@@ -1,0 +1,836 @@
+/*
+ * Copyright 2006 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import com.google.common.base.Join;
+import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+
+import junit.framework.TestCase;
+
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * <p>Base class for testing JS compiler classes that change
+ * the node tree of a compiled JS input.</p>
+ *
+ * <p>Pulls in shared functionality from different test cases. Also supports
+ * node tree comparison for input and output (instead of string comparison),
+ * which makes it easier to write tests b/c you don't have to get the syntax
+ * exactly correct to the spacing.</p>
+ *
+*
+ */
+public abstract class CompilerTestCase extends TestCase  {
+
+  /** Externs for the test */
+  private final JSSourceFile[] externsInputs;
+
+  /** Whether to compare input and output as trees instead of strings */
+  private final boolean compareAsTree;
+
+  /** Whether to parse type info from JSDoc comments */
+  protected boolean parseTypeInfo;
+
+  /** Whether we check warnings without source information. */
+  private boolean allowSourcelessWarnings = false;
+
+  /** True iff type checking pass runs before pass being tested. */
+  private boolean typeCheckEnabled = false;
+
+  /** Error level reported by type checker. */
+  private CheckLevel typeCheckLevel;
+
+  /** Whether the Normalize pass runs before pass being tested. */
+  private boolean normalizeEnabled = false;
+
+  /**
+   * Whether the MarkNoSideEffectsCalls pass runs before the pass being tested
+   */
+  private boolean markNoSideEffects = false;
+
+  /** The most recently used Compiler instance. */
+  private Compiler lastCompiler;
+
+  /**
+   * Constructs a test.
+   *
+   * @param externs Externs JS as a string
+   * @param compareAsTree True to compare output & expected as a node tree.
+   *     99% of the time you want to compare as a tree. There are a few
+   *     special cases where you don't, like if you want to test the code
+   *     printing of "unnatural" syntax trees. For example,
+   *
+   * <pre>
+   * IF
+   *   IF
+   *     STATEMENT
+   * ELSE
+   *   STATEMENT
+   * </pre>
+   */
+  protected CompilerTestCase(String externs, boolean compareAsTree) {
+    this.externsInputs = new JSSourceFile[] {
+        JSSourceFile.fromCode("externs", externs)
+    };
+    this.compareAsTree = compareAsTree;
+    this.parseTypeInfo = false;
+  }
+
+  /**
+   * Constructs a test. Uses AST comparison.
+   * @param externs Externs JS as a string
+   */
+  protected CompilerTestCase(String externs) {
+    this(externs, true);
+  }
+
+  /**
+   * Constructs a test. Uses AST comparison and no externs.
+   */
+  protected CompilerTestCase() {
+    this("", true);
+  }
+
+  /**
+   * Gets the compiler pass instance to use for a test.
+   *
+   * @param compiler The compiler
+   * @return The pass to test
+   */
+  protected abstract CompilerPass getProcessor(Compiler compiler);
+
+  /**
+   * Gets the compiler options to use for this test. Defaults to do nothing
+   * options.
+   *
+   * This is really only for configuring warnings guards. Use getProcessor
+   * to determine what passes should be run.
+   */
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = new CompilerOptions();
+    options.setWarningLevel(
+        DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
+    return options;
+  }
+
+  /**
+   * Returns the number of times the pass should be run before results are
+   * verified.
+   */
+  protected int getNumRepetitions() {
+    // Since most compiler passes should be idempotent, we run each pass twice
+    // by default.
+    return 2;
+  }
+
+  /** Expect warnings without source information. */
+  void allowSourcelessWarnings() {
+    allowSourcelessWarnings = true;
+  }
+
+  /** The most recently used JSComp instance. */
+  Compiler getLastCompiler() {
+    return lastCompiler;
+  }
+
+  /**
+   * Perform type checking before running the test pass. This will check
+   * for type errors and annotate nodes with type information.
+   *
+   * @param level the level of severity to report for type errors
+   *
+   * @see TypeCheck
+   */
+  public void enableTypeCheck(CheckLevel level) {
+    typeCheckEnabled  = true;
+    typeCheckLevel = level;
+  }
+
+  /**
+   * Do not run type checking before running the test pass.
+   *
+   * @see TypeCheck
+   */
+  void disableTypeCheck() {
+    typeCheckEnabled  = false;
+  }
+
+  /**
+   * Perform AST normalization before running the test pass, and anti-normalize
+   * after running it.
+   *
+   * @see Normalize
+   */
+  protected void enableNormalize() {
+    normalizeEnabled  = true;
+  }
+
+  /**
+   * Run the MarkSideEffectCalls pass before running the test pass.
+   *
+   * @see MarkNoSideEffectCalls
+   */
+  void enableMarkNoSideEffects() {
+    markNoSideEffects  = true;
+  }
+
+  /** Returns a newly created TypeCheck. */
+  private static TypeCheck createTypeCheck(Compiler compiler,
+      CheckLevel level) {
+    ReverseAbstractInterpreter rai =
+        new SemanticReverseAbstractInterpreter(compiler.getCodingConvention(),
+            compiler.getTypeRegistry());
+
+    return new TypeCheck(compiler, rai, compiler.getTypeRegistry(),
+        level, CheckLevel.OFF);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output.
+   *
+   * @param js Input
+   * @param expected Expected JS output
+   */
+  public void test(String js, String expected) {
+    test(js, expected, (DiagnosticType) null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output,
+   * or that an expected error is encountered.
+   *
+   * @param js Input
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   */
+  public void test(String js, String expected, DiagnosticType error) {
+    test(js, expected, error, null);
+  }
+
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output,
+   * or that an expected error is encountered.
+   *
+   * @param js Input
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   * @param description The content of the error expected
+   */
+  public void test(String js, String expected, DiagnosticType error,
+                   DiagnosticType warning, String description) {
+    test(externsInputs, js, expected, error, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param js Input
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  public void test(String js, String expected,
+                   DiagnosticType error, DiagnosticType warning) {
+    test(externsInputs, js, expected, error, warning, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param externs Externs input
+   * @param js Input
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  public void test(String externs, String js, String expected,
+                   DiagnosticType error, DiagnosticType warning) {
+    test(externs, js, expected, error, warning, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param externs Externs input
+   * @param js Input
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   * @param description The description of the expected warning,
+   *      or null if no warning is expected or if the warning's description
+   *      should not be examined
+   */
+  public void test(String externs, String js, String expected,
+                   DiagnosticType error, DiagnosticType warning,
+                   String description) {
+    JSSourceFile[] externsInputs = new JSSourceFile[]{
+        JSSourceFile.fromCode("externs", externs)
+    };
+    test(externsInputs, js, expected, error, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param externs Externs inputs
+   * @param js Input
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   * @param description The description of the expected warning,
+   *      or null if no warning is expected or if the warning's description
+   *      should not be examined
+   */
+  public void test(JSSourceFile[] externs, String js, String expected,
+                   DiagnosticType error,
+                   DiagnosticType warning, String description) {
+    Compiler compiler = new Compiler();
+    lastCompiler = compiler;
+
+    BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
+
+    CompilerOptions options = getOptions();
+    // Note that in this context, turning on the checkTypes option won't
+    // actually cause the type check to run.
+    options.checkTypes = parseTypeInfo;
+    compiler.init(externs, new JSSourceFile[] {
+        JSSourceFile.fromCode("testcode", js) }, options);
+    test(compiler, new String[] { expected }, error, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output.
+   *
+   * @param js Inputs
+   * @param expected Expected JS output
+   */
+  public void test(String[] js, String[] expected) {
+    test(js, expected, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output,
+   * or that an expected error is encountered.
+   *
+   * @param js Inputs
+   * @param expected Expected JS output
+   * @param error Expected error, or null if no error is expected
+   */
+  public void test(String[] js, String[] expected, DiagnosticType error) {
+    test(js, expected, error, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param js Inputs
+   * @param expected Expected JS output
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  public void test(String[] js, String[] expected, DiagnosticType error,
+                   DiagnosticType warning) {
+    test(js, expected, error, warning, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param js Inputs
+   * @param expected Expected JS output
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   * @param description The description of the expected warning,
+   *      or null if no warning is expected or if the warning's description
+   *      should not be examined
+   */
+  public void test(String[] js, String[] expected, DiagnosticType error,
+                   DiagnosticType warning, String description) {
+    Compiler compiler = new Compiler();
+    lastCompiler = compiler;
+
+    JSSourceFile[] inputs = new JSSourceFile[js.length];
+    for (int i = 0; i < js.length; i++) {
+      inputs[i] = JSSourceFile.fromCode("input" + i, js[i]);
+    }
+    compiler.init(externsInputs, inputs, getOptions());
+    test(compiler, expected, error, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output.
+   *
+   * @param modules Module inputs
+   * @param expected Expected JS outputs (one per module)
+   */
+  public void test(JSModule[] modules, String[] expected) {
+    test(modules, expected, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output,
+   * or that an expected error is encountered.
+   *
+   * @param modules Module inputs
+   * @param expected Expected JS outputs (one per module)
+   * @param error Expected error, or null if no error is expected
+   */
+  public void test(JSModule[] modules, String[] expected,
+      DiagnosticType error) {
+    test(modules, expected, error, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param modules Module inputs
+   * @param expected Expected JS outputs (one per module)
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  public void test(JSModule[] modules, String[] expected,
+                   DiagnosticType error, DiagnosticType warning) {
+    Compiler compiler = new Compiler();
+    lastCompiler = compiler;
+
+    compiler.init(externsInputs, modules, getOptions());
+    test(compiler, expected, error, warning);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input.
+   *
+   * @param js Input and output
+   */
+  public void testSame(String js) {
+    test(js, js);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input
+   * and (optionally) that an expected warning is issued.
+   *
+   * @param js Input and output
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  public void testSame(String js, DiagnosticType warning) {
+    test(js, js, null, warning);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input
+   * and (optionally) that an expected warning is issued.
+   *
+   * @param js Input and output
+   * @param diag Expected error or warning, or null if none is expected
+   * @param error true if diag is an error, false if it is a warning
+   */
+  public void testSame(String js, DiagnosticType diag, boolean error) {
+    if (error) {
+      test(js, js, diag);
+    } else {
+      test(js, js, null, diag);
+    }
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input
+   * and (optionally) that an expected warning is issued.
+   *
+   * @param externs Externs input
+   * @param js Input and output
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  public void testSame(String externs, String js, DiagnosticType warning) {
+    testSame(externs, js, warning, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input
+   * and (optionally) that an expected warning and description is issued.
+   *
+   * @param externs Externs input
+   * @param js Input and output
+   * @param warning Expected warning, or null if no warning is expected
+   * @param description The description of the expected warning,
+   *      or null if no warning is expected or if the warning's description
+   *      should not be examined
+   */
+  public void testSame(String externs, String js, DiagnosticType warning,
+                       String description) {
+    JSSourceFile[] externsInputs = new JSSourceFile[]{
+        JSSourceFile.fromCode("externs", externs)
+    };
+    test(externsInputs, js, js, null, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input.
+   *
+   * @param js Inputs and outputs
+   */
+  public void testSame(String[] js) {
+    test(js, js);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input,
+   * and emits the given error.
+   *
+   * @param js Inputs and outputs
+   * @param error Expected error, or null if no error is expected
+   */
+  public void testSame(String[] js, DiagnosticType error) {
+    test(js, js, error);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input,
+   * and emits the given error and warning.
+   *
+   * @param js Inputs and outputs
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  public void testSame(String[] js, DiagnosticType error, DiagnosticType warning) {
+    test(js, js, error, warning);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as the input.
+   *
+   * @param modules Module inputs
+   */
+  public void testSame(JSModule[] modules) {
+    testSame(modules, null);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as the input.
+   *
+   * @param modules Module inputs
+   * @param warning A warning, or null for no expected warning.
+   */
+  public void testSame(JSModule[] modules, DiagnosticType warning) {
+    try {
+      String[] expected = new String[modules.length];
+      for (int i = 0; i < modules.length; i++) {
+        expected[i] = "";
+        for (CompilerInput input : modules[i].getInputs()) {
+          expected[i] += input.getSourceFile().getCode();
+        }
+      }
+      test(modules, expected, null, warning);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param compiler A compiler that has been initialized via
+   *     {@link Compiler#init}
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  protected void test(Compiler compiler, String[] expected,
+                      DiagnosticType error, DiagnosticType warning) {
+    test(compiler, expected, error, warning, null);
+  }
+
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output
+   * and (optionally) that an expected warning is issued. Or, if an error is
+   * expected, this method just verifies that the error is encountered.
+   *
+   * @param compiler A compiler that has been initialized via
+   *     {@link Compiler#init}
+   * @param expected Expected output, or null if an error is expected
+   * @param error Expected error, or null if no error is expected
+   * @param warning Expected warning, or null if no warning is expected
+   * @param description The description of the expected warning,
+   *      or null if no warning is expected or if the warning's description
+   *      should not be examined
+   */
+  private void test(Compiler compiler, String[] expected,
+                    DiagnosticType error, DiagnosticType warning,
+                    String description) {
+    RecentChange recentChange = new RecentChange();
+    compiler.addChangeHandler(recentChange);
+
+    Node root = compiler.parseInputs();
+    assertTrue("Unexpected parse error(s): " +
+        Join.join("\n", compiler.getErrors()), root != null);
+
+    Node externsRoot = root.getFirstChild();
+    Node mainRoot = root.getLastChild();
+    Node mainRootClone = mainRoot.cloneTree();
+
+    int numRepetitions = getNumRepetitions();
+    ErrorManager[] errorManagers = new ErrorManager[numRepetitions];
+    int aggregateWarningCount = 0;
+    List<JSError> aggregateWarnings = Lists.newArrayList();
+    boolean hasCodeChanged = false;
+
+    assertFalse("Code should not change before processing",
+        recentChange.hasCodeChanged());
+
+    for (int i = 0; i < numRepetitions; ++i) {
+      if (compiler.getErrorCount() == 0) {
+        errorManagers[i] = new BlackHoleErrorManager(compiler);
+
+        // Only run the type checking pass once, if asked.
+        // Running it twice can cause unpredictable behavior because duplicate
+        // objects for the same type are created, and the type system
+        // uses reference equality to compare many types.
+        if (typeCheckEnabled && i == 0) {
+          TypeCheck check = createTypeCheck(compiler, typeCheckLevel);
+          check.processForTesting(externsRoot, mainRoot);
+        }
+
+        // Only run the normalize pass once, if asked.
+        if (normalizeEnabled && i == 0) {
+          Normalize normalize = new Normalize(compiler, false);
+          normalize.process(externsRoot, mainRoot);
+          compiler.setNormalized();
+        }
+
+        if (markNoSideEffects && i == 0) {
+          MarkNoSideEffectCalls mark = new MarkNoSideEffectCalls(compiler);
+          mark.process(externsRoot, mainRoot);
+        }
+
+        recentChange.reset();
+
+        getProcessor(compiler).process(externsRoot, mainRoot);
+
+        hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        aggregateWarningCount += errorManagers[i].getWarningCount();
+        aggregateWarnings.addAll(Lists.newArrayList(compiler.getWarnings()));
+
+        if (normalizeEnabled) {
+          boolean verifyDeclaredConstants = true;
+          new Normalize.VerifyConstants(compiler, verifyDeclaredConstants)
+              .process(externsRoot, mainRoot);
+        }
+      }
+    }
+
+    if (error == null) {
+      assertEquals(
+          "Unexpected error(s): " + Join.join("\n", compiler.getErrors()),
+          0, compiler.getErrorCount());
+
+      // Verify the symbol table.
+      ErrorManager symbolTableWarnings = new BlackHoleErrorManager(compiler);
+      Node expectedRoot = parseExpectedJs(expected);
+      SymbolTable table = compiler.acquireSymbolTable();
+      table.verify(expectedRoot, mainRoot);
+      table.release();
+
+      if (warning == null) {
+        assertEquals(
+            "Unexpected warning(s): " + Join.join("\n", aggregateWarnings),
+            0, aggregateWarningCount);
+      } else if (symbolTableWarnings.getWarnings().length > 0) {
+        JSError[] warnings = symbolTableWarnings.getWarnings();
+        assertEquals("There should be one symbol table warning",
+            1, warnings.length);
+        assertEquals(warning, warnings[0].getType());
+      } else {
+        assertEquals("There should be one warning, repeated " + numRepetitions +
+            " time(s).", numRepetitions, aggregateWarningCount);
+        for (int i = 0; i < numRepetitions; ++i) {
+          JSError[] warnings = errorManagers[i].getWarnings();
+          JSError actual = warnings[0];
+          assertEquals(warning, actual.getType());
+
+          // Make sure that source information is always provided.
+          if (!allowSourcelessWarnings) {
+            assertTrue("Missing source file name in warning",
+                actual.sourceName != null && !actual.sourceName.isEmpty());
+            assertTrue("Missing line number in warning",
+                -1 != actual.lineNumber);
+            assertTrue("Missing char number in warning",
+                -1 != actual.getCharno());
+          }
+
+          if (description != null) {
+            assertEquals(description, actual.description);
+          }
+        }
+      }
+
+      if (normalizeEnabled) {
+        Normalize normalize = new Normalize(compiler, false);
+        normalize.process(externsRoot, mainRootClone);
+      }
+
+      if (mainRootClone.checkTreeEqualsSilent(mainRoot)) {
+        assertFalse(
+            "compiler.reportCodeChange() was called " +
+            "even though nothing changed",
+            hasCodeChanged);
+      } else {
+        assertTrue("compiler.reportCodeChange() should have been called",
+            hasCodeChanged);
+      }
+
+      if (compareAsTree) {
+        String explanation = expectedRoot.checkTreeEquals(mainRoot);
+        assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
+            "\nResult: " + compiler.toSource(mainRoot) +
+            "\n" + explanation, explanation);
+      } else if (expected != null) {
+        assertEquals(Join.join("", expected), compiler.toSource(mainRoot));
+      }
+
+      // Verify normalization is not invalidated.
+      Node normalizeCheckRootClone = root.cloneTree();
+      Node normalizeCheckExternsRootClone = root.getFirstChild();
+      Node normalizeCheckMainRootClone = root.getLastChild();
+      new NodeTypeNormalizer().process(
+          normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
+      String explanation =
+          normalizeCheckMainRootClone.checkTreeEquals(mainRoot);
+      assertNull("Node structure normalization invalidated.\nExpected: " +
+          compiler.toSource(normalizeCheckMainRootClone) +
+          "\nResult: " + compiler.toSource(mainRoot) +
+          "\n" + explanation, explanation);
+
+      // TODO(johnlenz): enable this for most test cases.
+      // Currently, this invalidates test for while-loops, for-loop
+      // initializers, and other naming.  However, a set of code
+      // (FoldConstants, etc) runs before the Normalize pass, so this can't be
+      // force on everywhere.
+      if (normalizeEnabled) {
+        new Normalize(compiler, true).process(
+            normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
+        explanation =  normalizeCheckMainRootClone.checkTreeEquals(mainRoot);
+        assertNull("Normalization invalidated.\nExpected: " +
+            compiler.toSource(normalizeCheckMainRootClone) +
+            "\nResult: " + compiler.toSource(mainRoot) +
+            "\n" + explanation, explanation);
+      }
+    } else {
+      assertEquals("There should be one error.", 1, compiler.getErrorCount());
+      assertEquals(error, compiler.getErrors()[0].getType());
+    }
+  }
+
+  /**
+   * Parses expected js inputs and returns the root of the parse tree.
+   */
+  private Node parseExpectedJs(String[] expected) {
+    Compiler compiler = new Compiler();
+    JSSourceFile[] inputs = new JSSourceFile[expected.length];
+    for (int i = 0; i < expected.length; i++) {
+      inputs[i] = JSSourceFile.fromCode("expected" + i, expected[i]);
+    }
+    compiler.init(externsInputs, inputs, getOptions());
+    Node root = compiler.parseInputs();
+    assertTrue("Unexpected parse error(s): " +
+        Join.join("\n", compiler.getErrors()), root != null);
+    Node externsRoot = root.getFirstChild();
+    Node mainRoot = externsRoot.getNext();
+    // Only run the normalize pass, if asked.
+    if (normalizeEnabled && !compiler.hasErrors()) {
+      Normalize normalize = new Normalize(compiler, false);
+      normalize.process(externsRoot, mainRoot);
+      compiler.setNormalized();
+    }
+    return mainRoot;
+  }
+
+  Node parseExpectedJs(String expected) {
+    return parseExpectedJs(new String[] {expected});
+  }
+
+  /**
+   * Generates a list of modules from a list of inputs, such that each module
+   * depends on the module before it.
+   */
+  static JSModule[] createModuleChain(String... inputs) {
+    JSModule[] modules = createModules(inputs);
+    for (int i = 1; i < modules.length; i++) {
+      modules[i].addDependency(modules[i - 1]);
+    }
+    return modules;
+  }
+
+  /**
+   * Generates a list of modules from a list of inputs, such that each module
+   * depends on the first module.
+   */
+  static JSModule[] createModuleStar(String... inputs) {
+    JSModule[] modules = createModules(inputs);
+    for (int i = 1; i < modules.length; i++) {
+      modules[i].addDependency(modules[0]);
+    }
+    return modules;
+  }
+
+  /**
+   * Generates a list of modules from a list of inputs. Does not generate any
+   * dependencies between the modules.
+   */
+  static JSModule[] createModules(String... inputs) {
+    JSModule[] modules = new JSModule[inputs.length];
+    for (int i = 0; i < inputs.length; i++) {
+      JSModule module = modules[i] = new JSModule("m" + i);
+      module.add(JSSourceFile.fromCode("i" + i, inputs[i]));
+    }
+    return modules;
+  }
+
+  private static class BlackHoleErrorManager extends BasicErrorManager {
+    private BlackHoleErrorManager(Compiler compiler) {
+      compiler.setErrorManager(this);
+    }
+
+    @Override
+    public void println(CheckLevel level, JSError error) {}
+
+    @Override
+    public void printSummary() {}
+  }
+}

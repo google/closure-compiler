@@ -1,0 +1,1617 @@
+/*
+ * Copyright 2006 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import com.google.common.base.Join;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.CopySideEffectSubexpressions;
+import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.SideEffectAccumulator;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * This pass identifies all global names, simple (e.g. <code>a</code>) or
+ * qualified (e.g. <code>a.b.c</code>), and the dependencies between them, then
+ * removes code associated with unreferenced names. It starts by assuming that
+ * only externally accessible names (e.g. <code>window</code>) are referenced,
+ * then iteratively marks additional names as referenced (e.g. <code>Foo</code>
+ * in <code>window['foo'] = new Foo();</code>). This makes it possible to
+ * eliminate code containing circular references.
+ *
+ * <p>Qualified names can be defined using dotted or object literal syntax
+ * (<code>a.b.c = x;</code> or <code>a.b = {c: x};</code>, respectively).
+ *
+ * <p>Removal of prototype classes is currently all or nothing. In other words,
+ * prototype properties and methods are never individually removed.
+ *
+ * <p>Optionally generates pretty HTML output of data so that it is easy to
+ * analyze dependencies.
+ *
+ * <p>Only operates on names defined in the global scope, but it would be easy
+ * to extend the pass to names defined in local scopes.
+ *
+ * TODO(nicksantos): In the initial implementation of this pass, it was
+ * important to understand namespaced names (e.g., that a.b is distinct from
+ * a.b.c). Now that this pass comes after CollapseProperties, this is no longer
+ * necessary. For now, I've changed so that {@code refernceParentNames}
+ * creates a two-way reference between a.b and a.b.c, so that they're
+ * effectively the same name. When someone has the time, we should completely
+ * rip out all the logic that understands namespaces.
+ *
+*
+*
+ */
+final class NameAnalyzer implements CompilerPass {
+
+  /** Reference to the JS compiler */
+  private final AbstractCompiler compiler;
+
+  /** Map of all JS names found */
+  private final Map<String, JsName> allNames = Maps.newTreeMap();
+
+  /**
+   * Map of name scopes - all children of the Node key have a dependency on the
+   * name value.
+   *
+   * If scopes.get(node).equals(name) && node2 is a child of node, then node2
+   * will not get executed unless name is referenced via a get operation
+   */
+  private final Map<Node, NameInformation> scopes = Maps.newHashMap();
+
+  /**
+   * List of names referenced in successive generations of finding referenced
+   * nodes
+   */
+  private final List<Set<JsName>> generations = Lists.newArrayList();
+
+  /** Used to parse prototype names */
+  private static final String PROTOTYPE_SUBSTRING = ".prototype.";
+
+  private static final int PROTOTYPE_SUBSTRING_LEN =
+      PROTOTYPE_SUBSTRING.length();
+
+  private static final int PROTOTYPE_SUFFIX_LEN = ".prototype".length();
+
+  /** Window root */
+  private static final String WINDOW = "window";
+
+  /** Function class name */
+  private static final String FUNCTION = "Function";
+
+  /** All of these refer to global scope. These can be moved to config */
+  static final Set<String> DEFAULT_GLOBAL_NAMES = ImmutableSet.of(
+      "window", "goog.global");
+
+  /** Whether to remove unreferenced variables in main pass */
+  private final boolean removeUnreferenced;
+
+  /** Names that refer to the global scope */
+  private final Set<String> globalNames;
+
+  /** Ast change helper */
+  private final AstChangeProxy changeProxy;
+
+  /** Names that are externally defined */
+  private final Set<String> externalNames = Sets.newHashSet();
+
+  /** Name declarations or assignments, in post-order traversal order */
+  private final List<RefNode> refNodes = Lists.newArrayList();
+
+  /**
+   * Class to hold information that can be determined from a node tree about a
+   * given name
+   */
+  private static class NameInformation {
+    /** Fully qualified name */
+    String name;
+
+    /** Whether the name is guaranteed to be externally referenceable */
+    boolean isExternallyReferenceable = false;
+
+    /** Whether this name is a prototype function */
+    boolean isPrototype = false;
+
+    /** Name of the prototype class, i.e. "a" if name is "a.prototype.b" */
+    String prototypeClass = null;
+
+    /** Local name of prototype property i.e. "b" if name is "a.prototype.b" */
+    String prototypeProperty = null;
+
+    /** Name of the super class of name */
+    String superclass = null;
+
+    /** Whether this is a call that only affects the class definition */
+    boolean onlyAffectsClassDef = false;
+  }
+
+  /**
+   * Struct to hold information about a fully qualified JS name
+   */
+  private static class JsName implements Comparable<JsName> {
+    /** Fully qualified name */
+    String name;
+
+    /** Names referred to by this name */
+    Set<String> refersTo = Sets.newHashSet();
+
+    /** Names that refer to this name */
+    Set<String> referencedBy = Sets.newHashSet();
+
+    /** Name of prototype functions attached to this name */
+    List<String> prototypeNames = Lists.newArrayList();
+
+    /** Whether this is an externally defined name */
+    boolean externallyDefined = false;
+
+    /** Whether this node is referenced */
+    boolean referenced = false;
+
+    /** First generation this node was referenced */
+    int generation = 0;
+
+    /**
+     * Output the node as a string
+     *
+     * @return Node as a string
+     */
+    @Override
+    public String toString() {
+      StringBuilder out = new StringBuilder();
+      out.append(name);
+
+      if (prototypeNames.size() > 0) {
+        out.append(" (CLASS)\n");
+        out.append(" - FUNCTIONS: ");
+        Iterator<String> pIter = prototypeNames.iterator();
+        while (pIter.hasNext()) {
+          out.append(pIter.next());
+          if (pIter.hasNext()) {
+            out.append(", ");
+          }
+        }
+      }
+
+      if (refersTo.size() > 0) {
+        out.append("\n - REFERS TO: ");
+        out.append(Join.join(", ", refersTo));
+      }
+
+      if (referencedBy.size() > 0) {
+        out.append("\n - REFERENCED BY: ");
+        out.append(Join.join(", ", referencedBy));
+      }
+      return out.toString();
+    }
+
+    public int compareTo(JsName rhs) {
+      return this.name.compareTo(rhs.name);
+    }
+  }
+
+  /**
+   * Interface to get information about and remove unreferenced names.
+   */
+  interface RefNode {
+    JsName name();
+    void remove();
+  }
+
+  /**
+   * Class for nodes that reference a fully-qualified JS name. Fully qualified
+   * names are of form A or A.B (A.B.C, etc.). References can get the value or
+   * set the value of the JS name.
+   *
+   * TODO(user) Create an interface with a remove() method that is
+   * implemented differently by type of parent node
+   */
+  private class JsNameRefNode implements RefNode {
+    /** JsName node for this reference */
+    JsName name;
+
+    /** Top GETPROP or NAME node defining the name of this node */
+    Node node;
+
+    /**
+     * Parent node of the name access (ASSIGN, VAR, FUNCTION, or CALL)
+     */
+    Node parent;
+
+    /**
+     * Create a node that refers to a name
+     *
+     * @param name The name
+     * @param node The top node representing the name (GETPROP, NAME)
+     */
+    JsNameRefNode(JsName name, Node node) {
+      this.name = name;
+      this.node = node;
+      this.parent = node.getParent();
+    }
+
+    public JsName name() {
+      return name;
+    }
+
+    public void remove() {
+      // Setters have VAR, FUNCTION, or ASSIGN parent nodes. CALL parent
+      // nodes are global refs, and are handled later in this function.
+      Node containingNode = parent.getParent();
+      switch (parent.getType()) {
+        case Token.VAR:
+          if (parent.getFirstChild() ==
+              parent.getLastChild()) {
+            replaceWithRhs(containingNode, parent);
+          } else {
+            // Break up var expression into the parts before the
+            // current declaration and the ones after.  Replace
+            // the current declaration with its RHS, after
+            // removing subexpressions with no side effects.
+            // Replacement nodes should end up between the two
+            // sets of variable declarations.
+            List<Node> earlyChildren = Lists.newArrayList();
+            List<Node> lateChildren = Lists.newArrayList();
+            boolean seen = false;
+            for (Node child : parent.children()) {
+              if (child == node) {
+                seen = true;
+                continue;
+              }
+
+              if (seen) {
+                lateChildren.add(child);
+              } else {
+                earlyChildren.add(child);
+              }
+            }
+
+            if (!earlyChildren.isEmpty() && !lateChildren.isEmpty()) {
+              Node earlyDecls = new Node(Token.VAR);
+              for (Node child : earlyChildren) {
+                parent.removeChild(child);
+                earlyDecls.addChildToBack(child);
+              }
+              containingNode.addChildBefore(earlyDecls, parent);
+            }
+
+            Node currDecl = new Node(Token.VAR);
+            parent.removeChild(node);
+            currDecl.addChildToBack(node);
+            if (earlyChildren.isEmpty() || !lateChildren.isEmpty()) {
+              containingNode.addChildBefore(currDecl, parent);
+            } else {
+              containingNode.addChildAfter(currDecl, parent);
+            }
+            replaceWithRhs(containingNode, currDecl);
+          }
+          break;
+        case Token.FUNCTION:
+          replaceWithRhs(containingNode, parent);
+          break;
+        case Token.ASSIGN:
+          if (NodeUtil.isExpressionNode(containingNode)) {
+            replaceWithRhs(containingNode.getParent(), containingNode);
+          } else {
+            replaceWithRhs(containingNode, parent);
+          }
+          break;
+      }
+    }
+  }
+
+
+  /**
+   * Class for nodes that set prototype properties or methods.
+   */
+  private class PrototypeSetNode extends JsNameRefNode {
+    /**
+     * Create a set node from the name & setter node
+     *
+     * @param name The name
+     * @param parent Parent node that assigns the expression (an ASSIGN)
+     */
+    PrototypeSetNode(JsName name, Node parent) {
+      super(name, parent.getFirstChild());
+
+      Preconditions.checkState(parent.getType() == Token.ASSIGN);
+    }
+
+    @Override public void remove() {
+      Node gramps = parent.getParent();
+      if (NodeUtil.isExpressionNode(gramps)) {
+        // name.prototype.foo = function() { ... };
+        changeProxy.removeChild(gramps.getParent(), gramps);
+      } else {
+        // ... name.prototype.foo = function() { ... } ...
+        changeProxy.replaceWith(gramps, parent,
+                                parent.getLastChild().cloneTree());
+      }
+    }
+  }
+
+  /**
+   * Base class for special reference nodes.
+   */
+  private abstract class SpecialReferenceNode implements RefNode {
+    /** JsName node for the function */
+    JsName name;
+
+    /** The CALL node */
+    Node node;
+
+    /** The parent of {@code node} */
+    Node parent;
+
+    /** The parent of {@code parent} */
+    Node gramps;
+
+    /**
+     * Create a special reference node.
+     *
+     * @param name The name
+     * @param node The CALL node
+     * @param parent The parent of {@code node}
+     * @param gramps The parent of {@code parent}
+     */
+    SpecialReferenceNode(JsName name, Node node, Node parent,
+        Node gramps) {
+      this.name = name;
+      this.node = node;
+      this.parent = parent;
+      this.gramps = gramps;
+    }
+
+    public JsName name() {
+      return name;
+    }
+  }
+
+
+
+  /**
+   * Class for nodes that are function calls that may change a function's
+   * prototype
+   */
+  private class ClassDefiningFunctionNode extends SpecialReferenceNode {
+    /**
+     * Create a class defining function node from the name & setter node
+     *
+     * @param name The name
+     * @param node The CALL node
+     * @param parent The parent of {@code node}
+     * @param gramps The parent of {@code parent}
+     */
+    ClassDefiningFunctionNode(JsName name, Node node, Node parent,
+        Node gramps) {
+      super(name, node, parent, gramps);
+      Preconditions.checkState(node.getType() == Token.CALL);
+    }
+
+    public void remove() {
+      Preconditions.checkState(node.getType() == Token.CALL);
+      if (NodeUtil.isExpressionNode(parent)) {
+        changeProxy.removeChild(gramps, parent);
+      } else {
+        changeProxy.replaceWith(
+            parent, node, new Node(Token.VOID, Node.newNumber(0)));
+      }
+    }
+  }
+
+
+
+  /**
+   * Class for nodes that check instanceof
+   */
+  private class InstanceOfCheckNode extends SpecialReferenceNode {
+    /**
+     * Create an instanceof node from the name and parent node
+     *
+     * @param name The name
+     * @param node The qualified name node
+     * @param parent The parent of {@code node}, this should be an instanceof
+     *     node.
+     * @param gramps The parent of {@code parent}.
+     */
+    InstanceOfCheckNode(JsName name, Node node, Node parent, Node gramps) {
+      super(name, node, parent, gramps);
+      Preconditions.checkState(node.isQualifiedName());
+      Preconditions.checkState(parent.getType() == Token.INSTANCEOF);
+    }
+
+    public void remove() {
+      changeProxy.replaceWith(gramps, parent, new Node(Token.FALSE));
+    }
+  }
+
+  /**
+   * Walk through externs and mark nodes as externally declared if declared
+   */
+  private class ProcessExternals extends AbstractPostOrderCallback {
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      NameInformation ns = null;
+      if (NodeUtil.isVarDeclaration(n)) {
+        ns = createNameInformation(t, n, parent);
+      } else if (NodeUtil.isFunctionDeclaration(n)) {
+        ns = createNameInformation(t, n.getFirstChild(), n);
+      }
+      if (ns != null) {
+        JsName jsName = getName(ns.name, true);
+        jsName.externallyDefined = true;
+        externalNames.add(ns.name);
+      }
+    }
+  }
+
+  /**
+   * <p>Identifies all dependency scopes.
+   *
+   * <p>A dependency scope is a relationship between a node tree and a name that
+   * implies that the node tree will not execute (and thus can be eliminated) if
+   * the name is never referenced.
+   *
+   * <p>The entire parse tree is ultimately in a dependency scope relationship
+   * with <code>window</code> (or an equivalent name for the global scope), but
+   * the goal here is to find finer-grained relationships. This callback creates
+   * dependency scopes for every assignment statement, variable declaration, and
+   * function call in the global scope.
+   *
+   * <p>Note that dependency scope node trees aren't necessarily disjoint.
+   * In the following code snippet, for example, the function definition
+   * forms a dependency scope with the name <code>f</code> and the assignment
+   * inside the function forms a dependency scope with the name <code>x</code>.
+   * <pre>
+   * var x; function f() { x = 1; }
+   * </pre>
+   */
+  private class FindDependencyScopes extends AbstractPostOrderCallback {
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!t.inGlobalScope()) {
+        return;
+      }
+
+      if (n.getType() == Token.ASSIGN) {
+        Node nameNode = n.getFirstChild();
+        NameInformation ns = createNameInformation(t, nameNode, n);
+        if (ns != null) {
+          recordDepScope(parent, ns);
+        }
+      } else if (NodeUtil.isVarDeclaration(n)) {
+        NameInformation ns = createNameInformation(t, n, parent);
+        recordDepScope(n, ns);
+      } else if (NodeUtil.isFunctionDeclaration(n)) {
+        NameInformation ns = createNameInformation(t, n.getFirstChild(), n);
+        recordDepScope(n, ns);
+      } else if (NodeUtil.isExprCall(n)) {
+        Node callNode = n.getFirstChild();
+        Node nameNode = callNode.getFirstChild();
+        NameInformation ns = createNameInformation(t, nameNode, callNode);
+        if (ns != null && ns.onlyAffectsClassDef) {
+          recordDepScope(n, ns);
+        }
+      }
+    }
+
+    /**
+     * Defines a dependency scope.
+     */
+    private void recordDepScope(Node node, NameInformation name) {
+      scopes.put(node, name);
+    }
+  }
+
+  /**
+   * Create JsName objects for variable and function declarations in
+   * the global scope before computing name references.  In javascript
+   * it is legal to refer to variable and function names before the
+   * actual declaration.
+   */
+  private class HoistVariableAndFunctionDeclarations
+      extends NodeTraversal.AbstractShallowCallback {
+
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (NodeUtil.isVarDeclaration(n)) {
+        NameInformation ns = createNameInformation(t, n, parent);
+        Preconditions.checkNotNull(ns, "NameInformation is null");
+        createName(ns.name);
+      } else if (NodeUtil.isFunctionDeclaration(n)) {
+        Node nameNode = n.getFirstChild();
+        NameInformation ns = createNameInformation(t, nameNode, n);
+        Preconditions.checkNotNull(ns, "NameInformation is null");
+        createName(nameNode.getString());
+      }
+    }
+  }
+
+  /**
+   * Identifies all declarations of global names and setter statements
+   * affecting global symbols (assignments to global names).
+   *
+   * All declarations and setters must be gathered in a single
+   * traversal and stored in traversal order so "removeUnreferenced"
+   * can perform modifications in traversal order.
+   */
+  private class FindDeclarationsAndSetters extends AbstractPostOrderCallback {
+
+    public void visit(NodeTraversal t, Node n, Node parent) {
+
+      // Record global variable and function declarations
+      if (t.inGlobalScope()) {
+        if (NodeUtil.isVarDeclaration(n)) {
+          NameInformation ns = createNameInformation(t, n, parent);
+          Preconditions.checkNotNull(ns);
+          recordSet(ns.name, n);
+        } else if (NodeUtil.isFunctionDeclaration(n)) {
+          Node nameNode = n.getFirstChild();
+          NameInformation ns = createNameInformation(t, nameNode, n);
+          if (ns != null) {
+            JsName nameInfo = getName(nameNode.getString(), true);
+            recordSet(nameInfo.name, nameNode);
+          }
+        }
+      }
+
+      // Record assignments and call sites
+      if (n.getType() == Token.ASSIGN) {
+        Node nameNode = n.getFirstChild();
+
+        NameInformation ns = createNameInformation(t, nameNode, n);
+        if (ns != null) {
+          if (ns.isPrototype) {
+            JsName name = getName(ns.prototypeClass, false);
+            if (name != null) {
+              name.prototypeNames.add(ns.prototypeProperty);
+              refNodes.add(new PrototypeSetNode(name, n));
+            }
+          } else {
+            recordSet(ns.name, nameNode);
+          }
+        }
+      } else if (n.getType() == Token.CALL) {
+        Node nameNode = n.getFirstChild();
+        NameInformation ns = createNameInformation(t, nameNode, n);
+        if (ns != null && ns.onlyAffectsClassDef) {
+          JsName name = getName(ns.name, false);
+          if (name != null) {
+            refNodes.add(new ClassDefiningFunctionNode(
+                            name, n, parent, parent.getParent()));
+          }
+        }
+      }
+    }
+
+    /**
+     * Records the assignment of a value to a global name.
+     *
+     * @param name Fully qualified name
+     * @param node The top node representing the name (GETPROP, NAME)
+     */
+    private void recordSet(String name, Node node) {
+      JsName jsn = getName(name, true);
+      JsNameRefNode nameRefNode = new JsNameRefNode(jsn, node);
+      refNodes.add(nameRefNode);
+    }
+  }
+
+  /**
+   * <p>Identifies all references between global names.
+   *
+   * <p>A reference from a name <code>f</code> to a name <code>g</code> means
+   * that if the name <code>f</code> must be defined, then the name
+   * <code>g</code> must also be defined. This would be the case if, for
+   * example, <code>f</code> were a function that called <code>g</code>.
+   */
+  private class FindReferences implements Callback {
+    Set<Node> nodesToKeep;
+    FindReferences() {
+      nodesToKeep = Sets.newHashSet();
+    }
+
+    private void addAllChildren(Node n) {
+      nodesToKeep.add(n);
+      for (Node child = n.getFirstChild();
+           child != null;
+           child = child.getNext()) {
+        addAllChildren(child);
+      }
+    }
+
+    private void addSimplifiedChildren(Node n) {
+      NodeTraversal.traverse(
+          compiler, n,
+          new GatherSideEffectSubexpressionsCallback(
+              compiler, new NodeAccumulator()));
+    }
+
+    private void addSimplifiedExpression(Node n, Node parent) {
+      if (parent.getType() == Token.VAR) {
+        Node value = n.getFirstChild();
+        if (value != null) {
+          addSimplifiedChildren(value);
+        }
+      } else if (n.getType() == Token.ASSIGN &&
+          (parent.getType() == Token.EXPR_RESULT ||
+           parent.getType() == Token.FOR ||
+           parent.getType() == Token.RETURN)) {
+        for (Node child : n.children()) {
+          addSimplifiedChildren(child);
+        }
+      } else if (n.getType() == Token.CALL &&
+                 parent.getType() == Token.EXPR_RESULT) {
+        addSimplifiedChildren(n);
+      } else {
+        addAllChildren(n);
+      }
+    }
+
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (parent == null) {
+        return true;
+      }
+
+      // Gather the list of nodes that either have side effects, are
+      // arguments to function calls with side effects or are used in
+      // control structure predicates.  These names are always
+      // referenced when the enclosing function is called.
+      if (n.getType() == Token.FOR) {
+        if (n.getChildCount() == 4) {
+          Node decl = n.getFirstChild();
+          Node pred = decl.getNext();
+          Node step = pred.getNext();
+          addSimplifiedExpression(decl, n);
+          addSimplifiedExpression(pred, n);
+          addSimplifiedExpression(step, n);
+        } else { // n.getChildCount() == 3
+          Node decl = n.getFirstChild();
+          Node iter = decl.getNext();
+          addAllChildren(decl);
+          addAllChildren(iter);
+        }
+      }
+
+      if (parent.getType() == Token.VAR ||
+          parent.getType() == Token.EXPR_RESULT ||
+          parent.getType() == Token.RETURN) {
+        addSimplifiedExpression(n, parent);
+      }
+
+      if ((parent.getType() == Token.IF ||
+           parent.getType() == Token.WHILE ||
+           parent.getType() == Token.WITH ||
+           parent.getType() == Token.SWITCH ||
+           parent.getType() == Token.CASE) &&
+          parent.getFirstChild() == n) {
+        addAllChildren(n);
+      }
+
+      if (parent.getType() == Token.DO && parent.getLastChild() == n) {
+        addAllChildren(n);
+      }
+
+      return true;
+    }
+
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!(NodeUtil.isName(n) ||
+            NodeUtil.isGet(n) && !NodeUtil.isGetProp(parent))) {
+        // This is not a simple or qualified name.
+        return;
+      }
+
+      NameInformation nameInfo = createNameInformation(t, n, parent);
+      if (nameInfo == null) {
+        // The name is not a global name
+        return;
+      }
+
+      if (nameInfo.onlyAffectsClassDef) {
+        recordReference(nameInfo.name, nameInfo.superclass);
+
+        // Make sure that we record a reference to the function that does
+        // the inheritance, so that the inherits() function itself does
+        // not get stripped.
+        String nodeName = n.getQualifiedName();
+        if (nodeName != null) {
+          recordReference(nameInfo.name, nodeName);
+        }
+
+        return;
+      }
+
+      if (parent.getType() == Token.INSTANCEOF &&
+          parent.getLastChild() == n) {
+        JsName checkedClass = getName(nameInfo.name, true);
+        refNodes.add(
+            new InstanceOfCheckNode(
+                checkedClass, n, parent, parent.getParent()));
+
+        return;
+      }
+
+      // Determine which name might be potentially referring to this one by
+      // looking up the nearest enclosing dependency scope. It's unnecessary to
+      // determine all enclosing dependency scopes because this callback should
+      // create a chain of references between them.
+      NameInformation referring = getDependencyScope(n);
+      String referringName = "";
+      if (referring != null) {
+        referringName = referring.isPrototype
+                      ? referring.prototypeClass
+                      : referring.name;
+      }
+
+      // An externally referenceable name must always be defined, so we add a
+      // reference to it from the global scope (a.k.a. window).
+      String name = nameInfo.name;
+      if (nameInfo.isExternallyReferenceable) {
+        recordReference(WINDOW, name);
+        return;
+      }
+
+      // An assignment implies a reference from the enclosing dependency scope.
+      // For example, foo references bar in: function foo() {bar=5}.
+      if (NodeUtil.isLhs(n, parent)) {
+        if (referring != null) {
+          recordReference(referringName, name);
+        }
+        return;
+      }
+
+      if (nodesToKeep.contains(n)) {
+        NameInformation functionScope = getEnclosingFunctionDependencyScope(t);
+        if (functionScope != null) {
+          recordReference(functionScope.name, name);
+        } else {
+          recordReference(WINDOW, name);
+        }
+      } else if (referring != null) {
+        recordReference(referringName, name);
+      } else {
+        // No named dependency scope found.  Unfortunately that might
+        // mean that the expression is a child of an anonymous
+        // function or assignment with a complex lhs.  In those cases,
+        // protect this node by creating a reference to WINDOW.
+        for (Node ancestor : n.getAncestors()) {
+          if (NodeUtil.isAssignmentOp(ancestor) ||
+              NodeUtil.isFunction(ancestor)) {
+            recordReference(WINDOW, name);
+            break;
+          }
+        }
+      }
+    }
+
+    /**
+     * Records a reference from one name to another name.
+     */
+    private void recordReference(String fromName, String toName) {
+      JsName from = getName(fromName, true);
+      JsName to = getName(toName, true);
+      from.refersTo.add(toName);
+      to.referencedBy.add(fromName);
+    }
+
+    /**
+     * Helper class that gathers the list of nodes that would be left
+     * behind after simplification.
+     */
+    private class NodeAccumulator
+        implements SideEffectAccumulator {
+
+      /** {@inheritDoc} */
+      public boolean classDefiningCallsHaveSideEffects() {
+        return false;
+      }
+
+      /** {@inheritDoc} */
+      public void keepSubTree(Node original) {
+        addAllChildren(original);
+      }
+
+      /** {@inheritDoc} */
+      public void keepSimplifiedShortCircuitExpression(Node original) {
+        Node condition = original.getFirstChild();
+        Node thenBranch = condition.getNext();
+        addAllChildren(condition);
+        addSimplifiedChildren(thenBranch);
+      }
+
+      /** {@inheritDoc} */
+      public void keepSimplifiedHookExpression(Node hook,
+                                               boolean thenHasSideEffects,
+                                               boolean elseHasSideEffects) {
+        Node condition = hook.getFirstChild();
+        Node thenBranch = condition.getNext();
+        Node elseBranch = thenBranch.getNext();
+        addAllChildren(condition);
+        if (thenHasSideEffects) {
+          addSimplifiedChildren(thenBranch);
+        }
+        if (elseHasSideEffects) {
+          addSimplifiedChildren(elseBranch);
+        }
+      }
+    }
+  }
+
+  private class RemoveListener implements AstChangeProxy.ChangeListener {
+    public void nodeRemoved(Node n) {
+      compiler.reportCodeChange();
+    }
+  }
+
+  /**
+   * Creates a name analyzer, with option to remove unreferenced variables when
+   * calling process().
+   *
+   * The analyzer make a best guess at whether functions affect global scope
+   * based on usage (no assignment of return value means that a function has
+   * side effects).
+   *
+   * @param compiler The AbstractCompiler
+   * @param removeUnreferenced If true, remove unreferenced variables during
+   *        process()
+   */
+  NameAnalyzer(AbstractCompiler compiler, boolean removeUnreferenced) {
+    this.compiler = compiler;
+    this.removeUnreferenced = removeUnreferenced;
+    this.globalNames = DEFAULT_GLOBAL_NAMES;
+    this.changeProxy = new AstChangeProxy();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void process(Node externs, Node root) {
+    NodeTraversal.traverse(compiler, externs, new ProcessExternals());
+    NodeTraversal.traverse(compiler, root, new FindDependencyScopes());
+    NodeTraversal.traverse(
+        compiler, root, new HoistVariableAndFunctionDeclarations());
+    NodeTraversal.traverse(compiler, root, new FindDeclarationsAndSetters());
+    NodeTraversal.traverse(compiler, root, new FindReferences());
+    referenceParentNames();
+    calculateReferences();
+
+    if (removeUnreferenced) {
+      removeUnreferenced();
+    }
+  }
+
+  /**
+   * Removes all unreferenced variables.
+   */
+  void removeUnreferenced() {
+    RemoveListener listener = new RemoveListener();
+    changeProxy.registerListener(listener);
+
+    for (RefNode refNode : refNodes) {
+      JsName name = refNode.name();
+      if (!name.referenced && !name.externallyDefined) {
+        refNode.remove();
+      }
+    }
+
+    changeProxy.unregisterListener(listener);
+  }
+
+  /**
+   * Generates a report
+   *
+   * @return The report
+   */
+  String getStringReport() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("TOTAL NAMES: " + countOf(TriState.BOTH, TriState.BOTH) + "\n");
+    sb.append("TOTAL CLASSES: " + countOf(TriState.TRUE, TriState.BOTH) + "\n");
+    sb.append("TOTAL STATIC FUNCTIONS: "
+        + countOf(TriState.FALSE, TriState.BOTH) + "\n");
+    sb.append("REFERENCED NAMES: " + countOf(TriState.BOTH, TriState.TRUE)
+        + "\n");
+    sb.append("REFERENCED CLASSES: " + countOf(TriState.TRUE, TriState.TRUE)
+        + "\n");
+    sb.append("REFERENCED STATIC FUNCTIONS: "
+        + countOf(TriState.FALSE, TriState.TRUE) + "\n");
+
+
+    for (int i = 0; i < generations.size(); i++) {
+      Set<JsName> gen = generations.get(i);
+      sb.append("GENERATION " + i + ": " + gen.size() + " names\n");
+      for (JsName jsName : gen) {
+        sb.append(" - " + jsName.name + "\n");
+      }
+    }
+
+    sb.append("ALL NAMES\n");
+    for (JsName node : allNames.values()) {
+      sb.append(node + "\n");
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Generates an HTML report
+   *
+   * @return The report
+   */
+  String getHtmlReport() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("<html><body><style type=\"text/css\">"
+        + "body, td, p {font-family: Arial; font-size: 83%} "
+        + "ul {margin-top:2px; margin-left:0px; padding-left:1em;} "
+        + "li {margin-top:3px; margin-left:24px; padding-left:0px;"
+        + "padding-bottom: 4px}</style>");
+    sb.append("OVERALL STATS<ul>");
+    appendListItem(sb, "Total Names: " + countOf(TriState.BOTH, TriState.BOTH));
+    appendListItem(sb, "Total Classes: "
+        + countOf(TriState.TRUE, TriState.BOTH));
+    appendListItem(sb, "Total Static Functions: "
+        + countOf(TriState.FALSE, TriState.BOTH));
+    appendListItem(sb, "Referenced Names: "
+        + countOf(TriState.BOTH, TriState.TRUE));
+    appendListItem(sb, "Referenced Classes: "
+        + countOf(TriState.TRUE, TriState.TRUE));
+    appendListItem(sb, "Referenced Functions: "
+        + countOf(TriState.FALSE, TriState.TRUE));
+    sb.append("</ul>");
+
+
+    for (int i = 0; i < generations.size(); i++) {
+      Set<JsName> gen = generations.get(i);
+      sb.append("GENERATION " + i + ": " + gen.size() + " names\n<ul>");
+      for (JsName jsName : gen) {
+        appendListItem(sb, nameLink(jsName.name));
+      }
+      sb.append("</ul>");
+    }
+
+    sb.append("ALL NAMES<ul>\n");
+    for (JsName node : allNames.values()) {
+      sb.append("<li>" + nameAnchor(node.name) + "<ul>");
+      if (node.prototypeNames.size() > 0) {
+        sb.append("<li>PROTOTYPES: ");
+        Iterator<String> protoIter = node.prototypeNames.iterator();
+        while (protoIter.hasNext()) {
+          sb.append(protoIter.next());
+          if (protoIter.hasNext()) {
+            sb.append(", ");
+          }
+        }
+      }
+      if (node.refersTo.size() > 0) {
+        sb.append("<li>REFERS TO: ");
+        Iterator<String> toIter = node.refersTo.iterator();
+        while (toIter.hasNext()) {
+          sb.append(nameLink(toIter.next()));
+          if (toIter.hasNext()) {
+            sb.append(", ");
+          }
+        }
+      }
+      if (node.referencedBy.size() > 0) {
+        sb.append("<li>REFERENCED BY: ");
+        Iterator<String> fromIter = node.referencedBy.iterator();
+        while (fromIter.hasNext()) {
+          sb.append(nameLink(fromIter.next()));
+          if (fromIter.hasNext()) {
+            sb.append(", ");
+          }
+        }
+      }
+      sb.append("</li>");
+      sb.append("</ul></li>");
+    }
+    sb.append("</ul>");
+    sb.append("</body></html>");
+
+    return sb.toString();
+  }
+
+  private void appendListItem(StringBuilder sb, String text) {
+    sb.append("<li>" + text + "</li>\n");
+  }
+
+  private String nameLink(String name) {
+    return "<a href=\"#" + name + "\">" + name + "</a>";
+  }
+
+  private String nameAnchor(String name) {
+    return "<a name=\"" + name + "\">" + name + "</a>";
+  }
+
+  /**
+   * Looks up a {@link JsName} by name, optionally creating one if it doesn't
+   * already exist.
+   *
+   * @param name A fully qualified name
+   * @param canCreate Whether to create the object if necessary
+   * @return The {@code JsName} object, or null if one can't be found and
+   *   can't be created.
+   */
+  private JsName getName(String name, boolean canCreate) {
+    if (canCreate) {
+      createName(name);
+    }
+    return allNames.get(name);
+  }
+
+  /**
+   * Creates a {@link JsName} for the given name if it doesn't already
+   * exist.
+   *
+   * @param name A fully qualified name
+   */
+  private void createName(String name) {
+    JsName jsn = allNames.get(name);
+    if (jsn == null) {
+      jsn = new JsName();
+      jsn.name = name;
+      allNames.put(name, jsn);
+    }
+  }
+
+  /**
+   * Adds mutual references between all known global names and their parent
+   * names. (e.g. between <code>a.b.c</code> and <code>a.b</code>).
+   */
+  private void referenceParentNames() {
+    // Duplicate set of nodes to process so we don't modify set we are
+    // currently iterating over
+    Set<JsName> allNamesCopy = Sets.newHashSet(allNames.values());
+
+    for (JsName name : allNamesCopy) {
+      String curName = name.name;
+      JsName curJsName = name;
+      while (curName.indexOf('.') != -1) {
+        String parentName = curName.substring(0, curName.lastIndexOf('.'));
+        if (!globalNames.contains(parentName)) {
+          JsName parentJsName = getName(parentName, true);
+
+          curJsName.refersTo.add(parentName);
+          parentJsName.referencedBy.add(curName);
+
+          parentJsName.refersTo.add(curName);
+          curJsName.referencedBy.add(parentName);
+
+          curJsName = parentJsName;
+        }
+        curName = parentName;
+      }
+    }
+  }
+
+  /**
+   * Creates name information for the current node during a traversal.
+   *
+   * @param t The node traversal
+   * @param n The current node
+   * @param parent The parent of n
+   * @return The name information, or null if the name is irrelevant to this
+   *     pass
+   */
+  private NameInformation createNameInformation(NodeTraversal t, Node n,
+      Node parent) {
+    // Build the full name and find its root node by iterating down through all
+    // GETPROP/GETELEM nodes.
+    String name = "";
+    Node rootNameNode = n;
+    boolean bNameWasShortened = false;
+    while (NodeUtil.isGet(rootNameNode)) {
+      Node prop = rootNameNode.getLastChild();
+      if (rootNameNode.getType() == Token.GETPROP) {
+        name = "." + prop.getString() + name;
+      } else {
+        // We consider the name to be "a.b" in a.b['c'] or a.b[x].d.
+        bNameWasShortened = true;
+        name = "";
+      }
+      rootNameNode = rootNameNode.getFirstChild();
+    }
+
+    // Check whether this is a class-defining call. Classes may only be defined
+    // in the global scope.
+    if (NodeUtil.isCall(parent) && t.inGlobalScope()) {
+      SubclassRelationship classes =
+          compiler.getCodingConvention().getClassesDefinedByCall(parent);
+      if (classes != null) {
+        NameInformation nameInfo = new NameInformation();
+        nameInfo.name = classes.subclassName;
+        nameInfo.onlyAffectsClassDef = true;
+        nameInfo.superclass = classes.superclassName;
+        return nameInfo;
+      }
+    }
+
+    switch (rootNameNode.getType()) {
+      case Token.NAME:
+        // Check whether this is an assignment to a prototype property
+        // of an object defined in the global scope.
+        if (!bNameWasShortened &&
+            n.getType() == Token.GETPROP &&
+            parent.getType() == Token.ASSIGN &&
+            "prototype".equals(n.getLastChild().getString())) {
+          if (createNameInformation(t, n.getFirstChild(), n) != null) {
+            name = rootNameNode.getString() + name;
+            name = name.substring(0, name.length() - PROTOTYPE_SUFFIX_LEN);
+            NameInformation nameInfo = new NameInformation();
+            nameInfo.name = name;
+            return nameInfo;
+          } else {
+            return null;
+          }
+        }
+        return createNameInformation(
+            rootNameNode.getString() + name, t.getScope(), rootNameNode);
+      case Token.THIS:
+        if (t.inGlobalScope()) {
+          NameInformation nameInfo = new NameInformation();
+          if (name.indexOf('.') == 0) {
+            nameInfo.name = name.substring(1);  // strip leading "."
+          } else {
+            nameInfo.name = name;
+          }
+          nameInfo.isExternallyReferenceable = true;
+          return nameInfo;
+        }
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Creates name information for a particular qualified name that occurs in a
+   * particular scope.
+   *
+   * @param name A qualified name (e.g. "x" or "a.b.c")
+   * @param scope The scope in which {@code name} occurs
+   * @param rootNameNode The NAME node for the first token of {@code name}
+   * @return The name information, or null if the name is irrelevant to this
+   *     pass
+   */
+  private NameInformation createNameInformation(
+      String name, Scope scope, Node rootNameNode) {
+    // Check the scope. Currently we're only looking at globally scoped vars.
+    String rootName = rootNameNode.getString();
+    Var v = scope.getVar(rootName);
+    boolean isExtern = (v == null && externalNames.contains(rootName));
+    boolean isGlobalRef = (v != null && v.isGlobal()) || isExtern ||
+        rootName.equals(WINDOW);
+    if (!isGlobalRef) {
+      return null;
+    }
+
+    NameInformation nameInfo = new NameInformation();
+
+    // If a prototype property or method, fill in prototype information.
+    int idx = name.indexOf(PROTOTYPE_SUBSTRING);
+    if (idx != -1) {
+      nameInfo.isPrototype = true;
+      nameInfo.prototypeClass = name.substring(0, idx);
+      nameInfo.prototypeProperty = name.substring(
+          idx + PROTOTYPE_SUBSTRING_LEN);
+    }
+
+    nameInfo.name = name;
+    nameInfo.isExternallyReferenceable =
+        isExtern || isExternallyReferenceable(scope, name);
+    return nameInfo;
+  }
+
+  /**
+   * Checks whether a name can be referenced outside of the compiled code.
+   * These names will be the root of dependency trees.
+   *
+   * @param scope The current variable scope
+   * @param name The name
+   * @return True if can be referenced outside
+   */
+  private boolean isExternallyReferenceable(Scope scope, String name) {
+    if (compiler.getCodingConvention().isExported(name)) {
+      return true;
+    }
+    if (scope.isLocal()) {
+      return false;
+    }
+    for (String s : globalNames) {
+      if (name.startsWith(s)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Gets the nearest enclosing dependency scope, or null if there isn't one.
+   */
+  private NameInformation getDependencyScope(Node n) {
+    for (Node node : n.getAncestors()) {
+      NameInformation ref = scopes.get(node);
+      if (ref != null) {
+        return ref;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get dependency scope defined by the enclosing function, or null.
+   * If enclosing function is anonymous, determine scope based on its
+   * parent if the parent node is a variable declaration or
+   * assignment.
+   */
+  private NameInformation getEnclosingFunctionDependencyScope(NodeTraversal t) {
+    Node function = t.getEnclosingFunction();
+    if (function == null) {
+      return null;
+    }
+
+    NameInformation ref = scopes.get(function);
+    if (ref != null) {
+      return ref;
+    }
+
+    // anonymous function.  try to get a name from the parent var
+    // declaration or assignment.
+    Node parent = function.getParent();
+    if (parent != null) {
+      if (parent.getType() == Token.NAME) {
+        return scopes.get(parent);
+      }
+
+      if (parent.getType() == Token.ASSIGN) {
+        Node gramp = parent.getParent();
+        if (gramp != null && gramp.getType() == Token.EXPR_RESULT) {
+          return scopes.get(gramp);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Calculates all of the references. The results will be stored in the
+   * generations member variable.
+   */
+  private void calculateReferences() {
+    // Starting point is window + all externally defined names
+
+    Set<JsName> curGeneration = Sets.newHashSet();
+
+    JsName window = getName(WINDOW, true);
+    window.generation = 0;
+    window.referenced = true;
+    curGeneration.add(window);
+    JsName function = getName(FUNCTION, true);
+    function.generation = 0;
+    function.referenced = true;
+    curGeneration.add(function);
+
+    for (String s : externalNames) {
+      JsName jsn = getName(s, true);
+      if (jsn.refersTo.size() > 0) {
+        jsn.generation = 0;
+        jsn.referenced = true;
+        curGeneration.add(jsn);
+      }
+    }
+    generations.add(curGeneration);
+
+    // Iterate through, adding more referenced nodes
+    // capped at 100 for safety
+    int iters = 0;
+    while (curGeneration.size() > 0 && iters < 100) {
+      curGeneration = referenceMore(curGeneration);
+      generations.add(curGeneration);
+      iters++;
+    }
+  }
+
+
+  /**
+   * Takes a set of JsNode and finds all of the nodes that they reference that
+   * haven't already been marked as referenced. Marks the new nodes as
+   * referenced and returns the newly marked nodes
+   *
+   * @param lastGen Starting nodes
+   * @return Newly marked nodes
+   */
+  private Set<JsName> referenceMore(Set<JsName> lastGen) {
+    Set<JsName> referenced = Sets.newTreeSet();
+    for (JsName src : lastGen) {
+      for (String s : src.refersTo) {
+        JsName target = allNames.get(s);
+        if (target != null && !target.referenced) {
+          target.referenced = true;
+          target.generation = src.generation + 1;
+          referenced.add(target);
+        }
+      }
+    }
+    return referenced;
+  }
+
+  /**
+   * Enum for saying a value can be true, false, or either (cleaner than using a
+   * Boolean with null)
+   */
+  private enum TriState {
+    /** If value is true */
+    TRUE,
+    /** If value is false */
+    FALSE,
+    /** If value can be true or false */
+    BOTH
+  }
+
+  /**
+   * Gets the count of nodes matching the criteria
+   *
+   * @param isClass Whether the node is a class
+   * @param referenced Whether the node is referenced
+   * @return Number of matches
+   */
+  private int countOf(TriState isClass, TriState referenced) {
+    int count = 0;
+    for (JsName name : allNames.values()) {
+
+      boolean nodeIsClass = name.prototypeNames.size() > 0;
+
+      boolean classMatch = isClass == TriState.BOTH
+          || (nodeIsClass && isClass == TriState.TRUE)
+          || (!nodeIsClass && isClass == TriState.FALSE);
+
+      boolean referenceMatch = referenced == TriState.BOTH
+          || (name.referenced && referenced == TriState.TRUE)
+          || (!name.referenced && referenced == TriState.FALSE);
+
+      if (classMatch && referenceMatch && !name.externallyDefined) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+
+  /**
+   * Extract a list of replacement nodes to use.
+   */
+  private List<Node> getSideEffectNodes(Node n) {
+    List<Node> subexpressions = Lists.newArrayList();
+    NodeTraversal.traverse(
+        compiler, n,
+        new GatherSideEffectSubexpressionsCallback(
+            compiler,
+            new CopySideEffectSubexpressions(compiler, subexpressions)));
+
+    List<Node> replacements =
+        Lists.newArrayListWithExpectedSize(subexpressions.size());
+    for (Node subexpression : subexpressions) {
+      replacements.add(new Node(Token.EXPR_RESULT, subexpression));
+    }
+    return replacements;
+  }
+
+  /**
+   * Replace n with a simpler expression, while preserving program
+   * behavior.
+   *
+   * If the n's value is used, replace it with its rhs; otherwise
+   * replace it with the subexpressions that have side effects.
+   */
+  private void replaceWithRhs(Node parent, Node n) {
+    if (valueConsumedByParent(n, parent)) {
+      // parent reads from n directly; replace it with n's rhs + lhs
+      // subexpressions with side effects.
+      List<Node> replacements = getRhsSubexpressions(n);
+      List<Node> newReplacements = Lists.newArrayList();
+      for (int i = 0; i < replacements.size() - 1; i++) {
+        newReplacements.addAll(getSideEffectNodes(replacements.get(i)));
+      }
+      Node valueExpr = replacements.get(replacements.size() - 1);
+      valueExpr.detachFromParent();
+      newReplacements.add(valueExpr);
+      changeProxy.replaceWith(
+          parent, n, collapseReplacements(newReplacements));
+    } else if (n.getType() == Token.ASSIGN && parent.getType() != Token.FOR) {
+      // assignment appears in a RHS expression.  we have already
+      // considered names in the assignment's RHS as being referenced;
+      // replace the assignment with its RHS.
+      // TODO(user) make the pass smarter about these cases and/or run
+      // this pass and RemoveConstantExpressions together in a loop.
+      Node replacement = n.getLastChild();
+      replacement.detachFromParent();
+      changeProxy.replaceWith(parent, n, replacement);
+    } else {
+      replaceTopLevelExpressionWithRhs(parent, n);
+    }
+  }
+
+  /**
+   * Simplify a toplevel expression, while preserving program
+   * behavior.
+   */
+  private void replaceTopLevelExpressionWithRhs(Node parent, Node n) {
+    // validate inputs
+    switch (parent.getType()) {
+      case Token.BLOCK:
+      case Token.SCRIPT:
+      case Token.FOR:
+      case Token.LABEL:
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "Unsupported parent node type in replaceWithRhs " +
+            Token.name(parent.getType()));
+    }
+
+    switch (n.getType()) {
+      case Token.EXPR_RESULT:
+      case Token.FUNCTION:
+      case Token.VAR:
+        break;
+      case Token.ASSIGN:
+        Preconditions.checkArgument(
+            parent.getType() == Token.FOR,
+            "Unsupported assignment in replaceWithRhs. parent: " +
+            Token.name(parent.getType()));
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "Unsupported node type in replaceWithRhs " +
+            Token.name(n.getType()));
+    }
+
+    // gather replacements
+    List<Node> replacements = Lists.newArrayList();
+    for (Node rhs : getRhsSubexpressions(n)) {
+      replacements.addAll(getSideEffectNodes(rhs));
+    }
+
+    if (parent.getType() == Token.FOR) {
+      // tweak replacements array s.t. it is a single expression node.
+      if (replacements.isEmpty()) {
+        replacements.add(new Node(Token.EMPTY));
+      } else {
+        Node expr = collapseReplacements(replacements);
+        replacements.clear();
+        replacements.add(expr);
+      }
+    }
+
+    changeProxy.replaceWith(parent, n, replacements);
+  }
+
+  /**
+   * Determine if the parent reads the value of a child expression
+   * directly.  This is true children used in predicates, RETURN
+   * statements and, rhs of variable declarations and assignments.
+   *
+   * In the case of:
+   * if (a) b else c
+   *
+   * This method returns true for "a", and false for "b" and "c": the
+   * IF expression does something special based on "a"'s value.  "b"
+   * and "c" are effectivelly outputs.  Same logic applies to FOR,
+   * WHILE and DO loop predicates.  AND/OR/HOOK expressions are
+   * syntactic sugar for IF statements; therefore this method returns
+   * true for the predicate and false otherwise.
+   */
+  private boolean valueConsumedByParent(Node n, Node parent) {
+    if (NodeUtil.isAssignmentOp(parent)) {
+      return parent.getLastChild() == n;
+    }
+
+    switch (parent.getType()) {
+      case Token.NAME:
+      case Token.RETURN:
+        return true;
+      case Token.AND:
+      case Token.OR:
+      case Token.HOOK:
+        return parent.getFirstChild() == n;
+      case Token.FOR:
+        return parent.getFirstChild().getNext() == n;
+      case Token.IF:
+      case Token.WHILE:
+        return parent.getFirstChild() == n;
+      case Token.DO:
+        return parent.getLastChild() == n;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Merge a list of nodes into a single expression.  The value of the
+   * new expression is determined by the last expression in the list.
+   */
+  private Node collapseReplacements(List<Node> replacements) {
+    Node expr = null;
+    for (Node rep : replacements) {
+      if (rep.getType() == Token.EXPR_RESULT) {
+        rep = rep.getFirstChild();
+        rep.detachFromParent();
+      }
+
+      if (expr == null) {
+        expr = rep;
+      } else {
+        expr = new Node(Token.COMMA, expr, rep);
+      }
+    }
+
+    return expr;
+  }
+
+  /**
+   * Extract a list of subexpressions that act as right hand sides.
+   */
+  private List<Node> getRhsSubexpressions(Node n) {
+    switch (n.getType()) {
+      case Token.EXPR_RESULT:
+        // process body
+        return getRhsSubexpressions(n.getFirstChild());
+      case Token.FUNCTION:
+        // function nodes have no rhs
+        return Collections.emptyList();
+      case Token.NAME:
+        {
+          // parent is a var node.  rhs is first child
+          Node rhs = n.getFirstChild();
+          if (rhs != null) {
+            return Lists.newArrayList(rhs);
+          } else {
+            return Collections.emptyList();
+          }
+        }
+      case Token.ASSIGN:
+        {
+          // add lhs and rhs expressions - lhs may be a complex expression
+          Node lhs = n.getFirstChild();
+          Node rhs = lhs.getNext();
+          return Lists.newArrayList(lhs, rhs);
+        }
+      case Token.VAR:
+        {
+          // recurse on all children
+          List<Node> nodes = Lists.newArrayList();
+          for (Node child : n.children()) {
+            nodes.addAll(getRhsSubexpressions(child));
+          }
+          return nodes;
+        }
+      default:
+        throw new IllegalArgumentException("AstChangeProxy::getRhs " + n);
+    }
+  }
+}

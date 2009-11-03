@@ -1,0 +1,175 @@
+<!--
+ Copyright 2009 Google Inc.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<project name="compiler" basedir="." default="jar">
+
+  <!-- define other variables -->
+  <property name="src.dir" value="${basedir}/src" />
+  <property name="test.dir" value="${basedir}/test" />
+  <property name="externs.dir" value="${basedir}/externs" />
+  <property name="build.dir" value="${basedir}/build" />
+  <property name="classes.dir" value="${build.dir}/classes" />
+  <property name="testClasses.dir" value="${build.dir}/test" />
+  <property name="flags.xml" value="${build.dir}/flags.xml" />
+  <property name="javadoc.dir" value="${build.dir}/javadoc" />
+  <property name="stylesheetfile" value="" />
+  <property name="lib.dir" value="${basedir}/lib" />
+  <property name="tools.dir" value="${basedir}/tools" />
+  <property name="jarfile" value="${build.dir}/${ant.project.name}.jar" />
+
+  <!-- set the classpath for the project        -->
+  <!-- this includes the generated class files -->
+  <!-- and every jar in the /lib directory     -->
+  <path id="classpath.path">
+    <pathelement location="${classes.dir}" />
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+  </path>
+
+  <target name="clean" description="delete generated files">
+    <delete dir="${build.dir}" />
+  </target>
+
+  <target name="compile" description="compile the source code">
+    <mkdir dir="${classes.dir}" />
+    <javac srcdir="${src.dir}"
+           destdir="${classes.dir}"
+           excludes=".svn">
+      <classpath refid="classpath.path" />
+    </javac>
+
+    <!-- Move Messages.properties where ScriptRuntime.java expects it. -->
+    <mkdir dir="${classes.dir}/rhino_ast/java/com/google/javascript/rhino/" />
+    <copy file="${src.dir}/com/google/javascript/rhino/Messages.properties"
+          todir="${classes.dir}/rhino_ast/java/com/google/javascript/rhino/" />
+
+    <!-- Move ParserConfig.properties where ParserRunner.java expects it. -->
+    <copy file="${src.dir}/com/google/javascript/jscomp/parsing/ParserConfig.properties"
+          todir="${classes.dir}/com/google/javascript/jscomp/parsing" />
+  </target>
+
+  <target name="apt">
+    <mkdir dir="${build.dir}" />
+    <apt srcdir="${src.dir}"
+         compile="false"
+         factory="com.google.common.flags.FlagProcessorFactory"
+         >
+      <classpath>
+        <pathelement location="${lib.dir}/google_common_deploy.jar" />
+        <pathelement location="${tools.dir}/FlagProcessorFactory_deploy.jar" />
+      </classpath>
+      <compilerarg value="-Aflags.path=${flags.xml}" />
+    </apt>
+  </target>
+
+  <target name="jar"
+          depends="compile,apt"
+          description="package compiler as an executable jar">
+    <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" />
+    <jar destfile="${jarfile}" update="true">
+      <zipfileset src="${lib.dir}/google_common_deploy.jar"
+                  excludes="flags.xml" />
+      <zipfileset src="${lib.dir}/google_compiled_protos_deploy.jar"
+                  excludes="flags.xml" />
+      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar"
+                  excludes="flags.xml" />
+      <fileset dir="${classes.dir}" />
+      <fileset dir="${build.dir}" includes="flags.xml,externs.zip" />
+      <manifest>
+        <attribute name="Main-Class"
+                   value="com.google.javascript.jscomp.CompilerRunner" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="compile-tests"
+          depends="compile"
+          description="compile the JUnit tests">
+    <mkdir dir="${testClasses.dir}" />
+    <javac srcdir="${test.dir}"
+           destdir="${testClasses.dir}"
+           excludes=".svn">
+      <classpath refid="classpath.path" />
+    </javac>
+  </target>
+
+  <target name="all-classes-jar"
+          depends="compile,compile-tests,apt"
+          description="package the compiler and its tests into one jar">
+    <jar destfile="${jarfile}" update="true">
+      <zipfileset src="${lib.dir}/google_common_deploy.jar"
+                  excludes="flags.xml" />
+      <zipfileset src="${lib.dir}/google_compiled_protos_deploy.jar"
+                  excludes="flags.xml" />
+      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar"
+                  excludes="flags.xml" />
+      <fileset dir="${classes.dir}" />
+      <fileset dir="${testClasses.dir}" />
+    </jar>
+  </target>
+
+  <target name="test"
+          depends="compile-tests"
+          description="compile and execute JUnit tests">
+    <junit>
+      <classpath refid="classpath.path" />
+      <classpath>
+        <pathelement location="${build.dir}/test" />
+      </classpath>
+      <formatter type="plain" usefile="false" />
+      <batchtest>
+        <fileset dir="${build.dir}/test">
+          <include name="**/*Test.class" />
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="javadoc"
+          description="generate Javadoc">
+    <mkdir dir="${javadoc.dir}" />
+    <javadoc
+         destdir="${javadoc.dir}"
+         author="false"
+         protected="true"
+         windowtitle="Compiler"
+         stylesheetfile="${stylesheetfile}">
+      <sourcepath>
+        <pathelement location="${src.dir}" />
+      </sourcepath>
+      <classpath refid="classpath.path" />
+      <link href="http://java.sun.com/javase/6/docs/api/" />
+      <bottom><![CDATA[
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      ]]>
+      </bottom>
+    </javadoc>
+  </target>
+
+</project>

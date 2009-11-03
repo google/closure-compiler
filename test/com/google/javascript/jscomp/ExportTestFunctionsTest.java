@@ -1,0 +1,77 @@
+/*
+ * Copyright 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.google.javascript.jscomp;
+
+/**
+ * Tests for ExportTestFunctions.
+ *
+*
+ */
+public class ExportTestFunctionsTest extends CompilerTestCase {
+
+  private static final String EXTERNS =
+      "function google_exportSymbol(a, b) {}; ";
+
+  private static final String TEST_FUNCTIONS_WITH_NAMES =
+      "function Foo(arg) {}; "
+      + "function setUp(arg3) {}; "
+      + "function tearDown(arg, arg2) {}; "
+      + "function testBar(arg) {}";
+
+  public ExportTestFunctionsTest() {
+    super(EXTERNS);
+  }
+
+  @Override
+  protected CompilerPass getProcessor(Compiler compiler) {
+    return new ExportTestFunctions(compiler, "google_exportSymbol");
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    // This pass only runs once.
+    return 1;
+  }
+
+  public void testFunctionsAreExported() {
+    test(TEST_FUNCTIONS_WITH_NAMES,
+        "function Foo(arg){}; "
+        + "function setUp(arg3){} google_exportSymbol(\"setUp\",setUp);; "
+        + "function tearDown(arg,arg2) {} "
+        + "google_exportSymbol(\"tearDown\",tearDown);; "
+        + "function testBar(arg){} google_exportSymbol(\"testBar\",testBar)"
+    );
+  }
+
+  // Helper functions
+  public void testBasicTestFunctionsAreExported() {
+    test("function Foo() {function testA() {}}",
+         "function Foo() {function testA(){}}");
+    test("function setUp() {}",
+         "function setUp(){} google_exportSymbol(\"setUp\",setUp)");
+    test("function setUpPage() {}",
+         "function setUpPage(){} google_exportSymbol(\"setUpPage\",setUpPage)");
+    test("function tearDown() {}",
+         "function tearDown(){} google_exportSymbol(\"tearDown\",tearDown)");
+    test("function tearDownPage() {}",
+         "function tearDownPage(){} google_exportSymbol(\"tearDownPage\"," +
+         "tearDownPage)");
+    test("function testBar() { function testB() {}}",
+         "function testBar(){function testB(){}}"
+             + "google_exportSymbol(\"testBar\",testBar)");
+    testSame("var testCase = {}; testCase.setUpPage = function() {}");
+  }
+}

@@ -1,0 +1,620 @@
+/*
+ * Copyright 2008 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+/**
+ * Tests for {@link CrossModuleCodeMotion}.
+ *
+*
+ */
+public class CrossModuleCodeMotionTest extends CompilerTestCase {
+
+  private static final String EXTERNS = "alert";
+
+  public CrossModuleCodeMotionTest() {
+    super(EXTERNS);
+  }
+
+  @Override
+  public CompilerPass getProcessor(Compiler compiler) {
+    return new CrossModuleCodeMotion(compiler, compiler.getModuleGraph());
+  }
+
+  public void testFunctionMovement1() {
+    // This tests lots of things:
+    // 1) f1 is declared in m1, and used in m2. Move it to m2
+    // 2) f2 is declared in m1, and used in m3 twice. Move it to m3
+    // 3) f3 is declared in m1, and used in m2+m3. It stays put
+    // 4) g declared in m1 and never used. It stays put
+    // 5) h declared in m2 and never used. It stays put
+    // 6) f4 declared in m1 and used in m2 as var. It moves to m2
+
+    JSModule[] modules = createModuleStar(
+      // m1
+      "function f1(a) { alert(a); }" +
+      "function f2(a) { alert(a); }" +
+      "function f3(a) { alert(a); }" +
+      "function f4() { alert(1); }" +
+      "function g() { alert('ciao'); }",
+      // m2
+      "f1('hi'); f3('bye'); var a = f4;" +
+      "function h(a) { alert('h:' + a); }",
+      // m3
+      "f2('hi'); f2('hi'); f3('bye');");
+
+    test(modules, new String[] {
+      // m1
+      "function f3(a) { alert(a); }" +
+      "function g() { alert('ciao'); }",
+      // m2
+      "function f4() { alert(1); }" +
+      "function f1(a) { alert(a); }" +
+      "f1('hi'); f3('bye'); var a = f4;" +
+      "function h(a) { alert('h:' + a); }",
+      // m3
+      "function f2(a) { alert(a); }" +
+      "f2('hi'); f2('hi'); f3('bye');",
+    });
+  }
+
+  public void testFunctionMovement2() {
+    // having f declared as a local variable should block the migration to m2
+    JSModule[] modules = createModuleStar(
+      // m1
+      "function f(a) { alert(a); }" +
+      "function g() {var f = 1; f++}",
+      // m2
+      "f(1);");
+
+    test(modules, new String[] {
+      // m1
+      "function g() {var f = 1; f++}",
+      // m2
+      "function f(a) { alert(a); }" +
+      "f(1);",
+    });
+  }
+
+  public void testFunctionMovement3() {
+    // having f declared as a arg should block the migration to m2
+    JSModule[] modules = createModuleStar(
+      // m1
+      "function f(a) { alert(a); }" +
+      "function g(f) {f++}",
+      // m2
+      "f(1);");
+
+    test(modules, new String[] {
+      // m1
+      "function g(f) {f++}",
+      // m2
+      "function f(a) { alert(a); }" +
+      "f(1);",
+    });
+  }
+
+  public void testFunctionMovement4() {
+    // Try out moving a function which returns a closure
+    JSModule[] modules = createModuleStar(
+      // m1
+      "function f(){return function(a){}}",
+      // m2
+      "var a = f();"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "function f(){return function(a){}}" +
+      "var a = f();",
+    });
+  }
+
+  public void testFunctionMovement5() {
+    // Try moving a recursive function [using factorials for kicks]
+    JSModule[] modules = createModuleStar(
+      // m1
+      "function f(n){return (n<1)?1:f(n-1)}",
+      // m2
+      "var a = f(4);"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "function f(n){return (n<1)?1:f(n-1)}" +
+      "var a = f(4);",
+    });
+  }
+
+  public void testFunctionMovement6() {
+    // Try out moving to the common ancestor
+    JSModule[] modules = createModuleChain(
+      // m1
+      "function f(){return 1}",
+      // m2
+      "var a = f();",
+      // m3
+      "var b = f();"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "function f(){return 1}" +
+      "var a = f();",
+      // m3
+      "var b = f();",
+    });
+  }
+
+  public void testFunctionMovement7() {
+    // Try out moving to the common ancestor with deeper ancestry chain
+    JSModule[] modules = createModules(
+      // m1
+      "function f(){return 1}",
+      // m2
+      "",
+      // m3
+      "var a = f();",
+      // m4
+      "var b = f();",
+      // m5
+      "var c = f();"
+    );
+
+
+    modules[1].addDependency(modules[0]);
+    modules[2].addDependency(modules[1]);
+    modules[3].addDependency(modules[1]);
+    modules[4].addDependency(modules[1]);
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "function f(){return 1}",
+      // m3
+      "var a = f();",
+      // m4
+      "var b = f();",
+      // m5
+      "var c = f();",
+    });
+  }
+
+  public void testFunctionMovement8() {
+    // Check what happens with named functions
+    JSModule[] modules = createModuleChain(
+      // m1
+      "var v = function f(){return 1}",
+      // m2
+      "v();"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "var v = function f(){return 1};" +
+      "v();",
+    });
+  }
+
+  public void testFunctionNonMovement1() {
+    // This tests lots of things:
+    // 1) we can't move it if it is a class with non-const attributes accessed
+    // 2) if it's in an if statement, we can't move it
+    // 3) if it's in an while statement, we can't move it [with some extra
+    // block elements]
+    testSame(createModuleStar(
+      // m1
+      "function f(){};f.prototype.bar=new f;" +
+      "if(a)function f2(){}" +
+      "{{while(a)function f3(){}}}",
+      // m2
+      "var a = new f();f2();f3();"));
+  }
+
+  public void testFunctionNonMovement2() {
+    // A generic case where 2 modules depend on the first one. But it's the
+    // common ancestor, so we can't move.
+    testSame(createModuleStar(
+      // m1
+      "function f(){return 1}",
+      // m2
+      "var a = f();",
+      // m3
+      "var b = f();"));
+  }
+
+  public void testClassMovement1() {
+    test(createModuleStar(
+             // m1
+             "function f(){} f.prototype.bar=function (){};",
+             // m2
+             "var a = new f();"),
+         new String[] {
+           "",
+           "function f(){} f.prototype.bar=function (){};" +
+           "var a = new f();"
+         });
+  }
+
+  public void testClassMovement2() {
+    // NOTE: this is the result of two iterations
+    test(createModuleChain(
+             // m1
+             "function f(){} f.prototype.bar=3; f.prototype.baz=5;",
+             // m2
+             "f.prototype.baq = 7;",
+             // m3
+             "f.prototype.baz = 9;",
+             // m4
+             "var a = new f();"),
+         new String[] {
+           // m1
+           "",
+           // m2
+           "",
+           // m3
+           "function f(){} f.prototype.bar=3; f.prototype.baz=5;" +
+           "f.prototype.baq = 7;" +
+           "f.prototype.baz = 9;",
+           // m4
+           "var a = new f();"
+         });
+  }
+
+  public void testClassMovement3() {
+    // NOTE: this is the result of two iterations
+    test(createModuleChain(
+             // m1
+             "var f = function() {}; f.prototype.bar=3; f.prototype.baz=5;",
+             // m2
+             "f = 7;",
+             // m3
+             "f = 9;",
+             // m4
+             "f = 11;"),
+         new String[] {
+           // m1
+           "",
+           // m2
+           "",
+           // m3
+           "var f = function() {}; f.prototype.bar=3; f.prototype.baz=5;" +
+           "f = 7;" +
+           "f = 9;",
+           // m4
+           "f = 11;"
+         });
+  }
+
+  public void testClassMovement4() {
+    testSame(createModuleStar(
+                 // m1
+                 "function f(){} f.prototype.bar=3; f.prototype.baz=5;",
+                 // m2
+                 "f.prototype.baq = 7;",
+                 // m3
+                 "var a = new f();"));
+  }
+
+  public void testClassMovement5() {
+    JSModule[] modules = createModules(
+        // m1
+        "function f(){} f.prototype.bar=3; f.prototype.baz=5;",
+        // m2
+        "",
+        // m3
+        "f.prototype.baq = 7;",
+        // m4
+        "var a = new f();");
+
+    modules[1].addDependency(modules[0]);
+    modules[2].addDependency(modules[1]);
+    modules[3].addDependency(modules[1]);
+
+    test(modules,
+         new String[] {
+           // m1
+           "",
+           // m2
+           "function f(){} f.prototype.bar=3; f.prototype.baz=5;",
+           // m3
+           "f.prototype.baq = 7;",
+           // m4 +
+           "var a = new f();"
+         });
+  }
+
+  public void testClassMovement6() {
+    test(createModuleChain(
+             // m1
+             "function Foo(){} function Bar(){} goog.inherits(Bar, Foo);" +
+             "new Foo();",
+             // m2
+             "new Bar();"),
+         new String[] {
+           // m1
+           "function Foo(){} new Foo();",
+           // m2
+           "function Bar(){} goog.inherits(Bar, Foo); new Bar();"
+         });
+  }
+
+  public void testClassMovement7() {
+    testSame(createModuleChain(
+                 // m1
+                 "function Foo(){} function Bar(){} goog.inherits(Bar, Foo);" +
+                 "new Bar();",
+                 // m2
+                 "new Foo();"));
+  }
+
+  public void testStubMethodMovement1() {
+    test(createModuleChain(
+             // m1
+             "function Foo(){} " +
+             "Foo.prototype.bar = JSCompiler_stubMethod(x);",
+             // m2
+             "new Foo();"),
+        new String[] {
+          // m1
+          "",
+          "function Foo(){} " +
+          "Foo.prototype.bar = JSCompiler_stubMethod(x);" +
+          "new Foo();"
+        });
+  }
+
+  public void testStubMethodMovement2() {
+    test(createModuleChain(
+             // m1
+             "function Foo(){} " +
+             "Foo.prototype.bar = JSCompiler_unstubMethod(x);",
+             // m2
+             "new Foo();"),
+        new String[] {
+          // m1
+          "",
+          "function Foo(){} " +
+          "Foo.prototype.bar = JSCompiler_unstubMethod(x);" +
+          "new Foo();"
+        });
+  }
+
+  public void testNoMoveSideEffectProperty() {
+    testSame(createModuleChain(
+                 // m1
+                 "function Foo(){} " +
+                 "Foo.prototype.bar = createSomething();",
+                 // m2
+                 "new Foo();"));
+  }
+
+  public void testAssignMovement() {
+    test(createModuleChain(
+             // m1
+             "var f = 3;" +
+             "f = 5;",
+             // m2
+             "var h = f;"),
+        new String[] {
+          // m1
+          "",
+          // m2
+          "var f = 3;" +
+          "f = 5;" +
+          "var h = f;"
+        });
+
+    // don't move nested assigns
+    testSame(createModuleChain(
+                 // m1
+                 "var f = 3;" +
+                 "var g = f = 5;",
+                 // m2
+                 "var h = f;"));
+  }
+
+  public void testNoClassMovement2() {
+    test(createModuleChain(
+             // m1
+             "var f = {};" +
+             "f.h = 5;",
+             // m2
+             "var h = f;"),
+        new String[] {
+          // m1
+          "",
+          // m2
+          "var f = {};" +
+          "f.h = 5;" +
+          "var h = f;"
+        });
+
+    // don't move nested getprop assigns
+    testSame(createModuleChain(
+                 // m1
+                 "var f = {};" +
+                 "var g = f.h = 5;",
+                 // m2
+                 "var h = f;"));
+  }
+
+  public void testLiteralMovement1() {
+    test(createModuleChain(
+             // m1
+             "var f = {'hi': 'mom', 'bye': function() {}};",
+             // m2
+             "var h = f;"),
+        new String[] {
+          // m1
+          "",
+          // m2
+          "var f = {'hi': 'mom', 'bye': function() {}};" +
+          "var h = f;"
+        });
+  }
+
+  public void testLiteralMovement2() {
+    testSame(createModuleChain(
+                 // m1
+                 "var f = {'hi': 'mom', 'bye': goog.nullFunction};",
+                 // m2
+                 "var h = f;"));
+  }
+
+  public void testLiteralMovement3() {
+    test(createModuleChain(
+             // m1
+             "var f = ['hi', function() {}];",
+             // m2
+             "var h = f;"),
+        new String[] {
+          // m1
+          "",
+          // m2
+          "var f = ['hi', function() {}];" +
+          "var h = f;"
+        });
+  }
+
+  public void testLiteralMovement4() {
+    testSame(createModuleChain(
+                 // m1
+                 "var f = ['hi', goog.nullFunction];",
+                 // m2
+                 "var h = f;"));
+  }
+
+  public void testVarMovement1() {
+    // test moving a variable
+    JSModule[] modules = createModuleStar(
+      // m1
+      "var a = 0;",
+      // m2
+      "var x = a;"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "var a = 0;" +
+      "var x = a;",
+    });
+  }
+
+  public void testVarMovement2() {
+    // Test moving 1 variable out of the block
+    JSModule[] modules = createModuleStar(
+      // m1
+      "var a = 0, b = 1, c = 2;",
+      // m2
+      "var x = b;"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "var a = 0, c = 2;",
+      // m2
+      "var b = 1;" +
+      "var x = b;"
+    });
+  }
+
+  public void testVarMovement3() {
+    // Test moving all variables out of the block
+    JSModule[] modules = createModuleStar(
+      // m1
+      "var a = 0, b = 1;",
+      // m2
+      "var x = a + b;"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "var b = 1;" +
+      "var a = 0;" +
+      "var x = a + b;"
+    });
+  }
+
+
+  public void testVarMovement4() {
+    // Test moving a function
+    JSModule[] modules = createModuleStar(
+      // m1
+      "var a = function(){alert(1)};",
+      // m2
+      "var x = a;"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "var a = function(){alert(1)};" +
+      "var x = a;"
+    });
+  }
+
+
+  public void testVarMovement5() {
+    // Don't move a function outside of scope
+    testSame(createModuleStar(
+      // m1
+      "var a = alert;",
+      // m2
+      "var x = a;"));
+  }
+
+  public void testVarMovement6() {
+    // Test moving a var with no assigned value
+    JSModule[] modules = createModuleStar(
+      // m1
+      "var a;",
+      // m2
+      "var x = a;"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "var a;" +
+      "var x = a;"
+    });
+  }
+
+  public void testVarMovement7() {
+    // Don't move a variable higher in the dependency tree
+    testSame(createModuleStar(
+      // m1
+      "function f() {g();}",
+      // m2
+      "function g(){};"));
+  }
+}

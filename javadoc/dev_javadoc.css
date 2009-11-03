@@ -1,0 +1,109 @@
+/* Javadoc style sheet  */
+/* Author:  Doug Kramer */
+/* Purpose: For use with Sun Javadoc tool, to define colors, fonts and other style attributes for Google look */
+/*          Apply by specifying javadoc option "-stylesheetfile dev_javadoc.css" */
+
+body {
+	font-family: arial, sans-serif;
+	background-color:#fff;
+	font-size: small;
+	margin: 3px 8px 8px 8px;   /* Increasing top margin moves "All Classes" down in lower left frame, */
+    color:#000;                /* but unnecessarily moves increases gap in other 2 frames             */
+    }
+
+/* Needed to turn off "border=1" */
+table {
+    border: none;   
+    border-collapse:  collapse;
+    }
+
+/* Need "th" to bypass "bgcolor" embedded in <tr> */
+.TableSubHeadingColor th,
+.TableHeadingColor th,
+.TableRowColor td {
+    background: #E5ECF9;               /* light blue */
+    border-top: #3366CC solid thin;    /* dark blue */
+    border-bottom: #3366CC solid thin;
+    border-left: #3366CC solid thin;
+    border-right: #3366CC solid thin;
+    font-family: arial, sans-serif;
+    font-size: 100%;
+    }
+
+.TableHeadingColor th {
+   /*  border-bottom: none; */
+   /*  border-left: none;   */
+   /*  border-right: none;  */
+    }
+
+.TableRowColor td {
+    background: #FFFFFF;
+    padding: 6px 6px 6px 12px;
+    }
+
+/* Need "b" to bypass "font-size=+2" between <th> and <b> */
+.TableHeadingColor th b,
+.TableSubHeadingColor th b {
+    font-size: 10pt;
+}
+
+/* Font used in left-hand frame lists */
+.FrameTitleFont   { font-size: 105%; font-family: Helvetica, Arial, sans-serif; }
+.FrameHeadingFont { font-size: 100%; font-family: Helvetica, Arial, sans-serif; 
+                    font-weight: bold; margin-top: .3em; }
+.FrameItemFont    { font-size: 100%; font-family: Helvetica, Arial, sans-serif; }
+
+/* Navigation bar fonts and colors */
+.NavBarCell1      { padding-left: 2px; padding-right: 2px; font-size: 12px;
+                    background-color:#EEEEFF;} /* Light mauve */
+.NavBarCell1Rev   { background-color:#00008B;} /* Dark Blue */
+.NavBarFont1      { font-family: Arial, Helvetica, sans-serif; color:#000000; font-size: 120%;}
+.NavBarFont1Rev   { font-family: Arial, Helvetica, sans-serif; color:#FFFFFF; font-size: 120%;}
+
+.NavBarCell2      { font-family: Arial, Helvetica, sans-serif; background-color:#EEEEFF;}
+.NavBarCell3      { font-family: Arial, Helvetica, sans-serif; background-color:#EEEEFF;}
+
+.NavBarCell1 em   { font-size: 14px; }
+.NavBarCell2 b    { font-size:  9px; }
+.NavBarCell3 b    { font-size:  9px; }
+
+#searchbox {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  }
+
+#navheader {
+  font-weight: bold;
+  margin-top: -1em;
+  margin-bottom: 0.3em;
+  }
+
+#doc_title{  /* in header */
+  font-size:large;
+  font-weight:bold;
+  border-top: 1px solid;
+  background-color: #e5ecf9;
+  border-color: #3366CC;
+  margin:5px 0px 16px 0px;
+  padding:1px 0 1px 3px;
+  }
+
+#footer{
+  height: 55px;
+  padding-top: 20px;
+  clear:both;
+  }
+
+#footerlogo{  /* in footer */
+  position: absolute;
+  width: 175px;
+  padding:0;
+  margin:0;
+  left:10px;
+  }
+	
+#copyright {  /* in footer */
+  text-align: center;
+  margin:0px;
+  padding-top:8px;
+  }

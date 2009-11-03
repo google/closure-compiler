@@ -1,0 +1,407 @@
+/*
+ * Copyright 2008 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import com.google.common.collect.Maps;
+
+import com.google.javascript.rhino.Node;
+
+import java.util.Map;
+
+/**
+ * Unit test for AmbiguateProperties Compiler pass.
+ *
+*
+ */
+public class AmbiguatePropertiesTest extends CompilerTestCase {
+  private AmbiguateProperties lastPass;
+
+  private static final String EXTERNS =
+      "Function.prototype.inherits=function(){};" +
+      "prop.toString;" +
+      "var google = { gears: { factory: {}, workerPool: {} } };";
+
+  public AmbiguatePropertiesTest() {
+    super(EXTERNS);
+  }
+
+  @Override
+  public CompilerPass getProcessor(final Compiler compiler) {
+    return new CompilerPass() {
+      public void process(Node externs, Node root) {
+        new TypeCheck(compiler,
+            new SemanticReverseAbstractInterpreter(
+                compiler.getCodingConvention(), compiler.getTypeRegistry()),
+            compiler.getTypeRegistry())
+            .processForTesting(externs, root);
+
+        lastPass = new AmbiguateProperties(compiler, new char[]{'$'});
+        lastPass.process(externs, root);
+      }
+    };
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    return new CompilerOptions(); // no missing properties check
+  }
+
+  public void testOneVar() {
+    test("/** @constructor */ var Foo = function(){};Foo.prototype.b = 0;",
+         "var Foo = function(){};Foo.prototype.a = 0;");
+  }
+
+  public void testTwoVar() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.prototype.z=0;\n"
+        + "Foo.prototype.z=0;\n"
+        + "Foo.prototype.x=0;";
+    String output = ""
+        + "var Foo = function(){};\n"
+        + "Foo.prototype.a=0;\n"
+        + "Foo.prototype.a=0;\n"
+        + "Foo.prototype.b=0;";
+    test(js, output);
+  }
+
+  public void testTwoIndependentVar() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.prototype.b = 0;\n"
+        + "/** @constructor */ var Bar = function(){};\n"
+        + "Bar.prototype.c = 0;";
+    String output = ""
+        + "var Foo = function(){};"
+        + "Foo.prototype.a=0;"
+        + "var Bar = function(){};"
+        + "Bar.prototype.a=0;";
+    test(js, output);
+  }
+
+  public void testTwoTypesTwoVar() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.prototype.r = 0;\n"
+        + "Foo.prototype.g = 0;\n"
+        + "/** @constructor */ var Bar = function(){};\n"
+        + "Bar.prototype.c = 0;"
+        + "Bar.prototype.r = 0;";
+    String output = ""
+        + "var Foo = function(){};"
+        + "Foo.prototype.a=0;"
+        + "Foo.prototype.b=0;"
+        + "var Bar = function(){};"
+        + "Bar.prototype.b=0;"
+        + "Bar.prototype.a=0;";
+    test(js, output);
+  }
+
+  public void testUnion() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "/** @constructor */ var Bar = function(){};\n"
+        + "Foo.prototype.foodoo=0;\n"
+        + "Bar.prototype.bardoo=0;\n"
+        + "/** @type {Foo|Bar} */\n"
+        + "var U;\n"
+        + "U.joint;"
+        + "U.joint";
+    String output = ""
+        + "var Foo = function(){};\n"
+        + "var Bar = function(){};\n"
+        + "Foo.prototype.b=0;\n"
+        + "Bar.prototype.b=0;\n"
+        + "var U;\n"
+        + "U.a;"
+        + "U.a";
+    test(js, output);
+  }
+
+  public void testUnions() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "/** @constructor */ var Bar = function(){};\n"
+        + "/** @constructor */ var Baz = function(){};\n"
+        + "/** @constructor */ var Bat = function(){};\n"
+        + "Foo.prototype.lone1=0;\n"
+        + "Bar.prototype.lone2=0;\n"
+        + "Baz.prototype.lone3=0;\n"
+        + "Bat.prototype.lone4=0;\n"
+        + "/** @type {Foo|Bar} */\n"
+        + "var U1;\n"
+        + "U1.j1;"
+        + "U1.j2;"
+        + "/** @type {Baz|Bar} */\n"
+        + "var U2;\n"
+        + "U2.j3;"
+        + "U2.j4;"
+        + "/** @type {Baz|Bat} */\n"
+        + "var U3;"
+        + "U3.j5;"
+        + "U3.j6";
+    String output = ""
+        + "var Foo = function(){};\n"
+        + "var Bar = function(){};\n"
+        + "var Baz = function(){};\n"
+        + "var Bat = function(){};\n"
+        + "Foo.prototype.c=0;\n"
+        + "Bar.prototype.e=0;\n"
+        + "Baz.prototype.e=0;\n"
+        + "Bat.prototype.c=0;\n"
+        + "var U1;\n"
+        + "U1.a;"
+        + "U1.b;"
+        + "var U2;\n"
+        + "U2.c;"
+        + "U2.d;"
+        + "var U3;"
+        + "U3.a;"
+        + "U3.b";
+    test(js, output);
+  }
+
+  public void testExtends() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.prototype.x=0;\n"
+        + "/** @constructor \n @extends Foo */ var Bar = function(){};\n"
+        + "goog.inherits(Bar, Foo);\n"
+        + "Bar.prototype.y=0;\n"
+        + "Bar.prototype.z=0;\n"
+        + "/** @constructor */ var Baz = function(){};\n"
+        + "Baz.prototype.l=0;\n"
+        + "Baz.prototype.m=0;\n"
+        + "Baz.prototype.n=0;\n"
+        + "(new Baz).m\n";
+    String output = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.prototype.a=0;\n"
+        + "/** @constructor \n @extends Foo */ var Bar = function(){};\n"
+        + "goog.inherits(Bar, Foo);\n"
+        + "Bar.prototype.b=0;\n"
+        + "Bar.prototype.c=0;\n"
+        + "/** @constructor */ var Baz = function(){};\n"
+        + "Baz.prototype.b=0;\n"
+        + "Baz.prototype.a=0;\n"
+        + "Baz.prototype.c=0;\n"
+        + "(new Baz).a\n";
+    test(js, output);
+  }
+
+  public void testLotsOfVars() {
+    StringBuilder js = new StringBuilder();
+    StringBuilder output = new StringBuilder();
+    js.append("/** @constructor */ var Foo = function(){};\n");
+    js.append("/** @constructor */ var Bar = function(){};\n");
+    output.append(js.toString());
+
+    int vars = 10;
+    for (int i = 0; i < vars; i++) {
+      js.append("Foo.prototype.var" + i + " = 0;");
+      js.append("Bar.prototype.var" + (i + 10000) + " = 0;");
+      output.append("Foo.prototype." + (char) ('a' + i) + "=0;");
+      output.append("Bar.prototype." + (char) ('a' + i) + "=0;");
+    }
+    test(js.toString(), output.toString());
+  }
+
+  public void testLotsOfClasses() {
+    StringBuilder b = new StringBuilder();
+    int classes = 10;
+    for (int i = 0; i < classes; i++) {
+      String c = "Foo" + i;
+      b.append("/** @constructor */ var " + c + " = function(){};\n");
+      b.append(c + ".prototype.varness" + i + " = 0;");
+    }
+    String js = b.toString();
+    test(js, js.replaceAll("varness\\d+", "a"));
+  }
+
+  public void testFunctionType() {
+    String js = ""
+        + "/** @constructor */ function Foo(){};\n"
+        + "/** @return Bar */\n"
+        + "Foo.prototype.fun = function() { new Bar };\n"
+        + "/** @constructor */ function Bar(){};\n"
+        + "Bar.prototype.bazz;\n"
+        + "(new Foo).fun().bazz();";
+    String output = ""
+        + "function Foo(){};\n"
+        + "Foo.prototype.a = function() { new Bar };\n"
+        + "function Bar(){};\n"
+        + "Bar.prototype.a;\n"
+        + "(new Foo).a().a();";
+    test(js, output);
+  }
+
+  public void testPrototypePropertiesAsObjLitKeys() {
+    testSame("/** @constructor */ function Bar() {};" +
+             "Bar.prototype = {2: function(){}, getA: function(){}};");
+  }
+
+  public void testQuotedPrototypeProperty() {
+    testSame("/** @constructor */ function Bar() {};" +
+             "Bar.prototype['getA'] = function(){};" +
+             "var bar = new Bar();" +
+             "bar['getA']();");
+  }
+
+  public void testOverlappingOriginalAndGeneratedNames() {
+    test("/** @constructor */ function Bar(){};"
+         + "Bar.prototype.b = function(){};"
+         + "Bar.prototype.a = function(){};"
+         + "var bar = new Bar();"
+         + "bar.b();",
+         "function Bar(){};"
+         + "Bar.prototype.a = function(){};"
+         + "Bar.prototype.b = function(){};"
+         + "var bar = new Bar();"
+         + "bar.a();");
+  }
+
+  public void testPropertyAddedToObject() {
+    testSame("var foo = {}; foo.prop = '';");
+  }
+
+  public void testPropertyAddedToFunction() {
+    test("var foo = function(){}; foo.prop = '';",
+         "var foo = function(){}; foo.a = '';");
+  }
+
+  public void testPropertyOfObjectOfUnknownType() {
+    testSame("var foo = x(); foo.prop = '';");
+  }
+
+  public void testPropertyOnParamOfUnknownType() {
+    testSame("/** @constructor */ function Foo(){};\n"
+             + "Foo.prototype.prop = 0;"
+             + "function go(aFoo){\n"
+             + "  aFoo.prop = 1;"
+             + "}");
+  }
+
+  public void testSetPropertyOfGlobalThis() {
+    testSame("this.prop = 'bar'");
+  }
+
+  public void testReadPropertyOfGlobalThis() {
+    testSame("f(this.prop);");
+  }
+
+  public void testSetQuotedPropertyOfThis() {
+    testSame("this['prop'] = 'bar';");
+  }
+
+  public void testExternedPropertyName() {
+    test("/** @constructor */ var Bar = function(){};"
+         + "/** @override */ Bar.prototype.toString = function(){};"
+         + "Bar.prototype.func = function(){};"
+         + "var bar = new Bar();"
+         + "bar.toString();",
+         "var Bar = function(){};"
+         + "Bar.prototype.toString = function(){};"
+         + "Bar.prototype.a = function(){};"
+         + "var bar = new Bar();"
+         + "bar.toString();");
+  }
+
+  public void testExternedPropertyNameDefinedByObjectLiteral() {
+    testSame("/**@constructor*/function Bar(){};Bar.prototype.factory");
+  }
+
+  public void testStaticAndInstanceMethodWithSameName() {
+    test("/** @constructor */function Bar(){}; Bar.getA = function(){}; " +
+         "Bar.prototype.getA = function(){}; Bar.getA();" +
+         "var bar = new Bar(); bar.getA();",
+         "function Bar(){}; Bar.a = function(){};" +
+         "Bar.prototype.a = function(){}; Bar.a();" +
+         "var bar = new Bar(); bar.a();");
+  }
+
+  public void testStaticAndInstanceProperties() {
+    test("/** @constructor */function Bar(){};" +
+         "Bar.getA = function(){}; " +
+         "Bar.prototype.getB = function(){};",
+         "function Bar(){}; Bar.a = function(){};" +
+         "Bar.prototype.a = function(){};");
+  }
+
+  public void testTypeMismatch() {
+    testSame(EXTERNS, "/** @constructor */var Foo = function(){};\n"
+             + "/** @constructor */var Bar = function(){};\n"
+             + "Foo.prototype.b = 0;\n"
+             + "/** @type {Foo} */\n"
+             + "var F = new Bar();",
+             TypeValidator.TYPE_MISMATCH_WARNING,
+             "initializing variable\n"
+             + "found   : Bar\n"
+             + "required: (Foo|null)");
+  }
+
+  public void testRenamingMap() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.prototype.z=0;\n"
+        + "Foo.prototype.z=0;\n"
+        + "Foo.prototype.x=0;\n"
+        + "Foo.prototype.y=0;";
+    String output = ""
+        + "var Foo = function(){};\n"
+        + "Foo.prototype.a=0;\n"
+        + "Foo.prototype.a=0;\n"
+        + "Foo.prototype.b=0;\n"
+        + "Foo.prototype.c=0;";
+    test(js, output);
+
+    Map<String, String> answerMap = Maps.newHashMap();
+    answerMap.put("x", "b");
+    answerMap.put("y", "c");
+    answerMap.put("z", "a");
+    assertEquals(answerMap, lastPass.getRenamingMap());
+  }
+
+  public void testInline() {
+    String js = ""
+        + "/** @interface */ function Foo(){}\n"
+        + "Foo.prototype.x = function(){};\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @implements {Foo}\n"
+        + " */\n"
+        + "function Bar(){}\n"
+        + "/** @inheritDoc */\n"
+        + "Bar.prototype.x = function() { return this.y; };\n"
+        + "Bar.prototype.z = function() {};\n"
+        // Simulates inline getters.
+        + "/** @type {Foo} */ (new Bar).y;";
+    String output = ""
+        + "function Foo(){}\n"
+        + "Foo.prototype.a = function(){};\n"
+        + "function Bar(){}\n"
+        + "Bar.prototype.a = function() { return this.b; };\n"
+        + "Bar.prototype.c = function() {};\n"
+        // Simulates inline getters.
+        + "(new Bar).b;";
+    test(js, output);
+  }
+}

@@ -1,0 +1,284 @@
+/*
+ * Copyright 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package com.google.javascript.jscomp;
+
+import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+
+import junit.framework.TestCase;
+
+import java.util.Set;
+
+/**
+*
+ */
+public class FunctionToBlockMutatorTest extends TestCase {
+
+  public void testMutateNoReturnWithoutResultAssignment() {
+    helperMutate(
+        "function foo(){}; foo();",
+        "{}",
+        "foo");
+  }
+
+  public void testMutateNoReturnWithResultAssignment() {
+    helperMutate(
+        "function foo(){}; var result = foo();",
+        "{result = void 0}",
+        "foo", true, false);
+  }
+
+
+  public void testMutateNoValueReturnWithoutResultAssignment() {
+    helperMutate(
+        "function foo(){return;}; foo();",
+        "{}",
+        "foo", null);
+  }
+
+  public void testMutateNoValueReturnWithResultAssignment() {
+    helperMutate(
+        "function foo(){return;}; var result = foo();",
+        "{result = void 0}",
+        "foo");
+  }
+
+  public void testMutateValueReturnWithoutResultAssignment() {
+    helperMutate(
+        "function foo(){return true;}; foo();",
+        "{true;}",
+        "foo", null);
+  }
+
+  public void testMutateValueReturnWithResultAssignment() {
+    helperMutate(
+        "function foo(){return true;}; var x=foo();",
+        "{x=true}",
+        "foo", "x", true, false);
+  }
+
+  public void testMutateWithMultipleReturns() {
+    helperMutate(
+        "function foo(){ if (0) {return 0} else {return 1} };" +
+          "var result=foo();",
+        "{" +
+          "JSCompiler_inline_label_foo_0:{" +
+            "if(0) {" +
+              "result=0; break JSCompiler_inline_label_foo_0" +
+            "} else {" +
+              "result=1; break JSCompiler_inline_label_foo_0" +
+            "} result=void 0" +
+          "}" +
+        "}",
+        "foo", true, false);
+  }
+
+  public void testMutateWithParameters1() {
+    // Simple call with useless parameter
+    helperMutate(
+        "function foo(a){return true;}; foo(x);",
+        "{true}",
+        "foo", null);
+  }
+
+  public void testMutateWithParameters2() {
+    // Simple call with parameter
+    helperMutate(
+        "function foo(a){return x;}; foo(x);",
+        "{x}",
+        "foo", null);
+  }
+
+  public void testMutateWithParameters3() {
+    // Parameter has side-effects.
+    helperMutate(
+        "function foo(a){return a;}; " +
+        "function x() { foo(x++); }",
+        "{var JSCompiler_inline_a_1 = x++; JSCompiler_inline_a_1}",
+        "foo", null);
+  }
+
+  public void testMutate8() {
+    // Parameter has side-effects.
+    helperMutate(
+        "function foo(a){return a+a;}; foo(x++);",
+        "{var JSCompiler_inline_a_1 = x++;" +
+            "JSCompiler_inline_a_1 + JSCompiler_inline_a_1;}",
+        "foo", null);
+  }
+
+  public void testMutateInitializeUninitializedVars1() {
+    helperMutate(
+        "function foo(a){var b;return a;}; foo(1);",
+        "{var JSCompiler_inline_b_3=undefined;1}",
+        "foo", null, false, true);
+  }
+
+  public void testMutateInitializeUninitializedVars2() {
+    helperMutate(
+        "function foo(a){for(var b in c)return a;}; foo(1);",
+        "{JSCompiler_inline_label_foo_4:" +
+          "{" +
+            "for(var JSCompiler_inline_b_3 in c){" +
+                "1;break JSCompiler_inline_label_foo_4" +
+             "}" +
+          "}" +
+        "}",
+        "foo", null);
+  }
+  
+  public void testMutateCallInLoopVars1() {
+    // baseline: outside a loop, the constant remains constant.
+    boolean callInLoop = false;
+    helperMutate(
+        "function foo(a){var b$$constant = bar(); a;}; foo(1);",
+        "{var JSCompiler_inline_b$$constant_3=bar(); 1;}",
+        "foo", null, false, callInLoop);
+    // ... in a loop, the constant-ness is removed.
+    callInLoop = true;
+    helperMutate(
+        "function foo(a){var b$$constant = bar(); a;}; foo(1);",
+        "{var JSCompiler_inline_b_3 = bar(); 1;}",
+        "foo", null, false, callInLoop);
+  }  
+
+
+  public void helperMutate(
+      String code, final String expectedResult, final String fnName) {
+    helperMutate(code, expectedResult, fnName, false, false);
+  }
+
+  public void helperMutate(
+      String code, final String expectedResult, final String fnName,
+      final boolean needsDefaultResult,
+      final boolean isCallInLoop) {
+    helperMutate(code, expectedResult, fnName,
+        "result", needsDefaultResult, isCallInLoop);
+  }
+
+  public void helperMutate(
+      String code, final String expectedResult, final String fnName,
+      final String resultName) {
+    helperMutate(code, expectedResult, fnName, resultName, false, false);
+  }
+
+  public void helperMutate(
+      String code, final String expectedResult, final String fnName,
+      final String resultName,
+      final boolean needsDefaultResult,
+      final boolean isCallInLoop) {
+    final Compiler compiler = new Compiler();
+    final FunctionToBlockMutator mutator = new FunctionToBlockMutator(
+        compiler, compiler.getUniqueNameIdSupplier());
+    Node expectedRoot = parse(compiler, expectedResult);
+    final Node expected = expectedRoot.getFirstChild();
+    final Node tree = parse(compiler, code);
+
+    Node externsRoot = new Node(Token.EMPTY);
+    Node mainRoot = tree;
+    MarkNoSideEffectCalls mark = new MarkNoSideEffectCalls(compiler);
+    mark.process(externsRoot, mainRoot);
+
+    final Node fnNode = findFunction(tree, fnName);
+    final Set<String> unsafe =
+        FunctionArgumentInjector.findModifiedParameters(fnNode);
+
+    // Fake precondition.
+    compiler.setNormalized();
+
+    // inline tester
+    Method tester = new Method() {
+      public boolean call(NodeTraversal t, Node n, Node parent) {
+
+        Node result = mutator.mutate(
+            fnName, fnNode, n, resultName,
+            needsDefaultResult, isCallInLoop);
+        String explanation = expected.checkTreeEquals(result);
+        assertNull("\nExpected: " + compiler.toSource(expected) +
+            "\nResult: " + compiler.toSource(result) +
+            "\n" + explanation, explanation);
+        return true;
+      }
+    };
+
+    compiler.resetUniqueNameId();
+    TestCallback test = new TestCallback(fnName, tester);
+    NodeTraversal.traverse(compiler, tree, test);
+  }
+
+  interface Method {
+    boolean call(NodeTraversal t, Node n, Node parent);
+  }
+
+  class TestCallback implements Callback {
+
+    private final String callname;
+    private final Method method;
+    private boolean complete = false;
+
+    TestCallback(String callname, Method method) {
+      this.callname = callname;
+      this.method = method;
+    }
+
+    @Override
+    public boolean shouldTraverse(
+        NodeTraversal nodeTraversal, Node n, Node parent) {
+      return !complete;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.getType() == Token.CALL) {
+        Node first = n.getFirstChild();
+        if (first.getType() == Token.NAME &&
+            first.getString().equals(callname)) {
+          complete = method.call(t, n, parent);
+        }
+      }
+
+      if (parent == null) {
+        assertTrue(complete);
+      }
+    }
+  }
+
+  private static Node findFunction(Node n, String name) {
+    if (n.getType() == Token.FUNCTION) {
+      if (n.getFirstChild().getString().equals(name)) {
+        return n;
+      }
+    }
+
+    for (Node c : n.children()) {
+      Node result = findFunction(c, name);
+      if (result != null) {
+        return result;
+      }
+    }
+
+    return null;
+  }
+
+  private static Node parse(Compiler compiler, String js) {
+    Node n = compiler.parseTestCode(js);
+    assertEquals(0, compiler.getErrorCount());
+    return n;
+  }
+}

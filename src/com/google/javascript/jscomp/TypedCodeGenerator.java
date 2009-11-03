@@ -1,0 +1,128 @@
+/*
+ * Copyright 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
+
+
+/**
+ * A code generator that outputs type annotations for functions and
+ * constructors.
+*
+ */
+class TypedCodeGenerator extends CodeGenerator {
+  TypedCodeGenerator(CodeConsumer consumer) {
+    super(consumer);
+  }
+
+  void add(Node n, Context context) {
+    if (n.getParent().getType() == Token.BLOCK
+        || n.getParent().getType() == Token.SCRIPT) {
+      if (n.getType() == Token.FUNCTION) {
+        add(getFunctionAnnotation(n));
+      } else if (n.getType() == Token.EXPR_RESULT
+          && n.getFirstChild().getType() == Token.ASSIGN) {
+        Node rhs = n.getFirstChild().getFirstChild();
+        add(getTypeAnnotation(rhs));
+      } else if (n.getType() == Token.VAR
+          && n.getFirstChild().getFirstChild() != null
+          && n.getFirstChild().getFirstChild().getType() == Token.FUNCTION) {
+        add(getFunctionAnnotation(n.getFirstChild().getFirstChild()));
+      }
+    }
+
+    super.add(n, context);
+  }
+
+
+  private String getTypeAnnotation(Node node) {
+    JSType type = node.getJSType();
+    if (type instanceof FunctionType) {
+      return getFunctionAnnotation(node);
+    } else if (type != null && !type.isUnknownType()
+        && !type.isEmptyType() && !type.isVoidType()) {
+      return "/** @type {" + node.getJSType() + "} */\n";
+    } else {
+      return "";
+    }
+  }
+
+  /**
+   * @param node A node for a function for which to generate a type annotation
+   */
+  private String getFunctionAnnotation(Node node) {
+    StringBuilder sb = new StringBuilder("/**\n");
+
+    if (node.getJSType().isUnknownType()) {
+      return "";
+    }
+    FunctionType funType = (FunctionType) node.getJSType();
+
+    // We need to use the child nodes of the function as the nodes for the
+    // parameters of the function type do not have the real parameter names.
+    // FUNCTION
+    //   NAME
+    //   LP
+    //     NAME param1
+    //     NAME param2
+    Node paramNode = funType.getSource().getFirstChild().getNext()
+        .getFirstChild();
+
+    // Param types
+    for (Node n : funType.getParameters()) {
+      // Skip any parameters for which we do not have a name.
+      if (paramNode == null) {
+        break;
+      }
+      sb.append(" * @param {" + n.getJSType() + "} ");
+      sb.append(paramNode.getString());
+      sb.append("\n");
+      paramNode = paramNode.getNext();
+    }
+
+    // Return type
+    JSType retType = funType.getReturnType();
+    if (retType != null && !retType.isUnknownType() && !retType.isEmptyType()) {
+      sb.append(" * @return {" + retType + "}\n");
+    }
+
+    // Constructor/interface
+    if (funType.isConstructor() || funType.isInterface()) {
+      ObjectType superInstance =
+          funType.getSuperClassConstructor().getInstanceType();
+      if (!superInstance.toString().equals("Object")) {
+        sb.append(" * @extends {"  + superInstance + "}\n");
+      }
+
+      for (ObjectType interfaze : funType.getImplementedInterfaces()) {
+        sb.append(" * @implements {"  + interfaze + "}\n");
+      }
+
+      if (funType.isConstructor()) {
+        sb.append(" * @constructor\n");
+      } else if (funType.isInterface()) {
+        sb.append(" * @interface\n");
+      }
+    }
+    sb.append(" */\n");
+    return sb.toString();
+  }
+}
