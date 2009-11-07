@@ -66,15 +66,16 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  private final boolean nonStrictModuleChecks;
+  // Whether this is the post-processing sanity check.
+  private final boolean sanityCheck;
 
   VarCheck(AbstractCompiler compiler) {
-    this(compiler, true);
+    this(compiler, false);
   }
-  
-  VarCheck(AbstractCompiler compiler, boolean nonStrictModuleChecks) {
+
+  VarCheck(AbstractCompiler compiler, boolean sanityCheck) {
     this.compiler = compiler;
-    this.nonStrictModuleChecks = nonStrictModuleChecks;
+    this.sanityCheck = sanityCheck;
   }
 
   /** {@inheritDoc} */
@@ -118,13 +119,17 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
       } else {
         t.report(n, UNDEFINED_VAR_ERROR, varName);
 
-        // Create a new variable in a synthetic script. This will prevent
-        
-        Node nameNode = Node.newString(Token.NAME, varName);
-        getSynthesizedExternsRoot().addChildToBack(
-            new Node(Token.VAR, nameNode));
-        scope.declare(varName, nameNode,
-            null, getSynthesizedExternsInput());
+        if (sanityCheck) {
+          throw new IllegalStateException("Unexpected variable " + varName);
+        } else {
+          // Create a new variable in a synthetic script. This will prevent
+          // subsequent compiler passes from crashing.
+          Node nameNode = Node.newString(Token.NAME, varName);
+          getSynthesizedExternsRoot().addChildToBack(
+              new Node(Token.VAR, nameNode));
+          scope.declare(varName, nameNode,
+              null, getSynthesizedExternsInput());
+        }
       }
       return;
     }
@@ -144,7 +149,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
       if (moduleGraph.dependsOn(currModule, varModule)) {
         // The module dependency was properly declared.
       } else {
-        if (nonStrictModuleChecks && scope.isGlobal()) {
+        if (!sanityCheck && scope.isGlobal()) {
           if (moduleGraph.dependsOn(varModule, currModule)) {
             // The variable reference violates a declared module dependency.
             t.report(n, VIOLATED_MODULE_DEP_ERROR,

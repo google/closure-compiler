@@ -152,10 +152,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public CheckLevel checkGlobalNamesLevel;
 
-  /** Allow bad Closure require calls. Use brokenClosureRequiresLevel instead */
-  @Deprecated
-  public boolean allowBrokenClosureRequires;
-
   /** Sets the check level for bad Closure require calls. */
   public CheckLevel brokenClosureRequiresLevel;
 
@@ -254,7 +250,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** Removes unused variables in global scope. */
   public boolean removeUnusedVarsInGlobalScope;
-  
+
   /** Adds variable aliases for externals to reduce code size */
   public boolean aliasExternals;
 
@@ -348,7 +344,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean collapsePropertiesOnExternTypes;
 
   /**
-   * Devirtualize prototype method by rewriting them to be static calls that 
+   * Devirtualize prototype method by rewriting them to be static calls that
    * take the this pointer as their first argument
    */
   public boolean devirtualizePrototypeMethods;
@@ -547,7 +543,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkRequires = CheckLevel.OFF;
     checkProvides = CheckLevel.OFF;
     checkGlobalNamesLevel = CheckLevel.OFF;
-    allowBrokenClosureRequires = false;
+    brokenClosureRequiresLevel = CheckLevel.ERROR;
     checkGlobalThisLevel = CheckLevel.WARNING;
     checkUnreachableCode = CheckLevel.OFF;
     checkMissingReturn = CheckLevel.OFF;

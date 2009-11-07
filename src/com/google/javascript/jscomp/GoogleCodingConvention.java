@@ -135,9 +135,4 @@ public class GoogleCodingConvention extends ClosureCodingConvention {
   public boolean isPrivate(String name) {
     return name.endsWith("_") && !isExported(name);
   }
-
-  @Override
-  public boolean allowsUndeclaredVariables() {
-    return false;
-  }
 }

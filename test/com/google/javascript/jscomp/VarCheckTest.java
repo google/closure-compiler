@@ -26,7 +26,7 @@ public class VarCheckTest extends CompilerTestCase {
   private static final String EXTERNS = "var window; function alert() {}";
 
   private CheckLevel strictModuleDepErrorLevel;
-  private boolean nonStrictModuleChecks = true;
+  private boolean sanityCheck = false;
 
   public VarCheckTest() {
     super(EXTERNS);
@@ -36,7 +36,7 @@ public class VarCheckTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     strictModuleDepErrorLevel = CheckLevel.OFF;
-    nonStrictModuleChecks = true;
+    sanityCheck = false;
   }
 
   @Override
@@ -49,7 +49,7 @@ public class VarCheckTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new VarCheck(compiler, nonStrictModuleChecks);
+    return new VarCheck(compiler, sanityCheck);
   }
 
   @Override
@@ -146,26 +146,26 @@ public class VarCheckTest extends CompilerTestCase {
   }
 
   public void testMissingModuleDependencySkipNonStrict() {
-    nonStrictModuleChecks = false;
+    sanityCheck = true;
     testIndependentModules("var x = 10;", "var y = x++;",
                            null, null);
   }
 
   public void testViolatedModuleDependencySkipNonStrict() {
-    nonStrictModuleChecks = false;
+    sanityCheck = true;
     testDependentModules("var y = x++;", "var x = 10;",
                          null);
   }
 
   public void testMissingModuleDependencySkipNonStrictPromoted() {
-    nonStrictModuleChecks = false;
+    sanityCheck = true;
     strictModuleDepErrorLevel = CheckLevel.ERROR;
     testIndependentModules("var x = 10;", "var y = x++;",
         VarCheck.STRICT_MODULE_DEP_ERROR, null);
   }
 
   public void testViolatedModuleDependencyNonStrictPromoted() {
-    nonStrictModuleChecks = false;
+    sanityCheck = true;
     strictModuleDepErrorLevel = CheckLevel.ERROR;
     testDependentModules("var y = x++;", "var x = 10;",
         VarCheck.STRICT_MODULE_DEP_ERROR);
@@ -242,6 +242,15 @@ public class VarCheckTest extends CompilerTestCase {
     checkSynthesizedExtern("var x", "");
   }
 
+  public void testSimpleSanityCheck() {
+    sanityCheck = true;
+    try {
+      checkSynthesizedExtern("x", "");
+    } catch (RuntimeException e) {
+      assertTrue(e.getMessage().indexOf("Unexpected variable x") != -1);
+    }
+  }
+
   public void testParameter() {
     checkSynthesizedExtern("function(x){}", "");
   }
@@ -303,8 +312,10 @@ public class VarCheckTest extends CompilerTestCase {
     Node expected = compiler.parseTestCode(expectedExtern);
     assertFalse(compiler.hasErrors());
 
-    (new VarCheck(compiler)).process(externs, root);
-    (new VariableTestCheck(compiler)).process(externs, root);
+    (new VarCheck(compiler, sanityCheck)).process(externs, root);
+    if (!sanityCheck) {
+      (new VariableTestCheck(compiler)).process(externs, root);
+    }
 
     String externsCode = compiler.toSource(externs);
     String expectedCode = compiler.toSource(expected);

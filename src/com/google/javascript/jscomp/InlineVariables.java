@@ -451,8 +451,11 @@ class InlineVariables implements CompilerPass {
      * If the value is a literal, we can cross more boundaries to inline it.
      */
     private boolean canMoveAggressively(Reference declaration) {
-      return NodeUtil.isLiteralValue(
-          declaration.getNameNode().getFirstChild());
+      // Anonymous functions and other mutable objects can move within 
+      // the same basic block.
+      Node value = declaration.getNameNode().getFirstChild();
+      return NodeUtil.isLiteralValue(value)
+          || value.getType() == Token.FUNCTION;
     }
 
     /**

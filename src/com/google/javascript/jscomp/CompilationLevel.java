@@ -86,6 +86,7 @@ public enum CompilationLevel {
   private static void applySafeCompilationOptions(CompilerOptions options) {
     // Does not call applyBasicCompilationOptions(options) because the call to
     // skipAllCompilerPasses() cannot be easily undone.
+    options.closurePass = true;
     options.variableRenaming = VariableRenamingPolicy.LOCAL;
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
@@ -102,11 +103,6 @@ public enum CompilationLevel {
     options.removeUnusedVars = true;
     options.removeUnusedVarsInGlobalScope = false;
 
-    // Pretty much all external JS libraries use things like setTimeout()
-    // directly rather than specifying window.setTimeout().
-    options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES,
-        CheckLevel.OFF);
-
     // Allows annotations that are not standard.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
         CheckLevel.OFF);
@@ -122,6 +118,7 @@ public enum CompilationLevel {
     // create possible conflicts between multiple diagnostic groups.
 
     // All the safe optimizations.
+    options.closurePass = true;
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
     options.removeConstantExpressions = true;
@@ -135,11 +132,6 @@ public enum CompilationLevel {
     options.labelRenaming = true;
     options.removeDeadCode = true;
     options.optimizeArgumentsArray = true;
-
-    // Pretty much all external JS libraries use things like setTimeout()
-    // directly rather than specifying window.setTimeout().
-    options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES,
-        CheckLevel.OFF);
 
     // All the advance optimizations.
     options.variableRenaming = VariableRenamingPolicy.ALL;

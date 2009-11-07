@@ -216,8 +216,6 @@ public interface CodingConvention {
   public boolean allowsVariableRedeclaration(Scope scope, String name,
       Node parent);
 
-  public boolean allowsUndeclaredVariables();
-
   /**
    * Whether this CALL function is testing for the existence of a property.
    */

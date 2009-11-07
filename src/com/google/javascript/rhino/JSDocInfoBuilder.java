@@ -186,6 +186,9 @@ final public class JSDocInfoBuilder {
    * @return {@code true} if the description was recorded.
    */
   public boolean recordBlockDescription(String description) {
+    if (parseDocumentation) {
+      populated = true;
+    }
     return currentInfo.documentBlock(description);
   }
 

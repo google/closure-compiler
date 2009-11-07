@@ -28,7 +28,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.List;
 
 /**
- * Tests for {@link StaticMethodOptimizer}
+ * Tests for {@link DevirtualizePrototypeMethods}
  *
 *
  */

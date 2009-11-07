@@ -1026,8 +1026,9 @@ final class TypedScopeCreator implements ScopeCreator {
           ObjectType ownerType = getObjectSlot(ownerName);
           if (ownerType instanceof FunctionType) {
             JSType ownerTypeOfThis = ((FunctionType) ownerType).getTypeOfThis();
-            JSType delegateType = typeRegistry.getType(
-                codingConvention.getDelegateSuperclassName());
+            String delegateName = codingConvention.getDelegateSuperclassName();
+            JSType delegateType = delegateName == null ?
+                null : typeRegistry.getType(delegateName);
             if (delegateType != null &&
                 ownerTypeOfThis.isSubtype(delegateType)) {
               defineSlot(n, parent, typeRegistry.getNativeType(BOOLEAN_TYPE),

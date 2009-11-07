@@ -807,10 +807,12 @@ class FoldConstants extends AbstractPostOrderCallback
       Node var = getBlockVar(elseBranch);
       Node thenAssign = getBlockExpression(thenBranch).getFirstChild();
 
-      Node name1 = thenAssign.getFirstChild();
+      Node maybeName1 = thenAssign.getFirstChild();
       Node name2 = var.getFirstChild();
 
-      if (name2.hasChildren() && name1.getString().equals(name2.getString())) {
+      if (name2.hasChildren()
+          && maybeName1.getType() == Token.NAME
+          && maybeName1.getString().equals(name2.getString())) {
         Node thenExpr = thenAssign.getLastChild().detachFromParent();
         Node elseExpr = name2.removeChildren();
         cond.detachFromParent();

@@ -430,6 +430,18 @@ public class InlineVariablesTest extends CompilerTestCase {
     testSame("var a = b.c; a();");
   }
 
+  public void testInlineFunctionDeclaration() {
+    test("var f = function () {}; var a = f;", 
+         "var a = function () {};");
+    test("var f = function () {}; foo(); var a = f;", 
+         "foo(); var a = function () {};");
+    test("var f = function () {}; foo(f);", 
+         "foo(function () {});");
+    
+    testSame("var f = function () {}; function g() {var a = f;}"); 
+    testSame("var f = function () {}; function g() {h(f);}"); 
+  }
+  
   public void testRecursiveFunction1() {
     testSame("var x = 0; (function x() { return x ? x() : 3; })();");
   }

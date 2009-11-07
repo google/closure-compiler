@@ -62,41 +62,41 @@ public class SourceMapTest extends TestCase {
   }
 
   public void testGoldenOutput1() throws Exception {
-    checkSourceMap("function(foo, bar) { foo = foo + bar + 2; return foo; }",
+    checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
 
                    "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
                    "\"count\": 1 }\n" +
 
-                   "[0,0,0,0,0,0,0,0,2,4,4,4,4,5,5,5,5,3,8,8,8,8,9,9,9,9," +
+                   "[0,0,0,0,0,0,0,0,2,2,2,4,4,4,4,5,5,5,5,3,8,8,8,8,9,9,9,9," +
                    "10,10,10,10,11,11,12,12,12,12,12,12,13,13,13,13,13,6]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[\"testcode\"]\n" +
                    "/** Begin mapping definitions. **/\n" +
                    "[\"testcode\",1,0]\n" +
-                   "[\"testcode\",1,8]\n" +
-                   "[\"testcode\",1,8,\"\"]\n" +
-                   "[\"testcode\",1,8]\n" +
-                   "[\"testcode\",1,9,\"foo\"]\n" +
-                   "[\"testcode\",1,14,\"bar\"]\n" +
-                   "[\"testcode\",1,19]\n" +
+                   "[\"testcode\",1,9]\n" +
+                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,10]\n" +
+                   "[\"testcode\",1,11,\"foo\"]\n" +
+                   "[\"testcode\",1,16,\"bar\"]\n" +
                    "[\"testcode\",1,21]\n" +
-                   "[\"testcode\",1,21,\"foo\"]\n" +
-                   "[\"testcode\",1,27,\"foo\"]\n" +
-                   "[\"testcode\",1,33,\"bar\"]\n" +
-                   "[\"testcode\",1,39]\n" +
-                   "[\"testcode\",1,42]\n" +
-                   "[\"testcode\",1,49,\"foo\"]\n");
+                   "[\"testcode\",1,23]\n" +
+                   "[\"testcode\",1,23,\"foo\"]\n" +
+                   "[\"testcode\",1,29,\"foo\"]\n" +
+                   "[\"testcode\",1,35,\"bar\"]\n" +
+                   "[\"testcode\",1,41]\n" +
+                   "[\"testcode\",1,44]\n" +
+                   "[\"testcode\",1,51,\"foo\"]\n");
   }
 
   public void testGoldenOutput2() throws Exception {
-    checkSourceMap("function(foo, bar) {\r\n\n\n\nfoo = foo + bar + foo;" +
+    checkSourceMap("function f(foo, bar) {\r\n\n\n\nfoo = foo + bar + foo;" +
                    "\nreturn foo;\n}",
 
                    "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
                    "\"count\": 1 }\n" +
 
-                   "[0,0,0,0,0,0,0,0,2,4,4,4,4,5,5,5,5,3,8,8,8,8,9,9,9," +
+                   "[0,0,0,0,0,0,0,0,2,2,2,4,4,4,4,5,5,5,5,3,8,8,8,8,9,9,9," +
                    "9,10,10,10,10,11,11,11,11,12,12,12,12,12,12,13,13,13," +
                    "13,13,6]\n" +
 
@@ -104,12 +104,12 @@ public class SourceMapTest extends TestCase {
                    "[\"testcode\"]\n" +
                    "/** Begin mapping definitions. **/\n" +
                    "[\"testcode\",1,0]\n" +
-                   "[\"testcode\",1,8]\n" +
-                   "[\"testcode\",1,8,\"\"]\n" +
-                   "[\"testcode\",1,8]\n" +
-                   "[\"testcode\",1,9,\"foo\"]\n" +
-                   "[\"testcode\",1,14,\"bar\"]\n" +
-                   "[\"testcode\",1,19]\n" +
+                   "[\"testcode\",1,9]\n" +
+                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,10]\n" +
+                   "[\"testcode\",1,11,\"foo\"]\n" +
+                   "[\"testcode\",1,16,\"bar\"]\n" +
+                   "[\"testcode\",1,21]\n" +
                    "[\"testcode\",5,0]\n" +
                    "[\"testcode\",5,0,\"foo\"]\n" +
                    "[\"testcode\",5,6,\"foo\"]\n" +

@@ -19,36 +19,52 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 
 /**
- * Show warnings only for specific path. The rest of warnings should be
- * suppressed.
+ * Control whether warnings should be restricted or suppressed for specified
+ * paths.
  *
 *
  */
 public class ShowByPathWarningsGuard extends WarningsGuard {
-  private final String[] checkWarningsOnlyForPath;
+  /**
+   * Controls whether warnings should be restricted to a specified path or
+   * suppressed within the specified path.
+   */
+  public enum ShowType {
+    INCLUDE,  // Suppress warnings outside the path.
+    EXCLUDE;  // Suppress warnings within the path.
+  }
+
+  private final String[] paths;
+  private final ShowType showType;
 
   public ShowByPathWarningsGuard(String checkWarningsOnlyForPath) {
-    Preconditions.checkArgument(checkWarningsOnlyForPath != null);
-    this.checkWarningsOnlyForPath = new String[] { checkWarningsOnlyForPath };
+    this(checkWarningsOnlyForPath, ShowType.INCLUDE);
   }
 
   public ShowByPathWarningsGuard(String[] checkWarningsOnlyForPath) {
-    Preconditions.checkArgument(checkWarningsOnlyForPath != null);
-    this.checkWarningsOnlyForPath = checkWarningsOnlyForPath;
+    this(checkWarningsOnlyForPath, ShowType.INCLUDE);
+  }
+
+  public ShowByPathWarningsGuard(String path, ShowType showType) {
+    this(new String[] { path }, showType);
+  }
+
+  public ShowByPathWarningsGuard(String[] paths, ShowType showType) {
+    Preconditions.checkArgument(paths != null);
+    Preconditions.checkArgument(showType != null);
+    this.paths = paths;
+    this.showType = showType;
   }
 
   @Override
   public CheckLevel level(JSError error) {
-    // Check if we dont want to see these warnings
-    final String filePath = error.sourceName;
-
-    if (error.level != CheckLevel.ERROR && filePath != null) {
-      boolean checkMe = false;
-      for (String checkedPath : checkWarningsOnlyForPath) {
-        checkMe |= filePath.contains(checkedPath);
+    final String errorPath = error.sourceName;
+    if (error.level != CheckLevel.ERROR && errorPath != null) {
+      boolean inPath = false;
+      for (String path : paths) {
+        inPath |= errorPath.contains(path);
       }
-
-      if (!checkMe) {
+      if (inPath ^ (showType == ShowType.INCLUDE)) {
         return CheckLevel.OFF;
       }
     }

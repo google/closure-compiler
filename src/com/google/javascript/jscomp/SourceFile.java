@@ -77,7 +77,10 @@ public abstract class SourceFile {
   //////////////////////////////////////////////////////////////////////////////
   // Implementation
 
-  /** Gets all the code in this source file. */
+  /** 
+   * Gets all the code in this source file. 
+   * @throws IOException 
+   */
   public String getCode() throws IOException {
     return code;
   }

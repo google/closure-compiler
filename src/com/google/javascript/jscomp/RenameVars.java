@@ -99,19 +99,30 @@ final class RenameVars implements CompilerPass {
   /** Whether renaming should apply to local variables only. */
   private final boolean localRenamingOnly;
 
+  /**
+   * Whether anonymous function names should be preserved. Typically, for
+   * debugging purposes.
+   * @see NameAnonymousFunctions
+   */
+  private boolean preserveAnonymousFunctionNames;
+
   /** Characters that shouldn't be used in variable names. */
   private final char[] reservedCharacters;
 
   /** A prefix to distinguish temporary local names from global names */
   private static final String LOCAL_VAR_PREFIX = "L ";
 
-  RenameVars(AbstractCompiler compiler, String prefix,
-      boolean localRenamingOnly, VariableMap prevUsedRenameMap,
+  RenameVars(AbstractCompiler compiler,
+      String prefix,
+      boolean localRenamingOnly,
+      boolean preserveAnonymousFunctionNames,
+      VariableMap prevUsedRenameMap,
       @Nullable char[] reservedCharacters,
       @Nullable Set<String> reservedNames) {
     this.compiler = compiler;
     this.prefix = prefix == null ? "" : prefix;
     this.localRenamingOnly = localRenamingOnly;
+    this.preserveAnonymousFunctionNames = preserveAnonymousFunctionNames;
     this.prevUsedRenameMap = prevUsedRenameMap;
     this.reservedCharacters = reservedCharacters;
     if (reservedNames == null) {
@@ -170,6 +181,14 @@ final class RenameVars implements CompilerPass {
 
       // Are we renaming global variables?
       if (!local && localRenamingOnly) {
+        reservedNames.add(name);
+        return;
+      }
+
+      // Are we renaming anonymous function names?
+      if (preserveAnonymousFunctionNames
+          && var != null
+          && NodeUtil.isAnonymousFunction(var.getParentNode())) {
         reservedNames.add(name);
         return;
       }

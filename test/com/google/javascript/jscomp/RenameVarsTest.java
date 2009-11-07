@@ -34,6 +34,7 @@ public class RenameVarsTest extends CompilerTestCase {
   private RenameVars renameVars;
   private boolean withClosurePass = false;
   private boolean localRenamingOnly = false;
+  private boolean preserveAnonymousFunctionNames = false;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -41,7 +42,8 @@ public class RenameVarsTest extends CompilerTestCase {
       return new ClosurePassAndRenameVars(compiler);
     } else {
       return renameVars = new RenameVars(compiler, prefix,
-          localRenamingOnly, previouslyUsedMap, null, null);
+          localRenamingOnly, preserveAnonymousFunctionNames,
+          previouslyUsedMap, null, null);
     }
   }
 
@@ -57,6 +59,7 @@ public class RenameVarsTest extends CompilerTestCase {
     prefix = DEFAULT_PREFIX;
     withClosurePass = false;
     localRenamingOnly = false;
+    preserveAnonymousFunctionNames = false;
   }
 
   public void testRenameSimple() {
@@ -90,6 +93,44 @@ public class RenameVarsTest extends CompilerTestCase {
         "function f1(v3, v4) {f1()};",
         "function f1(a, b) {f1()};" +
         "function f1(a, b) {f1()};");
+  }
+
+  public void testRecursiveFunctions1() {
+    test("var walk = function walk(node, aFunction) {" +
+         "  walk(node, aFunction);" +
+         "};",
+         "var d = function a(b, c) {" +
+         "  a(b, c);" +
+         "};");
+
+    localRenamingOnly = true;
+
+    test("var walk = function walk(node, aFunction) {" +
+         "  walk(node, aFunction);" +
+         "};",
+         "var walk = function a(b, c) {" +
+         "  a(b, c);" +
+         "};");
+  }
+
+  public void testRecursiveFunctions2() {
+    preserveAnonymousFunctionNames = true;
+
+    test("var walk = function walk(node, aFunction) {" +
+         "  walk(node, aFunction);" +
+         "};",
+         "var c = function walk(a, b) {" +
+         "  walk(a, b);" +
+         "};");
+
+    localRenamingOnly = true;
+
+    test("var walk = function walk(node, aFunction) {" +
+        "  walk(node, aFunction);" +
+        "};",
+        "var walk = function walk(a, b) {" +
+        "  walk(a, b);" +
+        "};");
   }
 
   public void testRenameLocalsClashingWithGlobals() {
@@ -437,10 +478,10 @@ public class RenameVarsTest extends CompilerTestCase {
 
     public void process(Node externs, Node root) {
       ProcessClosurePrimitives closurePass =
-          new ProcessClosurePrimitives(compiler, true, true);
+          new ProcessClosurePrimitives(compiler, CheckLevel.WARNING, true);
       closurePass.process(externs, root);
       renameVars = new RenameVars(compiler, prefix,
-          false, previouslyUsedMap, null,
+          false, false, previouslyUsedMap, null,
           closurePass.getExportedVariableNames());
       renameVars.process(externs, root);
     }

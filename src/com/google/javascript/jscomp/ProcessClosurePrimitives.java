@@ -108,14 +108,6 @@ class ProcessClosurePrimitives extends AbstractNodeTypePruningCallback
     Token.FUNCTION);
 
   ProcessClosurePrimitives(AbstractCompiler compiler,
-                           boolean allowBrokenRequires,
-                           boolean rewriteNewDateGoogNow) {
-    this(compiler,
-         allowBrokenRequires ? CheckLevel.WARNING : CheckLevel.ERROR,
-         rewriteNewDateGoogNow);
-  }
-
-  ProcessClosurePrimitives(AbstractCompiler compiler,
                            CheckLevel requiresLevel,
                            boolean rewriteNewDateGoogNow) {
     super(TRAVERSAL_NODE_TYPES);

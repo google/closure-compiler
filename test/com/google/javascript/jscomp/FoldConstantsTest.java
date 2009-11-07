@@ -1037,4 +1037,11 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("function(){if(a()){return undefined;}}",
          "function(){if(a()){return}}");
   }
+  
+  public void testBugIssue3() {
+    foldSame("function foo() {" +
+             "  if(sections.length != 1) children[i] = 0;" +
+             "  else var selectedid = children[i]" +
+             "}");
+  }
 }

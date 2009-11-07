@@ -125,27 +125,12 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
   }
 
   /**
-   * Updates block statck and invokes any additional behavior.
+   * Updates block stack and invokes any additional behavior.
    */
   public void enterScope(NodeTraversal t) {
     Node n = t.getScope().getRootNode();
     BasicBlock parent = blockStack.isEmpty() ? null : blockStack.peek();
     blockStack.push(new BasicBlock(parent, n));
-
-    // Handle bleeding functions (named functions that create a variable
-    // declaration inside their scope, for recursion. such as:
-    // var x = function y() { return y(); }
-    // This is a special case because the declaration of "y" does not
-    // actually appear in the inner scope, even though it is a part of the
-    // inner scope.
-    if (n.getType() == Token.FUNCTION) {
-      String fnName = n.getFirstChild().getString();
-      Scope s = t.getScope();
-      if (!fnName.isEmpty() && s.getVar(fnName).scope == s) {
-        addReference(t, s.getVar(fnName),
-            Reference.newBleedingFunction(t, parent, n));
-      }
-    }
   }
 
   /**

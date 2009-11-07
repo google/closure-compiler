@@ -1485,7 +1485,7 @@ public class Compiler extends AbstractCompiler {
   void sanityCheckVars() {
     logger_.info("Checking for undefined vars");
     startPass("sanityCheckVars");
-    VarCheck v = new VarCheck(this, false);
+    VarCheck v = new VarCheck(this, true);
     process(v);
     endPass();
   }
@@ -1659,8 +1659,12 @@ public class Compiler extends AbstractCompiler {
       VariableMap prevVariableMap) {
     logger_.info("Renaming vars");
     startPass("renameVars");
+    boolean preserveAnonymousFunctionNames =
+      anonFunctionNamePolicy != AnonymousFunctionNamingPolicy.OFF;
     RenameVars rn = new RenameVars(
-        this, renamePrefix, renameLocalVarsOnly, prevVariableMap,
+        this, renamePrefix,
+        renameLocalVarsOnly, preserveAnonymousFunctionNames,
+        prevVariableMap,
         anonFunctionNamePolicy.getReservedCharacters(),
         getPassConfig().getExportedNames());
     process(rn);

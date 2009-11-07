@@ -414,7 +414,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     private static boolean isReadFrom(Var var, Node name) {
       return name != null && NodeUtil.isName(name) &&
           var.getName().equals(name.getString()) &&
-          NodeUtil.isRValue(name);
+          !NodeUtil.isLhs(name, name.getParent());
     }
   }
 }

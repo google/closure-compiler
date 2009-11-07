@@ -33,6 +33,7 @@ class TypedCodeGenerator extends CodeGenerator {
     super(consumer);
   }
 
+  @Override
   void add(Node n, Context context) {
     if (n.getParent().getType() == Token.BLOCK
         || n.getParent().getType() == Token.SCRIPT) {

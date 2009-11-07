@@ -128,9 +128,17 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(createSyntheticBlocks);
     }
 
-    if (options.checkSymbols) {
-      checks.add(checkVars);
+    // All passes must run the variable check. This synthesizes
+    // variables later so that the compiler doesn't crash. It also
+    // checks the externs file for validity. If you don't want to warn
+    // about missing variable declarations, we shut that specific
+    // error off.
+    if (!options.checkSymbols) {
+      options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES,
+          CheckLevel.OFF);
     }
+
+    checks.add(checkVars);
 
     if (options.checkShadowVars.isOn()) {
       checks.add(checkShadowVars);
@@ -471,16 +479,10 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("processProvidesAndRequires", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      final ProcessClosurePrimitives pass =
-          options.brokenClosureRequiresLevel != null ?
-          new ProcessClosurePrimitives(
-              compiler,
-              options.brokenClosureRequiresLevel,
-              options.rewriteNewDateGoogNow) :
-          new ProcessClosurePrimitives(
-              compiler,
-              options.allowBrokenClosureRequires,
-              options.rewriteNewDateGoogNow);
+      final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(
+          compiler,
+          options.brokenClosureRequiresLevel,
+          options.rewriteNewDateGoogNow);
 
       return new CompilerPass() {
         @Override

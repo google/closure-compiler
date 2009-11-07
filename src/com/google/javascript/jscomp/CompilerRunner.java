@@ -52,9 +52,15 @@ import java.util.zip.ZipInputStream;
 public class CompilerRunner extends
     AbstractCompilerRunner<Compiler, CompilerOptions> {
 
-  @FlagSpec(help = "Specifies the compilation level to use")
+  @FlagSpec(help = "Specifies the compilation level to use. Options: " +
+            "WHITESPACE_ONLY, SIMPLE_OPTIMIZATIONS, ADVANCED_OPTIMIZATIONS")
   private static final Flag<CompilationLevel> FLAG_compilation_level
       = Flag.value(CompilationLevel.SIMPLE_OPTIMIZATIONS);
+
+  @FlagSpec(help = "Specifies the warning level to use. Options: " +
+            "QUIET, DEFAULT, VERBOSE")
+  static final Flag<WarningLevel> FLAG_warning_level
+      = Flag.value(WarningLevel.DEFAULT);
 
   @FlagSpec(help = "Specifies whether the default externs should be excluded.")
   private static final Flag<Boolean> FLAG_use_only_custom_externs
@@ -105,6 +111,8 @@ public class CompilerRunner extends
     CompilerOptions options = new CompilerOptions();
     CompilationLevel level = FLAG_compilation_level.get();
     level.setOptionsForCompilationLevel(options);
+    WarningLevel wLevel = FLAG_warning_level.get();
+    wLevel.setOptionsForWarningLevel(options);
     for (FormattingOption formattingOption : FLAG_formatting.get()) {
       formattingOption.applyToOptions(options);
     }

@@ -46,7 +46,7 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   @Override public CompilerPass getProcessor(final Compiler compiler) {
     if ((additionalCode == null) && (additionalEndCode == null)) {
-      return new ProcessClosurePrimitives(compiler, false, true);
+      return new ProcessClosurePrimitives(compiler, CheckLevel.ERROR, true);
     } else {
       return new CompilerPass() {
         public void process(Node externs, Node root) {

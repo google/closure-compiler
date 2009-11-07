@@ -285,11 +285,6 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
     return !scope.isGlobal();
   }
 
-  @Override
-  public boolean allowsUndeclaredVariables() {
-    return true;
-  }
-
   private final Set<String> propertyTestFunctions = ImmutableSet.of(
       "goog.isDef", "goog.isNull", "goog.isDefAndNotNull",
       "goog.isString", "goog.isNumber", "goog.isBoolean",

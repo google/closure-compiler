@@ -472,12 +472,21 @@ public class NodeTraversal {
 
     final Node fnName = n.getFirstChild();
 
-    // Function name
-    traverseBranch(fnName, n);
+    boolean anonymous = parent != null && NodeUtil.isFunctionAnonymous(n); 
+
+    if (!anonymous) {
+      // Named functions are parent of the containing scope.
+      traverseBranch(fnName, n);
+    }
 
     curNode = n;
     pushScope(n);
 
+    if (anonymous) {
+      // Anonymous function names are parent of the contained scope.
+      traverseBranch(fnName, n);
+    }
+    
     final Node args = fnName.getNext();
     final Node body = args.getNext();
 

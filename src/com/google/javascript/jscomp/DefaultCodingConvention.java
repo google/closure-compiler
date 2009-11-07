@@ -165,11 +165,6 @@ public class DefaultCodingConvention implements CodingConvention {
   }
 
   @Override
-  public boolean allowsUndeclaredVariables() {
-    return true;
-  }
-
-  @Override
   public boolean isPropertyTestFunction(Node call) {
     return false;
   }
