@@ -52,7 +52,6 @@ public enum WarningLevel {
    * @param options The CompilerOptions object to set the options on.
    */
   private static void addDefaultWarnings(CompilerOptions options) {
-    options.checkSymbols = true;
     options.checkSuspiciousCode = true;
     // TODO(user): This is deprecated. We should turn on the
     // new one once it is default in command line JSCompiler.
@@ -70,6 +69,7 @@ public enum WarningLevel {
     // checkSuspiciousCode needs to be enabled for CheckGlobalThis to get run.
     options.checkSuspiciousCode = true;
     options.checkGlobalThisLevel = CheckLevel.WARNING;
+    options.checkSymbols = true;
 
     // checkTypes and checkFunctions have the side-effect of asserting that the
     // correct number of arguments are passed to a function.

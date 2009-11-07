@@ -59,6 +59,16 @@ public class CompilerRunnerTest extends TestCase {
     test("function f(x) { return x; } f();", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
+  public void testCheckSymbolsOffForDefault() {
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    testSame("x = 3;");
+  }
+
+  public void testCheckSymbolsOnForVerbose() {
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    test("x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
   private void testSame(String original) {
     testSame(new String[] { original });
   }
