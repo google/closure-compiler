@@ -146,6 +146,7 @@
          author="false"
          protected="true"
          windowtitle="Compiler"
+         additionalparam=" -notimestamp "
          stylesheetfile="${stylesheetfile}">
       <sourcepath>
         <pathelement location="${src.dir}" />

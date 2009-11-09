@@ -75,16 +75,8 @@ public class SanityCheckTest extends CompilerTestCase {
     try {
       test("while(1){}", "while(1){}");
     } catch (RuntimeException e) {
-      assertEquals(
-          "INTERNAL COMPILER ERROR.\n" +
-          "Please report this problem.\n" +
-          "Normalize constraints violated:\n" +
-          "WHILE node\n" +
-          "  Node: testcode:1:0\n" +
-          "null\n" +
-          "  Parent: testcode:1:0\n" +
-          "null\n",
-          e.getMessage());
+      assertTrue(e.getMessage().contains(
+          "Normalize constraints violated:\nWHILE node"));
       exceptionCaught = true;
     }
     assert(exceptionCaught);

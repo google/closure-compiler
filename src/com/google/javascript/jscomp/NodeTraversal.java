@@ -224,14 +224,22 @@ public class NodeTraversal {
     // its parent is missing. We still have the scope stack in which it is still
     // very useful to find out at least which function caused the exception.
     if (!sourceName.isEmpty()) {
-      int lineNumber = curNode == null ? -1 : curNode.getLineno();
       message =
           unexpectedException.getMessage() + "\n" +
-          "  Node: " + formatNodePosition(curNode) +
-          (curNode == null ? "" :
-            "  Parent: " + formatNodePosition(curNode.getParent()));
+          formatNodeContext("Node", curNode) +
+          (curNode == null ?
+              "" :
+              formatNodeContext("Parent", curNode.getParent()));
     }
     compiler.throwInternalError(message, unexpectedException);
+  }
+
+  private String formatNodeContext(String label, Node n) {
+    if (n == null) {
+      return "  " + label + ": NULL";
+    }
+    return "  " + label + "(" + n.toString(false, false, false) + "): "
+        + formatNodePosition(n);
   }
 
   /**
@@ -277,15 +285,21 @@ public class NodeTraversal {
     }
   }
 
+  private static final String MISSING_SOURCE = "[source unknown]";
+
   private String formatNodePosition(Node n) {
     if (n == null) {
-      return "[missing]\n";
+      return MISSING_SOURCE + "\n";
     }
 
     int lineNumber = n.getLineno();
     int columnNumber = n.getCharno();
-    return sourceName + ":" + lineNumber + ":" + columnNumber + "\n" +
-        compiler.getSourceLine(sourceName, lineNumber) + "\n";
+    String src = compiler.getSourceLine(sourceName, lineNumber);
+    if (src == null) {
+      src = MISSING_SOURCE;
+    }
+    return sourceName + ":" + lineNumber + ":" + columnNumber + "\n"
+        + src + "\n";
   }
 
   /**
@@ -472,7 +486,7 @@ public class NodeTraversal {
 
     final Node fnName = n.getFirstChild();
 
-    boolean anonymous = parent != null && NodeUtil.isFunctionAnonymous(n); 
+    boolean anonymous = parent != null && NodeUtil.isFunctionAnonymous(n);
 
     if (!anonymous) {
       // Named functions are parent of the containing scope.
@@ -486,7 +500,7 @@ public class NodeTraversal {
       // Anonymous function names are parent of the contained scope.
       traverseBranch(fnName, n);
     }
-    
+
     final Node args = fnName.getNext();
     final Node body = args.getNext();
 
