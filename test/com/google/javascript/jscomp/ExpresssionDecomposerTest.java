@@ -102,6 +102,24 @@ public class ExpresssionDecomposerTest extends TestCase {
         "function (){ return goo() && foo();}", "foo");
   }
 
+  public void testCanExposeExpression4() {
+    // 'this' must be preserved in call.
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "if (goo.a(1, foo()));", "foo");    
+  }
+
+  public void testCanExposeExpression5() {
+    // 'this' must be preserved in call.
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "if (goo['a'](foo()));", "foo");    
+  }
+
+  public void testCanExposeExpression6() {
+    // 'this' must be preserved in call.
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "z:if (goo.a(1, foo()));", "foo");    
+  }
+  
 
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
@@ -265,36 +283,6 @@ public class ExpresssionDecomposerTest extends TestCase {
         "if (temp_const_1(1, temp_const_0, temp_2));");
   }
 
-  public void testExposeExpression12() {
-    // Verify that "this" is preserved...
-    helperExposeExpression(
-        "if (goo.a(1, foo()));",
-        "foo",
-        "var temp_const_1 = goo;" +
-        "var temp_const_0 = temp_const_1.a;" +
-        "if (temp_const_0.call(temp_const_1, 1, foo()));");
-  }
-
-  public void testExposeExpression13() {
-    // Verify that "this" is preserved...
-    helperExposeExpression(
-        "if (goo['a'](foo()));",
-        "foo",
-        "var temp_const_1 = goo;" +
-        "var temp_const_0 = temp_const_1['a'];" +
-        "if (temp_const_0.call(temp_const_1, foo()));");
-  }
-
-  public void testExposeExpression14() {
-    // Verify that "this" is preserved...
-    helperExposeExpression(
-        "z:if (goo.a(1, foo()));",
-        "foo",
-        "var temp_const_1 = goo;" +
-        "var temp_const_0 = temp_const_1.a;" +
-        "z:if (temp_const_0.call(temp_const_1, 1, foo()));");
-  }
-
   /** Test case helpers. */
 
   private void helperCanExposeExpression(
@@ -366,6 +354,9 @@ public class ExpresssionDecomposerTest extends TestCase {
 
     Node callSite = findCall(tree, fnName);
     assertNotNull("Call to " + fnName + " was not found.", callSite);
+
+    DecompositionType result = decomposer.canExposeExpression(callSite);
+    assertTrue(result == DecompositionType.DECOMPOSABLE);
 
     compiler.resetUniqueNameId();
     decomposer.exposeExpression(callSite);

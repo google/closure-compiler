@@ -28,6 +28,7 @@ import com.google.javascript.rhino.TokenStream;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -541,6 +542,49 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * @return Whether the tree can be affected by side-effects or
+   * has side-effects.
+   */
+  static boolean canBeSideEffected(Node n) {
+    Set<String> emptySet = Collections.emptySet();
+    return canBeSideEffected(n, emptySet);
+  }
+
+  /**
+   * @param knownConstants A set of names known to be constant value at
+   * node 'n' (such as locals that are last written before n can execute).
+   * @return Whether the tree can be affected by side-effects or
+   * has side-effects.
+   */
+  static boolean canBeSideEffected(Node n, Set<String> knownConstants) {
+    switch (n.getType()) {
+      case Token.CALL:
+      case Token.NEW:
+        // Function calls or constructor can reference changed values.
+        // TODO(johnlenz): Add some mechanism for determining that functions
+        // are unaffected by side effects.
+        return true;
+      case Token.NAME:
+        // Non-constant names values may have been changed.
+        return !NodeUtil.isConstantName(n)
+            && !knownConstants.contains(n.getString());
+
+      // Properties on constant NAMEs can still be side-effected.
+      case Token.GETPROP:
+      case Token.GETELEM:
+        return true;
+    }
+
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      if (canBeSideEffected(c, knownConstants)) {
+        return true;
+      }
+    }
+
+    return false;    
+  }
+
   /*
    *  0 comma ,
    *  1 assignment = += -= *= /= %= <<= >>= >>>= &= ^= |=
@@ -739,6 +783,22 @@ public final class NodeUtil {
     return n.getType() == Token.NAME && n.getParent().getType() == Token.VAR;
   }
 
+  /**
+   * For an assignment or variable declaration get the assigned value.
+   * @return The value node representing the new value.
+   */
+  static Node getAssignedValue(Node n) {
+    Preconditions.checkState(isName(n));
+    Node parent = n.getParent();
+    if (isVar(parent)) {
+      return n.getFirstChild();
+    } else if (isAssign(parent) && parent.getFirstChild() == n) {
+      return n.getNext();
+    } else {
+      return null;
+    }
+  }
+  
   /**
    * Is this a STRING node?
    */
@@ -953,6 +1013,8 @@ public final class NodeUtil {
       if (parent.hasMoreThanOneChild()) {
         parent.removeChild(node);
       } else {
+        // Remove the node from the parent, so it can be reused.
+        parent.removeChild(node);
         // This would leave an empty VAR, remove the VAR itself.
         removeChild(parent.getParent(), parent);
       }
@@ -962,6 +1024,8 @@ public final class NodeUtil {
       node.detachChildren();
     } else if (parent.getType() == Token.LABEL
         && node == parent.getLastChild()) {
+      // Remove the node from the parent, so it can be reused.
+      parent.removeChild(node);
       // A LABEL without children can not be referred to, remove it.
       removeChild(parent.getParent(), parent);
     } else if (parent.getType() == Token.FOR

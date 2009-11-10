@@ -95,8 +95,23 @@ class VariableReferenceCheck implements CompilerPass {
     private void checkVar(NodeTraversal t, Var v, List<Reference> references) {
       blocksWithDeclarations.clear();
       boolean isDeclaredInScope = false;
+      Reference hoistedFn = null;
+
+      // Look for hoisted functions.
+      for (Reference reference : references) {
+        if (reference.isHoistedFunction()) {
+          blocksWithDeclarations.add(reference.getBasicBlock());
+          isDeclaredInScope = true;
+          hoistedFn = reference;
+          break;
+        }
+      }
 
       for (Reference reference : references) {
+        if (reference == hoistedFn) {
+          continue;
+        }
+
         BasicBlock basicBlock = reference.getBasicBlock();
         boolean isDeclaration = reference.isDeclaration();
 

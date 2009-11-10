@@ -43,7 +43,13 @@ public class InlineVariablesConstantsTest extends CompilerTestCase {
     test("var ABC=2; var x = ABC;", "var x=2");
     test("var AA = 'aa'; AA;", "'aa'");
     test("var A_A=10; A_A + A_A;", "10+10");
-    testSame("var AA; AA=1");
+    test("var AA=1", "");
+    test("var AA; AA=1", "1");
+    test("var AA; if (false) AA=1; AA;", "if (false) 1; 1;");
+    testSame("var AA; if (false) AA=1; else AA=2; AA;");
+
+    test("var AA;(function () {AA=1})()",
+         "(function () {1})()");
 
     // Make sure that nothing explodes if there are undeclared variables.
     testSame("var x = AA;");
@@ -66,7 +72,12 @@ public class InlineVariablesConstantsTest extends CompilerTestCase {
     test("/** @const */var abc=2; var x = abc;", "var x=2");
     test("/** @const */var aa = 'aa'; aa;", "'aa'");
     test("/** @const */var a_a=10; a_a + a_a;", "10+10");
-    testSame("/** @const */var aa; aa=1;");
+    test("/** @const */var aa=1;", "");
+    test("/** @const */var aa; aa=1;", "1");
+    test("/** @const */var aa;(function () {aa=1})()", "(function () {1})()");
+    test("/** @const */var aa;(function () {aa=1})(); var z=aa",
+         "(function () {1})(); var z=1");
+    testSame("/** @const */var aa;(function () {var y; aa=y})(); var z=aa");
 
     // Don't inline if it will make the output larger.
     testSame("/** @const */var aa = '1234567890'; foo(aa); foo(aa); foo(aa);");

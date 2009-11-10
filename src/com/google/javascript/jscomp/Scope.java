@@ -322,6 +322,14 @@ public class Scope implements StaticScope<JSType> {
     return parent;
   }
 
+  Scope getGlobalScope() {
+    Scope result = this;
+    while (result.getParent() != null) {
+      result = result.getParent();
+    }
+    return result;
+  }
+
   @Override
   public StaticScope<JSType> getParentScope() {
     return parent;

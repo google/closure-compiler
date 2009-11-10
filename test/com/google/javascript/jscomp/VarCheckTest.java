@@ -252,15 +252,19 @@ public class VarCheckTest extends CompilerTestCase {
   }
 
   public void testParameter() {
-    checkSynthesizedExtern("function(x){}", "");
+    checkSynthesizedExtern("function f(x){}", "");
   }
 
   public void testLocalVar() {
-    checkSynthesizedExtern("function(){x}", "var x");
+    checkSynthesizedExtern("function f(){x}", "var x");
+  }
+
+  public void testTwoLocalVars() {
+    checkSynthesizedExtern("function f(){x}function g() {x}", "var x");
   }
 
   public void testInnerFunctionLocalVar() {
-    checkSynthesizedExtern("function(){function() {x}}", "var x");
+    checkSynthesizedExtern("function f(){function g() {x}}", "var x");
   }
 
   public void testNoCreateVarsForLabels() {

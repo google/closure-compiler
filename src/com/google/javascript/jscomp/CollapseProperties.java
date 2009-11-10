@@ -210,7 +210,9 @@ class CollapseProperties implements CompilerPass {
 
       ReferenceCollection aliasRefs =
           collector.getReferenceCollection(aliasVar);
-      if (aliasRefs.isWellDefined() && aliasRefs.isNeverReassigned()) {
+      if (aliasRefs.isWellDefined()
+          && aliasRefs.firstReferenceIsAssigningDeclaration()
+          && aliasRefs.isAssignedOnce()) {
         // The alias is well-formed, so do the inlining now.
         int size = aliasRefs.references.size();
         Set<Node> newNodes = Sets.newHashSetWithExpectedSize(size - 1);

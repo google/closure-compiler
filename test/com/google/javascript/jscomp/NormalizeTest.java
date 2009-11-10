@@ -72,26 +72,6 @@ public class NormalizeTest extends CompilerTestCase {
          "do{var a = foo(1); var b} while(false);");
   }
 
-  public void disable_testSplitAssign() {
-    testSame("a = 0");
-    test("a = b = 0",
-         "b = 0; a = b");
-    test("a = b = c = foo()",
-         "c = foo(); b = c; a = b");
-    test("a.a = a.b = 0",
-         "a.b = 0; a.a = a.b");
-    test("a[0] = a[1] = 0",
-         "a[1] = 0; a[0] = a[1]");
-    testSame("a[x++] = a[x++] = 0");
-    testSame("a[getNext()] = a[getNext()] = 0");
-
-    testSame("for(;a=b=0;c=d=0);");
-
-    // Verify any assign op is split.
-    test("a *= b -= c += foo()",
-         "c += foo(); b -= c; a *= b");
-  }
-
   public void testUnhandled() {
     testSame("var x = y = 1");
   }

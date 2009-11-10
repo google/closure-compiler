@@ -91,6 +91,18 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclare("function x() { var y; if (true) { var y; } }");
   }
 
+  public void testHoistedFunction1() {
+    assertNoWarning("f(); function f() {}");
+  }
+
+  public void testHoistedFunction2() {
+    assertNoWarning("function g() { f(); function f() {} }");
+  }
+
+  public void testNonHoistedFunction() {
+    assertUndeclared("if (true) { f(); function f() {} }");
+  }
+
   /**
    * Expects the JS to generate one bad-read error.
    */

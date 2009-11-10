@@ -68,8 +68,6 @@ class Normalize implements CompilerPass, Callback {
   private final AbstractCompiler compiler;
   private final boolean assertOnChange;
   private static final boolean CONVERT_WHILE_TO_FOR = true;
-  // TODO(johnlenz): Remove assignment splitting support.
-  private static final boolean ALLOW_ASSIGNMENT_SPLITTING = false;
   static final boolean MAKE_LOCAL_NAMES_UNIQUE = true;
 
   Normalize(AbstractCompiler compiler, boolean assertOnChange) {
@@ -258,9 +256,6 @@ class Normalize implements CompilerPass, Callback {
     if (NodeUtil.isStatementBlock(n) || n.getType() == Token.LABEL) {
       extractForInitializer(n, null, null);
       splitVarDeclarations(n);
-      if (ALLOW_ASSIGNMENT_SPLITTING) {
-        splitAssignments(n);
-      }
     }
   }
 
@@ -336,53 +331,6 @@ class Normalize implements CompilerPass, Callback {
         }
       }
     }
-  }
-
-
-  /**
-   * Split a compound assignment into individual statements.  This does not
-   * split assignments within conditions, such as "while(a = b = foo()){ blah }"
-   * which would require moving the code into the code while block.
-   *
-   * @param n The assignment node to break down.
-   */
-  private void splitAssignments(Node n) {
-    for (Node next, c = n.getFirstChild(); c != null; c = next) {
-      next = c.getNext();
-      if (NodeUtil.isExpressionNode(c)) {
-        Node expression = c;
-        while (isCompoundAssignment(expression.getFirstChild())) {
-          Node assign = expression.getFirstChild();
-          Node rhs = assign.getLastChild();
-          Node nameNode = rhs.getFirstChild();
-
-          // Verify this is something safe to split.
-          if (NodeUtil.mayEffectMutableState(nameNode)) {
-            break;
-          }
-
-          // Split it. For example change "a = b = c = foo();"
-          // into "b = c = foo(); a = b;"
-          assign.removeChild(rhs);
-          assign.addChildToBack(nameNode.cloneTree());
-
-          Node newChild = NodeUtil.newExpr(rhs);
-          n.addChildBefore(newChild, expression);
-          expression = newChild;  // next iteration.
-          compiler.reportCodeChange();
-        }
-      }
-    }
-  }
-
-  /**
-   * @param n The node to check.
-   * @return Whether n is an assignment and the RHS is also an
-   *     assignment.
-   */
-  private static boolean isCompoundAssignment(Node n) {
-    return (NodeUtil.isAssignmentOp(n)
-        && NodeUtil.isAssignmentOp(n.getLastChild()));
   }
 
   /**

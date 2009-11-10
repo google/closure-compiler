@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -247,14 +248,15 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
 
       // If this is a declaration that does not instantiate the variable,
       // it's not well-defined.
-      Reference decl = references.get(0);
-      if (!decl.isInitializingDeclaration()) {
+      Reference init = getInitializingReference();
+      if (init == null) {
         return false;
       }
 
-      BasicBlock declBlock = decl.getBasicBlock();
+      Preconditions.checkState(references.get(0).isDeclaration());
+      BasicBlock initBlock = init.getBasicBlock();
       for (int i = 1; i < size; i++) {
-        if (!declBlock.provablyExecutesBefore(
+        if (!initBlock.provablyExecutesBefore(
                 references.get(i).getBasicBlock())) {
           return false;
         }
@@ -263,15 +265,98 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
       return true;
     }
 
-    boolean isNeverReassigned() {
-      int size = references.size();
-      for (int i = 1; i < size; i++) {
-        if (references.get(i).isLvalue()) {
-          return false;
+    /**
+     * @param index The index into the references array to look for an 
+     * assigning declaration.
+     *
+     * This is either the declaration if a value is assigned (such as
+     * "var a = 2", "function a()...", "... catch (a)...").
+     */
+    private boolean isInitializingDeclarationAt(int index) {
+      Reference maybeInit = references.get(index);
+      if (maybeInit.isInitializingDeclaration()) {
+        // This is a declaration that represents the initial value. 
+        // Specifically, var declarations without assignments such as "var a;"
+        // are not.
+        return true;
+      }
+      return false;
+    }
+    
+    /**
+     * @param index The index into the references array to look for an 
+     * initialized assignment reference. That is, an assignment immediately
+     * follow a variable declaration that itself does not initialize the
+     * variable.
+     */
+    private boolean isInitializingAssignmentAt(int index) {
+      if (index < references.size() && index > 0) {
+        Reference maybeDecl = references.get(index-1);
+        if (maybeDecl.isVarDeclaration()) {
+          Preconditions.checkState(!maybeDecl.isInitializingDeclaration());
+          Reference maybeInit = references.get(index);
+          if (maybeInit.isSimpleAssignmentToName()) {
+            return true;
+          }
         }
       }
+      return false;
+    }    
 
-      return true;
+    /**
+     * @return The reference that provides the value for the variable at the
+     * time of the first read, if known, otherwise null.
+     *
+     * This is either the variable declaration ("var a = ...") or first
+     * reference following the declaration if it is an assignment.
+     */
+    Reference getInitializingReference() {
+      if (isInitializingDeclarationAt(0)) {
+        return references.get(0);
+      } else if (isInitializingAssignmentAt(1)) {
+        return references.get(1);
+      }
+      return null;
+    }
+
+    /**
+     * Constants are allowed to be defined after their first use.
+     */
+    Reference getInitializingReferenceForConstants() {
+      int size = references.size();
+      for (int i = 0; i < size; i++) {
+        if (isInitializingDeclarationAt(i) || isInitializingAssignmentAt(i)) {
+          return references.get(i);
+        }
+      }
+      return null;
+    }
+
+    /**
+     * @return Whether the variable is only assigned a value once.
+     */
+    boolean isAssignedOnce() {
+      boolean assigned = false;
+      int size = references.size();
+      for (int i = 0; i < size; i++) {
+        Reference ref = references.get(i);
+        if (ref.isLvalue() || ref.isInitializingDeclaration()) {
+          if (!assigned) {
+            assigned = true;
+          } else {
+            return false;
+          }
+        }
+      }
+      return assigned;
+    }
+
+    boolean firstReferenceIsAssigningDeclaration() {
+      int size = references.size();
+      if (size > 0 && references.get(0).isInitializingDeclaration()) {
+        return true;
+      }
+      return false;
     }
   }
 
@@ -320,6 +405,16 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
           grandparent.getType() == Token.FUNCTION;
     }
 
+    boolean isVarDeclaration() {
+      return parent.getType() == Token.VAR;
+    }
+
+    boolean isHoistedFunction() {
+      return NodeUtil.isFunctionDeclaration(parent) &&
+          (grandparent.getType() == Token.SCRIPT ||
+           grandparent.getParent().getType() == Token.FUNCTION);
+    }
+
     /**
      * Determines whether the variable is initialized at the declaration.
      */
@@ -328,6 +423,14 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
       // its variable. Catch blocks, named functions, and parameters all do.
       return isDeclaration() &&
           (parent.getType() != Token.VAR || nameNode.getFirstChild() != null);
+    }
+
+   /**
+    * @return For an assignment or variable declaration return the assigned
+    * value, otherwise null.
+    */
+    Node getAssignedValue() {
+      return NodeUtil.getAssignedValue(getNameNode());
     }
 
     BasicBlock getBasicBlock() {
@@ -349,18 +452,23 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     private static boolean isForIn(Node n) {
       return n.getType() == Token.FOR && n.getChildCount() == 3;
     }
-    
+
     private static boolean isLhsOfForInExpression(Node n) {
       Node parent = n.getParent();
       if (parent.getType() == Token.VAR) {
         return isLhsOfForInExpression(parent);
-      } 
+      }
       return isForIn(parent) && parent.getFirstChild() == n;
     }
-    
+
+    boolean isSimpleAssignmentToName() {
+      return parent.getType() == Token.ASSIGN
+          && parent.getFirstChild() == nameNode;
+    }
+
     boolean isLvalue() {
       int parentType = parent.getType();
-      return parentType == Token.VAR 
+      return (parentType == Token.VAR && nameNode.getFirstChild() != null)
           || parentType == Token.INC
           || parentType == Token.DEC
           || (NodeUtil.isAssignmentOp(parent)

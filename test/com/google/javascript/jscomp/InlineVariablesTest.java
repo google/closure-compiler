@@ -114,9 +114,17 @@ public class InlineVariablesTest extends CompilerTestCase {
         new String[] { "", "var b = 2;" });
   }
 
-  public void testDoNotExitConditional() {
+  public void testDoNotExitConditional1() {
     testSame("if (true) { var x = 1; } var z = x;");
+  }
+
+  public void testDoNotExitConditional2() {
     testSame("if (true) var x = 1; var z = x;");
+  }
+
+
+  public void testDoNotExitConditional3() {
+    testSame("var x; if (true) x=1; var z = x;");
   }
 
   public void testDoNotExitLoop() {
@@ -159,6 +167,58 @@ public class InlineVariablesTest extends CompilerTestCase {
 
   public void testInsideIfConditional() {
     test("var a = foo(); if (a) { alert(3); }", "if (foo()) { alert(3); }");
+    test("var a; a = foo(); if (a) { alert(3); }", "if (foo()) { alert(3); }");
+  }
+
+  public void testOnlyReadAtInitialization() {
+    test("var a; a = foo();", "foo();");
+    test("var a; if (a = foo()) { alert(3); }", "if (foo()) { alert(3); }");
+    test("var a; switch (a = foo()) {}", "switch(foo()) {}");
+    test("var a; function f(){ return a = foo(); }",
+         "function f(){ return foo(); }");
+    test("function f(){ var a; return a = foo(); }",
+         "function f(){ return foo(); }");
+    test("var a; with (a = foo()) { alert(3); }", "with (foo()) { alert(3); }");
+
+    test("var a; b = (a = foo());", "b = foo();");
+    test("var a; while(a = foo()) { alert(3); }",
+         "while(foo()) { alert(3); }");
+    test("var a; for(;a = foo();) { alert(3); }",
+         "for(;foo();) { alert(3); }");
+    test("var a; do {} while(a = foo()) { alert(3); }",
+         "do {} while(foo()) { alert(3); }");
+  }
+
+  public void testImmutableWithSingleReferenceAfterInitialzation() {
+    test("var a; a = 1;", "1;");
+    test("var a; if (a = 1) { alert(3); }", "if (1) { alert(3); }");
+    test("var a; switch (a = 1) {}", "switch(1) {}");
+    test("var a; function f(){ return a = 1; }",
+         "function f(){ return 1; }");
+    test("function f(){ var a; return a = 1; }",
+         "function f(){ return 1; }");
+    test("var a; with (a = 1) { alert(3); }", "with (1) { alert(3); }");
+
+    test("var a; b = (a = 1);", "b = 1;");
+    test("var a; while(a = 1) { alert(3); }",
+         "while(1) { alert(3); }");
+    test("var a; for(;a = 1;) { alert(3); }",
+         "for(;1;) { alert(3); }");
+    test("var a; do {} while(a = 1) { alert(3); }",
+         "do {} while(1) { alert(3); }");
+  }
+
+  public void testSingleReferenceAfterInitialzation() {
+    test("var a; a = foo();a;", "foo();");
+    testSame("var a; if (a = foo()) { alert(3); } a;");
+    testSame("var a; switch (a = foo()) {} a;");
+    testSame("var a; function f(){ return a = foo(); } a;");
+    testSame("function f(){ var a; return a = foo(); a;}");
+    testSame("var a; with (a = foo()) { alert(3); } a;");
+    testSame("var a; b = (a = foo()); a;");
+    testSame("var a; while(a = foo()) { alert(3); } a;");
+    testSame("var a; for(;a = foo();) { alert(3); } a;");
+    testSame("var a; do {} while(a = foo()) { alert(3); } a;");
   }
 
   public void testInsideIfBranch() {
@@ -263,7 +323,7 @@ public class InlineVariablesTest extends CompilerTestCase {
   // Test movement of values that are complex but lack side effects
 
   public void testDoNotCrossAssignment() {
-    testSame("var x = {};\nvar y = x.a;\nx.a = 1;\nvar z = y;");
+    testSame("var x = {}; var y = x.a; x.a = 1; var z = y;");
     testSame("var a = this.id; foo(this.id = 3, a);");
   }
 
@@ -427,6 +487,7 @@ public class InlineVariablesTest extends CompilerTestCase {
 
   public void testNoInlineGetpropIntoCall() {
     test("var a = b; a();", "b();");
+    test("var a = b.c; f(a);", "f(b.c);");
     testSame("var a = b.c; a();");
   }
 
@@ -459,10 +520,43 @@ public class InlineVariablesTest extends CompilerTestCase {
          "var x = this.foo(); this.bar(); this.baz(x);");
   }
 
+  public void testInlineAliases1b() {
+    test("var x = this.foo(); this.bar(); var y; y = x; this.baz(y);",
+         "var x = this.foo(); this.bar(); x; this.baz(x);");
+  }
+
+  public void testInlineAliases1c() {
+    test("var x; x = this.foo(); this.bar(); var y = x; this.baz(y);",
+         "var x; x = this.foo(); this.bar(); this.baz(x);");
+  }
+
+  public void testInlineAliases1d() {
+    test("var x; x = this.foo(); this.bar(); var y; y = x; this.baz(y);",
+         "var x; x = this.foo(); this.bar(); x; this.baz(x);");
+  }
+
   public void testInlineAliases2() {
     test("var x = this.foo(); this.bar(); " +
          "function f() { var y = x; this.baz(y); }",
          "var x = this.foo(); this.bar(); function f() { this.baz(x); }");
+  }
+
+  public void testInlineAliases2b() {
+    test("var x = this.foo(); this.bar(); " +
+         "function f() { var y; y = x; this.baz(y); }",
+         "var x = this.foo(); this.bar(); function f() { this.baz(x); }");
+  }
+
+  public void testInlineAliases2c() {
+    test("var x; x = this.foo(); this.bar(); " +
+         "function f() { var y = x; this.baz(y); }",
+         "var x; x = this.foo(); this.bar(); function f() { this.baz(x); }");
+  }
+
+  public void testInlineAliases2d() {
+    test("var x; x = this.foo(); this.bar(); " +
+         "function f() { var y; y = x; this.baz(y); }",
+         "var x; x = this.foo(); this.bar(); function f() { this.baz(x); }");
   }
 
   public void testNoInlineAliases1() {
@@ -470,9 +564,19 @@ public class InlineVariablesTest extends CompilerTestCase {
         "var x = this.foo(); this.bar(); var y = x; x = 3; this.baz(y);");
   }
 
+  public void testNoInlineAliases1b() {
+    testSame(
+        "var x = this.foo(); this.bar(); var y; y = x; x = 3; this.baz(y);");
+  }
+
   public void testNoInlineAliases2() {
     testSame(
         "var x = this.foo(); this.bar(); var y = x; y = 3; this.baz(y); ");
+  }
+
+  public void testNoInlineAliases2b() {
+    testSame(
+        "var x = this.foo(); this.bar(); var y; y = x; y = 3; this.baz(y); ");
   }
 
   public void testNoInlineAliases3() {
@@ -482,15 +586,34 @@ public class InlineVariablesTest extends CompilerTestCase {
          "function g() { x = 3; }");
   }
 
+  public void testNoInlineAliases3b() {
+    testSame(
+         "var x = this.foo(); this.bar(); " +
+         "function f() { var y; y = x; g(); this.baz(y); } " +
+         "function g() { x = 3; }");
+  }
+
   public void testNoInlineAliases4() {
     testSame(
          "var x = this.foo(); this.bar(); " +
          "function f() { var y = x; y = 3; this.baz(y); }");
   }
 
+  public void testNoInlineAliases4b() {
+    testSame(
+         "var x = this.foo(); this.bar(); " +
+         "function f() { var y; y = x; y = 3; this.baz(y); }");
+  }
+
   public void testNoInlineAliases5() {
     testSame(
         "var x = this.foo(); this.bar(); var y = x; this.bing();" +
+        "this.baz(y); x = 3;");
+  }
+
+  public void testNoInlineAliases5b() {
+    testSame(
+        "var x = this.foo(); this.bar(); var y; y = x; this.bing();" +
         "this.baz(y); x = 3;");
   }
 
@@ -500,15 +623,130 @@ public class InlineVariablesTest extends CompilerTestCase {
         "this.baz(y); y = 3;");
   }
 
+  public void testNoInlineAliases6b() {
+    testSame(
+        "var x = this.foo(); this.bar(); var y; y = x; this.bing();" +
+        "this.baz(y); y = 3;");
+  }
+
   public void testNoInlineAliases7() {
     testSame(
          "var x = this.foo(); this.bar(); " +
          "function f() { var y = x; this.bing(); this.baz(y); x = 3; }");
   }
 
+  public void testNoInlineAliases7b() {
+    testSame(
+         "var x = this.foo(); this.bar(); " +
+         "function f() { var y; y = x; this.bing(); this.baz(y); x = 3; }");
+  }
+
   public void testNoInlineAliases8() {
     testSame(
          "var x = this.foo(); this.bar(); " +
          "function f() { var y = x; this.baz(y); y = 3; }");
+  }
+
+  public void testNoInlineAliases8b() {
+    testSame(
+         "var x = this.foo(); this.bar(); " +
+         "function f() { var y; y = x; this.baz(y); y = 3; }");
+  }
+
+  public void testSideEffectOrder() {
+    // z can not be changed by the call to y, so x can be inlined.
+    String EXTERNS = "var z; function f(){}";
+    test(EXTERNS,
+         "var x = f(y.a, y); z = x;",
+         "z = f(y.a, y);", null, null);
+    // z.b can be changed by the call to y, so x can not be inlined.
+    testSame(EXTERNS, "var x = f(y.a, y); z.b = x;", null, null);
+  }
+
+  public void testInlineParameterAlias1() {
+    test(
+      "function f(x) {" +
+      "  var y = x;" +
+      "  g();" +
+      "  y;y;" +
+      "}",
+      "function f(x) {" +
+      "  g();" +
+      "  x;x;" +
+      "}"
+      );
+  }
+
+  public void testInlineParameterAlias2() {
+    test(
+      "function f(x) {" +
+      "  var y; y = x;" +
+      "  g();" +
+      "  y;y;" +
+      "}",
+      "function f(x) {" +
+      "  x;" +
+      "  g();" +
+      "  x;x;" +
+      "}"
+      );
+  }
+
+  public void testInlineFunctionAlias1() {
+    test(
+      "function f(x) {};" +
+      "var y = f;" +
+      "g();" +
+      "y();y();",
+      "function f(x) {};" +
+      "g();" +
+      "f();f();"
+      );
+  }
+
+  public void testInlineFunctionAlias2() {
+    test(
+      "function f(x) {};" +
+      "var y; y = f;" +
+      "g();" +
+      "y();y();",
+      "function f(x) {};" +
+      "f;" +
+      "g();" +
+      "f();f();"
+      );
+  }
+
+  public void testInlineCatchAlias1() {
+    test(
+      "try {" +
+      "} catch (e) {" +
+      "  var y = e;" +
+      "  g();" +
+      "  y;y;" +
+      "}",
+      "try {" +
+      "} catch (e) {" +
+      "  g();" +
+      "  e;e;" +
+      "}"
+      );
+  }
+
+  public void testInlineCatchAlias2() {
+    test(
+      "try {" +
+      "} catch (e) {" +
+      "  var y; y = e;" +
+      "  g();" +
+      "  y;y;" +
+      "}",
+      "try {" +
+      "} catch (e) {" +
+      "  e;" +
+      "  g();" +
+      "  e;e;" +
+      "}"
+      );
   }
 }

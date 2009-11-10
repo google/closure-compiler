@@ -244,7 +244,7 @@ class FunctionArgumentInjector {
         // Even if there are no references, we still need to evaluate the
         // expression if it has side-effects.
         safe = false;
-      } else if (canBeSideEffected(cArg)
+      } else if (NodeUtil.canBeSideEffected(cArg)
           && namesAfterSideEffects.contains(argName)) {
         safe = false;
       } else if (references > 1) {
@@ -443,39 +443,6 @@ class FunctionArgumentInjector {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       gatherLocalNames(c, names);
     }
-  }
-
-  // TODO(johnlenz): Move this function to a better location.
-  /**
-   * @return Whether the tree can be affect by side-effects occuring elsewhere.
-   */
-  private static boolean canBeSideEffected(Node n) {
-    switch (n.getType()) {
-      case Token.CALL:
-        if (!n.isNoSideEffectsCall()) {
-          return true;
-        }
-        // The function itself is a pure function, check the parameters.
-        break;
-      case Token.NEW:
-        // TODO(johnlenz): Add some mechanism for determining that constructors
-        // are unaffected by side effects.
-        return true;
-      case Token.NAME:
-        // Non-constant names values may have been changed.
-        if (!NodeUtil.isConstantName(n)) {
-          return true;
-        }
-        break;
-    }
-
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (canBeSideEffected(c)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   /**

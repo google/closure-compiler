@@ -157,23 +157,46 @@ class NodeIterators {
     private Node lookAhead;
 
     /**
-     * @param ancestors The ancestors of the point where iteration will start,
-     *     beginning with the deepest ancestor. The start node will not be
-     *     exposed in the iteration.
+     * @return Create a LocalVarMotion for use with moving a value assigned
+     * at a variable declaration.
      */
-    LocalVarMotion(Node ... ancestors) {
-      Preconditions.checkArgument(ancestors.length >= 2);
-      Preconditions.checkArgument(ancestors[0].getType() == Token.NAME);
-      Preconditions.checkArgument(ancestors[1].getType() == Token.VAR);
+    static LocalVarMotion forVar(
+        Node name, Node var, Node block) {
+      Preconditions.checkArgument(var.getType() == Token.VAR);
+      Preconditions.checkArgument(NodeUtil.isStatement(var));
+      // The FunctionlessLocalScope must start at "name" as this may be used
+      // before the Normalize pass, and thus the VAR node may define multiple
+      // names and the "name" node may have siblings.  The actual assigned
+      // value is skipped as it is a child of name.
+      return new LocalVarMotion(
+          name, new FunctionlessLocalScope(name, var, block));
+    }
 
-      this.iterator = new FunctionlessLocalScope(ancestors);
+    /**
+     * @return Create a LocalVarMotion for use with moving a value assigned
+     * as part of a simple assignment expression ("a = b;").
+     */
+    static LocalVarMotion forAssign(
+        Node name, Node assign, Node expr, Node block) {
+      Preconditions.checkArgument(assign.getType() == Token.ASSIGN);
+      Preconditions.checkArgument(expr.getType() == Token.EXPR_RESULT);
+      // The FunctionlessLocalScope must start at "assign", to skip the value
+      // assigned to "name" (which would be its sibling).
+      return new LocalVarMotion(
+          name, new FunctionlessLocalScope(assign, expr, block));
+    }
 
-      Node nameNode = ancestors[0];
-      Node valueNode = nameNode.getFirstChild();
+    /**
+     * @param iterator The to use while inspecting the node
+     *     beginning with the deepest ancestor.
+     */
+    private LocalVarMotion(Node nameNode, FunctionlessLocalScope iterator) {
+      Preconditions.checkArgument(nameNode.getType() == Token.NAME);
+      Node valueNode = NodeUtil.getAssignedValue(nameNode);
       this.varName = nameNode.getString();
       this.valueHasSideEffects = valueNode != null &&
           NodeUtil.mayHaveSideEffects(valueNode);
-
+      this.iterator = iterator;
       advanceLookAhead(true);
     }
 

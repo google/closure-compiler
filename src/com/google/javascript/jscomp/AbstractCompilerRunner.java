@@ -494,7 +494,9 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
           pathPrefix.charAt(pathPrefix.length() - 1) == File.separatorChar
               ? pathPrefix.substring(0, pathPrefix.length() - 1) : new File(
                   pathPrefix).getParent();
-      new File(dirName).mkdirs();
+      if (dirName != null) {
+        new File(dirName).mkdirs();
+      }
     }
   }
 

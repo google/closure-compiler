@@ -165,8 +165,11 @@ public class NodeIteratorsTest extends TestCase {
     assertTrue("Variable X not found! " + root.toStringTree(), found);
 
     List<Node> currentAncestors = searchIt.currentAncestors();
-    Iterator<Node> moveIt = new LocalVarMotion(
-        currentAncestors.toArray(new Node[currentAncestors.size()]));
+    assert(currentAncestors.size() >= 3);
+    Iterator<Node> moveIt = LocalVarMotion.forVar(
+        currentAncestors.get(0),
+        currentAncestors.get(1),
+        currentAncestors.get(2));
     List<Integer> actualTokens = Lists.newArrayList();
     while (moveIt.hasNext()) {
       actualTokens.add(moveIt.next().getType());

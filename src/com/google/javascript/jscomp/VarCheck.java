@@ -127,7 +127,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
           Node nameNode = Node.newString(Token.NAME, varName);
           getSynthesizedExternsRoot().addChildToBack(
               new Node(Token.VAR, nameNode));
-          scope.declare(varName, nameNode,
+          scope.getGlobalScope().declare(varName, nameNode,
               null, getSynthesizedExternsInput());
         }
       }

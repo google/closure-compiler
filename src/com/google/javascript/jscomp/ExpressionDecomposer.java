@@ -17,8 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -67,6 +65,8 @@ class ExpressionDecomposer {
     this.knownConstants = constNames;
   }
 
+  private static final int MAX_INTERATIONS = 100;
+
   /**
    * If required, rewrite the statement containing the expression.
    * @param expression The expression to be exposed.
@@ -74,8 +74,14 @@ class ExpressionDecomposer {
    */
   void maybeDecomposeExpression(Node expression) {
     // If the expression needs to exposed.
+    int i = 0;
     while (DecompositionType.DECOMPOSABLE == canExposeExpression(expression)) {
       exposeExpression(expression);
+      if (i > MAX_INTERATIONS) {
+        throw new IllegalStateException(
+            "DecomposeExpression depth exceeded on :\n" + 
+            expression.toStringTree());
+      }
     }
   }
 
@@ -153,7 +159,7 @@ class ExpressionDecomposer {
       Preconditions.checkState(
           !isConditionalOp(parent) || child == parent.getFirstChild());
       if (parentType == Token.ASSIGN) {
-          if (parent.getFirstChild().getType() == Token.NAME) {
+          if (isSafeAssign(parent, state.sideEffects)) {
             // It is always safe to inline "foo()" for expressions such as
             // "a = b = c = foo();"
             // As the assignment is unaffected by side effect of "foo()"
@@ -178,19 +184,26 @@ class ExpressionDecomposer {
           }
       } else if (parentType == Token.CALL
           && NodeUtil.isGet(parent.getFirstChild())) {
-        Node functionExpression = parent.getFirstChild();
-        decomposeSubExpressions(
-            functionExpression.getNext(), child, state);
-        // Now handle the call expression
-        if (isExpressionTreeUnsafe(functionExpression, state.sideEffects)) {
-          // Either there were preexisting side-effects, or this node has
-          // side-effects.
-          state.sideEffects = true;
-
-          // Rewrite the call so "this" is preserved.
-          Node replacement = rewriteCallExpression(parent, state);
-          // Continue from here.
-          parent = replacement;
+        // TODO(johnlenz): In Internet Explorer, non-javascript objects such
+        // as DOM objects can not be decomposed.
+        if (!maybeExternMethod(parent.getFirstChild())) {
+          throw new IllegalStateException(
+              "External object method calls can not be decomposed.");
+        } else {
+          Node functionExpression = parent.getFirstChild();
+          decomposeSubExpressions(
+              functionExpression.getNext(), child, state);
+          // Now handle the call expression
+          if (isExpressionTreeUnsafe(functionExpression, state.sideEffects)) {
+            // Either there were preexisting side-effects, or this node has
+            // side-effects.
+            state.sideEffects = true;
+  
+            // Rewrite the call so "this" is preserved.
+            Node replacement = rewriteCallExpression(parent, state);
+            // Continue from here.
+            parent = replacement;
+          }
         }
       } else {
         decomposeSubExpressions(
@@ -214,6 +227,14 @@ class ExpressionDecomposer {
       Node extractedConditional = extractConditional(
           nonconditionalExpr, exprInjectionPoint, needResult);
     }
+  }
+
+  /**
+   * @return Whether the node may represent an external method.
+   */
+  private boolean maybeExternMethod(Node node) {
+    // TODO(johnlenz): Provide some mechanism for determining this.
+    return true;
   }
 
   /**
@@ -589,11 +610,7 @@ class ExpressionDecomposer {
   DecompositionType canExposeExpression(Node subExpression) {
     Node expressionRoot = findExpressionRoot(subExpression);
     if (expressionRoot != null) {
-      if (isSubexpressionMovable(expressionRoot, subExpression)) {
-        return DecompositionType.MOVABLE;
-      } else {
-        return DecompositionType.DECOMPOSABLE;
-      }
+      return isSubexpressionMovable(expressionRoot, subExpression);
     }
     return DecompositionType.UNDECOMPOSABLE;
   }
@@ -620,20 +637,23 @@ class ExpressionDecomposer {
    * by x().  Note: this is true even if b is a local variable; the object that
    * b refers to may have a global alias.
    *
-   * @return Whether the call can be moved before the expression.
+   * @return UNDECOMPOSABLE if the expression can not be moved, DECOMPOSABLE if
+   * decomposition is required before the expression can be moved, otherwise
+   * MOVABLE.
    */
-  private boolean isSubexpressionMovable(
+  private DecompositionType isSubexpressionMovable(
       Node expressionRoot, Node subExpression) {
-
-    boolean callExpressionHasSideEffects = NodeUtil.mayHaveSideEffects(
-        subExpression);
+    boolean requiresDecomposition = false;
+    boolean seenSideEffects = NodeUtil.mayHaveSideEffects(subExpression);
 
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
       if (parent == expressionRoot) {
         // Done. The walk back to the root of the expression is complete, and
         // nothing was encountered that blocks the call from being moved.
-        return true;
+        return requiresDecomposition
+            ? DecompositionType.DECOMPOSABLE
+            : DecompositionType.MOVABLE;
       }
 
       int parentType = parent.getType();
@@ -642,7 +662,7 @@ class ExpressionDecomposer {
         // Only the first child is always executed, otherwise it must be
         // decomposed.
         if (child != parent.getFirstChild()) {
-          return false;
+          requiresDecomposition = true;
         }
       } else {
         // Only inline the call if none of the preceding siblings in the
@@ -652,8 +672,7 @@ class ExpressionDecomposer {
         // are evaluated.
 
         // SPECIAL CASE: Assignment to a simple name
-        if (parentType == Token.ASSIGN
-            && parent.getFirstChild().getType() == Token.NAME) {
+        if (isSafeAssign(parent, seenSideEffects)) {
           // It is always safe to inline "foo()" for expressions such as
           //   "a = b = c = foo();"
           // As the assignment is unaffected by side effect of "foo()"
@@ -674,8 +693,35 @@ class ExpressionDecomposer {
             }
 
             if (isExpressionTreeUnsafe(
-                n, callExpressionHasSideEffects)) {
-              return false;
+                n, seenSideEffects)) {
+              seenSideEffects = true;
+              requiresDecomposition = true;
+            }
+          }
+
+          // In Internet Explorer, DOM objects and other external objects
+          // methods can not be called indirectly, as is required when the 
+          // object or its property can be side-effected.  For example,
+          // when exposing expression f() (with side-effects) in: x.m(f())
+          // either the value of x or its property m might have changed, so
+          // both the 'this' value ('x') and the function to be called ('x.m') 
+          // need to be preserved. Like so:
+          //   var t1 = x, t2 = x.m, t3 = f();
+          //   t2.call(t1, t3);
+          // As IE doesn't support the call to these non-javascript objects 
+          // methods in this way. We can't do this.
+          // We don't currently distinguish between these types of objects
+          // in the extern definitions and if we did we would need accurate
+          // type information.
+          //
+          Node first = parent.getFirstChild();
+          if (requiresDecomposition 
+              && parent.getType() == Token.CALL 
+              && NodeUtil.isGet(first)) {
+            if (maybeExternMethod(first)) {
+              return DecompositionType.UNDECOMPOSABLE;
+            } else {
+              return DecompositionType.DECOMPOSABLE;
             }
           }
         }
@@ -689,45 +735,40 @@ class ExpressionDecomposer {
   }
 
   /**
-   * @return Whether the tree can be affect by side-effects occuring elsewhere.
+   * It is always safe to inline "foo()" for expressions such as
+   *    "a = b = c = foo();"
+   * As the assignment is unaffected by side effect of "foo()"
+   * and the names assigned-to can not influence the state before
+   * the call to foo.
+   * 
+   * It is also safe in cases like where the object is constant:
+   *    CONST_NAME.a = foo()
+   *    CONST_NAME[CONST_VALUE] = foo(); 
+   * 
+   * This is not true of more complex LHS values, such as
+   *     a.x = foo();
+   *     next().x = foo();
+   * in these cases the checks below are necessary.
+   * 
+   * @param seenSideEffects If true, check to see if node-tree maybe affected by
+   * side-effects, otherwise if the tree has side-effects. @see 
+   * isExpressionTreeUnsafe
+   * @return Whether the assignment is safe from side-effects.
    */
-  private boolean canBeSideEffected(Node n) {
-    return NodeUtil.has(
-        n, new SideEffected(this.knownConstants),
-        Predicates.<Node>alwaysTrue());
-  }
-
-  /**
-   * Predicate for detecting logic that may be affect by side-effects.
-   */
-  private static class SideEffected implements Predicate<Node> {
-    final Set<String> additionalConsts;
-
-    SideEffected(Set<String> additionalConsts) {
-      this.additionalConsts = additionalConsts;
-    }
-
-    /**
-     * @return Whether the node can be affect by side-effects.
-     */
-    public boolean apply(Node n) {
-      switch (n.getType()) {
-        case Token.CALL:
-        case Token.NEW:
-          // Function calls or constructor can reference changed values.
-          // TODO(johnlenz): Add some mechanism for determining that functions
-          // are unaffected by side effects.
-          return true;
+  private boolean isSafeAssign(Node n, boolean seenSideEffects) {
+    if (n.getType() == Token.ASSIGN) {
+      Node lhs = n.getFirstChild();
+      switch (lhs.getType()) {
         case Token.NAME:
-          // Non-constant names values may have been changed.
-          // TODO(johnlenz): A constant Named object may still have
-          // properties that are non-constant.
-          return !NodeUtil.isConstantName(n)
-              && !additionalConsts.contains(n.getString());
-        default:
-          return false;
+          return true;
+        case Token.GETPROP:
+          return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects);
+        case Token.GETELEM:
+          return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects) 
+              && !isExpressionTreeUnsafe(lhs.getLastChild(), seenSideEffects);
       }
     }
+    return false;
   }
 
   /**
@@ -741,7 +782,7 @@ class ExpressionDecomposer {
       // expression tree can be affected by any side-effects.
 
       // This is a superset of "NodeUtil.mayHaveSideEffects".
-      return canBeSideEffected(n);
+      return NodeUtil.canBeSideEffected(n, this.knownConstants);
     } else {
       // The function called doesn't have side-effects but check to see if there
       // are side-effects that that may affect it.

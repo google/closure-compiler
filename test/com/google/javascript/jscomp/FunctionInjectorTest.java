@@ -1074,6 +1074,48 @@ public class FunctionInjectorTest extends TestCase {
         "foo", INLINE_BLOCK, true);
   }
 
+  public void testInlineReferenceInExpression16() {
+    helperInlineReferenceToFunction(
+        "var z = {};" +
+        "function foo(a){z = {};return true;}; " +
+        "function x() { z[bar()] = foo(1) }",
+
+        "var z = {};" +
+        "function foo(a){z = {};return true;}; " +
+        "function x() {" +
+            "var JSCompiler_temp_const_1=z;" +
+            "var JSCompiler_temp_const_0=bar();" +
+            "{" +
+             "var JSCompiler_inline_result_2;" +
+             "z= {};" +
+             "JSCompiler_inline_result_2 = true;" +
+            "}" +
+            "JSCompiler_temp_const_1[JSCompiler_temp_const_0] = " +
+                "JSCompiler_inline_result_2;" +
+        "}",
+        "foo", INLINE_BLOCK, true);
+  }
+
+  public void testInlineReferenceInExpression17() {
+    helperInlineReferenceToFunction(
+        "var z = {};" +
+        "function foo(a){z = {};return true;}; " +
+        "function x() { z.y.x.gack = foo(1) }",
+
+        "var z = {};" +
+        "function foo(a){z = {};return true;}; " +
+        "function x() {" +
+            "var JSCompiler_temp_const_0=z.y.x;" +
+            "{" +
+             "var JSCompiler_inline_result_1;" +
+             "z= {};" +
+             "JSCompiler_inline_result_1 = true;" +
+            "}" +
+            "JSCompiler_temp_const_0.gack = JSCompiler_inline_result_1;" +
+        "}",
+        "foo", INLINE_BLOCK, true);
+  }
+
 
   public void testInlineWithinCalls1() {
     // Call in within a call
