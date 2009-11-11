@@ -43,15 +43,16 @@ public class DefaultCodingConvention implements CodingConvention {
   }
 
   @Override
-  public boolean isOptionalParameter(String parameterName) {
-    return true; // be as lax as possible
+  public boolean isOptionalParameter(Node parameter) {
+    // be as lax as possible, but this must be mutually exclusive from
+    // var_args parameters.
+    return !isVarArgsParameter(parameter);
   }
 
   @Override
-  public boolean isVarArgsParameter(Node parameter, String name) {
+  public boolean isVarArgsParameter(Node parameter) {
     // be as lax as possible
-    return parameter != null &&
-        parameter.getParent().getLastChild() == parameter;
+    return parameter.getParent().getLastChild() == parameter;
   }
 
   @Override

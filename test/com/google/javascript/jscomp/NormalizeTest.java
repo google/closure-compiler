@@ -106,6 +106,29 @@ public class NormalizeTest extends CompilerTestCase {
          "for(; c < b;) foo()");
   }
 
+  public void testMoveFunctions1() throws Exception {
+    test("function f() { if (x) return; foo(); function foo() {} }",
+         "function f() {function foo() {} if (x) return; foo(); }");
+    test("function f() { " +
+            "function foo() {} " +
+            "if (x) return;" +
+            "foo(); " +
+            "function bar() {} " +
+         "}",
+         "function f() {" +
+           "function foo() {}" +
+           "function bar() {}" +
+           "if (x) return;" +
+           "foo();" +
+         "}");
+  }
+
+  public void testMoveFunctions2() throws Exception {
+    testSame("function f() { function foo() {} }");
+    testSame("function f() { f(); a:function bar() {} }");
+    testSame("function f() { f(); {function bar() {}}}");
+    testSame("function f() { f(); if (true) {function bar() {}}}");
+  }
 
   public void testMakeLocalNamesUnique() {
     if (!Normalize.MAKE_LOCAL_NAMES_UNIQUE) {

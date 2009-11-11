@@ -105,13 +105,13 @@ public class GoogleCodingConvention extends ClosureCodingConvention {
    * treated as optional arguments.
    */
   @Override
-  public boolean isOptionalParameter(String parameterName) {
-    return parameterName.startsWith(OPTIONAL_ARG_PREFIX);
+  public boolean isOptionalParameter(Node parameter) {
+    return parameter.getString().startsWith(OPTIONAL_ARG_PREFIX);
   }
 
   @Override
-  public boolean isVarArgsParameter(Node parameter, String name) {
-    return VAR_ARGS_NAME.equals(name);
+  public boolean isVarArgsParameter(Node parameter) {
+    return VAR_ARGS_NAME.equals(parameter.getString());
   }
 
   /**

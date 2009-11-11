@@ -312,7 +312,7 @@ public abstract class CompilerTestCase extends TestCase  {
   public void test(JSSourceFile[] externs, String js, String expected,
                    DiagnosticType error,
                    DiagnosticType warning, String description) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = createCompiler();
     lastCompiler = compiler;
 
     BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
@@ -378,7 +378,7 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   public void test(String[] js, String[] expected, DiagnosticType error,
                    DiagnosticType warning, String description) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = createCompiler();
     lastCompiler = compiler;
 
     JSSourceFile[] inputs = new JSSourceFile[js.length];
@@ -424,7 +424,7 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   public void test(JSModule[] modules, String[] expected,
                    DiagnosticType error, DiagnosticType warning) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = createCompiler();
     lastCompiler = compiler;
 
     compiler.init(externsInputs, modules, getOptions());
@@ -761,7 +761,7 @@ public abstract class CompilerTestCase extends TestCase  {
    * Parses expected js inputs and returns the root of the parse tree.
    */
   private Node parseExpectedJs(String[] expected) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = createCompiler();
     JSSourceFile[] inputs = new JSSourceFile[expected.length];
     for (int i = 0; i < expected.length; i++) {
       inputs[i] = JSSourceFile.fromCode("expected" + i, expected[i]);
@@ -832,5 +832,15 @@ public abstract class CompilerTestCase extends TestCase  {
 
     @Override
     public void printSummary() {}
+  }
+
+  private Compiler createCompiler() {
+    Compiler compiler = new Compiler();
+    compiler.setCodingConvention(getCodingConvention());
+    return compiler;
+  }
+
+  protected CodingConvention getCodingConvention() {
+    return new GoogleCodingConvention();
   }
 }

@@ -314,6 +314,8 @@ class ProcessClosurePrimitives extends AbstractNodeTypePruningCallback
       // Record this provide created on a previous pass.
       providedNodes.put(name, new ProvidedNode(
           parent, parent.getParent(), t.getModule()));
+      // Make sure it has the proper prefixes.
+      maybeProvidePrefixes(parent, parent.getParent(), name);
     } else {
       // Remove this provide (from a previous pass) since we have an
       // replacement already.

@@ -28,15 +28,23 @@ import junit.framework.TestCase;
 public class GoogleCodingConventionTest extends TestCase {
   private GoogleCodingConvention conv = new GoogleCodingConvention();
 
-
   public void testVarAndOptionalParams() {
     Node args = new Node(Token.LP,
         Node.newString(Token.NAME, "a"),
         Node.newString(Token.NAME, "b"));
-    assertFalse(conv.isVarArgsParameter(args.getFirstChild(), "a"));
-    assertFalse(conv.isVarArgsParameter(args.getLastChild(), "b"));
-    assertFalse(conv.isOptionalParameter("a"));
-    assertTrue(conv.isOptionalParameter("opt_a"));
+    Node optArgs = new Node(Token.LP,
+        Node.newString(Token.NAME, "opt_a"),
+        Node.newString(Token.NAME, "opt_b"));
+
+    assertFalse(conv.isVarArgsParameter(args.getFirstChild()));
+    assertFalse(conv.isVarArgsParameter(args.getLastChild()));
+    assertFalse(conv.isVarArgsParameter(optArgs.getFirstChild()));
+    assertFalse(conv.isVarArgsParameter(optArgs.getLastChild()));
+
+    assertFalse(conv.isOptionalParameter(args.getFirstChild()));
+    assertFalse(conv.isOptionalParameter(args.getLastChild()));
+    assertTrue(conv.isOptionalParameter(optArgs.getFirstChild()));
+    assertTrue(conv.isOptionalParameter(optArgs.getLastChild()));
   }
 
   public void testInlineName() {

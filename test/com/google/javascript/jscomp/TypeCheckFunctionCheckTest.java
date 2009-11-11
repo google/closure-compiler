@@ -29,6 +29,8 @@ import com.google.javascript.rhino.Node;
  */
 public class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
+  private CodingConvention convention = null;
+
   public TypeCheckFunctionCheckTest() {
     parseTypeInfo = true;
     enableTypeCheck(CheckLevel.ERROR);
@@ -41,10 +43,21 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
   }
 
   @Override
+  protected CodingConvention getCodingConvention() {
+    return convention;
+  }
+
+  @Override
   protected int getNumRepetitions() {
     // TypeCheck will only run once, regardless of what this returns.
     // We return 1 so that the framework only expects 1 warning.
     return 1;
+  }
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    convention = new GoogleCodingConvention();
   }
 
   public void testFunctionAritySimple() {
@@ -124,6 +137,13 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
   public void testFunctionsWithJsDoc6() {
     testSame("/** @param {...*} b */ var foo = function(a, b) {}; foo();",
              WRONG_ARGUMENT_COUNT);
+  }
+
+  public void testFunctionWithDefaultCodingConvention() {
+    convention = new DefaultCodingConvention();
+    testSame("var foo = function(x) {}; foo(1, 2);");
+    testSame("var foo = function(opt_x) {}; foo(1, 2);");
+    testSame("var foo = function(var_args) {}; foo(1, 2);");
   }
 
   public void assertOk(String params, String arguments) {

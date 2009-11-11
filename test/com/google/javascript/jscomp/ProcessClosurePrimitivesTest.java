@@ -38,10 +38,12 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQU
 public class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private String additionalCode;
   private String additionalEndCode;
+  private boolean addAdditionalNamespace;
 
   @Override protected void setUp() {
     additionalCode = null;
     additionalEndCode = null;
+    addAdditionalNamespace = false;
   }
 
   @Override public CompilerPass getProcessor(final Compiler compiler) {
@@ -60,6 +62,10 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
                 JSSourceFile.fromCode("additionalcode", additionalCode);
             Node scriptNode = root.getFirstChild();
             Node newScriptNode = new CompilerInput(file).getAstRoot(compiler);
+            if (addAdditionalNamespace) {
+              newScriptNode.getFirstChild()
+                  .putBooleanProp(Node.IS_NAMESPACE, true);
+            }
             while (newScriptNode.getLastChild() != null) {
               Node lastChild = newScriptNode.getLastChild();
               newScriptNode.removeChild(lastChild);
@@ -73,6 +79,10 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
                 JSSourceFile.fromCode("additionalendcode", additionalEndCode);
             Node scriptNode = root.getFirstChild();
             Node newScriptNode = new CompilerInput(file).getAstRoot(compiler);
+            if (addAdditionalNamespace) {
+              newScriptNode.getFirstChild()
+                  .putBooleanProp(Node.IS_NAMESPACE, true);
+            }
             while (newScriptNode.getFirstChild() != null) {
               Node firstChild = newScriptNode.getFirstChild();
               newScriptNode.removeChild(firstChild);
@@ -435,6 +445,23 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     additionalEndCode = "goog.require('a.A');";
     test("goog.provide('a.A'); a.A = {};",
          "var a={};a.A={};");
+  }
+
+  // Tests a case where code is reordered after processing provides and then
+  // provides are processed again.
+  public void testReorderedProvides() {
+    additionalCode = "a.B = {};";  // as if a.B was after a.A originally
+    addAdditionalNamespace = true;
+    test("goog.provide('a.A'); a.A = {};",
+         "var a={};a.B={};a.A={};");
+  }
+
+  // Another version of above.
+  public void testReorderedProvides2() {
+    additionalEndCode = "a.B = {};";
+    addAdditionalNamespace = true;
+    test("goog.provide('a.A'); a.A = {};",
+         "var a={};a.A={};a.B={};");
   }
 
   public void testInvalidProvide() {

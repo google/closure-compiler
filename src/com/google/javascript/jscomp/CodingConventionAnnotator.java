@@ -82,11 +82,11 @@ class CodingConventionAnnotator extends NodeTraversal.AbstractPostOrderCallback
           JSTypeExpression typeExpr = fnInfo == null ?
               null : fnInfo.getParameterType(argName);
 
-          if (convention.isOptionalParameter(argName) ||
+          if (convention.isOptionalParameter(arg) ||
               typeExpr != null && typeExpr.isOptionalArg()) {
             arg.putBooleanProp(Node.IS_OPTIONAL_PARAM, true);
           }
-          if (convention.isVarArgsParameter(arg, argName) ||
+          if (convention.isVarArgsParameter(arg) ||
               typeExpr != null && typeExpr.isVarArgs()) {
             arg.putBooleanProp(Node.IS_VAR_ARGS_PARAM, true);
           }

@@ -176,7 +176,7 @@ This describes the Google-specific JavaScript coding conventions.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html#isOptionalParameter(java.lang.String)">isOptionalParameter</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;parameterName)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given parameter name should be treated as an
@@ -202,8 +202,7 @@ This describes the Google-specific JavaScript coding conventions.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node, java.lang.String)">isVarArgsParameter</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter,
-                   <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given parameter should be treated as a marker
@@ -328,10 +327,10 @@ public boolean <B>isValidEnumKey</B>(<A HREF="http://java.sun.com/javase/6/docs/
 </DL>
 <HR>
 
-<A NAME="isOptionalParameter(java.lang.String)"><!-- --></A><H3>
+<A NAME="isOptionalParameter(com.google.javascript.rhino.Node)"><!-- --></A><H3>
 isOptionalParameter</H3>
 <PRE>
-public boolean <B>isOptionalParameter</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;parameterName)</PRE>
+public boolean <B>isOptionalParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
 <DL>
 <DD>This checks whether a given parameter name should be treated as an
  optional parameter as far as type checking or function call arg count
@@ -343,32 +342,31 @@ public boolean <B>isOptionalParameter</B>(<A HREF="http://java.sun.com/javase/6/
  treated as optional arguments.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(java.lang.String)">isOptionalParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isOptionalParameter(java.lang.String)">isOptionalParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
 </DD>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>parameterName</CODE> - potentially optional parameter name
+<DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
 <DT><B>Returns:</B><DD><code>true</code> if the parameter should be treated as an optional
  parameter.</DL>
 </DD>
 </DL>
 <HR>
 
-<A NAME="isVarArgsParameter(com.google.javascript.rhino.Node, java.lang.String)"><!-- --></A><H3>
+<A NAME="isVarArgsParameter(com.google.javascript.rhino.Node)"><!-- --></A><H3>
 isVarArgsParameter</H3>
 <PRE>
-public boolean <B>isVarArgsParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter,
-                                  <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+public boolean <B>isVarArgsParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
 <DL>
-<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node, java.lang.String)">CodingConvention</A></CODE></B></DD>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
 <DD>This checks whether a given parameter should be treated as a marker
  for a variable argument list function. A VarArgs parameter must be the
  last parameter in a function declaration.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node, java.lang.String)">isVarArgsParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node, java.lang.String)">isVarArgsParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
 </DD>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node, or null if none.<DD><CODE>name</CODE> - The name, in case we don't have a node.
+<DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
 <DT><B>Returns:</B><DD><code>true</code> if the parameter should be treated as a variable
  length parameter.</DL>
 </DD>

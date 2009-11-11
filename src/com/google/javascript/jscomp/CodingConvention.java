@@ -59,23 +59,22 @@ public interface CodingConvention {
    * declared as a simple type and is automatically converted to a union of the
    * declared type and Undefined.
    *
-   * @param parameterName potentially optional parameter name
+   * @param parameter The parameter's node.
    * @return {@code true} if the parameter should be treated as an optional
    * parameter.
    */
-  public boolean isOptionalParameter(String parameterName);
+  public boolean isOptionalParameter(Node parameter);
 
   /**
    * This checks whether a given parameter should be treated as a marker
    * for a variable argument list function. A VarArgs parameter must be the
    * last parameter in a function declaration.
    *
-   * @param parameter The parameter's node, or null if none.
-   * @param name The name, in case we don't have a node.
+   * @param parameter The parameter's node.
    * @return {@code true} if the parameter should be treated as a variable
    * length parameter.
    */
-  public boolean isVarArgsParameter(Node parameter, String name);
+  public boolean isVarArgsParameter(Node parameter);
 
   /**
    * Checks whether a global variable or function name should be treated as

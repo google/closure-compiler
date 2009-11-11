@@ -257,8 +257,11 @@ class Normalize implements CompilerPass, Callback {
       extractForInitializer(n, null, null);
       splitVarDeclarations(n);
     }
-  }
 
+    if (n.getType() == Token.FUNCTION) {
+      moveNamedFunctions(n.getLastChild());
+    }
+  }
 
   /**
    * Bring the initializers out of FOR loops.  These need to be placed
@@ -331,6 +334,58 @@ class Normalize implements CompilerPass, Callback {
         }
       }
     }
+  }
+
+  /**
+   * Move all the functions that are valid at the execution of the first
+   * statement of the function to the beginning of the function definition.
+   */
+  private void moveNamedFunctions(Node functionBody) {
+    Preconditions.checkState(
+        functionBody.getParent().getType() == Token.FUNCTION);
+    Node previous = null;
+    Node current = functionBody.getFirstChild();
+    // Skip any declarations at the beginning of the function body, they
+    // are already in the right place.
+    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
+      previous = current;
+      current = current.getNext();
+    }
+
+    // Find any remaining declarations and move them.
+    Node insertAfter = previous;
+    while (current != null) {
+      // Save off the next node as the current node maybe removed.
+      Node next = current.getNext();
+      if (NodeUtil.isFunctionDeclaration(current)) {
+        // Remove the declaration from the body.
+        Preconditions.checkNotNull(previous);
+        functionBody.removeChildAfter(previous);
+
+        // Readd the function at the top of the function body (after any
+        // previous declarations).
+        insertAfter = addToFront(functionBody, current, insertAfter);
+        compiler.reportCodeChange();
+      } else {
+        // Update the previous only if the current node hasn't been moved.
+        previous = current;
+      }
+      current = next;
+    }
+  }
+
+  /**
+   * @param after The child node to insert the newChild after, or null if
+   *     newChild should be added to the front of parent's child list.
+   * @return The inserted child node.
+   */
+  private Node addToFront(Node parent, Node newChild, Node after) {
+    if (after == null) {
+      parent.addChildToFront(newChild);
+    } else {
+      parent.addChildAfter(newChild, after);
+    }
+    return newChild;
   }
 
   /**

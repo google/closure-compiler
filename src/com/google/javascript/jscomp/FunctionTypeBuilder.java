@@ -20,14 +20,13 @@ import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
-import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.InstanceObjectType;
@@ -39,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 
 /**
  * A builder for FunctionTypes, because FunctionTypes are so
@@ -176,13 +176,12 @@ final class FunctionTypeBuilder {
         if (oldParams.hasNext()) {
           paramBuilder.newParameterFromNode(oldParams.next());
         } else {
-          String name = currentParam.getString();
           warnedAboutArgList |= addParameter(
               paramBuilder,
               typeRegistry.getNativeType(UNKNOWN_TYPE),
               warnedAboutArgList,
-              codingConvention.isOptionalParameter(name),
-              codingConvention.isVarArgsParameter(currentParam, name));
+              codingConvention.isOptionalParameter(currentParam),
+              codingConvention.isVarArgsParameter(currentParam));
         }
       }
       parametersNode = paramBuilder.build();
@@ -309,38 +308,32 @@ final class FunctionTypeBuilder {
   }
 
   /**
-   * Infer the parameter types from the list of arguments in the AST.
-   */
-  FunctionTypeBuilder inferParameterTypes(Node argsParent,
-      @Nullable JSDocInfo info) {
-    if (argsParent == null) {
-      return inferParameterTypes(info);
-    }
-
-    List<String> argsList = ImmutableList.of();
-    if (argsParent.getFirstChild() != null) {
-      argsList = Lists.newArrayList();
-      for (Node n : argsParent.children()) {
-        argsList.add(n.getString());
-      }
-    }
-
-    return inferParameterTypes(argsList, info);
-  }
-
-  /**
    * Infer the parameter types from the doc info alone.
    */
   FunctionTypeBuilder inferParameterTypes(JSDocInfo info) {
-    return inferParameterTypes(info.getParameterNames(), info);
+    // Create a fake args parent.
+    Node lp = new Node(Token.LP);
+    for (String name : info.getParameterNames()) {
+      lp.addChildToBack(Node.newString(Token.NAME, name));
+    }
+
+    return inferParameterTypes(lp, info);
   }
 
   /**
    * Infer the parameter types from the list of argument names and
    * the doc info.
    */
-  private FunctionTypeBuilder inferParameterTypes(Iterable<String> argList,
+  FunctionTypeBuilder inferParameterTypes(@Nullable Node argsParent,
       @Nullable JSDocInfo info) {
+    if (argsParent == null) {
+      if (info == null) {
+        return this;
+      } else {
+        return inferParameterTypes(info);
+      }
+    }
+
     // arguments
     FunctionParamBuilder builder = new FunctionParamBuilder(typeRegistry);
     boolean warnedAboutArgList = false;
@@ -348,7 +341,8 @@ final class FunctionTypeBuilder {
         Sets.<String>newHashSet() :
         Sets.newHashSet(info.getParameterNames());
     boolean foundTemplateType = false;
-    for (String argumentName : argList) {
+    for (Node arg : argsParent.children()) {
+      String argumentName = arg.getString();
       allJsDocParams.remove(argumentName);
 
       // type from JSDocInfo
@@ -365,8 +359,8 @@ final class FunctionTypeBuilder {
       }
       warnedAboutArgList |= addParameter(
           builder, parameterType, warnedAboutArgList,
-          isOptionalParameter(argumentName, info),
-          isVarArgsParameter(argumentName, info));
+          isOptionalParameter(arg, info),
+          isVarArgsParameter(arg, info));
     }
 
     if (templateTypeName != null && !foundTemplateType) {
@@ -374,9 +368,7 @@ final class FunctionTypeBuilder {
     }
 
     for (String inexistentName : allJsDocParams) {
-      if (!isVarArgsParameter(inexistentName, info)) {
-        reportWarning(INEXISTANT_PARAM, inexistentName, fnName);
-      }
+      reportWarning(INEXISTANT_PARAM, inexistentName, fnName);
     }
 
     parametersNode = builder.build();
@@ -387,27 +379,27 @@ final class FunctionTypeBuilder {
    * @return Whether the given param is an optional param.
    */
   private boolean isOptionalParameter(
-      String paramName, @Nullable JSDocInfo info) {
-    if (codingConvention.isOptionalParameter(paramName)) {
+      Node param, @Nullable JSDocInfo info) {
+    if (codingConvention.isOptionalParameter(param)) {
       return true;
     }
 
+    String paramName = param.getString();
     return info != null && info.hasParameterType(paramName) &&
         info.getParameterType(paramName).isOptionalArg();
   }
 
   /**
-   * Determine whether this is a var args parameter from just the name and
-   * annotation. This is the case where we have a stub declaration, with
-   * no function literal.
+   * Determine whether this is a var args parameter.
    * @return Whether the given param is a var args param.
    */
   private boolean isVarArgsParameter(
-      String paramName, @Nullable JSDocInfo info) {
-    if (codingConvention.isVarArgsParameter(null, paramName)) {
+      Node param, @Nullable JSDocInfo info) {
+    if (codingConvention.isVarArgsParameter(param)) {
       return true;
     }
 
+    String paramName = param.getString();
     return info != null && info.hasParameterType(paramName) &&
         info.getParameterType(paramName).isVarArgs();
   }

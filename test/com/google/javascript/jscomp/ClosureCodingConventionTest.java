@@ -32,10 +32,19 @@ public class ClosureCodingConventionTest extends TestCase {
     Node args = new Node(Token.LP,
         Node.newString(Token.NAME, "a"),
         Node.newString(Token.NAME, "b"));
-    assertFalse(conv.isVarArgsParameter(args.getFirstChild(), "a"));
-    assertTrue(conv.isVarArgsParameter(args.getLastChild(), "b"));
-    assertTrue(conv.isOptionalParameter("a"));
-    assertTrue(conv.isOptionalParameter("opt_a"));
+    Node optArgs = new Node(Token.LP,
+        Node.newString(Token.NAME, "opt_a"),
+        Node.newString(Token.NAME, "opt_b"));
+
+    assertFalse(conv.isVarArgsParameter(args.getFirstChild()));
+    assertTrue(conv.isVarArgsParameter(args.getLastChild()));
+    assertFalse(conv.isVarArgsParameter(optArgs.getFirstChild()));
+    assertTrue(conv.isVarArgsParameter(optArgs.getLastChild()));
+
+    assertTrue(conv.isOptionalParameter(args.getFirstChild()));
+    assertFalse(conv.isOptionalParameter(args.getLastChild()));
+    assertTrue(conv.isOptionalParameter(optArgs.getFirstChild()));
+    assertFalse(conv.isOptionalParameter(optArgs.getLastChild()));
   }
 
   public void testInlineName() {
