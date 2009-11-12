@@ -81,4 +81,9 @@ public class CheckSideEffectsTest extends CompilerTestCase {
     test("function A() { this.foo; }", e);
     test("function A() { /** @type Number */ this.foo; }", ok);
   }
+
+  public void testJSDocComments() {
+    test("function A() { /** This is a jsdoc comment */ this.foo; }", ok);
+    test("function A() { /* This is a normal comment */ this.foo; }", e);
+  }
 }

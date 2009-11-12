@@ -900,6 +900,15 @@ class GlobalNamespace {
       if (type == Type.OTHER || globalSets != 1 || localSets != 0) {
         return false;
       }
+
+      // Don't try to collapse if the one global set is a twin reference.
+      // We could theoretically handle this case in CollapseProperties, but
+      // it's probably not worth the effort.
+      Preconditions.checkNotNull(declaration);
+      if (declaration.getTwin() != null) {
+        return false;
+      }
+
       if (isClassOrEnum) {
         return true;
       }

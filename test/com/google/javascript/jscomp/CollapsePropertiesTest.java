@@ -1096,4 +1096,19 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "var a$b = CreateClass({c: function() {}});" +
          "var a$d = CreateClass({c: a$b.prototype.c});");
   }
+
+  public void testCrashInCommaOperator() {
+    test("var a = {}; a.b = function() {},a.b();",
+         "var a$b; a$b=function() {},a$b();");
+  }
+
+  public void testCrashInNestedAssign() {
+    test("var a = {}; if (a.b = function() {}) a.b();",
+         "var a$b; if (a$b=function() {}) { a$b(); }");
+  }
+
+  public void testTwinReferenceCancelsChildCollapsing() {
+    test("var a = {}; if (a.b = function() {}) { a.b.c = 3; a.b(a.b.c); }",
+         "var a$b; if (a$b = function() {}) { a$b.c = 3; a$b(a$b.c); }");
+  }
 }
