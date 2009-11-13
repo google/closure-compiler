@@ -719,10 +719,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     return warningsGuard;
   }
 
-  void setWarningsGuard(ComposeWarningsGuard guard) {
-    warningsGuard = guard;
-  }
-
   /**
    * Add a guard to the set of warnings guards.
    */

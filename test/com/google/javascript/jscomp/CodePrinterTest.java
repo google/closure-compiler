@@ -616,4 +616,23 @@ public class CodePrinterTest extends TestCase {
     assertPrint("if(e1)function goo(){return true}",
         "if(e1){function goo(){return true}}");
   }
+  
+  public void testExponents() {
+    assertPrint("1", "1");
+    assertPrint("10", "10");
+    assertPrint("100", "100");
+    assertPrint("1000", "1E3");
+    assertPrint("10000", "1E4");
+    assertPrint("100000", "1E5");
+    assertPrint("-1", "-1");
+    assertPrint("-10", "-10");
+    assertPrint("-100", "-100");
+    assertPrint("-1000", "-1E3");
+    assertPrint("-123412340000", "-12341234E4");
+    assertPrint("1000000000000000000", "1E18");
+    assertPrint("100000.0", "1E5");
+    assertPrint("100000.1", "100000.1");
+    
+    assertPrint("0.000001", "1.0E-6");
+  }
 }

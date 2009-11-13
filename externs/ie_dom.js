@@ -1300,6 +1300,12 @@ Element.prototype.createTextRange;
 Element.prototype.currentStyle;
 
 /**
+ * @param {string} opt_action
+ * @see http://msdn.microsoft.com/en-us/library/ms536414%28VS.85%29.aspx
+ */
+Element.prototype.doScroll = function(opt_action) {};
+
+/**
  * @see http://msdn.microsoft.com/en-us/library/ms536423(VS.85).aspx
  */
 Element.prototype.fireEvent;

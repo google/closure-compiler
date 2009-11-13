@@ -119,6 +119,17 @@ public class CompilerRunner extends
     if (FLAG_process_closure_primitives.get()) {
       options.closurePass = true;
     }
+
+    DiagnosticGroups.setWarningLevels(
+        options, AbstractCompilerRunner.FLAG_jscomp_error.get(),
+        CheckLevel.ERROR);
+    DiagnosticGroups.setWarningLevels(
+        options, AbstractCompilerRunner.FLAG_jscomp_warning.get(),
+        CheckLevel.WARNING);
+    DiagnosticGroups.setWarningLevels(
+        options, AbstractCompilerRunner.FLAG_jscomp_off.get(),
+        CheckLevel.OFF);
+
     return options;
   }
 

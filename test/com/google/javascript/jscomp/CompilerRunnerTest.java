@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Join;
+import com.google.common.collect.Lists;
 import com.google.common.flags.Flags;
 import com.google.javascript.rhino.Node;
 
@@ -67,6 +68,20 @@ public class CompilerRunnerTest extends TestCase {
   public void testCheckSymbolsOnForVerbose() {
     CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
     test("x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  public void testCheckSymbolsOverrideForVerbose() {
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    AbstractCompilerRunner.FLAG_jscomp_off.setForTest(
+        Lists.newArrayList("undefinedVars"));
+    testSame("x = 3;");
+  }
+
+  public void testCheckUndefinedProperties() {
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    AbstractCompilerRunner.FLAG_jscomp_error.setForTest(
+        Lists.newArrayList("missingProperties"));
+    test("var x = {}; var y = x.bar;", TypeCheck.INEXISTENT_PROPERTY);
   }
 
   private void testSame(String original) {

@@ -417,7 +417,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType externProto = ((FunctionType) e).getPrototype();
     assertTrue(globalScope.getRootNode().toStringTree(),
         externProto.hasOwnProperty("foo"));
-    assertTrue(externProto.isPropertyTypeDeclared("foo"));
+    assertTrue(externProto.isPropertyTypeInferred("foo"));
     assertEquals("?", externProto.getPropertyType("foo").toString());
     assertTrue(externProto.isPropertyInExterns("foo"));
   }
@@ -574,6 +574,23 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "foo((/** @type {function(string)} */" +
         "function(baz) { var f = baz; }))\n");
     assertEquals("string", findNameType("f", lastLocalScope).toString());
+  }
+
+  public void testDuplicateExternProperty1() {
+    testSame(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.bar;" +
+        "/** @type {number} */ Foo.prototype.bar; var x = (new Foo).bar;",
+        null);
+    assertEquals("number", findNameType("x", globalScope).toString());
+  }
+
+  public void testDuplicateExternProperty2() {
+    testSame(
+        "/** @constructor */ function Foo() {}" +
+        "/** @type {number} */ Foo.prototype.bar;" +
+        "Foo.prototype.bar; var x = (new Foo).bar;", null);
+    assertEquals("number", findNameType("x", globalScope).toString());
   }
 
   private JSType findNameType(String name, Scope scope) {

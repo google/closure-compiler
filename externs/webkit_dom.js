@@ -32,6 +32,11 @@ Window.prototype.console.error = function(msg) {};
 /**
  * @param {string} msg
  */
+Window.prototype.console.info = function(msg) {};
+
+/**
+ * @param {string} msg
+ */
 Window.prototype.console.log = function(msg) {};
 
 /**

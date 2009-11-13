@@ -129,6 +129,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       GlobalScopeBuilder scopeBuilder = new GlobalScopeBuilder(newScope);
       NodeTraversal.traverse(compiler, root, scopeBuilder);
+      scopeBuilder.resolveStubDeclarations();
 
       // Gather the properties in each function that we found in the
       // global scope, if that function has a @this type that we can
@@ -706,6 +707,15 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     private final List<Node> nonExternFunctions = Lists.newArrayList();
 
+    /**
+     * Type-less stubs in the global scope.
+     *
+     * If at the end of traversal, we still don't have types for these
+     * stubs, then we should declare UNKNOWN types.
+     */
+    private final List<StubDeclaration> stubDeclarations =
+        Lists.newArrayList();
+
     private GlobalScopeBuilder(Scope scope) {
       super(scope);
     }
@@ -1003,23 +1013,8 @@ final class TypedScopeCreator implements ScopeCreator {
 
       if (valueType == null) {
         if (parent.getType() == Token.EXPR_RESULT) {
-          // If we see a stub property, make sure to register this property
-          // in the type registry.
-          ObjectType ownerType = getObjectSlot(ownerName);
-          JSType unknownType = typeRegistry.getNativeType(UNKNOWN_TYPE);
-          if (ownerType == null) {
-            defineSlot(n, parent, unknownType, false);
-          } else {
-            boolean isExtern = t.getInput().isExtern();
-            if (isExtern || ownerType.isFunctionPrototypeType()) {
-              // If this is a stub for a prototype, just declare it
-              // as an unknown type. These are seen often in externs.
-              ownerType.defineDeclaredProperty(
-                  propName, unknownType, isExtern);
-            } else {
-              typeRegistry.registerPropertyOnType(propName, ownerType);
-            }
-          }
+          stubDeclarations.add(new StubDeclaration(
+              n, t.getInput().isExtern(), ownerName));
         } else if (rhsValue != null &&
                    rhsValue.getType() == Token.TRUE) {
           // We declare these for delegate proxy method properties.
@@ -1113,6 +1108,57 @@ final class TypedScopeCreator implements ScopeCreator {
         return rhsValue.getJSType();
       } else {
         return getDeclaredTypeInAnnotation(t, n, info);
+      }
+    }
+
+    /**
+     * Resolve any stub delcarations to unknown types if we could not
+     * find types for them during traversal.
+     */
+    private void resolveStubDeclarations() {
+      for (StubDeclaration stub : stubDeclarations) {
+        Node n = stub.node;
+        Node parent = n.getParent();
+        String qName = n.getQualifiedName();
+        String propName = n.getLastChild().getString();
+        String ownerName = stub.ownerName;
+        boolean isExtern = stub.isExtern;
+
+        if (scope.isDeclared(qName, false)) {
+          continue;
+        }
+
+        // If we see a stub property, make sure to register this property
+        // in the type registry.
+        ObjectType ownerType = getObjectSlot(ownerName);
+        ObjectType unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
+        defineSlot(n, parent, unknownType, true);
+
+        if (ownerType != null &&
+            (isExtern || ownerType.isFunctionPrototypeType())) {
+          // If this is a stub for a prototype, just declare it
+          // as an unknown type. These are seen often in externs.
+          ownerType.defineInferredProperty(
+              propName, unknownType, isExtern);
+        } else {
+          typeRegistry.registerPropertyOnType(
+              propName, ownerType == null ? unknownType : ownerType);
+        }
+      }
+    }
+
+    /**
+     * A stub declaration without any type information.
+     */
+    private final class StubDeclaration {
+      private final Node node;
+      private final boolean isExtern;
+      private final String ownerName;
+
+      private StubDeclaration(Node node, boolean isExtern, String ownerName) {
+        this.node = node;
+        this.isExtern = isExtern;
+        this.ownerName = ownerName;
       }
     }
 

@@ -74,11 +74,13 @@ import java.util.logging.Level;
 public abstract class AbstractCompilerRunner<A extends Compiler,
     B extends CompilerOptions> {
 
-  @FlagSpec(help = "Prints out the parse tree and exits")
+  @FlagSpec(help = "Prints out the parse tree and exits",
+      docLevel = DocLevel.SECRET)
   public static final Flag<Boolean> FLAG_print_tree = Flag.value(false);
 
   @FlagSpec(help = "Prints a dot file describing the internal abstract syntax"
-      + " tree and exits")
+      + " tree and exits",
+      docLevel = DocLevel.SECRET)
   public static final Flag<Boolean> FLAG_print_ast = Flag.value(false);
 
   @FlagSpec(help = "Turns on extra sanity checks.", altName = "dev_mode",
@@ -88,7 +90,8 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
 
   @FlagSpec(help = "The logging level (standard java.util.logging.Level"
       + " values) for Compiler progress. Does not control errors or"
-      + " warnings for the JavaScript code under compilation.")
+      + " warnings for the JavaScript code under compilation.",
+      docLevel = DocLevel.SECRET)
   public static final Flag<String> FLAG_logging_level =
       Flag.value(Level.WARNING.getName());
 
@@ -117,12 +120,14 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       Flag.value("");
 
   @FlagSpec(help = "File containing the serialized version of the property "
-      + "renaming map produced by a previous compilation.")
+      + "renaming map produced by a previous compilation.",
+      docLevel = DocLevel.SECRET)
   public static final Flag<String> FLAG_property_map_input_file =
       Flag.value("");
 
   @FlagSpec(help = "File where the serialized version of the variable "
-      + "renaming map produced should be saved.")
+      + "renaming map produced should be saved.",
+      docLevel = DocLevel.SECRET)
   public static final Flag<String> FLAG_variable_map_output_file =
       Flag.value("");
 
@@ -130,7 +135,8 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       + "files will be produced as {binary name}_vars_map.out and "
       + "{binary name}_props_map.out. Note that this flag cannot be used "
       + "in conjunction with either variable_map_output_file or "
-      + "property_map_output_file.")
+      + "property_map_output_file.",
+      docLevel = DocLevel.SECRET)
   public static final Flag<Boolean> FLAG_create_name_map_files =
       Flag.value(false);
 
@@ -183,6 +189,18 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
             " module's name placed into the path at that spot.")
   public static final Flag<String> FLAG_create_source_map =
       Flag.value("");
+
+  @FlagSpec(help = "Make the named class of warnings an error.")
+  public static final Flag<List<String>> FLAG_jscomp_error =
+      Flag.stringCollector();
+
+  @FlagSpec(help = "Make the named class of warnings a normal warning.")
+  public static final Flag<List<String>> FLAG_jscomp_warning =
+      Flag.stringCollector();
+
+  @FlagSpec(help = "Turn off the named class of warnings.")
+  public static final Flag<List<String>> FLAG_jscomp_off =
+      Flag.stringCollector();
 
   private PrintStream out;
   private final PrintStream err;

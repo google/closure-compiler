@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 
+
 /**
  * Abstracted consumer of the CodeGenerator output.
  *
@@ -267,7 +268,20 @@ abstract class CodeConsumer {
     }
 
     if ((long) x == x) {
-      add(Long.toString((long) x));
+      long value = (long) x;
+      long mantissa = value;
+      int exp = 0;
+      if (x >= 100) {
+        while (mantissa / 10 * Math.pow(10, exp + 1) == value) {
+          mantissa /= 10;
+          exp++;
+        }
+      }
+      if (exp > 2) {
+        add(Long.toString(mantissa) + "E" + Integer.toString(exp));
+      } else {
+        add(Long.toString(value));
+      }
     } else {
       add(String.valueOf(x));
     }

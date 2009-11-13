@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.primitives.IntStack;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -29,6 +28,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.text.MessageFormat;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -197,17 +198,15 @@ class ProcessDefines implements CompilerPass {
     // A stack tied to the node traversal, to keep track of whether
     // we're in a conditional block. If 1 is at the top, assignment to
     // a define is allowed. Otherwise, it's not allowed.
-    //
-    // TODO(user): Replace with ArrayDeque
-    private final IntStack assignAllowed;
+    private final Deque<Integer> assignAllowed;
 
     CollectDefines(AbstractCompiler compiler, List<Name> listOfDefines) {
       this.compiler = compiler;
       this.allDefines = Maps.newHashMap();
 
       assignableDefines = Maps.newHashMap();
-      assignAllowed = new IntStack();
-      assignAllowed.add(1);
+      assignAllowed = new ArrayDeque<Integer>();
+      assignAllowed.push(1);
 
       // Create a map of references to defines keyed by node for easy lookup
       allRefInfo = Maps.newHashMap();
@@ -348,7 +347,7 @@ class ProcessDefines implements CompilerPass {
         case Token.SWITCH:
         case Token.WHILE:
           if (entering) {
-            assignAllowed.add(0);
+            assignAllowed.push(0);
           } else {
             assignAllowed.remove();
           }

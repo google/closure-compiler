@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -94,4 +96,15 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("undefinedVars",
           new DiagnosticGroup(VarCheck.UNDEFINED_VAR_ERROR));
 
+  /**
+   * Adds warning levels by name.
+   */
+  static void setWarningLevels(CompilerOptions options,
+      List<String> diagnosticGroups, CheckLevel level) {
+    for (String name : diagnosticGroups) {
+      DiagnosticGroup group = DiagnosticGroups.forName(name);
+      Preconditions.checkNotNull(group, "No warning class for name: " + name);
+      options.setWarningLevel(group, level);
+    }
+  }
 }

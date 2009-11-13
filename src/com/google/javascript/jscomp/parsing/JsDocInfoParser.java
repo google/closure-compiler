@@ -570,12 +570,24 @@ public final class JsDocInfoParser {
                   }
 
                   String name = null;
+                  boolean isBracketedParam = JsDocToken.LB == token;
+                  if (isBracketedParam) {
+                    token = next();
+                  }
 
                   if (JsDocToken.STRING != token) {
                     parser.addWarning("msg.missing.variable.name",
                         lineno, charno);
                   } else {
                     name = stream.getString();
+
+                    if (isBracketedParam) {
+                      token = next();
+                      if (JsDocToken.RB != token) {
+                        reportTypeSyntaxWarning("msg.jsdoc.missing.rb");
+                      }
+                    }
+
                     if (!jsdocBuilder.recordParameter(name, type)) {
                       if (jsdocBuilder.hasParameter(name)) {
                         parser.addWarning("msg.dup.variable.name", name,
