@@ -144,6 +144,8 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       + "opt_parameter.")
   public static final Flag<Boolean> FLAG_third_party = Flag.value(false);
 
+  @FlagSpec(help = "Check types for validity.")
+  public static final Flag<Boolean> FLAG_check_types = Flag.value(false);
 
   @FlagSpec(help = "Controls how detailed the compilation summary is. Values:"
       + " 0 (never print summary), 1 (print summary only if there are "
@@ -534,6 +536,10 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
     if (!FLAG_property_map_input_file.get().equals("")) {
       options.inputPropertyMapSerialized =
           VariableMap.load(FLAG_property_map_input_file.get()).toBytes();
+    }
+
+    if (FLAG_check_types.get()) {
+      options.checkTypes = true;
     }
 
     if (!options.jsOutputFile.equals("")) {
