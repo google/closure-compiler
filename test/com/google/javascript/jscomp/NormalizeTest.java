@@ -70,6 +70,12 @@ public class NormalizeTest extends CompilerTestCase {
 
     test("do var a = foo(1), b; while(false);",
          "do{var a = foo(1); var b} while(false);");
+    test("a:var a,b,c;",
+         "a:{ var a;var b; var c; }");
+    test("a:for(var a,b,c;;);",
+         "var a;var b; var c;a:for(;;);");
+    test("if (true) a:var a,b;",
+         "if (true)a:{ var a; var b; }");
   }
 
   public void testUnhandled() {
@@ -125,7 +131,8 @@ public class NormalizeTest extends CompilerTestCase {
 
   public void testMoveFunctions2() throws Exception {
     testSame("function f() { function foo() {} }");
-    testSame("function f() { f(); a:function bar() {} }");
+    test("function f() { f(); a:function bar() {} }",
+         "function f() { f(); a:{function bar() {}}}");
     testSame("function f() { f(); {function bar() {}}}");
     testSame("function f() { f(); if (true) {function bar() {}}}");
   }
@@ -172,9 +179,9 @@ public class NormalizeTest extends CompilerTestCase {
     test("var a = 1; function f(){ var a = 2 }",
          "var a = 1; function f(){ var a$$1 = 2 }");
     test("function f() { var a = 1; lable1:var a = 2 }",
-         "function f() { var a = 1; lable1:a = 2 }");
+         "function f() { var a = 1; lable1:{a = 2}}");
     test("function f() { var a = 1; lable1:var a }",
-         "function f() { var a = 1; lable1:; }");
+         "function f() { var a = 1; lable1:{} }");
     test("function f() { var a = 1; for(var a in b); }",
          "function f() { var a = 1; for(a in b); }");
   }

@@ -72,6 +72,19 @@ public final class JSTypeExpression implements Serializable {
   }
 
   /**
+   * Make the given type expression into an optional type expression,
+   * if possible.
+   */
+  public static JSTypeExpression makeOptionalArg(JSTypeExpression expr) {
+    if (expr.isOptionalArg() || expr.isVarArgs()) {
+      return expr;
+    } else {
+      return new JSTypeExpression(
+          new Node(Token.EQUALS, expr.root), expr.sourceName, expr.registry);
+    }
+  }
+
+  /**
    * @return Whether this expression denotes an optional {@code @param}.
    */
   public boolean isOptionalArg() {

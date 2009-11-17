@@ -327,7 +327,7 @@ public class DefaultPassConfig extends PassConfig {
 
     passes.addAll(getCodeRemovingPasses(false));
 
-    if (options.inlineFunctions) {
+    if (options.inlineFunctions || options.inlineLocalFunctions) {
       passes.add(inlineFunctions);
     }
 
@@ -1074,9 +1074,13 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       boolean enableBlockInlining = !isInliningForbidden();
       return new InlineFunctions(
-          compiler, compiler.getUniqueNameIdSupplier(),
-          enableBlockInlining, options.decomposeExpressions,
-          options.inlineAnonymousFunctionExpressions);
+          compiler, 
+          compiler.getUniqueNameIdSupplier(),
+          options.inlineFunctions,
+          options.inlineLocalFunctions, 
+          options.inlineAnonymousFunctionExpressions,
+          enableBlockInlining,
+          options.decomposeExpressions);
     }
   };
 

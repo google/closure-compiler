@@ -22,7 +22,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -70,18 +70,26 @@ class InlineFunctions implements CompilerPass {
 
   private final boolean blockFunctionInliningEnabled;
   private final boolean inlineAnonymousFunctionExpressions;
+  private final boolean inlineGlobalFunctions;
+  private final boolean inlineLocalFunctions;
 
   InlineFunctions(AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
+      boolean inlineGlobalFunctions,
+      boolean inlineLocalFunctions,
+      boolean inlineAnonymousFunctionExpressions,
       boolean blockFunctionInliningEnabled,
-      boolean enableExpressionDecomposition,
-      boolean inlineAnonymousFunctionExpressions) {
+      boolean enableExpressionDecomposition) {
     Preconditions.checkArgument(compiler != null);
     Preconditions.checkArgument(safeNameIdSupplier != null);
     this.compiler = compiler;
-    this.blockFunctionInliningEnabled = blockFunctionInliningEnabled;
+
+    this.inlineGlobalFunctions = inlineGlobalFunctions;
+    this.inlineLocalFunctions = inlineLocalFunctions;
     this.inlineAnonymousFunctionExpressions =
-        inlineAnonymousFunctionExpressions;
+      inlineAnonymousFunctionExpressions;
+    this.blockFunctionInliningEnabled = blockFunctionInliningEnabled;
+
     this.injector = new FunctionInjector(
         compiler, safeNameIdSupplier, enableExpressionDecomposition);
   }
@@ -102,11 +110,6 @@ class InlineFunctions implements CompilerPass {
     Preconditions.checkState(compiler.isNormalized());
 
     NodeTraversal.traverse(compiler, root, new FindCandidateFunctions());
-    // TODO(johnlenz): Merge FindAnonymousFunctionCalls with
-    // FindCandidateFunctions.
-    if (inlineAnonymousFunctionExpressions) {
-      NodeTraversal.traverse(compiler, root, new FindAnonymousFunctionCalls());
-    }
     if (fns.isEmpty()) {
       return;  // Nothing left to do.
     }
@@ -143,11 +146,37 @@ class InlineFunctions implements CompilerPass {
   /**
    * Find functions that might be inlined.
    */
-  private class FindCandidateFunctions
-      extends AbstractShallowStatementCallback {
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
+  private class FindCandidateFunctions implements Callback {
+    private int callsSeen = 0;
 
+    @Override
+    public boolean shouldTraverse(
+        NodeTraversal nodeTraversal, Node n, Node parent) {
+      // Don't traverse into function bodies
+      // if we aren't inlining local functions.
+      return inlineLocalFunctions || inlineAnonymousFunctionExpressions
+         || parent == null || NodeUtil.isControlStructure(parent)
+         || NodeUtil.isStatementBlock(parent);
+    }
+
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if ((t.inGlobalScope() && inlineGlobalFunctions)
+          || (!t.inGlobalScope() && inlineLocalFunctions)) {
+        findNamedFunctions(t, n, parent);
+      } 
+      
+      if (inlineAnonymousFunctionExpressions) {
+        findAnonymousFunctionExpressions(t, n);
+      }
+    }
+
+    public void findNamedFunctions(NodeTraversal t, Node n, Node parent) {
+      if (!NodeUtil.isStatement(n)) {
+        // There aren't any interesting functions here.
+        return;
+      }
+
+      switch (n.getType()) {
         // Anonymous functions in the form of:
         //   var fooFn = function(x) { return ... }
         case Token.VAR:
@@ -176,18 +205,14 @@ class InlineFunctions implements CompilerPass {
           break;
       }
     }
-  }
 
-  /**
-   * Find anonymous functions that are called directly in the form of
-   *   (function(a,b,...){...})(a,b,...)
-   * or
-   *   (function(a,b,...){...}).call(this,a,b, ...)
-   */
-  private class FindAnonymousFunctionCalls
-      extends AbstractPostOrderCallback {
-    private int callsSeen = 0;
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    /**
+     * Find anonymous functions that are called directly in the form of
+     *   (function(a,b,...){...})(a,b,...)
+     * or
+     *   (function(a,b,...){...}).call(this,a,b, ...)
+     */
+    public void findAnonymousFunctionExpressions(NodeTraversal t, Node n) {
       switch (n.getType()) {
         // Anonymous functions in the form of:
         //   (function(){})();

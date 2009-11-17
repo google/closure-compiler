@@ -1111,4 +1111,26 @@ public class CollapsePropertiesTest extends CompilerTestCase {
     test("var a = {}; if (a.b = function() {}) { a.b.c = 3; a.b(a.b.c); }",
          "var a$b; if (a$b = function() {}) { a$b.c = 3; a$b(a$b.c); }");
   }
+
+  public void testPropWithDollarSign() {
+    test("var a = {$: 3}", "var a$$0 = 3;");
+  }
+
+  public void testPropWithDollarSign2() {
+    test("var a = {$: function(){}}", "var a$$0 = function(){};");
+  }
+
+  public void testPropWithDollarSign3() {
+    test("var a = {b: {c: 3}, b$c: function(){}}",
+         "var a$b$c = 3; var a$b$0c = function(){};");
+  }
+
+  public void testPropWithDollarSign4() {
+    test("var a = {$$: {$$$: 3}};", "var a$$0$0$$0$0$0 = 3;");
+  }
+
+  public void testPropWithDollarSign5() {
+    test("var a = {b: {$0c: true}, b$0c: false};",
+         "var a$b$$00c = true; var a$b$00c = false;");
+  }
 }

@@ -234,7 +234,7 @@ class FoldConstants extends AbstractPostOrderCallback
       tryMinimizeCondition(t, left, n);
       return;
     }
-    
+
     if (type == Token.RETURN) {
       tryReduceReturn(t, n);
       return;
@@ -787,9 +787,11 @@ class FoldConstants extends AbstractPostOrderCallback
       Node elseAssign = getBlockExpression(elseBranch).getFirstChild();
 
       Node name1 = var.getFirstChild();
-      Node name2 = elseAssign.getFirstChild();
+      Node maybeName2 = elseAssign.getFirstChild();
 
-      if (name1.hasChildren() && name1.getString().equals(name2.getString())) {
+      if (name1.hasChildren()
+          && maybeName2.getType() == Token.NAME
+          && name1.getString().equals(maybeName2.getString())) {
         Node thenExpr = name1.removeChildren();
         Node elseExpr = elseAssign.getLastChild().detachFromParent();
         cond.detachFromParent();

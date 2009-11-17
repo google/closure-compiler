@@ -251,15 +251,51 @@ class Normalize implements CompilerPass, Callback {
    * Do normalizations that introduce new siblings or parents.
    */
   private void doStatementNormalizations(NodeTraversal t, Node n, Node parent) {
+    if (n.getType() == Token.LABEL) {
+      normalizeLabels(n);
+    }
+
     // Only inspect the children of SCRIPTs, BLOCKs and LABELs, as all these
     // are the only legal place for VARs and FOR statements.
     if (NodeUtil.isStatementBlock(n) || n.getType() == Token.LABEL) {
       extractForInitializer(n, null, null);
+    }
+
+    // Only inspect the children of SCRIPTs, BLOCKs, as all these
+    // are the only legal place for VARs.
+    if (NodeUtil.isStatementBlock(n)) {
       splitVarDeclarations(n);
     }
 
     if (n.getType() == Token.FUNCTION) {
       moveNamedFunctions(n.getLastChild());
+    }
+  }
+
+  // TODO(johnlenz): Move this to NodeTypeNormalizer once the unit tests are
+  // fixed.
+  /**
+   * Limit the number of special cases where LABELs need to be handled. Only 
+   * BLOCK and loops are allowed to be labeled.  Loop labels must remain in 
+   * place as the named continues are not allowed for labeled blocks.
+   */
+  private void normalizeLabels(Node n) {
+    Preconditions.checkArgument(n.getType() == Token.LABEL);
+    
+    Node last = n.getLastChild();
+    switch (last.getType()) {
+      case Token.LABEL:
+      case Token.BLOCK:
+      case Token.FOR:
+      case Token.WHILE:
+      case Token.DO:
+        return;
+      default:
+        Node block = new Node(Token.BLOCK);
+        n.replaceChild(last, block);
+        block.addChildToFront(last);
+        reportCodeChange("LABEL normalization");
+        return;
     }
   }
 

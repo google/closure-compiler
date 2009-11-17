@@ -585,6 +585,10 @@ public final class JsDocInfoParser {
                       token = next();
                       if (JsDocToken.RB != token) {
                         reportTypeSyntaxWarning("msg.jsdoc.missing.rb");
+                      } else if (type != null) {
+                        // Make the type expression optional, if it isn't
+                        // already.
+                        type = JSTypeExpression.makeOptionalArg(type);
                       }
                     }
 

@@ -202,6 +202,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Enhanced function inlining */
   public boolean inlineAnonymousFunctionExpressions;
 
+  /** Enhanced function inlining */
+  public boolean inlineLocalFunctions;
+
   /** Move code to a deeper module */
   public boolean crossModuleCodeMotion;
 

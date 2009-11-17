@@ -1002,9 +1002,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {a:foo(1)?0:1 }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
+        "function x() { a:{{var JSCompiler_inline_result_0; " +
         "JSCompiler_inline_result_0=true;}" +
-        "a:JSCompiler_inline_result_0?0:1 }",
+        "JSCompiler_inline_result_0?0:1 }}",
         "foo", INLINE_BLOCK);
   }
 

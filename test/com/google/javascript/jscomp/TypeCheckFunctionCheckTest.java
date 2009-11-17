@@ -139,6 +139,13 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
              WRONG_ARGUMENT_COUNT);
   }
 
+  public void testFunctionsWithJsDoc7() {
+    String fooDfn = "/** @param {*} [b] */ var foo = function(b) {};";
+    testSame(fooDfn + "foo();");
+    testSame(fooDfn + "foo(1);");
+    testSame(fooDfn + "foo(1, 2);", WRONG_ARGUMENT_COUNT);
+  }
+
   public void testFunctionWithDefaultCodingConvention() {
     convention = new DefaultCodingConvention();
     testSame("var foo = function(x) {}; foo(1, 2);");

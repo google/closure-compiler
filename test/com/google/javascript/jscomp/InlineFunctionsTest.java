@@ -21,9 +21,11 @@ package com.google.javascript.jscomp;
 *
  */
 public class InlineFunctionsTest extends CompilerTestCase {
+  boolean allowGlobalFunctionInlining = true;
   boolean allowBlockInlining = true;
   boolean allowExpressionDecomposition = true;
   boolean allowAnonymousFunctionExpressionInlining = true;
+  boolean allowLocalFunctionInlining = true;
 
   public InlineFunctionsTest() {
     this.enableNormalize();
@@ -40,10 +42,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     compiler.resetUniqueNameId();
     return new InlineFunctions(
-        compiler, compiler.getUniqueNameIdSupplier(),
+        compiler, 
+        compiler.getUniqueNameIdSupplier(),
+        allowGlobalFunctionInlining,
+        allowLocalFunctionInlining,
+        allowAnonymousFunctionExpressionInlining,
         allowBlockInlining,
-        allowExpressionDecomposition,
-        allowAnonymousFunctionExpressionInlining);
+        allowExpressionDecomposition);
   }
 
   /**
@@ -928,23 +933,32 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testNoInlineOfNonGlobalFunction1() {
-    testSame("function _f(){function g(){return 0}}" +
-             "function _h(){return g()}");
+    test("var g;function _f(){function g(){return 0}}" +
+         "function _h(){return g()}",
+         "var g;function _f(){}" +
+         "function _h(){return g()}");
   }
 
   public void testNoInlineOfNonGlobalFunction2() {
-    testSame("function _f(){var g=function(){return 0}}" +
-             "function _h(){return g()}");
+    test("var g;function _f(){var g=function(){return 0}}" +
+         "function _h(){return g()}",
+         "var g;function _f(){}" +
+         "function _h(){return g()}");
   }
 
   public void testNoInlineOfNonGlobalFunction3() {
-    testSame("var g=3;function _f(){var g=function(){return 0}}" +
-             "function _h(){return g()}");
+    test("var g;function _f(){var g=function(){return 0}}" +
+         "function _h(){return g()}",
+         "var g;function _f(){}" +
+         "function _h(){return g()}");
   }
 
   public void testNoInlineOfNonGlobalFunction4() {
-    testSame("var g=3;function _f(){function g(){return 0}}" +
-             "function _h(){return g()}");
+    test("var g;function _f(){function g(){return 0}}" +
+         "function _h(){return g()}",
+         "var g;function _f(){}" +
+         "function _h(){return g()}");
+
   }
 
   public void testNoInlineMaskedFunction() {
@@ -1419,6 +1433,34 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("(function (f){f(f)})(function(f){f(f)})",
          "{var JSCompiler_inline_f_1=function(f$$1){f$$1(f$$1)};" +
           "{{JSCompiler_inline_f_1(JSCompiler_inline_f_1)}}}");
+  }
+
+  public void testLocalFunctionInlining1() {
+    test("function _f(){ function g() {} g() }",
+         "function _f(){ void 0 }");
+  }
+
+  public void testLocalFunctionInlining2() {
+    test("function _f(){ function g() {foo(); bar();} g() }",
+         "function _f(){ {foo(); bar();} }");
+  }
+
+  public void testLocalFunctionInlining3() {
+    test("function _f(){ function g() {foo(); bar();} g() }",
+         "function _f(){ {foo(); bar();} }");
+  }
+
+  public void testLocalFunctionInlining4() {
+    test("function _f(){ function g() {return 1} return g() }",
+         "function _f(){ return 1 }");
+  }
+
+  public void testLocalFunctionInlining5() {
+    testSame("function _f(){ function g() {this;} g() }");
+  }
+
+  public void testLocalFunctionInlining6() {
+    testSame("function _f(){ function g() {this;} return g; }");
   }
 
   // http://en.wikipedia.org/wiki/Fixed_point_combinator#Y_combinator

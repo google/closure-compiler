@@ -300,7 +300,7 @@ class CollapseProperties implements CompilerPass {
     if (n.props == null) return;
 
     for (Name p : n.props) {
-      String propAlias = alias + '$' + p.name;
+      String propAlias = appendPropForAlias(alias, p.name);
 
       if (p.canCollapse()) {
         flattenReferencesTo(p, propAlias);
@@ -448,13 +448,15 @@ class CollapseProperties implements CompilerPass {
     if (n.props != null) {
       for (Name p : n.props) {
         // Recurse first so that saved node ancestries are intact when needed.
-        collapseDeclarationOfNameAndDescendants(p, alias + '$' + p.name);
+        collapseDeclarationOfNameAndDescendants(
+            p, appendPropForAlias(alias, p.name));
 
         if (!p.inExterns && canCollapseChildNames && p.declaration != null &&
             p.declaration.node != null &&
             p.declaration.node.getParent() != null &&
             p.declaration.node.getParent().getType() == Token.ASSIGN) {
-          updateSimpleDeclaration(alias + '$' + p.name, p.declaration);
+          updateSimpleDeclaration(
+              appendPropForAlias(alias, p.name), p, p.declaration);
         }
       }
     }
@@ -467,10 +469,11 @@ class CollapseProperties implements CompilerPass {
    * function whose properties aren't collapsible.
    *
    * @param alias The flattened property name (e.g. "a$b")
+   * @param refName The name for the reference being updated.
    * @param ref An object containing information about the assignment getting
    *     updated
    */
-  private void updateSimpleDeclaration(String alias, Ref ref) {
+  private void updateSimpleDeclaration(String alias, Name refName, Ref ref) {
     Node rvalue = ref.node.getNext();
     Node parent = ref.node.getParent();
     Node gramps = parent.getParent();
@@ -479,7 +482,7 @@ class CollapseProperties implements CompilerPass {
 
     // Create the new alias node.
     Node nameNode = NodeUtil.newName(alias, gramps.getFirstChild(),
-        alias.replace("$", "."));
+        refName.fullName());
     if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
       nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
@@ -609,7 +612,7 @@ class CollapseProperties implements CompilerPass {
     if (isObjLit) {
       boolean discardKeys = n.aliasingGets == 0;
       declareVarsForObjLitValues(
-          alias, rvalue,
+          n, alias, rvalue,
           varNode, varParent.getChildBefore(varNode), varParent,
           discardKeys);
     }
@@ -666,7 +669,7 @@ class CollapseProperties implements CompilerPass {
     if (isObjLit) {
       boolean discardKeys = n.aliasingGets == 0;
       numChanges += declareVarsForObjLitValues(
-          name, rvalue, varNode, gramps.getChildBefore(varNode),
+          n, name, rvalue, varNode, gramps.getChildBefore(varNode),
           gramps, discardKeys);
     }
 
@@ -719,8 +722,8 @@ class CollapseProperties implements CompilerPass {
    * @return The number of variables added
    */
   private int declareVarsForObjLitValues(
-      String alias, Node objlit, Node varNode, Node nameToAddAfter,
-      Node varParent, boolean discardKeys) {
+      Name objlitName, String alias, Node objlit, Node varNode,
+      Node nameToAddAfter, Node varParent, boolean discardKeys) {
     int numVars = 0;
     int arbitraryNameCounter = 0;
 
@@ -736,10 +739,10 @@ class CollapseProperties implements CompilerPass {
       // their values are expressions that have side effects.
       boolean isJsIdentifier = key.getType() != Token.NUMBER &&
                                TokenStream.isJSIdentifier(key.getString());
-      String propAlias = alias + '$' +
-          (isJsIdentifier ? key.getString()
-              : String.valueOf(++arbitraryNameCounter));
-      String qName = propAlias.replace('$', '.');
+      String propName = isJsIdentifier ?
+          key.getString() : String.valueOf(++arbitraryNameCounter);
+      String propAlias = appendPropForAlias(alias, propName);
+      String qName = objlitName.fullName() + '.' + propName;
 
       Node refNode = null;
       if (discardKeys) {
@@ -815,7 +818,7 @@ class CollapseProperties implements CompilerPass {
     if (n.props != null) {
       for (Name p : n.props) {
         if (p.needsToBeStubbed()) {
-          String propAlias = alias + '$' + p.name;
+          String propAlias = appendPropForAlias(alias, p.name);
           Node nameNode = Node.newString(Token.NAME, propAlias);
           Node newVar = new Node(Token.VAR, nameNode);
           if (addAfter == null) {
@@ -837,5 +840,15 @@ class CollapseProperties implements CompilerPass {
       }
     }
     return numStubs;
+  }
+
+  private static String appendPropForAlias(String root, String prop) {
+    if (prop.indexOf('$') != -1) {
+      // Encode '$' in a property as '$0'. Because '0' cannot be the
+      // start of an identifier, this will never conflict with our
+      // encoding from '.' -> '$'.
+      prop = prop.replaceAll("\\$", "\\$0");
+    }
+    return root + '$' + prop;
   }
 }
