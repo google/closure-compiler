@@ -18,8 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Multisets;
 import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultiset;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -326,7 +326,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
         sb.append(" ");
         sb.append(node.getQualifiedName());
         sb.append(" -> ");
-        Multiset<String> defstrs = Multisets.newTreeMultiset();
+        Multiset<String> defstrs = TreeMultiset.create();
         for (Definition def : defs) {
           Node rValue = def.getRValue();
           if (rValue != null) {

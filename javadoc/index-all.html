@@ -1620,9 +1620,6 @@ Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/java
 <DT><A HREF="./com/google/javascript/jscomp/AbstractCompilerRunner.html#FLAG_module_wrapper"><B>FLAG_module_wrapper</B></A> - 
 Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/AbstractCompilerRunner.html" title="class in com.google.javascript.jscomp">AbstractCompilerRunner</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/jscomp/Compiler.html#FLAG_output_js_string_usage"><B>FLAG_output_js_string_usage</B></A> - 
-Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
-<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/AbstractCompilerRunner.html#FLAG_output_wrapper"><B>FLAG_output_wrapper</B></A> - 
 Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/AbstractCompilerRunner.html" title="class in com.google.javascript.jscomp">AbstractCompilerRunner</A>
 <DD>&nbsp;
@@ -3760,14 +3757,20 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>
 <DD>Returns whether the <code>@export</code> annotation is present on this
  <A HREF="./com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A>.
-<DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String)"><B>isExported(String)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String, boolean)"><B>isExported(String, boolean)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
 <DD>Checks whether a global variable or function name should be treated as
  exported, or externally referenceable.
+<DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String)"><B>isExported(String)</B></A> - 
+Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
+<DD>Should be isExported(name, true) || isExported(name, false);
+<DT><A HREF="./com/google/javascript/jscomp/DefaultCodingConvention.html#isExported(java.lang.String, boolean)"><B>isExported(String, boolean)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/DefaultCodingConvention.html#isExported(java.lang.String)"><B>isExported(String)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/jscomp/GoogleCodingConvention.html#isExported(java.lang.String)"><B>isExported(String)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/GoogleCodingConvention.html#isExported(java.lang.String, boolean)"><B>isExported(String, boolean)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/GoogleCodingConvention.html" title="class in com.google.javascript.jscomp">GoogleCodingConvention</A>
 <DD>Checks whether a global variable or function name should be treated as
  exported, or externally referenceable.

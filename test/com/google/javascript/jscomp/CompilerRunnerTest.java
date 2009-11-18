@@ -30,6 +30,8 @@ import junit.framework.TestCase;
  */
 public class CompilerRunnerTest extends TestCase {
 
+  private Compiler lastCompiler = null;
+
   /** Externs for the test */
   private final JSSourceFile[] externs = new JSSourceFile[] {
     JSSourceFile.fromCode("externs",
@@ -42,6 +44,7 @@ public class CompilerRunnerTest extends TestCase {
   @Override
   public void setUp() {
     Flags.disableStateCheckingForTest();
+    lastCompiler = null;
   }
 
   @Override
@@ -82,6 +85,11 @@ public class CompilerRunnerTest extends TestCase {
     AbstractCompilerRunner.FLAG_jscomp_error.setForTest(
         Lists.newArrayList("missingProperties"));
     test("var x = {}; var y = x.bar;", TypeCheck.INEXISTENT_PROPERTY);
+  }
+
+  public void testDuplicateParams() {
+    test("function (a, a) {}", RhinoErrorReporter.DUPLICATE_PARAM);
+    assertTrue(lastCompiler.hasHaltingErrors());
   }
 
   private void testSame(String original) {
@@ -143,6 +151,7 @@ public class CompilerRunnerTest extends TestCase {
   private Compiler compile(String[] original) {
     CompilerRunner runner = new CompilerRunner(new String[] {});
     Compiler compiler = runner.createCompiler();
+    lastCompiler = compiler;
     JSSourceFile[] inputs = new JSSourceFile[original.length];
     for (int i = 0; i < original.length; i++) {
       inputs[i] = JSSourceFile.fromCode("input" + i, original[i]);

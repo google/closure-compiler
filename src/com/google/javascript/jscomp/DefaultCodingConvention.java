@@ -56,8 +56,13 @@ public class DefaultCodingConvention implements CodingConvention {
   }
 
   @Override
+  public boolean isExported(String name, boolean local) {
+    return local && name.startsWith("$super");
+  }
+  
+  @Override
   public boolean isExported(String name) {
-    return false;
+    return isExported(name, false) || isExported(name, true);
   }
 
   @Override

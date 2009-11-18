@@ -88,11 +88,6 @@ public class OptimizeArgumentsArrayTest extends CompilerTestCase {
        + "  {alert(r0 + r1 + opt_1 + opt_2 + p1); }");
   }
 
-  public void testNotAllIndexKnown() {
-    test("function foo(  ) {alert(arguments[0] + arguments[x]);}",
-         "function foo(p0) {alert(          p0 + arguments[x]);}");
-  }
-
   public void testInnerFunctions() {
     test("function f() { function b(  ) { arguments[0]  }}",
          "function f() { function b(p0) {            p0 }}");
@@ -146,5 +141,12 @@ public class OptimizeArgumentsArrayTest extends CompilerTestCase {
 
   public void testNoOptimizationWhenGetProp() {
     testSame("function f() { arguments[0]; arguments.size }");
+  }
+  
+  public void testNoOptimizationWhenIndexIsNotNumberConstant() {
+    testSame("function f() { arguments[0]; arguments['callee'].length}");
+    testSame("function f() { arguments[0]; arguments.callee.length}");
+    testSame(
+        "function f() { arguments[0]; var x = 'callee'; arguments[x].length}");
   }
 }

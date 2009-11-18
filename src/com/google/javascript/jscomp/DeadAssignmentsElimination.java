@@ -28,7 +28,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Removes local variable assignments that are useless based on information from
@@ -43,8 +42,6 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
 
   private final AbstractCompiler compiler;
   private LiveVariablesAnalysis liveness;
-  private static final Logger logger =
-    Logger.getLogger(DeadAssignmentsElimination.class.getName());
 
   public DeadAssignmentsElimination(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -111,45 +108,60 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         case Token.IF:
         case Token.WHILE:
         case Token.DO:
-          tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), n, state);
+          tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state);
           continue;
         case Token.FOR:
           if (n.getChildCount() == 4) {
             tryRemoveAssignment(
-                t, NodeUtil.getConditionExpression(n), n, state);
-            tryRemoveAssignment(
-                t, n.getFirstChild().getNext().getNext(), n, state);
+                t, NodeUtil.getConditionExpression(n), state);
           }
           continue;
         case Token.SWITCH:
         case Token.CASE:
         case Token.RETURN:
           if (n.hasChildren()) {
-            tryRemoveAssignment(t, n.getFirstChild(), n, state);
+            tryRemoveAssignment(t, n.getFirstChild(), state);
           }
           continue;
         // TODO(user): case Token.VAR: Remove var a=1;a=2;.....
       }
       
-      if (NodeUtil.isExpressionNode(n)) {
-        tryRemoveAssignment(t, n.getFirstChild(), n, state);
-      }
+      tryRemoveAssignment(t, n, state);
     }
   }
 
+  private void tryRemoveAssignment(NodeTraversal t, Node n,
+      FlowState<LiveVariableLattice> state) {
+    tryRemoveAssignment(t, n, n, state);
+  }
+  
   /**
    * Determines if any local variables are dead after the instruction {@code n}
    * and are assigned within the subtree of {@code n}. Removes those assignments
    * if there are any.
    *
    * @param n Target instruction.
-   * @param parent Parent of {@code n}.
+   * @param exprRoot The CFG node where the liveness information in state is
+   *     still correct.
    * @param state The liveness information at {@code n}.
    */
-  private void tryRemoveAssignment(NodeTraversal t, Node n, Node parent,
+  private void tryRemoveAssignment(NodeTraversal t, Node n, Node exprRoot,
       FlowState<LiveVariableLattice> state) {
-    if (NodeUtil.isAssign(n)) {
+
+    // TODO(user): Add implemenation to handle x++ and ++x by replacing
+    // them with x or x+1 respectively.
+    if (NodeUtil.isAssignmentOp(n)) {
+
       Node lhs = n.getFirstChild();
+      Node rhs = lhs.getNext();
+      
+      // Recurse first. Example: dead_x = dead_y = 1; We try to clean up dead_y
+      // first.
+      if (rhs != null) {
+        tryRemoveAssignment(t, rhs, exprRoot, state);
+        rhs = lhs.getNext();
+      }
+
       Scope scope = t.getScope();
       if (!NodeUtil.isName(lhs)) {
         return; // Not a local variable assignment.
@@ -165,8 +177,9 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       if (state.getOut().isLive(var)) {
         return; // Variable not dead.
       }
-      if (state.getIn().isLive(var)) {
-        // Oddly, the variable is killed here but it is also live before it.
+      if (state.getIn().isLive(var) &&
+          isVariableStillLiveWithinExpression(n, exprRoot, var.name)) {
+        // The variable is killed here but it is also live before it.
         // This is possible if we have say:
         //    if (X = a && a = C) {..} ; .......; a = S;
         // In this case we are safe to remove "a = C" because it is dead.
@@ -178,22 +191,106 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         // of GEN sets when we recurse here.
         return;
       }
-      Node rhs = n.getLastChild();
-      // Now we are at a dead local variable assignment.
-      logger.info("Removing dead assignemnt to " + name + " in "
-          + t.getSourceName() + " line " + n.getLineno());
-      n.removeChild(rhs);
-      parent.replaceChild(n, rhs);
+      
+      if (NodeUtil.isAssign(n)) {
+        n.removeChild(rhs);
+        n.getParent().replaceChild(n, rhs);
+      } else if (NodeUtil.isAssignmentOp(n)) {
+        n.removeChild(rhs);
+        n.removeChild(lhs);
+        Node op = new Node(NodeUtil.getOpFromAssignmentOp(n), lhs, rhs);
+        n.getParent().replaceChild(n, op);
+      } else {
+        // TODO(user): this is where the code that handles dead x++ and x--
+        // should go.
+        
+        // Not reachable.
+        Preconditions.checkState(false, "Unknow statement");
+      }
+      
       compiler.reportCodeChange();
       return;
 
     } else {
       for (Node c = n.getFirstChild(); c != null;) {
         Node next = c.getNext();
-        tryRemoveAssignment(t, c, n, state);
+        if (!ControlFlowGraph.isEnteringNewCfgNode(c)) {
+          tryRemoveAssignment(t, c, exprRoot, state);
+        }
         c = next;
       }
       return;
     }
+  }
+  
+  /**
+   * Given a variable, node n in the tree and a sub-tree denoted by exprRoot as
+   * the root, this function returns true if there exists a read of that
+   * variable before a write to that variable that is on the right side of n.
+   * 
+   * For example, suppose the node is x = 1:
+   * 
+   * y = 1, x = 1; // false, there is no reads at all.
+   * y = 1, x = 1, print(x) // true, there is a read right of n.
+   * y = 1, x = 1, x = 2, print(x) // false, there is a read right of n but 
+   *                               // it is after a write.
+   * 
+   * @param n The current node we should look at.
+   * @param exprRoot The node
+   */
+  private boolean isVariableStillLiveWithinExpression(
+      Node n, Node exprRoot, String variable) {
+    while (n != exprRoot) {
+      for(Node sibling = n.getNext(); sibling != null;
+          sibling = sibling.getNext()) {
+        if (!ControlFlowGraph.isEnteringNewCfgNode(sibling)) {
+          VariableLiveness state = readVariableBeforeKilling(sibling, variable);
+          
+          // If we see a READ or KILL there is no need to continue.
+          if (state == VariableLiveness.READ) {
+            return true;
+          } else if (state == VariableLiveness.KILL) {
+            return false;
+          }
+        }
+      }
+      n = n.getParent();
+    }
+    return false;
+  }
+  
+  // The current liveness of the variable
+  private enum VariableLiveness {
+    MAYBE_LIVE, // May be still live in the current expression tree.
+    READ, // Known there is a read left of it.
+    KILL, // Known there is a write before any read.
+  }
+
+  /**
+   * Give an expression and a variable. It returns READ, if the right-most
+   * reference of that variable is a read. It returns KILL, if the right-most
+   * reference of that variable is an assignment. It returns MAY_LIVE otherwise.
+   * 
+   * This need to be a pre-order traversal so we cannot use the normal node
+   * traversals.
+   */
+  private VariableLiveness readVariableBeforeKilling(Node n, String variable) {
+    if (NodeUtil.isName(n) && variable.equals(n.getString())) {
+      if (NodeUtil.isLhs(n, n.getParent())) {
+        return VariableLiveness.KILL;
+      } else {
+        return VariableLiveness.READ;
+      }
+    }
+    for (Node child = n.getFirstChild();
+        child != null; child = child.getNext()) {
+      if (!ControlFlowGraph.isEnteringNewCfgNode(child)) {
+        VariableLiveness state = readVariableBeforeKilling(child, variable);
+        if (state != VariableLiveness.MAYBE_LIVE) {
+          return state;
+        }
+      }
+    }
+    return VariableLiveness.MAYBE_LIVE;
   }
 }

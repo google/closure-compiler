@@ -57,6 +57,7 @@ public enum WarningLevel {
     // new one once it is default in command line JSCompiler.
     options.checkUndefinedProperties = CheckLevel.OFF;
     options.checkUnusedPropertiesEarly = false;
+    options.checkUnreachableCode = CheckLevel.WARNING;
   }
 
   /**

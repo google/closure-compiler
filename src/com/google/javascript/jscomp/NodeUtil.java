@@ -716,6 +716,34 @@ public final class NodeUtil {
     }
     return false;
   }
+  
+  static int getOpFromAssignmentOp(Node n) {
+    switch (n.getType()){
+      case Token.ASSIGN_BITOR:
+        return Token.BITOR;
+      case Token.ASSIGN_BITXOR:
+        return Token.BITXOR;
+      case Token.ASSIGN_BITAND:
+        return Token.BITAND;
+      case Token.ASSIGN_LSH:
+        return Token.LSH;
+      case Token.ASSIGN_RSH:
+        return Token.RSH;
+      case Token.ASSIGN_URSH:
+        return Token.URSH;
+      case Token.ASSIGN_ADD:
+        return Token.ADD;
+      case Token.ASSIGN_SUB:
+        return Token.SUB;
+      case Token.ASSIGN_MUL:
+        return Token.MUL;
+      case Token.ASSIGN_DIV:
+        return Token.DIV;
+      case Token.ASSIGN_MOD:
+        return Token.MOD;
+    }
+    throw new IllegalArgumentException("Not an assiment op");
+  }
 
   static boolean isExpressionNode(Node n) {
     return n.getType() == Token.EXPR_RESULT;

@@ -343,6 +343,15 @@ CodingConvention defines a set of hooks to customize the behavior of the
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String)">isExported</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
 <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Should be isExported(name, true) || isExported(name, false);</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String, boolean)">isExported</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+           boolean&nbsp;local)</CODE>
+
+<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether a global variable or function name should be treated as
  exported, or externally referenceable.</TD>
 </TR>
@@ -477,17 +486,31 @@ boolean <B>isVarArgsParameter</B>(<A HREF="../../../../com/google/javascript/rhi
 </DL>
 <HR>
 
-<A NAME="isExported(java.lang.String)"><!-- --></A><H3>
+<A NAME="isExported(java.lang.String, boolean)"><!-- --></A><H3>
 isExported</H3>
 <PRE>
-boolean <B>isExported</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+boolean <B>isExported</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
+                   boolean&nbsp;local)</PRE>
 <DL>
 <DD>Checks whether a global variable or function name should be treated as
  exported, or externally referenceable.
 <P>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>name</CODE> - A global variable or function name.
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - A global variable or function name.<DD><CODE>local</CODE> - <code>true</code> if the name is a local variable.
 <DT><B>Returns:</B><DD><code>true</code> if the name should be considered exported.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isExported(java.lang.String)"><!-- --></A><H3>
+isExported</H3>
+<PRE>
+boolean <B>isExported</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD>Should be isExported(name, true) || isExported(name, false);
+<P>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <HR>

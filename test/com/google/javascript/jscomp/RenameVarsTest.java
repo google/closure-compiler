@@ -35,7 +35,17 @@ public class RenameVarsTest extends CompilerTestCase {
   private boolean withClosurePass = false;
   private boolean localRenamingOnly = false;
   private boolean preserveAnonymousFunctionNames = false;
+  private boolean useGoogleCodingConvention = true;
 
+  @Override
+  protected CodingConvention getCodingConvention() {
+    if (useGoogleCodingConvention) {
+      return new GoogleCodingConvention();
+    } else {
+      return new DefaultCodingConvention();
+    }
+  }
+  
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     if (withClosurePass) {
@@ -425,6 +435,20 @@ public class RenameVarsTest extends CompilerTestCase {
     withClosurePass = true;
     test("var goog, a, b; goog.exportSymbol(a, b);",
          "var a, b, c; a.exportSymbol(b, c);");
+  }
+  
+  public void testDollarSignSuperExport() {
+    useGoogleCodingConvention = false;
+    // See http://code.google.com/p/closure-compiler/issues/detail?id=32
+    test("var x = function($super,duper,$fantastic){}",
+         "var c = function($super,    a,        b){}");
+    
+    localRenamingOnly = false;
+    test("var $super = 1", "var a = 1");
+
+    useGoogleCodingConvention = true;
+    test("var x = function($super,duper,$fantastic){}",
+         "var d = function(a,     b,    c        ){}");
   }
 
   private void testRenameMapUsingOldMap(String input, String expected,

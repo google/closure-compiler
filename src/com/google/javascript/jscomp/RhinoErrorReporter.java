@@ -43,9 +43,12 @@ class RhinoErrorReporter {
   static final DiagnosticType TRAILING_COMMA =
       DiagnosticType.error("JSC_TRAILING_COMMA", "Parse error. {0}");
 
-  static final DiagnosticType BAD_JSDOC_ANNOTATION = 
+  static final DiagnosticType DUPLICATE_PARAM =
+      DiagnosticType.error("JSC_DUPLICATE_PARAM", "Parse error. {0}");
+
+  static final DiagnosticType BAD_JSDOC_ANNOTATION =
     DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
-  
+
   // A map of Rhino messages to their DiagnosticType.
   private final Map<String, DiagnosticType> typeMap;
 
@@ -64,18 +67,24 @@ class RhinoErrorReporter {
   private RhinoErrorReporter(AbstractCompiler compiler) {
     this.compiler = compiler;
     typeMap = ImmutableMap.of(
-        
+
         // Extra @fileoverview
         replacePlaceHolders(
             ScriptRuntime.getMessage0("msg.jsdoc.fileoverview.extra")),
         EXTRA_FILEOVERVIEW,
-        
+
         // Trailing comma
         replacePlaceHolders(
             com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime
               .getMessage0("msg.extra.trailing.comma")),
         TRAILING_COMMA,
-    
+
+        // Duplicate parameter
+        replacePlaceHolders(
+            com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime
+              .getMessage0("msg.dup.parms")),
+        DUPLICATE_PARAM,
+
         // Unknown @annotations.
         replacePlaceHolders(ScriptRuntime.getMessage0("msg.bad.jsdoc.tag")),
         BAD_JSDOC_ANNOTATION);

@@ -299,6 +299,9 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public boolean aliasAllStrings;
 
+  /** Print string usage as part of the compilation log. */
+  boolean outputJsStringUsage;
+
   /** Converts quoted property accesses to dot syntax (a['b'] -> a.b) */
   public boolean convertToDottedProperties;
 
@@ -581,6 +584,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     aliasableStrings = Collections.emptySet();
     aliasStringsBlacklist = "";
     aliasAllStrings = false;
+    outputJsStringUsage = false;
     convertToDottedProperties = false;
     rewriteFunctionExpressions = false;
     optimizeParameters = false;

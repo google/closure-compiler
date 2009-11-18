@@ -95,7 +95,6 @@ public enum CompilationLevel {
     options.deadAssignmentElimination = true;
     options.extractPrototypeMemberDeclarations = true;
     options.collapseVariableDeclarations = true;
-    options.collapseAnonymousFunctions = true;
     options.convertToDottedProperties = true;
     options.labelRenaming = true;
     options.removeDeadCode = true;
@@ -126,7 +125,6 @@ public enum CompilationLevel {
     options.deadAssignmentElimination = true;
     options.extractPrototypeMemberDeclarations = true;
     options.collapseVariableDeclarations = true;
-    options.collapseAnonymousFunctions = true;
     options.convertToDottedProperties = true;
     options.rewriteFunctionExpressions = true;
     options.labelRenaming = true;
@@ -138,6 +136,7 @@ public enum CompilationLevel {
     options.propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
     options.removeUnusedPrototypeProperties = true;
     options.removeUnusedPrototypePropertiesInExterns = true;
+    options.collapseAnonymousFunctions = true;
     options.collapseProperties = true;
     options.rewriteFunctionExpressions = true;
     options.devirtualizePrototypeMethods = true;

@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.Scope.Var;
@@ -85,7 +85,7 @@ class MaybeReachingVariableUse extends
     final Multimap<Var, Node> mayUseMap;
 
     public ReachingUses() {
-      mayUseMap = Multimaps.newHashMultimap();
+      mayUseMap = HashMultimap.create();
     }
 
     /**
@@ -94,7 +94,7 @@ class MaybeReachingVariableUse extends
      * @param other The constructed object is a replicated copy of this element.
      */
     public ReachingUses(ReachingUses other) {
-      mayUseMap = Multimaps.newHashMultimap(other.mayUseMap);
+      mayUseMap = HashMultimap.create(other.mayUseMap);
     }
 
     @Override

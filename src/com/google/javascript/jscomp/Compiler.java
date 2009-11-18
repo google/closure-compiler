@@ -22,8 +22,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Tracer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.flags.Flag;
-import com.google.common.flags.FlagSpec;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
@@ -63,12 +61,6 @@ import java.util.logging.Logger;
 *
  */
 public class Compiler extends AbstractCompiler {
-  @FlagSpec(help = "As part of the aliasing pass, outputs all strings and " +
-                   "the number of times they were used in the application to " +
-                   "the server log.")
-  public static final Flag<Boolean> FLAG_output_js_string_usage =
-      Flag.value(false);
-
   CompilerOptions options_ = createDefaultOptions();
 
   private PassConfig passes = null;
@@ -1405,7 +1397,7 @@ public class Compiler extends AbstractCompiler {
       aliasStrings(options_.aliasableStrings,
                    options_.aliasAllStrings,
                    options_.aliasStringsBlacklist,
-                   FLAG_output_js_string_usage.get());
+                   options_.outputJsStringUsage);
     }
 
     if (options_.aliasExternals) {

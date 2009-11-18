@@ -121,8 +121,8 @@ public class GoogleCodingConvention extends ClosureCodingConvention {
    * considered exported.
    */
   @Override
-  public boolean isExported(String name) {
-    return name.startsWith("_");
+  public boolean isExported(String name, boolean local) {
+    return !local && name.startsWith("_");
   }
 
   /**

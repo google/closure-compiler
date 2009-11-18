@@ -81,7 +81,13 @@ public interface CodingConvention {
    * exported, or externally referenceable.
    *
    * @param name A global variable or function name.
+   * @param local {@code true} if the name is a local variable.
    * @return {@code true} if the name should be considered exported.
+   */
+  public boolean isExported(String name, boolean local);
+  
+  /**
+   * Should be isExported(name, true) || isExported(name, false);
    */
   public boolean isExported(String name);
 

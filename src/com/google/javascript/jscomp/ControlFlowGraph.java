@@ -138,33 +138,58 @@ class ControlFlowGraph<N> extends
       if (parent == null) {
         return true;
       }
-      switch (parent.getType()) {
-        case Token.BLOCK:
-        case Token.SCRIPT:
-        case Token.TRY:
-        case Token.FINALLY:
-          return false;
-        case Token.FUNCTION:
-          return n == parent.getFirstChild().getNext();
-        case Token.WHILE:
-        case Token.DO:
-        case Token.IF:
-          return NodeUtil.getConditionExpression(parent) == n;
-        case Token.FOR:
-          if (parent.getChildCount() == 4) {
-            return NodeUtil.getConditionExpression(parent) == n;
-          } else {
-            return n != parent.getLastChild();
-          }
-        case Token.SWITCH:
-        case Token.CASE:
-        case Token.CATCH:
-        case Token.WITH:
-          return n == parent.getFirstChild();
-
-        default:
-          return true;
-      }
+      return !isEnteringNewCfgNode(n);
+    }
+  }
+  
+  /**
+   * @return True if n should be represented by a new CFG node in the control
+   * flow graph.
+   */
+  public static boolean isEnteringNewCfgNode(Node n) {
+    Node parent = n.getParent();
+    switch (parent.getType()) {
+      case Token.BLOCK:
+      case Token.SCRIPT:
+      case Token.TRY:
+      case Token.FINALLY:
+        return true;
+      case Token.FUNCTION:
+        // A function node represents the start of a function where the name
+        // is bleed into the local scope and parameters has been assigned
+        // to the formal argument names. The node includes the name of the
+        // function and the LP list since we assume the whole set up process
+        // is atomic without change in control flow. The next change of
+        // control is going into the function's body represent by the second
+        // child.
+        return n != parent.getFirstChild().getNext();
+      case Token.WHILE:
+      case Token.DO:
+      case Token.IF:
+        // Theses control structure is represented by its node that holds the
+        // condition. Each of them is a branch node based on its condition.
+        return NodeUtil.getConditionExpression(parent) != n;
+        
+      case Token.FOR:
+        // The FOR(;;) node differs from other control structure in that
+        // it has a initialization and a increment statement. Those
+        // two statements have its corresponding CFG nodes to represent them.
+        // The FOR node represents the condition check for each iteration.
+        // That way the following:
+        // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
+        // var x = 0; while(x<10) {  x++; }
+        if (parent.getChildCount() == 4) {
+          return NodeUtil.getConditionExpression(parent) != n;
+        } else {
+          return n == parent.getLastChild();
+        }
+      case Token.SWITCH:
+      case Token.CASE:
+      case Token.CATCH:
+      case Token.WITH:
+        return n != parent.getFirstChild();
+      default:
+        return false;
     }
   }
 }
