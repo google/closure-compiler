@@ -96,6 +96,12 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("undefinedVars",
           new DiagnosticGroup(VarCheck.UNDEFINED_VAR_ERROR));
 
+  public static DiagnosticGroup CHECK_VARIABLES =
+      DiagnosticGroups.registerGroup("checkVars",
+          new DiagnosticGroup(
+              VarCheck.UNDEFINED_VAR_ERROR,
+              SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR));
+
   /**
    * Adds warning levels by name.
    */

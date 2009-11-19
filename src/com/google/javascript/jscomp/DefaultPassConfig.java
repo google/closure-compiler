@@ -133,8 +133,11 @@ public class DefaultPassConfig extends PassConfig {
     // checks the externs file for validity. If you don't want to warn
     // about missing variable declarations, we shut that specific
     // error off.
-    if (!options.checkSymbols) {
-      options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES,
+    WarningsGuard warningsGuard = options.getWarningsGuard();
+    if (!options.checkSymbols &&
+        (warningsGuard == null || !warningsGuard.disables(
+            DiagnosticGroups.CHECK_VARIABLES))) {
+      options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES,
           CheckLevel.OFF);
     }
 
@@ -222,7 +225,7 @@ public class DefaultPassConfig extends PassConfig {
 
     // Abstract method removal works best on minimally modified code, and also
     // only needs to run once.
-    if (options.closurePass) {
+    if (options.closurePass && options.removeAbstractMethods) {
       passes.add(removeAbstractMethods);
     }
 

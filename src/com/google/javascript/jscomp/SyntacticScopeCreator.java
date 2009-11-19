@@ -182,9 +182,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         Scope s, String name,
         Node n, Node parent, Node gramps, Node nodeWithLineNumber) {
       // Don't allow multiple variables to be declared at the top level scope
-      if (!compiler.getCodingConvention().allowsVariableRedeclaration(
-          scope, name, parent)) {
-
+      if (scope.isGlobal()) {
         Scope.Var origVar = scope.getVar(name);
         Node origParent = origVar.getParentNode();
         if (origParent.getType() == Token.CATCH &&

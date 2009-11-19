@@ -23,6 +23,8 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+
 /**
  * Tests for {@link CompilerRunner}.
  *
@@ -65,12 +67,13 @@ public class CompilerRunnerTest extends TestCase {
 
   public void testCheckSymbolsOffForDefault() {
     CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
-    testSame("x = 3;");
+    testSame("x = 3; var y; var y;");
   }
 
   public void testCheckSymbolsOnForVerbose() {
     CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
     test("x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
+    test("var y; var y;", SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testCheckSymbolsOverrideForVerbose() {
@@ -91,6 +94,8 @@ public class CompilerRunnerTest extends TestCase {
     test("function (a, a) {}", RhinoErrorReporter.DUPLICATE_PARAM);
     assertTrue(lastCompiler.hasHaltingErrors());
   }
+
+  /* Helper functions */
 
   private void testSame(String original) {
     testSame(new String[] { original });
@@ -156,9 +161,14 @@ public class CompilerRunnerTest extends TestCase {
     for (int i = 0; i < original.length; i++) {
       inputs[i] = JSSourceFile.fromCode("input" + i, original[i]);
     }
+    CompilerOptions options = runner.createOptions();
+    try {
+      runner.setRunOptions(options);
+    } catch (IOException e) {
+      assert(false);
+    }
     compiler.compile(
-        externs, CompilerTestCase.createModuleChain(original),
-        runner.createOptions());
+        externs, CompilerTestCase.createModuleChain(original), options);
     return compiler;
   }
 

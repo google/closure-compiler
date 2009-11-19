@@ -17,11 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -40,7 +39,7 @@ import java.util.Set;
 *
 *
  */
-class ProcessClosurePrimitives extends AbstractNodeTypePruningCallback
+class ProcessClosurePrimitives extends AbstractPostOrderCallback
     implements CompilerPass {
 
   static final DiagnosticType NULL_ARGUMENT_ERROR = DiagnosticType.error(
@@ -85,6 +84,10 @@ class ProcessClosurePrimitives extends AbstractNodeTypePruningCallback
           "JSC_NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR",
       "goog.setCssNameMapping only takes an object literal with string values");
 
+  static final DiagnosticType BASE_CLASS_ERROR = DiagnosticType.error(
+      "JSC_BASE_CLASS_ERROR",
+      "incorrect use of goog.base: {0}");
+
   /** The root Closure namespace */
   static final String GOOG = "goog";
 
@@ -95,23 +98,9 @@ class ProcessClosurePrimitives extends AbstractNodeTypePruningCallback
   private final CheckLevel requiresLevel;
   private final boolean rewriteNewDateGoogNow;
 
-  private static final Set<Integer> TRAVERSAL_NODE_TYPES = ImmutableSet.of(
-    Token.SCRIPT,
-    Token.BLOCK,
-    Token.EXPR_RESULT,
-    Token.CALL,
-    Token.ASSIGN,
-    Token.IF,
-    Token.VAR,
-    Token.NAME,
-    Token.NEW,
-    Token.FUNCTION);
-
   ProcessClosurePrimitives(AbstractCompiler compiler,
                            CheckLevel requiresLevel,
                            boolean rewriteNewDateGoogNow) {
-    super(TRAVERSAL_NODE_TYPES);
-
     this.compiler = compiler;
     this.unrecognizedRequires = new ArrayList<UnrecognizedRequire>();
     this.providedNodes = new HashMap<String, ProvidedNode>();
@@ -160,91 +149,95 @@ class ProcessClosurePrimitives extends AbstractNodeTypePruningCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.CALL:
-        if (parent.getType() == Token.EXPR_RESULT) {
-          Node left = n.getFirstChild();
-          if (left.getType() == Token.GETPROP) {
-            Node name = left.getFirstChild();
-            if (name.getType() == Token.NAME &&
-                GOOG.equals(name.getString())) {
-              // For the sake of simplicity, we report code changes
-              // when we see a provides/requires, and don't worry about
-              // reporting the change when we actually do the replacement.
-              String methodName = name.getNext().getString();
-              if ("require".equals(methodName)) {
-                Node arg = left.getNext();
-                if (verifyArgument(t, left, arg)) {
-                  String ns = arg.getString();
-                  ProvidedNode provided = providedNodes.get(ns);
-                  if (provided == null) {
-                    unrecognizedRequires.add(
-                        new UnrecognizedRequire(n, ns, t.getSourceName()));
-                  } else {
-                    JSModule module = t.getModule();
-                    if (module != provided.module /* covers null case */ &&
-                        !compiler.getModuleGraph().dependsOn(module,
-                            provided.module)) {
-                      compiler.report(
-                          JSError.make(t, n, XMODULE_REQUIRE_ERROR, ns,
-                              provided.module.getName(),
-                              module.getName()));
-                    }
-                  }
-
-                  // Requires should be removed before runtime.  The one
-                  // exception is if the type has not been provided yet and
-                  // errors for broken requires are turned off, in which case,
-                  // we will be doing a later pass that may error, so we can
-                  // leave this here this time and let it error next time if it
-                  // is still not provided.
-                  if (provided != null || requiresLevel.isOn()) {
-                    parent.getParent().removeChild(parent);
-                    compiler.reportCodeChange();
+        boolean isExpr = parent.getType() == Token.EXPR_RESULT;
+        Node left = n.getFirstChild();
+        if (left.getType() == Token.GETPROP) {
+          Node name = left.getFirstChild();
+          if (name.getType() == Token.NAME &&
+              GOOG.equals(name.getString())) {
+            // For the sake of simplicity, we report code changes
+            // when we see a provides/requires, and don't worry about
+            // reporting the change when we actually do the replacement.
+            String methodName = name.getNext().getString();
+            if ("base".equals(methodName)) {
+              processBaseClassCall(t, n);
+            } else if (!isExpr) {
+              // All other methods must be called in an EXPR.
+              break;
+            } else if ("require".equals(methodName)) {
+              Node arg = left.getNext();
+              if (verifyArgument(t, left, arg)) {
+                String ns = arg.getString();
+                ProvidedNode provided = providedNodes.get(ns);
+                if (provided == null) {
+                  unrecognizedRequires.add(
+                      new UnrecognizedRequire(n, ns, t.getSourceName()));
+                } else {
+                  JSModule module = t.getModule();
+                  if (module != provided.module /* covers null case */ &&
+                      !compiler.getModuleGraph().dependsOn(module,
+                          provided.module)) {
+                    compiler.report(
+                        JSError.make(t, n, XMODULE_REQUIRE_ERROR, ns,
+                            provided.module.getName(),
+                            module.getName()));
                   }
                 }
-              } else if ("provide".equals(methodName)) {
-                Node arg = left.getNext();
-                if (verifyProvide(t, left, arg)) {
-                  String ns = arg.getString();
-                  if (providedNodes.get(ns) != null) {
-                    compiler.report(
-                        JSError.make(t, n, DUPLICATE_NAMESPACE_ERROR, ns));
-                  } else if (!providedNodes.containsKey(ns)) {
-                    replaceProvide(t, parent, parent.getParent(), ns);
-                  } else {
-                    // Namespace was already inserted for a sub-namespace.
-                    parent.getParent().removeChild(parent);
-                    providedNodes.put(ns,
-                        new ProvidedNode(null, null, t.getModule()));
-                  }
+
+                // Requires should be removed before runtime.  The one
+                // exception is if the type has not been provided yet and
+                // errors for broken requires are turned off, in which case,
+                // we will be doing a later pass that may error, so we can
+                // leave this here this time and let it error next time if it
+                // is still not provided.
+                if (provided != null || requiresLevel.isOn()) {
+                  parent.getParent().removeChild(parent);
                   compiler.reportCodeChange();
                 }
-              } else if ("exportSymbol".equals(methodName)) {
-                Node arg = left.getNext();
-                if (arg.getType() == Token.STRING) {
-                  int dot = arg.getString().indexOf('.');
-                  if (dot == -1) {
-                    exportedVariables.add(arg.getString());
-                  } else {
-                    exportedVariables.add(arg.getString().substring(0, dot));
-                  }
-                }
-              } else if ("addDependency".equals(methodName)) {
-                CodingConvention convention = compiler.getCodingConvention();
-                List<String> typeDecls =
-                    convention.identifyTypeDeclarationCall(n);
-                if (typeDecls != null) {
-                  for (String typeDecl : typeDecls) {
-                    compiler.getTypeRegistry().forwardDeclareType(typeDecl);
-                  }
-                }
-
-                // We can't modify parent, so just create a node that will
-                // get compiled out.
-                parent.replaceChild(n, Node.newNumber(0));
-                compiler.reportCodeChange();
-              } else if ("setCssNameMapping".equals(methodName)) {
-                processSetCssNameMapping(t, n, parent);
               }
+            } else if ("provide".equals(methodName)) {
+              Node arg = left.getNext();
+              if (verifyProvide(t, left, arg)) {
+                String ns = arg.getString();
+                if (providedNodes.get(ns) != null) {
+                  compiler.report(
+                      JSError.make(t, n, DUPLICATE_NAMESPACE_ERROR, ns));
+                } else if (!providedNodes.containsKey(ns)) {
+                  replaceProvide(t, parent, parent.getParent(), ns);
+                } else {
+                  // Namespace was already inserted for a sub-namespace.
+                  parent.getParent().removeChild(parent);
+                  providedNodes.put(ns,
+                      new ProvidedNode(null, null, t.getModule()));
+                }
+                compiler.reportCodeChange();
+              }
+            } else if ("exportSymbol".equals(methodName)) {
+              Node arg = left.getNext();
+              if (arg.getType() == Token.STRING) {
+                int dot = arg.getString().indexOf('.');
+                if (dot == -1) {
+                  exportedVariables.add(arg.getString());
+                } else {
+                  exportedVariables.add(arg.getString().substring(0, dot));
+                }
+              }
+            } else if ("addDependency".equals(methodName)) {
+              CodingConvention convention = compiler.getCodingConvention();
+              List<String> typeDecls =
+                  convention.identifyTypeDeclarationCall(n);
+              if (typeDecls != null) {
+                for (String typeDecl : typeDecls) {
+                  compiler.getTypeRegistry().forwardDeclareType(typeDecl);
+                }
+              }
+
+              // We can't modify parent, so just create a node that will
+              // get compiled out.
+              parent.replaceChild(n, Node.newNumber(0));
+              compiler.reportCodeChange();
+            } else if ("setCssNameMapping".equals(methodName)) {
+              processSetCssNameMapping(t, n, parent);
             }
           }
         }
@@ -300,7 +293,155 @@ class ProcessClosurePrimitives extends AbstractNodeTypePruningCallback
       case Token.NEW:
         trySimplifyNewDate(t, n, parent);
         break;
+
+      case Token.GETPROP:
+        if (n.getFirstChild().getType() == Token.NAME &&
+            parent.getType() != Token.CALL &&
+            parent.getType() != Token.ASSIGN &&
+            "goog.base".equals(n.getQualifiedName())) {
+          reportBadBaseClassUse(t, n, "May only be called directly.");
+        }
+        break;
     }
+  }
+
+  /**
+   * Processes the base class call.
+   */
+  private void processBaseClassCall(NodeTraversal t, Node n) {
+    // Two things must hold for every goog.base call:
+    // 1) We must be calling it on "this".
+    // 2) We must be calling it on a prototype method of the same name as
+    //    the one we're in, OR we must be calling it from a constructor.
+    // If both of those things are true, then we can rewrite:
+    // <pre>
+    // function Foo() {
+    //   goog.base(this);
+    // }
+    // goog.inherits(Foo, BaseFoo);
+    // Foo.prototype.bar = function() {
+    //   goog.base(this, 'bar', 1);
+    // };
+    // </pre>
+    // as the easy-to-optimize:
+    // <pre>
+    // function Foo() {
+    //   BaseFoo.call(this);
+    // }
+    // goog.inherits(Foo, BaseFoo);
+    // Foo.prototype.bar = function() {
+    //   Foo.superClass_.bar.call(this, 1);
+    // };
+    //
+    // Most of the logic here is just to make sure the AST's
+    // structure is what we expect it to be.
+
+    Node callee = n.getFirstChild();
+    Node thisArg = callee.getNext();
+    if (thisArg == null || thisArg.getType() != Token.THIS) {
+      reportBadBaseClassUse(t, n, "First argument must be 'this'.");
+      return;
+    }
+
+    Node enclosingFnNameNode = getEnclosingDeclNameNode(t);
+    if (enclosingFnNameNode == null) {
+      reportBadBaseClassUse(t, n, "Could not find enclosing method.");
+      return;
+    }
+
+    String enclosingQname = enclosingFnNameNode.getQualifiedName();
+    if (enclosingQname.indexOf(".prototype.") == -1) {
+      // Handle constructors.
+      Node enclosingParent = enclosingFnNameNode.getParent();
+      Node maybeInheritsExpr = (enclosingParent.getType() == Token.ASSIGN ?
+          enclosingParent.getParent() : enclosingParent).getNext();
+      Node baseClassNode = null;
+      if (maybeInheritsExpr != null &&
+          maybeInheritsExpr.getType() == Token.EXPR_RESULT &&
+          maybeInheritsExpr.getFirstChild().getType() == Token.CALL) {
+        Node callNode = maybeInheritsExpr.getFirstChild();
+        if ("goog.inherits".equals(
+                callNode.getFirstChild().getQualifiedName()) &&
+            callNode.getLastChild().isQualifiedName()) {
+          baseClassNode = callNode.getLastChild();
+        }
+      }
+
+      if (baseClassNode == null) {
+        reportBadBaseClassUse(
+            t, n, "Could not find goog.inherits for base class");
+        return;
+      }
+
+      // We're good to go.
+      n.replaceChild(
+          callee,
+          NodeUtil.newQualifiedNameNode(
+            String.format("%s.call", baseClassNode.getQualifiedName()),
+            callee, "goog.base"));
+      compiler.reportCodeChange();
+    } else {
+      // Handle methods.
+      Node methodNameNode = thisArg.getNext();
+      if (methodNameNode == null || methodNameNode.getType() != Token.STRING) {
+        reportBadBaseClassUse(t, n, "Second argument must name a method.");
+        return;
+      }
+
+      String methodName = methodNameNode.getString();
+      String ending = ".prototype." + methodName;
+      if (enclosingQname == null ||
+          !enclosingQname.endsWith(ending)) {
+        reportBadBaseClassUse(
+            t, n, "Enclosing method does not match " + methodName);
+        return;
+      }
+
+      // We're good to go.
+      Node className =
+          enclosingFnNameNode.getFirstChild().getFirstChild();
+      n.replaceChild(
+          callee,
+          NodeUtil.newQualifiedNameNode(
+            String.format("%s.superClass_.%s.call",
+                className.getQualifiedName(), methodName),
+            callee, "goog.base"));
+      n.removeChild(methodNameNode);
+      compiler.reportCodeChange();
+    }
+  }
+
+  /**
+   * Returns the qualified name node of the function whose scope we're in,
+   * or null if it cannot be found.
+   */
+  private Node getEnclosingDeclNameNode(NodeTraversal t) {
+    Node scopeRoot = t.getScopeRoot();
+    if (NodeUtil.isFunctionDeclaration(scopeRoot)) {
+      // function x() {...}
+      return scopeRoot.getFirstChild();
+    } else {
+      Node parent = scopeRoot.getParent();
+      if (parent != null) {
+        if (parent.getType() == Token.ASSIGN ||
+            parent.getLastChild() == scopeRoot &&
+            parent.getFirstChild().isQualifiedName()) {
+          // x.y.z = function() {...};
+          return parent.getFirstChild();
+        } else if (parent.getType() == Token.NAME) {
+          // var x = function() {...};
+          return parent;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /** Reports an incorrect use of super-method calling. */
+  private void reportBadBaseClassUse(
+      NodeTraversal t, Node n, String extraMessage) {
+    compiler.report(JSError.make(t, n, BASE_CLASS_ERROR, extraMessage));
   }
 
   /**

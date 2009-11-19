@@ -165,12 +165,6 @@ public class DefaultCodingConvention implements CodingConvention {
   }
 
   @Override
-  public boolean allowsVariableRedeclaration(
-      Scope scope, String name, Node parent) {
-    return true;
-  }
-
-  @Override
   public boolean isPropertyTestFunction(Node call) {
     return false;
   }

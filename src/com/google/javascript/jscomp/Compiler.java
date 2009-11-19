@@ -130,7 +130,7 @@ public class Compiler extends AbstractCompiler {
   private final StringBuilder debugLog_ = new StringBuilder();
 
   /** Detects Google-specific coding conventions. */
-  private CodingConvention codingConvention = new GoogleCodingConvention();
+  CodingConvention defaultCodingConvention = new GoogleCodingConvention();
 
   private JSTypeRegistry typeRegistry;
 
@@ -1769,12 +1769,9 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   public CodingConvention getCodingConvention() {
-    return codingConvention;
-  }
-
-  public void setCodingConvention(CodingConvention convention) {
-    Preconditions.checkState(convention != null);
-    codingConvention = convention;
+    CodingConvention convention = options_.getCodingConvention();
+    convention = convention != null ? convention : defaultCodingConvention;
+    return convention;
   }
 
   @Override

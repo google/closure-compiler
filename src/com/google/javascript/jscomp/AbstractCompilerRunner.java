@@ -234,6 +234,30 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
     return compiler;
   }
 
+  final protected void setRunOptions(B options) throws IOException {
+    if (FLAG_js_output_file.get().length() > 0) {
+      options.jsOutputFile = FLAG_js_output_file.get();
+    }
+
+    if (FLAG_create_source_map.get().length() > 0) {
+      options.sourceMapOutputPath = FLAG_create_source_map.get();
+    }
+
+    if (!FLAG_variable_map_input_file.get().equals("")) {
+      options.inputVariableMapSerialized =
+          VariableMap.load(FLAG_variable_map_input_file.get()).toBytes();
+    }
+
+    if (!FLAG_property_map_input_file.get().equals("")) {
+      options.inputPropertyMapSerialized =
+          VariableMap.load(FLAG_property_map_input_file.get()).toBytes();
+    }
+
+    if (FLAG_third_party.get()) {
+      options.setCodingConvention(new DefaultCodingConvention());
+    }
+  }
+
   /**
    * Runs the Compiler and calls System.exit() with the exit status of the
    * compiler.
@@ -536,32 +560,10 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
     JSModule[] modules = null;
     Result result;
 
-    if (FLAG_js_output_file.get().length() > 0) {
-      options.jsOutputFile = FLAG_js_output_file.get();
-    }
-
-    if (FLAG_create_source_map.get().length() > 0) {
-      options.sourceMapOutputPath = FLAG_create_source_map.get();
-    }
-
-    if (!FLAG_variable_map_input_file.get().equals("")) {
-      options.inputVariableMapSerialized =
-          VariableMap.load(FLAG_variable_map_input_file.get()).toBytes();
-    }
-
-    if (!FLAG_property_map_input_file.get().equals("")) {
-      options.inputPropertyMapSerialized =
-          VariableMap.load(FLAG_property_map_input_file.get()).toBytes();
-    }
+    setRunOptions(options);
 
     if (!options.jsOutputFile.equals("")) {
       out = new PrintStream(options.jsOutputFile);
-    }
-
-    if (FLAG_third_party.get()) {
-
-      // Enable the generic coding conventions.
-      compiler.setCodingConvention(new DefaultCodingConvention());
     }
 
     ((PrintStreamErrorManager) compiler.getErrorManager())

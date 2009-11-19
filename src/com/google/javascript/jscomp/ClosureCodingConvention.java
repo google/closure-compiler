@@ -279,12 +279,6 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
     return "goog.global";
   }
 
-  @Override
-  public boolean allowsVariableRedeclaration(
-      Scope scope, String name, Node parent) {
-    return !scope.isGlobal();
-  }
-
   private final Set<String> propertyTestFunctions = ImmutableSet.of(
       "goog.isDef", "goog.isNull", "goog.isDefAndNotNull",
       "goog.isString", "goog.isNumber", "goog.isBoolean",

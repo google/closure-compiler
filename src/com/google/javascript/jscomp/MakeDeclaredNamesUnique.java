@@ -17,9 +17,9 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Multisets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
@@ -29,7 +29,6 @@ import com.google.javascript.rhino.TokenStream;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
-
 
 /**
  *  Find all Functions, VARs, and Exception names and make them
@@ -338,7 +337,7 @@ class MakeDeclaredNamesUnique
 
     ContextualRenamer() {
       this.global = true;
-      nameUsage = Multisets.newHashMultiset();
+      nameUsage = HashMultiset.create();
     }
 
     /**

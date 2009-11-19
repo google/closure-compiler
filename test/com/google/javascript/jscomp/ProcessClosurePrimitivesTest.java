@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.jscomp.CheckLevel;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.DUPLICATE_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR;
@@ -466,5 +467,91 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   public void testInvalidProvide() {
     test("goog.provide('a.class');", null, INVALID_PROVIDE_ERROR);
+  }
+
+  private static final String METHOD_FORMAT =
+      "function Foo() {} Foo.prototype.method = function() { %s };";
+
+  private static final String FOO_INHERITS =
+      "goog.inherits(Foo, BaseFoo);";
+
+  public void testInvalidBase1() {
+    test("goog.base(this, 'method');", null, BASE_CLASS_ERROR);
+  }
+
+  public void testInvalidBase2() {
+    test("function Foo() {}" +
+         "Foo.method = function() {" +
+         "  goog.base(this, 'method');" +
+         "};", null, BASE_CLASS_ERROR);
+  }
+
+  public void testInvalidBase3() {
+    test(String.format(METHOD_FORMAT, "goog.base();"),
+         null, BASE_CLASS_ERROR);
+  }
+
+  public void testInvalidBase4() {
+    test(String.format(METHOD_FORMAT, "goog.base(this, 'bar');"),
+         null, BASE_CLASS_ERROR);
+  }
+
+  public void testInvalidBase5() {
+    test(String.format(METHOD_FORMAT, "goog.base('foo', 'method');"),
+         null, BASE_CLASS_ERROR);
+  }
+
+  public void testInvalidBase6() {
+    test(String.format(METHOD_FORMAT, "goog.base.call(null, this, 'method');"),
+         null, BASE_CLASS_ERROR);
+  }
+
+  public void testInvalidBase7() {
+    test("function Foo() { goog.base(this); }",
+         null, BASE_CLASS_ERROR);
+  }
+
+  public void testInvalidBase8() {
+    test("var Foo = function() { goog.base(this); }",
+         null, BASE_CLASS_ERROR);
+  }
+
+  public void testInvalidBase9() {
+    test("var goog = {}; goog.Foo = function() { goog.base(this); }",
+         null, BASE_CLASS_ERROR);
+  }
+
+  public void testValidBase1() {
+    test(String.format(METHOD_FORMAT, "goog.base(this, 'method');"),
+         String.format(METHOD_FORMAT, "Foo.superClass_.method.call(this)"));
+  }
+
+  public void testValidBase2() {
+    test(String.format(METHOD_FORMAT, "goog.base(this, 'method', 1, 2);"),
+         String.format(METHOD_FORMAT,
+             "Foo.superClass_.method.call(this, 1, 2)"));
+  }
+
+  public void testValidBase3() {
+    test(String.format(METHOD_FORMAT, "return goog.base(this, 'method');"),
+         String.format(METHOD_FORMAT,
+             "return Foo.superClass_.method.call(this)"));
+  }
+
+  public void testValidBase4() {
+    test("function Foo() { goog.base(this, 1, 2); }" + FOO_INHERITS,
+         "function Foo() { BaseFoo.call(this, 1, 2); } " + FOO_INHERITS);
+  }
+
+  public void testValidBase5() {
+    test("var Foo = function() { goog.base(this, 1); };" + FOO_INHERITS,
+         "var Foo = function() { BaseFoo.call(this, 1); }; " + FOO_INHERITS);
+  }
+
+  public void testValidBase6() {
+    test("var goog = {}; goog.Foo = function() { goog.base(this); }; " +
+         "goog.inherits(goog.Foo, goog.BaseFoo);",
+         "var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); }; " +
+         "goog.inherits(goog.Foo, goog.BaseFoo);");
   }
 }

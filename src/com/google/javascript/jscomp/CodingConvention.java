@@ -218,9 +218,6 @@ public interface CodingConvention {
    */
   public String getGlobalObject();
 
-  public boolean allowsVariableRedeclaration(Scope scope, String name,
-      Node parent);
-
   /**
    * Whether this CALL function is testing for the existence of a property.
    */

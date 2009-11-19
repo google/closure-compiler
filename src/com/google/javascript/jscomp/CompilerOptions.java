@@ -391,6 +391,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Special-purpose alterations
   //--------------------------------
 
+  /** A CodingConvention to use during the compile. */
+  private CodingConvention codingConvention;
+
   /** Instrument code for the purpose of collecting coverage data. */
   public boolean instrumentForCoverage;
 
@@ -418,6 +421,9 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** Rewrite new Date(goog.now()) to new Date().  */
   boolean rewriteNewDateGoogNow;
+
+  /** Remove goog.abstractMethod assignments. */
+  boolean removeAbstractMethods;
 
   /** Gather CSS names (requires closurePass) */
   public boolean gatherCssNames;
@@ -614,6 +620,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     removeTryCatchFinally = false;
     closurePass = false;
     rewriteNewDateGoogNow = true;
+    removeAbstractMethods = true;
     stripTypes = Collections.emptySet();
     stripNameSuffixes = Collections.emptySet();
     stripNamePrefixes = Collections.emptySet();
@@ -775,6 +782,10 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.rewriteNewDateGoogNow = rewrite;
   }
 
+  public void setRemoveAbstractMethods(boolean remove) {
+    this.removeAbstractMethods = remove;
+  }
+
   /**
    * If true, name anonymous functions only. All other passes will be skipped.
    */
@@ -795,6 +806,14 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setChainCalls(boolean value) {
     this.chainCalls = value;
+  }
+
+  public void setCodingConvention(CodingConvention codingConvention) {
+    this.codingConvention = codingConvention;
+  }
+
+  public CodingConvention getCodingConvention() {
+    return codingConvention;
   }
 
   @Override

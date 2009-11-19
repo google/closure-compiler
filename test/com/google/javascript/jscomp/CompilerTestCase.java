@@ -128,7 +128,12 @@ public abstract class CompilerTestCase extends TestCase  {
     CompilerOptions options = new CompilerOptions();
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
+    options.setCodingConvention(getCodingConvention());
     return options;
+  }
+
+  protected CodingConvention getCodingConvention() {
+    return new GoogleCodingConvention();
   }
 
   /**
@@ -836,11 +841,6 @@ public abstract class CompilerTestCase extends TestCase  {
 
   private Compiler createCompiler() {
     Compiler compiler = new Compiler();
-    compiler.setCodingConvention(getCodingConvention());
     return compiler;
-  }
-
-  protected CodingConvention getCodingConvention() {
-    return new GoogleCodingConvention();
   }
 }
