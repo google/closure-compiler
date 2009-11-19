@@ -583,6 +583,16 @@ public final class JsDocInfoParser {
 
                     if (isBracketedParam) {
                       token = next();
+
+                      // Throw out JsDocToolkit's "default" parameter annotation.
+                      // It makes no sense under our type system.
+                      if (JsDocToken.EQUALS == token) {
+                        token = next();
+                        if (JsDocToken.STRING == token) {
+                          token = next();
+                        }
+                      }
+
                       if (JsDocToken.RB != token) {
                         reportTypeSyntaxWarning("msg.jsdoc.missing.rb");
                       } else if (type != null) {
@@ -592,7 +602,12 @@ public final class JsDocInfoParser {
                       }
                     }
 
-                    if (!jsdocBuilder.recordParameter(name, type)) {
+                    // If the param name has a DOT in it, just throw it out
+                    // quietly. We do not handle the JsDocToolkit method
+                    // for handling properties of params.
+                    if (name.indexOf('.') > -1) {
+                      name = null;
+                    } else if (!jsdocBuilder.recordParameter(name, type)) {
                       if (jsdocBuilder.hasParameter(name)) {
                         parser.addWarning("msg.dup.variable.name", name,
                             lineno, charno);
