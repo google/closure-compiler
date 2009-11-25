@@ -77,7 +77,7 @@ class Denormalize implements CompilerPass, Callback {
     Node nextSibling = n.getNext();
     if (nextSibling != null
         && nextSibling.getType() == Token.FOR
-        && nextSibling.getChildCount() == 4
+        && !NodeUtil.isForIn(nextSibling)
         && nextSibling.getFirstChild().getType() == Token.EMPTY) {
 
       // Does the current node contain an in operator?  If so, embedding

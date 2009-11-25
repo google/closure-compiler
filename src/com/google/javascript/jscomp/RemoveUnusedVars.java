@@ -55,22 +55,24 @@ class RemoveUnusedVars implements CompilerPass {
   private int numRemoved_ = 0;
 
   private final boolean removeGlobals;
-  
+
+  private boolean preserveAnonymousFunctionNames;
+
   /**
    * Keeps track of what variables we've warned about, so that we don't do it
    * on subsequent traversals.
    */
   private final Set<Scope.Var> warnedVars_ = Sets.newHashSet();
 
-  RemoveUnusedVars(AbstractCompiler compiler) {
-    this(compiler, true);
-  }
-
-  RemoveUnusedVars(AbstractCompiler compiler, boolean removeGlobals) {
+  RemoveUnusedVars(
+      AbstractCompiler compiler,
+      boolean removeGlobals,
+      boolean preserveAnonymousFunctionNames) {
     compiler_ = compiler;
     this.removeGlobals = removeGlobals;
+    this.preserveAnonymousFunctionNames = preserveAnonymousFunctionNames;
   }
-  
+
   /**
    * Traverses the root, removing all unused variables. Multiple traversals
    * may occur to ensure all unused variables are removed.
@@ -246,6 +248,10 @@ class RemoveUnusedVars implements CompilerPass {
           // that's taken care of in removeUnreferencedFunctionArgs.
         } else if (toRemove.getType() == Token.FUNCTION &&
             NodeUtil.isFunctionAnonymous(toRemove)) {
+          if (!preserveAnonymousFunctionNames) {
+            toRemove.getFirstChild().setString("");
+            compiler_.reportCodeChange();
+          }
           // Don't remove bleeding functions.
         } else if (parent != null &&
             parent.getType() == Token.FOR &&

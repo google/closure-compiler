@@ -261,7 +261,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public String getName() {
+  public String getReferenceName() {
     return null;
   }
 

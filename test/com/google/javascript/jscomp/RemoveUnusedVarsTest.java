@@ -20,6 +20,7 @@ package com.google.javascript.jscomp;
 public class RemoveUnusedVarsTest extends CompilerTestCase {
 
   private boolean removeGlobal = true;
+  private boolean preserveAnonymousFunctionNames = false;
   
   public RemoveUnusedVarsTest() {
     super("", false);
@@ -28,11 +29,13 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   @Override
   public void setUp() {
     removeGlobal = true;
+    preserveAnonymousFunctionNames = false;
   }
   
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new RemoveUnusedVars(compiler, removeGlobal);
+    return new RemoveUnusedVars(
+        compiler, removeGlobal, preserveAnonymousFunctionNames);
   }
 
   public void testRemoveUnusedVars() {
@@ -139,10 +142,6 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var a,b=foo()", "foo()");
     test("var b=foo(),a", "foo()");
     test("var a,b=foo(a)", "var a,b=foo(a)");
-
-    // don't remove function objects
-    test("foo(function bar() { })",
-         "foo(function bar(){})");
   }
 
   public void testFunctionArgRemoval() {
@@ -198,8 +197,20 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "(function x(){return x()})()");
   }
 
-  public void testFunctionWithName() {
+  public void testFunctionWithName1() {
+    test("var x=function f(){};x()",
+         "var x=function(){};x()");
+
+    preserveAnonymousFunctionNames = true;
     testSame("var x=function f(){};x()");
+  }
+
+  public void testFunctionWithName2() {
+    test("foo(function bar(){})",
+         "foo(function(){})");
+
+    preserveAnonymousFunctionNames = true;
+    testSame("foo(function bar(){})");    
   }
   
 

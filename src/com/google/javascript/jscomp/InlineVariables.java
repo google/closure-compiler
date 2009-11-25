@@ -55,29 +55,48 @@ class InlineVariables implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  // Only inline things explicitly marked as constant.
-  private final boolean onlyConstants;
+  enum Mode {
+    // Only inline things explicitly marked as constant.
+    CONSTANTS_ONLY,
+    // Locals only
+    LOCALS_ONLY,
+    ALL
+  };
+
+  private final Mode mode;
 
   // Inlines all strings, even if they increase the size of the gzipped binary.
   private final boolean inlineAllStrings;
 
   private final IdentifyConstants identifyConstants = new IdentifyConstants();
 
-  InlineVariables(AbstractCompiler compiler, boolean onlyConstants,
+  InlineVariables(
+      AbstractCompiler compiler,
+      Mode mode,
       boolean inlineAllStrings) {
     this.compiler = compiler;
-    this.onlyConstants = onlyConstants;
+    this.mode = mode;
     this.inlineAllStrings = inlineAllStrings;
   }
 
   @Override
   public void process(Node externs, Node root) {
     ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
-        compiler, new InliningBehavior(),
-        onlyConstants ?
-            identifyConstants :
-            Predicates.<Var>alwaysTrue());
+        compiler, new InliningBehavior(), getFilterForMode());
     callback.process(externs, root);
+  }
+
+  private Predicate<Var> getFilterForMode() {
+    switch (mode) {
+      case ALL:
+        return Predicates.<Var>alwaysTrue();
+      case LOCALS_ONLY:
+        return new IdentifyLocals();
+      case CONSTANTS_ONLY:
+        return new IdentifyConstants();
+      default:
+        throw new IllegalStateException();
+    }
   }
 
   /**
@@ -92,6 +111,16 @@ class InlineVariables implements CompilerPass {
     @Override
     public boolean apply(Var var) {
       return var.isConst();
+    }
+  }
+
+  /**
+   * Filters non-global variables.
+   */
+  private class IdentifyLocals implements Predicate<Var> {
+    @Override
+    public boolean apply(Var var) {
+      return var.scope.isLocal();
     }
   }
 
@@ -138,7 +167,7 @@ class InlineVariables implements CompilerPass {
      */
     private void collectAliasCandidates(NodeTraversal t,
         Map<Var, ReferenceCollection> referenceMap) {
-      if (!onlyConstants) {
+      if (mode != Mode.CONSTANTS_ONLY) {
         for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
           Var v = it.next();
           ReferenceCollection referenceInfo = referenceMap.get(v);
@@ -183,7 +212,7 @@ class InlineVariables implements CompilerPass {
           Node value = init.getAssignedValue();
           inlineDeclaredConstant(v, value, referenceInfo.references);
           staleVars.add(v);
-        } else if (onlyConstants) {
+        } else if (mode == Mode.CONSTANTS_ONLY) {
           // If we're in constants-only mode, don't run more aggressive
           // inlining heuristics. See InlineConstantsTest.
           continue;

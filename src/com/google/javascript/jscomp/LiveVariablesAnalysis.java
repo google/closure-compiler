@@ -193,7 +193,7 @@ class LiveVariablesAnalysis extends
         return;
 
       case Token.FOR:
-        if (n.getChildCount() == 4) {
+        if (!NodeUtil.isForIn(n)) {
           computeGenKill(NodeUtil.getConditionExpression(n), gen, kill,
               conditional);
         } else {

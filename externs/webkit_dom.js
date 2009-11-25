@@ -85,7 +85,7 @@ Selection.prototype.modify = function(alter, direction, granularity) {};
 /**
  * @param {Element} element
  * @param {string} pseudoElement
- * @param {boolean} opt_authorOnly
+ * @param {boolean=} opt_authorOnly
  * @return {CSSRuleList}
  */
 ViewCSS.prototype.getMatchedCSSRules = function(element, pseudoElement, opt_authorOnly) {};

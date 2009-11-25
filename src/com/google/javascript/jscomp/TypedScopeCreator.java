@@ -195,8 +195,9 @@ final class TypedScopeCreator implements ScopeCreator {
 
   private void declareNativeFunctionType(Scope scope, JSTypeNative tId) {
     FunctionType t = typeRegistry.getNativeFunctionType(tId);
-    declareNativeType(scope, t.getInstanceType().getName(), t);
-    declareNativeType(scope, t.getPrototype().getName(), t.getPrototype());
+    declareNativeType(scope, t.getInstanceType().getReferenceName(), t);
+    declareNativeType(
+        scope, t.getPrototype().getReferenceName(), t.getPrototype());
   }
 
   private void declareNativeValueType(Scope scope, String name,
@@ -809,7 +810,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
                 FunctionType delegateProxy =
                     typeRegistry.createConstructorType(
-                        delegateBaseObject.getName(), null, null,
+                        delegateBaseObject.getReferenceName(), null, null,
                         null);
                 delegateProxy.setPrototypeBasedOn(delegateBaseCtor);
 

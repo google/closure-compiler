@@ -234,7 +234,7 @@ Node.prototype.transformNodeToObject =
 // Node methods
 
 /**
- * @param {boolean} opt_bRemoveChildren Whether to remove the entire sub-tree.
+ * @param {boolean=} opt_bRemoveChildren Whether to remove the entire sub-tree.
  *    Defaults to false.
  * @return {Node} The object that was removed.
  * @see http://msdn.microsoft.com/en-us/library/ms536708(VS.85).aspx
@@ -536,10 +536,10 @@ Window.prototype.moveTo;
 Window.prototype.navigate;
 
 /**
- * @param {*} opt_url
- * @param {string} opt_windowName
- * @param {string} opt_windowFeatures
- * @param {boolean} opt_replace
+ * @param {*=} opt_url
+ * @param {string=} opt_windowName
+ * @param {string=} opt_windowFeatures
+ * @param {boolean=} opt_replace
  * @return {Window}
  * @see http://msdn.microsoft.com/en-us/library/ms536651(VS.85).aspx
  */
@@ -630,7 +630,7 @@ History.prototype.go = function(delta) {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms535864(VS.85).aspx
- * @param {number} opt_distance The number of entries to go back
+ * @param {number=} opt_distance The number of entries to go back
  *     (Mozilla doesn't support distance -- use #go instead)
  */
 History.prototype.back = function(opt_distance) {};
@@ -1348,7 +1348,7 @@ Element.prototype.releaseCapture = function() {};
 Element.prototype.runtimeStyle;
 
 /**
- * @param {boolean} opt_bContainerCapture Events originating in a container are
+ * @param {boolean=} opt_bContainerCapture Events originating in a container are
  *     captured by the container. Defaults to true.
  * @see http://msdn.microsoft.com/en-us/library/ms536742(VS.85).aspx
  */

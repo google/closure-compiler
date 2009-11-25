@@ -232,7 +232,7 @@ final class MustBeReachingVariableDef extends
         return;
 
       case Token.FOR:
-        if (n.getChildCount() == 4) {
+        if (!NodeUtil.isForIn(n)) {
           computeMustDef(
               NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         } else {

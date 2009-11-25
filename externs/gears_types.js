@@ -66,7 +66,7 @@ GearsBlobBuilder.prototype.getAsBlob = function() {};
 /** @constructor */
 function GearsDatabase() {}
 
-/** @param {string} opt_name */
+/** @param {string=} opt_name */
 GearsDatabase.prototype.open = function(opt_name) {};
 
 /** @return {GearsResultSet} */
@@ -111,7 +111,7 @@ function GearsDesktop() {}
  * @param {string} name The name of the shortcut.
  * @param {string} url The url for the shortcut.
  * @param {Object} icons The icon set to use for the shortcut.
- * @param {string} opt_description The description of the shortcut.
+ * @param {string=} opt_description The description of the shortcut.
  */
 GearsDesktop.prototype.createShortcut = function(name,
                                                  url,
@@ -133,7 +133,7 @@ GearsDesktop.prototype.getDragData = function(event, flavor) { return null; };
 
 /**
  * @param {function(Array.<GearsFile>)} callback The callback after opening.
- * @param {GearsOpenFileOptions} opt_options The options to use for opening.
+ * @param {GearsOpenFileOptions=} opt_options The options to use for opening.
  */
 GearsDesktop.prototype.openFiles = function(callback, opt_options) {};
 
@@ -172,8 +172,8 @@ GearsGeolocation.prototype.lastPosition;
 
 /**
  * @param {function(GearsPosition)} successCallback
- * @param {function(GearsPositionError)|null} opt_errorCallback
- * @param {GearsPositionOptions} opt_options
+ * @param {(function(GearsPositionError)|null)=} opt_errorCallback
+ * @param {GearsPositionOptions=} opt_options
  */
 GearsGeolocation.prototype.getCurrentPosition = function(successCallback,
                                                          opt_errorCallback,
@@ -181,8 +181,8 @@ GearsGeolocation.prototype.getCurrentPosition = function(successCallback,
 
 /**
  * @param {function(GearsPosition)} successCallback
- * @param {function(GearsPositionError)|null} opt_errorCallback
- * @param {GearsPositionOptions} opt_options
+ * @param {(function(GearsPositionError)|null)=} opt_errorCallback
+ * @param {GearsPositionOptions=} opt_options
  * @return {number}
  */
 GearsGeolocation.prototype.watchPosition = function(successCallback,
@@ -193,9 +193,9 @@ GearsGeolocation.prototype.watchPosition = function(successCallback,
 GearsGeolocation.prototype.clearWatch = function(watchId) {};
 
 /**
- * @param {string} opt_siteName
- * @param {string} opt_imageUrl
- * @param {string} opt_extraMessage
+ * @param {string=} opt_siteName
+ * @param {string=} opt_imageUrl
+ * @param {string=} opt_extraMessage
  * @return {boolean}
  */
 GearsGeolocation.prototype.getPermission = function(opt_siteName,
@@ -333,7 +333,7 @@ GearsHttpRequest.prototype.open = function(method, url) {};
 GearsHttpRequest.prototype.setRequestHeader = function(name, value) {};
 
 /**
- * @param {string|GearsBlob|null} opt_postData
+ * @param {(string|GearsBlob|null)=} opt_postData
  */
 GearsHttpRequest.prototype.send = function(opt_postData) {};
 
@@ -472,7 +472,7 @@ GearsResourceStore.prototype.capture = function(urlOrUrlArray, callback) {};
 /**
  * @param {GearsBlob} blob
  * @param {string} url
- * @param {string} opt_contentType
+ * @param {string=} opt_contentType
  */
 GearsResourceStore.prototype.captureBlob = function(blob,
                                                     url,

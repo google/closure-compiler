@@ -149,8 +149,7 @@ class TypeInference
 
       switch (branch) {
         case ON_TRUE:
-          if (source.getType() == Token.FOR &&
-              source.getChildCount() == 3) {
+          if (NodeUtil.isForIn(source)) {
             // item is assigned a property name, so its type should be string.
             Node item = source.getFirstChild();
             if (item.getType() == Token.VAR) {
@@ -817,7 +816,7 @@ class TypeInference
                     // function.
                     jArgument.setJSType(
                         new FunctionType(
-                            registry, jArgumentFnType.getName(),
+                            registry, jArgumentFnType.getReferenceName(),
                             jArgumentFnType.getSource(),
                             jArgumentFnType.getParametersNode(),
                             jArgumentFnType.getReturnType(),

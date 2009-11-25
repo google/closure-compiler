@@ -131,6 +131,15 @@ public class VarCheckTest extends CompilerTestCase {
     testSame("var a = 3; (function a() { return a(); })();");
   }
 
+  public void testAmbiguousFunctionDeclarations() {
+    testSame("if (1) { function f(){}; }", VarCheck.AMBIGUOUS_FUNCTION_DECL);
+    testSame("{ function f(){}; }", VarCheck.AMBIGUOUS_FUNCTION_DECL);
+    testSame("a:function f(){};", VarCheck.AMBIGUOUS_FUNCTION_DECL);
+
+    testSame("function f(){}");
+    testSame("(function(){ function f(){} })");
+  }
+
   public void testLegalVarReferenceBetweenModules() {
     testDependentModules("var x = 10;", "var y = x++;", null);
   }

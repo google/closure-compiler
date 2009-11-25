@@ -88,6 +88,7 @@ public enum CompilationLevel {
     // skipAllCompilerPasses() cannot be easily undone.
     options.closurePass = true;
     options.variableRenaming = VariableRenamingPolicy.LOCAL;
+    options.inlineLocalVariables = true;
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
     options.removeConstantExpressions = true;

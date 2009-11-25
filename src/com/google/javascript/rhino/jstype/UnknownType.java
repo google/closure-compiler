@@ -126,7 +126,7 @@ public class UnknownType extends ObjectType {
 
   @Override
   public String toString() {
-    return getName();
+    return getReferenceName();
   }
 
   @Override
@@ -166,7 +166,7 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  public String getName() {
+  public String getReferenceName() {
     return isChecked ? "??" : "?";
   }
 

@@ -612,7 +612,7 @@ public class JSTypeRegistry implements Serializable {
    */
   void registerTypeImplementingInterface(
       FunctionType type, ObjectType interfaceInstance) {
-    interfaceToImplementors.put(interfaceInstance.getName(), type);
+    interfaceToImplementors.put(interfaceInstance.getReferenceName(), type);
   }
 
   /**
@@ -623,7 +623,7 @@ public class JSTypeRegistry implements Serializable {
    */
   public Collection<FunctionType> getDirectImplementors(
       ObjectType interfaceInstance) {
-    return interfaceToImplementors.get(interfaceInstance.getName());
+    return interfaceToImplementors.get(interfaceInstance.getReferenceName());
   }
 
   /**
@@ -1009,7 +1009,7 @@ public class JSTypeRegistry implements Serializable {
       FunctionType existingFunctionType, JSType returnType) {
     return new FunctionType(
         this,
-        existingFunctionType.getName(),
+        existingFunctionType.getReferenceName(),
         /** source node */ null,
         existingFunctionType.getParametersNode(),
         returnType,

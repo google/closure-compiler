@@ -57,7 +57,7 @@ public class TemplateType extends ProxyObjectType {
   }
 
   @Override
-  public String getName() {
+  public String getReferenceName() {
     return name;
   }
 

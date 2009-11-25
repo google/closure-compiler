@@ -445,7 +445,7 @@ Window.prototype.scrollTo;
 /**
  * @param {Function|string} callback
  * @param {number} delay
- * @param {*} var_args
+ * @param {...*} var_args
  * @return {number}
  */
 Window.prototype.setInterval;
@@ -453,7 +453,7 @@ Window.prototype.setInterval;
 /**
  * @param {Function|string} callback
  * @param {number} delay
- * @param {*} var_args
+ * @param {...*} var_args
  * @return {number}
  */
 Window.prototype.setTimeout = function(callback, delay, var_args) {};
@@ -865,7 +865,7 @@ Element.prototype.removeEventListener = function(type, handler, useCapture) {};
 Element.prototype.replaceChild = function(insertedNode, replacedNode) {};
 
 /**
- * @param {boolean} opt_alignWithTop
+ * @param {boolean=} opt_alignWithTop
  */
 Element.prototype.scrollIntoView = function(opt_alignWithTop) {};
 

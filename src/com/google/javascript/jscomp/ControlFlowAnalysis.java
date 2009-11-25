@@ -714,10 +714,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         }
         break;
       case Token.FOR:
-        if (parent.getChildCount() == 4) {
-          return parent.getFirstChild().getNext().getNext();
-        } else {
+        if (NodeUtil.isForIn(parent)) {
           return parent;
+        } else {
+          return parent.getFirstChild().getNext().getNext();
         }
       case Token.WHILE:
       case Token.DO:
@@ -773,10 +773,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case Token.DO:
         return computeFallThrough(n.getFirstChild());
       case Token.FOR:
-        if (n.getChildCount() == 4) {
-          return computeFallThrough(n.getFirstChild());
+        if (NodeUtil.isForIn(n)) {
+          return n;
         }
-        return n;
+        return computeFallThrough(n.getFirstChild());
       case Token.LABEL:
         return computeFallThrough(n.getLastChild());
       default:

@@ -111,7 +111,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
           tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state);
           continue;
         case Token.FOR:
-          if (n.getChildCount() == 4) {
+          if (!NodeUtil.isForIn(n)) {
             tryRemoveAssignment(
                 t, NodeUtil.getConditionExpression(n), state);
           }

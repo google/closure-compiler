@@ -612,7 +612,7 @@ public class FunctionType extends PrototypeObjectType {
     }
     if (this.isInterface()) {
       if (that.isInterface()) {
-        return this.getName().equals(that.getName());
+        return this.getReferenceName().equals(that.getReferenceName());
       }
       return false;
     }
@@ -625,7 +625,7 @@ public class FunctionType extends PrototypeObjectType {
 
   @Override
   public int hashCode() {
-    return isInterface() ? getName().hashCode() : call.hashCode();
+    return isInterface() ? getReferenceName().hashCode() : call.hashCode();
   }
 
   public boolean hasEqualCallType(FunctionType otherType) {

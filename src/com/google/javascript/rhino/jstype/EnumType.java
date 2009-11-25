@@ -121,7 +121,7 @@ public class EnumType extends PrototypeObjectType {
 
   @Override
   public String toString() {
-    return getName();
+    return getReferenceName();
   }
 
   @Override

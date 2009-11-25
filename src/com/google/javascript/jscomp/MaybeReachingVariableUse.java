@@ -169,7 +169,7 @@ class MaybeReachingVariableUse extends
         return;
 
       case Token.FOR:
-        if (n.getChildCount() == 4) {
+        if (!NodeUtil.isForIn(n)) {
           computeMayUse(
               NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         } else {

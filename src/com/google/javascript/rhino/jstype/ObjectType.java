@@ -157,17 +157,19 @@ public abstract class ObjectType extends JSType {
   }
 
   /**
-   * Gets this object's name.
+   * Gets the reference name for this object. This includes named types
+   * like constructors, prototypes, and enums. It notably does not include
+   * literal types like strings and booleans and structural types.
    * @return the object's name or {@code null} if this is an anonymous
    *         object
    */
-  public abstract String getName();
+  public abstract String getReferenceName();
 
   /**
    * Returns true if the object is named.
    * @return true if the object is named, false if it is anonymous
    */
-  public boolean hasName() {
+  public boolean hasReferenceName() {
     return false;
   }
 

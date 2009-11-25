@@ -61,6 +61,11 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
     DiagnosticType.error("JSC_INVALID_FUNCTION_DECL",
         "Syntax error: function declaration must have a name");
 
+  static final DiagnosticType AMBIGUOUS_FUNCTION_DECL =
+    DiagnosticType.warning("AMBIGUIOUS_FUNCTION_DECL",
+        "Conditional named functions have inconsistent behavior. Instead of" +
+        " 'function f(){}' use 'var f = function(){}'.");
+
   private CompilerInput synthesizedExternsInput = null;
   private Node synthesizedExternsRoot = null;
 
@@ -107,6 +112,14 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
         t.report(n, INVALID_FUNCTION_DECL);
       }
       return;
+    }
+
+    if (NodeUtil.isFunctionDeclaration(parent)) {
+      // Warn about having conditional named function declarations as IE and
+      // FireFox handle them differently.
+      if (!isHoistedFunction(parent)) {
+        t.report(n, AMBIGUOUS_FUNCTION_DECL);
+      }
     }
 
     // Check that the var has been declared.
@@ -207,5 +220,14 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
       synthesizedExternsRoot = synthesizedExterns.getAstRoot(compiler);
     }
     return synthesizedExternsRoot;
+  }
+
+  /**
+   * @return Whether the name function will be hoisted in its scope.
+   */
+  boolean isHoistedFunction(Node fn) {
+    Preconditions.checkArgument(NodeUtil.isFunctionDeclaration(fn));
+    return fn.getParent().getType() == Token.SCRIPT
+        || fn.getParent().getParent().getType() == Token.FUNCTION;
   }
 }

@@ -26,6 +26,7 @@ package com.google.javascript.jscomp;
 public class InlineVariablesTest extends CompilerTestCase {
 
   private boolean inlineAllStrings = false;
+  private boolean inlineLocalsOnly = false;
 
   public InlineVariablesTest() {
     enableNormalize();
@@ -33,12 +34,18 @@ public class InlineVariablesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new InlineVariables(compiler, false, inlineAllStrings);
+    return new InlineVariables(
+        compiler, 
+        (inlineLocalsOnly) 
+            ? InlineVariables.Mode.LOCALS_ONLY
+            : InlineVariables.Mode.ALL,
+        inlineAllStrings);
   }
 
   @Override
   public void tearDown() {
     inlineAllStrings = false;
+    inlineLocalsOnly = false;
   }
 
   // Test respect for scopes and blocks
@@ -748,5 +755,24 @@ public class InlineVariablesTest extends CompilerTestCase {
       "  e;e;" +
       "}"
       );
+  }
+
+  public void testLocalsOnly1() {
+    inlineLocalsOnly = true;
+    test(
+        "var x=1; x; function f() {var x = 1; x;}",
+        "var x=1; x; function f() {1;}");
+  }
+  
+  public void testLocalsOnly2() {
+    inlineLocalsOnly = true;
+    test(
+        "/** @const */\n" +
+        "var X=1; X;\n" +
+        "function f() {\n" +
+        "  /** @const */\n" +
+        "  var X = 1; X;\n" +
+        "}",
+        "var X$$constant=1; X$$constant; function f() {1;}");
   }
 }

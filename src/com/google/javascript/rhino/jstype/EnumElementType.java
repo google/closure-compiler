@@ -121,7 +121,7 @@ public class EnumElementType extends ObjectType {
 
   @Override
   boolean isNominalType() {
-    return hasName();
+    return hasReferenceName();
   }
 
   @Override
@@ -130,7 +130,7 @@ public class EnumElementType extends ObjectType {
       return true;
     } else if (this.isNominalType() && that instanceof JSType &&
         ((JSType) that).isNominalType()) {
-      return getName().equals(((ObjectType) that).getName());
+      return getReferenceName().equals(((ObjectType) that).getReferenceName());
     }
     return false;
   }
@@ -141,8 +141,8 @@ public class EnumElementType extends ObjectType {
    */
   @Override
   public int hashCode() {
-    if (hasName()) {
-      return getName().hashCode();
+    if (hasReferenceName()) {
+      return getReferenceName().hashCode();
     } else {
       return super.hashCode();
     }
@@ -150,16 +150,16 @@ public class EnumElementType extends ObjectType {
 
   @Override
   public String toString() {
-    return getName() + ".<" + primitiveType + ">";
+    return getReferenceName() + ".<" + primitiveType + ">";
   }
 
   @Override
-  public String getName() {
+  public String getReferenceName() {
     return name;
   }
 
   @Override
-  public boolean hasName() {
+  public boolean hasReferenceName() {
     return true;
   }
 

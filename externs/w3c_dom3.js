@@ -571,9 +571,9 @@ UserDataHandler.prototype.NODE_ADOPTED = 5;
 /**
  * @param {number} operation
  * @param {string} key
- * @param {*} opt_data
- * @param {?Node} opt_src
- * @param {?Node} opt_dst
+ * @param {*=} opt_data
+ * @param {?Node=} opt_src
+ * @param {?Node=} opt_dst
  * @return {undefined}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-handleUserDataEvent
  */

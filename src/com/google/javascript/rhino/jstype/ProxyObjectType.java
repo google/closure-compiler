@@ -62,13 +62,13 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public String getName() {
-    return referencedType.getName();
+  public String getReferenceName() {
+    return referencedType.getReferenceName();
   }
 
   @Override
-  public boolean hasName() {
-    return referencedType.hasName();
+  public boolean hasReferenceName() {
+    return referencedType.hasReferenceName();
   }
 
   @Override public boolean matchesNumberContext() {

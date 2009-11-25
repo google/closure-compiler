@@ -461,7 +461,7 @@ CSSStyleDeclaration.prototype.removeProperty = function(propertyName) {};
 /**
  * @param {string} propertyName
  * @param {string} value
- * @param {string} opt_priority
+ * @param {string=} opt_priority
  * @return {undefined}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-setProperty
  */
@@ -471,7 +471,7 @@ CSSStyleDeclaration.prototype.setProperty = function(propertyName, value, opt_pr
 
 /**
  * @param {string} name
- * @param {number} opt_flags
+ * @param {number=} opt_flags
  * @return {string|number|boolean|null}
  * @see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
  */
@@ -486,7 +486,7 @@ CSSStyleDeclaration.prototype.getExpression = function(name) {};
 
 /**
  * @param {string} name
- * @param {number} opt_flags
+ * @param {number=} opt_flags
  * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536696(VS.85).aspx
  */
@@ -503,7 +503,7 @@ CSSStyleDeclaration.prototype.removeExpression = function(name) {};
 /**
  * @param {string} name
  * @param {*} value
- * @param {number} opt_flags
+ * @param {number=} opt_flags
  * @see http://msdn.microsoft.com/en-us/library/ms536739(VS.85).aspx
  */
 CSSStyleDeclaration.prototype.setAttribute = function(name, value, opt_flags) {};
@@ -511,7 +511,7 @@ CSSStyleDeclaration.prototype.setAttribute = function(name, value, opt_flags) {}
 /**
  * @param {string} name
  * @param {string} expr
- * @param {string} opt_language
+ * @param {string=} opt_language
  * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms531196(VS.85).aspx
  */

@@ -784,7 +784,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (type.isNamedType()) {
       NamedType namedType = (NamedType) type;
       if (!namedType.isResolved()) {
-        return namedType.getName();
+        return namedType.getReferenceName();
       }
     } else if (type.isUnionType()) {
       for (JSType alt : ((UnionType) type).getAlternates()) {

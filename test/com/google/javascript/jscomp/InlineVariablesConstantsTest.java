@@ -31,7 +31,8 @@ public class InlineVariablesConstantsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new InlineVariables(compiler, true, inlineAllStrings);
+    return new InlineVariables(
+        compiler, InlineVariables.Mode.CONSTANTS_ONLY, inlineAllStrings);
   }
 
   @Override

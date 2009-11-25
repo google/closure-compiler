@@ -67,13 +67,13 @@ public final class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
-  public String getName() {
-    return getConstructor().getName();
+  public String getReferenceName() {
+    return getConstructor().getReferenceName();
   }
 
   @Override
-  public boolean hasName() {
-    return getConstructor().hasName();
+  public boolean hasReferenceName() {
+    return getConstructor().hasReferenceName();
   }
 
   @Override
@@ -98,12 +98,12 @@ public final class InstanceObjectType extends PrototypeObjectType {
 
   @Override
   public String toString() {
-    return constructor.getName();
+    return constructor.getReferenceName();
   }
 
   @Override
   boolean isTheObjectType() {
-    return getConstructor().isNative() && "Object".equals(getName());
+    return getConstructor().isNative() && "Object".equals(getReferenceName());
   }
 
   @Override
@@ -113,37 +113,37 @@ public final class InstanceObjectType extends PrototypeObjectType {
 
   @Override
   public boolean isArrayType() {
-    return getConstructor().isNative() && "Array".equals(getName());
+    return getConstructor().isNative() && "Array".equals(getReferenceName());
   }
 
   @Override
   public boolean isStringObjectType() {
-    return getConstructor().isNative() && "String".equals(getName());
+    return getConstructor().isNative() && "String".equals(getReferenceName());
   }
 
   @Override
   public boolean isBooleanObjectType() {
-    return getConstructor().isNative() && "Boolean".equals(getName());
+    return getConstructor().isNative() && "Boolean".equals(getReferenceName());
   }
 
   @Override
   public boolean isNumberObjectType() {
-    return getConstructor().isNative() && "Number".equals(getName());
+    return getConstructor().isNative() && "Number".equals(getReferenceName());
   }
 
   @Override
   public boolean isDateType() {
-    return getConstructor().isNative() && "Date".equals(getName());
+    return getConstructor().isNative() && "Date".equals(getReferenceName());
   }
 
   @Override
   public boolean isRegexpType() {
-    return getConstructor().isNative() && "RegExp".equals(getName());
+    return getConstructor().isNative() && "RegExp".equals(getReferenceName());
   }
 
   @Override
   boolean isNominalType() {
-    return hasName();
+    return hasReferenceName();
   }
 
   @Override
@@ -172,7 +172,7 @@ public final class InstanceObjectType extends PrototypeObjectType {
       return true;
     } else if (this.isNominalType() && that instanceof JSType &&
         ((JSType) that).isNominalType()) {
-      return getName().equals(((ObjectType) that).getName());
+      return getReferenceName().equals(((ObjectType) that).getReferenceName());
     }
     return false;
   }
@@ -183,8 +183,8 @@ public final class InstanceObjectType extends PrototypeObjectType {
    */
   @Override
   public int hashCode() {
-    if (hasName()) {
-      return getName().hashCode();
+    if (hasReferenceName()) {
+      return getReferenceName().hashCode();
     } else {
       return super.hashCode();
     }

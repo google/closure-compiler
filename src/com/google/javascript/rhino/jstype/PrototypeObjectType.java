@@ -318,7 +318,7 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public String toString() {
-    return getName();
+    return getReferenceName();
   }
 
   @Override
@@ -343,7 +343,7 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public String getName() {
+  public String getReferenceName() {
     if (className != null) {
       return className;
     } else {
@@ -352,7 +352,7 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public boolean hasName() {
+  public boolean hasReferenceName() {
     return className != null;
   }
 

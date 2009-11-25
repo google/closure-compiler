@@ -322,7 +322,7 @@ class Normalize implements CompilerPass, Callback {
           extractForInitializer(c, insertBefore, insertBeforeParent);
           break;
         case Token.FOR:
-          if (c.getChildCount() == 4
+          if (!NodeUtil.isForIn(c)
               && c.getFirstChild().getType() != Token.EMPTY) {
             Node init = c.getFirstChild();
             c.replaceChild(init, new Node(Token.EMPTY));

@@ -449,16 +449,12 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
       return grandparent;
     }
 
-    private static boolean isForIn(Node n) {
-      return n.getType() == Token.FOR && n.getChildCount() == 3;
-    }
-
     private static boolean isLhsOfForInExpression(Node n) {
       Node parent = n.getParent();
       if (parent.getType() == Token.VAR) {
         return isLhsOfForInExpression(parent);
       }
-      return isForIn(parent) && parent.getFirstChild() == n;
+      return NodeUtil.isForIn(parent) && parent.getFirstChild() == n;
     }
 
     boolean isSimpleAssignmentToName() {

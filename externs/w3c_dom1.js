@@ -559,7 +559,7 @@ Element.prototype.tagName;
 
 /**
  * @param {string} name
- * @param {number?} opt_flags
+ * @param {number?=} opt_flags
  * @return {string}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-getAttribute
  * @see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx

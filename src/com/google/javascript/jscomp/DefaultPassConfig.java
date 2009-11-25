@@ -348,7 +348,8 @@ public class DefaultPassConfig extends PassConfig {
   private List<PassFactory> getCodeRemovingPasses(
       boolean beforeSmartNameRemoval) {
     List<PassFactory> passes = Lists.newArrayList();
-    if (options.inlineVariables && !beforeSmartNameRemoval) {
+    if ((options.inlineVariables || options.inlineLocalVariables)
+        && !beforeSmartNameRemoval) {
       passes.add(inlineVariables);
     } else if (options.inlineConstantVars) {
       passes.add(inlineConstants);
@@ -960,7 +961,16 @@ public class DefaultPassConfig extends PassConfig {
         // schemes need to die.
         return new ErrorPass(compiler, CANNOT_USE_PROTOTYPE_AND_VAR);
       } else {
-        return new InlineVariables(compiler, false, true);
+        InlineVariables.Mode mode;
+        if (options.inlineVariables) {
+          mode = InlineVariables.Mode.ALL;
+        } else if (options.inlineLocalVariables) {
+          mode = InlineVariables.Mode.LOCALS_ONLY;
+        } else {
+          throw new IllegalStateException("No variable inlining option set.");
+        }
+
+        return new InlineVariables(compiler, mode, true);
       }
     }
   };
@@ -970,7 +980,8 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("inlineConstants", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new InlineVariables(compiler, true, true);
+      return new InlineVariables(
+          compiler, InlineVariables.Mode.CONSTANTS_ONLY, true);
     }
   };
 
@@ -1077,10 +1088,10 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       boolean enableBlockInlining = !isInliningForbidden();
       return new InlineFunctions(
-          compiler, 
+          compiler,
           compiler.getUniqueNameIdSupplier(),
           options.inlineFunctions,
-          options.inlineLocalFunctions, 
+          options.inlineLocalFunctions,
           options.inlineAnonymousFunctionExpressions,
           enableBlockInlining,
           options.decomposeExpressions);
@@ -1092,8 +1103,12 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("removeUnusedVars", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
+      boolean preserveAnonymousFunctionNames =
+        options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
       return new RemoveUnusedVars(
-          compiler, options.removeUnusedVarsInGlobalScope);
+          compiler,
+          options.removeUnusedVarsInGlobalScope,
+          preserveAnonymousFunctionNames);
     }
   };
 

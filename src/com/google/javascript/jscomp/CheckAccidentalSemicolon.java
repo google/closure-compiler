@@ -47,16 +47,12 @@ final class CheckAccidentalSemicolon extends AbstractPostOrderCallback {
     Node child;
     switch (n.getType()) {
       case Token.IF:
-      case Token.WHILE:
         child = n.getFirstChild().getNext();  // skip the condition child
         break;
 
+      case Token.WHILE:
       case Token.FOR:
-        child = n.getFirstChild().getNext().getNext();
-        if (child.getNext() != null) {
-          // This is a for (A; B; C) loop rather than a for (A in B) loop.
-          child = child.getNext();
-        }
+        child = NodeUtil.getLoopCodeBlock(n);
         break;
 
       default:

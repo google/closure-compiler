@@ -326,7 +326,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     Node parent = var.getParent();
 
     // Special case when we are in FOR-IN loop.
-    if (parent.getType() == Token.FOR && parent.getChildCount() == 3) {
+    if (NodeUtil.isForIn(parent)) {
       var.removeChild(name);
       parent.replaceChild(var, name);
     } else if (var.getChildCount() == 1) {

@@ -61,17 +61,17 @@ public class FunctionPrototypeType extends PrototypeObjectType {
   }
 
   @Override
-  public String getName() {
+  public String getReferenceName() {
     if (ownerFunction == null) {
       return "{...}.prototype";
     } else {
-      return ownerFunction.getName() + ".prototype";
+      return ownerFunction.getReferenceName() + ".prototype";
     }
   }
 
   @Override
-  public boolean hasName() {
-    return ownerFunction != null && ownerFunction.hasName();
+  public boolean hasReferenceName() {
+    return ownerFunction != null && ownerFunction.hasReferenceName();
   }
 
   @Override

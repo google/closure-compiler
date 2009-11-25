@@ -582,7 +582,7 @@ public final class NodeUtil {
       }
     }
 
-    return false;    
+    return false;
   }
 
   /*
@@ -716,7 +716,7 @@ public final class NodeUtil {
     }
     return false;
   }
-  
+
   static int getOpFromAssignmentOp(Node n) {
     switch (n.getType()){
       case Token.ASSIGN_BITOR:
@@ -826,7 +826,7 @@ public final class NodeUtil {
       return null;
     }
   }
-  
+
   /**
    * Is this a STRING node?
    */
@@ -865,6 +865,13 @@ public final class NodeUtil {
         && n.getFirstChild().getType() == Token.CALL;
   }
 
+  /**
+   * @return Whether the node represents a FOR-IN loop.
+   */
+  static boolean isForIn(Node n) {
+    return n.getType() == Token.FOR
+        && n.getChildCount() == 3;
+  }
 
   /**
    * Determines whether the given node is a FOR, DO, WHILE, WITH, or IF node.
@@ -1061,8 +1068,6 @@ public final class NodeUtil {
       // Only Token.FOR can have an Token.EMPTY other control structure
       // need something for the condition. Others need to be replaced
       // or the structure removed.
-      Preconditions.checkState(parent.getType() == Token.FOR
-          && parent.getChildCount() == 4);
       parent.replaceChild(node, new Node(Token.EMPTY));
     } else {
       throw new IllegalStateException("Invalid attempt to remove node: " +

@@ -410,7 +410,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       if (constructor instanceof FunctionType && constructor.isConstructor()) {
         // Case where the class has been properly declared with @constructor
         classType = (FunctionType) constructor;
-        className = classType.getName();
+        className = classType.getReferenceName();
       } else {
         // We'll guess it is a constructor even if it didn't have @constructor
         classType = compiler.getTypeRegistry().getNativeFunctionType(
@@ -488,7 +488,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
         if (superClass.getPrototype().hasOwnProperty(prop)) {
           graph.connect(getNamedContainingFunction(), ref,
               graph.defineNameIfNotExists(
-                 superClass.getName() + ".prototype." + prop, false));
+                 superClass.getReferenceName() + ".prototype." + prop, false));
           return;
         } else {
           superClass = superClass.getSuperClassConstructor();
@@ -505,7 +505,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       if (classType.getPrototype().hasOwnProperty(prop)) {
         graph.connect(getNamedContainingFunction(), ref,
            graph.defineNameIfNotExists(
-               classType.getName() + ".prototype." + prop, false));
+               classType.getReferenceName() + ".prototype." + prop, false));
       }
       if (classType.getSubTypes() != null) {
         for (FunctionType subclass : classType.getSubTypes()) {

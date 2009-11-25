@@ -32,7 +32,7 @@
 function HTMLCanvasElement() {}
 
 /**
- * @param {string} opt_type
+ * @param {string=} opt_type
  * @return {string}
  */
 HTMLCanvasElement.prototype.toDataURL = function(opt_type) {};
@@ -265,7 +265,7 @@ CanvasRenderingContext2D.prototype.isPointInPath = function(x, y) {};
  * @param {string} text
  * @param {number} x
  * @param {number} y
- * @param {number} opt_maxWidth
+ * @param {number=} opt_maxWidth
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.fillText = function(
@@ -275,7 +275,7 @@ CanvasRenderingContext2D.prototype.fillText = function(
  * @param {string} text
  * @param {number} x
  * @param {number} y
- * @param {number} opt_maxWidth
+ * @param {number=} opt_maxWidth
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.strokeText = function(
@@ -291,15 +291,15 @@ CanvasRenderingContext2D.prototype.measureText = function(text) {};
  * @param {HTMLImageElement|HTMLCanvasElement} image
  * @param {number} dx Destination x coordinate.
  * @param {number} dy Destination y coordinate.
- * @param {number} opt_dw Destination box width.  Defaults to the image width.
- * @param {number} opt_dh Destination box height.  Defaults to the image height.
- * @param {number} opt_sx Source box x coordinate.  Used to select a portion of
+ * @param {number=} opt_dw Destination box width.  Defaults to the image width.
+ * @param {number=} opt_dh Destination box height.  Defaults to the image height.
+ * @param {number=} opt_sx Source box x coordinate.  Used to select a portion of
  *     the source image to draw.  Defaults to 0.
- * @param {number} opt_sy Source box y coordinate.  Used to select a portion of
+ * @param {number=} opt_sy Source box y coordinate.  Used to select a portion of
  *     the source image to draw.  Defaults to 0.
- * @param {number} opt_sw Source box width.  Used to select a portion of
+ * @param {number=} opt_sw Source box width.  Used to select a portion of
  *     the source image to draw.  Defaults to the full image width.
- * @param {number} opt_sh Source box height.  Used to select a portion of
+ * @param {number=} opt_sh Source box height.  Used to select a portion of
  *     the source image to draw.  Defaults to the full image height.
  * @return {undefined}
  */
@@ -326,10 +326,10 @@ CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
  * @param {ImageData} imagedata
  * @param {number} dx
  * @param {number} dy
- * @param {number} opt_dirtyX
- * @param {number} opt_dirtyY
- * @param {number} opt_dirtyWidth
- * @param {number} opt_dirtyHeight
+ * @param {number=} opt_dirtyX
+ * @param {number=} opt_dirtyY
+ * @param {number=} opt_dirtyWidth
+ * @param {number=} opt_dirtyHeight
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
@@ -469,8 +469,8 @@ Database.prototype.version;
 
 /**
  * @param {function(SQLTransaction) : void} callback
- * @param {function(SQLError) : void} opt_errorCallback
- * @param {Function} opt_Callback
+ * @param {(function(SQLError) : void)=} opt_errorCallback
+ * @param {Function=} opt_Callback
  */
 Database.prototype.transaction = function(
     callback, opt_errorCallback, opt_Callback) {};
@@ -506,9 +506,9 @@ function SQLTransaction() {}
 
 /**
  * @param {string} sqlStatement
- * @param {Array.<*>} opt_queryArgs
- * @param {function(SQLTransaction, SQLResultSet) : void} opt_callback
- * @param {function(SQLTransaction, SQLError) : void} opt_errorCallback
+ * @param {Array.<*>=} opt_queryArgs
+ * @param {(function(SQLTransaction, SQLResultSet) : void)=} opt_callback
+ * @param {(function(SQLTransaction, SQLError) : void)=} opt_errorCallback
  */
 SQLTransaction.prototype.executeSql = function(
     sqlStatement, opt_queryArgs, opt_callback, opt_errorCallback) {};
@@ -710,7 +710,7 @@ function MessagePort() {}
 /**
  * Posts a message through the channel, optionally with the given ports.
  * @param {*} message
- * @param {Array.<MessagePort>} opt_ports
+ * @param {Array.<MessagePort>=} opt_ports
  */
 MessagePort.prototype.postMessage = function(message, opt_ports) {};
 
@@ -806,7 +806,7 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
  * @see http://dev.w3.org/html5/websockets/
  * @constructor
  * @param {string} url
- * @param {string} opt_protocol
+ * @param {string=} opt_protocol
  * @extends {EventTarget}
  */
 function WebSocket(url, opt_protocol) {}

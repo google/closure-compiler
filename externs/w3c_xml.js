@@ -64,7 +64,7 @@ function XPathEvaluator() {}
 
 /**
  * @param {string} expr
- * @param {?XPathNSResolver} opt_resolver
+ * @param {?XPathNSResolver=} opt_resolver
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathEvaluator-createExpression
  * @throws XPathException
  * @throws DOMException
@@ -80,9 +80,9 @@ XPathEvaluator.prototype.createNSResolver = function(nodeResolver) {};
 /**
  * @param {string} expr
  * @param {Node} contextNode
- * @param {?XPathNSResolver} opt_resolver
- * @param {?number} opt_type
- * @param {*} opt_result
+ * @param {?XPathNSResolver=} opt_resolver
+ * @param {?number=} opt_type
+ * @param {*=} opt_result
  * @return {XPathResult}
  * @throws XPathException
  * @throws DOMException
@@ -100,8 +100,8 @@ function XPathExpression() {}
 
 /**
  * @param {Node} contextNode
- * @param {number} opt_type
- * @param {*} opt_result
+ * @param {number=} opt_type
+ * @param {*=} opt_result
  * @return {*}
  * @throws XPathException
  * @throws DOMException
@@ -295,9 +295,9 @@ function XMLHttpRequest() {}
 /**
  * @param {string} method
  * @param {string} url
- * @param {?boolean} opt_async
- * @param {?string} opt_user
- * @param {?string} opt_password
+ * @param {?boolean=} opt_async
+ * @param {?string=} opt_user
+ * @param {?string=} opt_password
  * @return {undefined}
  * @see http://www.w3.org/TR/XMLHttpRequest/#open
  */
@@ -313,7 +313,7 @@ XMLHttpRequest.prototype.open = function(method, url, opt_async, opt_user,
 XMLHttpRequest.prototype.setRequestHeader = function(header, value) {};
 
 /**
- * @param {?string} opt_data
+ * @param {?string=} opt_data
  * @return {undefined}
  * @see http://www.w3.org/TR/XMLHttpRequest/#send
  */

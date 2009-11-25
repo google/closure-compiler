@@ -178,10 +178,10 @@ class ControlFlowGraph<N> extends
         // That way the following:
         // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
         // var x = 0; while(x<10) {  x++; }
-        if (parent.getChildCount() == 4) {
-          return NodeUtil.getConditionExpression(parent) != n;
+        if (NodeUtil.isForIn(parent)) {
+          return n == parent.getLastChild(); 
         } else {
-          return n == parent.getLastChild();
+          return NodeUtil.getConditionExpression(parent) != n;
         }
       case Token.SWITCH:
       case Token.CASE:

@@ -220,6 +220,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Inlines variables */
   public boolean inlineVariables;
 
+  /** Inlines variables */
+  public boolean inlineLocalVariables;
+
   // TODO(user): This is temporary. Once flow sensitive inlining is stable
   // Remove this.
   public boolean flowSensitiveInlineVariables;
@@ -573,10 +576,12 @@ public class CompilerOptions implements Serializable, Cloneable {
     deadAssignmentElimination = false;
     inlineConstantVars = false;
     inlineFunctions = false;
+    inlineLocalFunctions = false;
     crossModuleCodeMotion = false;
     crossModuleMethodMotion = false;
     inlineGetters = false;
     inlineVariables = false;
+    inlineLocalVariables = false;
     smartNameRemoval = false;
     removeDeadCode = false;
     extractPrototypeMemberDeclarations = false;

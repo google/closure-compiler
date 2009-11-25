@@ -132,7 +132,7 @@ public class NamedType extends ProxyObjectType {
   }
 
   @Override
-  public String getName() {
+  public String getReferenceName() {
     return reference;
   }
 
@@ -142,7 +142,7 @@ public class NamedType extends ProxyObjectType {
   }
 
   @Override
-  public boolean hasName() {
+  public boolean hasReferenceName() {
     return true;
   }
 
@@ -172,7 +172,7 @@ public class NamedType extends ProxyObjectType {
     } else if (that instanceof ObjectType) {
       ObjectType objType = (ObjectType) that;
       return objType.isNominalType() &&
-          reference.equals(objType.getName());
+          reference.equals(objType.getReferenceName());
     }
     return false;
   }

@@ -681,7 +681,7 @@ final class NameAnalyzer implements CompilerPass {
       // control structure predicates.  These names are always
       // referenced when the enclosing function is called.
       if (n.getType() == Token.FOR) {
-        if (n.getChildCount() == 4) {
+        if (!NodeUtil.isForIn(n)) {
           Node decl = n.getFirstChild();
           Node pred = decl.getNext();
           Node step = pred.getNext();
