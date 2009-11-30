@@ -126,6 +126,16 @@ public class MustBeReachingVariableDefTest extends TestCase {
     assertMatch("var x; D: x--; U: x");
   }
 
+  public void testFunctionParams1() {
+    computeDefUse("if (param2) { D: param1 = 1; U: param1 }");
+    assertSame(def, defUse.getDef("param1", use));  
+  }
+  
+  public void testFunctionParams2() {
+    computeDefUse("if (param2) { D: param1 = 1} U: param1");
+    assertNotSame(def, defUse.getDef("param1", use));
+  }
+  
   /**
    * The use of x at U: is the definition of x at D:.
    */

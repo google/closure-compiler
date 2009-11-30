@@ -180,6 +180,14 @@ AbstractCompilerRunner encapsulates the logic required to run the Compiler.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;com.google.common.flags.Flag&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/AbstractCompilerRunner.html#FLAG_define">FLAG_define</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;com.google.common.flags.Flag&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/AbstractCompilerRunner.html#FLAG_externs">FLAG_externs</A></B></CODE>
 
 <BR>
@@ -420,6 +428,14 @@ AbstractCompilerRunner encapsulates the logic required to run the Compiler.
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the PrintStream for writing errors associated with this
  AbstractCompilerRunner.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/AbstractCompilerRunner.html#initOptionsFromFlags(com.google.javascript.jscomp.CompilerOptions)">initOptionsFromFlags</A></B>(<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -679,6 +695,16 @@ public static final com.google.common.flags.Flag&lt;<A HREF="http://java.sun.com
 <DL>
 </DL>
 </DL>
+<HR>
+
+<A NAME="FLAG_define"><!-- --></A><H3>
+FLAG_define</H3>
+<PRE>
+public static final com.google.common.flags.Flag&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&gt; <B>FLAG_define</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
 
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 
@@ -740,6 +766,17 @@ protected abstract <A HREF="../../../../com/google/javascript/jscomp/AbstractCom
  createCompiler() is called before createOptions(), so getCompiler()
  will not return null when createOptions() is called.
 <P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="initOptionsFromFlags(com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
+initOptionsFromFlags</H3>
+<PRE>
+protected final void <B>initOptionsFromFlags</B>(<A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+<DL>
 <DD><DL>
 </DL>
 </DD>

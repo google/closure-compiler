@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -36,7 +37,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-
 
 /**
  * AbstractCompilerRunner encapsulates the logic required to run the Compiler.
@@ -200,6 +200,14 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
   public static final Flag<List<String>> FLAG_jscomp_off =
       Flag.stringCollector();
 
+  @FlagSpec(altName = "D",
+      help = "Override the value of a variable annotated @define. " +
+      "The format is <name>[=<val>], where <name> is the name of a @define " +
+      "variable and <val> is a boolean, number, or a single-quoted string " +
+      "that contains no single quotes. If [=<val>] is omitted, " +
+      "the variable is marked true.")
+  public static final Flag<List<String>> FLAG_define = Flag.stringCollector();
+
   private PrintStream out;
   private final PrintStream err;
   private A compiler;
@@ -229,6 +237,21 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
    * will not return null when createOptions() is called.
    */
   protected abstract B createOptions();
+
+  final protected void initOptionsFromFlags(CompilerOptions options) {
+
+    DiagnosticGroups.setWarningLevels(
+        options, AbstractCompilerRunner.FLAG_jscomp_error.get(),
+        CheckLevel.ERROR);
+    DiagnosticGroups.setWarningLevels(
+        options, AbstractCompilerRunner.FLAG_jscomp_warning.get(),
+        CheckLevel.WARNING);
+    DiagnosticGroups.setWarningLevels(
+        options, AbstractCompilerRunner.FLAG_jscomp_off.get(),
+        CheckLevel.OFF);
+
+    createDefineReplacements(FLAG_define.get(), options);
+  }
 
   final protected A getCompiler() {
     return compiler;
@@ -867,6 +890,63 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
         file.flush();
         file.close();
       }
+    }
+  }
+
+  /**
+   * Create a map of constant names to constant values from a textual
+   * description of the map.
+   *
+   * @param definitions A list of overriding definitions for defines in
+   *     the form <name>[=<val>], where <val> is a number, boolean, or
+   *     single-quoted string without single quotes.
+   */
+  @VisibleForTesting
+  static void createDefineReplacements(List<String> definitions,
+      CompilerOptions options) {
+    // Parse the definitions
+    for (String override : definitions) {
+      String[] assignment = override.split("=", 2);
+      String defName = assignment[0];
+
+      if (defName.length() > 0) {
+        if (assignment.length == 1) {
+          options.setDefineToBooleanLiteral(defName, true);
+          continue;
+        } else {
+          String defValue = assignment[1];
+
+          if (defValue.equals("true")) {
+            options.setDefineToBooleanLiteral(defName, true);
+            continue;
+          } else if (defValue.equals("false")) {
+            options.setDefineToBooleanLiteral(defName, false);
+            continue;
+          } else if (defValue.length() > 1 &&
+              defValue.charAt(0) == '\'' &&
+              defValue.charAt(defValue.length() - 1) == '\'') {
+            // If the value starts and ends with a single quote,
+            // we assume that it's a string.
+            String maybeStringVal =
+                defValue.substring(1, defValue.length() - 1);
+            if (maybeStringVal.indexOf('\'') == -1) {
+              options.setDefineToStringLiteral(defName, maybeStringVal);
+              continue;
+            }
+          } else {
+            try {
+              options.setDefineToDoubleLiteral(defName,
+                  Double.parseDouble(defValue));
+              continue;
+            } catch (NumberFormatException e) {
+              // do nothing, it will be caught at the end
+            }
+          }
+        }
+      }
+
+      throw new RuntimeException(
+          "--define flag syntax invalid: " + override);
     }
   }
 }

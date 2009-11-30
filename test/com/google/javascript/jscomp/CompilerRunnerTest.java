@@ -67,7 +67,7 @@ public class CompilerRunnerTest extends TestCase {
 
   public void testCheckSymbolsOffForDefault() {
     CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
-    testSame("x = 3; var y; var y;");
+    test("x = 3; var y; var y;", "x=3; var y;");
   }
 
   public void testCheckSymbolsOnForVerbose() {
@@ -93,6 +93,14 @@ public class CompilerRunnerTest extends TestCase {
   public void testDuplicateParams() {
     test("function (a, a) {}", RhinoErrorReporter.DUPLICATE_PARAM);
     assertTrue(lastCompiler.hasHaltingErrors());
+  }
+
+  public void testDefineFlag() {
+    AbstractCompilerRunner.FLAG_define.setForTest(
+        Lists.newArrayList("FOO", "BAR=5"));
+    test("/** @define {boolean} */ var FOO = false;" +
+         "/** @define {number} */ var BAR = 3;",
+         "var FOO = true, BAR = 5;");
   }
 
   /* Helper functions */
@@ -182,12 +190,6 @@ public class CompilerRunnerTest extends TestCase {
     compiler.init(externs, inputs, new CompilerOptions());
     Node all = compiler.parseInputs();
     Node n = all.getLastChild();
-    Node externs = all.getFirstChild();
-    (new Normalize(compiler, false)).process(externs, n);
-    (new MakeDeclaredNamesUnique.UndoConstantRenaming(compiler)).process(
-        externs, n);
-    (MakeDeclaredNamesUnique.getContextualRenameInverter(compiler)).process(
-        externs, n);
     return n;
   }
 }

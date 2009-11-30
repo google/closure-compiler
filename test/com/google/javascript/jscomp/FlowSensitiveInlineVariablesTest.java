@@ -285,6 +285,17 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("var x = 1; L: M: N: x = 2; print(x)", "var x = 1; print(2)");
   }
   
+  public void testInlineArguments() {
+    testSame("function _func(x) { print(x) }");
+    testSame("function _func(x,y) { if(y) { x = 1 }; print(x) }");
+    
+    test("function(x, y) { x = 1; print(x) }",
+         "function(x, y) { print(1) }");
+
+    test("function(x, y) { if (y) { x = 1; print(x) }}",
+         "function(x, y) { if (y) { print(1) }}");
+  }
+  
   private void noInline(String input) {
     inline(input, input);
   }

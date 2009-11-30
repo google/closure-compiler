@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
 
 /**
  * A {@link JSModule} dependency graph that assigns a depth to each module and
@@ -237,7 +236,7 @@ public class JSModuleGraph {
    * to avoid such an error.
    */
   public void coalesceDuplicateFiles() {
-    Multimap<String, JSModule> fileRefs = Multimaps.newLinkedHashMultimap();
+    Multimap<String, JSModule> fileRefs = LinkedHashMultimap.create();
     for (JSModule module : moduleDepths.keySet()) {
       for (CompilerInput jsFile : module.getInputs()) {
         fileRefs.put(jsFile.getName(), module);

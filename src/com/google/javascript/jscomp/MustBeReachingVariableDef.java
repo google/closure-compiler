@@ -117,9 +117,10 @@ final class MustBeReachingVariableDef extends
       this();
       while(vars.hasNext()) {
         Var var = vars.next();
-        if (NodeUtil.isVar(var.getParentNode())) {
-          reachingDef.put(var, new Definition(var.scope.getRootNode()));
-        }
+        // Every variable in the scope is defined once in the beginning of the
+        // function: all the declared variables are undefined, all functions
+        // have been assigned and all arguments has its value from the caller.
+        reachingDef.put(var, new Definition(var.scope.getRootNode()));
       }
     }
 
