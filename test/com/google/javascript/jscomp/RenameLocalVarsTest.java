@@ -27,7 +27,8 @@ public class RenameLocalVarsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RenameVars(compiler, prefix, true, false, null, null, null);
+    return new RenameVars(
+        compiler, prefix, true, false, false, null, null, null);
   }
 
   public void testRenameSimple() {

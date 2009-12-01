@@ -1439,6 +1439,7 @@ public class Compiler extends AbstractCompiler {
       renameVars(options_.renamePrefix,
           options_.variableRenaming == VariableRenamingPolicy.LOCAL,
           options_.anonymousFunctionNaming,
+          options_.generatePseudoNames,
           prevVariableMap);
     }
 
@@ -1648,6 +1649,7 @@ public class Compiler extends AbstractCompiler {
 
   void renameVars(String renamePrefix, boolean renameLocalVarsOnly,
       AnonymousFunctionNamingPolicy anonFunctionNamePolicy,
+      boolean generatePseudoNames,
       VariableMap prevVariableMap) {
     logger_.info("Renaming vars");
     startPass("renameVars");
@@ -1656,6 +1658,7 @@ public class Compiler extends AbstractCompiler {
     RenameVars rn = new RenameVars(
         this, renamePrefix,
         renameLocalVarsOnly, preserveAnonymousFunctionNames,
+        generatePseudoNames,
         prevVariableMap,
         anonFunctionNamePolicy.getReservedCharacters(),
         getPassConfig().getExportedNames());

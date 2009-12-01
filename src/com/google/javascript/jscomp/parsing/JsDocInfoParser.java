@@ -80,6 +80,7 @@ public final class JsDocInfoParser {
       put("enum", Annotation.ENUM).
       put("export", Annotation.EXPORT).
       put("extends", Annotation.EXTENDS).
+      put("externs", Annotation.EXTERNS).
       put("fileoverview", Annotation.FILE_OVERVIEW).
       put("final", Annotation.CONSTANT).
       put("hidden", Annotation.HIDDEN).
@@ -151,6 +152,7 @@ public final class JsDocInfoParser {
     DESC,
     ENUM,
     EXTENDS,
+    EXTERNS,
     EXPORT,
     FILE_OVERVIEW,
     HIDDEN,
@@ -410,6 +412,14 @@ public final class JsDocInfoParser {
                 case EXPORT:
                   if (!jsdocBuilder.recordExport()) {
                     parser.addWarning("msg.jsdoc.export",
+                        stream.getLineno(), stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
+                case EXTERNS:
+                  if (!jsdocBuilder.recordExterns()) {
+                    parser.addWarning("msg.jsdoc.externs",
                         stream.getLineno(), stream.getCharno());
                   }
                   token = eatTokensUntilEOL();

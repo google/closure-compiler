@@ -84,7 +84,8 @@ final public class JSDocInfoBuilder {
    * fileoverview tag.
    */
   public boolean isPopulatedWithFileOverview() {
-    return isPopulated() && currentInfo.hasFileOverview();
+    return isPopulated() &&
+        (currentInfo.hasFileOverview() || currentInfo.isExterns());
   }
 
   /**
@@ -706,6 +707,20 @@ final public class JSDocInfoBuilder {
   public boolean recordNoSideEffects() {
     if (!currentInfo.isNoSideEffects()) {
       currentInfo.setNoSideEffects(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isExterns()} flag set to {@code true}.
+   */
+  public boolean recordExterns() {
+    if (!currentInfo.isExterns()) {
+      currentInfo.setExterns(true);
       populated = true;
       return true;
     } else {

@@ -64,6 +64,11 @@ public enum CompilationLevel {
     }
   }
 
+  public void setDebugOptionsForCompilationLevel(CompilerOptions options) {
+    options.anonymousFunctionNaming = AnonymousFunctionNamingPolicy.UNMAPPED;
+    options.generatePseudoNames = true;
+  }
+
   /**
    * Gets options that only strip whitespace and comments.
    * @param options The CompilerOptions object to set the options on.

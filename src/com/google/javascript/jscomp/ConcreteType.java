@@ -287,13 +287,13 @@ abstract class ConcreteType implements LatticeElement {
    */
   static class ConcreteFunctionType extends ConcreteType {
     /** Name used for the call slot (see {@code getCallSlot}). */
-    static final String CALL_SLOT_NAME = "$call";
+    static final String CALL_SLOT_NAME = ":call";
 
     /** Name used for the this slot (see {@code getThisSlot}). */
-    static final String THIS_SLOT_NAME = "$this";
+    static final String THIS_SLOT_NAME = ":this";
 
     /** Name used for the return slot (see {@code getReturnSlot}). */
-    static final String RETURN_SLOT_NAME = "$return";
+    static final String RETURN_SLOT_NAME = ":return";
 
     private final Factory factory;
     private final Node declaration;

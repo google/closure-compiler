@@ -198,10 +198,12 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     // determine the real highestIndex.
     for (Node ref : currentArgumentsAccess) {
 
+      Node getElem = ref.getParent();
+      
       // Bail on anything but argument[c] access where c is a constant.
       // TODO(user): We might not need to bail out all the time, there might
       // be more cases that we can cover.
-      if (ref.getParent().getType() != Token.GETELEM) {
+      if (getElem.getType() != Token.GETELEM) {
         return false;
       }
 
@@ -215,6 +217,16 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
         // is never a subclass of the type of the index. We'd know that
         // it is never 'callee'.
         return false; // Give up.
+      }
+      
+      Node getElemParent = getElem.getParent();
+      // When we have argument[0](), replacing it with a() is semantically
+      // different if argument[0] is a function call that refers to 'this'
+      if (NodeUtil.isCall(getElemParent) &&
+          getElemParent.getFirstChild() == getElem) {
+        // TODO(user): We can consider using .call() if aliasing that
+        // argument allows shorter alias for other arguments.
+        return false;
       }
 
       // Replace the highest index if we see an access that has a higher index

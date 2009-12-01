@@ -39,12 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
-
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -53,6 +48,11 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Token;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -61,7 +61,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 
 /**
  * The type registry is used to resolve named types.
@@ -127,11 +126,11 @@ public class JSTypeRegistry implements Serializable {
 
   // All the unresolved named types.
   private final Multimap<StaticScope<JSType>, NamedType> unresolvedNamedTypes =
-      Multimaps.newArrayListMultimap();
+      ArrayListMultimap.create();
 
   // All the resolved named types.
   private final Multimap<StaticScope<JSType>, NamedType> resolvedNamedTypes =
-      Multimaps.newArrayListMultimap();
+      ArrayListMultimap.create();
 
   // NamedType warns about unresolved types in the last generation.
   private boolean lastGeneration = true;

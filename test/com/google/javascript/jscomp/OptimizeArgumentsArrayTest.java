@@ -149,4 +149,8 @@ public class OptimizeArgumentsArrayTest extends CompilerTestCase {
     testSame(
         "function f() { arguments[0]; var x = 'callee'; arguments[x].length}");
   }
+  
+  public void testNoOptimizationWhenArgumentIsUsedAsFunctionCall() {
+    testSame("function f() {arguments[0]()}");
+  }
 }

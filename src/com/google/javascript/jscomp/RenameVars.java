@@ -106,6 +106,9 @@ final class RenameVars implements CompilerPass {
    */
   private boolean preserveAnonymousFunctionNames;
 
+  /** Generate pseudo names for variables for debugging purposes */
+  private boolean generatePseudoNames;
+
   /** Characters that shouldn't be used in variable names. */
   private final char[] reservedCharacters;
 
@@ -116,6 +119,7 @@ final class RenameVars implements CompilerPass {
       String prefix,
       boolean localRenamingOnly,
       boolean preserveAnonymousFunctionNames,
+      boolean generatePseudoNames,
       VariableMap prevUsedRenameMap,
       @Nullable char[] reservedCharacters,
       @Nullable Set<String> reservedNames) {
@@ -123,6 +127,7 @@ final class RenameVars implements CompilerPass {
     this.prefix = prefix == null ? "" : prefix;
     this.localRenamingOnly = localRenamingOnly;
     this.preserveAnonymousFunctionNames = preserveAnonymousFunctionNames;
+    this.generatePseudoNames = generatePseudoNames;
     this.prevUsedRenameMap = prevUsedRenameMap;
     this.reservedCharacters = reservedCharacters;
     if (reservedNames == null) {
@@ -288,23 +293,22 @@ final class RenameVars implements CompilerPass {
 
     // Rename the globals!
     for (Node n : globalNameNodes) {
-      String oldName = n.getString();
-      Assignment a = assignments.get(oldName);
-
+      String newName = getNewGlobalName(n);
       // Note: if newName is null, then oldName is an extern.
-      if (a.newName != null) {
-        n.setString(a.newName);
-        changed = changed || !a.newName.equals(oldName);
+      if (newName != null) {
+        n.setString(newName);
+        changed = true;
       }
     }
 
     // Rename the locals!
     int count = 0;
     for (Node n : localNameNodes) {
-      String oldName = localTempNames.get(count);
-      Assignment a = assignments.get(oldName);
-      n.setString(a.newName);
-      changed = changed || !a.newName.equals(oldName);
+      String newName = getNewLocalName(n, count);
+      if (newName != null) {
+        n.setString(newName);
+        changed = true;
+      }
       count++;
     }
 
@@ -315,6 +319,38 @@ final class RenameVars implements CompilerPass {
     // Lastly, write the name assignments to the debug log.
     compiler.addToDebugLog("JS var assignments:\n" + assignmentLog);
     assignmentLog = null;
+  }
+
+  private String getNewGlobalName(Node n) {
+    String oldName = n.getString();
+    Assignment a = assignments.get(oldName);
+    if (a.newName != null && !a.newName.equals(oldName)) {
+      if (generatePseudoNames) {
+        return getPseudoName(oldName);
+      }
+      return a.newName;
+    } else {
+      return null;
+    }
+  }
+
+  private String getNewLocalName(Node n, int index) {
+    String oldTempName = localTempNames.get(index);
+    Assignment a = assignments.get(oldTempName);
+    if (!a.newName.equals(oldTempName)) {
+      if (generatePseudoNames) {
+        return getPseudoName(n.getString());
+      }
+      return a.newName;
+    }
+    return null;
+  }
+
+  private String getPseudoName(String s) {
+    Preconditions.checkState(generatePseudoNames);
+    // Variable names should be in a different name space than
+    // property pseudo names.
+    return '$' + s + "$$";
   }
 
   /**
@@ -368,7 +404,6 @@ final class RenameVars implements CompilerPass {
         // For local variable, we make the assignment right away.
         newName = localNameGenerator.generateNextName();
         finalizeNameAssignment(a, newName);
-
       } else {
         // For non-local variable, delay finalizing the name assignment
         // until we know how many new names we'll have of length 2, 3, etc.

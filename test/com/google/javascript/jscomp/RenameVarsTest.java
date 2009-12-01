@@ -36,6 +36,7 @@ public class RenameVarsTest extends CompilerTestCase {
   private boolean localRenamingOnly = false;
   private boolean preserveAnonymousFunctionNames = false;
   private boolean useGoogleCodingConvention = true;
+  private boolean generatePseudoNames = false;
 
   @Override
   protected CodingConvention getCodingConvention() {
@@ -53,6 +54,7 @@ public class RenameVarsTest extends CompilerTestCase {
     } else {
       return renameVars = new RenameVars(compiler, prefix,
           localRenamingOnly, preserveAnonymousFunctionNames,
+          generatePseudoNames,
           previouslyUsedMap, null, null);
     }
   }
@@ -70,6 +72,7 @@ public class RenameVarsTest extends CompilerTestCase {
     withClosurePass = false;
     localRenamingOnly = false;
     preserveAnonymousFunctionNames = false;
+    generatePseudoNames = false;
   }
 
   public void testRenameSimple() {
@@ -451,6 +454,17 @@ public class RenameVarsTest extends CompilerTestCase {
          "var d = function(a,     b,    c        ){}");
   }
 
+  public void testPseudoNames() {
+    generatePseudoNames = false;
+    // See http://code.google.com/p/closure-compiler/issues/detail?id=32
+    test("var foo = function(a, b, c){}",
+         "var d = function(a, b, c){}");
+    
+    generatePseudoNames = true;
+    test("var foo = function(a, b, c){}",
+         "var $foo$$ = function($a$$, $b$$, $c$$){}");
+  }  
+  
   private void testRenameMapUsingOldMap(String input, String expected,
                                         VariableMap expectedMap) {
     previouslyUsedMap = renameVars.getVariableMap();
@@ -505,7 +519,7 @@ public class RenameVarsTest extends CompilerTestCase {
           new ProcessClosurePrimitives(compiler, CheckLevel.WARNING, true);
       closurePass.process(externs, root);
       renameVars = new RenameVars(compiler, prefix,
-          false, false, previouslyUsedMap, null,
+          false, false, false, previouslyUsedMap, null,
           closurePass.getExportedVariableNames());
       renameVars.process(externs, root);
     }
