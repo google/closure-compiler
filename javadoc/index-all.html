@@ -739,7 +739,7 @@ Method in exception com.google.javascript.rhino.<A HREF="./com/google/javascript
 <DD>The column number of the location of the error, or zero if unknown.
 <DT><A HREF="./com/google/javascript/jscomp/package-summary.html"><B>com.google.javascript.jscomp</B></A> - package com.google.javascript.jscomp<DD>Provides the core compiler and its public API.<DT><A HREF="./com/google/javascript/jscomp/graph/package-summary.html"><B>com.google.javascript.jscomp.graph</B></A> - package com.google.javascript.jscomp.graph<DD>Provides graph data structures and algorithms for coloring and fixed-point
 computations.<DT><A HREF="./com/google/javascript/jscomp/parsing/package-summary.html"><B>com.google.javascript.jscomp.parsing</B></A> - package com.google.javascript.jscomp.parsing<DD>Provides utilities to help with parsing JSDoc annotations and performing AST
-transformations.<DT><A HREF="./com/google/javascript/rhino/package-summary.html"><B>com.google.javascript.rhino</B></A> - package com.google.javascript.rhino<DD>The core parsing functionality for
+transformations.<DT><A HREF="./com/google/javascript/jscomp/testing/package-summary.html"><B>com.google.javascript.jscomp.testing</B></A> - package com.google.javascript.jscomp.testing<DD>&nbsp;<DT><A HREF="./com/google/javascript/rhino/package-summary.html"><B>com.google.javascript.rhino</B></A> - package com.google.javascript.rhino<DD>The core parsing functionality for
 <a href="http://www.mozilla.org/rhino/">Rhino</a> but with the support for
 embedding and scripting removed.<DT><A HREF="./com/google/javascript/rhino/jstype/package-summary.html"><B>com.google.javascript.rhino.jstype</B></A> - package com.google.javascript.rhino.jstype<DD>Provides abstractions to represent types in JavaScript.<DT><A HREF="./com/google/javascript/rhino/Token.html#COMMA"><B>COMMA</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
@@ -1374,6 +1374,9 @@ Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javasc
 <DD>Create a DiagnosticType at level CheckLevel.ERROR
 <DT><A HREF="./com/google/javascript/jscomp/parsing/NullErrorReporter.html#error(java.lang.String, java.lang.String, int, java.lang.String, int)"><B>error(String, String, int, String, int)</B></A> - 
 Method in class com.google.javascript.jscomp.parsing.<A HREF="./com/google/javascript/jscomp/parsing/NullErrorReporter.html" title="class in com.google.javascript.jscomp.parsing">NullErrorReporter</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html#error(java.lang.String, java.lang.String, int, java.lang.String, int)"><B>error(String, String, int, String, int)</B></A> - 
+Method in class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html" title="class in com.google.javascript.jscomp.testing">TestErrorReporter</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/ErrorReporter.html#error(java.lang.String, java.lang.String, int, java.lang.String, int)"><B>error(String, String, int, String, int)</B></A> - 
 Method in interface com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A>
@@ -3014,6 +3017,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/SourceExcerptProvider.html#getSourceLine(java.lang.String, int)"><B>getSourceLine(String, int)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/SourceExcerptProvider.html" title="interface in com.google.javascript.jscomp">SourceExcerptProvider</A>
 <DD>Get the line indicated by the line number.
+<DT><A HREF="./com/google/javascript/jscomp/testing/SimpleSourceExcerptProvider.html#getSourceLine(java.lang.String, int)"><B>getSourceLine(String, int)</B></A> - 
+Method in class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/SimpleSourceExcerptProvider.html" title="class in com.google.javascript.jscomp.testing">SimpleSourceExcerptProvider</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html#getSourceMap()"><B>getSourceMap()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
 <DD>&nbsp;
@@ -3035,6 +3041,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/SourceExcerptProvider.html#getSourceRegion(java.lang.String, int)"><B>getSourceRegion(String, int)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/SourceExcerptProvider.html" title="interface in com.google.javascript.jscomp">SourceExcerptProvider</A>
 <DD>Get a region around the indicated line number.
+<DT><A HREF="./com/google/javascript/jscomp/testing/SimpleSourceExcerptProvider.html#getSourceRegion(java.lang.String, int)"><B>getSourceRegion(String, int)</B></A> - 
+Method in class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/SimpleSourceExcerptProvider.html" title="class in com.google.javascript.jscomp.testing">SimpleSourceExcerptProvider</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/SourcePosition.html#getStartLine()"><B>getStartLine()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/SourcePosition.html" title="class in com.google.javascript.rhino">SourcePosition</A>
 <DD>Returns the starting line number of this position.
@@ -3301,6 +3310,12 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>
 <DD>Returns whether a description exists for the parameter with the specified
  name.
+<DT><A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html#hasEncounteredAllErrors()"><B>hasEncounteredAllErrors()</B></A> - 
+Method in class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html" title="class in com.google.javascript.jscomp.testing">TestErrorReporter</A>
+<DD>Returns whether all errors were reported to this reporter.
+<DT><A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html#hasEncounteredAllWarnings()"><B>hasEncounteredAllWarnings()</B></A> - 
+Method in class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html" title="class in com.google.javascript.jscomp.testing">TestErrorReporter</A>
+<DD>Returns whether all warnings were reported to this reporter.
 <DT><A HREF="./com/google/javascript/rhino/JSDocInfo.html#hasEnumParameterType()"><B>hasEnumParameterType()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>
 <DD>Returns whether an enum parameter type, specified using the <code>@enum</code>
@@ -4950,7 +4965,7 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html#OPTIMIZE_LOOP_ERROR"><B>OPTIMIZE_LOOP_ERROR</B></A> - 
 Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
-<DD>&nbsp;
+<DD>Error strings used for reporting JSErrors
 <DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#optimizeArgumentsArray"><B>optimizeArgumentsArray</B></A> - 
 Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
 <DD>Provide formal names for elements of arguments array.
@@ -5156,9 +5171,6 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html#REACHABLE"><B>REACHABLE</B></A> - 
 Static variable in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html" title="class in com.google.javascript.jscomp.graph">GraphReachability</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/jscomp/Compiler.html#READ_ERROR"><B>READ_ERROR</B></A> - 
-Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
-<DD>Error strings used for reporting JSErrors
 <DT><A HREF="./com/google/javascript/rhino/Kit.html#readReader(java.io.Reader)"><B>readReader(Reader)</B></A> - 
 Static method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Kit.html" title="class in com.google.javascript.rhino">Kit</A>
 <DD>&nbsp;
@@ -5514,6 +5526,9 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/AbstractCompilerRunner.html" title="class in com.google.javascript.jscomp">AbstractCompilerRunner</A>
 <DD>Runs the Compiler and calls System.exit() with the exit status of the
  compiler.
+<DT><A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html#runtimeError(java.lang.String, java.lang.String, int, java.lang.String, int)"><B>runtimeError(String, String, int, String, int)</B></A> - 
+Method in class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html" title="class in com.google.javascript.jscomp.testing">TestErrorReporter</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/ErrorReporter.html#runtimeError(java.lang.String, java.lang.String, int, java.lang.String, int)"><B>runtimeError(String, String, int, String, int)</B></A> - 
 Method in interface com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A>
 <DD>Creates an EvaluatorException that may be thrown.
@@ -5921,6 +5936,9 @@ Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/SimpleSlot.html" title="class in com.google.javascript.rhino.jstype"><B>SimpleSlot</B></A> - Class in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>The minimum implementation of StaticSlot<JSType>.<DT><A HREF="./com/google/javascript/rhino/jstype/SimpleSlot.html#SimpleSlot(java.lang.String, com.google.javascript.rhino.jstype.JSType, boolean)"><B>SimpleSlot(String, JSType, boolean)</B></A> - 
 Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/SimpleSlot.html" title="class in com.google.javascript.rhino.jstype">SimpleSlot</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/testing/SimpleSourceExcerptProvider.html" title="class in com.google.javascript.jscomp.testing"><B>SimpleSourceExcerptProvider</B></A> - Class in <A HREF="./com/google/javascript/jscomp/testing/package-summary.html">com.google.javascript.jscomp.testing</A><DD>A simple source excerpt provider for testing.<DT><A HREF="./com/google/javascript/jscomp/testing/SimpleSourceExcerptProvider.html#SimpleSourceExcerptProvider(java.lang.String)"><B>SimpleSourceExcerptProvider(String)</B></A> - 
+Constructor for class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/SimpleSourceExcerptProvider.html" title="class in com.google.javascript.jscomp.testing">SimpleSourceExcerptProvider</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/ObjArray.html#size()"><B>size()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/ObjArray.html" title="class in com.google.javascript.rhino">ObjArray</A>
 <DD>&nbsp;
@@ -6065,7 +6083,11 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/rhino/Node.html#TEMP_PROP"><B>TEMP_PROP</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/TemplateType.html" title="class in com.google.javascript.rhino.jstype"><B>TemplateType</B></A> - Class in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>&nbsp;<DT><A HREF="./com/google/javascript/rhino/jstype/TernaryValue.html" title="enum in com.google.javascript.rhino.jstype"><B>TernaryValue</B></A> - Enum in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>An enum for ternary logic.<DT><A HREF="./com/google/javascript/rhino/jstype/AllType.html#testForEquality(com.google.javascript.rhino.jstype.JSType)"><B>testForEquality(JSType)</B></A> - 
+<DT><A HREF="./com/google/javascript/rhino/jstype/TemplateType.html" title="class in com.google.javascript.rhino.jstype"><B>TemplateType</B></A> - Class in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>&nbsp;<DT><A HREF="./com/google/javascript/rhino/jstype/TernaryValue.html" title="enum in com.google.javascript.rhino.jstype"><B>TernaryValue</B></A> - Enum in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>An enum for ternary logic.<DT><A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html" title="class in com.google.javascript.jscomp.testing"><B>TestErrorReporter</B></A> - Class in <A HREF="./com/google/javascript/jscomp/testing/package-summary.html">com.google.javascript.jscomp.testing</A><DD>An error reporter for testing that verifies that messages reported to the
+ reporter are expected.<DT><A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html#TestErrorReporter(java.lang.String[], java.lang.String[])"><B>TestErrorReporter(String[], String[])</B></A> - 
+Constructor for class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html" title="class in com.google.javascript.jscomp.testing">TestErrorReporter</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/AllType.html#testForEquality(com.google.javascript.rhino.jstype.JSType)"><B>testForEquality(JSType)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/AllType.html" title="class in com.google.javascript.rhino.jstype">AllType</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/BooleanType.html#testForEquality(com.google.javascript.rhino.jstype.JSType)"><B>testForEquality(JSType)</B></A> - 
@@ -6636,6 +6658,9 @@ Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javasc
 <DD>Create a DiagnosticType at level CheckLevel.WARNING
 <DT><A HREF="./com/google/javascript/jscomp/parsing/NullErrorReporter.html#warning(java.lang.String, java.lang.String, int, java.lang.String, int)"><B>warning(String, String, int, String, int)</B></A> - 
 Method in class com.google.javascript.jscomp.parsing.<A HREF="./com/google/javascript/jscomp/parsing/NullErrorReporter.html" title="class in com.google.javascript.jscomp.parsing">NullErrorReporter</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html#warning(java.lang.String, java.lang.String, int, java.lang.String, int)"><B>warning(String, String, int, String, int)</B></A> - 
+Method in class com.google.javascript.jscomp.testing.<A HREF="./com/google/javascript/jscomp/testing/TestErrorReporter.html" title="class in com.google.javascript.jscomp.testing">TestErrorReporter</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/ErrorReporter.html#warning(java.lang.String, java.lang.String, int, java.lang.String, int)"><B>warning(String, String, int, String, int)</B></A> - 
 Method in interface com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A>

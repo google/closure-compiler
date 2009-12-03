@@ -66,40 +66,19 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     }
   };
 
-  // A scope creator that does scope creation and type inference.
-  private class MyScopeCreator implements ScopeCreator {
-    private final AbstractCompiler compiler;
-    private final TypedScopeCreator delegate;
-
-    MyScopeCreator(AbstractCompiler compiler) {
-      this.compiler = compiler;
-      this.delegate = new TypedScopeCreator(compiler);
-    }
-
-    public Scope createScope(Node root, Scope parent) {
-      Scope typedScope = delegate.createScope(root, parent);
-
-      TypeInference typeInference = new TypeInference(
-          compiler, computeCfg(root),
-          compiler.getReverseAbstractInterpreter(), typedScope);
-      typeInference.analyze();
-      return typedScope;
-    }
-
-    private ControlFlowGraph<Node> computeCfg(Node n) {
-      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
-      cfa.process(null, n);
-      return cfa.getCfg();
-    }
-  }
-
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     registry = compiler.getTypeRegistry();
     return new CompilerPass() {
       public void process(Node externs, Node root) {
+        ScopeCreator scopeCreator =
+            new MemoizedScopeCreator(new TypedScopeCreator(compiler));
+        Scope topScope = scopeCreator.createScope(root.getParent(), null);
+        (new TypeInferencePass(
+            compiler, compiler.getReverseAbstractInterpreter(),
+            topScope, scopeCreator)).process(externs, root);
         NodeTraversal t = new NodeTraversal(
-            compiler, callback, new MyScopeCreator(compiler));
+            compiler, callback, scopeCreator);
         t.traverseRoots(Lists.newArrayList(externs, root));
       }
     };
@@ -591,6 +570,47 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @type {number} */ Foo.prototype.bar;" +
         "Foo.prototype.bar; var x = (new Foo).bar;", null);
     assertEquals("number", findNameType("x", globalScope).toString());
+  }
+
+  public void testAbstractMethod() {
+    testSame(
+        "/** @type {!Function} */ var abstractMethod;" +
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number} x */ Foo.prototype.bar = abstractMethod;");
+    assertEquals(
+        "Function", findNameType("abstractMethod", globalScope).toString());
+
+    FunctionType ctor = (FunctionType) findNameType("Foo", globalScope);
+    ObjectType instance = ctor.getInstanceType();
+    assertEquals("Foo", instance.toString());
+
+    ObjectType proto = instance.getImplicitPrototype();
+    assertEquals("Foo.prototype", proto.toString());
+
+    assertEquals(
+        "function (this:Foo, number): ?",
+        proto.getPropertyType("bar").toString());
+  }
+
+  public void testAbstractMethod2() {
+    testSame(
+        "/** @type {!Function} */ var abstractMethod;" +
+        "/** @param {number} x */ var y = abstractMethod;");
+    assertEquals(
+        "Function",
+        findNameType("y", globalScope).toString());
+    assertEquals(
+        "function (number): ?",
+        globalScope.getVar("y").getType().toString());
+  }
+
+  public void testAbstractMethod3() {
+    testSame(
+        "/** @type {!Function} */ var abstractMethod;" +
+        "/** @param {number} x */ var y = abstractMethod; y;");
+    assertEquals(
+        "function (number): ?",
+        findNameType("y", globalScope).toString());
   }
 
   private JSType findNameType(String name, Scope scope) {

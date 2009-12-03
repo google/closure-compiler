@@ -17,11 +17,8 @@
 package com.google.javascript.jscomp;
 
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,16 +33,6 @@ public abstract class PassConfig {
   // Used by subclasses in this package.
   final CompilerOptions options;
 
-  /** Names exported by goog.exportSymbol. */
-  private Set<String> exportedNames = null;
-
-  /**
-   * Ids for cross-module method stubbing, so that each method has
-   * a unique id.
-   */
-  private CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator =
-      new CrossModuleMethodMotion.IdGenerator();
-
   /**
    * A memoized version of scopeCreator. It must be memoized so that
    * we can make two separate passes over the AST, one for inferring types
@@ -56,63 +43,8 @@ public abstract class PassConfig {
   /** The global typed scope. */
   Scope topScope = null;
 
-  /**
-   * Keys are arguments passed to getCssName() found during compilation; values
-   * are the number of times the key appeared as an argument to getCssName().
-   */
-  private Map<String, Integer> cssNames = null;
-
   public PassConfig(CompilerOptions options) {
     this.options = options;
-  }
-
-  // Setters and getters for intermediate state.
-  //
-  // This makes it possible to start and stop the compiler mid-compile.
-  // Each getter and setter corresponds to a type of state that is produced
-  // by an earlier pass and consumed by a later pass. When the compiler is
-  // stopped mid-compile, the getter should return any state which has
-  // been produced, and the setter should restore that state when the compiler
-  // is restarted.
-  //
-  // TODO(nicksantos): Perhaps we should just make PassConfig serializable.
-
-  /**
-   * Gets a map of CSS names found in the JS code, to the number of times
-   * they appear.
-   */
-  Map<String, Integer> getCssNames() {
-    return cssNames == null ? null : Maps.newHashMap(cssNames);
-  }
-
-  /**
-   * Gets the symbols exported by the passes.
-   */
-  Set<String> getExportedNames() {
-    return exportedNames == null ? null :
-        Collections.unmodifiableSet(exportedNames);
-  }
-
-  /**
-   * Gets a generator for cross-module method ids, so that the ids
-   * are stable across compiled.
-   */
-  CrossModuleMethodMotion.IdGenerator getCrossModuleIdGenerator() {
-    return crossModuleIdGenerator;
-  }
-
-  /**
-   * Sets the map of CSS names found in the JS code during previous runs.
-   */
-  void setCssNames(Map<String, Integer> newVal) {
-    cssNames = newVal == null ? null : Maps.newHashMap(newVal);
-  }
-
-  /**
-   * Sets the symbols exported by previous passes.
-   */
-  void setExportedNames(Set<String> newVal) {
-    exportedNames = newVal == null ? null : Sets.newHashSet(newVal);
   }
 
   /**
@@ -202,20 +134,13 @@ public abstract class PassConfig {
    * Get intermediate state for a running pass config, so it can
    * be paused and started again later.
    */
-  State getIntermediateState() {
-    return new State(getCssNames(), getExportedNames(),
-                     crossModuleIdGenerator);
-  }
+  abstract State getIntermediateState();
 
   /**
    * Set the intermediate state for a pass config, to restart
    * a compilation process that had been previously paused.
    */
-  void setIntermediateState(State state) {
-    setCssNames(state.cssNames);
-    setExportedNames(state.exportedNames);
-    crossModuleIdGenerator = state.crossModuleIdGenerator;
-  }
+  abstract void setIntermediateState(State state);
 
   /**
    * An implementation of PassConfig that just proxies all its method calls
@@ -236,22 +161,6 @@ public abstract class PassConfig {
 
     @Override protected List<PassFactory> getOptimizations() {
       return delegate.getOptimizations();
-    }
-
-    @Override Map<String, Integer> getCssNames() {
-      return delegate.getCssNames();
-    }
-
-    @Override Set<String> getExportedNames() {
-      return delegate.getExportedNames();
-    }
-
-    @Override void setCssNames(Map<String, Integer> newVal) {
-      delegate.setCssNames(newVal);
-    }
-
-    @Override void setExportedNames(Set<String> newVal) {
-      delegate.setExportedNames(newVal);
     }
 
     @Override ScopeCreator getScopeCreator() {
@@ -277,15 +186,25 @@ public abstract class PassConfig {
   static class State implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final Map<String, Integer> cssNames;
-    private final Set<String> exportedNames;
-    private final CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator;
+    final Map<String, Integer> cssNames;
+    final Set<String> exportedNames;
+    final CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator;
+    final VariableMap variableMap;
+    final VariableMap propertyMap;
+    final VariableMap anonymousFunctionNameMap;
+    final FunctionNames functionNames;
 
-    private State(Map<String, Integer> cssNames, Set<String> exportedNames,
-                  CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator) {
+    State(Map<String, Integer> cssNames, Set<String> exportedNames,
+          CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator,
+          VariableMap variableMap, VariableMap propertyMap,
+          VariableMap anonymousFunctionNameMap, FunctionNames functionNames) {
       this.cssNames = cssNames;
       this.exportedNames = exportedNames;
       this.crossModuleIdGenerator = crossModuleIdGenerator;
+      this.variableMap = variableMap;
+      this.propertyMap = propertyMap;
+      this.anonymousFunctionNameMap = anonymousFunctionNameMap;
+      this.functionNames = functionNames;
     }
   }
 }

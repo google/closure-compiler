@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -48,6 +49,10 @@ class ControlStructureCheck implements CompilerPass {
       "JSC_INVALID_LABEL_CONTINUE",
       "continue can only target labels of loop structures");
 
+  static final DiagnosticType USE_OF_WITH = DiagnosticType.warning(
+      "JSC_USE_OF_WITH",
+      "The use of the 'with' structure should be avoided.");
+
   ControlStructureCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -79,6 +84,15 @@ class ControlStructureCheck implements CompilerPass {
    */
   private void check(Node node, boolean inLoop, boolean inSwitch) {
     switch (node.getType()) {
+      case Token.WITH:
+        JSDocInfo info = node.getJSDocInfo();
+        boolean allowWith =
+            info != null && info.getSuppressions().contains("with");
+        if (!allowWith) {
+          report(node, USE_OF_WITH);
+        }
+        break;
+
       case Token.FUNCTION:
         // Save the old labels because we are in a new scope.
         Deque<String> oldSwitchLabels = switchLabels;

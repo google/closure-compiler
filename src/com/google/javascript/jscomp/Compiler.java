@@ -29,11 +29,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -90,15 +88,6 @@ public class Compiler extends AbstractCompiler {
 
   private Map<String, CompilerInput> inputsByName_;
 
-  /** Fully qualified function names and globally unique ids */
-  private FunctionNames functionNames_;
-
-  /** The variable renaming map */
-  private VariableMap variableMap_;
-
-  /** The property renaming map */
-  private VariableMap propertyMap_;
-
   /** The source code map */
   private SourceMap sourceMap_;
 
@@ -119,9 +108,6 @@ public class Compiler extends AbstractCompiler {
 
   /** Whether to use threads. */
   private boolean useThreads = true;
-
-  /** The naming map for anonymous functions */
-  private VariableMap anonFunctionNameMap_;
 
   /** The function information map */
   private FunctionInformationMap functionInformationMap_;
@@ -148,20 +134,12 @@ public class Compiler extends AbstractCompiler {
       RhinoErrorReporter.forNewRhino(this);
 
   /** Error strings used for reporting JSErrors */
-  public static final DiagnosticType READ_ERROR = DiagnosticType.error(
-      "JSC_READ_ERROR", "Cannot read: {0}");
   public static final DiagnosticType OPTIMIZE_LOOP_ERROR = DiagnosticType.error(
       "JSC_OPTIMIZE_LOOP_ERROR",
       "Exceeded max number of optimization iterations: {0}");
   public static final DiagnosticType MOTION_ITERATIONS_ERROR =
       DiagnosticType.error("JSC_OPTIMIZE_LOOP_ERROR",
           "Exceeded max number of code motion iterations: {0}");
-  private static final DiagnosticType INPUT_MAP_PROP_PARSE =
-      DiagnosticType.error("JSC_INPUT_MAP_PROP_PARSE",
-          "Input property map parse error: {0}");
-  private static final DiagnosticType INPUT_VAR_PROP_PARSE =
-      DiagnosticType.error("JSC_INPUT_MAP_VAR_PARSE",
-          "Input variable map parse error: {0}");
 
   private static final long COMPILER_STACK_SIZE = 1048576L;
 
@@ -528,7 +506,8 @@ public class Compiler extends AbstractCompiler {
     }
 
     if (options_.nameAnonymousFunctionsOnly) {
-      nameAnonymousFunctions(options_.anonymousFunctionNaming);
+      // TODO(nicksantos): Move this into an instrument() phase maybe?
+      check();
       return;
     }
 
@@ -614,9 +593,9 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
-    if (options_.instrumentationTemplate != null ||
-        options_.recordFunctionInformation) {
-      computeFunctionNames();
+    // TODO(nicksantos): clean this up. The flow here is too hard to follow.
+    if (options_.nameAnonymousFunctionsOnly) {
+      return;
     }
 
     if (options_.removeTryCatchFinally) {
@@ -702,34 +681,6 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Alias string literals with global variables, to avoid creating lots of
-   * transient objects.
-   */
-  private void aliasStrings(Set<String> aliasableStrings,
-                            boolean aliasAllStrings,
-                            String aliasStringsBlacklist,
-                            boolean outputStringUsage) {
-    logger_.info("Aliasing strings");
-    startPass("aliasStrings");
-    AliasStrings aliasStrings = new AliasStrings(
-        this,
-        getModuleGraph(),
-        aliasAllStrings ? null : aliasableStrings,
-        aliasStringsBlacklist,
-        outputStringUsage);
-    process(aliasStrings);
-    endPass();
-  }
-
-  private void aliasKeywords() {
-    logger_.info("Aliasing true/false/null");
-    startPass("aliasKeywords");
-    AliasKeywords aliasKeywords = new AliasKeywords(this);
-    process(aliasKeywords);
-    endPass();
-  }
-
-  /**
    * Runs custom passes that are designated to run at a particular time.
    */
   private void runCustomPasses(CustomPassExecutionTime executionTime) {
@@ -794,10 +745,11 @@ public class Compiler extends AbstractCompiler {
    * Returns the result of the compilation.
    */
   public Result getResult() {
+    PassConfig.State state = getPassConfig().getIntermediateState();
     return new Result(getErrors(), getWarnings(), debugLog_.toString(),
-                      variableMap_, propertyMap_, anonFunctionNameMap_,
-                      functionInformationMap_, sourceMap_, externExports_,
-                      getPassConfig().getCssNames());
+        state.variableMap, state.propertyMap,
+        state.anonymousFunctionNameMap, functionInformationMap_,
+        sourceMap_, externExports_, state.cssNames);
   }
 
   /**
@@ -857,6 +809,7 @@ public class Compiler extends AbstractCompiler {
    * Set if the normalization pass has been done.
    * Note: non-private to enable test cases that require the Normalize pass.
    */
+  @Override
   void setNormalized() {
     normalized = true;
   }
@@ -865,6 +818,7 @@ public class Compiler extends AbstractCompiler {
    * Set once unnormalizing passes have been start.
    * Note: non-private to enable test cases that require the Normalize pass.
    */
+  @Override
   void setUnnormalized() {
     normalized = false;
   }
@@ -1307,160 +1261,6 @@ public class Compiler extends AbstractCompiler {
     if (hasErrors()) {
       return;
     }
-
-    if (options_.flowSensitiveInlineVariables) {
-      flowSensitiveInlineVariables();
-    }
-
-    if (options_.collapseAnonymousFunctions) {
-      collapseAnonymousFunctions();
-    }
-
-    // Move functions before extracting prototype member declarations.
-    if (options_.moveFunctionDeclarations) {
-      moveFunctionDeclarations();
-    }
-
-    if (options_.anonymousFunctionNaming ==
-        AnonymousFunctionNamingPolicy.MAPPED) {
-      nameAnonymousFunctions(AnonymousFunctionNamingPolicy.MAPPED);
-    }
-
-    // The mapped name anonymous function pass makes use of information that
-    // the extract prototype member declarations pass removes so the former
-    // happens before the latter.
-    //
-    // Extracting prototype properties screws up the heuristic renaming
-    // policies, so never run it when those policies are requested.
-    if (options_.extractPrototypeMemberDeclarations &&
-        (options_.propertyRenaming != PropertyRenamingPolicy.HEURISTIC &&
-         options_.propertyRenaming !=
-            PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC)) {
-      extractPrototypeMemberDeclarations();
-    }
-
-    if (options_.coalesceVariableNames) {
-      coalesceVariableNames();
-    }
-
-    VariableMap prevPropertyMap = null;
-    if (options_.inputPropertyMapSerialized != null) {
-      try {
-        prevPropertyMap =
-            VariableMap.fromBytes(options_.inputPropertyMapSerialized);
-      } catch (ParseException e) {
-        report(JSError.make(INPUT_MAP_PROP_PARSE, e.getMessage()));
-      }
-    }
-
-    if (options_.ambiguateProperties && (options_.propertyRenaming
-        == PropertyRenamingPolicy.ALL_UNQUOTED)) {
-      ambiguateProperties(options_.anonymousFunctionNaming
-          .getReservedCharacters());
-    }
-
-    switch (options_.propertyRenaming) {
-      case HEURISTIC:
-        renamePrototypes(false,
-            options_.anonymousFunctionNaming,
-            prevPropertyMap);
-        break;
-      case AGGRESSIVE_HEURISTIC:
-        renamePrototypes(true,
-            options_.anonymousFunctionNaming,
-            prevPropertyMap);
-        break;
-      case ALL_UNQUOTED:
-        renameProperties(options_.generatePseudoNames,
-            options_.anonymousFunctionNaming,
-            prevPropertyMap);
-        break;
-    }
-
-    // This comes after property renaming because quoted property names must
-    // not be renamed.
-    if (options_.convertToDottedProperties) {
-      convertToDottedProperties();
-    }
-
-    // Property renaming must happen before this pass runs since this
-    // pass may convert dotted properties into quoted properties.  It
-    // is beneficial to run before alias strings, alias keywords and
-    // variable renaming.
-    if (options_.rewriteFunctionExpressions) {
-      rewriteFunctionExpressions();
-    }
-
-    // This comes after converting quoted property accesses to dotted property
-    // accesses in order to avoid aliasing property names.
-    if (!options_.aliasableStrings.isEmpty() || options_.aliasAllStrings) {
-      aliasStrings(options_.aliasableStrings,
-                   options_.aliasAllStrings,
-                   options_.aliasStringsBlacklist,
-                   options_.outputJsStringUsage);
-    }
-
-    if (options_.aliasExternals) {
-      aliasExternals();
-    }
-
-    if (options_.aliasKeywords) {
-      aliasKeywords();
-    }
-
-    if (options_.collapseVariableDeclarations) {
-      collapseVariableDeclarations();
-    }
-
-    denormalize();
-
-    if (options_.instrumentationTemplate != null) {
-      instrumentFunctions();
-    }
-
-    if (options_.variableRenaming != VariableRenamingPolicy.ALL) {
-      // If we're leaving some (or all) variables with their old names,
-      // then we need to undo any of the markers we added for distinguishing
-      // local variables ("$$1") or constants ("$$constant").
-      invertContextualRenaming();
-    }
-
-    if (options_.variableRenaming != VariableRenamingPolicy.OFF) {
-      VariableMap prevVariableMap = null;
-      if (options_.inputVariableMapSerialized != null) {
-        try {
-          prevVariableMap =
-              VariableMap.fromBytes(options_.inputVariableMapSerialized);
-        } catch (ParseException e) {
-          report(JSError.make(INPUT_VAR_PROP_PARSE, e.getMessage()));
-        }
-      }
-
-      renameVars(options_.renamePrefix,
-          options_.variableRenaming == VariableRenamingPolicy.LOCAL,
-          options_.anonymousFunctionNaming,
-          options_.generatePseudoNames,
-          prevVariableMap);
-    }
-
-    // This pass should run after names stop changing.
-    if (options_.processObjectPropertyString) {
-      objectPropertyStringPostprocess();
-    }
-
-    if (options_.labelRenaming) {
-      renameLabels();
-    }
-
-    if (options_.anonymousFunctionNaming ==
-        AnonymousFunctionNamingPolicy.UNMAPPED) {
-      nameAnonymousFunctions(AnonymousFunctionNamingPolicy.UNMAPPED);
-    }
-
-    // Safety check
-    if (options_.checkSymbols) {
-      sanityCheckVars();
-    }
   }
 
   @Override
@@ -1473,16 +1273,6 @@ public class Compiler extends AbstractCompiler {
     return options_.cssRenamingMap;
   }
 
-
-  /** Checks that all variables are defined. */
-  void sanityCheckVars() {
-    logger_.info("Checking for undefined vars");
-    startPass("sanityCheckVars");
-    VarCheck v = new VarCheck(this, true);
-    process(v);
-    endPass();
-  }
-
   /**
    * Reprocesses the current defines over the AST.  This is used by GwtCompiler
    * to generate N outputs for different targets from the same (checked) AST.
@@ -1493,66 +1283,6 @@ public class Compiler extends AbstractCompiler {
   public void processDefines() {
     (new DefaultPassConfig(options_)).processDefines.create(this)
         .process(externsRoot, jsRoot);
-  }
-
-  void computeFunctionNames() {
-    logger_.info("Computing fully-qualified function names and ids");
-    startPass("computeFunctionNames");
-    functionNames_ = new FunctionNames(this);
-    process(functionNames_);
-    endPass();
-  }
-
-  void flowSensitiveInlineVariables() {
-    logger_.info("Flow Sensitive Inline Variables");
-    startPass("flowSensitiveInlineVariables");
-    process(new FlowSensitiveInlineVariables(this));
-    endPass();
-  }
-
-  void coalesceVariableNames() {
-    logger_.info("Coalesce Variable Names");
-    startPass("coalesceVariableNames");
-    process(new CoalesceVariableNames(this));
-    endPass();
-  }
-
-  void collapseVariableDeclarations() {
-    logger_.info("Collapsing variable declarations");
-    startPass("collapseVariableDeclarations");
-    process(new CollapseVariableDeclarations(this));
-    setUnnormalized();
-    endPass();
-  }
-
-  void extractPrototypeMemberDeclarations() {
-    logger_.info("Extracting Common Prototype Member Declarations");
-    startPass("extractPrototypeMemberDeclarations");
-    process(new ExtractPrototypeMemberDeclarations(this));
-    endPass();
-  }
-
-  void rewriteFunctionExpressions() {
-    logger_.info("Rewrite function expressions");
-    startPass("rewriteFunctionExpressions");
-    process(new FunctionRewriter(this));
-    endPass();
-  }
-
-  void collapseAnonymousFunctions() {
-    logger_.info("Collapsing anonymous functions");
-    startPass("collapseAnonymousFunctions");
-    process(new CollapseAnonymousFunctions(this));
-    endPass();
-  }
-
-
-
-  void moveFunctionDeclarations() {
-    logger_.info("Move function declarations");
-    startPass("moveFunctionDeclarations");
-    process(new MoveFunctionDeclarations(this));
-    endPass();
   }
 
   boolean isInliningForbidden() {
@@ -1571,57 +1301,11 @@ public class Compiler extends AbstractCompiler {
     return cfa.getCfg();
   }
 
-  void nameAnonymousFunctions(AnonymousFunctionNamingPolicy policy) {
-    logger_.info("Naming anonymous functions");
-    startPass("nameAnonymousFunctions");
-    if (policy == AnonymousFunctionNamingPolicy.UNMAPPED) {
-      process(new NameAnonymousFunctions(this));
-    } else if (policy == AnonymousFunctionNamingPolicy.MAPPED) {
-      NameAnonymousFunctionsMapped naf = new NameAnonymousFunctionsMapped(this);
-      process(naf);
-      anonFunctionNameMap_ = naf.getFunctionMap();
-    }
-    endPass();
-  }
-
-  void aliasExternals() {
-    logger_.info("Creating alias functions for externals");
-    startPass("aliasExternals");
-    AliasExternals ae = new AliasExternals(this,
-                                           getModuleGraph(),
-                                           options_.unaliasableGlobals,
-                                           options_.aliasableGlobals);
-    process(ae);
-    endPass();
-  }
-
-  void objectPropertyStringPostprocess() {
-    logger_.info("goog.testing.ObjectPropertyString postprocess");
-    startPass("ObjectPropertyStringPostprocess");
-    process(new ObjectPropertyStringPostprocess(this));
-    endPass();
-  }
-
-  void ambiguateProperties(char[] reservedCharacters) {
-    logger_.info("Ambiguating properties");
-    startPass("ambiguateProperties");
-    process(new AmbiguateProperties(this, reservedCharacters));
-    endPass();
-  }
-
   public void normalize() {
     logger_.info("Normalizing");
     startPass("normalize");
     process(new Normalize(this, false));
     setNormalized();
-    endPass();
-  }
-
-  private void denormalize() {
-    logger_.info("Denormalizing");
-    startPass("denormalize");
-    process(new Denormalize(this));
-    setUnnormalized();
     endPass();
   }
 
@@ -1647,97 +1331,12 @@ public class Compiler extends AbstractCompiler {
     stopTracer(tracer, "annotateCodingConvention");
   }
 
-  void renameVars(String renamePrefix, boolean renameLocalVarsOnly,
-      AnonymousFunctionNamingPolicy anonFunctionNamePolicy,
-      boolean generatePseudoNames,
-      VariableMap prevVariableMap) {
-    logger_.info("Renaming vars");
-    startPass("renameVars");
-    boolean preserveAnonymousFunctionNames =
-      anonFunctionNamePolicy != AnonymousFunctionNamingPolicy.OFF;
-    RenameVars rn = new RenameVars(
-        this, renamePrefix,
-        renameLocalVarsOnly, preserveAnonymousFunctionNames,
-        generatePseudoNames,
-        prevVariableMap,
-        anonFunctionNamePolicy.getReservedCharacters(),
-        getPassConfig().getExportedNames());
-    process(rn);
-    variableMap_ = rn.getVariableMap();
-    endPass();
-  }
-
-  void renameProperties(boolean generatePseudoNames,
-      AnonymousFunctionNamingPolicy anonFunctionNamePolicy,
-      VariableMap prevPropertyMap) {
-    logger_.info("Renaming properties");
-    startPass("renameProperties");
-    RenameProperties rp = new RenameProperties(
-        this, generatePseudoNames, prevPropertyMap,
-        anonFunctionNamePolicy.getReservedCharacters());
-    process(rp);
-    propertyMap_ = rp.getPropertyMap();
-    endPass();
-  }
-
-  void invertContextualRenaming() {
-    logger_.info("Denormalizing local names");
-    startPass("invertNames");
-    process(MakeDeclaredNamesUnique.getContextualRenameInverter(this));
-    endPass();
-  }
-
-  void renamePrototypes(boolean aggressive,
-      AnonymousFunctionNamingPolicy anonFunctionNamePolicy,
-      VariableMap prevPropertyMap) {
-    logger_.info("Renaming prototypes");
-    startPass("renamePrototypes");
-    RenamePrototypes rp = new RenamePrototypes(this, aggressive,
-        anonFunctionNamePolicy.getReservedCharacters(),
-        prevPropertyMap);
-    process(rp);
-    propertyMap_ = rp.getPropertyMap();
-    endPass();
-  }
-
-  void renameLabels() {
-    logger_.info("Renaming labels");
-    startPass("renameLabels");
-    RenameLabels rn = new RenameLabels(this);
-    process(rn);
-    endPass();
-  }
-
-  void convertToDottedProperties() {
-    logger_.info("Converting quoted property accesses to dot syntax");
-    startPass("convertToDottedProperties");
-    process(new ConvertToDottedProperties(this));
-    endPass();
-  }
-
-  void instrumentFunctions() {
-    logger_.info("Instrumenting functions");
-    startPass("instrumentFunctions");
-    try {
-      FileReader templateFile =
-          new FileReader(options_.instrumentationTemplate);
-
-      process(new InstrumentFunctions(this,
-                                      functionNames_,
-                                      options_.instrumentationTemplate,
-                                      options_.appNameStr,
-                                      templateFile));
-    } catch (IOException e) {
-      report(JSError.make(READ_ERROR, options_.instrumentationTemplate));
-    }
-    endPass();
-  }
-
   void recordFunctionInformation() {
     logger_.info("Recording function information");
     startPass("recordFunctionInformation");
     RecordFunctionInformation recordFunctionInfoPass =
-        new RecordFunctionInformation(this, functionNames_);
+        new RecordFunctionInformation(
+            this, getPassConfig().getIntermediateState().functionNames);
     process(recordFunctionInfoPass);
     functionInformationMap_ = recordFunctionInfoPass.getMap();
     endPass();
@@ -1926,11 +1525,11 @@ public class Compiler extends AbstractCompiler {
   }
 
   VariableMap getVariableMap() {
-    return variableMap_;
+    return getPassConfig().getIntermediateState().variableMap;
   }
 
   VariableMap getPropertyMap() {
-    return propertyMap_;
+    return getPassConfig().getIntermediateState().propertyMap;
   }
 
   CompilerOptions getOptions() {
@@ -1983,7 +1582,6 @@ public class Compiler extends AbstractCompiler {
     private CompilerInput[] externs;
     private CompilerInput[] inputs;
     private JSModule[] modules;
-    private FunctionNames functionNames;
     private PassConfig.State passConfigState;
     private JSTypeRegistry typeRegistry;
     private boolean normalized;
@@ -2001,7 +1599,6 @@ public class Compiler extends AbstractCompiler {
     state.externs = externs_;
     state.inputs = inputs_;
     state.modules = modules_;
-    state.functionNames = functionNames_;
     state.passConfigState = getPassConfig().getIntermediateState();
     state.typeRegistry = typeRegistry;
     state.normalized = normalized;
@@ -2019,7 +1616,6 @@ public class Compiler extends AbstractCompiler {
     externs_ = state.externs;
     inputs_ = state.inputs;
     modules_ = state.modules;
-    functionNames_ = state.functionNames;
     passes = createPassConfigInternal();
     getPassConfig().setIntermediateState(state.passConfigState);
     typeRegistry = state.typeRegistry;

@@ -107,6 +107,12 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
   private final Map<ObjectType, ConcreteInstanceType> instanceFromJSType =
       Maps.newHashMap();
 
+  /**
+   * Memoized results of "createTypeIntersection" calls.
+   */
+  private final Map<ConcreteJSTypePair, ConcreteType> typeIntersectionMemos =
+      Maps.newHashMap();
+
   /** Scope storing the top-level variables and functions. */
   private ConcreteScope topScope;
 
@@ -433,8 +439,11 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       assigns.add(new Assignment((ConcreteSlot) fType.getThisSlot(), thisType));
       for (int i = 0; i < argTypes.size(); ++i) {
         ConcreteSlot variable = (ConcreteSlot) fType.getParameterSlot(i);
-        Preconditions.checkState(variable != null);
-        assigns.add(new Assignment(variable, argTypes.get(i)));
+        // TODO(johnlenz): Support "arguments" references in function bodies.
+        // For now, ignore anonymous arguments.
+        if (variable != null) {
+          assigns.add(new Assignment(variable, argTypes.get(i)));
+        }
       }
     }
     return assigns;
@@ -510,7 +519,11 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
              : recvType.getFunctionInstanceTypes()) {
           thisType = thisType.unionWith(instType);
         }
-        allInstantiatedTypes.add(thisType);
+        boolean added = allInstantiatedTypes.add(thisType);
+        if (added) {
+          // A new type instance invalidates the cached type intersections.
+          typeIntersectionMemos.clear();
+        }
       }
 
       List<ConcreteType> argTypes = Lists.newArrayList();
@@ -537,7 +550,9 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     }
 
     public Collection<Assignment> getAssignments(ConcreteScope scope) {
-      ConcreteType thisType = inferConcreteType(scope, firstArgument);
+      ConcreteType thisType = (firstArgument != null)
+          ? inferConcreteType(scope, firstArgument)
+          : getTopScope().getTypeOfThis();
       ConcreteType recvType = inferConcreteType(scope, receiver);
 
       if (recvType instanceof ConcreteInstanceType &&
@@ -1028,6 +1043,8 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
 
   /** Computes the concrete types that can result from the given expression. */
   ConcreteType inferConcreteType(ConcreteScope scope, Node expr) {
+    Preconditions.checkNotNull(scope);
+    Preconditions.checkNotNull(expr);
     ConcreteType ret;
     switch (expr.getType()) {
       case Token.NAME:
@@ -1161,7 +1178,15 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
 
   private ConcreteType createTypeIntersection(
       ConcreteType concreteType, JSType jsType) {
-    ConcreteType ret;
+    // TODO(johnlenz): Even with memoizing all the time of this pass is still 
+    // spent in this function (due to invalidation caused by changes to
+    // allInstantiatedTypes), specifically calls to ConcreteUnionType.unionWith
+    ConcreteJSTypePair key = new ConcreteJSTypePair(concreteType, jsType);
+    ConcreteType ret = typeIntersectionMemos.get(key);
+    if (ret != null) {
+      return ret;
+    }
+
     if (jsType == null || jsType.isUnknownType() || concreteType.isNone()) {
       ret = concreteType;
     } else if (concreteType.isUnion() || concreteType.isSingleton()) {
@@ -1195,6 +1220,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       }
     }
 
+    typeIntersectionMemos.put(key, ret);
     return ret;
   }
 
@@ -1329,5 +1355,50 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       }
     }
     return true;
+  }
+
+  /**
+   * A simple class used to pair a concrete type and a js type.  Used to
+   * memoize the results of a "createTypeIntersection" call.
+   */
+  static class ConcreteJSTypePair {
+    final ConcreteType concrete;
+    final JSType jstype;
+    final int hashcode;
+
+    ConcreteJSTypePair(ConcreteType concrete, JSType jstype) {
+      this.concrete = concrete;
+      this.jstype = jstype;
+      this.hashcode = concrete.hashCode() + getJSTypeHashCode();
+    }
+
+    private int getJSTypeHashCode() {
+      return jstype != null ? jstype.hashCode() : 0;
+    }
+
+    private boolean equalsJSType(JSType jsType) {
+      if (jsType == null || jstype == null) {
+        return jstype == jsType;
+      } else {
+        return jsType.equals(this.jstype);
+      }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof ConcreteJSTypePair) {
+        ConcreteJSTypePair pair = (ConcreteJSTypePair) o;
+        if ((pair.concrete.equals(this.concrete)
+            && equalsJSType(pair.jstype))) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return hashcode;
+    }
   }
 }

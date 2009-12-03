@@ -1,5 +1,6 @@
 com.google.javascript.jscomp
 com.google.javascript.jscomp.graph
 com.google.javascript.jscomp.parsing
+com.google.javascript.jscomp.testing
 com.google.javascript.rhino
 com.google.javascript.rhino.jstype

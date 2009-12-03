@@ -21,6 +21,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -28,10 +29,14 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Pass factories and meta-data for native JSCompiler passes.
@@ -64,6 +69,14 @@ public class DefaultPassConfig extends PassConfig {
       DiagnosticType.error("JSC_REPORT_PATH_IO_ERROR",
           "Error writing compiler report to {0}");
 
+  private static final DiagnosticType INPUT_MAP_PROP_PARSE =
+      DiagnosticType.error("JSC_INPUT_MAP_PROP_PARSE",
+          "Input property map parse error: {0}");
+
+  private static final DiagnosticType INPUT_MAP_VAR_PARSE =
+      DiagnosticType.error("JSC_INPUT_MAP_VAR_PARSE",
+          "Input variable map parse error: {0}");
+
   /**
    * A global namespace to share across checking passes.
    * TODO(nicksantos): This is a hack until I can get the namespace into
@@ -76,13 +89,75 @@ public class DefaultPassConfig extends PassConfig {
    */
   private TightenTypes tightenTypes = null;
 
+  /** Names exported by goog.exportSymbol. */
+  private Set<String> exportedNames = null;
+
+  /**
+   * Ids for cross-module method stubbing, so that each method has
+   * a unique id.
+   */
+  private CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator =
+      new CrossModuleMethodMotion.IdGenerator();
+
+  /**
+   * Keys are arguments passed to getCssName() found during compilation; values
+   * are the number of times the key appeared as an argument to getCssName().
+   */
+  private Map<String, Integer> cssNames = null;
+
+  /** The variable renaming map */
+  private VariableMap variableMap = null;
+
+  /** The property renaming map */
+  private VariableMap propertyMap = null;
+
+  /** The naming map for anonymous functions */
+  private VariableMap anonymousFunctionNameMap = null;
+
+  /** Fully qualified function names and globally unique ids */
+  private FunctionNames functionNames = null;
+
   public DefaultPassConfig(CompilerOptions options) {
     super(options);
   }
 
   @Override
+  State getIntermediateState() {
+    return new State(
+        cssNames == null ? null : Maps.newHashMap(cssNames),
+        exportedNames == null ? null :
+            Collections.unmodifiableSet(exportedNames),
+        crossModuleIdGenerator, variableMap, propertyMap,
+        anonymousFunctionNameMap, functionNames);
+  }
+
+  @Override
+  void setIntermediateState(State state) {
+    this.cssNames = state.cssNames == null ? null :
+        Maps.newHashMap(state.cssNames);
+    this.exportedNames = state.exportedNames == null ? null :
+        Sets.newHashSet(state.exportedNames);
+    this.crossModuleIdGenerator = state.crossModuleIdGenerator;
+    this.variableMap = state.variableMap;
+    this.propertyMap = state.propertyMap;
+    this.anonymousFunctionNameMap = state.anonymousFunctionNameMap;
+    this.functionNames = state.functionNames;
+  }
+
+  @Override
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = Lists.newArrayList();
+
+    if (options.nameAnonymousFunctionsOnly) {
+      if (options.anonymousFunctionNaming ==
+          AnonymousFunctionNamingPolicy.MAPPED) {
+        checks.add(nameMappedAnonymousFunctions);
+      } else if (options.anonymousFunctionNaming ==
+          AnonymousFunctionNamingPolicy.UNMAPPED) {
+        checks.add(nameUnmappedAnonymousFunctions);
+      }
+      return checks;
+    }
 
     if (options.checkSuspiciousCode) {
       checks.add(suspiciousCode);
@@ -198,6 +273,12 @@ public class DefaultPassConfig extends PassConfig {
 
     // Defines in code always need to be processed.
     checks.add(processDefines);
+
+    if (options.instrumentationTemplate != null ||
+        options.recordFunctionInformation) {
+      checks.add(computeFunctionNames);
+    }
+
     assertAllOneTimePasses(checks);
     return checks;
   }
@@ -316,6 +397,119 @@ public class DefaultPassConfig extends PassConfig {
     if (options.customPasses != null) {
       passes.add(getCustomPasses(
           CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
+    }
+
+    if (options.flowSensitiveInlineVariables) {
+      passes.add(flowSensitiveInlineVariables);
+    }
+
+    if (options.collapseAnonymousFunctions) {
+      passes.add(collapseAnonymousFunctions);
+    }
+
+    // Move functions before extracting prototype member declarations.
+    if (options.moveFunctionDeclarations) {
+      passes.add(moveFunctionDeclarations);
+    }
+
+    if (options.anonymousFunctionNaming ==
+        AnonymousFunctionNamingPolicy.MAPPED) {
+      passes.add(nameMappedAnonymousFunctions);
+    }
+
+    // The mapped name anonymous function pass makes use of information that
+    // the extract prototype member declarations pass removes so the former
+    // happens before the latter.
+    //
+    // Extracting prototype properties screws up the heuristic renaming
+    // policies, so never run it when those policies are requested.
+    if (options.extractPrototypeMemberDeclarations &&
+        (options.propertyRenaming != PropertyRenamingPolicy.HEURISTIC &&
+         options.propertyRenaming !=
+            PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC)) {
+      passes.add(extractPrototypeMemberDeclarations);
+    }
+
+    if (options.coalesceVariableNames) {
+      passes.add(coalesceVariableNames);
+    }
+
+    if (options.ambiguateProperties &&
+        (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED)) {
+      passes.add(ambiguateProperties);
+    }
+
+    if (options.propertyRenaming != PropertyRenamingPolicy.OFF) {
+      passes.add(renameProperties);
+    }
+
+    // This comes after property renaming because quoted property names must
+    // not be renamed.
+    if (options.convertToDottedProperties) {
+      passes.add(convertToDottedProperties);
+    }
+
+    // Property renaming must happen before this pass runs since this
+    // pass may convert dotted properties into quoted properties.  It
+    // is beneficial to run before alias strings, alias keywords and
+    // variable renaming.
+    if (options.rewriteFunctionExpressions) {
+      passes.add(rewriteFunctionExpressions);
+    }
+
+    // This comes after converting quoted property accesses to dotted property
+    // accesses in order to avoid aliasing property names.
+    if (!options.aliasableStrings.isEmpty() || options.aliasAllStrings) {
+      passes.add(aliasStrings);
+    }
+
+    if (options.aliasExternals) {
+      passes.add(aliasExternals);
+    }
+
+    if (options.aliasKeywords) {
+      passes.add(aliasKeywords);
+    }
+
+    if (options.collapseVariableDeclarations) {
+      passes.add(collapseVariableDeclarations);
+    }
+
+    passes.add(denormalize);
+
+    if (options.instrumentationTemplate != null) {
+      passes.add(instrumentFunctions);
+    }
+
+    if (options.variableRenaming != VariableRenamingPolicy.ALL) {
+      // If we're leaving some (or all) variables with their old names,
+      // then we need to undo any of the markers we added for distinguishing
+      // local variables ("$$1") or constants ("$$constant").
+      passes.add(invertContextualRenaming);
+    }
+
+
+    if (options.variableRenaming != VariableRenamingPolicy.OFF) {
+      passes.add(renameVars);
+    }
+
+    // This pass should run after names stop changing.
+    if (options.processObjectPropertyString) {
+      passes.add(objectPropertyStringPostprocess);
+    }
+
+    if (options.labelRenaming) {
+      passes.add(renameLabels);
+    }
+
+    if (options.anonymousFunctionNaming ==
+        AnonymousFunctionNamingPolicy.UNMAPPED) {
+      passes.add(nameUnmappedAnonymousFunctions);
+    }
+
+    // Safety check
+    if (options.checkSymbols) {
+      passes.add(sanityCheckVars);
     }
 
     return passes;
@@ -492,7 +686,7 @@ public class DefaultPassConfig extends PassConfig {
         @Override
         public void process(Node externs, Node root) {
           pass.process(externs, root);
-          setExportedNames(pass.getExportedVariableNames());
+          exportedNames = pass.getExportedVariableNames();
         }
       };
     }
@@ -523,13 +717,13 @@ public class DefaultPassConfig extends PassConfig {
       return new CompilerPass() {
         @Override
         public void process(Node externs, Node jsRoot) {
-          Map<String, Integer> cssNames = null;
+          Map<String, Integer> newCssNames = null;
           if (options.gatherCssNames) {
-            cssNames = Maps.newHashMap();
+            newCssNames = Maps.newHashMap();
           }
-          (new ReplaceCssNames(compiler, cssNames)).process(
+          (new ReplaceCssNames(compiler, newCssNames)).process(
               externs, jsRoot);
-          setCssNames(cssNames);
+          cssNames = newCssNames;
         }
       };
     }
@@ -789,6 +983,15 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new ConstCheck(compiler);
+    }
+  };
+
+  /** Computes the names of functions for later analysis. */
+  private final PassFactory computeFunctionNames =
+      new PassFactory("computeFunctionNames", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return ((functionNames = new FunctionNames(compiler)));
     }
   };
 
@@ -1131,10 +1334,344 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new CrossModuleMethodMotion(
-          compiler, getCrossModuleIdGenerator(),
+          compiler, crossModuleIdGenerator,
           // Only move properties in externs if we're not treating
           // them as exports.
           options.removeUnusedPrototypePropertiesInExterns);
+    }
+  };
+
+  /** A data-flow based variable inliner. */
+  private final PassFactory flowSensitiveInlineVariables =
+      new PassFactory("flowSensitiveInlineVariables", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new FlowSensitiveInlineVariables(compiler);
+    }
+  };
+
+  /** Uses register-allocation algorithms to use fewer variables. */
+  private final PassFactory coalesceVariableNames =
+      new PassFactory("coalesceVariableNames", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new CoalesceVariableNames(compiler);
+    }
+  };
+
+  /**
+   * Some simple, local collapses (e.g., {@code var x; var y;} becomes
+   * {@code var x,y;}.
+   */
+  private final PassFactory collapseVariableDeclarations =
+      new PassFactory("collapseVariableDeclarations", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      compiler.setUnnormalized();
+      return new CollapseVariableDeclarations(compiler);
+    }
+  };
+
+  /**
+   * Extracts common sub-expressions.
+   */
+  private final PassFactory extractPrototypeMemberDeclarations =
+      new PassFactory("extractPrototypeMemberDeclarations", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new ExtractPrototypeMemberDeclarations(compiler);
+    }
+  };
+
+  /** Rewrites common function definitions to be more compact. */
+  private final PassFactory rewriteFunctionExpressions =
+      new PassFactory("rewriteFunctionExpressions", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new FunctionRewriter(compiler);
+    }
+  };
+
+  /** Collapses functions to not use the VAR keyword. */
+  private final PassFactory collapseAnonymousFunctions =
+      new PassFactory("collapseAnonymousFunctions", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new CollapseAnonymousFunctions(compiler);
+    }
+  };
+
+  /** Moves function declarations to the top, to simulate actual hoisting. */
+  private final PassFactory moveFunctionDeclarations =
+      new PassFactory("moveFunctionDeclarations", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new MoveFunctionDeclarations(compiler);
+    }
+  };
+
+  private final PassFactory nameUnmappedAnonymousFunctions =
+      new PassFactory("nameAnonymousFunctions", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new NameAnonymousFunctions(compiler);
+    }
+  };
+
+  private final PassFactory nameMappedAnonymousFunctions =
+      new PassFactory("nameAnonymousFunctions", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override public void process(Node externs, Node root) {
+          NameAnonymousFunctionsMapped naf =
+              new NameAnonymousFunctionsMapped(compiler);
+          naf.process(externs, root);
+          anonymousFunctionNameMap = naf.getFunctionMap();
+        }
+      };
+    }
+  };
+
+  /** Alias external symbols. */
+  private final PassFactory aliasExternals =
+      new PassFactory("aliasExternals", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new AliasExternals(compiler, compiler.getModuleGraph(),
+          options.unaliasableGlobals, options.aliasableGlobals);
+    }
+  };
+
+  /**
+   * Alias string literals with global variables, to avoid creating lots of
+   * transient objects.
+   */
+  private final PassFactory aliasStrings =
+      new PassFactory("aliasStrings", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new AliasStrings(
+          compiler,
+          compiler.getModuleGraph(),
+          options.aliasAllStrings ? null : options.aliasableStrings,
+          options.aliasStringsBlacklist,
+          options.outputJsStringUsage);
+    }
+  };
+
+  /** Aliases common keywords (true, false) */
+  private final PassFactory aliasKeywords =
+      new PassFactory("aliasKeywords", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new AliasKeywords(compiler);
+    }
+  };
+
+  /** Handling for the ObjectPropertyString primitive. */
+  private final PassFactory objectPropertyStringPostprocess =
+      new PassFactory("ObjectPropertyStringPostprocess", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new ObjectPropertyStringPostprocess(compiler);
+    }
+  };
+
+  /**
+   * Renames properties so that the two properties that never appear on
+   * the same object get the same name.
+   */
+  private final PassFactory ambiguateProperties =
+      new PassFactory("ambiguateProperties", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new AmbiguateProperties(
+          compiler, options.anonymousFunctionNaming.getReservedCharacters());
+    }
+  };
+
+  /** Normalizes the AST for optimizations. */
+  private final PassFactory normalize =
+      new PassFactory("normalize", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      compiler.setNormalized();
+      return new Normalize(compiler, false);
+    }
+  };
+
+  /** Denormalize the AST for code generation. */
+  private final PassFactory denormalize =
+      new PassFactory("denormalize", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      compiler.setUnnormalized();
+      return new Denormalize(compiler);
+    }
+  };
+
+  /** Inverting name normalization. */
+  private final PassFactory invertContextualRenaming =
+      new PassFactory("invertNames", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return MakeDeclaredNamesUnique.getContextualRenameInverter(compiler);
+    }
+  };
+
+  /**
+   * Renames properties.
+   */
+  private final PassFactory renameProperties =
+      new PassFactory("renameProperties", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      VariableMap map = null;
+      if (options.inputPropertyMapSerialized != null) {
+        try {
+          map = VariableMap.fromBytes(options.inputPropertyMapSerialized);
+        } catch (ParseException e) {
+          return new ErrorPass(compiler,
+              JSError.make(INPUT_MAP_PROP_PARSE, e.getMessage()));
+        }
+      }
+
+      final VariableMap prevPropertyMap = map;
+      return new CompilerPass() {
+        @Override public void process(Node externs, Node root) {
+          propertyMap = runPropertyRenaming(
+              compiler, prevPropertyMap, externs, root);
+        }
+      };
+    }
+  };
+
+  private VariableMap runPropertyRenaming(
+      AbstractCompiler compiler, VariableMap prevPropertyMap,
+      Node externs, Node root) {
+    char[] reservedChars =
+        options.anonymousFunctionNaming.getReservedCharacters();
+    switch (options.propertyRenaming) {
+      case HEURISTIC:
+        RenamePrototypes rproto = new RenamePrototypes(compiler, false,
+            reservedChars, prevPropertyMap);
+        rproto.process(externs, root);
+        return rproto.getPropertyMap();
+
+      case AGGRESSIVE_HEURISTIC:
+        RenamePrototypes rproto2 = new RenamePrototypes(compiler, true,
+            reservedChars, prevPropertyMap);
+        rproto2.process(externs, root);
+        return rproto2.getPropertyMap();
+
+      case ALL_UNQUOTED:
+        RenameProperties rprop = new RenameProperties(
+            compiler, options.generatePseudoNames, prevPropertyMap,
+            reservedChars);
+        rprop.process(externs, root);
+        return rprop.getPropertyMap();
+
+      default:
+        throw new IllegalStateException(
+            "Unrecognized property renaming policy");
+    }
+  }
+
+  /** Renames variables. */
+  private final PassFactory renameVars =
+      new PassFactory("renameVars", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      VariableMap map = null;
+      if (options.inputVariableMapSerialized != null) {
+        try {
+          map = VariableMap.fromBytes(options.inputVariableMapSerialized);
+        } catch (ParseException e) {
+          return new ErrorPass(compiler,
+              JSError.make(INPUT_MAP_VAR_PARSE, e.getMessage()));
+        }
+      }
+
+      final VariableMap prevVariableMap = map;
+      return new CompilerPass() {
+        @Override public void process(Node externs, Node root) {
+          variableMap = runVariableRenaming(
+              compiler, prevVariableMap, externs, root);
+        }
+      };
+    }
+  };
+
+  private VariableMap runVariableRenaming(
+      AbstractCompiler compiler, VariableMap prevVariableMap,
+      Node externs, Node root) {
+    char[] reservedChars =
+        options.anonymousFunctionNaming.getReservedCharacters();
+    boolean preserveAnonymousFunctionNames =
+        options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
+    RenameVars rn = new RenameVars(
+        compiler,
+        options.renamePrefix,
+        options.variableRenaming == VariableRenamingPolicy.LOCAL,
+        preserveAnonymousFunctionNames,
+        options.generatePseudoNames,
+        prevVariableMap,
+        reservedChars,
+        exportedNames);
+    rn.process(externs, root);
+    return rn.getVariableMap();
+  }
+
+  /** Renames labels */
+  private final PassFactory renameLabels =
+      new PassFactory("renameLabels", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new RenameLabels(compiler);
+    }
+  };
+
+  /** Convert bracket access to dot access */
+  private final PassFactory convertToDottedProperties =
+      new PassFactory("convertToDottedProperties", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new ConvertToDottedProperties(compiler);
+    }
+  };
+
+  /** Checks that all variables are defined. */
+  private final PassFactory sanityCheckVars =
+      new PassFactory("sanityCheckVars", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new VarCheck(compiler, true);
+    }
+  };
+
+  /** Adds instrumentations according to an instrumentation template. */
+  private final PassFactory instrumentFunctions =
+      new PassFactory("instrumentFunctions", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override public void process(Node externs, Node root) {
+          try {
+            FileReader templateFile =
+                new FileReader(options.instrumentationTemplate);
+            (new InstrumentFunctions(
+                compiler, functionNames,
+                options.instrumentationTemplate,
+                options.appNameStr,
+                templateFile)).process(externs, root);
+          } catch (IOException e) {
+            compiler.report(
+                JSError.make(AbstractCompiler.READ_ERROR,
+                    options.instrumentationTemplate));
+          }
+        }
+      };
     }
   };
 
@@ -1210,16 +1747,20 @@ public class DefaultPassConfig extends PassConfig {
   /** A compiler pass that just reports an error. */
   private static class ErrorPass implements CompilerPass {
     private final AbstractCompiler compiler;
-    private final DiagnosticType error;
+    private final JSError error;
 
     private ErrorPass(AbstractCompiler compiler, DiagnosticType error) {
+      this(compiler, JSError.make(error));
+    }
+
+    private ErrorPass(AbstractCompiler compiler, JSError error) {
       this.compiler = compiler;
       this.error = error;
     }
 
     @Override
     public void process(Node externs, Node root) {
-      compiler.report(JSError.make(error));
+      compiler.report(error);
     }
   }
 

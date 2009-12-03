@@ -31,6 +31,9 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 *
  */
 public abstract class AbstractCompiler implements SourceExcerptProvider {
+  static final DiagnosticType READ_ERROR = DiagnosticType.error(
+      "JSC_READ_ERROR", "Cannot read: {0}");
+
   // TODO(nicksantos): Decide if all of these are really necessary.
   // Many of them are just accessors that should be passed to the
   // CompilerPass's constructor.
@@ -202,4 +205,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Gets the error manager.
    */
   abstract public ErrorManager getErrorManager();
+
+  /**
+   * Set if the normalization pass has been done.
+   * Note: non-private to enable test cases that require the Normalize pass.
+   */
+  abstract void setNormalized();
+
+  /**
+   * Set once unnormalizing passes have been start.
+   * Note: non-private to enable test cases that require the Normalize pass.
+   */
+  abstract void setUnnormalized();
 }

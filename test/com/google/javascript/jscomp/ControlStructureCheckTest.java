@@ -80,6 +80,15 @@ public class ControlStructureCheckTest extends CompilerTestCase {
     assertNoError("a:switch(1){case(1):function f(){a:while(1){continue a;}}}");
   }
 
+  public void testUseOfWith1() {
+    testSame("with(a){}", ControlStructureCheck.USE_OF_WITH);
+  }
+
+  public void testUseOfWith2() {
+    testSame("/** @suppress {with} */" +
+             "with(a){}");
+  }
+
   private void assertNoError(String js) {
     testSame(js);
   }

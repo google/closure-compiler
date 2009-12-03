@@ -78,7 +78,7 @@ public class JsAst implements SourceAst {
       parse(compiler, sourceFile.getName(), sourceFile.getCode());
     } catch (IOException e) {
       compiler.report(
-          JSError.make(Compiler.READ_ERROR, sourceFile.getName()));
+          JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
     }
   }
 
@@ -91,7 +91,7 @@ public class JsAst implements SourceAst {
           compiler.getDefaultErrorReporter(),
           logger_);
     } catch (IOException e) {
-      compiler.report(JSError.make(Compiler.READ_ERROR, sourceName));
+      compiler.report(JSError.make(AbstractCompiler.READ_ERROR, sourceName));
     }
 
     if (root == null) {
