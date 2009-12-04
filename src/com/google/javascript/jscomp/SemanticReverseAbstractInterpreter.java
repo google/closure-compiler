@@ -453,8 +453,8 @@ class SemanticReverseAbstractInterpreter
     }
 
     @Override
-    protected JSType caseTopType(JSType topType) {
-      return topType;
+    protected JSType caseTopType(JSType type) {
+      return applyCommonRestriction(type);
     }
 
     @Override

@@ -874,7 +874,7 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether the given node is a FOR, DO, WHILE, WITH, or IF node.
+   * Determines whether the given node is a FOR, DO, or WHILE node.
    */
   static boolean isLoopStructure(Node n) {
     switch (n.getType()) {
