@@ -62,6 +62,12 @@ public abstract class CompilerTestCase extends TestCase  {
   private boolean normalizeEnabled = false;
 
   /**
+   * An expected symbol table error. Only useful for testing the
+   * symbol table error-handling.
+   */
+  private DiagnosticType expectedSymbolTableError = null;
+
+  /**
    * Whether the MarkNoSideEffectsCalls pass runs before the pass being tested
    */
   private boolean markNoSideEffects = false;
@@ -666,21 +672,27 @@ public abstract class CompilerTestCase extends TestCase  {
           0, compiler.getErrorCount());
 
       // Verify the symbol table.
-      ErrorManager symbolTableWarnings = new BlackHoleErrorManager(compiler);
+      ErrorManager symbolTableErrorManager =
+          new BlackHoleErrorManager(compiler);
       Node expectedRoot = parseExpectedJs(expected);
       SymbolTable table = compiler.acquireSymbolTable();
       table.verify(expectedRoot, mainRoot);
       table.release();
 
+      JSError[] stErrors = symbolTableErrorManager.getErrors();
+      if (expectedSymbolTableError != null) {
+        assertEquals("There should be one error.", 1, stErrors.length);
+        assertEquals(expectedSymbolTableError, stErrors[0].getType());
+      } else {
+        assertEquals("Unexpected symbol table error(s): " +
+            Join.join("\n", stErrors),
+            0, stErrors.length);
+      }
+
       if (warning == null) {
         assertEquals(
             "Unexpected warning(s): " + Join.join("\n", aggregateWarnings),
             0, aggregateWarningCount);
-      } else if (symbolTableWarnings.getWarnings().length > 0) {
-        JSError[] warnings = symbolTableWarnings.getWarnings();
-        assertEquals("There should be one symbol table warning",
-            1, warnings.length);
-        assertEquals(warning, warnings[0].getType());
       } else {
         assertEquals("There should be one warning, repeated " + numRepetitions +
             " time(s).", numRepetitions, aggregateWarningCount);
@@ -842,5 +854,9 @@ public abstract class CompilerTestCase extends TestCase  {
   private Compiler createCompiler() {
     Compiler compiler = new Compiler();
     return compiler;
+  }
+
+  protected void setExpectedSymbolTableError(DiagnosticType type) {
+    this.expectedSymbolTableError = type;
   }
 }

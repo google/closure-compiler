@@ -895,9 +895,11 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("for(;!true;) { foo() }", "");
     fold("for(;void 0;) { foo() }", "");
     fold("for(;undefined;) { foo() }", "");
-    fold("for(;!false;) foo() ", "for(;1;) foo()");
-    fold("for(;true;) foo() ", "for(;1;) foo() ");
-    fold("for(;!void 0;) foo()", "for(;1;) foo()");
+    fold("for(;!false;) foo() ", "for(;;) foo()");
+    fold("for(;true;) foo() ", "for(;;) foo() ");
+    fold("for(;1;) foo()", "for(;;) foo()");
+    foldSame("for(;;) foo()");
+    fold("for(;!void 0;) foo()", "for(;;) foo()");
     fold("for(;false;) { var a = 0; }", "var a");
 
     // Make sure it plays nice with minimizing

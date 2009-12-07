@@ -22,6 +22,17 @@ package com.google.javascript.jscomp;
 *
  */
 public class ControlStructureCheckTest extends CompilerTestCase {
+  // Rhino parse error message text
+  final String UNLABELED_BREAK =
+    "unlabelled break must be inside loop or switch";
+
+  final String UNEXPECTED_CONTINUE = "continue must be inside loop";
+
+  final String UNEXPECTED_LABLED_CONTINUE =
+    "continue can only use labeles of iteration statements";
+
+  final String UNDEFINED_LABEL = "undefined label";
+
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new ControlStructureCheck(compiler);
@@ -68,7 +79,7 @@ public class ControlStructureCheckTest extends CompilerTestCase {
   }
 
   public void testContinueToLabelSwitch() {
-    assertInvalidLabelContinue(
+    assertInvalidLabeledContinue(
         "while(1) {a: switch(1) {case(1): continue a; }}");
   }
 
@@ -76,8 +87,13 @@ public class ControlStructureCheckTest extends CompilerTestCase {
     assertNoError("b: while(1) { a: switch(1) { case(1): continue b; } }");
   }
 
-  public void testContinueNotCrossFunction() {
+  public void testContinueNotCrossFunction1() {
     assertNoError("a:switch(1){case(1):function f(){a:while(1){continue a;}}}");
+  }
+
+  public void testContinueNotCrossFunction2() {
+    assertUndefinedLabel(
+        "a:switch(1){case(1):function f(){while(1){continue a;}}}");
   }
 
   public void testUseOfWith1() {
@@ -94,31 +110,26 @@ public class ControlStructureCheckTest extends CompilerTestCase {
   }
 
   private void assertInvalidBreak(String js) {
-    assertSomeError(js, ControlStructureCheck.INVALID_BREAK);
+    testParseError(js, UNLABELED_BREAK);
   }
 
   private void assertInvalidContinue(String js) {
-    assertSomeError(js, ControlStructureCheck.INVALID_CONTINUE);
+    testParseError(js, UNEXPECTED_CONTINUE);
   }
 
-  private void assertInvalidLabelContinue(String js) {
-    assertSomeError(js, ControlStructureCheck.INVALID_LABEL_CONTINUE);
+  private void assertInvalidLabeledContinue(String js) {
+    testParseError(js, UNEXPECTED_LABLED_CONTINUE);
   }
 
-  /**
-   * Tests that either a parse error or the given error is triggered.
-   * The new parser is stricter with control structure checks, so it will catch
-   * some of these at parse time.
-   */
-  private void assertSomeError(String js, DiagnosticType error) {
-    if (!hasParseError(js)) {
-      test(js, js, error);
-    }
+  private void assertUndefinedLabel(String js) {
+    testParseError(js, UNDEFINED_LABEL);
   }
 
-  private boolean hasParseError(String js) {
+  private void testParseError(String js, String errorText) {
     Compiler compiler = new Compiler();
     compiler.parseTestCode(js);
-    return compiler.getErrorCount() > 0;
+    assertTrue(compiler.getErrorCount() == 1);
+    String msg = compiler.getErrors()[0].toString();
+    assertTrue(msg.contains(errorText));
   }
 }

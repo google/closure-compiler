@@ -120,7 +120,7 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  boolean isNominalType() {
+  public boolean isNominalType() {
     return referencedType.isNominalType();
   }
 

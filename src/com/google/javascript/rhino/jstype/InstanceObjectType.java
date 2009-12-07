@@ -142,7 +142,7 @@ public final class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
-  boolean isNominalType() {
+  public boolean isNominalType() {
     return hasReferenceName();
   }
 

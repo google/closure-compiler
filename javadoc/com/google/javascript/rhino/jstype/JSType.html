@@ -488,6 +488,15 @@ Represents JavaScript value types.<p>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNominalType()">isNominalType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether this type is a nominal type (a named instance object or
+ a named enum).</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isNoObjectType()">isNoObjectType</A></B>()</CODE>
 
 <BR>
@@ -1261,6 +1270,23 @@ public boolean <B>isConstructor</B>()</PRE>
 <DL>
 <DD>Whether this type is a <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype"><CODE>FunctionType</CODE></A> that is a constructor or a
  named type that points to such a type.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isNominalType()"><!-- --></A><H3>
+isNominalType</H3>
+<PRE>
+public boolean <B>isNominalType</B>()</PRE>
+<DL>
+<DD>Whether this type is a nominal type (a named instance object or
+ a named enum).
 <P>
 <DD><DL>
 </DL>

@@ -225,6 +225,7 @@ public class Compiler extends AbstractCompiler {
     moduleGraph_ = null;
     inputs_ = makeCompilerInput(inputs, false);
     options_ = options;
+    initBasedOnOptions();
 
     initInputsByNameMap();
   }
@@ -257,9 +258,19 @@ public class Compiler extends AbstractCompiler {
     }
     inputs_ = getAllInputsFromModules();
     options_ = options;
-
+    initBasedOnOptions();
 
     initInputsByNameMap();
+  }
+
+  /**
+   * Do any initialization that is dependent on the compiler options.
+   */
+  private void initBasedOnOptions() {
+    // Create the source map if necessary.
+    if (options_.sourceMapOutputPath != null) {
+      sourceMap_ = new SourceMap();
+    }
   }
 
   private CompilerInput[] makeCompilerInput(
@@ -618,11 +629,6 @@ public class Compiler extends AbstractCompiler {
     // 2) ReplaceMessages, stripCode, and potentially custom passes rely on
     // unmodified local names.
     normalize();
-
-    // Create the source map if necessary.
-    if (options_.sourceMapOutputPath != null) {
-      this.sourceMap_ = new SourceMap();
-    }
   }
 
   private void externExports() {

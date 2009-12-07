@@ -152,7 +152,7 @@ public class NamedType extends ProxyObjectType {
   }
 
   @Override
-  boolean isNominalType() {
+  public boolean isNominalType() {
     return true;
   }
 

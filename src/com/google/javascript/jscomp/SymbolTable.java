@@ -44,17 +44,17 @@ import java.util.Map;
  */
 class SymbolTable implements ScopeCreator, CodeChangeHandler {
   static final DiagnosticType MISSING_VARIABLE =
-      DiagnosticType.warning(
+      DiagnosticType.error(
           "JSC_MISSING_VARIABLE",
           "Missing variable name: {0}");
 
   static final DiagnosticType MOVED_VARIABLE =
-      DiagnosticType.warning(
+      DiagnosticType.error(
           "JSC_MOVED_VARIABLE",
           "Moved variable name: {0}");
 
   static final DiagnosticType VARIABLE_COUNT_MISMATCH =
-      DiagnosticType.warning(
+      DiagnosticType.error(
           "JSC_VARIABLE_COUNT_MISMATCH",
           "Variable count does not match." +
           "\nCached : {0}\nActual : {1}");

@@ -50,19 +50,33 @@ class SanityCheck implements CompilerPass {
 
   public void process(Node externs, Node root) {
     sanityCheckNormalization(externs, root);
-    sanityCheckCodeGeneration(root);
+    Node reparsedRoot = sanityCheckCodeGeneration(root);
+    if (reparsedRoot != null) {
+      sanityCheckSymbolTable(reparsedRoot, root);
+    }
+  }
+
+  /**
+   * Sanity checks that symbol table is up-to-date.
+   */
+  private void sanityCheckSymbolTable(Node reparsedRoot, Node originalRoot) {
+    SymbolTable table = compiler.acquireSymbolTable();
+    table.verify(reparsedRoot, originalRoot);
+    table.release();
   }
 
   /**
    * Sanity checks code generation by performing it once, parsing the result,
    * then generating code from the second parse tree to verify that it matches
    * the code generated from the first parse tree.
+   *
+   * @return The regenerated parse tree. Null on error.
    */
-  private void sanityCheckCodeGeneration(Node root) {
+  private Node sanityCheckCodeGeneration(Node root) {
     if (compiler.hasHaltingErrors()) {
       // Don't even bother checking code generation if we already know the
       // the code is bad.
-      return;
+      return null;
     }
 
     String source = compiler.toSource(root);
@@ -70,7 +84,7 @@ class SanityCheck implements CompilerPass {
     if (compiler.hasHaltingErrors()) {
       compiler.report(JSError.make(CANNOT_PARSE_GENERATED_CODE,
               StringUtil.truncateAtMaxLength(source, 100, true)));
-      return;
+      return null;
     }
 
     String source2 = compiler.toSource(root2);
@@ -79,6 +93,8 @@ class SanityCheck implements CompilerPass {
               StringUtil.truncateAtMaxLength(source, 100, true),
               StringUtil.truncateAtMaxLength(source2, 100, true)));
     }
+
+    return root2;
   }
 
   /**

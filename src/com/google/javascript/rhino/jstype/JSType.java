@@ -269,7 +269,7 @@ public abstract class JSType implements Serializable {
    * Whether this type is a nominal type (a named instance object or
    * a named enum).
    */
-  boolean isNominalType() {
+  public boolean isNominalType() {
     return false;
   }
 

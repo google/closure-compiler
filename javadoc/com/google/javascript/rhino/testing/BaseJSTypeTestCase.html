@@ -1,0 +1,1476 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+BaseJSTypeTestCase (Compiler)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../../dev_javadoc.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="BaseJSTypeTestCase (Compiler)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/testing/TestErrorReporter.html" title="class in com.google.javascript.rhino.testing"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../index.html?com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="BaseJSTypeTestCase.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+com.google.javascript.rhino.testing</FONT>
+<BR>
+Class BaseJSTypeTestCase</H2>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by ">junit.framework.Assert
+      <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by ">junit.framework.TestCase
+          <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.rhino.testing.BaseJSTypeTestCase</B>
+</PRE>
+<DL>
+<DT><B>All Implemented Interfaces:</B> <DD>junit.framework.Test</DD>
+</DL>
+<HR>
+<DL>
+<DT><PRE>public abstract class <B>BaseJSTypeTestCase</B><DT>extends junit.framework.TestCase</DL>
+</PRE>
+
+<P>
+<HR>
+
+<P>
+<!-- =========== FIELD SUMMARY =========== -->
+
+<A NAME="field_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Field Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#ALL_NATIVE_EXTERN_TYPES">ALL_NATIVE_EXTERN_TYPES</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A definition of all extern types.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#ALL_TYPE">ALL_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#ARRAY_FUNCTION_TYPE">ARRAY_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#ARRAY_TYPE">ARRAY_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#BOOLEAN_OBJECT_FUNCTION_TYPE">BOOLEAN_OBJECT_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#BOOLEAN_OBJECT_TYPE">BOOLEAN_OBJECT_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#BOOLEAN_TYPE">BOOLEAN_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#CHECKED_UNKNOWN_TYPE">CHECKED_UNKNOWN_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#DATE_FUNCTION_TYPE">DATE_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#DATE_TYPE">DATE_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#ERROR_FUNCTION_TYPE">ERROR_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#ERROR_TYPE">ERROR_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/testing/TestErrorReporter.html" title="class in com.google.javascript.rhino.testing">TestErrorReporter</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#errorReporter">errorReporter</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#EVAL_ERROR_FUNCTION_TYPE">EVAL_ERROR_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#EVAL_ERROR_TYPE">EVAL_ERROR_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#FUNCTION_FUNCTION_TYPE">FUNCTION_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#FUNCTION_INSTANCE_TYPE">FUNCTION_INSTANCE_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#FUNCTION_PROTOTYPE">FUNCTION_PROTOTYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#GREATEST_FUNCTION_TYPE">GREATEST_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#LEAST_FUNCTION_TYPE">LEAST_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#MATH_TYPE">MATH_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;int</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#NATIVE_PROPERTIES_COUNT">NATIVE_PROPERTIES_COUNT</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#NO_OBJECT_TYPE">NO_OBJECT_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#NO_TYPE">NO_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#NULL_TYPE">NULL_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#NUMBER_OBJECT_FUNCTION_TYPE">NUMBER_OBJECT_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#NUMBER_OBJECT_TYPE">NUMBER_OBJECT_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#NUMBER_STRING_BOOLEAN">NUMBER_STRING_BOOLEAN</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#NUMBER_TYPE">NUMBER_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#OBJECT_FUNCTION_TYPE">OBJECT_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#OBJECT_NUMBER_STRING">OBJECT_NUMBER_STRING</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#OBJECT_NUMBER_STRING_BOOLEAN">OBJECT_NUMBER_STRING_BOOLEAN</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#OBJECT_PROTOTYPE">OBJECT_PROTOTYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#OBJECT_TYPE">OBJECT_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#RANGE_ERROR_FUNCTION_TYPE">RANGE_ERROR_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#RANGE_ERROR_TYPE">RANGE_ERROR_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#REFERENCE_ERROR_FUNCTION_TYPE">REFERENCE_ERROR_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#REFERENCE_ERROR_TYPE">REFERENCE_ERROR_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#REGEXP_FUNCTION_TYPE">REGEXP_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#REGEXP_TYPE">REGEXP_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#registry">registry</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#STRING_OBJECT_FUNCTION_TYPE">STRING_OBJECT_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#STRING_OBJECT_TYPE">STRING_OBJECT_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#STRING_TYPE">STRING_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#SYNTAX_ERROR_FUNCTION_TYPE">SYNTAX_ERROR_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#SYNTAX_ERROR_TYPE">SYNTAX_ERROR_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#TYPE_ERROR_FUNCTION_TYPE">TYPE_ERROR_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#TYPE_ERROR_TYPE">TYPE_ERROR_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#U2U_CONSTRUCTOR_TYPE">U2U_CONSTRUCTOR_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#U2U_FUNCTION_TYPE">U2U_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#UNKNOWN_TYPE">UNKNOWN_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#URI_ERROR_FUNCTION_TYPE">URI_ERROR_FUNCTION_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#URI_ERROR_TYPE">URI_ERROR_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#VOID_TYPE">VOID_TYPE</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+<A NAME="constructor_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Constructor Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#BaseJSTypeTestCase()">BaseJSTypeTestCase</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#addNativeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry)">addNativeProperties</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a basic set of properties to the native types.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.JSTypeExpression)">assertTypeEquals</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;expected,
+                 <A HREF="../../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&nbsp;actual)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Asserts that a a type expression resolves to the correct <code>JSType</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)">assertTypeEquals</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;expected,
+                 <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;actual)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Asserts that a Node representing a type expression resolves to the
+ correct <code>JSType</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#createNullableType(com.google.javascript.rhino.jstype.JSType)">createNullableType</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#createOptionalType(com.google.javascript.rhino.jstype.JSType)">createOptionalType</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html" title="class in com.google.javascript.rhino.jstype">RecordTypeBuilder</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#createRecordTypeBuilder()">createRecordTypeBuilder</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#createUnionType(com.google.javascript.rhino.jstype.JSType...)">createUnionType</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>...&nbsp;variants)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#initTypes()">initTypes</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#resolve(com.google.javascript.rhino.JSTypeExpression, java.lang.String...)">resolve</A></B>(<A HREF="../../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&nbsp;n,
+        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>...&nbsp;warnings)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Resolves a type expression, expecting the given warnings.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#setUp()">setUp</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_junit.framework.TestCase"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class junit.framework.TestCase</B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE>countTestCases, createResult, getName, run, run, runBare, runTest, setName, tearDown, toString</CODE></TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_junit.framework.Assert"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class junit.framework.Assert</B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE>assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertEquals, assertFalse, assertFalse, assertNotNull, assertNotNull, assertNotSame, assertNotSame, assertNull, assertNull, assertSame, assertSame, assertTrue, assertTrue, fail, fail</CODE></TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ FIELD DETAIL =========== -->
+
+<A NAME="field_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Field Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="registry"><!-- --></A><H3>
+registry</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A> <B>registry</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="errorReporter"><!-- --></A><H3>
+errorReporter</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/testing/TestErrorReporter.html" title="class in com.google.javascript.rhino.testing">TestErrorReporter</A> <B>errorReporter</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="ALL_TYPE"><!-- --></A><H3>
+ALL_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>ALL_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="NO_OBJECT_TYPE"><!-- --></A><H3>
+NO_OBJECT_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>NO_OBJECT_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="NO_TYPE"><!-- --></A><H3>
+NO_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>NO_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="ARRAY_FUNCTION_TYPE"><!-- --></A><H3>
+ARRAY_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>ARRAY_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="ARRAY_TYPE"><!-- --></A><H3>
+ARRAY_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>ARRAY_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="BOOLEAN_OBJECT_FUNCTION_TYPE"><!-- --></A><H3>
+BOOLEAN_OBJECT_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>BOOLEAN_OBJECT_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="BOOLEAN_OBJECT_TYPE"><!-- --></A><H3>
+BOOLEAN_OBJECT_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>BOOLEAN_OBJECT_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="BOOLEAN_TYPE"><!-- --></A><H3>
+BOOLEAN_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>BOOLEAN_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="CHECKED_UNKNOWN_TYPE"><!-- --></A><H3>
+CHECKED_UNKNOWN_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>CHECKED_UNKNOWN_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="DATE_FUNCTION_TYPE"><!-- --></A><H3>
+DATE_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>DATE_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="DATE_TYPE"><!-- --></A><H3>
+DATE_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>DATE_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="ERROR_FUNCTION_TYPE"><!-- --></A><H3>
+ERROR_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>ERROR_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="ERROR_TYPE"><!-- --></A><H3>
+ERROR_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>ERROR_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="EVAL_ERROR_FUNCTION_TYPE"><!-- --></A><H3>
+EVAL_ERROR_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>EVAL_ERROR_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="EVAL_ERROR_TYPE"><!-- --></A><H3>
+EVAL_ERROR_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>EVAL_ERROR_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="FUNCTION_FUNCTION_TYPE"><!-- --></A><H3>
+FUNCTION_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>FUNCTION_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="FUNCTION_INSTANCE_TYPE"><!-- --></A><H3>
+FUNCTION_INSTANCE_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>FUNCTION_INSTANCE_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="FUNCTION_PROTOTYPE"><!-- --></A><H3>
+FUNCTION_PROTOTYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>FUNCTION_PROTOTYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="GREATEST_FUNCTION_TYPE"><!-- --></A><H3>
+GREATEST_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>GREATEST_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="LEAST_FUNCTION_TYPE"><!-- --></A><H3>
+LEAST_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>LEAST_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="MATH_TYPE"><!-- --></A><H3>
+MATH_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>MATH_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="NULL_TYPE"><!-- --></A><H3>
+NULL_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>NULL_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="NUMBER_OBJECT_FUNCTION_TYPE"><!-- --></A><H3>
+NUMBER_OBJECT_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>NUMBER_OBJECT_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="NUMBER_OBJECT_TYPE"><!-- --></A><H3>
+NUMBER_OBJECT_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>NUMBER_OBJECT_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="NUMBER_STRING_BOOLEAN"><!-- --></A><H3>
+NUMBER_STRING_BOOLEAN</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>NUMBER_STRING_BOOLEAN</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="NUMBER_TYPE"><!-- --></A><H3>
+NUMBER_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>NUMBER_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="OBJECT_FUNCTION_TYPE"><!-- --></A><H3>
+OBJECT_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>OBJECT_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="OBJECT_NUMBER_STRING"><!-- --></A><H3>
+OBJECT_NUMBER_STRING</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>OBJECT_NUMBER_STRING</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="OBJECT_NUMBER_STRING_BOOLEAN"><!-- --></A><H3>
+OBJECT_NUMBER_STRING_BOOLEAN</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>OBJECT_NUMBER_STRING_BOOLEAN</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="OBJECT_PROTOTYPE"><!-- --></A><H3>
+OBJECT_PROTOTYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>OBJECT_PROTOTYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="OBJECT_TYPE"><!-- --></A><H3>
+OBJECT_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>OBJECT_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="RANGE_ERROR_FUNCTION_TYPE"><!-- --></A><H3>
+RANGE_ERROR_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>RANGE_ERROR_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="RANGE_ERROR_TYPE"><!-- --></A><H3>
+RANGE_ERROR_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>RANGE_ERROR_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="REFERENCE_ERROR_FUNCTION_TYPE"><!-- --></A><H3>
+REFERENCE_ERROR_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>REFERENCE_ERROR_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="REFERENCE_ERROR_TYPE"><!-- --></A><H3>
+REFERENCE_ERROR_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>REFERENCE_ERROR_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="REGEXP_FUNCTION_TYPE"><!-- --></A><H3>
+REGEXP_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>REGEXP_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="REGEXP_TYPE"><!-- --></A><H3>
+REGEXP_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>REGEXP_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="STRING_OBJECT_FUNCTION_TYPE"><!-- --></A><H3>
+STRING_OBJECT_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>STRING_OBJECT_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="STRING_OBJECT_TYPE"><!-- --></A><H3>
+STRING_OBJECT_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>STRING_OBJECT_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="STRING_TYPE"><!-- --></A><H3>
+STRING_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>STRING_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="SYNTAX_ERROR_FUNCTION_TYPE"><!-- --></A><H3>
+SYNTAX_ERROR_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>SYNTAX_ERROR_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="SYNTAX_ERROR_TYPE"><!-- --></A><H3>
+SYNTAX_ERROR_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>SYNTAX_ERROR_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="TYPE_ERROR_FUNCTION_TYPE"><!-- --></A><H3>
+TYPE_ERROR_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>TYPE_ERROR_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="TYPE_ERROR_TYPE"><!-- --></A><H3>
+TYPE_ERROR_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>TYPE_ERROR_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="U2U_CONSTRUCTOR_TYPE"><!-- --></A><H3>
+U2U_CONSTRUCTOR_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>U2U_CONSTRUCTOR_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="U2U_FUNCTION_TYPE"><!-- --></A><H3>
+U2U_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>U2U_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="UNKNOWN_TYPE"><!-- --></A><H3>
+UNKNOWN_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>UNKNOWN_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="URI_ERROR_FUNCTION_TYPE"><!-- --></A><H3>
+URI_ERROR_FUNCTION_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>URI_ERROR_FUNCTION_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="URI_ERROR_TYPE"><!-- --></A><H3>
+URI_ERROR_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>URI_ERROR_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="VOID_TYPE"><!-- --></A><H3>
+VOID_TYPE</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>VOID_TYPE</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="NATIVE_PROPERTIES_COUNT"><!-- --></A><H3>
+NATIVE_PROPERTIES_COUNT</H3>
+<PRE>
+protected int <B>NATIVE_PROPERTIES_COUNT</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="ALL_NATIVE_EXTERN_TYPES"><!-- --></A><H3>
+ALL_NATIVE_EXTERN_TYPES</H3>
+<PRE>
+public static final <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>ALL_NATIVE_EXTERN_TYPES</B></PRE>
+<DL>
+<DD>A definition of all extern types. This should be kept in sync with
+ javascript/externs/es3.js. This is used to check that the builtin types
+ declared in <A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype"><CODE>JSTypeRegistry</CODE></A> have the same type as that in the
+ externs. It can also be used for any tests that want to use builtin types
+ in their externs.
+<P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../../constant-values.html#com.google.javascript.rhino.testing.BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES">Constant Field Values</A></DL>
+</DL>
+
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+<A NAME="constructor_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Constructor Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="BaseJSTypeTestCase()"><!-- --></A><H3>
+BaseJSTypeTestCase</H3>
+<PRE>
+public <B>BaseJSTypeTestCase</B>()</PRE>
+<DL>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="setUp()"><!-- --></A><H3>
+setUp</H3>
+<PRE>
+protected void <B>setUp</B>()
+              throws <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</A></PRE>
+<DL>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE>setUp</CODE> in class <CODE>junit.framework.TestCase</CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="initTypes()"><!-- --></A><H3>
+initTypes</H3>
+<PRE>
+protected void <B>initTypes</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="addNativeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry)"><!-- --></A><H3>
+addNativeProperties</H3>
+<PRE>
+public static void <B>addNativeProperties</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry)</PRE>
+<DL>
+<DD>Adds a basic set of properties to the native types.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createUnionType(com.google.javascript.rhino.jstype.JSType...)"><!-- --></A><H3>
+createUnionType</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>createUnionType</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>...&nbsp;variants)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createRecordTypeBuilder()"><!-- --></A><H3>
+createRecordTypeBuilder</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html" title="class in com.google.javascript.rhino.jstype">RecordTypeBuilder</A> <B>createRecordTypeBuilder</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createNullableType(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+createNullableType</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>createNullableType</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createOptionalType(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+createOptionalType</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>createOptionalType</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+assertTypeEquals</H3>
+<PRE>
+protected void <B>assertTypeEquals</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;expected,
+                                <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;actual)</PRE>
+<DL>
+<DD>Asserts that a Node representing a type expression resolves to the
+ correct <code>JSType</code>.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.JSTypeExpression)"><!-- --></A><H3>
+assertTypeEquals</H3>
+<PRE>
+protected void <B>assertTypeEquals</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;expected,
+                                <A HREF="../../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&nbsp;actual)</PRE>
+<DL>
+<DD>Asserts that a a type expression resolves to the correct <code>JSType</code>.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="resolve(com.google.javascript.rhino.JSTypeExpression, java.lang.String...)"><!-- --></A><H3>
+resolve</H3>
+<PRE>
+protected <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>resolve</B>(<A HREF="../../../../../com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>&nbsp;n,
+                         <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>...&nbsp;warnings)</PRE>
+<DL>
+<DD>Resolves a type expression, expecting the given warnings.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/testing/TestErrorReporter.html" title="class in com.google.javascript.rhino.testing"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../index.html?com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="BaseJSTypeTestCase.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+
+        <div id="footer">
+          <div id="footerlogo">
+            <img src="http://www.google.com/images/art.gif"
+                 alt="Google colored balls">
+          </div>
+
+          <div id="copyright">
+          <p>&copy; 2009 Google -
+            <a href="http://www.google.com/privacy.html">Privacy Policy</a> -
+            <a href="http://www.google.com/terms_of_service.html">Terms and Conditions</a> -
+            <a href="http://www.google.com/about.html">About Google</a>
+          </p>
+          </div>
+        </div>
+      
+      
+</BODY>
+</HTML>

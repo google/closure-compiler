@@ -293,7 +293,11 @@ class FoldConstants extends AbstractPostOrderCallback
       Node condition = NodeUtil.getConditionExpression(n);
       if (condition != null) {
         tryMinimizeCondition(t, condition, n);
+        // The root condition node might have changed, get it again.
+        condition = NodeUtil.getConditionExpression(n);
+        this.tryFoldForCondition(condition, n);
       }
+        
       tryFoldFor(t, n, parent);
       return;
     }
@@ -1918,6 +1922,19 @@ class FoldConstants extends AbstractPostOrderCallback
     }
   }
 
+  /**
+   * Remove always true loop conditions.
+   */
+  private void tryFoldForCondition(Node n, Node parent) {
+    if (NodeUtil.isLiteralValue(n)) {
+      boolean result = NodeUtil.getBooleanValue(n);
+      if (result) {
+        parent.replaceChild(n, new Node(Token.EMPTY));
+        compiler.reportCodeChange();
+      }
+    }
+  }
+  
   /**
    * Replaces a node with a number node if the new number node is not equivalent
    * to the current node.

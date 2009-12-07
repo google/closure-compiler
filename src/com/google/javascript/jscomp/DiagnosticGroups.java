@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public class DiagnosticGroups {
 
-  private DiagnosticGroups() {} // all static
+  DiagnosticGroups() {}
 
   private final static Map<String, DiagnosticGroup> groupsByName =
       Maps.newHashMap();
@@ -40,7 +40,7 @@ public class DiagnosticGroups {
   }
 
   /** Find the diagnostic group registered under the given name. */
-  static DiagnosticGroup forName(String name) {
+  DiagnosticGroup forName(String name) {
     return groupsByName.get(name);
   }
 
@@ -105,10 +105,10 @@ public class DiagnosticGroups {
   /**
    * Adds warning levels by name.
    */
-  static void setWarningLevels(CompilerOptions options,
+  void setWarningLevels(CompilerOptions options,
       List<String> diagnosticGroups, CheckLevel level) {
     for (String name : diagnosticGroups) {
-      DiagnosticGroup group = DiagnosticGroups.forName(name);
+      DiagnosticGroup group = forName(name);
       Preconditions.checkNotNull(group, "No warning class for name: " + name);
       options.setWarningLevel(group, level);
     }

@@ -4,3 +4,4 @@ com.google.javascript.jscomp.parsing
 com.google.javascript.jscomp.testing
 com.google.javascript.rhino
 com.google.javascript.rhino.jstype
+com.google.javascript.rhino.testing

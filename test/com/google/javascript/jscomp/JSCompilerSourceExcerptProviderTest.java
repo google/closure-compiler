@@ -31,7 +31,9 @@ public class JSCompilerSourceExcerptProviderTest extends TestCase {
     JSSourceFile bar = JSSourceFile.fromCode("bar",
         "bar:first line\nbar:second line\nbar:third line\nbar:fourth line\n");
     Compiler compiler = new Compiler();
-    compiler.init(new JSSourceFile[] {}, new JSSourceFile[] {foo, bar}, null);
+    CompilerOptions options = new CompilerOptions();
+    compiler.init(
+        new JSSourceFile[] {}, new JSSourceFile[] {foo, bar}, options);
     this.provider = compiler;
   }
 

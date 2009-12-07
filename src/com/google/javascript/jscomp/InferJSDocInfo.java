@@ -18,14 +18,43 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.EnumType;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
+
+import javax.annotation.Nullable;
 
 /**
  * Set the JSDocInfo on all types.
+ *
+ * Propagates JSDoc across the type graph, but not across the symbol graph.
+ * This means that if you have:
+ * <code>
+ * var x = new Foo();
+ * x.bar;
+ * </code>
+ * then the JSType attached to x.bar may get associated JSDoc, but the
+ * Node and Var will not.
+ *
+ * JSDoc is initially attached to AST Nodes at parse time.
+ * There are 3 ways that JSDoc get propagated across the type system.
+ * 1) Nominal types (e.g., constructors) may contain JSDocInfo for their
+ *    declaration.
+ * 2) Object types have a JSDocInfo slot for each property on that type.
+ * 3) Shape types (like structural functions) may have JSDocInfo.
+ *
+ * #1 and #2 should be self-explanatory, and non-controversial. #3 is
+ * a bit trickier. It means that if you have:
+ * <code>
+ * /** @param {number} x /
+ * Foo.prototype.bar = goog.abstractMethod;
+ * </code>
+ * the JSDocInfo will appear in two places in the type system: in the 'bar'
+ * slot of Foo.prototype, and on the anonymous function type created by
+ * this expression.
  *
 *
  */
@@ -54,12 +83,18 @@ class InferJSDocInfo extends AbstractPostOrderCallback
     JSDocInfo docInfo;
 
     switch (n.getType()) {
-      case Token.FUNCTION:
-        // Infer JSDocInfo on all programmer-defined types.
-        // Conveniently, all programmer-defined types are functions.
-        JSType fnType = n.getJSType();
-        if (fnType == null) {
-          break;
+      // Infer JSDocInfo on types of all type declarations on variables.
+      case Token.NAME:
+        if (parent == null) {
+          return;
+        }
+
+        // Only allow JSDoc on VARs, function declarations, and assigns.
+        if (parent.getType() != Token.VAR &&
+            !NodeUtil.isFunctionDeclaration(parent) &&
+            !(parent.getType() == Token.ASSIGN &&
+              n == parent.getFirstChild())) {
+          return;
         }
 
         // There are four places the doc info could live.
@@ -73,26 +108,31 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         // /** ... */ var x = function() { ... }
         docInfo = n.getJSDocInfo();
         if (docInfo == null &&
-            (parent.getType() == Token.ASSIGN ||
-             parent.getType() == Token.NAME)) {
+            !(parent.getType() == Token.VAR &&
+                !parent.hasOneChild())) {
           docInfo = parent.getJSDocInfo();
-
-          if (docInfo == null) {
-            Node gramps = parent.getParent();
-            if (gramps != null && gramps.getType() == Token.VAR &&
-                gramps.hasOneChild()) {
-              docInfo = gramps.getJSDocInfo();
-            }
-          }
         }
 
-        if (docInfo != null && fnType instanceof FunctionType) {
-          FunctionType maybeCtorType = (FunctionType) fnType;
-          maybeCtorType.setJSDocInfo(docInfo);
-          if (maybeCtorType.isConstructor()) {
-            maybeCtorType.getInstanceType().setJSDocInfo(docInfo);
-          }
+        // Try to find the type of the NAME.
+        JSType varType = n.getJSType();
+        if (varType == null && parent.getType() == Token.FUNCTION) {
+          varType = parent.getJSType();
         }
+
+        // If we have no type to attach JSDocInfo to, then there's nothing
+        // we can do.
+        if (varType == null || docInfo == null) {
+          return;
+        }
+
+        // Dereference the type. If the result is not an object, or already
+        // has docs attached, then do nothing.
+        ObjectType objType = dereferenceToObject(varType);
+        if (objType == null || objType.getJSDocInfo() != null) {
+          return;
+        }
+
+        attachJSDocInfoToNominalTypeOrShape(objType, docInfo, n.getString());
         break;
 
       case Token.GETPROP:
@@ -114,16 +154,61 @@ class InferJSDocInfo extends AbstractPostOrderCallback
             docInfo = parent.getJSDocInfo();
           }
           if (docInfo != null) {
-            JSType lhsType = n.getFirstChild().getJSType();
-            if (lhsType != null &&
-                lhsType instanceof ObjectType) {
-              ObjectType objectType = (ObjectType) lhsType;
-              objectType.setPropertyJSDocInfo(
-                  n.getLastChild().getString(), docInfo, inExterns);
+            ObjectType lhsType =
+                dereferenceToObject(n.getFirstChild().getJSType());
+            if (lhsType != null) {
+              // Put the JSDoc in the property slot, if there is one.
+              String propName = n.getLastChild().getString();
+              if (lhsType.hasOwnProperty(propName)) {
+                lhsType.setPropertyJSDocInfo(propName, docInfo, inExterns);
+              }
+
+              // Put the JSDoc in any constructors or function shapes as well.
+              ObjectType propType =
+                  dereferenceToObject(lhsType.getPropertyType(propName));
+              if (propType != null) {
+                attachJSDocInfoToNominalTypeOrShape(
+                    propType, docInfo, n.getQualifiedName());
+              }
             }
           }
         }
         break;
+    }
+  }
+
+  /**
+   * Dereferences the given type to an object, or returns null.
+   */
+  private ObjectType dereferenceToObject(JSType type) {
+    type = type == null ? null : type.dereference();
+    return (type instanceof ObjectType) ? (ObjectType) type : null;
+  }
+
+  /**
+   * Handle cases #1 and #3 in the class doc.
+   */
+  private void attachJSDocInfoToNominalTypeOrShape(
+      ObjectType objType, JSDocInfo docInfo, @Nullable String qName) {
+    if (objType.isConstructor() ||
+        objType.isEnumType() ||
+        objType.isInterface()) {
+      // Named types.
+      if (objType.hasReferenceName() &&
+          objType.getReferenceName().equals(qName)) {
+        objType.setJSDocInfo(docInfo);
+
+        if (objType.isConstructor() || objType.isInterface()) {
+          ((FunctionType) objType).getInstanceType().setJSDocInfo(
+              docInfo);
+        } else if (objType instanceof EnumType) {
+          ((EnumType) objType).getElementsType().setJSDocInfo(docInfo);
+        }
+      }
+    } else if (!objType.isNativeObjectType() &&
+        objType.isFunctionType()) {
+      // Structural functions.
+      objType.setJSDocInfo(docInfo);
     }
   }
 }

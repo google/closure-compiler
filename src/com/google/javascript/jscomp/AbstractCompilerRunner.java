@@ -238,15 +238,21 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
    */
   protected abstract B createOptions();
 
-  final protected void initOptionsFromFlags(CompilerOptions options) {
+  protected DiagnosticGroups getDiagnoticGroups() {
+    return new DiagnosticGroups();
+  }
 
-    DiagnosticGroups.setWarningLevels(
+  protected void initOptionsFromFlags(CompilerOptions options) {
+
+    DiagnosticGroups diagnosticGroups = getDiagnoticGroups();
+
+    diagnosticGroups.setWarningLevels(
         options, AbstractCompilerRunner.FLAG_jscomp_error.get(),
         CheckLevel.ERROR);
-    DiagnosticGroups.setWarningLevels(
+    diagnosticGroups.setWarningLevels(
         options, AbstractCompilerRunner.FLAG_jscomp_warning.get(),
         CheckLevel.WARNING);
-    DiagnosticGroups.setWarningLevels(
+    diagnosticGroups.setWarningLevels(
         options, AbstractCompilerRunner.FLAG_jscomp_off.get(),
         CheckLevel.OFF);
 

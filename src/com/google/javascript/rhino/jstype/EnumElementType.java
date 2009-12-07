@@ -120,7 +120,7 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  boolean isNominalType() {
+  public boolean isNominalType() {
     return hasReferenceName();
   }
 

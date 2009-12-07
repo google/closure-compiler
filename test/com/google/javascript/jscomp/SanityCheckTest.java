@@ -35,6 +35,10 @@ public class SanityCheckTest extends CompilerTestCase {
     otherPass = null;
   }
 
+  @Override protected int getNumRepetitions() {
+    return 1;
+  }
+
   /** {@inheritDoc} */
   @Override public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
@@ -80,5 +84,19 @@ public class SanityCheckTest extends CompilerTestCase {
       exceptionCaught = true;
     }
     assert(exceptionCaught);
+  }
+
+  public void testSymbolTable() throws Exception {
+    otherPass = new CompilerPass() {
+      @Override public void process(Node externs, Node root) {
+        SymbolTable st = getLastCompiler().acquireSymbolTable();
+        st.createScope(root, null);
+        Node script = root.getFirstChild();
+        script.removeChild(script.getFirstChild());
+        st.release();
+      }
+    };
+
+    test("var x;", null, SymbolTable.VARIABLE_COUNT_MISMATCH);
   }
 }

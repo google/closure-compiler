@@ -30,14 +30,15 @@ import com.google.javascript.rhino.Token;
  */
 public class SymbolTableTest extends CompilerTestCase {
 
-  DiagnosticType targetWarning = null;
+  DiagnosticType targetError = null;
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {
     return new BuggyVariableChanger(compiler);
   }
 
   @Override public void setUp() {
-    targetWarning = null;
+    setExpectedSymbolTableError(null);
+    targetError = null;
   }
 
   public void testOk() throws Exception {
@@ -47,18 +48,24 @@ public class SymbolTableTest extends CompilerTestCase {
   }
 
   public void testCountMismatch() throws Exception {
-    targetWarning = VARIABLE_COUNT_MISMATCH;
-    test("var x = 3, y = 5;", "", null, targetWarning);
+    setExpectedSymbolTableError(VARIABLE_COUNT_MISMATCH);
+    test("var x = 3, y = 5;", "");
   }
 
   public void testMovedVariable() throws Exception {
-    targetWarning = MOVED_VARIABLE;
-    test("var x = 3, y = 5;", "var x, y = 5;", null, targetWarning);
+    setExpectedSymbolTableError(MOVED_VARIABLE);
+    test("var x = 3, y = 5;", "var x, y = 5;");
   }
 
   public void testMissingVariable() throws Exception {
-    targetWarning = MISSING_VARIABLE;
-    test("var x = 3, y = 5;", "var z = 3, y = 5;", null, targetWarning);
+    setExpectedSymbolTableError(MISSING_VARIABLE);
+    test("var x = 3, y = 5;", "var z = 3, y = 5;");
+  }
+
+  @Override
+  protected void setExpectedSymbolTableError(DiagnosticType type) {
+    super.setExpectedSymbolTableError(type);
+    targetError = type;
   }
 
   /**
@@ -85,21 +92,21 @@ public class SymbolTableTest extends CompilerTestCase {
       if (node.getType() == Token.VAR) {
         compiler.reportCodeChange();
 
-        if (targetWarning == null) {
+        if (targetError == null) {
           // the "correct" implementation
           parent.removeChild(node);
           for (Node child = node.getFirstChild();
                child != null; child = child.getNext()) {
             scope.undeclare(scope.getVar(child.getString()));
           }
-        } else if (targetWarning == VARIABLE_COUNT_MISMATCH) {
+        } else if (targetError == VARIABLE_COUNT_MISMATCH) {
           // A bad implementation where we forget to undeclare all vars.
           parent.removeChild(node);
           scope.undeclare(scope.getVar(node.getFirstChild().getString()));
-        } else if (targetWarning == MISSING_VARIABLE) {
+        } else if (targetError == MISSING_VARIABLE) {
           // A bad implementation where we don't update the var name.
           node.getFirstChild().setString("z");
-        } else if (targetWarning == MOVED_VARIABLE) {
+        } else if (targetError == MOVED_VARIABLE) {
           // A bad implementation where we take the var out of the tree.
           Node oldName = node.getFirstChild();
           oldName.detachFromParent();
