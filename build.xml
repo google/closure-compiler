@@ -124,7 +124,7 @@
   <target name="test"
           depends="compile-tests"
           description="compile and execute JUnit tests">
-    <junit>
+    <junit printsummary="on" fork="true" forkmode="once" showoutput="true">
       <classpath refid="classpath.path" />
       <classpath>
         <pathelement location="${build.dir}/test" />

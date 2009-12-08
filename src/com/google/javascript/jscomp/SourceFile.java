@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 
 /**
  * An abstract representation of a source file that provides access to
@@ -204,8 +205,16 @@ public abstract class SourceFile {
     }
   }
 
+  public static SourceFile fromFile(String fileName, Charset c) {
+    return fromFile(new File(fileName), c);
+  }
+
   public static SourceFile fromFile(String fileName) {
     return fromFile(new File(fileName));
+  }
+
+  public static SourceFile fromFile(File file, Charset c) {
+    return new OnDisk(file, c);
   }
 
   public static SourceFile fromFile(File file) {
@@ -287,9 +296,22 @@ public abstract class SourceFile {
   static class OnDisk extends SourceFile {
     private final File file;
 
+    // This is stored as a String, but passed in and out as a Charset so that
+    // we can serialize the class.
+    // Default input file format for JSCompiler has always been UTF_8.
+    protected String inputCharset = Charsets.UTF_8.name();
+
+    OnDisk(File file, Charset c) {
+      this(file);
+      if (c != null) {
+        this.setCharset(c);
+      }
+    }
+
+    // No Charset provided?
     OnDisk(File file) {
       super(file.getPath());
-      this.file = file;
+      this.file = file;     
     }
 
     @Override
@@ -297,7 +319,7 @@ public abstract class SourceFile {
       String cachedCode = super.getCode();
 
       if (cachedCode == null) {
-        cachedCode = Files.toString(file, Charsets.UTF_8);
+        cachedCode = Files.toString(file, this.getCharset());
         super.setCode(cachedCode);
       }
       return cachedCode;
@@ -309,5 +331,25 @@ public abstract class SourceFile {
     public void clearCachedSource() {
       super.setCode(null);
     }
+
+    /**
+     * Store the Charset specification as the string version of the name,
+     * rather than the Charset itself.  This allows us to serialize the
+     * SourceFile class.
+     * @param c charset to use when reading the input.
+     */
+    public void setCharset(Charset c) {
+      inputCharset = c.name();
+    }
+
+    /**
+     * Get the Charset specifying how we're supposed to read the file
+     * in off disk and into UTF-16.  This is stored as a strong to allow
+     * SourceFile to be serialized.
+     * @return Charset object representing charset to use.
+     */
+    public Charset getCharset() {
+      return Charset.forName(inputCharset);
+    }    
   }
 }

@@ -63,7 +63,7 @@ public class CompilerRunner extends
       = Flag.value(WarningLevel.DEFAULT);
 
   @FlagSpec(help = "Specifies whether the default externs should be excluded.")
-  private static final Flag<Boolean> FLAG_use_only_custom_externs
+  static final Flag<Boolean> FLAG_use_only_custom_externs
       = Flag.value(false);
 
   /**

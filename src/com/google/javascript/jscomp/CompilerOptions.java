@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -527,6 +528,10 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** The output path for the source map. */
   public String sourceMapOutputPath;
 
+  /**
+   * Charset to use when generating code.  If null, then output ASCII.
+   */
+  public Charset outputCharset;
 
   /**
    * Initializes compiler options. All options are disabled by default.
@@ -844,6 +849,11 @@ public class CompilerOptions implements Serializable, Cloneable {
      * After the initial parse
      */
     START,
+
+    /**
+     * At the start and at the end of all optimizations.
+     */
+    START_AND_END,
 
     /**
      * After every pass

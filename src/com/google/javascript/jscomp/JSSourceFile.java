@@ -18,10 +18,12 @@ package com.google.javascript.jscomp;
 
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 
 
 /**
@@ -33,12 +35,20 @@ import java.io.InputStream;
  */
 public class JSSourceFile extends SourceFile {
 
+  public static JSSourceFile fromFile(String fileName, Charset charSet) {
+    return new JSSourceFile(SourceFile.fromFile(fileName, charSet));
+  }
+
   public static JSSourceFile fromFile(String fileName) {
-    return new JSSourceFile(SourceFile.fromFile(fileName));
+    return new JSSourceFile(SourceFile.fromFile(fileName, Charsets.UTF_8));
+  }
+
+  public static JSSourceFile fromFile(File file, Charset charSet) {
+    return new JSSourceFile(SourceFile.fromFile(file, charSet));
   }
 
   public static JSSourceFile fromFile(File file) {
-    return new JSSourceFile(SourceFile.fromFile(file));
+    return new JSSourceFile(SourceFile.fromFile(file, Charsets.UTF_8));
   }
 
   public static JSSourceFile fromCode(String fileName, String code) {

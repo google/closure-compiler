@@ -17,16 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.DefinitionsRemover.AssignmentDefinition;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.DefinitionsRemover.NamedFunctionDefinition;
 import com.google.javascript.jscomp.DefinitionsRemover.UnknownDefinition;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -66,7 +66,7 @@ class NameReferenceGraph extends
   // will give us the Reference edges. For example a CALL node will map to a
   // list of possible call edge.
   private final Multimap<Node, DiGraphEdge<Name, Reference>>
-      referenceMap = Multimaps.newHashMultimap();
+      referenceMap = HashMultimap.create();
 
   // Given a qualified name, provides the Name object.
   private Map<String, Name> nameMap = Maps.newHashMap();

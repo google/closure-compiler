@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -33,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-
 
 /**
  * This is a compiler pass that computes a control flow graph.
@@ -124,7 +123,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    *   foo() -> bar()
    *   bar() -> END
    */
-  private final Multimap<Node, Node> finallyMap = Multimaps.newHashMultimap();
+  private final Multimap<Node, Node> finallyMap = HashMultimap.create();
 
   /**
    * Constructor.

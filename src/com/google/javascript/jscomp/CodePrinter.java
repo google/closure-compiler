@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -481,6 +482,9 @@ class CodePrinter {
     private boolean outputTypes = false;
     private int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
     private SourceMap sourceMap = null;
+    // Specify a charset to use when outputting source code.  If null,
+    // then just output ASCII.
+    private Charset outputCharset = null;
 
     /**
      * Sets the root node from which to generate the source code.
@@ -539,6 +543,11 @@ class CodePrinter {
       return this;
     }
 
+    Builder setOutputCharset(Charset outCharset) {
+      this.outputCharset = outCharset;
+      return this;
+    }
+
     /**
      * Generates the source code and returns it.
      */
@@ -555,7 +564,7 @@ class CodePrinter {
               : Format.COMPACT;
 
       return toSource(root, outputFormat, lineBreak, lineLengthThreshold,
-          sourceMap);
+          sourceMap, outputCharset);
     }
   }
 
@@ -570,7 +579,8 @@ class CodePrinter {
    */
   private static String toSource(Node root, Format outputFormat,
                                  boolean lineBreak,  int lineLengthThreshold,
-                                 SourceMap sourceMap) {
+                                 SourceMap sourceMap,
+                                 Charset outputCharset) {
     boolean createSourceMap = (sourceMap != null);
     CodeConsumer cp =
         outputFormat == Format.COMPACT
@@ -579,8 +589,8 @@ class CodePrinter {
         : new PrettyCodePrinter(lineLengthThreshold, createSourceMap);
     CodeGenerator cg =
         outputFormat == Format.TYPED
-        ? new TypedCodeGenerator(cp)
-        : new CodeGenerator(cp);
+        ? new TypedCodeGenerator(cp, outputCharset)
+        : new CodeGenerator(cp, outputCharset);
     cg.add(root);
 
     String code = ((HasGetCode) cp).getCode();

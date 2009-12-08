@@ -100,6 +100,14 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("a.b.MyClass.prototype.memberName;", "");
   }
 
+  public void testRemoveUselessStrings() {
+    test("'a';", "");
+  }
+
+  public void testNoRemoveUseStrict() {
+    test("'use strict';", "'use strict'");
+  }
+
   public void testNoRemoveUselessNameStatements() {
     removeNoOpStatements = false;
     testSame("a;");

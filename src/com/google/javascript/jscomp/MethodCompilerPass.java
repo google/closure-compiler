@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -46,7 +46,7 @@ abstract class MethodCompilerPass implements CompilerPass {
   final Set<String> nonMethodProperties = Sets.newHashSet();
 
   final Multimap<String, Node> methodDefinitions =
-      Multimaps.newHashMultimap();
+      HashMultimap.create();
 
   final AbstractCompiler compiler;
 

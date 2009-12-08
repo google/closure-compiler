@@ -19,13 +19,8 @@ package com.google.javascript.jscomp.parsing;
 import static com.google.javascript.jscomp.mozilla.rhino.Token.CommentType.JSDOC;
 
 import com.google.common.base.Preconditions;
-
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ScriptOrFnNode;
-import com.google.javascript.rhino.Token;
-
+import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.ast.ArrayLiteral;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Assignment;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstNode;
@@ -69,8 +64,13 @@ import com.google.javascript.jscomp.mozilla.rhino.ast.VariableDeclaration;
 import com.google.javascript.jscomp.mozilla.rhino.ast.VariableInitializer;
 import com.google.javascript.jscomp.mozilla.rhino.ast.WhileLoop;
 import com.google.javascript.jscomp.mozilla.rhino.ast.WithStatement;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ScriptOrFnNode;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
-import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
+import java.util.Set;
 
 /**
  * IRFactory transforms the new AST to the old AST.
@@ -90,6 +90,9 @@ public class IRFactory {
   private final JSTypeRegistry registry;
   private final ErrorReporter errorReporter;
   private final TransformDispatcher transformDispatcher;
+
+  // non-static for thread safety
+  private final Set<String> ALLOWED_DIRECTIVES = Sets.newHashSet("use strict");
 
   private IRFactory(String sourceString,
                     String sourceName,
@@ -363,7 +366,43 @@ public class IRFactory {
       for (com.google.javascript.jscomp.mozilla.rhino.Node child : rootNode) {
         node.addChildToBack(transform((AstNode)child));
       }
+      parseDirectives(node);
       return node;
+    }
+
+    /**
+     * Parse the directives, encode them in the AST, and remove their nodes.
+     *
+     * For information on ES5 directives, see section 14.1 of
+     * Ecma-262, Edition 5.
+     *
+     * It would be nice if Rhino would eventually take care of this for
+     * us, but right now their directive-processing is a one-off.
+     */
+    private void parseDirectives(Node node) {
+      // Remove all the directives, and encode them in the AST.
+      Set<String> directives = null;
+      while (isDirective(node.getFirstChild())) {
+        String directive = node.removeFirstChild().getFirstChild().getString();
+        if (directives == null) {
+          directives = Sets.newHashSet(directive);
+        } else {
+          directives.add(directive);
+        }
+      }
+
+      if (directives != null) {
+        node.setDirectives(directives);
+      }
+    }
+
+    private boolean isDirective(Node n) {
+      if (n == null) return false;
+
+      int nType = n.getType();
+      return (nType == Token.EXPR_RESULT || nType == Token.EXPR_VOID) &&
+          n.getFirstChild().getType() == Token.STRING &&
+          ALLOWED_DIRECTIVES.contains(n.getFirstChild().getString());
     }
 
     @Override
@@ -528,7 +567,10 @@ public class IRFactory {
         lp.addChildToBack(transform(param));
       }
       node.addChildToBack(lp);
-      node.addChildToBack(transform(functionNode.getBody()));
+
+      Node bodyNode = transform(functionNode.getBody());
+      parseDirectives(bodyNode);
+      node.addChildToBack(bodyNode);
      return node;
     }
 

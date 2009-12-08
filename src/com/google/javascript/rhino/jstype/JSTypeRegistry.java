@@ -40,9 +40,9 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
@@ -122,7 +122,7 @@ public class JSTypeRegistry implements Serializable {
 
   // A map from interface name to types that implement it.
   private final Multimap<String, FunctionType> interfaceToImplementors =
-      Multimaps.newHashMultimap();
+      HashMultimap.create();
 
   // All the unresolved named types.
   private final Multimap<StaticScope<JSType>, NamedType> unresolvedNamedTypes =

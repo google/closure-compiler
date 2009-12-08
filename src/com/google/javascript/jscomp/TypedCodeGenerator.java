@@ -22,6 +22,8 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.nio.charset.Charset;
+
 
 /**
  * A code generator that outputs type annotations for functions and
@@ -29,8 +31,8 @@ import com.google.javascript.rhino.jstype.ObjectType;
 *
  */
 class TypedCodeGenerator extends CodeGenerator {
-  TypedCodeGenerator(CodeConsumer consumer) {
-    super(consumer);
+  TypedCodeGenerator(CodeConsumer consumer, Charset outputCharset) {
+    super(consumer, outputCharset);
   }
 
   @Override

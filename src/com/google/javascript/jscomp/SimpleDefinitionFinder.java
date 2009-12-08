@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.DefinitionsRemover.ExternalNameOnlyDefinition;
 import com.google.javascript.jscomp.DefinitionsRemover.UnknownDefinition;
@@ -51,8 +51,8 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
   public SimpleDefinitionFinder(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.definitionSiteMap = Maps.newHashMap();
-    this.nameDefinitionMultimap = Multimaps.newHashMultimap();
-    this.nameUseSiteMultimap = Multimaps.newHashMultimap();
+    this.nameDefinitionMultimap = HashMultimap.create();
+    this.nameUseSiteMultimap = HashMultimap.create();
   }
 
   /**

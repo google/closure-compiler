@@ -58,6 +58,7 @@ public enum WarningLevel {
     options.checkUndefinedProperties = CheckLevel.OFF;
     options.checkUnusedPropertiesEarly = false;
     options.checkUnreachableCode = CheckLevel.WARNING;
+    options.checkControlStructures = true;
   }
 
   /**

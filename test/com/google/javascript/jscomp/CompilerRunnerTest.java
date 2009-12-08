@@ -52,6 +52,8 @@ public class CompilerRunnerTest extends TestCase {
   @Override
   public void tearDown() {
     Flags.resetAllFlagsForTest();
+    // NOTE(nicksantos): ANT needs this for some weird reason.
+    AbstractCompilerRunner.FLAG_define.resetForTest();
     Flags.enableStateCheckingForTest();
   }
 
@@ -101,6 +103,17 @@ public class CompilerRunnerTest extends TestCase {
     test("/** @define {boolean} */ var FOO = false;" +
          "/** @define {number} */ var BAR = 3;",
          "var FOO = true, BAR = 5;");
+  }
+
+  public void testScriptStrictModeNoWarning() {
+    test("'use strict';", "");
+    test("'no use strict';", CheckSideEffects.USELESS_CODE_ERROR);
+  }
+
+  public void testFunctionStrictModeNoWarning() {
+    test("function f() {'use strict';}", "function f() {}");
+    test("function f() {'no use strict';}",
+         CheckSideEffects.USELESS_CODE_ERROR);
   }
 
   /* Helper functions */
@@ -172,6 +185,8 @@ public class CompilerRunnerTest extends TestCase {
     CompilerOptions options = runner.createOptions();
     try {
       runner.setRunOptions(options);
+    } catch (AbstractCompilerRunner.FlagUsageException e) {
+      fail("Unexpected exception " + e);
     } catch (IOException e) {
       assert(false);
     }

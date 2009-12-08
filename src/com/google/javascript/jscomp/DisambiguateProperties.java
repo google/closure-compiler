@@ -16,11 +16,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ConcreteType.ConcreteFunctionType;
 import com.google.javascript.jscomp.ConcreteType.ConcreteInstanceType;
@@ -28,8 +28,8 @@ import com.google.javascript.jscomp.ConcreteType.ConcreteUnionType;
 import com.google.javascript.jscomp.ConcreteType.ConcreteUniqueType;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
-import com.google.javascript.jscomp.graph.UnionFind;
 import com.google.javascript.jscomp.graph.StandardUnionFind;
+import com.google.javascript.jscomp.graph.UnionFind;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionPrototypeType;
@@ -43,10 +43,10 @@ import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 /**
  * DisambiguateProperties renames properties to disambiguate between unrelated
@@ -539,7 +539,7 @@ class DisambiguateProperties<T> implements CompilerPass {
 
   /** Returns a map from field name to types for which it will be renamed. */
   Multimap<String, Collection<T>> getRenamedTypesForTesting() {
-    Multimap<String, Collection<T>> ret = Multimaps.newHashMultimap();
+    Multimap<String, Collection<T>> ret = HashMultimap.create();
     for (Map.Entry<String, Property> entry: properties.entrySet()) {
       Property prop = entry.getValue();
       if (!prop.skipRenaming) {

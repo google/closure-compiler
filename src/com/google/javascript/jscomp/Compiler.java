@@ -541,6 +541,10 @@ public class Compiler extends AbstractCompiler {
     if (options_.recordFunctionInformation) {
       recordFunctionInformation();
     }
+
+    if (options_.devMode == DevMode.START_AND_END) {
+      runSanityCheck();
+    }
   }
 
   public void parse() {
@@ -655,10 +659,14 @@ public class Compiler extends AbstractCompiler {
     }
   };
 
-  private void maybeSanityCheck(String passName) {
+  private void maybeSanityCheck() {
     if (options_.devMode == DevMode.EVERY_PASS) {
-      sanityCheck.create(this).process(null, jsRoot);
+      runSanityCheck();
     }
+  }
+
+  private void runSanityCheck() {
+    sanityCheck.create(this).process(null, jsRoot);
   }
 
   /**
@@ -725,7 +733,7 @@ public class Compiler extends AbstractCompiler {
     currentPassName = null;
     currentTracer = null;
 
-    maybeSanityCheck(passToCheck);
+    maybeSanityCheck();
   }
 
   /**
@@ -969,7 +977,7 @@ public class Compiler extends AbstractCompiler {
         }
 
         if (devMode) {
-          sanityCheck.create(this).process(null, n);
+          runSanityCheck();
           if (hasErrors()) {
             return null;
           }
@@ -1195,6 +1203,7 @@ public class Compiler extends AbstractCompiler {
     builder.setPrettyPrint(options_.prettyPrint);
     builder.setLineBreak(options_.lineBreak);
     builder.setSourceMap(sourceMap_);
+    builder.setOutputCharset(options_.outputCharset);
     return builder.build();
   }
 

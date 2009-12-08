@@ -16,12 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StringUtil;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 
 /**
  * CodeGenerator generates codes from a parse tree, sending it to the specified
@@ -34,8 +37,23 @@ class CodeGenerator {
 
   private final CodeConsumer cc;
 
-  CodeGenerator(CodeConsumer consumer) {
+  private final CharsetEncoder outputCharsetEncoder;
+
+  CodeGenerator(CodeConsumer consumer, Charset outputCharset) {
     cc = consumer;
+    if (outputCharset == null || outputCharset == Charsets.US_ASCII) {
+      // If we want our default (pretending to be UTF-8, but escaping anything
+      // outside of straight ASCII), then don't use the encoder, but
+      // just special-case the code.  This keeps the normal path through
+      // the code identical to how it's been for years.
+      this.outputCharsetEncoder = null;
+    } else {
+      this.outputCharsetEncoder = outputCharset.newEncoder();
+    }
+  }
+
+  CodeGenerator(CodeConsumer consumer) {
+    this(consumer, null);
   }
 
   void add(String str) {
@@ -221,7 +239,7 @@ class CodeGenerator {
           throw new Error("Expected children to be strings");
         }
 
-        String regexp = regexpEscape(first.getString());
+        String regexp = regexpEscape(first.getString(), outputCharsetEncoder);
 
         // I only use one .add because whitespace matters
         if (childCount == 2) {
@@ -495,7 +513,7 @@ class CodeGenerator {
 
       case Token.STRING:
         Preconditions.checkState(childCount == 0);
-        add(jsString(n.getString()));
+        add(jsString(n.getString(), outputCharsetEncoder));
         break;
 
       case Token.DELPROP:
@@ -730,7 +748,7 @@ class CodeGenerator {
   }
 
   /** Outputs a js string, using the optimal (single/double) quote character */
-  static String jsString(String s) {
+  static String jsString(String s, CharsetEncoder outputCharsetEncoder) {
     int singleq = 0, doubleq = 0;
 
     // could count the quotes and pick the optimal quote character
@@ -755,19 +773,28 @@ class CodeGenerator {
       singlequote = "\'";
     }
 
-    return strEscape(s, quote, doublequote, singlequote, "\\\\");
+    return strEscape(s, quote, doublequote, singlequote, "\\\\",
+        outputCharsetEncoder);
   }
 
   /** Escapes regular expression */
+  static String regexpEscape(String s, CharsetEncoder outputCharsetEncoder) {
+    return strEscape(s, '/', "\"", "'", "\\", outputCharsetEncoder);
+  }
+
+  /* If the user doesn't want to specify an output charset encoder, assume
+     they want Latin/ASCII characters only.
+   */
   static String regexpEscape(String s) {
-    return strEscape(s, '/', "\"", "'", "\\");
+    return regexpEscape(s, null);
   }
 
   /** Helper to escape javascript string as well as regular expression */
   static String strEscape(String s, char quote,
                           String doublequoteEscape,
                           String singlequoteEscape,
-                          String backslashEscape) {
+                          String backslashEscape,
+                          CharsetEncoder outputCharsetEncoder) {
     StringBuilder sb = new StringBuilder();
     sb.append(quote);
     for (int i = 0; i < s.length(); i++) {
@@ -798,15 +825,27 @@ class CodeGenerator {
           }
           break;
         default:
-          // Please keep in sync with the same code in identifierEscape().
-          if (c > 0x1F && c < 0x7F) {
-            // Non-control ASCII characters are safe to transmit
-            sb.append(c);
+          // If we're given an outputCharsetEncoder, then check if the
+          //  character can be represented in this character set.
+          if (outputCharsetEncoder != null) {
+            if (outputCharsetEncoder.canEncode(c)) {
+              sb.append(c);
+            } else {
+              // Unicode-escape the character.
+              StringUtil.appendHexJavaScriptRepresentation(sb, c);
+            }
           } else {
-            // Other characters can be misinterpreted by some js parsers,
-            // or perhaps mangled by proxies along the way,
-            // so we play it safe and unicode escape them.
-            StringUtil.appendHexJavaScriptRepresentation(sb, c);
+            // No charsetEncoder provided - pass straight latin characters
+            // through, and escape the rest.  Doing the explicit character
+            // check is measurably faster than using the CharsetEncoder.
+            if (c > 0x1f && c <= 0x7f) {
+              sb.append(c);
+            } else {
+              // Other characters can be misinterpreted by some js parsers,
+              // or perhaps mangled by proxies along the way,
+              // so we play it safe and unicode escape them.
+              StringUtil.appendHexJavaScriptRepresentation(sb, c);
+            }
           }
       }
     }
@@ -824,7 +863,9 @@ class CodeGenerator {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
-      // See comments for the same code in strEscape(). Please keep in sync.
+      // Identifiers should always go to Latin1/ ASCII characters because
+      // different browser's rules for valid identifier characters are
+      // crazy.
       if (c > 0x1F && c < 0x7F) {
         sb.append(c);
       } else {

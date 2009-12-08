@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -32,6 +33,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -208,9 +210,14 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       "the variable is marked true.")
   public static final Flag<List<String>> FLAG_define = Flag.stringCollector();
 
+  @FlagSpec(help = "Input charset for all files.")
+  static final Flag<String> FLAG_charset = Flag.value("");
+
   private PrintStream out;
   private final PrintStream err;
   private A compiler;
+
+  private static Charset inputCharset;
 
   public AbstractCompilerRunner(String[] args) {
     this(args, System.out, System.err);
@@ -263,7 +270,8 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
     return compiler;
   }
 
-  final protected void setRunOptions(B options) throws IOException {
+  final protected void setRunOptions(B options)
+      throws IOException, FlagUsageException {
     if (FLAG_js_output_file.get().length() > 0) {
       options.jsOutputFile = FLAG_js_output_file.get();
     }
@@ -285,6 +293,8 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
     if (FLAG_third_party.get()) {
       options.setCodingConvention(new DefaultCodingConvention());
     }
+
+    inputCharset = getInputCharset();
   }
 
   /**
@@ -338,7 +348,8 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
     boolean usingStdin = false;
     for (String filename : files) {
       if (!"-".equals(filename)) {
-        inputs.add(JSSourceFile.fromFile(filename));
+        JSSourceFile newFile = JSSourceFile.fromFile(filename, inputCharset);
+        inputs.add(newFile);
       } else {
         if (!allowStdIn) {
           throw new FlagUsageException("Can't specify stdin.");
@@ -591,8 +602,18 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
 
     setRunOptions(options);
 
-    if (!options.jsOutputFile.equals("")) {
-      out = new PrintStream(options.jsOutputFile);
+    // Let the outputCharset be the same as the input charset... except if
+    // we're reading in UTF-8 by default.  By tradition, we've always
+    // output ASCII to avoid various hiccups with different browsers,
+    // proxies and firewalls.
+    if (inputCharset == Charsets.UTF_8) {
+      options.outputCharset = Charsets.US_ASCII;
+    } else {
+      options.outputCharset = inputCharset;
+    }
+
+    if (!options.jsOutputFile.isEmpty()) {
+      out = new PrintStream(options.jsOutputFile, inputCharset.name());
     }
 
     ((PrintStreamErrorManager) compiler.getErrorManager())
@@ -704,6 +725,25 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
     return Math.min(result.errors.length, 0x7f);
   }
 
+  /**
+   * Query the flag for the charset, and return a Charset object representing
+   * the selection.  Keep this in a separate function
+   * so it can be called both in static and normal methods.
+   *
+   * @return Charset to use when reading inputs
+   * @throws FlagUsageException if flag is not a valid Charset name.
+   */
+  private static Charset getInputCharset() throws FlagUsageException {
+    if (!FLAG_charset.get().isEmpty()) {
+      if (!Charset.isSupported(FLAG_charset.get())) {
+        throw new FlagUsageException(FLAG_charset.get() +
+            " is not a valid charset name.");
+      }
+      return Charset.forName(FLAG_charset.get());
+    }
+    return Charsets.UTF_8;
+  }
+
   protected List<JSSourceFile> createExterns() throws FlagUsageException,
       IOException {
     return createExternInputs(FLAG_externs.get());
@@ -769,7 +809,7 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
 
     String mapPath = null;
 
-    if (sourceMapPath.contains(File.separator)) {
+    if (sourceMapPath.contains("/") || sourceMapPath.contains("\\")) {
       mapPath = sourceMapPath;
     } else {
       File outputFile = new File(path);

@@ -40,9 +40,9 @@
 
 package com.google.javascript.rhino;
 
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.common.base.Pair;
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.jstype.JSType;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * This class implements the root of the intermediate representation.
@@ -146,7 +147,8 @@ public class Node implements Cloneable, Serializable
                                     // probably generated from Java code, and
                                     // should be resolved to the proper
                                     // overload if possible.
-        LAST_PROP          = 47;
+        DIRECTIVES         = 48,    // The ES5 directives on this node.
+        LAST_PROP          = 48;
 
     // values of ISNUMBER_PROP to specify
     // which of the children are Number types
@@ -1906,6 +1908,20 @@ public class Node implements Cloneable, Serializable
      */
     public boolean isSyntheticBlock() {
         return getBooleanProp(SYNTHETIC_BLOCK_PROP);
+    }
+
+    /**
+     * Sets the ES5 directives on this node.
+     */
+    public void setDirectives(Set<String> val) {
+        putProp(DIRECTIVES, val);
+    }
+
+    /**
+     * Returns the set of ES5 directives for this node.
+     */
+    public Set<String> getDirectives() {
+        return (Set<String>) getProp(DIRECTIVES);
     }
 
     /**

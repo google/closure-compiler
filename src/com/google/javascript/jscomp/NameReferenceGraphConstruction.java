@@ -16,11 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import javax.annotation.Nullable;
 import com.google.common.base.Pair;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.NameReferenceGraph.Name;
 import com.google.javascript.jscomp.NameReferenceGraph.Reference;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -36,6 +35,8 @@ import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
+import javax.annotation.Nullable;
 
 /**
  * Constructs a name reference graph.
@@ -55,7 +56,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
   // The accuracy of the analysis will depend heavily on eliminating the need
   // to resort to this map.
   private final Multimap<String, Pair<Name, Reference>> unknownNameUse =
-      Multimaps.newHashMultimap();
+      HashMultimap.create();
 
   // Should we continue even if we found a type checker bug.
   private static final boolean CONSERVATIVE = false;

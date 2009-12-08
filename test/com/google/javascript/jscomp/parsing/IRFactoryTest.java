@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.CompilerEnvirons;
 import com.google.javascript.jscomp.mozilla.rhino.Parser;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
@@ -31,6 +32,13 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
 
   public void testScript() throws Exception {
     parse("");
+  }
+
+  public void testStrictScript() throws Exception {
+    assertNull(newParse("").getDirectives());
+    assertEquals(
+        Sets.newHashSet("use strict"),
+        newParse("'use strict'").getDirectives());
   }
 
   public void testName() throws Exception {

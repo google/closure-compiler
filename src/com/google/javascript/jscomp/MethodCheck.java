@@ -16,14 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.FunctionCheck.FunctionInfo;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 
 import java.util.Collection;
-
 
 /**
  * Checks method arity. Looks for the following ways of defining methods:
@@ -47,7 +46,7 @@ class MethodCheck extends MethodCompilerPass {
 
   /** Map from method names to possible signatures */
   final Multimap<String,FunctionInfo> methodSignatures =
-      Multimaps.newHashMultimap();
+      HashMultimap.create();
 
   final MethodCompilerPass.SignatureStore signatureCallback = new Store();
 
