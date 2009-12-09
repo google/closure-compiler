@@ -197,17 +197,16 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; for(;;x -= 1){}");
     inFunction("var x; for(;;x = 0){}", "var x; for(;;0){}");
     
-    // TODO(user): Add support of INC and DEC.
-    inFunction("var x; for(--x;;){}");
-    inFunction("var x; for(x--;;){}");
+    inFunction("var x; for(--x;;){}", "var x; for(;;){}");
+    inFunction("var x; for(x--;;){}", "var x; for(;;){}");
     inFunction("var x; for(x -= 1;;){}", "var x; for(x - 1;;){}");
     inFunction("var x; for(x = 0;;){}", "var x; for(0;;){}");
   }
   
   public void testDeadIncrement() {
     // TODO(user): Optimize this.
-    inFunction("var x; x ++");
-    inFunction("var x; x --");
+    inFunction("var x; x ++", "var x; void 0");
+    inFunction("var x; x --", "var x; void 0");
   }
   
   public void testDeadButAlivePartiallyWithinTheExpression() {
@@ -260,17 +259,32 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
   
   public void testIncDecInSubExpressions() {
     inFunction("var a; a = 1, a++; a");
+    inFunction("var a; a = 1, ++a; a");
+    inFunction("var a; a = 1, a--; a");
+    inFunction("var a; a = 1, --a; a");
+
+    inFunction("var a; a = 1, a++, print(a)");
+    inFunction("var a; a = 1, ++a, print(a)");
+    inFunction("var a; a = 1, a--, print(a)");
+    inFunction("var a; a = 1, --a, print(a)");
+    
+    inFunction("var a; a = 1, print(a++)");
+    inFunction("var a; a = 1, print(++a)");
+
+    inFunction("var a; a = 1, print(a++)");
+    inFunction("var a; a = 1, print(++a)");
+
+    inFunction("var a; a = 1, print(a--)");
+    inFunction("var a; a = 1, print(--a)");
   }
   
   public void testNestedReassignments() {
     inFunction("var a; a = (a = 1)", "var a; 1");
     inFunction("var a; a = (a *= 2)", "var a; a*2");
-    
-    // TODO(user): ++ not supported.
-    
+       
     // Note a = (a++) is not same as a++. Only if 'a' is dead.
-    inFunction("var a; a = (a++)", "var a; a++");
-    inFunction("var a; a = (++a)", "var a; ++a");
+    inFunction("var a; a = (a++)", "var a; void 0");
+    inFunction("var a; a = (++a)", "var a; void 0");
     
     inFunction("var a; a = (b = (a = 1))", "var a; b = 1");
     inFunction("var a; a = (b = (a *= 2))", "var a; b = a * 2");
@@ -280,11 +294,11 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // Include b as local.
     inFunction("var a,b; a = (b = (a = 1))", "var a,b; 1");
     inFunction("var a,b; a = (b = (a *= 2))", "var a,b; a * 2");
-    inFunction("var a,b; a = (b = (a++))", "var a,b; a++");
-    inFunction("var a,b; a = (b = (++a))", "var a,b; ++a");
+    inFunction("var a,b; a = (b = (a++))", "var a,b; void 0");
+    inFunction("var a,b; a = (b = (++a))", "var a,b; void 0");
     
-    inFunction("var a; a += (a++)", "var a; a+a++");
-    inFunction("var a; a += (++a)", "var a; a+ ++a");
+    inFunction("var a; a += (a++)", "var a; a + a++");
+    inFunction("var a; a += (++a)", "var a; a+ (++a)");
     
     // Include b as local.
     inFunction("var a,b; a += (b = (a = 1))", "var a,b; a + 1");
@@ -299,7 +313,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("for(;x+=1;){foo(x)}");
     inFunction("for(;1;x+=1){foo(x)}");
   }
-  
+
   private void inFunction(String src) {
     inFunction(src, src);
   }

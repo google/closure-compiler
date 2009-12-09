@@ -121,6 +121,23 @@
     </jar>
   </target>
 
+  <target name="test-forkless"
+      depends="compile-tests"
+      description="execute JUnit tests without forking the process">
+    <junit>
+      <classpath refid="classpath.path" />
+      <classpath>
+        <pathelement location="${build.dir}/test" />
+      </classpath>
+      <formatter type="plain" usefile="false" />
+      <batchtest>
+        <fileset dir="${build.dir}/test">
+          <include name="**/*Test.class" />
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
   <target name="test"
           depends="compile-tests"
           description="compile and execute JUnit tests">

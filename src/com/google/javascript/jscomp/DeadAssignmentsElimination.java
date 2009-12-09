@@ -148,9 +148,10 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
   private void tryRemoveAssignment(NodeTraversal t, Node n, Node exprRoot,
       FlowState<LiveVariableLattice> state) {
 
-    // TODO(user): Add implemenation to handle x++ and ++x by replacing
-    // them with x or x+1 respectively.
-    if (NodeUtil.isAssignmentOp(n)) {
+    Node parent = n.getParent();
+    
+    if (NodeUtil.isAssignmentOp(n) ||
+        n.getType() == Token.INC || n.getType() == Token.DEC) {
 
       Node lhs = n.getFirstChild();
       Node rhs = lhs.getNext();
@@ -199,13 +200,23 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         n.removeChild(rhs);
         n.removeChild(lhs);
         Node op = new Node(NodeUtil.getOpFromAssignmentOp(n), lhs, rhs);
-        n.getParent().replaceChild(n, op);
+        parent.replaceChild(n, op);
+      } else if (n.getType() == Token.INC || n.getType() == Token.DEC) {        
+        if (NodeUtil.isExpressionNode(parent)) {
+          parent.replaceChild(n, new Node(Token.VOID, Node.newNumber(0)));
+        } else if(n.getType() == Token.COMMA && n != parent.getLastChild()) {
+          parent.removeChild(n);
+        } else if (parent.getType() == Token.FOR && !NodeUtil.isForIn(parent) &&
+            NodeUtil.getConditionExpression(parent) != n) {
+          parent.replaceChild(n, new Node(Token.EMPTY));
+        } else {
+          // Cannot replace x = a++ with x = a because that's not valid
+          // when a is not a number.
+          return;
+        }
       } else {
-        // TODO(user): this is where the code that handles dead x++ and x--
-        // should go.
-        
         // Not reachable.
-        Preconditions.checkState(false, "Unknow statement");
+        Preconditions.checkState(false, "Unknown statement");
       }
       
       compiler.reportCodeChange();

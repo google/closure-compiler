@@ -149,8 +149,11 @@ public enum CompilationLevel {
     options.smartNameRemoval = true;
     options.inlineConstantVars = true;
     options.inlineFunctions = true;
+    options.inlineLocalFunctions = true;
+    options.inlineAnonymousFunctionExpressions = true;
     options.inlineGetters = true;
     options.inlineVariables = true;
+    
     // Remove unused vars also removes unused functions.
     options.removeUnusedVars = true;
     options.removeUnusedVarsInGlobalScope = true;
