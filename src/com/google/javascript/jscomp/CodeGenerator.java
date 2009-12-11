@@ -39,7 +39,14 @@ class CodeGenerator {
 
   private final CharsetEncoder outputCharsetEncoder;
 
-  CodeGenerator(CodeConsumer consumer, Charset outputCharset) {
+  /** Whether to perform basic checks for obviously incorrect AST structure. */
+  // NOTE: This exists to support a few extern legacy parsers that don't 
+  // properly normalize the AST (JsMinimizer).
+  private final boolean validation;
+
+  CodeGenerator(
+      CodeConsumer consumer, Charset outputCharset, boolean validation) {
+    this.validation = validation;
     cc = consumer;
     if (outputCharset == null || outputCharset == Charsets.US_ASCII) {
       // If we want our default (pretending to be UTF-8, but escaping anything
@@ -52,8 +59,12 @@ class CodeGenerator {
     }
   }
 
+  CodeGenerator(CodeConsumer consumer, Charset outputCharset) {
+    this(consumer, outputCharset, true);
+  }
+
   CodeGenerator(CodeConsumer consumer) {
-    this(consumer, null);
+    this(consumer, null, false);
   }
 
   void add(String str) {
@@ -481,10 +492,10 @@ class CodeGenerator {
         break;
 
       case Token.EXPR_VOID:
-        // TODO(johnlenz): Enable this exception once the external users of
-        //     CodePrinter have been corrected.
-        // throw new Error("EXPR_VOID should not be used in this codebase.");
       case Token.EXPR_RESULT:
+        if (type == Token.EXPR_VOID && validation) {
+          throw new Error("Unexpected EXPR_VOID. Should be EXPR_RESULT.");
+        }
         Preconditions.checkState(childCount == 1);
         add(first, Context.START_OF_EXPR);
         cc.endStatement();
@@ -610,8 +621,9 @@ class CodeGenerator {
     Node nodeToProcess = n;
 
     if (!allowNonBlockChild && n.getType() != Token.BLOCK) {
-      // TODO(johnlenz) : Enable this when the JsMinifier is corrected.
-      // throw new Error("Missing BLOCK child.");
+      if (validation) {
+        throw new Error("Missing BLOCK child.");
+      }
     }
 
     // Strip unneeded blocks, that is blocks with <2 children.

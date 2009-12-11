@@ -443,6 +443,11 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(renameProperties);
     }
 
+    // Reserve global names added to the "windows" object.
+    if (options.reserveRawExports) {
+      passes.add(gatherRawExports);
+    }
+
     // This comes after property renaming because quoted property names must
     // not be renamed.
     if (options.convertToDottedProperties) {
@@ -668,6 +673,27 @@ public class DefaultPassConfig extends PassConfig {
       } else {
         return new ErrorPass(compiler, GENERATE_EXPORTS_ERROR);
       }
+    }
+  };
+
+  /** Raw exports processing pass. */
+  final PassFactory gatherRawExports =
+      new PassFactory("gatherRawExports", false) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      final GatherRawExports pass = new GatherRawExports(
+          compiler);
+
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node root) {
+          pass.process(externs, root);
+          if (exportedNames == null) {
+            exportedNames = Sets.newHashSet();
+          }
+          exportedNames.addAll(pass.getExportedVariableNames());
+        }
+      };
     }
   };
 

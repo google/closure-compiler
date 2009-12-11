@@ -94,7 +94,7 @@ public class JsAst implements SourceAst {
       compiler.report(JSError.make(AbstractCompiler.READ_ERROR, sourceName));
     }
 
-    if (root == null) {
+    if (root == null || compiler.hasHaltingErrors()) {
       // There was a parse error or IOException, so use a dummy block.
       root = new Node(Token.BLOCK);
     } else {

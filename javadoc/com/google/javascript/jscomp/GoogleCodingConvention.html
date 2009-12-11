@@ -343,7 +343,7 @@ public boolean <B>isOptionalParameter</B>(<A HREF="../../../../com/google/javasc
  treated as optional arguments.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
@@ -358,13 +358,13 @@ isVarArgsParameter</H3>
 <PRE>
 public boolean <B>isVarArgsParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
 <DL>
-<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">ClosureCodingConvention</A></CODE></B></DD>
 <DD>This checks whether a given parameter should be treated as a marker
  for a variable argument list function. A VarArgs parameter must be the
  last parameter in a function declaration.
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
@@ -410,7 +410,7 @@ public boolean <B>isPrivate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/j
  names are never considered private (see <A HREF="../../../../com/google/javascript/jscomp/GoogleCodingConvention.html#isExported(java.lang.String, boolean)"><CODE>isExported(java.lang.String, boolean)</CODE></A>).
 <P>
 <DD><DL>
-<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A></CODE></DL>
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>name</CODE> - The name of a global variable or function, or a method or

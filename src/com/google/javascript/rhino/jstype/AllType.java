@@ -71,8 +71,13 @@ public final class AllType extends JSType {
 
   @Override
   public boolean matchesStringContext() {
-    // TODO(user): Change this to false once UnionType's implementation is
-    // correct instead of generous.
+    // Be lenient.
+    return true;
+  }
+
+  @Override
+  public boolean matchesObjectContext() {
+    // Be lenient.
     return true;
   }
 

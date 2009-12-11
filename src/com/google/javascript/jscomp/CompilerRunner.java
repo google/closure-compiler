@@ -109,6 +109,7 @@ public class CompilerRunner extends
   @Override
   protected CompilerOptions createOptions() {
     CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new ClosureCodingConvention());
     CompilationLevel level = FLAG_compilation_level.get();
     level.setOptionsForCompilationLevel(options);
     WarningLevel wLevel = FLAG_warning_level.get();

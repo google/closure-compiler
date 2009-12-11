@@ -778,14 +778,22 @@ Selection.prototype.selectionLanguageChange;
 /** @type {NamedNodeMap} */ Element.prototype.attributes;
 Element.prototype.baseURIObject;
 /** @type {!NodeList} */ Element.prototype.childNodes;
-/** @type {string} */ Element.prototype.className;
+/**
+ * @type {string}
+ * @implicitCast
+ */
+Element.prototype.className;
 /** @type {number} */ Element.prototype.clientHeight;
 /** @type {number} */ Element.prototype.clientLeft;
 /** @type {number} */ Element.prototype.clientTop;
 /** @type {number} */ Element.prototype.clientWidth;
 /** @type {string} */ Element.prototype.dir;
 /** @type {Node} */ Element.prototype.firstChild;
-/** @type {string} */ Element.prototype.id;
+/**
+ * @type {string}
+ * @implicitCast
+ */
+Element.prototype.id;
 /**
  * @type {string}
  * @implicitCast

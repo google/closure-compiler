@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 Google Inc.
+ * Copyright 2009 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,16 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
 /**
- * Test class for {@link GoogleCodingConvention}.
+ * Test class for {@link DefaultCodingConvention}.
  */
-public class ClosureCodingConventionTest extends TestCase {
-  private ClosureCodingConvention conv = new ClosureCodingConvention();
+public class DefaultCodingConventionTest extends TestCase {
+  private DefaultCodingConvention conv = new DefaultCodingConvention();
 
   public void testVarAndOptionalParams() {
     Node args = new Node(Token.LP,
@@ -37,13 +36,13 @@ public class ClosureCodingConventionTest extends TestCase {
         Node.newString(Token.NAME, "opt_b"));
 
     assertFalse(conv.isVarArgsParameter(args.getFirstChild()));
-    assertFalse(conv.isVarArgsParameter(args.getLastChild()));
+    assertTrue(conv.isVarArgsParameter(args.getLastChild()));
     assertFalse(conv.isVarArgsParameter(optArgs.getFirstChild()));
-    assertFalse(conv.isVarArgsParameter(optArgs.getLastChild()));
+    assertTrue(conv.isVarArgsParameter(optArgs.getLastChild()));
 
-    assertFalse(conv.isOptionalParameter(args.getFirstChild()));
+    assertTrue(conv.isOptionalParameter(args.getFirstChild()));
     assertFalse(conv.isOptionalParameter(args.getLastChild()));
-    assertFalse(conv.isOptionalParameter(optArgs.getFirstChild()));
+    assertTrue(conv.isOptionalParameter(optArgs.getFirstChild()));
     assertFalse(conv.isOptionalParameter(optArgs.getLastChild()));
   }
 
@@ -92,19 +91,19 @@ public class ClosureCodingConventionTest extends TestCase {
   }
 
   public void testInheritanceDetection2() {
-    assertDefinesClasses("goog.inherits(A, B);", "A", "B");
+    assertNotClassDefining("goog.inherits(A, B);");
   }
 
   public void testInheritanceDetection3() {
-    assertDefinesClasses("A.inherits(B);", "A", "B");
+    assertNotClassDefining("A.inherits(B);");
   }
 
   public void testInheritanceDetection4() {
-    assertDefinesClasses("goog.inherits(goog.A, goog.B);", "goog.A", "goog.B");
+    assertNotClassDefining("goog.inherits(goog.A, goog.B);");
   }
 
   public void testInheritanceDetection5() {
-    assertDefinesClasses("goog.A.inherits(goog.B);", "goog.A", "goog.B");
+    assertNotClassDefining("goog.A.inherits(goog.B);");
   }
 
   public void testInheritanceDetection6() {
@@ -120,17 +119,15 @@ public class ClosureCodingConventionTest extends TestCase {
   }
 
   public void testInheritanceDetection9() {
-    assertDefinesClasses("A.mixin(B.prototype);",
-        "A", "B");
+    assertNotClassDefining("A.mixin(B.prototype);");
   }
 
   public void testInheritanceDetection10() {
-    assertDefinesClasses("goog.mixin(A.prototype, B.prototype);",
-        "A", "B");
+    assertNotClassDefining("goog.mixin(A.prototype, B.prototype);");
   }
 
   public void testInheritanceDetectionPostCollapseProperties() {
-    assertDefinesClasses("goog$inherits(A, B);", "A", "B");
+    assertNotClassDefining("goog$inherits(A, B);");
     assertNotClassDefining("goog$inherits(A);");
   }
 
@@ -139,18 +136,9 @@ public class ClosureCodingConventionTest extends TestCase {
     assertNull(conv.getClassesDefinedByCall(n.getFirstChild()));
   }
 
-  private void assertDefinesClasses(String code, String subclassName,
-      String superclassName) {
-    Node n = parseTestCode(code);
-    SubclassRelationship classes =
-        conv.getClassesDefinedByCall(n.getFirstChild());
-    assertNotNull(classes);
-    assertEquals(subclassName, classes.subclassName);
-    assertEquals(superclassName, classes.superclassName);
-  }
-
   private Node parseTestCode(String code) {
     Compiler compiler = new Compiler();
     return compiler.parseTestCode(code).getFirstChild();
   }
 }
+

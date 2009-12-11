@@ -988,7 +988,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // matchesXxx
     assertFalse(ALL_TYPE.matchesInt32Context());
     assertFalse(ALL_TYPE.matchesNumberContext());
-    assertFalse(ALL_TYPE.matchesObjectContext());
+    assertTrue(ALL_TYPE.matchesObjectContext());
     assertTrue(ALL_TYPE.matchesStringContext());
     assertFalse(ALL_TYPE.matchesUint32Context());
 

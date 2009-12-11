@@ -4138,6 +4138,11 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DT><A HREF="./com/google/javascript/rhino/Node.html#isOptionalArg()"><B>isOptionalArg()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>Returns whether this node is an optional argument node.
+<DT><A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)"><B>isOptionalParameter(Node)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A>
+<DD>This checks whether a given parameter name should be treated as an
+ optional parameter as far as type checking or function call arg count
+ checking is concerned.
 <DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)"><B>isOptionalParameter(Node)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
 <DD>This checks whether a given parameter name should be treated as an
@@ -4171,6 +4176,9 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DD>Returns whether this builder is populated with information that can be
  used to <A HREF="./com/google/javascript/rhino/JSDocInfoBuilder.html#build(java.lang.String)"><CODE>JSDocInfoBuilder.build(java.lang.String)</CODE></A> a <A HREF="./com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> object that has a
  fileoverview tag.
+<DT><A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html#isPrivate(java.lang.String)"><B>isPrivate(String)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A>
+<DD>Checks whether a name should be considered private.
 <DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)"><B>isPrivate(String)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
 <DD>Checks whether a name should be considered private.
@@ -4380,6 +4388,10 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DT><A HREF="./com/google/javascript/rhino/Node.html#isVarArgs()"><B>isVarArgs()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>Returns whether this node is a variable length argument node.
+<DT><A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)"><B>isVarArgsParameter(Node)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A>
+<DD>This checks whether a given parameter should be treated as a marker
+ for a variable argument list function.
 <DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)"><B>isVarArgsParameter(Node)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
 <DD>This checks whether a given parameter should be treated as a marker
@@ -4723,6 +4735,9 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/VoidType.html#matchesNumberContext()"><B>matchesNumberContext()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/VoidType.html" title="class in com.google.javascript.rhino.jstype">VoidType</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/AllType.html#matchesObjectContext()"><B>matchesObjectContext()</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/AllType.html" title="class in com.google.javascript.rhino.jstype">AllType</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/BooleanType.html#matchesObjectContext()"><B>matchesObjectContext()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/BooleanType.html" title="class in com.google.javascript.rhino.jstype">BooleanType</A>
@@ -5673,6 +5688,9 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DT><A HREF="./com/google/javascript/rhino/Token.html#RESERVED"><B>RESERVED</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#reserveRawExports"><B>reserveRawExports</B></A> - 
+Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
+<DD>Reserve property names on the global this object.
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#resetForTypeCheck()"><B>resetForTypeCheck()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Reset to run the TypeCheck pass.

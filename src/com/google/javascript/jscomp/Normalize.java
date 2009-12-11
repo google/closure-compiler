@@ -90,7 +90,8 @@ class Normalize implements CompilerPass, Callback {
     NodeTraversal.traverse(compiler, root, this);
     if (MAKE_LOCAL_NAMES_UNIQUE) {
       MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
-      NodeTraversal.traverse(compiler, root, renamer);
+      NodeTraversal t = new NodeTraversal(compiler, renamer);
+      t.traverseRoots(externs, root);
     }
     removeDuplicateDeclarations(root);
   }
@@ -275,13 +276,13 @@ class Normalize implements CompilerPass, Callback {
   // TODO(johnlenz): Move this to NodeTypeNormalizer once the unit tests are
   // fixed.
   /**
-   * Limit the number of special cases where LABELs need to be handled. Only 
-   * BLOCK and loops are allowed to be labeled.  Loop labels must remain in 
+   * Limit the number of special cases where LABELs need to be handled. Only
+   * BLOCK and loops are allowed to be labeled.  Loop labels must remain in
    * place as the named continues are not allowed for labeled blocks.
    */
   private void normalizeLabels(Node n) {
     Preconditions.checkArgument(n.getType() == Token.LABEL);
-    
+
     Node last = n.getLastChild();
     switch (last.getType()) {
       case Token.LABEL:

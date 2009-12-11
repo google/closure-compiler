@@ -277,6 +277,24 @@ This describes the Closure-specific JavaScript coding conventions.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given parameter name should be treated as an
+ optional parameter as far as type checking or function call arg count
+ checking is concerned.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether a name should be considered private.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isPropertyTestFunction(com.google.javascript.rhino.Node)">isPropertyTestFunction</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;call)</CODE>
 
 <BR>
@@ -290,6 +308,15 @@ This describes the Closure-specific JavaScript coding conventions.
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if passed a string referring to the superclass.</TD>
 </TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given parameter should be treated as a marker
+ for a variable argument list function.</TD>
+</TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_com.google.javascript.jscomp.DefaultCodingConvention"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -297,7 +324,7 @@ This describes the Closure-specific JavaScript coding conventions.
 <TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#applyDelegateRelationship(com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType)">applyDelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#defineDelegateProxyProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.Map)">defineDelegateProxyProperties</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#getDelegateRelationship(com.google.javascript.rhino.Node)">getDelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#getDelegateSuperclassName()">getDelegateSuperclassName</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isConstant(java.lang.String)">isConstant</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isExported(java.lang.String)">isExported</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isExported(java.lang.String, boolean)">isExported</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isPrivate(java.lang.String)">isPrivate</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isValidEnumKey(java.lang.String)">isValidEnumKey</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE></TD>
+<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#applyDelegateRelationship(com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.ObjectType, com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.FunctionType)">applyDelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#defineDelegateProxyProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.Map)">defineDelegateProxyProperties</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#getDelegateRelationship(com.google.javascript.rhino.Node)">getDelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#getDelegateSuperclassName()">getDelegateSuperclassName</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isConstant(java.lang.String)">isConstant</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isExported(java.lang.String)">isExported</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isExported(java.lang.String, boolean)">isExported</A>, <A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isValidEnumKey(java.lang.String)">isValidEnumKey</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -614,6 +641,69 @@ public <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.Object
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>t</CODE> - The node traversal.<DD><CODE>callNode</CODE> - A CALL node.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isOptionalParameter(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isOptionalParameter</H3>
+<PRE>
+public boolean <B>isOptionalParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
+<DL>
+<DD>This checks whether a given parameter name should be treated as an
+ optional parameter as far as type checking or function call arg count
+ checking is concerned. Note that an optional function parameter may be
+ declared as a simple type and is automatically converted to a union of the
+ declared type and Undefined.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">isOptionalParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
+<DT><B>Returns:</B><DD><code>true</code> if the parameter should be treated as an optional
+ parameter.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isVarArgsParameter(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+isVarArgsParameter</H3>
+<PRE>
+public boolean <B>isVarArgsParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
+<DL>
+<DD>This checks whether a given parameter should be treated as a marker
+ for a variable argument list function. A VarArgs parameter must be the
+ last parameter in a function declaration.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">isVarArgsParameter</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>parameter</CODE> - The parameter's node.
+<DT><B>Returns:</B><DD><code>true</code> if the parameter should be treated as a variable
+ length parameter.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isPrivate(java.lang.String)"><!-- --></A><H3>
+isPrivate</H3>
+<PRE>
+public boolean <B>isPrivate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD>Checks whether a name should be considered private. Private global
+ variables and functions can only be referenced within the source file in
+ which they are declared. Private properties and methods should only be
+ accessed by the class that defines them.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#isPrivate(java.lang.String)">isPrivate</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - The name of a global variable or function, or a method or
+     property.
+<DT><B>Returns:</B><DD><code>true</code> if the name should be considered private.</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

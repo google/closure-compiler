@@ -116,6 +116,13 @@ public class CompilerRunnerTest extends TestCase {
          CheckSideEffects.USELESS_CODE_ERROR);
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Integration tests
+
+  public void testIssue70() {
+    test("function foo({}) {}", RhinoErrorReporter.PARSE_ERROR);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {

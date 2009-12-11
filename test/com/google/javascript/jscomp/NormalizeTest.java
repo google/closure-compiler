@@ -23,6 +23,13 @@ import com.google.javascript.rhino.Node;
  *
  */
 public class NormalizeTest extends CompilerTestCase {
+
+  private static final String EXTERNS = "var window;";
+
+  public NormalizeTest() {
+    super(EXTERNS);
+  }
+
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new Normalize(compiler, false);
@@ -169,6 +176,13 @@ public class NormalizeTest extends CompilerTestCase {
          "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}");
     test("try { } catch(e) {e; try { } catch(e) {e;}};",
          "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
+
+    // Verify global redefinition of extern definition is left alone.
+    testSame("var window");
+
+    // Verify local masking extern made unique.
+    test("function f() {var window}",
+         "function f() {var window$$1}");
   }
 
   public void testRemoveDuplicateVarDeclarations() {

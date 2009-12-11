@@ -338,6 +338,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Controls label renaming. */
   public boolean labelRenaming;
 
+  /** Reserve property names on the global this object. */
+  public boolean reserveRawExports;
+
   /**
    * Generate pseudo names for variables and properties for debugging purposes.
    */

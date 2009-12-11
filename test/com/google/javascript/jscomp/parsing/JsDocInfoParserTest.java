@@ -772,6 +772,15 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         info.getParameterType("index"));
   }
 
+  public void testParseParam19() throws Exception {
+    JSDocInfo info = parse("@param {...} [index] */");
+    assertEquals(1, info.getParameterCount());
+    assertTypeEquals(
+        registry.createOptionalType(UNKNOWN_TYPE),
+        info.getParameterType("index"));
+    assertTrue(info.getParameterType("index").isVarArgs());
+  }
+
   public void testParseThrows1() throws Exception {
     JSDocInfo info = parse("@throws {number} Some number */");
     assertEquals(1, info.getThrownTypes().size());

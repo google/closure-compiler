@@ -1429,6 +1429,10 @@ public final class JsDocInfoParser {
     token = next();
     if (token == JsDocToken.ELLIPSIS) {
       token = next();
+      if (token == JsDocToken.RC) {
+        // EMPTY represents the UNKNOWN type in the Type AST.
+        return wrapNode(Token.ELLIPSIS, new Node(Token.EMPTY));
+      }
       restArg = true;
     }
 

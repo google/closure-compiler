@@ -614,7 +614,11 @@ public abstract class CompilerTestCase extends TestCase  {
 
     Node externsRoot = root.getFirstChild();
     Node mainRoot = root.getLastChild();
-    Node mainRootClone = mainRoot.cloneTree();
+
+    // Save the tree for later comparison.
+    Node rootClone = root.cloneTree();
+    Node externsRootClone = rootClone.getFirstChild();
+    Node mainRootClone = rootClone.getLastChild();
 
     int numRepetitions = getNumRepetitions();
     ErrorManager[] errorManagers = new ErrorManager[numRepetitions];
@@ -719,7 +723,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
       if (normalizeEnabled) {
         Normalize normalize = new Normalize(compiler, false);
-        normalize.process(externsRoot, mainRootClone);
+        normalize.process(externsRootClone, mainRootClone);
       }
 
       if (mainRootClone.checkTreeEqualsSilent(mainRoot)) {

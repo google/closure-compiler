@@ -1328,10 +1328,8 @@ public class Compiler extends AbstractCompiler {
   void normalizeNodeTypes(Node root) {
     Tracer tracer = newTracer("normalizeNodeTypes");
 
-    // TODO(johnlenz): Move the Node type normalizer into the general
-    // Normalization pass once we force everybody to turn it on. It's
-    // confusing to have a mandatory normalization pass and an optional
-    // one.
+    // TODO(johnlenz): Merge the NodeTypeNormalizer into the AST creator
+    // it doesn't need to be done separately.
     CompilerPass pass = new NodeTypeNormalizer();
     pass.process(null, root);
 
