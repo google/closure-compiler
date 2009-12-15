@@ -167,8 +167,9 @@ class AmbiguateProperties implements CompilerPass {
     }
 
     invalidatingTypes.add(type);
-    if (type instanceof InstanceObjectType) {
-      invalidatingTypes.add(((ObjectType) type).getImplicitPrototype());
+    ObjectType objType = ObjectType.cast(type);
+    if (objType instanceof InstanceObjectType) {
+      invalidatingTypes.add(objType.getImplicitPrototype());
     }
   }
 
@@ -260,7 +261,7 @@ class AmbiguateProperties implements CompilerPass {
       relatedBitsets.put(type, related);
     }
 
-    ObjectType parentType = (ObjectType) type;
+    ObjectType parentType = type.toObjectType();
     while (parentType != null) {
       related.set(getIntForType(parentType));
       parentType = parentType.getImplicitPrototype();
@@ -272,7 +273,7 @@ class AmbiguateProperties implements CompilerPass {
     } else if (type instanceof FunctionPrototypeType) {
       constructor = ((FunctionPrototypeType) type).getOwnerFunction();
     } else {
-      constructor = ((ObjectType) type).getConstructor();
+      constructor = type.toObjectType().getConstructor();
     }
     if (constructor != null) {
       Set<ObjectType> interfaces = constructor.getAllImplementedInterfaces();
@@ -500,11 +501,12 @@ class AmbiguateProperties implements CompilerPass {
         return false;
       }
     }
-    return type == null || !(type instanceof ObjectType)
-        || invalidatingTypes.contains(type)
-        || !((ObjectType) type).hasReferenceName()
-        || (type.isNamedType() && type.isUnknownType())
-        || type.isEnumType() || type.autoboxesTo() != null;
+    ObjectType objType = ObjectType.cast(type);
+    return objType == null
+        || invalidatingTypes.contains(objType)
+        || !objType.hasReferenceName()
+        || (objType.isNamedType() && objType.isUnknownType())
+        || objType.isEnumType() || objType.autoboxesTo() != null;
   }
 
   private Property getProperty(String name) {

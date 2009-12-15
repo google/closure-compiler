@@ -430,4 +430,11 @@ public abstract class ObjectType extends JSType {
   public boolean isNativeObjectType() {
     return false;
   }
+
+  /**
+   * A null-safe version of JSType#toObjectType.
+   */
+  public static ObjectType cast(JSType type) {
+    return type == null ? null : type.toObjectType();
+  }
 }

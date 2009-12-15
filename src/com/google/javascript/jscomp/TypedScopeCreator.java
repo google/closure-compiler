@@ -504,11 +504,10 @@ final class TypedScopeCreator implements ScopeCreator {
             Var var = scope.getVar(
                 lvalueNode.getFirstChild().getQualifiedName());
             if (var != null) {
-              JSType ownerType = var.getType();
-              if (ownerType instanceof ObjectType) {
+              ObjectType ownerType = ObjectType.cast(var.getType());
+              if (ownerType != null) {
                 String propName = lvalueNode.getLastChild().getString();
-                JSType propType =
-                    ((ObjectType) ownerType).getPropertyType(propName);
+                JSType propType = ownerType.getPropertyType(propName);
                 if (propType instanceof FunctionType) {
                   functionType =
                       new FunctionTypeBuilder(
@@ -735,19 +734,16 @@ final class TypedScopeCreator implements ScopeCreator {
           SubclassRelationship relationship =
               codingConvention.getClassesDefinedByCall(n);
           if (relationship != null) {
-            JSType superClass =
-                typeRegistry.getType(relationship.superclassName);
-            JSType subClass = typeRegistry.getType(relationship.subclassName);
-            if (superClass instanceof ObjectType &&
-                subClass instanceof ObjectType) {
-              ObjectType superObject = (ObjectType) superClass;
-              ObjectType subObject = (ObjectType) subClass;
-
-              FunctionType superCtor = superObject.getConstructor();
-              FunctionType subCtor = subObject.getConstructor();
+            ObjectType superClass = ObjectType.cast(
+                typeRegistry.getType(relationship.superclassName));
+            ObjectType subClass = ObjectType.cast(
+                typeRegistry.getType(relationship.subclassName));
+            if (superClass != null && subClass != null) {
+              FunctionType superCtor = superClass.getConstructor();
+              FunctionType subCtor = subClass.getConstructor();
 
               if (relationship.type == SubclassType.INHERITS) {
-                validator.expectSuperType(t, n, superObject, subObject);
+                validator.expectSuperType(t, n, superClass, subClass);
               }
 
               if (superCtor != null && subCtor != null) {
@@ -760,9 +756,9 @@ final class TypedScopeCreator implements ScopeCreator {
           String singletonGetterClassName =
               codingConvention.getSingletonGetterClassName(n);
           if (singletonGetterClassName != null) {
-            JSType classType = typeRegistry.getType(singletonGetterClassName);
-            if (classType instanceof ObjectType) {
-              ObjectType objectType = (ObjectType) classType;
+            ObjectType objectType = ObjectType.cast(
+                typeRegistry.getType(singletonGetterClassName));
+            if (objectType != null) {
               FunctionType functionType = objectType.getConstructor();
 
               if (functionType != null) {
@@ -779,19 +775,16 @@ final class TypedScopeCreator implements ScopeCreator {
           DelegateRelationship delegateRelationship =
               codingConvention.getDelegateRelationship(n);
           if (delegateRelationship != null) {
-            JSType delegatorClass =
-                typeRegistry.getType(delegateRelationship.delegator);
-            JSType delegateBaseClass =
-                typeRegistry.getType(delegateRelationship.delegateBase);
-            JSType delegateSuperClass = typeRegistry.getType(
-                codingConvention.getDelegateSuperclassName());
-            if (delegatorClass instanceof ObjectType &&
-                delegateBaseClass instanceof ObjectType &&
-                delegateSuperClass instanceof ObjectType) {
-              ObjectType delegatorObject = (ObjectType) delegatorClass;
-              ObjectType delegateBaseObject = (ObjectType) delegateBaseClass;
-              ObjectType delegateSuperObject = (ObjectType) delegateSuperClass;
-
+            ObjectType delegatorObject = ObjectType.cast(
+                typeRegistry.getType(delegateRelationship.delegator));
+            ObjectType delegateBaseObject = ObjectType.cast(
+                typeRegistry.getType(delegateRelationship.delegateBase));
+            ObjectType delegateSuperObject = ObjectType.cast(
+                typeRegistry.getType(
+                    codingConvention.getDelegateSuperclassName()));
+            if (delegatorObject != null &&
+                delegateBaseObject != null &&
+                delegateSuperObject != null) {
               FunctionType delegatorCtor = delegatorObject.getConstructor();
               FunctionType delegateBaseCtor =
                   delegateBaseObject.getConstructor();
@@ -806,7 +799,7 @@ final class TypedScopeCreator implements ScopeCreator {
                     typeRegistry.getNativeType(U2U_CONSTRUCTOR_TYPE));
                 FunctionType findDelegate = new FunctionType(
                     typeRegistry, null, null, functionParamBuilder.build(),
-                    typeRegistry.createNullableType(delegateBaseClass), null);
+                    typeRegistry.createNullableType(delegateBaseObject), null);
 
                 FunctionType delegateProxy =
                     typeRegistry.createConstructorType(
@@ -827,9 +820,9 @@ final class TypedScopeCreator implements ScopeCreator {
           ObjectLiteralCast objectLiteralCast =
               codingConvention.getObjectLiteralCast(t, n);
           if (objectLiteralCast != null) {
-            JSType type = typeRegistry.getType(objectLiteralCast.typeName);
-            if (type instanceof ObjectType &&
-                ((ObjectType) type).getConstructor() != null) {
+            ObjectType type = ObjectType.cast(
+                typeRegistry.getType(objectLiteralCast.typeName));
+            if (type != null && type.getConstructor() != null) {
               objectLiteralCast.objectNode.setJSType(type);
             } else {
               compiler.report(JSError.make(t.getSourceName(), n,
@@ -1079,12 +1072,8 @@ final class TypedScopeCreator implements ScopeCreator {
       Var ownerVar = scope.getVar(slotName);
       if (ownerVar != null) {
         JSType ownerVarType = ownerVar.getType();
-        ownerVarType = ownerVarType == null ?
-            null : ownerVarType.restrictByNotNullOrUndefined();
-
-        if (ownerVarType instanceof ObjectType) {
-          return (ObjectType) ownerVarType;
-        }
+        return ObjectType.cast(ownerVarType == null ?
+            null : ownerVarType.restrictByNotNullOrUndefined());
       }
       return null;
     }

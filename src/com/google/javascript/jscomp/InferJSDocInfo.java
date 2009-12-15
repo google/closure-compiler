@@ -181,8 +181,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
    * Dereferences the given type to an object, or returns null.
    */
   private ObjectType dereferenceToObject(JSType type) {
-    type = type == null ? null : type.dereference();
-    return (type instanceof ObjectType) ? (ObjectType) type : null;
+    return ObjectType.cast(type == null ? null : type.dereference());
   }
 
   /**

@@ -506,10 +506,9 @@ class TypeInference
    * Defines a property if the property has not been defined yet.
    */
   private void ensurePropertyDefined(Node getprop, JSType rightType) {
-    JSType ownerType =
-        getJSType(getprop.getFirstChild()).restrictByNotNullOrUndefined();
-    if (ownerType instanceof ObjectType) {
-      ObjectType objectType = (ObjectType) ownerType;
+    ObjectType objectType = ObjectType.cast(
+        getJSType(getprop.getFirstChild()).restrictByNotNullOrUndefined());
+    if (objectType != null) {
       if (ensurePropertyDeclaredHelper(getprop, objectType)) {
         return;
       }
@@ -555,10 +554,10 @@ class TypeInference
    * be known in {@code TypedScopeCreator}.
    */
   private void ensurePropertyDeclared(Node getprop) {
-    JSType ownerType =
-        getJSType(getprop.getFirstChild()).restrictByNotNullOrUndefined();
-    if (ownerType instanceof ObjectType) {
-      ensurePropertyDeclaredHelper(getprop, (ObjectType) ownerType);
+    ObjectType ownerType = ObjectType.cast(
+        getJSType(getprop.getFirstChild()).restrictByNotNullOrUndefined());
+    if (ownerType != null) {
+      ensurePropertyDeclaredHelper(getprop, ownerType);
     }
   }
 
@@ -880,10 +879,10 @@ class TypeInference
 
   private FlowScope traverseGetElem(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope);
-    JSType objType =
-        getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
-    if (objType instanceof ObjectType) {
-      JSType type = ((ObjectType) objType).getParameterType();
+    ObjectType objType = ObjectType.cast(
+        getJSType(n.getFirstChild()).restrictByNotNullOrUndefined());
+    if (objType != null) {
+      JSType type = objType.getParameterType();
       if (type != null) {
         n.setJSType(type);
       }
@@ -944,9 +943,9 @@ class TypeInference
     if ((propertyType == null || propertyType.isUnknownType()) &&
         qualifiedName != null) {
       // If we find this node in the registry, then we can infer its type.
-      JSType regType = registry.getType(qualifiedName);
-      if (regType instanceof ObjectType) {
-        propertyType = ((ObjectType) regType).getConstructor();
+      ObjectType regType = ObjectType.cast(registry.getType(qualifiedName));
+      if (regType != null) {
+        propertyType = regType.getConstructor();
       }
     }
 

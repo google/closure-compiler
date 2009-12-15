@@ -711,6 +711,14 @@ Represents JavaScript value types.<p>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#toObjectType()">toObjectType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Casts this to an ObjectType, or returns null if this is not an ObjectType.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#unboxesTo()">unboxesTo</A></B>()</CODE>
 
@@ -1566,6 +1574,26 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 <DD><DL>
 
 <DT><B>Returns:</B><DD>the unboxed type or <code>null</code> if this type does not unbox.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="toObjectType()"><!-- --></A><H3>
+toObjectType</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A> <B>toObjectType</B>()</PRE>
+<DL>
+<DD>Casts this to an ObjectType, or returns null if this is not an ObjectType.
+
+ Does not change the underlying JS type. If you want to simulate JS
+ autoboxing or dereferencing, you should use autoboxesTo() or dereference().
+ Those methods may change the underlying JS type.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <HR>

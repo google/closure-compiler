@@ -410,9 +410,7 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     }
 
     boolean isHoistedFunction() {
-      return NodeUtil.isFunctionDeclaration(parent) &&
-          (grandparent.getType() == Token.SCRIPT ||
-           grandparent.getParent().getType() == Token.FUNCTION);
+      return NodeUtil.isHoistedFunctionDeclaration(parent);
     }
 
     /**
@@ -493,7 +491,7 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
      * Determines whether the block may not be part of the normal control flow,
      * but instead "hoisted" to the top of the scope.
      */
-    private final boolean mayBeHoisted;
+    private final boolean isHoisted;
 
     /**
      * Creates a new block.
@@ -504,8 +502,7 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
       this.parent = parent;
 
       // only named functions may be hoisted.
-      this.mayBeHoisted = (root.getType() == Token.FUNCTION) &&
-          !NodeUtil.isFunctionAnonymous(root);
+      this.isHoisted = NodeUtil.isHoistedFunctionDeclaration(root);
     }
 
     BasicBlock getParent() {
@@ -523,7 +520,7 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
       for (currentBlock = thatBlock;
            currentBlock != null && currentBlock != this;
            currentBlock = currentBlock.getParent()) {
-        if (currentBlock.mayBeHoisted) {
+        if (currentBlock.isHoisted) {
           return false;
         }
       }

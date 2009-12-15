@@ -277,14 +277,11 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
       return;
     }
 
-    JSType maybeObjectType = dereference(n.getFirstChild().getJSType());
+    ObjectType objectType =
+        ObjectType.cast(dereference(n.getFirstChild().getJSType()));
     String propertyName = n.getLastChild().getString();
 
-    if (maybeObjectType != null &&
-        maybeObjectType instanceof ObjectType) {
-
-      ObjectType objectType = (ObjectType) maybeObjectType;
-
+    if (objectType != null) {
       String deprecationInfo
           = getPropertyDeprecationInfo(objectType, propertyName);
 
@@ -339,11 +336,11 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
    */
   private void checkPropertyVisibility(NodeTraversal t,
       Node getprop, Node parent) {
-    JSType maybeObjectType = dereference(getprop.getFirstChild().getJSType());
+    ObjectType objectType =
+        ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
     String propertyName = getprop.getLastChild().getString();
 
-    if (maybeObjectType != null &&
-        maybeObjectType instanceof ObjectType) {
+    if (objectType != null) {
       // Is this a normal property access, or are we trying to override
       // an existing property?
       boolean isOverride = t.inGlobalScope() &&
@@ -352,7 +349,6 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
 
       // Find the lowest property defined on a class with visibility
       // information.
-      ObjectType objectType = (ObjectType) maybeObjectType;
       if (isOverride) {
         objectType = objectType.getImplicitPrototype();
       }
@@ -535,8 +531,9 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
       }
       return "";
     }
-    if (type instanceof ObjectType) {
-      ObjectType implicitProto = ((ObjectType) type).getImplicitPrototype();
+    ObjectType objType = ObjectType.cast(type);
+    if (objType != null) {
+      ObjectType implicitProto = objType.getImplicitPrototype();
       if (implicitProto != null) {
         return getTypeDeprecationInfo(implicitProto);
       }

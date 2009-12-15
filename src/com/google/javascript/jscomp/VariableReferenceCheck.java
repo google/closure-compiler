@@ -49,6 +49,10 @@ class VariableReferenceCheck implements CompilerPass {
       "JSC_REDECLARED_VARIABLE",
       "Redeclared variable: {0}");
 
+  static final DiagnosticType AMBIGUOUS_FUNCTION_DECL =
+    DiagnosticType.warning("AMBIGUIOUS_FUNCTION_DECL",
+        "Ambiguious use of a named function: {0}.");
+
   private AbstractCompiler compiler;
   private CheckLevel checkLevel;
 
@@ -95,6 +99,7 @@ class VariableReferenceCheck implements CompilerPass {
     private void checkVar(NodeTraversal t, Var v, List<Reference> references) {
       blocksWithDeclarations.clear();
       boolean isDeclaredInScope = false;
+      boolean isUnhoistedNamedFunction = false;
       Reference hoistedFn = null;
 
       // Look for hoisted functions.
@@ -104,6 +109,9 @@ class VariableReferenceCheck implements CompilerPass {
           isDeclaredInScope = true;
           hoistedFn = reference;
           break;
+        } else if (NodeUtil.isFunctionDeclaration(
+            reference.getNameNode().getParent())) {
+          isUnhoistedNamedFunction = true;
         }
       }
 
@@ -125,6 +133,21 @@ class VariableReferenceCheck implements CompilerPass {
                       reference.getNameNode(),
                       checkLevel,
                       REDECLARED_VARIABLE, v.name));
+              break;
+            }
+          }
+        }
+
+        if (!isDeclaration && isDeclaredInScope && isUnhoistedNamedFunction) {
+          // Only allow an unhoisted named function to be used within the
+          // block it is declared.
+          for (BasicBlock declaredBlock : blocksWithDeclarations) {
+            if (!declaredBlock.provablyExecutesBefore(basicBlock)) {
+              compiler.report(
+                  JSError.make(reference.getSourceName(),
+                      reference.getNameNode(),
+                      checkLevel,
+                      AMBIGUOUS_FUNCTION_DECL, v.name));
               break;
             }
           }

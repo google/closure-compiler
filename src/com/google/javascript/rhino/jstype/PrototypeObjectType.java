@@ -279,8 +279,8 @@ class PrototypeObjectType extends ObjectType {
     JSType propertyType = getPropertyType(propertyName);
     ObjectType nativeType =
         this.isFunctionType() ?
-        ((ObjectType) getNativeType(JSTypeNative.FUNCTION_PROTOTYPE)) :
-        ((ObjectType) getNativeType(JSTypeNative.OBJECT_PROTOTYPE));
+        registry.getNativeObjectType(JSTypeNative.FUNCTION_PROTOTYPE) :
+        registry.getNativeObjectType(JSTypeNative.OBJECT_PROTOTYPE);
     JSType nativePropertyType = nativeType.getPropertyType(propertyName);
     return propertyType != nativePropertyType;
   }
@@ -366,14 +366,15 @@ class PrototypeObjectType extends ObjectType {
       return RecordType.isSubtype(this, (RecordType) that);
     }
     // prototype based objects
-    if (that instanceof ObjectType) {
+    ObjectType thatObj = ObjectType.cast(that);
+    if (that != null) {
       if (isUnknownType() || implicitPrototypeChainIsUnknown()) {
         // If unsure, say 'yes', to avoid spurious warnings.
         // TODO(user): resolve the prototype chain completely in all cases,
         // to avoid guessing.
         return true;
       }
-      return this.isImplicitPrototype((ObjectType) that);
+      return this.isImplicitPrototype(thatObj);
     }
     return false;
   }

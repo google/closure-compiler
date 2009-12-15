@@ -461,8 +461,8 @@ public class FunctionType extends PrototypeObjectType {
   boolean defineProperty(String name, JSType type,
       boolean inferred, boolean inExterns) {
     if ("prototype".equals(name)) {
-      if (type instanceof ObjectType) {
-        ObjectType objType = (ObjectType) type;
+      ObjectType objType = type.toObjectType();
+      if (objType != null) {
         return setPrototype(
             new FunctionPrototypeType(
                 registry, this, objType, isNativeObjectType()));

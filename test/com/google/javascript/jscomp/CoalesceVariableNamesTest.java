@@ -27,24 +27,12 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
   // The spacing in this file is not exactly standard but it greatly helps
   // picking out which variable names are merged.
 
-  private boolean usePseudoName = false;
-  
-  @Override
-  protected int getNumRepetitions() {
-   return 1;
-  }  
-  
-  @Override
-  public void setUp() {
-    usePseudoName = false;
-  }
-  
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       public void process(Node externs, Node js) {
         NodeTraversal.traverse(compiler, js,
-            new CoalesceVariableNames(compiler, usePseudoName));
+            new CoalesceVariableNames(compiler));
       }
     };
   }
@@ -341,26 +329,6 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
         "   this.load();");
   }
 
-  public void testUsePseduoNames() {
-    usePseudoName = true;
-    inFunction("var x   = 0; print(x  ); var   y = 1; print(  y)",
-               "var x_y = 0; print(x_y);     x_y = 1; print(x_y)");
-    
-    inFunction("var x_y = 1; var x   = 0; print(x  ); var     y = 1;" + 
-               "print(  y); print(x_y);",
-
-               "var x_y = 1; var x_y$ = 0; print(x_y$);     x_y$ = 1;" + "" +
-               "print(x_y$); print(x_y);");
-    
-    inFunction("var x_y = 1; function f() {" +
-               "var x    = 0; print(x  ); var y = 1; print( y);" +
-               "print(x_y);}",
-
-               "var x_y = 1; function f() {" +
-               "var x_y$ = 0; print(x_y$); x_y$ = 1; print(x_y$);" +
-               "print(x_y);}");
-  }
-  
   private void inFunction(String src) {
     inFunction(src, src);
   }

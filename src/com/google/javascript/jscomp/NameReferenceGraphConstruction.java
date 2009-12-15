@@ -457,8 +457,8 @@ class NameReferenceGraphConstruction implements CompilerPass {
       instanceType = boxedType != null ? boxedType : instanceType;
 
       // Retrieves the property.
-      Preconditions.checkState(instanceType instanceof ObjectType);
-      ObjectType objType = (ObjectType) instanceType;
+      ObjectType objType = instanceType.toObjectType();
+      Preconditions.checkState(objType != null);
 
       if (!isExtern) {
         // Don't count reference in extern as a use.

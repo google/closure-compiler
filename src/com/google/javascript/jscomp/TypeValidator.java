@@ -256,9 +256,9 @@ class TypeValidator {
       JSType indexType) {
     if (objType.isUnknownType()) {
       expectStringOrNumber(t, n, indexType, "property access");
-    } else if (objType instanceof ObjectType &&
-        ((ObjectType) objType).getIndexType() != null) {
-      expectCanAssignTo(t, n, indexType, ((ObjectType) objType).getIndexType(),
+    } else if (objType.toObjectType() != null &&
+        objType.toObjectType().getIndexType() != null) {
+      expectCanAssignTo(t, n, indexType, objType.toObjectType().getIndexType(),
           "restricted index type");
     } else if (objType.isArrayType()) {
       expectNumber(t, n, indexType, "array access");
@@ -624,8 +624,8 @@ class TypeValidator {
 
     String qualifiedName = n.getQualifiedName();
     if (type.isFunctionPrototypeType() ||
-        (type instanceof ObjectType &&
-         ((ObjectType) type).getConstructor() != null)) {
+        (type.toObjectType() != null &&
+         type.toObjectType().getConstructor() != null)) {
       return type.toString();
     } else if (qualifiedName != null) {
       return qualifiedName;

@@ -300,10 +300,9 @@ class DisambiguateProperties<T> implements CompilerPass {
     }
 
     typeSystem.addInvalidatingType(type);
-    if (type instanceof ObjectType &&
-        ((ObjectType) type).getImplicitPrototype() != null) {
-      typeSystem.addInvalidatingType(
-          ((ObjectType) type).getImplicitPrototype());
+    ObjectType objType = ObjectType.cast(type);
+    if (objType != null && objType.getImplicitPrototype() != null) {
+      typeSystem.addInvalidatingType(objType.getImplicitPrototype());
     }
   }
 
@@ -669,10 +668,13 @@ class DisambiguateProperties<T> implements CompilerPass {
     }
 
     @Override public boolean isInvalidatingType(JSType type) {
-      return (type == null) || invalidatingTypes.contains(type)
-          || (type instanceof ObjectType &&
-              !((ObjectType) type).hasReferenceName())
-          || (type.isNamedType() && type.isUnknownType());
+      if (type == null || invalidatingTypes.contains(type) ||
+          (type.isNamedType() && type.isUnknownType())) {
+        return true;
+      }
+
+      ObjectType objType = ObjectType.cast(type);
+      return objType != null && !objType.hasReferenceName();
     }
 
     @Override public ImmutableSet<JSType> getTypesToSkipForType(JSType type) {
@@ -692,8 +694,10 @@ class DisambiguateProperties<T> implements CompilerPass {
       JSType skipType = type;
       while (skipType != null) {
         types.add(skipType);
-        if (skipType instanceof ObjectType) {
-          skipType = ((ObjectType) skipType).getImplicitPrototype();
+
+        ObjectType objSkipType = skipType.toObjectType();
+        if (objSkipType != null) {
+          skipType = objSkipType.getImplicitPrototype();
         } else {
           break;
         }
@@ -712,17 +716,20 @@ class DisambiguateProperties<T> implements CompilerPass {
     @Override public Iterable<JSType> getTypeAlternatives(JSType type) {
       if (type.isUnionType()) {
         return ((UnionType) type).getAlternates();
-      } else if (type instanceof ObjectType
-          && ((ObjectType) type).getConstructor() != null
-          && ((ObjectType) type).getConstructor().isInterface()) {
-        List<JSType> list = Lists.newArrayList();
-        for (FunctionType impl
-            : registry.getDirectImplementors((ObjectType) type)) {
-          list.add(impl.getInstanceType());
-        }
-        return list;
       } else {
-        return null;
+        ObjectType objType = type.toObjectType();
+        if (objType != null &&
+            objType.getConstructor() != null &&
+            objType.getConstructor().isInterface()) {
+          List<JSType> list = Lists.newArrayList();
+          for (FunctionType impl
+                   : registry.getDirectImplementors(objType)) {
+            list.add(impl.getInstanceType());
+          }
+          return list;
+        } else {
+          return null;
+        }
       }
     }
 
@@ -739,7 +746,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       // this appears.  This will make references to overriden properties look
       // like references to the initial property, so they are renamed alike.
       ObjectType foundType = null;
-      ObjectType objType = (ObjectType) type;
+      ObjectType objType = ObjectType.cast(type);
       while (objType != null && objType.getImplicitPrototype() != objType) {
         if (objType.hasOwnProperty(field)) {
           foundType = objType;
@@ -764,14 +771,15 @@ class DisambiguateProperties<T> implements CompilerPass {
     @Override
     public void recordInterfaces(JSType type, JSType relatedType,
                                  DisambiguateProperties<JSType>.Property p) {
-      if (type instanceof ObjectType) {
+      ObjectType objType = ObjectType.cast(type);
+      if (objType != null) {
         FunctionType constructor;
-        if (type instanceof FunctionType) {
-          constructor = (FunctionType) type;
-        } else if (type instanceof FunctionPrototypeType) {
-          constructor = ((FunctionPrototypeType) type).getOwnerFunction();
+        if (objType instanceof FunctionType) {
+          constructor = (FunctionType) objType;
+        } else if (objType instanceof FunctionPrototypeType) {
+          constructor = ((FunctionPrototypeType) objType).getOwnerFunction();
         } else {
-          constructor = ((ObjectType) type).getConstructor();
+          constructor = objType.getConstructor();
         }
         while (constructor != null) {
           List<ObjectType> interfaces = constructor.getImplementedInterfaces();

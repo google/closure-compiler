@@ -35,8 +35,8 @@ public class InlineVariablesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new InlineVariables(
-        compiler, 
-        (inlineLocalsOnly) 
+        compiler,
+        (inlineLocalsOnly)
             ? InlineVariables.Mode.LOCALS_ONLY
             : InlineVariables.Mode.ALL,
         inlineAllStrings);
@@ -410,8 +410,12 @@ public class InlineVariablesTest extends CompilerTestCase {
     testSame("f(); var x = false; function f() { alert(x); };");
   }
 
+  public void testInlineIntoNestedNonHoistedNamedFunctions() {
+    test("f(); var x = false; if (false) function f() { alert(x); };",
+         "f(); if (false) function f() { alert(false); };");
+  }
+
   public void testNoInlineIntoNestedNamedFunctions() {
-    testSame("f(); var x = false; if (false) function f() { alert(x); };");
     testSame("f(); var x = false; function f() { if (false) { alert(x); } };");
   }
 
@@ -499,17 +503,17 @@ public class InlineVariablesTest extends CompilerTestCase {
   }
 
   public void testInlineFunctionDeclaration() {
-    test("var f = function () {}; var a = f;", 
+    test("var f = function () {}; var a = f;",
          "var a = function () {};");
-    test("var f = function () {}; foo(); var a = f;", 
+    test("var f = function () {}; foo(); var a = f;",
          "foo(); var a = function () {};");
-    test("var f = function () {}; foo(f);", 
+    test("var f = function () {}; foo(f);",
          "foo(function () {});");
-    
-    testSame("var f = function () {}; function g() {var a = f;}"); 
-    testSame("var f = function () {}; function g() {h(f);}"); 
+
+    testSame("var f = function () {}; function g() {var a = f;}");
+    testSame("var f = function () {}; function g() {h(f);}");
   }
-  
+
   public void testRecursiveFunction1() {
     testSame("var x = 0; (function x() { return x ? x() : 3; })();");
   }
@@ -763,7 +767,7 @@ public class InlineVariablesTest extends CompilerTestCase {
         "var x=1; x; function f() {var x = 1; x;}",
         "var x=1; x; function f() {1;}");
   }
-  
+
   public void testLocalsOnly2() {
     inlineLocalsOnly = true;
     test(

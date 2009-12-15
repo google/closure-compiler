@@ -863,11 +863,12 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
         return Lists.<Action>newArrayList();
       }
 
-      JSType objType = getJSType(receiver.getFirstChild())
-          .restrictByNotNullOrUndefined();
+      ObjectType objType = ObjectType.cast(
+          getJSType(receiver.getFirstChild())
+          .restrictByNotNullOrUndefined());
       String prop = receiver.getLastChild().getString();
-      if (objType instanceof ObjectType &&
-          (((ObjectType) objType).isPropertyInExterns(prop)) &&
+      if (objType != null &&
+          (objType.isPropertyInExterns(prop)) &&
           ((FunctionType) recvType).getParameters() != null) {
         List<Action> actions = Lists.newArrayList();
 
@@ -915,8 +916,8 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       if (jsType instanceof UnionType) {
         boolean found = false;
         for (JSType alt : ((UnionType) jsType).getAlternates()) {
-          if (alt instanceof ObjectType) {
-            ObjectType altObj = (ObjectType) alt;
+          ObjectType altObj = ObjectType.cast(alt);
+          if (altObj != null) {
             actions.addAll(getImplicitActionsFromPropNonUnion(
                   altObj, prop, fnNode));
             if (altObj.hasProperty(prop)) {
@@ -927,9 +928,10 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
         if (found) {
           return actions;
         }
-      } else if (jsType instanceof ObjectType && !jsType.isUnknownType()) {
-        ObjectType objType = (ObjectType) jsType;
-        if (objType.hasProperty(prop)) {
+      } else {
+        ObjectType objType = ObjectType.cast(jsType);
+        if (objType != null &&
+            !objType.isUnknownType() && objType.hasProperty(prop)) {
           return getImplicitActionsFromPropNonUnion(objType, prop, fnNode);
         }
       }
@@ -1005,7 +1007,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     }
 
     if (jsType.isObject()) {
-      return createConcreteInstance((ObjectType) jsType);
+      return createConcreteInstance(jsType.toObjectType());
     }
 
     return ConcreteType.NONE;  // Not a reference type.
@@ -1022,11 +1024,10 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
         ret = ret.unionWith(createTypeWithSubTypes(alt));
       }
     } else {
-      if (jsType instanceof ObjectType
-        && ((ObjectType) jsType).getConstructor() != null
-            && ((ObjectType) jsType).getConstructor().isInterface()) {
-        ObjectType instType = (ObjectType) jsType;
-
+      ObjectType instType = ObjectType.cast(jsType);
+      if (instType != null &&
+          instType.getConstructor() != null &&
+          instType.getConstructor().isInterface()) {
         Collection<FunctionType> implementors =
             getTypeRegistry().getDirectImplementors(instType);
 
@@ -1154,7 +1155,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       case Token.OBJECTLIT:
         if ((expr.getJSType() != null) && !expr.getJSType().isUnknownType()) {
           JSType exprType = expr.getJSType().restrictByNotNullOrUndefined();
-          ConcreteType inst = createConcreteInstance((ObjectType) exprType);
+          ConcreteType inst = createConcreteInstance(exprType.toObjectType());
           allInstantiatedTypes.add(inst);
           ret = inst;
         } else {

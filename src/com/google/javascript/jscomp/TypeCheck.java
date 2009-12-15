@@ -878,16 +878,15 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
 
       // object.property = ...;
-      JSType type = objectJsType.restrictByNotNullOrUndefined();
-      if (type instanceof ObjectType) {
-        ObjectType objectType = (ObjectType) type;
-        if (objectType.hasProperty(property)) {
-          if (!objectType.isPropertyTypeInferred(property) &&
-              !propertyIsImplicitCast(objectType, property)) {
-            validator.expectCanAssignToPropertyOf(
-                t, assign, getJSType(rvalue),
-                objectType.getPropertyType(property), object, property);
-          }
+      ObjectType type = ObjectType.cast(
+          objectJsType.restrictByNotNullOrUndefined());
+      if (type != null) {
+        if (type.hasProperty(property) &&
+            !type.isPropertyTypeInferred(property) &&
+            !propertyIsImplicitCast(type, property)) {
+          validator.expectCanAssignToPropertyOf(
+              t, assign, getJSType(rvalue),
+              type.getPropertyType(property), object, property);
         }
         return;
       }
@@ -958,7 +957,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           continue;
         }
         FunctionType interfaceType =
-            ((ObjectType) implementedInterface).getConstructor();
+            implementedInterface.toObjectType().getConstructor();
         boolean interfaceHasProperty =
             interfaceType.getPrototype().hasProperty(propertyName);
         foundInterfaceProperty = foundInterfaceProperty || interfaceHasProperty;
@@ -1305,9 +1304,10 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       for (JSType baseInterface : functionType.getImplementedInterfaces()) {
         boolean badImplementedType = false;
-        if (baseInterface instanceof ObjectType) {
+        ObjectType baseInterfaceObj = ObjectType.cast(baseInterface);
+        if (baseInterfaceObj != null) {
           FunctionType interfaceConstructor =
-              ((ObjectType) baseInterface).getConstructor();
+              baseInterfaceObj.getConstructor();
           if (interfaceConstructor != null &&
               !interfaceConstructor.isInterface()) {
             badImplementedType = true;

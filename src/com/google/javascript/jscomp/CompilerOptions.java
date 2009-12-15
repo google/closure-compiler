@@ -412,6 +412,9 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public boolean instrumentForCoverageOnly;
 
+  /** Add code to skip properties that Caja adds to Object.prototype */
+  public boolean ignoreCajaProperties;
+
   public String syntheticBlockStartMarker;
 
   public String syntheticBlockEndMarker;
@@ -628,6 +631,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Alterations
     instrumentForCoverage = false;
     instrumentForCoverageOnly = false;
+    ignoreCajaProperties = false;
     syntheticBlockStartMarker = null;
     syntheticBlockEndMarker = null;
     locale = null;

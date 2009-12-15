@@ -417,12 +417,14 @@ class SemanticReverseAbstractInterpreter
    * @param propertyName The string of the left-side of the in.
    */
   private FlowScope caseIn(Node object, String propertyName, FlowScope blindScope) {
-    JSType objectType = object.getJSType();
-    objectType = this.getRestrictedWithoutNull(objectType);
-    objectType = this.getRestrictedWithoutUndefined(objectType);
+    JSType jsType = object.getJSType();
+    jsType = this.getRestrictedWithoutNull(jsType);
+    jsType = this.getRestrictedWithoutUndefined(jsType);
+
     boolean hasProperty = false;
-    if (objectType instanceof ObjectType) {
-      hasProperty = ((ObjectType) objectType).hasProperty(propertyName);
+    ObjectType objectType = ObjectType.cast(jsType);
+    if (objectType != null) {
+      hasProperty = objectType.hasProperty(propertyName);
     }
     if (!hasProperty) {
       String qualifiedName = object.getQualifiedName();

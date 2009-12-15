@@ -170,9 +170,11 @@ public final class InstanceObjectType extends PrototypeObjectType {
   public boolean equals(Object that) {
     if (this == that) {
       return true;
-    } else if (this.isNominalType() && that instanceof JSType &&
-        ((JSType) that).isNominalType()) {
-      return getReferenceName().equals(((ObjectType) that).getReferenceName());
+    } else if (that instanceof JSType && this.isNominalType()) {
+      ObjectType thatObj = ObjectType.cast((JSType) that);
+      if (thatObj != null && thatObj.isNominalType()) {
+        return getReferenceName().equals(thatObj.getReferenceName());
+      }
     }
     return false;
   }

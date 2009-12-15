@@ -169,10 +169,12 @@ public class NamedType extends ProxyObjectType {
   public boolean equals(Object that) {
     if (this == that) {
       return true;
-    } else if (that instanceof ObjectType) {
-      ObjectType objType = (ObjectType) that;
-      return objType.isNominalType() &&
-          reference.equals(objType.getReferenceName());
+    } else if (that instanceof JSType) {
+      ObjectType objType = ObjectType.cast((JSType) that);
+      if (objType != null) {
+        return objType.isNominalType() &&
+            reference.equals(objType.getReferenceName());
+      }
     }
     return false;
   }
@@ -210,9 +212,9 @@ public class NamedType extends ProxyObjectType {
    */
   private void resolveViaRegistry(
       ErrorReporter t, StaticScope<JSType> enclosing) {
-    JSType type = registry.getType(reference);
-    if (type != null && type instanceof ObjectType) {
-      setReferencedType((ObjectType) type, t, enclosing);
+    ObjectType type = ObjectType.cast(registry.getType(reference));
+    if (type != null) {
+      setReferencedType(type, t, enclosing);
     }
   }
 
@@ -249,11 +251,11 @@ public class NamedType extends ProxyObjectType {
 
     // resolving component by component
     for (int i = 1; i < componentNames.length; i++) {
-      if (!(value instanceof ObjectType)) {
+      ObjectType parentClass = ObjectType.cast(value);
+      if (parentClass == null) {
         handleUnresolvedType(t);
         return;
       }
-      ObjectType parentClass = (ObjectType)value;
       if (componentNames[i].length() == 0) {
         handleUnresolvedType(t);
         return;

@@ -1920,6 +1920,7 @@ public class Node implements Cloneable, Serializable
     /**
      * Returns the set of ES5 directives for this node.
      */
+    @SuppressWarnings("unchecked")
     public Set<String> getDirectives() {
         return (Set<String>) getProp(DIRECTIVES);
     }

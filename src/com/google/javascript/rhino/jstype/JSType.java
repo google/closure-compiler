@@ -376,10 +376,9 @@ public abstract class JSType implements Serializable {
    *     have properties, or if the type is not found.
    */
   public JSType findPropertyType(String propertyName) {
-    JSType autoboxObjType = autoboxesTo();
-    if (autoboxObjType != null &&
-        autoboxObjType instanceof ObjectType) {
-      return ((ObjectType) autoboxObjType).findPropertyType(propertyName);
+    ObjectType autoboxObjType = ObjectType.cast(autoboxesTo());
+    if (autoboxObjType != null) {
+      return autoboxObjType.findPropertyType(propertyName);
     }
 
     return null;
@@ -428,6 +427,17 @@ public abstract class JSType implements Serializable {
   }
 
   /**
+   * Casts this to an ObjectType, or returns null if this is not an ObjectType.
+   *
+   * Does not change the underlying JS type. If you want to simulate JS
+   * autoboxing or dereferencing, you should use autoboxesTo() or dereference().
+   * Those methods may change the underlying JS type.
+   */
+  public ObjectType toObjectType() {
+    return this instanceof ObjectType ? (ObjectType) this : null;
+  }
+
+  /**
    * Dereference a type for property access.
    *
    * Autoboxes the type, filters null/undefined, and returns the result
@@ -436,9 +446,7 @@ public abstract class JSType implements Serializable {
   public final ObjectType dereference() {
     JSType restricted = restrictByNotNullOrUndefined();
     JSType autobox = restricted.autoboxesTo();
-    JSType result =  autobox == null ? restricted : autobox;
-    return result instanceof ObjectType ?
-        (ObjectType) result : null;
+    return ObjectType.cast(autobox == null ? restricted : autobox);
   }
 
   /**

@@ -49,7 +49,8 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testCorrectRedeclare() {
-    assertNoWarning("function f() { if (1) { var a = 2; } else { var a = 3; } }");
+    assertNoWarning(
+        "function f() { if (1) { var a = 2; } else { var a = 3; } }");
   }
 
   public void testCorrectRecursion() {
@@ -103,6 +104,43 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
     assertUndeclared("if (true) { f(); function f() {} }");
   }
 
+  public void testNonHoistedFunction2() {
+    assertNoWarning("if (false) { function f() {} f(); }");
+  }
+
+  public void testNonHoistedFunction3() {
+    assertNoWarning("function g() { if (false) { function f() {} f(); }}");
+  }
+
+  public void testNonHoistedFunction4() {
+    assertAmbiguous("if (false) { function f() {} }  f();");
+  }
+
+  public void testNonHoistedFunction5() {
+    assertAmbiguous("function g() { if (false) { function f() {} }  f(); }");
+  }
+
+  public void testNonHoistedFunction6() {
+    assertUndeclared("if (false) { f(); function f() {} }");
+  }
+
+  public void testNonHoistedFunction7() {
+    assertUndeclared("function g() { if (false) { f(); function f() {} }}");
+  }
+  
+  
+  public void testNonHoistedRecursiveFunction1() {
+    assertNoWarning("if (false) { function f() { f(); }}");
+  }
+
+  public void testNonHoistedRecursiveFunction2() {
+    assertNoWarning("function g() { if (false) { function f() { f(); }}}");
+  }
+
+  public void testNonHoistedRecursiveFunction3() {
+    assertNoWarning("function g() { if (false) { function f() { f(); g(); }}}");
+  }
+
   /**
    * Expects the JS to generate one bad-read error.
    */
@@ -116,6 +154,14 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   private void assertUndeclared(String js) {
     testSame(js, VariableReferenceCheck.UNDECLARED_REFERENCE);
   }
+
+  /**
+   * Expects the JS to generate one bad-write warning.
+   */
+  private void assertAmbiguous(String js) {
+    testSame(js, VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL);
+  }
+
 
   /**
    * Expects the JS to generate no errors or warnings.

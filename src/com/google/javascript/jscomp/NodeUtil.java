@@ -1147,6 +1147,18 @@ public final class NodeUtil {
   }
 
   /**
+   * Is this node a hoisted function declaration? A function declaration in the
+   * scope root is hoisted to the top of the scope.
+   * See {@link #isFunctionDeclaration}).
+   */
+  static boolean isHoistedFunctionDeclaration(Node n) {
+    return NodeUtil.isFunctionDeclaration(n)
+        && (n.getParent().getType() == Token.SCRIPT
+            || n.getParent().getParent().getType() == Token.FUNCTION);
+  }
+
+
+  /**
    * Is this node an anonymous function? An anonymous function is one that has
    * either no name or a name that is not added to the current scope (see
    * {@link #isFunctionAnonymous}).

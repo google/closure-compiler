@@ -617,6 +617,14 @@ Compiler options
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#ignoreCajaProperties">ignoreCajaProperties</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add code to skip properties that Caja adds to Object.prototype</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#inferTypesInGlobalScope">inferTypesInGlobalScope</A></B></CODE>
 
 <BR>
@@ -2325,6 +2333,18 @@ public boolean <B>instrumentForCoverageOnly</B></PRE>
 <DL>
 <DD>Instrument code for the purpose of collecting coverage data - restrict to
  coverage pass only, and skip all other passes.
+<P>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="ignoreCajaProperties"><!-- --></A><H3>
+ignoreCajaProperties</H3>
+<PRE>
+public boolean <B>ignoreCajaProperties</B></PRE>
+<DL>
+<DD>Add code to skip properties that Caja adds to Object.prototype
 <P>
 <DL>
 </DL>

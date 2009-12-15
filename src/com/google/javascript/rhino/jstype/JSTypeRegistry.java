@@ -730,8 +730,9 @@ public class JSTypeRegistry implements Serializable {
           JSTypeNative.GLOBAL_THIS);
       JSType windowType = getType("Window");
       if (globalThis.isUnknownType()) {
-        if (windowType instanceof ObjectType) {
-          globalThis.setImplicitPrototype((ObjectType) windowType);
+        ObjectType windowObjType = ObjectType.cast(windowType);
+        if (windowObjType != null) {
+          globalThis.setImplicitPrototype(windowObjType);
         } else {
           globalThis.setImplicitPrototype(
               getNativeObjectType(JSTypeNative.OBJECT_TYPE));
@@ -1239,12 +1240,11 @@ public class JSTypeRegistry implements Serializable {
         Node current = n.getFirstChild();
         if (current.getType() == Token.THIS) {
           Node thisNode = current.getFirstChild();
-          JSType maybeThisType =
-              createFromTypeNodes(thisNode, sourceName, scope)
-              .restrictByNotNullOrUndefined();
-          if (maybeThisType instanceof ObjectType) {
-            thisType = (ObjectType) maybeThisType;
-          } else {
+          thisType =
+              ObjectType.cast(
+                  createFromTypeNodes(thisNode, sourceName, scope)
+                  .restrictByNotNullOrUndefined());
+          if (thisType == null) {
             reporter.warning(
                 ScriptRuntime.getMessage0("msg.jsdoc.function.thisnotobject"),
                 sourceName, thisNode.getLineno(), "", thisNode.getCharno());

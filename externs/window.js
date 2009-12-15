@@ -113,6 +113,18 @@ var sun;
 function alert(x) {}
 
 /**
+ * @param {number|undefined?} intervalID
+ * @see https://developer.mozilla.org/en/DOM/window.clearInterval
+ */
+function clearInterval(intervalID) {}
+
+/**
+ * @param {number|undefined?} timeoutID
+ * @see https://developer.mozilla.org/en/DOM/window.clearTimeout
+ */
+function clearTimeout(timeoutID) {}
+
+/**
  * @see https://developer.mozilla.org/en/DOM/window.confirm
  */
 function confirm(x) {}
@@ -126,3 +138,19 @@ function dump(x) {}
  * @see https://developer.mozilla.org/en/DOM/window.prompt
  */
 function prompt(x, opt_value) {}
+
+/**
+ * @param {Function|string} callback
+ * @param {number} delay
+ * @param {*} var_args
+ * @return {number}
+ */
+function setInterval(callback, delay, var_args) {}
+
+/**
+ * @param {Function|string} callback
+ * @param {number} delay
+ * @param {*} var_args
+ * @return {number}
+ */
+function setTimeout(callback, delay, var_args) {}

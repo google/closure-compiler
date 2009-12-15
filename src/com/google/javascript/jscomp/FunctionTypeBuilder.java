@@ -215,12 +215,9 @@ final class FunctionTypeBuilder {
       // base type
       if (info.hasBaseType()) {
         if (isConstructor || isInterface) {
-          JSType maybeBaseType = info.getBaseType().evaluate(scope);
-          if (maybeBaseType instanceof ObjectType) {
-            baseType = (ObjectType) maybeBaseType;
-          } else {
-            reportWarning(EXTENDS_NON_OBJECT,
-                fnName, maybeBaseType.toString());
+          baseType = ObjectType.cast(info.getBaseType().evaluate(scope));
+          if (baseType == null) {
+            reportWarning(EXTENDS_NON_OBJECT, fnName, baseType.toString());
           }
         } else {
           reportWarning(EXTENDS_WITHOUT_TYPEDEF, fnName);
@@ -231,9 +228,9 @@ final class FunctionTypeBuilder {
       if (isConstructor || isInterface) {
         implementedInterfaces = Lists.newArrayList();
         for (JSTypeExpression t : info.getImplementedInterfaces()) {
-          JSType interType = t.evaluate(scope);
-          if (interType instanceof ObjectType) {
-            implementedInterfaces.add((ObjectType) interType);
+          ObjectType interType = ObjectType.cast(t.evaluate(scope));
+          if (interType != null) {
+            implementedInterfaces.add(interType);
           } else {
             reportError(BAD_IMPLEMENTED_TYPE, fnName);
           }
@@ -259,9 +256,9 @@ final class FunctionTypeBuilder {
    * @param type The type of this.
    */
   FunctionTypeBuilder inferThisType(JSDocInfo info, JSType type) {
-    if (type instanceof ObjectType &&
-        (info == null || !info.hasType())) {
-      thisType = (ObjectType) type;
+    ObjectType objType = ObjectType.cast(type);
+    if (objType != null && (info == null || !info.hasType())) {
+      thisType = objType;
     }
     return this;
   }
@@ -275,18 +272,18 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder inferThisType(JSDocInfo info,
       @Nullable Node owner) {
-    JSType maybeThisType = null;
+    ObjectType maybeThisType = null;
     if (info != null && info.hasThisType()) {
-      maybeThisType = info.getThisType().evaluate(scope);
+      maybeThisType = ObjectType.cast(info.getThisType().evaluate(scope));
     }
-    if (maybeThisType != null && maybeThisType instanceof ObjectType) {
+    if (maybeThisType != null) {
       // TODO(user): Doing an instanceof check here is too
       // restrictive as (Date,Error) is, for instance, an object type
       // even though its implementation is a UnionType. Would need to
       // create interfaces JSType, ObjectType, FunctionType etc and have
       // separate implementation instead of the class hierarchy, so that
       // union types can also be object types, etc.
-      thisType = (ObjectType) maybeThisType;
+      thisType = maybeThisType;
     } else if (owner != null &&
                (info == null || !info.hasType())) {
       // If the function is of the form:
@@ -296,11 +293,12 @@ final class FunctionTypeBuilder {
       // /** @type {Function} */ x.prototype.y;
       // then we should not give it a @this type.
       String ownerTypeName = owner.getQualifiedName();
-      JSType ownerType = typeRegistry.getType(
-          scope, ownerTypeName, sourceName,
-          owner.getLineno(), owner.getCharno());
-      if (ownerType instanceof ObjectType) {
-        thisType = (ObjectType) ownerType;
+      ObjectType ownerType = ObjectType.cast(
+          typeRegistry.getType(
+              scope, ownerTypeName, sourceName,
+              owner.getLineno(), owner.getCharno()));
+      if (ownerType != null) {
+        thisType = ownerType;
       }
     }
 
