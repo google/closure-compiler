@@ -54,7 +54,7 @@ public class CompilerRunner extends
 
   @FlagSpec(help = "Specifies the compilation level to use. Options: " +
             "WHITESPACE_ONLY, SIMPLE_OPTIMIZATIONS, ADVANCED_OPTIMIZATIONS")
-  private static final Flag<CompilationLevel> FLAG_compilation_level
+  static final Flag<CompilationLevel> FLAG_compilation_level
       = Flag.value(CompilationLevel.SIMPLE_OPTIMIZATIONS);
 
   @FlagSpec(help = "Specifies the warning level to use. Options: " +
@@ -64,6 +64,10 @@ public class CompilerRunner extends
 
   @FlagSpec(help = "Specifies whether the default externs should be excluded.")
   static final Flag<Boolean> FLAG_use_only_custom_externs
+      = Flag.value(false);
+
+  @FlagSpec(help = "Enable debugging opitons.")
+  static final Flag<Boolean> FLAG_debug
       = Flag.value(false);
 
   /**
@@ -90,12 +94,12 @@ public class CompilerRunner extends
 
   @FlagSpec(help = "Specifies which formatting options, if any, should be "
       + "applied to the output JS")
-  private static final Flag<List<FormattingOption>> FLAG_formatting
+  static final Flag<List<FormattingOption>> FLAG_formatting
       = Flag.enumList(FormattingOption.class);
 
   @FlagSpec(help = "Processes built-ins from the Closure library, such as "
       + "goog.require(), goog.provide(), and goog.exportSymbol().")
-  private static final Flag<Boolean> FLAG_process_closure_primitives
+  static final Flag<Boolean> FLAG_process_closure_primitives
       = Flag.value(true);
 
   public CompilerRunner(String[] args) {
@@ -112,6 +116,10 @@ public class CompilerRunner extends
     options.setCodingConvention(new ClosureCodingConvention());
     CompilationLevel level = FLAG_compilation_level.get();
     level.setOptionsForCompilationLevel(options);
+    if (FLAG_debug.get()) {
+      level.setDebugOptionsForCompilationLevel(options);
+    }
+
     WarningLevel wLevel = FLAG_warning_level.get();
     wLevel.setOptionsForWarningLevel(options);
     for (FormattingOption formattingOption : FLAG_formatting.get()) {

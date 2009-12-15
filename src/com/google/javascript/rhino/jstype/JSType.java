@@ -406,12 +406,6 @@ public abstract class JSType implements Serializable {
     if (this.isSubtype(that)) {
       return true;
     }
-    if (autoboxesTo() != null) {
-      return autoboxesTo().isSubtype(that);
-    }
-    if (unboxesTo() != null) {
-      return unboxesTo().isSubtype(that);
-    }
     return false;
   }
 

@@ -1606,7 +1606,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testDocumentationThrows() throws Exception {
     JSDocInfo jsdoc
-        = parse("@throws {Number} This is a description.*/", true);
+        = parse("@throws {number} This is a description.*/", true);
 
     assertEquals("This is a description.",
                  jsdoc.getDescriptionForThrownType(NUMBER_TYPE, null));

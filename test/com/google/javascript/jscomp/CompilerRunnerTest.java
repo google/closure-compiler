@@ -46,6 +46,7 @@ public class CompilerRunnerTest extends TestCase {
   @Override
   public void setUp() {
     Flags.disableStateCheckingForTest();
+    Flags.resetAllFlagsForTest();
     lastCompiler = null;
   }
 
@@ -121,6 +122,47 @@ public class CompilerRunnerTest extends TestCase {
 
   public void testIssue70() {
     test("function foo({}) {}", RhinoErrorReporter.PARSE_ERROR);
+  }
+
+  public void testDebugFlag1() {
+    CompilerRunner.FLAG_compilation_level.setForTest(
+        CompilationLevel.SIMPLE_OPTIMIZATIONS);
+    CompilerRunner.FLAG_debug.setForTest(false);
+    testSame("function foo(a) {}");
+  }
+
+  public void testDebugFlag2() {
+    CompilerRunner.FLAG_compilation_level.setForTest(
+        CompilationLevel.SIMPLE_OPTIMIZATIONS);
+    CompilerRunner.FLAG_debug.setForTest(true);
+    test("function foo(a) {}",
+         "function foo($a$$) {}");
+  }
+
+  public void testDebugFlag3() {
+    CompilerRunner.FLAG_compilation_level.setForTest(
+        CompilationLevel.ADVANCED_OPTIMIZATIONS);
+    CompilerRunner.FLAG_warning_level.setForTest(
+        WarningLevel.QUIET);
+    CompilerRunner.FLAG_debug.setForTest(false);
+    test("function Foo() {};" +
+         "Foo.x = 1;" +
+         "function f() {throw new Foo().x;} f();",
+         "function a() {};" +
+         "throw new a().a;");
+  }
+
+  public void testDebugFlag4() {
+    CompilerRunner.FLAG_compilation_level.setForTest(
+        CompilationLevel.ADVANCED_OPTIMIZATIONS);
+    CompilerRunner.FLAG_warning_level.setForTest(
+        WarningLevel.QUIET);
+    CompilerRunner.FLAG_debug.setForTest(true);
+    test("function Foo() {};" +
+        "Foo.x = 1;" +
+        "function f() {throw new Foo().x;} f();",
+        "function $Foo$$() {};" +
+        "throw new $Foo$$().$x$;");
   }
 
   /* Helper functions */

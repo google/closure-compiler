@@ -1184,7 +1184,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // canAssignTo
     assertTrue(NUMBER_OBJECT_TYPE.canAssignTo(ALL_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canAssignTo(STRING_OBJECT_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canAssignTo(NUMBER_TYPE));
+    assertFalse(NUMBER_OBJECT_TYPE.canAssignTo(NUMBER_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canAssignTo(functionType));
     assertFalse(NUMBER_OBJECT_TYPE.canAssignTo(NULL_TYPE));
     assertTrue(NUMBER_OBJECT_TYPE.canAssignTo(OBJECT_TYPE));
@@ -1193,7 +1193,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_OBJECT_TYPE.canAssignTo(namedGoogBar));
     assertTrue(NUMBER_OBJECT_TYPE.canAssignTo(
             createUnionType(NUMBER_OBJECT_TYPE, NULL_TYPE)));
-    assertTrue(NUMBER_OBJECT_TYPE.canAssignTo(
+    assertFalse(NUMBER_OBJECT_TYPE.canAssignTo(
             createUnionType(NUMBER_TYPE, NULL_TYPE)));
     assertTrue(NUMBER_OBJECT_TYPE.canAssignTo(UNKNOWN_TYPE));
 
@@ -1317,7 +1317,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NUMBER_TYPE.canAssignTo(NUMBER_TYPE));
     assertFalse(NUMBER_TYPE.canAssignTo(functionType));
     assertFalse(NUMBER_TYPE.canAssignTo(NULL_TYPE));
-    assertTrue(NUMBER_TYPE.canAssignTo(OBJECT_TYPE));
+    assertFalse(NUMBER_TYPE.canAssignTo(OBJECT_TYPE));
     assertFalse(NUMBER_TYPE.canAssignTo(DATE_TYPE));
     assertTrue(NUMBER_TYPE.canAssignTo(unresolvedNamedType));
     assertFalse(NUMBER_TYPE.canAssignTo(namedGoogBar));
@@ -1922,13 +1922,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // canAssignTo
     assertTrue(STRING_OBJECT_TYPE.canAssignTo(ALL_TYPE));
     assertTrue(STRING_OBJECT_TYPE.canAssignTo(STRING_OBJECT_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canAssignTo(STRING_TYPE));
+    assertFalse(STRING_OBJECT_TYPE.canAssignTo(STRING_TYPE));
     assertTrue(STRING_OBJECT_TYPE.canAssignTo(OBJECT_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canAssignTo(NUMBER_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canAssignTo(DATE_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canAssignTo(REGEXP_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canAssignTo(ARRAY_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canAssignTo(STRING_TYPE));
+    assertFalse(STRING_OBJECT_TYPE.canAssignTo(STRING_TYPE));
 
     // canBeCalled
     assertFalse(STRING_OBJECT_TYPE.canBeCalled());
@@ -2075,9 +2075,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // canAssignTo
     assertTrue(STRING_TYPE.canAssignTo(ALL_TYPE));
-    assertTrue(STRING_TYPE.canAssignTo(STRING_OBJECT_TYPE));
+    assertFalse(STRING_TYPE.canAssignTo(STRING_OBJECT_TYPE));
     assertFalse(STRING_TYPE.canAssignTo(NUMBER_TYPE));
-    assertTrue(STRING_TYPE.canAssignTo(OBJECT_TYPE));
+    assertFalse(STRING_TYPE.canAssignTo(OBJECT_TYPE));
     assertFalse(STRING_TYPE.canAssignTo(NUMBER_TYPE));
     assertFalse(STRING_TYPE.canAssignTo(DATE_TYPE));
     assertFalse(STRING_TYPE.canAssignTo(REGEXP_TYPE));
@@ -2949,7 +2949,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_TYPE.canAssignTo(NUMBER_TYPE));
     assertFalse(BOOLEAN_TYPE.canAssignTo(functionType));
     assertFalse(BOOLEAN_TYPE.canAssignTo(NULL_TYPE));
-    assertTrue(BOOLEAN_TYPE.canAssignTo(OBJECT_TYPE));
+    assertFalse(BOOLEAN_TYPE.canAssignTo(OBJECT_TYPE));
     assertFalse(BOOLEAN_TYPE.canAssignTo(DATE_TYPE));
     assertTrue(BOOLEAN_TYPE.canAssignTo(unresolvedNamedType));
     assertFalse(BOOLEAN_TYPE.canAssignTo(namedGoogBar));
@@ -3249,7 +3249,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(elementsType.canAssignTo(NUMBER_TYPE));
     assertFalse(elementsType.canAssignTo(functionType));
     assertFalse(elementsType.canAssignTo(NULL_TYPE));
-    assertTrue(elementsType.canAssignTo(OBJECT_TYPE)); // autoboxing
+    assertFalse(elementsType.canAssignTo(OBJECT_TYPE)); // no more autoboxing
     assertFalse(elementsType.canAssignTo(DATE_TYPE));
     assertTrue(elementsType.canAssignTo(unresolvedNamedType));
     assertFalse(elementsType.canAssignTo(namedGoogBar));
@@ -4763,31 +4763,29 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Tests that special union types can assign to other types. For instance
-   * <code>(number,Number)</code> can assign to <code>number</code> or
-   * <code>Number</code> even though <code>number &lt; (number, Number)</code>
-   * and <code>Number &lt; (number,Number)</code>. Unions containing the unknown
-   * type should be able to assign to any other type.
+   * Tests that special union types can assign to other types.  Unions
+   * containing the unknown type should be able to assign to any other
+   * type.
    */
   @SuppressWarnings("checked")
       public void testSpecialUnionCanAssignTo() throws Exception {
     // autoboxing quirks
     UnionType numbers =
         (UnionType) createUnionType(NUMBER_TYPE, NUMBER_OBJECT_TYPE);
-    assertTrue(numbers.canAssignTo(NUMBER_TYPE));
-    assertTrue(numbers.canAssignTo(NUMBER_OBJECT_TYPE));
+    assertFalse(numbers.canAssignTo(NUMBER_TYPE));
+    assertFalse(numbers.canAssignTo(NUMBER_OBJECT_TYPE));
     assertFalse(numbers.canAssignTo(EVAL_ERROR_TYPE));
 
     UnionType strings =
         (UnionType) createUnionType(STRING_OBJECT_TYPE, STRING_TYPE);
-    assertTrue(strings.canAssignTo(STRING_TYPE));
-    assertTrue(strings.canAssignTo(STRING_OBJECT_TYPE));
+    assertFalse(strings.canAssignTo(STRING_TYPE));
+    assertFalse(strings.canAssignTo(STRING_OBJECT_TYPE));
     assertFalse(strings.canAssignTo(DATE_TYPE));
 
     UnionType booleans =
         (UnionType) createUnionType(BOOLEAN_OBJECT_TYPE, BOOLEAN_TYPE);
-    assertTrue(booleans.canAssignTo(BOOLEAN_TYPE));
-    assertTrue(booleans.canAssignTo(BOOLEAN_OBJECT_TYPE));
+    assertFalse(booleans.canAssignTo(BOOLEAN_TYPE));
+    assertFalse(booleans.canAssignTo(BOOLEAN_OBJECT_TYPE));
     assertFalse(booleans.canAssignTo(REGEXP_TYPE));
 
     // unknown quirks

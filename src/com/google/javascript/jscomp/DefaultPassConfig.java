@@ -1381,7 +1381,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("coalesceVariableNames", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new CoalesceVariableNames(compiler);
+      return new CoalesceVariableNames(compiler, options.generatePseudoNames);
     }
   };
 
