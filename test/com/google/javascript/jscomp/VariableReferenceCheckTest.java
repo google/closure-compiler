@@ -113,11 +113,15 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testNonHoistedFunction4() {
-    assertAmbiguous("if (false) { function f() {} }  f();");
+    if (VariableReferenceCheck.CHECK_UNHOISTED_NAMED_FUNCTIONS) {
+      assertAmbiguous("if (false) { function f() {} }  f();");
+    }
   }
 
   public void testNonHoistedFunction5() {
-    assertAmbiguous("function g() { if (false) { function f() {} }  f(); }");
+    if (VariableReferenceCheck.CHECK_UNHOISTED_NAMED_FUNCTIONS) {
+      assertAmbiguous("function g() { if (false) { function f() {} }  f(); }");
+    }
   }
 
   public void testNonHoistedFunction6() {
