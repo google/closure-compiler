@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Join;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
@@ -25,11 +27,11 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.GraphColoring;
-import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
+import com.google.javascript.jscomp.graph.UndiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
-import com.google.javascript.jscomp.graph.UndiGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -60,10 +62,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     CompilerPass, ScopedCallback {
 
   private final AbstractCompiler compiler;
-  private final Deque<GraphColoring<Var, ?>> colorings;
-
-  /** Logs all name assignments */
-  private StringBuilder coalescedLog;
+  private final Deque<GraphColoring<Var, Void>> colorings;
+  private final boolean usePseudoNames;
 
   private static final Comparator<Var> coloringTieBreaker =
       new Comparator<Var>() {
@@ -72,19 +72,19 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
   };
 
-  CoalesceVariableNames(AbstractCompiler compiler) {
+  /**
+   * @param usePseudoNames For debug purposes, when merging variable foo and bar
+   * to foo, rename both variable to foo_bar.
+   */
+  CoalesceVariableNames(AbstractCompiler compiler, boolean usePseudoNames) {
     this.compiler = compiler;
     colorings = Lists.newLinkedList();
-    coalescedLog = new StringBuilder();
+    this.usePseudoNames = usePseudoNames;
   }
 
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-
-    // Lastly, write the report to the debug log.
-    compiler.addToDebugLog("JS vars coalesced:\n" + coalescedLog.toString());
-    coalescedLog = new StringBuilder();
   }
 
   @Override
@@ -107,7 +107,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         computeVariableNamesInterferenceGraph(
             t, cfg, liveness.getEscapedLocals());
 
-    GraphColoring<Var, ?> coloring =
+    GraphColoring<Var, Void> coloring =
         new GreedyGraphColoring<Var, Void>(interferenceGraph,
             coloringTieBreaker);
 
@@ -137,24 +137,54 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return;
     }
     Var coalescedVar = colorings.peek().getPartitionSuperNode(var);
-    if (vNode.getValue().equals(coalescedVar)) {
-      // The coalesced name is itself, nothing to do.
-      return;
-    }
+    
+    if (!usePseudoNames) {
+      if (vNode.getValue().equals(coalescedVar)) {
+        // The coalesced name is itself, nothing to do.
+        return;
+      }
 
-    if (var.getNameNode() == n) {
-      coalescedLog.append(n.getString()).append(" => ")
-          .append(coalescedVar.name).append(" in ")
-          .append(t.getSourceName()).append(':')
-          .append(n.getLineno()).append('\n');
-    }
+      // Rename.
+      n.setString(coalescedVar.name);
+      compiler.reportCodeChange();
 
-    // Rename.
-    n.setString(coalescedVar.name);
-    compiler.reportCodeChange();
+      if (NodeUtil.isVar(parent)) {
+        removeVarDeclaration(n);
+      }
+    } else {
+      // This code block is slow but since usePseudoName is for debugging,
+      // we should not sacrifice performance for non-debugging compilation to
+      // make this fast.
+      String pseudoName = null;
+      Set<String> allMergedNames = Sets.newTreeSet();
+      for (Iterator<Var> i = t.getScope().getVars(); i.hasNext();) {
+        Var iVar = i.next();
+        
+        // Look for all the variables that can be merged (in the graph by now)
+        // and it is merged with the current coalscedVar.
+        if (colorings.peek().getGraph().getNode(iVar) != null &&
+            coalescedVar.equals(colorings.peek().getPartitionSuperNode(iVar))) {
+          allMergedNames.add(iVar.name);
+        }
+      }
+      
+      // Keep its original name.
+      if (allMergedNames.size() == 1) {
+        return;
+      }
+      
+      pseudoName = Join.join("_", allMergedNames);
+      
+      while (t.getScope().isDeclared(pseudoName, true)) {
+        pseudoName += "$";
+      }
+      
+      n.setString(pseudoName);
+      compiler.reportCodeChange();
 
-    if (NodeUtil.isVar(parent)) {
-      removeVarDeclaration(n);
+      if (!vNode.getValue().equals(coalescedVar) && NodeUtil.isVar(parent)) {
+        removeVarDeclaration(n);
+      }
     }
   }
 

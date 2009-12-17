@@ -739,7 +739,7 @@ public class FoldConstantsTest extends CompilerTestCase {
   public void testFoldGetElem() {
     fold("x = [10, 20][0]", "x = 10");
     fold("x = [10, 20][1]", "x = 20");
-    fold("x = [10, 20]['abc']", "", FoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    fold("x = [10, 20][0.5]", "", FoldConstants.INVALID_GETELEM_INDEX_ERROR);
     fold("x = [10, 20][-1]",    "", FoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
     fold("x = [10, 20][2]",     "", FoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
   }

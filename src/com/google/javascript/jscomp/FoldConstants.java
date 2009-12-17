@@ -1556,7 +1556,8 @@ class FoldConstants extends AbstractPostOrderCallback
     if (left.getType() == Token.ARRAYLIT) {
 
       if (right.getType() != Token.NUMBER) {
-        error(t, INVALID_GETELEM_INDEX_ERROR, right);
+        // Sometimes people like to use complex expressions to index into
+        // arrays, or strings to index into array methods.
         return;
       }
 

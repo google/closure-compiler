@@ -22,7 +22,7 @@
  */
 
 // Window properties
-// Only common properties are here.  Others such as open() and setTimeout()
+// Only common properties are here.  Others such as open()
 // should be used with an explicit Window object.
 
 /**
@@ -144,6 +144,7 @@ function prompt(x, opt_value) {}
  * @param {number} delay
  * @param {*} var_args
  * @return {number}
+ * @see https://developer.mozilla.org/en/DOM/window.setInterval
  */
 function setInterval(callback, delay, var_args) {}
 
@@ -152,5 +153,6 @@ function setInterval(callback, delay, var_args) {}
  * @param {number} delay
  * @param {*} var_args
  * @return {number}
+ * @see https://developer.mozilla.org/en/DOM/window.setTimeout
  */
 function setTimeout(callback, delay, var_args) {}
