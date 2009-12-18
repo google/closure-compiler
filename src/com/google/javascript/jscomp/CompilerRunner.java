@@ -62,13 +62,12 @@ public class CompilerRunner extends
   static final Flag<WarningLevel> FLAG_warning_level
       = Flag.value(WarningLevel.DEFAULT);
 
-  @FlagSpec(help = "Specifies whether the default externs should be excluded.")
+  @FlagSpec(help = "Specifies whether the default externs should be excluded")
   static final Flag<Boolean> FLAG_use_only_custom_externs
       = Flag.value(false);
 
-  @FlagSpec(help = "Enable debugging opitons.")
-  static final Flag<Boolean> FLAG_debug
-      = Flag.value(false);
+  @FlagSpec(help = "Enable debugging options")
+  static final Flag<Boolean> FLAG_debug = Flag.value(false);
 
   /**
    * Set of options that can be used with the --formatting flag.
@@ -93,12 +92,13 @@ public class CompilerRunner extends
   }
 
   @FlagSpec(help = "Specifies which formatting options, if any, should be "
-      + "applied to the output JS")
+      + "applied to the output JS. Options: "
+      + "PRETTY_PRINT, PRINT_INPUT_DELIMITER")
   static final Flag<List<FormattingOption>> FLAG_formatting
       = Flag.enumList(FormattingOption.class);
 
   @FlagSpec(help = "Processes built-ins from the Closure library, such as "
-      + "goog.require(), goog.provide(), and goog.exportSymbol().")
+      + "goog.require(), goog.provide(), and goog.exportSymbol()")
   static final Flag<Boolean> FLAG_process_closure_primitives
       = Flag.value(true);
 

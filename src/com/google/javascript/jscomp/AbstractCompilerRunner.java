@@ -85,14 +85,14 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       docLevel = DocLevel.SECRET)
   public static final Flag<Boolean> FLAG_print_ast = Flag.value(false);
 
-  @FlagSpec(help = "Turns on extra sanity checks.", altName = "dev_mode",
+  @FlagSpec(help = "Turns on extra sanity checks", altName = "dev_mode",
       docLevel = DocLevel.SECRET)
   public static final Flag<CompilerOptions.DevMode> FLAG_jscomp_dev_mode =
       Flag.value(CompilerOptions.DevMode.OFF);
 
   @FlagSpec(help = "The logging level (standard java.util.logging.Level"
       + " values) for Compiler progress. Does not control errors or"
-      + " warnings for the JavaScript code under compilation.",
+      + " warnings for the JavaScript code under compilation",
       docLevel = DocLevel.SECRET)
   public static final Flag<String> FLAG_logging_level =
       Flag.value(Level.WARNING.getName());
@@ -105,7 +105,7 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
   public static final Flag<List<String>> FLAG_js = Flag.stringCollector();
 
   @FlagSpec(help = "Primary output filename. If not specified, output is " +
-            "written to stdout.")
+            "written to stdout")
   static final Flag<String> FLAG_js_output_file = Flag.value("");
 
   @FlagSpec(help = "A javascript module specification. The format is "
@@ -113,22 +113,22 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       + "unique. Each dep is the name of a module that this module "
       + "depends on. Modules must be listed in dependency order, and js "
       + "source files must be listed in the corresponding order. Where "
-      + "--module flags occur in relation to --js flags is unimportant.")
+      + "--module flags occur in relation to --js flags is unimportant")
   public static final Flag<List<String>> FLAG_module = Flag.stringCollector();
 
   @FlagSpec(help = "File containing the serialized version of the variable "
-      + "renaming map produced by a previous compilation.")
+      + "renaming map produced by a previous compilation")
   public static final Flag<String> FLAG_variable_map_input_file =
       Flag.value("");
 
   @FlagSpec(help = "File containing the serialized version of the property "
-      + "renaming map produced by a previous compilation.",
+      + "renaming map produced by a previous compilation",
       docLevel = DocLevel.SECRET)
   public static final Flag<String> FLAG_property_map_input_file =
       Flag.value("");
 
   @FlagSpec(help = "File where the serialized version of the variable "
-      + "renaming map produced should be saved.",
+      + "renaming map produced should be saved",
       docLevel = DocLevel.SECRET)
   public static final Flag<String> FLAG_variable_map_output_file =
       Flag.value("");
@@ -137,19 +137,18 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       + "files will be produced as {binary name}_vars_map.out and "
       + "{binary name}_props_map.out. Note that this flag cannot be used "
       + "in conjunction with either variable_map_output_file or "
-      + "property_map_output_file.",
+      + "property_map_output_file",
       docLevel = DocLevel.SECRET)
   public static final Flag<Boolean> FLAG_create_name_map_files =
       Flag.value(false);
 
   @FlagSpec(help = "File where the serialized version of the property "
-      + "renaming map produced should be saved.")
+      + "renaming map produced should be saved")
   public static final Flag<String> FLAG_property_map_output_file =
       Flag.value("");
 
-  @FlagSpec(help = "Check source validity but do not enforce Google style "
-      + "rules and conventions, such as capitalized constant names or "
-      + "opt_parameter.")
+  @FlagSpec(help = "Check source validity but do not enforce Closure style "
+      + "rules and conventions")
   public static final Flag<Boolean> FLAG_third_party = Flag.value(false);
 
 
@@ -157,7 +156,7 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       + " 0 (never print summary), 1 (print summary only if there are "
       + "errors or warnings), 2 (print summary if type checking is on, "
       + "see --check_types), 3 (always print summary). The default level "
-      + "is 1.")
+      + "is 1")
   public static final Flag<Integer> FLAG_summary_detail_level = Flag.value(1);
 
   @FlagSpec(help = "Interpolate output into this string at the place denoted"
@@ -172,13 +171,13 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
   @FlagSpec(help = "An output wrapper for a javascript module (optional). "
       + "The format is <name>:<wrapper>. The module name must correspond "
       + "with a module specified using --module. The wrapper must "
-      + "contain %s as the code placeholder.")
+      + "contain %s as the code placeholder")
   public static final Flag<List<String>> FLAG_module_wrapper =
       Flag.stringCollector();
 
   @FlagSpec(help = "Prefix for filenames of compiled js modules. "
       + "<module-name>.js will be appended to this prefix. Directories "
-      + "will be created as needed. Use with --module.")
+      + "will be created as needed. Use with --module")
   public static final Flag<String> FLAG_module_output_path_prefix =
       Flag.value("./");
 
@@ -186,19 +185,22 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
             "source files back to the original source file will be " +
             "output to the specified path. If %module% is added, " +
             "a source map will be generated for each module, with the " +
-            " module's name placed into the path at that spot.")
+            " module's name placed into the path at that spot")
   public static final Flag<String> FLAG_create_source_map =
       Flag.value("");
 
-  @FlagSpec(help = "Make the named class of warnings an error.")
+  @FlagSpec(help = "Make the named class of warnings an error. Options:" +
+      DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
   public static final Flag<List<String>> FLAG_jscomp_error =
       Flag.stringCollector();
 
-  @FlagSpec(help = "Make the named class of warnings a normal warning.")
+  @FlagSpec(help = "Make the named class of warnings a normal warning. " +
+  		"Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
   public static final Flag<List<String>> FLAG_jscomp_warning =
       Flag.stringCollector();
 
-  @FlagSpec(help = "Turn off the named class of warnings.")
+  @FlagSpec(help = "Turn off the named class of warnings. Options:" +
+      DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
   public static final Flag<List<String>> FLAG_jscomp_off =
       Flag.stringCollector();
 
@@ -207,7 +209,7 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       "The format is <name>[=<val>], where <name> is the name of a @define " +
       "variable and <val> is a boolean, number, or a single-quoted string " +
       "that contains no single quotes. If [=<val>] is omitted, " +
-      "the variable is marked true.")
+      "the variable is marked true")
   public static final Flag<List<String>> FLAG_define = Flag.stringCollector();
 
   @FlagSpec(help = "Input charset for all files.")
