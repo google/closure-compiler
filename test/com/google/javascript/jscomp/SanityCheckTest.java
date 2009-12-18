@@ -61,11 +61,11 @@ public class SanityCheckTest extends CompilerTestCase {
     try {
       test("var x = 3;", "var x=3;0;0");
     } catch (IllegalStateException e) {
-      assertEquals("normalizeNodeType constraints violated by last pass",
+      assertEquals("normalizeNodeType constraints violated",
           e.getMessage());
       exceptionCaught = true;
     }
-    assert(exceptionCaught);
+    assertTrue(exceptionCaught);
   }
 
   public void testUnnormalized() throws Exception {
@@ -83,7 +83,29 @@ public class SanityCheckTest extends CompilerTestCase {
           "Normalize constraints violated:\nWHILE node"));
       exceptionCaught = true;
     }
-    assert(exceptionCaught);
+    assertTrue(exceptionCaught);
+  }
+
+  public void testConstantAnnotationMismatch() throws Exception {
+    otherPass = new CompilerPass() {
+      @Override public void process(Node externs, Node root) {
+        getLastCompiler().reportCodeChange();
+        Node name = Node.newString(Token.NAME, "x");
+        name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        root.addChildToBack(new Node(Token.EXPR_RESULT, name));
+        getLastCompiler().setNormalized();
+      }
+    };
+
+    boolean exceptionCaught = false;
+    try {
+      test("var x;", "var x; x;");
+    } catch (RuntimeException e) {
+      assertTrue(e.getMessage().contains(
+          "The name x is not consistently annotated as constant."));
+      exceptionCaught = true;
+    }
+    assertTrue(exceptionCaught);
   }
 
   public void testSymbolTable() throws Exception {

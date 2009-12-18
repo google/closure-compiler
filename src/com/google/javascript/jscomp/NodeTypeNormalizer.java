@@ -26,19 +26,19 @@ import com.google.javascript.rhino.Token;
  */
 class NodeTypeNormalizer implements CompilerPass {
 
-  private CodeChangeHandler changeHandler;
+  private final boolean assertOnChange;
 
   NodeTypeNormalizer() {
-    this(null);
+    this(false);
   }
 
-  NodeTypeNormalizer(CodeChangeHandler changeHandler) {
-    this.changeHandler = changeHandler;
+  NodeTypeNormalizer(boolean forbidChanges) {
+    this.assertOnChange = forbidChanges;
   }
 
   private void reportChange() {
-    if (changeHandler != null) {
-      changeHandler.reportChange();
+    if (assertOnChange) {
+      Preconditions.checkState(false, "normalizeNodeType constraints violated");
     }
   }
 
@@ -95,8 +95,7 @@ class NodeTypeNormalizer implements CompilerPass {
     // Remove unused properties to minimize differences between ASTs
     // produced by the two parsers.
     if (n.getType() == Token.FUNCTION) {
-      n.removeProp(Node.FUNCTION_PROP);
-      reportChange();
+      Preconditions.checkState(n.getProp(Node.FUNCTION_PROP) == null);
     }
 
     normalizeBlocks(n);

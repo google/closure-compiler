@@ -666,7 +666,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   private void runSanityCheck() {
-    sanityCheck.create(this).process(null, jsRoot);
+    sanityCheck.create(this).process(externsRoot, jsRoot);
   }
 
   /**

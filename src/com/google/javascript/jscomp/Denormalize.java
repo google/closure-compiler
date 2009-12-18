@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -107,6 +108,29 @@ class Denormalize implements CompilerPass, Callback {
       forNode.replaceChild(oldInitializer, newInitializer);
 
       compiler.reportCodeChange();
+    }
+  }
+
+  static class StripConstantAnnotations
+      extends AbstractPostOrderCallback
+      implements CompilerPass {
+    private AbstractCompiler compiler;
+
+    StripConstantAnnotations(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void process(Node externs, Node js) {
+      NodeTraversal.traverse(compiler, externs, this);
+      NodeTraversal.traverse(compiler, js, this);
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node node, Node parent) {
+      if (node.getType() == Token.NAME || node.getType() == Token.STRING) {
+        node.removeProp(Node.IS_CONSTANT_NAME);
+      }
     }
   }
 }

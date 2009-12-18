@@ -178,7 +178,7 @@ public class NormalizeTest extends CompilerTestCase {
          "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
 
     // Verify global redefinition of extern definition is left alone.
-    testSame("var window");
+    testSame("/** @suppress {duplicate} */\nvar window;");
 
     // Verify local masking extern made unique.
     test("function f() {var window}",
@@ -202,19 +202,19 @@ public class NormalizeTest extends CompilerTestCase {
 
   public void testRenamingConstants() {
     test("var ACONST = 4;var b = ACONST;",
-         "var ACONST$$constant = 4; var b = ACONST$$constant;");
+         "var ACONST = 4; var b = ACONST;");
 
     test("var a, ACONST = 4;var b = ACONST;",
-         "var a; var ACONST$$constant = 4; var b = ACONST$$constant;");
+         "var a; var ACONST = 4; var b = ACONST;");
 
     test("var ACONST; ACONST = 4; var b = ACONST;",
-         "var ACONST$$constant; ACONST$$constant = 4;" +
-         "var b = ACONST$$constant;");
+         "var ACONST; ACONST = 4;" +
+         "var b = ACONST;");
 
     test("var ACONST = new Foo(); var b = ACONST;",
-         "var ACONST$$constant = new Foo(); var b = ACONST$$constant;");
+         "var ACONST = new Foo(); var b = ACONST;");
 
-    test("/** @const */var aa; aa=1;", "var aa$$constant;aa$$constant=1");
+    test("/** @const */var aa; aa=1;", "var aa;aa=1");
   }
 
   public void testSkipRenamingExterns() {
@@ -230,47 +230,48 @@ public class NormalizeTest extends CompilerTestCase {
   }
 
   private class WithCollapse extends CompilerTestCase {
-     private void testConstantProperties() {
+    WithCollapse() {
+      enableNormalize();
+    }
+
+    private void testConstantProperties() {
       test("var a={}; a.ACONST = 4;var b = a.ACONST;",
-            "var a$ACONST$$constant = 4; var b = a$ACONST$$constant;");
+            "var a$ACONST = 4; var b = a$ACONST;");
 
       test("var a={b:{}}; a.b.ACONST = 4;var b = a.b.ACONST;",
-           "var a$b$ACONST$$constant = 4;var b = a$b$ACONST$$constant;");
+           "var a$b$ACONST = 4;var b = a$b$ACONST;");
 
       test("var a = {FOO: 1};var b = a.FOO;",
-           "var a$FOO$$constant = 1; var b = a$FOO$$constant;");
+           "var a$FOO = 1; var b = a$FOO;");
 
       test("var EXTERN; var ext; ext.FOO;", "var b = EXTERN; var c = ext.FOO",
            "var b = EXTERN; var c = ext.FOO", null, null);
 
       test("var a={}; a.ACONST = 4; var b = a.ACONST;",
-           "var a$ACONST$$constant = 4; var b = a$ACONST$$constant;");
+           "var a$ACONST = 4; var b = a$ACONST;");
 
       test("var a = {}; function foo() { var d = a.CONST; };" +
            "(function(){a.CONST=4})();",
-           "var a$CONST$$constant;function foo(){var d = a$CONST$$constant;};" +
-           "(function(){a$CONST$$constant = 4})();");
+           "var a$CONST;function foo(){var d = a$CONST;};" +
+           "(function(){a$CONST = 4})();");
 
       test("var a = {}; a.ACONST = new Foo(); var b = a.ACONST;",
-           "var a$ACONST$$constant = new Foo(); var b = a$ACONST$$constant;");
-     }
+           "var a$ACONST = new Foo(); var b = a$ACONST;");
+    }
 
-     @Override
-     protected int getNumRepetitions() {
-       // The normalize pass is only run once.
-        return 1;
-     }
+    @Override
+    protected int getNumRepetitions() {
+      // The normalize pass is only run once.
+      return 1;
+    }
 
-     @Override
-     public CompilerPass getProcessor(final Compiler compiler) {
-       return new CompilerPass() {
-         public void process(Node externs, Node root) {
-           new CollapseProperties(compiler, false, true).process(externs, root);
-           new Normalize(compiler, false).new RenameConstants().process(
-               externs, root);
-         }
-       };
-     }
-   }
-
+    @Override
+    public CompilerPass getProcessor(final Compiler compiler) {
+      return new CompilerPass() {
+        public void process(Node externs, Node root) {
+          new CollapseProperties(compiler, false, true).process(externs, root);
+        }
+      };
+    }
+  }
 }

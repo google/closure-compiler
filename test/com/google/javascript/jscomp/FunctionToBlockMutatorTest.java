@@ -126,7 +126,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
   public void testMutateInitializeUninitializedVars1() {
     helperMutate(
         "function foo(a){var b;return a;}; foo(1);",
-        "{var JSCompiler_inline_b_3=undefined;1}",
+        "{var JSCompiler_inline_b_3=void 0;1}",
         "foo", null, false, true);
   }
 
@@ -147,14 +147,15 @@ public class FunctionToBlockMutatorTest extends TestCase {
     // baseline: outside a loop, the constant remains constant.
     boolean callInLoop = false;
     helperMutate(
-        "function foo(a){var b$$constant = bar(); a;}; foo(1);",
-        "{var JSCompiler_inline_b$$constant_3=bar(); 1;}",
+        "function foo(a){var B = bar(); a;}; foo(1);",
+        "{var JSCompiler_inline_B_3=bar(); 1;}",
         "foo", null, false, callInLoop);
     // ... in a loop, the constant-ness is removed.
+    // TODO(johnlenz): update this test to look for the const annotation.
     callInLoop = true;
     helperMutate(
-        "function foo(a){var b$$constant = bar(); a;}; foo(1);",
-        "{var JSCompiler_inline_b_3 = bar(); 1;}",
+        "function foo(a){var B = bar(); a;}; foo(1);",
+        "{var JSCompiler_inline_B_3 = bar(); 1;}",
         "foo", null, false, callInLoop);
   }  
 

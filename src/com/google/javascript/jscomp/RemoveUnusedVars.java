@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -62,7 +63,12 @@ class RemoveUnusedVars implements CompilerPass {
    * Keeps track of what variables we've warned about, so that we don't do it
    * on subsequent traversals.
    */
-  private final Set<Scope.Var> warnedVars_ = Sets.newHashSet();
+  private final Set<Var> warnedVars_ = Sets.newHashSet();
+
+  /**
+   * Keep track of variables that we've referenced.
+   */
+  private final Set<Var> referenced = Sets.newHashSet();
 
   RemoveUnusedVars(
       AbstractCompiler compiler,
@@ -85,6 +91,7 @@ class RemoveUnusedVars implements CompilerPass {
     int i = 0;
     do {
       numRemoved_ = 0;
+      referenced.clear();
       traverseAndRemoveUnusedReferences(root);
 
       if (numRemoved_ > 0) {
@@ -139,7 +146,7 @@ class RemoveUnusedVars implements CompilerPass {
       case Token.NAME:
         if (parent.getType() != Token.VAR) {
           // All non-var declarations are references to other vars
-          Scope.Var var = scope.getVar(n.getString());
+          Var var = scope.getVar(n.getString());
           if (var != null) {
             markReferencedVar(var);
           }
@@ -186,8 +193,8 @@ class RemoveUnusedVars implements CompilerPass {
     Node argList = function.getFirstChild().getNext();
     Node lastArg;
     while ((lastArg = argList.getLastChild()) != null) {
-      Scope.Var var = fnScope.getVar(lastArg.getString());
-      if (!var.referenced) {
+      Var var = fnScope.getVar(lastArg.getString());
+      if (!referenced.contains(var)) {
         argList.removeChild(lastArg);
         fnScope.undeclare(var);
         numRemoved_++;
@@ -200,12 +207,12 @@ class RemoveUnusedVars implements CompilerPass {
   /**
    * Marks a var as referenced, recursing into any functions.
    */
-  private void markReferencedVar(Scope.Var var) {
-    if (var.referenced) {
+  private void markReferencedVar(Var var) {
+    if (referenced.contains(var)) {
       // Already marked
       return;
     }
-    var.referenced = true;
+    referenced.add(var);
 
     Node parent = var.getParentNode();
     if (parent.getType() == Token.FUNCTION &&
@@ -224,10 +231,10 @@ class RemoveUnusedVars implements CompilerPass {
   private void removeUnreferencedVars(Scope scope) {
     CodingConvention convention = compiler_.getCodingConvention();
 
-    for (Iterator<Scope.Var> it = scope.getVars(); it.hasNext(); ) {
-      Scope.Var var = it.next();
+    for (Iterator<Var> it = scope.getVars(); it.hasNext(); ) {
+      Var var = it.next();
 
-      if (!var.referenced &&
+      if (!referenced.contains(var) &&
           (var.isLocal() || !convention.isExported(var.name))) {
 
         compiler_.addToDebugLog("Unreferenced var: " + var.name);

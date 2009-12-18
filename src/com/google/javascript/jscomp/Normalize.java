@@ -85,8 +85,6 @@ class Normalize implements CompilerPass, Callback {
 
   @Override
   public void process(Node externs, Node root) {
-    new RenameConstants().process(externs, root);
-
     NodeTraversal.traverse(compiler, root, this);
     if (MAKE_LOCAL_NAMES_UNIQUE) {
       MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
@@ -94,6 +92,8 @@ class Normalize implements CompilerPass, Callback {
       t.traverseRoots(externs, root);
     }
     removeDuplicateDeclarations(root);
+    new PropogateConstantAnnotations(compiler, assertOnChange)
+        .process(externs, root);
   }
 
   @Override
@@ -103,18 +103,27 @@ class Normalize implements CompilerPass, Callback {
     return true;
   }
 
-  class RenameConstants extends AbstractPostOrderCallback
+  public static class PropogateConstantAnnotations
+      extends AbstractPostOrderCallback
       implements CompilerPass {
+    private final AbstractCompiler compiler;
+    private final boolean assertOnChange;
+
+    public PropogateConstantAnnotations(
+        AbstractCompiler compiler, boolean forbidChanges) {
+      this.compiler = compiler;
+      this.assertOnChange = forbidChanges;
+    }
+
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverse(compiler, root, this);
+      new NodeTraversal(compiler, this).traverseRoots(externs, root);
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      // Note: Constant properties annotations are not propagated.
       if (n.getType() == Token.NAME) {
-        // If the normalize pass has already been run, this will already have
-        // been renamed.
         if (n.getString().isEmpty()) {
           return;
         }
@@ -122,39 +131,26 @@ class Normalize implements CompilerPass, Callback {
         JSDocInfo info = null;
         // Find the JSDocInfo for a top level variable.
         Var var = t.getScope().getVar(n.getString());
-        if (var == null) {
-          // We do not want to rename names defined in externs,
-          // and this pass is not traversing the externs.
-          n.putBooleanProp(Node.IS_CONSTANT_NAME, false);
-          return;
-        } else {
+        if (var != null) {
           info = var.getJSDocInfo();
         }
 
-        if (NodeUtil.isConstantName(n)) {
-          // TODO(johnlenz): Enable this check generally when all the passes
-          // are fixed.
-          // Preconditions.checkState(n.getBooleanProp(Node.IS_CONSTANT_NAME),
-          //    "Constant missing constant annotation");
-          return;
-        }
-
-        if ((info != null && info.isConstant()) ||
-            n.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        if ((info != null && info.isConstant()) &&
+            !n.getBooleanProp(Node.IS_CONSTANT_NAME)) {
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-          n.setString(addConstantMarkerToName(n.getString()));
-          reportCodeChange("rename constant var");
+          if (assertOnChange) {
+            String name = n.getString();
+            throw new IllegalStateException(
+                "Unexpected const change.\n" +
+                "  name: "+ name + "\n" +
+                "  gramps:" + n.getParent().getParent().toStringTree());
+          }
+          // Even though the AST has changed (an annotation was added),
+          // the annotations are not compared so don't report the change.
+          // reportCodeChange("constant annotation");
         }
       }
     }
-  }
-
-  static String addConstantMarkerToName(String name) {
-    return name + NodeUtil.CONSTANT_MARKER;
-  }
-
-  static String removeConstantMarkerFromName(String name) {
-    return name.replace(NodeUtil.CONSTANT_MARKER, "");
   }
 
   /**
@@ -185,7 +181,7 @@ class Normalize implements CompilerPass, Callback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.NAME || n.getType() == Token.STRING) {
+      if (n.getType() == Token.NAME) {
         String name = n.getString();
         if (n.getString().isEmpty()) {
           return;
@@ -194,7 +190,8 @@ class Normalize implements CompilerPass, Callback {
         boolean isConst = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (checkUserDeclarations) {
           boolean expectedConst = false;
-          if (NodeUtil.isConstantName(n)) {
+          if (NodeUtil.isConstantName(n)
+              || compiler.getCodingConvention().isConstant(n.getString())) {
             expectedConst = true;
           } else {
             expectedConst = false;
@@ -226,7 +223,7 @@ class Normalize implements CompilerPass, Callback {
           constantMap.put(name, isConst);
         } else {
           Preconditions.checkState(value.booleanValue() == isConst,
-              "The name " + name + "is not consistently annotated as " +
+              "The name " + name + " is not consistently annotated as " +
               "constant.");
         }
       }

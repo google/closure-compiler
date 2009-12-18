@@ -1904,7 +1904,7 @@ public final class NodeUtil {
    * @return True if the variable is constant
    */
   static boolean isConstantName(Node node) {
-    return node.getString().contains(CONSTANT_MARKER);
+    return node.getBooleanProp(Node.IS_CONSTANT_NAME);
   }
 
   /**

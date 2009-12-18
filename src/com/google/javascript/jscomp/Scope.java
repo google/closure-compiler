@@ -89,9 +89,6 @@ public class Scope implements StaticScope<JSType> {
     /** Input source */
     CompilerInput input;
 
-    /** Whether it's been referenced */
-    boolean referenced;
-
     /** Whether the variable is a define */
     boolean isDefine;
 
@@ -375,7 +372,6 @@ public class Scope implements StaticScope<JSType> {
     var.name = name;
     var.nameNode = nameNode;
     var.type = type;
-    var.referenced = false;
     var.scope = this;
     var.index = vars.size();
     var.input = input;

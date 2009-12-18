@@ -102,7 +102,7 @@ class FunctionArgumentInjector {
         argMap.put(fnArg.getString(), cArg);
         cArg = cArg.getNext();
       } else {
-        argMap.put(fnArg.getString(), Node.newString(Token.NAME, "undefined"));
+        argMap.put(fnArg.getString(), NodeUtil.newUndefinedNode());
       }
     }
 

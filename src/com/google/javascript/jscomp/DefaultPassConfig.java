@@ -313,9 +313,7 @@ public class DefaultPassConfig extends PassConfig {
     // Collapsing properties can undo constant inlining, so we do this before
     // the main optimization loop.
     if (options.collapseProperties) {
-      passes.add(undoConstantRenaming);
       passes.add(collapseProperties);
-      passes.add(renameConstants.makeOneTimePass());
     }
 
     // Tighten types based on actual usage.
@@ -374,7 +372,7 @@ public class DefaultPassConfig extends PassConfig {
     assertAllOneTimePasses(passes);
 
     if (options.smartNameRemoval || options.reportPath != null) {
-      passes.addAll(getCodeRemovingPasses(true));
+      passes.addAll(getCodeRemovingPasses());
       passes.add(smartNamePass);
     }
 
@@ -534,7 +532,7 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(inlineGetters);
     }
 
-    passes.addAll(getCodeRemovingPasses(false));
+    passes.addAll(getCodeRemovingPasses());
 
     if (options.inlineFunctions || options.inlineLocalFunctions) {
       passes.add(inlineFunctions);
@@ -551,11 +549,9 @@ public class DefaultPassConfig extends PassConfig {
   }
 
   /** Creates several passes aimed at removing code. */
-  private List<PassFactory> getCodeRemovingPasses(
-      boolean beforeSmartNameRemoval) {
+  private List<PassFactory> getCodeRemovingPasses() {
     List<PassFactory> passes = Lists.newArrayList();
-    if ((options.inlineVariables || options.inlineLocalVariables)
-        && !beforeSmartNameRemoval) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(inlineVariables);
     } else if (options.inlineConstantVars) {
       passes.add(inlineConstants);
@@ -1090,30 +1086,6 @@ public class DefaultPassConfig extends PassConfig {
       return new CollapseProperties(
           compiler, options.collapsePropertiesOnExternTypes,
           !isInliningForbidden());
-    }
-  };
-
-  /**
-   * Undo the renaming to $$CONSTANT that we're doing to preserve
-   * annotations.
-   */
-  private final PassFactory undoConstantRenaming =
-      new PassFactory("undoConstantNames", true) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new MakeDeclaredNamesUnique.UndoConstantRenaming(compiler);
-    }
-  };
-
-  /**
-   * Add $$CONSTANT to names of constant variables, to preserve the
-   * {@code @const} annotation.
-   */
-  private final PassFactory renameConstants =
-      new PassFactory("renameConstants", false) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new Normalize(compiler, false).new RenameConstants();
     }
   };
 

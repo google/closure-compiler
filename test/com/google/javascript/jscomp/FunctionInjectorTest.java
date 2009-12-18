@@ -852,7 +852,7 @@ public class FunctionInjectorTest extends TestCase {
         "for(;1;){ foo(1); }",
         "function foo(a){var b;return a;}; " +
         "for(;1;){ {" +
-            "var JSCompiler_inline_b_3=undefined;1}}",
+            "var JSCompiler_inline_b_3=void 0;1}}",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
@@ -860,7 +860,7 @@ public class FunctionInjectorTest extends TestCase {
         "do{ foo(1); } while(1)",
         "function foo(a){var b;return a;}; " +
         "do{ {" +
-            "var JSCompiler_inline_b_3=undefined;1}}while(1)",
+            "var JSCompiler_inline_b_3=void 0;1}}while(1)",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
@@ -1150,7 +1150,7 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(){return _g;}; " +
         "function x() {" +
         "  {var JSCompiler_inline_result_0; JSCompiler_inline_result_0=_g;}" +
-        "  var CONSTANT_RESULT$$constant = JSCompiler_inline_result_0;" +
+        "  var CONSTANT_RESULT = JSCompiler_inline_result_0;" +
         "}",
         "foo", INLINE_BLOCK);
   }

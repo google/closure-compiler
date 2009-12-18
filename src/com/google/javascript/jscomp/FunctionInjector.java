@@ -405,11 +405,8 @@ class FunctionInjector {
     FunctionToBlockMutator mutator = new FunctionToBlockMutator(
         compiler, this.safeNameIdSupplier);
 
-    // Remove const marker from the label name
-    String fnNameClean = Normalize.removeConstantMarkerFromName(fnName);
-
     Node newBlock = mutator.mutate(
-        fnNameClean, fnNode, callNode, resultName,
+        fnName, fnNode, callNode, resultName,
         needsDefaultReturnResult, isCallInLoop);
 
     // TODO(nicksantos): Create a common mutation function that

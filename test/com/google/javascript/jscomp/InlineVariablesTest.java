@@ -777,6 +777,6 @@ public class InlineVariablesTest extends CompilerTestCase {
         "  /** @const */\n" +
         "  var X = 1; X;\n" +
         "}",
-        "var X$$constant=1; X$$constant; function f() {1;}");
+        "var X=1; X; function f() {1;}");
   }
 }

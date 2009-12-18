@@ -107,14 +107,22 @@ class SanityCheck implements CompilerPass {
         new CodeChangeHandler.RecentChange();
     compiler.addChangeHandler(handler);
 
-    new NodeTypeNormalizer(handler).process(null, root);
+    // TODO(johnlenz): Change these normalization checks Preconditions and
+    // Exceptions into Errors so that it is easier to find the root cause
+    // when there are cascading issues.
+    new NodeTypeNormalizer(true).process(null, root);
     Preconditions.checkState(!handler.hasCodeChanged(),
-        "normalizeNodeType constraints violated by last pass");
+        "This should never fire, NodeTypeNormalizer should assert first.");
 
     if (compiler.isNormalized()) {
       (new Normalize(compiler, true)).process(externs, root);
       Preconditions.checkState(!handler.hasCodeChanged(),
-          "normalize constraints violated by last pass");
+          "This should never fire, Normalize should assert first.");
+
+      boolean checkUserDeclarations = true;
+      CompilerPass pass = new Normalize.VerifyConstants(
+          compiler, checkUserDeclarations);
+      pass.process(externs, root);
     }
 
     compiler.removeChangeHandler(handler);

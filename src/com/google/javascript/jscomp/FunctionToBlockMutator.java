@@ -123,7 +123,7 @@ class FunctionToBlockMutator {
       Node name = n.getFirstChild();
       // It isn't initialized.
       if (!name.hasChildren()) {
-        name.addChildToBack(Node.newString(Token.NAME, "undefined"));
+        name.addChildToBack(NodeUtil.newUndefinedNode());
       }
       return;
     }
@@ -142,7 +142,7 @@ class FunctionToBlockMutator {
     NodeTraversal.traverse(
         compiler, fnNode, new MakeDeclaredNamesUnique(
             new InlineRenamer(
-                compiler.getUniqueNameIdSupplier(), 
+                compiler.getUniqueNameIdSupplier(),
                 "JSCompiler_inline_",
                 isCallInLoop)));
   }

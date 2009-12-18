@@ -140,22 +140,28 @@ class PhaseOptimizer implements CompilerPass {
   /**
    * Marks the end of a pass.
    */
-  private void endPass(Node root) {
+  private void endPass(Node externs, Node root) {
     Preconditions.checkState(currentTracer != null && currentPassName != null);
     stopTracer(currentTracer, currentPassName);
     String passToCheck = currentPassName;
     currentPassName = null;
     currentTracer = null;
 
-    maybeSanityCheck(root);
+    try {
+      maybeSanityCheck(externs, root);
+    } catch (Exception e) {
+      // TODO(johnlenz): Remove this once the normalization checks report
+      // errors instead of exceptions.
+      throw new RuntimeException("Sanity check failed for " + passToCheck, e);
+    }
   }
 
   /**
    * Runs the sanity check if it is available.
    */
-  void maybeSanityCheck(Node root) {
+  void maybeSanityCheck(Node externs, Node root) {
     if (sanityCheck != null) {
-      sanityCheck.create(compiler).process(null, root);
+      sanityCheck.create(compiler).process(externs, root);
     }
   }
 
@@ -196,7 +202,7 @@ class PhaseOptimizer implements CompilerPass {
       logger.info(name);
       startPass(name);
       processInternal(externs, root);
-      endPass(root);
+      endPass(externs, root);
     }
 
     abstract void processInternal(Node externs, Node root);

@@ -137,6 +137,11 @@ class MakeDeclaredNamesUnique
       case Token.NAME:
         String newName = getReplacementName(n.getString());
         if (newName != null) {
+          Renamer renamer = nameStack.peek();
+          if (renamer.stripConstIfReplaced()) {
+            // TODO(johnlenz): Do we need to do anything about the javadoc?
+            n.removeProp(Node.IS_CONSTANT_NAME);
+          }
           n.setString(newName);
           t.getCompiler().reportCodeChange();
         }
@@ -208,6 +213,11 @@ class MakeDeclaredNamesUnique
     String getReplacementName(String oldName);
 
     /**
+     * @return Whether the constant-ness of a name should be removed.
+     */
+    boolean stripConstIfReplaced();
+
+    /**
      * @return A Renamer for a scope within the scope of the current Renamer.
      */
     Renamer forChildScope();
@@ -228,7 +238,6 @@ class MakeDeclaredNamesUnique
     }
 
     public void process(Node externs, Node js) {
-      new UndoConstantRenaming(compiler).process(externs, js);
       NodeTraversal.traverse(compiler, js, this);
     }
 
@@ -270,50 +279,6 @@ class MakeDeclaredNamesUnique
 
             nameMap.put(var, newName);
           }
-        }
-      }
-    }
-  }
-
-  static class UndoConstantRenaming extends AbstractPostOrderCallback
-      implements CompilerPass {
-    private AbstractCompiler compiler;
-
-    /**
-     * Keep a hash table mapping variable names with $$constant to the
-     * equivalent name with $$constant removed.  This avoids running
-     * String.replace on the same strings over and over.
-     */
-    private Map<String, String> constantRenamingCache =
-        Maps.newHashMap();
-
-    UndoConstantRenaming(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
-
-    @Override
-    public void process(Node externs, Node js) {
-      NodeTraversal.traverse(compiler, js, this);
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node node, Node parent) {
-      if (node.getType() == Token.NAME) {
-        String name = node.getString();
-        if (name.contains(NodeUtil.CONSTANT_MARKER)) {
-          // Make sure there is not more than one constant marker, or something
-          // has gone terribly wrong.
-          Preconditions.checkState(name.indexOf(NodeUtil.CONSTANT_MARKER) ==
-              name.lastIndexOf(NodeUtil.CONSTANT_MARKER));
-
-          String constantFreeName = constantRenamingCache.get(name);
-          if (constantFreeName == null) {
-            constantFreeName = name.replace(NodeUtil.CONSTANT_MARKER, "");
-            constantRenamingCache.put(name, constantFreeName);
-          }
-          node.setString(constantFreeName);
-          node.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-          compiler.reportCodeChange();
         }
       }
     }
@@ -395,6 +360,11 @@ class MakeDeclaredNamesUnique
     private int incrementNameCount(String name) {
       return nameUsage.add(name, 1);
     }
+
+    @Override
+    public boolean stripConstIfReplaced() {
+      return false;
+    }
   }
 
 
@@ -432,11 +402,6 @@ class MakeDeclaredNamesUnique
       if (name.isEmpty()) {
         return name;
       }
-      if (removeConstness) {
-        // When inlining call within loops, constants lose there
-        // const-ness, this supports that necessary change.
-        name = name.replace(NodeUtil.CONSTANT_MARKER, "");
-      }
       return namePrefix + name + "_" + uniqueIdSupplier.get();
     }
 
@@ -448,6 +413,11 @@ class MakeDeclaredNamesUnique
     @Override
     public Renamer forChildScope() {
       return new InlineRenamer(uniqueIdSupplier, namePrefix, removeConstness);
+    }
+
+    @Override
+    public boolean stripConstIfReplaced() {
+      return removeConstness;
     }
   }
 

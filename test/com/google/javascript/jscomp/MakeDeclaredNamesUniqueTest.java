@@ -195,21 +195,21 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testSame("try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
     testSame("var a$$1;");
     testSame("function f() { var $$; }");
-    test("var CONST$$constant = 3; var b = CONST$$constant;",
+    test("var CONST = 3; var b = CONST;",
          "var CONST = 3; var b = CONST;");
-    test("function() {var CONST$$constant = 3; var ACONST$$constant$$1 = 2;}",
+    test("function() {var CONST = 3; var ACONST$$1 = 2;}",
          "function() {var CONST = 3; var ACONST = 2;}");
   }
 
   public void testConstRemovingRename1() {
     removeConst = true;
-    test("function() {var CONST$$constant = 3; var ACONST$$constant$$1 = 2;}",
+    test("function() {var CONST = 3; var ACONST$$1 = 2;}",
          "function() {var unique_CONST_0 = 3; var unique_ACONST$$1_1 = 2;}");
   }
 
   public void testConstRemovingRename2() {
     removeConst = true;
-    test("var CONST$$constant = 3; var b = CONST$$constant;",
+    test("var CONST = 3; var b = CONST;",
          "var unique_CONST_0 = 3; var unique_b_1 = unique_CONST_0;");
   }
 }

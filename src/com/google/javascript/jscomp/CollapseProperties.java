@@ -142,6 +142,10 @@ class CollapseProperties implements CompilerPass {
     for (Name n : globalNames) {
       collapseDeclarationOfNameAndDescendants(n, n.name);
     }
+
+    // TODO(johnlenz): The pass should maintain the constant annotations during
+    // the main pass.
+    new Normalize.PropogateConstantAnnotations(compiler, false);
   }
 
   /**
@@ -422,9 +426,7 @@ class CollapseProperties implements CompilerPass {
     // AFTER:
     //   name a$b$c
     Node ref = NodeUtil.newName(alias, n, originalName);
-    if (n.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
-      ref.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-    }
+    NodeUtil.copyNameAnnotations(n.getLastChild(), ref);
     parent.replaceChild(n, ref);
     compiler.reportCodeChange();
   }
@@ -483,9 +485,7 @@ class CollapseProperties implements CompilerPass {
     // Create the new alias node.
     Node nameNode = NodeUtil.newName(alias, gramps.getFirstChild(),
         refName.fullName());
-    if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
-      nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-    }
+    NodeUtil.copyNameAnnotations(ref.node.getLastChild(), nameNode);
 
     if (gramps.getType() == Token.EXPR_RESULT) {
       // BEFORE: a.b.c = ...;

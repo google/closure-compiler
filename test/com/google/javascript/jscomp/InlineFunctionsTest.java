@@ -424,7 +424,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testNoInlineIfParametersModified6() {
     test("function f(x,y){return x?(y=2):0}f(2)",
-         "{var JSCompiler_inline_y_3=undefined;2?(" +
+         "{var JSCompiler_inline_y_3=void 0;2?(" +
          "JSCompiler_inline_y_3=2):0}");
   }
 
@@ -980,7 +980,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testInlineFunctionWithArgsMismatch1() {
     test("function f(g) { return g; } f();",
-         "undefined");
+         "void 0");
   }
 
   public void testInlineFunctionWithArgsMismatch2() {
@@ -990,7 +990,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testInlineFunctionWithArgsMismatch3() {
     test("function f(one, two, three) { return one + two + three; } f(1);",
-         "1+undefined+undefined");
+         "1+void 0+void 0");
   }
 
   public void testInlineFunctionWithArgsMismatch4() {
