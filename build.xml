@@ -28,10 +28,11 @@
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="tools.dir" value="${basedir}/tools" />
   <property name="jarfile" value="${build.dir}/${ant.project.name}.jar" />
+  <property name="num-fuzz-tests" value="10000"/>
 
-  <!-- set the classpath for the project        -->
-  <!-- this includes the generated class files -->
-  <!-- and every jar in the /lib directory     -->
+  <!-- set the classpath for the project              -->
+  <!-- this includes the generated source class files -->
+  <!-- and every jar in the /lib directory            -->
   <path id="classpath.path">
     <pathelement location="${classes.dir}" />
     <fileset dir="${lib.dir}">
@@ -153,6 +154,19 @@
         </fileset>
       </batchtest>
     </junit>
+  </target>
+
+  <target name="fuzz-test"
+          depends="all-classes-jar"
+          description="checks the compiler against a variety of js programs">
+      <exec executable="java" failonerror="true">
+        <arg value="-cp" />
+        <arg value="${jarfile}" />
+        <arg value="com.google.javascript.jscomp.regtests.CompileEachLineOfProgramOutput" />
+        <arg value="generatejs"/>
+        <arg value="--stdout"/>
+        <arg value="${num-fuzz-tests}"/>
+      </exec>
   </target>
 
   <target name="javadoc"
