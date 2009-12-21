@@ -1,0 +1,26 @@
+// Copyright 2008 Google Inc.
+//
+
+syntax = "proto2";
+
+package jscomp;
+
+option java_package = "com.google.javascript.jscomp";
+option java_multiple_files = true;
+
+message FunctionInformationMap {
+  repeated group Entry = 1 {
+    required int32 id = 2;
+    required string source_name = 3;
+    required int32 line_number = 4;
+    required string module_name = 5;
+    required int32 size = 6;
+    required string name = 7;
+    required string compiled_source = 8;
+  }
+
+  repeated group Module = 101 {
+    required string name = 102;
+    required string compiled_source = 103;
+  }
+}

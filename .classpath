@@ -3,7 +3,7 @@
         <classpathentry kind="src" path="src"/>
         <classpathentry kind="src" path="test"/>
         <classpathentry kind="lib" path="lib/google_common_deploy.jar"/>
-        <classpathentry kind="lib" path="lib/google_compiled_protos_deploy.jar"/>
+        <classpathentry kind="lib" path="lib/protobuf_deploy.jar"/>
         <classpathentry kind="lib" path="lib/libtrunk_rhino_parser_jarjared.jar"/>
         <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
         <classpathentry kind="lib" path="lib/junit.jar"/>

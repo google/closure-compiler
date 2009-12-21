@@ -1,0 +1,47 @@
+// Copyright 2008 Google Inc. All Rights Reserved.
+//
+//
+// Provides jscompiler with parameters for the instrumentation pass
+
+syntax = "proto2";
+
+package jscomp;
+
+option py_api_version = 2;
+
+option java_package = "com.google.javascript.jscomp";
+option java_multiple_files = true;
+
+message Instrumentation {
+  // name of function(ID = <numeric function id>);
+  // used to inform the harness about the contents of a module
+  optional string report_defined = 1;
+
+  // name of function(ID = <numeric function id>);
+  // used to inform the harness about a function call
+  optional string report_call = 2;
+
+  // name of function(ID = <numeric function id>, VAL = <return value>);
+  // used to inform the harness about a function exit.  Must return
+  // its second argument.
+  //
+  // @returns VAL
+  optional string report_exit = 6;
+
+  // List of variable declarations in the application's source code
+  // that should be replaced by variables with the same name that are
+  // part of the instrumentation harness.  The presence of these
+  // declarations in the original code allows debug UIs that access
+  // these variables to compile when the instrumentation pass is
+  // disabled.
+  repeated string declaration_to_remove = 3;
+
+  // Definition of functions used to report module contents and
+  // function calls.  Will be added to the start of the app's main
+  // module.
+  repeated string init = 4;
+
+  // name of function(<string>);
+  // used to inform the harness about the app name
+  optional string app_name_setter = 5;
+}

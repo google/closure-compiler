@@ -17,6 +17,7 @@
 
   <!-- define other variables -->
   <property name="src.dir" value="${basedir}/src" />
+  <property name="gen.dir" value="${basedir}/gen" />
   <property name="test.dir" value="${basedir}/test" />
   <property name="externs.dir" value="${basedir}/externs" />
   <property name="build.dir" value="${basedir}/build" />
@@ -46,6 +47,11 @@
 
   <target name="compile" description="compile the source code">
     <mkdir dir="${classes.dir}" />
+    <javac srcdir="${gen.dir}"
+           destdir="${classes.dir}"
+           excludes=".svn">
+      <classpath refid="classpath.path" />
+    </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
            excludes=".svn">
@@ -83,7 +89,7 @@
     <jar destfile="${jarfile}" update="true">
       <zipfileset src="${lib.dir}/google_common_deploy.jar"
                   excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/google_compiled_protos_deploy.jar"
+      <zipfileset src="${lib.dir}/protobuf_deploy.jar"
                   excludes="flags.xml" />
       <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar"
                   excludes="flags.xml" />
@@ -113,7 +119,7 @@
     <jar destfile="${jarfile}" update="true">
       <zipfileset src="${lib.dir}/google_common_deploy.jar"
                   excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/google_compiled_protos_deploy.jar"
+      <zipfileset src="${lib.dir}/protobuf_deploy.jar"
                   excludes="flags.xml" />
       <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar"
                   excludes="flags.xml" />
