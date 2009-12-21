@@ -59,6 +59,12 @@ class SymbolTable implements ScopeCreator, CodeChangeHandler {
           "Variable count does not match." +
           "\nCached : {0}\nActual : {1}");
 
+  static final DiagnosticType SCOPE_MISMATCH =
+      DiagnosticType.error(
+          "JSC_SCOPE_MISMATCH",
+          "Scope roots used with the symbol table do not match." +
+          "\nExpected : {0}\nActual : {1}");
+
   private final AbstractCompiler compiler;
   private final ScopeCreator scopeCreator;
 
@@ -92,8 +98,11 @@ class SymbolTable implements ScopeCreator, CodeChangeHandler {
    */
   @Override
   public Scope createScope(Node n, Scope parent) {
+    // We may only ask for local blocks and the global (all scripts) block.
     Preconditions.checkArgument(
-        n.getType() == Token.BLOCK || n.getType() == Token.FUNCTION);
+        (n.getType() == Token.BLOCK && n.getParent() == null) ||
+        n.getType() == Token.FUNCTION,
+        "May only create scopes for the global node and functions");
     ensureCacheInitialized();
 
     if (!cache.scopes.containsKey(n)) {
@@ -208,6 +217,17 @@ class SymbolTable implements ScopeCreator, CodeChangeHandler {
       for (int i = 0; i < expectedScopes.size(); i++) {
         Scope expectedScope = expectedScopes.get(i);
         Scope actualScope = actualScopes.get(i);
+
+        if (!checkNodesMatch(expectedScope.getRootNode(),
+                actualScope.getRootNode())) {
+          compiler.report(
+              JSError.make(
+                  SCOPE_MISMATCH,
+                  expectedScope.getRootNode().toStringTree(),
+                  actualScope.getRootNode().toStringTree()));
+          continue;
+        }
+
         if (expectedScope.getVarCount() != actualScope.getVarCount()) {
           compiler.report(
               JSError.make(
@@ -219,16 +239,40 @@ class SymbolTable implements ScopeCreator, CodeChangeHandler {
           while (it.hasNext()) {
             Var var = it.next();
             Scope.Var actualVar = actualScope.getVar(var.getName());
-            if (actualVar == null) {
+            if (actualVar == null ||
+                expectedScope.getVar(var.getName()) != var) {
               compiler.report(
                   JSError.make(MISSING_VARIABLE, var.getName()));
-            } else if (!isNodeAttached(actualVar.getNameNode())) {
+            } else if (
+                !checkNodesMatch(
+                    var.getNameNode(),
+                    actualVar.getNameNode()) ||
+                !isNodeAttached(actualVar.getNameNode())) {
               compiler.report(
                   JSError.make(MOVED_VARIABLE, var.getName()));
             }
           }
         }
       }
+    }
+
+    /**
+     * Check that the two nodes have the same relative position in the tree.
+     */
+    private boolean checkNodesMatch(Node nodeA, Node nodeB) {
+      Node currentA = nodeA;
+      Node currentB = nodeB;
+      while (currentA != null && currentB != null) {
+        if (currentA.getType() != currentB.getType() ||
+            !currentA.isEquivalentTo(currentB)) {
+          return false;
+        }
+
+        currentA = currentA.getParent();
+        currentB = currentB.getParent();
+      }
+
+      return currentA == null && currentB == null;
     }
 
     private boolean isNodeAttached(Node node) {

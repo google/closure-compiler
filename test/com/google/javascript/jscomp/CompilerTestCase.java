@@ -20,6 +20,7 @@ import com.google.common.base.Join;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 import junit.framework.TestCase;
@@ -679,8 +680,11 @@ public abstract class CompilerTestCase extends TestCase  {
       ErrorManager symbolTableErrorManager =
           new BlackHoleErrorManager(compiler);
       Node expectedRoot = parseExpectedJs(expected);
+      expectedRoot.detachFromParent();
       SymbolTable table = compiler.acquireSymbolTable();
-      table.verify(expectedRoot, mainRoot);
+      table.verify(
+          new Node(Token.BLOCK, externsRoot.cloneTree(), expectedRoot),
+          mainRoot.getParent());
       table.release();
 
       JSError[] stErrors = symbolTableErrorManager.getErrors();
@@ -773,8 +777,13 @@ public abstract class CompilerTestCase extends TestCase  {
             "\n" + explanation, explanation);
       }
     } else {
-      assertEquals("There should be one error.", 1, compiler.getErrorCount());
-      assertEquals(error, compiler.getErrors()[0].getType());
+      String errors = "";
+      for (JSError actualError : compiler.getErrors()) {
+        errors += actualError.description + "\n";
+      }
+      assertEquals("There should be one error. " + errors,
+          1, compiler.getErrorCount());
+      assertEquals(errors, error, compiler.getErrors()[0].getType());
     }
   }
 

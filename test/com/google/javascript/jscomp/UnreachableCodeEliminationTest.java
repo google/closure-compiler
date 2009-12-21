@@ -165,4 +165,17 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("while(1) { break; var x=1; var y=1}",
         "var y; var x; while(1) { break } ");
   }
+
+  public void testAssignPropertyOnCreatedObject() {
+    testSame("this.foo = 3;");
+    testSame("a.foo = 3;");
+    testSame("bar().foo = 3;");
+    testSame("({}).foo = bar();");
+    testSame("(new X()).foo = 3;");
+
+    test("({}).foo = 3;", "");
+    test("(function() {}).prototype.toString = function(){};", "");
+    test("(function() {}).prototype['toString'] = function(){};", "");
+    test("(function() {}).prototype[f] = function(){};", "");
+  }
 }

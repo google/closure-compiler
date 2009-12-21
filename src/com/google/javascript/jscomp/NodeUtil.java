@@ -443,6 +443,28 @@ public final class NodeUtil {
         if (isSimpleOperatorType(n.getType()))
           break;
 
+        if (isAssignmentOp(n)) {
+          // Assignments will have side effects if
+          // a) The RHS has side effects, or
+          // b) The LHS has side effects, or
+          // c) A name on the LHS will exist beyond the life of this statement.
+          if (checkForStateChangeHelper(
+                  n.getFirstChild(), checkForNewObjects) ||
+              checkForStateChangeHelper(
+                  n.getLastChild(), checkForNewObjects)) {
+            return true;
+          }
+
+          Node current = n.getFirstChild();
+          for (;
+               current.getType() == Token.GETPROP ||
+               current.getType() == Token.GETELEM;
+               current = current.getFirstChild()) { }
+
+          return !(isLiteralValue(current) ||
+              current.getType() == Token.FUNCTION);
+        }
+
         return true;
     }
 
@@ -1366,6 +1388,15 @@ public final class NodeUtil {
                       Token.name(operator));
     }
     return res;
+  }
+
+  /**
+   * @return true if n or any of its children are of the specified type.
+   *     Does not traverse into functions.
+   */
+  static boolean containsTypeInOuterScope(Node node, int type) {
+    return containsType(node, type,
+        Predicates.<Node>not(new NodeUtil.MatchNodeType(Token.FUNCTION)));
   }
 
   /**

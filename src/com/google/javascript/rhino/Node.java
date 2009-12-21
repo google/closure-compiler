@@ -226,9 +226,11 @@ public class Node implements Cloneable, Serializable
             case IS_CONSTANT_NAME:   return "is_constant_name";
             case IS_OPTIONAL_PARAM:  return "is_optional_param";
             case IS_VAR_ARGS_PARAM:  return "is_var_args_param";
-            case IS_NAMESPACE:         return "is_namespace";
-            case IS_DISPATCHER:        return "is_dispatcher";
-            default: Kit.codeBug();
+            case IS_NAMESPACE:       return "is_namespace";
+            case IS_DISPATCHER:      return "is_dispatcher";
+            case DIRECTIVES:         return "directives";
+            default:
+              Kit.codeBug();
 
 
         }

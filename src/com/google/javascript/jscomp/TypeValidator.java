@@ -619,7 +619,10 @@ class TypeValidator {
 
     JSType type = getJSType(n);
     if (dereference) {
-      type = type.dereference();
+      ObjectType dereferenced = type.dereference();
+      if (dereferenced != null) {
+        type = dereferenced;
+      }
     }
 
     String qualifiedName = n.getQualifiedName();

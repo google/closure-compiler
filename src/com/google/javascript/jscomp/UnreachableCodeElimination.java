@@ -112,7 +112,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       return;
     }
     if (gNode.getAnnotation() != GraphReachability.REACHABLE ||
-        (removeNoOpStatements && !NodeUtil.mayEffectMutableState(n))) {
+        (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n))) {
       removeDeadExprStatementSafely(n, parent);
     }
   }

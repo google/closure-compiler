@@ -222,6 +222,16 @@ public class NodeUtilTest extends TestCase {
     assertSideEffect(false, "new Array(4)");
     assertSideEffect(false, "new Array('a', 'b', 'c')");
     assertSideEffect(true, "new SomeClassINeverHeardOf()");
+    assertSideEffect(true, "new SomeClassINeverHeardOf()");
+
+    assertSideEffect(false, "({}).foo = 4");
+    assertSideEffect(false, "([]).foo = 4");
+    assertSideEffect(false, "(function() {}).foo = 4");
+
+    assertSideEffect(true, "this.foo = 4");
+    assertSideEffect(true, "a.foo = 4");
+    assertSideEffect(true, "(function() { return n; })().foo = 4");
+    assertSideEffect(true, "([]).foo = bar()");
   }
 
   private void assertMutableState(boolean se, String js) {
@@ -766,7 +776,7 @@ public class NodeUtilTest extends TestCase {
     assertTrue(labelNode.getType() == Token.LABEL);
     assertTrue(NodeUtil.isLabelName(labelNode.getFirstChild()));
     assertFalse(NodeUtil.isLabelName(labelNode.getLastChild()));
-    
+
     Node whileNode = labelNode.getLastChild();
     assertTrue(whileNode.getType() == Token.WHILE);
     Node whileBlock = whileNode.getLastChild();
@@ -778,7 +788,7 @@ public class NodeUtilTest extends TestCase {
     Node variableReference = firstStatement.getFirstChild();
     assertTrue(variableReference.getType() == Token.NAME);
     assertFalse(NodeUtil.isLabelName(variableReference));
-    
+
     Node continueStatement = firstStatement.getNext();
     assertTrue(continueStatement.getType() == Token.CONTINUE);
     assertTrue(NodeUtil.isLabelName(continueStatement.getFirstChild()));
@@ -786,7 +796,7 @@ public class NodeUtilTest extends TestCase {
     Node firstBreak = continueStatement.getNext();
     assertTrue(firstBreak.getType() == Token.BREAK);
     assertTrue(NodeUtil.isLabelName(firstBreak.getFirstChild()));
-    
+
     Node secondBreak = firstBreak.getNext();
     assertTrue(secondBreak.getType() == Token.BREAK);
     assertFalse(secondBreak.hasChildren());

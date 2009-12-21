@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StringUtil;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 /**
  * A compiler pass that verifies the structure of the AST conforms
@@ -52,7 +53,12 @@ class SanityCheck implements CompilerPass {
     sanityCheckNormalization(externs, root);
     Node reparsedRoot = sanityCheckCodeGeneration(root);
     if (reparsedRoot != null) {
-      sanityCheckSymbolTable(reparsedRoot, root);
+      Node clonedExterns = externs.cloneTree();
+      sanityCheckSymbolTable(
+          new Node(Token.BLOCK,
+              clonedExterns,
+              new Node(Token.BLOCK, reparsedRoot)),
+          root.getParent());
     }
   }
 

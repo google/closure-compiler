@@ -83,7 +83,7 @@ public class SymbolTableTest extends CompilerTestCase {
 
     public void process(Node externs, Node root) {
       SymbolTable table = compiler.acquireSymbolTable();
-      (new NodeTraversal(compiler, this, table)).traverse(root);
+      (new NodeTraversal(compiler, this, table)).traverseRoots(externs, root);
       table.release();
     }
 
