@@ -48,9 +48,9 @@ public class DiagnosticGroups {
   // New groups should be added to this list if they are public and should
   // be listed on the command-line as an available option.
   static final String DIAGNOSTIC_GROUP_NAMES = "accessControls, checkVars, " +
-      "deprecated, fileoverviewTags, invalidCasts, missingProperties, " +
-      "nonStandardJsDocs, strictModuleDepCheck, undefinedVars, " +
-      "unknownDefines, visibility";
+      "checkTypes, deprecated, fileoverviewTags, invalidCasts, " +
+      "missingProperties, nonStandardJsDocs, strictModuleDepCheck, " +
+      "undefinedVars, unknownDefines, visibility";
 
   public static DiagnosticGroup DEPRECATED = DiagnosticGroups
       .registerGroup("deprecated",
@@ -109,6 +109,12 @@ public class DiagnosticGroups {
           new DiagnosticGroup(
               VarCheck.UNDEFINED_VAR_ERROR,
               SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR));
+
+  public static DiagnosticGroup CHECK_TYPES =
+      DiagnosticGroups.registerGroup("checkTypes",
+          new DiagnosticGroup(
+              TypeValidator.ALL_DIAGNOSTICS,
+              TypeCheck.ALL_DIAGNOSTICS));
 
   /**
    * Adds warning levels by name.

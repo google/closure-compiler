@@ -22,8 +22,8 @@ import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
-
 
 /**
  * Optimizes the order of compiler passes.
@@ -49,10 +49,38 @@ class PhaseOptimizer implements CompilerPass {
   private String currentPassName = null;
   private PassFactory sanityCheck = null;
 
+  // The following static properties are only used for computing optimal
+  // phase orderings. They should not be touched by normal compiler runs.
+  private static boolean randomizeLoops = false;
+  private static List<List<String>> loopsRun = Lists.newArrayList();
+
   PhaseOptimizer(AbstractCompiler compiler, PerformanceTracker tracker) {
     this.compiler = compiler;
     this.tracker = tracker;
     compiler.addChangeHandler(recentChange);
+  }
+
+  /**
+   * Randomizes loops. This should only be used when computing optimal phase
+   * orderings.
+   */
+  static void randomizeLoops() {
+    randomizeLoops = true;
+  }
+
+  /**
+   * Get the phase ordering of loops during this run.
+   * Returns an empty list when the loops are not randomized.
+   */
+  static List<List<String>> getLoopsRun() {
+    return loopsRun;
+  }
+
+  /**
+   * Clears the phase ordering of loops during this run.
+   */
+  static void clearLoopsRun() {
+    loopsRun.clear();
   }
 
   /**
@@ -242,22 +270,42 @@ class PhaseOptimizer implements CompilerPass {
    * of PhaseOptimizer.
    */
   private class LoopInternal extends Loop {
-    private List<CompilerPass> myPasses = Lists.newArrayList();
+    private final List<NamedPass> myPasses = Lists.newArrayList();
 
     @Override
     void addLoopedPass(PassFactory factory) {
       myPasses.add(new PassFactoryDelegate(compiler, factory));
     }
 
+    /**
+     * Gets the pass names, in order.
+     */
+    private List<String> getPassOrder() {
+      List<String> order = Lists.newArrayList();
+      for (NamedPass pass : myPasses) {
+        order.add(pass.name);
+      }
+      return order;
+    }
+
     public void process(Node externs, Node root) {
       Preconditions.checkState(!loopMutex, "Nested loops are forbidden");
       loopMutex = true;
+      if (randomizeLoops) {
+        List<NamedPass> mixedupPasses = Lists.newArrayList();
+        Random random = new Random();
+        while (myPasses.size() > 0) {
+          mixedupPasses.add(
+              myPasses.remove(random.nextInt(myPasses.size())));
+        }
+        myPasses.addAll(mixedupPasses);
+      }
 
       try {
         // TODO(nicksantos): Use a smarter algorithm that dynamically adjusts
         // the order that passes are run in.
         int count = 0;
-        do {
+        out: do {
           if (count++ > MAX_LOOPS) {
             compiler.throwInternalError(OPTIMIZE_LOOP_ERROR, null);
           }
@@ -267,11 +315,15 @@ class PhaseOptimizer implements CompilerPass {
           for (CompilerPass pass : myPasses) {
             pass.process(externs, root);
             if (hasHaltingErrors()) {
-              return;
+              break out;
             }
           }
 
         } while (recentChange.hasCodeChanged() && !hasHaltingErrors());
+
+        if (randomizeLoops) {
+          loopsRun.add(getPassOrder());
+        }
       } finally {
         loopMutex = false;
       }

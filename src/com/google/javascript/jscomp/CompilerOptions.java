@@ -742,6 +742,14 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
+   * Whether the warnings guard in this Options object disables the given
+   * group of warnings.
+   */
+  boolean disables(DiagnosticGroup type) {
+    return warningsGuard != null && warningsGuard.disables(type);
+  }
+
+  /**
    * Configure the given type of warning to the given level.
    */
   public void setWarningLevel(DiagnosticGroup type, CheckLevel level) {

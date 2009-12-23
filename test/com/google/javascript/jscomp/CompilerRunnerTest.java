@@ -44,18 +44,25 @@ public class CompilerRunnerTest extends TestCase {
   };
 
   @Override
-  public void setUp() {
+  public void setUp() throws Exception {
+    super.setUp();
     Flags.disableStateCheckingForTest();
     Flags.resetAllFlagsForTest();
     lastCompiler = null;
   }
 
   @Override
-  public void tearDown() {
+  public void tearDown() throws Exception {
     Flags.resetAllFlagsForTest();
+
     // NOTE(nicksantos): ANT needs this for some weird reason.
     AbstractCompilerRunner.FLAG_define.resetForTest();
+    AbstractCompilerRunner.FLAG_jscomp_off.resetForTest();
+    AbstractCompilerRunner.FLAG_jscomp_warning.resetForTest();
+    AbstractCompilerRunner.FLAG_jscomp_error.resetForTest();
+
     Flags.enableStateCheckingForTest();
+    super.tearDown();
   }
 
   public void testTypeCheckingOffByDefault() {
@@ -66,6 +73,21 @@ public class CompilerRunnerTest extends TestCase {
   public void testTypeCheckingOnWithVerbose() {
     CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
     test("function f(x) { return x; } f();", TypeCheck.WRONG_ARGUMENT_COUNT);
+  }
+
+  public void testTypeCheckOverride1() {
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    CompilerRunner.FLAG_jscomp_off.setForTest(
+        Lists.newArrayList("checkTypes"));
+    testSame("var x = x || {}; x.f = function() {}; x.f(3);");
+  }
+
+  public void testTypeCheckOverride2() {
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.QUIET);
+    CompilerRunner.FLAG_jscomp_warning.setForTest(
+        Lists.newArrayList("checkTypes"));
+    test("var x = x || {}; x.f = function() {}; x.f(3);",
+         TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
   public void testCheckSymbolsOffForDefault() {

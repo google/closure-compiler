@@ -105,6 +105,14 @@ class TypeValidator {
           "JSC_INTERFACE_METHOD_NOT_IMPLEMENTED",
           "property {0} on interface {1} is not implemented by type {2}");
 
+  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      INVALID_CAST,
+      TYPE_MISMATCH_WARNING,
+      MISSING_EXTENDS_TAG_WARNING,
+      DUP_VAR_DECLARATION,
+      HIDDEN_PROPERTY_MISMATCH,
+      INTERFACE_METHOD_NOT_IMPLEMENTED);
+
   TypeValidator(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.typeRegistry = compiler.getTypeRegistry();

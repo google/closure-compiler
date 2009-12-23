@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Join;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -79,6 +80,12 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
   @FlagSpec(help = "Prints out the parse tree and exits",
       docLevel = DocLevel.SECRET)
   public static final Flag<Boolean> FLAG_print_tree = Flag.value(false);
+
+  @FlagSpec(help = "Runs the compile job many times, then prints out the " +
+      "best phase ordering from this run",
+      docLevel = DocLevel.SECRET)
+  public static final Flag<Boolean> FLAG_compute_phase_ordering =
+      Flag.value(false);
 
   @FlagSpec(help = "Prints a dot file describing the internal abstract syntax"
       + " tree and exits",
@@ -195,7 +202,7 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       Flag.stringCollector();
 
   @FlagSpec(help = "Make the named class of warnings a normal warning. " +
-  		"Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
+                "Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
   public static final Flag<List<String>> FLAG_jscomp_warning =
       Flag.stringCollector();
 
@@ -220,6 +227,11 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
   private A compiler;
 
   private static Charset inputCharset;
+
+  // Bookkeeping to measure optimal phase orderings.
+  private static final int NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER = 100;
+
+  private final RunTimeStats runTimeStats = new RunTimeStats();
 
   public AbstractCompilerRunner(String[] args) {
     this(args, System.out, System.err);
@@ -304,15 +316,27 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
    * compiler.
    */
   final public void run() {
-    int result;
+    int result = 0;
+    int runs = 1;
+    if (FLAG_compute_phase_ordering.get()) {
+      runs = NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER;
+      PhaseOptimizer.randomizeLoops();
+    }
     try {
-      result = doRun();
+      for (int i = 0; i < runs && result == 0; i++) {
+        runTimeStats.recordStartRun();
+        result = doRun();
+        runTimeStats.recordEndRun();
+      }
     } catch (AbstractCompilerRunner.FlagUsageException e) {
       System.err.println(e.getMessage());
       result = -1;
     } catch (Throwable t) {
       t.printStackTrace();
       result = -2;
+    }
+    if (FLAG_compute_phase_ordering.get()) {
+      runTimeStats.outputBestPhaseOrdering();
     }
     System.exit(result);
   }
@@ -631,6 +655,18 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
       JSSourceFile[] inputs = new JSSourceFile[inputList.size()];
       inputList.toArray(inputs);
       result = compiler.compile(externs, inputs, options);
+    }
+
+    return processResults(result, modules, options);
+  }
+
+  /**
+   * Processes the results of the compile job, and returns an error code.
+   */
+  int processResults(Result result, JSModule[] modules, B options)
+       throws FlagUsageException, IOException {
+    if (FLAG_compute_phase_ordering.get()) {
+      return 0;
     }
 
     if (FLAG_print_ast.get()) {
@@ -995,6 +1031,48 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
 
       throw new RuntimeException(
           "--define flag syntax invalid: " + override);
+    }
+  }
+
+  private class RunTimeStats {
+    private long bestRunTime = Long.MAX_VALUE;
+    private long worstRunTime = Long.MIN_VALUE;
+    private long lastStartTime = 0;
+    private List<List<String>> loopedPassesInBestRun = null;
+
+    /**
+     * Record the start of a run.
+     */
+    private void recordStartRun() {
+      lastStartTime = System.currentTimeMillis();
+      PhaseOptimizer.clearLoopsRun();
+    }
+
+    /**
+     * Record the end of a run.
+     */
+    private void recordEndRun() {
+      long endTime = System.currentTimeMillis();
+      long length = endTime - lastStartTime;
+      worstRunTime = Math.max(length, worstRunTime);
+      if (length < bestRunTime) {
+        loopedPassesInBestRun = PhaseOptimizer.getLoopsRun();
+        bestRunTime = length;
+      }
+    }
+
+    /**
+     * Print the best phase loop to stderr.
+     */
+    private void outputBestPhaseOrdering() {
+      out.println("Best time: " + bestRunTime);
+      out.println("Worst time: " + worstRunTime);
+
+      int i = 1;
+      for (List<String> loop : loopedPassesInBestRun) {
+        out.println("\nLoop " + i + ":\n" + Join.join("\n", loop));
+        i++;
+      }
     }
   }
 }

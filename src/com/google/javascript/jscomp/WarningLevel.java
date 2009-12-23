@@ -73,15 +73,12 @@ public enum WarningLevel {
     options.checkGlobalThisLevel = CheckLevel.WARNING;
     options.checkSymbols = true;
 
-    // checkTypes and checkFunctions have the side-effect of asserting that the
+    // checkTypes has the side-effect of asserting that the
     // correct number of arguments are passed to a function.
     // Because the CodingConvention used with the web service does not provide a
     // way for optional arguments to be specified, these warnings may result in
     // false positives.
     options.checkTypes = true;
-    options.checkFunctions = CheckLevel.WARNING;
-
-    options.checkMethods = CheckLevel.WARNING;
     options.checkGlobalNamesLevel = CheckLevel.WARNING;
     options.aggressiveVarCheck = CheckLevel.WARNING;
   }

@@ -78,6 +78,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   // User warnings
   //
 
+  protected static final String OVERRIDING_PROTOTYPE_WITH_NON_OBJECT =
+      "overriding prototype with non-object";
+
   // TODO(user): make all the non private messages private once the
   // TypedScopeCreator has been merged with the type checker.
   static final DiagnosticType DETERMINISTIC_TEST =
@@ -110,9 +113,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_NOT_A_CONSTRUCTOR",
           "cannot instantiate non-constructor");
-
-  protected static final String OVERRIDING_PROTOTYPE_WITH_NON_OBJECT =
-      "overriding prototype with non-object";
 
   static final DiagnosticType BIT_OPERATION =
       DiagnosticType.warning(
@@ -223,6 +223,34 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_ILLEGAL_IMPLICIT_CAST",
           "Illegal annotation on {0}. @implicitCast may only be used in " +
           "externs.");
+
+  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      DETERMINISTIC_TEST,
+      DETERMINISTIC_TEST_NO_RESULT,
+      INEXISTENT_ENUM_ELEMENT,
+      INEXISTENT_PROPERTY,
+      NOT_A_CONSTRUCTOR,
+      BIT_OPERATION,
+      NOT_CALLABLE,
+      CONSTRUCTOR_NOT_CALLABLE,
+      FUNCTION_MASKS_VARIABLE,
+      MULTIPLE_VAR_DEF,
+      ENUM_DUP,
+      ENUM_NOT_CONSTANT,
+      INTERFACE_FUNCTION_MEMBERS_ONLY,
+      INTERFACE_FUNCTION_NOT_EMPTY,
+      CONFLICTING_EXTENDED_TYPE,
+      BAD_IMPLEMENTED_TYPE,
+      HIDDEN_SUPERCLASS_PROPERTY,
+      HIDDEN_INTERFACE_PROPERTY,
+      HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
+      HIDDEN_INTERFACE_PROPERTY_MISMATCH,
+      UNKNOWN_OVERRIDE,
+      INTERFACE_METHOD_OVERRIDE,
+      UNKNOWN_EXPR_TYPE,
+      UNRESOLVED_TYPE,
+      WRONG_ARGUMENT_COUNT,
+      ILLEGAL_IMPLICIT_CAST);
 
   private final AbstractCompiler compiler;
   private final TypeValidator validator;

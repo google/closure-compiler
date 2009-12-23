@@ -1,0 +1,550 @@
+/*
+ * Copyright 2007 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import com.google.common.base.Pair;
+import com.google.common.collect.Sets;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
+
+import java.util.Arrays;
+import java.util.Collection;
+
+public class SemanticReverseAbstractInterpreterTest
+    extends CompilerTypeTestCase {
+  private CodingConvention codingConvention = new GoogleCodingConvention();
+  private ReverseAbstractInterpreter interpreter;
+  private Scope functionScope;
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+
+    interpreter = new SemanticReverseAbstractInterpreter(
+        codingConvention, registry);
+  }
+
+  public FlowScope newScope() {
+    Scope globalScope = new Scope(new Node(Token.EMPTY), compiler);
+    functionScope = new Scope(globalScope, new Node(Token.EMPTY));
+    return LinkedFlowScope.createEntryLattice(functionScope);
+  }
+
+  /**
+   * Tests reverse interpretation of a NAME expression.
+   */
+  public void testNameCondition() throws Exception {
+    FlowScope blind = newScope();
+    Node condition = createVar(blind, "a", createNullableType(STRING_TYPE));
+
+    // true outcome.
+    FlowScope informedTrue = interpreter.
+        getPreciserScopeKnowingConditionOutcome(condition, blind, true);
+    assertEquals(STRING_TYPE, getVarType(informedTrue, "a"));
+
+    // false outcome.
+    FlowScope informedFalse = interpreter.
+        getPreciserScopeKnowingConditionOutcome(condition, blind, false);
+    assertEquals(createNullableType(STRING_TYPE),
+        getVarType(informedFalse, "a"));
+  }
+
+  /**
+   * Tests reverse interpretation of a NOT(NAME) expression.
+   */
+  public void testNegatedNameCondition() throws Exception {
+    FlowScope blind = newScope();
+    Node a = createVar(blind, "a", createNullableType(STRING_TYPE));
+    Node condition = new Node(Token.NOT);
+    condition.addChildToBack(a);
+
+    // true outcome.
+    FlowScope informedTrue = interpreter.
+        getPreciserScopeKnowingConditionOutcome(condition, blind, true);
+    assertEquals(createNullableType(STRING_TYPE),
+        getVarType(informedTrue, "a"));
+
+    // false outcome.
+    FlowScope informedFalse = interpreter.
+        getPreciserScopeKnowingConditionOutcome(condition, blind, false);
+    assertEquals(STRING_TYPE, getVarType(informedFalse, "a"));
+  }
+
+  /**
+   * Tests reverse interpretation of a ASSIGN expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testAssignCondition1() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.ASSIGN,
+        createVar(blind, "a", createNullableType(OBJECT_TYPE)),
+        createVar(blind, "b", createNullableType(OBJECT_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a", OBJECT_TYPE),
+            new Pair<String, JSType>("b", OBJECT_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a", NULL_TYPE),
+            new Pair<String, JSType>("b", NULL_TYPE)));
+  }
+
+  /**
+   * Tests reverse interpretation of a SHEQ(NAME, NUMBER) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testSheqCondition1() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHEQ,
+        createVar(blind, "a", createUnionType(STRING_TYPE, NUMBER_TYPE)),
+        createNumber(56),
+        Sets.newHashSet(new Pair<String, JSType>("a", NUMBER_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a",
+            createUnionType(STRING_TYPE, NUMBER_TYPE))));
+  }
+
+  /**
+   * Tests reverse interpretation of a SHEQ(NUMBER, NAME) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testSheqCondition2() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHEQ,
+        createNumber(56),
+        createVar(blind, "a", createUnionType(STRING_TYPE, NUMBER_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", NUMBER_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a",
+            createUnionType(STRING_TYPE, NUMBER_TYPE))));
+  }
+
+  /**
+   * Tests reverse interpretation of a SHEQ(NAME, NAME) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testSheqCondition3() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHEQ,
+        createVar(blind, "b", createUnionType(STRING_TYPE, BOOLEAN_TYPE)),
+        createVar(blind, "a", createUnionType(STRING_TYPE, NUMBER_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", STRING_TYPE),
+            new Pair<String, JSType>("b", STRING_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a",
+            createUnionType(STRING_TYPE, NUMBER_TYPE)),
+            new Pair<String, JSType>("b",
+                createUnionType(STRING_TYPE, BOOLEAN_TYPE))));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testSheqCondition4() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHEQ,
+        createVar(blind, "a", createUnionType(STRING_TYPE, VOID_TYPE)),
+        createVar(blind, "b", createUnionType(VOID_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", VOID_TYPE),
+            new Pair<String, JSType>("b", VOID_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", STRING_TYPE),
+            new Pair<String, JSType>("b", VOID_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testSheqCondition5() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHEQ,
+        createVar(blind, "a", createUnionType(NULL_TYPE, VOID_TYPE)),
+        createVar(blind, "b", createUnionType(VOID_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", VOID_TYPE),
+            new Pair<String, JSType>("b", VOID_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", NULL_TYPE),
+            new Pair<String, JSType>("b", VOID_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testSheqCondition6() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHEQ,
+        createVar(blind, "a", createUnionType(STRING_TYPE, VOID_TYPE)),
+        createVar(blind, "b", createUnionType(NUMBER_TYPE, VOID_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a", VOID_TYPE),
+            new Pair<String, JSType>("b", VOID_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a",
+                createUnionType(STRING_TYPE, VOID_TYPE)),
+            new Pair<String, JSType>("b",
+                createUnionType(NUMBER_TYPE, VOID_TYPE))));
+  }
+
+  /**
+   * Tests reverse interpretation of a SHNE(NAME, NUMBER) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testShneCondition1() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHNE,
+        createVar(blind, "a", createUnionType(STRING_TYPE, NUMBER_TYPE)),
+        createNumber(56),
+        Sets.newHashSet(new Pair<String, JSType>("a",
+            createUnionType(STRING_TYPE, NUMBER_TYPE))),
+        Sets.newHashSet(new Pair<String, JSType>("a", NUMBER_TYPE)));
+  }
+
+  /**
+   * Tests reverse interpretation of a SHNE(NUMBER, NAME) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testShneCondition2() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHNE,
+        createNumber(56),
+        createVar(blind, "a", createUnionType(STRING_TYPE, NUMBER_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a",
+            createUnionType(STRING_TYPE, NUMBER_TYPE))),
+        Sets.newHashSet(new Pair<String, JSType>("a", NUMBER_TYPE)));
+  }
+
+  /**
+   * Tests reverse interpretation of a SHNE(NAME, NAME) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testShneCondition3() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHNE,
+        createVar(blind, "b", createUnionType(STRING_TYPE, BOOLEAN_TYPE)),
+        createVar(blind, "a", createUnionType(STRING_TYPE, NUMBER_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a",
+            createUnionType(STRING_TYPE, NUMBER_TYPE)),
+            new Pair<String, JSType>("b",
+                createUnionType(STRING_TYPE, BOOLEAN_TYPE))),
+        Sets.newHashSet(new Pair<String, JSType>("a", STRING_TYPE),
+            new Pair<String, JSType>("b", STRING_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testShneCondition4() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHNE,
+        createVar(blind, "a", createUnionType(STRING_TYPE, VOID_TYPE)),
+        createVar(blind, "b", createUnionType(VOID_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", STRING_TYPE),
+            new Pair<String, JSType>("b", VOID_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", VOID_TYPE),
+            new Pair<String, JSType>("b", VOID_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testShneCondition5() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHNE,
+        createVar(blind, "a", createUnionType(NULL_TYPE, VOID_TYPE)),
+        createVar(blind, "b", createUnionType(NULL_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", VOID_TYPE),
+            new Pair<String, JSType>("b", NULL_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", NULL_TYPE),
+            new Pair<String, JSType>("b", NULL_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testShneCondition6() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.SHNE,
+        createVar(blind, "a", createUnionType(STRING_TYPE, VOID_TYPE)),
+        createVar(blind, "b", createUnionType(NUMBER_TYPE, VOID_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a",
+                createUnionType(STRING_TYPE, VOID_TYPE)),
+            new Pair<String, JSType>("b",
+                createUnionType(NUMBER_TYPE, VOID_TYPE))),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a", VOID_TYPE),
+            new Pair<String, JSType>("b", VOID_TYPE)));
+  }
+
+  /**
+   * Tests reverse interpretation of a EQ(NAME, NULL) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testEqCondition1() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.EQ,
+        createVar(blind, "a", createUnionType(BOOLEAN_TYPE, VOID_TYPE)),
+        createNull(),
+        Sets.newHashSet(new Pair<String, JSType>("a", VOID_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", BOOLEAN_TYPE)));
+  }
+
+  /**
+   * Tests reverse interpretation of a NE(NULL, NAME) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testEqCondition2() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.NE,
+        createNull(),
+        createVar(blind, "a", createUnionType(BOOLEAN_TYPE, VOID_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", BOOLEAN_TYPE)),
+        Sets.newHashSet(new Pair<String, JSType>("a", VOID_TYPE)));
+  }
+
+  /**
+   * Tests reverse interpretation of a EQ(NAME, NULL) expression.
+   */
+  @SuppressWarnings("unchecked")
+  public void testEqCondition3() throws Exception {
+    FlowScope blind = newScope();
+    // (number,undefined,null)
+    JSType nullableOptionalNumber =
+        createUnionType(NULL_TYPE, VOID_TYPE, NUMBER_TYPE);
+    // (null,undefined)
+    JSType nullUndefined =
+        createUnionType(VOID_TYPE, NULL_TYPE);
+    testBinop(blind,
+        Token.EQ,
+        createVar(blind, "a", nullableOptionalNumber),
+        createNull(),
+        Sets.newHashSet(new Pair<String, JSType>("a", nullUndefined)),
+        Sets.newHashSet(new Pair<String, JSType>("a", NUMBER_TYPE)));
+  }
+
+  /**
+   * Tests reverse interpretation of a COMPARE(NAME, NUMBER) expression,
+   * where COMPARE can be LE, LT, GE or GT.
+   */
+  @SuppressWarnings("unchecked")
+  public void testInequalitiesCondition1() {
+    for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
+      FlowScope blind = newScope();
+      testBinop(blind,
+          op,
+          createVar(blind, "a", createUnionType(STRING_TYPE, VOID_TYPE)),
+          createNumber(8),
+          Sets.newHashSet(
+              new Pair<String, JSType>("a", STRING_TYPE)),
+          Sets.newHashSet(new Pair<String, JSType>("a",
+              createUnionType(STRING_TYPE, VOID_TYPE))));
+    }
+  }
+
+  /**
+   * Tests reverse interpretation of a COMPARE(NAME, NAME) expression,
+   * where COMPARE can be LE, LT, GE or GT.
+   */
+  @SuppressWarnings("unchecked")
+  public void testInequalitiesCondition2() {
+    for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
+      FlowScope blind = newScope();
+      testBinop(blind,
+          op,
+          createVar(blind, "a",
+              createUnionType(STRING_TYPE, NUMBER_TYPE, VOID_TYPE)),
+          createVar(blind, "b",
+              createUnionType(NUMBER_TYPE, NULL_TYPE)),
+          Sets.newHashSet(
+              new Pair<String, JSType>("a",
+              createUnionType(STRING_TYPE, NUMBER_TYPE)),
+              new Pair<String, JSType>("b",
+              createUnionType(NUMBER_TYPE, NULL_TYPE))),
+          Sets.newHashSet(
+              new Pair<String, JSType>("a",
+              createUnionType(STRING_TYPE, NUMBER_TYPE, VOID_TYPE)),
+              new Pair<String, JSType>("b",
+              createUnionType(NUMBER_TYPE, NULL_TYPE))));
+    }
+  }
+
+  /**
+   * Tests reverse interpretation of a COMPARE(NUMBER-untyped, NAME) expression,
+   * where COMPARE can be LE, LT, GE or GT.
+   */
+  @SuppressWarnings("unchecked")
+  public void testInequalitiesCondition3() {
+    for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
+      FlowScope blind = newScope();
+      testBinop(blind,
+          op,
+          createUntypedNumber(8),
+          createVar(blind, "a", createUnionType(STRING_TYPE, VOID_TYPE)),
+          Sets.newHashSet(
+              new Pair<String, JSType>("a", STRING_TYPE)),
+          Sets.newHashSet(new Pair<String, JSType>("a",
+              createUnionType(STRING_TYPE, VOID_TYPE))));
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testAnd() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+      Token.AND,
+      createVar(blind, "b", createUnionType(STRING_TYPE, NULL_TYPE)),
+      createVar(blind, "a", createUnionType(NUMBER_TYPE, VOID_TYPE)),
+      Sets.newHashSet(new Pair<String, JSType>("a", NUMBER_TYPE),
+          new Pair<String, JSType>("b", STRING_TYPE)),
+      Sets.newHashSet(new Pair<String, JSType>("a",
+          createUnionType(NUMBER_TYPE, VOID_TYPE)),
+          new Pair<String, JSType>("b",
+          createUnionType(STRING_TYPE, NULL_TYPE))));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testTypeof1() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.EQ,
+        new Node(Token.TYPEOF, createVar(blind, "a", OBJECT_TYPE)),
+        Node.newString("function"),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a", U2U_CONSTRUCTOR_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a", OBJECT_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testTypeof2() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.EQ,
+        new Node(Token.TYPEOF, createVar(blind, "a", ALL_TYPE)),
+        Node.newString("function"),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a", U2U_CONSTRUCTOR_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("a", ALL_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testInstanceOf() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.INSTANCEOF,
+        createVar(blind, "x", UNKNOWN_TYPE),
+        createVar(blind, "s", STRING_OBJECT_FUNCTION_TYPE),
+        Sets.newHashSet(
+            new Pair<String, JSType>("x", STRING_OBJECT_TYPE),
+            new Pair<String, JSType>("s", STRING_OBJECT_FUNCTION_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("s", STRING_OBJECT_FUNCTION_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testInstanceOf2() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.INSTANCEOF,
+        createVar(blind, "x",
+            createUnionType(STRING_OBJECT_TYPE, NUMBER_OBJECT_TYPE)),
+        createVar(blind, "s", STRING_OBJECT_FUNCTION_TYPE),
+        Sets.newHashSet(
+            new Pair<String, JSType>("x", STRING_OBJECT_TYPE),
+            new Pair<String, JSType>("s", STRING_OBJECT_FUNCTION_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("x", NUMBER_OBJECT_TYPE),
+            new Pair<String, JSType>("s", STRING_OBJECT_FUNCTION_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testInstanceOf3() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.INSTANCEOF,
+        createVar(blind, "x", OBJECT_TYPE),
+        createVar(blind, "s", STRING_OBJECT_FUNCTION_TYPE),
+        Sets.newHashSet(
+            new Pair<String, JSType>("x", STRING_OBJECT_TYPE),
+            new Pair<String, JSType>("s", STRING_OBJECT_FUNCTION_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("x", OBJECT_TYPE),
+            new Pair<String, JSType>("s", STRING_OBJECT_FUNCTION_TYPE)));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testInstanceOf4() {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.INSTANCEOF,
+        createVar(blind, "x", ALL_TYPE),
+        createVar(blind, "s", STRING_OBJECT_FUNCTION_TYPE),
+        Sets.newHashSet(
+            new Pair<String, JSType>("x", STRING_OBJECT_TYPE),
+            new Pair<String, JSType>("s", STRING_OBJECT_FUNCTION_TYPE)),
+        Sets.newHashSet(
+            new Pair<String, JSType>("s", STRING_OBJECT_FUNCTION_TYPE)));
+  }
+
+  private void testBinop(FlowScope blind, int binop, Node left, Node right,
+      Collection<Pair<String, JSType>> trueOutcome,
+      Collection<Pair<String, JSType>> falseOutcome) {
+    Node condition = new Node(binop);
+    condition.addChildToBack(left);
+    condition.addChildToBack(right);
+
+    // true outcome.
+    FlowScope informedTrue = interpreter.
+        getPreciserScopeKnowingConditionOutcome(condition, blind, true);
+    for (Pair<String, JSType> p : trueOutcome) {
+      assertEquals(p.first, p.second, getVarType(informedTrue, p.first));
+    }
+
+    // false outcome.
+    FlowScope informedFalse = interpreter.
+        getPreciserScopeKnowingConditionOutcome(condition, blind, false);
+    for (Pair<String, JSType> p : falseOutcome) {
+      assertEquals(p.second, getVarType(informedFalse, p.first));
+    }
+  }
+
+  private Node createNull() {
+    Node n = new Node(Token.NULL);
+    n.setJSType(NULL_TYPE);
+    return n;
+  }
+
+  private Node createNumber(int n) {
+    Node number = createUntypedNumber(n);
+    number.setJSType(NUMBER_TYPE);
+    return number;
+  }
+
+  private Node createUntypedNumber(int n) {
+    return Node.newNumber(n);
+  }
+
+  private JSType getVarType(FlowScope scope, String name) {
+    return scope.getSlot(name).getType();
+  }
+
+  private Node createVar(FlowScope scope, String name, JSType type) {
+    Node n = Node.newString(Token.NAME, name);
+    functionScope.declare(name, n, null, null);
+    ((LinkedFlowScope) scope).inferSlotType(name, type);
+    n.setJSType(type);
+    return n;
+  }
+}
