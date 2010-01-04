@@ -401,6 +401,51 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(externProto.isPropertyInExterns("foo"));
   }
 
+  public void testPropertyInExterns1() {
+    testSame(
+        "/** @constructor */ function Extern() {}" +
+        "/** @type {Extern} */ var extern;" +
+        "/** @return {number} */ extern.one;",
+        "/** @constructor */ function Normal() {}" +
+        "/** @type {Normal} */ var normal;" +
+        "/** @return {number} */ normal.one;", null);
+
+    JSType e = globalScope.getVar("Extern").getType();
+    ObjectType externInstance = ((FunctionType) e).getInstanceType();
+    assertTrue(externInstance.hasOwnProperty("one"));
+    assertTrue(externInstance.isPropertyTypeDeclared("one"));
+    assertTypeEquals("function (): number",
+        externInstance.getPropertyType("one"));
+
+    JSType n = globalScope.getVar("Normal").getType();
+    ObjectType normalInstance = ((FunctionType) n).getInstanceType();
+    assertFalse(normalInstance.hasOwnProperty("one"));
+  }
+
+  public void testPropertyInExterns2() {
+    testSame(
+        "/** @type {Object} */ var extern;" +
+        "/** @return {number} */ extern.one;",
+        "/** @type {Object} */ var normal;" +
+        "/** @return {number} */ normal.one;", null);
+
+    JSType e = globalScope.getVar("extern").getType();
+    assertFalse(e.dereference().hasOwnProperty("one"));
+
+    JSType normal = globalScope.getVar("normal").getType();
+    assertFalse(normal.dereference().hasOwnProperty("one"));
+  }
+
+  public void testPropertyInExterns3() {
+    testSame(
+        "/** @constructor \n * @param {*} x */ function Object(x) {}" +
+        "/** @type {number} */ Object.one;", null);
+
+    ObjectType obj = globalScope.getVar("Object").getType().dereference();
+    assertTrue(obj.hasOwnProperty("one"));
+    assertTypeEquals("number", obj.getPropertyType("one"));
+  }
+
   public void testTypedStubsInExterns() {
     testSame(
         "/** @constructor \n * @param {*} var_args */ " +
@@ -637,5 +682,9 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
   private ObjectType getNativeObjectType(JSTypeNative type) {
     return (ObjectType) registry.getNativeType(type);
+  }
+
+  private void assertTypeEquals(String s, JSType type) {
+    assertEquals(s, type.toString());
   }
 }

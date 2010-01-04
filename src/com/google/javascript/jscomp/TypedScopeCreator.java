@@ -1051,7 +1051,8 @@ final class TypedScopeCreator implements ScopeCreator {
           boolean isExtern = t.getInput().isExtern();
           if ((!ownerType.hasOwnProperty(propName) ||
                ownerType.isPropertyTypeInferred(propName)) &&
-              (isExtern || !ownerType.isInstanceType())) {
+              ((isExtern && !ownerType.isNativeObjectType()) ||
+               !ownerType.isInstanceType())) {
             // If the property is undeclared or inferred, declare it now.
             ownerType.defineDeclaredProperty(propName, valueType, isExtern);
           }

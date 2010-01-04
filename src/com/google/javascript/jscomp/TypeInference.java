@@ -574,7 +574,8 @@ class TypeInference
       if (var != null &&
           !var.isTypeInferred() &&
           !objectType.hasOwnProperty(propName) &&
-          (!objectType.isInstanceType() || var.isExtern())) {
+          (!objectType.isInstanceType() ||
+           (var.isExtern() && !objectType.isNativeObjectType()))) {
         objectType.defineDeclaredProperty(
             propName, var.getType(), var.isExtern());
         return true;

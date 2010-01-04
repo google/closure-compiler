@@ -1646,7 +1646,7 @@ String.prototype.small = function() {};
 /**
  * @param {*=} opt_separator
  * @param {number=} opt_limit
- * @return {Array.<string>}
+ * @return {!Array.<string>}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/split
  */

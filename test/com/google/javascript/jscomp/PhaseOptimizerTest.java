@@ -22,7 +22,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
+
 import java.util.List;
+import java.util.Random;
 
 /**
  * Tests for {@link PhaseOptimizer}.
@@ -142,6 +144,28 @@ public class PhaseOptimizerTest extends TestCase {
             createPassFactory("b", 0, false),
             createPassFactory("c", 0, false)));
     assertPasses("a", "b", "c");
+  }
+
+  public void testDuplicateLoop() {
+    Loop loop = optimizer.addFixedPointLoop();
+    addLoopedPass(loop, "x", 1);
+    try {
+      addLoopedPass(loop, "x", 1);
+      fail("Expected exception");
+    } catch (IllegalArgumentException e) {}
+  }
+
+  public void testPassOrdering() {
+    Loop loop = optimizer.addFixedPointLoop();
+    List<String> optimalOrder = Lists.newArrayList(
+        PhaseOptimizer.OPTIMAL_ORDER);
+    Random random = new Random();
+    while (optimalOrder.size() > 0) {
+      addLoopedPass(
+          loop, optimalOrder.remove(random.nextInt(optimalOrder.size())), 0);
+    }
+    optimizer.process(null, null);
+    assertEquals(PhaseOptimizer.OPTIMAL_ORDER, passesRun);
   }
 
   public void assertPasses(String ... names) {

@@ -16,13 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Tracer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -30,6 +34,18 @@ import java.util.logging.Logger;
 *
  */
 class PhaseOptimizer implements CompilerPass {
+
+  // This ordering is computed offline by running with compute_phase_ordering.
+  @VisibleForTesting
+  static final List<String> OPTIMAL_ORDER = ImmutableList.of(
+     "removeUnreachableCode",
+     "removeUnusedVars",
+     "foldConstants",
+     "deadAssignmentsElimination",
+     "inlineVariables",
+     "inlineFunctions",
+     "removeUnusedPrototypeProperties",
+     "minimizeExitPoints");
 
   static final int MAX_LOOPS = 100;
   static final String OPTIMIZE_LOOP_ERROR =
@@ -271,9 +287,15 @@ class PhaseOptimizer implements CompilerPass {
    */
   private class LoopInternal extends Loop {
     private final List<NamedPass> myPasses = Lists.newArrayList();
+    private final Set<String> myNames = Sets.newHashSet();
 
     @Override
     void addLoopedPass(PassFactory factory) {
+      String name = factory.getName();
+      Preconditions.checkArgument(
+          !myNames.contains(name),
+          "Already a pass with name '" + name + "' in this loop");
+      myNames.add(factory.getName());
       myPasses.add(new PassFactoryDelegate(compiler, factory));
     }
 
@@ -292,13 +314,9 @@ class PhaseOptimizer implements CompilerPass {
       Preconditions.checkState(!loopMutex, "Nested loops are forbidden");
       loopMutex = true;
       if (randomizeLoops) {
-        List<NamedPass> mixedupPasses = Lists.newArrayList();
-        Random random = new Random();
-        while (myPasses.size() > 0) {
-          mixedupPasses.add(
-              myPasses.remove(random.nextInt(myPasses.size())));
-        }
-        myPasses.addAll(mixedupPasses);
+        randomizePasses();
+      } else {
+        optimizePasses();
       }
 
       try {
@@ -327,6 +345,39 @@ class PhaseOptimizer implements CompilerPass {
       } finally {
         loopMutex = false;
       }
+    }
+
+    /** Re-arrange the passes in a random order. */
+    private void randomizePasses() {
+      List<NamedPass> mixedupPasses = Lists.newArrayList();
+      Random random = new Random();
+      while (myPasses.size() > 0) {
+        mixedupPasses.add(
+            myPasses.remove(random.nextInt(myPasses.size())));
+      }
+      myPasses.addAll(mixedupPasses);
+    }
+
+    /** Re-arrange the passes in an optimal order. */
+    private void optimizePasses() {
+      // It's important that this ordering is deterministic, so that
+      // multiple compiles with the same input produce exactly the same
+      // results.
+      //
+      // To do this, grab any passes we recognize, and move them to the end
+      // in an "optimal" order.
+      List<NamedPass> optimalPasses = Lists.newArrayList();
+      for (String passName : OPTIMAL_ORDER) {
+        for (NamedPass pass : myPasses) {
+          if (pass.name.equals(passName)) {
+            optimalPasses.add(pass);
+            break;
+          }
+        }
+      }
+
+      myPasses.removeAll(optimalPasses);
+      myPasses.addAll(optimalPasses);
     }
   }
 }
