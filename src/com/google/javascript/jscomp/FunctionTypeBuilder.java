@@ -21,6 +21,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
@@ -239,7 +240,8 @@ final class FunctionTypeBuilder {
           JSType maybeFunctionType = baseType.getConstructor();
           if (maybeFunctionType instanceof FunctionType) {
             FunctionType functionType = baseType.getConstructor();
-            implementedInterfaces.addAll(
+            Iterables.addAll(
+                implementedInterfaces,
                 functionType.getImplementedInterfaces());
           }
         }

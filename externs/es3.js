@@ -835,10 +835,9 @@ Number.POSITIVE_INFINITY;
 
 
 /**
- * @type {Object}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math
  */
-var Math;
+var Math = {};
 
 /**
  * @param {*} x

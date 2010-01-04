@@ -151,7 +151,7 @@ public final class InstanceObjectType extends PrototypeObjectType {
     if (super.isSubtype(that)) {
       return true;
     }
-    List<ObjectType> thisInterfaces =
+    Iterable<ObjectType> thisInterfaces =
         getConstructor().getImplementedInterfaces();
     if (thisInterfaces != null) {
       List<ObjectType> thatInterfaces = that.keepAssignableInterfaces();

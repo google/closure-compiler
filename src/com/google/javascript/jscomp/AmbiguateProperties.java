@@ -276,8 +276,7 @@ class AmbiguateProperties implements CompilerPass {
       constructor = type.toObjectType().getConstructor();
     }
     if (constructor != null) {
-      Set<ObjectType> interfaces = constructor.getAllImplementedInterfaces();
-      for (ObjectType itype : interfaces) {
+      for (ObjectType itype : constructor.getAllImplementedInterfaces()) {
         related.set(getIntForType(itype));
       }
     }

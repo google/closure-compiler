@@ -103,10 +103,10 @@ public class FunctionType extends PrototypeObjectType {
   private Node source;
 
   /**
-   * The interfaces implemented by the instance type of this function.
-   * It is only relevant for constructors and may be {@code null}.
+   * The interfaces directly implemented by this function.
+   * It is only relevant for constructors. May not be {@code null}.
    */
-  private List<ObjectType> implementedInterfaces;
+  private List<ObjectType> implementedInterfaces = ImmutableList.of();
 
   /**
    * The types which are subtypes of this function. It is only relevant for
@@ -357,7 +357,7 @@ public class FunctionType extends PrototypeObjectType {
    * superclasses for any of those interfaces. If this is called before all
    * types are resolved, it may return an incomplete set.
    */
-  public Set<ObjectType> getAllImplementedInterfaces() {
+  public Iterable<ObjectType> getAllImplementedInterfaces() {
     Set<ObjectType> interfaces = Sets.newHashSet();
 
     for (ObjectType type : getImplementedInterfaces()) {
@@ -383,12 +383,8 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   /** Returns interfaces implemented directly by a class or its superclass. */
-  public List<ObjectType> getImplementedInterfaces() {
-    if (implementedInterfaces == null) {
-      return ImmutableList.of();
-    } else {
-      return implementedInterfaces;
-    }
+  public Iterable<ObjectType> getImplementedInterfaces() {
+    return implementedInterfaces;
   }
 
   public void setImplementedInterfaces(List<ObjectType> implementedInterfaces) {

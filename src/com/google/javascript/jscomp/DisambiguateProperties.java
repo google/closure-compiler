@@ -782,8 +782,7 @@ class DisambiguateProperties<T> implements CompilerPass {
           constructor = objType.getConstructor();
         }
         while (constructor != null) {
-          List<ObjectType> interfaces = constructor.getImplementedInterfaces();
-          for (ObjectType itype : interfaces) {
+          for (ObjectType itype : constructor.getImplementedInterfaces()) {
             JSType top = getTypeWithProperty(p.name, itype);
             if (top != null) {
               p.addType(itype, top, relatedType);
