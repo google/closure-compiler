@@ -18,11 +18,11 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.StringUtil;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 
@@ -34,6 +34,10 @@ import java.nio.charset.CharsetEncoder;
 *
  */
 class CodeGenerator {
+  
+  private static final char[] HEX_CHARS
+      = { '0', '1', '2', '3', '4', '5', '6', '7',
+          '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
   private final CodeConsumer cc;
 
@@ -844,7 +848,7 @@ class CodeGenerator {
               sb.append(c);
             } else {
               // Unicode-escape the character.
-              StringUtil.appendHexJavaScriptRepresentation(sb, c);
+              appendHexJavaScriptRepresentation(sb, c);
             }
           } else {
             // No charsetEncoder provided - pass straight latin characters
@@ -856,7 +860,7 @@ class CodeGenerator {
               // Other characters can be misinterpreted by some js parsers,
               // or perhaps mangled by proxies along the way,
               // so we play it safe and unicode escape them.
-              StringUtil.appendHexJavaScriptRepresentation(sb, c);
+              appendHexJavaScriptRepresentation(sb, c);
             }
           }
       }
@@ -881,7 +885,7 @@ class CodeGenerator {
       if (c > 0x1F && c < 0x7F) {
         sb.append(c);
       } else {
-        StringUtil.appendHexJavaScriptRepresentation(sb, c);
+        appendHexJavaScriptRepresentation(sb, c);
       }
     }
     return sb.toString();
@@ -946,5 +950,45 @@ class CodeGenerator {
   private  Context clearContextForNoInOperator(Context context) {
     return (context == Context.IN_FOR_INIT_CLAUSE
         ? Context.OTHER : context);
+  }
+
+  /**
+   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+   */
+  private static void appendHexJavaScriptRepresentation(
+      StringBuilder sb, char c) {
+    try {
+      appendHexJavaScriptRepresentation(c, sb);
+    } catch (IOException ex) {
+      // StringBuilder does not throw IOException.
+      throw new RuntimeException(ex);
+    }
+  }
+
+  /**
+   * Returns a javascript representation of the character in a hex escaped
+   * format.
+   *
+   * @param codePoint The codepoint to append.
+   * @param out The buffer to which the hex representation should be appended.
+   */
+  private static void appendHexJavaScriptRepresentation(
+      int codePoint, Appendable out)
+      throws IOException {
+    if (Character.isSupplementaryCodePoint(codePoint)) {
+      // Handle supplementary unicode values which are not representable in
+      // javascript.  We deal with these by escaping them as two 4B sequences
+      // so that they will round-trip properly when sent from java to javascript
+      // and back.
+      char[] surrogates = Character.toChars(codePoint);
+      appendHexJavaScriptRepresentation(surrogates[0], out);
+      appendHexJavaScriptRepresentation(surrogates[1], out);
+      return;
+    }
+    out.append("\\u")
+        .append(HEX_CHARS[(codePoint >>> 12) & 0xf])
+        .append(HEX_CHARS[(codePoint >>> 8) & 0xf])
+        .append(HEX_CHARS[(codePoint >>> 4) & 0xf])
+        .append(HEX_CHARS[codePoint & 0xf]);
   }
 }

@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Join;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -24,10 +27,10 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
 import com.google.javascript.jscomp.graph.Annotation;
-import com.google.javascript.jscomp.graph.GraphNode;
-import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.jscomp.graph.GraphColoring;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
+import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionPrototypeType;
@@ -48,7 +51,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
-
 
 /**
  * Renames unrelated properties to the same name, using type information.
@@ -114,10 +116,13 @@ class AmbiguateProperties implements CompilerPass {
       };
 
   /** A map from JSType to a unique representative Integer. */
-  private Map<JSType, Integer> intForType = Maps.newHashMap();
+  private BiMap<JSType, Integer> intForType = HashBiMap.create();
 
-  /** A map from JSType to BitSet representing the types related to the type. */
-  private Map<JSType, BitSet> relatedBitsets = Maps.newHashMap();
+  /**
+   * A map from JSType to JSTypeBitSet representing the types related
+   * to the type.
+   */
+  private Map<JSType, JSTypeBitSet> relatedBitsets = Maps.newHashMap();
 
   /** A set of types that invalidate properties from ambiguation. */
   private final Set<JSType> invalidatingTypes;
@@ -243,7 +248,7 @@ class AmbiguateProperties implements CompilerPass {
                 + numSkippedPropertyNames + " properties.");
   }
 
-  /** Add supertypes of the type to its BitSet of related types. */
+  /** Add supertypes of the type to its JSTypeBitSet of related types. */
   private void computeRelatedTypes(JSType type) {
     if (type instanceof UnionType) {
       type = type.restrictByNotNullOrUndefined();
@@ -255,11 +260,13 @@ class AmbiguateProperties implements CompilerPass {
       }
     }
 
-    BitSet related = relatedBitsets.get(type);
-    if (related == null) {
-      related = new BitSet(intForType.size());
-      relatedBitsets.put(type, related);
+    if (relatedBitsets.containsKey(type)) {
+      // We only need to generate the bit set once.
+      return;
     }
+
+    JSTypeBitSet related = new JSTypeBitSet(intForType.size());
+    relatedBitsets.put(type, related);
 
     ObjectType parentType = type.toObjectType();
     while (parentType != null) {
@@ -320,10 +327,10 @@ class AmbiguateProperties implements CompilerPass {
    */
   class PropertySubGraph implements SubGraph<Property, Void> {
     /** Types from which properties in this subgraph are referenced. */
-    BitSet typesInSet = new BitSet(intForType.size());
+    JSTypeBitSet typesInSet = new JSTypeBitSet(intForType.size());
 
     /** Types related to types in {@code typesInSet}. */
-    BitSet typesRelatedToSet = new BitSet(intForType.size());
+    JSTypeBitSet typesRelatedToSet = new JSTypeBitSet(intForType.size());
 
     /**
      * Returns true if prop is in an independent set from all properties in
@@ -352,8 +359,8 @@ class AmbiguateProperties implements CompilerPass {
      * Finds all types related to the provided type and returns a BitSet with
      * their bits to true.
      */
-    private BitSet getRelated(JSType type) {
-      BitSet relatedTypes = new BitSet(intForType.size());
+    private JSTypeBitSet getRelated(JSType type) {
+      JSTypeBitSet relatedTypes = new JSTypeBitSet(intForType.size());
       if (type instanceof UnionType) {
         for (JSType alt : ((UnionType) type).getAlternates()) {
           getRelatedTypesOnNonUnion(alt, relatedTypes);
@@ -368,7 +375,8 @@ class AmbiguateProperties implements CompilerPass {
      * Finds all types related to the provided type and returns a BitSet with
      * their bits to true.  Expects a non-union type.
      */
-    private void getRelatedTypesOnNonUnion(JSType type, BitSet relatedTypes) {
+    private void getRelatedTypesOnNonUnion(
+        JSType type, JSTypeBitSet relatedTypes) {
       // All of the types we encounter should have been added to the
       // relatedBitsets via computeRelatedTypes.
       if (relatedBitsets.containsKey(type)) {
@@ -542,7 +550,7 @@ class AmbiguateProperties implements CompilerPass {
     String newName;
     int numOccurrences;
     boolean skipAmbiguating;
-    BitSet typesSet = new BitSet(intForType.size());
+    JSTypeBitSet typesSet = new JSTypeBitSet(intForType.size());
 
     Property(String name) {
       this.oldName = name;
@@ -582,10 +590,48 @@ class AmbiguateProperties implements CompilerPass {
       if (type == null) {
         type = newType;
       } else {
+        // TODO(nicksantos): This line doesn't make sense. It only works if
+        // we assume that the type hierarchy is a tree (and thus has a
+        // single root). It doesn't work with an arbitrary lattice.
+        //
+        // Consider a class Chimay that extends Beer and implements Expensive.
+        // supremum(Chimay, Expensive) == Expensive
+        // according to the lattice's supremum op (getLeastSupertype).
+        //
+        // And since related types are computed from this result, this
+        // means that we will treat Beer as unrelated to Chimay, which is
+        // clearly not correct.
         type = type.getLeastSupertype(newType);
       }
 
       typesSet.set(getIntForType(newType));
+    }
+  }
+
+  // A BitSet that stores type info. Adds pretty-print routines.
+  private class JSTypeBitSet extends BitSet {
+
+    private JSTypeBitSet(int size) {
+      super(size);
+    }
+
+    private JSTypeBitSet() {
+      super();
+    }
+
+    /**
+     * Pretty-printing, for diagnostic purposes.
+     */
+    @Override
+    public String toString() {
+      int from = 0;
+      int current = 0;
+      List<String> types = Lists.newArrayList();
+      while (-1 != (current = nextSetBit(from))) {
+        types.add(intForType.inverse().get(current).toString());
+        from = current + 1;
+      }
+      return Join.join(" && ", types);
     }
   }
 }
