@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -36,8 +36,13 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 package com.google.javascript.rhino.jstype;
+
+import com.google.javascript.rhino.jstype.ObjectType;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Represents the prototype of a {@link FunctionType}.
@@ -81,5 +86,10 @@ public class FunctionPrototypeType extends PrototypeObjectType {
 
   public FunctionType getOwnerFunction() {
     return ownerFunction;
+  }
+
+  @Override
+  Iterable<ObjectType> getCtorImplementedInterfaces() {
+    return getOwnerFunction().getImplementedInterfaces();
   }
 }

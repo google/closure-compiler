@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.JSDocInfo;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -147,6 +148,11 @@ class ProxyObjectType extends ObjectType {
   @Override
   public boolean isSubtype(JSType that) {
     return referencedType.isSubtype(that);
+  }
+
+  @Override
+  Iterable<ObjectType> getCtorImplementedInterfaces() {
+    return referencedType.getCtorImplementedInterfaces();
   }
 
   @Override

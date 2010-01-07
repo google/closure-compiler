@@ -45,9 +45,9 @@ import com.google.common.collect.Maps;
 import com.google.javascript.rhino.JSDocInfo;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 
 /**
  * The object type represents instances of JavaScript objects such as
@@ -361,12 +361,34 @@ class PrototypeObjectType extends ObjectType {
     if (JSType.isSubtype(this, that)) {
       return true;
     }
+
+    // Union types
+    if (that instanceof UnionType) {
+      // The static {@code JSType.isSubtype} check already decomposed
+      // union types, so we don't need to check those again.
+      return false;
+    }
+
     // record types
     if (that instanceof RecordType) {
       return RecordType.isSubtype(this, (RecordType) that);
     }
-    // prototype based objects
-    ObjectType thatObj = ObjectType.cast(that);
+
+    // Interfaces
+    // Find all the interfaces implemented by this class and compare each one
+    // to the interface instance.
+    ObjectType thatObj = that.toObjectType();
+    ObjectType thatCtor = thatObj == null ? null : thatObj.getConstructor();
+    if (thatCtor != null && thatCtor.isInterface()) {
+      Iterable<ObjectType> thisInterfaces = getCtorImplementedInterfaces();
+      for (ObjectType thisInterface : thisInterfaces) {
+        if (thisInterface.isSubtype(that)) {
+          return true;
+        }
+      }
+    }
+
+    // other prototype based objects
     if (that != null) {
       if (isUnknownType() || implicitPrototypeChainIsUnknown()) {
         // If unsure, say 'yes', to avoid spurious warnings.
@@ -376,6 +398,7 @@ class PrototypeObjectType extends ObjectType {
       }
       return this.isImplicitPrototype(thatObj);
     }
+
     return false;
   }
 

@@ -673,45 +673,6 @@ public boolean <B>isNominalType</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="isSubtype(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
-isSubtype</H3>
-<PRE>
-public boolean <B>isSubtype</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</PRE>
-<DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isSubtype(com.google.javascript.rhino.jstype.JSType)">JSType</A></CODE></B></DD>
-<DD>Checks whether <code>this</code> is a subtype of <code>that</code>.<p>
-
- Subtyping rules:
- <ul>
- <li>(unknown) &mdash; every type is a subtype of the Unknown type.</li>
- <li>(no) &mdash; the No type is a subtype of every type.</li>
- <li>(no-object) &mdash; the NoObject type is a subtype of every object
- type (i.e. subtypes of the Object type).</li>
- <li>(ref) &mdash; a type is a subtype of itself.</li>
- <li>(union-l) &mdash; A union type is a subtype of a type U if all the
- union type's constituents are a subtype of U. Formally<br>
- <code>(T&lt;sub&gt;1&lt;/sub&gt;, &amp;hellip;, T&lt;sub&gt;n&lt;/sub&gt;) &amp;lt;: U</code> if and only
- <code>T&lt;sub&gt;k&lt;/sub&gt; &amp;lt;: U</code> for all <code>k &amp;isin; 1..n</code>.</li>
- <li>(union-r) &mdash; A type U is a subtype of a union type if it is a
- subtype of one of the union type's constituents. Formally<br>
- <code>U &amp;lt;: (T&lt;sub&gt;1&lt;/sub&gt;, &amp;hellip;, T&lt;sub&gt;n&lt;/sub&gt;)</code> if and only
- if <code>U &amp;lt;: T&lt;sub&gt;k&lt;/sub&gt;</code> for some index <code>k</code>.</li>
- <li>(objects) &mdash; an Object <code>O&lt;sub&gt;1&lt;/sub&gt;</code> is a subtype
- of an object <code>O&lt;sub&gt;2&lt;/sub&gt;</code> if it has more properties
- than <code>O&lt;sub&gt;2&lt;/sub&gt;</code> and all common properties are
- pairwise subtypes.</li>
- </ul>
-<P>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-
-<DT><B>Returns:</B><DD><code>this &amp;lt;: that</code></DL>
-</DD>
-</DL>
-<HR>
-
 <A NAME="equals(java.lang.Object)"><!-- --></A><H3>
 equals</H3>
 <PRE>
@@ -1045,6 +1006,45 @@ public boolean <B>canBeCalled</B>()</PRE>
 <DD><DL>
 
 <DT><B>Returns:</B><DD><code>true</code> if this type might be callable.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isSubtype(com.google.javascript.rhino.jstype.JSType)"><!-- --></A><H3>
+isSubtype</H3>
+<PRE>
+public boolean <B>isSubtype</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isSubtype(com.google.javascript.rhino.jstype.JSType)">JSType</A></CODE></B></DD>
+<DD>Checks whether <code>this</code> is a subtype of <code>that</code>.<p>
+
+ Subtyping rules:
+ <ul>
+ <li>(unknown) &mdash; every type is a subtype of the Unknown type.</li>
+ <li>(no) &mdash; the No type is a subtype of every type.</li>
+ <li>(no-object) &mdash; the NoObject type is a subtype of every object
+ type (i.e. subtypes of the Object type).</li>
+ <li>(ref) &mdash; a type is a subtype of itself.</li>
+ <li>(union-l) &mdash; A union type is a subtype of a type U if all the
+ union type's constituents are a subtype of U. Formally<br>
+ <code>(T&lt;sub&gt;1&lt;/sub&gt;, &amp;hellip;, T&lt;sub&gt;n&lt;/sub&gt;) &amp;lt;: U</code> if and only
+ <code>T&lt;sub&gt;k&lt;/sub&gt; &amp;lt;: U</code> for all <code>k &amp;isin; 1..n</code>.</li>
+ <li>(union-r) &mdash; A type U is a subtype of a union type if it is a
+ subtype of one of the union type's constituents. Formally<br>
+ <code>U &amp;lt;: (T&lt;sub&gt;1&lt;/sub&gt;, &amp;hellip;, T&lt;sub&gt;n&lt;/sub&gt;)</code> if and only
+ if <code>U &amp;lt;: T&lt;sub&gt;k&lt;/sub&gt;</code> for some index <code>k</code>.</li>
+ <li>(objects) &mdash; an Object <code>O&lt;sub&gt;1&lt;/sub&gt;</code> is a subtype
+ of an object <code>O&lt;sub&gt;2&lt;/sub&gt;</code> if it has more properties
+ than <code>O&lt;sub&gt;2&lt;/sub&gt;</code> and all common properties are
+ pairwise subtypes.</li>
+ </ul>
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isSubtype(com.google.javascript.rhino.jstype.JSType)">isSubtype</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD><code>this &amp;lt;: that</code></DL>
 </DD>
 </DL>
 <HR>

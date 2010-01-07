@@ -42,11 +42,13 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import com.google.javascript.rhino.JSDocInfo;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -436,5 +438,13 @@ public abstract class ObjectType extends JSType {
    */
   public static ObjectType cast(JSType type) {
     return type == null ? null : type.toObjectType();
+  }
+
+  /**
+   * Gets the interfaces implemented by the ctor associated with this type.
+   * Intended to be overridden by subclasses.
+   */
+  Iterable<ObjectType> getCtorImplementedInterfaces() {
+    return ImmutableSet.of();
   }
 }

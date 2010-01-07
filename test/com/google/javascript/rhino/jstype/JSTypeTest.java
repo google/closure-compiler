@@ -71,6 +71,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private ObjectType subclassOfUnresolvedNamedType;
   private FunctionType subclassCtor;
   private FunctionType interfaceType;
+  private ObjectType interfaceInstType;
   private JSType recordType;
   private EnumType enumType;
   private EnumElementType elementsType;
@@ -122,11 +123,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 
     interfaceType = new FunctionType(registry, "Interface", null);
+    interfaceInstType = interfaceType.getInstanceType();
 
     googBar = registry.createConstructorType("goog.Bar", null, null, null);
     googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE, true);
     googBar.setImplementedInterfaces(
-        Lists.<ObjectType>newArrayList(interfaceType.getInstanceType()));
+        Lists.<ObjectType>newArrayList(interfaceInstType));
     googBarInst = googBar.getInstanceType();
 
     googSubBar = registry.createConstructorType(
@@ -4709,6 +4711,20 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         googSubBarArgConstructor,
         registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE));
     verifySubtypeChain(typeChain, false);
+  }
+
+  public void testInterfaceInstanceSubtypeChain() throws Exception {
+    List<JSType> typeChain = Lists.newArrayList(
+        ALL_TYPE,
+        OBJECT_TYPE,
+        interfaceInstType,
+        googBar.getPrototype(),
+        googBarInst,
+        googSubBar.getPrototype(),
+        googSubBarInst,
+        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        registry.getNativeType(JSTypeNative.NO_TYPE));
+    verifySubtypeChain(typeChain);
   }
 
   /**

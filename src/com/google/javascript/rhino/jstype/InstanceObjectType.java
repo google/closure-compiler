@@ -43,7 +43,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.common.base.Preconditions;
 
 import java.util.List;
-
+import java.util.Set;
 
 /**
  * An object type that is an instance of some function constructor.
@@ -147,26 +147,6 @@ public final class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
-  public boolean isSubtype(JSType that) {
-    if (super.isSubtype(that)) {
-      return true;
-    }
-    Iterable<ObjectType> thisInterfaces =
-        getConstructor().getImplementedInterfaces();
-    if (thisInterfaces != null) {
-      List<ObjectType> thatInterfaces = that.keepAssignableInterfaces();
-      for (ObjectType thatInterface : thatInterfaces) {
-        for (ObjectType thisInterface : thisInterfaces) {
-          if (thisInterface.isSubtype(thatInterface)) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  @Override
   public boolean equals(Object that) {
     if (this == that) {
       return true;
@@ -190,5 +170,10 @@ public final class InstanceObjectType extends PrototypeObjectType {
     } else {
       return super.hashCode();
     }
+  }
+
+  @Override
+  Iterable<ObjectType> getCtorImplementedInterfaces() {
+    return getConstructor().getImplementedInterfaces();
   }
 }

@@ -4096,6 +4096,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testBug2341812() throws Exception {
+    testTypes(
+        "/** @interface */" +
+        "function EventTarget() {}" +
+        "/** @constructor \n * @implements {EventTarget} */" +
+        "function Node() {}" +
+        "/** @type {number} */ Node.prototype.index;" +
+        "/** @param {EventTarget} x \n * @return {string} */" +
+        "function foo(x) { return x.index; }");
+  }
+
   public void testScopedConstructors() throws Exception {
     testTypes(
         "function foo1() { " +

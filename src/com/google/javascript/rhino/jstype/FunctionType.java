@@ -40,9 +40,11 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
@@ -51,7 +53,6 @@ import com.google.javascript.rhino.Token;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
 
 /**
  * This derived type provides extended information about a function, including
@@ -384,7 +385,14 @@ public class FunctionType extends PrototypeObjectType {
 
   /** Returns interfaces implemented directly by a class or its superclass. */
   public Iterable<ObjectType> getImplementedInterfaces() {
-    return implementedInterfaces;
+    FunctionType superCtor = isConstructor() ?
+        getSuperClassConstructor() : null;
+    if (superCtor == null) {
+      return implementedInterfaces;
+    } else {
+      return Iterables.concat(
+          implementedInterfaces, superCtor.getImplementedInterfaces());
+    }
   }
 
   public void setImplementedInterfaces(List<ObjectType> implementedInterfaces) {
