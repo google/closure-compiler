@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -201,12 +201,12 @@ final class NameAnalyzer implements CompilerPass {
 
       if (refersTo.size() > 0) {
         out.append("\n - REFERS TO: ");
-        out.append(Join.join(", ", refersTo));
+        out.append(Joiner.on(", ").join(refersTo));
       }
 
       if (referencedBy.size() > 0) {
         out.append("\n - REFERENCED BY: ");
-        out.append(Join.join(", ", referencedBy));
+        out.append(Joiner.on(", ").join(referencedBy));
       }
       return out.toString();
     }

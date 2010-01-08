@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
@@ -58,14 +58,14 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
    * Combine source strings using '\n' as the separator.
    */
   private static String newlineJoin(String ... parts) {
-    return Join.join("\n", parts);
+    return Joiner.on("\n").join(parts);
   }
 
   /**
    * Combine source strings using ';' as the separator.
    */
   private static String semicolonJoin(String ... parts) {
-    return Join.join(";", parts);
+    return Joiner.on(";").join(parts);
   }
 
   /**
@@ -592,7 +592,7 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
         if (nameNode != null) {
           JSType type = node.getJSType();
           typeInformation.add(
-              Join.join("",
+              Joiner.on("").join(
                         Token.name(node.getType()),
                         " ",
                         nameNode.getQualifiedName(),

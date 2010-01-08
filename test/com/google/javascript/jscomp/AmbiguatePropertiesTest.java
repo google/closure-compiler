@@ -404,4 +404,30 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
         + "(new Bar).b;";
     test(js, output);
   }
+
+  public void testImplementsAndExtends() {
+    String js = ""
+        + "/** @interface */ function Foo() {}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " */\n"
+        + "function Bar(){}\n"
+        + "Bar.prototype.y = function() { return 3; };\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Bar}\n"
+        + " * @implements {Foo}\n"
+        + " */\n"
+        + "function SubBar(){ }\n"
+        + "/** @param {Foo} x */ function f(x) { x.z = 3; }\n"
+        + "/** @param {SubBar} x */ function g(x) { x.z = 3; }";
+    String output = ""
+        + "function Foo(){}\n"
+        + "function Bar(){}\n"
+        + "Bar.prototype.b = function() { return 3; };\n"
+        + "function SubBar(){}\n"
+        + "function f(x) { x.a = 3; }\n"
+        + "function g(x) { x.a = 3; }";
+    test(js, output);
+  }
 }

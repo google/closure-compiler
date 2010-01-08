@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.flags.Flags;
 import com.google.javascript.rhino.Node;
@@ -208,8 +208,8 @@ public class CompilerRunnerTest extends TestCase {
   private void test(String[] original, String[] compiled) {
     Compiler compiler = compile(original);
     assertEquals("Expected no warnings or errors\n" +
-        "Errors: \n" + Join.join("\n", compiler.getErrors()) +
-        "Warnings: \n" + Join.join("\n", compiler.getWarnings()),
+        "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
+        "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         0, compiler.getErrors().length + compiler.getWarnings().length);
 
     Node root = compiler.getRoot().getLastChild();

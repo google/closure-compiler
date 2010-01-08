@@ -89,7 +89,7 @@ public class FunctionPrototypeType extends PrototypeObjectType {
   }
 
   @Override
-  Iterable<ObjectType> getCtorImplementedInterfaces() {
+  public Iterable<ObjectType> getCtorImplementedInterfaces() {
     return getOwnerFunction().getImplementedInterfaces();
   }
 }

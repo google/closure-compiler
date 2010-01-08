@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -207,7 +207,6 @@ class AmbiguateProperties implements CompilerPass {
     for (Property p : propertyMap.values()) {
       if (!p.skipAmbiguating) {
         ++numRenamedPropertyNames;
-        computeRelatedTypes(p.type);
         propsByFreq.add(p);
       } else {
         ++numSkippedPropertyNames;
@@ -246,6 +245,17 @@ class AmbiguateProperties implements CompilerPass {
     logger.info("Collapsed " + numRenamedPropertyNames + " properties into "
                 + numNewPropertyNames + " and skipped renaming "
                 + numSkippedPropertyNames + " properties.");
+  }
+
+  private BitSet getRelatedTypesOnNonUnion(JSType type) {
+    // All of the types we encounter should have been added to the
+    // relatedBitsets via computeRelatedTypes.
+    if (relatedBitsets.containsKey(type)) {
+      return relatedBitsets.get(type);
+    } else {
+      throw new RuntimeException("Related types should have been computed for"
+                                 + " type: " + type + " but have not been.");
+    }
   }
 
   /** Add supertypes of the type to its JSTypeBitSet of related types. */
@@ -342,7 +352,7 @@ class AmbiguateProperties implements CompilerPass {
       if (typesRelatedToSet.intersects(prop.typesSet)) {
         return false;
       }
-      return !getRelated(prop.type).intersects(typesInSet);
+      return !prop.relatedTypesSet.intersects(typesInSet);
     }
 
     /**
@@ -352,7 +362,7 @@ class AmbiguateProperties implements CompilerPass {
      */
     public void addNode(Property prop) {
       typesInSet.or(prop.typesSet);
-      typesRelatedToSet.or(getRelated(prop.type));
+      typesRelatedToSet.or(prop.relatedTypesSet);
     }
 
     /**
@@ -363,28 +373,21 @@ class AmbiguateProperties implements CompilerPass {
       JSTypeBitSet relatedTypes = new JSTypeBitSet(intForType.size());
       if (type instanceof UnionType) {
         for (JSType alt : ((UnionType) type).getAlternates()) {
-          getRelatedTypesOnNonUnion(alt, relatedTypes);
+          intersectRelatedTypesOnNonUnion(alt, relatedTypes);
         }
       } else {
-        getRelatedTypesOnNonUnion(type, relatedTypes);
+        intersectRelatedTypesOnNonUnion(type, relatedTypes);
       }
       return relatedTypes;
     }
 
     /**
-     * Finds all types related to the provided type and returns a BitSet with
-     * their bits to true.  Expects a non-union type.
+     * Finds all types related to the provided type and intersects them with
+     * the given BitSet. Expects a non-union type.
      */
-    private void getRelatedTypesOnNonUnion(
+    private void intersectRelatedTypesOnNonUnion(
         JSType type, JSTypeBitSet relatedTypes) {
-      // All of the types we encounter should have been added to the
-      // relatedBitsets via computeRelatedTypes.
-      if (relatedBitsets.containsKey(type)) {
-        relatedTypes.or(relatedBitsets.get(type));
-      } else {
-        throw new RuntimeException("Related types should have been computed for"
-                                   + "type: " + type + " but have not been.");
-      }
+      relatedTypes.or(getRelatedTypesOnNonUnion(type));
     }
   }
 
@@ -546,11 +549,11 @@ class AmbiguateProperties implements CompilerPass {
   /** Encapsulates the information needed for renaming a property. */
   private class Property {
     final String oldName;
-    JSType type;
     String newName;
     int numOccurrences;
     boolean skipAmbiguating;
     JSTypeBitSet typesSet = new JSTypeBitSet(intForType.size());
+    JSTypeBitSet relatedTypesSet = new JSTypeBitSet(intForType.size());
 
     Property(String name) {
       this.oldName = name;
@@ -587,29 +590,18 @@ class AmbiguateProperties implements CompilerPass {
         return;
       }
 
-      if (type == null) {
-        type = newType;
-      } else {
-        // TODO(nicksantos): This line doesn't make sense. It only works if
-        // we assume that the type hierarchy is a tree (and thus has a
-        // single root). It doesn't work with an arbitrary lattice.
-        //
-        // Consider a class Chimay that extends Beer and implements Expensive.
-        // supremum(Chimay, Expensive) == Expensive
-        // according to the lattice's supremum op (getLeastSupertype).
-        //
-        // And since related types are computed from this result, this
-        // means that we will treat Beer as unrelated to Chimay, which is
-        // clearly not correct.
-        type = type.getLeastSupertype(newType);
+      int typeInt = getIntForType(newType);
+      if (!typesSet.get(typeInt)) {
+        computeRelatedTypes(newType);
+        typesSet.set(typeInt);
+        relatedTypesSet.or(getRelatedTypesOnNonUnion(newType));
       }
-
-      typesSet.set(getIntForType(newType));
     }
   }
 
   // A BitSet that stores type info. Adds pretty-print routines.
   private class JSTypeBitSet extends BitSet {
+    private static final long serialVersionUID = 1L;
 
     private JSTypeBitSet(int size) {
       super(size);
@@ -631,7 +623,7 @@ class AmbiguateProperties implements CompilerPass {
         types.add(intForType.inverse().get(current).toString());
         from = current + 1;
       }
-      return Join.join(" && ", types);
+      return Joiner.on(" && ").join(types);
     }
   }
 }

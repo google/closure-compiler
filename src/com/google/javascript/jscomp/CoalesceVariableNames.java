@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
@@ -26,12 +26,12 @@ import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.GraphColoring;
+import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 import com.google.javascript.jscomp.graph.UndiGraph;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
-import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -173,7 +173,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         return;
       }
       
-      pseudoName = Join.join("_", allMergedNames);
+      pseudoName = Joiner.on("_").join(allMergedNames);
       
       while (t.getScope().isDeclared(pseudoName, true)) {
         pseudoName += "$";

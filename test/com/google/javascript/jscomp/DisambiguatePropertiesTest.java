@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
 
 /**
  * Unit test for the Compiler DisambiguateProprties pass.
@@ -941,7 +940,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
 
     Node root = compiler.parseInputs();
     assertTrue("Unexpected parse error(s): " +
-        Join.join("\n", compiler.getErrors()), root != null);
+        Joiner.on("\n").join(compiler.getErrors()), root != null);
 
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();

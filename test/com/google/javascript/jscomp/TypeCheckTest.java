@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.base.Pair;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CheckLevel;
@@ -29,7 +29,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Arrays;
-
 
 /**
  * Tests {@link TypeCheck}.
@@ -3904,6 +3903,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: boolean");
   }
 
+  public void testIssue86() throws Exception {
+    testTypes(
+        "/** @interface */ function I() {}" +
+        "/** @return {number} */ I.prototype.get = function(){};" +
+        "/** @constructor \n * @implements {I} */ function F() {}" +
+        "/** @override */ F.prototype.get = function() { return true; };",
+        "inconsistent return type\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See
@@ -6594,7 +6604,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     externAndJsRoot.setIsSyntheticBlock(true);
 
     assertEquals("parsing error: " +
-        Join.join(", ", compiler.getErrors()), 0, compiler.getErrorCount());
+        Joiner.on(", ").join(compiler.getErrors()),
+        0, compiler.getErrorCount());
 
     // For processing goog.addDependency for forward typedefs.
     new ProcessClosurePrimitives(compiler, CheckLevel.ERROR, true)
@@ -6614,7 +6625,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
     if (description == null) {
       assertEquals(
-          "unexpected warning(s) : " + Join.join(", ", compiler.getWarnings()),
+          "unexpected warning(s) : " +
+          Joiner.on(", ").join(compiler.getWarnings()),
           0, compiler.getWarningCount());
     } else {
       assertEquals(1, compiler.getWarningCount());
@@ -6639,7 +6651,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
           new JSError[errors.length - 1]);
     }
     if (errors.length > 0) {
-      fail("unexpected error(s):\n" + Join.join("\n", errors));
+      fail("unexpected error(s):\n" + Joiner.on("\n").join(errors));
     }
 
     JSError[] warnings = compiler.getWarnings();
@@ -6650,7 +6662,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
           new JSError[warnings.length - 1]);
     }
     if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + Join.join("\n", warnings));
+      fail("unexpected warnings(s):\n" + Joiner.on("\n").join(warnings));
     }
   }
 
@@ -6681,7 +6693,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     externAndJsRoot.setIsSyntheticBlock(true);
 
     assertEquals("parsing error: " +
-        Join.join(", ", compiler.getErrors()), 0, compiler.getErrorCount());
+        Joiner.on(", ").join(compiler.getErrors()),
+        0, compiler.getErrorCount());
 
     Scope s = makeTypeCheck().processForTesting(externsNode, n);
     return new Pair<Node, Scope>(n, s);

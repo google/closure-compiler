@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -1070,7 +1070,7 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
 
       int i = 1;
       for (List<String> loop : loopedPassesInBestRun) {
-        out.println("\nLoop " + i + ":\n" + Join.join("\n", loop));
+        out.println("\nLoop " + i + ":\n" + Joiner.on("\n").join(loop));
         i++;
       }
     }

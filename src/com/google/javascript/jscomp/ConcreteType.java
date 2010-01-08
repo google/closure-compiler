@@ -15,11 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import com.google.javascript.jscomp.DataFlowAnalysis.LatticeElement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -631,7 +630,7 @@ abstract class ConcreteType implements LatticeElement {
       }
       Collections.sort(names);
 
-      return "(" + Join.join(",", names) + ")";
+      return "(" + Joiner.on(",").join(names) + ")";
     }
   }
 

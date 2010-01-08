@@ -17,14 +17,14 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Join;
-import javax.annotation.Nullable;
+import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
 
 /**
  * ReplaceCssNames replaces occurrences of goog.getCssName('foo') with a shorter
@@ -195,7 +195,7 @@ class ReplaceCssNames implements CompilerPass {
           }
         }
         if (symbolMap != null) {
-          n.setString(Join.join("-", parts));
+          n.setString(Joiner.on("-").join(parts));
         }
       }
     }

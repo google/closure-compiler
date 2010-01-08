@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
 import com.google.javascript.rhino.Node;
@@ -611,7 +611,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
     Node root = compiler.parseInputs();
     assertTrue("Unexpected parse error(s): " +
-        Join.join("\n", compiler.getErrors()), root != null);
+        Joiner.on("\n").join(compiler.getErrors()), root != null);
 
     Node externsRoot = root.getFirstChild();
     Node mainRoot = root.getLastChild();
@@ -673,7 +673,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
     if (error == null) {
       assertEquals(
-          "Unexpected error(s): " + Join.join("\n", compiler.getErrors()),
+          "Unexpected error(s): " + Joiner.on("\n").join(compiler.getErrors()),
           0, compiler.getErrorCount());
 
       // Verify the symbol table.
@@ -693,13 +693,13 @@ public abstract class CompilerTestCase extends TestCase  {
         assertEquals(expectedSymbolTableError, stErrors[0].getType());
       } else {
         assertEquals("Unexpected symbol table error(s): " +
-            Join.join("\n", stErrors),
+            Joiner.on("\n").join(stErrors),
             0, stErrors.length);
       }
 
       if (warning == null) {
         assertEquals(
-            "Unexpected warning(s): " + Join.join("\n", aggregateWarnings),
+            "Unexpected warning(s): " + Joiner.on("\n").join(aggregateWarnings),
             0, aggregateWarningCount);
       } else {
         assertEquals("There should be one warning, repeated " + numRepetitions +
@@ -746,7 +746,8 @@ public abstract class CompilerTestCase extends TestCase  {
             "\nResult: " + compiler.toSource(mainRoot) +
             "\n" + explanation, explanation);
       } else if (expected != null) {
-        assertEquals(Join.join("", expected), compiler.toSource(mainRoot));
+        assertEquals(
+            Joiner.on("").join(expected), compiler.toSource(mainRoot));
       }
 
       // Verify normalization is not invalidated.
@@ -799,7 +800,7 @@ public abstract class CompilerTestCase extends TestCase  {
     compiler.init(externsInputs, inputs, getOptions());
     Node root = compiler.parseInputs();
     assertTrue("Unexpected parse error(s): " +
-        Join.join("\n", compiler.getErrors()), root != null);
+        Joiner.on("\n").join(compiler.getErrors()), root != null);
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     // Only run the normalize pass, if asked.

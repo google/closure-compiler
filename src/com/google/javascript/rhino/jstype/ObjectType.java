@@ -444,7 +444,7 @@ public abstract class ObjectType extends JSType {
    * Gets the interfaces implemented by the ctor associated with this type.
    * Intended to be overridden by subclasses.
    */
-  Iterable<ObjectType> getCtorImplementedInterfaces() {
+  public Iterable<ObjectType> getCtorImplementedInterfaces() {
     return ImmutableSet.of();
   }
 }

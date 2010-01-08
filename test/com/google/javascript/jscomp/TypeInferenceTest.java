@@ -29,16 +29,16 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Join;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.StaticSlot;
-import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
@@ -76,7 +76,8 @@ public class TypeInferenceTest extends TestCase {
     // Parse the body of the function.
     Node n = compiler.parseTestCode("function() {" + js + "}");
     assertEquals("parsing error: " +
-        Join.join(", ", compiler.getErrors()), 0, compiler.getErrorCount());
+        Joiner.on(", ").join(compiler.getErrors()),
+        0, compiler.getErrorCount());
     n = n.getFirstChild();
     // Create the scope with the assumptions.
     Scope assumedScope =

@@ -505,19 +505,20 @@ final class TypedScopeCreator implements ScopeCreator {
                 lvalueNode.getFirstChild().getQualifiedName());
             if (var != null) {
               ObjectType ownerType = ObjectType.cast(var.getType());
+              FunctionType propType = null;
               if (ownerType != null) {
-                String propName = lvalueNode.getLastChild().getString();
-                JSType propType = ownerType.getPropertyType(propName);
-                if (propType instanceof FunctionType) {
-                  functionType =
-                      new FunctionTypeBuilder(
-                          name, compiler, errorRoot, sourceName, scope)
-                      .setSourceNode(fnRoot)
-                      .inferFromOverriddenFunction(
-                          (FunctionType) propType, parametersNode)
-                      .inferThisType(info, owner)
-                      .buildAndRegister();
-                }
+                propType = findOverriddenFunction(
+                    ownerType, lvalueNode.getLastChild().getString());
+              }
+
+              if (propType != null) {
+                functionType =
+                    new FunctionTypeBuilder(
+                        name, compiler, errorRoot, sourceName, scope)
+                    .setSourceNode(fnRoot)
+                    .inferFromOverriddenFunction(propType, parametersNode)
+                    .inferThisType(info, owner)
+                    .buildAndRegister();
               }
             }
           }
@@ -544,6 +545,31 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // all done
       return functionType;
+    }
+
+    /**
+     * Find the function that's being overridden on this type, if any.
+     */
+    private FunctionType findOverriddenFunction(
+        ObjectType ownerType, String propName) {
+      // First, check to see if the property is implemented
+      // on a superclass.
+      JSType propType = ownerType.getPropertyType(propName);
+      if (propType instanceof FunctionType) {
+        return (FunctionType) propType;
+      } else {
+        // If it's not, then check to see if it's implemented
+        // on an implemented interface.
+        for (ObjectType iface :
+                 ownerType.getCtorImplementedInterfaces()) {
+          propType = iface.getPropertyType(propName);
+          if (propType instanceof FunctionType) {
+            return (FunctionType) propType;
+          }
+        }
+      }
+
+      return null;
     }
 
     /**

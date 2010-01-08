@@ -151,7 +151,7 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  Iterable<ObjectType> getCtorImplementedInterfaces() {
+  public Iterable<ObjectType> getCtorImplementedInterfaces() {
     return referencedType.getCtorImplementedInterfaces();
   }
 
