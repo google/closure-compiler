@@ -119,16 +119,37 @@ public class SourceMapTest extends TestCase {
                    "[\"testcode\",6,7,\"foo\"]\n");
   }
 
+  public void testGoldenOutput3() throws Exception {
+    checkSourceMap("c:\\myfile.js",
+                   "foo;",
+
+                   "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
+                   "\"count\": 1 }\n" +
+
+                   "[2,2,2,2]\n" +
+
+                   "/** Begin file information. **/\n" +
+                   "[\"c:\\\\myfile.js\"]\n" +
+                   "/** Begin mapping definitions. **/\n" +
+                   "[\"c:\\\\myfile.js\",1,0]\n" +
+                   "[\"c:\\\\myfile.js\",1,0]\n" +
+                   "[\"c:\\\\myfile.js\",1,0,\"foo\"]\n");
+  }
+
   /**
    * Creates a source map for the given JS code and asserts it is
    * equal to the expected golden map.
    */
   private void checkSourceMap(String js, String expectedMap)
       throws IOException {
-    RunResult result = compile(js);
+    checkSourceMap("testcode", js, expectedMap);
+  }
+
+  private void checkSourceMap(String fileName, String js, String expectedMap)
+      throws IOException {
+    RunResult result = compile(js, fileName);
     StringBuilder sb = new StringBuilder();
     result.sourceMap.appendTo(sb, "testMap");
-
     assertEquals(expectedMap, sb.toString());
   }
 
@@ -239,6 +260,10 @@ public class SourceMapTest extends TestCase {
   }
 
   private RunResult compile(String js) {
+    return compile(js, "testcode");
+  }
+
+  private RunResult compile(String js, String fileName) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.sourceMapOutputPath = "testcode_source_map.out";
@@ -246,7 +271,7 @@ public class SourceMapTest extends TestCase {
     // Turn on IDE mode to get rid of optimizations.
     options.ideMode = true;
 
-    JSSourceFile[] inputs = { JSSourceFile.fromCode("testcode", js) };
+    JSSourceFile[] inputs = { JSSourceFile.fromCode(fileName, js) };
     Result result = compiler.compile(EXTERNS, inputs, options);
 
     assertTrue(result.success);

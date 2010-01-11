@@ -798,6 +798,13 @@ class CodeGenerator {
     return strEscape(s, '/', "\"", "'", "\\", outputCharsetEncoder);
   }
 
+  /**
+   * Escapes the given string to a double quoted (") JavaScript/JSON string
+   */
+  static String escapeToDoubleQuotedJsString(String s) {
+    return strEscape(s, '"',  "\\\"", "\'", "\\\\", null);
+  }
+
   /* If the user doesn't want to specify an output charset encoder, assume
      they want Latin/ASCII characters only.
    */

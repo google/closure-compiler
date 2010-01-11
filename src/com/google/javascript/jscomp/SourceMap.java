@@ -84,9 +84,7 @@ public class SourceMap {
     void appendTo(Appendable out) throws IOException {
       out.append("[");
 
-      out.append("\"");
-      out.append(sourceFile);
-      out.append("\"");
+      out.append(escapeString(sourceFile));
 
       out.append(",");
       out.append(originalPosition.getLineNumber() + "");
@@ -96,9 +94,7 @@ public class SourceMap {
 
       if (originalName != null) {
         out.append(",");
-        out.append("\"");
-        out.append(originalName);
-        out.append("\"");
+        out.append(escapeString(originalName));
       }
 
       out.append("]");
@@ -179,9 +175,7 @@ public class SourceMap {
           out.append(",");
         }
 
-        out.append("\"");
-        out.append(files.get(j));
-        out.append("\"");
+        out.append(escapeString(files.get(j)));
       }
 
       out.append("]");
@@ -227,6 +221,13 @@ public class SourceMap {
    * an output wrapper prefix.
    */
   private Position prefixPosition = new Position(0, 0);
+
+  /**
+   * Escapes the given string for JSON.
+   */
+  private static String escapeString(String value) {
+    return CodeGenerator.escapeToDoubleQuotedJsString(value);
+  }
 
   /**
    * Adds a mapping for the given node.
@@ -449,6 +450,12 @@ public class SourceMap {
 
           int lcmLength = lcm.endCharacter - lcm.startCharacter;
 
+          // Give precedence to items with names.
+          if (lcmLength == minLength && lcm.basisMapping.originalName != null) {
+            current = lcm;
+            continue;
+          }
+
           if (lcmLength < minLength) {
             minLength = lcmLength;
             current = lcm;
@@ -540,9 +547,9 @@ public class SourceMap {
     // 12) ["d.js", 3, 78, "foo"]
 
     // Add the line character maps.
-    out.append("/** Begin line maps. **/{ \"file\" : \"");
-    out.append(name);
-    out.append("\", \"count\": ");
+    out.append("/** Begin line maps. **/{ \"file\" : ");
+    out.append(escapeString(name));
+    out.append(", \"count\": ");
     out.append((maxLine + 1) + "");
     out.append(" }\n");
 
