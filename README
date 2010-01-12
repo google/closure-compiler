@@ -168,7 +168,7 @@ http://code.google.com/p/jarjar/
 
 -----
 Code in:
-lib/google_common.jar
+lib/google_common_deploy.jar
 
 Guava Libraries
 URL: http://code.google.com/p/guava-libraries/
@@ -196,7 +196,7 @@ Local Modifications: None.
 
 ---
 Code in:
-lib/protobuf.jar
+lib/protobuf_deploy.jar
 
 Protocol Buffers
 URL: http://code.google.com/p/protobuf/
@@ -209,3 +209,16 @@ an encoding of structured data.
 Local Modifications: None
 
 
+---
+Code in:
+lib/ant_deploy.jar
+
+URL: http://ant.apache.org/bindownload.cgi
+Version: 1.6.5
+License: Apache License 2.0
+Description:
+  Ant is a Java based build tool. In theory it is kind of like "make"
+  without make's wrinkles and with the full portability of pure java code.
+
+Local Modifications:
+  Modified apache-ant-1.6.5/bin/ant to look in the ant.runfiles directory

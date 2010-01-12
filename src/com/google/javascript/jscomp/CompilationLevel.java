@@ -154,6 +154,8 @@ public enum CompilationLevel {
     options.inlineAnonymousFunctionExpressions = true;
     options.inlineGetters = true;
     options.inlineVariables = true;
+    options.removeConstantExpressions = true;
+    options.computeFunctionSideEffects = true;
     
     // Remove unused vars also removes unused functions.
     options.removeUnusedVars = true;

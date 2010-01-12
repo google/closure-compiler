@@ -117,6 +117,10 @@
           depends="compile,compile-tests,apt"
           description="package the compiler and its tests into one jar">
     <jar destfile="${jarfile}" update="true">
+      <zipfileset src="${lib.dir}/ant_deploy.jar"
+                  excludes="flags.xml" />
+      <zipfileset src="${lib.dir}/junit.jar"
+                  excludes="flags.xml" />
       <zipfileset src="${lib.dir}/google_common_deploy.jar"
                   excludes="flags.xml" />
       <zipfileset src="${lib.dir}/protobuf_deploy.jar"
