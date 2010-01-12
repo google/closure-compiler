@@ -1048,6 +1048,12 @@ function MimeTypeArray() {}
 MimeTypeArray.prototype.item = function(index) {};
 
 /**
+ * @type {number}
+ * @see https://developer.mozilla.org/en/DOM/window.navigator.mimeTypes
+ */
+MimeTypeArray.prototype.length;
+
+/**
  * @param {string} name
  * @return {MimeType}
  */

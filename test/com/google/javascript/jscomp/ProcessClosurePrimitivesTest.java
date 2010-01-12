@@ -465,6 +465,79 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
          "var a={};a.A={};a.B={};");
   }
 
+  // Provide a name before the definition of the class providing the
+  // parent namespace.
+  public void testProvideOrder1() {
+    additionalEndCode = "";
+    addAdditionalNamespace = false;
+    // TODO(johnlenz):  This test confirms that the constructor (a.b) isn't
+    // improperly removed, but this result isn't really what we want as the
+    // reassign of a.b removes the definition of "a.b.c".
+    test("goog.provide('a.b');" +
+         "goog.provide('a.b.c');" +
+         "a.b.c;" +
+         "a.b = function(x,y) {};",
+         "var a = {};" +
+         "a.b = {};" +
+         "a.b.c = {};" +
+         "a.b.c;" +
+         "a.b = function(x,y) {};");
+  }
+
+  // Provide a name after the definition of the class providing the
+  // parent namespace.
+  public void testProvideOrder2() {
+    additionalEndCode = "";
+    addAdditionalNamespace = false;
+    // TODO(johnlenz):  This test confirms that the constructor (a.b) isn't
+    // improperly removed, but this result isn't really what we want as
+    // namespace placeholders for a.b and a.b.c remain.
+    test("goog.provide('a.b');" +
+         "goog.provide('a.b.c');" +
+         "a.b = function(x,y) {};" +
+         "a.b.c;",
+         "var a = {};" +
+         "a.b = {};" +
+         "a.b.c = {};" +
+         "a.b = function(x,y) {};" +
+         "a.b.c;");
+  }
+
+  // Provide a name after the definition of the class providing the
+  // parent namespace.
+  public void testProvideOrder3() {
+    additionalEndCode = "";
+    addAdditionalNamespace = false;
+    // This tests a cleanly provided name, below a function namespace.
+    test("goog.provide('a.b');" +
+         "a.b = function(x,y) {};" +
+         "goog.provide('a.b.c');" +
+         "a.b.c;",
+         "var a = {};" +
+         "a.b = function(x,y) {};" +
+         "a.b.c = {};" +
+         "a.b.c;");
+  }
+
+  public void testProvideOrder4() {
+    additionalEndCode = "";
+    addAdditionalNamespace = false;
+    // This tests a cleanly provided name, below a function namespace.
+    test("goog.provide('goog.a');" +
+         "goog.provide('goog.a.b');" +
+         "if (x) {" +
+         "  goog.a.b = 1;" +
+         "} else {" +
+         "  goog.a.b = 2;" +
+         "}",
+
+         "goog.a={};" +
+         "if(x)" +
+         "  goog.a.b=1;" +
+         "else" +
+         "  goog.a.b=2;");
+  }  
+
   public void testInvalidProvide() {
     test("goog.provide('a.class');", null, INVALID_PROVIDE_ERROR);
   }

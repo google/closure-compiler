@@ -458,9 +458,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // Make sure it has the proper prefixes.
       maybeProvidePrefixes(parent, parent.getParent(), name);
     } else {
-      // Remove this provide (from a previous pass) since we have an
+      // Remove this provide if it came from a previous pass since we have an
       // replacement already.
-      parent.getParent().removeChild(parent);
+      if (isNamespacePlaceholder(parent)) {
+        parent.getParent().removeChild(parent);
+      }
     }
   }
 
@@ -664,6 +666,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
 
+    Preconditions.checkState(isNamespacePlaceholder(decl));
     return decl;
   }
 
@@ -680,6 +683,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             NodeUtil.newQualifiedNameNode(namespace, node, namespace),
             new Node(Token.OBJECTLIT)));
     decl.putBooleanProp(Node.IS_NAMESPACE, true);
+    Preconditions.checkState(isNamespacePlaceholder(decl));
     return decl;
   }
 
@@ -732,7 +736,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * definition.
      */
     void maybeRemove() {
-      if ((providedNode != null) && (replacementCandidate != null)) {
+      if ((providedNode != null)
+          && (replacementCandidate != null)
+          && isNamespacePlaceholder(providedNode)) {
         providedParent.removeChild(providedNode);
         compiler.reportCodeChange();
 
@@ -755,6 +761,28 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         }
       }
     }
+  }
+
+  /**
+   * @return Whether the node is namespace placeholder.
+   */
+  private static boolean isNamespacePlaceholder(Node n) {
+    if (!n.getBooleanProp(Node.IS_NAMESPACE)) {
+      return false;
+    }
+
+    Node value = null;
+    if (n.getType() == Token.EXPR_RESULT) {
+      Node assign = n.getFirstChild();
+      value = assign.getLastChild();
+    } else if (n.getType() == Token.VAR) {
+      Node name = n.getFirstChild();
+      value = name.getFirstChild();
+    }
+
+    return value != null
+      && value.getType() == Token.OBJECTLIT
+      && !value.hasChildren();
   }
 
   // -------------------------------------------------------------------------
