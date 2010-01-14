@@ -553,6 +553,8 @@ public  final class FunctionInformationMap extends
         result.compiledSource_ = getDefaultInstance().getCompiledSource();
         return this;
       }
+      
+      // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap.Entry)
     }
     
     static {
@@ -882,6 +884,8 @@ public  final class FunctionInformationMap extends
         result.compiledSource_ = getDefaultInstance().getCompiledSource();
         return this;
       }
+      
+      // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap.Module)
     }
     
     static {
@@ -1276,6 +1280,8 @@ public  final class FunctionInformationMap extends
       result.module_ = java.util.Collections.emptyList();
       return this;
     }
+    
+    // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap)
   }
   
   static {

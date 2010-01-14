@@ -97,7 +97,7 @@ chrome.tabs.captureVisibleTab = function(windowId, callback) {};
 chrome.tabs.connect = function(tabId, opt_connectInfo) {};
 
 /**
- * @param {Object.<string, *>} createProperties Info object.
+ * @param {Object} createProperties Info object.
  * @param {function(Tab) : void=} opt_callback The callback function.
  */
 chrome.tabs.create = function(createProperties, opt_callback) {};
@@ -110,7 +110,7 @@ chrome.tabs.detectLanguage = function(tabId, callback) {};
 
 /**
  * @param {number?} tabId Tab id.
- * @param {Object.<string,*>?} details An object which may have 'code', 'file',
+ * @param {Object?} details An object which may have 'code', 'file',
  *    or 'allFrames' keys.
  * @param {function() : void=} opt_callback Callback function.
  */
@@ -136,8 +136,8 @@ chrome.tabs.getSelected = function(windowId, callback) {};
 
 /**
  * @param {number?} tabId Tab id.
- * @param {Object.<string,*>?} details An object which may have 'code', 'file',
- *    or 'allFrames' keys.
+ * @param {Object?} details An object which may have 'code', 'file',
+ *     or 'allFrames' keys.
  * @param {function() : void=} opt_callback Callback function.
  */
 chrome.tabs.insertCSS = function(tabId, details, opt_callback) {};
@@ -145,7 +145,7 @@ chrome.tabs.insertCSS = function(tabId, details, opt_callback) {};
 /**
  * @param {number} tabId Tab id.
  * @param {Object.<string, number>} moveProperties An object with 'index'
- *      and optional 'windowId' keys.
+ *     and optional 'windowId' keys.
  * @param {function(Tab) : void} opt_callback Callback.
  */
 chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
@@ -192,7 +192,7 @@ chrome.tabs.onUpdated;
 chrome.windows = {};
 
 /**
- * @param {Object.<string, *>?} createData May have 'url', 'left', 'top',
+ * @param {Object?} createData May have 'url', 'left', 'top',
  *     'width', or 'height' properties.
  * @param {function(ChromeWindow) : void=} opt_callback Callback.
  */
@@ -251,6 +251,153 @@ chrome.i18n.getAcceptLanguages = function(callback) {};
  * @return {string}
  */
 chrome.i18n.getMessage = function(messageName, opt_args) {};
+
+
+
+/** @see http://code.google.com/chrome/extensions/pageAction.html */
+chrome.pageAction = {};
+
+/**
+ * @param {number} tabId Tab Id.
+ */
+chrome.pageAction.hide = function(tabId) {};
+
+/**
+ * @param {number} tabId Tab Id.
+ */
+chrome.pageAction.show = function(tabId) {};
+
+/**
+ * @param {Object} details An object which has 'tabId' and either
+ *     'imageData' or 'path'.
+ */
+chrome.pageAction.setIcon = function(details) {};
+
+/**
+ * @param {Object} details An object which has 'tabId' and 'title'.
+ */
+chrome.pageAction.setTitle = function(details) {};
+
+/** @type {ChromeEvent} */
+chrome.pageAction.onClicked;
+
+
+/** @see http://code.google.com/chrome/extensions/browserAction.html */
+chrome.browserAction = {};
+
+/**
+ * @param {Object} details An object whose keys are 'color' and
+ *     optionally 'tabId'.
+ */
+chrome.browserAction.setBadgeBackgroundColor = function(details) {};
+
+/**
+ * @param {Object} details An object whose keys are 'text' and
+ *     optionally 'tabId'.
+ */
+chrome.browserAction.setBadgeText = function(details) {};
+
+/**
+ * @param {Object} details An object which may have 'imageData',
+ *     'path', or 'tabId' as keys.
+ */
+chrome.browserAction.setIcon = function(details) {};
+
+/**
+ * @param {Object} details An object which has 'title' and optionally
+ *     'tabId'.
+ */
+chrome.browserAction.setTitle = function(details) {};
+
+/** @type {ChromeEvent} */
+chrome.browserAction.onClicked;
+
+
+/** @see http://code.google.com/chrome/extensions/bookmarks.html */
+chrome.bookmarks = {};
+
+/**
+ * @param {Object} bookmark An object which has 'parentId' and
+ *     optionally 'index', 'title', and 'url'.
+ * @param {function(BookmarkTreeNode) : void=} opt_callback The
+ *     callback function which accepts a BookmarkTreeNode object.
+ * @return {BookmarkTreeNode}
+ */
+chrome.bookmarks.create = function(bookmark, opt_callback) {};
+
+/**
+ * @param {(string|Array.<string>)} idOrIdList
+ * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ *     callback function which accepts an array of BookmarkTreeNode.
+ * @return {Array.<BookmarkTreeNode>}
+ */
+chrome.bookmarks.get = function(idOrIdList, callback) {};
+
+/**
+ * @param {string} id
+ * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ *     callback function which accepts an array of BookmarkTreeNode.
+ * @return {Array.<BookmarkTreeNode>}
+ */
+chrome.bookmarks.getChildren = function(id, callback) {};
+
+/**
+ * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ *     callback function which accepts an array of BookmarkTreeNode.
+ * @return {Array.<BookmarkTreeNode>}
+ */
+chrome.bookmarks.getTree = function(callback) {};
+
+/**
+ * @param {string} id
+ * @param {Object} destination An object which has 'parentId' and
+ *     optionally 'index'.
+ * @param {function(Array.<BookmarkTreeNode>) : void=} opt_callback
+ *     The callback function which accepts an array of
+ *     BookmarkTreeNode.
+ * @return {BookmarkTreeNode}
+ */
+chrome.bookmarks.move = function(id, destination, opt_callback) {};
+
+/**
+ * @param {string} id
+ * @param {function() : void=} opt_callback
+ */
+chrome.bookmarks.remove = function(id, opt_callback) {};
+
+/**
+ * @param {string} id
+ * @param {function() : void=} opt_callback
+ */
+chrome.bookmarks.removeTree = function(id, opt_callback) {};
+
+/**
+ * @param {string} query
+ * @param {function(Array.<BookmarkTreeNode>) : void} callback
+ * @return {Array.<BookmarkTreeNode>}
+ */
+chrome.bookmarks.search = function(query, callback) {};
+
+/**
+ * @param {string} id
+ * @param {Object} changes An object which may have 'title' as a key.
+ * @param {function(BookmarkTreeNode) : void=} opt_callback The
+ *     callback function which accepts a BookmarkTreeNode object.
+ * @return {BookmarkTreeNode}
+ */
+chrome.bookmarks.update = function(id, changes, opt_callback) {};
+
+/** @type {ChromeEvent} */
+chrome.bookmarks.onChanged;
+/** @type {ChromeEvent} */
+chrome.bookmarks.onChildrenReordered;
+/** @type {ChromeEvent} */
+chrome.bookmarks.onCreated;
+/** @type {ChromeEvent} */
+chrome.bookmarks.onMoved;
+/** @type {ChromeEvent} */
+chrome.bookmarks.onRemoved;
+
 
 // Classes
 
@@ -339,3 +486,25 @@ function MessageSender() {}
 MessageSender.prototype.tab;
 /** @type {string} */
 MessageSender.prototype.id;
+
+/**
+ * @see http://code.google.com/chrome/extensions/bookmarks.html#type-BookmarkTreeNode
+ * @constructor
+ */
+function BookmarkTreeNode() {}
+/** @type {string} */
+BookmarkTreeNode.prototype.id;
+/** @type {string} */
+BookmarkTreeNode.prototype.parentId;
+/** @type {number} */
+BookmarkTreeNode.prototype.index;
+/** @type {string} */
+BookmarkTreeNode.prototype.url;
+/** @type {string} */
+BookmarkTreeNode.prototype.title;
+/** @type {number} */
+BookmarkTreeNode.prototype.dateAdded;
+/** @type {number} */
+BookmarkTreeNode.prototype.dateGroupModified;
+/** @type {Array.<BookmarkTreeNode>} */
+BookmarkTreeNode.prototype.children;

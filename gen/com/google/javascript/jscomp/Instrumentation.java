@@ -558,6 +558,8 @@ public  final class Instrumentation extends
       result.appNameSetter_ = getDefaultInstance().getAppNameSetter();
       return this;
     }
+    
+    // @@protoc_insertion_point(builder_scope:jscomp.Instrumentation)
   }
   
   static {
