@@ -1,4 +1,5 @@
 com.google.javascript.jscomp
+com.google.javascript.jscomp.ant
 com.google.javascript.jscomp.graph
 com.google.javascript.jscomp.parsing
 com.google.javascript.jscomp.testing
