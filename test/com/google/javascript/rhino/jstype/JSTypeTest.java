@@ -42,10 +42,10 @@ import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.base.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
@@ -5005,16 +5005,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private void testGetTypeUnderEquality(
       JSType t1, JSType t2, JSType t1Eq, JSType t2Eq) {
     // creating the pairs
-    Pair<JSType, JSType> p12 = t1.getTypesUnderEquality(t2);
-    Pair<JSType, JSType> p21 = t2.getTypesUnderEquality(t1);
+    TypePair p12 = t1.getTypesUnderEquality(t2);
+    TypePair p21 = t2.getTypesUnderEquality(t1);
 
     // t1Eq
-    assertEquals(t1Eq, p12.first);
-    assertEquals(t1Eq, p21.second);
+    assertEquals(t1Eq, p12.typeA);
+    assertEquals(t1Eq, p21.typeB);
 
     // t2Eq
-    assertEquals(t2Eq, p12.second);
-    assertEquals(t2Eq, p21.first);
+    assertEquals(t2Eq, p12.typeB);
+    assertEquals(t2Eq, p21.typeA);
   }
 
   @SuppressWarnings("checked")
@@ -5069,16 +5069,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private void testGetTypesUnderInequality(
       JSType t1, JSType t2, JSType t1Eq, JSType t2Eq) {
     // creating the pairs
-    Pair<JSType, JSType> p12 = t1.getTypesUnderInequality(t2);
-    Pair<JSType, JSType> p21 = t2.getTypesUnderInequality(t1);
+    TypePair p12 = t1.getTypesUnderInequality(t2);
+    TypePair p21 = t2.getTypesUnderInequality(t1);
 
     // t1Eq
-    assertEquals(t1Eq, p12.first);
-    assertEquals(t1Eq, p21.second);
+    assertEquals(t1Eq, p12.typeA);
+    assertEquals(t1Eq, p21.typeB);
 
     // t2Eq
-    assertEquals(t2Eq, p12.second);
-    assertEquals(t2Eq, p21.first);
+    assertEquals(t2Eq, p12.typeB);
+    assertEquals(t2Eq, p21.typeA);
   }
 
 

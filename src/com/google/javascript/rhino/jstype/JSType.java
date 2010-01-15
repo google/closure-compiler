@@ -41,7 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.base.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.JSDocInfo;
@@ -643,21 +642,21 @@ public abstract class JSType implements Serializable {
    *         element. The returned pair is never {@code null} even though its
    *         components may be {@code null}
    */
-  public Pair<JSType, JSType> getTypesUnderEquality(JSType that) {
+  public TypePair getTypesUnderEquality(JSType that) {
     // unions types
     if (that instanceof UnionType) {
-      Pair<JSType, JSType> p = that.getTypesUnderEquality(this);
-      return Pair.of(p.second, p.first);
+      TypePair p = that.getTypesUnderEquality(this);
+      return new TypePair(p.typeB, p.typeA);
     }
 
     // other types
     switch (this.testForEquality(that)) {
       case FALSE:
-        return Pair.of(null, null);
+        return new TypePair(null, null);
 
       case TRUE:
       case UNKNOWN:
-        return Pair.of(this, that);
+        return new TypePair(this, that);
     }
 
     // switch case is exhaustive
@@ -676,21 +675,21 @@ public abstract class JSType implements Serializable {
    *         element. The returned pair is never {@code null} even though its
    *         components may be {@code null}
    */
-  public Pair<JSType, JSType> getTypesUnderInequality(JSType that) {
+  public TypePair getTypesUnderInequality(JSType that) {
     // unions types
     if (that instanceof UnionType) {
-      Pair<JSType, JSType> p = that.getTypesUnderInequality(this);
-      return Pair.of(p.second, p.first);
+      TypePair p = that.getTypesUnderInequality(this);
+      return new TypePair(p.typeB, p.typeA);
     }
 
     // other types
     switch (this.testForEquality(that)) {
       case TRUE:
-        return Pair.of(null, null);
+        return new TypePair(null, null);
 
       case FALSE:
       case UNKNOWN:
-        return Pair.of(this, that);
+        return new TypePair(this, that);
     }
 
     // switch case is exhaustive
@@ -706,9 +705,9 @@ public abstract class JSType implements Serializable {
    *         element. The returned pair is never {@code null} even though its
    *         components may be {@code null}.
    */
-  public Pair<JSType, JSType> getTypesUnderShallowEquality(JSType that) {
+  public TypePair getTypesUnderShallowEquality(JSType that) {
     JSType commonType = getGreatestSubtype(that);
-    return new Pair<JSType, JSType>(commonType, commonType);
+    return new TypePair(commonType, commonType);
   }
 
   /**
@@ -720,11 +719,11 @@ public abstract class JSType implements Serializable {
    *         element. The returned pair is never {@code null} even though its
    *         components may be {@code null}
    */
-  public Pair<JSType, JSType> getTypesUnderShallowInequality(JSType that) {
+  public TypePair getTypesUnderShallowInequality(JSType that) {
     // union types
     if (that instanceof UnionType) {
-      Pair<JSType, JSType> p = that.getTypesUnderShallowInequality(this);
-      return Pair.of(p.second, p.first);
+      TypePair p = that.getTypesUnderShallowInequality(this);
+      return new TypePair(p.typeB, p.typeA);
     }
 
     // Other types.
@@ -732,9 +731,9 @@ public abstract class JSType implements Serializable {
     // true -- null and undefined. We can just enumerate them.
     if (this.isNullType() && that.isNullType() ||
         this.isVoidType() && that.isVoidType()) {
-      return Pair.of(null, null);
+      return new TypePair(null, null);
     } else {
-      return Pair.of(this, that);
+      return new TypePair(this, that);
     }
   }
 
@@ -830,4 +829,14 @@ public abstract class JSType implements Serializable {
    * @return the value returned by the visitor
    */
   public abstract <T> T visit(Visitor<T> visitor);
+
+  public static class TypePair {
+    public final JSType typeA;
+    public final JSType typeB;
+
+    public TypePair(JSType typeA, JSType typeB) {
+      this.typeA = typeA;
+      this.typeB = typeB;
+    }
+  }
 }

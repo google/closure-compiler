@@ -19,9 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Function;
-import com.google.common.base.Pair;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -44,26 +44,26 @@ class SemanticReverseAbstractInterpreter
   /**
    * Merging function for equality between types.
    */
-  private static final Function<Pair<JSType, JSType>, Pair<JSType, JSType>> EQ =
-    new Function<Pair<JSType, JSType>, Pair<JSType, JSType>>() {
-      public Pair<JSType, JSType> apply(Pair<JSType, JSType> p) {
-        if (p.first == null || p.second == null) {
+  private static final Function<TypePair, TypePair> EQ =
+    new Function<TypePair, TypePair>() {
+      public TypePair apply(TypePair p) {
+        if (p.typeA == null || p.typeB == null) {
           return null;
         }
-        return p.first.getTypesUnderEquality(p.second);
+        return p.typeA.getTypesUnderEquality(p.typeB);
       }
     };
 
   /**
    * Merging function for non-equality between types.
    */
-  private static final Function<Pair<JSType, JSType>, Pair<JSType, JSType>> NE =
-    new Function<Pair<JSType, JSType>, Pair<JSType, JSType>>() {
-      public Pair<JSType, JSType> apply(Pair<JSType, JSType> p) {
-        if (p.first == null || p.second == null) {
+  private static final Function<TypePair, TypePair> NE =
+    new Function<TypePair, TypePair>() {
+      public TypePair apply(TypePair p) {
+        if (p.typeA == null || p.typeB == null) {
           return null;
         }
-        return p.first.getTypesUnderInequality(p.second);
+        return p.typeA.getTypesUnderInequality(p.typeB);
       }
     };
 
@@ -71,13 +71,13 @@ class SemanticReverseAbstractInterpreter
    * Merging function for strict equality between types.
    */
   private static final
-      Function<Pair<JSType, JSType>, Pair<JSType, JSType>> SHEQ =
-    new Function<Pair<JSType, JSType>, Pair<JSType, JSType>>() {
-      public Pair<JSType, JSType> apply(Pair<JSType, JSType> p) {
-        if (p.first == null || p.second == null) {
+      Function<TypePair, TypePair> SHEQ =
+    new Function<TypePair, TypePair>() {
+      public TypePair apply(TypePair p) {
+        if (p.typeA == null || p.typeB == null) {
           return null;
         }
-        return p.first.getTypesUnderShallowEquality(p.second);
+        return p.typeA.getTypesUnderShallowEquality(p.typeB);
       }
     };
 
@@ -85,13 +85,13 @@ class SemanticReverseAbstractInterpreter
    * Merging function for strict non-equality between types.
    */
   private static final
-      Function<Pair<JSType, JSType>, Pair<JSType, JSType>> SHNE =
-    new Function<Pair<JSType, JSType>, Pair<JSType, JSType>>() {
-      public Pair<JSType, JSType> apply(Pair<JSType, JSType> p) {
-        if (p.first == null || p.second == null) {
+      Function<TypePair, TypePair> SHNE =
+    new Function<TypePair, TypePair>() {
+      public TypePair apply(TypePair p) {
+        if (p.typeA == null || p.typeB == null) {
           return null;
         }
-        return p.first.getTypesUnderShallowInequality(p.second);
+        return p.typeA.getTypesUnderShallowInequality(p.typeB);
       }
     };
 
@@ -99,12 +99,12 @@ class SemanticReverseAbstractInterpreter
    * Merging function for inequality comparisons between types.
    */
   private final
-      Function<Pair<JSType, JSType>, Pair<JSType, JSType>> INEQ =
-    new Function<Pair<JSType, JSType>, Pair<JSType, JSType>>() {
-      public Pair<JSType, JSType> apply(Pair<JSType, JSType> p) {
-        return new Pair<JSType, JSType>(
-            getRestrictedWithoutUndefined(p.first),
-            getRestrictedWithoutUndefined(p.second));
+      Function<TypePair, TypePair> INEQ =
+    new Function<TypePair, TypePair>() {
+      public TypePair apply(TypePair p) {
+        return new TypePair(
+            getRestrictedWithoutUndefined(p.typeA),
+            getRestrictedWithoutUndefined(p.typeB));
       }
     };
 
@@ -238,7 +238,7 @@ class SemanticReverseAbstractInterpreter
   }
 
   private FlowScope caseEquality(Node condition, FlowScope blindScope,
-      Function<Pair<JSType, JSType>, Pair<JSType, JSType>> merging) {
+      Function<TypePair, TypePair> merging) {
     Node left = condition.getFirstChild();
     Node right = condition.getLastChild();
 
@@ -263,18 +263,18 @@ class SemanticReverseAbstractInterpreter
     }
 
     // merged types
-    Pair<JSType, JSType> merged = merging.apply(Pair.of(leftType, rightType));
+    TypePair merged = merging.apply(new TypePair(leftType, rightType));
 
     // creating new scope
     if (merged != null &&
-        ((leftIsRefineable && merged.first != null) ||
-         (rightIsRefineable && merged.second != null))) {
+        ((leftIsRefineable && merged.typeA != null) ||
+         (rightIsRefineable && merged.typeB != null))) {
       FlowScope informed = blindScope.createChildFlowScope();
-      if (leftIsRefineable && merged.first != null) {
-        declareNameInScope(informed, left, merged.first);
+      if (leftIsRefineable && merged.typeA != null) {
+        declareNameInScope(informed, left, merged.typeA);
       }
-      if (rightIsRefineable && merged.second != null) {
-        declareNameInScope(informed, right, merged.second);
+      if (rightIsRefineable && merged.typeB != null) {
+        declareNameInScope(informed, right, merged.typeB);
       }
       return informed;
     }

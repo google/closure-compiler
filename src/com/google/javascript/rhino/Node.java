@@ -40,7 +40,7 @@
 
 package com.google.javascript.rhino;
 
-import com.google.common.base.Pair;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.jstype.JSType;
 
@@ -1322,7 +1322,7 @@ public class Node implements Cloneable, Serializable
      * Returns null if it's equal, or a message describing the differences.
      */
     public String checkTreeEquals(Node node2) {
-        Pair<Node, Node> diff = checkTreeEqualsImpl(node2);
+        NodeMismatch diff = checkTreeEqualsImpl(node2);
         if (diff != null) {
           return "Node tree inequality:" +
               "\nTree1:\n" + toStringTree() +
@@ -1344,7 +1344,7 @@ public class Node implements Cloneable, Serializable
      * of nodes that differs doing a preorder depth-first traversal.
      * Package private for testing. Returns null if the nodes are equivalent.
      */
-    Pair<Node, Node> checkTreeEqualsImpl(Node node2) {
+    NodeMismatch checkTreeEqualsImpl(Node node2) {
         boolean eq = false;
 
         if (type == node2.getType() &&
@@ -1355,10 +1355,10 @@ public class Node implements Cloneable, Serializable
         }
 
         if (!eq) {
-            return Pair.of(this, node2);
+            return new NodeMismatch(this, node2);
         }
 
-        Pair<Node, Node> res = null;
+        NodeMismatch res = null;
         Node n, n2;
         for (n = first, n2 = node2.first;
              res == null && n != null;
@@ -1977,5 +1977,27 @@ public class Node implements Cloneable, Serializable
      */
     public void setQuotedString() {
         Kit.codeBug();
+    }
+
+    static class NodeMismatch {
+      final Node nodeA;
+      final Node nodeB;
+
+      NodeMismatch(Node nodeA, Node nodeB) {
+        this.nodeA = nodeA;
+        this.nodeB = nodeB;
+      }
+
+      @Override public boolean equals(Object object) {
+        if (object instanceof NodeMismatch) {
+          NodeMismatch that = (NodeMismatch) object;
+          return that.nodeA.equals(this.nodeA) && that.nodeB.equals(this.nodeB);
+        }
+        return false;
+      }
+
+      @Override public int hashCode() {
+        return Objects.hashCode(nodeA, nodeB);
+      }
     }
 }

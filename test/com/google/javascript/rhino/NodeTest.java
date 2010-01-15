@@ -38,7 +38,7 @@
 
 package com.google.javascript.rhino;
 
-import com.google.common.base.Pair;
+import com.google.javascript.rhino.Node.NodeMismatch;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import junit.framework.TestCase;
@@ -72,13 +72,15 @@ public class NodeTest extends TestCase {
   public void testCheckTreeEqualsImplDifferentType() {
     Node node1 = new Node(1, new Node(2));
     Node node2 = new Node(2, new Node(2));
-    assertEquals(Pair.of(node1, node2), node1.checkTreeEqualsImpl(node2));
+    assertEquals(new NodeMismatch(node1, node2),
+        node1.checkTreeEqualsImpl(node2));
   }
 
   public void testCheckTreeEqualsImplDifferentChildCount() {
     Node node1 = new Node(1, new Node(2));
     Node node2 = new Node(1);
-    assertEquals(Pair.of(node1, node2), node1.checkTreeEqualsImpl(node2));
+    assertEquals(new NodeMismatch(node1, node2),
+        node1.checkTreeEqualsImpl(node2));
   }
 
   public void testCheckTreeEqualsImplDifferentChild() {
@@ -86,7 +88,8 @@ public class NodeTest extends TestCase {
     Node child2 = new Node(2);
     Node node1 = new Node(1, child1);
     Node node2 = new Node(1, child2);
-    assertEquals(Pair.of(child1, child2), node1.checkTreeEqualsImpl(node2));
+    assertEquals(new NodeMismatch(child1, child2),
+        node1.checkTreeEqualsImpl(node2));
   }
 
   public void testCheckTreeEqualsSame() {

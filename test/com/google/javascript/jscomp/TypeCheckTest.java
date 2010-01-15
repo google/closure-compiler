@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Pair;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
@@ -1204,14 +1203,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testScoping10() throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope("var a = function b(){};");
+    TypeCheckResult p = parseAndTypeCheckWithScope("var a = function b(){};");
 
     // a declared, b is not
-    assertTrue(p.second.isDeclared("a", false));
-    assertFalse(p.second.isDeclared("b", false));
+    assertTrue(p.scope.isDeclared("a", false));
+    assertFalse(p.scope.isDeclared("b", false));
 
     // checking that a has the correct assigned type
-    assertEquals("function (): ?", p.second.getVar("a").getType().toString());
+    assertEquals("function (): ?", p.scope.getVar("a").getType().toString());
   }
 
   public void testScoping11() throws Exception {
@@ -2926,11 +2925,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testVar1() throws Exception {
-    Pair<Node, Scope> p =
+    TypeCheckResult p =
         parseAndTypeCheckWithScope("/** @type {(string,null)} */var a = null");
 
     assertEquals(createUnionType(STRING_TYPE, NULL_TYPE),
-        p.getSecond().getVar("a").getType());
+        p.scope.getVar("a").getType());
   }
 
   public void testVar2() throws Exception {
@@ -2938,17 +2937,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testVar3() throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope("var a = 3;");
+    TypeCheckResult p = parseAndTypeCheckWithScope("var a = 3;");
 
-    assertEquals(NUMBER_TYPE, p.second.getVar("a").getType());
+    assertEquals(NUMBER_TYPE, p.scope.getVar("a").getType());
   }
 
   public void testVar4() throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope(
+    TypeCheckResult p = parseAndTypeCheckWithScope(
         "var a = 3; a = 'string';");
 
     assertEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
-        p.second.getVar("a").getType());
+        p.scope.getVar("a").getType());
   }
 
   public void testVar5() throws Exception {
@@ -3964,7 +3963,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
    */
   public void testBug911118() throws Exception {
     // verifying the type assigned to anonymous functions assigned variables
-    Scope s = parseAndTypeCheckWithScope("var a = function(){};").second;
+    Scope s = parseAndTypeCheckWithScope("var a = function(){};").scope;
     JSType type = s.getVar("a").getType();
     assertEquals("function (): ?", type.toString());
 
@@ -4262,11 +4261,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNew6() throws Exception {
-    Pair<Node, Scope> p =
+    TypeCheckResult p =
       parseAndTypeCheckWithScope("/** @constructor */function A(){};" +
       "var a = new A();");
 
-    JSType aType = p.getSecond().getVar("a").getType();
+    JSType aType = p.scope.getVar("a").getType();
     assertTrue(aType instanceof ObjectType);
     ObjectType aObjectType = (ObjectType) aType;
     assertEquals("A", aObjectType.getConstructor().getReferenceName());
@@ -4310,38 +4309,38 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNew12() throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope("var a = new Array();");
-    Var a = p.second.getVar("a");
+    TypeCheckResult p = parseAndTypeCheckWithScope("var a = new Array();");
+    Var a = p.scope.getVar("a");
 
     assertEquals(ARRAY_TYPE, a.getType());
   }
 
   public void testNew13() throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope(
+    TypeCheckResult p = parseAndTypeCheckWithScope(
         "/** @constructor */function FooBar(){};" +
         "var a = new FooBar();");
-    Var a = p.second.getVar("a");
+    Var a = p.scope.getVar("a");
 
     assertTrue(a.getType() instanceof ObjectType);
     assertEquals("FooBar", a.getType().toString());
   }
 
   public void testNew14() throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope(
+    TypeCheckResult p = parseAndTypeCheckWithScope(
         "/** @constructor */var FooBar = function(){};" +
         "var a = new FooBar();");
-    Var a = p.second.getVar("a");
+    Var a = p.scope.getVar("a");
 
     assertTrue(a.getType() instanceof ObjectType);
     assertEquals("FooBar", a.getType().toString());
   }
 
   public void testNew15() throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope(
+    TypeCheckResult p = parseAndTypeCheckWithScope(
         "var goog = {};" +
         "/** @constructor */goog.A = function(){};" +
         "var a = new goog.A();");
-    Var a = p.second.getVar("a");
+    Var a = p.scope.getVar("a");
 
     assertTrue(a.getType() instanceof ObjectType);
     assertEquals("goog.A", a.getType().toString());
@@ -4757,10 +4756,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testConstructorType7() throws Exception {
-    Pair<Node, Scope> p =
+    TypeCheckResult p =
         parseAndTypeCheckWithScope("/** @constructor */function A(){};");
 
-    JSType type = p.getSecond().getVar("A").getType();
+    JSType type = p.scope.getVar("A").getType();
     assertTrue(type instanceof FunctionType);
     FunctionType fType = (FunctionType) type;
     assertEquals("A", fType.getReferenceName());
@@ -4888,10 +4887,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
       "goog.foo = {};" +
       "goog.foo.bar = 5;";
 
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope(js);
+    TypeCheckResult p = parseAndTypeCheckWithScope(js);
 
     // goog type in the scope
-    JSType googScopeType = p.second.getVar("goog").getType();
+    JSType googScopeType = p.scope.getVar("goog").getType();
     assertTrue(googScopeType instanceof ObjectType);
     assertTrue("foo property not present on goog type",
         ((ObjectType) googScopeType).hasProperty("foo"));
@@ -4899,7 +4898,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         ((ObjectType) googScopeType).hasProperty("bar"));
 
     // goog type on the VAR node
-    Node varNode = p.first.getFirstChild();
+    Node varNode = p.root.getFirstChild();
     assertEquals(Token.VAR, varNode.getType());
     JSType googNodeType = varNode.getFirstChild().getJSType();
     assertTrue(googNodeType instanceof ObjectType);
@@ -4961,7 +4960,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testAddingMethodsUsingPrototypeIdiomComplexNamespace1()
       throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope(
+    TypeCheckResult p = parseAndTypeCheckWithScope(
         "var goog = {};" +
         "goog.A = /** @constructor */function() {};" +
         "/** @type number */goog.A.prototype.m1 = 5");
@@ -4971,7 +4970,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testAddingMethodsUsingPrototypeIdiomComplexNamespace2()
       throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope(
+    TypeCheckResult p = parseAndTypeCheckWithScope(
         "var goog = {};" +
         "/** @constructor */goog.A = function() {};" +
         "/** @type number */goog.A.prototype.m1 = 5");
@@ -4980,8 +4979,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   private void testAddingMethodsUsingPrototypeIdiomComplexNamespace(
-      Pair<Node, Scope> p) {
-    ObjectType goog = (ObjectType) p.second.getVar("goog").getType();
+      TypeCheckResult p) {
+    ObjectType goog = (ObjectType) p.scope.getVar("goog").getType();
     assertEquals(NATIVE_PROPERTIES_COUNT + 1, goog.getPropertiesCount());
     JSType googA = goog.getPropertyType("A");
     assertNotNull(googA);
@@ -5790,10 +5789,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGatherProperyWithoutAnnotation2() throws Exception {
-    Pair<Node, Scope> ns =
+    TypeCheckResult ns =
         parseAndTypeCheckWithScope("/** @type {!Object} */var t; t.x; t;");
-    Node n = ns.getFirst();
-    Scope s = ns.getSecond();
+    Node n = ns.root;
+    Scope s = ns.scope;
     JSType type = n.getLastChild().getLastChild().getJSType();
     assertFalse(type.isUnknownType());
     assertEquals(type, OBJECT_TYPE);
@@ -6179,7 +6178,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPrototypePropertyReference() throws Exception {
-    Pair<Node, Scope> p = parseAndTypeCheckWithScope(""
+    TypeCheckResult p = parseAndTypeCheckWithScope(""
         + "/** @constructor */\n"
         + "function Foo() {}\n"
         + "/** @param {number} a */\n"
@@ -6191,8 +6190,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals(0, compiler.getErrorCount());
     assertEquals(0, compiler.getWarningCount());
 
-    assertTrue(p.second.getVar("Foo").getType() instanceof FunctionType);
-    FunctionType fooType = (FunctionType) p.second.getVar("Foo").getType();
+    assertTrue(p.scope.getVar("Foo").getType() instanceof FunctionType);
+    FunctionType fooType = (FunctionType) p.scope.getVar("Foo").getType();
     assertEquals("function (this:Foo, number): ?",
                  fooType.getPrototype().getPropertyType("bar").toString());
   }
@@ -6674,18 +6673,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   private Node parseAndTypeCheck(String externs, String js) {
-    return parseAndTypeCheckWithScope(externs, js).getFirst();
+    return parseAndTypeCheckWithScope(externs, js).root;
   }
 
   /**
    * Parses and type checks the JavaScript code and returns the Scope used
    * whilst type checking.
    */
-  private Pair<Node, Scope> parseAndTypeCheckWithScope(String js) {
+  private TypeCheckResult parseAndTypeCheckWithScope(String js) {
     return parseAndTypeCheckWithScope(DEFAULT_EXTERNS, js);
   }
 
-  private Pair<Node, Scope> parseAndTypeCheckWithScope(String externs,
+  private TypeCheckResult parseAndTypeCheckWithScope(String externs,
                                                        String js) {
     Node externsNode = compiler.parseTestCode(externs);
     Node n = compiler.parseTestCode(js);
@@ -6697,7 +6696,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         0, compiler.getErrorCount());
 
     Scope s = makeTypeCheck().processForTesting(externsNode, n);
-    return new Pair<Node, Scope>(n, s);
+    return new TypeCheckResult(n, s);
   }
 
   private Node typeCheck(Node n) {
@@ -6743,5 +6742,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
       result += "x." + prop + " = 3;";
     }
     return result + "}";
+  }
+
+  private static class TypeCheckResult {
+    private final Node root;
+    private final Scope scope;
+
+    private TypeCheckResult(Node root, Scope scope) {
+      this.root = root;
+      this.scope = scope;
+    }
   }
 }

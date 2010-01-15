@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Pair;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CheckLevel;
 
@@ -38,14 +37,14 @@ import java.util.SortedSet;
 *
  */
 public abstract class BasicErrorManager implements ErrorManager {
-  private final SortedSet<Pair<JSError, CheckLevel>> messages =
-    Sets.newTreeSet(new LeveledJSErrorComparator());
+  private final SortedSet<ErrorWithLevel> messages =
+      Sets.newTreeSet(new LeveledJSErrorComparator());
   private int errorCount = 0;
   private int warningCount = 0;
   private double typedPercent = 0.0;
 
   public void report(CheckLevel level, JSError error) {
-    if (messages.add(Pair.of(error, level))) {
+    if (messages.add(new ErrorWithLevel(error, level))) {
       if (level == CheckLevel.ERROR) {
         errorCount++;
       } else if (level == CheckLevel.WARNING) {
@@ -55,8 +54,8 @@ public abstract class BasicErrorManager implements ErrorManager {
   }
 
   public void generateReport() {
-    for (Pair<JSError, CheckLevel> message : messages) {
-      println(message.second, message.first);
+    for (ErrorWithLevel message : messages) {
+      println(message.level, message.error);
     }
     printSummary();
   }
@@ -98,9 +97,9 @@ public abstract class BasicErrorManager implements ErrorManager {
 
   private JSError[] toArray(CheckLevel level) {
     List<JSError> errors = new ArrayList<JSError>(messages.size());
-    for (Pair<JSError, CheckLevel> p : messages) {
-      if (p.second == level) {
-        errors.add(p.first);
+    for (ErrorWithLevel p : messages) {
+      if (p.level == level) {
+        errors.add(p.error);
       }
     }
     return errors.toArray(new JSError[errors.size()]);
@@ -116,12 +115,11 @@ public abstract class BasicErrorManager implements ErrorManager {
    * {@link JSError#equals(Object)}.</p>
    */
   static final class LeveledJSErrorComparator
-      implements Comparator<Pair<JSError, CheckLevel>> {
+      implements Comparator<ErrorWithLevel> {
     private static final int P1_LT_P2 = -1;
     private static final int P1_GT_P2 = 1;
 
-    public int compare(Pair<JSError, CheckLevel> p1,
-        Pair<JSError, CheckLevel> p2) {
+    public int compare(ErrorWithLevel p1, ErrorWithLevel p2) {
       // null is the smallest value
       if (p2 == null) {
         if (p1 == null) {
@@ -132,13 +130,13 @@ public abstract class BasicErrorManager implements ErrorManager {
       }
 
       // check level
-      if (p1.second != p2.second) {
-        return p2.second.compareTo(p1.second);
+      if (p1.level != p2.level) {
+        return p2.level.compareTo(p1.level);
       }
 
       // sourceName comparison
-      String source1 = p1.first.sourceName;
-      String source2 = p2.first.sourceName;
+      String source1 = p1.error.sourceName;
+      String source2 = p2.error.sourceName;
       if (source1 != null && source2 != null) {
         int sourceCompare = source1.compareTo(source2);
         if (sourceCompare != 0) {
@@ -150,8 +148,8 @@ public abstract class BasicErrorManager implements ErrorManager {
         return P1_GT_P2;
       }
       // lineno comparison
-      int lineno1 = p1.first.lineNumber;
-      int lineno2 = p2.first.lineNumber;
+      int lineno1 = p1.error.lineNumber;
+      int lineno2 = p2.error.lineNumber;
       if (lineno1 != lineno2) {
         return lineno1 - lineno2;
       } else if (lineno1 < 0 && 0 <= lineno2) {
@@ -160,8 +158,8 @@ public abstract class BasicErrorManager implements ErrorManager {
         return P1_GT_P2;
       }
       // charno comparison
-      int charno1 = p1.first.getCharno();
-      int charno2 = p2.first.getCharno();
+      int charno1 = p1.error.getCharno();
+      int charno2 = p2.error.getCharno();
       if (charno1 != charno2) {
         return charno1 - charno2;
       } else if (charno1 < 0 && 0 <= charno2) {
@@ -170,7 +168,17 @@ public abstract class BasicErrorManager implements ErrorManager {
         return P1_GT_P2;
       }
       // description
-      return p1.first.description.compareTo(p2.first.description);
+      return p1.error.description.compareTo(p2.error.description);
+    }
+  }
+
+  static class ErrorWithLevel {
+    final JSError error;
+    final CheckLevel level;
+
+    ErrorWithLevel(JSError error, CheckLevel level) {
+      this.error = error;
+      this.level = level;
     }
   }
 }

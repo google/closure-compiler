@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -55,7 +54,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
   // the nodes that might have a name foo and connect that to the curFuncName.
   // The accuracy of the analysis will depend heavily on eliminating the need
   // to resort to this map.
-  private final Multimap<String, Pair<Name, Reference>> unknownNameUse =
+  private final Multimap<String, NameUse> unknownNameUse =
       HashMultimap.create();
 
   // Should we continue even if we found a type checker bug.
@@ -524,7 +523,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
         Reference ref = new Reference(n, parent);
         ref.setUnknown(true);
         unknownNameUse.put(n.getLastChild().getString(),
-            new Pair<Name, Reference>(getNamedContainingFunction(), ref));
+            new NameUse(getNamedContainingFunction(), ref));
       }
     }
 
@@ -562,10 +561,10 @@ class NameReferenceGraphConstruction implements CompilerPass {
       if (propName == null) {
         continue;
       }
-      Collection<Pair<Name, Reference>> uses = unknownNameUse.get(propName);
+      Collection<NameUse> uses = unknownNameUse.get(propName);
       if (uses != null) {
-        for (Pair<Name, Reference> use : uses) {
-          graph.connect(use.getFirst(), use.getSecond(), name);
+        for (NameUse use : uses) {
+          graph.connect(use.name, use.reference, name);
         }
       }
     }
@@ -622,5 +621,15 @@ class NameReferenceGraphConstruction implements CompilerPass {
     }
     Preconditions.checkNotNull(containingFn);
     return containingFn;
+  }
+
+  private static class NameUse {
+    private final Name name;
+    private final Reference reference;
+
+    private NameUse(Name name, Reference reference) {
+      this.name = name;
+      this.reference = reference;
+    }
   }
 }

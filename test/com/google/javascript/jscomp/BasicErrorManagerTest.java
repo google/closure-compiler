@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Pair;
+import com.google.javascript.jscomp.BasicErrorManager.ErrorWithLevel;
 import com.google.javascript.jscomp.BasicErrorManager.LeveledJSErrorComparator;
 import com.google.javascript.jscomp.CheckLevel;
 
@@ -103,16 +103,15 @@ public class BasicErrorManagerTest extends TestCase {
     assertSmaller(error(e1), error(e2));
   }
 
-  private Pair<JSError, CheckLevel> error(JSError e) {
-    return Pair.of(e, CheckLevel.ERROR);
+  private ErrorWithLevel error(JSError e) {
+    return new ErrorWithLevel(e, CheckLevel.ERROR);
   }
 
-  private Pair<JSError, CheckLevel> warning(JSError e) {
-    return Pair.of(e, CheckLevel.WARNING);
+  private ErrorWithLevel warning(JSError e) {
+    return new ErrorWithLevel(e, CheckLevel.WARNING);
   }
 
-  private void assertSmaller(Pair<JSError, CheckLevel> p1,
-      Pair<JSError, CheckLevel> p2) {
+  private void assertSmaller(ErrorWithLevel p1, ErrorWithLevel p2) {
     int p1p2 = comparator.compare(p1, p2);
     assertTrue(Integer.toString(p1p2), p1p2 < 0);
     int p2p1 = comparator.compare(p2, p1);

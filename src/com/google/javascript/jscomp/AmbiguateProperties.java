@@ -155,8 +155,8 @@ class AmbiguateProperties implements CompilerPass {
         r.getNativeType(JSTypeNative.UNKNOWN_TYPE));
 
     for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
-      addInvalidatingType(mis.first);
-      addInvalidatingType(mis.second);
+      addInvalidatingType(mis.typeA);
+      addInvalidatingType(mis.typeB);
     }
   }
 

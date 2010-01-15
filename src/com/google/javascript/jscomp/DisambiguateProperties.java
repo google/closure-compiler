@@ -277,8 +277,8 @@ class DisambiguateProperties<T> implements CompilerPass {
 
   public void process(Node externs, Node root) {
     for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
-      addInvalidatingType(mis.first);
-      addInvalidatingType(mis.second);
+      addInvalidatingType(mis.typeA);
+      addInvalidatingType(mis.typeB);
     }
 
     StaticScope<T> scope = typeSystem.getRootScope();

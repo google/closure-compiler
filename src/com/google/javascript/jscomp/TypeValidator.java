@@ -27,7 +27,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Pair;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.Scope.Var;
@@ -43,7 +43,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
-
 
 /**
  * A central reporter for all type violations: places where the programmer
@@ -676,8 +675,9 @@ class TypeValidator {
    * Type-based optimizations should take this into account
    * so that they don't wreck code with type warnings.
    */
-  static class TypeMismatch extends Pair<JSType, JSType> {
-    private static final long serialVersionUID = 1;
+  static class TypeMismatch {
+    final JSType typeA;
+    final JSType typeB;
 
     /**
      * It's the responsibility of the class that creates the
@@ -685,7 +685,25 @@ class TypeValidator {
      * non-matching types.
      */
     TypeMismatch(JSType a, JSType b) {
-      super(a, b);
+      this.typeA = a;
+      this.typeB = b;
+    }
+
+    @Override public boolean equals(Object object) {
+      if (object instanceof TypeMismatch) {
+        TypeMismatch that = (TypeMismatch) object;
+        return (that.typeA.equals(this.typeA) && that.typeB.equals(this.typeB))
+            || (that.typeB.equals(this.typeA) && that.typeA.equals(this.typeB));
+      }
+      return false;
+    }
+
+    @Override public int hashCode() {
+      return Objects.hashCode(typeA, typeB);
+    }
+
+    @Override public String toString() {
+      return "(" + typeA + ", " + typeB + ")";
     }
   }
 }

@@ -38,7 +38,6 @@
 
 package com.google.javascript.rhino;
 
-import com.google.common.base.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
@@ -277,20 +276,20 @@ public class ParserTest extends BaseJSTypeTestCase {
   public void testParse() {
     Node a = Node.newString(Token.NAME, "a");
     a.addChildToFront(Node.newString(Token.NAME, "b"));
-    List<Pair<String, Node>> testCases = ImmutableList.of(
-        Pair.of(
+    List<ParserResult> testCases = ImmutableList.of(
+        new ParserResult(
             "3;",
             createScript(new Node(Token.EXPR_RESULT, Node.newNumber(3.0)))),
-        Pair.of(
+        new ParserResult(
             "var a = b;",
              createScript(new Node(Token.VAR, a))),
-        Pair.of(
+        new ParserResult(
             "\"hell\\\no\\ world\\\n\\\n!\"",
              createScript(new Node(Token.EXPR_RESULT,
              Node.newString(Token.STRING, "hello world!")))));
 
-    for (Pair<String, Node> testCase : testCases) {
-      assertNodeEquality(testCase.second, parse(testCase.first));
+    for (ParserResult testCase : testCases) {
+      assertNodeEquality(testCase.node, parse(testCase.code));
     }
   }
 
@@ -342,5 +341,15 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertTrue(testErrorReporter.hasEncounteredAllWarnings());
 
     return script;
+  }
+
+  private static class ParserResult {
+    private final String code;
+    private final Node node;
+
+    private ParserResult(String code, Node node) {
+      this.code = code;
+      this.node = node;
+    }
   }
 }

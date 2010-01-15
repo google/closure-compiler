@@ -25,7 +25,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 
 import com.google.common.base.Function;
-import com.google.common.base.Pair;
 import com.google.common.collect.ImmutableMapBuilder;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -113,9 +112,8 @@ class ClosureReverseAbstractInterpreter
         }
       };
 
-  /** Functions used to restrict types.
-   */
-  private Map<String, Function<Pair<JSType, Boolean>, JSType>> restricters;
+  /** Functions used to restrict types. */
+  private Map<String, Function<TypeRestriction, JSType>> restricters;
 
   /**
    * Creates a {@link ClosureReverseAbstractInterpreter}.
@@ -124,67 +122,67 @@ class ClosureReverseAbstractInterpreter
       final JSTypeRegistry typeRegistry) {
     super(convention, typeRegistry);
     this.restricters =
-      new ImmutableMapBuilder<String, Function<Pair<JSType, Boolean>, JSType>>()
-      .put("isDef", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          if (p.second) {
-            return getRestrictedWithoutUndefined(p.first);
+      new ImmutableMapBuilder<String, Function<TypeRestriction, JSType>>()
+      .put("isDef", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          if (p.outcome) {
+            return getRestrictedWithoutUndefined(p.type);
           } else {
             return null;
           }
          }
       })
-      .put("isNull", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          if (p.second) {
+      .put("isNull", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          if (p.outcome) {
             return getNativeType(NULL_TYPE);
           } else {
-            return getRestrictedWithoutNull(p.first);
+            return getRestrictedWithoutNull(p.type);
           }
         }
       })
-      .put("isDefAndNotNull", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          if (p.second) {
+      .put("isDefAndNotNull", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          if (p.outcome) {
             return getRestrictedWithoutUndefined(
-                getRestrictedWithoutNull(p.first));
+                getRestrictedWithoutNull(p.type));
           } else {
             return null;
           }
         }
       })
-      .put("isString", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          return getRestrictedByTypeOfResult(p.first, "string", p.second);
+      .put("isString", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          return getRestrictedByTypeOfResult(p.type, "string", p.outcome);
         }
       })
-      .put("isBoolean", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          return getRestrictedByTypeOfResult(p.first, "boolean", p.second);
+      .put("isBoolean", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          return getRestrictedByTypeOfResult(p.type, "boolean", p.outcome);
         }
       })
-      .put("isNumber", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          return getRestrictedByTypeOfResult(p.first, "number", p.second);
+      .put("isNumber", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          return getRestrictedByTypeOfResult(p.type, "number", p.outcome);
         }
       })
-      .put("isFunction", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          return getRestrictedByTypeOfResult(p.first, "function", p.second);
+      .put("isFunction", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          return getRestrictedByTypeOfResult(p.type, "function", p.outcome);
         }
       })
-      .put("isArray", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          Visitor<JSType> visitor = p.second ? restrictToArrayVisitor :
+      .put("isArray", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          Visitor<JSType> visitor = p.outcome ? restrictToArrayVisitor :
               restrictToNotArrayVisitor;
-          return p.first == null ? null : p.first.visit(visitor);
+          return p.type == null ? null : p.type.visit(visitor);
         }
       })
-      .put("isObject", new Function<Pair<JSType, Boolean>, JSType>() {
-        public JSType apply(Pair<JSType, Boolean> p) {
-          Visitor<JSType> visitor = p.second ? restrictToObjectVisitor :
+      .put("isObject", new Function<TypeRestriction, JSType>() {
+        public JSType apply(TypeRestriction p) {
+          Visitor<JSType> visitor = p.outcome ? restrictToObjectVisitor :
               restrictToNotObjectVisitor;
-          return p.first == null ? null : p.first.visit(visitor);
+          return p.type == null ? null : p.type.visit(visitor);
         }
       })
       .getMap();
@@ -202,7 +200,7 @@ class ClosureReverseAbstractInterpreter
           Node right = callee.getLastChild();
           if (left.getType() == NAME && "goog".equals(left.getString()) &&
               right.getType() == STRING) {
-            Function<Pair<JSType, Boolean>, JSType> restricter =
+            Function<TypeRestriction, JSType> restricter =
                 restricters.get(right.getString());
             if (restricter != null) {
               return restrictParameter(param, paramType, blindScope, restricter,
@@ -217,10 +215,10 @@ class ClosureReverseAbstractInterpreter
   }
 
   private FlowScope restrictParameter(Node parameter, JSType type,
-      FlowScope blindScope, Function<Pair<JSType, Boolean>, JSType> restriction,
+      FlowScope blindScope, Function<TypeRestriction, JSType> restriction,
       boolean outcome) {
     // restricting
-    type = restriction.apply(Pair.of(type, outcome));
+    type = restriction.apply(new TypeRestriction(type, outcome));
 
     // changing the scope
     if (type != null) {
@@ -229,6 +227,16 @@ class ClosureReverseAbstractInterpreter
       return informed;
     } else {
       return blindScope;
+    }
+  }
+
+  private static class TypeRestriction {
+    private final JSType type;
+    private final boolean outcome;
+
+    private TypeRestriction(JSType type, boolean outcome) {
+      this.type = type;
+      this.outcome = outcome;
     }
   }
 }

@@ -41,7 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.base.Pair;
+import com.google.javascript.rhino.jstype.JSType.TypePair;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -418,55 +418,55 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public Pair<JSType, JSType> getTypesUnderEquality(JSType that) {
+  public TypePair getTypesUnderEquality(JSType that) {
     UnionTypeBuilder thisRestricted = new UnionTypeBuilder(registry);
     UnionTypeBuilder thatRestricted = new UnionTypeBuilder(registry);
     for (JSType element : alternates) {
-      Pair<JSType, JSType> p = element.getTypesUnderEquality(that);
-      if (p.first != null) {
-        thisRestricted.addAlternate(p.first);
+      TypePair p = element.getTypesUnderEquality(that);
+      if (p.typeA != null) {
+        thisRestricted.addAlternate(p.typeA);
       }
-      if (p.second != null) {
-        thatRestricted.addAlternate(p.second);
+      if (p.typeB != null) {
+        thatRestricted.addAlternate(p.typeB);
       }
     }
-    return Pair.of(
+    return new TypePair(
         thisRestricted.build(),
         thatRestricted.build());
   }
 
   @Override
-  public Pair<JSType, JSType> getTypesUnderInequality(JSType that) {
+  public TypePair getTypesUnderInequality(JSType that) {
     UnionTypeBuilder thisRestricted = new UnionTypeBuilder(registry);
     UnionTypeBuilder thatRestricted = new UnionTypeBuilder(registry);
     for (JSType element : alternates) {
-      Pair<JSType, JSType> p = element.getTypesUnderInequality(that);
-      if (p.first != null) {
-        thisRestricted.addAlternate(p.first);
+      TypePair p = element.getTypesUnderInequality(that);
+      if (p.typeA != null) {
+        thisRestricted.addAlternate(p.typeA);
       }
-      if (p.second != null) {
-        thatRestricted.addAlternate(p.second);
+      if (p.typeB != null) {
+        thatRestricted.addAlternate(p.typeB);
       }
     }
-    return Pair.of(
+    return new TypePair(
         thisRestricted.build(),
         thatRestricted.build());
   }
 
   @Override
-  public Pair<JSType, JSType> getTypesUnderShallowInequality(JSType that) {
+  public TypePair getTypesUnderShallowInequality(JSType that) {
     UnionTypeBuilder thisRestricted = new UnionTypeBuilder(registry);
     UnionTypeBuilder thatRestricted = new UnionTypeBuilder(registry);
     for (JSType element : alternates) {
-      Pair<JSType, JSType> p = element.getTypesUnderShallowInequality(that);
-      if (p.first != null) {
-        thisRestricted.addAlternate(p.first);
+      TypePair p = element.getTypesUnderShallowInequality(that);
+      if (p.typeA != null) {
+        thisRestricted.addAlternate(p.typeA);
       }
-      if (p.second != null) {
-        thatRestricted.addAlternate(p.second);
+      if (p.typeB != null) {
+        thatRestricted.addAlternate(p.typeB);
       }
     }
-    return Pair.of(
+    return new TypePair(
         thisRestricted.build(),
         thatRestricted.build());
   }

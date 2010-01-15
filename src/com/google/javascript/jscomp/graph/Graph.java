@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.graph;
 
-import com.google.common.base.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -58,15 +57,16 @@ import java.util.List;
  */
 public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
   /**
-   * Pseudo typedef for Pair<Annotatable, Annotation>. Record of an object's
+   * Pseudo typedef for a pair of annotations. Record of an object's
    * annotation at some state.
    */
-  private static final class AnnotationState extends
-      Pair<Annotatable, Annotation> {
-    private static final long serialVersionUID = 1L;
-    
+  private static final class AnnotationState {
+    private final Annotatable first;
+    private final Annotation second;
+
     public AnnotationState(Annotatable annotatable, Annotation annotation) {
-      super(annotatable, annotation);
+      this.first = annotatable;
+      this.second = annotation;
     }
   }
 
@@ -76,7 +76,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    */
   private static class GraphAnnotationState extends ArrayList<AnnotationState> {
     private static final long serialVersionUID = 1L;
-    
+
     public GraphAnnotationState(int size) {
       super(size);
     }
@@ -101,7 +101,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * @return The newly created graph edge.
    */
   public abstract GraphEdge<N, E> connect(N n1, E edge, N n2);
-  
+
   /**
    * Disconnects two nodes in the graph by removing all edges between them.
    *
@@ -172,7 +172,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * @return A list of neighboring nodes.
    */
   public abstract List<GraphNode<N, E>> getNeighborNodes(N value);
-  
+
   public abstract Iterator<GraphNode<N, E>> getNeighborNodesIterator(N value);
 
   /**
@@ -261,7 +261,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
 
   /**
    * A generic edge.
-   * 
+   *
    * @param <N> Value type that the graph node stores.
    * @param <E> Value type that the graph edge stores.
    */
