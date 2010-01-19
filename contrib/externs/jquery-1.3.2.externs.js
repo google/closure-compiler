@@ -397,8 +397,8 @@ jQueryObject.prototype.clone = function(opt_cloneEvents) {};
 
 /**
  * @param {string|Object} nameOrProperties
- * @param {string|number|Function} opt_value
- * @return {Object|jQueryObject}
+ * @param {(string|number|Function)=} opt_value
+ * @return {Object|jQueryObject|string}
  */
 jQueryObject.prototype.css = function(nameOrProperties, opt_value) {};
 
@@ -641,52 +641,52 @@ jQueryObject.prototype.hide = function(opt_speed, opt_fn) {};
 jQueryObject.prototype.toggle = function(opt_arg1, opt_fn2, var_args) {};
 
 /**
- * @param {number|string} speed
+ * @param {(number|string)=} opt_speed
  * @param {Function=} opt_fn
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideDown = function(speed, opt_fn) {};
+jQueryObject.prototype.slideDown = function(opt_speed, opt_fn) {};
 
 /**
- * @param {number|string} speed
+ * @param {(number|string)=} opt_speed
  * @param {Function=} opt_fn
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideUp = function(speed, opt_fn) {};
+jQueryObject.prototype.slideUp = function(opt_speed, opt_fn) {};
 
 /**
- * @param {number|string} speed
+ * @param {(number|string)=} opt_speed
  * @param {Function=} opt_fn
  * @return {jQueryObject}
  */
-jQueryObject.prototype.slideToggle = function(speed, opt_fn) {};
+jQueryObject.prototype.slideToggle = function(opt_speed, opt_fn) {};
 
 /**
- * @param {number|string} speed
+ * @param {(number|string)=} opt_speed
  * @param {Function=} opt_fn
  * @return {jQueryObject}
  */
-jQueryObject.prototype.fadeIn = function(speed, opt_fn) {};
+jQueryObject.prototype.fadeIn = function(opt_speed, opt_fn) {};
 
 /**
- * @param {number|string} speed
+ * @param {(number|string)=} opt_speed
  * @param {Function=} opt_fn
  * @return {jQueryObject}
  */
-jQueryObject.prototype.fadeOut = function(speed, opt_fn) {};
+jQueryObject.prototype.fadeOut = function(opt_speed, opt_fn) {};
 
 /**
- * @param {number|string} speed
- * @param {number} opacity
+ * @param {(number|string)=} opt_speed
+ * @param {number=} opt_opacity
  * @param {Function=} opt_fn
  * @return {jQueryObject}
  */
-jQueryObject.prototype.fadeTo = function(speed, opacity, opt_fn) {};
+jQueryObject.prototype.fadeTo = function(opt_speed, opt_opacity, opt_fn) {};
 
 /**
  * @param {Object} params
  * @param {(number|string|Object)=} opt_durationOrOptions
- * @param {string} opt_easing
+ * @param {string=} opt_easing
  * @param {Function=} opt_fn
  * @return {jQueryObject}
  */
