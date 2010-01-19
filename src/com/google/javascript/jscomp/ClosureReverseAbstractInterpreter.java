@@ -25,7 +25,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMapBuilder;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -122,7 +122,7 @@ class ClosureReverseAbstractInterpreter
       final JSTypeRegistry typeRegistry) {
     super(convention, typeRegistry);
     this.restricters =
-      new ImmutableMapBuilder<String, Function<TypeRestriction, JSType>>()
+      new ImmutableMap.Builder<String, Function<TypeRestriction, JSType>>()
       .put("isDef", new Function<TypeRestriction, JSType>() {
         public JSType apply(TypeRestriction p) {
           if (p.outcome) {
@@ -185,7 +185,7 @@ class ClosureReverseAbstractInterpreter
           return p.type == null ? null : p.type.visit(visitor);
         }
       })
-      .getMap();
+      .build();
   }
 
   public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,

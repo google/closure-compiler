@@ -191,6 +191,7 @@
          stylesheetfile="${stylesheetfile}">
       <sourcepath>
         <pathelement location="${src.dir}" />
+        <pathelement location="${gen.dir}" />
       </sourcepath>
       <classpath refid="classpath.path" />
       <link href="http://java.sun.com/javase/6/docs/api/" />

@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNEXPECTED_STRING_LITERAL_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_WARNING;
 
-import com.google.common.collect.ImmutableMapBuilder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.rhino.Node;
@@ -37,7 +37,8 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
   boolean useReplacementMap;
 
   /** Map of replacements to use during the test. */
-  Map<String, String> replacementMap = new ImmutableMapBuilder<String, String>()
+  Map<String, String> replacementMap =
+      new ImmutableMap.Builder<String, String>()
       .put("active", "a")
       .put("buttonbar", "b")
       .put("colorswatch", "c")
@@ -45,7 +46,7 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
       .put("elephant", "e")
       .put("footer", "f")
       .put("goog", "g")
-      .getMap();
+      .build();
 
   Map<String, Integer> cssNames;
 
@@ -88,14 +89,15 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
          "el.className = 'goog-colorswatch-disabled'");
     test("setClass(goog.getCssName('active-buttonbar'))",
          "setClass('active-buttonbar')");
-    Map<String, Integer> expected = new ImmutableMapBuilder<String, Integer>()
+    Map<String, Integer> expected =
+        new ImmutableMap.Builder<String, Integer>()
         .put("goog", 2)
         .put("footer", 1)
         .put("active", 2)
         .put("colorswatch", 1)
         .put("disabled", 1)
         .put("buttonbar", 1)
-        .getMap();
+        .build();
     assertEquals(expected, cssNames);
   }
 
@@ -115,11 +117,12 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
          "el.className = 'c'");
     test("setClass(goog.getCssName('elephant'))",
          "setClass('e')");
-    Map<String, Integer> expected = new ImmutableMapBuilder<String, Integer>()
+    Map<String, Integer> expected =
+        new ImmutableMap.Builder<String, Integer>()
         .put("buttonbar", 1)
         .put("colorswatch", 1)
         .put("elephant", 1)
-        .getMap();
+        .build();
     assertEquals(expected, cssNames);
   }
 
@@ -130,14 +133,15 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
          "el.className = 'g-c-d'");
     test("setClass(goog.getCssName('active-buttonbar'))",
          "setClass('a-b')");
-    Map<String, Integer> expected = new ImmutableMapBuilder<String, Integer>()
+    Map<String, Integer> expected =
+        new ImmutableMap.Builder<String, Integer>()
         .put("goog", 2)
         .put("footer", 1)
         .put("active", 2)
         .put("colorswatch", 1)
         .put("disabled", 1)
         .put("buttonbar", 1)
-        .getMap();
+        .build();
     assertEquals(expected, cssNames);
   }
 

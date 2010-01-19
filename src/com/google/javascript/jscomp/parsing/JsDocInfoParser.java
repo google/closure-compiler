@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMapBuilder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -68,7 +68,7 @@ public final class JsDocInfoParser {
   private State state;
 
   private static final Map<String, Annotation> recognizedAnnotations =
-      new ImmutableMapBuilder<String, Annotation>().
+      new ImmutableMap.Builder<String, Annotation>().
       put("argument", Annotation.PARAM).
       put("author", Annotation.AUTHOR).
       put("const", Annotation.CONSTANT).
@@ -111,7 +111,7 @@ public final class JsDocInfoParser {
       put("type", Annotation.TYPE).
       put("typedef", Annotation.TYPEDEF).
       put("version", Annotation.VERSION).
-      getMap();
+      build();
 
   private final Map<String, Annotation> annotationNames;
 
@@ -199,15 +199,16 @@ public final class JsDocInfoParser {
 
   /** Create the annotation names from the user-specified config. */
   private static Map<String, Annotation> buildAnnotationNames(Config config) {
-    ImmutableMapBuilder<String, Annotation> annotationBuilder =
-        ImmutableMapBuilder.fromMap(recognizedAnnotations);
+    ImmutableMap.Builder<String, Annotation> annotationBuilder =
+        ImmutableMap.builder();
+    annotationBuilder.putAll(recognizedAnnotations);
     for (String unrecognizedAnnotation : config.annotationWhitelist) {
       if (!recognizedAnnotations.containsKey(unrecognizedAnnotation)) {
         annotationBuilder.put(
             unrecognizedAnnotation, Annotation.NOT_IMPLEMENTED);
       }
     }
-    return annotationBuilder.getMap();
+    return annotationBuilder.build();
   }
 
   /**
