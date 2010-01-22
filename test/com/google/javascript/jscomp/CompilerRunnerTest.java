@@ -83,7 +83,9 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   public void testTypeCheckOverride2() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.QUIET);
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    testSame("var x = x || {}; x.f = function() {}; x.f(3);");
+
     CompilerRunner.FLAG_jscomp_warning.setForTest(
         Lists.newArrayList("checkTypes"));
     test("var x = x || {}; x.f = function() {}; x.f(3);",
@@ -137,6 +139,14 @@ public class CompilerRunnerTest extends TestCase {
     test("function f() {'use strict';}", "function f() {}");
     test("function f() {'no use strict';}",
          CheckSideEffects.USELESS_CODE_ERROR);
+  }
+
+  public void testQuietMode() {
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    test("/** @type { not a type name } */ var x;",
+         RhinoErrorReporter.PARSE_ERROR);
+    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.QUIET);
+    testSame("/** @type { not a type name } */ var x;");
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -232,7 +242,9 @@ public class CompilerRunnerTest extends TestCase {
    */
   private void test(String[] original, DiagnosticType warning) {
     Compiler compiler = compile(original);
-    assertEquals("Expected exactly one warning or error",
+    assertEquals("Expected exactly one warning or error " +
+        "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
+        "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         1, compiler.getErrors().length + compiler.getWarnings().length);
     if (compiler.getErrors().length > 0) {
       assertEquals(warning, compiler.getErrors()[0].getType());

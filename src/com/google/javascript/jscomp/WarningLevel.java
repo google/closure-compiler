@@ -34,7 +34,7 @@ public enum WarningLevel {
   public void setOptionsForWarningLevel(CompilerOptions options) {
     switch (this) {
       case QUIET:
-        // Nothing to do
+        silenceAllWarnings(options);
         break;
       case DEFAULT:
         addDefaultWarnings(options);
@@ -45,6 +45,17 @@ public enum WarningLevel {
       default:
         throw new RuntimeException("Unknown warning level.");
     }
+  }
+
+  /**
+   * Silence all non-essential warnings.
+   */
+  private static void silenceAllWarnings(CompilerOptions options) {
+    // Just use a ShowByPath warnings guard, so that we don't have
+    // to maintain a separate class of warnings guards for silencing warnings.
+    options.addWarningsGuard(
+        new ShowByPathWarningsGuard(
+            "the_longest_path_that_cannot_be_expressed_as_a_string"));
   }
 
   /**
