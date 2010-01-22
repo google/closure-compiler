@@ -501,6 +501,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Prints a separator comment before each js script */
   public boolean printInputDelimiter;
 
+  /** The string to use as the separator for printInputDelimiter */
+  public String inputDelimiter = "// Input %num%";
+
   /** Where to save a report of global name usage */
   public String reportPath;
 

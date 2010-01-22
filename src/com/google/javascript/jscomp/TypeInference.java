@@ -170,7 +170,14 @@ class TypeInference
           if (condition == null) {
             condition = NodeUtil.getConditionExpression(source);
             if (condition == null && source.getType() == Token.CASE) {
-              condition = createSwitchCaseConditionExpression(source);
+              condition = source;
+
+              // conditionFlowScope is cached from previous iterations
+              // of the loop.
+              if (conditionFlowScope == null) {
+                conditionFlowScope = traverse(
+                    condition.getFirstChild(), output.createChildFlowScope());
+              }
             }
           }
 
@@ -220,35 +227,6 @@ class TypeInference
       result.add(newScope.optimize());
     }
     return result;
-  }
-
-  /**
-   * Given the case node of some switch(x) {... case y: ...} statement,
-   * constructs and returns the condition x === y.
-   */
-  private Node createSwitchCaseConditionExpression(Node caseNode) {
-    Node switchNode = findSwitchFromCase(caseNode);
-    Node switchExpressionNode = switchNode.getFirstChild();
-    Node caseExpressionNode = caseNode.getFirstChild();
-    return new Node(Token.SHEQ, switchExpressionNode.cloneTree(),
-        caseExpressionNode.cloneTree());
-  }
-
-  /**
-   * Finds the switch node associated with a case node.
-   */
-  private Node findSwitchFromCase(Node caseNode) {
-    for (DiGraphNode<Node, Branch> gn :
-        getCfg().getDirectedPredNodes(caseNode)) {
-      Node n = gn.getValue();
-      switch (n.getType()) {
-        case Token.SWITCH:
-          return n;
-        case Token.CASE:
-          return findSwitchFromCase(n);
-      }
-    }
-    throw new IllegalArgumentException("ill-formed case node");
   }
 
   private FlowScope traverse(Node n, FlowScope scope) {
@@ -396,6 +374,10 @@ class TypeInference
         if (n.getFirstChild().getType() == Token.GETPROP) {
           ensurePropertyDeclared(n.getFirstChild());
         }
+        break;
+
+      case Token.SWITCH:
+        scope = traverse(n.getFirstChild(), scope);
         break;
 
       case Token.VAR:

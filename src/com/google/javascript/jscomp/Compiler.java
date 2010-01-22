@@ -1164,8 +1164,18 @@ public class Compiler extends AbstractCompiler {
           if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
             cb.append("\n");  // Make sure that the label starts on a new line
           }
-          cb.append("// Input ")
-            .append(String.valueOf(inputSeqNum))
+          Preconditions.checkState(root.getType() == Token.SCRIPT);
+          
+          String delimiter = options_.inputDelimiter;
+          
+          String sourceName = (String)root.getProp(Node.SOURCENAME_PROP);
+          Preconditions.checkState(sourceName != null);
+          Preconditions.checkState(!sourceName.isEmpty());
+          
+          delimiter = delimiter.replaceAll("%name%", sourceName)
+            .replaceAll("%num%", String.valueOf(inputSeqNum));
+
+          cb.append(delimiter)
             .append("\n");
         }
         if (root.getJSDocInfo() != null &&

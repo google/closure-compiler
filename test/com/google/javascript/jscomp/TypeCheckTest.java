@@ -3757,6 +3757,42 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "switch (a) { case 5:break; case null:break; }");
   }
 
+  public void testSwitchCase7() throws Exception {
+    // This really tests the inference inside the case.
+    testTypes(
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @return {number}\n" +
+        " */\n" +
+        "function g(x) { return 5; }" +
+        "function f() {" +
+        "  var x = {};" +
+        "  x.foo = '3';" +
+        "  switch (3) { case g(x.foo): return 3; }" +
+        "}",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testSwitchCase8() throws Exception {
+    // This really tests the inference inside the switch clause.
+    testTypes(
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @return {number}\n" +
+        " */\n" +
+        "function g(x) { return 5; }" +
+        "function f() {" +
+        "  var x = {};" +
+        "  x.foo = '3';" +
+        "  switch (g(x.foo)) { case 3: return 3; }" +
+        "}",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
   public void testNoTypeCheck1() throws Exception {
     testTypes("/** @notypecheck */function foo() { new 4 }");
   }
