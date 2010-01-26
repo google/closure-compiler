@@ -779,4 +779,37 @@ public class InlineVariablesTest extends CompilerTestCase {
         "}",
         "var X=1; X; function f() {1;}");
   }
+
+  public void testInlineUndefined1() {
+    test("var x; x;",
+         "void 0;");
+  }
+
+  public void testInlineUndefined2() {
+    testSame("var x; x++;");
+  }
+
+  public void testInlineUndefined3() {
+    testSame("var x; var x;");
+  }
+
+  public void testInlineUndefined4() {
+    test("var x; x; x;",
+         "void 0; void 0;");
+  }
+
+  public void testInlineUndefined5() {
+    test("var x; for(x in a) {}",
+         "var x; for(x in a) {}");
+  }  
+  
+  public void testIssue90() {
+    test("var x; x && alert(1)",
+         "void 0 && alert(1)");
+  }
+  
+  public void testRenamePropertyFunction() {
+    testSame("var JSCompiler_renameProperty; " +
+             "JSCompiler_renameProperty('foo')");
+  }
 }

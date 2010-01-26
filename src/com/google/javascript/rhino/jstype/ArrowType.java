@@ -39,9 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
-
-
 
 /**
  * The arrow type is an internal type that models the functional arrow type
@@ -55,7 +54,7 @@ final class ArrowType extends JSType {
   private static final long serialVersionUID = 1L;
 
   final Node parameters;
-  final JSType returnType;
+  JSType returnType;
 
   ArrowType(JSTypeRegistry registry, Node parameters,
       JSType returnType) {
@@ -229,5 +228,17 @@ final class ArrowType extends JSType {
   @Override
   public BooleanLiteralSet getPossibleToBooleanOutcomes() {
     return BooleanLiteralSet.TRUE;
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    returnType = safeResolve(returnType, t, scope);
+    if (parameters != null) {
+      for (Node paramNode = parameters.getFirstChild();
+           paramNode != null; paramNode = paramNode.getNext()) {
+        paramNode.setJSType(paramNode.getJSType().resolve(t, scope));
+      }
+    }
+    return this;
   }
 }

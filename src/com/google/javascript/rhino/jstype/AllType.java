@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.javascript.rhino.ErrorReporter;
 
 /**
  * All type, representing all values.
@@ -117,5 +118,10 @@ public final class AllType extends JSType {
   @Override
   public BooleanLiteralSet getPossibleToBooleanOutcomes() {
     return BooleanLiteralSet.BOTH;
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    return this;
   }
 }

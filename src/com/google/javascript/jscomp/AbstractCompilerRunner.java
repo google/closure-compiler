@@ -190,9 +190,9 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
 
   @FlagSpec(help = "If specified, a source map file mapping the generated " +
             "source files back to the original source file will be " +
-            "output to the specified path. If %module% is added, " +
-            "a source map will be generated for each module, with the " +
-            " module's name placed into the path at that spot")
+            "output to the specified path. The %outname% placeholder will " +
+            "expand to the name of the output file that the source map " +
+            "corresponds to.")
   public static final Flag<String> FLAG_create_source_map =
       Flag.value("");
 
@@ -710,13 +710,13 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
         PrintStream mapOut = null;
 
         if (!shouldGenerateMapPerModule(options)) {
-          mapOut = openSourceMapStream(options, moduleFilePrefix, null);
+          mapOut = openSourceMapStream(options, moduleFilePrefix);
         }
 
         for (JSModule m : modules) {
           if (shouldGenerateMapPerModule(options)) {
-            mapOut =
-                openSourceMapStream(options, moduleFilePrefix, m.getName());
+            mapOut = openSourceMapStream(
+                options, moduleFilePrefix + m.getName() + ".js");
           }
 
           PrintStream ps =
@@ -790,11 +790,11 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
   /**
    * Returns true if and only if a source map file should be generated for each
    * module, as opposed to one unified map. This is specified by having the
-   * source map pattern include the %module% variable.
+   * source map pattern include the %outname% variable.
    */
   private boolean shouldGenerateMapPerModule(B options) {
     return options.sourceMapOutputPath != null
-        && options.sourceMapOutputPath.contains("%module%");
+        && options.sourceMapOutputPath.contains("%outname%");
   }
 
   /**
@@ -829,21 +829,15 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
    * @param options The options to the Compiler.
    * @param path The directory or a file in the directory in which to place the
    *        source map.
-   * @param module If modules are being generated, the name of the current
-   *        module.
    */
-  private PrintStream openSourceMapStream(B options, String path,
-      String module) throws IOException {
+  private PrintStream openSourceMapStream(B options, String path)
+      throws IOException {
     if (options.sourceMapOutputPath == null) {
       return null;
     }
 
     String sourceMapPath = options.sourceMapOutputPath;
-
-    // Replace the %module% "variable" with the name of the module.
-    if (module != null) {
-      sourceMapPath = sourceMapPath.replace("%module%", module);
-    }
+    sourceMapPath = sourceMapPath.replace("%outname%", path);
 
     String mapPath = null;
 
@@ -872,7 +866,7 @@ public abstract class AbstractCompilerRunner<A extends Compiler,
     }
 
     File outputFile = new File(path);
-    PrintStream out = openSourceMapStream(options, path, null);
+    PrintStream out = openSourceMapStream(options, path + ".js");
     compiler.getSourceMap().appendTo(out, outputFile.getName());
     out.close();
   }

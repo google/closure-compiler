@@ -314,6 +314,11 @@ class InlineFunctions implements CompilerPass {
       // by external definitions.
       return false;
     }
+    
+    // Don't inline this special function
+    if (RenameProperties.RENAME_PROPERTY_FUNCTION_NAME.equals(fnName)) {
+      return false;
+    }
 
     Node fnNode = fn.getFunctionNode();
     return injector.doesFunctionMeetMinimumRequirements(fnName, fnNode);

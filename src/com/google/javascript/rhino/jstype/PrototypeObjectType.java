@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Maps;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
 import java.io.Serializable;
@@ -419,7 +420,7 @@ class PrototypeObjectType extends ObjectType {
     /**
      * Property's type.
      */
-    private final JSType type;
+    private JSType type;
 
     /**
      * Whether the property's type is inferred.
@@ -450,5 +451,18 @@ class PrototypeObjectType extends ObjectType {
   @Override
   public boolean isNativeObjectType() {
     return nativeType;
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    // Don't try to resolve native types, because it's unnecessary and
+    // there are infinite loops between native types.
+    if (implicitPrototype != null && !implicitPrototype.isNativeObjectType()) {
+      implicitPrototype = (ObjectType) implicitPrototype.resolve(t, scope);
+    }
+    for (Property prop : properties.values()) {
+      prop.type = safeResolve(prop.type, t, scope);
+    }
+    return this;
   }
 }

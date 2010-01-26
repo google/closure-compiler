@@ -41,8 +41,10 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
 import java.io.Serializable;
@@ -68,6 +70,9 @@ import java.util.List;
  */
 public abstract class JSType implements Serializable {
   private static final long serialVersionUID = 1L;
+
+  private boolean resolved = false;
+  private JSType resolveResult = null;
 
   public static final String UNKNOWN_NAME =
       "Unknown class name";
@@ -829,6 +834,63 @@ public abstract class JSType implements Serializable {
    * @return the value returned by the visitor
    */
   public abstract <T> T visit(Visitor<T> visitor);
+
+  /**
+   * Resolve this type in the given scope.
+   *
+   * The returned value must be equal to {@code this}, as defined by
+   * {@link Object#equals}. It may or may not be the same object. This method
+   * may modify the internal state of {@code this}, as long as it does
+   * so in a way that preserves Object equality.
+   *
+   * For efficiency, we should only resolve a type once per compilation job.
+   * For incremental compilations, one compilation job may need the
+   * artifacts from a previous generation, so we will eventually need
+   * a generational flag instead of a boolean one.
+   */
+  public final JSType resolve(ErrorReporter t, StaticScope<JSType> scope) {
+    if (resolved) {
+      // TODO(nicksantos): Check to see if resolve() looped back on itself.
+      // Preconditions.checkNotNull(resolveResult);
+      if (resolveResult == null) {
+        return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      }
+      return resolveResult;
+    }
+    resolved = true;
+    resolveResult = resolveInternal(t, scope);
+    return resolveResult;
+  }
+
+  /**
+   * @see #resolve
+   */
+  abstract JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope);
+
+  void setResolvedTypeInternal(JSType type) {
+    resolveResult = type;
+    resolved = true;
+  }
+
+  /** Whether the type has been resolved. */
+  public final boolean isResolved() {
+    return resolved;
+  }
+
+  /** Clears the resolved field. */
+  public final void clearResolved() {
+    resolved = false;
+    resolveResult = null;
+  }
+
+  /**
+   * A null-safe resolve.
+   * @see #resolve
+   */
+  static final JSType safeResolve(
+      JSType type, ErrorReporter t, StaticScope<JSType> scope) {
+    return type == null ? null : type.resolve(t, scope);
+  }
 
   public static class TypePair {
     public final JSType typeA;

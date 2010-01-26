@@ -39,6 +39,7 @@
  
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
 import java.util.List;
@@ -113,6 +114,11 @@ class ProxyObjectType extends ObjectType {
   @Override
   public boolean isEnumType() {
     return referencedType.isEnumType();
+  }
+
+  @Override
+  public boolean isEnumElementType() {
+    return referencedType.isEnumElementType();
   }
 
   @Override
@@ -279,5 +285,11 @@ class ProxyObjectType extends ObjectType {
   @Override
   public <T> T visit(Visitor<T> visitor) {
     return referencedType.visit(visitor);
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    referencedType = (ObjectType) referencedType.resolve(t, scope);
+    return this;
   }
 }

@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -76,7 +77,7 @@ public class FunctionType extends PrototypeObjectType {
   /**
    * {@code [[Call]]} property.
    */
-  private final ArrowType call;
+  private ArrowType call;
 
   /**
    * The {@code prototype} property. This field is lazily initialized by
@@ -815,5 +816,32 @@ public class FunctionType extends PrototypeObjectType {
    */
   public String getTemplateTypeName() {
     return templateTypeName;
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    call = (ArrowType) safeResolve(call, t, scope);
+    prototype = (FunctionPrototypeType) safeResolve(prototype, t, scope);
+    typeOfThis = (ObjectType) safeResolve(typeOfThis, t, scope);
+
+    boolean changed = false;
+    ImmutableList.Builder<ObjectType> resolvedInterfaces =
+        ImmutableList.builder();
+    for (ObjectType iface : implementedInterfaces) {
+      ObjectType resolvedIface = (ObjectType) iface.resolve(t, scope);
+      resolvedInterfaces.add(resolvedIface);
+      changed |= (resolvedIface != iface);
+    }
+    if (changed) {
+      implementedInterfaces = resolvedInterfaces.build();
+    }
+
+    if (subTypes != null) {
+      for (int i = 0; i < subTypes.size(); i++) {
+        subTypes.set(i, (FunctionType) subTypes.get(i).resolve(t, scope));
+      }
+    }
+
+    return super.resolveInternal(t, scope);
   }
 }

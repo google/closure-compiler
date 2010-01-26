@@ -1489,6 +1489,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "\n" +
         "factorial(5)\n");
   }
+  
+  public void testRenamePropertyFunction() {
+    testSame("function JSCompiler_renameProperty(x) {return x} " +
+             "JSCompiler_renameProperty('foo')");
+  }
 
   // Inline a single reference function into deeper modules
   public void testCrossModuleInlining1() {

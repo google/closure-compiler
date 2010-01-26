@@ -41,6 +41,8 @@ package com.google.javascript.rhino.jstype;
 
 
 
+import com.google.javascript.rhino.ErrorReporter;
+
 import java.util.Set;
 
 /**
@@ -58,10 +60,10 @@ public class EnumElementType extends ObjectType {
    * <pre>var LOCAL_CODES = {A: 3, B: 9, C: 8}</pre>
    * the primitive type of the the constants is {@code number}.
    */
-  private final JSType primitiveType;
+  private JSType primitiveType;
 
   // The primitive type, if it is an object.
-  private final ObjectType primitiveObjectType;
+  private ObjectType primitiveObjectType;
 
   private final String name;
 
@@ -250,5 +252,13 @@ public class EnumElementType extends ObjectType {
    */
   public JSType getPrimitiveType() {
     return primitiveType;
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    primitiveType = primitiveType.resolve(t, scope);
+    primitiveObjectType =
+        (ObjectType) safeResolve(primitiveObjectType, t, scope);
+    return this;
   }
 }

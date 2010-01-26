@@ -363,13 +363,22 @@ Variable in class com.google.javascript.rhino.testing.<A HREF="./com/google/java
 <DT><A HREF="./com/google/javascript/rhino/Token.html#ARRAYLIT"><B>ARRAYLIT</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
 <DD>Token types.
-<DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)"><B>assertTypeEquals(JSType, Node)</B></A> - 
+<DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html#assertResolvesToSame(com.google.javascript.rhino.jstype.JSType)"><B>assertResolvesToSame(JSType)</B></A> - 
+Static method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing">Asserts</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing"><B>Asserts</B></A> - Class in <A HREF="./com/google/javascript/rhino/testing/package-summary.html">com.google.javascript.rhino.testing</A><DD>Helper methods for making assertions about the validity of types.<DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)"><B>assertTypeEquals(JSType, Node)</B></A> - 
 Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing">BaseJSTypeTestCase</A>
 <DD>Asserts that a Node representing a type expression resolves to the
  correct <code>JSType</code>.
 <DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.JSTypeExpression)"><B>assertTypeEquals(JSType, JSTypeExpression)</B></A> - 
 Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing">BaseJSTypeTestCase</A>
 <DD>Asserts that a a type expression resolves to the correct <code>JSType</code>.
+<DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html#assertValidResolve(com.google.javascript.rhino.jstype.JSType)"><B>assertValidResolve(JSType)</B></A> - 
+Static method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing">Asserts</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html#assertValidResolve(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.StaticScope)"><B>assertValidResolve(JSType, StaticScope&lt;JSType&gt;)</B></A> - 
+Static method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing">Asserts</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/Token.html#ASSIGN"><B>ASSIGN</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
 <DD>&nbsp;
@@ -824,8 +833,8 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/Instrumentation.Builder.html#clearReportExit()"><B>clearReportExit()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Instrumentation.Builder.html" title="class in com.google.javascript.jscomp">Instrumentation.Builder</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#clearResolved()"><B>clearResolved()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#clearResolved()"><B>clearResolved()</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
 <DD>Clears the resolved field.
 <DT><A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.Builder.html#clearSize()"><B>clearSize()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.Builder.html" title="class in com.google.javascript.jscomp">FunctionInformationMap.Entry.Builder</A>
@@ -1487,6 +1496,9 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/rhino/ScriptRuntime.html#emptyArgs"><B>emptyArgs</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/ScriptRuntime.html" title="class in com.google.javascript.rhino">ScriptRuntime</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/testing/EmptyScope.html" title="class in com.google.javascript.rhino.testing"><B>EmptyScope</B></A> - Class in <A HREF="./com/google/javascript/rhino/testing/package-summary.html">com.google.javascript.rhino.testing</A><DD>An empty scope implementation.<DT><A HREF="./com/google/javascript/rhino/testing/EmptyScope.html#EmptyScope()"><B>EmptyScope()</B></A> - 
+Constructor for class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/EmptyScope.html" title="class in com.google.javascript.rhino.testing">EmptyScope</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/ScriptRuntime.html#emptyStrings"><B>emptyStrings</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/ScriptRuntime.html" title="class in com.google.javascript.rhino">ScriptRuntime</A>
 <DD>&nbsp;
@@ -1940,6 +1952,9 @@ Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascrip
 <DD>Format a warning.
 <DT><A HREF="./com/google/javascript/jscomp/parsing/NullErrorReporter.html#forNewRhino()"><B>forNewRhino()</B></A> - 
 Static method in class com.google.javascript.jscomp.parsing.<A HREF="./com/google/javascript/jscomp/parsing/NullErrorReporter.html" title="class in com.google.javascript.jscomp.parsing">NullErrorReporter</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/testing/TestErrorReporter.html#forNoExpectedReports()"><B>forNoExpectedReports()</B></A> - 
+Static method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/TestErrorReporter.html" title="class in com.google.javascript.rhino.testing">TestErrorReporter</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/parsing/NullErrorReporter.html#forOldRhino()"><B>forOldRhino()</B></A> - 
 Static method in class com.google.javascript.jscomp.parsing.<A HREF="./com/google/javascript/jscomp/parsing/NullErrorReporter.html" title="class in com.google.javascript.jscomp.parsing">NullErrorReporter</A>
@@ -3168,6 +3183,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/rhino/jstype/StaticScope.html#getOwnSlot(java.lang.String)"><B>getOwnSlot(String)</B></A> - 
 Method in interface com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>
 <DD>Like <code>getSlot</code> but does not recurse into parent scopes.
+<DT><A HREF="./com/google/javascript/rhino/testing/EmptyScope.html#getOwnSlot(java.lang.String)"><B>getOwnSlot(String)</B></A> - 
+Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/EmptyScope.html" title="class in com.google.javascript.rhino.testing">EmptyScope</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/ScriptOrFnNode.html#getParamAndVarConst()"><B>getParamAndVarConst()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/ScriptOrFnNode.html" title="class in com.google.javascript.rhino">ScriptOrFnNode</A>
 <DD>&nbsp;
@@ -3219,6 +3237,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/rhino/jstype/StaticScope.html#getParentScope()"><B>getParentScope()</B></A> - 
 Method in interface com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>
 <DD>Returns the scope enclosing this one or null if none.
+<DT><A HREF="./com/google/javascript/rhino/testing/EmptyScope.html#getParentScope()"><B>getParentScope()</B></A> - 
+Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/EmptyScope.html" title="class in com.google.javascript.rhino.testing">EmptyScope</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/CompilerEnvirons.html#getParseJSDoc()"><B>getParseJSDoc()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/CompilerEnvirons.html" title="class in com.google.javascript.rhino">CompilerEnvirons</A>
 <DD>&nbsp;
@@ -3488,6 +3509,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/rhino/jstype/StaticScope.html#getSlot(java.lang.String)"><B>getSlot(String)</B></A> - 
 Method in interface com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>
 <DD>Returns any defined slot within this scope for this name.
+<DT><A HREF="./com/google/javascript/rhino/testing/EmptyScope.html#getSlot(java.lang.String)"><B>getSlot(String)</B></A> - 
+Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/EmptyScope.html" title="class in com.google.javascript.rhino.testing">EmptyScope</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/AbstractMessageFormatter.html#getSource()"><B>getSource()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/AbstractMessageFormatter.html" title="class in com.google.javascript.jscomp">AbstractMessageFormatter</A>
 <DD>Get the source excerpt provider.
@@ -3650,6 +3674,9 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/StaticScope.html#getTypeOfThis()"><B>getTypeOfThis()</B></A> - 
 Method in interface com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>
 <DD>Returns the expected type of <code>this</code> in the current scope.
+<DT><A HREF="./com/google/javascript/rhino/testing/EmptyScope.html#getTypeOfThis()"><B>getTypeOfThis()</B></A> - 
+Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/EmptyScope.html" title="class in com.google.javascript.rhino.testing">EmptyScope</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/AbstractCompiler.html#getTypeRegistry()"><B>getTypeRegistry()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>
 <DD>Gets a central registry of type information from the compiled JS.
@@ -4797,9 +4824,9 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/CompilerEnvirons.html#isReservedKeywordAsIdentifier()"><B>isReservedKeywordAsIdentifier()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/CompilerEnvirons.html" title="class in com.google.javascript.rhino">CompilerEnvirons</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#isResolved()"><B>isResolved()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>Whether the type name has been resolved to an enum or object.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#isResolved()"><B>isResolved()</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
+<DD>Whether the type has been resolved.
 <DT><A HREF="./com/google/javascript/rhino/Context.html#isSealed()"><B>isSealed()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Context.html" title="class in com.google.javascript.rhino">Context</A>
 <DD>Checks if this is a sealed Context.
@@ -6473,9 +6500,9 @@ Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#resetForTypeCheck()"><B>resetForTypeCheck()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Reset to run the TypeCheck pass.
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#resolve(com.google.javascript.rhino.ErrorReporter, com.google.javascript.rhino.jstype.StaticScope)"><B>resolve(ErrorReporter, StaticScope&lt;JSType&gt;)</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>Resolve the referenced type within the enclosing scope.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#resolve(com.google.javascript.rhino.ErrorReporter, com.google.javascript.rhino.jstype.StaticScope)"><B>resolve(ErrorReporter, StaticScope&lt;JSType&gt;)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
+<DD>Resolve this type in the given scope.
 <DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#resolve(com.google.javascript.rhino.JSTypeExpression, java.lang.String...)"><B>resolve(JSTypeExpression, String...)</B></A> - 
 Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing">BaseJSTypeTestCase</A>
 <DD>Resolves a type expression, expecting the given warnings.

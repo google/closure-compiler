@@ -41,6 +41,8 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.javascript.rhino.ErrorReporter;
+
 import java.util.Set;
 
 /**
@@ -183,5 +185,10 @@ public class UnknownType extends ObjectType {
   @Override
   public BooleanLiteralSet getPossibleToBooleanOutcomes() {
     return BooleanLiteralSet.BOTH;
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    return this;
   }
 }

@@ -41,12 +41,13 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
 
 /**
  * The {@code UnionType} implements a common JavaScript idiom in which the
@@ -65,7 +66,7 @@ import java.util.TreeSet;
 public class UnionType extends JSType {
   private static final long serialVersionUID = 1L;
 
-  final Set<JSType> alternates;
+  Set<JSType> alternates;
 
   /**
    * Creates a union type.
@@ -474,5 +475,22 @@ public class UnionType extends JSType {
   @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseUnionType(this);
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    setResolvedTypeInternal(this); // for circularly defined types.
+
+    boolean changed = false;
+    ImmutableSet.Builder<JSType> resolvedTypes = ImmutableSet.builder();
+    for (JSType alternate : alternates) {
+      JSType newAlternate = alternate.resolve(t, scope);
+      changed |= (alternate != newAlternate);
+      resolvedTypes.add(alternate);
+    }
+    if (changed) {
+      alternates = resolvedTypes.build();
+    }
+    return this;
   }
 }

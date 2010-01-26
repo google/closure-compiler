@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -22,8 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Jervis
- *   Google Inc.
+ *   Nick Santos
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -36,26 +35,35 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.ErrorReporter;
+package com.google.javascript.rhino.testing;
+
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.StaticScope;
+import com.google.javascript.rhino.jstype.StaticSlot;
 
 /**
- * Value types (null, void, number, boolean, string).
+ * An empty scope implementation.
+*
  */
-abstract class ValueType extends JSType {
-  ValueType(JSTypeRegistry registry) {
-    super(registry);
+public class EmptyScope implements StaticScope<JSType> {
+  @Override
+  public StaticScope<JSType> getParentScope() {
+    return null;
   }
 
   @Override
-  public boolean isSubtype(JSType that) {
-    return JSType.isSubtype(this, that);
+  public StaticSlot<JSType> getSlot(String name) {
+    return null;
   }
 
   @Override
-  final JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
-    return this;
+  public StaticSlot<JSType> getOwnSlot(String name) {
+    return null;
+  }
+
+  @Override
+  public JSType getTypeOfThis() {
+    return null;
   }
 }

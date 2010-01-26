@@ -42,10 +42,11 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 
+import com.google.javascript.rhino.ErrorReporter;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
 
 /**
  * An enum type representing a branded collection of elements. Each element
@@ -57,7 +58,7 @@ public class EnumType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
   // the type of the individual elements
-  private final EnumElementType elementsType;
+  private EnumElementType elementsType;
   // the elements' names (they all have the same type)
   private final Set<String> elements = new HashSet<String>();
 
@@ -147,5 +148,11 @@ public class EnumType extends PrototypeObjectType {
   @Override
   public boolean matchesObjectContext() {
     return true;
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    elementsType = (EnumElementType) elementsType.resolve(t, scope);
+    return super.resolveInternal(t, scope);
   }
 }

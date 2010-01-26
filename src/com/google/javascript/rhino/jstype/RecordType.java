@@ -39,6 +39,8 @@
  
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.ErrorReporter;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +61,7 @@ import java.util.Map;
 public class RecordType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
-  private final Map<String, JSType> properties = new HashMap<String, JSType>();
+  private Map<String, JSType> properties = new HashMap<String, JSType>();
   private boolean isFrozen = false;
 
   /**
@@ -277,5 +279,17 @@ public class RecordType extends PrototypeObjectType {
 
     sb.append(" }");
     return sb.toString();
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    for (Map.Entry<String, JSType> entry : properties.entrySet()) {
+      JSType type = entry.getValue();
+      JSType resolvedType = type.resolve(t, scope);
+      if (type != resolvedType) {
+        properties.put(entry.getKey(), resolvedType);
+      }
+    }
+    return super.resolveInternal(t, scope);
   }
 }

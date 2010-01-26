@@ -69,6 +69,10 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
     this.warnings = warnings;
   }
 
+  public static TestErrorReporter forNoExpectedReports() {
+    return new TestErrorReporter(null, null);
+  }
+
   public void setErrors(String[] errors) {
     this.errors = errors;
     errorsIndex = 0;

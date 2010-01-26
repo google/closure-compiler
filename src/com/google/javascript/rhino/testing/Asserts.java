@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -22,7 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Jervis
+ *   Nick Santos
  *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,26 +36,41 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-package com.google.javascript.rhino.jstype;
+
+package com.google.javascript.rhino.testing;
 
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.StaticScope;
+
+import junit.framework.Assert;
 
 /**
- * Value types (null, void, number, boolean, string).
+ * Helper methods for making assertions about the validity of types.
+*
  */
-abstract class ValueType extends JSType {
-  ValueType(JSTypeRegistry registry) {
-    super(registry);
+public class Asserts {
+  private Asserts() {} // all static
+
+  public static JSType assertResolvesToSame(JSType type) {
+    Assert.assertSame(type, assertValidResolve(type));
+    return type;
   }
 
-  @Override
-  public boolean isSubtype(JSType that) {
-    return JSType.isSubtype(this, that);
+  /** @return The resolved type */
+  public static JSType assertValidResolve(JSType type) {
+    return assertValidResolve(type, new EmptyScope());
   }
 
-  @Override
-  final JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
-    return this;
+  /** @return The resolved type */
+  public static JSType assertValidResolve(
+      JSType type, StaticScope<JSType> scope) {
+    ErrorReporter t = TestErrorReporter.forNoExpectedReports();
+    JSType resolvedType = type.resolve(t, scope);
+    Assert.assertEquals("JSType#resolve should not affect object equality",
+        type, resolvedType);
+    Assert.assertEquals("JSType#resolve should not affect hash codes",
+        type.hashCode(), resolvedType.hashCode());
+    return resolvedType;
   }
 }

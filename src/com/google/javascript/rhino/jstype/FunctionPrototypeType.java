@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.List;
@@ -92,4 +93,9 @@ public class FunctionPrototypeType extends PrototypeObjectType {
   public Iterable<ObjectType> getCtorImplementedInterfaces() {
     return getOwnerFunction().getImplementedInterfaces();
   }
+
+  // The owner will always be a resolved type, so there's no need to set
+  // the ownerFunction in resolveInternal.
+  // (it would lead to infinite loops if we did).
+  // JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope);
 }

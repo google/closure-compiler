@@ -39,10 +39,10 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
 import java.io.Serializable;
-
 
 /**
  * The bottom Object type, representing the subclass of all objects.
@@ -345,5 +345,10 @@ public class NoObjectType extends FunctionType {
   @Override
   public FunctionType getConstructor() {
     return null;
+  }
+
+  @Override
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    return this;
   }
 }

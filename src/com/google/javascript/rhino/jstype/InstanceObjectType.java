@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.ErrorReporter;
 
 import java.util.List;
 import java.util.Set;
@@ -176,4 +177,9 @@ public final class InstanceObjectType extends PrototypeObjectType {
   public Iterable<ObjectType> getCtorImplementedInterfaces() {
     return getConstructor().getImplementedInterfaces();
   }
+  
+  // The owner will always be a resolved type, so there's no need to set
+  // the constructor in resolveInternal.
+  // (it would lead to infinite loops if we did).
+  // JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope);
 }

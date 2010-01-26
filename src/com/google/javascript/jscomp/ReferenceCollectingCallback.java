@@ -266,7 +266,7 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     }
 
     /**
-     * @param index The index into the references array to look for an 
+     * @param index The index into the references array to look for an
      * assigning declaration.
      *
      * This is either the declaration if a value is assigned (such as
@@ -275,16 +275,16 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     private boolean isInitializingDeclarationAt(int index) {
       Reference maybeInit = references.get(index);
       if (maybeInit.isInitializingDeclaration()) {
-        // This is a declaration that represents the initial value. 
+        // This is a declaration that represents the initial value.
         // Specifically, var declarations without assignments such as "var a;"
         // are not.
         return true;
       }
       return false;
     }
-    
+
     /**
-     * @param index The index into the references array to look for an 
+     * @param index The index into the references array to look for an
      * initialized assignment reference. That is, an assignment immediately
      * follow a variable declaration that itself does not initialize the
      * variable.
@@ -301,7 +301,7 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
         }
       }
       return false;
-    }    
+    }
 
     /**
      * @return The reference that provides the value for the variable at the
@@ -349,6 +349,20 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
         }
       }
       return assigned;
+    }
+
+    /**
+     * @return Whether the variable is never assigned a value.
+     */
+    boolean isNeverAssigned() {
+      int size = references.size();
+      for (int i = 0; i < size; i++) {
+        Reference ref = references.get(i);
+        if (ref.isLvalue() || ref.isInitializingDeclaration()) {
+          return false;
+        }
+      }
+      return true;
     }
 
     boolean firstReferenceIsAssigningDeclaration() {

@@ -233,7 +233,13 @@ class InlineVariables implements CompilerPass {
           isImmutableAndWellDefinedVariable(v, referenceInfo)) {
         // if the variable is referenced more than once, we can only
         // inline it if it's immutable and never defined before referenced.
-        Node value = init.getAssignedValue();
+        Node value;
+        if (init != null) {
+          value = init.getAssignedValue();
+        } else {
+          // Create a new node for variable that is never initialized.
+          value = NodeUtil.newUndefinedNode();
+        }
         Preconditions.checkNotNull(value);
         inlineWellDefinedVariable(v, value, referenceInfo.references);
         staleVars.add(v);
@@ -306,8 +312,10 @@ class InlineVariables implements CompilerPass {
       // 2) A reference to the variable has been inlined. We're downstream
       //    of the mechanism that creates variable references, so we don't
       //    have a good way to update the reference. Just punt on it.
-      return compiler.getCodingConvention().isExported(var.name) ||
-          staleVars.contains(var);
+      // 3) Don't inline the special RENAME_PROPERTY_FUNCTION_NAME
+      return compiler.getCodingConvention().isExported(var.name)
+          || RenameProperties.RENAME_PROPERTY_FUNCTION_NAME.equals(var.name)
+          || staleVars.contains(var);
     }
 
     /**
@@ -608,14 +616,32 @@ class InlineVariables implements CompilerPass {
         return false;
       }
 
-      Reference refInit = refInfo.getInitializingReference();
-      if (!isValidInitialization(refInit)) {
-        return false;
-      }
+      boolean isNeverAssigned = refInfo.isNeverAssigned();
+      // For values that are never assigned, only the references need to be 
+      // checked.
+      if (!isNeverAssigned) {
+        Reference refInit = refInfo.getInitializingReference();
+        if (!isValidInitialization(refInit)) {
+          return false;
+        }
 
-      if (refDecl != refInit) {
-        Preconditions.checkState(refInit == refSet.get(1));
-        startingReadRef = 2;
+        if (refDecl != refInit) {
+          Preconditions.checkState(refInit == refSet.get(1));
+          startingReadRef = 2;
+        }
+
+        if (!refInfo.isWellDefined()) {
+          return false;
+        }
+        
+        Node value = refInit.getAssignedValue();
+        Preconditions.checkNotNull(value);
+        if (!(NodeUtil.isImmutableValue(value) &&
+            (value.getType() != Token.STRING ||
+             isStringWorthInlining(v, refInfo.references)))) {
+          return false;
+        }
+
       }
 
       for (int i = startingReadRef; i < refSet.size(); i++) {
@@ -625,15 +651,7 @@ class InlineVariables implements CompilerPass {
         }
       }
 
-      if (!refInfo.isWellDefined()) {
-        return false;
-      }
-
-      Node value = refInit.getAssignedValue();
-      Preconditions.checkNotNull(value);
-      return NodeUtil.isImmutableValue(value) &&
-          (value.getType() != Token.STRING ||
-           isStringWorthInlining(v, refInfo.references));
+      return true;
     }
   }
 }

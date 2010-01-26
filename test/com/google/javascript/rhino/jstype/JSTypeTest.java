@@ -42,21 +42,24 @@ import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType.TypePair;
+import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.EmptyScope;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// TODO(nicksantos): Split some of this up into per-class unit tests.
 public class JSTypeTest extends BaseJSTypeTestCase {
   private FunctionType dateMethod;
   private FunctionType functionType;
@@ -76,20 +79,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private EnumType enumType;
   private EnumElementType elementsType;
 
-  private static final StaticScope<JSType> EMPTY_SCOPE =
-      new StaticScope<JSType>() {
-    @Override
-    public StaticScope<JSType> getParentScope() { return null; }
-
-    @Override
-    public StaticSlot<JSType> getSlot(String name) { return null; }
-
-    @Override
-    public StaticSlot<JSType> getOwnSlot(String name) { return null; }
-
-    @Override
-    public JSType getTypeOfThis() { return null; }
-  };
+  private static final StaticScope<JSType> EMPTY_SCOPE = new EmptyScope();
 
   /**
    * A non exhaustive list of representative types used to test simple
@@ -163,6 +153,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
           public JSType getTypeOfThis() { return null; }
         });
+    assertNotNull(namedGoogBar.getImplicitPrototype());
 
     types = ImmutableList.of(
         NO_OBJECT_TYPE,
@@ -375,6 +366,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTrue(U2U_CONSTRUCTOR_TYPE.isNative());
     assertTrue(U2U_CONSTRUCTOR_TYPE.isNativeObjectType());
+
+    Asserts.assertResolvesToSame(U2U_CONSTRUCTOR_TYPE);
   }
 
   /**
@@ -509,6 +502,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // getPropertyType
     assertEquals(NO_TYPE,
         NO_OBJECT_TYPE.getPropertyType("anyProperty"));
+
+    Asserts.assertResolvesToSame(NO_OBJECT_TYPE);
   }
 
   /**
@@ -635,6 +630,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // getPropertyType
     assertEquals(NO_TYPE,
         NO_TYPE.getPropertyType("anyProperty"));
+
+    Asserts.assertResolvesToSame(NO_TYPE);
   }
 
   /**
@@ -780,6 +777,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("Array", ARRAY_TYPE.toString());
 
     assertTrue(ARRAY_TYPE.isNativeObjectType());
+
+    Asserts.assertResolvesToSame(ARRAY_TYPE);
   }
 
   /**
@@ -882,6 +881,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("?", UNKNOWN_TYPE.toString());
+
+    Asserts.assertResolvesToSame(UNKNOWN_TYPE);
   }
 
   /**
@@ -996,6 +997,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("*", ALL_TYPE.toString());
+
+    Asserts.assertResolvesToSame(ALL_TYPE);
   }
 
   /**
@@ -1146,6 +1149,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTrue(OBJECT_TYPE.isNativeObjectType());
     assertTrue(OBJECT_TYPE.getImplicitPrototype().isNativeObjectType());
+
+    Asserts.assertResolvesToSame(OBJECT_TYPE);
   }
 
   /**
@@ -1281,6 +1286,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("Number", NUMBER_OBJECT_TYPE.toString());
 
     assertTrue(NUMBER_OBJECT_TYPE.isNativeObjectType());
+
+    Asserts.assertResolvesToSame(NUMBER_OBJECT_TYPE);
   }
 
   /**
@@ -1399,6 +1406,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("number", NUMBER_TYPE.toString());
+
+    Asserts.assertResolvesToSame(NUMBER_TYPE);
   }
 
   /**
@@ -1541,6 +1550,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("null", NULL_TYPE.toString());
+
+    Asserts.assertResolvesToSame(NULL_TYPE);
   }
 
   /**
@@ -1744,6 +1755,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("Date", DATE_TYPE.toString());
 
     assertTrue(DATE_TYPE.isNativeObjectType());
+
+    Asserts.assertResolvesToSame(DATE_TYPE);
   }
 
   /**
@@ -1885,6 +1898,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("RegExp", REGEXP_TYPE.toString());
 
     assertTrue(REGEXP_TYPE.isNativeObjectType());
+
+    Asserts.assertResolvesToSame(REGEXP_TYPE);
   }
 
   /**
@@ -2040,6 +2055,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(createNullableType(STRING_OBJECT_TYPE).isNullable());
 
     assertTrue(STRING_OBJECT_TYPE.isNativeObjectType());
+
+    Asserts.assertResolvesToSame(STRING_OBJECT_TYPE);
   }
 
   /**
@@ -2147,6 +2164,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // findPropertyType
     assertEquals(NUMBER_TYPE, STRING_TYPE.findPropertyType("length"));
     assertEquals(null, STRING_TYPE.findPropertyType("unknownProperty"));
+
+    Asserts.assertResolvesToSame(STRING_TYPE);
   }
 
   private void assertPropertyTypeDeclared(ObjectType ownerType, String prop) {
@@ -2240,6 +2259,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(recordType.matchesObjectContext());
     assertFalse(recordType.matchesStringContext());
     assertFalse(recordType.matchesUint32Context());
+
+    Asserts.assertResolvesToSame(recordType);
   }
 
   /**
@@ -2321,6 +2342,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals(FUNCTION_FUNCTION_TYPE, functionInst.getConstructor());
     assertEquals(FUNCTION_PROTOTYPE, functionInst.getImplicitPrototype());
     assertEquals(functionInst, FUNCTION_FUNCTION_TYPE.getInstanceType());
+
+    Asserts.assertResolvesToSame(functionInst);
   }
 
   /**
@@ -2395,6 +2418,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // hasProperty
     assertTrue(functionType.hasProperty("prototype"));
     assertPropertyTypeInferred(functionType, "prototype");
+
+    Asserts.assertResolvesToSame(functionType);
   }
 
   /**
@@ -2912,6 +2937,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(VOID_TYPE.matchesObjectContext());
     assertTrue(VOID_TYPE.matchesStringContext());
     assertFalse(VOID_TYPE.matchesUint32Context());
+
+    Asserts.assertResolvesToSame(VOID_TYPE);
   }
 
   /**
@@ -3011,6 +3038,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("boolean", BOOLEAN_TYPE.toString());
+
+    Asserts.assertResolvesToSame(BOOLEAN_TYPE);
   }
 
   /**
@@ -3115,6 +3144,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("Boolean", BOOLEAN_OBJECT_TYPE.toString());
 
     assertTrue(BOOLEAN_OBJECT_TYPE.isNativeObjectType());
+
+    Asserts.assertResolvesToSame(BOOLEAN_OBJECT_TYPE);
   }
 
   /**
@@ -3218,6 +3249,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("enum{Enum}", enumType.toString());
+
+    Asserts.assertResolvesToSame(enumType);
   }
 
   /**
@@ -3321,6 +3354,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("Enum.<number>", elementsType.toString());
+
+    Asserts.assertResolvesToSame(elementsType);
   }
 
   public void testStringEnumType() throws Exception {
@@ -3332,6 +3367,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals(false, stringEnum.hasProperty("length"));
     assertEquals(STRING_OBJECT_TYPE, stringEnum.autoboxesTo());
     assertNull(stringEnum.getConstructor());
+
+    Asserts.assertResolvesToSame(stringEnum);
   }
 
   public void testStringObjectEnumType() throws Exception {
@@ -3387,6 +3424,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // findPropertyType
     assertEquals(NUMBER_TYPE, nullOrString.findPropertyType("length"));
     assertEquals(null, nullOrString.findPropertyType("lengthx"));
+
+    Asserts.assertResolvesToSame(nullOrString);
   }
 
   /**
@@ -3434,6 +3473,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("{...}", objectType.toString());
+
+    Asserts.assertResolvesToSame(objectType);
   }
 
   /**
@@ -3455,6 +3496,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     namedGoogBar.canAssignTo(googBar);
     assertTrue(googBar.equals(googBar));
     assertFalse(googBar.equals(googSubBar));
+
+    Asserts.assertResolvesToSame(googBar);
+    Asserts.assertResolvesToSame(googSubBar);
   }
 
   /**
@@ -3575,6 +3619,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertFalse(namedGoogBar.isNativeObjectType());
     assertFalse(namedGoogBar.getImplicitPrototype().isNativeObjectType());
+
+    JSType resolvedNamedGoogBar = Asserts.assertValidResolve(namedGoogBar);
+    assertNotSame(resolvedNamedGoogBar, namedGoogBar);
+    assertSame(resolvedNamedGoogBar, googBar.getInstanceType());
   }
 
   /**
@@ -4446,6 +4494,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals(a, realA);
     assertEquals(b.hashCode(), realB.hashCode());
     assertEquals(b, realB);
+
+    JSType resolvedA = Asserts.assertValidResolve(a);
+    assertNotSame(resolvedA, a);
+    assertSame(resolvedA, realA);
+
+    JSType resolvedB = Asserts.assertValidResolve(b);
+    assertNotSame(resolvedB, b);
+    assertSame(resolvedB, realB);
   }
 
   /**

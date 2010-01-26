@@ -253,6 +253,14 @@ Represents JavaScript value types.<p>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#clearResolved()">clearResolved</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Clears the resolved field.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#dereference()">dereference</A></B>()</CODE>
 
@@ -603,6 +611,14 @@ Represents JavaScript value types.<p>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isResolved()">isResolved</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether the type has been resolved.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#isString()">isString</A></B>()</CODE>
 
 <BR>
@@ -708,6 +724,15 @@ Represents JavaScript value types.<p>
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This predicate is used to test whether a given type can appear in a
  'Uint32' context.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#resolve(com.google.javascript.rhino.ErrorReporter, com.google.javascript.rhino.jstype.StaticScope)">resolve</A></B>(<A HREF="../../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A>&nbsp;t,
+        <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Resolve this type in the given scope.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1995,6 +2020,65 @@ public abstract &lt;T&gt; T <B>visit</B>(<A HREF="../../../../../com/google/java
 <DD><DL>
 
 <DT><B>Returns:</B><DD>the value returned by the visitor<DT><B>See Also:</B><DD><A HREF="../../../../../com/google/javascript/rhino/jstype/Visitor.html" title="interface in com.google.javascript.rhino.jstype"><CODE>Visitor</CODE></A></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="resolve(com.google.javascript.rhino.ErrorReporter, com.google.javascript.rhino.jstype.StaticScope)"><!-- --></A><H3>
+resolve</H3>
+<PRE>
+public final <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>resolve</B>(<A HREF="../../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A>&nbsp;t,
+                            <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope)</PRE>
+<DL>
+<DD>Resolve this type in the given scope.
+
+ The returned value must be equal to <code>this</code>, as defined by
+ <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang"><CODE>Object.equals(java.lang.Object)</CODE></A>. It may or may not be the same object. This method
+ may modify the internal state of <code>this</code>, as long as it does
+ so in a way that preserves Object equality.
+
+ For efficiency, we should only resolve a type once per compilation job.
+ For incremental compilations, one compilation job may need the
+ artifacts from a previous generation, so we will eventually need
+ a generational flag instead of a boolean one.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isResolved()"><!-- --></A><H3>
+isResolved</H3>
+<PRE>
+public final boolean <B>isResolved</B>()</PRE>
+<DL>
+<DD>Whether the type has been resolved.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="clearResolved()"><!-- --></A><H3>
+clearResolved</H3>
+<PRE>
+public final void <B>clearResolved</B>()</PRE>
+<DL>
+<DD>Clears the resolved field.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

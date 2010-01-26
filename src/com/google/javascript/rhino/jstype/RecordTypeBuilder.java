@@ -39,6 +39,7 @@
  
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
@@ -49,8 +50,10 @@ import java.util.Map;
 *
  */
 public class RecordTypeBuilder {
+  private boolean isEmpty = true;
   private JSTypeRegistry registry;
-  private final Map<String, JSType> properties = Maps.newHashMap();
+  private final ImmutableMap.Builder<String, JSType> properties =
+      ImmutableMap.builder();
 
   public RecordTypeBuilder(JSTypeRegistry registry) {
     this.registry = registry;
@@ -62,6 +65,7 @@ public class RecordTypeBuilder {
    * @return The builder itself for chaining purposes.
    */
   public RecordTypeBuilder addProperty(String name, JSType type) {
+    isEmpty = false;
     properties.put(name, type);
     return this;
   }
@@ -72,10 +76,10 @@ public class RecordTypeBuilder {
    */
   public JSType build() {
      // If we have an empty record, simply return the object type.
-    if (properties.size() == 0) {
+    if (isEmpty) {
        return registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
     }
 
-    return registry.createRecordType(properties);
+    return registry.createRecordType(properties.build());
   }
 }
