@@ -61,6 +61,21 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
 
     int pt = parent.getType();
     if (pt == Token.COMMA) {
+      Node gramps = parent.getParent();
+      if (gramps.getType() == Token.CALL &&
+          parent == gramps.getFirstChild()) {
+        // Semantically, a direct call to eval is different from an indirect
+        // call to an eval. See Ecma-262 S15.1.2.1. So it's ok for the first
+        // expression to a comma to be a no-op if it's used to indirect
+        // an eval.
+        if (n == parent.getFirstChild() &&
+            parent.getChildCount() == 2 &&
+            n.getNext().getType() == Token.NAME &&
+            "eval".equals(n.getNext().getString())) {
+          return;
+        }
+      }
+
       if (n == parent.getLastChild()) {
         for (Node an : parent.getAncestors()) {
           int ancestorType = an.getType();
