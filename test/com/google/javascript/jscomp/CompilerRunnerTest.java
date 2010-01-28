@@ -34,6 +34,9 @@ public class CompilerRunnerTest extends TestCase {
 
   private Compiler lastCompiler = null;
 
+  // If set to true, uses comparison by string instead of by AST.
+  private boolean useStringComparison = false;
+
   /** Externs for the test */
   private final JSSourceFile[] externs = new JSSourceFile[] {
     JSSourceFile.fromCode("externs",
@@ -49,6 +52,7 @@ public class CompilerRunnerTest extends TestCase {
     Flags.disableStateCheckingForTest();
     Flags.resetAllFlagsForTest();
     lastCompiler = null;
+    useStringComparison = false;
   }
 
   @Override
@@ -156,6 +160,14 @@ public class CompilerRunnerTest extends TestCase {
     test("function foo({}) {}", RhinoErrorReporter.PARSE_ERROR);
   }
 
+  public void testIssue81() {
+    CompilerRunner.FLAG_compilation_level.setForTest(
+        CompilationLevel.ADVANCED_OPTIMIZATIONS);
+    useStringComparison = true;
+    test("eval('1'); var x = eval; x('2');",
+         "eval(\"1\");(0,eval)(\"2\");");
+  }
+
   public void testDebugFlag1() {
     CompilerRunner.FLAG_compilation_level.setForTest(
         CompilationLevel.SIMPLE_OPTIMIZATIONS);
@@ -223,11 +235,15 @@ public class CompilerRunnerTest extends TestCase {
         0, compiler.getErrors().length + compiler.getWarnings().length);
 
     Node root = compiler.getRoot().getLastChild();
-    Node expectedRoot = parse(compiled);
-    String explanation = expectedRoot.checkTreeEquals(root);
-    assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-        "\nResult: " + compiler.toSource(root) +
-        "\n" + explanation, explanation);
+    if (useStringComparison) {
+      assertEquals(Joiner.on("").join(compiled), compiler.toSource());
+    } else {
+      Node expectedRoot = parse(compiled);
+      String explanation = expectedRoot.checkTreeEquals(root);
+      assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
+          "\nResult: " + compiler.toSource(root) +
+          "\n" + explanation, explanation);
+    }
   }
 
   /**

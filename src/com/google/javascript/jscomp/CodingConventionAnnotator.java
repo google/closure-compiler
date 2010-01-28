@@ -28,6 +28,9 @@ import com.google.javascript.rhino.Token;
  *
 *
  */
+// TODO(nicksantos): This pass should really be merged together with
+// NodeTypeNormalizer. They really do one task: they fill in information
+// on the AST that we expect to be there.
 class CodingConventionAnnotator extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
 
@@ -51,10 +54,17 @@ class CodingConventionAnnotator extends NodeTraversal.AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
+    int nType = n.getType();
+    switch (nType) {
       case Token.NAME:
       case Token.STRING:
-        if (convention.isConstant(n.getString())) {
+        String nString = n.getString();
+        if (nType == Token.NAME &&
+            n.getParent().getType() == Token.CALL &&
+            "eval".equals(nString)) {
+          n.putBooleanProp(Node.DIRECT_EVAL, true);
+        }
+        if (convention.isConstant(nString)) {
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
         break;

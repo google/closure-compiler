@@ -427,7 +427,17 @@ class CodeGenerator {
       }
 
       case Token.CALL:
-        addLeftExpr(first, NodeUtil.precedence(type), context);
+        // If the left hand side of the call is a direct reference to eval,
+        // then it must have a DIRECT_EVAL annotation. If it does not, then
+        // that means it was originally an indirect call to eval, and that
+        // indirectness must be preserved.
+        if (first.getType() == Token.NAME &&
+            "eval".equals(first.getString()) &&
+            !first.getBooleanProp(Node.DIRECT_EVAL)) {
+          add("(0,eval)");
+        } else {
+          addLeftExpr(first, NodeUtil.precedence(type), context);
+        }
         add("(");
         addList(first.getNext());
         add(")");

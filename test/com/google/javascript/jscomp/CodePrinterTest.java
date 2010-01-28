@@ -635,4 +635,16 @@ public class CodePrinterTest extends TestCase {
     
     assertPrint("0.000001", "1.0E-6");
   }
+
+  public void testDirectEval() {
+    assertPrint("eval('1');", "eval(\"1\")");
+  }
+
+  public void testIndirectEval() {
+    Node n = parse("eval('1');");
+    assertPrintNode("eval(\"1\")", n);
+    n.getFirstChild().getFirstChild().getFirstChild().putBooleanProp(
+        Node.DIRECT_EVAL, false);
+    assertPrintNode("(0,eval)(\"1\")", n);
+  }
 }

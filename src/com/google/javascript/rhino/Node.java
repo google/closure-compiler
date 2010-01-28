@@ -148,7 +148,9 @@ public class Node implements Cloneable, Serializable
                                     // should be resolved to the proper
                                     // overload if possible.
         DIRECTIVES         = 48,    // The ES5 directives on this node.
-        LAST_PROP          = 48;
+        DIRECT_EVAL        = 49,    // ES5 distinguishes between direct and
+                                    // indirect calls to eval.
+        LAST_PROP          = 49;
 
     // values of ISNUMBER_PROP to specify
     // which of the children are Number types
@@ -229,6 +231,7 @@ public class Node implements Cloneable, Serializable
             case IS_NAMESPACE:       return "is_namespace";
             case IS_DISPATCHER:      return "is_dispatcher";
             case DIRECTIVES:         return "directives";
+            case DIRECT_EVAL:        return "direct_eval";
             default:
               Kit.codeBug();
 
