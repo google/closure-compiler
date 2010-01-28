@@ -196,6 +196,15 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#isJavaDispatch()">isJavaDispatch</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built will have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isJavaDispatch()"><CODE>JSDocInfo.isJavaDispatch()</CODE></A> flag set to <code>true</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#isPopulated()">isPopulated</A></B>()</CODE>
 
 <BR>
@@ -392,6 +401,15 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
  <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isInterface()"><CODE>JSDocInfo.isInterface()</CODE></A> flag set to <code>true</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordJavaDispatch()">recordJavaDispatch</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isJavaDispatch()"><CODE>JSDocInfo.isJavaDispatch()</CODE></A> flag set to <code>true</code>.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1114,6 +1132,37 @@ public boolean <B>isConstructorRecorded</B>()</PRE>
 <DL>
 <DD>Whether the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built will have its
  <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isConstructor()"><CODE>JSDocInfo.isConstructor()</CODE></A> flag set to <code>true</code>.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="recordJavaDispatch()"><!-- --></A><H3>
+recordJavaDispatch</H3>
+<PRE>
+public boolean <B>recordJavaDispatch</B>()</PRE>
+<DL>
+<DD>Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isJavaDispatch()"><CODE>JSDocInfo.isJavaDispatch()</CODE></A> flag set to <code>true</code>.
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD><code>true</code> if the javadispatch was recorded and <code>false</code>
+     if it was already defined or it was incompatible with the existing
+     flags</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isJavaDispatch()"><!-- --></A><H3>
+isJavaDispatch</H3>
+<PRE>
+public boolean <B>isJavaDispatch</B>()</PRE>
+<DL>
+<DD>Whether the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built will have its
+ <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#isJavaDispatch()"><CODE>JSDocInfo.isJavaDispatch()</CODE></A> flag set to <code>true</code>.
 <P>
 <DD><DL>
 </DL>

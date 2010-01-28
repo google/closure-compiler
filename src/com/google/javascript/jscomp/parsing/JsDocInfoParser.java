@@ -88,6 +88,7 @@ public final class JsDocInfoParser {
       put("implicitCast", Annotation.IMPLICIT_CAST).
       put("inheritDoc", Annotation.INHERIT_DOC).
       put("interface", Annotation.INTERFACE).
+      put("javadispatch", Annotation.JAVA_DISPATCH).
       put("license", Annotation.LICENSE).
       put("noalias", Annotation.NO_ALIAS).
       put("noshadow", Annotation.NO_SHADOW).
@@ -160,6 +161,7 @@ public final class JsDocInfoParser {
     IMPLICIT_CAST,
     INHERIT_DOC,
     INTERFACE,
+    JAVA_DISPATCH,
     LICENSE, // same as preserve
     NO_ALIAS,
     NO_SHADOW,
@@ -421,6 +423,14 @@ public final class JsDocInfoParser {
                 case EXTERNS:
                   if (!jsdocBuilder.recordExterns()) {
                     parser.addWarning("msg.jsdoc.externs",
+                        stream.getLineno(), stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
+                case JAVA_DISPATCH:
+                  if (!jsdocBuilder.recordJavaDispatch()) {
+                    parser.addWarning("msg.jsdoc.javadispatch",
                         stream.getLineno(), stream.getCharno());
                   }
                   token = eatTokensUntilEOL();

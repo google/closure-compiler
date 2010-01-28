@@ -359,6 +359,7 @@ class TypeInference
       case Token.SHEQ:
       case Token.SHNE:
       case Token.INSTANCEOF:
+      case Token.IN:
       case Token.TRUE:
       case Token.FALSE:
         scope = traverseChildren(n, scope);

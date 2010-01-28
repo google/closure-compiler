@@ -216,6 +216,7 @@ public final class JSDocInfo implements Serializable {
   private static final int MASK_IMPLICITCAST  = 0x00002000; // @implicitCast
   private static final int MASK_NOSIDEEFFECTS = 0x00004000; // @nosideeffects
   private static final int MASK_EXTERNS       = 0x00008000; // @externs
+  private static final int MASK_JAVADISPATCH  = 0x00010000; // @javadispath
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
@@ -295,6 +296,10 @@ public final class JSDocInfo implements Serializable {
 
   void setExterns(boolean value) {
     setFlag(value, MASK_EXTERNS);
+  }
+
+  void setJavaDispatch(boolean value) {
+    setFlag(value, MASK_JAVADISPATCH);
   }
 
   private void setFlag(boolean value, int mask) {
@@ -424,6 +429,14 @@ public final class JSDocInfo implements Serializable {
    */
   public boolean isExterns() {
     return getFlag(MASK_EXTERNS);
+  }
+
+  /**
+   * Returns whether the {@code @javadispath} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean isJavaDispatch() {
+    return getFlag(MASK_JAVADISPATCH);
   }
 
   private boolean getFlag(int mask) {

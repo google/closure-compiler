@@ -585,6 +585,32 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isJavaDispatch()} flag set to {@code true}.
+   *
+   * @return {@code true} if the javadispatch was recorded and {@code false}
+   *     if it was already defined or it was incompatible with the existing
+   *     flags
+   */
+  public boolean recordJavaDispatch() {
+    if (!currentInfo.isJavaDispatch()) {
+      currentInfo.setJavaDispatch(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Whether the {@link JSDocInfo} being built will have its
+   * {@link JSDocInfo#isJavaDispatch()} flag set to {@code true}.
+   */
+  public boolean isJavaDispatch() {
+    return currentInfo.isJavaDispatch();
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#shouldPreserveTry()} flag set to {@code true}.
    */
   public boolean recordPreserveTry() {

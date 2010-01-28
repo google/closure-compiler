@@ -1962,6 +1962,34 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Object");
   }
 
+  public void testIn6() throws Exception {
+    testTypes(
+        "/** @param {number} x */" +
+        "function g(x) {}" +
+        "g(1 in {});",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testIn7() throws Exception {
+    // Make sure we do inference in the 'in' expression.
+    testTypes(
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @return {number}\n" +
+        " */\n" +
+        "function g(x) { return 5; }" +
+        "function f() {" +
+        "  var x = {};" +
+        "  x.foo = '3';" +
+        "  return g(x.foo) in {};" +
+        "}",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
   // TODO(nicksantos): change this to something that makes sense.
 //   public void testComparison1() throws Exception {
 //     testTypes("/**@type null */var a;" +

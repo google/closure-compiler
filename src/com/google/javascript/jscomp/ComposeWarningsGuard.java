@@ -34,17 +34,17 @@ import java.util.*;
  */
 public class ComposeWarningsGuard extends WarningsGuard {
 
-  private final PriorityQueue<WarningsGuard> guards;
+  private final List<WarningsGuard> guards;
+  private static final Comparator<WarningsGuard> guardComparator =
+      new Comparator<WarningsGuard>() {
+    @Override
+    public int compare(WarningsGuard a, WarningsGuard b) {
+      return a.getPriority() - b.getPriority();
+    }
+  };
 
   public ComposeWarningsGuard(List<WarningsGuard> guards) {
-    this.guards = new PriorityQueue<WarningsGuard>(
-        5,
-        new Comparator<WarningsGuard>() {
-      @Override
-      public int compare(WarningsGuard a, WarningsGuard b) {
-        return a.getPriority() - b.getPriority();
-      }
-    });
+    this.guards = Lists.newArrayList();
     addGuards(guards);
   }
 
@@ -56,7 +56,11 @@ public class ComposeWarningsGuard extends WarningsGuard {
     if (guard instanceof ComposeWarningsGuard) {
       addGuards(((ComposeWarningsGuard) guard).guards);
     } else {
-      this.guards.add(guard);
+      int index = Collections.binarySearch(this.guards, guard, guardComparator);
+      if (index < 0) {
+        index = -index - 1;
+      }
+      this.guards.add(index, guard);
     }
   }
 
@@ -110,5 +114,9 @@ public class ComposeWarningsGuard extends WarningsGuard {
     }
 
     return false;
+  }
+  
+  List<WarningsGuard> getGuards() {
+    return Collections.unmodifiableList(guards);
   }
 }
