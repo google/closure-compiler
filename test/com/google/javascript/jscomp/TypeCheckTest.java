@@ -6102,6 +6102,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Typedef for goog.Bar does not have any type information");
   }
 
+  public void testMalformedOldTypeDef2() throws Exception {
+    testTypes(
+        "var goog = {}; goog.typedef = true;" +
+        "/** @typedef {boolean} */ goog.Bar = goog.typedef",
+        "Typedef for goog.Bar does not have any type information");
+  }
+
   public void testDuplicateOldTypeDef() throws Exception {
     testTypes(
         "var goog = {}; goog.typedef = true;" +

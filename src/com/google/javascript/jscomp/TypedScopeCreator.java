@@ -963,8 +963,11 @@ final class TypedScopeCreator implements ScopeCreator {
         typeRegistry.forwardDeclareType(typedef);
 
         JSDocInfo info = candidate.getJSDocInfo();
-        JSType realType = info == null ? null :
-            info.getType().evaluate(scope);
+        JSType realType = null;
+        if (info != null && info.getType() != null) {
+          realType = info.getType().evaluate(scope);
+        }
+
         if (realType == null) {
           compiler.report(
               JSError.make(

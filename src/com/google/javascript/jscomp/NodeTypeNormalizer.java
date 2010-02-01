@@ -77,6 +77,19 @@ class NodeTypeNormalizer implements CompilerPass {
       }
     }
 
+    // TODO(johnlenz): Determine if it is possible to simply use the javadoc
+    // everywhere rather than use IS_DISPATCHER.
+    /*
+     * Translate dispatcher info into the property expected node.
+     */
+    if (n.getJSDocInfo() != null && n.getJSDocInfo().isJavaDispatch()) {
+      if (n.getType() == Token.ASSIGN) {
+        Node fnNode = n.getLastChild();
+        Preconditions.checkState(fnNode.getType() == Token.FUNCTION);
+        fnNode.putBooleanProp(Node.IS_DISPATCHER, true);
+      }
+    }
+
     for (Node child = n.getFirstChild();
          child != null; child = child.getNext()) {
       normalizeJsDocAnnotations(child);

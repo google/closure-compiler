@@ -86,8 +86,8 @@ class TypedCodeGenerator extends CodeGenerator {
     //   LP
     //     NAME param1
     //     NAME param2
-    Node paramNode = funType.getSource().getFirstChild().getNext()
-        .getFirstChild();
+    Node fnNode = funType.getSource();
+    Node paramNode = NodeUtil.getFnParameters(fnNode).getFirstChild();
 
     // Param types
     for (Node n : funType.getParameters()) {
@@ -125,6 +125,11 @@ class TypedCodeGenerator extends CodeGenerator {
         sb.append(" * @interface\n");
       }
     }
+
+    if (fnNode.getBooleanProp(Node.IS_DISPATCHER)) {
+      sb.append(" * @javadispatch\n");
+    }
+
     sb.append(" */\n");
     return sb.toString();
   }

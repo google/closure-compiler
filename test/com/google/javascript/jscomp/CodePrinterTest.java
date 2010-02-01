@@ -178,7 +178,7 @@ public class CodePrinterTest extends TestCase {
     assertPrint("1 || ({})", "1||{}");
     assertPrint("({}) ? 1 : 2", "({})?1:2");
     assertPrint("0 ? ({}) : 2", "0?{}:2");
-    assertPrint("0 ? 1 : ({})", "0?1:{}");    
+    assertPrint("0 ? 1 : ({})", "0?1:{}");
     assertPrint("typeof ({})", "typeof{}");
     assertPrint("f({})", "f({})");
 
@@ -219,7 +219,7 @@ public class CodePrinterTest extends TestCase {
     assertPrint("+ - + + - + 3", "+-+ +-+3"); // chained unary plus/minus
     assertPrint("+(--x)", "+--x");
     assertPrint("-(++x)", "-++x");
-    
+
     // needs a space to prevent an ambiguous parse
     assertPrint("-(--x)", "- --x");
     assertPrint("!(~~5)", "!~~5");
@@ -461,6 +461,48 @@ public class CodePrinterTest extends TestCase {
         + "a.Bar = function() {\n}");
   }
 
+  public void testTypeAnnotationsDispatcher1() {
+    assertTypeAnnotations(
+        "var a = {};\n" +
+        "/** \n" +
+        " * @constructor \n" +
+        " * @javadispatch \n" +
+        " */\n" +
+        "a.Foo = function(){}",
+        "var a = {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @javadispatch\n" +
+        " */\n" +
+        "a.Foo = function() {\n" +
+        "}");
+  }
+
+  public void testTypeAnnotationsDispatcher2() {
+    assertTypeAnnotations(
+        "var a = {};\n" +
+        "/** \n" +
+        " * @constructor \n" +
+        " */\n" +
+        "a.Foo = function(){}\n" +
+        "/**\n" +
+        " * @javadispatch\n" +
+        " */\n" +
+        "a.Foo.prototype.foo = function() {};",
+
+        "var a = {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " */\n" +
+        "a.Foo = function() {\n" +
+        "};\n" +
+        "/**\n" +
+        " * @javadispatch\n" +
+        " */\n" +
+        "a.Foo.prototype.foo = function() {\n" +
+        "}");
+  }
+
   private void assertPrettyPrint(String js, String expected) {
     assertEquals(expected,
         parsePrint(js, true, false,
@@ -616,7 +658,7 @@ public class CodePrinterTest extends TestCase {
     assertPrint("if(e1)function goo(){return true}",
         "if(e1){function goo(){return true}}");
   }
-  
+
   public void testExponents() {
     assertPrint("1", "1");
     assertPrint("10", "10");
@@ -632,7 +674,7 @@ public class CodePrinterTest extends TestCase {
     assertPrint("1000000000000000000", "1E18");
     assertPrint("100000.0", "1E5");
     assertPrint("100000.1", "100000.1");
-    
+
     assertPrint("0.000001", "1.0E-6");
   }
 
