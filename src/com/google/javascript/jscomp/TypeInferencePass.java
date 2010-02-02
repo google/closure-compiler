@@ -17,9 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
-
 
 /**
  * A compiler pass to run the type inference analysis.
@@ -36,6 +38,12 @@ class TypeInferencePass implements CompilerPass {
   private final ReverseAbstractInterpreter reverseInterpreter;
   private Scope topScope;
   private ScopeCreator scopeCreator;
+
+  /**
+   * Local variables that are declared in an outer scope, but are assigned in
+   * an inner scope. We cannot do type inference on these vars.
+   */
+  private final Multimap<Scope, Var> escapedLocalVars = HashMultimap.create();
 
   TypeInferencePass(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
@@ -70,9 +78,12 @@ class TypeInferencePass implements CompilerPass {
 
   void inferTypes(NodeTraversal t, Node n, Scope scope) {
     TypeInference typeInference =
-        new TypeInference(compiler, computeCfg(n), reverseInterpreter, scope);
+        new TypeInference(
+            compiler, computeCfg(n), reverseInterpreter, scope,
+            escapedLocalVars.get(scope));
     try {
       typeInference.analyze();
+      escapedLocalVars.putAll(typeInference.getAssignedOuterLocalVars());
 
       // Resolve any new type names found during the inference.
       compiler.getTypeRegistry().resolveTypesInScope(scope);
@@ -86,10 +97,18 @@ class TypeInferencePass implements CompilerPass {
     public void enterScope(NodeTraversal t) {
       Scope scope = t.getScope();
       Node node = t.getCurrentNode();
-      inferTypes(t, node, scope);
+      if (scope.isGlobal()) {
+        inferTypes(t, node, scope);
+      }
     }
 
-    public void exitScope(NodeTraversal t) {}
+    public void exitScope(NodeTraversal t) {
+      Scope scope = t.getScope();
+      Node node = t.getCurrentNode();
+      if (scope.isLocal()) {
+        inferTypes(t, node, scope);
+      }
+    }
 
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       return true;

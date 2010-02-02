@@ -125,6 +125,13 @@ public class Scope implements StaticScope<JSType> {
     }
 
     /**
+     * Gets the scope where this variable is declared.
+     */
+    Scope getScope() {
+      return scope;
+    }
+
+    /**
      * Returns the index within the scope stack.
      * e.g. function Foo(a) { var b; function c(d) { } }
      * a = 0, b = 1, c = 2, d = 3

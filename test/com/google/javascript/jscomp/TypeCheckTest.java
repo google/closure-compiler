@@ -1492,6 +1492,76 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function (this:Date): ?");
   }
 
+  public void testInnerFunction1() throws Exception {
+    testTypes(
+        "function f() {" +
+        " /** @type {number} */ var x = 3;\n" +
+        " function g() { x = null; }" +
+        " return x;" +
+        "}",
+        "assignment\n" +
+        "found   : null\n" +
+        "required: number");
+  }
+
+  public void testInnerFunction2() throws Exception {
+    testTypes(
+        "/** @return {number} */\n" +
+        "function f() {" +
+        " var x = null;\n" +
+        " function g() { x = 3; }" +
+        " g();" +
+        " return x;" +
+        "}",
+        "inconsistent return type\n" +
+        "found   : (null|number)\n" +
+        "required: number");
+  }
+
+  public void testInnerFunction3() throws Exception {
+    testTypes(
+        "var x = null;" +
+        "/** @return {number} */\n" +
+        "function f() {" +
+        " x = 3;\n" +
+        " /** @return {number} */\n" +
+        " function g() { x = true; return x; }" +
+        " return x;" +
+        "}",
+        "inconsistent return type\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testInnerFunction4() throws Exception {
+    testTypes(
+        "var x = null;" +
+        "/** @return {number} */\n" +
+        "function f() {" +
+        " x = '3';\n" +
+        " /** @return {number} */\n" +
+        " function g() { x = 3; return x; }" +
+        " return x;" +
+        "}",
+        "inconsistent return type\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testInnerFunction5() throws Exception {
+    testTypes(
+        "/** @return {number} */\n" +
+        "function f() {" +
+        " var x = 3;\n" +
+        " /** @return {number} */" +
+        " function g() { var x = 3;x = true; return x; }" +
+        " return x;" +
+        "}",
+        "inconsistent return type\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
   public void testAbstractMethodHandling1() throws Exception {
     testTypes(
         "/** @type {Function} */ var abstractFn = function() {};" +

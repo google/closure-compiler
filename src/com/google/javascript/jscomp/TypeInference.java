@@ -29,7 +29,11 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -46,9 +50,10 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.UnionType;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.Set;
 
 /**
  * Type inference within a script node or a function body, using the data-flow
@@ -77,18 +82,49 @@ class TypeInference
   private final FlowScope functionScope;
   private final FlowScope bottomScope;
 
+  /**
+   * Local variables that do not belong to this scope, but are assigned
+   * in this scope.
+   */
+  private final Multimap<Scope, Var> assignedOuterLocalVars =
+      HashMultimap.create();
+
+  /**
+   * Vars that we should not map out type flow for.
+   */
+  private final Set<String> unflowableVarNames = Sets.newHashSet();
+
   TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
                 ReverseAbstractInterpreter reverseInterpreter,
                 Scope functionScope) {
+    this(compiler, cfg, reverseInterpreter, functionScope,
+         ImmutableSet.<Var>of());
+  }
+
+  /**
+   * @param unflowableVars Do not do infer flow on the types of these vars.
+   */
+  // TODO(nicksantos): Create a builder for this class.
+  TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
+                ReverseAbstractInterpreter reverseInterpreter,
+                Scope functionScope, Collection<Var> unflowableVars) {
     super(cfg, new LinkedFlowScope.FlowScopeJoinOp());
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
     this.reverseInterpreter = reverseInterpreter;
     this.syntacticScope = functionScope;
     this.functionScope = LinkedFlowScope.createEntryLattice(functionScope);
+
+    for (Var unflowableVar : unflowableVars) {
+      this.unflowableVarNames.add(unflowableVar.getName());
+    }
+
     Iterator<Var> varIt = functionScope.getVars();
     while (varIt.hasNext()) {
       Var var = varIt.next();
+      if (this.unflowableVarNames.contains(var.getName())) {
+        continue;
+      }
 
       // For each local variable declared with the VAR keyword, the entry
       // type is VOID.
@@ -113,6 +149,14 @@ class TypeInference
   @Override
   FlowScope createEntryLattice() {
     return functionScope;
+  }
+
+  /**
+   * @return Local variables assigned in this scope, but which are declared in
+   *     a scope outside of it. Hashed by the scope they're declared in.
+   */
+  Multimap<Scope, Var> getAssignedOuterLocalVars() {
+    return assignedOuterLocalVars;
   }
 
   @Override
@@ -447,6 +491,9 @@ class TypeInference
       case Token.NAME:
         String varName = left.getString();
         Var var = syntacticScope.getVar(varName);
+        if (var != null && var.isLocal() && var.getScope() != syntacticScope) {
+          assignedOuterLocalVars.put(var.getScope(), var);
+        }
 
         // When looking at VAR initializers for declared VARs, we trust
         // the declared type over the type it's being initialized to.
@@ -1123,6 +1170,9 @@ class TypeInference
   private void redeclare(FlowScope scope, String varName, JSType varType) {
     if (varType == null) {
       varType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+    if (unflowableVarNames.contains(varName)) {
+      return;
     }
     scope.inferSlotType(varName, varType);
   }
