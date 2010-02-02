@@ -297,6 +297,8 @@ public class DefaultPassConfig extends PassConfig {
     // TODO(nicksantos): The order of these passes makes no sense, and needs
     // to be re-arranged.
 
+    passes.add(createEmptyPass("beforeStandardOptimizations"));
+
     if (!options.idGenerators.isEmpty()) {
       passes.add(replaceIdGenerators);
     }
@@ -355,14 +357,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(chainCalls);
     }
 
-    // Method devirtualization benefits from property disambiguiation so
-    // it should run after that pass but before passes that do
-    // optimizations based on global names (like smart name removal and cross
-    // module code motion)
-    if (options.devirtualizePrototypeMethods) {
-      passes.add(devirtualizePrototypeMethods);
-    }
-
     // Constant checking must be done after property collapsing because
     // property collapsing can introduce new constants (e.g. enum values).
     if (options.inlineConstantVars) {
@@ -381,6 +375,15 @@ public class DefaultPassConfig extends PassConfig {
     if (options.smartNameRemoval || options.reportPath != null) {
       passes.addAll(getCodeRemovingPasses());
       passes.add(smartNamePass);
+    }
+
+    // Method devirtualization benefits from property disambiguiation so
+    // it should run after that pass but before passes that do
+    // optimizations based on global names (like cross module code motion
+    // and inline functions).  Smart Name Removal does better if run before
+    // this pass.
+    if (options.devirtualizePrototypeMethods) {
+      passes.add(devirtualizePrototypeMethods);
     }
 
     if (options.customPasses != null) {
