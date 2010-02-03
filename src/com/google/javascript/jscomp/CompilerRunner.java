@@ -29,9 +29,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * CompilerRunner encapsulates the logic required to run the Compiler.
- * This class is designed to be extended and used to create other Java classes
- * that behave the same as running the Compiler from the command line. Example:
+ * CompilerRunner translates flags into Java API calls on the Compiler.
+ *
+ * This class may be extended and used to create other Java classes
+ * that behave the same as running the Compiler from the command line. If you
+ * want to run the compiler in-process in Java, you should look at this class
+ * for hints on what API calls to make, but you should not use this class directly.
+ *
+ * Example:
  * <pre>
  * class MyCompilerRunner extends CompilerRunner {
  *   MyCompilerRunner(String[] args) { super(args); }
@@ -49,7 +54,7 @@ import java.util.zip.ZipInputStream;
  * </pre>
 *
  */
-public class CompilerRunner extends
+class CompilerRunner extends
     AbstractCompilerRunner<Compiler, CompilerOptions> {
 
   @FlagSpec(help = "Specifies the compilation level to use. Options: " +
@@ -102,11 +107,11 @@ public class CompilerRunner extends
   static final Flag<Boolean> FLAG_process_closure_primitives
       = Flag.value(true);
 
-  public CompilerRunner(String[] args) {
+  CompilerRunner(String[] args) {
     super(args);
   }
 
-  public CompilerRunner(String[] args, PrintStream out, PrintStream err) {
+  CompilerRunner(String[] args, PrintStream out, PrintStream err) {
     super(args, out, err);
   }
 

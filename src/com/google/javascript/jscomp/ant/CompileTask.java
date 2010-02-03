@@ -21,7 +21,6 @@ import com.google.common.io.LimitInputStream;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerRunner;
 import com.google.javascript.jscomp.JSSourceFile;
 import com.google.javascript.jscomp.MessageFormatter;
 import com.google.javascript.jscomp.Result;
@@ -229,7 +228,7 @@ public final class CompileTask
    */
   private List<JSSourceFile> getDefaultExterns() {
     try {
-      InputStream input = CompilerRunner.class.getResourceAsStream(
+      InputStream input = Compiler.class.getResourceAsStream(
           "/externs.zip");
       ZipInputStream zip = new ZipInputStream(input);
       List<JSSourceFile> externs = Lists.newLinkedList();

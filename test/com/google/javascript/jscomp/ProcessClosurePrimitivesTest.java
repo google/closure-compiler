@@ -41,6 +41,10 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private String additionalEndCode;
   private boolean addAdditionalNamespace;
 
+  public ProcessClosurePrimitivesTest() {
+    enableLineNumberCheck(true);
+  }
+
   @Override protected void setUp() {
     additionalCode = null;
     additionalEndCode = null;

@@ -62,6 +62,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether the Normalize pass runs before pass being tested. */
   private boolean normalizeEnabled = false;
 
+  /** Whether to check that all line number information is preserved. */
+  private boolean checkLineNumbers = false;
+
   /**
    * An expected symbol table error. Only useful for testing the
    * symbol table error-handling.
@@ -174,6 +177,13 @@ public abstract class CompilerTestCase extends TestCase  {
   public void enableTypeCheck(CheckLevel level) {
     typeCheckEnabled  = true;
     typeCheckLevel = level;
+  }
+
+  /**
+   * Check to make sure that line numbers were preserved.
+   */
+  public void enableLineNumberCheck(boolean newVal) {
+    checkLineNumbers = newVal;
   }
 
   /**
@@ -658,6 +668,9 @@ public abstract class CompilerTestCase extends TestCase  {
         recentChange.reset();
 
         getProcessor(compiler).process(externsRoot, mainRoot);
+        if (checkLineNumbers) {
+          (new LineNumberCheck(compiler)).process(externsRoot, mainRoot);
+        }
 
         hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         aggregateWarningCount += errorManagers[i].getWarningCount();

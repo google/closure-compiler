@@ -1801,6 +1801,18 @@ public class Node implements Cloneable, Serializable
         }
     }
 
+    /**
+     * Copies source file and name information from the other node to the
+     * entire tree rooted at this node.
+     */
+    public void copyInformationFromForTree(Node other) {
+      copyInformationFrom(other);
+      for (Node child = getFirstChild();
+           child != null; child = child.getNext()) {
+        child.copyInformationFromForTree(other);
+      }
+    }
+
     //==========================================================================
     // Custom annotations
 

@@ -611,7 +611,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       NodeTraversal t, Node node, Node parent, String ns) {
     Node newNode;
     if (ns.indexOf('.') == -1) {
-      newNode = makeVarDeclNode(ns);
+      newNode = makeVarDeclNode(ns, node);
       parent.replaceChild(node, newNode);
     } else {
       newNode = makeAssignmentExprNode(ns, node);
@@ -641,7 +641,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         // been declared implicitly and is not removable.
         providedNodes.put(prefixNs, null);
         Node newNode = (pos == -1
-                        ? makeVarDeclNode(prefixNs)
+                        ? makeVarDeclNode(prefixNs, node)
                         : makeAssignmentExprNode(prefixNs, node));
         parent.addChildBefore(newNode, nodeToAddBefore);
         nodeToAddBefore = newNode;
@@ -654,10 +654,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * (e.g. <code>var foo = {};</code>).
    *
    * @param namespace A simple namespace (must be a valid js identifier)
+   * @param sourceNode The node to get source information from.
    */
-  private Node makeVarDeclNode(String namespace) {
+  private Node makeVarDeclNode(String namespace, Node sourceNode) {
     Node name = Node.newString(Token.NAME, namespace);
     name.addChildToFront(new Node(Token.OBJECTLIT));
+
     Node decl = new Node(Token.VAR, name);
     decl.putBooleanProp(Node.IS_NAMESPACE, true);
 
@@ -667,6 +669,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     Preconditions.checkState(isNamespacePlaceholder(decl));
+    decl.copyInformationFromForTree(sourceNode);
     return decl;
   }
 
@@ -684,6 +687,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             new Node(Token.OBJECTLIT)));
     decl.putBooleanProp(Node.IS_NAMESPACE, true);
     Preconditions.checkState(isNamespacePlaceholder(decl));
+    decl.copyInformationFromForTree(node);
     return decl;
   }
 
@@ -753,6 +757,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             assignNode.removeChild(valueNode);
             nameNode.addChildToFront(valueNode);
             Node varNode = new Node(Token.VAR, nameNode);
+            varNode.copyInformationFrom(replacementCandidate);
             replacementCandidateParent.replaceChild(replacementCandidate,
                                                     varNode);
             nameNode.setJSDocInfo(assignNode.getJSDocInfo());

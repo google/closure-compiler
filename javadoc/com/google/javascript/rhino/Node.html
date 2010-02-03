@@ -939,6 +939,15 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#copyInformationFromForTree(com.google.javascript.rhino.Node)">copyInformationFromForTree</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Copies source file and name information from the other node to the
+ entire tree rooted at this node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#detachChildren()">detachChildren</A></B>()</CODE>
 
 <BR>
@@ -3593,6 +3602,23 @@ public void <B>copyInformationFrom</B>(<A HREF="../../../../com/google/javascrip
 <DD>Copies source file and name information from the other
  node given to the current node. Used for maintaining
  debug information across node append and remove operations.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="copyInformationFromForTree(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+copyInformationFromForTree</H3>
+<PRE>
+public void <B>copyInformationFromForTree</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD>Copies source file and name information from the other node to the
+ entire tree rooted at this node.
 <P>
 <DD><DL>
 </DL>

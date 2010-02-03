@@ -1548,7 +1548,7 @@ public final class NodeUtil {
    */
   static void setDebugInformation(Node node, Node basisNode,
                                   String originalName) {
-    node.copyInformationFrom(basisNode);
+    node.copyInformationFromForTree(basisNode);
     node.putProp(Node.ORIGINALNAME_PROP, originalName);
   }
 
