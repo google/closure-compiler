@@ -142,7 +142,7 @@ function prompt(x, opt_value) {}
 /**
  * @param {Function|string} callback
  * @param {number} delay
- * @param {*} var_args
+ * @param {...*} var_args
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setInterval
  */
@@ -151,7 +151,7 @@ function setInterval(callback, delay, var_args) {}
 /**
  * @param {Function|string} callback
  * @param {number} delay
- * @param {*} var_args
+ * @param {...*} var_args
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setTimeout
  */

@@ -356,7 +356,7 @@ abstract class AbstractCompilerRunner<A extends Compiler,
   /**
    * An exception thrown when command-line flags are used incorrectly.
    */
-  static class FlagUsageException extends Exception {
+  protected static class FlagUsageException extends Exception {
     private static final long serialVersionUID = 1L;
 
     FlagUsageException(String message) {
