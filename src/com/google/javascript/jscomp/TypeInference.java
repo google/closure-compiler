@@ -627,6 +627,9 @@ class TypeInference
       StaticSlot<JSType> var = scope.getSlot(varName);
       if (var != null) {
         type = var.getType();
+        if (type == null) {
+          type = getNativeType(UNKNOWN_TYPE);
+        }
       }
     }
     n.setJSType(type);

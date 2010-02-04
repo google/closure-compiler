@@ -27,6 +27,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "goog.abstractMethod = function() {};" +
       "goog.isArray = function(x) {};" +
       "goog.isDef = function(x) {};" +
+      "goog.isFunction = function(x) {};" +
       "goog.isNull = function(x) {};" +
       "goog.isString = function(x) {};" +
       "goog.isObject = function(x) {};" +
