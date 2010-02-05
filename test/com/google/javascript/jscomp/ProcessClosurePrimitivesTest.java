@@ -509,7 +509,18 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   // Provide a name after the definition of the class providing the
   // parent namespace.
-  public void testProvideOrder3() {
+  public void testProvideOrder3a() {
+    test("goog.provide('a.b');" +
+         "a.b = function(x,y) {};" +
+         "goog.provide('a.b.c');" +
+         "a.b.c;",
+         "var a = {};" +
+         "a.b = function(x,y) {};" +
+         "a.b.c = {};" +
+         "a.b.c;");
+  }
+
+  public void testProvideOrder3b() {
     additionalEndCode = "";
     addAdditionalNamespace = false;
     // This tests a cleanly provided name, below a function namespace.
@@ -523,10 +534,7 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
          "a.b.c;");
   }
 
-  public void testProvideOrder4() {
-    additionalEndCode = "";
-    addAdditionalNamespace = false;
-    // This tests a cleanly provided name, below a function namespace.
+  public void testProvideOrder4a() {
     test("goog.provide('goog.a');" +
          "goog.provide('goog.a.b');" +
          "if (x) {" +
@@ -540,7 +548,26 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
          "  goog.a.b=1;" +
          "else" +
          "  goog.a.b=2;");
-  }  
+  }
+
+  public void testProvideOrder4b() {
+    additionalEndCode = "";
+    addAdditionalNamespace = false;
+    // This tests a cleanly provided name, below a namespace.
+    test("goog.provide('goog.a');" +
+         "goog.provide('goog.a.b');" +
+         "if (x) {" +
+         "  goog.a.b = 1;" +
+         "} else {" +
+         "  goog.a.b = 2;" +
+         "}",
+
+         "goog.a={};" +
+         "if(x)" +
+         "  goog.a.b=1;" +
+         "else" +
+         "  goog.a.b=2;");
+  }
 
   public void testInvalidProvide() {
     test("goog.provide('a.class');", null, INVALID_PROVIDE_ERROR);
@@ -630,5 +657,11 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
          "goog.inherits(goog.Foo, goog.BaseFoo);",
          "var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); }; " +
          "goog.inherits(goog.Foo, goog.BaseFoo);");
+  }
+
+  public void testImplicitAndExplicitProvide() {
+    test("var goog = {}; " +
+         "goog.provide('goog.foo.bar'); goog.provide('goog.foo');",
+         "var goog = {}; goog.foo = {}; goog.foo.bar = {};");
   }
 }

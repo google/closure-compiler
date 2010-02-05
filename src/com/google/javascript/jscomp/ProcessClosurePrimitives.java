@@ -17,15 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,8 +90,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   static final String GOOG = "goog";
 
   private final AbstractCompiler compiler;
-  private final List<UnrecognizedRequire> unrecognizedRequires;
-  private final Map<String, ProvidedNode> providedNodes;
+
+  // The goog.provides must be processed in a deterministic order.
+  private final Map<String, ProvidedName> providedNames =
+      Maps.newLinkedHashMap();
+
+  private final List<UnrecognizedRequire> unrecognizedRequires =
+      Lists.newArrayList();
   private final Set<String> exportedVariables = Sets.newHashSet();
   private final CheckLevel requiresLevel;
   private final boolean rewriteNewDateGoogNow;
@@ -102,13 +105,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                            CheckLevel requiresLevel,
                            boolean rewriteNewDateGoogNow) {
     this.compiler = compiler;
-    this.unrecognizedRequires = new ArrayList<UnrecognizedRequire>();
-    this.providedNodes = new HashMap<String, ProvidedNode>();
     this.requiresLevel = requiresLevel;
     this.rewriteNewDateGoogNow = rewriteNewDateGoogNow;
 
     // goog is special-cased because it is provided in Closure's base library.
-    providedNodes.put(GOOG, new ProvidedNode(null, null, null));
+    providedNames.put(GOOG,
+        new ProvidedName(GOOG, null, null, false /* implicit */));
   }
 
   Set<String> getExportedVariableNames() {
@@ -121,16 +123,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   public void process(Node externs, Node root) {
     new NodeTraversal(compiler, this).traverse(root);
 
-    for (ProvidedNode pn : providedNodes.values()) {
-      if (pn != null) {
-        pn.maybeRemove();
-      }
+    for (ProvidedName pn : providedNames.values()) {
+      pn.replace();
     }
 
     if (requiresLevel.isOn()) {
       for (UnrecognizedRequire r : unrecognizedRequires) {
         DiagnosticType error;
-        if (providedNodes.get(r.namespace) != null) {
+        if (providedNames.get(r.namespace) != null) {
           // The namespace ended up getting provided after it was required.
           error = LATE_PROVIDE_ERROR;
         } else {
@@ -147,6 +147,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * {@inheritDoc}
    */
   public void visit(NodeTraversal t, Node n, Node parent) {
+    // TODO(nicksantos): Clean this method up.
     switch (n.getType()) {
       case Token.CALL:
         boolean isExpr = parent.getType() == Token.EXPR_RESULT;
@@ -168,18 +169,18 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
               Node arg = left.getNext();
               if (verifyArgument(t, left, arg)) {
                 String ns = arg.getString();
-                ProvidedNode provided = providedNodes.get(ns);
-                if (provided == null) {
+                ProvidedName provided = providedNames.get(ns);
+                if (provided == null || !provided.isExplicitlyProvided()) {
                   unrecognizedRequires.add(
                       new UnrecognizedRequire(n, ns, t.getSourceName()));
                 } else {
                   JSModule module = t.getModule();
-                  if (module != provided.module /* covers null case */ &&
+                  if (module != provided.firstModule /* covers null case */ &&
                       !compiler.getModuleGraph().dependsOn(module,
-                          provided.module)) {
+                          provided.firstModule)) {
                     compiler.report(
                         JSError.make(t, n, XMODULE_REQUIRE_ERROR, ns,
-                            provided.module.getName(),
+                            provided.firstModule.getName(),
                             module.getName()));
                   }
                 }
@@ -199,18 +200,19 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
               Node arg = left.getNext();
               if (verifyProvide(t, left, arg)) {
                 String ns = arg.getString();
-                if (providedNodes.get(ns) != null) {
-                  compiler.report(
-                      JSError.make(t, n, DUPLICATE_NAMESPACE_ERROR, ns));
-                } else if (!providedNodes.containsKey(ns)) {
-                  replaceProvide(t, parent, parent.getParent(), ns);
+                if (providedNames.containsKey(ns)) {
+                  ProvidedName previouslyProvided = providedNames.get(ns);
+                  if (!previouslyProvided.isExplicitlyProvided()) {
+                    previouslyProvided.addProvide(parent, t.getModule(), true);
+                  } else {
+                    compiler.report(
+                        JSError.make(t, n, DUPLICATE_NAMESPACE_ERROR, ns));
+                  }
                 } else {
-                  // Namespace was already inserted for a sub-namespace.
-                  parent.getParent().removeChild(parent);
-                  providedNodes.put(ns,
-                      new ProvidedNode(null, null, t.getModule()));
+                  registerAnyProvidedPrefixes(ns, parent, t.getModule());
+                  providedNames.put(
+                      ns, new ProvidedName(ns, parent, t.getModule(), true));
                 }
-                compiler.reportCodeChange();
               }
             } else if ("exportSymbol".equals(methodName)) {
               Node arg = left.getNext();
@@ -253,9 +255,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
               processProvideFromPreviousPass(t, name, parent);
             } else {
-              ProvidedNode pn = providedNodes.get(name);
+              ProvidedName pn = providedNames.get(name);
               if (pn != null) {
-                pn.addCandidate(parent, parent.getParent());
+                pn.addDefinition(parent);
               }
             }
           }
@@ -270,9 +272,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
             processProvideFromPreviousPass(t, name, parent);
           } else {
-            ProvidedNode pn = providedNodes.get(name);
+            ProvidedName pn = providedNames.get(name);
             if (pn != null) {
-              pn.addCandidate(parent, parent.getParent());
+              pn.addDefinition(parent);
             }
           }
         }
@@ -283,7 +285,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         if (t.inGlobalScope() &&
             !NodeUtil.isFunctionAnonymous(n)) {
           String name = n.getFirstChild().getString();
-          ProvidedNode pn = providedNodes.get(name);
+          ProvidedName pn = providedNames.get(name);
           if (pn != null) {
             compiler.report(JSError.make(t, n, FUNCTION_NAMESPACE_ERROR, name));
           }
@@ -451,17 +453,25 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    */
   private void processProvideFromPreviousPass(
       NodeTraversal t, String name, Node parent) {
-    if (!providedNodes.containsKey(name)) {
-      // Record this provide created on a previous pass.
-      providedNodes.put(name, new ProvidedNode(
-          parent, parent.getParent(), t.getModule()));
-      // Make sure it has the proper prefixes.
-      maybeProvidePrefixes(parent, parent.getParent(), name);
+    if (!providedNames.containsKey(name)) {
+      // Record this provide created on a previous pass, and create a dummy
+      // EXPR node as a placeholder to simulate an explicit provide.
+      Node expr = new Node(Token.EXPR_RESULT);
+      expr.copyInformationFromForTree(parent);
+      parent.getParent().addChildBefore(expr, parent);
+      compiler.reportCodeChange();
+
+      registerAnyProvidedPrefixes(name, expr, t.getModule());
+
+      ProvidedName provided = new ProvidedName(name, expr, t.getModule(), true);
+      providedNames.put(name, provided);
+      provided.addDefinition(parent);
     } else {
       // Remove this provide if it came from a previous pass since we have an
       // replacement already.
       if (isNamespacePlaceholder(parent)) {
         parent.getParent().removeChild(parent);
+        compiler.reportCodeChange();
       }
     }
   }
@@ -479,7 +489,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     if (verifyArgument(t, left, arg, Token.OBJECTLIT)) {
       // Translate OBJECTLIT into SubstitutionMap. All keys and
       // values must be strings, or an error will be thrown.
-      final Map<String,String> cssNames = Maps.newHashMap();
+      final Map<String, String> cssNames = Maps.newHashMap();
       JSError error = null;
       for (Node key = arg.getFirstChild(); key != null;
           key = key.getNext().getNext()) {
@@ -600,119 +610,78 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   }
 
   /**
-   * Replaces a goog.provide call with one or more variable assignments.
+   * Registers ProvidedNames for prefix namespaces if they haven't
+   * already been defined. The prefix namespaces must be registered in
+   * order from shortest to longest.
    *
-   * @param t The current traversal.
-   * @param node The EXPR_RESULT node to be replaced.
-   * @param parent The parent of {@code node}.
-   * @param ns The namespace to provide.
+   * @param ns The namespace whose prefixes may need to be provided.
+   * @param node The EXPR of the provide call.
+   * @param module The current module.
    */
-  private void replaceProvide(
-      NodeTraversal t, Node node, Node parent, String ns) {
-    Node newNode;
-    if (ns.indexOf('.') == -1) {
-      newNode = makeVarDeclNode(ns, node);
-      parent.replaceChild(node, newNode);
-    } else {
-      newNode = makeAssignmentExprNode(ns, node);
-      parent.replaceChild(node, newNode);
-      maybeProvidePrefixes(newNode, parent, ns);
-    }
-    providedNodes.put(ns, new ProvidedNode(newNode, parent, t.getModule()));
-  }
-
-  /**
-   * Provides prefix namespaces if they haven't already been defined.
-   *
-   * @param node Node to insert definitions before
-   * @param parent Parent of {@code node}
-   * @param ns The namespace whose prefixes may need to be provided
-   */
-  private void maybeProvidePrefixes(Node node, Node parent, String ns) {
-    int pos = ns.lastIndexOf('.');
-    Node nodeToAddBefore = node;
+  private void registerAnyProvidedPrefixes(
+      String ns, Node node, JSModule module) {
+    int pos = ns.indexOf('.');
     while (pos != -1) {
       String prefixNs = ns.substring(0, pos);
-      pos = prefixNs.lastIndexOf('.');
-      if (providedNodes.containsKey(prefixNs)) {
-        break;
+      pos = ns.indexOf('.', pos + 1);
+      if (providedNames.containsKey(prefixNs)) {
+        providedNames.get(prefixNs).addProvide(
+            node, module, false /* implicit */);
       } else {
-        // Use a null value in this map to indicate that the namespace has
-        // been declared implicitly and is not removable.
-        providedNodes.put(prefixNs, null);
-        Node newNode = (pos == -1
-                        ? makeVarDeclNode(prefixNs, node)
-                        : makeAssignmentExprNode(prefixNs, node));
-        parent.addChildBefore(newNode, nodeToAddBefore);
-        nodeToAddBefore = newNode;
+        providedNames.put(
+            prefixNs,
+            new ProvidedName(prefixNs, node, module, false /* implicit */));
       }
     }
-  }
-
-  /**
-   * Creates a simple namespace variable declaration
-   * (e.g. <code>var foo = {};</code>).
-   *
-   * @param namespace A simple namespace (must be a valid js identifier)
-   * @param sourceNode The node to get source information from.
-   */
-  private Node makeVarDeclNode(String namespace, Node sourceNode) {
-    Node name = Node.newString(Token.NAME, namespace);
-    name.addChildToFront(new Node(Token.OBJECTLIT));
-
-    Node decl = new Node(Token.VAR, name);
-    decl.putBooleanProp(Node.IS_NAMESPACE, true);
-
-    // TODO(nicksantos): ew ew ew. Create a mutator package.
-    if (compiler.getCodingConvention().isConstant(namespace)) {
-      name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-    }
-
-    Preconditions.checkState(isNamespacePlaceholder(decl));
-    decl.copyInformationFromForTree(sourceNode);
-    return decl;
-  }
-
-  /**
-   * Creates a dotted namespace assignment expression
-   * (e.g. <code>foo.bar = {};</code>).
-   *
-   * @param namespace A dotted namespace
-   * @param node A node from which to copy source info.
-   */
-  private Node makeAssignmentExprNode(String namespace, Node node) {
-    Node decl = new Node(Token.EXPR_RESULT,
-        new Node(Token.ASSIGN,
-            NodeUtil.newQualifiedNameNode(namespace, node, namespace),
-            new Node(Token.OBJECTLIT)));
-    decl.putBooleanProp(Node.IS_NAMESPACE, true);
-    Preconditions.checkState(isNamespacePlaceholder(decl));
-    decl.copyInformationFromForTree(node);
-    return decl;
   }
 
   // -------------------------------------------------------------------------
 
   /**
-   * Information required to replace a provided node later in the traversal.
+   * Information required to replace a goog.provide call later in the traversal.
    */
-  private class ProvidedNode {
-    private final Node providedNode;
-    private final Node providedParent;
-    private final JSModule module;
-    private Node replacementCandidate;
-    private Node replacementCandidateParent;
+  private class ProvidedName {
+    private final String namespace;
 
-    ProvidedNode(Node node, Node parent, JSModule module) {
-      Preconditions.checkArgument((node == null) ||
-                                  NodeUtil.isVar(node) ||
-                                  NodeUtil.isExpressionNode(node));
-      Preconditions.checkArgument((node == null) == (parent == null));
-      this.providedNode = node;
-      this.providedParent = parent;
-      this.replacementCandidate = null;
-      this.replacementCandidateParent = null;
-      this.module = module;
+    // The node and module where the call was explicitly or implicitly
+    // goog.provided.
+    private final Node firstNode;
+    private final JSModule firstModule;
+
+    // The node where the call was explicitly goog.provided. May be null
+    // if the namespace is always provided implicitly.
+    private Node explicitNode = null;
+
+    // The candidate definition.
+    private Node candidateDefinition = null;
+
+    ProvidedName(String namespace, Node node, JSModule module,
+        boolean explicit) {
+      Preconditions.checkArgument(
+          node == null /* The base case */ ||
+          NodeUtil.isExpressionNode(node));
+      this.namespace = namespace;
+      this.firstNode = node;
+      this.firstModule = module;
+
+      addProvide(node, module, explicit);
+    }
+
+    /**
+     * Add an implicit or explicit provide.
+     */
+    void addProvide(Node node, JSModule module, boolean explicit) {
+      // TODO(nicksantos): Fixing this pass in the presence of modules
+      // will require the module parameter.
+      if (explicit) {
+        Preconditions.checkState(explicitNode == null);
+        Preconditions.checkArgument(NodeUtil.isExpressionNode(node));
+        explicitNode = node;
+      }
+    }
+
+    boolean isExplicitlyProvided() {
+      return explicitNode != null;
     }
 
     /**
@@ -721,34 +690,39 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * declarations; if no declation exists record a reference to an
      * assignment so it repurposed later.
      */
-    void addCandidate(Node node, Node parent) {
+    void addDefinition(Node node) {
       Preconditions.checkArgument(NodeUtil.isExpressionNode(node) || // assign
                                   NodeUtil.isFunction(node) ||
                                   NodeUtil.isVar(node));
-      Preconditions.checkArgument(providedNode != node);
-
-      if ((replacementCandidate == null) || !NodeUtil.isExpressionNode(node)) {
-        replacementCandidate = node;
-        replacementCandidateParent = parent;
+      Preconditions.checkArgument(explicitNode != node);
+      if ((candidateDefinition == null) || !NodeUtil.isExpressionNode(node)) {
+        candidateDefinition = node;
       }
     }
 
     /**
-     * Remove the definition added to replace the provide statement if a
-     * duplicate definition exists.  If no suitable definition exists, but
-     * an assignment is found, convert the assignment into a variable
-     * definition.
+     * Replace the provide statement.
+     *
+     * If we're providing a name with no definition, then create one.
+     * If we're providing a name with a duplicate definition, then make sure
+     * that definition becomes a declaration.
      */
-    void maybeRemove() {
-      if ((providedNode != null)
-          && (replacementCandidate != null)
-          && isNamespacePlaceholder(providedNode)) {
-        providedParent.removeChild(providedNode);
+    void replace() {
+      if (firstNode == null) {
+        // Don't touch the base case ('goog').
+        return;
+      }
+
+      // Handle the case where there is a duplicate definition for an explicitly
+      // provided symbol.
+      if (candidateDefinition != null && explicitNode != null) {
+        explicitNode.detachFromParent();
         compiler.reportCodeChange();
 
-        if (NodeUtil.isExpressionNode(replacementCandidate)) {
-          replacementCandidate.putBooleanProp(Node.IS_NAMESPACE, true);
-          Node assignNode = replacementCandidate.getFirstChild();
+        // Does this need a VAR keyword?
+        if (NodeUtil.isExpressionNode(candidateDefinition)) {
+          candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
+          Node assignNode = candidateDefinition.getFirstChild();
           Node nameNode = assignNode.getFirstChild();
           if (nameNode.getType() == Token.NAME) {
             // Need to convert this assign to a var declaration.
@@ -757,14 +731,84 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             assignNode.removeChild(valueNode);
             nameNode.addChildToFront(valueNode);
             Node varNode = new Node(Token.VAR, nameNode);
-            varNode.copyInformationFrom(replacementCandidate);
-            replacementCandidateParent.replaceChild(replacementCandidate,
-                                                    varNode);
+            varNode.copyInformationFrom(candidateDefinition);
+            candidateDefinition.getParent().replaceChild(
+                candidateDefinition, varNode);
             nameNode.setJSDocInfo(assignNode.getJSDocInfo());
             compiler.reportCodeChange();
           }
         }
+      } else {
+        // Handle the case where there's not a duplicate definition.
+        Node declaration = createDeclarationNode();
+
+        // The node was implicitly provided, so insert it before
+        // the explicit provide.
+        if (explicitNode != firstNode) {
+          firstNode.getParent().addChildBefore(declaration, firstNode);
+          if (explicitNode != null) {
+            explicitNode.detachFromParent();
+          }
+        } else {
+          Preconditions.checkNotNull(explicitNode);
+          explicitNode.getParent().replaceChild(explicitNode, declaration);
+        }
+        compiler.reportCodeChange();
       }
+    }
+
+    /**
+     * Create the declaration node for this name, without inserting it
+     * into the AST.
+     */
+    private Node createDeclarationNode() {
+      if (namespace.indexOf('.') == -1) {
+        return makeVarDeclNode(namespace, firstNode);
+      } else {
+        return makeAssignmentExprNode(namespace, firstNode);
+      }
+    }
+
+    /**
+     * Creates a simple namespace variable declaration
+     * (e.g. <code>var foo = {};</code>).
+     *
+     * @param namespace A simple namespace (must be a valid js identifier)
+     * @param sourceNode The node to get source information from.
+     */
+    private Node makeVarDeclNode(String namespace, Node sourceNode) {
+      Node name = Node.newString(Token.NAME, namespace);
+      name.addChildToFront(new Node(Token.OBJECTLIT));
+
+      Node decl = new Node(Token.VAR, name);
+      decl.putBooleanProp(Node.IS_NAMESPACE, true);
+
+      // TODO(nicksantos): ew ew ew. Create a mutator package.
+      if (compiler.getCodingConvention().isConstant(namespace)) {
+        name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      }
+
+      Preconditions.checkState(isNamespacePlaceholder(decl));
+      decl.copyInformationFromForTree(sourceNode);
+      return decl;
+    }
+
+    /**
+     * Creates a dotted namespace assignment expression
+     * (e.g. <code>foo.bar = {};</code>).
+     *
+     * @param namespace A dotted namespace
+     * @param node A node from which to copy source info.
+     */
+    private Node makeAssignmentExprNode(String namespace, Node node) {
+      Node decl = new Node(Token.EXPR_RESULT,
+          new Node(Token.ASSIGN,
+            NodeUtil.newQualifiedNameNode(namespace, node, namespace),
+              new Node(Token.OBJECTLIT)));
+      decl.putBooleanProp(Node.IS_NAMESPACE, true);
+      Preconditions.checkState(isNamespacePlaceholder(decl));
+      decl.copyInformationFromForTree(node);
+      return decl;
     }
   }
 
