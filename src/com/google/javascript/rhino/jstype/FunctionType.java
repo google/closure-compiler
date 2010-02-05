@@ -410,6 +410,11 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   @Override
+  public boolean hasOwnProperty(String name) {
+    return super.hasOwnProperty(name) || "prototype".equals(name);
+  }
+
+  @Override
   public JSType getPropertyType(String name) {
     if ("prototype".equals(name)) {
       return getPrototype();
@@ -468,6 +473,9 @@ public class FunctionType extends PrototypeObjectType {
     if ("prototype".equals(name)) {
       ObjectType objType = type.toObjectType();
       if (objType != null) {
+        if (objType.equals(prototype)) {
+          return true;
+        }
         return setPrototype(
             new FunctionPrototypeType(
                 registry, this, objType, isNativeObjectType()));

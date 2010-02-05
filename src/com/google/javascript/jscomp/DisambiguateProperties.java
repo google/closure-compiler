@@ -742,6 +742,11 @@ class DisambiguateProperties<T> implements CompilerPass {
         }
       }
 
+      // Ignore the prototype itself at all times.
+      if ("prototype".equals(field)) {
+        return null;
+      }
+
       // We look up the prototype chain to find the highest place (if any) that
       // this appears.  This will make references to overriden properties look
       // like references to the initial property, so they are renamed alike.

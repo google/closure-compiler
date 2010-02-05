@@ -904,7 +904,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
       String fieldTypes) {
     this.runTightenTypes = runTightenTypes;
     test(js, expected);
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+    assertEquals(
+        fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
   @SuppressWarnings("unchecked")
@@ -919,7 +920,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
        String description) {
     this.runTightenTypes = runTightenTypes;
     test(externs, js, expected, null, warning, description);
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+    assertEquals(
+        fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
   /**

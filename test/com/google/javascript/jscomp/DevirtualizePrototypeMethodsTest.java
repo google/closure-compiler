@@ -105,7 +105,9 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
     static final List<String> EXPECTED_TYPE_CHECKING_OFF = ImmutableList.of(
         "FUNCTION a = null",
+        "NAME JSCompiler_StaticMethods_foo$self = null",
         "FUNCTION JSCompiler_StaticMethods_foo = null",
+        "NAME JSCompiler_StaticMethods_bar$self = null",
         "FUNCTION JSCompiler_StaticMethods_bar = null",
         "FUNCTION JSCompiler_StaticMethods_baz = null",
         "NEW a = null",
@@ -115,7 +117,9 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
     static final List<String> EXPECTED_TYPE_CHECKING_ON = ImmutableList.of(
         "FUNCTION a = function (this:a): ?",
+        "NAME JSCompiler_StaticMethods_foo$self = a",
         "FUNCTION JSCompiler_StaticMethods_foo = function (a): number",
+        "NAME JSCompiler_StaticMethods_bar$self = a",
         "FUNCTION JSCompiler_StaticMethods_bar = function (a, number): number",
         "FUNCTION JSCompiler_StaticMethods_baz = function (a): ?",
         "NEW a = a",
@@ -543,22 +547,22 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new FunctionTypeInformationGatherer(
+    return new TypeInformationGatherer(
         compiler, new DevirtualizePrototypeMethods(compiler), typeInformation);
   }
 
   /**
-   * Wrapper that gathers function and call type strings after the
-   * pass under test runs.  For use to test passes that modify JSType
+   * Wrapper that gathers function, call, and self variable type strings after
+   * the pass under test runs.  For use to test passes that modify JSType
    * annotations.
    */
-  private static class FunctionTypeInformationGatherer
+  private static class TypeInformationGatherer
       implements CompilerPass {
     private final Compiler compiler;
     private final CompilerPass passUnderTest;
     private final List<String> typeInformation;
 
-    FunctionTypeInformationGatherer(Compiler compiler,
+    TypeInformationGatherer(Compiler compiler,
                                     CompilerPass passUnderTest,
                                     List<String> typeInformation) {
       this.compiler = compiler;
@@ -598,6 +602,20 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
                         nameNode.getQualifiedName(),
                         " = ",
                         (type != null) ? type.toString() : "null"));
+        }
+
+        if (NodeUtil.isGetProp(node)) {
+          Node child = node.getFirstChild();
+          if (NodeUtil.isName(child) && child.getString().endsWith("$self")) {
+            JSType type = child.getJSType();
+            typeInformation.add(
+                Joiner.on("").join(
+                    Token.name(child.getType()),
+                    " ",
+                    child.getString(),
+                    " = ",
+                    (type != null) ? type.toString() : "null"));
+          }
         }
       }
     }

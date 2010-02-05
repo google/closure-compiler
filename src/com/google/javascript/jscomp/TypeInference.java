@@ -601,14 +601,16 @@ class TypeInference
     String qName = getprop.getQualifiedName();
     if (qName != null) {
       Var var = syntacticScope.getVar(qName);
-      if (var != null &&
-          !var.isTypeInferred() &&
-          !objectType.hasOwnProperty(propName) &&
-          (!objectType.isInstanceType() ||
-           (var.isExtern() && !objectType.isNativeObjectType()))) {
-        objectType.defineDeclaredProperty(
-            propName, var.getType(), var.isExtern());
-        return true;
+      if (var != null && !var.isTypeInferred()) {
+        // Handle normal declarations that could not be addressed earlier.
+        if (propName.equals("prototype") ||
+        // Handle prototype declarations that could not be addressed earlier.
+            (!objectType.hasOwnProperty(propName) &&
+             (!objectType.isInstanceType() ||
+                 (var.isExtern() && !objectType.isNativeObjectType())))) {
+          return objectType.defineDeclaredProperty(
+              propName, var.getType(), var.isExtern());
+        }
       }
     }
     return false;

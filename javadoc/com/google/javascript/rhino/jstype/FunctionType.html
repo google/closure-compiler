@@ -466,7 +466,7 @@ This derived type provides extended information about a function, including
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasOwnProperty(java.lang.String)">hasOwnProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html#hasOwnProperty(java.lang.String)">hasOwnProperty</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether the property whose name is given is present directly on
@@ -1068,6 +1068,24 @@ public boolean <B>hasProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api
 </DL>
 <HR>
 
+<A NAME="hasOwnProperty(java.lang.String)"><!-- --></A><H3>
+hasOwnProperty</H3>
+<PRE>
+public boolean <B>hasOwnProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasOwnProperty(java.lang.String)">ObjectType</A></CODE></B></DD>
+<DD>Checks whether the property whose name is given is present directly on
+ the object.  Returns false even if it is declared on a supertype.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getPropertyType(java.lang.String)"><!-- --></A><H3>
 getPropertyType</H3>
 <PRE>
@@ -1423,24 +1441,6 @@ public int <B>getPropertiesCount</B>()</PRE>
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#getPropertiesCount()">getPropertiesCount</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="hasOwnProperty(java.lang.String)"><!-- --></A><H3>
-hasOwnProperty</H3>
-<PRE>
-public boolean <B>hasOwnProperty</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</PRE>
-<DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasOwnProperty(java.lang.String)">ObjectType</A></CODE></B></DD>
-<DD>Checks whether the property whose name is given is present directly on
- the object.  Returns false even if it is declared on a supertype.
-<P>
-<DD><DL>
-<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html#hasOwnProperty(java.lang.String)">hasOwnProperty</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A></CODE></DL>
 </DD>
 <DD><DL>
 </DL>

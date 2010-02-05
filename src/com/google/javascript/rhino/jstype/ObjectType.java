@@ -258,6 +258,8 @@ public abstract class ObjectType extends JSType {
    *        file. TightenTypes assumes that any function passed to an externs
    *        property could be called, so setting this incorrectly could result
    *        in live code being removed.
+   * @return True if the property was registered successfully, false if this
+   *        conflicts with a previous property type declaration.
    */
   abstract boolean defineProperty(String propertyName, JSType type,
       boolean inferred, boolean inExterns);

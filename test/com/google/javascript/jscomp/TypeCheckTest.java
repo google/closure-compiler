@@ -2632,6 +2632,36 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testGoodExtends9() throws Exception {
+    testTypes(
+        "/** @constructor */ function Super() {}" +
+        "Super.prototype.foo = function() {};" +
+        "/** @constructor \n * @extends {Super} */ function Sub() {}" +
+        "Sub.prototype = new Super();" +
+        "/** @override */ Sub.prototype.foo = function() {};");
+  }
+
+  public void testGoodExtends10() throws Exception {
+    testTypes(
+        "/** @constructor */ function Super() {}" +
+        "/** @constructor \n * @extends {Super} */ function Sub() {}" +
+        "Sub.prototype = new Super();" +
+        "/** @return {Super} */ function foo() { return new Sub(); }");
+  }
+
+  public void testGoodExtends11() throws Exception {
+    testTypes(
+        "/** @constructor */ function Super() {}" +
+        "/** @param {boolean} x */ Super.prototype.foo = function(x) {};" +
+        "/** @constructor \n * @extends {Super} */ function Sub() {}" +
+        "Sub.prototype = new Super();" +
+        "(new Sub()).foo(0);",
+        "actual parameter 1 of Super.prototype.foo " +
+        "does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: boolean");
+  }
+
   public void testBadExtends1() throws Exception {
     testTypes("/** @constructor */function base() {}\n" +
         "/** @constructor\n * @extends {not_base} */function derived() {}\n",
