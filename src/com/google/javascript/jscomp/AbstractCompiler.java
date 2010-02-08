@@ -217,4 +217,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Note: non-private to enable test cases that require the Normalize pass.
    */
   abstract void setUnnormalized();
+
+  /**
+   * Are the nodes equal for the purpose of inlining?
+   * If type aware optimizations are on, type equality is checked.
+   */
+  abstract boolean areNodesEqualForInlining(Node n1, Node n2);
 }

@@ -203,13 +203,13 @@ class InlineGetters extends MethodCompilerPass {
   /**
    * Given a set of method definitions, verify they are the same.
    */
-  private static boolean allDefinitionsEquivalent(
+  private boolean allDefinitionsEquivalent(
       Collection<Node> definitions) {
     List<Node> list = Lists.newArrayList();
     list.addAll(definitions);
     Node node0 = list.get(0);
     for (int i = 1; i < list.size(); i++) {
-      if (!list.get(i).checkTreeEqualsSilent(node0)) {
+      if (!compiler.areNodesEqualForInlining(list.get(i), node0)) {
         return false;
       }
     }

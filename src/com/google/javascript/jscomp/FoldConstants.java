@@ -424,7 +424,7 @@ class FoldConstants extends AbstractPostOrderCallback
     }
 
     Node leftChild = right.getFirstChild();
-    if (!left.checkTreeEqualsSilent(leftChild)) {
+    if (!compiler.areNodesEqualForInlining(left, leftChild)) {
       return;
     }
 
@@ -745,7 +745,7 @@ class FoldConstants extends AbstractPostOrderCallback
         // if(x)a=1;else a=2; -> a=x?1:2;
         if (NodeUtil.isAssignmentOp(thenOp)) {
           Node lhs = thenOp.getFirstChild();
-          if (lhs.checkTreeEqualsSilent(elseOp.getFirstChild()) &&
+          if (compiler.areNodesEqualForInlining(lhs, elseOp.getFirstChild()) &&
               // if LHS has side effects, don't proceed [since the optimization
               // evaluates LHS before cond]
               // NOTE - there are some circumstances where we can
@@ -873,7 +873,7 @@ class FoldConstants extends AbstractPostOrderCallback
       Node lastTrue = trueBranch.getLastChild();
       Node lastFalse = falseBranch.getLastChild();
       if (lastTrue == null || lastFalse == null
-          || !lastTrue.checkTreeEqualsSilent(lastFalse)) {
+          || !compiler.areNodesEqualForInlining(lastTrue, lastFalse)) {
         break;
       }
       lastTrue.detachFromParent();

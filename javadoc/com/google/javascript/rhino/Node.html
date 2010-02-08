@@ -905,6 +905,15 @@ This class implements the root of the intermediate representation.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#checkTreeTypeAwareEqualsSilent(com.google.javascript.rhino.Node)">checkTreeTypeAwareEqualsSilent</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks if the subtree under this node is the same as another subtree
+ including types.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#children()">children</A></B>()</CODE>
 
@@ -3373,6 +3382,24 @@ public boolean <B>checkTreeEqualsSilent</B>(<A HREF="../../../../com/google/java
 <DL>
 <DD>If this is a compilation pass and not a test, do not construct error
  strings. Instead return true if the trees are equal.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="checkTreeTypeAwareEqualsSilent(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+checkTreeTypeAwareEqualsSilent</H3>
+<PRE>
+public boolean <B>checkTreeTypeAwareEqualsSilent</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node2)</PRE>
+<DL>
+<DD>Checks if the subtree under this node is the same as another subtree
+ including types. Returns null if it's equal, or a message describing the
+ differences.
 <P>
 <DD><DL>
 </DL>

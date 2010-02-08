@@ -842,6 +842,18 @@ public class Compiler extends AbstractCompiler {
     return normalized;
   }
 
+  @Override
+  boolean areNodesEqualForInlining(Node n1, Node n2) {
+    if (options_.ambiguateProperties ||
+        options_.disambiguateProperties) {
+      // The type based optimizations require that type information is preserved
+      // during other optimizations.
+      return n1.checkTreeTypeAwareEqualsSilent(n2);
+    } else {
+      return n1.checkTreeEqualsSilent(n2);
+    }
+  }
+
   //------------------------------------------------------------------------
   // Inputs
   //------------------------------------------------------------------------

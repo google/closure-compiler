@@ -664,4 +664,70 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
          "goog.provide('goog.foo.bar'); goog.provide('goog.foo');",
          "var goog = {}; goog.foo = {}; goog.foo.bar = {};");
   }
+
+  public void testImplicitProvideInIndependentModules() {
+    test(
+        createModuleStar(
+            "",
+            "goog.provide('apps.A');",
+            "goog.provide('apps.B');"),
+        new String[] {
+            "var apps = {};",
+            "apps.A = {};",
+            "apps.B = {};",
+        });
+  }
+
+  public void testImplicitProvideInIndependentModules2() {
+    test(
+        createModuleStar(
+            "goog.provide('apps');",
+            "goog.provide('apps.foo.A');",
+            "goog.provide('apps.foo.B');"),
+        new String[] {
+            "var apps = {}; apps.foo = {};",
+            "apps.foo.A = {};",
+            "apps.foo.B = {};",
+        });
+  }
+
+  public void testImplicitProvideInIndependentModules3() {
+    test(
+        createModuleStar(
+            "var goog = {};",
+            "goog.provide('goog.foo.A');",
+            "goog.provide('goog.foo.B');"),
+        new String[] {
+            "var goog = {}; goog.foo = {};",
+            "goog.foo.A = {};",
+            "goog.foo.B = {};",
+        });
+  }
+
+  public void testProvideInIndependentModules1() {
+    test(
+        createModuleStar(
+            "goog.provide('apps');",
+            "goog.provide('apps.foo');",
+            "goog.provide('apps.foo.B');"),
+        new String[] {
+            "var apps = {}; apps.foo = {};",
+            "",
+            "apps.foo.B = {};",
+        });
+  }
+
+  public void testProvideInIndependentModules2() {
+    // TODO(nicksantos): Make this an error.
+    test(
+        createModuleStar(
+            "goog.provide('apps');",
+            "goog.provide('apps.foo'); apps.foo = {};",
+            "goog.provide('apps.foo.B');"),
+        new String[] {
+            "var apps = {};",
+            "apps.foo = {};",
+            "apps.foo.B = {};",
+        });
+  }
 }

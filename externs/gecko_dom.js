@@ -72,7 +72,7 @@ Window.prototype.dialogArguments;
 Window.prototype.directories;
 
 /**
- * @type {Document}
+ * @type {!Document}
  * @see https://developer.mozilla.org/en/DOM/window.document
  */
 Window.prototype.document;
@@ -103,7 +103,7 @@ Window.prototype.fullScreen;
 Window.prototype.globalStorage;
 
 /**
- * @type {History}
+ * @type {!History}
  * @see https://developer.mozilla.org/en/DOM/window.history
  */
 Window.prototype.history;
@@ -130,7 +130,7 @@ Window.prototype.innerWidth;
 Window.prototype.length;
 
 /**
- * @type {Location}
+ * @type {!Location}
  * @implicitCast
  * @see https://developer.mozilla.org/en/DOM/window.location
  */
@@ -305,7 +305,7 @@ Window.prototype.scrollX;
 Window.prototype.scrollY;
 
 /**
- * @type {Window}
+ * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window.self
  */
 Window.prototype.self;
@@ -329,7 +329,7 @@ Window.prototype.statusbar;
 Window.prototype.toolbar;
 
 /**
- * @type {Window}
+ * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window.self
  */
 Window.prototype.top;
@@ -522,7 +522,7 @@ Document.prototype.lastModified;
 Document.prototype.linkColor;
 Document.prototype.links;
 /**
- * @type {Location}
+ * @type {!Location}
  * @implicitCast
  */
 Document.prototype.location;
@@ -532,7 +532,7 @@ Document.prototype.plugins;
 Document.prototype.popupNode;
 Document.prototype.referrer;
 Document.prototype.styleSheets;
-/** @type {string?} */ Document.prototype.title;
+/** @type {?string} */ Document.prototype.title;
 Document.prototype.tooltipNode;
 /** @type {string} */ Document.prototype.URL;
 Document.prototype.vlinkColor;

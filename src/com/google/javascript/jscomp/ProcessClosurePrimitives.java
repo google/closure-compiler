@@ -90,10 +90,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   static final String GOOG = "goog";
 
   private final AbstractCompiler compiler;
+  private final JSModuleGraph moduleGraph;
 
   // The goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames =
-      Maps.newLinkedHashMap();
+      Maps.newTreeMap();
 
   private final List<UnrecognizedRequire> unrecognizedRequires =
       Lists.newArrayList();
@@ -105,6 +106,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                            CheckLevel requiresLevel,
                            boolean rewriteNewDateGoogNow) {
     this.compiler = compiler;
+    this.moduleGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
     this.rewriteNewDateGoogNow = rewriteNewDateGoogNow;
 
@@ -147,7 +149,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * {@inheritDoc}
    */
   public void visit(NodeTraversal t, Node n, Node parent) {
-    // TODO(nicksantos): Clean this method up.
     switch (n.getType()) {
       case Token.CALL:
         boolean isExpr = parent.getType() == Token.EXPR_RESULT;
@@ -166,54 +167,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
               // All other methods must be called in an EXPR.
               break;
             } else if ("require".equals(methodName)) {
-              Node arg = left.getNext();
-              if (verifyArgument(t, left, arg)) {
-                String ns = arg.getString();
-                ProvidedName provided = providedNames.get(ns);
-                if (provided == null || !provided.isExplicitlyProvided()) {
-                  unrecognizedRequires.add(
-                      new UnrecognizedRequire(n, ns, t.getSourceName()));
-                } else {
-                  JSModule module = t.getModule();
-                  if (module != provided.firstModule /* covers null case */ &&
-                      !compiler.getModuleGraph().dependsOn(module,
-                          provided.firstModule)) {
-                    compiler.report(
-                        JSError.make(t, n, XMODULE_REQUIRE_ERROR, ns,
-                            provided.firstModule.getName(),
-                            module.getName()));
-                  }
-                }
-
-                // Requires should be removed before runtime.  The one
-                // exception is if the type has not been provided yet and
-                // errors for broken requires are turned off, in which case,
-                // we will be doing a later pass that may error, so we can
-                // leave this here this time and let it error next time if it
-                // is still not provided.
-                if (provided != null || requiresLevel.isOn()) {
-                  parent.getParent().removeChild(parent);
-                  compiler.reportCodeChange();
-                }
-              }
+              processRequireCall(t, n, parent);
             } else if ("provide".equals(methodName)) {
-              Node arg = left.getNext();
-              if (verifyProvide(t, left, arg)) {
-                String ns = arg.getString();
-                if (providedNames.containsKey(ns)) {
-                  ProvidedName previouslyProvided = providedNames.get(ns);
-                  if (!previouslyProvided.isExplicitlyProvided()) {
-                    previouslyProvided.addProvide(parent, t.getModule(), true);
-                  } else {
-                    compiler.report(
-                        JSError.make(t, n, DUPLICATE_NAMESPACE_ERROR, ns));
-                  }
-                } else {
-                  registerAnyProvidedPrefixes(ns, parent, t.getModule());
-                  providedNames.put(
-                      ns, new ProvidedName(ns, parent, t.getModule(), true));
-                }
-              }
+              processProvideCall(t, n, parent);
             } else if ("exportSymbol".equals(methodName)) {
               Node arg = left.getNext();
               if (arg.getType() == Token.STRING) {
@@ -245,39 +201,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         }
         break;
       case Token.ASSIGN:
+      case Token.NAME:
         // If this is an assignment to a provided name, remove the provided
         // object.
-        if (t.inGlobalScope() &&
-            parent.getType() == Token.EXPR_RESULT) {
-          Node nameNode = n.getFirstChild();
-          String name = nameNode.getQualifiedName();
-          if (name != null) {
-            if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
-              processProvideFromPreviousPass(t, name, parent);
-            } else {
-              ProvidedName pn = providedNames.get(name);
-              if (pn != null) {
-                pn.addDefinition(parent);
-              }
-            }
-          }
-        }
-        break;
-      case Token.NAME:
-        // If this is a declaration of a provided variable, remove the provided
-        // object.
-        if (t.inGlobalScope() &&
-            parent.getType() == Token.VAR) {
-          String name = n.getString();
-          if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
-            processProvideFromPreviousPass(t, name, parent);
-          } else {
-            ProvidedName pn = providedNames.get(name);
-            if (pn != null) {
-              pn.addDefinition(parent);
-            }
-          }
-        }
+        handleCandidateProvideDefinition(t, n, parent);
         break;
       case Token.FUNCTION:
         // If this is a declaration of a provided named function, this is an
@@ -304,6 +231,94 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           reportBadBaseClassUse(t, n, "May only be called directly.");
         }
         break;
+    }
+  }
+
+  /**
+   * Handles a goog.require call.
+   */
+  private void processRequireCall(NodeTraversal t, Node n, Node parent) {
+    Node left = n.getFirstChild();
+    Node arg = left.getNext();
+    if (verifyArgument(t, left, arg)) {
+      String ns = arg.getString();
+      ProvidedName provided = providedNames.get(ns);
+      if (provided == null || !provided.isExplicitlyProvided()) {
+        unrecognizedRequires.add(
+            new UnrecognizedRequire(n, ns, t.getSourceName()));
+      } else {
+        JSModule module = t.getModule();
+        if (module != provided.firstModule /* covers null case */ &&
+            !compiler.getModuleGraph().dependsOn(module,
+                provided.firstModule)) {
+          compiler.report(
+              JSError.make(t, n, XMODULE_REQUIRE_ERROR, ns,
+                  provided.firstModule.getName(),
+                  module.getName()));
+        }
+      }
+
+      // Requires should be removed before runtime.  The one
+      // exception is if the type has not been provided yet and
+      // errors for broken requires are turned off, in which case,
+      // we will be doing a later pass that may error, so we can
+      // leave this here this time and let it error next time if it
+      // is still not provided.
+      if (provided != null || requiresLevel.isOn()) {
+        parent.detachFromParent();
+        compiler.reportCodeChange();
+      }
+    }
+  }
+
+  /**
+   * Handles a goog.provide call.
+   */
+  private void processProvideCall(NodeTraversal t, Node n, Node parent) {
+    Node left = n.getFirstChild();
+    Node arg = left.getNext();
+    if (verifyProvide(t, left, arg)) {
+      String ns = arg.getString();
+      if (providedNames.containsKey(ns)) {
+        ProvidedName previouslyProvided = providedNames.get(ns);
+        if (!previouslyProvided.isExplicitlyProvided()) {
+          previouslyProvided.addProvide(parent, t.getModule(), true);
+        } else {
+          compiler.report(
+              JSError.make(t, n, DUPLICATE_NAMESPACE_ERROR, ns));
+        }
+      } else {
+        registerAnyProvidedPrefixes(ns, parent, t.getModule());
+        providedNames.put(
+            ns, new ProvidedName(ns, parent, t.getModule(), true));
+      }
+    }
+  }
+
+  /**
+   * Handles a candidate definition for a goog.provided name.
+   */
+  private void handleCandidateProvideDefinition(
+      NodeTraversal t, Node n, Node parent) {
+    if (t.inGlobalScope()) {
+      String name = null;
+      if (n.getType() == Token.NAME && parent.getType() == Token.VAR) {
+        name = n.getString();
+      } else if (n.getType() == Token.ASSIGN &&
+          parent.getType() == Token.EXPR_RESULT) {
+        name = n.getFirstChild().getQualifiedName();
+      }
+
+      if (name != null) {
+        if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
+          processProvideFromPreviousPass(t, name, parent);
+        } else {
+          ProvidedName pn = providedNames.get(name);
+          if (pn != null) {
+            pn.addDefinition(parent, t.getModule());
+          }
+        }
+      }
     }
   }
 
@@ -461,11 +476,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       parent.getParent().addChildBefore(expr, parent);
       compiler.reportCodeChange();
 
-      registerAnyProvidedPrefixes(name, expr, t.getModule());
+      JSModule module = t.getModule();
+      registerAnyProvidedPrefixes(name, expr, module);
 
-      ProvidedName provided = new ProvidedName(name, expr, t.getModule(), true);
+      ProvidedName provided = new ProvidedName(name, expr, module, true);
       providedNames.put(name, provided);
-      provided.addDefinition(parent);
+      provided.addDefinition(parent, module);
     } else {
       // Remove this provide if it came from a previous pass since we have an
       // replacement already.
@@ -654,6 +670,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     // The candidate definition.
     private Node candidateDefinition = null;
+    private JSModule candidateModule = null;
+
+    // The minimum module where the provide must appear.
+    private JSModule minimumModule = null;
+
+    // The replacement declaration.
+    private Node replacementNode = null;
 
     ProvidedName(String namespace, Node node, JSModule module,
         boolean explicit) {
@@ -671,13 +694,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * Add an implicit or explicit provide.
      */
     void addProvide(Node node, JSModule module, boolean explicit) {
-      // TODO(nicksantos): Fixing this pass in the presence of modules
-      // will require the module parameter.
       if (explicit) {
         Preconditions.checkState(explicitNode == null);
         Preconditions.checkArgument(NodeUtil.isExpressionNode(node));
         explicitNode = node;
       }
+      updateMinimumModule(module);
     }
 
     boolean isExplicitlyProvided() {
@@ -690,13 +712,26 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * declarations; if no declation exists record a reference to an
      * assignment so it repurposed later.
      */
-    void addDefinition(Node node) {
+    void addDefinition(Node node, JSModule module) {
       Preconditions.checkArgument(NodeUtil.isExpressionNode(node) || // assign
                                   NodeUtil.isFunction(node) ||
                                   NodeUtil.isVar(node));
       Preconditions.checkArgument(explicitNode != node);
       if ((candidateDefinition == null) || !NodeUtil.isExpressionNode(node)) {
         candidateDefinition = node;
+        candidateModule = module;
+        updateMinimumModule(module);
+      }
+    }
+
+    private void updateMinimumModule(JSModule newModule) {
+      if (moduleGraph != null) {
+        if (minimumModule == null) {
+          minimumModule = newModule;
+        } else {
+          minimumModule = moduleGraph.getDeepestCommonDependencyInclusive(
+              minimumModule, newModule);
+        }
       }
     }
 
@@ -710,6 +745,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     void replace() {
       if (firstNode == null) {
         // Don't touch the base case ('goog').
+        replacementNode = candidateDefinition;
         return;
       }
 
@@ -720,6 +756,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         compiler.reportCodeChange();
 
         // Does this need a VAR keyword?
+        replacementNode = candidateDefinition;
         if (NodeUtil.isExpressionNode(candidateDefinition)) {
           candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
           Node assignNode = candidateDefinition.getFirstChild();
@@ -736,22 +773,34 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                 candidateDefinition, varNode);
             nameNode.setJSDocInfo(assignNode.getJSDocInfo());
             compiler.reportCodeChange();
+            replacementNode = varNode;
           }
         }
       } else {
         // Handle the case where there's not a duplicate definition.
-        Node declaration = createDeclarationNode();
-
-        // The node was implicitly provided, so insert it before
-        // the explicit provide.
-        if (explicitNode != firstNode) {
-          firstNode.getParent().addChildBefore(declaration, firstNode);
-          if (explicitNode != null) {
-            explicitNode.detachFromParent();
-          }
+        replacementNode = createDeclarationNode();
+        if (firstModule == minimumModule) {
+          firstNode.getParent().addChildBefore(replacementNode, firstNode);
         } else {
-          Preconditions.checkNotNull(explicitNode);
-          explicitNode.getParent().replaceChild(explicitNode, declaration);
+          // In this case, the name was implicitly provided by two independent
+          // modules. We need to move this code up to a common module.
+          int indexOfDot = namespace.indexOf('.');
+          if (indexOfDot == -1) {
+            // Any old place is fine.
+            compiler.getNodeForCodeInsertion(minimumModule)
+                .addChildToBack(replacementNode);
+          } else {
+            // Add it after the parent namespace.
+            ProvidedName parentName =
+                providedNames.get(namespace.substring(0, indexOfDot));
+            Preconditions.checkNotNull(parentName);
+            Preconditions.checkNotNull(parentName.replacementNode);
+            parentName.replacementNode.getParent().addChildAfter(
+                replacementNode, parentName.replacementNode);
+          }
+        }
+        if (explicitNode != null) {
+          explicitNode.detachFromParent();
         }
         compiler.reportCodeChange();
       }

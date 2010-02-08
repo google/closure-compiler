@@ -28,6 +28,12 @@ import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.SideE
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
+import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
+
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -77,6 +83,10 @@ final class NameAnalyzer implements CompilerPass {
   /** Map of all JS names found */
   private final Map<String, JsName> allNames = Maps.newTreeMap();
 
+  /** Reference dependency graph */
+  private DiGraph<JsName, RefType> referenceGraph =
+      new LinkedDirectedGraph<JsName, RefType>();
+
   /**
    * Map of name scopes - all children of the Node key have a dependency on the
    * name value.
@@ -85,12 +95,6 @@ final class NameAnalyzer implements CompilerPass {
    * will not get executed unless name is referenced via a get operation
    */
   private final Map<Node, NameInformation> scopes = Maps.newHashMap();
-
-  /**
-   * List of names referenced in successive generations of finding referenced
-   * nodes
-   */
-  private final List<Set<JsName>> generations = Lists.newArrayList();
 
   /** Used to parse prototype names */
   private static final String PROTOTYPE_SUBSTRING = ".prototype.";
@@ -126,6 +130,33 @@ final class NameAnalyzer implements CompilerPass {
   private final List<RefNode> refNodes = Lists.newArrayList();
 
   /**
+   * Relationship between the two names.
+   * Currently only two different reference types exists:
+   * goog.inherits class relations and all other references.
+   */
+  private static enum RefType {
+    REGULAR,
+    INHERITANCE,
+  }
+
+  /**
+   * Callback that propagates side effect information across call sites.
+   */
+  private static class ReferencePropagationCallback
+      implements EdgeCallback<JsName, RefType> {
+    public boolean traverseEdge(JsName from,
+                                RefType callSite,
+                                JsName to) {
+      if (from.referenced && !to.referenced) {
+        to.referenced = true;
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  /**
    * Class to hold information that can be determined from a node tree about a
    * given name
    */
@@ -159,12 +190,6 @@ final class NameAnalyzer implements CompilerPass {
     /** Fully qualified name */
     String name;
 
-    /** Names referred to by this name */
-    Set<String> refersTo = Sets.newHashSet();
-
-    /** Names that refer to this name */
-    Set<String> referencedBy = Sets.newHashSet();
-
     /** Name of prototype functions attached to this name */
     List<String> prototypeNames = Lists.newArrayList();
 
@@ -173,9 +198,6 @@ final class NameAnalyzer implements CompilerPass {
 
     /** Whether this node is referenced */
     boolean referenced = false;
-
-    /** First generation this node was referenced */
-    int generation = 0;
 
     /**
      * Output the node as a string
@@ -199,15 +221,6 @@ final class NameAnalyzer implements CompilerPass {
         }
       }
 
-      if (refersTo.size() > 0) {
-        out.append("\n - REFERS TO: ");
-        out.append(Joiner.on(", ").join(refersTo));
-      }
-
-      if (referencedBy.size() > 0) {
-        out.append("\n - REFERENCED BY: ");
-        out.append(Joiner.on(", ").join(referencedBy));
-      }
       return out.toString();
     }
 
@@ -732,14 +745,18 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if (nameInfo.onlyAffectsClassDef) {
-        recordReference(nameInfo.name, nameInfo.superclass);
+        recordReference(nameInfo.name,
+                        nameInfo.superclass,
+                        RefType.INHERITANCE);
 
         // Make sure that we record a reference to the function that does
         // the inheritance, so that the inherits() function itself does
         // not get stripped.
         String nodeName = n.getQualifiedName();
         if (nodeName != null) {
-          recordReference(nameInfo.name, nodeName);
+          recordReference(nameInfo.name,
+                          nodeName,
+                          RefType.REGULAR);
         }
 
         return;
@@ -771,7 +788,8 @@ final class NameAnalyzer implements CompilerPass {
       // reference to it from the global scope (a.k.a. window).
       String name = nameInfo.name;
       if (nameInfo.isExternallyReferenceable) {
-        recordReference(WINDOW, name);
+        recordReference(WINDOW, name,
+                        RefType.REGULAR);
         return;
       }
 
@@ -779,7 +797,7 @@ final class NameAnalyzer implements CompilerPass {
       // For example, foo references bar in: function foo() {bar=5}.
       if (NodeUtil.isLhs(n, parent)) {
         if (referring != null) {
-          recordReference(referringName, name);
+          recordReference(referringName, name, RefType.REGULAR);
         }
         return;
       }
@@ -787,12 +805,12 @@ final class NameAnalyzer implements CompilerPass {
       if (nodesToKeep.contains(n)) {
         NameInformation functionScope = getEnclosingFunctionDependencyScope(t);
         if (functionScope != null) {
-          recordReference(functionScope.name, name);
+          recordReference(functionScope.name, name, RefType.REGULAR);
         } else {
-          recordReference(WINDOW, name);
+          recordReference(WINDOW, name, RefType.REGULAR);
         }
       } else if (referring != null) {
-        recordReference(referringName, name);
+        recordReference(referringName, name, RefType.REGULAR);
       } else {
         // No named dependency scope found.  Unfortunately that might
         // mean that the expression is a child of an anonymous
@@ -801,21 +819,11 @@ final class NameAnalyzer implements CompilerPass {
         for (Node ancestor : n.getAncestors()) {
           if (NodeUtil.isAssignmentOp(ancestor) ||
               NodeUtil.isFunction(ancestor)) {
-            recordReference(WINDOW, name);
+            recordReference(WINDOW, name, RefType.REGULAR);
             break;
           }
         }
       }
-    }
-
-    /**
-     * Records a reference from one name to another name.
-     */
-    private void recordReference(String fromName, String toName) {
-      JsName from = getName(fromName, true);
-      JsName to = getName(toName, true);
-      from.refersTo.add(toName);
-      to.referencedBy.add(fromName);
     }
 
     /**
@@ -905,6 +913,20 @@ final class NameAnalyzer implements CompilerPass {
   }
 
   /**
+   * Records a reference from one name to another name.
+   */
+  private void recordReference(String fromName, String toName,
+                               RefType depType) {
+    JsName from = getName(fromName, true);
+    JsName to = getName(toName, true);
+    referenceGraph.createNode(from);
+    referenceGraph.createNode(to);
+    if (!referenceGraph.isConnectedInDirection(from, to)) {
+      referenceGraph.connect(from, depType, to);
+    }
+  }
+
+  /**
    * Removes all unreferenced variables.
    */
   void removeUnreferenced() {
@@ -919,41 +941,6 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     changeProxy.unregisterListener(listener);
-  }
-
-  /**
-   * Generates a report
-   *
-   * @return The report
-   */
-  String getStringReport() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("TOTAL NAMES: " + countOf(TriState.BOTH, TriState.BOTH) + "\n");
-    sb.append("TOTAL CLASSES: " + countOf(TriState.TRUE, TriState.BOTH) + "\n");
-    sb.append("TOTAL STATIC FUNCTIONS: "
-        + countOf(TriState.FALSE, TriState.BOTH) + "\n");
-    sb.append("REFERENCED NAMES: " + countOf(TriState.BOTH, TriState.TRUE)
-        + "\n");
-    sb.append("REFERENCED CLASSES: " + countOf(TriState.TRUE, TriState.TRUE)
-        + "\n");
-    sb.append("REFERENCED STATIC FUNCTIONS: "
-        + countOf(TriState.FALSE, TriState.TRUE) + "\n");
-
-
-    for (int i = 0; i < generations.size(); i++) {
-      Set<JsName> gen = generations.get(i);
-      sb.append("GENERATION " + i + ": " + gen.size() + " names\n");
-      for (JsName jsName : gen) {
-        sb.append(" - " + jsName.name + "\n");
-      }
-    }
-
-    sb.append("ALL NAMES\n");
-    for (JsName node : allNames.values()) {
-      sb.append(node + "\n");
-    }
-
-    return sb.toString();
   }
 
   /**
@@ -982,16 +969,6 @@ final class NameAnalyzer implements CompilerPass {
         + countOf(TriState.FALSE, TriState.TRUE));
     sb.append("</ul>");
 
-
-    for (int i = 0; i < generations.size(); i++) {
-      Set<JsName> gen = generations.get(i);
-      sb.append("GENERATION " + i + ": " + gen.size() + " names\n<ul>");
-      for (JsName jsName : gen) {
-        appendListItem(sb, nameLink(jsName.name));
-      }
-      sb.append("</ul>");
-    }
-
     sb.append("ALL NAMES<ul>\n");
     for (JsName node : allNames.values()) {
       sb.append("<li>" + nameAnchor(node.name) + "<ul>");
@@ -1005,23 +982,32 @@ final class NameAnalyzer implements CompilerPass {
           }
         }
       }
-      if (node.refersTo.size() > 0) {
-        sb.append("<li>REFERS TO: ");
-        Iterator<String> toIter = node.refersTo.iterator();
-        while (toIter.hasNext()) {
-          sb.append(nameLink(toIter.next()));
-          if (toIter.hasNext()) {
-            sb.append(", ");
+
+      if (referenceGraph.hasNode(node)) {
+        List<DiGraphEdge<JsName, RefType>> refersTo =
+            referenceGraph.getOutEdges(node);
+        if (refersTo.size() > 0) {
+          sb.append("<li>REFERS TO: ");
+          Iterator<DiGraphEdge<JsName, RefType>> toIter = refersTo.iterator();
+          while (toIter.hasNext()) {
+            sb.append(nameLink(toIter.next().getDestination().getValue().name));
+            if (toIter.hasNext()) {
+              sb.append(", ");
+            }
           }
         }
-      }
-      if (node.referencedBy.size() > 0) {
-        sb.append("<li>REFERENCED BY: ");
-        Iterator<String> fromIter = node.referencedBy.iterator();
-        while (fromIter.hasNext()) {
-          sb.append(nameLink(fromIter.next()));
-          if (fromIter.hasNext()) {
-            sb.append(", ");
+
+        List<DiGraphEdge<JsName, RefType>> referencedBy =
+            referenceGraph.getInEdges(node);
+        if (referencedBy.size() > 0) {
+          sb.append("<li>REFERENCED BY: ");
+          Iterator<DiGraphEdge<JsName, RefType>> fromIter = refersTo.iterator();
+          while (fromIter.hasNext()) {
+            sb.append(
+                nameLink(fromIter.next().getDestination().getValue().name));
+            if (fromIter.hasNext()) {
+              sb.append(", ");
+            }
           }
         }
       }
@@ -1092,13 +1078,11 @@ final class NameAnalyzer implements CompilerPass {
       while (curName.indexOf('.') != -1) {
         String parentName = curName.substring(0, curName.lastIndexOf('.'));
         if (!globalNames.contains(parentName)) {
+
           JsName parentJsName = getName(parentName, true);
 
-          curJsName.refersTo.add(parentName);
-          parentJsName.referencedBy.add(curName);
-
-          parentJsName.refersTo.add(curName);
-          curJsName.referencedBy.add(parentName);
+          recordReference(curJsName.name, parentJsName.name, RefType.REGULAR);
+          recordReference(parentJsName.name, curJsName.name, RefType.REGULAR);
 
           curJsName = parentJsName;
         }
@@ -1299,66 +1283,19 @@ final class NameAnalyzer implements CompilerPass {
   }
 
   /**
-   * Calculates all of the references. The results will be stored in the
-   * generations member variable.
+   * Propagate "referenced" property down the graph.
    */
   private void calculateReferences() {
-    // Starting point is window + all externally defined names
-
-    Set<JsName> curGeneration = Sets.newHashSet();
-
     JsName window = getName(WINDOW, true);
-    window.generation = 0;
     window.referenced = true;
-    curGeneration.add(window);
     JsName function = getName(FUNCTION, true);
-    function.generation = 0;
     function.referenced = true;
-    curGeneration.add(function);
 
-    for (String s : externalNames) {
-      JsName jsn = getName(s, true);
-      if (jsn.refersTo.size() > 0) {
-        jsn.generation = 0;
-        jsn.referenced = true;
-        curGeneration.add(jsn);
-      }
-    }
-    generations.add(curGeneration);
-
-    // Iterate through, adding more referenced nodes
-    // capped at 100 for safety
-    int iters = 0;
-    while (curGeneration.size() > 0 && iters < 100) {
-      curGeneration = referenceMore(curGeneration);
-      generations.add(curGeneration);
-      iters++;
-    }
+    // Propagate "referenced" property to a fixed point.
+    FixedPointGraphTraversal.newTraversal(new ReferencePropagationCallback())
+        .computeFixedPoint(referenceGraph);
   }
 
-
-  /**
-   * Takes a set of JsNode and finds all of the nodes that they reference that
-   * haven't already been marked as referenced. Marks the new nodes as
-   * referenced and returns the newly marked nodes
-   *
-   * @param lastGen Starting nodes
-   * @return Newly marked nodes
-   */
-  private Set<JsName> referenceMore(Set<JsName> lastGen) {
-    Set<JsName> referenced = Sets.newTreeSet();
-    for (JsName src : lastGen) {
-      for (String s : src.refersTo) {
-        JsName target = allNames.get(s);
-        if (target != null && !target.referenced) {
-          target.referenced = true;
-          target.generation = src.generation + 1;
-          referenced.add(target);
-        }
-      }
-    }
-    return referenced;
-  }
 
   /**
    * Enum for saying a value can be true, false, or either (cleaner than using a

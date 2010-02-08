@@ -1374,6 +1374,48 @@ public class Node implements Cloneable, Serializable
         return res;
     }
 
+    /**
+     * Checks if the subtree under this node is the same as another subtree
+     * including types. Returns null if it's equal, or a message describing the
+     * differences.
+     */
+    public boolean checkTreeTypeAwareEqualsSilent(Node node2) {
+      return checkTreeTypeAwareEqualsImpl(node2) == null;
+    }
+
+    /**
+     * Compare this node to node2 recursively and return the first pair
+     * of nodes that differs doing a preorder depth-first traversal.
+     * Package private for testing. Returns null if the nodes are equivalent.
+     */
+    NodeMismatch checkTreeTypeAwareEqualsImpl(Node node2) {
+        boolean eq = false;
+
+        if (type == node2.getType() &&
+            getChildCount() == node2.getChildCount() &&
+            getClass() == node2.getClass() &&
+            Objects.equal(jsType, node2.getJSType())) {
+
+            eq = this.isEquivalentTo(node2);
+        }
+
+        if (!eq) {
+            return new NodeMismatch(this, node2);
+        }
+
+        NodeMismatch res = null;
+        Node n, n2;
+        for (n = first, n2 = node2.first;
+             res == null && n != null;
+             n = n.next, n2 = n2.next) {
+            res = n.checkTreeTypeAwareEqualsImpl(n2);
+            if (res != null) {
+              return res;
+            }
+        }
+        return res;
+    }
+
     public static String tokenToName(int token) {
         switch (token) {
             case Token.ERROR:           return "error";

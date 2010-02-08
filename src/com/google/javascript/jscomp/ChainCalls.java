@@ -159,8 +159,8 @@ class ChainCalls implements CompilerPass {
       }
 
       Node nextGetPropFirstChildNode = nextGetPropNode.getFirstChild();
-      if (!nextGetPropFirstChildNode.checkTreeEqualsSilent(
-          getPropFirstChildNode)) {
+      if (!compiler.areNodesEqualForInlining(
+              nextGetPropFirstChildNode, getPropFirstChildNode)) {
         return;
       }
 
