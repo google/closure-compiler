@@ -116,7 +116,10 @@ class TypeInference
     this.functionScope = LinkedFlowScope.createEntryLattice(functionScope);
 
     for (Var unflowableVar : unflowableVars) {
-      this.unflowableVarNames.add(unflowableVar.getName());
+      String name = unflowableVar.getName();
+      if (functionScope.getVar(name) == unflowableVar) {
+        this.unflowableVarNames.add(name);
+      }
     }
 
     Iterator<Var> varIt = functionScope.getVars();
@@ -627,7 +630,8 @@ class TypeInference
       return scope;
     } else {
       StaticSlot<JSType> var = scope.getSlot(varName);
-      if (var != null) {
+      if (var != null &&
+          !(var.isTypeInferred() && unflowableVarNames.contains(varName))) {
         type = var.getType();
         if (type == null) {
           type = getNativeType(UNKNOWN_TYPE);

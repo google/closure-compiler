@@ -18,6 +18,11 @@ package com.google.javascript.jscomp;
 
 
 
+import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.javascript.jscomp.graph.GraphvizGraph;
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +85,38 @@ public abstract class PassConfig {
    * They should always run after checking passes.
    */
   abstract protected List<PassFactory> getOptimizations();
+
+  /**
+   * Gets a graph of the passes run. For debugging.
+   */
+  GraphvizGraph getPassGraph() {
+    LinkedDirectedGraph<String, String> graph = LinkedDirectedGraph.create();
+    Iterable<PassFactory> allPasses =
+        Iterables.concat(getChecks(), getOptimizations());
+    String lastPass = null;
+    String loopStart = null;
+    for (PassFactory pass : allPasses) {
+      String passName = pass.getName();
+      int i = 1;
+      while (graph.hasNode(passName)) {
+        passName = pass.getName() + (i++);
+      }
+      graph.createNode(passName);
+
+      if (loopStart == null && !pass.isOneTimePass()) {
+        loopStart = passName;
+      } else if (loopStart != null && pass.isOneTimePass()) {
+        graph.connect(lastPass, "loop", loopStart);
+        loopStart = null;
+      }
+
+      if (lastPass != null) {
+        graph.connect(lastPass, "", passName);
+      }
+      lastPass = passName;
+    }
+    return graph;
+  }
 
   /**
    * Create a type inference pass.

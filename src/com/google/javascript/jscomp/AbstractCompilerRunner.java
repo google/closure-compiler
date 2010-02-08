@@ -95,6 +95,11 @@ abstract class AbstractCompilerRunner<A extends Compiler,
       docLevel = DocLevel.SECRET)
   static final Flag<Boolean> FLAG_print_ast = Flag.value(false);
 
+  @FlagSpec(help = "Prints a dot file describing the passes that will get run"
+      + " and exits",
+      docLevel = DocLevel.SECRET)
+  static final Flag<Boolean> FLAG_print_pass_graph = Flag.value(false);
+
   @FlagSpec(help = "Turns on extra sanity checks", altName = "dev_mode",
       docLevel = DocLevel.SECRET)
   static final Flag<CompilerOptions.DevMode> FLAG_jscomp_dev_mode =
@@ -671,6 +676,16 @@ abstract class AbstractCompilerRunner<A extends Compiler,
        throws FlagUsageException, IOException {
     if (FLAG_compute_phase_ordering.get()) {
       return 0;
+    }
+
+    if (FLAG_print_pass_graph.get()) {
+      if (compiler.getRoot() == null) {
+        return 1;
+      } else {
+        out.append(DotFormatter.toDot(compiler.getPassConfig().getPassGraph()));
+        out.println();
+        return 0;
+      }
     }
 
     if (FLAG_print_ast.get()) {

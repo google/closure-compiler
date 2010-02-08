@@ -18,10 +18,14 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * A compiler pass to run the type inference analysis.
@@ -76,11 +80,20 @@ class TypeInferencePass implements CompilerPass {
     inferTypes.traverseWithScope(node, topScope);
   }
 
+  private Collection<Var> getUnflowableVars(Scope scope) {
+    List<Var> vars = Lists.newArrayList();
+    for (Scope current = scope;
+         current.isLocal(); current = current.getParent()) {
+      vars.addAll(escapedLocalVars.get(current));
+    }
+    return vars;
+  }
+
   void inferTypes(NodeTraversal t, Node n, Scope scope) {
     TypeInference typeInference =
         new TypeInference(
             compiler, computeCfg(n), reverseInterpreter, scope,
-            escapedLocalVars.get(scope));
+            getUnflowableVars(scope));
     try {
       typeInference.analyze();
       escapedLocalVars.putAll(typeInference.getAssignedOuterLocalVars());

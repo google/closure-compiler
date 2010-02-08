@@ -45,6 +45,10 @@ public class LinkedDirectedGraph<N, E>
     return new SimpleSubGraph<N, E>(this);
   }
 
+  public static <N, E> LinkedDirectedGraph<N, E> create() {
+    return new LinkedDirectedGraph<N, E>();
+  }
+
   @Override
   public GraphEdge<N, E> connect(N srcValue, E edgeValue, N destValue) {
     DiGraphNode<N, E> node = getDirectedGraphNode(srcValue);
