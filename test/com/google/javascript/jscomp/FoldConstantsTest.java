@@ -641,8 +641,22 @@ public class FoldConstantsTest extends CompilerTestCase {
     // Only optimize if it's a size win.
     fold("x = ['a', '5', 'c'].join('a very very very long chain')",
          "x = [\"a\",\"5\",\"c\"].join(\"a very very very long chain\")");
+    
+    // TODO(user): Its possible to fold this better.
+    foldSame("x = ['', foo].join(',')");
+    foldSame("x = ['', foo, ''].join(',')");
+    
+    fold("x = ['', '', foo, ''].join(',')", "x = [',', foo, ''].join(',')");
+    fold("x = ['', '', foo, '', ''].join(',')",
+         "x = [',', foo, ','].join(',')");
+    
+    fold("x = ['', '', foo, '', '', bar].join(',')",
+         "x = [',', foo, ',', bar].join(',')");
+    
+    fold("x = [1,2,3].join('abcdef')",
+         "x = '1abcdef2abcdef3'");
   }
-
+  
   public void testStringJoinAdd_b1992789() {
     fold("x = ['a'].join('')", "x = \"a\"");
     fold("x = [foo()].join('')", "x = '' + foo()");
