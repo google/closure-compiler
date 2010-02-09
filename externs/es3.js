@@ -1068,12 +1068,19 @@ Date.now = function() {};
 Date.parse = function(date) {};
 
 /**
+ * @param {number} year
+ * @param {number} month
+ * @param {number=} opt_date
+ * @param {number=} opt_hours
+ * @param {number=} opt_minute
+ * @param {number=} opt_second
+ * @param {number=} opt_ms
  * @return {number}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/UTC
  */
-Date.UTC = function(opt_yr_num, opt_mo_num, opt_day_num, opt_hr_num,
-    opt_min_num, opt_sec_num, opt_ms) {};
+Date.UTC = function(year, month,
+                    opt_date, opt_hours, opt_minute, opt_second, opt_ms) {};
 
 /**
  * @return {number}

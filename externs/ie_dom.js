@@ -277,7 +277,7 @@ ClipboardData.prototype.getData = function(type) { };
 function Window() {}
 
 /**
- * @type {Window}
+ * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window
  */
 var window;
@@ -424,6 +424,7 @@ Window.prototype.screenTop;
 Window.prototype.scrollbars;
 
 /**
+ * @type {!Window}
  * @see http://msdn.microsoft.com/en-us/library/ms534627(VS.85).aspx
  */
 Window.prototype.self;

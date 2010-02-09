@@ -335,7 +335,7 @@ Window.prototype.toolbar;
 Window.prototype.top;
 
 /**
- * @type {Window}
+ * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window.self
  */
 Window.prototype.window;
