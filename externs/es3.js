@@ -54,7 +54,7 @@ Arguments.prototype.caller;
 Arguments.prototype.length;
 
 /**
- * @type {Arguments}
+ * @type {!Arguments}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Functions_and_function_scope/arguments
  */
 var arguments;

@@ -699,6 +699,25 @@ Window.prototype.applicationCache;
  */
 MouseEvent.prototype.dataTransfer;
 
+// HTML5 MessageChannel
+/**
+ * @see http://dev.w3.org/html5/spec/comms.html#messagechannel
+ * @constructor
+ */
+function MessageChannel() {}
+
+/**
+ * Returns the first port.
+ * @type {MessagePort}
+ */
+MessageChannel.prototype.port1;
+
+/**
+ * Returns the second port.
+ * @type {MessagePort}
+ */
+MessageChannel.prototype.port2;
+
 // HTML5 MessagePort
 /**
  * @see http://dev.w3.org/html5/spec/comms.html#messageport
