@@ -19,6 +19,10 @@ package com.google.javascript.jscomp.parsing;
 import static com.google.javascript.jscomp.mozilla.rhino.Token.CommentType.JSDOC;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.ast.ArrayLiteral;
@@ -70,6 +74,9 @@ import com.google.javascript.rhino.ScriptOrFnNode;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -78,11 +85,6 @@ import java.util.Set;
 *
  */
 public class IRFactory {
-  /**
-   * Property used to temporarily store the JsDoc string in a node for later
-   * transforming into a proper JSDocInfo.
-   */
-  private static int TMP_JSDOC_PROP = Node.LAST_PROP + 1;
 
   private final String sourceString;
   private final String sourceName;
@@ -93,6 +95,24 @@ public class IRFactory {
 
   // non-static for thread safety
   private final Set<String> ALLOWED_DIRECTIVES = Sets.newHashSet("use strict");
+
+  // Nodes with JSDoc comments, indexed by the text of the JSDoc comment.
+  //
+  // It's likely that two or more nodes in the same file may have the same
+  // jsdoc comment. In general, that's ok.
+  //
+  // There's one edge case where this might cause problems. If two JSDoc
+  // comments have the same text, and the first JSDoc comment is not attached
+  // to a node, then the second node will get the first JSDoc comment
+  // instead of the second. When this happens, it probably won't cause any
+  // problems. The two JSDoc comments will be exactly the same, except for
+  // their line numbers. Their line numbers will only be exposed for
+  // type name resolution warnings.
+  //
+  // TODO(nicksantos): Change rhino to put the whole Comment object
+  // on the Node.
+  private final Multimap<String, NodeWithJsDoc> nodesWithJsDoc =
+      LinkedHashMultimap.create();
 
   private IRFactory(String sourceString,
                     String sourceName,
@@ -124,15 +144,18 @@ public class IRFactory {
     JSDocInfo fileOverviewInfo = null;
     if (node.getComments() != null) {
       for (Comment comment : node.getComments()) {
-        if (comment.getCommentType() == JSDOC &&
-            (comment.getValue().contains("@fileoverview") ||
-             comment.getValue().contains("@preserve") ||
-             comment.getValue().contains("@license"))) {
-          JSDocInfo info = irFactory.parseJSDocInfo(comment.getValue(),
-              comment.getLineno(), comment.getAbsolutePosition(),
-              fileLevelJsDocBuilder, fileOverviewInfo);
-          if (info != null && fileOverviewInfo == null) {
-            fileOverviewInfo = info;
+        if (comment.getCommentType() == JSDOC) {
+          JsDocInfoParser jsDocParser =
+              irFactory.createJsDocInfoParser(comment.getValue(),
+                  comment.getLineno(), comment.getAbsolutePosition(),
+                  fileLevelJsDocBuilder, fileOverviewInfo);
+          if (jsDocParser.getFileOverviewJSDocInfo() != fileOverviewInfo) {
+            fileOverviewInfo = jsDocParser.getFileOverviewJSDocInfo();
+          } else {
+            JSDocInfo info = jsDocParser.retrieveAndResetParsedJSDocInfo();
+            if (info != null) {
+              irFactory.attachJsDoc(comment, info);
+            }
           }
         }
       }
@@ -147,16 +170,23 @@ public class IRFactory {
         }
         irNode.setJSDocInfo(fileOverviewInfo);
       }
-
-      Comment[] comments = new Comment[node.getComments().size()];
-      comments = node.getComments().toArray(comments);
-      irFactory.parseAllJsDocInfo(irNode, comments, 0);
     }
     return irNode;
   }
 
   private Node transform(AstNode node) {
+    String jsDoc = node.getJsDoc();
+    NodeWithJsDoc nodeWithJsDoc = null;
+    if (jsDoc != null) {
+      nodeWithJsDoc = new NodeWithJsDoc();
+      nodesWithJsDoc.put(jsDoc, nodeWithJsDoc);
+    }
+
     Node irNode = justTransform(node);
+    if (nodeWithJsDoc != null) {
+      nodeWithJsDoc.node = irNode;
+    }
+
     // If we have a named function, set the position to that of the name.
     if (irNode.getType() == Token.FUNCTION &&
         irNode.getFirstChild().getLineno() != -1) {
@@ -173,90 +203,25 @@ public class IRFactory {
         irNode.setCharno(charno);
       }
     }
-    if (node.getJsDoc() != null) {
-      irNode.putProp(TMP_JSDOC_PROP, node.getJsDoc());
-    }
     return irNode;
   }
 
   /**
-   * Parses all temporary JsDoc strings in this node and all its children
-   * recursively as well. Assumes the remaining JsDoc strings are contained in
-   * pre-order with skips allowed, in the given comments, after the given index.
+   * Creates a JsDocInfoParser and parses the JsDoc string.
    *
-   * @param node The current node to start parsing at.
-   * @param comments An array of all comments in the source.
-   * @param ci Current index into the array of comments.
-   *
-   * @return Current index into the array of comments after parsing this node.
-   */
-  private int parseAllJsDocInfo(Node node, Comment[] comments, int ci) {
-    if (ci >= comments.length) {
-      // There are no comments left.
-      return ci;
-    }
-
-    // Parse the JsDoc string on the current node, if any.
-    if (node.getProp(TMP_JSDOC_PROP) != null) {
-      String jsDoc = (String) node.getProp(TMP_JSDOC_PROP);
-
-      // Find the match of the JsDoc string in the array of comments.
-      while (comments[ci].getCommentType() != JSDOC ||
-          !comments[ci].getValue().equals(jsDoc)) {
-        ci++;
-        Preconditions.checkState(ci < comments.length);
-      }
-
-      JSDocInfo info = parseJSDocInfo(jsDoc, comments[ci].getLineno(),
-          comments[ci].getAbsolutePosition());
-      node.setJSDocInfo(info);
-      if (info != null && info.hasEnumParameterType()) {
-        if (node.getType() == Token.NAME) {
-          registry.identifyEnumName(node.getString());
-        } else if (node.getType() == Token.VAR &&
-            node.getChildCount() == 1) {
-          registry.identifyEnumName(node.getFirstChild().getString());
-        } else if (node.getType() == Token.ASSIGN) {
-          registry.identifyEnumName(node.getFirstChild().getQualifiedName());
-        }
-      }
-
-      ci++;
-      node.removeProp(TMP_JSDOC_PROP);
-    }
-
-    // Recurse on the children.
-    for (Node child : node.children()) {
-      ci = parseAllJsDocInfo(child, comments, ci);
-    }
-
-    return ci;
-  }
-
-  private JSDocInfo parseJSDocInfo(String comment, int lineno, int position) {
-    return parseJSDocInfo(comment, lineno, position, null, null);
-  }
-
-  /**
-   * Parse a JsDoc string into a JSDocInfo.
-   *
-   * Used both for handling individual JSDoc comments (when it returns the new
-   * JSDocInfo for the node) and for handling file-level JSDoc comments
-   * (@fileoverview and @license).  In this second case, it returns a
-   * JSDocInfo if it found another @fileoverview, or null if not.  Also in
-   * the second case, all @license text found gets shoved into the
-   * fileLevelJsDocBuilder object.
+   * Used both for handling individual JSDoc comments and for handling
+   * file-level JSDoc comments (@fileoverview and @license).
    *
    * @param comment The JsDoc comment to parse.
    * @param lineno The line number of the node this comment is attached to.
-   * @param fileLevelJsDocBuilder The builder for file-level JSDocInfo. If not
-   *     null, this method parses to a fileOverview JSDocInfo as opposed to a
-   *     node-level one.
+   * @param fileLevelJsDocBuilder The builder for file-level JSDocInfo.
    * @param fileOverviewInfo The current @fileoverview JSDocInfo, so that the
    *     parser may warn if another @fileoverview is found. May be null.
-   * @return A JSDocInfo. May be null if the method parses to the wrong level.
+   * @return A JSDocInfoParser. Will contain either fileoverview jsdoc, or
+   *     normal jsdoc, or no jsdoc (if the method parses to the wrong level).
    */
-  private JSDocInfo parseJSDocInfo(String comment, int lineno, int position,
+  private JsDocInfoParser createJsDocInfoParser(
+      String comment, int lineno, int position,
       Node.FileLevelJsDocBuilder fileLevelJsDocBuilder,
       JSDocInfo fileOverviewInfo) {
     // The JsDocInfoParser expects the comment without the initial '/**'.
@@ -272,10 +237,32 @@ public class IRFactory {
     jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
     jsdocParser.setFileOverviewJSDocInfo(fileOverviewInfo);
     jsdocParser.parse();
-    if (fileLevelJsDocBuilder != null) {
-      return jsdocParser.getFileOverviewJSDocInfo();
-    } else {
-      return jsdocParser.retrieveAndResetParsedJSDocInfo();
+    return jsdocParser;
+  }
+
+  /** Attach JSDocInfo to a node, if we can find one. */
+  private void attachJsDoc(Comment comment, JSDocInfo info) {
+    Collection<NodeWithJsDoc> candidates =
+        nodesWithJsDoc.get(comment.getValue());
+    if (candidates.isEmpty()) {
+      return;
+    }
+
+    Iterator<NodeWithJsDoc> candidateIter = candidates.iterator();
+    Node node = candidateIter.next().node;
+    candidateIter.remove();
+    node.setJSDocInfo(info);
+    if (info.hasEnumParameterType()) {
+      if (node.getType() == Token.NAME) {
+        registry.identifyEnumName(node.getString());
+      } else if (node.getType() == Token.VAR &&
+            node.getChildCount() == 1) {
+        registry.identifyEnumName(
+            node.getFirstChild().getString());
+      } else if (node.getType() == Token.ASSIGN) {
+        registry.identifyEnumName(
+            node.getFirstChild().getQualifiedName());
+      }
     }
   }
 
@@ -1161,5 +1148,13 @@ public class IRFactory {
 
     // Token without name
     throw new IllegalStateException(String.valueOf(token));
+  }
+
+  /**
+   * A simple wrapper struct, so that we can put a Node in the collection
+   * first and populate it later.
+   */
+  private final class NodeWithJsDoc {
+    private Node node = null;
   }
 }

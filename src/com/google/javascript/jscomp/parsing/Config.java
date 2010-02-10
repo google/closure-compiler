@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -39,15 +41,38 @@ class Config {
   final boolean parseJsDocDocumentation;
 
   /**
-   * JSDoc annotations that should not be warned about, even if
-   * the parser doesn't know what to do with them otherwise.
+   * Recognized JSDoc annotations, mapped from their name to their internal
+   * representation.
    */
-  final Set<String> annotationWhitelist;
+  final Map<String, Annotation> annotationNames;
+
+  /**
+   * Annotation names.
+   */
 
   Config(JSTypeRegistry registry, Set<String> annotationWhitelist,
       boolean parseJsDocDocumentation) {
     this.registry = registry;
-    this.annotationWhitelist = annotationWhitelist;
+    this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = parseJsDocDocumentation;
+  }
+
+  /**
+   * Create the annotation names from the user-specified
+   * annotation whitelist.
+   */
+  private static Map<String, Annotation> buildAnnotationNames(
+      Set<String> annotationWhitelist) {
+    ImmutableMap.Builder<String, Annotation> annotationBuilder =
+        ImmutableMap.builder();
+    annotationBuilder.putAll(Annotation.recognizedAnnotations);
+    for (String unrecognizedAnnotation : annotationWhitelist) {
+      if (!Annotation.recognizedAnnotations.containsKey(
+              unrecognizedAnnotation)) {
+        annotationBuilder.put(
+            unrecognizedAnnotation, Annotation.NOT_IMPLEMENTED);
+      }
+    }
+    return annotationBuilder.build();
   }
 }

@@ -67,53 +67,6 @@ public final class JsDocInfoParser {
   private JSDocInfo fileOverviewJSDocInfo = null;
   private State state;
 
-  private static final Map<String, Annotation> recognizedAnnotations =
-      new ImmutableMap.Builder<String, Annotation>().
-      put("argument", Annotation.PARAM).
-      put("author", Annotation.AUTHOR).
-      put("const", Annotation.CONSTANT).
-      put("constant", Annotation.CONSTANT).
-      put("constructor", Annotation.CONSTRUCTOR).
-      put("define", Annotation.DEFINE).
-      put("deprecated", Annotation.DEPRECATED).
-      put("desc", Annotation.DESC).
-      put("enum", Annotation.ENUM).
-      put("export", Annotation.EXPORT).
-      put("extends", Annotation.EXTENDS).
-      put("externs", Annotation.EXTERNS).
-      put("fileoverview", Annotation.FILE_OVERVIEW).
-      put("final", Annotation.CONSTANT).
-      put("hidden", Annotation.HIDDEN).
-      put("implements", Annotation.IMPLEMENTS).
-      put("implicitCast", Annotation.IMPLICIT_CAST).
-      put("inheritDoc", Annotation.INHERIT_DOC).
-      put("interface", Annotation.INTERFACE).
-      put("javadispatch", Annotation.JAVA_DISPATCH).
-      put("license", Annotation.LICENSE).
-      put("noalias", Annotation.NO_ALIAS).
-      put("noshadow", Annotation.NO_SHADOW).
-      put("nosideeffects", Annotation.NO_SIDE_EFFECTS).
-      put("notypecheck", Annotation.NO_TYPE_CHECK).
-      put("override", Annotation.OVERRIDE).
-      put("owner", Annotation.AUTHOR).
-      put("param", Annotation.PARAM).
-      put("preserve", Annotation.PRESERVE).
-      put("preserveTry", Annotation.PRESERVE_TRY).
-      put("private", Annotation.PRIVATE).
-      put("protected", Annotation.PROTECTED).
-      put("public", Annotation.PUBLIC).
-      put("return", Annotation.RETURN).
-      put("returns", Annotation.RETURN).
-      put("see", Annotation.SEE).
-      put("suppress", Annotation.SUPPRESS).
-      put("template", Annotation.TEMPLATE).
-      put("this", Annotation.THIS).
-      put("throws", Annotation.THROWS).
-      put("type", Annotation.TYPE).
-      put("typedef", Annotation.TYPEDEF).
-      put("version", Annotation.VERSION).
-      build();
-
   private final Map<String, Annotation> annotationNames;
 
   private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder;
@@ -144,48 +97,6 @@ public final class JsDocInfoParser {
     NEXT_IS_ANNOTATION
   }
 
-  private enum Annotation {
-    AUTHOR,
-    CONSTANT,
-    CONSTRUCTOR,
-    DEFINE,
-    DEPRECATED,
-    DESC,
-    ENUM,
-    EXTENDS,
-    EXTERNS,
-    EXPORT,
-    FILE_OVERVIEW,
-    HIDDEN,
-    IMPLEMENTS,
-    IMPLICIT_CAST,
-    INHERIT_DOC,
-    INTERFACE,
-    JAVA_DISPATCH,
-    LICENSE, // same as preserve
-    NO_ALIAS,
-    NO_SHADOW,
-    NO_SIDE_EFFECTS,
-    NO_TYPE_CHECK,
-    NOT_IMPLEMENTED,
-    OVERRIDE,
-    PARAM,
-    PRESERVE, // same as license
-    PRESERVE_TRY,
-    PRIVATE,
-    PROTECTED,
-    PUBLIC,
-    RETURN,
-    SEE,
-    SUPPRESS,
-    TEMPLATE,
-    THIS,
-    THROWS,
-    TYPE,
-    TYPEDEF,
-    VERSION
-  }
-
   JsDocInfoParser(JsDocTokenStream stream,
                   String sourceName,
                   Config config,
@@ -194,23 +105,9 @@ public final class JsDocInfoParser {
     this.sourceName = sourceName;
     this.typeRegistry = config.registry;
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
-    this.annotationNames = buildAnnotationNames(config);
+    this.annotationNames = config.annotationNames;
 
     this.errorReporter = errorReporter;
-  }
-
-  /** Create the annotation names from the user-specified config. */
-  private static Map<String, Annotation> buildAnnotationNames(Config config) {
-    ImmutableMap.Builder<String, Annotation> annotationBuilder =
-        ImmutableMap.builder();
-    annotationBuilder.putAll(recognizedAnnotations);
-    for (String unrecognizedAnnotation : config.annotationWhitelist) {
-      if (!recognizedAnnotations.containsKey(unrecognizedAnnotation)) {
-        annotationBuilder.put(
-            unrecognizedAnnotation, Annotation.NOT_IMPLEMENTED);
-      }
-    }
-    return annotationBuilder.build();
   }
 
   /**
