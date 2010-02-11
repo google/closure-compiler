@@ -61,7 +61,7 @@ class InlineVariables implements CompilerPass {
     // Locals only
     LOCALS_ONLY,
     ALL
-  };
+  }
 
   private final Mode mode;
 
@@ -617,7 +617,7 @@ class InlineVariables implements CompilerPass {
       }
 
       boolean isNeverAssigned = refInfo.isNeverAssigned();
-      // For values that are never assigned, only the references need to be 
+      // For values that are never assigned, only the references need to be
       // checked.
       if (!isNeverAssigned) {
         Reference refInit = refInfo.getInitializingReference();
@@ -633,7 +633,7 @@ class InlineVariables implements CompilerPass {
         if (!refInfo.isWellDefined()) {
           return false;
         }
-        
+
         Node value = refInit.getAssignedValue();
         Preconditions.checkNotNull(value);
         if (!(NodeUtil.isImmutableValue(value) &&

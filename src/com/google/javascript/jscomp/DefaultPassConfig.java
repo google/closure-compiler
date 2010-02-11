@@ -1515,16 +1515,6 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Normalizes the AST for optimizations. */
-  private final PassFactory normalize =
-      new PassFactory("normalize", true) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      compiler.setNormalized();
-      return new Normalize(compiler, false);
-    }
-  };
-
   /** Denormalize the AST for code generation. */
   private final PassFactory denormalize =
       new PassFactory("denormalize", true) {

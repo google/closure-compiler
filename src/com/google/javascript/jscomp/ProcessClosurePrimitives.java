@@ -670,7 +670,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     // The candidate definition.
     private Node candidateDefinition = null;
-    private JSModule candidateModule = null;
 
     // The minimum module where the provide must appear.
     private JSModule minimumModule = null;
@@ -719,7 +718,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       Preconditions.checkArgument(explicitNode != node);
       if ((candidateDefinition == null) || !NodeUtil.isExpressionNode(node)) {
         candidateDefinition = node;
-        candidateModule = module;
         updateMinimumModule(module);
       }
     }

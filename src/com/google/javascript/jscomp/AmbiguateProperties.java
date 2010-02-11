@@ -364,31 +364,6 @@ class AmbiguateProperties implements CompilerPass {
       typesInSet.or(prop.typesSet);
       typesRelatedToSet.or(prop.relatedTypesSet);
     }
-
-    /**
-     * Finds all types related to the provided type and returns a BitSet with
-     * their bits to true.
-     */
-    private JSTypeBitSet getRelated(JSType type) {
-      JSTypeBitSet relatedTypes = new JSTypeBitSet(intForType.size());
-      if (type instanceof UnionType) {
-        for (JSType alt : ((UnionType) type).getAlternates()) {
-          intersectRelatedTypesOnNonUnion(alt, relatedTypes);
-        }
-      } else {
-        intersectRelatedTypesOnNonUnion(type, relatedTypes);
-      }
-      return relatedTypes;
-    }
-
-    /**
-     * Finds all types related to the provided type and intersects them with
-     * the given BitSet. Expects a non-union type.
-     */
-    private void intersectRelatedTypesOnNonUnion(
-        JSType type, JSTypeBitSet relatedTypes) {
-      relatedTypes.or(getRelatedTypesOnNonUnion(type));
-    }
   }
 
   class PropertyGraphNode implements GraphNode<Property, Void> {

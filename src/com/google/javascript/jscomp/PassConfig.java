@@ -16,10 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-
-
 import com.google.common.collect.Iterables;
-import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 
