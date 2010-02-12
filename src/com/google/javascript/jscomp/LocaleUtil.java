@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.StringUtil;
-
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,9 +55,9 @@ class LocaleUtil {
     // subsequent text.
     matcher.find();
 
-    String language = StringUtil.makeSafe(matcher.group(1));
-    String country = StringUtil.makeSafe(matcher.group(2));
-    String variant = StringUtil.makeSafe(matcher.group(3));
+    String language = Strings.makeSafe(matcher.group(1));
+    String country = Strings.makeSafe(matcher.group(2));
+    String variant = Strings.makeSafe(matcher.group(3));
 
     return new Locale(language, country, variant);
   }

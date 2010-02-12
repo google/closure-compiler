@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.StringUtil;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -89,15 +88,15 @@ class SanityCheck implements CompilerPass {
     Node root2 = compiler.parseSyntheticCode(source);
     if (compiler.hasHaltingErrors()) {
       compiler.report(JSError.make(CANNOT_PARSE_GENERATED_CODE,
-              StringUtil.truncateAtMaxLength(source, 100, true)));
+              Strings.truncateAtMaxLength(source, 100, true)));
       return null;
     }
 
     String source2 = compiler.toSource(root2);
     if (!source.equals(source2)) {
       compiler.report(JSError.make(GENERATED_BAD_CODE,
-              StringUtil.truncateAtMaxLength(source, 100, true),
-              StringUtil.truncateAtMaxLength(source2, 100, true)));
+              Strings.truncateAtMaxLength(source, 100, true),
+              Strings.truncateAtMaxLength(source2, 100, true)));
     }
 
     return root2;

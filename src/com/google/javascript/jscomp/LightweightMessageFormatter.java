@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt.LINE;
 
-import com.google.common.base.StringUtil;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.SourceExcerptProvider.ExcerptFormatter;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
@@ -140,7 +139,7 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
 
         // nice spaces for the line number
         int spaces = numberLength - Integer.toString(lineNumber).length();
-        builder.append(StringUtil.repeat(" ", spaces));
+        builder.append(Strings.repeat(" ", spaces));
         builder.append(lineNumber);
         builder.append("| ");
 

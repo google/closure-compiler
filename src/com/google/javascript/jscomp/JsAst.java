@@ -86,8 +86,8 @@ public class JsAst implements SourceAst {
       String sourceStr) {
     try {
       logger_.fine("Parsing: " + sourceName);
-      root = ParserRunner.parse(sourceName, sourceStr, compiler.isIdeMode(),
-          compiler.getTypeRegistry(),
+      root = ParserRunner.parse(sourceName, sourceStr,
+          compiler.getParserConfig(),
           compiler.getDefaultErrorReporter(),
           logger_);
     } catch (IOException e) {

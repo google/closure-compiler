@@ -25,6 +25,8 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
+import com.google.javascript.jscomp.parsing.Config;
+import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -119,6 +121,7 @@ public class Compiler extends AbstractCompiler {
   CodingConvention defaultCodingConvention = new GoogleCodingConvention();
 
   private JSTypeRegistry typeRegistry;
+  private Config parserConfig = null;
 
   private ReverseAbstractInterpreter abstractInterpreter;
   private final TypeValidator typeValidator;
@@ -1414,6 +1417,15 @@ public class Compiler extends AbstractCompiler {
   @Override
   public boolean isIdeMode() {
     return options_.ideMode;
+  }
+
+  @Override
+  Config getParserConfig() {
+    if (parserConfig == null) {
+      parserConfig = ParserRunner.createConfig(
+          getTypeRegistry(), isIdeMode());
+    }
+    return parserConfig;
   }
 
   @Override

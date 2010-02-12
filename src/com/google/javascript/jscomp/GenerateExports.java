@@ -116,8 +116,22 @@ class GenerateExports implements CompilerPass {
 
       Node expression = new Node(Token.EXPR_RESULT, call);
       annotate(expression);
-      context.getScriptNode().addChildAfter(expression,
-          context.getContextNode());
+
+      // It's important that any class-building calls (goog.inherits)
+      // come right after the class definition, so move the export after that.
+      Node insertionPoint = context.getContextNode().getNext();
+      CodingConvention convention = compiler.getCodingConvention();
+      while (insertionPoint != null &&
+          NodeUtil.isExprCall(insertionPoint) &&
+          convention.getClassesDefinedByCall(insertionPoint) == null) {
+        insertionPoint = insertionPoint.getNext();
+      }
+
+      if (insertionPoint == null) {
+        context.getScriptNode().addChildToBack(expression);
+      } else {
+        context.getScriptNode().addChildBefore(expression, insertionPoint);
+      }
       compiler.reportCodeChange();
     }
   }

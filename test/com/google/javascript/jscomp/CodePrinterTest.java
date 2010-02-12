@@ -502,6 +502,12 @@ public class CodePrinterTest extends TestCase {
         "a.Foo.prototype.foo = function() {\n" +
         "}");
   }
+  
+  public void testU2UFunctionTypeAnnotation() {
+    assertTypeAnnotations(
+        "/** @type {!Function} */ var x = function() {}",
+        "/**\n * @constructor\n */\nvar x = function() {\n}");
+  }
 
   private void assertPrettyPrint(String js, String expected) {
     assertEquals(expected,

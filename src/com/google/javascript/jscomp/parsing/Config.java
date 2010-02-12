@@ -28,7 +28,7 @@ import java.util.Set;
  *
 *
  */
-class Config {
+public class Config {
 
   /**
    * Central registry for type info.
@@ -41,6 +41,11 @@ class Config {
   final boolean parseJsDocDocumentation;
 
   /**
+   * Whether we're in ide mode.
+   */
+  final boolean isIdeMode;
+
+  /**
    * Recognized JSDoc annotations, mapped from their name to their internal
    * representation.
    */
@@ -51,10 +56,11 @@ class Config {
    */
 
   Config(JSTypeRegistry registry, Set<String> annotationWhitelist,
-      boolean parseJsDocDocumentation) {
+      boolean isIdeMode) {
     this.registry = registry;
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
-    this.parseJsDocDocumentation = parseJsDocDocumentation;
+    this.parseJsDocDocumentation = isIdeMode;
+    this.isIdeMode = isIdeMode;
   }
 
   /**

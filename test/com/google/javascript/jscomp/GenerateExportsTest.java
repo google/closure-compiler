@@ -103,4 +103,11 @@ public class GenerateExportsTest extends CompilerTestCase {
     test("(function() { /** @export */var FOO = 5 })()",
          null, FindExportableNodes.NON_GLOBAL_ERROR);
   }
+
+  public void testExportSubclass() {
+    test("var goog = {}; function F() {}" +
+         "/** @export */ function G() {} goog.inherits(G, F);",
+         "var goog = {}; function F() {}" +
+         "function G() {} goog.inherits(G, F); google_exportSymbol('G', G);");
+  }
 }

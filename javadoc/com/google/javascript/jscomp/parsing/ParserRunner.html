@@ -112,11 +112,19 @@ Class ParserRunner</H2>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing">Config</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/ParserRunner.html#createConfig(com.google.javascript.rhino.jstype.JSTypeRegistry, boolean)">createConfig</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;typeRegistry,
+             boolean&nbsp;isIdeMode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/ParserRunner.html#parse(java.lang.String, java.lang.String, boolean, com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.mozilla.rhino.ErrorReporter, java.util.logging.Logger)">parse</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/ParserRunner.html#parse(java.lang.String, java.lang.String, com.google.javascript.jscomp.parsing.Config, com.google.javascript.jscomp.mozilla.rhino.ErrorReporter, java.util.logging.Logger)">parse</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
       <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceString,
-      boolean&nbsp;isIdeMode,
-      <A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;typeRegistry,
+      <A HREF="../../../../../com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing">Config</A>&nbsp;config,
       com.google.javascript.jscomp.mozilla.rhino.ErrorReporter&nbsp;errorReporter,
       <A HREF="http://java.sun.com/javase/6/docs/api/java/util/logging/Logger.html?is-external=true" title="class or interface in java.util.logging">Logger</A>&nbsp;logger)</CODE>
 
@@ -146,13 +154,24 @@ Class ParserRunner</H2>
 </TR>
 </TABLE>
 
-<A NAME="parse(java.lang.String, java.lang.String, boolean, com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.mozilla.rhino.ErrorReporter, java.util.logging.Logger)"><!-- --></A><H3>
+<A NAME="createConfig(com.google.javascript.rhino.jstype.JSTypeRegistry, boolean)"><!-- --></A><H3>
+createConfig</H3>
+<PRE>
+public static <A HREF="../../../../../com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing">Config</A> <B>createConfig</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;typeRegistry,
+                                  boolean&nbsp;isIdeMode)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="parse(java.lang.String, java.lang.String, com.google.javascript.jscomp.parsing.Config, com.google.javascript.jscomp.mozilla.rhino.ErrorReporter, java.util.logging.Logger)"><!-- --></A><H3>
 parse</H3>
 <PRE>
 public static <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>parse</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
                          <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceString,
-                         boolean&nbsp;isIdeMode,
-                         <A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;typeRegistry,
+                         <A HREF="../../../../../com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing">Config</A>&nbsp;config,
                          com.google.javascript.jscomp.mozilla.rhino.ErrorReporter&nbsp;errorReporter,
                          <A HREF="http://java.sun.com/javase/6/docs/api/java/util/logging/Logger.html?is-external=true" title="class or interface in java.util.logging">Logger</A>&nbsp;logger)
                   throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>

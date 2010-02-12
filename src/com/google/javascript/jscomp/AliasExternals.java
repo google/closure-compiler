@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.StringUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -180,19 +179,19 @@ class AliasExternals implements CompilerPass {
     this.compiler = compiler;
     this.moduleGraph = moduleGraph;
 
-    if (!StringUtil.isEmpty(unaliasableGlobals) &&
-        !StringUtil.isEmpty(aliasableGlobals)) {
+    if (!Strings.isEmpty(unaliasableGlobals) &&
+        !Strings.isEmpty(aliasableGlobals)) {
       throw new IllegalArgumentException(
           "Cannot pass in both unaliasable and aliasable globals; you must " +
           "choose one or the other.");
     }
 
-    if (!StringUtil.isEmpty(unaliasableGlobals)) {
+    if (!Strings.isEmpty(unaliasableGlobals)) {
       this.unaliasableGlobals.addAll(
           Arrays.asList(unaliasableGlobals.split(",")));
     }
 
-    if (!StringUtil.isEmpty(aliasableGlobals)) {
+    if (!Strings.isEmpty(aliasableGlobals)) {
       this.aliasableGlobals.addAll(Arrays.asList(aliasableGlobals.split(",")));
     }
 

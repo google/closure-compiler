@@ -1030,7 +1030,7 @@ Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascr
 Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
 <DD>Use @nosideeffects annotations, function bodies and name graph
  to determine if calls have side effects.
-<DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)"><B>connect(N, E, N)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing"><B>Config</B></A> - Class in <A HREF="./com/google/javascript/jscomp/parsing/package-summary.html">com.google.javascript.jscomp.parsing</A><DD>Configuration for the AST factory.<DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)"><B>connect(N, E, N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>
 <DD>Connects two nodes in the graph with an edge.
 <DT><A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#connect(N, E, N)"><B>connect(N, E, N)</B></A> - 
@@ -1088,6 +1088,9 @@ Static method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createAnonymousObjectType()"><B>createAnonymousObjectType()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Create an anonymous object type.
+<DT><A HREF="./com/google/javascript/jscomp/parsing/ParserRunner.html#createConfig(com.google.javascript.rhino.jstype.JSTypeRegistry, boolean)"><B>createConfig(JSTypeRegistry, boolean)</B></A> - 
+Static method in class com.google.javascript.jscomp.parsing.<A HREF="./com/google/javascript/jscomp/parsing/ParserRunner.html" title="class in com.google.javascript.jscomp.parsing">ParserRunner</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createConstructorType(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType...)"><B>createConstructorType(JSType, JSType...)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Creates a function type which can act as a constructor.
@@ -3418,7 +3421,7 @@ Method in interface com.google.javascript.jscomp.graph.<A HREF="./com/google/jav
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/FunctionType.html#getSource()"><B>getSource()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>
-<DD>Gets the source node.
+<DD>Gets the source node or null if this is an unknown function.
 <DT><A HREF="./com/google/javascript/jscomp/CompilerInput.html#getSourceAst()"><B>getSourceAst()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>
 <DD>Returns the SourceAst object on which this input is based.
@@ -5757,7 +5760,7 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html#parse(com.google.javascript.jscomp.JSSourceFile)"><B>parse(JSSourceFile)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/jscomp/parsing/ParserRunner.html#parse(java.lang.String, java.lang.String, boolean, com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.mozilla.rhino.ErrorReporter, java.util.logging.Logger)"><B>parse(String, String, boolean, JSTypeRegistry, ErrorReporter, Logger)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/parsing/ParserRunner.html#parse(java.lang.String, java.lang.String, com.google.javascript.jscomp.parsing.Config, com.google.javascript.jscomp.mozilla.rhino.ErrorReporter, java.util.logging.Logger)"><B>parse(String, String, Config, ErrorReporter, Logger)</B></A> - 
 Static method in class com.google.javascript.jscomp.parsing.<A HREF="./com/google/javascript/jscomp/parsing/ParserRunner.html" title="class in com.google.javascript.jscomp.parsing">ParserRunner</A>
 <DD>Parses the JavaScript text given by a reader.
 <DT><A HREF="./com/google/javascript/rhino/Parser.html#parse(java.lang.String, java.lang.String)"><B>parse(String, String)</B></A> - 

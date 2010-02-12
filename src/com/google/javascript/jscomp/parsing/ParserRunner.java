@@ -42,6 +42,12 @@ public class ParserRunner {
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
 
+  public static Config createConfig(
+      JSTypeRegistry typeRegistry, boolean isIdeMode) {
+    return new Config(
+        typeRegistry, getAnnotationNames(), isIdeMode);
+  }
+
   /**
    * Gets a list of extra annotations that are OK, even if the parser
    * doesn't have handlers for them built-in.
@@ -79,12 +85,9 @@ public class ParserRunner {
    */
   public static Node parse(String sourceName,
                            String sourceString,
-                           boolean isIdeMode,
-                           JSTypeRegistry typeRegistry,
+                           Config config,
                            ErrorReporter errorReporter,
                            Logger logger) throws IOException {
-    initAnnotationNames();
-
     Context cx = Context.enter();
     cx.setErrorReporter(errorReporter);
     cx.setLanguageVersion(Context.VERSION_1_5);
@@ -93,7 +96,7 @@ public class ParserRunner {
     compilerEnv.setRecordingComments(true);
     compilerEnv.setRecordingLocalJsDocComments(true);
     compilerEnv.setWarnTrailingComma(true);
-    if (isIdeMode) {
+    if (config.isIdeMode) {
       compilerEnv.setReservedKeywordAsIdentifier(true);
       compilerEnv.setAllowMemberExprAsFunctionName(true);
     }
@@ -109,8 +112,6 @@ public class ParserRunner {
     }
     Node root = null;
     if (astRoot != null) {
-      Config config = new Config(
-          typeRegistry, annotationNames, isIdeMode);
       root = IRFactory.transformTree(
           astRoot, sourceString, config, errorReporter);
       root.setIsSyntheticBlock(true);

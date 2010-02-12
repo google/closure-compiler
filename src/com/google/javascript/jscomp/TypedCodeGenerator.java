@@ -37,8 +37,8 @@ class TypedCodeGenerator extends CodeGenerator {
 
   @Override
   void add(Node n, Context context) {
-    if (n.getParent().getType() == Token.BLOCK
-        || n.getParent().getType() == Token.SCRIPT) {
+    Node parent = n.getParent();
+    if (parent.getType() == Token.BLOCK || parent.getType() == Token.SCRIPT) {
       if (n.getType() == Token.FUNCTION) {
         add(getFunctionAnnotation(n));
       } else if (n.getType() == Token.EXPR_RESULT
@@ -87,18 +87,20 @@ class TypedCodeGenerator extends CodeGenerator {
     //     NAME param1
     //     NAME param2
     Node fnNode = funType.getSource();
-    Node paramNode = NodeUtil.getFnParameters(fnNode).getFirstChild();
+    if (fnNode != null) {
+      Node paramNode = NodeUtil.getFnParameters(fnNode).getFirstChild();
 
-    // Param types
-    for (Node n : funType.getParameters()) {
-      // Skip any parameters for which we do not have a name.
-      if (paramNode == null) {
-        break;
+      // Param types
+      for (Node n : funType.getParameters()) {
+        // Bail out if the paramNode is not there.
+        if (paramNode == null) {
+          break;
+        }
+        sb.append(" * @param {" + n.getJSType() + "} ");
+        sb.append(paramNode.getString());
+        sb.append("\n");
+        paramNode = paramNode.getNext();
       }
-      sb.append(" * @param {" + n.getJSType() + "} ");
-      sb.append(paramNode.getString());
-      sb.append("\n");
-      paramNode = paramNode.getNext();
     }
 
     // Return type
@@ -126,7 +128,7 @@ class TypedCodeGenerator extends CodeGenerator {
       }
     }
 
-    if (fnNode.getBooleanProp(Node.IS_DISPATCHER)) {
+    if (fnNode != null && fnNode.getBooleanProp(Node.IS_DISPATCHER)) {
       sb.append(" * @javadispatch\n");
     }
 

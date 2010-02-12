@@ -18,9 +18,9 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
+import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-
 
 /**
  * An abstract compiler, to help remove the circular dependency of
@@ -179,6 +179,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Returns true if compiling in IDE mode.
    */
   abstract boolean isIdeMode();
+
+  /**
+   * Returns the parser configuration.
+   */
+  abstract Config getParserConfig();
 
   /**
    * Returns true if type checking is enabled.

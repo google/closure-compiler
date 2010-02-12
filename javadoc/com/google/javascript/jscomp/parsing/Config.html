@@ -3,7 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>
-IRFactory (Compiler)
+Config (Compiler)
 </TITLE>
 
 
@@ -13,7 +13,7 @@ IRFactory (Compiler)
 function windowTitle()
 {
     if (location.href.indexOf('is-external=true') == -1) {
-        parent.document.title="IRFactory (Compiler)";
+        parent.document.title="Config (Compiler)";
     }
 }
 </SCRIPT>
@@ -52,11 +52,11 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/parsing/JsDocInfoParser.html" title="class in com.google.javascript.jscomp.parsing"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/parsing/IRFactory.html" title="class in com.google.javascript.jscomp.parsing"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../../index.html?com/google/javascript/jscomp/parsing/IRFactory.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="IRFactory.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/parsing/Config.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="Config.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -73,9 +73,9 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#methods_inherited_from_class_java.lang.Object">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;METHOD</FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_top"></A>
@@ -87,18 +87,19 @@ DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHO
 <FONT SIZE="-1">
 com.google.javascript.jscomp.parsing</FONT>
 <BR>
-Class IRFactory</H2>
+Class Config</H2>
 <PRE>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
-  <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.parsing.IRFactory</B>
+  <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.parsing.Config</B>
 </PRE>
 <HR>
 <DL>
-<DT><PRE>public class <B>IRFactory</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+<DT><PRE>public class <B>Config</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
 </PRE>
 
 <P>
-IRFactory transforms the new AST to the old AST.
+Configuration for the AST factory. Should be shared across AST creation
+ for all files of a compilation process.
 <P>
 
 <P>
@@ -114,17 +115,6 @@ IRFactory transforms the new AST to the old AST.
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
 <B>Method Summary</B></FONT></TH>
 </TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/parsing/IRFactory.html#transformTree(com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot, java.lang.String, com.google.javascript.jscomp.parsing.Config, com.google.javascript.jscomp.mozilla.rhino.ErrorReporter)">transformTree</A></B>(com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot&nbsp;node,
-              <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceString,
-              <A HREF="../../../../../com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing">Config</A>&nbsp;config,
-              com.google.javascript.jscomp.mozilla.rhino.ErrorReporter&nbsp;errorReporter)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -137,29 +127,6 @@ IRFactory transforms the new AST to the old AST.
 </TABLE>
 &nbsp;
 <P>
-
-<!-- ============ METHOD DETAIL ========== -->
-
-<A NAME="method_detail"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
-<B>Method Detail</B></FONT></TH>
-</TR>
-</TABLE>
-
-<A NAME="transformTree(com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot, java.lang.String, com.google.javascript.jscomp.parsing.Config, com.google.javascript.jscomp.mozilla.rhino.ErrorReporter)"><!-- --></A><H3>
-transformTree</H3>
-<PRE>
-public static <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>transformTree</B>(com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot&nbsp;node,
-                                 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceString,
-                                 <A HREF="../../../../../com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing">Config</A>&nbsp;config,
-                                 com.google.javascript.jscomp.mozilla.rhino.ErrorReporter&nbsp;errorReporter)</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-</DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
 
@@ -190,11 +157,11 @@ public static <A HREF="../../../../../com/google/javascript/rhino/Node.html" tit
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/parsing/Config.html" title="class in com.google.javascript.jscomp.parsing"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/parsing/JsDocInfoParser.html" title="class in com.google.javascript.jscomp.parsing"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/parsing/IRFactory.html" title="class in com.google.javascript.jscomp.parsing"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../../index.html?com/google/javascript/jscomp/parsing/IRFactory.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="IRFactory.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/parsing/Config.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="Config.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -211,9 +178,9 @@ public static <A HREF="../../../../../com/google/javascript/rhino/Node.html" tit
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#methods_inherited_from_class_java.lang.Object">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;METHOD</FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_bottom"></A>

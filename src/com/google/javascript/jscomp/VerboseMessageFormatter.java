@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.StringUtil;
 import com.google.javascript.jscomp.CheckLevel;
 
 /**
@@ -47,7 +46,7 @@ class VerboseMessageFormatter extends AbstractMessageFormatter {
       lineSource = sourceRegion.getSourceExcerpt();
     }
     return String.format("%s at %s line %s %s", description,
-        (StringUtil.isEmpty(sourceName) ? "(unknown source)" : sourceName),
+        (Strings.isEmpty(sourceName) ? "(unknown source)" : sourceName),
         ((lineNumber < 0) ? String.valueOf(lineNumber) : "(unknown line)"),
         ((lineSource != null) ? ":\n\n" + lineSource : "."));
   }

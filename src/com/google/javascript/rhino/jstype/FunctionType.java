@@ -784,7 +784,7 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   /**
-   * Gets the source node.
+   * Gets the source node or null if this is an unknown function.
    */
   public Node getSource() {
     return source;
