@@ -7,7 +7,8 @@
 	<classpathentry kind="lib" path="lib/protobuf_deploy.jar"/>
 	<classpathentry kind="lib" path="lib/libtrunk_rhino_parser_jarjared.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/junit.jar"/>
 	<classpathentry kind="lib" path="lib/ant_deploy.jar"/>
+	<classpathentry kind="lib" path="lib/junit4-core.jar"/>
+	<classpathentry kind="lib" path="lib/junit4-legacy.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
