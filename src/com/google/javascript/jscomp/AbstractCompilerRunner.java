@@ -885,7 +885,7 @@ abstract class AbstractCompilerRunner<A extends Compiler,
     }
 
     File outputFile = new File(path);
-    PrintStream out = openSourceMapStream(options, path + ".js");
+    PrintStream out = openSourceMapStream(options, path);
     compiler.getSourceMap().appendTo(out, outputFile.getName());
     out.close();
   }

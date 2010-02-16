@@ -123,7 +123,8 @@ class GenerateExports implements CompilerPass {
       CodingConvention convention = compiler.getCodingConvention();
       while (insertionPoint != null &&
           NodeUtil.isExprCall(insertionPoint) &&
-          convention.getClassesDefinedByCall(insertionPoint) == null) {
+          convention.getClassesDefinedByCall(
+              insertionPoint.getFirstChild()) != null) {
         insertionPoint = insertionPoint.getNext();
       }
 

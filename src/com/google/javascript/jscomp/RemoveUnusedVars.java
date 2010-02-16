@@ -85,23 +85,13 @@ class RemoveUnusedVars implements CompilerPass {
    */
   public void process(Node externs, Node root) {
     warnedVars_.clear();
+    numRemoved_ = 0;
+    referenced.clear();
 
-    // TODO(nicksantos|user): Maybe speed this up by only repeating the pass
-    // if any functions were removed.
-    int i = 0;
-    do {
-      numRemoved_ = 0;
-      referenced.clear();
-      traverseAndRemoveUnusedReferences(root);
+    traverseAndRemoveUnusedReferences(root);
 
-      if (numRemoved_ > 0) {
-        compiler_.reportCodeChange();
-        logger_.fine("RemoveUnusedVars(" + i + "): removed " + numRemoved_);
-      }
-    } while (numRemoved_ > 0 && ++i < MAX_ITERATIONS);
-
-    if (i == MAX_ITERATIONS) {
-      logger_.warning("Reached max allowable iterations. Stopping.");
+    if (numRemoved_ > 0) {
+      compiler_.reportCodeChange();
     }
   }
 

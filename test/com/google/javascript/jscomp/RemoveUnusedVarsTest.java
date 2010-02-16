@@ -100,7 +100,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
     // Test multiple passes required
     test("var a,b,c,d;var e=[b,c];var x=e[3];var f=[d];print(f[0])",
-         "var d;var f=[d];print(f[0])");
+         "var b,c,d;var f=[d];print(f[0])");
 
     // Test proper scoping (static vs dynamic)
     test("var x;function A(){var x;B()}function B(){print(x)}A()",
@@ -122,7 +122,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "return function(){print(f)}}B()",
 
          "function B(){" +
-         "var e,f,h;" +
+         "var d,e,f,h;" +
          "e=function(){print(e)};" +
          "if(1);" +
          "arr=[function(){print(h)}];" +
@@ -220,4 +220,3 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var y=function(x){var z;}", "var y=function(){}");
   }
 }
-
