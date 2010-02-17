@@ -514,6 +514,15 @@ public class InlineVariablesTest extends CompilerTestCase {
     testSame("var f = function () {}; function g() {h(f);}");
   }
 
+  public void test2388531() {
+    testSame("var f = function () {};" +
+             "var g = function () {};" +
+             "goog.inherits(f, g);");
+    testSame("var f = function () {};" +
+             "var g = function () {};" +
+             "goog$inherits(f, g);");
+  }
+
   public void testRecursiveFunction1() {
     testSame("var x = 0; (function x() { return x ? x() : 3; })();");
   }
@@ -801,13 +810,13 @@ public class InlineVariablesTest extends CompilerTestCase {
   public void testInlineUndefined5() {
     test("var x; for(x in a) {}",
          "var x; for(x in a) {}");
-  }  
-  
+  }
+
   public void testIssue90() {
     test("var x; x && alert(1)",
          "void 0 && alert(1)");
   }
-  
+
   public void testRenamePropertyFunction() {
     testSame("var JSCompiler_renameProperty; " +
              "JSCompiler_renameProperty('foo')");

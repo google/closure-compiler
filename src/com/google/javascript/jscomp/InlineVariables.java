@@ -21,6 +21,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
@@ -514,6 +515,19 @@ class InlineVariables implements CompilerPass {
           && reference.getParent().getType() == Token.CALL
           && reference.getParent().getFirstChild() == reference.getNameNode()) {
         return false;
+      }
+
+      // Bug 2388531: Don't inline subclass definitions into class defining
+      // calls as this confused class removing logic.
+      if (value.getType() == Token.FUNCTION) {
+        Node callNode = reference.getParent();
+        if (reference.getParent().getType() == Token.CALL) {
+          SubclassRelationship relationship =
+              compiler.getCodingConvention().getClassesDefinedByCall(callNode);
+          if (relationship != null) {
+            return false;
+          }
+        }
       }
 
       return canMoveAggressively(value) ||

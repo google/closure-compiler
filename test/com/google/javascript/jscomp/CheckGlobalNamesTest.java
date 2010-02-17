@@ -122,6 +122,10 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
     testSame("var a = {}; var b = a.b = 3;");
   }
 
+  public void testTypedefGivesNoWarning() {
+    testSame("var a = {}; /** @typedef {number} */ a.b;");
+  }
+
   public void testRefToDescendantOfUndefinedPropertyGivesCorrectWarning() {
     testSame("", NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
              UNDEFINED_NAME_WARNING.format("a.x"));

@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
-import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 /**
  * Checks references to undefined properties of global variables.
@@ -140,9 +142,18 @@ class CheckGlobalNames implements CompilerPass {
       name = name.parent;
     }
 
+    // If this is an annotated EXPR-GET, don't do anything.
+    Node parent = ref.node.getParent();
+    if (parent.getType() == Token.EXPR_RESULT) {
+      JSDocInfo info = ref.node.getJSDocInfo();
+      if (info != null && info.hasTypedefType()) {
+        return;
+      }
+    }
+
     compiler.report(
         JSError.make(ref.sourceName, ref.node, level, UNDEFINED_NAME_WARNING,
-                     name.fullName()));
+            name.fullName()));
   }
 
   /**
