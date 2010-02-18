@@ -159,10 +159,10 @@ chrome.tabs.remove = function(tabId, opt_callback) {};
 /**
  * @param {number} tabId Tab id.
  * @param {*} request The request value of any type.
- * @param {function(*) : void} responseCallback The callback function which
+ * @param {function(*) : void=} opt_callback The callback function which
  *     takes a JSON response object sent by the handler of the request.
  */
-chrome.tabs.sendRequest = function(tabId, request, responseCallback) {};
+chrome.tabs.sendRequest = function(tabId, request, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
