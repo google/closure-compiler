@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -296,6 +295,10 @@ public class DefaultPassConfig extends PassConfig {
 
     // TODO(nicksantos): The order of these passes makes no sense, and needs
     // to be re-arranged.
+
+    if (options.runtimeTypeCheck) {
+      passes.add(runtimeTypeCheck);
+    }
 
     passes.add(createEmptyPass("beforeStandardOptimizations"));
 
@@ -1040,6 +1043,16 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new IgnoreCajaProperties(compiler);
+    }
+  };
+
+  /** Inserts runtime type assertions for debugging. */
+  private final PassFactory runtimeTypeCheck =
+      new PassFactory("runtimeTypeCheck", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new RuntimeTypeCheck(compiler,
+          options.runtimeTypeCheckLogFunction);
     }
   };
 

@@ -1126,6 +1126,22 @@ Compiler options
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#disableRuntimeTypeCheck()">disableRuntimeTypeCheck</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#enableRuntimeTypeCheck(java.lang.String)">enableRuntimeTypeCheck</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;logFunction)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Enable runtime type checking, which adds JS type assertions for debugging.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#getCodingConvention()">getCodingConvention</A></B>()</CODE>
 
@@ -3036,6 +3052,37 @@ public void <B>setChainCalls</B>(boolean&nbsp;value)</PRE>
 <DL>
 <DD>If true, chain calls to functions that return this.
 <P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="enableRuntimeTypeCheck(java.lang.String)"><!-- --></A><H3>
+enableRuntimeTypeCheck</H3>
+<PRE>
+public void <B>enableRuntimeTypeCheck</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;logFunction)</PRE>
+<DL>
+<DD>Enable runtime type checking, which adds JS type assertions for debugging.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>logFunction</CODE> - A JS function to be used for logging runtime type
+     assertion failures.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="disableRuntimeTypeCheck()"><!-- --></A><H3>
+disableRuntimeTypeCheck</H3>
+<PRE>
+public void <B>disableRuntimeTypeCheck</B>()</PRE>
+<DL>
 <DD><DL>
 </DL>
 </DD>

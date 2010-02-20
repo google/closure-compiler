@@ -474,6 +474,15 @@ Database.prototype.version;
  */
 Database.prototype.transaction = function(
     callback, opt_errorCallback, opt_Callback) {};
+
+/**
+ * @param {function(SQLTransaction) : void} callback
+ * @param {(function(SQLError) : void)=} opt_errorCallback
+ * @param {Function=} opt_Callback
+ */
+Database.prototype.readTransaction = function(
+    callback, opt_errorCallback, opt_Callback) {};
+
 /**
  * @param {string} oldVersion
  * @param {string} newVersion

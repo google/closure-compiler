@@ -400,6 +400,16 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Special-purpose alterations
   //--------------------------------
 
+  /** Inserts runtime type assertions for debugging. */
+  boolean runtimeTypeCheck;
+
+  /**
+   * A JS function to be used for logging runtime type assertion
+   * failures. It will be passed the warning as a string and the
+   * faulty expression as arguments.
+   */
+  String runtimeTypeCheckLogFunction;
+
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
 
@@ -632,6 +642,8 @@ public class CompilerOptions implements Serializable, Cloneable {
     exportTestFunctions = false;
 
     // Alterations
+    runtimeTypeCheck = false;
+    runtimeTypeCheckLogFunction = null;
     instrumentForCoverage = false;
     instrumentForCoverageOnly = false;
     ignoreCajaProperties = false;
@@ -836,6 +848,21 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setChainCalls(boolean value) {
     this.chainCalls = value;
+  }
+
+  /**
+   * Enable runtime type checking, which adds JS type assertions for debugging.
+   *
+   * @param logFunction A JS function to be used for logging runtime type
+   *     assertion failures.
+   */
+  public void enableRuntimeTypeCheck(String logFunction) {
+    this.runtimeTypeCheck = true;
+    this.runtimeTypeCheckLogFunction = logFunction;
+  }
+
+  public void disableRuntimeTypeCheck() {
+    this.runtimeTypeCheck = false;
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {

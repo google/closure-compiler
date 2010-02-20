@@ -156,6 +156,11 @@ public  final class Instrumentation extends
     return size;
   }
   
+  @Override
+  protected Object writeReplace() throws java.io.ObjectStreamException {
+    return super.writeReplace();
+  }
+  
   public static com.google.javascript.jscomp.Instrumentation parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {

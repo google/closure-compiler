@@ -96,7 +96,7 @@ Class FunctionInformationMap.Module</H2>
               <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.FunctionInformationMap.Module</B>
 </PRE>
 <DL>
-<DT><B>All Implemented Interfaces:</B> <DD>com.google.protobuf.Message, com.google.protobuf.MessageLite</DD>
+<DT><B>All Implemented Interfaces:</B> <DD>com.google.protobuf.Message, com.google.protobuf.MessageLite, <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Serializable.html?is-external=true" title="class or interface in java.io">Serializable</A></DD>
 </DL>
 <DL>
 <DT><B>Enclosing class:</B><DD><A HREF="../../../../com/google/javascript/jscomp/FunctionInformationMap.html" title="class in com.google.javascript.jscomp">FunctionInformationMap</A></DD>
@@ -107,6 +107,8 @@ Class FunctionInformationMap.Module</H2>
 </PRE>
 
 <P>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../serialized-form.html#com.google.javascript.jscomp.FunctionInformationMap.Module">Serialized Form</A></DL>
 <HR>
 
 <P>
@@ -370,6 +372,14 @@ Class FunctionInformationMap.Module</H2>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/FunctionInformationMap.Module.html#writeReplace()">writeReplace</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/FunctionInformationMap.Module.html#writeTo(com.google.protobuf.CodedOutputStream)">writeTo</A></B>(com.google.protobuf.CodedOutputStream&nbsp;output)</CODE>
 
@@ -596,6 +606,23 @@ public int <B>getSerializedSize</B>()</PRE>
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="writeReplace()"><!-- --></A><H3>
+writeReplace</H3>
+<PRE>
+protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A> <B>writeReplace</B>()
+                       throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></PRE>
+<DL>
+<DD><DL>
+<DT><B>Overrides:</B><DD><CODE>writeReplace</CODE> in class <CODE>com.google.protobuf.GeneratedMessage</CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></CODE></DL>
 </DD>
 </DL>
 <HR>

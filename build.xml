@@ -66,6 +66,11 @@
     <!-- Move ParserConfig.properties where ParserRunner.java expects it. -->
     <copy file="${src.dir}/com/google/javascript/jscomp/parsing/ParserConfig.properties"
           todir="${classes.dir}/com/google/javascript/jscomp/parsing" />
+
+    <!-- Move runtime_type_check.js where RuntimeTypeCheck.java expects it. -->
+    <mkdir dir="${classes.dir}/com/google/javascript/jscomp/js" />
+    <copy file="${src.dir}/com/google/javascript/jscomp/js/runtime_type_check.js"
+          todir="${classes.dir}/com/google/javascript/jscomp/js" />
   </target>
 
   <target name="apt">

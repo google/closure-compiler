@@ -1288,6 +1288,30 @@ boolean <B>exportTestFunctions</B></PRE>
 </DL>
 <HR>
 <H3>
+runtimeTypeCheck</H3>
+<PRE>
+boolean <B>runtimeTypeCheck</B></PRE>
+<DL>
+<DD>Inserts runtime type assertions for debugging.
+<P>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+runtimeTypeCheckLogFunction</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>runtimeTypeCheckLogFunction</B></PRE>
+<DL>
+<DD>A JS function to be used for logging runtime type assertion
+ failures. It will be passed the warning as a string and the
+ faulty expression as arguments.
+<P>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
 codingConvention</H3>
 <PRE>
 <A HREF="com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A> <B>codingConvention</B></PRE>
@@ -1722,6 +1746,468 @@ outputCharset</H3>
 <DL>
 <DD>Charset to use when generating code.  If null, then output ASCII.
 <P>
+<DL>
+</DL>
+</DL>
+
+<P>
+<A NAME="com.google.javascript.jscomp.FunctionInformationMap"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Class <A HREF="com/google/javascript/jscomp/FunctionInformationMap.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.FunctionInformationMap</A> extends com.google.protobuf.GeneratedMessage implements Serializable</B></FONT></TH>
+</TR>
+</TABLE>
+
+<P>
+<A NAME="serialized_methods"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Serialization Methods</B></FONT></TH>
+</TR>
+</TABLE>
+
+<P>
+<A NAME="writeReplace()"><!-- --></A><H3>
+writeReplace</H3>
+<PRE>
+protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A> <B>writeReplace</B>()
+                       throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></PRE>
+<DL>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></CODE></DD>
+</DL>
+</DL>
+<A NAME="serializedForm"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Serialized Fields</B></FONT></TH>
+</TR>
+</TABLE>
+
+<H3>
+entry_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">E</A>&gt; <B>entry_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+module_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">E</A>&gt; <B>module_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+memoizedSerializedSize</H3>
+<PRE>
+int <B>memoizedSerializedSize</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+
+<P>
+<A NAME="com.google.javascript.jscomp.FunctionInformationMap.Entry"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Class <A HREF="com/google/javascript/jscomp/FunctionInformationMap.Entry.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.FunctionInformationMap.Entry</A> extends com.google.protobuf.GeneratedMessage implements Serializable</B></FONT></TH>
+</TR>
+</TABLE>
+
+<P>
+<A NAME="serialized_methods"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Serialization Methods</B></FONT></TH>
+</TR>
+</TABLE>
+
+<P>
+<A NAME="writeReplace()"><!-- --></A><H3>
+writeReplace</H3>
+<PRE>
+protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A> <B>writeReplace</B>()
+                       throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></PRE>
+<DL>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></CODE></DD>
+</DL>
+</DL>
+<A NAME="serializedForm"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Serialized Fields</B></FONT></TH>
+</TR>
+</TABLE>
+
+<H3>
+hasId</H3>
+<PRE>
+boolean <B>hasId</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+id_</H3>
+<PRE>
+int <B>id_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasSourceName</H3>
+<PRE>
+boolean <B>hasSourceName</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+sourceName_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>sourceName_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasLineNumber</H3>
+<PRE>
+boolean <B>hasLineNumber</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+lineNumber_</H3>
+<PRE>
+int <B>lineNumber_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasModuleName</H3>
+<PRE>
+boolean <B>hasModuleName</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+moduleName_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>moduleName_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasSize</H3>
+<PRE>
+boolean <B>hasSize</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+size_</H3>
+<PRE>
+int <B>size_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasName</H3>
+<PRE>
+boolean <B>hasName</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+name_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>name_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasCompiledSource</H3>
+<PRE>
+boolean <B>hasCompiledSource</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+compiledSource_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>compiledSource_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+memoizedSerializedSize</H3>
+<PRE>
+int <B>memoizedSerializedSize</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+
+<P>
+<A NAME="com.google.javascript.jscomp.FunctionInformationMap.Module"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Class <A HREF="com/google/javascript/jscomp/FunctionInformationMap.Module.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.FunctionInformationMap.Module</A> extends com.google.protobuf.GeneratedMessage implements Serializable</B></FONT></TH>
+</TR>
+</TABLE>
+
+<P>
+<A NAME="serialized_methods"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Serialization Methods</B></FONT></TH>
+</TR>
+</TABLE>
+
+<P>
+<A NAME="writeReplace()"><!-- --></A><H3>
+writeReplace</H3>
+<PRE>
+protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A> <B>writeReplace</B>()
+                       throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></PRE>
+<DL>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></CODE></DD>
+</DL>
+</DL>
+<A NAME="serializedForm"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Serialized Fields</B></FONT></TH>
+</TR>
+</TABLE>
+
+<H3>
+hasName</H3>
+<PRE>
+boolean <B>hasName</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+name_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>name_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasCompiledSource</H3>
+<PRE>
+boolean <B>hasCompiledSource</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+compiledSource_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>compiledSource_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+memoizedSerializedSize</H3>
+<PRE>
+int <B>memoizedSerializedSize</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+
+<P>
+<A NAME="com.google.javascript.jscomp.Instrumentation"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Class <A HREF="com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.Instrumentation</A> extends com.google.protobuf.GeneratedMessage implements Serializable</B></FONT></TH>
+</TR>
+</TABLE>
+
+<P>
+<A NAME="serialized_methods"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Serialization Methods</B></FONT></TH>
+</TR>
+</TABLE>
+
+<P>
+<A NAME="writeReplace()"><!-- --></A><H3>
+writeReplace</H3>
+<PRE>
+protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A> <B>writeReplace</B>()
+                       throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></PRE>
+<DL>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/ObjectStreamException.html?is-external=true" title="class or interface in java.io">ObjectStreamException</A></CODE></DD>
+</DL>
+</DL>
+<A NAME="serializedForm"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Serialized Fields</B></FONT></TH>
+</TR>
+</TABLE>
+
+<H3>
+hasReportDefined</H3>
+<PRE>
+boolean <B>hasReportDefined</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+reportDefined_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>reportDefined_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasReportCall</H3>
+<PRE>
+boolean <B>hasReportCall</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+reportCall_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>reportCall_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasReportExit</H3>
+<PRE>
+boolean <B>hasReportExit</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+reportExit_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>reportExit_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+declarationToRemove_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">E</A>&gt; <B>declarationToRemove_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+init_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">E</A>&gt; <B>init_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+hasAppNameSetter</H3>
+<PRE>
+boolean <B>hasAppNameSetter</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+appNameSetter_</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>appNameSetter_</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+<H3>
+memoizedSerializedSize</H3>
+<PRE>
+int <B>memoizedSerializedSize</B></PRE>
+<DL>
 <DL>
 </DL>
 </DL>

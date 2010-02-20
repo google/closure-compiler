@@ -184,6 +184,11 @@ public  final class FunctionInformationMap extends
       return size;
     }
     
+    @Override
+    protected Object writeReplace() throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
     public static com.google.javascript.jscomp.FunctionInformationMap.Entry parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -646,6 +651,11 @@ public  final class FunctionInformationMap extends
       return size;
     }
     
+    @Override
+    protected Object writeReplace() throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
     public static com.google.javascript.jscomp.FunctionInformationMap.Module parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -962,6 +972,11 @@ public  final class FunctionInformationMap extends
     size += getUnknownFields().getSerializedSize();
     memoizedSerializedSize = size;
     return size;
+  }
+  
+  @Override
+  protected Object writeReplace() throws java.io.ObjectStreamException {
+    return super.writeReplace();
   }
   
   public static com.google.javascript.jscomp.FunctionInformationMap parseFrom(

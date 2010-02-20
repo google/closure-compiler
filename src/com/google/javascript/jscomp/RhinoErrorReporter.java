@@ -41,7 +41,10 @@ class RhinoErrorReporter {
       DiagnosticType.warning("JSC_EXTRA_FILEOVERVIEW", "Parse error. {0}");
 
   static final DiagnosticType TRAILING_COMMA =
-      DiagnosticType.error("JSC_TRAILING_COMMA", "Parse error. {0}");
+      DiagnosticType.error("JSC_TRAILING_COMMA",
+          "Parse error. Internet Explorer has a non-standard " +
+          "intepretation of trailing commas. Arrays will have the wrong " +
+          "length and objects will not parse at all.");
 
   static final DiagnosticType DUPLICATE_PARAM =
       DiagnosticType.error("JSC_DUPLICATE_PARAM", "Parse error. {0}");
