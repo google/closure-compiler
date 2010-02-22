@@ -3381,52 +3381,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals(STRING_OBJECT_FUNCTION_TYPE, stringEnum.getConstructor());
   }
 
-  /**
-   * Tests the behavior of variants type.
-   */
-  @SuppressWarnings("checked")
-      public void testUnionType() throws Exception {
-    UnionType nullOrString =
-        (UnionType) createUnionType(NULL_TYPE, STRING_OBJECT_TYPE);
-    UnionType stringOrNull =
-        (UnionType) createUnionType(STRING_OBJECT_TYPE, NULL_TYPE);
-
-    assertEquals(nullOrString, stringOrNull);
-    assertEquals(stringOrNull, nullOrString);
-
-    assertTypeCanAssignToItself(createUnionType(VOID_TYPE, NUMBER_TYPE));
-    assertTypeCanAssignToItself(
-        createUnionType(NUMBER_TYPE, STRING_TYPE, OBJECT_TYPE));
-    assertTypeCanAssignToItself(createUnionType(NUMBER_TYPE, BOOLEAN_TYPE));
-    assertTypeCanAssignToItself(createUnionType(VOID_TYPE));
-
-    UnionType nullOrUnknown =
-        (UnionType) createUnionType(NULL_TYPE, unresolvedNamedType);
-    assertTrue(nullOrUnknown.isUnknownType());
-    assertEquals(nullOrUnknown, NULL_TYPE.getLeastSupertype(nullOrUnknown));
-    assertEquals(nullOrUnknown, nullOrUnknown.getLeastSupertype(NULL_TYPE));
-    assertEquals(UNKNOWN_TYPE,
-        NULL_TYPE.getGreatestSubtype(nullOrUnknown));
-    assertEquals(UNKNOWN_TYPE,
-        nullOrUnknown.getGreatestSubtype(NULL_TYPE));
-
-    assertTrue(NULL_TYPE.differsFrom(nullOrUnknown));
-    assertTrue(nullOrUnknown.differsFrom(NULL_TYPE));
-    assertFalse(nullOrUnknown.differsFrom(unresolvedNamedType));
-
-    assertTrue(NULL_TYPE.isSubtype(nullOrUnknown));
-    assertTrue(unresolvedNamedType.isSubtype(nullOrUnknown));
-    assertTrue(nullOrUnknown.isSubtype(NULL_TYPE));
-
-    assertEquals(unresolvedNamedType,
-        nullOrUnknown.restrictByNotNullOrUndefined());
-
-    // findPropertyType
-    assertEquals(NUMBER_TYPE, nullOrString.findPropertyType("length"));
-    assertEquals(null, nullOrString.findPropertyType("lengthx"));
-
-    Asserts.assertResolvesToSame(nullOrString);
-  }
 
   /**
    * Tests object types.
@@ -3752,7 +3706,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * special corner cases.
    */
   @SuppressWarnings("checked")
-      public void testCanTestForEqualityWithCornerCases() {
+  public void testCanTestForEqualityWithCornerCases() {
     // null == undefined is always true
     assertFalse(NULL_TYPE.canTestForEqualityWith(VOID_TYPE));
 
@@ -4056,54 +4010,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ALL_TYPE.isSubtype(TYPE_ERROR_TYPE));
     assertTrue(ALL_TYPE.isSubtype(ALL_TYPE));
     assertFalse(ALL_TYPE.isSubtype(VOID_TYPE));
-  }
-
-  /**
-   * Tests subtyping of union types.
-   */
-  public void testSubtypingUnionTypes() throws Exception {
-    // subtypes
-    assertTrue(BOOLEAN_TYPE.
-        isSubtype(createUnionType(BOOLEAN_TYPE, STRING_TYPE)));
-    assertTrue(createUnionType(BOOLEAN_TYPE, STRING_TYPE).
-        isSubtype(createUnionType(BOOLEAN_TYPE, STRING_TYPE)));
-    assertTrue(createUnionType(BOOLEAN_TYPE, STRING_TYPE).
-        isSubtype(createUnionType(BOOLEAN_TYPE, STRING_TYPE, NULL_TYPE)));
-    assertTrue(createUnionType(BOOLEAN_TYPE, STRING_TYPE).
-        isSubtype(createUnionType(BOOLEAN_TYPE, STRING_TYPE, NULL_TYPE)));
-    assertTrue(createUnionType(BOOLEAN_TYPE).
-        isSubtype(createUnionType(BOOLEAN_TYPE, STRING_TYPE, NULL_TYPE)));
-    assertTrue(createUnionType(STRING_TYPE).
-        isSubtype(createUnionType(BOOLEAN_TYPE, STRING_TYPE, NULL_TYPE)));
-    assertTrue(createUnionType(STRING_TYPE, NULL_TYPE).isSubtype(ALL_TYPE));
-    assertTrue(createUnionType(DATE_TYPE, REGEXP_TYPE).isSubtype(OBJECT_TYPE));
-    assertTrue(createUnionType(URI_ERROR_TYPE, EVAL_ERROR_TYPE).
-        isSubtype(ERROR_TYPE));
-    assertTrue(createUnionType(URI_ERROR_TYPE, EVAL_ERROR_TYPE).
-        isSubtype(OBJECT_TYPE));
-
-    // not subtypes
-    assertFalse(createUnionType(STRING_TYPE, NULL_TYPE).isSubtype(NO_TYPE));
-    assertFalse(createUnionType(STRING_TYPE, NULL_TYPE).
-        isSubtype(NO_OBJECT_TYPE));
-    assertFalse(createUnionType(NO_OBJECT_TYPE, NULL_TYPE).
-        isSubtype(OBJECT_TYPE));
-
-    // defined unions
-    assertTrue(NUMBER_TYPE.isSubtype(OBJECT_NUMBER_STRING));
-    assertTrue(OBJECT_TYPE.isSubtype(OBJECT_NUMBER_STRING));
-    assertTrue(STRING_TYPE.isSubtype(OBJECT_NUMBER_STRING));
-    assertTrue(NO_OBJECT_TYPE.isSubtype(OBJECT_NUMBER_STRING));
-
-    assertTrue(NUMBER_TYPE.isSubtype(NUMBER_STRING_BOOLEAN));
-    assertTrue(BOOLEAN_TYPE.isSubtype(NUMBER_STRING_BOOLEAN));
-    assertTrue(STRING_TYPE.isSubtype(NUMBER_STRING_BOOLEAN));
-
-    assertTrue(NUMBER_TYPE.isSubtype(OBJECT_NUMBER_STRING_BOOLEAN));
-    assertTrue(OBJECT_TYPE.isSubtype(OBJECT_NUMBER_STRING_BOOLEAN));
-    assertTrue(STRING_TYPE.isSubtype(OBJECT_NUMBER_STRING_BOOLEAN));
-    assertTrue(BOOLEAN_TYPE.isSubtype(OBJECT_NUMBER_STRING_BOOLEAN));
-    assertTrue(NO_OBJECT_TYPE.isSubtype(OBJECT_NUMBER_STRING_BOOLEAN));
   }
 
   /**
@@ -4574,42 +4480,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
-   */
-  public void testGreatestSubtypeUnionTypes1() {
-    assertEquals(NULL_TYPE, createNullableType(STRING_TYPE).getGreatestSubtype(
-            createNullableType(NUMBER_TYPE)));
-  }
-
-  /**
-   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
-   */
-  @SuppressWarnings("checked")
-      public void testGreatestSubtypeUnionTypes2() {
-    UnionType evalUriError =
-        (UnionType) createUnionType(EVAL_ERROR_TYPE, URI_ERROR_TYPE);
-    assertEquals(evalUriError,
-        evalUriError.getGreatestSubtype(ERROR_TYPE));
-  }
-
-  /**
-   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
-   */
-  @SuppressWarnings("checked")
-      public void testGreatestSubtypeUnionTypes3() {
-    // (number,undefined,null)
-    UnionType nullableOptionalNumber =
-        (UnionType) createUnionType(NULL_TYPE, VOID_TYPE, NUMBER_TYPE);
-    // (null,undefined)
-    UnionType nullUndefined =
-        (UnionType) createUnionType(VOID_TYPE, NULL_TYPE);
-    assertEquals(nullUndefined,
-        nullUndefined.getGreatestSubtype(nullableOptionalNumber));
-    assertEquals(nullUndefined,
-        nullableOptionalNumber.getGreatestSubtype(nullUndefined));
-  }
-
-  /**
    * Tests that a derived class extending a type via a named type is a subtype
    * of it.
    */
@@ -4835,44 +4705,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Tests that special union types can assign to other types.  Unions
-   * containing the unknown type should be able to assign to any other
-   * type.
-   */
-  @SuppressWarnings("checked")
-      public void testSpecialUnionCanAssignTo() throws Exception {
-    // autoboxing quirks
-    UnionType numbers =
-        (UnionType) createUnionType(NUMBER_TYPE, NUMBER_OBJECT_TYPE);
-    assertFalse(numbers.canAssignTo(NUMBER_TYPE));
-    assertFalse(numbers.canAssignTo(NUMBER_OBJECT_TYPE));
-    assertFalse(numbers.canAssignTo(EVAL_ERROR_TYPE));
-
-    UnionType strings =
-        (UnionType) createUnionType(STRING_OBJECT_TYPE, STRING_TYPE);
-    assertFalse(strings.canAssignTo(STRING_TYPE));
-    assertFalse(strings.canAssignTo(STRING_OBJECT_TYPE));
-    assertFalse(strings.canAssignTo(DATE_TYPE));
-
-    UnionType booleans =
-        (UnionType) createUnionType(BOOLEAN_OBJECT_TYPE, BOOLEAN_TYPE);
-    assertFalse(booleans.canAssignTo(BOOLEAN_TYPE));
-    assertFalse(booleans.canAssignTo(BOOLEAN_OBJECT_TYPE));
-    assertFalse(booleans.canAssignTo(REGEXP_TYPE));
-
-    // unknown quirks
-    JSType unknown = createUnionType(UNKNOWN_TYPE, DATE_TYPE);
-    assertTrue(unknown.canAssignTo(STRING_TYPE));
-
-    // all members need to be assignable to
-    UnionType stringDate =
-        (UnionType) createUnionType(STRING_OBJECT_TYPE, DATE_TYPE);
-    assertTrue(stringDate.canAssignTo(OBJECT_TYPE));
-    assertFalse(stringDate.canAssignTo(STRING_OBJECT_TYPE));
-    assertFalse(stringDate.canAssignTo(DATE_TYPE));
-  }
-
-  /**
    * Tests the behavior of
    * {@link JSType#getRestrictedTypeGivenToBooleanOutcome(boolean)}.
    */
@@ -4987,6 +4819,20 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.getGreatestSubtypeWithProperty(derived2, "propz"));
   }
 
+  /**
+   * Tests {@link JSTypeRegistry#getGreatestSubtypeWithProperty(JSType)}.
+   */
+  public void testGreatestSubtypeWithProperty() {
+    ObjectType foo = registry.createObjectType("foo", null, OBJECT_TYPE);
+    ObjectType bar = registry.createObjectType("bar", null, namedGoogBar);
+
+    foo.defineDeclaredProperty("propz", UNKNOWN_TYPE, false);
+    bar.defineDeclaredProperty("propz", UNKNOWN_TYPE, false);
+
+    assertEquals(bar,
+        registry.getGreatestSubtypeWithProperty(namedGoogBar, "propz"));
+  }
+
   public void testGoodSetPrototypeBasedOn() {
     FunctionType fun = registry.createConstructorType("fun", null, null, null);
     fun.setPrototypeBasedOn(unresolvedNamedType);
@@ -5074,7 +4920,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   @SuppressWarnings("checked")
-      public void testGetTypesUnderInequality1() {
+  public void testGetTypesUnderInequality1() {
     // objects can be not equal to numbers
     UnionType numberObject =
         (UnionType) createUnionType(NUMBER_TYPE, OBJECT_TYPE);
@@ -5087,7 +4933,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   @SuppressWarnings("checked")
-      public void testGetTypesUnderInequality2() {
+  public void testGetTypesUnderInequality2() {
     // null == undefined
     UnionType nullUndefined =
         (UnionType) createUnionType(VOID_TYPE, NULL_TYPE);
@@ -5100,7 +4946,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   @SuppressWarnings("checked")
-      public void testGetTypesUnderInequality3() {
+  public void testGetTypesUnderInequality3() {
     // (number,string)
     UnionType stringNumber =
         (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
@@ -5113,7 +4959,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   @SuppressWarnings("checked")
-      public void testGetTypesUnderInequality4() throws Exception {
+  public void testGetTypesUnderInequality4() throws Exception {
     // (number,undefined,null) and null
     UnionType nullableOptionalNumber =
         (UnionType) createUnionType(NULL_TYPE, VOID_TYPE, NUMBER_TYPE);
@@ -5148,27 +4994,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType recordType = registry.createRecordType(properties);
     assertEquals("{ hello : number }", recordType.toString());
-  }
-
-  /**
-   * Tests the factory method
-   * {@link JSTypeRegistry#createUnionType(JSType...)}.
-   */
-  @SuppressWarnings("checked")
-      public void testCreateUnionType() throws Exception {
-    // number
-    UnionType optNumber =
-        (UnionType) registry.createUnionType(NUMBER_TYPE, DATE_TYPE);
-    assertTrue(optNumber.contains(NUMBER_TYPE));
-    assertTrue(optNumber.contains(DATE_TYPE));
-
-    // union
-    UnionType optUnion =
-        (UnionType) registry.createUnionType(REGEXP_TYPE,
-            registry.createUnionType(STRING_OBJECT_TYPE, DATE_TYPE));
-    assertTrue(optUnion.contains(DATE_TYPE));
-    assertTrue(optUnion.contains(STRING_OBJECT_TYPE));
-    assertTrue(optUnion.contains(REGEXP_TYPE));
   }
 
   /**
@@ -5229,7 +5054,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests {@code (U2U_CONSTRUCTOR,undefined) <: (U2U_CONSTRUCTOR,undefined)}.
    */
   @SuppressWarnings("checked")
-      public void testBug903110() throws Exception {
+  public void testBug903110() throws Exception {
     UnionType union =
         (UnionType) createUnionType(U2U_CONSTRUCTOR_TYPE, VOID_TYPE);
     assertTrue(VOID_TYPE.isSubtype(union));
@@ -5245,10 +5070,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(U2U_FUNCTION_TYPE.isSubtype(U2U_CONSTRUCTOR_TYPE));
     assertTrue(U2U_FUNCTION_TYPE.
         isSubtype(createOptionalType(U2U_CONSTRUCTOR_TYPE)));
-  }
-
-  public void testUnionWithUnknown() throws Exception {
-    assertTrue(createUnionType(UNKNOWN_TYPE, NULL_TYPE).isUnknownType());
   }
 
   /**

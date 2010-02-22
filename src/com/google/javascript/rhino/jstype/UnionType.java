@@ -271,28 +271,31 @@ public class UnionType extends JSType {
     return getLeastSupertype(this, that);
   }
 
-  @Override
-  public JSType getGreatestSubtype(JSType that) {
-    if (that instanceof UnionType) {
-      return meet((UnionType) that);
-    }
-    return getGreatestSubtype(this, that);
-  }
-
-  private JSType meet(UnionType that) {
+  JSType meet(JSType that) {
     UnionTypeBuilder builder = new UnionTypeBuilder(registry);
     for (JSType alternate : alternates) {
       if (alternate.isSubtype(that)) {
         builder.addAlternate(alternate);
       }
     }
-    for (JSType otherAlternate : that.alternates) {
-      if (otherAlternate.isSubtype(this)) {
-        builder.addAlternate(otherAlternate);
+
+    if (that instanceof UnionType) {
+      for (JSType otherAlternate : ((UnionType) that).alternates) {
+        if (otherAlternate.isSubtype(this)) {
+          builder.addAlternate(otherAlternate);
+        }
       }
+    } else if (that.isSubtype(this)) {
+      builder.addAlternate(that);
     }
     JSType result = builder.build();
-    return result == null ? getNativeType(JSTypeNative.NO_TYPE) : result;
+    if (result != null) {
+      return result;
+    } else if (this.isObject() && that.isObject()) {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    } else {
+      return getNativeType(JSTypeNative.NO_TYPE);
+    }
   }
 
   /**
