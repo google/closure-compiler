@@ -145,10 +145,19 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
    */
   public void testGreatestSubtypeUnionTypes4() throws Exception {
-    UnionType numStr = (UnionType) createUnionType(
+    UnionType errUnion = (UnionType) createUnionType(
         NULL_TYPE, EVAL_ERROR_TYPE, URI_ERROR_TYPE);
     assertEquals(createUnionType(EVAL_ERROR_TYPE, URI_ERROR_TYPE),
-        numStr.getGreatestSubtype(ERROR_TYPE));
+        errUnion.getGreatestSubtype(ERROR_TYPE));
+  }
+
+  /**
+   * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
+   */
+  public void testGreatestSubtypeUnionTypes5() throws Exception {
+    JSType errUnion = createUnionType(EVAL_ERROR_TYPE, URI_ERROR_TYPE);
+    assertEquals(NO_OBJECT_TYPE,
+        errUnion.getGreatestSubtype(STRING_OBJECT_TYPE));
   }
 
   /**

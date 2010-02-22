@@ -351,7 +351,7 @@ CanvasRenderingContext2D.prototype.font;
 CanvasRenderingContext2D.prototype.globalAlpha;
 
 /** @type {string} */
-CanvasRenderingContext2D.prototype.globalCompositingOperation;
+CanvasRenderingContext2D.prototype.globalCompositeOperation;
 
 /** @type {number} */
 CanvasRenderingContext2D.prototype.lineWidth;
@@ -363,7 +363,7 @@ CanvasRenderingContext2D.prototype.lineCap;
 CanvasRenderingContext2D.prototype.lineJoin;
 
 /** @type {number} */
-CanvasRenderingContext2D.prototype.mitreLimit;
+CanvasRenderingContext2D.prototype.miterLimit;
 
 /** @type {number} */
 CanvasRenderingContext2D.prototype.shadowBlur;

@@ -43,7 +43,6 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.jstype.JSType.TypePair;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -289,7 +288,7 @@ public class UnionType extends JSType {
       builder.addAlternate(that);
     }
     JSType result = builder.build();
-    if (result != null) {
+    if (!result.isNoType()) {
       return result;
     } else if (this.isObject() && that.isObject()) {
       return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
