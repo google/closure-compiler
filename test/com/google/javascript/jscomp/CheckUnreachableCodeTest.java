@@ -136,6 +136,11 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("switch (x) { default: throw x; break; }");
   }
 
+  public void testInstanceOfThrowsException() {
+    testSame("function f() {try { if (value instanceof type) return true; } " +
+             "catch (e) { }}");
+  }
+  
   private void assertUnreachable(String js) {
     test(js, js, CheckUnreachableCode.UNREACHABLE_CODE);
   }

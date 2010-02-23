@@ -1240,12 +1240,18 @@ public class ControlFlowAnalysisTest extends TestCase {
     testCfg(src, expectedWhenNotTraversingFunctions, false);
   }
 
+  public void testInstanceOf() {
+    String src = "try { x instanceof 'x' } catch (e) { }";
+    ControlFlowGraph<Node> cfg = createCfg(src, true);
+    assertCrossEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+  }
+  
   public void testSynBlock() {
     String src = "START(); var x; END()";
     ControlFlowGraph<Node> cfg = createCfg(src, true);
     assertDownEdge(cfg, Token.BLOCK, Token.EXPR_RESULT, Branch.SYN_BLOCK);
   }
-
+  
   public void testPartialTraversalOfScope() {
     Compiler compiler = new Compiler();
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, true);

@@ -891,12 +891,13 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case Token.ASSIGN:
       case Token.INC:
       case Token.DEC:
+      case Token.INSTANCEOF:
         return true;
       case Token.FUNCTION:
         return false;
     }
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (mayThrowException(c)) {
+      if (!ControlFlowGraph.isEnteringNewCfgNode(c) && mayThrowException(c)) {
         return true;
       }
     }

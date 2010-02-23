@@ -584,6 +584,28 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(true, js, "{a=[[Bar.prototype, Foo.prototype]]}");
   }
 
+  public void testSupertypeReferenceOfSubtypeProperty() {
+    String externs = ""
+        + "/** @constructor */ function Ext() {}"
+        + "Ext.prototype.a;";
+    String js = ""
+        + "/** @constructor */ function Foo() {}\n"
+        + "/** @constructor \n@extends Foo*/ function Bar() {}\n"
+        + "Bar.prototype.a;\n"
+        + "/** @param {Foo} foo */"
+        + "function foo(foo) {\n"
+        + "  var x = foo.a;\n"
+        + "}\n";
+    String result = ""
+        + "function Foo() {}\n"
+        + "function Bar() {}\n"
+        + "Bar.prototype.Bar_prototype$a;\n"
+        + "function foo(foo) {\n"
+        + "  var x = foo.Bar_prototype$a;\n"
+        + "}\n";
+    testSets(false, externs, js, result, "{a=[[Bar.prototype]]}");
+  }
+
   public void testObjectLiteralNotRenamed() {
     String js = ""
         + "var F = {a:'a', b:'b'};"
@@ -889,6 +911,26 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
 
     testSets(false, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
     testSets(true, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+  }
+
+  public void testCustomInherits() {
+    String js = "Object.prototype.inheritsFrom = function(shuper) {\n" +
+        "  /** @constructor */\n" +
+        "  function Inheriter() { }\n" +
+        "  Inheriter.prototype = shuper.prototype;\n" +
+        "  this.prototype = new Inheriter();\n" +
+        "  this.superConstructor = shuper;\n" +
+        "};\n" +
+        "function Foo(var1, var2, strength) {\n" +
+        "  Foo.superConstructor.call(this, strength);\n" +
+        "}" +
+        "Foo.inheritsFrom(Object);";
+
+    String externs = "" +
+        "function Function(var_args) {}" +
+        "/** @return {*} */Function.prototype.call = function(var_args) {};";
+
+    testSets(false, externs, js, js, "{}");
   }
 
   public void runFindHighestTypeInChain() {
