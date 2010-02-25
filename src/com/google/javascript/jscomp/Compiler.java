@@ -1349,23 +1349,11 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  void normalizeNodeTypes(Node root) {
-    Tracer tracer = newTracer("normalizeNodeTypes");
-
-    // TODO(johnlenz): Merge the NodeTypeNormalizer into the AST creator
-    // it doesn't need to be done separately.
-    CompilerPass pass = new NodeTypeNormalizer();
+  void prepareAst(Node root) {
+    Tracer tracer = newTracer("prepareAst");
+    CompilerPass pass = new PrepareAst(this);
     pass.process(null, root);
-
-    stopTracer(tracer, "normalizeNodeTypes");
-  }
-
-  @Override
-  void annotateCodingConvention(Node root) {
-    Tracer tracer = newTracer("annotateCodingConvention");
-    CompilerPass pass = new CodingConventionAnnotator(this);
-    pass.process(null, root);
-    stopTracer(tracer, "annotateCodingConvention");
+    stopTracer(tracer, "prepareAst");
   }
 
   void recordFunctionInformation() {

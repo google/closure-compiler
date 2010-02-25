@@ -98,8 +98,7 @@ public class JsAst implements SourceAst {
       // There was a parse error or IOException, so use a dummy block.
       root = new Node(Token.BLOCK);
     } else {
-      compiler.normalizeNodeTypes(root);
-      compiler.annotateCodingConvention(root);
+      compiler.prepareAst(root);
     }
 
     // Set the source name so that the compiler passes can track

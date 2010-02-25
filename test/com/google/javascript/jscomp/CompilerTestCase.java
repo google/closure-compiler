@@ -767,7 +767,7 @@ public abstract class CompilerTestCase extends TestCase  {
       Node normalizeCheckRootClone = root.cloneTree();
       Node normalizeCheckExternsRootClone = root.getFirstChild();
       Node normalizeCheckMainRootClone = root.getLastChild();
-      new NodeTypeNormalizer().process(
+      new PrepareAst(compiler).process(
           normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
       String explanation =
           normalizeCheckMainRootClone.checkTreeEquals(mainRoot);

@@ -139,7 +139,7 @@ class GenerateExports implements CompilerPass {
 
   private void annotate(Node node) {
     NodeTraversal.traverse(
-        compiler, node, new CodingConventionAnnotator(compiler));
+        compiler, node, new PrepareAst.PrepareAnnotations(compiler));
   }
 
   /**

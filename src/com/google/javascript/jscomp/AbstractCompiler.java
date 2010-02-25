@@ -191,15 +191,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract boolean isTypeCheckingEnabled();
 
   /**
-   * Normalizes the types of AST nodes in the given tree.
-   */
-  abstract void normalizeNodeTypes(Node root);
-
-  /**
-   * Annotates any nodes to which the coding convention applies so that passes
+   * Normalizes the types of AST nodes in the given tree, and
+   * annotates any nodes to which the coding convention applies so that passes
    * can read the annotations instead of using the coding convention.
    */
-  abstract void annotateCodingConvention(Node root);
+  abstract void prepareAst(Node root);
 
   /**
    * Acquires the symbol table.

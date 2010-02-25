@@ -115,7 +115,7 @@ class SanityCheck implements CompilerPass {
     // TODO(johnlenz): Change these normalization checks Preconditions and
     // Exceptions into Errors so that it is easier to find the root cause
     // when there are cascading issues.
-    new NodeTypeNormalizer(true).process(null, root);
+    new PrepareAst(compiler, true).process(null, root);
     Preconditions.checkState(!handler.hasCodeChanged(),
         "This should never fire, NodeTypeNormalizer should assert first.");
 
