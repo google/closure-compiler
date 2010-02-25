@@ -414,7 +414,7 @@ class ExpressionDecomposer {
     Node replacementValueNode = Node.newString(Token.NAME, tempName);
     parent.replaceChild(expr, replacementValueNode);
 
-    // Readd the expression in the declaration of the temporary name.
+    // Re-add the expression in the declaration of the temporary name.
     Node tempNameNode = Node.newString(Token.NAME, tempName);
     tempNameNode.addChildrenToBack(expr);
     Node tempVarNode = new Node(Token.VAR, tempNameNode);
@@ -422,6 +422,26 @@ class ExpressionDecomposer {
     Node injectionPointParent = injectionPoint.getParent();
     injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
 
+    // If it is ASSIGN_XXX we need to assign it back to the original value.
+    // Note that calling the temp constant is a lie in this case, but we do know
+    // that it is not modified until after the exposed expression.
+    if (NodeUtil.isAssignmentOp(parent) && !NodeUtil.isAssign(parent)) {
+      Node gParent = parent.getParent();
+      Node assignBack = new Node(Token.ASSIGN,
+          expr.cloneTree(),
+          tempNameNode.cloneNode());
+      if (NodeUtil.isExpressionNode(gParent)) {
+        gParent.getParent().addChildAfter(
+            NodeUtil.newExpr(assignBack), gParent);
+      } else {
+        // TODO(user): Use comma here sucks. We might close some accuracy
+        // in flow sensitive passes but as far as I know it is unavoidable.
+        Node comma = new Node(Token.COMMA);
+        gParent.replaceChild(parent, comma);
+        comma.addChildrenToFront(assignBack);
+        comma.addChildrenToFront(parent);
+      }
+    }
     return tempVarNode;
   }
 

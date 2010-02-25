@@ -1322,6 +1322,15 @@ public class InlineFunctionsTest extends CompilerTestCase {
     testSame("function f(){call(function(){return})}f()");
   }
 
+  public void testDecomposePlusEquals() {
+    test("function f(){a=1;return 1} var x = 1; x += f()",
+        "var x = 1;" +
+        "var JSCompiler_temp_const_0 = x;" +
+        "{var JSCompiler_inline_result_1; a=1; JSCompiler_inline_result_1=1}" +
+        "JSCompiler_temp_const_0 += JSCompiler_inline_result_1;" +
+        "x = JSCompiler_temp_const_0");
+  }
+  
   public void testInlineConstructor1() {
     test("function f() {} function _g() {f.call(this)}",
          "function _g() {void 0}");

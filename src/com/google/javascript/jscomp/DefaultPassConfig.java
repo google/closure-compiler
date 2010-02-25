@@ -419,6 +419,12 @@ public class DefaultPassConfig extends PassConfig {
 
     if (options.flowSensitiveInlineVariables) {
       passes.add(flowSensitiveInlineVariables);
+
+      // After inlining some of the variable uses, some variables are unused.
+      // Re-run remove unused vars to clean it up.
+      if (options.removeUnusedVars) {
+        passes.add(removeUnusedVars);
+      }
     }
 
     if (options.collapseAnonymousFunctions) {

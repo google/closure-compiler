@@ -38,6 +38,11 @@ public class ExpresssionDecomposerTest extends TestCase {
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "while(foo());", "foo");
     helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "while(x = goo()&&foo()){}", "foo");
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "while(x += goo()&&foo()){}", "foo");
+    
+    helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "do{}while(foo());", "foo");
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "for(;foo(););", "foo");
@@ -90,6 +95,8 @@ public class ExpresssionDecomposerTest extends TestCase {
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "x = goo() && foo()", "foo");
     helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "x += goo() && foo()", "foo");
+    helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "var x = goo() && foo()", "foo");
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "if(goo() && foo()){}", "foo");
@@ -97,6 +104,8 @@ public class ExpresssionDecomposerTest extends TestCase {
         DecompositionType.DECOMPOSABLE, "switch(goo() && foo()){}", "foo");
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "switch(goo() && foo()){}", "foo");
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "switch(x = goo() && foo()){}", "foo");
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE,
         "function (){ return goo() && foo();}", "foo");
@@ -281,6 +290,21 @@ public class ExpresssionDecomposerTest extends TestCase {
         "var temp_2;" +
         "if (1) temp_2 = foo(); else temp_2 = 0;" +
         "if (temp_const_1(1, temp_const_0, temp_2));");
+  }
+  
+  public void testExposePlusEquals() {
+    helperExposeExpression(
+        "var x = 0; x += foo() + 1",
+        "foo",
+        "var x = 0; var temp_const_0 = x;" +
+        "temp_const_0 += foo() + 1;" +
+        "x = temp_const_0;");
+
+    helperExposeExpression(
+        "var x = 0; y = (x += foo()) + x",
+        "foo",
+        "var x = 0; var temp_const_0 = x;" +
+        "y = (temp_const_0 += foo(), x=temp_const_0) + x");
   }
 
   /** Test case helpers. */
