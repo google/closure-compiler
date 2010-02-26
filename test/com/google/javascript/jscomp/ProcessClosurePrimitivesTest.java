@@ -730,4 +730,9 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
             "apps.foo.B = {};",
         });
   }
+
+  public void testRequireOfBaseGoog() {
+    test("goog.require('goog');",
+         "", MISSING_PROVIDE_ERROR);
+  }
 }

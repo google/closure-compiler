@@ -132,7 +132,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     if (requiresLevel.isOn()) {
       for (UnrecognizedRequire r : unrecognizedRequires) {
         DiagnosticType error;
-        if (providedNames.get(r.namespace) != null) {
+        ProvidedName expectedName = providedNames.get(r.namespace);
+        if (expectedName != null && expectedName.firstNode != null) {
           // The namespace ended up getting provided after it was required.
           error = LATE_PROVIDE_ERROR;
         } else {
