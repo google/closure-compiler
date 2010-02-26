@@ -40,7 +40,11 @@ public class CompilerRunnerTest extends TestCase {
   /** Externs for the test */
   private final JSSourceFile[] externs = new JSSourceFile[] {
     JSSourceFile.fromCode("externs",
-        "/** @constructor */ function Window() {}\n"
+        "var arguments;" +
+        "/** @constructor \n * @param {...*} var_args \n " +
+        "* @return {!Array} */ " +
+        "function Array(var_args) {}\n"
+        + "/** @constructor */ function Window() {}\n"
         + "/** @type {string} */ Window.prototype.name;\n"
         + "/** @type {Window} */ var window;"
         + "/** @nosideeffects */ function noSideEffects() {}")
@@ -166,6 +170,21 @@ public class CompilerRunnerTest extends TestCase {
     useStringComparison = true;
     test("eval('1'); var x = eval; x('2');",
          "eval(\"1\");(0,eval)(\"2\");");
+  }
+
+  public void testIssue115() {
+    CompilerRunner.FLAG_compilation_level.setForTest(
+        CompilationLevel.SIMPLE_OPTIMIZATIONS);
+    CompilerRunner.FLAG_warning_level.setForTest(
+        WarningLevel.VERBOSE);
+    test("function f() { " +
+         "  var arguments = Array.prototype.slice.call(arguments, 0);" +
+         "  return arguments[0]; " +
+         "}",
+         "function f() { " +
+         "  arguments = Array.prototype.slice.call(arguments, 0);" +
+         "  return arguments[0]; " +
+         "}");
   }
 
   public void testDebugFlag1() {

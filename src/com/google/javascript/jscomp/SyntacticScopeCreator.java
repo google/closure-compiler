@@ -37,6 +37,10 @@ class SyntacticScopeCreator implements ScopeCreator {
   private String sourceName;
   private final RedeclarationHandler redeclarationHandler;
 
+  // The arguments variable is special, in that it's declared in every local
+  // scope, but not explicitly declared.
+  private static final String ARGUMENTS = "arguments";
+
   public static final DiagnosticType VAR_MULTIPLY_DECLARED_ERROR =
       DiagnosticType.error(
           "JSC_VAR_MULTIPLY_DECLARED_ERROR",
@@ -197,7 +201,7 @@ class SyntacticScopeCreator implements ScopeCreator {
           info = parent.getJSDocInfo();
         }
         allowDupe =
-          info != null && info.getSuppressions().contains("duplicate");
+            info != null && info.getSuppressions().contains("duplicate");
 
         if (!allowDupe) {
           compiler.report(
@@ -226,7 +230,8 @@ class SyntacticScopeCreator implements ScopeCreator {
   private void declareVar(String name, Node n, Node parent,
                           Node gramps, JSType declaredType,
                           Node nodeWithLineNumber) {
-    if (scope.isDeclared(name, false)) {
+    if (scope.isDeclared(name, false)
+        || (scope.isLocal() && name.equals(ARGUMENTS))) {
       redeclarationHandler.onRedeclaration(
           scope, name, n, parent, gramps, nodeWithLineNumber);
     } else {
