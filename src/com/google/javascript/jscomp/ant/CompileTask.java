@@ -42,7 +42,7 @@ import java.util.zip.ZipInputStream;
 
 /**
  * This class implements a simple Ant task to do almost the same as
- * CompilerRunner.
+ * CommandLineRunner.
  *
  * Most of the public methods of this class are entry points for the
  * Ant code to hook into.
@@ -224,7 +224,7 @@ public final class CompileTask
   /**
    * Gets the default externs set.
    *
-   * Adapted from {@link CompilerRunner}.
+   * Adapted from {@link CommandLineRunner}.
    */
   private List<JSSourceFile> getDefaultExterns() {
     try {

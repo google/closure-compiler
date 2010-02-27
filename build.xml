@@ -102,7 +102,7 @@
       <fileset dir="${build.dir}" includes="flags.xml,externs.zip" />
       <manifest>
         <attribute name="Main-Class"
-                   value="com.google.javascript.jscomp.CompilerRunner" />
+                   value="com.google.javascript.jscomp.CommandLineRunner" />
       </manifest>
     </jar>
   </target>

@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * Implementations of AbstractCompilerRunner translate flags into Java
+ * Implementations of AbstractCommandLineRunner translate flags into Java
  * API calls on the Compiler. AbstractCompiler contains common flags and logic
  * to make that happen.
  *
@@ -50,9 +50,9 @@ import java.util.logging.Level;
  * that behave the same as running the Compiler from the command line. Example:
  *
  * <pre>
- * class MyCompilerRunner extends
- *     AbstractCompilerRunner<MyCompiler, MyOptions> {
- *   MyCompilerRunner(String[] args) {
+ * class MyCommandLineRunner extends
+ *     AbstractCommandLineRunner<MyCompiler, MyOptions> {
+ *   MyCommandLineRunner(String[] args) {
  *     super(args);
  *   }
  *
@@ -70,14 +70,14 @@ import java.util.logging.Level;
  *   }
  *
  *   public static void main(String[] args) {
- *     (new MyCompilerRunner(args)).run();
+ *     (new MyCommandLineRunner(args)).run();
  *   }
  * }
  * </pre>
  *
 *
  */
-abstract class AbstractCompilerRunner<A extends Compiler,
+abstract class AbstractCommandLineRunner<A extends Compiler,
     B extends CompilerOptions> {
 
   @FlagSpec(help = "Prints out the parse tree and exits",
@@ -242,11 +242,11 @@ abstract class AbstractCompilerRunner<A extends Compiler,
 
   private final RunTimeStats runTimeStats = new RunTimeStats();
 
-  AbstractCompilerRunner(String[] args) {
+  AbstractCommandLineRunner(String[] args) {
     this(args, System.out, System.err);
   }
 
-  AbstractCompilerRunner(String[] args, PrintStream out,
+  AbstractCommandLineRunner(String[] args, PrintStream out,
       PrintStream err) {
     // Flags are read when a compiler is instantiated, so we parse them first.
     Flags.parse(args);
@@ -277,13 +277,13 @@ abstract class AbstractCompilerRunner<A extends Compiler,
     DiagnosticGroups diagnosticGroups = getDiagnoticGroups();
 
     diagnosticGroups.setWarningLevels(
-        options, AbstractCompilerRunner.FLAG_jscomp_error.get(),
+        options, AbstractCommandLineRunner.FLAG_jscomp_error.get(),
         CheckLevel.ERROR);
     diagnosticGroups.setWarningLevels(
-        options, AbstractCompilerRunner.FLAG_jscomp_warning.get(),
+        options, AbstractCommandLineRunner.FLAG_jscomp_warning.get(),
         CheckLevel.WARNING);
     diagnosticGroups.setWarningLevels(
-        options, AbstractCompilerRunner.FLAG_jscomp_off.get(),
+        options, AbstractCommandLineRunner.FLAG_jscomp_off.get(),
         CheckLevel.OFF);
 
     createDefineReplacements(FLAG_define.get(), options);
@@ -337,7 +337,7 @@ abstract class AbstractCompilerRunner<A extends Compiler,
         result = doRun();
         runTimeStats.recordEndRun();
       }
-    } catch (AbstractCompilerRunner.FlagUsageException e) {
+    } catch (AbstractCommandLineRunner.FlagUsageException e) {
       System.err.println(e.getMessage());
       result = -1;
     } catch (Throwable t) {
@@ -352,7 +352,7 @@ abstract class AbstractCompilerRunner<A extends Compiler,
 
   /**
    * Returns the PrintStream for writing errors associated with this
-   * AbstractCompilerRunner.
+   * AbstractCommandLineRunner.
    */
   protected PrintStream getErrorPrintStream() {
     return err;

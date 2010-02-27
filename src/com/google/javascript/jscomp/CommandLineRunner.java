@@ -29,7 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * CompilerRunner translates flags into Java API calls on the Compiler.
+ * CommandLineRunner translates flags into Java API calls on the Compiler.
  *
  * This class may be extended and used to create other Java classes
  * that behave the same as running the Compiler from the command line. If you
@@ -38,8 +38,8 @@ import java.util.zip.ZipInputStream;
  *
  * Example:
  * <pre>
- * class MyCompilerRunner extends CompilerRunner {
- *   MyCompilerRunner(String[] args) { super(args); }
+ * class MyCommandLineRunner extends CommandLineRunner {
+ *   MyCommandLineRunner(String[] args) { super(args); }
  *
  *   {@code @Override} protected CompilerOptions createOptions() {
  *     CompilerOptions options = super.createOptions();
@@ -48,14 +48,14 @@ import java.util.zip.ZipInputStream;
  *   }
  *
  *   public static void main(String[] args) {
- *     (new MyCompilerRunner(args)).run();
+ *     (new MyCommandLineRunner(args)).run();
  *   }
  * }
  * </pre>
 *
  */
-class CompilerRunner extends
-    AbstractCompilerRunner<Compiler, CompilerOptions> {
+class CommandLineRunner extends
+    AbstractCommandLineRunner<Compiler, CompilerOptions> {
 
   @FlagSpec(help = "Specifies the compilation level to use. Options: " +
             "WHITESPACE_ONLY, SIMPLE_OPTIMIZATIONS, ADVANCED_OPTIMIZATIONS")
@@ -107,11 +107,11 @@ class CompilerRunner extends
   static final Flag<Boolean> FLAG_process_closure_primitives
       = Flag.value(true);
 
-  CompilerRunner(String[] args) {
+  CommandLineRunner(String[] args) {
     super(args);
   }
 
-  CompilerRunner(String[] args, PrintStream out, PrintStream err) {
+  CommandLineRunner(String[] args, PrintStream out, PrintStream err) {
     super(args, out, err);
   }
 
@@ -161,7 +161,7 @@ class CompilerRunner extends
    * @throws IOException
    */
   private List<JSSourceFile> getDefaultExterns() throws IOException {
-    InputStream input = CompilerRunner.class.getResourceAsStream(
+    InputStream input = CommandLineRunner.class.getResourceAsStream(
         "/externs.zip");
     ZipInputStream zip = new ZipInputStream(input);
     List<JSSourceFile> externs = Lists.newLinkedList();
@@ -176,6 +176,6 @@ class CompilerRunner extends
    * Runs the Compiler. Exits cleanly in the event of an error.
    */
   public static void main(String[] args) {
-    (new CompilerRunner(args)).run();
+    (new CommandLineRunner(args)).run();
   }
 }

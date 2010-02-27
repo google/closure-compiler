@@ -26,11 +26,11 @@ import junit.framework.TestCase;
 import java.io.IOException;
 
 /**
- * Tests for {@link CompilerRunner}.
+ * Tests for {@link CommandLineRunner}.
  *
 *
  */
-public class CompilerRunnerTest extends TestCase {
+public class CommandLineRunnerTest extends TestCase {
 
   private Compiler lastCompiler = null;
 
@@ -64,10 +64,10 @@ public class CompilerRunnerTest extends TestCase {
     Flags.resetAllFlagsForTest();
 
     // NOTE(nicksantos): ANT needs this for some weird reason.
-    AbstractCompilerRunner.FLAG_define.resetForTest();
-    AbstractCompilerRunner.FLAG_jscomp_off.resetForTest();
-    AbstractCompilerRunner.FLAG_jscomp_warning.resetForTest();
-    AbstractCompilerRunner.FLAG_jscomp_error.resetForTest();
+    AbstractCommandLineRunner.FLAG_define.resetForTest();
+    AbstractCommandLineRunner.FLAG_jscomp_off.resetForTest();
+    AbstractCommandLineRunner.FLAG_jscomp_warning.resetForTest();
+    AbstractCommandLineRunner.FLAG_jscomp_error.resetForTest();
 
     Flags.enableStateCheckingForTest();
     super.tearDown();
@@ -79,48 +79,48 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   public void testTypeCheckingOnWithVerbose() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
     test("function f(x) { return x; } f();", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
   public void testTypeCheckOverride1() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
-    CompilerRunner.FLAG_jscomp_off.setForTest(
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    CommandLineRunner.FLAG_jscomp_off.setForTest(
         Lists.newArrayList("checkTypes"));
     testSame("var x = x || {}; x.f = function() {}; x.f(3);");
   }
 
   public void testTypeCheckOverride2() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
     testSame("var x = x || {}; x.f = function() {}; x.f(3);");
 
-    CompilerRunner.FLAG_jscomp_warning.setForTest(
+    CommandLineRunner.FLAG_jscomp_warning.setForTest(
         Lists.newArrayList("checkTypes"));
     test("var x = x || {}; x.f = function() {}; x.f(3);",
          TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
   public void testCheckSymbolsOffForDefault() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
     test("x = 3; var y; var y;", "x=3; var y;");
   }
 
   public void testCheckSymbolsOnForVerbose() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
     test("x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
     test("var y; var y;", SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testCheckSymbolsOverrideForVerbose() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
-    AbstractCompilerRunner.FLAG_jscomp_off.setForTest(
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    AbstractCommandLineRunner.FLAG_jscomp_off.setForTest(
         Lists.newArrayList("undefinedVars"));
     testSame("x = 3;");
   }
 
   public void testCheckUndefinedProperties() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
-    AbstractCompilerRunner.FLAG_jscomp_error.setForTest(
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    AbstractCommandLineRunner.FLAG_jscomp_error.setForTest(
         Lists.newArrayList("missingProperties"));
     test("var x = {}; var y = x.bar;", TypeCheck.INEXISTENT_PROPERTY);
   }
@@ -131,7 +131,7 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   public void testDefineFlag() {
-    AbstractCompilerRunner.FLAG_define.setForTest(
+    AbstractCommandLineRunner.FLAG_define.setForTest(
         Lists.newArrayList("FOO", "BAR=5"));
     test("/** @define {boolean} */ var FOO = false;" +
          "/** @define {number} */ var BAR = 3;",
@@ -150,10 +150,10 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   public void testQuietMode() {
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
     test("/** @type { not a type name } */ var x;",
          RhinoErrorReporter.PARSE_ERROR);
-    CompilerRunner.FLAG_warning_level.setForTest(WarningLevel.QUIET);
+    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.QUIET);
     testSame("/** @type { not a type name } */ var x;");
   }
 
@@ -165,7 +165,7 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   public void testIssue81() {
-    CompilerRunner.FLAG_compilation_level.setForTest(
+    CommandLineRunner.FLAG_compilation_level.setForTest(
         CompilationLevel.ADVANCED_OPTIMIZATIONS);
     useStringComparison = true;
     test("eval('1'); var x = eval; x('2');",
@@ -173,9 +173,9 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   public void testIssue115() {
-    CompilerRunner.FLAG_compilation_level.setForTest(
+    CommandLineRunner.FLAG_compilation_level.setForTest(
         CompilationLevel.SIMPLE_OPTIMIZATIONS);
-    CompilerRunner.FLAG_warning_level.setForTest(
+    CommandLineRunner.FLAG_warning_level.setForTest(
         WarningLevel.VERBOSE);
     test("function f() { " +
          "  var arguments = Array.prototype.slice.call(arguments, 0);" +
@@ -188,26 +188,26 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   public void testDebugFlag1() {
-    CompilerRunner.FLAG_compilation_level.setForTest(
+    CommandLineRunner.FLAG_compilation_level.setForTest(
         CompilationLevel.SIMPLE_OPTIMIZATIONS);
-    CompilerRunner.FLAG_debug.setForTest(false);
+    CommandLineRunner.FLAG_debug.setForTest(false);
     testSame("function foo(a) {}");
   }
 
   public void testDebugFlag2() {
-    CompilerRunner.FLAG_compilation_level.setForTest(
+    CommandLineRunner.FLAG_compilation_level.setForTest(
         CompilationLevel.SIMPLE_OPTIMIZATIONS);
-    CompilerRunner.FLAG_debug.setForTest(true);
+    CommandLineRunner.FLAG_debug.setForTest(true);
     test("function foo(a) {}",
          "function foo($a$$) {}");
   }
 
   public void testDebugFlag3() {
-    CompilerRunner.FLAG_compilation_level.setForTest(
+    CommandLineRunner.FLAG_compilation_level.setForTest(
         CompilationLevel.ADVANCED_OPTIMIZATIONS);
-    CompilerRunner.FLAG_warning_level.setForTest(
+    CommandLineRunner.FLAG_warning_level.setForTest(
         WarningLevel.QUIET);
-    CompilerRunner.FLAG_debug.setForTest(false);
+    CommandLineRunner.FLAG_debug.setForTest(false);
     test("function Foo() {};" +
          "Foo.x = 1;" +
          "function f() {throw new Foo().x;} f();",
@@ -216,11 +216,11 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   public void testDebugFlag4() {
-    CompilerRunner.FLAG_compilation_level.setForTest(
+    CommandLineRunner.FLAG_compilation_level.setForTest(
         CompilationLevel.ADVANCED_OPTIMIZATIONS);
-    CompilerRunner.FLAG_warning_level.setForTest(
+    CommandLineRunner.FLAG_warning_level.setForTest(
         WarningLevel.QUIET);
-    CompilerRunner.FLAG_debug.setForTest(true);
+    CommandLineRunner.FLAG_debug.setForTest(true);
     test("function Foo() {};" +
         "Foo.x = 1;" +
         "function f() {throw new Foo().x;} f();",
@@ -293,7 +293,7 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   private Compiler compile(String[] original) {
-    CompilerRunner runner = new CompilerRunner(new String[] {});
+    CommandLineRunner runner = new CommandLineRunner(new String[] {});
     Compiler compiler = runner.createCompiler();
     lastCompiler = compiler;
     JSSourceFile[] inputs = new JSSourceFile[original.length];
@@ -303,7 +303,7 @@ public class CompilerRunnerTest extends TestCase {
     CompilerOptions options = runner.createOptions();
     try {
       runner.setRunOptions(options);
-    } catch (AbstractCompilerRunner.FlagUsageException e) {
+    } catch (AbstractCommandLineRunner.FlagUsageException e) {
       fail("Unexpected exception " + e);
     } catch (IOException e) {
       assert(false);
@@ -314,7 +314,7 @@ public class CompilerRunnerTest extends TestCase {
   }
 
   private Node parse(String[] original) {
-    CompilerRunner runner = new CompilerRunner(new String[] {});
+    CommandLineRunner runner = new CommandLineRunner(new String[] {});
     Compiler compiler = runner.createCompiler();
     JSSourceFile[] inputs = new JSSourceFile[original.length];
     for (int i = 0; i < inputs.length; i++) {
