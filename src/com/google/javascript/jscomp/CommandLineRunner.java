@@ -54,7 +54,7 @@ import java.util.zip.ZipInputStream;
  * </pre>
 *
  */
-class CommandLineRunner extends
+public class CommandLineRunner extends
     AbstractCommandLineRunner<Compiler, CompilerOptions> {
 
   @FlagSpec(help = "Specifies the compilation level to use. Options: " +
