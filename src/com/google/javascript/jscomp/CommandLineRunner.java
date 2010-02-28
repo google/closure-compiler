@@ -107,11 +107,11 @@ public class CommandLineRunner extends
   static final Flag<Boolean> FLAG_process_closure_primitives
       = Flag.value(true);
 
-  CommandLineRunner(String[] args) {
+  public CommandLineRunner(String[] args) {
     super(args);
   }
 
-  CommandLineRunner(String[] args, PrintStream out, PrintStream err) {
+  public CommandLineRunner(String[] args, PrintStream out, PrintStream err) {
     super(args, out, err);
   }
 
