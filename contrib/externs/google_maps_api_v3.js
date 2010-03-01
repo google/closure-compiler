@@ -91,7 +91,9 @@ google.maps.Map.prototype.setZoom = function(zoom) {};
 /** @type {google.maps.MVCArray} */
 google.maps.Map.prototype.controls;
 
-/** @type {Array.<string>} */
+/** @type {google.maps.MVCObject} */
+// TODO(nicksantos): The docs say that this should be a MapTypeRegistry,
+// but never explains what a MapTypeRegistry is.
 google.maps.Map.prototype.mapTypes;
 
 /** @type {google.maps.MVCArray} */
@@ -141,7 +143,10 @@ google.maps.ControlPosition = {
   TOP_RIGHT: 7
 };
 
-/** @constructor */
+/**
+ * @private
+ * @constructor
+ */
 google.maps.MapPanes = function() {};
 
 /** @type {Node} */
@@ -330,8 +335,9 @@ google.maps.Marker.prototype.setZIndex= function(zIndex) {};
  * @param {google.maps.Size} size
  * @param {google.maps.Point} origin
  * @param {google.maps.Point=} anchor
+ * @param {google.maps.Size=} scaledSize
  */
-google.maps.MarkerImage = function(url, size, origin, anchor) {};
+google.maps.MarkerImage = function(url, size, origin, anchor, scaledSize) {};
 
 /**
  * @constructor
@@ -593,6 +599,18 @@ google.maps.DirectionsUnitSystem = {
   METRIC: 1
 };
 
+/**
+ * @private
+ * @constructor
+ */
+google.maps.DirectionsWaypoint = function() {};
+
+/** @type {string|google.maps.LatLng} **/
+google.maps.DirectionsWaypoint.prototype.location;
+
+/** @type {boolean} **/
+google.maps.DirectionsWaypoint.prototype.stopover;
+
 /** @enum */
 google.maps.DirectionsStatus = {
   INVALID_REQUEST: 0,
@@ -605,13 +623,19 @@ google.maps.DirectionsStatus = {
   ZERO_RESULTS: 7
 };
 
-/** @constructor */
+/**
+ * @private
+ * @constructor
+ */
 google.maps.DirectionsResult = function() {};
 
 /** @type {Array.<google.maps.DirectionsTrip>} */
 google.maps.DirectionsResult.prototype.trips;
 
-/** @constructor */
+/**
+ * @private
+ * @constructor
+ */
 google.maps.DirectionsTrip = function() {};
 
 /** @type {string} */
@@ -623,7 +647,10 @@ google.maps.DirectionsTrip.prototype.routes;
 /** @type {Array.<string>} */
 google.maps.DirectionsTrip.prototype.warnings;
 
-/** @constructor */
+/**
+ * @private
+ * @constructor
+ */
 google.maps.DirectionsRoute = function() {};
 
 /** @type {google.maps.DirectionsDistance} */
@@ -641,7 +668,10 @@ google.maps.DirectionsRoute.prototype.start_geocode;
 /** @type {Array.<google.maps.DirectionsStep>} */
 google.maps.DirectionsRoute.prototype.steps;
 
-/** @constructor */
+/**
+ * @private
+ * @constructor
+ */
 google.maps.DirectionsStep = function() {};
 
 /** @type {google.maps.DirectionsDistance} */
@@ -665,7 +695,10 @@ google.maps.DirectionsStep.prototype.lat_lngs;
 /** @type {google.maps.LatLng} */
 google.maps.DirectionsStep.prototype.start_point;
 
-/** @constructor */
+/**
+ * @private
+ * @constructor
+ */
 google.maps.DirectionsDistance = function() {};
 
 /** @type {string} */
@@ -674,7 +707,10 @@ google.maps.DirectionsDistance.prototype.text;
 /** @type {number} */
 google.maps.DirectionsDistance.prototype.value;
 
-/** @constructor */
+/**
+ * @private
+ * @constructor
+ */
 google.maps.DirectionsDuration = function() {};
 
 /** @type {string} */
@@ -722,6 +758,7 @@ google.maps.OverlayView.prototype.setMap = function(map) {};
 google.maps.MapType = function() {};
 
 /**
+ * @nosideeffects
  * @param {google.maps.Point} tileCoord
  * @param {number} zoom
  * @param {Node} doc
@@ -745,20 +782,42 @@ google.maps.MapType.prototype.minZoom;
 /** @type {string} */
 google.maps.MapType.prototype.name;
 
-/** @type {string} */
+/** @type {google.maps.Projection} */
 google.maps.MapType.prototype.projection;
 
 /** @type {google.maps.Size} */
 google.maps.MapType.prototype.tileSize;
 
+/** @interface */
+google.maps.Projection = function() {};
+
+/**
+ * @nosideeffects
+ * @param {google.maps.LatLng} latLng
+ * @param {google.maps.Point=} point
+ * @return {google.maps.Point}
+ */
+google.maps.Projection.prototype.fromLatLngToPoint =
+        function(latLng, point) {};
+
+/**
+ * @nosideeffects
+ * @param {google.maps.Point} pixel
+ * @param {boolean=} nowrap
+ * @return {google.maps.LatLng}
+ */
+google.maps.Projection.prototype.fromPointToLatLng =
+        function(pixel, nowrap) {};
+
 /**
  * @constructor
  * @implements {google.maps.MapType}
- * @param {Object.<string, *>} a
+ * @param {Object.<string, *>} opts
  */
-google.maps.ImageMapType = function(a) {};
+google.maps.ImageMapType = function(opts) {};
 
 /**
+ * @nosideeffects
  * @param {google.maps.Point} tileCoord
  * @param {number} zoom
  * @param {Node} doc
@@ -774,6 +833,7 @@ google.maps.ImageMapType.prototype.releaseTile = function(tile) {};
 google.maps.ImageMapType.prototype.alt;
 
 /**
+ * @nosideeffects
  * @param {google.maps.Point} point
  * @param {number} zoom
  * @return {string}
@@ -792,7 +852,10 @@ google.maps.ImageMapType.prototype.minZoom;
 /** @type {string} */
 google.maps.ImageMapType.prototype.name;
 
-/** @type {string} */
+/** @type {number} */
+google.maps.ImageMapType.prototype.opacity;
+
+/** @type {google.maps.Projection} */
 google.maps.ImageMapType.prototype.projection;
 
 /** @type {google.maps.Size} */
@@ -807,13 +870,13 @@ google.maps.Rectangle = function(opts) {};
 
 /**
  * @nosideeffects
- * @returns {google.maps.LatLngBounds} 
+ * @return {google.maps.LatLngBounds}
  */
 google.maps.Rectangle.prototype.getBounds = function() {};
 
 /**
  * @nosideeffects
- * @returns {google.maps.Map} 
+ * @return {google.maps.Map}
  */
 google.maps.Rectangle.prototype.getMap = function() {};
 
@@ -835,19 +898,19 @@ google.maps.Circle = function(opts) {};
 
 /**
  * @nosideeffects
- * @returns {google.maps.LatLng} 
+ * @return {google.maps.LatLng}
  */
 google.maps.Circle.prototype.getCenter = function() {};
 
 /**
  * @nosideeffects
- * @returns {google.maps.Map} 
+ * @return {google.maps.Map}
  */
 google.maps.Circle.prototype.getMap = function() {};
 
 /**
  * @nosideeffects
- * @returns {number} 
+ * @return {number}
  */
 google.maps.Circle.prototype.getRadius = function() {};
 
@@ -862,25 +925,6 @@ google.maps.Circle.prototype.setOptions = function(options) {};
 
 /** @param {number} radius */
 google.maps.Circle.prototype.setRadius = function(radius) {};
-
-/** @constructor */
-google.maps.Projection = function() {};
-
-/**
- * @nosideeffects
- * @param {google.maps.LatLng} latLng
- * @param {google.maps.Point=} point
- * @return {google.maps.Point}
- */
-google.maps.Projection.prototype.fromLatLngToPoint = function(latLng, point) {};
-
-/**
- * @nosideeffects
- * @param {google.maps.Point} pixel
- * @param {boolean=} nowrap
- * @return {google.maps.LatLng}
- */
-google.maps.Projection.prototype.fromPointToLatLng = function(pixel, nowrap) {};
 
 /**
  * @constructor
@@ -947,7 +991,10 @@ google.maps.event.removeListener = function(listener) {};
  */
 google.maps.event.trigger = function(instance, eventName, var_args) {};
 
-/** @constructor */
+/**
+ * @private
+ * @constructor
+ */
 google.maps.MouseEvent = function() {};
 
 /** @type {google.maps.LatLng} */
@@ -1106,8 +1153,10 @@ google.maps.Point.prototype.y;
  * @constructor
  * @param {number} width
  * @param {number} height
+ * @param {string=} widthUnit
+ * @param {string=} heightUnit
  */
-google.maps.Size = function(width, height) {};
+google.maps.Size = function(width, height, widthUnit, heightUnit) {};
 
 /**
  * @nosideeffects
@@ -1170,8 +1219,9 @@ google.maps.MVCObject.prototype.unbindAll = function() {};
 /**
  * @constructor
  * @extends {google.maps.MVCObject}
+ * @param {Array.<*>=} array
  */
-google.maps.MVCArray = function() {};
+google.maps.MVCArray = function(array) {};
 
 /** @param {function(*, number)} callback */
 google.maps.MVCArray.prototype.forEach = function(callback) {};
@@ -1198,7 +1248,10 @@ google.maps.MVCArray.prototype.insertAt = function(i, elem) {};
 /** @return {*} */
 google.maps.MVCArray.prototype.pop = function() {};
 
-/** @param {*} elem */
+/**
+ * @param {*} elem
+ * @return {number}
+ */
 google.maps.MVCArray.prototype.push = function(elem) {};
 
 /** @param {number} i */
