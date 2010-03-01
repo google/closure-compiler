@@ -151,6 +151,24 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(f instanceof EnumType);
   }
 
+  public void testNamespacedEnum() {
+    testSame("var goog = {}; goog.ui = {};" +
+        "/** @constructor */goog.ui.Zippy = function() {};" +
+        "/** @enum{string} */goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };" +
+        "var x = goog.ui.Zippy.EventType;" +
+        "var y = goog.ui.Zippy.EventType.TOGGLE;");
+
+    ObjectType x = (ObjectType) findNameType("x", globalScope);
+    assertTrue(x.isEnumType());
+    assertTrue(x.hasProperty("TOGGLE"));
+    assertEquals("enum{goog.ui.Zippy.EventType}", x.getReferenceName());
+
+    ObjectType y = (ObjectType) findNameType("y", globalScope);
+    assertTrue(y.isSubtype(getNativeType(STRING_TYPE)));
+    assertTrue(y.isEnumElementType());
+    assertEquals("goog.ui.Zippy.EventType", y.getReferenceName());
+  }
+
   public void testEnumAlias() {
     testSame("/** @enum */ var Foo = {BAR: 1}; " +
         "/** @enum */ var FooAlias = Foo; var f = FooAlias;");

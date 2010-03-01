@@ -107,6 +107,11 @@ public class CommandLineRunner extends
   static final Flag<Boolean> FLAG_process_closure_primitives
       = Flag.value(true);
 
+  /**
+   * Create a new command-line runner. You should only need to call
+   * the constructor if you're extending this class. Otherwise, the main
+   * method should instantiate it.
+   */
   protected CommandLineRunner(String[] args) {
     super(args);
   }
