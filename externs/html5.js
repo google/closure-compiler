@@ -595,9 +595,33 @@ Document.prototype.postMessage = function(message) {};
 /**
  * @see https://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/DOMApplicationCache/DOMApplicationCache.html
  * @constructor
- * @extends {EventTarget}
+ * @implements {EventTarget}
  */
 function DOMApplicationCache() {}
+
+/**
+ * @param {string} type
+ * @param {EventListener|function(Event):boolean} listener
+ * @param {boolean} useCapture
+ * @return {undefined}
+ */
+DOMApplicationCache.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/**
+ * @param {string} type
+ * @param {EventListener|function(Event):boolean} listener
+ * @param {boolean} useCapture
+ * @return {undefined}
+ */
+DOMApplicationCache.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/**
+ * @param {Event} evt
+ * @return {boolean}
+ */
+DOMApplicationCache.prototype.dispatchEvent = function(evt) {};
 
 /**
  * The object isn't associated with an application cache. This can occur if the
@@ -731,9 +755,21 @@ MessageChannel.prototype.port2;
 /**
  * @see http://dev.w3.org/html5/spec/comms.html#messageport
  * @constructor
- * @extends {EventTarget}
+ * @implements {EventTarget}
  */
 function MessagePort() {}
+
+/** @inheritDoc */
+MessagePort.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+MessagePort.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+MessagePort.prototype.dispatchEvent = function(evt) {};
+
 
 /**
  * Posts a message through the channel, optionally with the given ports.
@@ -835,9 +871,20 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
  * @constructor
  * @param {string} url
  * @param {string=} opt_protocol
- * @extends {EventTarget}
+ * @implements {EventTarget}
  */
 function WebSocket(url, opt_protocol) {}
+
+/** @inheritDoc */
+WebSocket.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+WebSocket.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+WebSocket.prototype.dispatchEvent = function(evt) {};
 
 /**
  * Returns the URL value that was passed to the constructor.
