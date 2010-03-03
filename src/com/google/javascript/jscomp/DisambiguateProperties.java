@@ -448,7 +448,7 @@ class DisambiguateProperties<T> implements CompilerPass {
 
       Iterable<T> alternatives = typeSystem.getTypeAlternatives(type);
       if (alternatives != null) {
-        T firstType = null;
+        T firstType = relatedType;
         for (T subType : alternatives) {
           T lastType = processProperty(t, prop, subType, firstType);
           if (lastType != null) {

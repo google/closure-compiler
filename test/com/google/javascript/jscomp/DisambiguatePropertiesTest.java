@@ -829,6 +829,56 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(true, js, "{a=[[Foo.prototype], [I.prototype]]}");
   }
 
+  public void testInterfaceUnionWithCtor() {
+    String js = ""
+        + "/** @interface */ function I() {};\n"
+        + "/** @type {!Function} */ I.prototype.addEventListener;\n"
+        + "/** @constructor \n * @implements {I} */ function Impl() {};\n"
+        + "/** @type {!Function} */ Impl.prototype.addEventListener;"
+        + "/** @constructor */ function C() {};\n"
+        + "/** @type {!Function} */ C.prototype.addEventListener;"
+        + "/** @param {C|I} x */"
+        + "function f(x) { x.addEventListener(); };\n"
+        + "f(new C()); f(new Impl());";
+
+    testSets(false, js, js,
+        "{addEventListener=[[C.prototype, I.prototype, Impl.prototype]]}");
+
+    // In the tightened case, the disambiguator is smart enough to
+    // disambiguate Impl's method from the interface method.
+    String tightenedOutput = ""
+        + "function I() {};\n"
+        + "I.prototype.I_prototype$addEventListener;\n"
+        + "function Impl() {};\n"
+        + "Impl.prototype.C_prototype$addEventListener;"
+        + "function C() {};\n"
+        + "C.prototype.C_prototype$addEventListener;"
+        + "/** @param {C|I} x */"
+        + "function f(x) { x.C_prototype$addEventListener(); };\n"
+        + "f(new C()); f(new Impl());";
+
+    testSets(true, js, tightenedOutput,
+        "{addEventListener=[[C.prototype, Impl.prototype], [I.prototype]]}");
+  }
+
+  public void testExternInterfaceUnionWithCtor() {
+    String externs = ""
+        + "/** @interface */ function I() {};\n"
+        + "/** @type {!Function} */ I.prototype.addEventListener;\n"
+        + "/** @constructor \n * @implements {I} */ function Impl() {};\n"
+        + "/** @type {!Function} */ Impl.prototype.addEventListener;";
+
+    String js = ""
+        + "/** @constructor */ function C() {};\n"
+        + "/** @type {!Function} */ C.prototype.addEventListener;"
+        + "/** @param {C|I} x */"
+        + "function f(x) { x.addEventListener(); };\n"
+        + "f(new C()); f(new Impl());";
+
+    testSets(false, externs, js, js, "{}");
+    testSets(true, externs, js, js, "{}");
+  }
+
   /**
    * Tests that the type based version skips renaming on types that have a
    * mismatch, and the type tightened version continues to work as normal.
