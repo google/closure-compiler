@@ -270,18 +270,11 @@ ClipboardData.prototype.getData = function(type) { };
 
 /**
  * @constructor
- * @implements {EventTarget}
+ * @extends {EventTarget}
  */
+// NOTE(nicksantos): Technically, this doesn't extend EventTarget into HTML5.
+// But there's no easy way to express this and still maintain separate files.
 function Window() {}
-
-/** @inheritDoc */
-Window.prototype.addEventListener = function(type, listener, useCapture) {};
-
-/** @inheritDoc */
-Window.prototype.removeEventListener = function(type, listener, useCapture) {};
-
-/** @inheritDoc */
-Window.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @type {!Window}

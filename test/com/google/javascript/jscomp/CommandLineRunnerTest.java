@@ -64,10 +64,10 @@ public class CommandLineRunnerTest extends TestCase {
     Flags.resetAllFlagsForTest();
 
     // NOTE(nicksantos): ANT needs this for some weird reason.
-    AbstractCommandLineRunner.FLAG_define.resetForTest();
-    AbstractCommandLineRunner.FLAG_jscomp_off.resetForTest();
-    AbstractCommandLineRunner.FLAG_jscomp_warning.resetForTest();
-    AbstractCommandLineRunner.FLAG_jscomp_error.resetForTest();
+    CommandLineRunner.FLAG_define.resetForTest();
+    CommandLineRunner.FLAG_jscomp_off.resetForTest();
+    CommandLineRunner.FLAG_jscomp_warning.resetForTest();
+    CommandLineRunner.FLAG_jscomp_error.resetForTest();
 
     Flags.enableStateCheckingForTest();
     super.tearDown();
@@ -113,14 +113,14 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testCheckSymbolsOverrideForVerbose() {
     CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
-    AbstractCommandLineRunner.FLAG_jscomp_off.setForTest(
+    CommandLineRunner.FLAG_jscomp_off.setForTest(
         Lists.newArrayList("undefinedVars"));
     testSame("x = 3;");
   }
 
   public void testCheckUndefinedProperties() {
     CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
-    AbstractCommandLineRunner.FLAG_jscomp_error.setForTest(
+    CommandLineRunner.FLAG_jscomp_error.setForTest(
         Lists.newArrayList("missingProperties"));
     test("var x = {}; var y = x.bar;", TypeCheck.INEXISTENT_PROPERTY);
   }
@@ -131,7 +131,7 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testDefineFlag() {
-    AbstractCommandLineRunner.FLAG_define.setForTest(
+    CommandLineRunner.FLAG_define.setForTest(
         Lists.newArrayList("FOO", "BAR=5"));
     test("/** @define {boolean} */ var FOO = false;" +
          "/** @define {number} */ var BAR = 3;",

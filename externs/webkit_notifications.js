@@ -20,21 +20,10 @@
 
 /**
  * @constructor
- * @implements {EventTarget}
+ * @extends {EventTarget}
  * @see http://dev.w3.org/2006/webapi/WebNotifications/publish/#idl-if-Notification
  */
 function Notification() {}
-
-/** @override */
-Notification.prototype.addEventListener =
-    function(type, listener, useCapture) {};
-
-/** @override */
-Notification.prototype.removeEventListener =
-    function(type, listener, useCapture) {};
-
-/** @override */
-Notification.prototype.dispatchEvent = function(evt) {};
 
 /**
  * Displays the notification.

@@ -21,6 +21,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.flags.DocLevel;
 import com.google.common.flags.Flag;
@@ -80,156 +81,7 @@ import java.util.logging.Level;
 abstract class AbstractCommandLineRunner<A extends Compiler,
     B extends CompilerOptions> {
 
-  @FlagSpec(help = "Prints out the parse tree and exits",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_print_tree = Flag.value(false);
-
-  @FlagSpec(help = "Runs the compile job many times, then prints out the " +
-      "best phase ordering from this run",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_compute_phase_ordering =
-      Flag.value(false);
-
-  @FlagSpec(help = "Prints a dot file describing the internal abstract syntax"
-      + " tree and exits",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_print_ast = Flag.value(false);
-
-  @FlagSpec(help = "Prints a dot file describing the passes that will get run"
-      + " and exits",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_print_pass_graph = Flag.value(false);
-
-  @FlagSpec(help = "Turns on extra sanity checks", altName = "dev_mode",
-      docLevel = DocLevel.SECRET)
-  static final Flag<CompilerOptions.DevMode> FLAG_jscomp_dev_mode =
-      Flag.value(CompilerOptions.DevMode.OFF);
-
-  // TODO(nicksantos): Make the next 2 flags package-private.
-  @FlagSpec(help = "The logging level (standard java.util.logging.Level"
-      + " values) for Compiler progress. Does not control errors or"
-      + " warnings for the JavaScript code under compilation",
-      docLevel = DocLevel.SECRET)
-  public static final Flag<String> FLAG_logging_level =
-      Flag.value(Level.WARNING.getName());
-
-  @FlagSpec(help = "The file containing javascript externs. You may specify"
-      + " multiple")
-  public static final Flag<List<String>> FLAG_externs = Flag.stringCollector();
-
-  @FlagSpec(help = "The javascript filename. You may specify multiple")
-  static final Flag<List<String>> FLAG_js = Flag.stringCollector();
-
-  @FlagSpec(help = "Primary output filename. If not specified, output is " +
-            "written to stdout")
-  static final Flag<String> FLAG_js_output_file = Flag.value("");
-
-  @FlagSpec(help = "A javascript module specification. The format is "
-      + "<name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be "
-      + "unique. Each dep is the name of a module that this module "
-      + "depends on. Modules must be listed in dependency order, and js "
-      + "source files must be listed in the corresponding order. Where "
-      + "--module flags occur in relation to --js flags is unimportant")
-  static final Flag<List<String>> FLAG_module = Flag.stringCollector();
-
-  @FlagSpec(help = "File containing the serialized version of the variable "
-      + "renaming map produced by a previous compilation")
-  static final Flag<String> FLAG_variable_map_input_file =
-      Flag.value("");
-
-  @FlagSpec(help = "File containing the serialized version of the property "
-      + "renaming map produced by a previous compilation",
-      docLevel = DocLevel.SECRET)
-  static final Flag<String> FLAG_property_map_input_file =
-      Flag.value("");
-
-  @FlagSpec(help = "File where the serialized version of the variable "
-      + "renaming map produced should be saved",
-      docLevel = DocLevel.SECRET)
-  static final Flag<String> FLAG_variable_map_output_file =
-      Flag.value("");
-
-  @FlagSpec(help = "If true, variable renaming and property renaming map "
-      + "files will be produced as {binary name}_vars_map.out and "
-      + "{binary name}_props_map.out. Note that this flag cannot be used "
-      + "in conjunction with either variable_map_output_file or "
-      + "property_map_output_file",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_create_name_map_files =
-      Flag.value(false);
-
-  @FlagSpec(help = "File where the serialized version of the property "
-      + "renaming map produced should be saved")
-  static final Flag<String> FLAG_property_map_output_file =
-      Flag.value("");
-
-  @FlagSpec(help = "Check source validity but do not enforce Closure style "
-      + "rules and conventions")
-  static final Flag<Boolean> FLAG_third_party = Flag.value(false);
-
-
-  @FlagSpec(help = "Controls how detailed the compilation summary is. Values:"
-      + " 0 (never print summary), 1 (print summary only if there are "
-      + "errors or warnings), 2 (print summary if type checking is on, "
-      + "see --check_types), 3 (always print summary). The default level "
-      + "is 1")
-  static final Flag<Integer> FLAG_summary_detail_level = Flag.value(1);
-
-  @FlagSpec(help = "Interpolate output into this string at the place denoted"
-      + " by the marker token %output%. See --output_wrapper_marker")
-  static final Flag<String> FLAG_output_wrapper = Flag.value("");
-
-  @FlagSpec(help = "Use this token as output marker in the value of"
-      + " --output_wrapper")
-  static final Flag<String> FLAG_output_wrapper_marker =
-      Flag.value("%output%");
-
-  @FlagSpec(help = "An output wrapper for a javascript module (optional). "
-      + "The format is <name>:<wrapper>. The module name must correspond "
-      + "with a module specified using --module. The wrapper must "
-      + "contain %s as the code placeholder")
-  static final Flag<List<String>> FLAG_module_wrapper =
-      Flag.stringCollector();
-
-  @FlagSpec(help = "Prefix for filenames of compiled js modules. "
-      + "<module-name>.js will be appended to this prefix. Directories "
-      + "will be created as needed. Use with --module")
-  static final Flag<String> FLAG_module_output_path_prefix =
-      Flag.value("./");
-
-  @FlagSpec(help = "If specified, a source map file mapping the generated " +
-            "source files back to the original source file will be " +
-            "output to the specified path. The %outname% placeholder will " +
-            "expand to the name of the output file that the source map " +
-            "corresponds to.")
-  static final Flag<String> FLAG_create_source_map =
-      Flag.value("");
-
-  @FlagSpec(help = "Make the named class of warnings an error. Options:" +
-      DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
-  static final Flag<List<String>> FLAG_jscomp_error =
-      Flag.stringCollector();
-
-  @FlagSpec(help = "Make the named class of warnings a normal warning. " +
-                "Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
-  static final Flag<List<String>> FLAG_jscomp_warning =
-      Flag.stringCollector();
-
-  @FlagSpec(help = "Turn off the named class of warnings. Options:" +
-      DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
-  static final Flag<List<String>> FLAG_jscomp_off =
-      Flag.stringCollector();
-
-  @FlagSpec(altName = "D",
-      help = "Override the value of a variable annotated @define. " +
-      "The format is <name>[=<val>], where <name> is the name of a @define " +
-      "variable and <val> is a boolean, number, or a single-quoted string " +
-      "that contains no single quotes. If [=<val>] is omitted, " +
-      "the variable is marked true")
-  static final Flag<List<String>> FLAG_define = Flag.stringCollector();
-
-  @FlagSpec(help = "Input charset for all files.")
-  static final Flag<String> FLAG_charset = Flag.value("");
+  private final CommandLineConfig config;
 
   private PrintStream out;
   private final PrintStream err;
@@ -242,15 +94,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private final RunTimeStats runTimeStats = new RunTimeStats();
 
-  AbstractCommandLineRunner(String[] args) {
-    this(args, System.out, System.err);
+  AbstractCommandLineRunner(CommandLineConfig config) {
+    this(config, System.out, System.err);
   }
 
-  AbstractCommandLineRunner(String[] args, PrintStream out,
-      PrintStream err) {
-    // Flags are read when a compiler is instantiated, so we parse them first.
-    Flags.parse(args);
-
+  AbstractCommandLineRunner(
+      CommandLineConfig config, PrintStream out, PrintStream err) {
+    this.config = config;
     this.out = out;
     this.err = err;
   }
@@ -277,16 +127,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     DiagnosticGroups diagnosticGroups = getDiagnoticGroups();
 
     diagnosticGroups.setWarningLevels(
-        options, AbstractCommandLineRunner.FLAG_jscomp_error.get(),
-        CheckLevel.ERROR);
+        options, config.jscompError, CheckLevel.ERROR);
     diagnosticGroups.setWarningLevels(
-        options, AbstractCommandLineRunner.FLAG_jscomp_warning.get(),
-        CheckLevel.WARNING);
+        options, config.jscompWarning, CheckLevel.WARNING);
     diagnosticGroups.setWarningLevels(
-        options, AbstractCommandLineRunner.FLAG_jscomp_off.get(),
-        CheckLevel.OFF);
+        options, config.jscompOff, CheckLevel.OFF);
 
-    createDefineReplacements(FLAG_define.get(), options);
+    createDefineReplacements(config.define, options);
   }
 
   final protected A getCompiler() {
@@ -295,25 +142,25 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   final protected void setRunOptions(B options)
       throws IOException, FlagUsageException {
-    if (FLAG_js_output_file.get().length() > 0) {
-      options.jsOutputFile = FLAG_js_output_file.get();
+    if (config.jsOutputFile.length() > 0) {
+      options.jsOutputFile = config.jsOutputFile;
     }
 
-    if (FLAG_create_source_map.get().length() > 0) {
-      options.sourceMapOutputPath = FLAG_create_source_map.get();
+    if (config.createSourceMap.length() > 0) {
+      options.sourceMapOutputPath = config.createSourceMap;
     }
 
-    if (!FLAG_variable_map_input_file.get().equals("")) {
+    if (!config.variableMapInputFile.equals("")) {
       options.inputVariableMapSerialized =
-          VariableMap.load(FLAG_variable_map_input_file.get()).toBytes();
+          VariableMap.load(config.variableMapInputFile).toBytes();
     }
 
-    if (!FLAG_property_map_input_file.get().equals("")) {
+    if (!config.propertyMapInputFile.equals("")) {
       options.inputPropertyMapSerialized =
-          VariableMap.load(FLAG_property_map_input_file.get()).toBytes();
+          VariableMap.load(config.propertyMapInputFile).toBytes();
     }
 
-    if (FLAG_third_party.get()) {
+    if (config.thirdParty) {
       options.setCodingConvention(new DefaultCodingConvention());
     }
 
@@ -327,7 +174,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   final public void run() {
     int result = 0;
     int runs = 1;
-    if (FLAG_compute_phase_ordering.get()) {
+    if (config.computePhaseOrdering) {
       runs = NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER;
       PhaseOptimizer.randomizeLoops();
     }
@@ -344,7 +191,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       t.printStackTrace();
       result = -2;
     }
-    if (FLAG_compute_phase_ordering.get()) {
+    if (config.computePhaseOrdering) {
       runTimeStats.outputBestPhaseOrdering();
     }
     System.exit(result);
@@ -623,7 +470,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * @return system exit status
    */
   protected int doRun() throws FlagUsageException, IOException {
-    Compiler.setLoggingLevel(Level.parse(FLAG_logging_level.get()));
+    Compiler.setLoggingLevel(Level.parse(config.loggingLevel));
 
     List<JSSourceFile> externsList = createExterns();
     JSSourceFile[] externs = new JSSourceFile[externsList.size()];
@@ -652,10 +499,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     ((PrintStreamErrorManager) compiler.getErrorManager())
-        .setSummaryDetailLevel(FLAG_summary_detail_level.get());
+        .setSummaryDetailLevel(config.summaryDetailLevel);
 
-    List<String> jsFiles = FLAG_js.get();
-    List<String> moduleSpecs = FLAG_module.get();
+    List<String> jsFiles = config.js;
+    List<String> moduleSpecs = config.module;
     if (!moduleSpecs.isEmpty()) {
       modules = createJsModules(moduleSpecs, jsFiles);
       result = compiler.compile(externs, modules, options);
@@ -674,11 +521,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   int processResults(Result result, JSModule[] modules, B options)
        throws FlagUsageException, IOException {
-    if (FLAG_compute_phase_ordering.get()) {
+    if (config.computePhaseOrdering) {
       return 0;
     }
 
-    if (FLAG_print_pass_graph.get()) {
+    if (config.printPassGraph) {
       if (compiler.getRoot() == null) {
         return 1;
       } else {
@@ -688,7 +535,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
-    if (FLAG_print_ast.get()) {
+    if (config.printAst) {
       if (compiler.getRoot() == null) {
         return 1;
       } else {
@@ -699,7 +546,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
-    if (FLAG_print_tree.get()) {
+    if (config.printTree) {
       if (compiler.getRoot() == null) {
         out.println("Code contains errors; no tree was generated.");
         return 1;
@@ -712,16 +559,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (result.success) {
       if (modules == null) {
-        writeOutput(out, compiler, compiler.toSource(), FLAG_output_wrapper
-            .get(), FLAG_output_wrapper_marker.get());
+        writeOutput(out, compiler, compiler.toSource(), config.outputWrapper,
+            config.outputWrapperMarker);
 
         // Output the source map if requested.
         outputSourceMap(options, options.jsOutputFile);
       } else {
-        String moduleFilePrefix = FLAG_module_output_path_prefix.get();
+        String moduleFilePrefix = config.moduleOutputPathPrefix;
         maybeCreateDirsForPath(moduleFilePrefix);
         Map<String, String> moduleWrappers =
-            parseModuleWrappers(FLAG_module_wrapper.get(), modules);
+            parseModuleWrappers(config.moduleWrapper, modules);
 
         // If the source map path is in fact a pattern for each
         // module, create a stream per-module. Otherwise, create
@@ -784,26 +631,25 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   /**
    * Query the flag for the charset, and return a Charset object representing
-   * the selection.  Keep this in a separate function
-   * so it can be called both in static and normal methods.
+   * the selection.
    *
    * @return Charset to use when reading inputs
    * @throws FlagUsageException if flag is not a valid Charset name.
    */
-  private static Charset getInputCharset() throws FlagUsageException {
-    if (!FLAG_charset.get().isEmpty()) {
-      if (!Charset.isSupported(FLAG_charset.get())) {
-        throw new FlagUsageException(FLAG_charset.get() +
+  private Charset getInputCharset() throws FlagUsageException {
+    if (!config.charset.isEmpty()) {
+      if (!Charset.isSupported(config.charset)) {
+        throw new FlagUsageException(config.charset +
             " is not a valid charset name.");
       }
-      return Charset.forName(FLAG_charset.get());
+      return Charset.forName(config.charset);
     }
     return Charsets.UTF_8;
   }
 
   protected List<JSSourceFile> createExterns() throws FlagUsageException,
       IOException {
-    return createExternInputs(FLAG_externs.get());
+    return createExternInputs(config.externs);
   }
 
   /**
@@ -896,14 +742,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *
    * @return The path in which to place the generated map file(s).
    */
-  private static String getMapPath(String outputFile) {
+  private String getMapPath(String outputFile) {
     String basePath = "";
 
     if (outputFile.equals("")) {
       // If we have a js_module_binary rule, output the maps
       // at modulename_props_map.out, etc.
-      if (!FLAG_module_output_path_prefix.get().equals("")) {
-        basePath = FLAG_module_output_path_prefix.get();
+      if (!config.moduleOutputPathPrefix.equals("")) {
+        basePath = config.moduleOutputPathPrefix;
       } else {
         basePath = "jscompiler";
       }
@@ -937,7 +783,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     String functionInformationMapOutputPath = null;
 
     // Check the create_name_map_files FLAG.
-    if (FLAG_create_name_map_files.get()) {
+    if (config.createNameMapFiles) {
       String basePath = getMapPath(options.jsOutputFile);
 
       propertyMapOutputPath = basePath + "_props_map.out";
@@ -946,22 +792,22 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     // Check the individual FLAGS.
-    if (!FLAG_variable_map_output_file.get().equals("")) {
+    if (!config.variableMapOutputFile.equals("")) {
       if (variableMapOutputPath != null) {
         throw new FlagUsageException("The flags variable_map_output_file and "
             + "create_name_map_files cannot both be used simultaniously.");
       }
 
-      variableMapOutputPath = FLAG_variable_map_output_file.get();
+      variableMapOutputPath = config.variableMapOutputFile;
     }
 
-    if (!FLAG_property_map_output_file.get().equals("")) {
+    if (!config.propertyMapOutputFile.equals("")) {
       if (propertyMapOutputPath != null) {
         throw new FlagUsageException("The flags property_map_output_file and "
             + "create_name_map_files cannot both be used simultaniously.");
       }
 
-      propertyMapOutputPath = FLAG_property_map_output_file.get();
+      propertyMapOutputPath = config.propertyMapOutputFile;
     }
 
     // Output the maps.
@@ -1086,6 +932,325 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         out.println("\nLoop " + i + ":\n" + Joiner.on("\n").join(loop));
         i++;
       }
+    }
+  }
+
+  /**
+   * Configurations for the command line configs. Designed for easy
+   * building, so that we can decouple the flags-parsing library from
+   * the actual configuration options.
+   *
+   * By design, these configurations must match one-to-one with
+   * command-line flags.
+   */
+  static class CommandLineConfig {
+    private boolean printTree = false;
+
+    /** Prints out the parse tree and exits */
+    CommandLineConfig setPrintTree(boolean printTree) {
+      this.printTree = printTree;
+      return this;
+    }
+
+    private boolean computePhaseOrdering = false;
+
+    /**
+     * Runs the compile job many times, then prints out the best phase
+     * ordering from this run
+     */
+    CommandLineConfig setComputePhaseOrdering(boolean computePhaseOrdering) {
+      this.computePhaseOrdering = computePhaseOrdering;
+      return this;
+    }
+
+    private boolean printAst = false;
+
+    /**
+     * Prints a dot file describing the internal abstract syntax tree
+     * and exits
+     */
+    CommandLineConfig setPrintAst(boolean printAst) {
+      this.printAst = printAst;
+      return this;
+    }
+
+    private boolean printPassGraph = false;
+
+    /** Prints a dot file describing the passes that will get run and exits */
+    CommandLineConfig setPrintPassGraph(boolean printPassGraph) {
+      this.printPassGraph = printPassGraph;
+      return this;
+    }
+
+    private CompilerOptions.DevMode jscompDevMode = CompilerOptions.DevMode.OFF;
+
+    /** Turns on extra sanity checks */
+    CommandLineConfig setJscompDevMode(CompilerOptions.DevMode jscompDevMode) {
+      this.jscompDevMode = jscompDevMode;
+      return this;
+    }
+
+    private String loggingLevel = Level.WARNING.getName();
+
+    /**
+     * The logging level (standard java.util.logging.Level
+     * values) for Compiler progress. Does not control errors or
+     * warnings for the JavaScript code under compilation
+     */
+    CommandLineConfig setLoggingLevel(String loggingLevel) {
+      this.loggingLevel = loggingLevel;
+      return this;
+    }
+
+    private final List<String> externs = Lists.newArrayList();
+
+    /**
+     * The file containing javascript externs. You may specify multiple.
+     */
+    CommandLineConfig setExterns(List<String> externs) {
+      this.externs.clear();
+      this.externs.addAll(externs);
+      return this;
+    }
+
+    private final List<String> js = Lists.newArrayList();
+
+    /**
+     * The javascript filename. You may specify multiple.
+     */
+    CommandLineConfig setJs(List<String> js) {
+      this.js.clear();
+      this.js.addAll(js);
+      return this;
+    }
+
+    private String jsOutputFile = "";
+
+    /**
+     * Primary output filename. If not specified, output is written to stdout
+     */
+    CommandLineConfig setJsOutputFile(String jsOutputFile) {
+      this.jsOutputFile = jsOutputFile;
+      return this;
+    }
+
+    private final List<String> module = Lists.newArrayList();
+
+    /**
+     * A javascript module specification. The format is
+     * <name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be
+     * unique. Each dep is the name of a module that this module
+     * depends on. Modules must be listed in dependency order, and js
+     * source files must be listed in the corresponding order. Where
+     * --module flags occur in relation to --js flags is unimportant
+     */
+    CommandLineConfig setModule(List<String> module) {
+      this.module.clear();
+      this.module.addAll(module);
+      return this;
+    }
+
+    private String variableMapInputFile = "";
+
+    /**
+     * File containing the serialized version of the variable renaming
+     * map produced by a previous compilation
+     */
+    CommandLineConfig setVariableMapInputFile(String variableMapInputFile) {
+      this.variableMapInputFile = variableMapInputFile;
+      return this;
+    }
+
+    private String propertyMapInputFile = "";
+
+    /**
+     * File containing the serialized version of the property renaming
+     * map produced by a previous compilation
+     */
+    CommandLineConfig setPropertyMapInputFile(String propertyMapInputFile) {
+      this.propertyMapInputFile = propertyMapInputFile;
+      return this;
+    }
+
+    private String variableMapOutputFile = "";
+
+    /**
+     * File where the serialized version of the variable renaming map
+     * produced should be saved
+     */
+    CommandLineConfig setVariableMapOutputFile(String variableMapOutputFile) {
+      this.variableMapOutputFile = variableMapOutputFile;
+      return this;
+    }
+
+    private boolean createNameMapFiles = false;
+
+    /**
+     * If true, variable renaming and property renaming map
+     * files will be produced as {binary name}_vars_map.out and
+     * {binary name}_props_map.out. Note that this flag cannot be used
+     * in conjunction with either variable_map_output_file or
+     * property_map_output_file
+     */
+    CommandLineConfig setCreateNameMapFiles(boolean createNameMapFiles) {
+      this.createNameMapFiles = createNameMapFiles;
+      return this;
+    }
+
+    private String propertyMapOutputFile = "";
+
+    /**
+     * File where the serialized version of the property renaming map
+     * produced should be saved
+     */
+    CommandLineConfig setPropertyMapOutputFile(String propertyMapOutputFile) {
+      this.propertyMapOutputFile = propertyMapOutputFile;
+      return this;
+    }
+
+    private boolean thirdParty = false;
+
+    /**
+     * Check source validity but do not enforce Closure style rules and
+     * conventions
+     */
+    CommandLineConfig setThirdParty(boolean thirdParty) {
+      this.thirdParty = thirdParty;
+      return this;
+    }
+
+    private int summaryDetailLevel = 1;
+
+    /**
+     * Controls how detailed the compilation summary is. Values:
+     *  0 (never print summary), 1 (print summary only if there are
+     * errors or warnings), 2 (print summary if type checking is on,
+     * see --check_types), 3 (always print summary). The default level
+     * is 1
+     */
+    CommandLineConfig setSummaryDetailLevel(int summaryDetailLevel) {
+      this.summaryDetailLevel = summaryDetailLevel;
+      return this;
+    }
+
+    private String outputWrapper = "";
+
+    /**
+     * Interpolate output into this string at the place denoted
+     *  by the marker token %output%. See --output_wrapper_marker
+     */
+    CommandLineConfig setOutputWrapper(String outputWrapper) {
+      this.outputWrapper = outputWrapper;
+      return this;
+    }
+
+    private String outputWrapperMarker = "";
+
+    /**
+     * Use this token as output marker in the value of
+     *  --output_wrapper
+     */
+    CommandLineConfig setOutputWrapperMarker(String outputWrapperMarker) {
+      this.outputWrapperMarker = outputWrapperMarker;
+      return this;
+    }
+
+    private final List<String> moduleWrapper = Lists.newArrayList();
+
+    /**
+     * An output wrapper for a javascript module (optional).
+     * The format is <name>:<wrapper>. The module name must correspond
+     * with a module specified using --module. The wrapper must
+     * contain %s as the code placeholder
+     */
+    CommandLineConfig setModuleWrapper(List<String> moduleWrapper) {
+      this.moduleWrapper.clear();
+      this.moduleWrapper.addAll(moduleWrapper);
+      return this;
+    }
+
+    private String moduleOutputPathPrefix = "";
+
+    /**
+     * Prefix for filenames of compiled js modules.
+     * <module-name>.js will be appended to this prefix. Directories
+     * will be created as needed. Use with --module
+     */
+    CommandLineConfig setModuleOutputPathPrefix(String moduleOutputPathPrefix) {
+      this.moduleOutputPathPrefix = moduleOutputPathPrefix;
+      return this;
+    }
+
+    private String createSourceMap = "";
+
+    /**
+     * If specified, a source map file mapping the generated
+     * source files back to the original source file will be
+     * output to the specified path. The %outname% placeholder will
+     * expand to the name of the output file that the source map
+     * corresponds to.
+     */
+    CommandLineConfig setCreateSourceMap(String createSourceMap) {
+      this.createSourceMap = createSourceMap;
+      return this;
+    }
+
+    private final List<String> jscompError = Lists.newArrayList();
+
+    /**
+     * Make the named class of warnings an error.
+     */
+    CommandLineConfig setJscompError(List<String> jscompError) {
+      this.jscompError.clear();
+      this.jscompError.addAll(jscompError);
+      return this;
+    }
+
+    private final List<String> jscompWarning = Lists.newArrayList();
+
+    /**
+     * Make the named class of warnings a normal warning.
+     */
+    CommandLineConfig setJscompWarning(List<String> jscompWarning) {
+      this.jscompWarning.clear();
+      this.jscompWarning.addAll(jscompWarning);
+      return this;
+    }
+
+    private final List<String> jscompOff = Lists.newArrayList();
+
+    /**
+     * Turn off the named class of warnings.
+     */
+    CommandLineConfig setJscompOff(List<String> jscompOff) {
+      this.jscompOff.clear();
+      this.jscompOff.addAll(jscompOff);
+      return this;
+    }
+
+    private final List<String> define = Lists.newArrayList();
+
+    /**
+     * Override the value of a variable annotated @define.
+     * The format is <name>[=<val>], where <name> is the name of a @define
+     * variable and <val> is a boolean, number, or a single-quoted string
+     * that contains no single quotes. If [=<val>] is omitted,
+     * the variable is marked true
+     */
+    CommandLineConfig setDefine(List<String> define) {
+      this.define.clear();
+      this.define.addAll(define);
+      return this;
+    }
+
+    private String charset = "";
+
+    /**
+     * Input charset for all files.
+     */
+    CommandLineConfig setCharset(String charset) {
+      this.charset = charset;
+      return this;
     }
   }
 }
