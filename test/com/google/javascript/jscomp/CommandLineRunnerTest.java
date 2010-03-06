@@ -18,12 +18,14 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.flags.Flags;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
+import org.kohsuke.args4j.CmdLineException;
+
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Tests for {@link CommandLineRunner}.
@@ -36,6 +38,8 @@ public class CommandLineRunnerTest extends TestCase {
 
   // If set to true, uses comparison by string instead of by AST.
   private boolean useStringComparison = false;
+
+  private List<String> args = Lists.newArrayList();
 
   /** Externs for the test */
   private final JSSourceFile[] externs = new JSSourceFile[] {
@@ -53,23 +57,13 @@ public class CommandLineRunnerTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    Flags.disableStateCheckingForTest();
-    Flags.resetAllFlagsForTest();
     lastCompiler = null;
     useStringComparison = false;
+    args.clear();
   }
 
   @Override
   public void tearDown() throws Exception {
-    Flags.resetAllFlagsForTest();
-
-    // NOTE(nicksantos): ANT needs this for some weird reason.
-    CommandLineRunner.FLAG_define.resetForTest();
-    CommandLineRunner.FLAG_jscomp_off.resetForTest();
-    CommandLineRunner.FLAG_jscomp_warning.resetForTest();
-    CommandLineRunner.FLAG_jscomp_error.resetForTest();
-
-    Flags.enableStateCheckingForTest();
     super.tearDown();
   }
 
@@ -79,49 +73,45 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testTypeCheckingOnWithVerbose() {
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    args.add("--warning_level=VERBOSE");
     test("function f(x) { return x; } f();", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
   public void testTypeCheckOverride1() {
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
-    CommandLineRunner.FLAG_jscomp_off.setForTest(
-        Lists.newArrayList("checkTypes"));
+    args.add("--warning_level=VERBOSE");
+    args.add("--jscomp_off=checkTypes");
     testSame("var x = x || {}; x.f = function() {}; x.f(3);");
   }
 
   public void testTypeCheckOverride2() {
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    args.add("--warning_level=DEFAULT");
     testSame("var x = x || {}; x.f = function() {}; x.f(3);");
 
-    CommandLineRunner.FLAG_jscomp_warning.setForTest(
-        Lists.newArrayList("checkTypes"));
+    args.add("--jscomp_warning=checkTypes");
     test("var x = x || {}; x.f = function() {}; x.f(3);",
          TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
   public void testCheckSymbolsOffForDefault() {
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    args.add("--warning_level=DEFAULT");
     test("x = 3; var y; var y;", "x=3; var y;");
   }
 
   public void testCheckSymbolsOnForVerbose() {
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
+    args.add("--warning_level=VERBOSE");
     test("x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
     test("var y; var y;", SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testCheckSymbolsOverrideForVerbose() {
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
-    CommandLineRunner.FLAG_jscomp_off.setForTest(
-        Lists.newArrayList("undefinedVars"));
+    args.add("--warning_level=VERBOSE");
+    args.add("--jscomp_off=undefinedVars");
     testSame("x = 3;");
   }
 
   public void testCheckUndefinedProperties() {
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.VERBOSE);
-    CommandLineRunner.FLAG_jscomp_error.setForTest(
-        Lists.newArrayList("missingProperties"));
+    args.add("--warning_level=VERBOSE");
+    args.add("--jscomp_error=missingProperties");
     test("var x = {}; var y = x.bar;", TypeCheck.INEXISTENT_PROPERTY);
   }
 
@@ -131,8 +121,8 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testDefineFlag() {
-    CommandLineRunner.FLAG_define.setForTest(
-        Lists.newArrayList("FOO", "BAR=5"));
+    args.add("--define=FOO");
+    args.add("--define=\"BAR=5\"");
     test("/** @define {boolean} */ var FOO = false;" +
          "/** @define {number} */ var BAR = 3;",
          "var FOO = true, BAR = 5;");
@@ -150,10 +140,10 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testQuietMode() {
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.DEFAULT);
+    args.add("--warning_level=DEFAULT");
     test("/** @type { not a type name } */ var x;",
          RhinoErrorReporter.PARSE_ERROR);
-    CommandLineRunner.FLAG_warning_level.setForTest(WarningLevel.QUIET);
+    args.add("--warning_level=QUIET");
     testSame("/** @type { not a type name } */ var x;");
   }
 
@@ -165,18 +155,15 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testIssue81() {
-    CommandLineRunner.FLAG_compilation_level.setForTest(
-        CompilationLevel.ADVANCED_OPTIMIZATIONS);
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     useStringComparison = true;
     test("eval('1'); var x = eval; x('2');",
          "eval(\"1\");(0,eval)(\"2\");");
   }
 
   public void testIssue115() {
-    CommandLineRunner.FLAG_compilation_level.setForTest(
-        CompilationLevel.SIMPLE_OPTIMIZATIONS);
-    CommandLineRunner.FLAG_warning_level.setForTest(
-        WarningLevel.VERBOSE);
+    args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
+    args.add("--warning_level=VERBOSE");
     test("function f() { " +
          "  var arguments = Array.prototype.slice.call(arguments, 0);" +
          "  return arguments[0]; " +
@@ -188,26 +175,22 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testDebugFlag1() {
-    CommandLineRunner.FLAG_compilation_level.setForTest(
-        CompilationLevel.SIMPLE_OPTIMIZATIONS);
-    CommandLineRunner.FLAG_debug.setForTest(false);
+    args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
+    args.add("--debug=false");
     testSame("function foo(a) {}");
   }
 
   public void testDebugFlag2() {
-    CommandLineRunner.FLAG_compilation_level.setForTest(
-        CompilationLevel.SIMPLE_OPTIMIZATIONS);
-    CommandLineRunner.FLAG_debug.setForTest(true);
+    args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
+    args.add("--debug=true");
     test("function foo(a) {}",
          "function foo($a$$) {}");
   }
 
   public void testDebugFlag3() {
-    CommandLineRunner.FLAG_compilation_level.setForTest(
-        CompilationLevel.ADVANCED_OPTIMIZATIONS);
-    CommandLineRunner.FLAG_warning_level.setForTest(
-        WarningLevel.QUIET);
-    CommandLineRunner.FLAG_debug.setForTest(false);
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--warning_level=QUIET");
+    args.add("--debug=false");
     test("function Foo() {};" +
          "Foo.x = 1;" +
          "function f() {throw new Foo().x;} f();",
@@ -216,11 +199,9 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testDebugFlag4() {
-    CommandLineRunner.FLAG_compilation_level.setForTest(
-        CompilationLevel.ADVANCED_OPTIMIZATIONS);
-    CommandLineRunner.FLAG_warning_level.setForTest(
-        WarningLevel.QUIET);
-    CommandLineRunner.FLAG_debug.setForTest(true);
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--warning_level=QUIET");
+    args.add("--debug=true");
     test("function Foo() {};" +
         "Foo.x = 1;" +
         "function f() {throw new Foo().x;} f();",
@@ -293,7 +274,13 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   private Compiler compile(String[] original) {
-    CommandLineRunner runner = new CommandLineRunner(new String[] {});
+    String[] argStrings = args.toArray(new String[] {});
+    CommandLineRunner runner = null;
+    try {
+      runner = new CommandLineRunner(argStrings);
+    } catch (CmdLineException e) {
+      throw new RuntimeException(e);
+    }
     Compiler compiler = runner.createCompiler();
     lastCompiler = compiler;
     JSSourceFile[] inputs = new JSSourceFile[original.length];
@@ -314,7 +301,13 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   private Node parse(String[] original) {
-    CommandLineRunner runner = new CommandLineRunner(new String[] {});
+    String[] argStrings = args.toArray(new String[] {});
+    CommandLineRunner runner = null;
+    try {
+      runner = new CommandLineRunner(argStrings);
+    } catch (CmdLineException e) {
+      throw new RuntimeException(e);
+    }
     Compiler compiler = runner.createCompiler();
     JSSourceFile[] inputs = new JSSourceFile[original.length];
     for (int i = 0; i < inputs.length; i++) {

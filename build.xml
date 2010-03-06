@@ -23,7 +23,6 @@
   <property name="build.dir" value="${basedir}/build" />
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testClasses.dir" value="${build.dir}/test" />
-  <property name="flags.xml" value="${build.dir}/flags.xml" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
   <property name="stylesheetfile" value="" />
   <property name="lib.dir" value="${basedir}/lib" />
@@ -73,33 +72,17 @@
           todir="${classes.dir}/com/google/javascript/jscomp/js" />
   </target>
 
-  <target name="apt">
-    <mkdir dir="${build.dir}" />
-    <apt srcdir="${src.dir}"
-         compile="false"
-         factory="com.google.common.flags.FlagProcessorFactory"
-         >
-      <classpath>
-        <pathelement location="${lib.dir}/google_common_deploy.jar" />
-        <pathelement location="${tools.dir}/FlagProcessorFactory_deploy.jar" />
-      </classpath>
-      <compilerarg value="-Aflags.path=${flags.xml}" />
-    </apt>
-  </target>
-
   <target name="jar"
-          depends="compile,apt"
+          depends="compile"
           description="package compiler as an executable jar">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" />
     <jar destfile="${jarfile}" update="true">
-      <zipfileset src="${lib.dir}/google_common_deploy.jar"
-                  excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/protobuf_deploy.jar"
-                  excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar"
-                  excludes="flags.xml" />
+      <zipfileset src="${lib.dir}/args4j_deploy.jar" />
+      <zipfileset src="${lib.dir}/google_common_deploy.jar" />
+      <zipfileset src="${lib.dir}/protobuf_deploy.jar" />
+      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
       <fileset dir="${classes.dir}" />
-      <fileset dir="${build.dir}" includes="flags.xml,externs.zip" />
+      <fileset dir="${build.dir}" includes="externs.zip" />
       <manifest>
         <attribute name="Main-Class"
                    value="com.google.javascript.jscomp.CommandLineRunner" />
@@ -119,23 +102,17 @@
   </target>
 
   <target name="all-classes-jar"
-          depends="compile,compile-tests,apt"
+          depends="compile,compile-tests"
           description="package the compiler and its tests into one jar">
     <jar destfile="${jarfile}" update="true">
-      <zipfileset src="${lib.dir}/ant_deploy.jar"
-                  excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/junit4-core.jar"
-                  excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/junit4-legacy.jar"
-                  excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/hamcrest-core-1.1.jar"
-                  excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/google_common_deploy.jar"
-                  excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/protobuf_deploy.jar"
-                  excludes="flags.xml" />
-      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar"
-                  excludes="flags.xml" />
+      <zipfileset src="${lib.dir}/ant_deploy.jar" />
+      <zipfileset src="${lib.dir}/args4j_deploy.jar" />
+      <zipfileset src="${lib.dir}/junit4-core.jar" />
+      <zipfileset src="${lib.dir}/junit4-legacy.jar" />
+      <zipfileset src="${lib.dir}/hamcrest-core-1.1.jar" />
+      <zipfileset src="${lib.dir}/google_common_deploy.jar" />
+      <zipfileset src="${lib.dir}/protobuf_deploy.jar" />
+      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
       <fileset dir="${classes.dir}" />
       <fileset dir="${testClasses.dir}" />
     </jar>

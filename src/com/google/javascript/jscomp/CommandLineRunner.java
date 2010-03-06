@@ -17,18 +17,26 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
-import com.google.common.flags.DocLevel;
-import com.google.common.flags.Flag;
-import com.google.common.flags.FlagSpec;
-import com.google.common.flags.Flags;
+import com.google.common.collect.Sets;
 import com.google.common.io.LimitInputStream;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig;
+
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.spi.OptionHandler;
+import org.kohsuke.args4j.spi.Parameters;
+import org.kohsuke.args4j.spi.Setter;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -61,173 +69,241 @@ import java.util.zip.ZipInputStream;
 public class CommandLineRunner extends
     AbstractCommandLineRunner<Compiler, CompilerOptions> {
 
-  @FlagSpec(help = "Prints out the parse tree and exits",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_print_tree = Flag.value(false);
+  private static class Flags {
+    @Option(name = "--print_tree",
+        handler = BooleanOptionHandler.class,
+        usage = "Prints out the parse tree and exits")
+    private boolean print_tree = false;
 
-  @FlagSpec(help = "Runs the compile job many times, then prints out the " +
-      "best phase ordering from this run",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_compute_phase_ordering =
-      Flag.value(false);
+    @Option(name = "--compute_phase_ordering",
+        handler = BooleanOptionHandler.class,
+        usage = "Runs the compile job many times, then prints out the " +
+        "best phase ordering from this run")
+    private boolean compute_phase_ordering = false;
 
-  @FlagSpec(help = "Prints a dot file describing the internal abstract syntax"
-      + " tree and exits",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_print_ast = Flag.value(false);
+    @Option(name = "--print_ast",
+        handler = BooleanOptionHandler.class,
+        usage = "Prints a dot file describing the internal abstract syntax"
+        + " tree and exits")
+    private boolean print_ast = false;
 
-  @FlagSpec(help = "Prints a dot file describing the passes that will get run"
-      + " and exits",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_print_pass_graph = Flag.value(false);
+    @Option(name = "--print_pass_graph",
+        usage = "Prints a dot file describing the passes that will get run"
+        + " and exits")
+    private boolean print_pass_graph = false;
 
-  @FlagSpec(help = "Turns on extra sanity checks", altName = "dev_mode",
-      docLevel = DocLevel.SECRET)
-  static final Flag<CompilerOptions.DevMode> FLAG_jscomp_dev_mode =
-      Flag.value(CompilerOptions.DevMode.OFF);
+    @Option(name = "--jscomp_dev_mode",
+        usage = "Turns on extra sanity checks",
+        aliases = {"--dev_mode"})
+    private CompilerOptions.DevMode jscomp_dev_mode =
+        CompilerOptions.DevMode.OFF;
 
-  // TODO(nicksantos): Make the next 2 flags package-private.
-  @FlagSpec(help = "The logging level (standard java.util.logging.Level"
-      + " values) for Compiler progress. Does not control errors or"
-      + " warnings for the JavaScript code under compilation",
-      docLevel = DocLevel.SECRET)
-  public static final Flag<String> FLAG_logging_level =
-      Flag.value(Level.WARNING.getName());
+    // TODO(nicksantos): Make the next 2 flags package-private.
+    @Option(name = "--logging_level",
+        usage = "The logging level (standard java.util.logging.Level"
+        + " values) for Compiler progress. Does not control errors or"
+        + " warnings for the JavaScript code under compilation")
+    private String logging_level = Level.WARNING.getName();
 
-  @FlagSpec(help = "The file containing javascript externs. You may specify"
-      + " multiple")
-  public static final Flag<List<String>> FLAG_externs = Flag.stringCollector();
+    @Option(name = "--externs",
+        usage = "The file containing javascript externs. You may specify"
+        + " multiple")
+    private List<String> externs = Lists.newArrayList();
 
-  @FlagSpec(help = "The javascript filename. You may specify multiple")
-  static final Flag<List<String>> FLAG_js = Flag.stringCollector();
+    @Option(name = "--js",
+        usage = "The javascript filename. You may specify multiple")
+    private List<String> js = Lists.newArrayList();
 
-  @FlagSpec(help = "Primary output filename. If not specified, output is " +
-            "written to stdout")
-  static final Flag<String> FLAG_js_output_file = Flag.value("");
+    @Option(name = "--js_output_file",
+        usage = "Primary output filename. If not specified, output is " +
+        "written to stdout")
+    private String js_output_file = "";
 
-  @FlagSpec(help = "A javascript module specification. The format is "
-      + "<name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be "
-      + "unique. Each dep is the name of a module that this module "
-      + "depends on. Modules must be listed in dependency order, and js "
-      + "source files must be listed in the corresponding order. Where "
-      + "--module flags occur in relation to --js flags is unimportant")
-  static final Flag<List<String>> FLAG_module = Flag.stringCollector();
+    @Option(name = "--module",
+        usage = "A javascript module specification. The format is "
+        + "<name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be "
+        + "unique. Each dep is the name of a module that this module "
+        + "depends on. Modules must be listed in dependency order, and js "
+        + "source files must be listed in the corresponding order. Where "
+        + "--module flags occur in relation to --js flags is unimportant")
+    private List<String> module = Lists.newArrayList();
 
-  @FlagSpec(help = "File containing the serialized version of the variable "
-      + "renaming map produced by a previous compilation")
-  static final Flag<String> FLAG_variable_map_input_file =
-      Flag.value("");
+    @Option(name = "--variable_map_input_file",
+        usage = "File containing the serialized version of the variable "
+        + "renaming map produced by a previous compilation")
+    private String variable_map_input_file = "";
 
-  @FlagSpec(help = "File containing the serialized version of the property "
-      + "renaming map produced by a previous compilation",
-      docLevel = DocLevel.SECRET)
-  static final Flag<String> FLAG_property_map_input_file =
-      Flag.value("");
+    @Option(name = "--property_map_input_file",
+        usage = "File containing the serialized version of the property "
+        + "renaming map produced by a previous compilation")
+    private String property_map_input_file = "";
 
-  @FlagSpec(help = "File where the serialized version of the variable "
-      + "renaming map produced should be saved",
-      docLevel = DocLevel.SECRET)
-  static final Flag<String> FLAG_variable_map_output_file =
-      Flag.value("");
+    @Option(name = "--variable_map_output_file",
+        usage = "File where the serialized version of the variable "
+        + "renaming map produced should be saved")
+    private String variable_map_output_file = "";
 
-  @FlagSpec(help = "If true, variable renaming and property renaming map "
-      + "files will be produced as {binary name}_vars_map.out and "
-      + "{binary name}_props_map.out. Note that this flag cannot be used "
-      + "in conjunction with either variable_map_output_file or "
-      + "property_map_output_file",
-      docLevel = DocLevel.SECRET)
-  static final Flag<Boolean> FLAG_create_name_map_files =
-      Flag.value(false);
+    @Option(name = "--create_name_map_files",
+        handler = BooleanOptionHandler.class,
+        usage = "If true, variable renaming and property renaming map "
+        + "files will be produced as {binary name}_vars_map.out and "
+        + "{binary name}_props_map.out. Note that this flag cannot be used "
+        + "in conjunction with either variable_map_output_file or "
+        + "property_map_output_file")
+    private boolean create_name_map_files = false;
 
-  @FlagSpec(help = "File where the serialized version of the property "
-      + "renaming map produced should be saved")
-  static final Flag<String> FLAG_property_map_output_file =
-      Flag.value("");
+    @Option(name = "--property_map_output_file",
+        usage = "File where the serialized version of the property "
+        + "renaming map produced should be saved")
+    private String property_map_output_file = "";
 
-  @FlagSpec(help = "Check source validity but do not enforce Closure style "
-      + "rules and conventions")
-  static final Flag<Boolean> FLAG_third_party = Flag.value(false);
+    @Option(name = "--third_party",
+        handler = BooleanOptionHandler.class,
+        usage = "Check source validity but do not enforce Closure style "
+        + "rules and conventions")
+    private boolean third_party = false;
 
 
-  @FlagSpec(help = "Controls how detailed the compilation summary is. Values:"
-      + " 0 (never print summary), 1 (print summary only if there are "
-      + "errors or warnings), 2 (print summary if type checking is on, "
-      + "see --check_types), 3 (always print summary). The default level "
-      + "is 1")
-  static final Flag<Integer> FLAG_summary_detail_level = Flag.value(1);
+    @Option(name = "--summary_detail_level",
+        usage = "Controls how detailed the compilation summary is. Values:"
+        + " 0 (never print summary), 1 (print summary only if there are "
+        + "errors or warnings), 2 (print summary if type checking is on, "
+        + "see --check_types), 3 (always print summary). The default level "
+        + "is 1")
+    private int summary_detail_level = 1;
 
-  @FlagSpec(help = "Interpolate output into this string at the place denoted"
-      + " by the marker token %output%. See --output_wrapper_marker")
-  static final Flag<String> FLAG_output_wrapper = Flag.value("");
+    @Option(name = "--output_wrapper",
+        usage = "Interpolate output into this string at the place denoted"
+        + " by the marker token %output%. See --output_wrapper_marker")
+    private String output_wrapper = "";
 
-  @FlagSpec(help = "Use this token as output marker in the value of"
-      + " --output_wrapper")
-  static final Flag<String> FLAG_output_wrapper_marker =
-      Flag.value("%output%");
+    @Option(name = "--output_wrapper_marker",
+        usage = "Use this token as output marker in the value of"
+        + " --output_wrapper")
+    private String output_wrapper_marker = "%output%";
 
-  @FlagSpec(help = "An output wrapper for a javascript module (optional). "
-      + "The format is <name>:<wrapper>. The module name must correspond "
-      + "with a module specified using --module. The wrapper must "
-      + "contain %s as the code placeholder")
-  static final Flag<List<String>> FLAG_module_wrapper =
-      Flag.stringCollector();
+    @Option(name = "--module_wrapper",
+        usage = "An output wrapper for a javascript module (optional). "
+        + "The format is <name>:<wrapper>. The module name must correspond "
+        + "with a module specified using --module. The wrapper must "
+        + "contain %s as the code placeholder")
+    private List<String> module_wrapper = Lists.newArrayList();
 
-  @FlagSpec(help = "Prefix for filenames of compiled js modules. "
-      + "<module-name>.js will be appended to this prefix. Directories "
-      + "will be created as needed. Use with --module")
-  static final Flag<String> FLAG_module_output_path_prefix =
-      Flag.value("./");
+    @Option(name = "--module_output_path_prefix",
+        usage = "Prefix for filenames of compiled js modules. "
+        + "<module-name>.js will be appended to this prefix. Directories "
+        + "will be created as needed. Use with --module")
+    private String module_output_path_prefix = "./";
 
-  @FlagSpec(help = "If specified, a source map file mapping the generated " +
-            "source files back to the original source file will be " +
-            "output to the specified path. The %outname% placeholder will " +
-            "expand to the name of the output file that the source map " +
-            "corresponds to.")
-  static final Flag<String> FLAG_create_source_map =
-      Flag.value("");
+    @Option(name = "--create_source_map",
+        usage = "If specified, a source map file mapping the generated " +
+        "source files back to the original source file will be " +
+        "output to the specified path. The %outname% placeholder will " +
+        "expand to the name of the output file that the source map " +
+        "corresponds to.")
+    private String create_source_map = "";
 
-  @FlagSpec(help = "Make the named class of warnings an error. Options:" +
-      DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
-  static final Flag<List<String>> FLAG_jscomp_error =
-      Flag.stringCollector();
+    @Option(name = "--jscomp_error",
+        usage = "Make the named class of warnings an error. Options:" +
+        DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
+    private List<String> jscomp_error = Lists.newArrayList();
 
-  @FlagSpec(help = "Make the named class of warnings a normal warning. " +
-                "Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
-  static final Flag<List<String>> FLAG_jscomp_warning =
-      Flag.stringCollector();
+    @Option(name = "--jscomp_warning",
+        usage = "Make the named class of warnings a normal warning. " +
+        "Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
+    private List<String> jscomp_warning =  Lists.newArrayList();
 
-  @FlagSpec(help = "Turn off the named class of warnings. Options:" +
-      DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
-  static final Flag<List<String>> FLAG_jscomp_off =
-      Flag.stringCollector();
+    @Option(name = "--jscomp_off",
+        usage = "Turn off the named class of warnings. Options:" +
+        DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
+    private List<String> jscomp_off = Lists.newArrayList();
 
-  @FlagSpec(altName = "D",
-      help = "Override the value of a variable annotated @define. " +
-      "The format is <name>[=<val>], where <name> is the name of a @define " +
-      "variable and <val> is a boolean, number, or a single-quoted string " +
-      "that contains no single quotes. If [=<val>] is omitted, " +
-      "the variable is marked true")
-  static final Flag<List<String>> FLAG_define = Flag.stringCollector();
+    @Option(name = "--define",
+        aliases = {"--D"},
+        usage = "Override the value of a variable annotated @define. " +
+        "The format is <name>[=<val>], where <name> is the name of a @define " +
+        "variable and <val> is a boolean, number, or a single-quoted string " +
+        "that contains no single quotes. If [=<val>] is omitted, " +
+        "the variable is marked true")
+    private List<String> define = Lists.newArrayList();
 
-  @FlagSpec(help = "Input charset for all files.")
-  static final Flag<String> FLAG_charset = Flag.value("");
+    @Option(name = "--charset",
+        usage = "Input charset for all files.")
+    private String charset = "";
 
-  @FlagSpec(help = "Specifies the compilation level to use. Options: " +
-            "WHITESPACE_ONLY, SIMPLE_OPTIMIZATIONS, ADVANCED_OPTIMIZATIONS")
-  static final Flag<CompilationLevel> FLAG_compilation_level
-      = Flag.value(CompilationLevel.SIMPLE_OPTIMIZATIONS);
+    @Option(name = "--compilation_level",
+        usage = "Specifies the compilation level to use. Options: " +
+        "WHITESPACE_ONLY, SIMPLE_OPTIMIZATIONS, ADVANCED_OPTIMIZATIONS")
+    private CompilationLevel compilation_level =
+        CompilationLevel.SIMPLE_OPTIMIZATIONS;
 
-  @FlagSpec(help = "Specifies the warning level to use. Options: " +
-            "QUIET, DEFAULT, VERBOSE")
-  static final Flag<WarningLevel> FLAG_warning_level
-      = Flag.value(WarningLevel.DEFAULT);
+    @Option(name = "--warning_level",
+        usage = "Specifies the warning level to use. Options: " +
+        "QUIET, DEFAULT, VERBOSE")
+    private WarningLevel warning_level = WarningLevel.DEFAULT;
 
-  @FlagSpec(help = "Specifies whether the default externs should be excluded")
-  static final Flag<Boolean> FLAG_use_only_custom_externs
-      = Flag.value(false);
+    @Option(name = "--use_only_custom_externs",
+        handler = BooleanOptionHandler.class,
+        usage = "Specifies whether the default externs should be excluded")
+    private boolean use_only_custom_externs = false;
 
-  @FlagSpec(help = "Enable debugging options")
-  static final Flag<Boolean> FLAG_debug = Flag.value(false);
+    @Option(name = "--debug",
+        handler = BooleanOptionHandler.class,
+        usage = "Enable debugging options")
+    private boolean debug = false;
+
+    @Option(name = "--formatting",
+        usage = "Specifies which formatting options, if any, should be "
+        + "applied to the output JS. Options: "
+        + "PRETTY_PRINT, PRINT_INPUT_DELIMITER")
+    private List<FormattingOption> formatting = Lists.newArrayList();
+
+    @Option(name = "--process_closure_primitives",
+        handler = BooleanOptionHandler.class,
+        usage = "Processes built-ins from the Closure library, such as "
+        + "goog.require(), goog.provide(), and goog.exportSymbol()")
+    private boolean process_closure_primitives = true;
+
+    // Our own option parser to be backwards-compatible.
+    // It needs to be public because of the crazy reflection that args4j does.
+    public static class BooleanOptionHandler extends OptionHandler<Boolean> {
+      private static final Set<String> TRUES =
+          Sets.newHashSet("true", "on", "yes", "1");
+      private static final Set<String> FALSES =
+          Sets.newHashSet("false", "off", "no", "0");
+
+      public BooleanOptionHandler(
+          CmdLineParser parser, OptionDef option,
+          Setter<? super Boolean> setter) {
+        super(parser, option, setter);
+      }
+
+      @Override
+      public int parseArguments(Parameters params) throws CmdLineException {
+        String param = params.getParameter(0);
+        if (param == null) {
+          setter.addValue(true);
+          return 0;
+        } else {
+          String lowerParam = param.toLowerCase();
+          if (TRUES.contains(lowerParam)) {
+            setter.addValue(true);
+          } else if (FALSES.contains(lowerParam)) {
+            setter.addValue(false);
+          } else {
+            throw new CmdLineException(owner,
+               "Illegal boolean value: " + lowerParam);
+          }
+          return 1;
+        }
+      }
+
+      @Override
+      public String getDefaultMetaVariable() {
+        return null;
+      }
+    }
+  }
 
   /**
    * Set of options that can be used with the --formatting flag.
@@ -251,78 +327,105 @@ public class CommandLineRunner extends
     }
   }
 
-  @FlagSpec(help = "Specifies which formatting options, if any, should be "
-      + "applied to the output JS. Options: "
-      + "PRETTY_PRINT, PRINT_INPUT_DELIMITER")
-  static final Flag<List<FormattingOption>> FLAG_formatting
-      = Flag.enumList(FormattingOption.class);
-
-  @FlagSpec(help = "Processes built-ins from the Closure library, such as "
-      + "goog.require(), goog.provide(), and goog.exportSymbol()")
-  static final Flag<Boolean> FLAG_process_closure_primitives
-      = Flag.value(true);
+  private final Flags flags = new Flags();
 
   /**
    * Create a new command-line runner. You should only need to call
    * the constructor if you're extending this class. Otherwise, the main
    * method should instantiate it.
    */
-  protected CommandLineRunner(String[] args) {
-    super(readConfigFromFlags(args));
+  protected CommandLineRunner(String[] args)
+      throws CmdLineException {
+    super();
+    initConfigFromFlags(args, System.err);
   }
 
-  protected CommandLineRunner(String[] args, PrintStream out, PrintStream err) {
-    super(readConfigFromFlags(args), out, err);
+  protected CommandLineRunner(String[] args, PrintStream out, PrintStream err)
+      throws CmdLineException {
+    super(out, err);
+    initConfigFromFlags(args, err);
   }
 
-  private static CommandLineConfig readConfigFromFlags(String[] args) {
-    Flags.parse(args);
-    return new CommandLineConfig()
-        .setPrintTree(FLAG_print_tree.get())
-        .setComputePhaseOrdering(FLAG_compute_phase_ordering.get())
-        .setPrintAst(FLAG_print_ast.get())
-        .setPrintPassGraph(FLAG_print_pass_graph.get())
-        .setJscompDevMode(FLAG_jscomp_dev_mode.get())
-        .setLoggingLevel(FLAG_logging_level.get())
-        .setExterns(FLAG_externs.get())
-        .setJs(FLAG_js.get())
-        .setJsOutputFile(FLAG_js_output_file.get())
-        .setModule(FLAG_module.get())
-        .setVariableMapInputFile(FLAG_variable_map_input_file.get())
-        .setPropertyMapInputFile(FLAG_property_map_input_file.get())
-        .setVariableMapOutputFile(FLAG_variable_map_output_file.get())
-        .setCreateNameMapFiles(FLAG_create_name_map_files.get())
-        .setPropertyMapOutputFile(FLAG_property_map_output_file.get())
-        .setThirdParty(FLAG_third_party.get())
-        .setSummaryDetailLevel(FLAG_summary_detail_level.get())
-        .setOutputWrapper(FLAG_output_wrapper.get())
-        .setOutputWrapperMarker(FLAG_output_wrapper_marker.get())
-        .setModuleWrapper(FLAG_module_wrapper.get())
-        .setModuleOutputPathPrefix(FLAG_module_output_path_prefix.get())
-        .setCreateSourceMap(FLAG_create_source_map.get())
-        .setJscompError(FLAG_jscomp_error.get())
-        .setJscompWarning(FLAG_jscomp_warning.get())
-        .setJscompOff(FLAG_jscomp_off.get())
-        .setDefine(FLAG_define.get())
-        .setCharset(FLAG_charset.get());
+  private void initConfigFromFlags(
+      String[] args, PrintStream err)
+      throws CmdLineException {
+    // Args4j has a different format that the old command-line parser.
+    // So we use some voodoo to get the args into the format that args4j
+    // expects.
+    Pattern argPattern = Pattern.compile("(--[a-zA-Z_]+)=(.*)");
+    Pattern quotesPattern = Pattern.compile("^['\"](.*)['\"]$");
+    List<String> processedArgs = Lists.newArrayList();
+    for (String arg : args) {
+      Matcher matcher = argPattern.matcher(arg);
+      if (matcher.matches()) {
+        processedArgs.add(matcher.group(1));
+
+        String value = matcher.group(2);
+        Matcher quotesMatcher = quotesPattern.matcher(value);
+        if (quotesMatcher.matches()) {
+          processedArgs.add(quotesMatcher.group(1));
+        } else {
+          processedArgs.add(value);
+        }
+      } else {
+        processedArgs.add(arg);
+      }
+    }
+
+    CmdLineParser parser = new CmdLineParser(flags);
+    try {
+      parser.parseArgument(processedArgs.toArray(new String[] {}));
+    } catch (CmdLineException e) {
+      err.println(e.getMessage());
+      parser.printUsage(err);
+      throw e;
+    }
+    getCommandLineConfig()
+        .setPrintTree(flags.print_tree)
+        .setComputePhaseOrdering(flags.compute_phase_ordering)
+        .setPrintAst(flags.print_ast)
+        .setPrintPassGraph(flags.print_pass_graph)
+        .setJscompDevMode(flags.jscomp_dev_mode)
+        .setLoggingLevel(flags.logging_level)
+        .setExterns(flags.externs)
+        .setJs(flags.js)
+        .setJsOutputFile(flags.js_output_file)
+        .setModule(flags.module)
+        .setVariableMapInputFile(flags.variable_map_input_file)
+        .setPropertyMapInputFile(flags.property_map_input_file)
+        .setVariableMapOutputFile(flags.variable_map_output_file)
+        .setCreateNameMapFiles(flags.create_name_map_files)
+        .setPropertyMapOutputFile(flags.property_map_output_file)
+        .setThirdParty(flags.third_party)
+        .setSummaryDetailLevel(flags.summary_detail_level)
+        .setOutputWrapper(flags.output_wrapper)
+        .setOutputWrapperMarker(flags.output_wrapper_marker)
+        .setModuleWrapper(flags.module_wrapper)
+        .setModuleOutputPathPrefix(flags.module_output_path_prefix)
+        .setCreateSourceMap(flags.create_source_map)
+        .setJscompError(flags.jscomp_error)
+        .setJscompWarning(flags.jscomp_warning)
+        .setJscompOff(flags.jscomp_off)
+        .setDefine(flags.define)
+        .setCharset(flags.charset);
   }
 
   @Override
   protected CompilerOptions createOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new ClosureCodingConvention());
-    CompilationLevel level = FLAG_compilation_level.get();
+    CompilationLevel level = flags.compilation_level;
     level.setOptionsForCompilationLevel(options);
-    if (FLAG_debug.get()) {
+    if (flags.debug) {
       level.setDebugOptionsForCompilationLevel(options);
     }
 
-    WarningLevel wLevel = FLAG_warning_level.get();
+    WarningLevel wLevel = flags.warning_level;
     wLevel.setOptionsForWarningLevel(options);
-    for (FormattingOption formattingOption : FLAG_formatting.get()) {
+    for (FormattingOption formattingOption : flags.formatting) {
       formattingOption.applyToOptions(options);
     }
-    if (FLAG_process_closure_primitives.get()) {
+    if (flags.process_closure_primitives) {
       options.closurePass = true;
     }
 
@@ -339,7 +442,7 @@ public class CommandLineRunner extends
   protected List<JSSourceFile> createExterns() throws FlagUsageException,
       IOException {
     List<JSSourceFile> externs = super.createExterns();
-    if (!FLAG_use_only_custom_externs.get()) {
+    if (!flags.use_only_custom_externs) {
       List<JSSourceFile> defaultExterns = getDefaultExterns();
       defaultExterns.addAll(externs);
       return defaultExterns;
@@ -368,6 +471,10 @@ public class CommandLineRunner extends
    * Runs the Compiler. Exits cleanly in the event of an error.
    */
   public static void main(String[] args) {
-    (new CommandLineRunner(args)).run();
+    try {
+      (new CommandLineRunner(args)).run();
+    } catch (CmdLineException e) {
+      System.exit(-1);
+    }
   }
 }

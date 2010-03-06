@@ -23,10 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.flags.DocLevel;
-import com.google.common.flags.Flag;
-import com.google.common.flags.FlagSpec;
-import com.google.common.flags.Flags;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
@@ -94,15 +90,21 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private final RunTimeStats runTimeStats = new RunTimeStats();
 
-  AbstractCommandLineRunner(CommandLineConfig config) {
-    this(config, System.out, System.err);
+  AbstractCommandLineRunner() {
+    this(System.out, System.err);
   }
 
-  AbstractCommandLineRunner(
-      CommandLineConfig config, PrintStream out, PrintStream err) {
-    this.config = config;
+  AbstractCommandLineRunner(PrintStream out, PrintStream err) {
+    this.config = new CommandLineConfig();
     this.out = out;
     this.err = err;
+  }
+
+  /**
+   * Get the command line config, so that it can be initialized.
+   */
+  protected CommandLineConfig getCommandLineConfig() {
+    return config;
   }
 
   /**
