@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.LimitInputStream;
-import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -51,7 +50,9 @@ import java.util.zip.ZipInputStream;
  * Example:
  * <pre>
  * class MyCommandLineRunner extends CommandLineRunner {
- *   MyCommandLineRunner(String[] args) { super(args); }
+ *   MyCommandLineRunner(String[] args) throws CmdLineException {
+ *     super(args);
+ *   }
  *
  *   {@code @Override} protected CompilerOptions createOptions() {
  *     CompilerOptions options = super.createOptions();
@@ -60,7 +61,11 @@ import java.util.zip.ZipInputStream;
  *   }
  *
  *   public static void main(String[] args) {
- *     (new MyCommandLineRunner(args)).run();
+ *     try {
+ *       (new MyCommandLineRunner(args)).run();
+ *     } catch (CmdLineException e) {
+ *       System.exit(-1);
+ *     }
  *   }
  * }
  * </pre>
