@@ -168,6 +168,22 @@ http://code.google.com/p/jarjar/
 
 -----
 Code in:
+lib/args4j_deploy.jar
+
+Args4j
+URL: https://args4j.dev.java.net/
+Version: 2.0.9
+License: MIT
+
+Description:
+args4j is a small Java class library that makes it easy to parse command line
+options/arguments in your CUI application.
+
+Local Modifications: None.
+
+
+-----
+Code in:
 lib/google_common_deploy.jar
 
 Guava Libraries
@@ -180,14 +196,35 @@ Description: Google's core Java libraries.
 Local Modifications: None.
 
 
+-----
+Code in:
+lib/hamcrest-core-1.1.jar
+
+Hamcrest
+URL: http://code.google.com/p/hamcrest
+License: BSD
+License File: LICENSE
+
+Description:
+Provides a library of matcher objects (also known as constraints or
+predicates) allowing 'match' rules to be defined declaratively, to be used in
+other frameworks. Typical scenarios include testing frameworks, mocking
+libraries and UI validation rules.
+
+Local modifications:
+The original jars contained both source code and compiled classes.
+
+hamcrest-core-1.1.jar just contains the compiled classes.
+
+
 ----
 Code in:
 lib/junit.jar
 
 JUnit
-URL: http://sourceforge.net/projects/junit/
-Version: 3.8.1
-License: Common Public License 1.0
+URL:  http://sourceforge.net/projects/junit/
+Version:  4.5
+License:  Common Public License 1.0
 
 Description: A framework for writing and running automated tests in Java.
 

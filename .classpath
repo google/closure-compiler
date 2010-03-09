@@ -9,6 +9,7 @@
         <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
         <classpathentry kind="lib" path="lib/ant_deploy.jar"/>
         <classpathentry kind="lib" path="lib/args4j_deploy.jar"/>
+        <classpathentry kind="lib" path="lib/hamcrest-core-1.1.jar"/>
         <classpathentry kind="lib" path="lib/junit.jar"/>
         <classpathentry kind="output" path="build/classes"/>
 </classpath>
