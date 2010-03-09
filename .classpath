@@ -9,7 +9,6 @@
         <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
         <classpathentry kind="lib" path="lib/ant_deploy.jar"/>
         <classpathentry kind="lib" path="lib/args4j_deploy.jar"/>
-        <classpathentry kind="lib" path="lib/junit4-core.jar"/>
-        <classpathentry kind="lib" path="lib/junit4-legacy.jar"/>
+        <classpathentry kind="lib" path="lib/junit.jar"/>
         <classpathentry kind="output" path="build/classes"/>
 </classpath>

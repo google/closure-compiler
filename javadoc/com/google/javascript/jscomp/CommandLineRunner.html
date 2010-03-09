@@ -108,7 +108,9 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
  Example:
  <pre>
  class MyCommandLineRunner extends CommandLineRunner {
-   MyCommandLineRunner(String[] args) { super(args); }
+   MyCommandLineRunner(String[] args) throws CmdLineException {
+     super(args);
+   }
 
    <code>@Override</code> protected CompilerOptions createOptions() {
      CompilerOptions options = super.createOptions();
@@ -117,7 +119,11 @@ CommandLineRunner translates flags into Java API calls on the Compiler.
    }
 
    public static void main(String[] args) {
-     (new MyCommandLineRunner(args)).run();
+     try {
+       (new MyCommandLineRunner(args)).run();
+     } catch (CmdLineException e) {
+       System.exit(-1);
+     }
    }
  }
  </pre>

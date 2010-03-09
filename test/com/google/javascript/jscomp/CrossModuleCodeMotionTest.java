@@ -617,4 +617,19 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
       // m2
       "function g(){};"));
   }
+  
+  public void testRecursiveReference() {
+    test(createModuleChain(
+             // m1
+             "function f(){} f.prototype.clone = function() { return new f };",
+             // m2
+             "var a = (new f).clone();"),
+         new String[] {
+           // m1
+           "",
+           "function f(){} f.prototype.clone = function() { return new f() };" +
+           // m2
+           "var a = (new f).clone();"
+         });
+  }
 }

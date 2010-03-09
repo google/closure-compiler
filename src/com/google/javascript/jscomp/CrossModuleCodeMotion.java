@@ -241,15 +241,31 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
    * Process the references to named variables
    */
   private void processReference(NodeTraversal t, NamedInfo info, String name) {
-    // Random tidbit: A recursive function should not block movement.
-    // If the inlineName matches the scope function which contains it,
-    // we can ignore the module [this one time].
+    // A name is recursively defined if:
+    //   1: It is calling itself.
+    //   2: One of its property calls itself.
+    // Recursive definition should not block movement.
+
     boolean recursive = false;
     Node rootNode = t.getScope().getRootNode();
     if (rootNode.getType() == Token.FUNCTION) {
+      
+      // CASE #1:
       String scopeFuncName = rootNode.getFirstChild().getString();
       if (scopeFuncName.equals(name)) {
         recursive = true;
+      }
+      
+      // CASE #2:
+      Node rootParent = rootNode.getParent();
+      if (rootParent.getType() == Token.ASSIGN) {
+        Node owner = rootParent.getFirstChild();
+        while (owner.getType() == Token.GETPROP) {
+          owner = owner.getFirstChild();
+        }
+        if (owner.getType() == Token.NAME && owner.getString().equals(name)) {
+          recursive = true;
+        }
       }
     }
 
