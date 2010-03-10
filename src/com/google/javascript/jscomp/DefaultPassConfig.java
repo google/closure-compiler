@@ -380,6 +380,18 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(smartNamePass);
     }
 
+    // TODO(user): This forces a first crack at crossModuleCodeMotion
+    // before devirtualization. Once certain functions are devirtualized,
+    // it confuses crossModuleCodeMotion ability to recognized that
+    // it is recursive.
+
+    // TODO(user): This is meant for a temporary quick win.
+    // In the future, we might want to improve our analysis in
+    // CrossModuleCodeMotion so we don't need to do this.
+    if (options.crossModuleCodeMotion) {
+      passes.add(crossModuleCodeMotion);
+    }
+
     // Method devirtualization benefits from property disambiguiation so
     // it should run after that pass but before passes that do
     // optimizations based on global names (like cross module code motion
@@ -1775,26 +1787,6 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     return additionalReplacements;
-  }
-
-  /** A compiler pass that just reports an error. */
-  private static class ErrorPass implements CompilerPass {
-    private final AbstractCompiler compiler;
-    private final JSError error;
-
-    private ErrorPass(AbstractCompiler compiler, DiagnosticType error) {
-      this(compiler, JSError.make(error));
-    }
-
-    private ErrorPass(AbstractCompiler compiler, JSError error) {
-      this.compiler = compiler;
-      this.error = error;
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      compiler.report(error);
-    }
   }
 
   /** A compiler pass that marks pure functions. */

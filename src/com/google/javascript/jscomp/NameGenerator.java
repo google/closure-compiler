@@ -76,7 +76,7 @@ final class NameGenerator {
    * @return An array of characters to use. Will return the chars array if
    *    reservedCharacters is null or empty, otherwise creates a new array.
    */
-  private char[] reserveCharacters(char[] chars, char[] reservedCharacters) {
+  static char[] reserveCharacters(char[] chars, char[] reservedCharacters) {
     if (reservedCharacters == null || reservedCharacters.length == 0) {
       return chars;
     }    

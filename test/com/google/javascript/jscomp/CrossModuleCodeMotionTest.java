@@ -618,7 +618,7 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
       "function g(){};"));
   }
   
-  public void testRecursiveReference() {
+  public void testClone1() {
     test(createModuleChain(
              // m1
              "function f(){} f.prototype.clone = function() { return new f };",
@@ -632,4 +632,25 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
            "var a = (new f).clone();"
          });
   }
+
+  public void testClone2() {
+    test(createModuleChain(
+             // m1
+             "function f(){}" +
+             "f.prototype.cloneFun = function() {" +
+             "  return function() {new f}" +
+             "};",
+             // m2
+             "var a = (new f).cloneFun();"),
+         new String[] {
+           // m1
+           "",
+           "function f(){}" +
+           "f.prototype.cloneFun = function() {" +
+           "  return function() {new f}" +
+           "};" +
+           // m2
+           "var a = (new f).cloneFun();"
+         });
+  }  
 }

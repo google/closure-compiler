@@ -3,7 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>
-FindExportableNodes (Compiler)
+ErrorPass (Compiler)
 </TITLE>
 
 
@@ -13,7 +13,7 @@ FindExportableNodes (Compiler)
 function windowTitle()
 {
     if (location.href.indexOf('is-external=true') == -1) {
-        parent.document.title="FindExportableNodes (Compiler)";
+        parent.document.title="ErrorPass (Compiler)";
     }
 }
 </SCRIPT>
@@ -52,11 +52,11 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorPass.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.GenerateNodeContext.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/FindExportableNodes.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="FindExportableNodes.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/ErrorPass.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="ErrorPass.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -73,7 +73,7 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
@@ -87,60 +87,28 @@ DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&n
 <FONT SIZE="-1">
 com.google.javascript.jscomp</FONT>
 <BR>
-Class FindExportableNodes</H2>
+Class ErrorPass</H2>
 <PRE>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
-  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.AbstractPostOrderCallback.html" title="class in com.google.javascript.jscomp">com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback</A>
-      <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.FindExportableNodes</B>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.ErrorPass</B>
 </PRE>
 <DL>
-<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.Callback.html" title="interface in com.google.javascript.jscomp">NodeTraversal.Callback</A></DD>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html" title="interface in com.google.javascript.jscomp">CompilerPass</A></DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public class <B>FindExportableNodes</B><DT>extends <A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.AbstractPostOrderCallback.html" title="class in com.google.javascript.jscomp">NodeTraversal.AbstractPostOrderCallback</A></DL>
+<DT><PRE>public class <B>ErrorPass</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html" title="interface in com.google.javascript.jscomp">CompilerPass</A></DL>
 </PRE>
 
 <P>
-Records all of the symbols and properties that should be exported.
-
- Currently applies to:
- - function foo() {}
- - var foo = function() {}
- - foo.bar = function() {}
- - var FOO = ...;
- - foo.BAR = ...;
-
- FOO = BAR = 5;
- and
- var FOO = BAR = 5;
- are not supported because the annotation is ambigous to whether it applies
- to all the variables or only the first one.
+A compiler pass that just reports an error.
 <P>
 
 <P>
 <HR>
 
 <P>
-<!-- ======== NESTED CLASS SUMMARY ======== -->
 
-<A NAME="nested_class_summary"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
-<B>Nested Class Summary</B></FONT></TH>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;class</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.GenerateNodeContext.html" title="class in com.google.javascript.jscomp">FindExportableNodes.GenerateNodeContext</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Context holding the node references required for generating the export
- calls.</TD>
-</TR>
-</TABLE>
-&nbsp;
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 
 <A NAME="constructor_summary"><!-- --></A>
@@ -150,7 +118,15 @@ Records all of the symbols and properties that should be exported.
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.html#FindExportableNodes(com.google.javascript.jscomp.AbstractCompiler)">FindExportableNodes</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/ErrorPass.html#ErrorPass(com.google.javascript.jscomp.AbstractCompiler, com.google.javascript.jscomp.DiagnosticType)">ErrorPass</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler,
+          <A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;error)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/ErrorPass.html#ErrorPass(com.google.javascript.jscomp.AbstractCompiler, com.google.javascript.jscomp.JSError)">ErrorPass</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler,
+          <A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A>&nbsp;error)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -167,30 +143,12 @@ Records all of the symbols and properties that should be exported.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/LinkedHashMap.html?is-external=true" title="class or interface in java.util">LinkedHashMap</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.GenerateNodeContext.html" title="class in com.google.javascript.jscomp">FindExportableNodes.GenerateNodeContext</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.html#getExports()">getExports</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.html#visit(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">visit</A></B>(<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp">NodeTraversal</A>&nbsp;t,
-      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
-      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parent)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/ErrorPass.html#process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">process</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;externs,
+        <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;root)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Visits a node in post order (after its children have been visited).</TD>
-</TR>
-</TABLE>
-&nbsp;<A NAME="methods_inherited_from_class_com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
-<TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.AbstractPostOrderCallback.html" title="class in com.google.javascript.jscomp">NodeTraversal.AbstractPostOrderCallback</A></B></TH>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.AbstractPostOrderCallback.html#shouldTraverse(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">shouldTraverse</A></CODE></TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Process the JS with root node root.</TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -215,10 +173,20 @@ Records all of the symbols and properties that should be exported.
 </TR>
 </TABLE>
 
-<A NAME="FindExportableNodes(com.google.javascript.jscomp.AbstractCompiler)"><!-- --></A><H3>
-FindExportableNodes</H3>
+<A NAME="ErrorPass(com.google.javascript.jscomp.AbstractCompiler, com.google.javascript.jscomp.DiagnosticType)"><!-- --></A><H3>
+ErrorPass</H3>
 <PRE>
-public <B>FindExportableNodes</B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</PRE>
+public <B>ErrorPass</B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler,
+                 <A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;error)</PRE>
+<DL>
+</DL>
+<HR>
+
+<A NAME="ErrorPass(com.google.javascript.jscomp.AbstractCompiler, com.google.javascript.jscomp.JSError)"><!-- --></A><H3>
+ErrorPass</H3>
+<PRE>
+public <B>ErrorPass</B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler,
+                 <A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A>&nbsp;error)</PRE>
 <DL>
 </DL>
 
@@ -232,33 +200,21 @@ public <B>FindExportableNodes</B>(<A HREF="../../../../com/google/javascript/jsc
 </TR>
 </TABLE>
 
-<A NAME="visit(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
-visit</H3>
+<A NAME="process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+process</H3>
 <PRE>
-public void <B>visit</B>(<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp">NodeTraversal</A>&nbsp;t,
-                  <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
-                  <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parent)</PRE>
+public void <B>process</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;externs,
+                    <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;root)</PRE>
 <DL>
-<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.Callback.html#visit(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">NodeTraversal.Callback</A></CODE></B></DD>
-<DD><p>Visits a node in post order (after its children have been visited).
- A node is visited only if all its parents should be traversed
- (<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.Callback.html#shouldTraverse(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><CODE>NodeTraversal.Callback.shouldTraverse(NodeTraversal, Node, Node)</CODE></A>).</p>
- <p>Implementations can have side effects (e.g. modifying the parse
- tree).</p>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html#process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">CompilerPass</A></CODE></B></DD>
+<DD>Process the JS with root node root.
+ Can modify the contents of each Node tree
 <P>
 <DD><DL>
-</DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html#process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">process</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CompilerPass.html" title="interface in com.google.javascript.jscomp">CompilerPass</A></CODE></DL>
 </DD>
-</DL>
-<HR>
-
-<A NAME="getExports()"><!-- --></A><H3>
-getExports</H3>
-<PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/LinkedHashMap.html?is-external=true" title="class or interface in java.util">LinkedHashMap</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.GenerateNodeContext.html" title="class in com.google.javascript.jscomp">FindExportableNodes.GenerateNodeContext</A>&gt; <B>getExports</B>()</PRE>
-<DL>
 <DD><DL>
-</DL>
+<DT><B>Parameters:</B><DD><CODE>externs</CODE> - Top of external JS tree<DD><CODE>root</CODE> - Top of JS tree</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
@@ -291,11 +247,11 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/LinkedHashMap.ht
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorPass.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.GenerateNodeContext.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/FindExportableNodes.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/FindExportableNodes.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="FindExportableNodes.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/ErrorPass.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="ErrorPass.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -312,7 +268,7 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/LinkedHashMap.ht
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>

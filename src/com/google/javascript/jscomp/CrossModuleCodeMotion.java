@@ -257,14 +257,21 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
       }
       
       // CASE #2:
-      Node rootParent = rootNode.getParent();
-      if (rootParent.getType() == Token.ASSIGN) {
-        Node owner = rootParent.getFirstChild();
-        while (owner.getType() == Token.GETPROP) {
-          owner = owner.getFirstChild();
-        }
-        if (owner.getType() == Token.NAME && owner.getString().equals(name)) {
-          recursive = true;
+
+
+      // Suppose name is Foo, we keep look up the scope stack to look for
+      // a scope with "Foo.prototype.bar = function() { ..... "
+      for  (Scope s = t.getScope(); s.getParent() != null; s = s.getParent()) {
+        Node curRoot = s.getRootNode();
+        if (curRoot.getParent().getType() == Token.ASSIGN) {
+          Node owner = curRoot.getParent().getFirstChild();
+          while (owner.getType() == Token.GETPROP) {
+            owner = owner.getFirstChild();
+          }
+          if (owner.getType() == Token.NAME && owner.getString().equals(name)) {
+            recursive = true;
+            break;
+          }
         }
       }
     }
