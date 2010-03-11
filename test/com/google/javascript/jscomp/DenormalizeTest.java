@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -54,7 +55,7 @@ public class DenormalizeTest extends CompilerTestCase {
     // Any other expression.
     test("init(); for(; a < 2 ; a++) foo()",
          "for(init(); a < 2 ; a++) foo();");
-    
+
     // Other statements are left as is.
     test("function(){ var a; for(; a < 2 ; a++) foo() }",
          "function(){ for(var a; a < 2 ; a++) foo() }");
@@ -76,8 +77,8 @@ public class DenormalizeTest extends CompilerTestCase {
     // Make sure Normalize yanks the variable initializer out, and
     // Denormalize doesn't put it back.
     test("function(){var b,a=0; for (var i=(\"length\" in b);a<2; a++) foo()}",
-        "function(){var b; var a=0;var i=(\"length\" in b);for (;a<2;a++) foo()}");
-
+         "function(){var b; var a=0;var i=(\"length\" in b);" +
+         "for (;a<2;a++) foo()}");
   }
 
   /**
@@ -88,13 +89,13 @@ public class DenormalizeTest extends CompilerTestCase {
    */
   public class NormalizeAndDenormalizePass implements CompilerPass {
     Denormalize denormalizePass;
-    Normalize normalizePass;
+    NormalizeStatements normalizePass;
     AbstractCompiler compiler;
 
     public NormalizeAndDenormalizePass(AbstractCompiler compiler) {
       this.compiler = compiler;
       denormalizePass = new Denormalize(compiler);
-      normalizePass = new Normalize(compiler, false);
+      normalizePass = new NormalizeStatements(compiler, false);
     }
 
     public void process(Node externs, Node root) {

@@ -1285,10 +1285,12 @@ class FoldConstants extends AbstractPostOrderCallback
             tt != Token.NULL)
           return;
         switch (op) {
+          case Token.SHEQ:
           case Token.EQ:
             result = left.getType() == right.getType();
             break;
 
+          case Token.SHNE:            
           case Token.NE:
             result = left.getType() != right.getType();
             break;
@@ -1307,10 +1309,12 @@ class FoldConstants extends AbstractPostOrderCallback
           return;  // Only eval if they are the same type
         }
         switch (op) {
+          case Token.SHEQ:
           case Token.EQ:
             result = left.getString().equals(right.getString());
             break;
 
+          case Token.SHNE:
           case Token.NE:
             result = !left.getString().equals(right.getString());
             break;
@@ -1332,7 +1336,9 @@ class FoldConstants extends AbstractPostOrderCallback
         double rv = right.getDouble();
 
         switch (op) {
+          case Token.SHEQ:
           case Token.EQ: result = lv == rv; break;
+          case Token.SHNE:
           case Token.NE: result = lv != rv; break;
           case Token.LE: result = lv <= rv; break;
           case Token.LT: result = lv <  rv; break;

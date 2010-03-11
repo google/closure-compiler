@@ -44,26 +44,18 @@ import java.util.Map;
  * all is said and done.
  *
  * This pass currently does the following:
- * 1) Splits var statements contains multiple declarations into individual
- * statements.
- * 2) Splits chained assign statements such as "a = b = c = 0" into individual
- * statements.  These are split as follows "c = 0; b = c; a = b". Unfortunately,
- * not all such statements can be broken up, for instance:
- *   "a[next()] = a[next()] = 0"
- * can not be made into
- *   "a[next()] = 0; a[next()] = a[next()];
- * 3) init expressions in FOR statements are extracted and placed before the
- * statement. For example: "for(var a=0;;);" becomes "var a=0;for(;;);"
- * 4) WHILE statements are converted to FOR statements. For example:
- * "while(true);" becomes "for(;true;);"
- * 5) Renames constant variables, as marked with an IS_CONSTANT_NAME annotation,
- *   to include a suffix of NodeUtil.CONSTANT_MARKER which is used by constant
- *   inlining.
+ * 1) Simplifies the AST by splitting var statements, moving initializiers
+ *    out of for loops, and converting whiles to fors.
+ * 2) Makes all variable names globally unique (extern or otherwise) so that
+ *    no value is ever shadowed (note: "arguments" may require special
+ *    handling).
+ * 3) Removes duplicate variable declarations.
+ * 4) Marks constants with the IS_CONSTANT_NAME annotation.
  *
 *
  */
 // public for ReplaceDebugStringsTest
-class Normalize implements CompilerPass, Callback {
+class Normalize implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final boolean assertOnChange;
@@ -85,7 +77,8 @@ class Normalize implements CompilerPass, Callback {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverse(compiler, root,
+        new NormalizeStatements(compiler, assertOnChange));
     removeDuplicateDeclarations(root);
     if (MAKE_LOCAL_NAMES_UNIQUE) {
       MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
@@ -94,13 +87,6 @@ class Normalize implements CompilerPass, Callback {
     }
     new PropogateConstantAnnotations(compiler, assertOnChange)
         .process(externs, root);
-  }
-
-  @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    doStatementNormalizations(t, n, parent);
-
-    return true;
   }
 
   public static class PropogateConstantAnnotations
@@ -230,196 +216,231 @@ class Normalize implements CompilerPass, Callback {
     }
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
-      case Token.WHILE:
-        if (CONVERT_WHILE_TO_FOR) {
-          Node expr = n.getFirstChild();
-          n.setType(Token.FOR);
-          n.addChildBefore(new Node(Token.EMPTY), expr);
-          n.addChildAfter(new Node(Token.EMPTY), expr);
-          reportCodeChange("WHILE node");
-        }
-        break;
-    }
-  }
-
   /**
-   * Do normalizations that introduce new siblings or parents.
+   * Simplify the AST:
+   *   - VAR declarations split, so they represent exactly one child
+   *     declaration.
+   *   - WHILEs are converted to FORs
+   *   - FOR loop are initializers are moved out of the FOR structure
+   *   - LABEL node of children other than LABEL, BLOCK, WHILE, FOR, or DO are
+   *     moved into a block.
    */
-  private void doStatementNormalizations(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() == Token.LABEL) {
-      normalizeLabels(n);
+  static class NormalizeStatements implements Callback {
+    private final AbstractCompiler compiler;
+    private final boolean assertOnChange;
+
+    NormalizeStatements(AbstractCompiler compiler, boolean assertOnChange) {
+      this.compiler = compiler;
+      this.assertOnChange = assertOnChange;
     }
 
-    // Only inspect the children of SCRIPTs, BLOCKs and LABELs, as all these
-    // are the only legal place for VARs and FOR statements.
-    if (NodeUtil.isStatementBlock(n) || n.getType() == Token.LABEL) {
-      extractForInitializer(n, null, null);
+    private void reportCodeChange(String changeDescription) {
+      if (assertOnChange) {
+        throw new IllegalStateException(
+            "Normalize constraints violated:\n" + changeDescription);
+      }
+      compiler.reportCodeChange();
     }
 
-    // Only inspect the children of SCRIPTs, BLOCKs, as all these
-    // are the only legal place for VARs.
-    if (NodeUtil.isStatementBlock(n)) {
-      splitVarDeclarations(n);
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      doStatementNormalizations(t, n, parent);
+
+      return true;
     }
 
-    if (n.getType() == Token.FUNCTION) {
-      moveNamedFunctions(n.getLastChild());
-    }
-  }
-
-  // TODO(johnlenz): Move this to NodeTypeNormalizer once the unit tests are
-  // fixed.
-  /**
-   * Limit the number of special cases where LABELs need to be handled. Only
-   * BLOCK and loops are allowed to be labeled.  Loop labels must remain in
-   * place as the named continues are not allowed for labeled blocks.
-   */
-  private void normalizeLabels(Node n) {
-    Preconditions.checkArgument(n.getType() == Token.LABEL);
-
-    Node last = n.getLastChild();
-    switch (last.getType()) {
-      case Token.LABEL:
-      case Token.BLOCK:
-      case Token.FOR:
-      case Token.WHILE:
-      case Token.DO:
-        return;
-      default:
-        Node block = new Node(Token.BLOCK);
-        n.replaceChild(last, block);
-        block.addChildToFront(last);
-        reportCodeChange("LABEL normalization");
-        return;
-    }
-  }
-
-  /**
-   * Bring the initializers out of FOR loops.  These need to be placed
-   * before any associated LABEL nodes. This needs to be done from the top
-   * level label first so this is called as a pre-order callback (from
-   * shouldTraverse).
-   *
-   * @param n The node to inspect.
-   * @param before The node to insert the initializer before.
-   * @param beforeParent The parent of the node before which the initializer
-   *     will be inserted.
-   */
-  private void extractForInitializer(
-      Node n, Node before, Node beforeParent) {
-
-    for (Node next, c = n.getFirstChild(); c != null; c = next) {
-      next = c.getNext();
-      Node insertBefore = (before == null) ? c : before;
-      Node insertBeforeParent = (before == null) ? n : beforeParent;
-      switch (c.getType()) {
-        case Token.LABEL:
-          extractForInitializer(c, insertBefore, insertBeforeParent);
-          break;
-        case Token.FOR:
-          if (!NodeUtil.isForIn(c)
-              && c.getFirstChild().getType() != Token.EMPTY) {
-            Node init = c.getFirstChild();
-            c.replaceChild(init, new Node(Token.EMPTY));
-
-            Node newStatement;
-            // Only VAR statements, and expressions are allowed,
-            // but are handled differently.
-            if (init.getType() == Token.VAR) {
-              newStatement = init;
-            } else {
-              newStatement = NodeUtil.newExpr(init);
-            }
-
-            insertBeforeParent.addChildBefore(newStatement, insertBefore);
-            reportCodeChange("FOR initializer");
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.WHILE:
+          if (CONVERT_WHILE_TO_FOR) {
+            Node expr = n.getFirstChild();
+            n.setType(Token.FOR);
+            n.addChildBefore(new Node(Token.EMPTY), expr);
+            n.addChildAfter(new Node(Token.EMPTY), expr);
+            reportCodeChange("WHILE node");
           }
           break;
       }
     }
-  }
 
+    /**
+     * Do normalizations that introduce new siblings or parents.
+     */
+    private void doStatementNormalizations(
+        NodeTraversal t, Node n, Node parent) {
+      if (n.getType() == Token.LABEL) {
+        normalizeLabels(n);
+      }
 
-  /**
-   * Split a var node such as:
-   *   var a, b;
-   * into individual statements:
-   *   var a;
-   *   var b;
-   * @param n The whose children we should inspect.
-   */
-  private void splitVarDeclarations(Node n) {
-    for (Node next, c = n.getFirstChild(); c != null; c = next) {
-      next = c.getNext();
-      if (c.getType() == Token.VAR) {
-        if (assertOnChange && !c.hasChildren()) {
-          throw new IllegalStateException("Empty VAR node.");
-        }
+      // Only inspect the children of SCRIPTs, BLOCKs and LABELs, as all these
+      // are the only legal place for VARs and FOR statements.
+      if (NodeUtil.isStatementBlock(n) || n.getType() == Token.LABEL) {
+        extractForInitializer(n, null, null);
+      }
 
-        while (c.getFirstChild() != c.getLastChild()) {
-          Node name = c.getFirstChild();
-          c.removeChild(name);
-          Node newVar = new Node(Token.VAR, name, n.getLineno(), n.getCharno());
-          n.addChildBefore(newVar, c);
-          reportCodeChange("VAR with multiple children");
+      // Only inspect the children of SCRIPTs, BLOCKs, as all these
+      // are the only legal place for VARs.
+      if (NodeUtil.isStatementBlock(n)) {
+        splitVarDeclarations(n);
+      }
+
+      if (n.getType() == Token.FUNCTION) {
+        moveNamedFunctions(n.getLastChild());
+      }
+    }
+
+    // TODO(johnlenz): Move this to NodeTypeNormalizer once the unit tests are
+    // fixed.
+    /**
+     * Limit the number of special cases where LABELs need to be handled. Only
+     * BLOCK and loops are allowed to be labeled.  Loop labels must remain in
+     * place as the named continues are not allowed for labeled blocks.
+     */
+    private void normalizeLabels(Node n) {
+      Preconditions.checkArgument(n.getType() == Token.LABEL);
+
+      Node last = n.getLastChild();
+      switch (last.getType()) {
+        case Token.LABEL:
+        case Token.BLOCK:
+        case Token.FOR:
+        case Token.WHILE:
+        case Token.DO:
+          return;
+        default:
+          Node block = new Node(Token.BLOCK);
+          n.replaceChild(last, block);
+          block.addChildToFront(last);
+          reportCodeChange("LABEL normalization");
+          return;
+      }
+    }
+
+    /**
+     * Bring the initializers out of FOR loops.  These need to be placed
+     * before any associated LABEL nodes. This needs to be done from the top
+     * level label first so this is called as a pre-order callback (from
+     * shouldTraverse).
+     *
+     * @param n The node to inspect.
+     * @param before The node to insert the initializer before.
+     * @param beforeParent The parent of the node before which the initializer
+     *     will be inserted.
+     */
+    private void extractForInitializer(
+        Node n, Node before, Node beforeParent) {
+
+      for (Node next, c = n.getFirstChild(); c != null; c = next) {
+        next = c.getNext();
+        Node insertBefore = (before == null) ? c : before;
+        Node insertBeforeParent = (before == null) ? n : beforeParent;
+        switch (c.getType()) {
+          case Token.LABEL:
+            extractForInitializer(c, insertBefore, insertBeforeParent);
+            break;
+          case Token.FOR:
+            if (!NodeUtil.isForIn(c)
+                && c.getFirstChild().getType() != Token.EMPTY) {
+              Node init = c.getFirstChild();
+              c.replaceChild(init, new Node(Token.EMPTY));
+
+              Node newStatement;
+              // Only VAR statements, and expressions are allowed,
+              // but are handled differently.
+              if (init.getType() == Token.VAR) {
+                newStatement = init;
+              } else {
+                newStatement = NodeUtil.newExpr(init);
+              }
+
+              insertBeforeParent.addChildBefore(newStatement, insertBefore);
+              reportCodeChange("FOR initializer");
+            }
+            break;
         }
       }
     }
-  }
 
-  /**
-   * Move all the functions that are valid at the execution of the first
-   * statement of the function to the beginning of the function definition.
-   */
-  private void moveNamedFunctions(Node functionBody) {
-    Preconditions.checkState(
-        functionBody.getParent().getType() == Token.FUNCTION);
-    Node previous = null;
-    Node current = functionBody.getFirstChild();
-    // Skip any declarations at the beginning of the function body, they
-    // are already in the right place.
-    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
-      previous = current;
-      current = current.getNext();
+    /**
+     * Split a var node such as:
+     *   var a, b;
+     * into individual statements:
+     *   var a;
+     *   var b;
+     * @param n The whose children we should inspect.
+     */
+    private void splitVarDeclarations(Node n) {
+      for (Node next, c = n.getFirstChild(); c != null; c = next) {
+        next = c.getNext();
+        if (c.getType() == Token.VAR) {
+          if (assertOnChange && !c.hasChildren()) {
+            throw new IllegalStateException("Empty VAR node.");
+          }
+
+          while (c.getFirstChild() != c.getLastChild()) {
+            Node name = c.getFirstChild();
+            c.removeChild(name);
+            Node newVar = new Node(
+                Token.VAR, name, n.getLineno(), n.getCharno());
+            n.addChildBefore(newVar, c);
+            reportCodeChange("VAR with multiple children");
+          }
+        }
+      }
     }
 
-    // Find any remaining declarations and move them.
-    Node insertAfter = previous;
-    while (current != null) {
-      // Save off the next node as the current node maybe removed.
-      Node next = current.getNext();
-      if (NodeUtil.isFunctionDeclaration(current)) {
-        // Remove the declaration from the body.
-        Preconditions.checkNotNull(previous);
-        functionBody.removeChildAfter(previous);
-
-        // Readd the function at the top of the function body (after any
-        // previous declarations).
-        insertAfter = addToFront(functionBody, current, insertAfter);
-        compiler.reportCodeChange();
-      } else {
-        // Update the previous only if the current node hasn't been moved.
+    /**
+     * Move all the functions that are valid at the execution of the first
+     * statement of the function to the beginning of the function definition.
+     */
+    private void moveNamedFunctions(Node functionBody) {
+      Preconditions.checkState(
+          functionBody.getParent().getType() == Token.FUNCTION);
+      Node previous = null;
+      Node current = functionBody.getFirstChild();
+      // Skip any declarations at the beginning of the function body, they
+      // are already in the right place.
+      while (current != null && NodeUtil.isFunctionDeclaration(current)) {
         previous = current;
+        current = current.getNext();
       }
-      current = next;
-    }
-  }
 
-  /**
-   * @param after The child node to insert the newChild after, or null if
-   *     newChild should be added to the front of parent's child list.
-   * @return The inserted child node.
-   */
-  private Node addToFront(Node parent, Node newChild, Node after) {
-    if (after == null) {
-      parent.addChildToFront(newChild);
-    } else {
-      parent.addChildAfter(newChild, after);
+      // Find any remaining declarations and move them.
+      Node insertAfter = previous;
+      while (current != null) {
+        // Save off the next node as the current node maybe removed.
+        Node next = current.getNext();
+        if (NodeUtil.isFunctionDeclaration(current)) {
+          // Remove the declaration from the body.
+          Preconditions.checkNotNull(previous);
+          functionBody.removeChildAfter(previous);
+
+          // Readd the function at the top of the function body (after any
+          // previous declarations).
+          insertAfter = addToFront(functionBody, current, insertAfter);
+          reportCodeChange("Move function declaration not at top of function");
+        } else {
+          // Update the previous only if the current node hasn't been moved.
+          previous = current;
+        }
+        current = next;
+      }
     }
-    return newChild;
+
+    /**
+     * @param after The child node to insert the newChild after, or null if
+     *     newChild should be added to the front of parent's child list.
+     * @return The inserted child node.
+     */
+    private Node addToFront(Node parent, Node newChild, Node after) {
+      if (after == null) {
+        parent.addChildToFront(newChild);
+      } else {
+        parent.addChildAfter(newChild, after);
+      }
+      return newChild;
+    }
   }
 
   /**

@@ -641,22 +641,22 @@ public class FoldConstantsTest extends CompilerTestCase {
     // Only optimize if it's a size win.
     fold("x = ['a', '5', 'c'].join('a very very very long chain')",
          "x = [\"a\",\"5\",\"c\"].join(\"a very very very long chain\")");
-    
+
     // TODO(user): Its possible to fold this better.
     foldSame("x = ['', foo].join(',')");
     foldSame("x = ['', foo, ''].join(',')");
-    
+
     fold("x = ['', '', foo, ''].join(',')", "x = [',', foo, ''].join(',')");
     fold("x = ['', '', foo, '', ''].join(',')",
          "x = [',', foo, ','].join(',')");
-    
+
     fold("x = ['', '', foo, '', '', bar].join(',')",
          "x = [',', foo, ',', bar].join(',')");
-    
+
     fold("x = [1,2,3].join('abcdef')",
          "x = '1abcdef2abcdef3'");
   }
-  
+
   public void testStringJoinAdd_b1992789() {
     fold("x = ['a'].join('')", "x = \"a\"");
     fold("x = [foo()].join('')", "x = '' + foo()");
@@ -731,10 +731,55 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("-1 >= 9", "0");
 
     fold("true == true", "1");
-    fold("true == true", "1");
     fold("false == null", "0");
     fold("false == true", "0");
     fold("true == null", "0");
+  }
+
+  // ===, !== comparison tests
+  public void testFoldComparison2() {
+    fold("x = 0 === 0", "x = true");
+    fold("x = 1 === 2", "x = false");
+    fold("x = 'abc' === 'def'", "x = false");
+    fold("x = 'abc' === 'abc'", "x = true");
+    fold("x = \"\" === ''", "x = true");
+    fold("x = foo() === bar()", "x = foo()===bar()");
+
+    fold("x = 1 !== 0", "x = true");
+    fold("x = 'abc' !== 'def'", "x = true");
+    fold("x = 'a' !== 'a'", "x = false");
+
+    fold("x = y === y", "x = y===y");
+
+    fold("x = true === true", "x = true");
+    fold("x = true === true", "x = true");
+    fold("x = false === null", "x = false");
+    fold("x = false === true", "x = false");
+    fold("x = true === null", "x = false");
+
+    fold("0 === 0", "1");
+    fold("1 === 2", "0");
+    fold("'abc' === 'def'", "0");
+    fold("'abc' === 'abc'", "1");
+    fold("\"\" === ''", "1");
+    fold("foo() === bar()", "foo()===bar()");
+
+    // TODO(johnlenz): It would be nice to handle these cases as well. 
+    foldSame("1 === '1'");
+    foldSame("1 === true");
+    foldSame("1 !== '1'");
+    foldSame("1 !== true");
+    
+    fold("1 !== 0", "1");
+    fold("'abc' !== 'def'", "1");
+    fold("'a' !== 'a'", "0");
+
+    fold("x === x", "x===x");
+
+    fold("true === true", "1");
+    fold("false === null", "0");
+    fold("false === true", "0");
+    fold("true === null", "0");
   }
 
   public void testFoldNot() {

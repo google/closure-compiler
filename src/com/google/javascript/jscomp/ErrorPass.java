@@ -24,21 +24,21 @@ import com.google.javascript.rhino.Node;
 *
  */
 
-public class ErrorPass implements CompilerPass {
-    private final AbstractCompiler compiler;
-    private final JSError error;
-    
-    public ErrorPass(AbstractCompiler compiler, DiagnosticType error) {
-      this(compiler, JSError.make(error));
-    }
+class ErrorPass implements CompilerPass {
+  private final AbstractCompiler compiler;
+  private final JSError error;
 
-    public ErrorPass(AbstractCompiler compiler, JSError error) {
-      this.compiler = compiler;
-      this.error = error;
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      compiler.report(error);
-    }
+  ErrorPass(AbstractCompiler compiler, DiagnosticType error) {
+    this(compiler, JSError.make(error));
   }
+
+  ErrorPass(AbstractCompiler compiler, JSError error) {
+    this.compiler = compiler;
+    this.error = error;
+  }
+
+  @Override
+  public void process(Node externs, Node root) {
+    compiler.report(error);
+  }
+}
