@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 /**
  * Inline function tests.
-*
+ * @author johnlenz@google.com (john lenz)
  */
 public class InlineFunctionsTest extends CompilerTestCase {
   boolean allowGlobalFunctionInlining = true;

@@ -20,7 +20,7 @@ import junit.framework.TestCase;
 
 /**
  * Tests for DiagnosticGroup.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class DiagnosticGroupTest extends TestCase {
 

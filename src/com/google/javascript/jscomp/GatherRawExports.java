@@ -28,7 +28,7 @@ import java.util.Set;
  * External references of the form: "window['xx']" indicate names that must
  * be reserved when variable renaming to avoid conflicts.
  *
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 class GatherRawExports extends AbstractPostOrderCallback
     implements CompilerPass {

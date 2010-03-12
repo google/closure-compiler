@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * Named groups of DiagnosticTypes exposed by Compiler.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class DiagnosticGroups {
 

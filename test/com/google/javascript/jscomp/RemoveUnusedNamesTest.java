@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Tests for {@link RemoveUnusedPrototypeProperties}.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class RemoveUnusedNamesTest extends CompilerTestCase {
   private static final String EXTERNS =

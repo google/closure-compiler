@@ -25,7 +25,7 @@ import junit.framework.TestCase;
  * A dopey test for {@link MemoizedScopeCreator}. This is mostly here
  * just so it's easy to write more tests if this becomes more complicated.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class MemoizedScopeCreatorTest extends TestCase {
 

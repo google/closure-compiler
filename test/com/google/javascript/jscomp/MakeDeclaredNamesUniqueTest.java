@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.Node;
 
 /**
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 

@@ -52,7 +52,7 @@ import java.util.Iterator;
  *
 *
 *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 

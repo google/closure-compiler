@@ -50,7 +50,7 @@ import java.io.Serializable;
  * Represents a type expression as a miniture Rhino AST, so that the
  * type expression can be evaluated later.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public final class JSTypeExpression implements Serializable {
   private static final long serialVersionUID = 1L;

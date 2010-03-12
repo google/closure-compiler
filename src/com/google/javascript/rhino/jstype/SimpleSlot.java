@@ -42,7 +42,7 @@ package com.google.javascript.rhino.jstype;
 /**
  * The minimum implementation of StaticSlot<JSType>.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class SimpleSlot implements StaticSlot<JSType> {
   final String name;

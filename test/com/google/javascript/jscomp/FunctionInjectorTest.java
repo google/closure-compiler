@@ -29,7 +29,7 @@ import java.util.Set;
 
 /**
  * Inline function tests.
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 
 public class FunctionInjectorTest extends TestCase {

@@ -28,7 +28,7 @@ import java.util.Random;
 
 /**
  * Tests for {@link PhaseOptimizer}.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class PhaseOptimizerTest extends TestCase {
   private final List<String> passesRun = Lists.newArrayList();

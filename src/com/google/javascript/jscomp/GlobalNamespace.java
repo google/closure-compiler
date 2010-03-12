@@ -38,7 +38,7 @@ import java.util.Set;
  *
 *
 *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class GlobalNamespace {
 

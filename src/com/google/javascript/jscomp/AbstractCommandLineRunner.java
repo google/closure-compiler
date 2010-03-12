@@ -72,7 +72,7 @@ import java.util.logging.Level;
  * }
  * </pre>
  *
-*
+ * @author bolinfest@google.com (Michael Bolin)
  */
 abstract class AbstractCommandLineRunner<A extends Compiler,
     B extends CompilerOptions> {

@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Token;
 
 /**
  * Tests for NodeTypeNormalizer.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class NodeTypeNormalizerTest extends CompilerTestCase {
 

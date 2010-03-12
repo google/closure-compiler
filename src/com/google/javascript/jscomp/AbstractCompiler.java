@@ -28,7 +28,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
  *
  * This is an abstract class, so that we can make the methods package-private.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(

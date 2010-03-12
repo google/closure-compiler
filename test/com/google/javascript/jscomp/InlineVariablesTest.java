@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Verifies that valid candidates for inlining are inlined, but
  * that no dangerous inlining occurs.
  *
-*
+ * @author kushal@google.com (Kushal Dave)
  */
 public class InlineVariablesTest extends CompilerTestCase {
 

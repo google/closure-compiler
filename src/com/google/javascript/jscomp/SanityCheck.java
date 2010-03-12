@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Token;
  * we only run this in development mode.
  *
 *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class SanityCheck implements CompilerPass {
 

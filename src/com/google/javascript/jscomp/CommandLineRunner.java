@@ -69,7 +69,7 @@ import java.util.zip.ZipInputStream;
  *   }
  * }
  * </pre>
-*
+ * @author bolinfest@google.com (Michael Bolin)
  */
 public class CommandLineRunner extends
     AbstractCommandLineRunner<Compiler, CompilerOptions> {

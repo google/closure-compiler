@@ -22,7 +22,7 @@ import java.util.Map;
 
 /**
  * All natively recognized JSDoc annotations.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 enum Annotation {
   AUTHOR,

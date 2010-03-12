@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions;
  * whether it can be run multiple times, a human-readable name for
  * logging, etc.).
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public abstract class PassFactory {
 

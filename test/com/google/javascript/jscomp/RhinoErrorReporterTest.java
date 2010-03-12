@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 
 /**
  * Tests for error message filtering.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class RhinoErrorReporterTest extends TestCase {
 

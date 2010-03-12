@@ -30,7 +30,7 @@ import java.util.Set;
 
 /**
  * Inline function tests.
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 public class FunctionArgumentInjectorTest extends TestCase {
 

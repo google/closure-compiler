@@ -28,7 +28,7 @@ import java.util.Set;
 /**
  * Pass factories and meta-data for native Compiler passes.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public abstract class PassConfig {
 

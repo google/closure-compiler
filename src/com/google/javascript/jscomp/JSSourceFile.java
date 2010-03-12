@@ -30,7 +30,7 @@ import java.nio.charset.Charset;
  * An abstract representation of a JavaScript source file, as input to
  * JSCompiler.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
 *
  */
 public class JSSourceFile extends SourceFile {

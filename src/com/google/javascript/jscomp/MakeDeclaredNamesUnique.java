@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  *  Find all Functions, VARs, and Exception names and make them
  *  unique.  Specifically, it will not modify object properties.
-*
+ *  @author johnlenz@google.com (John Lenz)
  *  TODO(johnlenz): Try to merge this with the ScopeCreator.
  */
 class MakeDeclaredNamesUnique

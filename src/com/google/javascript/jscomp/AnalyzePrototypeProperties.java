@@ -49,7 +49,7 @@ import java.util.Stack;
  * similar semantics.
  *
 *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class AnalyzePrototypeProperties implements CompilerPass {
 

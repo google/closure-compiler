@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Tests for {@link CommandLineRunner}.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class CommandLineRunnerTest extends TestCase {
 

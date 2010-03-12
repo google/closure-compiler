@@ -43,7 +43,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 /**
  * Test for {@link UnionTypeBuilder}.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
 

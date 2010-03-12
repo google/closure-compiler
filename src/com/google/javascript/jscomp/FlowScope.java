@@ -28,7 +28,7 @@ import com.google.javascript.rhino.jstype.StaticSlot;
  * Each flow scope represents the types of all variables in the scope at
  * a particular point in the flow analysis.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 interface FlowScope extends StaticScope<JSType>, LatticeElement {
 

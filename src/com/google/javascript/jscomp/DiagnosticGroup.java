@@ -28,7 +28,7 @@ import java.util.Set;
 /**
  * Group a set of related diagnostic types together, so that they can
  * be toggled on and off as one unit.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class DiagnosticGroup {
 

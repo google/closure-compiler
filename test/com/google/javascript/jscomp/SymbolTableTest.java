@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Token;
 
 /**
  * Tests for {@link SymbolTable}.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class SymbolTableTest extends CompilerTestCase {
 

@@ -23,7 +23,7 @@ import java.util.Set;
 /**
  * Tests for {@link GatherRawExports}.
  *
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 public class GatherRawExportsTest extends CompilerTestCase {
 

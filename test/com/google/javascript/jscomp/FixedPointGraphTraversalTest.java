@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 
 /**
  * Test for FixedPointGraphTraversal.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class FixedPointGraphTraversalTest extends TestCase {
 

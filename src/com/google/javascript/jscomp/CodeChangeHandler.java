@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 /**
  * A simple listener for code change events.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 interface CodeChangeHandler {
 

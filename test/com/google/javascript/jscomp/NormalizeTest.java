@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 
 /**
-*
+ * @author johnlenz@google.com (John Lenz)
  *
  */
 public class NormalizeTest extends CompilerTestCase {

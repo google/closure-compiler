@@ -29,7 +29,7 @@ import com.google.javascript.rhino.Token;
  * Transform the structure of the AST so that the number of explicit exits
  * are minimized.
  *
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 class MinimizeExitPoints
     extends AbstractPostOrderCallback

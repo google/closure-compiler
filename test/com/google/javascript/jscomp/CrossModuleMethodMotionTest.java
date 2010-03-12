@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tessts for {@link CrossModuleMethodMotion}.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class CrossModuleMethodMotionTest extends CompilerTestCase {
   private static final String EXTERNS =

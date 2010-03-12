@@ -21,7 +21,7 @@
  * This page is also useful for the IDL definitions:
  * http://source.winehq.org/source/include/mshtml.idl
  *
-*
+ * @author nicksantos@google.com
  */
 
 /** @type {Element} */

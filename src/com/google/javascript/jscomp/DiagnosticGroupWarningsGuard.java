@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.CheckLevel;
 
 /**
  * Sets the level for a particular DiagnosticGroup.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class DiagnosticGroupWarningsGuard extends WarningsGuard {
   private final DiagnosticGroup group;

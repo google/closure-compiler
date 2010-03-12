@@ -52,7 +52,7 @@ import java.util.List;
  * Also doubles as a central repository for all type violations, so that
  * type-based optimizations (like AmbiguateProperties) can be fault-tolerant.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class TypeValidator {
 

@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 
 /**
  * Optimizes the order of compiler passes.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class PhaseOptimizer implements CompilerPass {
 

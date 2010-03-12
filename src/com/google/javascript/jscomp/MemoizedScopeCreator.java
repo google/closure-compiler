@@ -32,7 +32,7 @@ import java.util.Map;
  * are doing. Scopes are memoized stupidly, so if the underlying tree
  * changes, the scope may be out of sync.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class MemoizedScopeCreator implements ScopeCreator {
 

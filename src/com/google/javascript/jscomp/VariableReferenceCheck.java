@@ -37,7 +37,7 @@ import java.util.Set;
  * control structures). This is a more aggressive version of {@link VarCheck},
  * but it lacks the cross-module checks.
  *
-*
+ * @author kushal@google.com (Kushal Dave)
  */
 class VariableReferenceCheck implements CompilerPass {
 

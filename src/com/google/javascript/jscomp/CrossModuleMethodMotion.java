@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 /**
  * Move prototype methods into later modules.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class CrossModuleMethodMotion implements CompilerPass {
 

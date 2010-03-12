@@ -18,7 +18,7 @@
  * @fileoverview Definitions for WebKit's custom CSS properties. Copied from:
  * http://trac.webkit.org/browser/trunk/WebCore/css/CSSPropertyNames.in
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 
 /** @type {string} */ CSSProperties.prototype.WebkitAppearance;

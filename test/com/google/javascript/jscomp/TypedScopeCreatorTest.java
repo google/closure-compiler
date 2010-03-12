@@ -42,7 +42,7 @@ import java.util.Deque;
 /**
  * Tests for {@link TypedScopeCreator} and {@link TypeInference}. Admittedly,
  * the name is a bit of a misnomer.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class TypedScopeCreatorTest extends CompilerTestCase {
 

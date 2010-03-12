@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Token;
  * A simple pass to ensure that all AST nodes have line numbers,
  * an that the line numbers are monotonically increasing.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class LineNumberCheck implements Callback, CompilerPass {
 

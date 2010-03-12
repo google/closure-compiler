@@ -52,7 +52,7 @@ import java.util.Map;
  * 3) Removes duplicate variable declarations.
  * 4) Marks constants with the IS_CONSTANT_NAME annotation.
  *
-*
+ * @author johnlenz@google.com (johnlenz)
  */
 // public for ReplaceDebugStringsTest
 class Normalize implements CompilerPass {

@@ -47,7 +47,7 @@ import junit.framework.Assert;
 
 /**
  * Helper methods for making assertions about the validity of types.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class Asserts {
   private Asserts() {} // all static

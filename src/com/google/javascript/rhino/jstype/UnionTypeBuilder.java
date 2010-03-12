@@ -56,7 +56,7 @@ import java.util.Set;
 /**
  * A builder for union types.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class UnionTypeBuilder implements Serializable {
   private static final long serialVersionUID = 1L;

@@ -35,7 +35,7 @@ import java.util.Set;
  * A flow scope that tries to store as little symbol information as possible,
  * instead delegating to its parents. Optimized for low memory use.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class LinkedFlowScope implements FlowScope {
   // The closest flow scope cache.

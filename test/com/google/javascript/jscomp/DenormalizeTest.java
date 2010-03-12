@@ -20,7 +20,7 @@ import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.rhino.Node;
 
 /**
-*
+ * @author johnlenz@google.com (John Lenz)
  *
  */
 public class DenormalizeTest extends CompilerTestCase {

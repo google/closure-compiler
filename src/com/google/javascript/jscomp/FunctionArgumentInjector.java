@@ -32,7 +32,7 @@ import java.util.Set;
  * A nifty set of functions to deal with the issues of replacing function
  * parameters with a set of call argument expressions.
  *
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 class FunctionArgumentInjector {
 

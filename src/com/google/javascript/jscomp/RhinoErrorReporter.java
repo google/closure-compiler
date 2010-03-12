@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 /**
  * An error reporter for serizalizing Rhino errors into our error format.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class RhinoErrorReporter {
 

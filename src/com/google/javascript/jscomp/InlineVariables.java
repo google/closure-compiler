@@ -49,8 +49,8 @@ import java.util.Set;
  *
  * The approach of this pass is similar to {@link CrossModuleCodeMotion}
  *
-*
-*
+ * @author kushal@google.com (Kushal Dave)
+ * @author nicksantos@google.com (Nick Santos)
  */
 class InlineVariables implements CompilerPass {
 

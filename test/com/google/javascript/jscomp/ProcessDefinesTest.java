@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Token;
 import java.util.Map;
 
 /**
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class ProcessDefinesTest extends CompilerTestCase {
 

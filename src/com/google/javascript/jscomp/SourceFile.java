@@ -34,7 +34,7 @@ import java.nio.charset.Charset;
  * language-neutral features. The source file can be loaded from various
  * locations, such as from disk or from a preloaded string.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public abstract class SourceFile {
 
@@ -52,6 +52,13 @@ public abstract class SourceFile {
   private static final int SOURCE_EXCERPT_REGION_LENGTH = 5;
 
   private final String fileName;
+
+  // The fileName may not always identify the original file - for example,
+  // supersourced Java inputs, or Java inputs that come from Jar files. This
+  // is an optional field that the creator of an AST or SourceFile can set.
+  // It could be a path to the original file, or in case this SourceFile came
+  // from a Jar, it could be the path to the Jar.
+  private String originalPath = null;
 
   // Remember the offset for the previous line query.  If the next line
   // is after this point, we can start scanning at the previous offset rather
@@ -78,9 +85,9 @@ public abstract class SourceFile {
   //////////////////////////////////////////////////////////////////////////////
   // Implementation
 
-  /** 
-   * Gets all the code in this source file. 
-   * @throws IOException 
+  /**
+   * Gets all the code in this source file.
+   * @throws IOException
    */
   public String getCode() throws IOException {
     return code;
@@ -93,6 +100,14 @@ public abstract class SourceFile {
 
   private void setCode(String sourceCode) {
     code = sourceCode;
+  }
+
+  public String getOriginalPath() {
+    return originalPath != null ? originalPath : fileName;
+  }
+
+  public void setOriginalPath(String originalPath) {
+    this.originalPath = originalPath;
   }
 
   // For SourceFile types which cache source code that can be regenerated
@@ -225,9 +240,20 @@ public abstract class SourceFile {
     return new Preloaded(fileName, code);
   }
 
+  public static SourceFile fromCode(String fileName,
+      String originalPath, String code) {
+    return new Preloaded(fileName, originalPath, code);
+  }
+
   public static SourceFile fromInputStream(String fileName, InputStream s)
       throws IOException {
     return fromCode(fileName,
+        CharStreams.toString(new InputStreamReader(s, Charsets.UTF_8)));
+  }
+
+  public static SourceFile fromInputStream(String fileName,
+      String originalPath, InputStream s) throws IOException {
+    return fromCode(fileName, originalPath,
         CharStreams.toString(new InputStreamReader(s, Charsets.UTF_8)));
   }
 
@@ -251,7 +277,12 @@ public abstract class SourceFile {
   static class Preloaded extends SourceFile {
 
     Preloaded(String fileName, String code) {
+      this(fileName, fileName, code);
+    }
+
+    Preloaded(String fileName, String originalPath, String code) {
       super(fileName);
+      super.setOriginalPath(originalPath);
       super.setCode(code);
     }
   }
@@ -311,7 +342,7 @@ public abstract class SourceFile {
     // No Charset provided?
     OnDisk(File file) {
       super(file.getPath());
-      this.file = file;     
+      this.file = file;
     }
 
     @Override
@@ -350,6 +381,6 @@ public abstract class SourceFile {
      */
     public Charset getCharset() {
       return Charset.forName(inputCharset);
-    }    
+    }
   }
 }

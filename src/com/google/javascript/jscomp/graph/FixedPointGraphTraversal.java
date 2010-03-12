@@ -31,7 +31,7 @@ import java.util.Set;
  * the edges over the given directed graph until the graph reaches
  * a steady state.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.

@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link GlobalNamespace}.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class GlobalNamespaceTest extends TestCase {
 

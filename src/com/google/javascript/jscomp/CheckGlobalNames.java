@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Token;
 /**
  * Checks references to undefined properties of global variables.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class CheckGlobalNames implements CompilerPass {
 

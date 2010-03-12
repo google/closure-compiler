@@ -52,7 +52,7 @@ import java.util.Set;
  * - consists of a single return statement
  *
 *
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 class InlineFunctions implements CompilerPass {
 

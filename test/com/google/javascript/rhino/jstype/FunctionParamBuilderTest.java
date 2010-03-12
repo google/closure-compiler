@@ -44,7 +44,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 /**
  * Tests for FunctionParamBuilder.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class FunctionParamBuilderTest extends BaseJSTypeTestCase {
 

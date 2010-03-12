@@ -39,7 +39,7 @@ import java.util.Set;
  * a special constant that may be overridden by later files and
  * manipulated by the compiler, much like C preprocessor {@code #define}s.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class ProcessDefines implements CompilerPass {
 

@@ -47,7 +47,7 @@ import java.util.Set;
 
 /**
  * Represents the prototype of a {@link FunctionType}.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class FunctionPrototypeType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;

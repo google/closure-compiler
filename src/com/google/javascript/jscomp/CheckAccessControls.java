@@ -43,7 +43,7 @@ import com.google.javascript.rhino.Token;
  * it's important that TypeCheck runs before this pass, so that all types
  * are correctly resolved and propagated before this pass runs.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class CheckAccessControls implements ScopedCallback, CompilerPass {
 

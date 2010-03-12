@@ -56,7 +56,7 @@ import javax.annotation.Nullable;
  * slot of Foo.prototype, and on the anonymous function type created by
  * this expression.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class InferJSDocInfo extends AbstractPostOrderCallback
     implements CompilerPass {

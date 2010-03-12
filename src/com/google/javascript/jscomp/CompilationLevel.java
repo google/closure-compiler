@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * A CompilationLevel represents the level of optimization that should be
  * applied when compiling JavaScript code.
  *
-*
+ * @author bolinfest@google.com (Michael Bolin)
  */
 public enum CompilationLevel {
 

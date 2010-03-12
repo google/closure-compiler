@@ -34,7 +34,7 @@ import java.util.List;
 
 /**
  * Tests for TypeValidator.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class TypeValidatorTest extends CompilerTestCase {
 

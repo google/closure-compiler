@@ -31,7 +31,7 @@ import java.util.Stack;
  *
  * All iterators are forward, post-order traversals unless otherwise noted.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class NodeIterators {
 

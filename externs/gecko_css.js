@@ -18,7 +18,7 @@
  * @fileoverview Definitions for Gecko's custom CSS properties. Copied from:
  * http://lxr.mozilla.org/mozilla1.8.0/source/dom/public/idl/css/nsIDOMCSS2Properties.idl
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 
 

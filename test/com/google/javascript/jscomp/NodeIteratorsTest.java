@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 
 /**
  * Tests for NodeIterators.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class NodeIteratorsTest extends TestCase {
 

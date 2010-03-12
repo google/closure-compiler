@@ -40,7 +40,7 @@ import java.util.Set;
 /**
  * Pass factories and meta-data for native JSCompiler passes.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 // TODO(nicksantos): This needs state for a variety of reasons. Some of it
 // is to satisfy the existing API. Some of it is because passes really do

@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Tests for {@code CheckGlobalNames.java}.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class CheckGlobalNamesTest extends CompilerTestCase {
 

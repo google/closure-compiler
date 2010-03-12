@@ -26,7 +26,7 @@ import java.util.Set;
  * Configuration for the AST factory. Should be shared across AST creation
  * for all files of a compilation process.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class Config {
 

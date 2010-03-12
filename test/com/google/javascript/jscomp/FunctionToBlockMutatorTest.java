@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 import java.util.Set;
 
 /**
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 public class FunctionToBlockMutatorTest extends TestCase {
 

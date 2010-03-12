@@ -19,7 +19,7 @@
  * is actually ES3+Reality.
 *
 *
-*
+ * @author nicksantos@google.com (Nick Santos)
 *
  */
 

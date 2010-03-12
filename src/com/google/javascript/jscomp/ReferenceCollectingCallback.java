@@ -40,7 +40,7 @@ import java.util.Set;
  * warnings. Callers do this by providing {@link Behavior} and then
  * calling {@link #process(Node, Node)}.
  *
-*
+ * @author kushal@google.com (Kushal Dave)
  */
 class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
 

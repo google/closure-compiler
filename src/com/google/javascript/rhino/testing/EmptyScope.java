@@ -44,7 +44,7 @@ import com.google.javascript.rhino.jstype.StaticSlot;
 
 /**
  * An empty scope implementation.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class EmptyScope implements StaticScope<JSType> {
   @Override

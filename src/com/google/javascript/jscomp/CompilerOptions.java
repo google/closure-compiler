@@ -31,7 +31,7 @@ import java.util.Set;
 
 /**
  * Compiler options
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class CompilerOptions implements Serializable, Cloneable {
   private static final long serialVersionUID = 7L;

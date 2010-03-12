@@ -31,7 +31,7 @@ import java.util.Set;
  * FUNCTION body, replacing and aliasing function parameters as
  * necessary.
  *
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 class FunctionInjector {
 

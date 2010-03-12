@@ -36,7 +36,7 @@ import java.util.Set;
  *    var b = z();
  *    x = a + b;
  *
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 class ExpressionDecomposer {
 

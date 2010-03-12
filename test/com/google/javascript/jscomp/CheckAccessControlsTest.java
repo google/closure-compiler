@@ -34,7 +34,7 @@ import com.google.javascript.jscomp.CompilerOptions;
 /**
  * Tests for {@link CheckAccessControls}.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class CheckAccessControlsTest extends CompilerTestCase {
 

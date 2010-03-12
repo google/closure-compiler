@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * Tests for {@link CompilerOptions}.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class CompilerOptionsTest extends TestCase {
 

@@ -33,7 +33,7 @@ import com.google.javascript.rhino.Token;
  * becomes:
  *   for(var a = 0;a<0;a++) {}
  *
-*
+ * @author johnlenz@google.com (johnlenz)
  */
 class Denormalize implements CompilerPass, Callback {
 

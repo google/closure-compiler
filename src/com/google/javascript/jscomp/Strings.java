@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
  * until they're able to do that. A lot of these methods are discouraged
  * anyways.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class Strings {
   private Strings() {} // All static

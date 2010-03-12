@@ -40,7 +40,7 @@ import java.util.Map;
  * then it should not use the symbol table--it should directly invoke
  * the factory for the data structure it wants.
  *
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 class SymbolTable implements ScopeCreator, CodeChangeHandler {
   static final DiagnosticType MISSING_VARIABLE =

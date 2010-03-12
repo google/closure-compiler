@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 
 /**
  * Unit test for {@link InlineCostEstimator}.
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 public class InlineCostEstimatorTest extends TestCase {
 

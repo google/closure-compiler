@@ -44,7 +44,7 @@ import com.google.javascript.rhino.Token;
 
 /**
  * A builder for the Rhino Node representing Function parameters.
-*
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class FunctionParamBuilder {
 

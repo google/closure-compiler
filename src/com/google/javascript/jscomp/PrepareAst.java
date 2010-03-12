@@ -30,7 +30,7 @@ import com.google.javascript.rhino.Token;
  * on the tree that would lose source information, since we need that source
  * information for checks.
  *
-*
+ * @author johnlenz@google.com (John Lenz)
  */
 class PrepareAst implements CompilerPass {
 
