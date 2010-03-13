@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
 
@@ -66,6 +67,7 @@ public class UnionType extends JSType {
   private static final long serialVersionUID = 1L;
 
   Set<JSType> alternates;
+  private final int hashcode;
 
   /**
    * Creates a union type.
@@ -75,6 +77,7 @@ public class UnionType extends JSType {
   UnionType(JSTypeRegistry registry, Set<JSType> alternates) {
     super(registry);
     this.alternates = alternates;
+    this.hashcode = this.alternates.hashCode();
   }
 
   /**
@@ -313,7 +316,7 @@ public class UnionType extends JSType {
 
   @Override
   public int hashCode() {
-    return alternates.hashCode();
+    return this.hashcode;
   }
 
   @Override
@@ -491,7 +494,9 @@ public class UnionType extends JSType {
       resolvedTypes.add(alternate);
     }
     if (changed) {
-      alternates = resolvedTypes.build();
+      Set<JSType> newAlternates = resolvedTypes.build();
+      Preconditions.checkState(newAlternates.hashCode() == this.hashcode);
+      alternates = newAlternates;
     }
     return this;
   }
