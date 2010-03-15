@@ -224,7 +224,7 @@ public class CommandLineRunner extends
     private List<String> jscomp_off = Lists.newArrayList();
 
     @Option(name = "--define",
-        aliases = {"--D"},
+        aliases = {"--D", "-D"},
         usage = "Override the value of a variable annotated @define. " +
         "The format is <name>[=<val>], where <name> is the name of a @define " +
         "variable and <val> is a boolean, number, or a single-quoted string " +

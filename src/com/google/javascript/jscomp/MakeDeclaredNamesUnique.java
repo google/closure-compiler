@@ -245,7 +245,7 @@ class MakeDeclaredNamesUnique
     public void visit(NodeTraversal t, Node node, Node parent) {
       if (node.getType() == Token.NAME) {
         String oldName = node.getString();
-        if (oldName.indexOf("$$") != -1) {
+        if (oldName.indexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR) != -1) {
           Scope scope = t.getScope();
           Var var = t.getScope().getVar(oldName);
           if (var == null || var.isGlobal()) {
@@ -255,12 +255,35 @@ class MakeDeclaredNamesUnique
           if (nameMap.containsKey(var)) {
             node.setString(nameMap.get(var));
           } else {
-            String newName = oldName.substring(0, oldName.lastIndexOf("$$"));
-
+            String newName = oldName.substring(
+                0, oldName.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR));
+            String suffix = oldName.substring(
+                oldName.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR)
+                    + ContextualRenamer.UNIQUE_ID_SEPARATOR.length(),
+                oldName.length());
+            
+            // The convention we are using here is that names of the form:
+            //    a$$1  ($$ followed by a digit are allowed to mask a global)
+            //    a$$inline_1 ($$ followed by anything that isn't a digit isn't 
+            //       allowed to mask a global.
+            // This preserves existing behavior while allowing simpler diffs
+            // when inlining is enabled.
+            // TODO(johnlenz): Remove this distiction when scoping is properly
+            // checked.
+            boolean recurseScopes = false;
+            if (!suffix.matches("\\d+")) {
+              // Non-contextual renamed value.
+              recurseScopes = true;
+            }
+            
             // Before we change the name of this variable, double-check to
             // make sure we're not declaring a duplicate name in the
             // same scope as the var declaration.
-            if (var.scope.isDeclared(newName, false) ||
+            // TODO(johnlenz): This test isn't sufficient; specifically,
+            // a reference to a global may have been introduced. Shortening 
+            // the name without checking for such a reference may mask the
+            // global causing the wrong value to be referenced.
+            if (var.scope.isDeclared(newName, recurseScopes) ||
                 !TokenStream.isJSIdentifier(newName)) {
               newName = oldName;
             } else {
@@ -299,6 +322,8 @@ class MakeDeclaredNamesUnique
     private final Multiset<String> nameUsage;
     private final Map<String, String> declarations = Maps.newHashMap();
     private final boolean global;
+
+    final static String UNIQUE_ID_SEPARATOR = "$$";
 
     ContextualRenamer() {
       this.global = true;
@@ -350,7 +375,7 @@ class MakeDeclaredNamesUnique
      * Given a name and the associated id, create a new unique name.
      */
     private String getUniqueName(String name, int id) {
-      return name + "$$" + id;
+      return name + UNIQUE_ID_SEPARATOR + id;
     }
 
     private void reserveName(String name) {
@@ -379,15 +404,18 @@ class MakeDeclaredNamesUnique
   static class InlineRenamer implements Renamer {
     private final Map<String, String> declarations = Maps.newHashMap();
     private final Supplier<String> uniqueIdSupplier;
-    private final String namePrefix;
+    private final String idPrefix;
     private final boolean removeConstness;
 
     InlineRenamer(
         Supplier<String> uniqueIdSupplier,
-        String namePrefix,
+        String idPrefix,
         boolean removeConstness) {
       this.uniqueIdSupplier = uniqueIdSupplier;
-      this.namePrefix = namePrefix;
+      // To ensure that the id does not conflict with the id from the 
+      // ContextualRenamer some prefix is needed.
+      Preconditions.checkArgument(!idPrefix.isEmpty());
+      this.idPrefix = idPrefix;
       this.removeConstness = removeConstness;
     }
 
@@ -402,7 +430,16 @@ class MakeDeclaredNamesUnique
       if (name.isEmpty()) {
         return name;
       }
-      return namePrefix + name + "_" + uniqueIdSupplier.get();
+
+      if (name.indexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR) != -1) {
+          name = name.substring(
+              0, name.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR));
+      }
+
+      // By using the same separator the id will be stripped if it isn't 
+      // needed when variable renaming is turned off.
+      return name + ContextualRenamer.UNIQUE_ID_SEPARATOR
+          + idPrefix + uniqueIdSupplier.get();
     }
 
     @Override
@@ -412,7 +449,7 @@ class MakeDeclaredNamesUnique
 
     @Override
     public Renamer forChildScope() {
-      return new InlineRenamer(uniqueIdSupplier, namePrefix, removeConstness);
+      return new InlineRenamer(uniqueIdSupplier, idPrefix, removeConstness);
     }
 
     @Override

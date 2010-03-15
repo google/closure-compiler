@@ -110,7 +110,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
     helperMutate(
         "function foo(a){return a;}; " +
         "function x() { foo(x++); }",
-        "{var JSCompiler_inline_a_1 = x++; JSCompiler_inline_a_1}",
+        "{var a$$inline_1 = x++; a$$inline_1}",
         "foo", null);
   }
 
@@ -118,15 +118,15 @@ public class FunctionToBlockMutatorTest extends TestCase {
     // Parameter has side-effects.
     helperMutate(
         "function foo(a){return a+a;}; foo(x++);",
-        "{var JSCompiler_inline_a_1 = x++;" +
-            "JSCompiler_inline_a_1 + JSCompiler_inline_a_1;}",
+        "{var a$$inline_1 = x++;" +
+            "a$$inline_1 + a$$inline_1;}",
         "foo", null);
   }
 
   public void testMutateInitializeUninitializedVars1() {
     helperMutate(
         "function foo(a){var b;return a;}; foo(1);",
-        "{var JSCompiler_inline_b_3=void 0;1}",
+        "{var b$$inline_3=void 0;1}",
         "foo", null, false, true);
   }
 
@@ -135,7 +135,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
         "function foo(a){for(var b in c)return a;}; foo(1);",
         "{JSCompiler_inline_label_foo_4:" +
           "{" +
-            "for(var JSCompiler_inline_b_3 in c){" +
+            "for(var b$$inline_3 in c){" +
                 "1;break JSCompiler_inline_label_foo_4" +
              "}" +
           "}" +
@@ -148,14 +148,14 @@ public class FunctionToBlockMutatorTest extends TestCase {
     boolean callInLoop = false;
     helperMutate(
         "function foo(a){var B = bar(); a;}; foo(1);",
-        "{var JSCompiler_inline_B_3=bar(); 1;}",
+        "{var B$$inline_3=bar(); 1;}",
         "foo", null, false, callInLoop);
     // ... in a loop, the constant-ness is removed.
     // TODO(johnlenz): update this test to look for the const annotation.
     callInLoop = true;
     helperMutate(
         "function foo(a){var B = bar(); a;}; foo(1);",
-        "{var JSCompiler_inline_B_3 = bar(); 1;}",
+        "{var B$$inline_3 = bar(); 1;}",
         "foo", null, false, callInLoop);
   }  
 

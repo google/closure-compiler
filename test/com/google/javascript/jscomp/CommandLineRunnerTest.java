@@ -123,9 +123,13 @@ public class CommandLineRunnerTest extends TestCase {
   public void testDefineFlag() {
     args.add("--define=FOO");
     args.add("--define=\"BAR=5\"");
+    args.add("--D"); args.add("CCC");
+    args.add("-D"); args.add("DDD");
     test("/** @define {boolean} */ var FOO = false;" +
-         "/** @define {number} */ var BAR = 3;",
-         "var FOO = true, BAR = 5;");
+         "/** @define {number} */ var BAR = 3;" +
+         "/** @define {boolean} */ var CCC = false;" +
+         "/** @define {boolean} */ var DDD = false;",
+         "var FOO = true, BAR = 5, CCC = true, DDD = true;");
   }
 
   public void testScriptStrictModeNoWarning() {

@@ -42,7 +42,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     compiler.resetUniqueNameId();
     return new InlineFunctions(
-        compiler, 
+        compiler,
         compiler.getUniqueNameIdSupplier(),
         allowGlobalFunctionInlining,
         allowLocalFunctionInlining,
@@ -168,18 +168,18 @@ public class InlineFunctionsTest extends CompilerTestCase {
     // don't inline if the input parameter is modified.
     test("function INC(x){return x++}" +
          "var y=INC(i)",
-         "var y;{var JSCompiler_inline_x_1=i;" +
-         "y=JSCompiler_inline_x_1++}");
+         "var y;{var x$$inline_1=i;" +
+         "y=x$$inline_1++}");
   }
 
   public void testInlineFunctions10() {
     test("function INC(x){return x++}" +
          "var y=INC(i);y=INC(i)",
          "var y;" +
-         "{var JSCompiler_inline_x_1=i;" +
-         "y=JSCompiler_inline_x_1++}" +
-         "{var JSCompiler_inline_x_4=i;" +
-         "y=JSCompiler_inline_x_4++}");
+         "{var x$$inline_1=i;" +
+         "y=x$$inline_1++}" +
+         "{var x$$inline_4=i;" +
+         "y=x$$inline_4++}");
   }
 
   public void testInlineFunctions11() {
@@ -202,7 +202,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     // inline as block if the input parameter has side-effects.
     test("function f(x){return x}" +
          "var y=f(i++)",
-         "var y;{var JSCompiler_inline_x_1=i++;y=JSCompiler_inline_x_1}");
+         "var y;{var x$$inline_1=i++;y=x$$inline_1}");
   }
 
   public void testInlineFunctions14() {
@@ -390,50 +390,50 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testNoInlineIfParametersModified1() {
     // Assignment
     test("function f(x){return x=1}f(undefined)",
-         "{var JSCompiler_inline_x_1=undefined;" +
-         "JSCompiler_inline_x_1=1}");
+         "{var x$$inline_1=undefined;" +
+         "x$$inline_1=1}");
   }
 
   public void testNoInlineIfParametersModified2() {
     test("function f(x){return (x)=1;}f(2)",
-         "{var JSCompiler_inline_x_1=2;" +
-         "JSCompiler_inline_x_1=1}");
+         "{var x$$inline_1=2;" +
+         "x$$inline_1=1}");
   }
 
   public void testNoInlineIfParametersModified3() {
     // Assignment variant.
     test("function f(x){return x*=2}f(2)",
-         "{var JSCompiler_inline_x_1=2;" +
-         "JSCompiler_inline_x_1*=2}");
+         "{var x$$inline_1=2;" +
+         "x$$inline_1*=2}");
   }
 
   public void testNoInlineIfParametersModified4() {
     // Assignment in if.
     test("function f(x){return x?(x=2):0}f(2)",
-         "{var JSCompiler_inline_x_1=2;" +
-         "JSCompiler_inline_x_1?(" +
-         "JSCompiler_inline_x_1=2):0}");
+         "{var x$$inline_1=2;" +
+         "x$$inline_1?(" +
+         "x$$inline_1=2):0}");
   }
 
   public void testNoInlineIfParametersModified5() {
     // Assignment in if, multiple params
     test("function f(x,y){return x?(y=2):0}f(2,undefined)",
-         "{var JSCompiler_inline_y_3=undefined;2?(" +
-         "JSCompiler_inline_y_3=2):0}");
+         "{var y$$inline_3=undefined;2?(" +
+         "y$$inline_3=2):0}");
   }
 
   public void testNoInlineIfParametersModified6() {
     test("function f(x,y){return x?(y=2):0}f(2)",
-         "{var JSCompiler_inline_y_3=void 0;2?(" +
-         "JSCompiler_inline_y_3=2):0}");
+         "{var y$$inline_3=void 0;2?(" +
+         "y$$inline_3=2):0}");
   }
 
   public void testNoInlineIfParametersModified7() {
     // Increment
     test("function f(a){return++a<++a}f(1)",
-         "{var JSCompiler_inline_a_1=1;" +
-         "++JSCompiler_inline_a_1<" +
-         "++JSCompiler_inline_a_1}");
+         "{var a$$inline_1=1;" +
+         "++a$$inline_1<" +
+         "++a$$inline_1}");
   }
 
   public void testNoInlineIfParametersModified8() {
@@ -458,14 +458,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testInlineNeverMutateConstants() {
     test("function f(x){return x=1}f(undefined)",
-         "{var JSCompiler_inline_x_1=undefined;" +
-         "JSCompiler_inline_x_1=1}");
+         "{var x$$inline_1=undefined;" +
+         "x$$inline_1=1}");
   }
 
   public void testInlineNeverOverrideNewValues() {
     test("function f(a){return++a<++a}f(1)",
-        "{var JSCompiler_inline_a_1=1;" +
-        "++JSCompiler_inline_a_1<++JSCompiler_inline_a_1}");
+        "{var a$$inline_1=1;" +
+        "++a$$inline_1<++a$$inline_1}");
   }
 
   public void testInlineMutableArgsReferencedOnce() {
@@ -494,26 +494,26 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testInlineBlockMutableArgs1() {
     test("function foo(x){x+x}foo([])",
-         "{var JSCompiler_inline_x_1=[];" +
-         "JSCompiler_inline_x_1+JSCompiler_inline_x_1}");
+         "{var x$$inline_1=[];" +
+         "x$$inline_1+x$$inline_1}");
   }
 
   public void testInlineBlockMutableArgs2() {
     test("function foo(x){x+x}foo(new Date)",
-         "{var JSCompiler_inline_x_1=new Date;" +
-         "JSCompiler_inline_x_1+JSCompiler_inline_x_1}");
+         "{var x$$inline_1=new Date;" +
+         "x$$inline_1+x$$inline_1}");
   }
 
   public void testInlineBlockMutableArgs3() {
     test("function foo(x){x+x}foo(true&&new Date)",
-         "{var JSCompiler_inline_x_1=true&&new Date;" +
-         "JSCompiler_inline_x_1+JSCompiler_inline_x_1}");
+         "{var x$$inline_1=true&&new Date;" +
+         "x$$inline_1+x$$inline_1}");
   }
 
   public void testInlineBlockMutableArgs4() {
     test("function foo(x){x+x}foo({})",
-         "{var JSCompiler_inline_x_1={};" +
-         "JSCompiler_inline_x_1+JSCompiler_inline_x_1}");
+         "{var x$$inline_1={};" +
+         "x$$inline_1+x$$inline_1}");
   }
 
   public void testShadowVariables1() {
@@ -528,7 +528,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "bar();",
 
          "var a=0;" +
-         "{var JSCompiler_inline_a$$2_1=3+4}");
+         "{var a$$inline_1=3+4}");
   }
 
   public void testShadowVariables2() {
@@ -551,8 +551,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function _bar(){a=foo()}",
 
         "var a=0;" +
-        "function _bar(){{var JSCompiler_inline_a$$1_1=2;" +
-        "a=3+JSCompiler_inline_a$$1_1}}");
+        "function _bar(){{var a$$inline_1=2;" +
+        "a=3+a$$inline_1}}");
   }
 
   public void testShadowVariables4() {
@@ -582,8 +582,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function _bar(a){a=foo(4)}",
 
         "var a=0;function _bar(a$$2){{" +
-        "var JSCompiler_inline_a$$1_1=4;" +
-        "a$$2=3+JSCompiler_inline_a$$1_1}}");
+        "var a$$inline_1=4;" +
+        "a$$2=3+a$$inline_1}}");
   }
 
   public void testShadowVariables7() {
@@ -591,7 +591,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function foo(){return a}" +
          "(function(){var a=5;(function(){foo()})()})()",
          "var a=3;" +
-         "{var JSCompiler_inline_a$$1_1=5;{a}}"
+         "{var a$$inline_1=5;{a}}"
          );
   }
 
@@ -679,7 +679,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function foo(){return a}" +
          "(function(){var a=5;(function(){foo()})()})()",
          "var a=3;" +
-         "{var JSCompiler_inline_a$$1_1=5;{a}}"
+         "{var a$$inline_1=5;{a}}"
          );
   }
 
@@ -701,7 +701,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
         "var a=0;" +
         "function _goo(){var a$$2=2;var x;" +
-        "{var JSCompiler_inline_a$$1_1=3;x=a+a}}");
+        "{var a$$inline_1=3;x=a+a}}");
   }
 
   public void testCostBasedInlining1() {
@@ -800,8 +800,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(a){return 1 + a + a;}" +
          "var a = f(f(1));",
          "var a;" +
-         "{var JSCompiler_inline_a$$1_1=1+1+1;" +
-         "a=1+JSCompiler_inline_a$$1_1+JSCompiler_inline_a$$1_1}");
+         "{var a$$inline_1=1+1+1;" +
+         "a=1+a$$inline_1+a$$inline_1}");
   }
 
   public void testCostBasedInlining10() {
@@ -819,8 +819,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(a){return a + a;}" +
          "var a = f(f(1))",
          "var a;" +
-         "{var JSCompiler_inline_a$$1_1=1+1;" +
-         "a=JSCompiler_inline_a$$1_1+JSCompiler_inline_a$$1_1}");
+         "{var a$$inline_1=1+1;" +
+         "a=a$$inline_1+a$$inline_1}");
   }
 
   public void testCostBasedInlining12() {
@@ -1033,7 +1033,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
     // But do inline into functions
     test("function f(){a();b();var z=1+1}function _foo(){f()}",
-         "function _foo(){{a();b();var JSCompiler_inline_z_1=1+1}}");
+         "function _foo(){{a();b();var z$$inline_1=1+1}}");
 
   }
 
@@ -1214,28 +1214,28 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testComplexSample() {
     String result = "" +
       "{{" +
-      "var JSCompiler_inline_styleSheet_9=null;" +
+      "var styleSheet$$inline_9=null;" +
       "if(goog$userAgent$IE)" +
-        "JSCompiler_inline_styleSheet_9=0;" +
+        "styleSheet$$inline_9=0;" +
       "else " +
-        "var JSCompiler_inline_head_10=0;" +
+        "var head$$inline_10=0;" +
       "{" +
-        "var JSCompiler_inline_JSCompiler_inline_element_3_11=" +
-            "JSCompiler_inline_styleSheet_9;" +
-        "var JSCompiler_inline_JSCompiler_inline_stylesString$$1_4_12=a;" +
+        "var element$$inline_11=" +
+            "styleSheet$$inline_9;" +
+        "var stylesString$$inline_12=a;" +
         "if(goog$userAgent$IE)" +
-          "JSCompiler_inline_JSCompiler_inline_element_3_11.cssText=" +
-              "JSCompiler_inline_JSCompiler_inline_stylesString$$1_4_12;" +
+          "element$$inline_11.cssText=" +
+              "stylesString$$inline_12;" +
         "else " +
         "{" +
-          "var JSCompiler_inline_JSCompiler_inline_propToSet_5_13=" +
+          "var propToSet$$inline_13=" +
               "\"innerText\";" +
-          "JSCompiler_inline_JSCompiler_inline_element_3_11[" +
-              "JSCompiler_inline_JSCompiler_inline_propToSet_5_13]=" +
-                  "JSCompiler_inline_JSCompiler_inline_stylesString$$1_4_12" +
+          "element$$inline_11[" +
+              "propToSet$$inline_13]=" +
+                  "stylesString$$inline_12" +
         "}" +
       "}" +
-      "JSCompiler_inline_styleSheet_9" +
+      "styleSheet$$inline_9" +
       "}}";
 
     test("var foo = function(stylesString, opt_element) { " +
@@ -1330,7 +1330,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "JSCompiler_temp_const_0 += JSCompiler_inline_result_1;" +
         "x = JSCompiler_temp_const_0");
   }
-  
+
   public void testInlineConstructor1() {
     test("function f() {} function _g() {f.call(this)}",
          "function _g() {void 0}");
@@ -1440,8 +1440,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testAnonymousFunctionOmega() {
     // ... with unused recursive name.
     test("(function (f){f(f)})(function(f){f(f)})",
-         "{var JSCompiler_inline_f_1=function(f$$1){f$$1(f$$1)};" +
-          "{{JSCompiler_inline_f_1(JSCompiler_inline_f_1)}}}");
+         "{var f$$inline_1=function(f$$1){f$$1(f$$1)};" +
+          "{{f$$inline_1(f$$inline_1)}}}");
   }
 
   public void testLocalFunctionInlining1() {
@@ -1498,7 +1498,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "\n" +
         "factorial(5)\n");
   }
-  
+
   public void testRenamePropertyFunction() {
     testSame("function JSCompiler_renameProperty(x) {return x} " +
              "JSCompiler_renameProperty('foo')");

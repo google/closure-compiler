@@ -757,8 +757,8 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return a;}; " +
         "function x() { foo(x++); }",
         "function foo(a){return a;}; " +
-        "function x() {{var JSCompiler_inline_a_1=x++;" +
-            "JSCompiler_inline_a_1}}",
+        "function x() {{var a$$inline_1=x++;" +
+            "a$$inline_1}}",
         "foo", INLINE_BLOCK);
   }
 
@@ -767,9 +767,9 @@ public class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(x++);",
         "function foo(a){return a+a;}; " +
-            "{var JSCompiler_inline_a_1=x++;" +
-            " JSCompiler_inline_a_1+" +
-            "JSCompiler_inline_a_1;}",
+            "{var a$$inline_1=x++;" +
+            " a$$inline_1+" +
+            "a$$inline_1;}",
         "foo", INLINE_BLOCK);
   }
 
@@ -778,9 +778,9 @@ public class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(new Date());",
         "function foo(a){return a+a;}; " +
-            "{var JSCompiler_inline_a_1=new Date();" +
-            " JSCompiler_inline_a_1+" +
-            "JSCompiler_inline_a_1;}",
+            "{var a$$inline_1=new Date();" +
+            " a$$inline_1+" +
+            "a$$inline_1;}",
         "foo", INLINE_BLOCK);
   }
 
@@ -789,9 +789,9 @@ public class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){return a+a;}; foo(function(){});",
         "function foo(a){return a+a;}; " +
-            "{var JSCompiler_inline_a_1=function(){};" +
-            " JSCompiler_inline_a_1+" +
-            "JSCompiler_inline_a_1;}",
+            "{var a$$inline_1=function(){};" +
+            " a$$inline_1+" +
+            "a$$inline_1;}",
         "foo", INLINE_BLOCK);
   }
 
@@ -800,7 +800,7 @@ public class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){return true;}; foo(goo());",
         "function foo(a){return true;};" +
-            "{var JSCompiler_inline_a_1=goo();true}",
+            "{var a$$inline_1=goo();true}",
         "foo", INLINE_BLOCK);
   }
 
@@ -810,8 +810,8 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){var b;return a;}; " +
             "function x() { foo(goo()); }",
             "function foo(a){var b;return a;}; " +
-            "function x() {{var JSCompiler_inline_a_2=goo();" +
-                "var JSCompiler_inline_b_3;JSCompiler_inline_a_2}}",
+            "function x() {{var a$$inline_2=goo();" +
+                "var b$$inline_3;a$$inline_2}}",
         "foo", INLINE_BLOCK);
   }
 
@@ -824,9 +824,9 @@ public class FunctionInjectorTest extends TestCase {
         "var x = 1; var y = 2;" +
         "function foo(a,b){x = b; y = a;}; " +
         "function bar() {" +
-           "{var JSCompiler_inline_a_2=x;" +
+           "{var a$$inline_2=x;" +
             "x = y;" +
-            "y = JSCompiler_inline_a_2;}" +
+            "y = a$$inline_2;}" +
         "}",
         "foo", INLINE_BLOCK);
   }
@@ -839,9 +839,9 @@ public class FunctionInjectorTest extends TestCase {
         "var x = 1; var y = 2;" +
         "function foo(a,b){y = a; x = b;}; " +
         "function bar() {" +
-           "{var JSCompiler_inline_b_3=y;" +
+           "{var b$$inline_3=y;" +
             "y = x;" +
-            "x = JSCompiler_inline_b_3;}" +
+            "x = b$$inline_3;}" +
         "}",
         "foo", INLINE_BLOCK);
   }
@@ -852,7 +852,7 @@ public class FunctionInjectorTest extends TestCase {
         "for(;1;){ foo(1); }",
         "function foo(a){var b;return a;}; " +
         "for(;1;){ {" +
-            "var JSCompiler_inline_b_3=void 0;1}}",
+            "var b$$inline_3=void 0;1}}",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
@@ -860,7 +860,7 @@ public class FunctionInjectorTest extends TestCase {
         "do{ foo(1); } while(1)",
         "function foo(a){var b;return a;}; " +
         "do{ {" +
-            "var JSCompiler_inline_b_3=void 0;1}}while(1)",
+            "var b$$inline_3=void 0;1}}while(1)",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
@@ -868,7 +868,7 @@ public class FunctionInjectorTest extends TestCase {
         "for(;1;){ foo(1); }",
         "function foo(a){for(var b in c)return a;}; " +
         "for(;1;){ {JSCompiler_inline_label_foo_4:{" +
-            "for(var JSCompiler_inline_b_3 in c){" +
+            "for(var b$$inline_3 in c){" +
               "1;break JSCompiler_inline_label_foo_4" +
             "}}}}",
         "foo", INLINE_BLOCK);
@@ -1159,18 +1159,18 @@ public class FunctionInjectorTest extends TestCase {
   public void testBug1897706() {
     helperInlineReferenceToFunction(
         "function foo(a){}; foo(x())",
-        "function foo(a){}; {var JSCompiler_inline_a_1=x()}",
+        "function foo(a){}; {var a$$inline_1=x()}",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
         "function foo(a){bar()}; foo(x())",
-        "function foo(a){bar()}; {var JSCompiler_inline_a_1=x();bar()}",
+        "function foo(a){bar()}; {var a$$inline_1=x();bar()}",
         "foo", INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
         "function foo(a,b){bar()}; foo(x(),y())",
         "function foo(a,b){bar()};" +
-        "{var JSCompiler_inline_a_2=x();var JSCompiler_inline_b_3=y();bar()}",
+        "{var a$$inline_2=x();var b$$inline_3=y();bar()}",
         "foo", INLINE_BLOCK);
   }
 

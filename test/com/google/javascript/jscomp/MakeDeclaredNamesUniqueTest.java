@@ -89,6 +89,17 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testSameWithInversion("", original);
   }
 
+  public void testMakeLocalNamesUniqueWithContext0() {
+    // Set the test type
+    this.useDefaultRenamer = true;
+
+    // Local names are made unique.
+    invert = true;
+    test(
+        "var a;function foo(){var a$$inline_1; a = 1}",
+        "var a;function foo(){var a$$inline_1; a = 1}");
+  }
+
   public void testMakeLocalNamesUniqueWithContext() {
     // Set the test type
     this.useDefaultRenamer = true;
@@ -149,7 +160,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     this.useDefaultRenamer = false;
 
     test("var a;",
-         "var unique_a_0");
+         "var a$$unique_0");
 
     // Verify undeclared names are untouched.
     testSame("a;");
@@ -157,30 +168,30 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // Local names are made unique.
     test("var a;" +
          "function foo(a){var b;a}",
-         "var unique_a_0;" +
-         "function unique_foo_1(unique_a_2){var unique_b_3;unique_a_2}");
+         "var a$$unique_0;" +
+         "function foo$$unique_1(a$$unique_2){var b$$unique_3;a$$unique_2}");
     test("var a;" +
          "function foo(){var b;a}" +
          "function boo(){var b;a}",
-         "var unique_a_0;" +
-         "function unique_foo_1(){var unique_b_3;unique_a_0}" +
-         "function unique_boo_2(){var unique_b_4;unique_a_0}");
+         "var a$$unique_0;" +
+         "function foo$$unique_1(){var b$$unique_3;a$$unique_0}" +
+         "function boo$$unique_2(){var b$$unique_4;a$$unique_0}");
 
     // Verify anonymous functions are renamed.
     test("var a = function foo(){foo()};",
-         "var unique_a_0 = function unique_foo_1(){unique_foo_1()};");
+         "var a$$unique_0 = function foo$$unique_1(){foo$$unique_1()};");
 
     // Verify catch exceptions names are made unique
     test("try { } catch(e) {e;}",
-         "try { } catch(unique_e_0) {unique_e_0;}");
+         "try { } catch(e$$unique_0) {e$$unique_0;}");
     test("try { } catch(e) {e;};" +
          "try { } catch(e) {e;}",
-         "try { } catch(unique_e_0) {unique_e_0;};" +
-         "try { } catch(unique_e_1) {unique_e_1;}");
+         "try { } catch(e$$unique_0) {e$$unique_0;};" +
+         "try { } catch(e$$unique_1) {e$$unique_1;}");
     test("try { } catch(e) {e; " +
          "try { } catch(e) {e;}};",
-         "try { } catch(unique_e_0) {unique_e_0; " +
-            "try { } catch(unique_e_1) {unique_e_1;} }; ");
+         "try { } catch(e$$unique_0) {e$$unique_0; " +
+            "try { } catch(e$$unique_1) {e$$unique_1;} }; ");
   }
 
   public void testOnlyInversion() {
@@ -204,12 +215,12 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testConstRemovingRename1() {
     removeConst = true;
     test("function() {var CONST = 3; var ACONST$$1 = 2;}",
-         "function() {var unique_CONST_0 = 3; var unique_ACONST$$1_1 = 2;}");
+         "function() {var CONST$$unique_0 = 3; var ACONST$$unique_1 = 2;}");
   }
 
   public void testConstRemovingRename2() {
     removeConst = true;
     test("var CONST = 3; var b = CONST;",
-         "var unique_CONST_0 = 3; var unique_b_1 = unique_CONST_0;");
+         "var CONST$$unique_0 = 3; var b$$unique_1 = CONST$$unique_0;");
   }
 }

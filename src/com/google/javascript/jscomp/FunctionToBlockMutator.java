@@ -143,7 +143,7 @@ class FunctionToBlockMutator {
         compiler, fnNode, new MakeDeclaredNamesUnique(
             new InlineRenamer(
                 compiler.getUniqueNameIdSupplier(),
-                "JSCompiler_inline_",
+                "inline_",
                 isCallInLoop)));
   }
 
