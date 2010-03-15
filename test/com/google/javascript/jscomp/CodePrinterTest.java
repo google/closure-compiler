@@ -200,6 +200,19 @@ public class CodePrinterTest extends TestCase {
     // Make sure we don't treat non-latin character escapes as raw strings.
     assertPrint("({ 'a': 4, '\\u0100': 4 })", "({a:4,\"\\u0100\":4})");
 
+    // Test if statement and for statements with single statements in body.
+    assertPrint("if (true) { alert();}", "if(true)alert()");
+    assertPrint("if (false) {} else {alert(\"a\");}",
+        "if(false);else alert(\"a\")");
+    assertPrint("for(;;) { alert();};", "for(;;)alert()");
+
+    assertPrint("do { alert(); } while(true);",
+        "do alert();while(true)");
+    assertPrint("myLabel: { alert();}",
+        "myLabel:alert()");
+    assertPrint("myLabel: for(;;) continue myLabel;",
+        "myLabel:for(;;)continue myLabel");
+
     // Test nested var statement
     assertPrint("if (true) var x; x = 4;", "if(true)var x;x=4");
 
@@ -389,6 +402,87 @@ public class CodePrinterTest extends TestCase {
     assertPrettyPrint("(function(){})();","(function() {\n})()");
     assertPrettyPrint("var a = (function() {});alert(a);",
         "var a = function() {\n};\nalert(a)");
+
+    // Check we correctly handle putting brackets around all if clauses so
+    // we can put breakpoints inside statements.
+    assertPrettyPrint("if (1) {}",
+        "if(1);");
+    assertPrettyPrint("if (1) {alert(\"\");}",
+        "if(1) {\n" +
+        "  alert(\"\")\n" +
+        "}");
+    assertPrettyPrint("if (1)alert(\"\");",
+        "if(1) {\n" +
+        "  alert(\"\")\n" +
+        "}");
+    assertPrettyPrint("if (1) {alert();alert();}",
+        "if(1) {\n" +
+        "  alert();\n" +
+        "  alert()\n" +
+        "}");
+
+    // Don't add blocks if they weren't there already.
+    assertPrettyPrint("label: alert();",
+        "label:alert()");
+
+    // But if statements and loops get blocks automagically.
+    assertPrettyPrint("if (1) alert();",
+        "if(1) {\n" +
+        "  alert()\n" +
+        "}");
+    assertPrettyPrint("for (;;) alert();",
+        "for(;;) {\n" +
+        "  alert()\n" +
+        "}");
+
+    assertPrettyPrint("while (1) alert();",
+        "while(1) {\n" +
+        "  alert()\n" +
+        "}");
+
+    // Do we put else clauses in blocks?
+    assertPrettyPrint("if (1) {} else {alert(a);}",
+        "if(1);else {\n  alert(a)\n}");
+
+    // Do we add blocks to else clauses?
+    assertPrettyPrint("if (1) alert(a); else alert(b);",
+        "if(1) {\n" +
+        "  alert(a)\n" +
+        "}else {\n" +
+        "  alert(b)\n" +
+        "}");
+
+    // Do we put for bodies in blocks?
+    assertPrettyPrint("for(;;) { alert();}",
+        "for(;;) {\n" +
+         "  alert()\n" +
+         "}");
+    assertPrettyPrint("for(;;) {}",
+        "for(;;);");
+    assertPrettyPrint("for(;;) { alert(); alert(); }",
+        "for(;;) {\n" +
+        "  alert();\n" +
+        "  alert()\n" +
+        "}");
+
+    // How about do loops?
+    assertPrettyPrint("do { alert(); } while(true);",
+        "do {\n" +
+        "  alert()\n" +
+        "}while(true)");
+
+    // label?
+    assertPrettyPrint("myLabel: { alert();}",
+        "myLabel: {\n" +
+        "  alert()\n" +
+        "}");
+
+    // Don't move the label on a loop, because then break {label} and
+    // continue {label} won't work.
+    assertPrettyPrint("myLabel: for(;;) continue myLabel;",
+        "myLabel:for(;;) {\n" +
+        "  continue myLabel\n" +
+        "}");
   }
 
   public void testTypeAnnotations() {

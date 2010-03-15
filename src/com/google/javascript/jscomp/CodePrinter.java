@@ -338,6 +338,19 @@ class CodePrinter {
         append(op);
       }
     }
+
+    /**
+     * If the body of a for loop or the then clause of an if statement has
+     * a single statement, should it be wrapped in a block?
+     * {@inheritDoc}
+     */
+    @Override
+    boolean shouldPreserveExtraBlocks() {
+      // When pretty-printing, always place the statement in its own block
+      // so it is printed on a separate line.  This allows breakpoints to be
+      // placed on the statement.
+      return true;
+    }
   }
 
 

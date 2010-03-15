@@ -640,8 +640,9 @@ class CodeGenerator {
       }
     }
 
-    // Strip unneeded blocks, that is blocks with <2 children.
-    if (n.getType() == Token.BLOCK) {
+    // Strip unneeded blocks, that is blocks with <2 children unless
+    // the CodePrinter specifically wants to keep them.
+    if (n.getType() == Token.BLOCK ) {
       int count = getNonEmptyChildCount(n);
       if (count == 0) {
         cc.endStatement(true);
@@ -653,7 +654,9 @@ class CodeGenerator {
         //   Safari needs a block around function declarations.
         //   IE6/7 needs a block around DOs.
         Node firstAndOnlyChild = getFirstNonEmptyChild(n);
-        if (firstAndOnlyChild.getType() == Token.FUNCTION ||
+        boolean alwaysWrapInBlock = cc.shouldPreserveExtraBlocks();
+        if (alwaysWrapInBlock ||
+            firstAndOnlyChild.getType() == Token.FUNCTION ||
             firstAndOnlyChild.getType() == Token.DO) {
           cc.beginBlock();
           add(firstAndOnlyChild, Context.STATEMENT);
