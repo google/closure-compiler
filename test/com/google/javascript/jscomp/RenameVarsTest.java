@@ -46,7 +46,7 @@ public class RenameVarsTest extends CompilerTestCase {
       return new DefaultCodingConvention();
     }
   }
-  
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     if (withClosurePass) {
@@ -73,6 +73,8 @@ public class RenameVarsTest extends CompilerTestCase {
     localRenamingOnly = false;
     preserveAnonymousFunctionNames = false;
     generatePseudoNames = false;
+
+    // TODO(johnlenz): Enable Normalize during these tests.
   }
 
   public void testRenameSimple() {
@@ -439,13 +441,13 @@ public class RenameVarsTest extends CompilerTestCase {
     test("var goog, a, b; goog.exportSymbol(a, b);",
          "var a, b, c; a.exportSymbol(b, c);");
   }
-  
-  public void testDollarSignSuperExport() {
+
+  public void testDollarSignSuperExport1() {
     useGoogleCodingConvention = false;
     // See http://code.google.com/p/closure-compiler/issues/detail?id=32
     test("var x = function($super,duper,$fantastic){}",
          "var c = function($super,    a,        b){}");
-    
+
     localRenamingOnly = false;
     test("var $super = 1", "var a = 1");
 
@@ -454,17 +456,40 @@ public class RenameVarsTest extends CompilerTestCase {
          "var d = function(a,     b,    c        ){}");
   }
 
+  public void testDollarSignSuperExport2() {
+    boolean normalizedExpectedJs = false;
+    super.enableNormalize(false);
+
+    useGoogleCodingConvention = false;
+    // See http://code.google.com/p/closure-compiler/issues/detail?id=32
+    test("var x = function($super,duper,$fantastic){};" +
+            "var y = function($super,duper){};",
+         "var c = function($super,    a,         b){};" +
+            "var d = function($super,    a){};");
+
+    localRenamingOnly = false;
+    test("var $super = 1", "var a = 1");
+
+    useGoogleCodingConvention = true;
+    test("var x = function($super,duper,$fantastic){};" +
+            "var y = function($super,duper){};",
+         "var d = function(a,     b,    c         ){};" +
+            "var e = function(     a,    b){};");
+
+    super.disableNormalize();
+  }
+
   public void testPseudoNames() {
     generatePseudoNames = false;
     // See http://code.google.com/p/closure-compiler/issues/detail?id=32
     test("var foo = function(a, b, c){}",
          "var d = function(a, b, c){}");
-    
+
     generatePseudoNames = true;
     test("var foo = function(a, b, c){}",
          "var $foo$$ = function($a$$, $b$$, $c$$){}");
-  }  
-  
+  }
+
   private void testRenameMapUsingOldMap(String input, String expected,
                                         VariableMap expectedMap) {
     previouslyUsedMap = renameVars.getVariableMap();

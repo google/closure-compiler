@@ -62,6 +62,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether the Normalize pass runs before pass being tested. */
   private boolean normalizeEnabled = false;
 
+  /** Whether the expected js strings should be normalized. */
+  private boolean normalizeExpected = false;
+
   /** Whether to check that all line number information is preserved. */
   private boolean checkLineNumbers = false;
 
@@ -202,7 +205,28 @@ public abstract class CompilerTestCase extends TestCase  {
    * @see Normalize
    */
   protected void enableNormalize() {
-    normalizeEnabled  = true;
+    enableNormalize(true);
+  }
+
+  /**
+   * Perform AST normalization before running the test pass, and anti-normalize
+   * after running it.
+   *
+   * @param normalizeExpected Whether to perform normalization on the
+   * expected js result.
+   * @see Normalize
+   */
+  protected void enableNormalize(boolean normalizeExpected) {
+    normalizeEnabled = true;
+    this.normalizeExpected = normalizeExpected;
+  }
+
+  /**
+   * Don't perform AST normalization before running the test pass.
+   * @see Normalize
+   */
+  protected void disableNormalize() {
+    normalizeEnabled = false;
   }
 
   /**
@@ -817,7 +841,7 @@ public abstract class CompilerTestCase extends TestCase  {
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     // Only run the normalize pass, if asked.
-    if (normalizeEnabled && !compiler.hasErrors()) {
+    if (normalizeEnabled && normalizeExpected && !compiler.hasErrors()) {
       Normalize normalize = new Normalize(compiler, false);
       normalize.process(externsRoot, mainRoot);
       compiler.setNormalized();

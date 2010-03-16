@@ -241,6 +241,25 @@ class MakeDeclaredNamesUnique
       NodeTraversal.traverse(compiler, js, this);
     }
 
+    public static String getOrginalName(String name) {
+      int index = indexOfSeparator(name);
+      return (index == -1) ? name : name.substring(0, index);
+    }
+
+    private static int indexOfSeparator(String name) {
+      return name.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR);
+    }
+
+    private static String getOrginalNameInternal(String name, int index) {
+      return name.substring(0, index);
+    }
+
+    private static String getNameSuffix(String name, int index) {
+      return name.substring(
+          index + ContextualRenamer.UNIQUE_ID_SEPARATOR.length(),
+          name.length());
+    }
+
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
       if (node.getType() == Token.NAME) {
@@ -255,16 +274,13 @@ class MakeDeclaredNamesUnique
           if (nameMap.containsKey(var)) {
             node.setString(nameMap.get(var));
           } else {
-            String newName = oldName.substring(
-                0, oldName.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR));
-            String suffix = oldName.substring(
-                oldName.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR)
-                    + ContextualRenamer.UNIQUE_ID_SEPARATOR.length(),
-                oldName.length());
-            
+            int index = indexOfSeparator(oldName);
+            String newName = getOrginalNameInternal(oldName, index);
+            String suffix = getNameSuffix(oldName, index);
+
             // The convention we are using here is that names of the form:
             //    a$$1  ($$ followed by a digit are allowed to mask a global)
-            //    a$$inline_1 ($$ followed by anything that isn't a digit isn't 
+            //    a$$inline_1 ($$ followed by anything that isn't a digit isn't
             //       allowed to mask a global.
             // This preserves existing behavior while allowing simpler diffs
             // when inlining is enabled.
@@ -275,12 +291,12 @@ class MakeDeclaredNamesUnique
               // Non-contextual renamed value.
               recurseScopes = true;
             }
-            
+
             // Before we change the name of this variable, double-check to
             // make sure we're not declaring a duplicate name in the
             // same scope as the var declaration.
             // TODO(johnlenz): This test isn't sufficient; specifically,
-            // a reference to a global may have been introduced. Shortening 
+            // a reference to a global may have been introduced. Shortening
             // the name without checking for such a reference may mask the
             // global causing the wrong value to be referenced.
             if (var.scope.isDeclared(newName, recurseScopes) ||
@@ -412,7 +428,7 @@ class MakeDeclaredNamesUnique
         String idPrefix,
         boolean removeConstness) {
       this.uniqueIdSupplier = uniqueIdSupplier;
-      // To ensure that the id does not conflict with the id from the 
+      // To ensure that the id does not conflict with the id from the
       // ContextualRenamer some prefix is needed.
       Preconditions.checkArgument(!idPrefix.isEmpty());
       this.idPrefix = idPrefix;
@@ -436,7 +452,7 @@ class MakeDeclaredNamesUnique
               0, name.lastIndexOf(ContextualRenamer.UNIQUE_ID_SEPARATOR));
       }
 
-      // By using the same separator the id will be stripped if it isn't 
+      // By using the same separator the id will be stripped if it isn't
       // needed when variable renaming is turned off.
       return name + ContextualRenamer.UNIQUE_ID_SEPARATOR
           + idPrefix + uniqueIdSupplier.get();

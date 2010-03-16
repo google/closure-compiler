@@ -97,12 +97,10 @@ public class MethodCheckTest extends CompilerTestCase {
     testSame("Boz.staticMethod1(1);");
     testSame("Boz.staticMethod2(1, 2);");
 
-    testErr("var f = new Bar();f.oneOrTwoArg2(1, 2, 3);",
-            FunctionCheck.WRONG_ARGUMENT_COUNT_ERROR);
-    testErr("Boz.staticMethod1(1, 2);",
-            FunctionCheck.WRONG_ARGUMENT_COUNT_ERROR);
-    testErr("Boz.staticMethod2(1);",
-            FunctionCheck.WRONG_ARGUMENT_COUNT_ERROR);
+    // Can't detect these incorrect usuages as they are defined indirectly.
+    testSame("var f = new Bar();f.oneOrTwoArg2(1, 2, 3);");
+    testSame("Boz.staticMethod1(1, 2);");
+    testSame("Boz.staticMethod2(1);");
   }
 
   public void testNoDefinition() {

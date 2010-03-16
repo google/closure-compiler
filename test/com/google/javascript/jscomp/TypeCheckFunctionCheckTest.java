@@ -153,6 +153,34 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
     testSame("var foo = function(var_args) {}; foo(1, 2);");
   }
 
+  public void testMethodCalls() {
+    final String METHOD_DEFS =
+      "/** @constructor */\n" +
+      "function Foo() {}" +
+      // Methods defined in a separate functions and then added via assignment
+      "function twoArg(arg1, arg2) {};" +
+      "Foo.prototype.prototypeMethod = twoArg;" +
+      "Foo.staticMethod = twoArg;";
+    
+    // Prototype method with too many arguments.
+    testSame(METHOD_DEFS +
+        "var f = new Foo();f.prototypeMethod(1, 2, 3);",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+    // Prototype method with too few arguments.
+    testSame(METHOD_DEFS +
+        "var f = new Foo();f.prototypeMethod(1);",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    // Static method with too many arguments.
+    testSame(METHOD_DEFS +
+        "Foo.staticMethod(1, 2, 3);",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+    // Static method with too few arguments.
+    testSame(METHOD_DEFS +
+        "Foo.staticMethod(1);",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+  }
+
   public void assertOk(String params, String arguments) {
     assertWarning(params, arguments, null);
   }

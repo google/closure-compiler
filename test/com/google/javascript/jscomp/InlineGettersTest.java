@@ -231,4 +231,20 @@ public class InlineGettersTest extends CompilerTestCase {
         "function Foo(){this.empty=emptyFunction}" +
         "(new Foo).empty()", null);
   }
+
+  public void testIssue2508576_1() {
+    // Method defined by an extern should be left alone.
+    String externs = "function alert(a) {}";
+    testSame(externs, "({a:alert,b:alert}).a(\"a\")", null);
+  }
+
+  public void testIssue2508576_2() {
+    // Anonymous object definition with a side-effect should be left alone.
+    testSame("({a:function(){},b:x()}).a(\"a\")");
+  }  
+
+  public void testIssue2508576_3() {
+    // Anonymous object definition without side-effect should be removed.
+    test("({a:function(){},b:alert}).a(\"a\")", "");
+  }  
 }
