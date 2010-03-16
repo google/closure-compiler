@@ -409,6 +409,7 @@ Function.prototype.name;
  * @this {Function}
  * @return {string}
  * @nosideeffects
+ * @override
  */
 Function.prototype.toString = function() {};
 
@@ -540,6 +541,7 @@ Array.prototype.toSource;
  * @this {Array}
  * @return {string}
  * @nosideeffects
+ * @override
  */
 Array.prototype.toString = function() {};
 
@@ -751,6 +753,7 @@ function Boolean(opt_value) {}
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Boolean/toSource
+ * @override
  */
 Boolean.prototype.toSource = function() {};
 
@@ -758,6 +761,7 @@ Boolean.prototype.toSource = function() {};
  * @this {boolean|Boolean}
  * @return {string}
  * @nosideeffects
+ * @override
  */
 Boolean.prototype.toString = function() {};
 
@@ -799,6 +803,7 @@ Number.prototype.toPrecision = function(opt_precision) {};
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/toString
+ * @override
  */
 Number.prototype.toString = function(opt_radix) {};
 
@@ -1374,6 +1379,7 @@ Date.prototype.setUTCMilliseconds = function(millisecondsValue) {};
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toSource
+ * @override
  */
 Date.prototype.toSource = function() {};
 
@@ -1417,6 +1423,7 @@ Date.prototype.toLocaleFormat = function(formatString) {};
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toLocaleString
+ * @override
  */
 Date.prototype.toLocaleString = function() {};
 
@@ -1431,6 +1438,7 @@ Date.prototype.toLocaleTimeString = function() {};
  * @this {Date}
  * @return {string}
  * @nosideeffects
+ * @override
  */
 Date.prototype.toString = function() {};
 
@@ -1729,6 +1737,7 @@ String.prototype.toUpperCase = function() {};
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/toSource
+ * @override
  */
 String.prototype.toSource = function() {};
 
@@ -1736,6 +1745,7 @@ String.prototype.toSource = function() {};
  * @this {string|String}
  * @return {string}
  * @nosideeffects
+ * @override
  */
 String.prototype.toString = function() {};
 
@@ -1783,6 +1793,7 @@ RegExp.prototype.test = function(str) {};
  * @this {RegExp}
  * @return {string}
  * @nosideeffects
+ * @override
  */
 RegExp.prototype.toString = function() {};
 

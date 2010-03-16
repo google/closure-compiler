@@ -111,6 +111,7 @@ XMLDOMDocument.prototype.createNode = function(type, name, namespaceURI) {};
  * @param {string} xmlSource
  * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms762722(VS.85).aspx
+ * @override
  */
 XMLDOMDocument.prototype.load = function(xmlSource) {};
 
@@ -118,6 +119,7 @@ XMLDOMDocument.prototype.load = function(xmlSource) {};
  * @param {string} xmlString
  * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms754585(VS.85).aspx
+ * @override
  */
 XMLDOMDocument.prototype.loadXML = function(xmlString) {};
 

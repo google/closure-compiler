@@ -140,12 +140,14 @@ HTMLDocument.prototype.cookie;
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-72161170
+ * @override
  */
 HTMLDocument.prototype.open = function() {};
 
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-98948567
+ * @override
  */
 HTMLDocument.prototype.close = function() {};
 
@@ -153,6 +155,7 @@ HTMLDocument.prototype.close = function() {};
  * @param {string} text
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-75233634
+ * @override
  */
 HTMLDocument.prototype.write = function(text) {};
 
@@ -160,6 +163,7 @@ HTMLDocument.prototype.write = function(text) {};
  * @param {string} text
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-35318390
+ * @override
  */
 HTMLDocument.prototype.writeln = function(text) {};
 
@@ -167,6 +171,7 @@ HTMLDocument.prototype.writeln = function(text) {};
  * @param {string} elementName
  * @return {!NodeList}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-71555259
+ * @override
  */
 HTMLDocument.prototype.getElementsByName = function(elementName) {};
 
@@ -597,12 +602,14 @@ HTMLSelectElement.prototype.add = function(element, before) {};
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-28216144
+ * @override
  */
 HTMLSelectElement.prototype.blur = function() {};
 
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-32130014
+ * @override
  */
 HTMLSelectElement.prototype.focus = function() {};
 
@@ -804,19 +811,22 @@ HTMLInputElement.prototype.value;
 
 /**
  * @return {undefined}
- * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-26838235'
+ * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-26838235
+ * @override
  */
 HTMLInputElement.prototype.blur = function() {};
 
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-2651361
+ * @override
  */
 HTMLInputElement.prototype.click = function() {};
 
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-65996295
+ * @override
  */
 HTMLInputElement.prototype.focus = function() {};
 
@@ -902,12 +912,14 @@ HTMLTextAreaElement.prototype.value;
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-6750689
+ * @override
  */
 HTMLTextAreaElement.prototype.blur = function() {};
 
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-39055426
+ * @override
  */
 HTMLTextAreaElement.prototype.focus = function() {};
 
@@ -1391,12 +1403,14 @@ HTMLAnchorElement.prototype.type;
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-65068939
+ * @override
  */
 HTMLAnchorElement.prototype.blur = function() {};
 
 /**
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-47150313
+ * @override
  */
 HTMLAnchorElement.prototype.focus = function() {};
 

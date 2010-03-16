@@ -25,23 +25,27 @@
 /**
  * @param {string} selectors
  * @return {Element}
+ * @override
  */
 Document.prototype.querySelector = function(selectors) {};
 
 /**
  * @param {string} selectors
  * @return {!NodeList}
+ * @override
  */
 Document.prototype.querySelectorAll = function(selectors) {};
 
 /**
  * @param {string} selectors
  * @return {Element}
+ * @override
  */
 Element.prototype.querySelector = function(selectors) {};
 
 /**
  * @param {string} selectors
  * @return {!NodeList}
+ * @override
  */
 Element.prototype.querySelectorAll = function(selectors) {};

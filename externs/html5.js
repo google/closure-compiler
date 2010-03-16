@@ -808,6 +808,7 @@ MessageEvent.prototype.ports;
  * @param {string} lastEventIdArg
  * @param {Window} sourceArg
  * @param {Array.<MessagePort>} portsArg
+ * @override
  */
 MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
     cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg, portsArg) {};

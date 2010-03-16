@@ -839,9 +839,14 @@ Element.prototype.textContent;
 /**
  * @param {Node} child
  * @return {Node} appendedElement.
+ * @override
  */
 Element.prototype.appendChild = function(child) {};
+
+/** @override */
 Element.prototype.cloneNode = function(deep) {};
+
+/** @override */
 Element.prototype.dispatchEvent = function(event) {};
 
 /** @return {undefined} */
@@ -859,17 +864,38 @@ Element.prototype.getBoundingClientRect = function() {};
 /** @return {undefined} */
 Element.prototype.focus = function() {};
 
-/** @return {boolean} */ Element.prototype.hasAttributes = function() {};
-/** @return {boolean} */ Element.prototype.hasChildNodes = function() {};
+/**
+ * @return {boolean}
+ * @override
+ */
+Element.prototype.hasAttributes = function() {};
+
+/**
+ * @return {boolean}
+ * @override
+ */
+Element.prototype.hasChildNodes = function() {};
+
+/** @override */
 Element.prototype.insertBefore = function(insertedNode, adjacentNode) {};
-/** @return {undefined} */ Element.prototype.normalize = function() {};
+
+/**
+ * @return {undefined}
+ * @override
+ */
+Element.prototype.normalize = function() {};
 
 /**
  * @param {Node} removedNode
  * @return {Node}
+ * @override
  */
 Element.prototype.removeChild = function(removedNode) {};
+
+/** @override */
 Element.prototype.removeEventListener = function(type, handler, useCapture) {};
+
+/** @override */
 Element.prototype.replaceChild = function(insertedNode, replacedNode) {};
 
 /**
