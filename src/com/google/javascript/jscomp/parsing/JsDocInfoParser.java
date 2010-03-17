@@ -17,16 +17,15 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;

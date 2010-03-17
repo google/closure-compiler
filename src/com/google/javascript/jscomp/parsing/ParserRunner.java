@@ -76,8 +76,6 @@ public class ParserRunner {
    *
    * @param sourceName The filename.
    * @param sourceString Source code from the file.
-   * @param isIdeMode Whether in IDE mode, which affects the environment.
-   * @param typeRegistry The type registry.
    * @param errorReporter An error.
    * @param logger A logger.
    * @return The AST of the given text.
