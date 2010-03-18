@@ -625,15 +625,33 @@ class TypeInference
     if (value != null) {
       scope = traverse(value, scope);
       updateScopeForTypeChange(scope, n, n.getJSType() /* could be null */,
-         getJSType(value));
+          getJSType(value));
       return scope;
     } else {
       StaticSlot<JSType> var = scope.getSlot(varName);
-      if (var != null &&
-          !(var.isTypeInferred() && unflowableVarNames.contains(varName))) {
-        type = var.getType();
-        if (type == null) {
-          type = getNativeType(UNKNOWN_TYPE);
+      if (var != null) {
+        // There are two situations where we don't want to use type information
+        // from the scope, even if we have it.
+
+        // 1) The var is escaped in a weird way, e.g.,
+        // function f() { var x = 3; function g() { x = null } (x); }
+        boolean isInferred = var.isTypeInferred();
+        boolean unflowable =
+            isInferred && unflowableVarNames.contains(varName);
+
+        // 2) We're reading type information from another scope for an
+        // inferred variable.
+        // var t = null; function f() { (t); }
+        boolean nonLocalInferredSlot =
+            isInferred &&
+            syntacticScope.getParent() != null &&
+            var == syntacticScope.getParent().getSlot(varName);
+
+        if (!unflowable && !nonLocalInferredSlot) {
+          type = var.getType();
+          if (type == null) {
+            type = getNativeType(UNKNOWN_TYPE);
+          }
         }
       }
     }

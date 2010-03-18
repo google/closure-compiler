@@ -597,6 +597,24 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function f(x) { return goog.isObject(x) ? x : []; }", null);
   }
 
+  public void testTypeOfReduction14() throws Exception {
+    // Don't do type inference on GETELEMs.
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "function f(arguments) { " +
+        "  return goog.isString(arguments[0]) ? arguments[0] : 0;" +
+        "}", null);
+  }
+
+  public void testTypeOfReduction15() throws Exception {
+    // Don't do type inference on GETELEMs.
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "function f(arguments) { " +
+        "  return typeof arguments[0] == 'string' ? arguments[0] : 0;" +
+        "}", null);
+  }
+
   public void testQualifiedNameReduction1() throws Exception {
     testTypes("var x = {}; /** @type {string?} */ x.a = 'a';\n" +
         "/** @return {string} */ var f = function() {\n" +
@@ -3473,7 +3491,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @constructor */ var Foo = function() {};" +
         "/** @type {number} */ Foo.prototype.bar = 3;" +
-        "var FooAlias = Foo;" +
+        "/** @constructor */ var FooAlias = Foo;" +
         "/** @return {string} */ function foo() { " +
         "  return (new FooAlias()).bar; }",
         "inconsistent return type\n" +
@@ -4122,6 +4140,27 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "inconsistent return type\n" +
         "found   : boolean\n" +
         "required: number");
+  }
+
+  public void testIssue124() throws Exception {
+    testTypes(
+        "var t = null;" +
+        "function test() {" +
+        "  if (t != null) { t = null; }" +
+        "  t = 1;" +
+        "}");
+  }
+
+  public void testIssue124b() throws Exception {
+    testTypes(
+        "var t = null;" +
+        "function test() {" +
+        "  if (t != null) { t = null; }" +
+        "  t = undefined;" +
+        "}",
+        "condition always evaluates to false\n" +
+        "left : (null|undefined)\n" +
+        "right: null");
   }
 
   /**

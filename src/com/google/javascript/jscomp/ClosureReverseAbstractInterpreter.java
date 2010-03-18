@@ -23,6 +23,7 @@ import static com.google.javascript.rhino.Token.STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -173,39 +174,46 @@ class ClosureReverseAbstractInterpreter
       })
       .put("isArray", new Function<TypeRestriction, JSType>() {
         public JSType apply(TypeRestriction p) {
+          if (p.type == null) {
+            return p.outcome ? getNativeType(ARRAY_TYPE) : null;
+          }
+
           Visitor<JSType> visitor = p.outcome ? restrictToArrayVisitor :
               restrictToNotArrayVisitor;
-          return p.type == null ? null : p.type.visit(visitor);
+          return p.type.visit(visitor);
         }
       })
       .put("isObject", new Function<TypeRestriction, JSType>() {
         public JSType apply(TypeRestriction p) {
+          if (p.type == null) {
+            return p.outcome ? getNativeType(OBJECT_TYPE) : null;
+          }
+
           Visitor<JSType> visitor = p.outcome ? restrictToObjectVisitor :
               restrictToNotObjectVisitor;
-          return p.type == null ? null : p.type.visit(visitor);
+          return p.type.visit(visitor);
         }
       })
       .build();
   }
 
+  @Override
   public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
       FlowScope blindScope, boolean outcome) {
     if (condition.getType() == CALL && condition.getChildCount() == 2) {
       Node callee = condition.getFirstChild();
       Node param = condition.getLastChild();
-      if (callee.getType() == GETPROP) {
+      if (callee.getType() == GETPROP && param.isQualifiedName()) {
         JSType paramType =  getTypeIfRefinable(param, blindScope);
-        if (paramType != null) {
-          Node left = callee.getFirstChild();
-          Node right = callee.getLastChild();
-          if (left.getType() == NAME && "goog".equals(left.getString()) &&
-              right.getType() == STRING) {
-            Function<TypeRestriction, JSType> restricter =
-                restricters.get(right.getString());
-            if (restricter != null) {
-              return restrictParameter(param, paramType, blindScope, restricter,
-                  outcome);
-            }
+        Node left = callee.getFirstChild();
+        Node right = callee.getLastChild();
+        if (left.getType() == NAME && "goog".equals(left.getString()) &&
+            right.getType() == STRING) {
+          Function<TypeRestriction, JSType> restricter =
+              restricters.get(right.getString());
+          if (restricter != null) {
+            return restrictParameter(param, paramType, blindScope, restricter,
+                outcome);
           }
         }
       }

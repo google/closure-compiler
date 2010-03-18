@@ -121,6 +121,27 @@ public class ClosureReverseAbstractInterpreterTest extends
         OBJECT_TYPE);
   }
 
+  public void testGoogIsArrayOnNull() throws Exception {
+    testClosureFunction("goog.isArray",
+        null,
+        ARRAY_TYPE,
+        null);
+  }
+
+  public void testGoogIsFunctionOnNull() throws Exception {
+    testClosureFunction("goog.isFunction",
+        null,
+        U2U_CONSTRUCTOR_TYPE,
+        null);
+  }
+
+  public void testGoogIsObjectOnNull() throws Exception {
+    testClosureFunction("goog.isObject",
+        null,
+        OBJECT_TYPE,
+        null);
+  }
+
   private void testClosureFunction(String function, JSType type,
       JSType trueType, JSType falseType) {
     // function(a) where a : type

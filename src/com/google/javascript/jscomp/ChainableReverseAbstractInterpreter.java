@@ -169,7 +169,8 @@ abstract class ChainableReverseAbstractInterpreter
         break;
 
       default:
-        throw new IllegalArgumentException("Node cannot be refined.");
+        throw new IllegalArgumentException("Node cannot be refined. \n" +
+            node.toStringTree());
     }
   }
 
@@ -484,20 +485,14 @@ abstract class ChainableReverseAbstractInterpreter
 
     @Override
     protected JSType caseTopType(JSType topType) {
+      JSType result = topType;
       if (resultEqualsValue) {
-        if (value.equals("number")) {
-          return getNativeType(NUMBER_TYPE);
-        } else if (value.equals("boolean")) {
-          return getNativeType(BOOLEAN_TYPE);
-        } else if (value.equals("string")) {
-          return getNativeType(STRING_TYPE);
-        } else if (value.equals("undefined")) {
-          return getNativeType(VOID_TYPE);
-        } else if (value.equals("function")) {
-          return getNativeType(U2U_CONSTRUCTOR_TYPE);
+        JSType typeByName = getNativeTypeForTypeOf(value);
+        if (typeByName != null) {
+          result = typeByName;
         }
       }
-      return topType;
+      return result;
     }
 
     public JSType caseNoObjectType() {
@@ -554,7 +549,7 @@ abstract class ChainableReverseAbstractInterpreter
 
   /**
    * Returns a version of {@code type} that is restricted by some knowledge
-   * about the result of the {@code typeof} operation..
+   * about the result of the {@code typeof} operation.
    * <p>
    * The behavior of the {@code typeof} operator can be summarized by the
    * following table:
@@ -581,12 +576,44 @@ abstract class ChainableReverseAbstractInterpreter
    */
   JSType getRestrictedByTypeOfResult(JSType type, String value,
                                      boolean resultEqualsValue) {
-    return type == null ? null :
-        type.visit(new RestrictByOneTypeOfResultVisitor(
-            value, resultEqualsValue));
+    if (type == null) {
+      if (resultEqualsValue) {
+        JSType result = getNativeTypeForTypeOf(value);
+        return result == null ? getNativeType(UNKNOWN_TYPE) : result;
+      } else {
+        return null;
+      }
+    }
+    return type.visit(
+        new RestrictByOneTypeOfResultVisitor(value, resultEqualsValue));
   }
 
   JSType getNativeType(JSTypeNative typeId) {
     return typeRegistry.getNativeType(typeId);
+  }
+
+  /**
+   * If we definitely know what a type is based on the typeof result,
+   * return it.  Otherwise, return null.
+   *
+   * The typeof operation in JS is poorly defined, and this function works
+   * for both the native typeof and goog.typeOf. It should not be made public,
+   * because its semantics are informally defined, and would be wrong in
+   * the general case.
+   */
+  private JSType getNativeTypeForTypeOf(String value) {
+    if (value.equals("number")) {
+      return getNativeType(NUMBER_TYPE);
+    } else if (value.equals("boolean")) {
+      return getNativeType(BOOLEAN_TYPE);
+    } else if (value.equals("string")) {
+      return getNativeType(STRING_TYPE);
+    } else if (value.equals("undefined")) {
+      return getNativeType(VOID_TYPE);
+    } else if (value.equals("function")) {
+      return getNativeType(U2U_CONSTRUCTOR_TYPE);
+    } else {
+      return null;
+    }
   }
 }
