@@ -40,6 +40,13 @@ public class LoggerErrorManager extends BasicErrorManager {
     this.logger = logger;
   }
 
+  /**
+   * Creates an instance with a source-less error formatter.
+   */
+  public LoggerErrorManager(Logger logger) {
+    this(ErrorFormat.SOURCELESS.toFormatter(null, false), logger);
+  }
+
   @Override
   public void println(CheckLevel level, JSError error) {
     switch (level) {

@@ -39,10 +39,16 @@ import java.util.Set;
  */
 public class CompilerInput implements SourceAst {
   private static final long serialVersionUID = 1L;
+
+  // Info about where the file lives.
   private JSModule module;
   private final boolean isExtern;
-  private final SourceAst ast;
   final private String name;
+
+  // The AST.
+  private final SourceAst ast;
+
+  // Provided and required symbols.
   private final Set<String> provides = Sets.newHashSet();
   private final Set<String> requires = Sets.newHashSet();
 

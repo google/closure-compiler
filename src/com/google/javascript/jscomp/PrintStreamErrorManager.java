@@ -48,6 +48,13 @@ public class PrintStreamErrorManager extends BasicErrorManager {
     this.stream = stream;
   }
 
+  /**
+   * Creates an instance with a source-less error formatter.
+   */
+  public PrintStreamErrorManager(PrintStream stream) {
+    this(ErrorFormat.SOURCELESS.toFormatter(null, false), stream);
+  }
+
   @Override
   public void println(CheckLevel level, JSError error) {
     stream.println(error.format(level, formatter));
