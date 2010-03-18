@@ -89,18 +89,32 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testSameWithInversion("", original);
   }
 
-  public void testMakeLocalNamesUniqueWithContext0() {
+  private String wrapInFunction(String s) {
+    return "function f(){" + s + "}";
+  }
+  
+  public void testInFunction(String original, String expected) {
+    test(wrapInFunction(original), wrapInFunction(expected));
+  }
+  
+  public void testSameInFunction(String original) {
+    testSame(wrapInFunction(original));
+  }  
+  
+  public void testMakeLocalNamesUniqueWithContext1() {
     // Set the test type
     this.useDefaultRenamer = true;
 
-    // Local names are made unique.
     invert = true;
     test(
         "var a;function foo(){var a$$inline_1; a = 1}",
         "var a;function foo(){var a$$inline_1; a = 1}");
+    test(
+        "var a;function foo(){var a$$inline_1;}",
+        "var a;function foo(){var a;}");
   }
 
-  public void testMakeLocalNamesUniqueWithContext() {
+  public void testMakeLocalNamesUniqueWithContext2() {
     // Set the test type
     this.useDefaultRenamer = true;
 
@@ -142,7 +156,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
   }
 
-  public void testMakeLocalNamesUniqueWithContext2() {
+  public void testMakeLocalNamesUniqueWithContext3() {
     // Set the test type
     this.useDefaultRenamer = true;
 
@@ -153,6 +167,51 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
     // Verify global names are untouched.
     testSame(externs, "var extern1 = extern1 || {};", null);
+  }
+
+
+
+  public void testMakeLocalNamesUniqueWithContext4() {
+    // Set the test type
+    this.useDefaultRenamer = true;
+
+    // Inversion does not handle exceptions correctly.
+    testInFunction(
+        "var e; try { } catch(e) {e;}; try { } catch(e) {e;}",
+        "var e; try { } catch(e$$1) {e$$1;}; try { } catch(e$$2) {e$$2;}");
+    testInFunction(
+        "var e; try { } catch(e) {e; try { } catch(e) {e;}}",
+        "var e; try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} }");
+    testInFunction(
+        "try { } catch(e) {e;}; try { } catch(e) {e;} var e;",
+        "try { } catch(e$$1) {e$$1;}; try { } catch(e$$2) {e$$2;} var e;");
+    testInFunction(
+        "try { } catch(e) {e; try { } catch(e) {e;}} var e;",
+        "try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} } var e;");
+
+    invert = true;
+
+    testSameInFunction(
+        "var e; try { } catch(e$$1) {e$$1;}; try { } catch(e$$2) {e$$2;}");
+    testSameInFunction(
+        "var e; try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} };");
+    testSameInFunction(
+        "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;};var e$$2;");
+    testSameInFunction(
+        "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} };var e$$2");
+  }
+
+  public void testArguments() {
+    // Set the test type
+    this.useDefaultRenamer = true;
+
+    invert = true;
+    // Don't distinguish between "arguments", it can't be made unique.
+    testSameWithInversion(
+        "function foo(){var arguments;function bar(){var arguments;}}");
+    // Don't introduce new references to arguments, it is special.
+    testSameWithInversion(
+        "function foo(){var arguments$$1;}");
   }
 
   public void testMakeLocalNamesUniqueWithoutContext() {
@@ -210,6 +269,52 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
          "var CONST = 3; var b = CONST;");
     test("function() {var CONST = 3; var ACONST$$1 = 2;}",
          "function() {var CONST = 3; var ACONST = 2;}");
+  }
+
+  public void testOnlyInversion2() {
+    invert = true;
+    testSame("function () {" +
+        "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}}");
+  }
+
+  public void testOnlyInversion3() {
+    invert = true;
+    test(
+        "function x1() {" +
+        "  var a$$1;" +
+        "  function x2() {" +
+        "    var a$$2;" +
+        "  }" +
+        "  function x3() {" +
+        "    var a$$3;" +
+        "  }" +
+        "}",
+        "function x1() {" +
+        "  var a$$1;" +
+        "  function x2() {" +
+        "    var a;" +
+        "  }" +
+        "  function x3() {" +
+        "    var a;" +
+        "  }" +
+        "}");
+  }
+
+  public void testOnlyInversion4() {
+    invert = true;
+    test(
+        "function x1() {" +
+        "  var a$$1;" +
+        "  function x2() {" +
+        "    var a;a$$1++" +
+        "  }" +
+        "}",
+        "function x1() {" +
+        "  var a$$1;" +
+        "  function x2() {" +
+        "    var a;a$$1++" +
+        "  }" +
+        "}");
   }
 
   public void testConstRemovingRename1() {

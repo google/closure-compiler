@@ -1036,6 +1036,14 @@ public final class NodeUtil {
     return n.getType() == Token.CASE || n.getType() == Token.DEFAULT;
   }
 
+  /**
+   * @return Whether the name is a reference to a variable, function or
+   *       function parameter (not a label or a empty anonymous function name).
+   */
+  static boolean isReferenceName(Node n) {
+    return isName(n) && !n.getString().isEmpty() && !isLabelName(n);
+  }
+
   /** @return Whether the node is a label name. */
   static boolean isLabelName(Node n) {
     if (n != null && n.getType() == Token.NAME) {

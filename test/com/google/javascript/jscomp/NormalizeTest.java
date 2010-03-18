@@ -185,7 +185,7 @@ public class NormalizeTest extends CompilerTestCase {
          "function f() {var window$$1}");
   }
 
-  public void testRemoveDuplicateVarDeclarations() {
+  public void testRemoveDuplicateVarDeclarations1() {
     test("function f() { var a; var a }",
          "function f() { var a; }");
     test("function f() { var a = 1; var a = 2 }",
@@ -200,6 +200,11 @@ public class NormalizeTest extends CompilerTestCase {
          "function f() { var a = 1; for(a in b); }");
   }
 
+  public void testRemoveDuplicateVarDeclarations2() {
+    test("var e = 1; function f(){ try {} catch (e) {} var e = 2 }",
+         "var e = 1; function f(){ try {} catch (e$$2) {} var e$$1 = 2 }");
+  }
+  
   public void testRenamingConstants() {
     test("var ACONST = 4;var b = ACONST;",
          "var ACONST = 4; var b = ACONST;");
