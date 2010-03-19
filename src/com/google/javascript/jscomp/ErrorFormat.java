@@ -55,7 +55,10 @@ public enum ErrorFormat {
     @Override
     public MessageFormatter toFormatter(
         SourceExcerptProvider source, boolean colorize) {
-      return new SourcelessMessageFormatter();
+      LightweightMessageFormatter formatter =
+          LightweightMessageFormatter.withoutSource();
+      formatter.setColorize(colorize);
+      return formatter;
     }
   };
 
@@ -64,43 +67,4 @@ public enum ErrorFormat {
    */
   public abstract MessageFormatter toFormatter(
       SourceExcerptProvider source, boolean colorize);
-
-  // A message formatter that does not know how to get source information.
-  private static class SourcelessMessageFormatter
-      extends AbstractMessageFormatter {
-
-    private SourcelessMessageFormatter() {
-      super(null);
-    }
-
-    @Override
-    public String formatError(JSError error) {
-      return format(error, false);
-    }
-
-    @Override
-    public String formatWarning(JSError warning) {
-      return format(warning, true);
-    }
-
-    private String format(JSError error, boolean warning) {
-      // formatting the message
-      StringBuilder b = new StringBuilder();
-      if (error.sourceName != null) {
-        b.append(error.sourceName);
-        if (error.lineNumber > 0) {
-          b.append(':');
-          b.append(error.lineNumber);
-        }
-        b.append(": ");
-      }
-
-      b.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
-      b.append(" - ");
-
-      b.append(error.description);
-      b.append('\n');
-      return b.toString();
-    }
-  }
 }

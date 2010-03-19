@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt.LINE;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.SourceExcerptProvider.ExcerptFormatter;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
@@ -32,6 +33,14 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
   private static final ExcerptFormatter excerptFormatter =
       new LineNumberingFormatter();
 
+  /**
+   * A constructor for when the client doesn't care about source information.
+   */
+  private LightweightMessageFormatter() {
+    super(null);
+    this.excerpt = LINE;
+  }
+
   public LightweightMessageFormatter(SourceExcerptProvider source) {
     this(source, LINE);
   }
@@ -39,7 +48,12 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
   public LightweightMessageFormatter(SourceExcerptProvider source,
       SourceExcerpt excerpt) {
     super(source);
+    Preconditions.checkNotNull(source);
     this.excerpt = excerpt;
+  }
+
+  static LightweightMessageFormatter withoutSource() {
+    return new LightweightMessageFormatter();
   }
 
   public String formatError(JSError error) {
@@ -53,8 +67,9 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
   private String format(JSError error, boolean warning) {
     // extract source excerpt
     SourceExcerptProvider source = getSource();
-    String sourceExcerpt = excerpt.get(
-        source, error.sourceName, error.lineNumber, excerptFormatter);
+    String sourceExcerpt = source == null ? null :
+        excerpt.get(
+            source, error.sourceName, error.lineNumber, excerptFormatter);
 
     // formatting the message
     StringBuilder b = new StringBuilder();
