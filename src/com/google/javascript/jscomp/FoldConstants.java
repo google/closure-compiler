@@ -297,7 +297,7 @@ class FoldConstants extends AbstractPostOrderCallback
         condition = NodeUtil.getConditionExpression(n);
         this.tryFoldForCondition(condition, n);
       }
-        
+
       tryFoldFor(t, n, parent);
       return;
     }
@@ -329,6 +329,11 @@ class FoldConstants extends AbstractPostOrderCallback
     if (type == Token.CALL) {
       tryFoldStringJoin(t, n, left, right, parent);
       tryFoldStringIndexOf(t, n, left, right, parent);
+      return;
+    }
+
+    if (type == Token.COMMA) {
+      tryFoldComma(t, n, left, right, parent);
       return;
     }
 
@@ -379,6 +384,29 @@ class FoldConstants extends AbstractPostOrderCallback
     }
 
     // other types aren't handled
+  }
+
+  private void tryFoldComma(
+      NodeTraversal t, Node n, Node left, Node right, Node parent) {
+    // If the left side does nothing replace the comma with the result.
+    if (!NodeUtil.mayHaveSideEffects(left)) {
+      // Fold it!
+      n.removeChild(right);
+      parent.replaceChild(n, right);
+      t.getCompiler().reportCodeChange();
+    } else {
+      if (parent.getType() == Token.EXPR_RESULT) {
+        // split comma
+        n.detachChildren();
+        // Replace the original expression with the left operand.
+        parent.replaceChild(n, left);
+        // Add the right expression afterward.
+        Node newStatement = new Node(Token.EXPR_RESULT, right);
+        newStatement.copyInformationFrom(n);
+        parent.getParent().addChildAfter(newStatement, parent);
+        t.getCompiler().reportCodeChange();
+      }
+    }
   }
 
   private void error(NodeTraversal t, DiagnosticType diagnostic, Node n) {
@@ -1290,7 +1318,7 @@ class FoldConstants extends AbstractPostOrderCallback
             result = left.getType() == right.getType();
             break;
 
-          case Token.SHNE:            
+          case Token.SHNE:
           case Token.NE:
             result = left.getType() != right.getType();
             break;
@@ -1943,7 +1971,7 @@ class FoldConstants extends AbstractPostOrderCallback
       }
     }
   }
-  
+
   /**
    * Replaces a node with a number node if the new number node is not equivalent
    * to the current node.

@@ -1111,4 +1111,27 @@ public class FoldConstantsTest extends CompilerTestCase {
              "  if (a) { var b = 1; } else { a.b = 1; }" +
              "}");
   }
+
+  public void testFoldConstantCommaExpressions() {
+    fold("if (true, false) {foo()}", "");
+    fold("if (false, true) {foo()}", "foo()");
+    fold("true, foo()", "foo()");
+    fold("(1 + 2 + ''), foo()", "foo()");
+  }
+
+  public void testSplitCommaExpressions() {
+    // Don't try to split in expressions.
+    foldSame("if (foo(), true) boo()");
+    foldSame("var a = (foo(), true);");
+    foldSame("a = (foo(), true);");
+
+    fold("(x=2), foo()", "x=2; foo()");
+    fold("foo(), boo();", "foo(); boo()");    
+    fold("(a(), b()), (c(), d());", "a(); b(); c(); d();");    
+    // TODO(johnlenz): interestingly we don't remove side-effect free expression
+    // in a script block (as it is currently part of block folding), so "1;" 
+    // is left. 
+    fold("foo(), true", "foo();1");
+    fold("function x(){foo(), true}", "function x(){foo();}");
+  }
 }
