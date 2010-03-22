@@ -17,12 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import junit.framework.*;
 
-import java.util.*;
 import java.text.*;
+import java.util.*;
 
 /**
  * Tests for {@link VariableMap}.
@@ -32,7 +33,7 @@ import java.text.*;
 public class VariableMapTest extends TestCase {
 
   public void testToBytes() {
-    VariableMap vm = new VariableMap(Maps.immutableMap("AAA", "a", "BBB", "b"));
+    VariableMap vm = new VariableMap(ImmutableMap.of("AAA", "a", "BBB", "b"));
     String serialized = new String(vm.toBytes(), Charsets.UTF_8);
     assertTrue(serialized.endsWith("\n"));
 

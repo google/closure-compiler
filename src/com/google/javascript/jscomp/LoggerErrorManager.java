@@ -67,8 +67,10 @@ public class LoggerErrorManager extends BasicErrorManager {
       logger.log(level, "{0} error(s), {1} warning(s), {2,number,#.#}% typed",
           new Object[] {getErrorCount(), getWarningCount(), getTypedPercent()});
     } else {
-      logger.log(level, "{0} error(s), {1} warning(s)",
-          new Object[] {getErrorCount(), getWarningCount()});
+      if (getErrorCount() + getWarningCount() > 0) {
+        logger.log(level, "{0} error(s), {1} warning(s)",
+            new Object[] {getErrorCount(), getWarningCount()});
+      }
     }
   }
 }
