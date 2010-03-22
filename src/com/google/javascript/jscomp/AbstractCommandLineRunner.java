@@ -166,6 +166,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       options.setCodingConvention(new DefaultCodingConvention());
     }
 
+    options.setSummaryDetailLevel(config.summaryDetailLevel);
+
     inputCharset = getInputCharset();
   }
 
@@ -499,9 +501,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (!options.jsOutputFile.isEmpty()) {
       out = new PrintStream(options.jsOutputFile, inputCharset.name());
     }
-
-    ((PrintStreamErrorManager) compiler.getErrorManager())
-        .setSummaryDetailLevel(config.summaryDetailLevel);
 
     List<String> jsFiles = config.js;
     List<String> moduleSpecs = config.module;

@@ -81,6 +81,7 @@ public class NodeTraversalTest extends TestCase {
       @Override protected void printSummary() {
       }
     });
+    compiler.initCompilerOptionsIfTesting();
 
     NodeTraversal t = new NodeTraversal(compiler, null);
     DiagnosticType dt = DiagnosticType.warning("FOO", "{0}, {1} - {2}");

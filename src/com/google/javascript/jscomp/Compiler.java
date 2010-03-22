@@ -60,7 +60,7 @@ import java.util.logging.Logger;
 *
  */
 public class Compiler extends AbstractCompiler {
-  CompilerOptions options_ = createDefaultOptions();
+  CompilerOptions options_ = null;
 
   private PassConfig passes = null;
 
@@ -154,13 +154,13 @@ public class Compiler extends AbstractCompiler {
   private static final Logger logger_ =
       Logger.getLogger("com.google.javascript.jscomp");
 
+  private final PrintStream outStream;
+
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
    */
   public Compiler() {
-    addChangeHandler(recentChange);
-    this.typeValidator = new TypeValidator(this);
-    setErrorManager(new LoggerErrorManager(createMessageFormatter(), logger_));
+    this((PrintStream) null);
   }
 
   /**
@@ -168,9 +168,9 @@ public class Compiler extends AbstractCompiler {
    * stream.
    */
   public Compiler(PrintStream stream) {
-    this();
-    setErrorManager(
-        new PrintStreamErrorManager(createMessageFormatter(), stream));
+    addChangeHandler(recentChange);
+    this.typeValidator = new TypeValidator(this);
+    outStream = stream;
   }
 
   /**
@@ -179,10 +179,6 @@ public class Compiler extends AbstractCompiler {
   public Compiler(ErrorManager errorManager) {
     this();
     setErrorManager(errorManager);
-  }
-
-  CompilerOptions createDefaultOptions() {
-    return new CompilerOptions();
   }
 
   /**
@@ -218,15 +214,35 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
+   * Initialize the compiler options. Only necessary if you're not doing
+   * a normal compile() job.
+   */
+  public void initOptions(CompilerOptions options) {
+    options_ = options;
+    if (errorManager == null) {
+      if (outStream == null) {
+        setErrorManager(
+            new LoggerErrorManager(createMessageFormatter(), logger_));
+      } else {
+        PrintStreamErrorManager printer =
+            new PrintStreamErrorManager(createMessageFormatter(), outStream);
+        printer.setSummaryDetailLevel(options_.summaryDetailLevel);
+        setErrorManager(printer);
+      }
+    }
+  }
+
+  /**
    * Initializes the instance state needed for a compile job.
    */
   public void init(JSSourceFile[] externs, JSSourceFile[] inputs,
       CompilerOptions options) {
+    initOptions(options);
+    
     externs_ = makeCompilerInput(externs, true);
     modules_ = null;
     moduleGraph_ = null;
     inputs_ = makeCompilerInput(inputs, false);
-    options_ = options;
     initBasedOnOptions();
 
     initInputsByNameMap();
@@ -242,6 +258,7 @@ public class Compiler extends AbstractCompiler {
    */
   public void init(JSSourceFile[] externs, JSModule[] modules,
       CompilerOptions options) {
+    initOptions(options);
 
     checkFirstModule(modules);
 
@@ -259,7 +276,6 @@ public class Compiler extends AbstractCompiler {
       return;
     }
     inputs_ = getAllInputsFromModules();
-    options_ = options;
     initBasedOnOptions();
 
     initInputsByNameMap();
@@ -1020,6 +1036,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   public Node parse(JSSourceFile file) {
+    initCompilerOptionsIfTesting();
     addToDebugLog("Parsing: " + file.getName());
     return new JsAst(file).getAstRoot(this);
   }
@@ -1032,12 +1049,22 @@ public class Compiler extends AbstractCompiler {
     return input.getAstRoot(this);
   }
 
+  void initCompilerOptionsIfTesting() {
+    if (options_ == null) {
+      // initialization for tests that don't initialize the compiler
+      // by the normal mechanisms.
+      initOptions(new CompilerOptions());
+    }
+  }
+
   @Override
   Node parseSyntheticCode(String fileName, String js) {
+    initCompilerOptionsIfTesting();
     return parse(JSSourceFile.fromCode(fileName, js));
   }
 
   Node parseTestCode(String js) {
+    initCompilerOptionsIfTesting();
     CompilerInput input = new CompilerInput(
         JSSourceFile.fromCode(" [testcode] ", js));
     if (inputsByName_ == null) {
@@ -1223,6 +1250,8 @@ public class Compiler extends AbstractCompiler {
    */
   @Override
   String toSource(Node n) {
+    initCompilerOptionsIfTesting();
+    
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setPrettyPrint(options_.prettyPrint);
     builder.setLineBreak(options_.lineBreak);
@@ -1594,6 +1623,9 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   public ErrorManager getErrorManager() {
+    if (options_ == null) {
+      initOptions(new CompilerOptions());
+    }
     return errorManager;
   }
 

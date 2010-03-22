@@ -84,7 +84,9 @@ public class JSModuleTest extends TestCase {
         "goog.provide('c');goog.require('d')"));
     mod.add(JSSourceFile.fromCode("d.js",
         "goog.provide('d')"));
-    mod.sortInputsByDeps(new Compiler(System.err));
+    Compiler compiler = new Compiler(System.err);
+    compiler.initCompilerOptionsIfTesting();
+    mod.sortInputsByDeps(compiler);
 
     assertEquals(4, mod.getInputs().size());
     assertEquals("d.js", mod.getInputs().get(0).getSourceFile().getName());

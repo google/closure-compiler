@@ -527,6 +527,8 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   private transient ComposeWarningsGuard warningsGuard;
 
+  int summaryDetailLevel = 1;
+
   //--------------------------------
   // Special Output Options
   //--------------------------------
@@ -871,6 +873,17 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public CodingConvention getCodingConvention() {
     return codingConvention;
+  }
+
+  /**
+   * Controls how detailed the compilation summary is. Values:
+   *  0 (never print summary), 1 (print summary only if there are
+   * errors or warnings), 2 (print summary if type checking is on,
+   * see --check_types), 3 (always print summary). The default level
+   * is 1
+   */
+  public void setSummaryDetailLevel(int summaryDetailLevel) {
+    this.summaryDetailLevel = summaryDetailLevel;
   }
 
   @Override

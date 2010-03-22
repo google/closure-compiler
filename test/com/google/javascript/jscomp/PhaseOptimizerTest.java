@@ -40,6 +40,7 @@ public class PhaseOptimizerTest extends TestCase {
   public void setUp() {
     passesRun.clear();
     compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
     tracker = new PerformanceTracker(new Node(Token.BLOCK), false);
     optimizer = new PhaseOptimizer(compiler, tracker);
   }
