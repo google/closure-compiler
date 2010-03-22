@@ -120,13 +120,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   protected abstract B createOptions();
 
-  protected DiagnosticGroups getDiagnoticGroups() {
+  protected DiagnosticGroups getDiagnosticGroups() {
     return new DiagnosticGroups();
   }
 
   protected void initOptionsFromFlags(CompilerOptions options) {
 
-    DiagnosticGroups diagnosticGroups = getDiagnoticGroups();
+    DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 
     diagnosticGroups.setWarningLevels(
         options, config.jscompError, CheckLevel.ERROR);

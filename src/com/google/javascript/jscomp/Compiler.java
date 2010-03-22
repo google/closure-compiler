@@ -1455,7 +1455,7 @@ public class Compiler extends AbstractCompiler {
   //------------------------------------------------------------------------
 
   @Override
-  void report(JSError error) {
+  public void report(JSError error) {
     CheckLevel level = error.level;
     WarningsGuard guard = options_.getWarningsGuard();
     if (guard != null) {

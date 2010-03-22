@@ -139,10 +139,56 @@ public class NormalizeTest extends CompilerTestCase {
   public void testMoveFunctions2() throws Exception {
     testSame("function f() { function foo() {} }");
     test("function f() { f(); a:function bar() {} }",
-         "function f() { f(); a:{function bar() {}}}");
-    testSame("function f() { f(); {function bar() {}}}");
-    testSame("function f() { f(); if (true) {function bar() {}}}");
+         "function f() { f(); a:{ var bar = function () {} }}");
+    test("function f() { f(); {function bar() {}}}",
+         "function f() { f(); {var bar = function () {}}}");
+    test("function f() { f(); if (true) {function bar() {}}}",
+         "function f() { f(); if (true) {var bar = function () {}}}");
   }
+
+  private String inFunction(String code) {
+    return "(function(){" + code + "})";
+  }
+
+  private void testSameInFunction(String code) {
+    testSame(inFunction(code));
+  }
+
+  private void testInFunction(String code, String expected) {
+    test(inFunction(code), inFunction(expected));
+  }
+
+  public void testNormalizeFunctionDeclarations() throws Exception {
+    testSame("function f() {}");
+    testSame("var f = function () {}");
+    test("var f = function f() {}",
+         "var f = function f$$1() {}");
+    testSame("var f = function g() {}");
+    test("a:function g() {}",
+         "a:{ var g = function () {} }");
+    test("{function g() {}}",
+         "{var g = function () {}}");
+    testSame("if (function g() {}) {}");
+    test("if (true) {function g() {}}",
+         "if (true) {var g = function () {}}");
+    test("if (true) {} else {function g() {}}",
+         "if (true) {} else {var g = function () {}}");
+    testSame("switch (function g() {}) {}");
+    test("switch (1) { case 1: function g() {}}",
+         "switch (1) { case 1: var g = function () {}}");
+
+
+    testSameInFunction("function f() {}");
+    testInFunction("f(); a:function g() {}",
+                   "f(); a:{ var g = function () {} }");
+    testInFunction("f(); {function g() {}}",
+                   "f(); {var g = function () {}}");
+    testInFunction("f(); if (true) {function g() {}}",
+                   "f(); if (true) {var g = function () {}}");
+    testInFunction("if (true) {} else {function g() {}}",
+                   "if (true) {} else {var g = function () {}}");
+  }
+
 
   public void testMakeLocalNamesUnique() {
     if (!Normalize.MAKE_LOCAL_NAMES_UNIQUE) {
@@ -204,7 +250,31 @@ public class NormalizeTest extends CompilerTestCase {
     test("var e = 1; function f(){ try {} catch (e) {} var e = 2 }",
          "var e = 1; function f(){ try {} catch (e$$2) {} var e$$1 = 2 }");
   }
-  
+
+  public void testRemoveDuplicateVarDeclarations3() {
+    test("var f = 1; function f(){}",
+         "f = 1; function f(){}");
+    test("var f; function f(){}",
+         "function f(){}");
+    test("if (a) { var f = 1; } else { function f(){} }",
+         "if (a) { var f = 1; } else { f = function (){} }");
+
+    test("function f(){} var f = 1;",
+         "function f(){} f = 1;");
+    test("function f(){} var f;",
+         "function f(){}");
+    test("if (a) { function f(){} } else { var f = 1; }",
+         "if (a) { var f = function (){} } else { f = 1; }");
+
+    // TODO(johnlenz): Do we need to handle this differently for "third_party"
+    // mode? Remove the previous function definitions?
+    test("function f(){} function f(){}",
+         "function f(){} function f(){}",
+         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+    test("if (a) { function f(){} } else { function f(){} }",
+         "if (a) { var f = function (){} } else { f = function (){} }");
+  }
+
   public void testRenamingConstants() {
     test("var ACONST = 4;var b = ACONST;",
          "var ACONST = 4; var b = ACONST;");

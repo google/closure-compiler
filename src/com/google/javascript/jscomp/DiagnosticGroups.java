@@ -40,7 +40,7 @@ public class DiagnosticGroups {
   }
 
   /** Find the diagnostic group registered under the given name. */
-  DiagnosticGroup forName(String name) {
+  protected DiagnosticGroup forName(String name) {
     return groupsByName.get(name);
   }
 

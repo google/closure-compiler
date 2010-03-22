@@ -74,7 +74,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Report an error or warning.
    */
-  abstract void report(JSError error);
+  public abstract void report(JSError error);
 
   /**
    * Report an internal error.

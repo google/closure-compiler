@@ -46,11 +46,13 @@ import java.util.Map;
  * This pass currently does the following:
  * 1) Simplifies the AST by splitting var statements, moving initializiers
  *    out of for loops, and converting whiles to fors.
- * 2) Makes all variable names globally unique (extern or otherwise) so that
+ * 2) Moves hoisted functions to the top of function scopes.
+ * 3) Rewrites unhoisted named function declarations to be var declarations.
+ * 4) Makes all variable names globally unique (extern or otherwise) so that
  *    no value is ever shadowed (note: "arguments" may require special
  *    handling).
- * 3) Removes duplicate variable declarations.
- * 4) Marks constants with the IS_CONSTANT_NAME annotation.
+ * 5) Removes duplicate variable declarations.
+ * 6) Marks constants with the IS_CONSTANT_NAME annotation.
  *
  * @author johnlenz@google.com (johnlenz)
  */
@@ -88,7 +90,7 @@ class Normalize implements CompilerPass {
     // MakeDeclaredNamesUnique in order for catch block exception names to be
     // handled properly. Specifically, catch block exception names are
     // only valid within the catch block, but our currect Scope logic
-    // has no concept of this and includes it in the containing function 
+    // has no concept of this and includes it in the containing function
     // (or global scope). MakeDeclaredNamesUnique makes the catch exception
     // names unique so that removeDuplicateDeclarations() will properly handle
     // cases where a function scope variable conflict with a exception name:
@@ -97,7 +99,7 @@ class Normalize implements CompilerPass {
     //      var e = 1; // f scope 'e'
     //   }
     // otherwise 'var e = 1' would be rewritten as 'e = 1'.
-    // TODO(johnlenz): Introduce a seperate scope for catch nodes. 
+    // TODO(johnlenz): Introduce a seperate scope for catch nodes.
     removeDuplicateDeclarations(root);
     new PropogateConstantAnnotations(compiler, assertOnChange)
         .process(externs, root);
@@ -275,7 +277,61 @@ class Normalize implements CompilerPass {
             reportCodeChange("WHILE node");
           }
           break;
+
+        case Token.FUNCTION:
+          normalizeFunctionDeclaration(n);
+          break;
       }
+    }
+
+    /**
+     * Rewrite named unhoisted functions declarations to a known
+     * consistent behavior so we don't to different logic paths for the same
+     * code. From:
+     *    function f() {}
+     * to:
+     *    var f = function () {};
+     */
+    private void normalizeFunctionDeclaration(Node n) {
+      Preconditions.checkState(n.getType() == Token.FUNCTION);
+      if (!NodeUtil.isFunctionAnonymous(n)
+          && !NodeUtil.isHoistedFunctionDeclaration(n)) {
+        rewriteFunctionDeclaration(n);
+      }
+    }
+
+    /**
+     * Rewrite the function declaration from:
+     *   function x() {}
+     *   FUNCTION
+     *     NAME
+     *     LP
+     *     BLOCK
+     * to:
+     *   var x = function() {};
+     *   VAR
+     *     NAME
+     *       FUNCTION
+     *         NAME (w/ empty string)
+     *         LP
+     *         BLOCK
+     */
+    private void rewriteFunctionDeclaration(Node n) {
+      // Prepare a spot for the function.
+      Node oldNameNode = n.getFirstChild();
+      Node fnNameNode = oldNameNode.cloneNode();
+      Node var = new Node(Token.VAR, fnNameNode, n.getLineno(), n.getCharno());
+      var.copyInformationFrom(n);
+
+      // Prepare the function
+      oldNameNode.setString("");
+
+      // Move the function
+      Node parent = n.getParent();
+      parent.replaceChild(n, var);
+      fnNameNode.addChildToFront(n);
+
+      reportCodeChange("Function declaration");
     }
 
     /**
@@ -483,53 +539,66 @@ class Normalize implements CompilerPass {
         Scope s, String name, Node n, Node parent, Node gramps,
         Node nodeWithLineNumber) {
       Preconditions.checkState(n.getType() == Token.NAME);
-      if (parent.getType() == Token.VAR) {
+      Var v = s.getVar(name);
+      // If name is "arguments", Var maybe null.
+      Preconditions.checkState(
+          v == null || v.getParentNode().getType() != Token.CATCH);
+      if (v != null && parent.getType() == Token.FUNCTION) {
+        if (v.getParentNode().getType() == Token.VAR) {
+          s.undeclare(v);
+          s.declare(name, n, n.getJSType(), v.input);
+          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
+              v.getParentNode().getParent());
+        }
+      } else if (parent.getType() == Token.VAR) {
         Preconditions.checkState(parent.hasOneChild());
 
-        //
-        // Remove the parent VAR. There are three cases that need to be handled:
-        //  1) "var a = b;" which is replaced with "a = b"
-        //  2) "label:var a;" which is replaced with "label:;".  Ideally, the
-        //     label itself would be removed but that is not possible in the
-        //     context in which "onRedeclaration" is called.
-        //  3) "for (var a in b) ..." which is replaced with "for (a in b)..."
-        // Cases we don't need to handle are VARs with multiple children,
-        // which have already been split into separate declarations, so there
-        // is no need to handle that here, and "for (var a;;);", which has
-        // been moved out of the loop.
-        //
-        // The result of this is that in each case the parent node is replaced
-        // which is generally dangerous in a traversal but is fine here with
-        // the scope creator, as the next node of interest is the parent's
-        // next sibling.
-        //
-        if (n.hasChildren()) {
-          // The var is being initialize, preserve the new value.
-          parent.removeChild(n);
-          // Convert "var name = value" to "name = value"
-          Node value = n.getFirstChild();
-          n.removeChild(value);
-          Node replacement = new Node(Token.ASSIGN, n, value);
-          gramps.replaceChild(parent, new Node(Token.EXPR_RESULT, replacement));
-        } else {
-          // It is an empty reference remove it.
-          if (NodeUtil.isStatementBlock(gramps)) {
-            gramps.removeChild(parent);
-          } else if (gramps.getType() == Token.FOR) {
-            // This is the "for (var a in b)..." case.  We don't need to worry
-            // about initializers in "for (var a;;)..." as those are moved out
-            // as part of the other normalizations.
-            parent.removeChild(n);
-            gramps.replaceChild(parent, n);
-          } else {
-            Preconditions.checkState(gramps.getType() == Token.LABEL);
-            gramps.replaceChild(parent, new Node(Token.EMPTY));
-          }
-        }
-        reportCodeChange("Duplicate VAR declaration");
+        replaceVarWithAssignment(n, parent, gramps);
       }
     }
 
+    /**
+     * Remove the parent VAR. There are three cases that need to be handled:
+     *   1) "var a = b;" which is replaced with "a = b"
+     *   2) "label:var a;" which is replaced with "label:;". Ideally, the
+     *      label itself would be removed but that is not possible in the
+     *      context in which "onRedeclaration" is called.
+     *   3) "for (var a in b) ..." which is replaced with "for (a in b)..."
+     *      Cases we don't need to handle are VARs with multiple children,
+     *      which have already been split into separate declarations, so there
+     *      is no need to handle that here, and "for (var a;;);", which has
+     *      been moved out of the loop.
+     *      The result of this is that in each case the parent node is replaced
+     *      which is generally dangerous in a traversal but is fine here with
+     *      the scope creator, as the next node of interest is the parent's
+     *      next sibling.
+     */
+    private void replaceVarWithAssignment(Node n, Node parent, Node gramps) {
+      if (n.hasChildren()) {
+        // The  *  is being initialize, preserve the new value.
+        parent.removeChild(n);
+        // Convert "var name = value" to "name = value"
+        Node value = n.getFirstChild();
+        n.removeChild(value);
+        Node replacement = new Node(Token.ASSIGN, n, value);
+        gramps.replaceChild(parent, new Node(Token.EXPR_RESULT, replacement));
+      } else {
+        // It is an empty reference remove it.
+        if (NodeUtil.isStatementBlock(gramps)) {
+          gramps.removeChild(parent);
+        } else if (gramps.getType() == Token.FOR) {
+          // This is the "for (var a in b)..." case.  We don't need to worry
+          // about initializers in "for (var a;;)..." as those are moved out
+          // as part of the other normalizations.
+          parent.removeChild(n);
+          gramps.replaceChild(parent, n);
+        } else {
+          Preconditions.checkState(gramps.getType() == Token.LABEL);
+          gramps.replaceChild(parent, new Node(Token.EMPTY));
+        }
+      }
+      reportCodeChange("Duplicate VAR declaration");
+    }
   }
 
   /**
