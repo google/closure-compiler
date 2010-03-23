@@ -272,8 +272,10 @@ class Normalize implements CompilerPass {
           if (CONVERT_WHILE_TO_FOR) {
             Node expr = n.getFirstChild();
             n.setType(Token.FOR);
-            n.addChildBefore(new Node(Token.EMPTY), expr);
-            n.addChildAfter(new Node(Token.EMPTY), expr);
+            Node empty = new Node(Token.EMPTY);
+            empty.copyInformationFrom(n);
+            n.addChildBefore(empty, expr);
+            n.addChildAfter(empty.cloneNode(), expr);
             reportCodeChange("WHILE node");
           }
           break;
@@ -380,6 +382,7 @@ class Normalize implements CompilerPass {
           return;
         default:
           Node block = new Node(Token.BLOCK);
+          block.copyInformationFrom(last);
           n.replaceChild(last, block);
           block.addChildToFront(last);
           reportCodeChange("LABEL normalization");
@@ -413,7 +416,9 @@ class Normalize implements CompilerPass {
             if (!NodeUtil.isForIn(c)
                 && c.getFirstChild().getType() != Token.EMPTY) {
               Node init = c.getFirstChild();
-              c.replaceChild(init, new Node(Token.EMPTY));
+              Node empty = new Node(Token.EMPTY);
+              empty.copyInformationFrom(c);
+              c.replaceChild(init, empty);
 
               Node newStatement;
               // Only VAR statements, and expressions are allowed,
@@ -581,7 +586,8 @@ class Normalize implements CompilerPass {
         Node value = n.getFirstChild();
         n.removeChild(value);
         Node replacement = new Node(Token.ASSIGN, n, value);
-        gramps.replaceChild(parent, new Node(Token.EXPR_RESULT, replacement));
+        replacement.copyInformationFrom(parent);
+        gramps.replaceChild(parent, NodeUtil.newExpr(replacement));
       } else {
         // It is an empty reference remove it.
         if (NodeUtil.isStatementBlock(gramps)) {
@@ -594,7 +600,9 @@ class Normalize implements CompilerPass {
           gramps.replaceChild(parent, n);
         } else {
           Preconditions.checkState(gramps.getType() == Token.LABEL);
-          gramps.replaceChild(parent, new Node(Token.EMPTY));
+          // We should never get here. LABELs with a single VAR statement should
+          // already have been normalized to have a BLOCK.
+          throw new IllegalStateException("Unexpected LABEL");
         }
       }
       reportCodeChange("Duplicate VAR declaration");

@@ -609,6 +609,12 @@ public class IRFactory {
           prev.addChildToBack(cur);
         }
         cur.addChildToBack(transform(label));
+
+        cur.setLineno(label.getLineno());
+        int clauseAbsolutePosition =
+            position2charno(label.getAbsolutePosition());
+        cur.setCharno(clauseAbsolutePosition);
+
         prev = cur;
         cur = new Node(Token.LABEL);
       }

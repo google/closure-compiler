@@ -26,6 +26,10 @@ import com.google.javascript.rhino.Token;
  */
 public class NodeTypeNormalizerTest extends CompilerTestCase {
 
+  public NodeTypeNormalizerTest() {
+    super.enableLineNumberCheck(true);
+  }
+
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return null; // unused

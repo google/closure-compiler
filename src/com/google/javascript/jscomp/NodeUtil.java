@@ -323,7 +323,9 @@ public final class NodeUtil {
    * @return Newly created EXPR node with the child as subexpression.
    */
   public static Node newExpr(Node child) {
-    return new Node(Token.EXPR_RESULT, child);
+    Node expr = new Node(Token.EXPR_RESULT, child);
+    expr.copyInformationFrom(child);
+    return expr;
   }
 
   /**
