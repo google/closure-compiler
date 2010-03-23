@@ -652,5 +652,35 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
            // m2
            "var a = (new f).cloneFun();"
          });
-  }  
+  }
+  
+  public void testEmptyModule() {
+    // When the dest module is empty, it might try to move the code to the
+    // one of the modules that the empty module depends on. In some cases
+    // this might ended up to be the same module as the definition of the code.
+    // When that happens, CrossMooduleCodeMotion might report a code change
+    // while nothing is moved. This should not be a problem if we know all
+    // modules are non-empty.
+    JSModule m1 = new JSModule("m1");
+    m1.add(JSSourceFile.fromCode("m1", "function x() {}"));
+    
+    JSModule empty = new JSModule("empty");
+    empty.addDependency(m1);
+    
+    JSModule m2 = new JSModule("m2");
+    m2.add(JSSourceFile.fromCode("m2", "x()"));
+    m2.addDependency(empty);
+    
+    JSModule m3 = new JSModule("m3");
+    m3.add(JSSourceFile.fromCode("m3", "x()"));
+    m3.addDependency(empty);
+    
+    test(new JSModule[] {m1,empty,m2,m3},
+        new String[] {
+          "",
+          "function x() {}",
+          "x()",
+          "x()"
+    });
+  }
 }

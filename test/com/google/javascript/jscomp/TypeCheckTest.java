@@ -2728,7 +2728,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testSuperclassMatch() throws Exception {
-    compiler.options_.setCodingConvention(new GoogleCodingConvention());
+    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
     testTypes("/** @constructor */ var Foo = function() {};\n" +
         "/** @constructor \n @extends Foo */ var Bar = function() {};\n" +
         "Bar.inherits = function(x){};" +
@@ -2736,7 +2736,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testSuperclassMatchWithMixin() throws Exception {
-    compiler.options_.setCodingConvention(new GoogleCodingConvention());
+    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
     testTypes("/** @constructor */ var Foo = function() {};\n" +
         "/** @constructor */ var Baz = function() {};\n" +
         "/** @constructor \n @extends Foo */ var Bar = function() {};\n" +
@@ -2747,7 +2747,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testSuperclassMismatch1() throws Exception {
-    compiler.options_.setCodingConvention(new GoogleCodingConvention());
+    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
     testTypes("/** @constructor */ var Foo = function() {};\n" +
         "/** @constructor \n @extends Object */ var Bar = function() {};\n" +
         "Bar.inherits = function(x){};" +
@@ -2756,7 +2756,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testSuperclassMismatch2() throws Exception {
-    compiler.options_.setCodingConvention(new GoogleCodingConvention());
+    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
     testTypes("/** @constructor */ var Foo = function(){};\n" +
         "/** @constructor */ var Bar = function(){};\n" +
         "Bar.inherits = function(x){};" +

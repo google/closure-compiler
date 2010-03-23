@@ -52,7 +52,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
   protected void setUp() throws Exception {
     compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
-    compiler.options_.setWarningLevel(
+    compiler.getOptions().setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     registry = compiler.getTypeRegistry();
     initTypes();

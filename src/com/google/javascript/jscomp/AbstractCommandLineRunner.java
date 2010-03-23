@@ -326,7 +326,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       } catch (NumberFormatException ignored) {
         numJsFiles = -1;
       }
-      if (numJsFiles < 1) {
+      
+      // We will allow modules of zero input.
+      if (numJsFiles < 0) {
         throw new FlagUsageException("Invalid js file count '" + parts[1]
             + "' for module: " + name);
       }
