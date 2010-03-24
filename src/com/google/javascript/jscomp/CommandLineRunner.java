@@ -430,10 +430,8 @@ public class CommandLineRunner extends
     for (FormattingOption formattingOption : flags.formatting) {
       formattingOption.applyToOptions(options);
     }
-    if (flags.process_closure_primitives) {
-      options.closurePass = true;
-    }
 
+    options.closurePass = flags.process_closure_primitives;
     initOptionsFromFlags(options);
     return options;
   }

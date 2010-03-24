@@ -28,7 +28,7 @@ import java.util.Map;
  * Compiler for a specific team/company.
  *
  * // TODO(bolinfest): Tighten up this interface -- it is far too big.
- *
+ * 
 *
 *
  */
@@ -241,16 +241,12 @@ public interface CodingConvention {
 
   static class SubclassRelationship {
     final SubclassType type;
-    final Node subclassNode;
-    final Node superclassNode;
     final String subclassName;
     final String superclassName;
 
     SubclassRelationship(SubclassType type,
         Node subclassNode, Node superclassNode) {
       this.type = type;
-      this.subclassNode = subclassNode;
-      this.superclassNode = superclassNode;
       this.subclassName = subclassNode.getQualifiedName();
       this.superclassName = superclassNode.getQualifiedName();
     }

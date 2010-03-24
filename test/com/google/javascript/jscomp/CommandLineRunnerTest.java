@@ -151,6 +151,13 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("/** @type { not a type name } */ var x;");
   }
 
+  public void testProcessClosurePrimitives() {
+    test("var goog = {}; goog.provide('goog.dom');",
+         "var goog = {}; goog.dom = {};");
+    args.add("--process_closure_primitives=false");
+    testSame("var goog = {}; goog.provide('goog.dom');");
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   // Integration tests
 
