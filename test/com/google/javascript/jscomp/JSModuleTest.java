@@ -75,24 +75,53 @@ public class JSModuleTest extends TestCase {
   }
 
   public void testSortInputs() {
+    CompilerInput a = new CompilerInput(
+        JSSourceFile.fromCode("a.js",
+            "goog.require('b');goog.require('c')"));
+    CompilerInput b = new CompilerInput(
+        JSSourceFile.fromCode("b.js",
+            "goog.provide('b');goog.require('d')"));
+    CompilerInput c = new CompilerInput(
+        JSSourceFile.fromCode("c.js",
+            "goog.provide('c');goog.require('d')"));
+    CompilerInput d = new CompilerInput(
+        JSSourceFile.fromCode("d.js",
+            "goog.provide('d')"));
+
+    // Independent modules.
+    CompilerInput e = new CompilerInput(
+        JSSourceFile.fromCode("e.js",
+            "goog.provide('e')"));
+    CompilerInput f = new CompilerInput(
+        JSSourceFile.fromCode("f.js",
+            "goog.provide('f')"));
+
+    assertSortedInputs(
+        ImmutableList.of(d, b, c, a),
+        ImmutableList.of(a, b, c, d));
+    assertSortedInputs(
+        ImmutableList.of(d, b, c, a),
+        ImmutableList.of(d, b, c, a));
+    assertSortedInputs(
+        ImmutableList.of(d, c, b, a),
+        ImmutableList.of(d, c, b, a));
+    assertSortedInputs(
+        ImmutableList.of(d, b, c, a),
+        ImmutableList.of(d, a, b, c));
+  }
+
+  private void assertSortedInputs(
+      List<CompilerInput> expected, List<CompilerInput> shuffled) {
     JSModule mod = new JSModule("mod");
-    mod.add(JSSourceFile.fromCode("a.js",
-        "goog.require('b');goog.require('c')"));
-    mod.add(JSSourceFile.fromCode("b.js",
-        "goog.provide('b');goog.require('d')"));
-    mod.add(JSSourceFile.fromCode("c.js",
-        "goog.provide('c');goog.require('d')"));
-    mod.add(JSSourceFile.fromCode("d.js",
-        "goog.provide('d')"));
+    for (CompilerInput input : shuffled) {
+      input.setModule(null);
+      mod.add(input);
+    }
     Compiler compiler = new Compiler(System.err);
     compiler.initCompilerOptionsIfTesting();
     mod.sortInputsByDeps(compiler);
 
-    assertEquals(4, mod.getInputs().size());
-    assertEquals("d.js", mod.getInputs().get(0).getSourceFile().getName());
-    assertEquals("b.js", mod.getInputs().get(1).getSourceFile().getName());
-    assertEquals("c.js", mod.getInputs().get(2).getSourceFile().getName());
-    assertEquals("a.js", mod.getInputs().get(3).getSourceFile().getName());
+    assertEquals(expected, mod.getInputs());
   }
 
   public void testSortJsModules() {
@@ -105,7 +134,7 @@ public class JSModuleTest extends TestCase {
             ImmutableList.of(mod1, mod3, mod2, mod4))));
 
     // one out of order:
-    assertEquals(ImmutableList.of(mod1, mod2, mod3, mod4),
+    assertEquals(ImmutableList.of(mod1, mod3, mod2, mod4),
         Arrays.asList(JSModule.sortJsModules(
             ImmutableList.of(mod4, mod3, mod2, mod1))));
     assertEquals(ImmutableList.of(mod1, mod3, mod2, mod4),
@@ -113,7 +142,7 @@ public class JSModuleTest extends TestCase {
             ImmutableList.of(mod3, mod1, mod2, mod4))));
 
     // more out of order:
-    assertEquals(ImmutableList.of(mod1, mod2, mod3, mod4),
+    assertEquals(ImmutableList.of(mod1, mod3, mod2, mod4),
         Arrays.asList(JSModule.sortJsModules(
             ImmutableList.of(mod4, mod3, mod1, mod2))));
   }

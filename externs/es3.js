@@ -1930,6 +1930,15 @@ RegExp.prototype.source;
  */
 function Error(opt_message, opt_file, opt_line) {}
 
+
+/**
+ * A magical v8 property for altering the maximum depth of the stack trace.
+ * @type {number}
+ * @see http://code.google.com/p/chromium/issues/detail?id=38958
+ */
+Error.stackTraceLimit;
+
+
 /**
  * Mozilla-only.
  * @type {number}

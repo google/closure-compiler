@@ -17,17 +17,25 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
-
 
 /**
  * A JavaScript module has a unique name, consists of a list of compiler inputs,
@@ -193,29 +201,31 @@ public class JSModule {
    * Puts the JS files into a topologically sorted order by their dependencies.
    */
   public void sortInputsByDeps(Compiler compiler) {
-    // Collect all symbols provided in these files.
     final Map<String, CompilerInput> provides = Maps.newHashMap();
+    // Collect all symbols provided in these files.
     for (CompilerInput input : inputs) {
       for (String provide : input.getProvides(compiler)) {
         provides.put(provide, input);
       }
     }
 
-    // Put the files into topologically sorted order by their requires.
-    // NOTE: This will leave the list unchanged if the files are already
-    //       topologically sorted.  This is important to apps whose dependencies
-    //       are incomplete.
-    List<CompilerInput> list = Lists.newArrayList();
-    Set<CompilerInput> set = Sets.newHashSet();
+    // Get the direct dependencies.
+    final Multimap<CompilerInput, CompilerInput> deps =
+        HashMultimap.create();
     for (CompilerInput input : inputs) {
-      addInputAndDeps(input, provides, compiler, list, set,
-                      Sets.<CompilerInput>newHashSet());
+      for (String req : input.getRequires(compiler)) {
+        CompilerInput dep = provides.get(req);
+        if (dep != null) {
+          deps.put(input, dep);
+        }
+      }
     }
 
-    // Update the JSModule to this order.
-    Preconditions.checkState(inputs.size() == list.size());
+    // Sort the JSModule in this order.
+    List<CompilerInput> sortedList = topologicalStableSort(
+        inputs, deps);
     inputs.clear();
-    inputs.addAll(list);
+    inputs.addAll(sortedList);
   }
 
   /**
@@ -227,61 +237,61 @@ public class JSModule {
    * the modules do not properly specify all dependencies.
    */
   public static JSModule[] sortJsModules(Collection<JSModule> modules) {
-    List<JSModule> list = Lists.newArrayList();
-    Set<JSModule> set = Sets.newHashSet();
+    final Multimap<JSModule, JSModule> deps = HashMultimap.create();
     for (JSModule module : modules) {
-      addModuleAndDeps(module, list, set, Sets.<JSModule>newHashSet());
+      for (JSModule dep : module.getDependencies()) {
+        deps.put(module, dep);
+      }
     }
-    return list.toArray(new JSModule[list.size()]);
+
+    // Sort the JSModule in this order.
+    List<JSModule> sortedList = topologicalStableSort(
+        Lists.newArrayList(modules), deps);
+    return sortedList.toArray(new JSModule[sortedList.size()]);
   }
 
-  /**
-   * Adds the given input and its deps to the given list and set, if they are
-   * not already added, placing dependencies before dependants.
-   */
-  private static void addInputAndDeps(
-      CompilerInput input, Map<String, CompilerInput> provides,
-      Compiler compiler, List<CompilerInput> list, Set<CompilerInput> set,
-      Set<CompilerInput> inProgress) {
-    if (!set.contains(input)) {
-      if (inProgress.contains(input)) {
-        throw new IllegalArgumentException(
-            "Circular dependency involving input: " + input.getName());
-      }
-      inProgress.add(input);
+  private static <T> List<T> topologicalStableSort(
+      List<T> items, Multimap<T, T> deps) {
+    final Map<T, Integer> originalIndex = Maps.newHashMap();
+    for (int i = 0; i < items.size(); i++) {
+      originalIndex.put(items.get(i), i);
+    }
 
-      for (String require : input.getRequires(compiler)) {
-        if (provides.containsKey(require)) {
-          addInputAndDeps(provides.get(require), provides, compiler, list, set,
-                          inProgress);
+    PriorityQueue<T> inDegreeZero = new PriorityQueue<T>(items.size(),
+        new Comparator<T>() {
+      @Override
+      public int compare(T a, T b) {
+        return originalIndex.get(a).intValue() -
+            originalIndex.get(b).intValue();
+      }
+    });
+    List<T> result = Lists.newArrayList();
+
+    Multiset<T> inDegree = HashMultiset.create();
+    Multimap<T, T> reverseDeps = ArrayListMultimap.create();
+    Multimaps.invertFrom(deps, reverseDeps);
+
+    // First, add all the inputs with in-degree 0.
+    for (T item : items) {
+      Collection<T> itemDeps = deps.get(item);
+      inDegree.add(item, itemDeps.size());
+      if (itemDeps.isEmpty()) {
+        inDegreeZero.add(item);
+      }
+    }
+
+    // Then, iterate to a fixed point over the reverse dependency graph.
+    while (!inDegreeZero.isEmpty()) {
+      T item = inDegreeZero.remove();
+      result.add(item);
+      for (T inWaiting : reverseDeps.get(item)) {
+        inDegree.remove(inWaiting, 1);
+        if (inDegree.count(inWaiting) == 0) {
+          inDegreeZero.add(inWaiting);
         }
       }
-
-      list.add(input);
-      set.add(input);
     }
-  }
 
-  /**
-   * Adds the given module and its deps to the given list and set, if they are
-   * not already added, placing dependencies before dependants.
-   */
-  private static void addModuleAndDeps(
-      JSModule module, List<JSModule> list, Set<JSModule> set,
-      Set<JSModule> inProgress) {
-    if (!set.contains(module)) {
-      if (inProgress.contains(module)) {
-        throw new IllegalArgumentException(
-            "Circular dependency involving module: " + module.getName());
-      }
-      inProgress.add(module);
-
-      for (JSModule dep : module.getDependencies()) {
-        addModuleAndDeps(dep, list, set, inProgress);
-      }
-
-      list.add(module);
-      set.add(module);
-    }
+    return result;
   }
 }
