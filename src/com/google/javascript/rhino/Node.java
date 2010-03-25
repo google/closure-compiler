@@ -1831,8 +1831,9 @@ public class Node implements Cloneable, Serializable
      * Copies source file and name information from the other
      * node given to the current node. Used for maintaining
      * debug information across node append and remove operations.
+     * @return this
      */
-    public void copyInformationFrom(Node other) {
+    public Node copyInformationFrom(Node other) {
         if (getProp(ORIGINALNAME_PROP) == null) {
             putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
         }
@@ -1841,18 +1842,23 @@ public class Node implements Cloneable, Serializable
             putProp(SOURCEFILE_PROP, other.getProp(SOURCEFILE_PROP));
             sourcePosition = other.sourcePosition;
         }
+
+        return this;
     }
 
     /**
      * Copies source file and name information from the other node to the
      * entire tree rooted at this node.
+     * @return this
      */
-    public void copyInformationFromForTree(Node other) {
+    public Node copyInformationFromForTree(Node other) {
       copyInformationFrom(other);
       for (Node child = getFirstChild();
            child != null; child = child.getNext()) {
         child.copyInformationFromForTree(other);
       }
+
+      return this;
     }
 
     //==========================================================================

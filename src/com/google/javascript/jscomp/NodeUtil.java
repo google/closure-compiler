@@ -598,6 +598,12 @@ public final class NodeUtil {
       case Token.GETPROP:
       case Token.GETELEM:
         return true;
+
+      case Token.FUNCTION:
+        // Anonymous functions definitions are not changed by side-effects,
+        // and named functions are not part of expressions.
+        Preconditions.checkState(NodeUtil.isAnonymousFunction(n));
+        return false;
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {

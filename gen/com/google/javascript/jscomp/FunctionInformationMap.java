@@ -60,50 +60,78 @@ public  final class FunctionInformationMap extends
     public static final int ID_FIELD_NUMBER = 2;
     private boolean hasId;
     private int id_ = 0;
-    public boolean hasId() { return hasId; }
-    public int getId() { return id_; }
+    public boolean hasId() {
+      return hasId;
+    }
+    public int getId() {
+      return id_;
+    }
     
     // required string source_name = 3;
     public static final int SOURCE_NAME_FIELD_NUMBER = 3;
     private boolean hasSourceName;
     private java.lang.String sourceName_ = "";
-    public boolean hasSourceName() { return hasSourceName; }
-    public java.lang.String getSourceName() { return sourceName_; }
+    public boolean hasSourceName() {
+      return hasSourceName;
+    }
+    public java.lang.String getSourceName() {
+      return sourceName_;
+    }
     
     // required int32 line_number = 4;
     public static final int LINE_NUMBER_FIELD_NUMBER = 4;
     private boolean hasLineNumber;
     private int lineNumber_ = 0;
-    public boolean hasLineNumber() { return hasLineNumber; }
-    public int getLineNumber() { return lineNumber_; }
+    public boolean hasLineNumber() {
+      return hasLineNumber;
+    }
+    public int getLineNumber() {
+      return lineNumber_;
+    }
     
     // required string module_name = 5;
     public static final int MODULE_NAME_FIELD_NUMBER = 5;
     private boolean hasModuleName;
     private java.lang.String moduleName_ = "";
-    public boolean hasModuleName() { return hasModuleName; }
-    public java.lang.String getModuleName() { return moduleName_; }
+    public boolean hasModuleName() {
+      return hasModuleName;
+    }
+    public java.lang.String getModuleName() {
+      return moduleName_;
+    }
     
     // required int32 size = 6;
     public static final int SIZE_FIELD_NUMBER = 6;
     private boolean hasSize;
     private int size_ = 0;
-    public boolean hasSize() { return hasSize; }
-    public int getSize() { return size_; }
+    public boolean hasSize() {
+      return hasSize;
+    }
+    public int getSize() {
+      return size_;
+    }
     
     // required string name = 7;
     public static final int NAME_FIELD_NUMBER = 7;
     private boolean hasName;
     private java.lang.String name_ = "";
-    public boolean hasName() { return hasName; }
-    public java.lang.String getName() { return name_; }
+    public boolean hasName() {
+      return hasName;
+    }
+    public java.lang.String getName() {
+      return name_;
+    }
     
     // required string compiled_source = 8;
     public static final int COMPILED_SOURCE_FIELD_NUMBER = 8;
     private boolean hasCompiledSource;
     private java.lang.String compiledSource_ = "";
-    public boolean hasCompiledSource() { return hasCompiledSource; }
-    public java.lang.String getCompiledSource() { return compiledSource_; }
+    public boolean hasCompiledSource() {
+      return hasCompiledSource;
+    }
+    public java.lang.String getCompiledSource() {
+      return compiledSource_;
+    }
     
     private void initFields() {
     }
@@ -602,15 +630,23 @@ public  final class FunctionInformationMap extends
     public static final int NAME_FIELD_NUMBER = 102;
     private boolean hasName;
     private java.lang.String name_ = "";
-    public boolean hasName() { return hasName; }
-    public java.lang.String getName() { return name_; }
+    public boolean hasName() {
+      return hasName;
+    }
+    public java.lang.String getName() {
+      return name_;
+    }
     
     // required string compiled_source = 103;
     public static final int COMPILED_SOURCE_FIELD_NUMBER = 103;
     private boolean hasCompiledSource;
     private java.lang.String compiledSource_ = "";
-    public boolean hasCompiledSource() { return hasCompiledSource; }
-    public java.lang.String getCompiledSource() { return compiledSource_; }
+    public boolean hasCompiledSource() {
+      return hasCompiledSource;
+    }
+    public java.lang.String getCompiledSource() {
+      return compiledSource_;
+    }
     
     private void initFields() {
     }
@@ -914,7 +950,9 @@ public  final class FunctionInformationMap extends
   public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> getEntryList() {
     return entry_;
   }
-  public int getEntryCount() { return entry_.size(); }
+  public int getEntryCount() {
+    return entry_.size();
+  }
   public com.google.javascript.jscomp.FunctionInformationMap.Entry getEntry(int index) {
     return entry_.get(index);
   }
@@ -926,7 +964,9 @@ public  final class FunctionInformationMap extends
   public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> getModuleList() {
     return module_;
   }
-  public int getModuleCount() { return module_.size(); }
+  public int getModuleCount() {
+    return module_.size();
+  }
   public com.google.javascript.jscomp.FunctionInformationMap.Module getModule(int index) {
     return module_.get(index);
   }
@@ -1204,14 +1244,16 @@ public  final class FunctionInformationMap extends
     public com.google.javascript.jscomp.FunctionInformationMap.Entry getEntry(int index) {
       return result.getEntry(index);
     }
-    public Builder setEntry(int index, com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
+    public Builder setEntry(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
       if (value == null) {
         throw new NullPointerException();
       }
       result.entry_.set(index, value);
       return this;
     }
-    public Builder setEntry(int index, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
+    public Builder setEntry(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
       result.entry_.set(index, builderForValue.build());
       return this;
     }
@@ -1225,7 +1267,8 @@ public  final class FunctionInformationMap extends
       result.entry_.add(value);
       return this;
     }
-    public Builder addEntry(com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
+    public Builder addEntry(
+        com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
       if (result.entry_.isEmpty()) {
         result.entry_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Entry>();
       }
@@ -1255,14 +1298,16 @@ public  final class FunctionInformationMap extends
     public com.google.javascript.jscomp.FunctionInformationMap.Module getModule(int index) {
       return result.getModule(index);
     }
-    public Builder setModule(int index, com.google.javascript.jscomp.FunctionInformationMap.Module value) {
+    public Builder setModule(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Module value) {
       if (value == null) {
         throw new NullPointerException();
       }
       result.module_.set(index, value);
       return this;
     }
-    public Builder setModule(int index, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
+    public Builder setModule(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
       result.module_.set(index, builderForValue.build());
       return this;
     }
@@ -1276,7 +1321,8 @@ public  final class FunctionInformationMap extends
       result.module_.add(value);
       return this;
     }
-    public Builder addModule(com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
+    public Builder addModule(
+        com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
       if (result.module_.isEmpty()) {
         result.module_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Module>();
       }

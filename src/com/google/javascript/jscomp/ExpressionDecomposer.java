@@ -65,6 +65,7 @@ class ExpressionDecomposer {
     this.knownConstants = constNames;
   }
 
+  // An arbitrary limit to prevent catch infinite recursion.
   private static final int MAX_INTERATIONS = 100;
 
   /**
@@ -79,7 +80,7 @@ class ExpressionDecomposer {
       exposeExpression(expression);
       if (i > MAX_INTERATIONS) {
         throw new IllegalStateException(
-            "DecomposeExpression depth exceeded on :\n" + 
+            "DecomposeExpression depth exceeded on :\n" +
             expression.toStringTree());
       }
     }
@@ -198,7 +199,7 @@ class ExpressionDecomposer {
             // Either there were preexisting side-effects, or this node has
             // side-effects.
             state.sideEffects = true;
-  
+
             // Rewrite the call so "this" is preserved.
             Node replacement = rewriteCallExpression(parent, state);
             // Continue from here.
@@ -720,23 +721,23 @@ class ExpressionDecomposer {
           }
 
           // In Internet Explorer, DOM objects and other external objects
-          // methods can not be called indirectly, as is required when the 
+          // methods can not be called indirectly, as is required when the
           // object or its property can be side-effected.  For example,
           // when exposing expression f() (with side-effects) in: x.m(f())
           // either the value of x or its property m might have changed, so
-          // both the 'this' value ('x') and the function to be called ('x.m') 
+          // both the 'this' value ('x') and the function to be called ('x.m')
           // need to be preserved. Like so:
           //   var t1 = x, t2 = x.m, t3 = f();
           //   t2.call(t1, t3);
-          // As IE doesn't support the call to these non-javascript objects 
+          // As IE doesn't support the call to these non-javascript objects
           // methods in this way. We can't do this.
           // We don't currently distinguish between these types of objects
           // in the extern definitions and if we did we would need accurate
           // type information.
           //
           Node first = parent.getFirstChild();
-          if (requiresDecomposition 
-              && parent.getType() == Token.CALL 
+          if (requiresDecomposition
+              && parent.getType() == Token.CALL
               && NodeUtil.isGet(first)) {
             if (maybeExternMethod(first)) {
               return DecompositionType.UNDECOMPOSABLE;
@@ -760,18 +761,18 @@ class ExpressionDecomposer {
    * As the assignment is unaffected by side effect of "foo()"
    * and the names assigned-to can not influence the state before
    * the call to foo.
-   * 
+   *
    * It is also safe in cases like where the object is constant:
    *    CONST_NAME.a = foo()
-   *    CONST_NAME[CONST_VALUE] = foo(); 
-   * 
+   *    CONST_NAME[CONST_VALUE] = foo();
+   *
    * This is not true of more complex LHS values, such as
    *     a.x = foo();
    *     next().x = foo();
    * in these cases the checks below are necessary.
-   * 
+   *
    * @param seenSideEffects If true, check to see if node-tree maybe affected by
-   * side-effects, otherwise if the tree has side-effects. @see 
+   * side-effects, otherwise if the tree has side-effects. @see
    * isExpressionTreeUnsafe
    * @return Whether the assignment is safe from side-effects.
    */
@@ -784,7 +785,7 @@ class ExpressionDecomposer {
         case Token.GETPROP:
           return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects);
         case Token.GETELEM:
-          return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects) 
+          return !isExpressionTreeUnsafe(lhs.getFirstChild(), seenSideEffects)
               && !isExpressionTreeUnsafe(lhs.getLastChild(), seenSideEffects);
       }
     }

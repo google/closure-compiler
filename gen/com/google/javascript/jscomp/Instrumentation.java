@@ -33,31 +33,46 @@ public  final class Instrumentation extends
   public static final int REPORT_DEFINED_FIELD_NUMBER = 1;
   private boolean hasReportDefined;
   private java.lang.String reportDefined_ = "";
-  public boolean hasReportDefined() { return hasReportDefined; }
-  public java.lang.String getReportDefined() { return reportDefined_; }
+  public boolean hasReportDefined() {
+    return hasReportDefined;
+  }
+  public java.lang.String getReportDefined() {
+    return reportDefined_;
+  }
   
   // optional string report_call = 2;
   public static final int REPORT_CALL_FIELD_NUMBER = 2;
   private boolean hasReportCall;
   private java.lang.String reportCall_ = "";
-  public boolean hasReportCall() { return hasReportCall; }
-  public java.lang.String getReportCall() { return reportCall_; }
+  public boolean hasReportCall() {
+    return hasReportCall;
+  }
+  public java.lang.String getReportCall() {
+    return reportCall_;
+  }
   
   // optional string report_exit = 6;
   public static final int REPORT_EXIT_FIELD_NUMBER = 6;
   private boolean hasReportExit;
   private java.lang.String reportExit_ = "";
-  public boolean hasReportExit() { return hasReportExit; }
-  public java.lang.String getReportExit() { return reportExit_; }
+  public boolean hasReportExit() {
+    return hasReportExit;
+  }
+  public java.lang.String getReportExit() {
+    return reportExit_;
+  }
   
   // repeated string declaration_to_remove = 3;
   public static final int DECLARATION_TO_REMOVE_FIELD_NUMBER = 3;
   private java.util.List<java.lang.String> declarationToRemove_ =
     java.util.Collections.emptyList();
-  public java.util.List<java.lang.String> getDeclarationToRemoveList() {
+  public java.util.List<java.lang.String>
+      getDeclarationToRemoveList() {
     return declarationToRemove_;
   }
-  public int getDeclarationToRemoveCount() { return declarationToRemove_.size(); }
+  public int getDeclarationToRemoveCount() {
+    return declarationToRemove_.size();
+  }
   public java.lang.String getDeclarationToRemove(int index) {
     return declarationToRemove_.get(index);
   }
@@ -66,10 +81,13 @@ public  final class Instrumentation extends
   public static final int INIT_FIELD_NUMBER = 4;
   private java.util.List<java.lang.String> init_ =
     java.util.Collections.emptyList();
-  public java.util.List<java.lang.String> getInitList() {
+  public java.util.List<java.lang.String>
+      getInitList() {
     return init_;
   }
-  public int getInitCount() { return init_.size(); }
+  public int getInitCount() {
+    return init_.size();
+  }
   public java.lang.String getInit(int index) {
     return init_.get(index);
   }
@@ -78,8 +96,12 @@ public  final class Instrumentation extends
   public static final int APP_NAME_SETTER_FIELD_NUMBER = 5;
   private boolean hasAppNameSetter;
   private java.lang.String appNameSetter_ = "";
-  public boolean hasAppNameSetter() { return hasAppNameSetter; }
-  public java.lang.String getAppNameSetter() { return appNameSetter_; }
+  public boolean hasAppNameSetter() {
+    return hasAppNameSetter;
+  }
+  public java.lang.String getAppNameSetter() {
+    return appNameSetter_;
+  }
   
   private void initFields() {
   }
@@ -464,7 +486,8 @@ public  final class Instrumentation extends
     }
     
     // repeated string declaration_to_remove = 3;
-    public java.util.List<java.lang.String> getDeclarationToRemoveList() {
+    public java.util.List<java.lang.String>
+        getDeclarationToRemoveList() {
       return java.util.Collections.unmodifiableList(result.declarationToRemove_);
     }
     public int getDeclarationToRemoveCount() {
@@ -473,7 +496,8 @@ public  final class Instrumentation extends
     public java.lang.String getDeclarationToRemove(int index) {
       return result.getDeclarationToRemove(index);
     }
-    public Builder setDeclarationToRemove(int index, java.lang.String value) {
+    public Builder setDeclarationToRemove(
+        int index, java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
@@ -504,7 +528,8 @@ public  final class Instrumentation extends
     }
     
     // repeated string init = 4;
-    public java.util.List<java.lang.String> getInitList() {
+    public java.util.List<java.lang.String>
+        getInitList() {
       return java.util.Collections.unmodifiableList(result.init_);
     }
     public int getInitCount() {
@@ -513,7 +538,8 @@ public  final class Instrumentation extends
     public java.lang.String getInit(int index) {
       return result.getInit(index);
     }
-    public Builder setInit(int index, java.lang.String value) {
+    public Builder setInit(
+        int index, java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }

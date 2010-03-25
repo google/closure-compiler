@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
+
 /**
  * Inline function tests.
  * @author johnlenz@google.com (john lenz)
@@ -1329,6 +1331,29 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "{var JSCompiler_inline_result_1; a=1; JSCompiler_inline_result_1=1}" +
         "JSCompiler_temp_const_0 += JSCompiler_inline_result_1;" +
         "x = JSCompiler_temp_const_0");
+  }
+
+  public void testDecomposeAnonymousInCall() {
+    test(
+        "(function(map){descriptions_=map})(\n" +
+           "function(){\n" +
+              "var ret={};\n" +
+              "ret[ONE]='a';\n" +
+              "ret[TWO]='b';\n" +
+              "return ret\n" +
+           "}()\n" +
+        ");",
+        "{" +
+        "var JSCompiler_inline_result_0;" +
+        "var ret$$inline_2={};\n" +
+        "ret$$inline_2[ONE]='a';\n" +
+        "ret$$inline_2[TWO]='b';\n" +
+        "JSCompiler_inline_result_0 = ret$$inline_2;\n" +
+        "}" +
+        "{" +
+        "descriptions_=JSCompiler_inline_result_0;" +
+        "}"
+        );
   }
 
   public void testInlineConstructor1() {

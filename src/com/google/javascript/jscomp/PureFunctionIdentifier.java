@@ -174,28 +174,46 @@ class PureFunctionIdentifier implements CompilerPass {
    */
   private static Collection<Definition> getCallableDefinitions(
       DefinitionProvider definitionProvider, Node name) {
-    List<Definition> result = Lists.newArrayList();
+    if (NodeUtil.isGetProp(name) || NodeUtil.isName(name)) {
+      List<Definition> result = Lists.newArrayList();
 
-    if (!NodeUtil.isGetProp(name) && !NodeUtil.isName(name)) {
-      return null;
-    }
+      Collection<Definition> decls =
+          definitionProvider.getDefinitionsReferencedAt(name);
+      if (decls == null) {
+        return null;
+      }
 
-    Collection<Definition> decls =
-        definitionProvider.getDefinitionsReferencedAt(name);
-    if (decls == null) {
-      return null;
-    }
+      for (Definition current : decls) {
+        Node rValue = current.getRValue();
+        if ((rValue != null) && NodeUtil.isFunction(rValue)) {
+          result.add(current);
+        } else {
+          return null;
+        }
+      }
 
-    for (Definition current : decls) {
-      Node rValue = current.getRValue();
-      if ((rValue != null) && NodeUtil.isFunction(rValue)) {
-        result.add(current);
+      return result;
+    } else if (name.getType() == Token.OR || name.getType() == Token.HOOK) {
+      Node firstVal;
+      if (name.getType() == Token.HOOK) {
+        firstVal = name.getFirstChild().getNext();
+      } else {
+        firstVal = name.getFirstChild();
+      }
+
+      Collection<Definition> defs1 = getCallableDefinitions(definitionProvider,
+                                                            firstVal);
+      Collection<Definition> defs2 = getCallableDefinitions(definitionProvider,
+                                                            firstVal.getNext());
+      if (defs1 != null && defs2 != null) {
+        defs1.addAll(defs2);
+        return defs1;
       } else {
         return null;
       }
+    } else {
+      return null;
     }
-
-    return result;
   }
 
   /**

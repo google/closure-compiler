@@ -600,6 +600,60 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f"));
   }
 
+  public void testCallFunctionFOrG() throws Exception {
+    String source = "function f(){}\n" +
+        "function g(){}\n" +
+        "function h(){ (f || g)() }\n" +
+        "h()";
+
+    checkMarkedCalls(source, ImmutableList.<String>of("(f || g)", "h"));
+  }
+
+  public void testCallFunctionFOrGViaHook() throws Exception {
+    String source = "function f(){}\n" +
+        "function g(){}\n" +
+        "function h(){ (false ? f : g)() }\n" +
+        "h()";
+
+    checkMarkedCalls(source, ImmutableList.<String>of("(f : g)", "h"));
+  }
+
+  public void testCallFunctionForGorH() throws Exception {
+    String source = "function f(){}\n" +
+        "function g(){}\n" +
+        "function h(){}\n" +
+        "function i(){ (false ? f : (g || h))() }\n" +
+        "i()";
+
+    checkMarkedCalls(source, ImmutableList.<String>of("(f : (g || h))", "i"));
+  }
+
+  public void testCallFunctionFOrGWithSideEffects() throws Exception {
+    String source = "var x = 0;\n" +
+        "function f(){x = 10}\n" +
+        "function g(){}\n" +
+        "function h(){ (f || g)() }\n" +
+        "function i(){ (g || f)() }\n" +
+        "function j(){ (f || f)() }\n" +
+        "function k(){ (g || g)() }\n" +
+        "h(); i(); j(); k()";
+
+    checkMarkedCalls(source, ImmutableList.<String>of("(g || g)", "k"));
+  }
+
+  public void testCallFunctionFOrGViaHookWithSideEffects() throws Exception {
+    String source = "var x = 0;\n" +
+        "function f(){x = 10}\n" +
+        "function g(){}\n" +
+        "function h(){ (false ? f : g)() }\n" +
+        "function i(){ (false ? g : f)() }\n" +
+        "function j(){ (false ? f : f)() }\n" +
+        "function k(){ (false ? g : g)() }\n" +
+        "h(); i(); j(); k()";
+
+    checkMarkedCalls(source, ImmutableList.<String>of("(g : g)", "k"));
+  }
+
   public void testInvalidAnnotation1() throws Exception {
     test("/** @nosideeffects */ function foo() {}",
          null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
@@ -668,12 +722,24 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.NEW) {
         if (!NodeUtil.constructorCallHasSideEffects(n)) {
-          noSideEffectCalls.add(n.getFirstChild().getQualifiedName());
+          noSideEffectCalls.add(generateNameString(n.getFirstChild()));
         }
       } else if (n.getType() == Token.CALL) {
         if (!NodeUtil.functionCallHasSideEffects(n)) {
-          noSideEffectCalls.add(n.getFirstChild().getQualifiedName());
+          noSideEffectCalls.add(generateNameString(n.getFirstChild()));
         }
+      }
+    }
+
+    private String generateNameString(Node node) {
+      if (node.getType() == Token.OR) {
+        return "(" + generateNameString(node.getFirstChild()) +
+            " || " + generateNameString(node.getLastChild()) + ")";
+      } else if (node.getType() == Token.HOOK) {
+        return "(" + generateNameString(node.getFirstChild().getNext()) +
+            " : " + generateNameString(node.getLastChild()) + ")";
+      } else {
+        return node.getQualifiedName();
       }
     }
   }

@@ -25,6 +25,8 @@ import junit.framework.TestCase;
 
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * Unit tests for ExpressionDecomposer
  * @author johnlenz@google.com (John Lenz)
@@ -41,7 +43,7 @@ public class ExpresssionDecomposerTest extends TestCase {
         DecompositionType.UNDECOMPOSABLE, "while(x = goo()&&foo()){}", "foo");
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "while(x += goo()&&foo()){}", "foo");
-    
+
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "do{}while(foo());", "foo");
     helperCanExposeExpression(
@@ -80,6 +82,8 @@ public class ExpresssionDecomposerTest extends TestCase {
         DecompositionType.MOVABLE, "x = foo() || 1", "foo");
     helperCanExposeExpression(
         DecompositionType.MOVABLE, "x = foo() ? 0 : 1", "foo");
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE, "(function(a){b = a})(foo())", "foo");
   }
 
   public void testCanExposeExpression3() {
@@ -114,21 +118,34 @@ public class ExpresssionDecomposerTest extends TestCase {
   public void testCanExposeExpression4() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
-        DecompositionType.UNDECOMPOSABLE, "if (goo.a(1, foo()));", "foo");    
+        DecompositionType.UNDECOMPOSABLE, "if (goo.a(1, foo()));", "foo");
   }
 
   public void testCanExposeExpression5() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
-        DecompositionType.UNDECOMPOSABLE, "if (goo['a'](foo()));", "foo");    
+        DecompositionType.UNDECOMPOSABLE, "if (goo['a'](foo()));", "foo");
   }
 
   public void testCanExposeExpression6() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
-        DecompositionType.UNDECOMPOSABLE, "z:if (goo.a(1, foo()));", "foo");    
+        DecompositionType.UNDECOMPOSABLE, "z:if (goo.a(1, foo()));", "foo");
   }
-  
+
+  public void testCanExposeExpression7() {
+    // Verify calls to anonymous function are movable.
+    helperCanExposeAnonymousFunctionExpression(
+        DecompositionType.MOVABLE,
+        "(function(map){descriptions_=map})(\n" +
+            "function(){\n" +
+                "var ret={};\n" +
+                "ret[INIT]='a';\n" +
+                "ret[MIGRATION_BANNER_DISMISS]='b';\n" +
+                "return ret\n" +
+            "}()\n" +
+        ");", 2);
+  }
 
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
@@ -291,7 +308,7 @@ public class ExpresssionDecomposerTest extends TestCase {
         "if (1) temp_2 = foo(); else temp_2 = 0;" +
         "if (temp_const_1(1, temp_const_0, temp_2));");
   }
-  
+
   public void testExposePlusEquals() {
     helperExposeExpression(
         "var x = 0; x += foo() + 1",
@@ -315,6 +332,30 @@ public class ExpresssionDecomposerTest extends TestCase {
       String fnName
       ) {
     helperCanExposeExpression(expectedResult, code, fnName, null);
+  }
+
+  private void helperCanExposeAnonymousFunctionExpression(
+      DecompositionType expectedResult, String code, int call) {
+    Compiler compiler = new Compiler();
+    Set<String> knownConstants = Sets.newHashSet();
+    ExpressionDecomposer decomposer = new ExpressionDecomposer(
+        compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
+    Node tree = parse(compiler, code);
+    assertNotNull(tree);
+
+    Node externsRoot = parse(compiler,
+        "function goo() {}" +
+        "function foo() {}");
+    assertNotNull(externsRoot);
+    Node mainRoot = tree;
+
+    Node callSite = findCall(tree, null, 2);
+    assertNotNull("Call " + call + " was not found.", callSite);
+
+    compiler.resetUniqueNameId();
+    DecompositionType result = decomposer.canExposeExpression(
+        callSite);
+    assertEquals(expectedResult, result);
   }
 
   private void helperCanExposeExpression(
@@ -431,24 +472,44 @@ public class ExpresssionDecomposerTest extends TestCase {
         "\n" + explanation, explanation);
   }
 
-
   private static Node findCall(Node n, String name) {
-    if (n.getType() == Token.CALL) {
-      Node callee = n.getFirstChild();
-      if (callee.getType() == Token.NAME
-          && callee.getString().equals(name)) {
-        return n;
+    return findCall(n, name, 1);
+  }
+
+  /**
+   * @param name The name to look for.
+   * @param call The call to look for.
+   * @return The return the Nth CALL node to name found in a pre-order 
+   * traversal.
+   */
+  private static Node findCall(
+      Node root, @Nullable final String name, final int call) {
+    class Find {
+      int found = 0;
+      Node find(Node n) {
+        if (n.getType() == Token.CALL) {
+          Node callee = n.getFirstChild();
+          if (name == null || (callee.getType() == Token.NAME
+              && callee.getString().equals(name))) {
+            found++;
+            if (found == call) {
+              return n;
+            }
+          }
+        }
+
+        for (Node c : n.children()) {
+          Node result = find(c);
+          if (result != null) {
+            return result;
+          }
+        }
+
+        return null;
       }
     }
 
-    for (Node c : n.children()) {
-      Node result = findCall(c, name);
-      if (result != null) {
-        return result;
-      }
-    }
-
-    return null;
+    return (new Find()).find(root);
   }
 
   private static Node parse(Compiler compiler, String js) {
