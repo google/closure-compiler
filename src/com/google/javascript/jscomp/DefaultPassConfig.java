@@ -237,20 +237,10 @@ public class DefaultPassConfig extends PassConfig {
       options.checkTypes = false;
     }
 
-    // Type-checking already does more accurate method arity checking, so don't
-    // do legacy method arity checking unless checkTypes is OFF.
     if (options.checkTypes) {
       checks.add(resolveTypes.makeOneTimePass());
       checks.add(inferTypes.makeOneTimePass());
       checks.add(checkTypes.makeOneTimePass());
-    } else {
-      if (options.checkFunctions.isOn()) {
-        checks.add(checkFunctions);
-      }
-
-      if (options.checkMethods.isOn()) {
-        checks.add(checkMethods);
-      }
     }
 
     if (options.checkUnreachableCode.isOn() ||
@@ -847,24 +837,6 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new ObjectPropertyStringPreprocess(compiler);
-    }
-  };
-
-  /** Checks number of args passed to functions. */
-  private final PassFactory checkFunctions =
-      new PassFactory("checkFunctions", true) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new FunctionCheck(compiler, options.checkFunctions);
-    }
-  };
-
-  /** Checks number of args passed to methods. */
-  private final PassFactory checkMethods =
-      new PassFactory("checkMethods", true) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new MethodCheck(compiler, options.checkMethods);
     }
   };
 

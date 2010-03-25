@@ -821,4 +821,14 @@ public class InlineVariablesTest extends CompilerTestCase {
     testSame("var JSCompiler_renameProperty; " +
              "JSCompiler_renameProperty('foo')");
   }
+
+  public void testThisAlias() {
+    test("function f() { var a = this; a.y(); a.z(); }",
+         "function f() { this.y(); this.z(); }");
+  }
+
+  public void testThisEscapedAlias() {
+    testSame(
+        "function f() { var a = this; var g = function() { a.y(); }; a.z(); }");
+  }
 }

@@ -266,6 +266,21 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     }
 
     /**
+     * Whether the variable is escaped into an inner scope.
+     */
+    boolean isEscaped() {
+      Scope scope = null;
+      for (Reference ref : references) {
+        if (scope == null) {
+          scope = ref.scope;
+        } else if (scope != ref.scope) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /**
      * @param index The index into the references array to look for an
      * assigning declaration.
      *

@@ -650,12 +650,17 @@ class InlineVariables implements CompilerPass {
 
         Node value = refInit.getAssignedValue();
         Preconditions.checkNotNull(value);
-        if (!(NodeUtil.isImmutableValue(value) &&
+
+        boolean isImmutableValueWorthInlining =
+            NodeUtil.isImmutableValue(value) &&
             (value.getType() != Token.STRING ||
-             isStringWorthInlining(v, refInfo.references)))) {
+                isStringWorthInlining(v, refInfo.references));
+        boolean isInlinableThisAlias =
+            value.getType() == Token.THIS &&
+            !refInfo.isEscaped();
+        if (!isImmutableValueWorthInlining && !isInlinableThisAlias) {
           return false;
         }
-
       }
 
       for (int i = startingReadRef; i < refSet.size(); i++) {
