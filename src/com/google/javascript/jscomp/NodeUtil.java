@@ -55,8 +55,6 @@ public final class NodeUtil {
         "RegExp",
         "XMLHttpRequest"));
 
-  public static final String CONSTANT_MARKER = "$$constant";
-
   // Utility class; do not instantiate.
   private NodeUtil() {}
 

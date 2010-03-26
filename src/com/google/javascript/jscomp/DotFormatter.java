@@ -42,7 +42,7 @@ import java.util.List;
  *
 *
  */
-class DotFormatter {
+public class DotFormatter {
   private static final String INDENT = "  ";
   private static final String ARROW = " -> ";
   private static final String LINE = " -- ";
@@ -94,21 +94,21 @@ class DotFormatter {
    * @param printAnnotations print annotations.
    * @return the dot representation of the AST
    */
-  public static String toDot(
+  static String toDot(
       Node n, ControlFlowGraph<Node> inCFG, boolean printAnnotations)
       throws IOException  {
     StringBuilder builder = new StringBuilder();
     new DotFormatter(n, inCFG, builder, printAnnotations);
     return builder.toString();
   }
-  
+
   /**
    * Converts an AST to dot representation.
    * @param n the root of the AST described in the dot formatted string
    * @param inCFG Control Flow Graph.
    * @return the dot representation of the AST
    */
-  public static String toDot(Node n, ControlFlowGraph<Node> inCFG)
+  static String toDot(Node n, ControlFlowGraph<Node> inCFG)
       throws IOException  {
     StringBuilder builder = new StringBuilder();
     new DotFormatter(n, inCFG, builder, false);
@@ -121,7 +121,7 @@ class DotFormatter {
    * @param inCFG Control Flow Graph.
    * @param builder A place to dump the graph.
    */
-  public static void appendDot(Node n, ControlFlowGraph<Node> inCFG,
+  static void appendDot(Node n, ControlFlowGraph<Node> inCFG,
       Appendable builder) throws IOException {
     new DotFormatter(n, inCFG, builder, false);
   }
@@ -152,28 +152,28 @@ class DotFormatter {
 
     // Flow Edges
     if (cfg != null && cfg.hasNode(parent)) {
-      List<DiGraphEdge<Node, Branch>> outEdges = 
+      List<DiGraphEdge<Node, Branch>> outEdges =
         cfg.getOutEdges(parent);
       String[] edgeList = new String[outEdges.size()];
       for (int i = 0; i < edgeList.length; i++) {
         DiGraphEdge<Node, ControlFlowGraph.Branch> edge = outEdges.get(i);
         DiGraphNode<Node, Branch> succ = edge.getDestination();
-        
+
         String toNode = null;
         if (succ == cfg.getImplicitReturn()) {
           toNode = "RETURN";
         } else {
-          int keySucc = key(succ.getValue()); 
+          int keySucc = key(succ.getValue());
           toNode = formatNodeName(keySucc);
         }
-                
-        edgeList[i] = formatNodeName(keyParent) + ARROW + toNode + " [label=\"" 
+
+        edgeList[i] = formatNodeName(keyParent) + ARROW + toNode + " [label=\""
           + edge.getValue().toString() + "\", " + "fontcolor=\"red\", " +
           "weight=0.01, color=\"red\"];\n";
       }
-      
+
       Arrays.sort(edgeList);
-      
+
       for (int i = 0; i < edgeList.length; i++) {
           builder.append(INDENT);
           builder.append(edgeList[i]);
@@ -238,11 +238,11 @@ class DotFormatter {
 
   /**
    * Outputs a string in DOT format that presents the graph.
-   * 
+   *
    * @param graph Input graph.
    * @return A string in Dot format that presents the graph.
    */
-  public static String toDot(GraphvizGraph graph) { 
+  public static String toDot(GraphvizGraph graph) {
     StringBuilder builder = new StringBuilder ();
     builder.append(graph.isDirected() ? "digraph" : "graph");
     builder.append(INDENT);
@@ -252,21 +252,21 @@ class DotFormatter {
     builder.append("node [color=lightblue2, style=filled];\n");
 
     final String edgeSymbol = graph.isDirected() ? ARROW : LINE;
-    
+
     List<GraphvizNode> nodes = graph.getGraphvizNodes();
-    
+
     String[] nodeNames = new String[nodes.size()];
-    
+
     for (int i = 0; i < nodeNames.length; i++) {
       GraphvizNode gNode = nodes.get(i);
-      nodeNames[i] = gNode.getId() + " [label=\"" + gNode.getLabel() + 
+      nodeNames[i] = gNode.getId() + " [label=\"" + gNode.getLabel() +
           "\" color=\"" + gNode.getColor() + "\"]";
     }
-    
+
     // We sort the nodes so we get a deterministic output every time regardless
     // of the implementation of the graph data structure.
     Arrays.sort(nodeNames);
-    
+
     for (String nodeName : nodeNames) {
       builder.append(INDENT);
       builder.append(nodeName);
@@ -274,17 +274,17 @@ class DotFormatter {
     }
 
     List<GraphvizEdge> edges = graph.getGraphvizEdges();
-    
+
     String[] edgeNames = new String[edges.size()];
-    
+
     for (int i = 0; i < edgeNames.length; i++) {
       GraphvizEdge edge = edges.get(i);
       edgeNames[i] = edge.getNode1Id() + edgeSymbol + edge.getNode2Id();
     }
-    
+
     // Again, we sort the edges as well.
     Arrays.sort(edgeNames);
-    
+
     for (String edgeName : edgeNames) {
       builder.append(INDENT);
       builder.append(edgeName);

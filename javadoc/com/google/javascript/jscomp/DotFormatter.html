@@ -3,7 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>
-NodeUtil (Compiler)
+DotFormatter (Compiler)
 </TITLE>
 
 
@@ -13,7 +13,7 @@ NodeUtil (Compiler)
 function windowTitle()
 {
     if (location.href.indexOf('is-external=true') == -1) {
-        parent.document.title="NodeUtil (Compiler)";
+        parent.document.title="DotFormatter (Compiler)";
     }
 }
 </SCRIPT>
@@ -52,11 +52,11 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.ScopedCallback.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ObjectPropertyStringPreprocess.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorFormat.html" title="enum in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/NodeUtil.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="NodeUtil.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/DotFormatter.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="DotFormatter.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -87,18 +87,24 @@ DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHO
 <FONT SIZE="-1">
 com.google.javascript.jscomp</FONT>
 <BR>
-Class NodeUtil</H2>
+Class DotFormatter</H2>
 <PRE>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
-  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.NodeUtil</B>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.DotFormatter</B>
 </PRE>
 <HR>
 <DL>
-<DT><PRE>public final class <B>NodeUtil</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+<DT><PRE>public class <B>DotFormatter</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
 </PRE>
 
 <P>
-NodeUtil contains utilities that get properties from the Node object.
+<p>DotFormatter prints out a dot file of the Abstract Syntax Tree.
+ For a detailed description of the dot format and visualization tool refer
+ to <a href="http://www.graphviz.org">Graphviz</a>.</p>
+ <p>Typical usage of this class</p>
+ <code>System.out.println(new DotFormatter().toDot(<i>node</i>));</code>
+ <p>This class is <b>not</b> thread safe and should not be used without proper
+ external synchronization.</p>
 <P>
 
 <P>
@@ -116,41 +122,19 @@ NodeUtil contains utilities that get properties from the Node object.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#getVarsDeclaredInBranch(com.google.javascript.rhino.Node)">getVarsDeclaredInBranch</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;root)</CODE>
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/DotFormatter.html#toDot(com.google.javascript.jscomp.graph.GraphvizGraph)">toDot</A></B>(<A HREF="../../../../com/google/javascript/jscomp/graph/GraphvizGraph.html" title="interface in com.google.javascript.jscomp.graph">GraphvizGraph</A>&nbsp;graph)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Retrieves vars declared in the current node tree, excluding descent scopes.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Outputs a string in DOT format that presents the graph.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#newExpr(com.google.javascript.rhino.Node)">newExpr</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;child)</CODE>
+<CODE>static&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/DotFormatter.html#toDot(com.google.javascript.rhino.Node)">toDot</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates an EXPR_RESULT.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/FunctionNode.html" title="class in com.google.javascript.rhino">FunctionNode</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#newFunctionNode(java.lang.String, java.util.List, com.google.javascript.rhino.Node, int, int)">newFunctionNode</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;&nbsp;params,
-                <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body,
-                int&nbsp;lineno,
-                int&nbsp;charno)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates function name(params_0, ..., params_n) { body }.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/NodeUtil.html#newQualifiedNameNode(java.lang.String, int, int)">newQualifiedNameNode</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                     int&nbsp;lineno,
-                     int&nbsp;charno)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a node representing a qualified name.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Converts an AST to dot representation.</TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -175,62 +159,33 @@ NodeUtil contains utilities that get properties from the Node object.
 </TR>
 </TABLE>
 
-<A NAME="newExpr(com.google.javascript.rhino.Node)"><!-- --></A><H3>
-newExpr</H3>
+<A NAME="toDot(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+toDot</H3>
 <PRE>
-public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>newExpr</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;child)</PRE>
+public static <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toDot</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)
+                    throws <A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
 <DL>
-<DD>Creates an EXPR_RESULT.
+<DD>Converts an AST to dot representation.
 <P>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>child</CODE> - The expression itself.
-<DT><B>Returns:</B><DD>Newly created EXPR node with the child as subexpression.</DL>
+<DT><B>Parameters:</B><DD><CODE>n</CODE> - the root of the AST described in the dot formatted string
+<DT><B>Returns:</B><DD>the dot representation of the AST
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://java.sun.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
 </DD>
 </DL>
 <HR>
 
-<A NAME="newFunctionNode(java.lang.String, java.util.List, com.google.javascript.rhino.Node, int, int)"><!-- --></A><H3>
-newFunctionNode</H3>
+<A NAME="toDot(com.google.javascript.jscomp.graph.GraphvizGraph)"><!-- --></A><H3>
+toDot</H3>
 <PRE>
-public static <A HREF="../../../../com/google/javascript/rhino/FunctionNode.html" title="class in com.google.javascript.rhino">FunctionNode</A> <B>newFunctionNode</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                                           <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;&nbsp;params,
-                                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;body,
-                                           int&nbsp;lineno,
-                                           int&nbsp;charno)</PRE>
+public static <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>toDot</B>(<A HREF="../../../../com/google/javascript/jscomp/graph/GraphvizGraph.html" title="interface in com.google.javascript.jscomp.graph">GraphvizGraph</A>&nbsp;graph)</PRE>
 <DL>
-<DD>Creates function name(params_0, ..., params_n) { body }.
+<DD>Outputs a string in DOT format that presents the graph.
 <P>
 <DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="newQualifiedNameNode(java.lang.String, int, int)"><!-- --></A><H3>
-newQualifiedNameNode</H3>
-<PRE>
-public static <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>newQualifiedNameNode</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                                        int&nbsp;lineno,
-                                        int&nbsp;charno)</PRE>
-<DL>
-<DD>Creates a node representing a qualified name.
-<P>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>name</CODE> - A qualified name (e.g. "foo" or "foo.bar.baz")<DD><CODE>lineno</CODE> - The source line offset.<DD><CODE>charno</CODE> - The source character offset from start of the line.
-<DT><B>Returns:</B><DD>A NAME or GETPROP node</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getVarsDeclaredInBranch(com.google.javascript.rhino.Node)"><!-- --></A><H3>
-getVarsDeclaredInBranch</H3>
-<PRE>
-public static <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt; <B>getVarsDeclaredInBranch</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;root)</PRE>
-<DL>
-<DD>Retrieves vars declared in the current node tree, excluding descent scopes.
-<P>
-<DD><DL>
-</DL>
+<DT><B>Parameters:</B><DD><CODE>graph</CODE> - Input graph.
+<DT><B>Returns:</B><DD>A string in Dot format that presents the graph.</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
@@ -263,11 +218,11 @@ public static <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collectio
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.ScopedCallback.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ObjectPropertyStringPreprocess.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/ErrorFormat.html" title="enum in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/NodeUtil.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="NodeUtil.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/DotFormatter.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="DotFormatter.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {

@@ -1052,9 +1052,6 @@ Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/Token.html#CONST"><B>CONST</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/jscomp/NodeUtil.html#CONSTANT_MARKER"><B>CONSTANT_MARKER</B></A> - 
-Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/NodeUtil.html" title="class in com.google.javascript.jscomp">NodeUtil</A>
-<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/ScriptRuntime.html#constructError(java.lang.String, java.lang.String)"><B>constructError(String, String)</B></A> - 
 Static method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/ScriptRuntime.html" title="class in com.google.javascript.rhino">ScriptRuntime</A>
 <DD>&nbsp;
@@ -1377,7 +1374,10 @@ Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroup.html#DiagnosticGroup(com.google.javascript.jscomp.DiagnosticGroup...)"><B>DiagnosticGroup(DiagnosticGroup...)</B></A> - 
 Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DiagnosticGroup.html" title="class in com.google.javascript.jscomp">DiagnosticGroup</A>
 <DD>Create a composite group.
-<DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp"><B>DiagnosticGroups</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>Named groups of DiagnosticTypes exposed by Compiler.<DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroupWarningsGuard.html" title="class in com.google.javascript.jscomp"><B>DiagnosticGroupWarningsGuard</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>Sets the level for a particular DiagnosticGroup.<DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroupWarningsGuard.html#DiagnosticGroupWarningsGuard(com.google.javascript.jscomp.DiagnosticGroup, com.google.javascript.jscomp.CheckLevel)"><B>DiagnosticGroupWarningsGuard(DiagnosticGroup, CheckLevel)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp"><B>DiagnosticGroups</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>Named groups of DiagnosticTypes exposed by Compiler.<DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroups.html#DiagnosticGroups()"><B>DiagnosticGroups()</B></A> - 
+Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp">DiagnosticGroups</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroupWarningsGuard.html" title="class in com.google.javascript.jscomp"><B>DiagnosticGroupWarningsGuard</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>Sets the level for a particular DiagnosticGroup.<DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroupWarningsGuard.html#DiagnosticGroupWarningsGuard(com.google.javascript.jscomp.DiagnosticGroup, com.google.javascript.jscomp.CheckLevel)"><B>DiagnosticGroupWarningsGuard(DiagnosticGroup, CheckLevel)</B></A> - 
 Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DiagnosticGroupWarningsGuard.html" title="class in com.google.javascript.jscomp">DiagnosticGroupWarningsGuard</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp"><B>DiagnosticType</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>The type of a compile or analysis error.<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#differsFrom(com.google.javascript.rhino.jstype.JSType)"><B>differsFrom(JSType)</B></A> - 
@@ -1448,7 +1448,7 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/rhino/Token.html#DOTDOT"><B>DOTDOT</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/Token.html#DOTQUERY"><B>DOTQUERY</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/DotFormatter.html" title="class in com.google.javascript.jscomp"><B>DotFormatter</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>DotFormatter prints out a dot file of the Abstract Syntax Tree.<DT><A HREF="./com/google/javascript/rhino/Token.html#DOTQUERY"><B>DOTQUERY</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/UniqueTag.html#DOUBLE_MARK"><B>DOUBLE_MARK</B></A> - 
@@ -7270,6 +7270,12 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/VariableMap.html#toBytes()"><B>toBytes()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/VariableMap.html" title="class in com.google.javascript.jscomp">VariableMap</A>
 <DD>Serializes the variable map to a byte array.
+<DT><A HREF="./com/google/javascript/jscomp/DotFormatter.html#toDot(com.google.javascript.rhino.Node)"><B>toDot(Node)</B></A> - 
+Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DotFormatter.html" title="class in com.google.javascript.jscomp">DotFormatter</A>
+<DD>Converts an AST to dot representation.
+<DT><A HREF="./com/google/javascript/jscomp/DotFormatter.html#toDot(com.google.javascript.jscomp.graph.GraphvizGraph)"><B>toDot(GraphvizGraph)</B></A> - 
+Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DotFormatter.html" title="class in com.google.javascript.jscomp">DotFormatter</A>
+<DD>Outputs a string in DOT format that presents the graph.
 <DT><A HREF="./com/google/javascript/jscomp/ErrorFormat.html#toFormatter(com.google.javascript.jscomp.SourceExcerptProvider, boolean)"><B>toFormatter(SourceExcerptProvider, boolean)</B></A> - 
 Method in enum com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ErrorFormat.html" title="enum in com.google.javascript.jscomp">ErrorFormat</A>
 <DD>Convert to a concrete formatter.

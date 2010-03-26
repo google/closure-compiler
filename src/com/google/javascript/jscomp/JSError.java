@@ -215,7 +215,8 @@ public class JSError {
     return type.key + ". " + description + " at " +
       (sourceName != null && sourceName.length() > 0 ?
        sourceName : "(unknown source)") + " line " +
-      (lineNumber != -1 ? String.valueOf(lineNumber) : "(unknown line)");
+      (lineNumber != -1 ? String.valueOf(lineNumber) : "(unknown line)") +
+      " : " + (charno != -1 ? String.valueOf(charno) : "(unknown column)");
   }
 
   /**

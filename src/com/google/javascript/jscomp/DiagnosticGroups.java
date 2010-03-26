@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public class DiagnosticGroups {
 
-  DiagnosticGroups() {}
+  public DiagnosticGroups() {}
 
   private final static Map<String, DiagnosticGroup> groupsByName =
       Maps.newHashMap();
