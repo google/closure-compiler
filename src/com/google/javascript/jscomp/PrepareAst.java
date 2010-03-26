@@ -54,7 +54,9 @@ class PrepareAst implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    normalizeNodeTypes(root);
+    if (assertOnChange) {
+      normalizeNodeTypes(root);
+    }
     if (externs != null) {
       NodeTraversal.traverse(
           compiler, externs, new PrepareAnnotations(compiler));
@@ -102,7 +104,7 @@ class PrepareAst implements CompilerPass {
       for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
         if (NodeUtil.isControlStructureCodeBlock(n,c) &&
             c.getType() != Token.BLOCK) {
-          Node newBlock = new Node(Token.BLOCK);
+          Node newBlock = new Node(Token.BLOCK, n.getLineno(), n.getCharno());
           newBlock.copyInformationFrom(n);
           n.replaceChild(c, newBlock);
           if (c.getType() != Token.EMPTY) {
@@ -124,11 +126,9 @@ class PrepareAst implements CompilerPass {
   static class PrepareAnnotations
       extends NodeTraversal.AbstractPostOrderCallback {
 
-    private final AbstractCompiler compiler;
     private final CodingConvention convention;
 
     PrepareAnnotations(AbstractCompiler compiler) {
-      this.compiler = compiler;
       this.convention = compiler.getCodingConvention();
     }
 

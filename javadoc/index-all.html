@@ -929,7 +929,7 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/rhino/RhinoException.html#columnNumber()"><B>columnNumber()</B></A> - 
 Method in exception com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/RhinoException.html" title="class in com.google.javascript.rhino">RhinoException</A>
 <DD>The column number of the location of the error, or zero if unknown.
-<DT><A HREF="./com/google/javascript/jscomp/package-summary.html"><B>com.google.javascript.jscomp</B></A> - package com.google.javascript.jscomp<DD>Provides the core compiler and its public API.<DT><A HREF="./com/google/javascript/jscomp/ant/package-summary.html"><B>com.google.javascript.jscomp.ant</B></A> - package com.google.javascript.jscomp.ant<DD>&nbsp;<DT><A HREF="./com/google/javascript/jscomp/graph/package-summary.html"><B>com.google.javascript.jscomp.graph</B></A> - package com.google.javascript.jscomp.graph<DD>Provides graph data structures and algorithms for coloring and fixed-point
+<DT><A HREF="./com/google/javascript/jscomp/package-summary.html"><B>com.google.javascript.jscomp</B></A> - package com.google.javascript.jscomp<DD>Provides the core compiler and its public API.<DT><A HREF="./com/google/javascript/jscomp/ant/package-summary.html"><B>com.google.javascript.jscomp.ant</B></A> - package com.google.javascript.jscomp.ant<DD>&nbsp;<DT><A HREF="./com/google/javascript/jscomp/deps/package-summary.html"><B>com.google.javascript.jscomp.deps</B></A> - package com.google.javascript.jscomp.deps<DD>Analyzes information about dependencies between files.<DT><A HREF="./com/google/javascript/jscomp/graph/package-summary.html"><B>com.google.javascript.jscomp.graph</B></A> - package com.google.javascript.jscomp.graph<DD>Provides graph data structures and algorithms for coloring and fixed-point
 computations.<DT><A HREF="./com/google/javascript/jscomp/parsing/package-summary.html"><B>com.google.javascript.jscomp.parsing</B></A> - package com.google.javascript.jscomp.parsing<DD>Provides utilities to help with parsing JSDoc annotations and performing AST
 transformations.<DT><A HREF="./com/google/javascript/jscomp/testing/package-summary.html"><B>com.google.javascript.jscomp.testing</B></A> - package com.google.javascript.jscomp.testing<DD>&nbsp;<DT><A HREF="./com/google/javascript/rhino/package-summary.html"><B>com.google.javascript.rhino</B></A> - package com.google.javascript.rhino<DD>The core parsing functionality for
 <a href="http://www.mozilla.org/rhino/">Rhino</a> but with the support for
@@ -1332,7 +1332,7 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/rhino/Token.html#DELPROP"><B>DELPROP</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
 <DD>Token types.
-<DT><A HREF="./com/google/javascript/jscomp/JSModuleGraph.html#dependsOn(com.google.javascript.jscomp.JSModule, com.google.javascript.jscomp.JSModule)"><B>dependsOn(JSModule, JSModule)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps"><B>DependencyInfo</B></A> - Interface in <A HREF="./com/google/javascript/jscomp/deps/package-summary.html">com.google.javascript.jscomp.deps</A><DD>A data structure for JS dependency information for a single .js file.<DT><A HREF="./com/google/javascript/jscomp/JSModuleGraph.html#dependsOn(com.google.javascript.jscomp.JSModule, com.google.javascript.jscomp.JSModule)"><B>dependsOn(JSModule, JSModule)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/JSModuleGraph.html" title="class in com.google.javascript.jscomp">JSModuleGraph</A>
 <DD>Determines whether this module depends on a given module.
 <DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroups.html#DEPRECATED"><B>DEPRECATED</B></A> - 
@@ -1565,6 +1565,9 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/rhino/Token.html#EQ"><B>EQ</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Token.html" title="class in com.google.javascript.rhino">Token</A>
 <DD>Token types.
+<DT><A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/GraphColoring.Color.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphColoring.Color.html" title="class in com.google.javascript.jscomp.graph">GraphColoring.Color</A>
 <DD>&nbsp;
@@ -2930,6 +2933,12 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/CompilerInput.html#getName()"><B>getName()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>
 <DD>Returns a name for this input.
+<DT><A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html#getName()"><B>getName()</B></A> - 
+Method in interface com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A>
+<DD>Gets the unique name / path of this file.
+<DT><A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html#getName()"><B>getName()</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.Builder.html#getName()"><B>getName()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.Builder.html" title="class in com.google.javascript.jscomp">FunctionInformationMap.Entry.Builder</A>
 <DD>&nbsp;
@@ -3181,6 +3190,15 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphColoring.html" title="class in com.google.javascript.jscomp.graph">GraphColoring</A>
 <DD>Using the coloring as partitions, finds the node that represents that
  partition as the super node.
+<DT><A HREF="./com/google/javascript/jscomp/CompilerInput.html#getPathRelativeToClosureBase()"><B>getPathRelativeToClosureBase()</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>
+<DD>Gets the path relative to closure-base, if one is available.
+<DT><A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html#getPathRelativeToClosureBase()"><B>getPathRelativeToClosureBase()</B></A> - 
+Method in interface com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A>
+<DD>Gets the path of this file relative to Closure's base.js file.
+<DT><A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html#getPathRelativeToClosureBase()"><B>getPathRelativeToClosureBase()</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/SourcePosition.html#getPositionOnEndLine()"><B>getPositionOnEndLine()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/SourcePosition.html" title="class in com.google.javascript.rhino">SourcePosition</A>
 <DD>Returns the character position on the ending line.
@@ -3276,6 +3294,15 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/jscomp/CompilerInput.html#getProvides(com.google.javascript.jscomp.AbstractCompiler)"><B>getProvides(AbstractCompiler)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>
 <DD>Gets a list of types provided by this input.
+<DT><A HREF="./com/google/javascript/jscomp/CompilerInput.html#getProvides()"><B>getProvides()</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>
+<DD>Gets a list of types provided by this input.
+<DT><A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html#getProvides()"><B>getProvides()</B></A> - 
+Method in interface com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A>
+<DD>Gets the symbols provided by this file.
+<DT><A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html#getProvides()"><B>getProvides()</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/Node.html#getQualifiedName()"><B>getQualifiedName()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>This function takes a set of GETPROP nodes and produces a string that is
@@ -3346,6 +3373,15 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/CompilerInput.html#getRequires(com.google.javascript.jscomp.AbstractCompiler)"><B>getRequires(AbstractCompiler)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>
 <DD>Gets a list of types depended on by this input.
+<DT><A HREF="./com/google/javascript/jscomp/CompilerInput.html#getRequires()"><B>getRequires()</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>
+<DD>Gets a list of types depended on by this input.
+<DT><A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html#getRequires()"><B>getRequires()</B></A> - 
+Method in interface com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A>
+<DD>Gets the symbols required by this file.
+<DT><A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html#getRequires()"><B>getRequires()</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/AnonymousFunctionNamingPolicy.html#getReservedCharacters()"><B>getReservedCharacters()</B></A> - 
 Method in enum com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/AnonymousFunctionNamingPolicy.html" title="enum in com.google.javascript.jscomp">AnonymousFunctionNamingPolicy</A>
 <DD>Gets characters that are reserved for use in anonymous function names and
@@ -6994,6 +7030,10 @@ Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascr
  suppressed within the specified path.<DT><A HREF="./com/google/javascript/rhino/Node.html#siblings()"><B>siblings()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>Return an iterable object that iterates over this nodes's siblings.
+<DT><A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps"><B>SimpleDependencyInfo</B></A> - Class in <A HREF="./com/google/javascript/jscomp/deps/package-summary.html">com.google.javascript.jscomp.deps</A><DD>A class to hold JS dependency information for a single .js file.<DT><A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html#SimpleDependencyInfo(java.lang.String, java.lang.String, java.util.List, java.util.List)"><B>SimpleDependencyInfo(String, String, List&lt;String&gt;, List&lt;String&gt;)</B></A> - 
+Constructor for class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A>
+<DD>Constructs a DependencyInfo object with the given list of provides &
+ requires.
 <DT><A HREF="./com/google/javascript/rhino/SimpleErrorReporter.html" title="class in com.google.javascript.rhino"><B>SimpleErrorReporter</B></A> - Class in <A HREF="./com/google/javascript/rhino/package-summary.html">com.google.javascript.rhino</A><DD>A simple <A HREF="./com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino"><CODE>ErrorReporter</CODE></A> that collects warnings and errors and makes
  them accessible via <A HREF="./com/google/javascript/rhino/SimpleErrorReporter.html#errors()"><CODE>SimpleErrorReporter.errors()</CODE></A> and <A HREF="./com/google/javascript/rhino/SimpleErrorReporter.html#warnings()"><CODE>SimpleErrorReporter.warnings()</CODE></A>.<DT><A HREF="./com/google/javascript/rhino/SimpleErrorReporter.html#SimpleErrorReporter()"><B>SimpleErrorReporter()</B></A> - 
 Constructor for class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/SimpleErrorReporter.html" title="class in com.google.javascript.rhino">SimpleErrorReporter</A>
@@ -7309,6 +7349,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.CodeBuilder.html#toString()"><B>toString()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.CodeBuilder.html" title="class in com.google.javascript.jscomp">Compiler.CodeBuilder</A>
 <DD>Returns all text in the text buffer.
+<DT><A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html#toString()"><B>toString()</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/DiagnosticType.html#toString()"><B>toString()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>
 <DD>&nbsp;

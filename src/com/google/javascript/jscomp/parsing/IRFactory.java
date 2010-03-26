@@ -18,10 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import static com.google.javascript.jscomp.mozilla.rhino.Token.CommentType.JSDOC;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
@@ -76,7 +73,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -169,6 +165,21 @@ public class IRFactory {
           fileOverviewInfo.setLicense(irNode.getJSDocInfo().getLicense());
         }
         irNode.setJSDocInfo(fileOverviewInfo);
+      }
+    }
+    return irNode;
+  }
+
+  private Node transformBlock(AstNode node) {
+    Node irNode = transform(node);
+    if (irNode.getType() != Token.BLOCK) {
+      if (irNode.getType() == Token.EMPTY) {
+        irNode.setType(Token.BLOCK);
+        irNode.setWasEmptyNode(true);
+      } else {
+        Node newBlock = new Node(Token.BLOCK, irNode,
+            irNode.getLineno(), irNode.getCharno());
+        irNode = newBlock;
       }
     }
     return irNode;
@@ -422,7 +433,7 @@ public class IRFactory {
         catchCondition.setCharno(clauseAbsolutePosition);
         node.addChildToBack(catchCondition);
       }
-      node.addChildToBack(transform(clauseNode.getBody()));
+      node.addChildToBack(transformBlock(clauseNode.getBody()));
       return node;
     }
 
@@ -448,7 +459,7 @@ public class IRFactory {
     Node processDoLoop(DoLoop loopNode) {
       return new Node(
           Token.DO,
-          transform(loopNode.getBody()),
+          transformBlock(loopNode.getBody()),
           transform(loopNode.getCondition()));
     }
 
@@ -479,7 +490,7 @@ public class IRFactory {
           Token.FOR,
           transform(loopNode.getIterator()),
           transform(loopNode.getIteratedObject()),
-          transform(loopNode.getBody()));
+          transformBlock(loopNode.getBody()));
     }
 
     @Override
@@ -489,7 +500,7 @@ public class IRFactory {
           transform(loopNode.getInitializer()),
           transform(loopNode.getCondition()),
           transform(loopNode.getIncrement()));
-      node.addChildToBack(transform(loopNode.getBody()));
+      node.addChildToBack(transformBlock(loopNode.getBody()));
       return node;
     }
 
@@ -565,9 +576,9 @@ public class IRFactory {
     Node processIfStatement(IfStatement statementNode) {
       Node node = new Node(Token.IF);
       node.addChildToBack(transform(statementNode.getCondition()));
-      node.addChildToBack(transform(statementNode.getThenPart()));
+      node.addChildToBack(transformBlock(statementNode.getThenPart()));
       if (statementNode.getElsePart() != null) {
-        node.addChildToBack(transform(statementNode.getElsePart()));
+        node.addChildToBack(transformBlock(statementNode.getElsePart()));
       }
       return node;
     }
@@ -748,7 +759,8 @@ public class IRFactory {
 
     @Override
     Node processTryStatement(TryStatement statementNode) {
-      Node node = new Node(Token.TRY, transform(statementNode.getTryBlock()));
+      Node node = new Node(Token.TRY,
+          transformBlock(statementNode.getTryBlock()));
       Node block = new Node(Token.BLOCK);
       boolean lineSet = false;
 
@@ -765,7 +777,7 @@ public class IRFactory {
 
       AstNode finallyBlock = statementNode.getFinallyBlock();
       if (finallyBlock != null) {
-        node.addChildToBack(transform(finallyBlock));
+        node.addChildToBack(transformBlock(finallyBlock));
       }
 
       // If we didn't set the line on the catch clause, then
@@ -812,7 +824,7 @@ public class IRFactory {
       return new Node(
           Token.WHILE,
           transform(loopNode.getCondition()),
-          transform(loopNode.getBody()));
+          transformBlock(loopNode.getBody()));
     }
 
     @Override
@@ -820,7 +832,7 @@ public class IRFactory {
       return new Node(
           Token.WITH,
           transform(statementNode.getExpression()),
-          transform(statementNode.getStatement()));
+          transformBlock(statementNode.getStatement()));
     }
 
     @Override
@@ -1105,7 +1117,6 @@ public class IRFactory {
       case com.google.javascript.jscomp.mozilla.rhino.Token.LOOP:
         return Token.LOOP;
       case com.google.javascript.jscomp.mozilla.rhino.Token.EXPR_VOID:
-        return Token.EXPR_VOID;
       case com.google.javascript.jscomp.mozilla.rhino.Token.EXPR_RESULT:
         return Token.EXPR_RESULT;
       case com.google.javascript.jscomp.mozilla.rhino.Token.JSR:

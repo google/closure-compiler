@@ -3,7 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>
-com.google.javascript.jscomp.ant (Compiler)
+com.google.javascript.jscomp.deps (Compiler)
 </TITLE>
 
 
@@ -13,7 +13,7 @@ com.google.javascript.jscomp.ant (Compiler)
 function windowTitle()
 {
     if (location.href.indexOf('is-external=true') == -1) {
-        parent.document.title="com.google.javascript.jscomp.ant (Compiler)";
+        parent.document.title="com.google.javascript.jscomp.deps (Compiler)";
     }
 }
 </SCRIPT>
@@ -52,10 +52,10 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/package-summary.html"><B>PREV PACKAGE</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/package-summary.html"><B>NEXT PACKAGE</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/ant/package-summary.html"><B>PREV PACKAGE</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/package-summary.html"><B>NEXT PACKAGE</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../../index.html?com/google/javascript/jscomp/ant/package-summary.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/deps/package-summary.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="package-summary.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
@@ -77,8 +77,28 @@ function windowTitle()
 
 <HR>
 <H2>
-Package com.google.javascript.jscomp.ant
+Package com.google.javascript.jscomp.deps
 </H2>
+Analyzes information about dependencies between files.
+<P>
+<B>See:</B>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#package_description"><B>Description</B></A>
+<P>
+
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Interface Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></B></TD>
+<TD>A data structure for JS dependency information for a single .js file.</TD>
+</TR>
+</TABLE>
+&nbsp;
+
+<P>
 
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
@@ -86,17 +106,20 @@ Package com.google.javascript.jscomp.ant
 <B>Class Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/ant/AntErrorManager.html" title="class in com.google.javascript.jscomp.ant">AntErrorManager</A></B></TD>
-<TD>An error manager that pipes warnings and errors properly into the Ant
- task infrastructure.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/ant/CompileTask.html" title="class in com.google.javascript.jscomp.ant">CompileTask</A></B></TD>
-<TD>This class implements a simple Ant task to do almost the same as
- CommandLineRunner.</TD>
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A></B></TD>
+<TD>A class to hold JS dependency information for a single .js file.</TD>
 </TR>
 </TABLE>
 &nbsp;
+
+<P>
+<A NAME="package_description"><!-- --></A><H2>
+Package com.google.javascript.jscomp.deps Description
+</H2>
+
+<P>
+Analyzes information about dependencies between files.
+<P>
 
 <P>
 <DL>
@@ -130,10 +153,10 @@ Package com.google.javascript.jscomp.ant
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/package-summary.html"><B>PREV PACKAGE</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/package-summary.html"><B>NEXT PACKAGE</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/ant/package-summary.html"><B>PREV PACKAGE</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/package-summary.html"><B>NEXT PACKAGE</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../../index.html?com/google/javascript/jscomp/ant/package-summary.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/deps/package-summary.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="package-summary.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--

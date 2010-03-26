@@ -304,7 +304,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testLabel2() {
-    parse("l: while (f()) { if (g()) continue l;}");
+    parse("l: while (f()) { if (g()) { continue l; } }");
   }
 
   public void testLabel3() {

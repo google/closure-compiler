@@ -20,13 +20,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
-
+import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -37,7 +37,7 @@ import java.util.Set;
  *
 *
  */
-public class CompilerInput implements SourceAst {
+public class CompilerInput implements SourceAst, DependencyInfo {
   private static final long serialVersionUID = 1L;
 
   // Info about where the file lives.
@@ -77,8 +77,16 @@ public class CompilerInput implements SourceAst {
   }
 
   /** Returns a name for this input. Must be unique across all inputs. */
+  @Override
   public String getName() {
     return name;
+  }
+
+  /** Gets the path relative to closure-base, if one is available. */
+  @Override
+  public String getPathRelativeToClosureBase() {
+    // TODO(nicksantos): Implement me.
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -107,7 +115,7 @@ public class CompilerInput implements SourceAst {
   }
 
   /** Gets a list of types depended on by this input. */
-  public Set<String> getRequires(AbstractCompiler compiler) {
+  public Collection<String> getRequires(AbstractCompiler compiler) {
     if (getAstRoot(compiler) != null) {
       DepsFinder deps = new DepsFinder(compiler, true);
       NodeTraversal.traverse(compiler, getAstRoot(compiler), deps);
@@ -118,8 +126,15 @@ public class CompilerInput implements SourceAst {
     }
   }
 
+  /** Gets a list of types depended on by this input. */
+  @Override
+  public Collection<String> getRequires() {
+    // TODO(nicksantos): Implement me.
+    throw new UnsupportedOperationException();
+  }
+
   /** Gets a list of types provided by this input. */
-  public Set<String> getProvides(AbstractCompiler compiler) {
+  public Collection<String> getProvides(AbstractCompiler compiler) {
     if (getAstRoot(compiler) != null) {
       DepsFinder deps = new DepsFinder(compiler, false);
       NodeTraversal.traverse(compiler, getAstRoot(compiler), deps);
@@ -128,6 +143,13 @@ public class CompilerInput implements SourceAst {
     } else {
       return ImmutableSet.<String>of();
     }
+  }
+
+  /** Gets a list of types provided by this input. */
+  @Override
+  public Collection<String> getProvides() {
+    // TODO(nicksantos): Implement me.
+    throw new UnsupportedOperationException();
   }
 
   private class DepsFinder extends AbstractShallowCallback {
