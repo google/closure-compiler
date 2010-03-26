@@ -27,7 +27,8 @@ import junit.framework.TestCase;
 
 /**
  * Tests for {@link CheckPathsBetweenNodes}.
- * 
+ *
+ * @autohr acleung@google.com (Alan Leung)
 *
  */
 public class CheckPathsBetweenNodesTest extends TestCase {
@@ -194,7 +195,66 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     assertGood(createTest(g, "a", "d", Predicates.equalTo("a"), ALL_EDGE));
     assertBad(createTest(g, "a", "d", Predicates.equalTo("z"), ALL_EDGE));
   }
+
   
+  /**
+   * Much of the tests are done by testing all paths. We quickly verified
+   * that some paths are indeed correct for the some path case.
+   */
+  public void testSomePath1() {
+    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    g.createDirectedGraphNode("a");
+    g.createDirectedGraphNode("b");
+    g.createDirectedGraphNode("c");
+    g.createDirectedGraphNode("d");
+
+    g.connect("a", "-", "b");
+    g.connect("a", "-", "c");
+    g.connect("b", "-", "d");
+    g.connect("c", "-", "d");
+    
+    assertTrue(createTest(g, "a", "d", Predicates.equalTo("b"), ALL_EDGE)
+        .somePathsSatisfyPredicate());
+    assertTrue(createTest(g, "a", "d", Predicates.equalTo("c"), ALL_EDGE)
+        .somePathsSatisfyPredicate());
+    assertTrue(createTest(g, "a", "d", Predicates.equalTo("a"), ALL_EDGE)
+        .somePathsSatisfyPredicate());
+    assertTrue(createTest(g, "a", "d", Predicates.equalTo("d"), ALL_EDGE)
+        .somePathsSatisfyPredicate());
+    assertFalse(createTest(g, "a", "d", Predicates.equalTo("NONE"), ALL_EDGE)
+        .somePathsSatisfyPredicate());
+  }
+  
+  public void testSomePath2() {
+    // No Paths between nodes, by definition, always false.
+    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    g.createDirectedGraphNode("a");
+    g.createDirectedGraphNode("b");
+
+    assertFalse(createTest(g, "a", "b", Predicates.equalTo("b"), ALL_EDGE)
+        .somePathsSatisfyPredicate());
+    assertFalse(createTest(g, "a", "b", Predicates.equalTo("d"), ALL_EDGE)
+        .somePathsSatisfyPredicate());
+    assertTrue(createTest(g, "a", "b", Predicates.equalTo("a"), ALL_EDGE)
+        .somePathsSatisfyPredicate());
+  }
+  
+  public void testNonInclusive() {
+    // No Paths between nodes, by definition, always false.
+    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    g.createDirectedGraphNode("a");
+    g.createDirectedGraphNode("b");
+    g.createDirectedGraphNode("c");
+    g.connect("a", "-", "b");
+    g.connect("b", "-", "c");
+    assertFalse(createNonInclusiveTest(g, "a", "b",
+        Predicates.equalTo("a"), ALL_EDGE).somePathsSatisfyPredicate());
+    assertFalse(createNonInclusiveTest(g, "a", "b",
+        Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate());
+    assertTrue(createNonInclusiveTest(g, "a", "c",
+        Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate());
+  }
+
   private static <N, E> void assertGood(CheckPathsBetweenNodes<N, E> test) {
     assertTrue(test.allPathsSatisfyPredicate());
   }
@@ -212,6 +272,18 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     return new CheckPathsBetweenNodes<String, String>(graph,
         graph.getDirectedGraphNode(entry), graph.getDirectedGraphNode(exit),
         nodePredicate, edgePredicate);
+  }
+  
+  private static CheckPathsBetweenNodes<String, String>
+      createNonInclusiveTest(
+        DiGraph<String, String> graph,
+        String entry,
+        String exit,
+        Predicate<String> nodePredicate,
+        Predicate<DiGraphEdge<String, String>> edgePredicate) {
+    return new CheckPathsBetweenNodes<String, String>(graph,
+        graph.getDirectedGraphNode(entry), graph.getDirectedGraphNode(exit),
+        nodePredicate, edgePredicate, false);
   }
   
   private static Predicate<DiGraphEdge<String, String>>

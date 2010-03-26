@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
  * DiGraphNode, DiGraphNode, Predicate, Predicate)}, for a
  * description of this algorithm.
  *
+ * @autohr acleung@google.com (Alan Leung)
 *
  *
  * @param <N> The node type.
@@ -34,9 +35,9 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
  */
 class CheckPathsBetweenNodes<N, E> {
 
-  private Predicate<N> nodePredicate;
-  private Predicate<DiGraphEdge<N, E>> edgePredicate;
-  private boolean result;
+  private final Predicate<N> nodePredicate;
+  private final Predicate<DiGraphEdge<N, E>> edgePredicate;
+  private final boolean inclusive;
 
   // This algorithm works in two stages. First, the depth-first search (DFS)
   // tree is calculated with A as the root. During when constructing the DFS
@@ -60,6 +61,10 @@ class CheckPathsBetweenNodes<N, E> {
   private static final Annotation GRAY = new Annotation() {};
   // Finished visiting.
   private static final Annotation BLACK = new Annotation() {};
+  
+  private final DiGraph<N, E> graph;
+  private final DiGraphNode<N, E> start;
+  private final DiGraphNode<N, E> end;
 
   /**
    * Given a graph G with nodes A and B, this algorithm determines if all paths
@@ -75,31 +80,62 @@ class CheckPathsBetweenNodes<N, E> {
    *     A node to B (inclusive) must match.
    * @param edgePredicate Edges to consider as part of the graph. Edges in
    *     graph that don't match edgePredicate will be ignored.
+   * @param inclusive Includes node A and B in the test for the node predicate.
+   */
+  CheckPathsBetweenNodes(DiGraph<N, E> graph, DiGraphNode<N, E> a,
+      DiGraphNode<N, E> b, Predicate<N> nodePredicate,
+      Predicate<DiGraphEdge<N, E>> edgePredicate, boolean inclusive) {
+    this.graph = graph;
+    this.start = a;
+    this.end = b;
+    this.nodePredicate = nodePredicate;
+    this.edgePredicate = edgePredicate;
+    this.inclusive = inclusive;
+  }
+  
+  /**
+   * Inclusive check.
    */
   CheckPathsBetweenNodes(DiGraph<N, E> graph, DiGraphNode<N, E> a,
       DiGraphNode<N, E> b, Predicate<N> nodePredicate,
       Predicate<DiGraphEdge<N, E>> edgePredicate) {
-    this.nodePredicate = nodePredicate;
-    this.edgePredicate = edgePredicate;
-
-    graph.pushNodeAnnotations();
-    graph.pushEdgeAnnotations();
-
-    discoverBackEdges(a);
-    result = checkAllPathsWithoutBackEdges(a, b);
-
-    graph.popNodeAnnotations();
-    graph.popEdgeAnnotations();
+    this(graph, a, b, nodePredicate, edgePredicate, true);
   }
+  
 
   /**
    * @return true iff all paths contain at least one node that satisfy the
    *     predicate
    */
   public boolean allPathsSatisfyPredicate() {
+    setUp();
+    boolean result = checkAllPathsWithoutBackEdges(start, end);
+    tearDown();
+    return result;
+  }
+  
+  /**
+   * @return true iff some paths contain at least one node that satisfy the
+   *     predicate
+   */
+  public boolean somePathsSatisfyPredicate() {
+    setUp();
+    boolean result = checkSomePathsWithoutBackEdges(start, end);
+    tearDown();
     return result;
   }
 
+  private void setUp() {
+    graph.pushNodeAnnotations();
+    graph.pushEdgeAnnotations();
+    discoverBackEdges(this.start);
+  }
+  
+  private void tearDown() {
+    graph.popNodeAnnotations();
+    graph.popEdgeAnnotations();
+  }
+  
   private void discoverBackEdges(DiGraphNode<N, E> u) {
     u.setAnnotation(GRAY);
     for (DiGraphEdge<N, E> e : u.getOutEdges()) {
@@ -126,7 +162,8 @@ class CheckPathsBetweenNodes<N, E> {
    */
   private boolean checkAllPathsWithoutBackEdges(DiGraphNode<N, E> a,
       DiGraphNode<N, E> b) {
-    if (nodePredicate.apply(a.getValue())) {
+    if (nodePredicate.apply(a.getValue()) &&
+        (inclusive || (a != start && a != end))) {
       return true;
     }
     if (a == b) {
@@ -145,5 +182,33 @@ class CheckPathsBetweenNodes<N, E> {
       }
     }
     return true;
+  }
+  
+  /**
+   * Verify that some non-looping paths from {@code a} to {@code b} pass
+   * through at least one node where {@code nodePredicate} is true.
+   */
+  private boolean checkSomePathsWithoutBackEdges(DiGraphNode<N, E> a,
+      DiGraphNode<N, E> b) {
+    if (nodePredicate.apply(a.getValue()) &&
+        (inclusive || (a != start && a != end))) {
+      return true;
+    }
+    if (a == b) {
+      return false;
+    }
+    for (DiGraphEdge<N, E> e : a.getOutEdges()) {
+      if (ignoreEdge(e)) {
+        continue;
+      }
+      if (e.getAnnotation() == BACK_EDGE) {
+        continue;
+      }
+      DiGraphNode<N, E> next = e.getDestination();
+      if (checkSomePathsWithoutBackEdges(next, b)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
