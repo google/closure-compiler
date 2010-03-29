@@ -208,29 +208,6 @@ Compile error description
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>static&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSError.html#make(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.jscomp.CheckLevel, com.google.javascript.jscomp.DiagnosticType, java.lang.String...)">make</A></B>(<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp">NodeTraversal</A>&nbsp;t,
-     <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
-     <A HREF="../../../../com/google/javascript/jscomp/CheckLevel.html" title="enum in com.google.javascript.jscomp">CheckLevel</A>&nbsp;level,
-     <A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;type,
-     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>...&nbsp;arguments)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a JSError during NodeTraversal.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSError.html#make(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.jscomp.DiagnosticType, java.lang.String...)">make</A></B>(<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp">NodeTraversal</A>&nbsp;t,
-     <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
-     <A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;type,
-     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>...&nbsp;arguments)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a JSError during NodeTraversal.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>static&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSError.html#make(java.lang.String, int, int, com.google.javascript.jscomp.CheckLevel, com.google.javascript.jscomp.DiagnosticType, java.lang.String...)">make</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
      int&nbsp;lineno,
      int&nbsp;charno,
@@ -442,39 +419,6 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSError.html" ti
 <P>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>sourceName</CODE> - The source file name<DD><CODE>n</CODE> - Determines the line and char position within the source file name<DD><CODE>type</CODE> - The DiagnosticType<DD><CODE>arguments</CODE> - Arguments to be incorporated into the message</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="make(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.jscomp.CheckLevel, com.google.javascript.jscomp.DiagnosticType, java.lang.String...)"><!-- --></A><H3>
-make</H3>
-<PRE>
-public static <A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A> <B>make</B>(<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp">NodeTraversal</A>&nbsp;t,
-                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
-                           <A HREF="../../../../com/google/javascript/jscomp/CheckLevel.html" title="enum in com.google.javascript.jscomp">CheckLevel</A>&nbsp;level,
-                           <A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;type,
-                           <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>...&nbsp;arguments)</PRE>
-<DL>
-<DD>Creates a JSError during NodeTraversal.
-<P>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>t</CODE> - Determines source file name containing current script<DD><CODE>n</CODE> - Determines the line and char position within the source file name<DD><CODE>type</CODE> - The DiagnosticType<DD><CODE>arguments</CODE> - Arguments to be incorporated into the message</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="make(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.jscomp.DiagnosticType, java.lang.String...)"><!-- --></A><H3>
-make</H3>
-<PRE>
-public static <A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A> <B>make</B>(<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp">NodeTraversal</A>&nbsp;t,
-                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
-                           <A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;type,
-                           <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>...&nbsp;arguments)</PRE>
-<DL>
-<DD>Creates a JSError during NodeTraversal.
-<P>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>t</CODE> - Determines source file name containing current script<DD><CODE>n</CODE> - Determines the line and char position within the source file name<DD><CODE>type</CODE> - The DiagnosticType<DD><CODE>arguments</CODE> - Arguments to be incorporated into the message</DL>
 </DD>
 </DL>
 <HR>

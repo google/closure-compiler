@@ -98,7 +98,7 @@ public class FindExportableNodes extends AbstractPostOrderCallback {
       if (export != null) {
         exports.put(export, context);
       } else {
-        compiler.report(JSError.make(t, n, NON_GLOBAL_ERROR));
+        compiler.report(t.makeError(n, NON_GLOBAL_ERROR));
       }
     }
   }

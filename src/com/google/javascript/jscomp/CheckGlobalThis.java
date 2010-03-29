@@ -121,7 +121,7 @@ final class CheckGlobalThis implements Callback {
 
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (assignLhsChild != null && n.getType() == Token.THIS) {
-      compiler.report(JSError.make(t, n, level, GLOBAL_THIS));
+      compiler.report(t.makeError(n, level, GLOBAL_THIS));
     }
     if (n == assignLhsChild) {
       assignLhsChild = null;

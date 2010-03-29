@@ -230,11 +230,11 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
 
         if (!deprecationInfo.isEmpty()) {
             compiler.report(
-                JSError.make(t, n, DEPRECATED_CLASS_REASON,
-                             type.toString(), deprecationInfo));
+                t.makeError(n, DEPRECATED_CLASS_REASON,
+                    type.toString(), deprecationInfo));
         } else {
           compiler.report(
-              JSError.make(t, n, DEPRECATED_CLASS, type.toString()));
+              t.makeError(n, DEPRECATED_CLASS, type.toString()));
         }
       }
     }
@@ -258,11 +258,11 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
 
       if (docInfo.getDeprecationReason() != null) {
         compiler.report(
-            JSError.make(t, n, DEPRECATED_NAME_REASON, n.getString(),
-                         docInfo.getDeprecationReason()));
+            t.makeError(n, DEPRECATED_NAME_REASON, n.getString(),
+                docInfo.getDeprecationReason()));
       } else {
         compiler.report(
-            JSError.make(t, n, DEPRECATED_NAME, n.getString()));
+            t.makeError(n, DEPRECATED_NAME, n.getString()));
       }
     }
   }
@@ -290,12 +290,12 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
 
         if (!deprecationInfo.isEmpty()) {
           compiler.report(
-              JSError.make(t, n, DEPRECATED_PROP_REASON, propertyName,
+              t.makeError(n, DEPRECATED_PROP_REASON, propertyName,
                   validator.getReadableJSTypeName(n.getFirstChild(), true),
                   deprecationInfo));
         } else {
           compiler.report(
-              JSError.make(t, n, DEPRECATED_PROP, propertyName,
+              t.makeError(n, DEPRECATED_PROP, propertyName,
                   validator.getReadableJSTypeName(n.getFirstChild(), true)));
         }
       }
@@ -322,7 +322,7 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
           }
 
           compiler.report(
-              JSError.make(t, name, BAD_PRIVATE_GLOBAL_ACCESS,
+              t.makeError(name, BAD_PRIVATE_GLOBAL_ACCESS,
                   name.getString(), docInfo.getSourceName()));
         }
       }
@@ -383,12 +383,12 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
         // visibility of the original property.
         if (visibility == Visibility.PRIVATE && !sameInput) {
           compiler.report(
-              JSError.make(t, getprop, PRIVATE_OVERRIDE,
+              t.makeError(getprop, PRIVATE_OVERRIDE,
                   objectType.toString()));
         } else if (overridingVisibility != Visibility.INHERITED &&
             overridingVisibility != visibility) {
           compiler.report(
-              JSError.make(t, getprop, VISIBILITY_MISMATCH,
+              t.makeError(getprop, VISIBILITY_MISMATCH,
                   visibility.name(), objectType.toString(),
                   overridingVisibility.name()));
         }
@@ -406,7 +406,7 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
           // private access is not allowed outside the file from a different
           // enclosing class.
           compiler.report(
-              JSError.make(t, getprop,
+              t.makeError(getprop,
                   BAD_PRIVATE_PROPERTY_ACCESS,
                   propertyName,
                   validator.getReadableJSTypeName(
@@ -419,7 +419,7 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
           // The first two have already been checked for.
           if (currentClass == null || !currentClass.isSubtype(ownerType)) {
             compiler.report(
-                JSError.make(t, getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
+                t.makeError(getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
                     propertyName,
                     validator.getReadableJSTypeName(
                         getprop.getFirstChild(), true)));

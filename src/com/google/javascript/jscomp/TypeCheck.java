@@ -790,11 +790,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (reportUnknownTypes.isOn()) {
         String unresolvedReference = getUnresolvedReference(type);
         if (unresolvedReference != null) {
-          compiler.report(JSError.make(t, n, reportUnknownTypes,
-                                       UNRESOLVED_TYPE, unresolvedReference));
+          compiler.report(
+              t.makeError(n, reportUnknownTypes,
+                  UNRESOLVED_TYPE, unresolvedReference));
         } else {
-          compiler.report(JSError.make(t, n, reportUnknownTypes,
-                                       UNKNOWN_EXPR_TYPE));
+          compiler.report(
+              t.makeError(n, reportUnknownTypes, UNKNOWN_EXPR_TYPE));
         }
       }
       unknownCount++;
@@ -993,7 +994,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             interfaceHasProperty) {
           // @override not present, but the property does override an interface
           // property
-          compiler.report(JSError.make(t, n, reportMissingOverride,
+          compiler.report(t.makeError(n, reportMissingOverride,
               HIDDEN_INTERFACE_PROPERTY, propertyName,
               interfaceType.getTopMostDefiningType(propertyName).toString()));
         }
@@ -1005,7 +1006,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           JSType interfacePropType =
               interfaceType.getPrototype().getPropertyType(propertyName);
           if (!propertyType.canAssignTo(interfacePropType)) {
-            compiler.report(JSError.make(t, n,
+            compiler.report(t.makeError(n,
                 HIDDEN_INTERFACE_PROPERTY_MISMATCH, propertyName,
                 interfaceType.getTopMostDefiningType(propertyName).toString(),
                 interfacePropType.toString(), propertyType.toString()));
@@ -1025,7 +1026,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         !declaredOverride && superClassHasProperty) {
       // @override not present, but the property does override a superclass
       // property
-      compiler.report(JSError.make(t, n, reportMissingOverride,
+      compiler.report(t.makeError(n, reportMissingOverride,
           HIDDEN_SUPERCLASS_PROPERTY, propertyName,
           topInstanceType.toString()));
     }
@@ -1040,15 +1041,15 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           superClass.getPrototype().getPropertyType(propertyName);
       if (!propertyType.canAssignTo(superClassPropType)) {
         compiler.report(
-            JSError.make(t, n, HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
+            t.makeError(n, HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
                 propertyName, topInstanceType.toString(),
                 superClassPropType.toString(), propertyType.toString()));
       }
     } else if (!foundInterfaceProperty) {
       // there is no superclass nor interface implementation
       compiler.report(
-          JSError.make(t, n, UNKNOWN_OVERRIDE,
-                       propertyName, ctorType.getInstanceType().toString()));
+          t.makeError(n, UNKNOWN_OVERRIDE,
+              propertyName, ctorType.getInstanceType().toString()));
     }
   }
 
@@ -1067,14 +1068,16 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (!rvalueType.isOrdinaryFunction() &&
         !(rvalue.isQualifiedName() &&
           rvalue.getQualifiedName().equals(abstractMethodName))) {
-      compiler.report(JSError.make(t, object, INTERFACE_FUNCTION_MEMBERS_ONLY,
-                                   abstractMethodName));
+      compiler.report(
+          t.makeError(object, INTERFACE_FUNCTION_MEMBERS_ONLY,
+              abstractMethodName));
     }
 
     if (assign.getLastChild().getType() == Token.FUNCTION
         && !NodeUtil.isEmptyBlock(assign.getLastChild().getLastChild())) {
-      compiler.report(JSError.make(t, object, INTERFACE_FUNCTION_NOT_EMPTY,
-                                   abstractMethodName));
+      compiler.report(
+          t.makeError(object, INTERFACE_FUNCTION_NOT_EMPTY,
+              abstractMethodName));
     }
   }
 
@@ -1327,7 +1330,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           (baseConstructor.isConstructor() && functionType.isInterface() ||
            baseConstructor.isInterface() && functionType.isConstructor())) {
         compiler.report(
-            JSError.make(t, n, CONFLICTING_EXTENDED_TYPE, functionPrivateName));
+            t.makeError(n, CONFLICTING_EXTENDED_TYPE, functionPrivateName));
       }
 
       for (JSType baseInterface : functionType.getImplementedInterfaces()) {
@@ -1416,7 +1419,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     int maxArgs = functionType.getMaxArguments();
     if (minArgs > numArgs || maxArgs < numArgs) {
       t.getCompiler().report(
-          JSError.make(t, call, WRONG_ARGUMENT_COUNT,
+          t.makeError(call, WRONG_ARGUMENT_COUNT,
               validator.getReadableJSTypeName(call.getFirstChild(), false),
               String.valueOf(numArgs), String.valueOf(minArgs),
               maxArgs != Integer.MAX_VALUE ?
@@ -1687,7 +1690,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         String propName = n.getType() == Token.GETPROP ?
             n.getLastChild().getString() : "(missing)";
         compiler.report(
-            JSError.make(t, n, ILLEGAL_IMPLICIT_CAST, propName));
+            t.makeError(n, ILLEGAL_IMPLICIT_CAST, propName));
       }
     }
 

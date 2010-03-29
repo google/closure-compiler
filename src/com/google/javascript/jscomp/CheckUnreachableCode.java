@@ -62,7 +62,7 @@ class CheckUnreachableCode implements ScopedCallback {
       if (n.getLineno() != -1 &&
           // Allow spurious semi-colons and spurious breaks.
           n.getType() != Token.EMPTY && n.getType() != Token.BREAK) {
-        compiler.report(JSError.make(t, n, level, UNREACHABLE_CODE));
+        compiler.report(t.makeError(n, level, UNREACHABLE_CODE));
         // From now on, we are going to assume the user fixed the error and not
         // give more warning related to code section reachable from this node.
         new GraphReachability<Node, ControlFlowGraph.Branch>(

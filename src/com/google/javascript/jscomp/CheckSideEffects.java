@@ -115,7 +115,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
       }
 
       t.getCompiler().report(
-          JSError.make(t, n, level, USELESS_CODE_ERROR, msg));
+          t.makeError(n, level, USELESS_CODE_ERROR, msg));
     }
   }
 }

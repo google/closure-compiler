@@ -379,7 +379,7 @@ class TypeValidator {
     if (!overridingType.canAssignTo(hiddenType)) {
       registerMismatch(overridingType, hiddenType);
       compiler.report(
-          JSError.make(t, n, HIDDEN_PROPERTY_MISMATCH,
+          t.makeError(n, HIDDEN_PROPERTY_MISMATCH,
               propertyName, ownerType.toString(),
               hiddenType.toString(), overridingType.toString()));
     }
@@ -401,7 +401,7 @@ class TypeValidator {
     if (!declaredSuper.equals(superObject)) {
       if (declaredSuper.equals(getNativeType(OBJECT_TYPE))) {
         compiler.report(
-            JSError.make(t, n, MISSING_EXTENDS_TAG_WARNING,
+            t.makeError(n, MISSING_EXTENDS_TAG_WARNING,
                 subObject.toString()));
         registerMismatch(superObject, declaredSuper);
       } else {
@@ -432,7 +432,7 @@ class TypeValidator {
 
     if (!type.canAssignTo(castType) && !castType.canAssignTo(type)) {
       compiler.report(
-          JSError.make(t, n, INVALID_CAST,
+          t.makeError(n, INVALID_CAST,
               castType.toString(), type.toString()));
       registerMismatch(type, castType);
     }

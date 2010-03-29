@@ -121,7 +121,7 @@ class CreateSyntheticBlocks implements CompilerPass {
       }
 
       if (startMarkerStack.isEmpty()) {
-        compiler.report(JSError.make(t, n, UNMATCHED_END_MARKER,
+        compiler.report(t.makeError(n, UNMATCHED_END_MARKER,
             startMarkerName, endMarkerName));
         return;
       }
@@ -134,7 +134,7 @@ class CreateSyntheticBlocks implements CompilerPass {
         if (type == Token.SCRIPT || type == Token.BLOCK) {
           if (ancestor != startMarker.ancestorBlock) {
             // The end marker isn't in the same block as the start marker.
-            compiler.report(JSError.make(t, n, UNMATCHED_END_MARKER,
+            compiler.report(t.makeError(n, UNMATCHED_END_MARKER,
                 startMarkerName, endMarkerName));
             return;
           }

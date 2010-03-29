@@ -215,7 +215,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           String name = n.getFirstChild().getString();
           ProvidedName pn = providedNames.get(name);
           if (pn != null) {
-            compiler.report(JSError.make(t, n, FUNCTION_NAMESPACE_ERROR, name));
+            compiler.report(t.makeError(n, FUNCTION_NAMESPACE_ERROR, name));
           }
         }
         break;
@@ -253,7 +253,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             !compiler.getModuleGraph().dependsOn(module,
                 provided.firstModule)) {
           compiler.report(
-              JSError.make(t, n, XMODULE_REQUIRE_ERROR, ns,
+              t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
                   provided.firstModule.getName(),
                   module.getName()));
         }
@@ -286,7 +286,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           previouslyProvided.addProvide(parent, t.getModule(), true);
         } else {
           compiler.report(
-              JSError.make(t, n, DUPLICATE_NAMESPACE_ERROR, ns));
+              t.makeError(n, DUPLICATE_NAMESPACE_ERROR, ns));
         }
       } else {
         registerAnyProvidedPrefixes(ns, parent, t.getModule());
@@ -459,7 +459,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   /** Reports an incorrect use of super-method calling. */
   private void reportBadBaseClassUse(
       NodeTraversal t, Node n, String extraMessage) {
-    compiler.report(JSError.make(t, n, BASE_CLASS_ERROR, extraMessage));
+    compiler.report(t.makeError(n, BASE_CLASS_ERROR, extraMessage));
   }
 
   /**
@@ -514,7 +514,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         if (key.getType() != Token.STRING
             || value == null
             || value.getType() != Token.STRING) {
-          error = JSError.make(t, n,
+          error = t.makeError(n,
               NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
         }
         if (error != null) {
@@ -584,7 +584,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     for (String part : arg.getString().split("\\.")) {
       if (!NodeUtil.isValidPropertyName(part)) {
-        compiler.report(JSError.make(t, arg, INVALID_PROVIDE_ERROR, part));
+        compiler.report(t.makeError(arg, INVALID_PROVIDE_ERROR, part));
         return false;
       }
     }
@@ -619,8 +619,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
     if (diagnostic != null) {
       compiler.report(
-          JSError.make(t, methodName,
-                       diagnostic, methodName.getQualifiedName()));
+          t.makeError(methodName,
+              diagnostic, methodName.getQualifiedName()));
       return false;
     }
     return true;

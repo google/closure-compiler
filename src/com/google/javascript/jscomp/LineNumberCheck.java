@@ -62,7 +62,7 @@ class LineNumberCheck implements Callback, CompilerPass {
         // The tree version of the node is really the best diagnostic
         // info we have to offer here.
         compiler.report(
-            JSError.make(t, n, MISSING_LINE_INFO,
+            t.makeError(n, MISSING_LINE_INFO,
                 n.toStringTree()));
       }
     }

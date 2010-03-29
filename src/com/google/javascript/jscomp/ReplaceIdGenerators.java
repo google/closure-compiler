@@ -75,14 +75,14 @@ class ReplaceIdGenerators implements CompilerPass {
 
       if (!t.inGlobalScope()) {
         // Warn about calls not in the global scope.
-        compiler.report(JSError.make(t, n, NON_GLOBAL_ID_GENERATOR_CALL));
+        compiler.report(t.makeError(n, NON_GLOBAL_ID_GENERATOR_CALL));
         return;
       }
 
       for (Node ancestor : n.getAncestors()) {
         if (NodeUtil.isControlStructure(ancestor)) {
           // Warn about conditional calls.
-          compiler.report(JSError.make(t, n, CONDITIONAL_ID_GENERATOR_CALL));
+          compiler.report(t.makeError(n, CONDITIONAL_ID_GENERATOR_CALL));
           return;
         }
       }

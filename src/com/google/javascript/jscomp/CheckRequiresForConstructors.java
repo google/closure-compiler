@@ -135,7 +135,7 @@ class CheckRequiresForConstructors implements CompilerPass {
             && (requires == null || !requires.contains(className))
             && !classNames.contains(className)) {
           compiler.report(
-              JSError.make(t, node, level, MISSING_REQUIRE_WARNING, className));
+              t.makeError(node, level, MISSING_REQUIRE_WARNING, className));
           classNames.add(className);
         }
       }

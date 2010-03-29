@@ -67,7 +67,7 @@ final class CheckAccidentalSemicolon extends AbstractPostOrderCallback {
         // children are considered OK.
         if (child.wasEmptyNode()) {
           t.getCompiler().report(
-              JSError.make(t, n, level, SUSPICIOUS_SEMICOLON));
+              t.makeError(n, level, SUSPICIOUS_SEMICOLON));
         }
       }
     }

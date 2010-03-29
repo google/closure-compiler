@@ -110,18 +110,18 @@ class VariableShadowDeclarationCheck implements CompilerPass {
         Var var = vars.next();
 
         if (externalNoShadowVariableNames.contains(var.getName())) {
-          compiler.report(JSError.make(t, var.nameNode, checkLevel,
-                                       SHADOW_VAR_ERROR,
-                                       var.getName()));
+          compiler.report(
+              t.makeError(var.nameNode, checkLevel,
+                  SHADOW_VAR_ERROR, var.getName()));
           continue;
         }
 
         Var shadowedVar = parentScope.getVar(var.getName());
         if ((shadowedVar != null) &&
             (shadowedVar.isNoShadow() || shadowedVar.isLocal())) {
-          compiler.report(JSError.make(t, var.nameNode, checkLevel,
-                                       SHADOW_VAR_ERROR,
-                                       var.getName()));
+          compiler.report(
+              t.makeError(var.nameNode, checkLevel,
+                  SHADOW_VAR_ERROR, var.getName()));
           continue;
         }
       }

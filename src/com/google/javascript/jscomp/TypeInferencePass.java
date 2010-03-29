@@ -102,7 +102,7 @@ class TypeInferencePass implements CompilerPass {
       compiler.getTypeRegistry().resolveTypesInScope(scope);
 
     } catch (DataFlowAnalysis.MaxIterationsExceededException e) {
-      compiler.report(JSError.make(t, n, DATAFLOW_ERROR));
+      compiler.report(t.makeError(n, DATAFLOW_ERROR));
     }
   }
 

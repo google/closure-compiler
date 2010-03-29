@@ -260,7 +260,7 @@ class ProcessDefines implements CompilerPass {
               // For defines, it's an error if a simple name is assigned
               // before it's declared
               compiler.report(
-                  JSError.make(t, val, INVALID_DEFINE_INIT_ERROR, fullName));
+                  t.makeError(val, INVALID_DEFINE_INIT_ERROR, fullName));
             } else if (processDefineAssignment(t, fullName, val, valParent)) {
               // remove the assignment so that the variable is still declared,
               // but no longer assigned to a value, e.g.,
@@ -291,7 +291,7 @@ class ProcessDefines implements CompilerPass {
           n.getJSDocInfo() != null && n.getJSDocInfo().isDefine()) {
         // warn about @define annotations in local scopes
         compiler.report(
-            JSError.make(t, n, NON_GLOBAL_DEFINE_INIT_ERROR, ""));
+            t.makeError(n, NON_GLOBAL_DEFINE_INIT_ERROR, ""));
       }
 
       if (lvalueToRemoveLater == n) {
@@ -377,10 +377,10 @@ class ProcessDefines implements CompilerPass {
       if (value == null || !NodeUtil.isValidDefineValue(value,
                                                         allDefines.keySet())) {
         compiler.report(
-            JSError.make(t, value, INVALID_DEFINE_INIT_ERROR, name));
+            t.makeError(value, INVALID_DEFINE_INIT_ERROR, name));
       } else if (!isAssignAllowed()) {
         compiler.report(
-            JSError.make(t, valueParent, NON_GLOBAL_DEFINE_INIT_ERROR, name));
+            t.makeError(valueParent, NON_GLOBAL_DEFINE_INIT_ERROR, name));
       } else {
         DefineInfo info = allDefines.get(name);
         if (info == null) {
@@ -396,8 +396,8 @@ class ProcessDefines implements CompilerPass {
           // The define was already initialized, and this is an unsafe
           // re-assignment.
           compiler.report(
-              JSError.make(t, valueParent, DEFINE_NOT_ASSIGNABLE_ERROR,
-                           name, info.getReasonWhyNotAssignable()));
+              t.makeError(valueParent, DEFINE_NOT_ASSIGNABLE_ERROR,
+                  name, info.getReasonWhyNotAssignable()));
         }
       }
 

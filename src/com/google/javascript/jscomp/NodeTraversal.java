@@ -625,4 +625,28 @@ public class NodeTraversal {
     String name = (String) n.getProp(Node.SOURCENAME_PROP);
     return name == null ? "" : name;
   }
+
+  /**
+   * Creates a JSError during NodeTraversal.
+   *
+   * @param n Determines the line and char position within the source file name
+   * @param type The DiagnosticType
+   * @param arguments Arguments to be incorporated into the message
+   */
+  public JSError makeError(Node n, CheckLevel level, DiagnosticType type,
+      String... arguments) {
+    return JSError.make(getSourceName(), n.getLineno(), n.getCharno(), level,
+        type, arguments);
+  }
+
+  /**
+   * Creates a JSError during NodeTraversal.
+   *
+   * @param n Determines the line and char position within the source file name
+   * @param type The DiagnosticType
+   * @param arguments Arguments to be incorporated into the message
+   */
+  public JSError makeError(Node n, DiagnosticType type, String... arguments) {
+    return JSError.make(getSourceName(), n, type, arguments);
+  }
 }

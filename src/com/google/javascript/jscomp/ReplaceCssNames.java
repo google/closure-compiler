@@ -124,7 +124,7 @@ class ReplaceCssNames implements CompilerPass {
               parent.replaceChild(n, first);
               compiler.reportCodeChange();
             } else {
-              compiler.report(JSError.make(t, n, STRING_LITERAL_EXPECTED_ERROR,
+              compiler.report(t.makeError(n, STRING_LITERAL_EXPECTED_ERROR,
                   Token.name(first.getType())));
             }
             break;
@@ -136,8 +136,8 @@ class ReplaceCssNames implements CompilerPass {
             Node second = first.getNext();
 
             if (first.getType() == Token.STRING) {
-              compiler.report(JSError.make(
-                  t, n, UNEXPECTED_STRING_LITERAL_ERROR,
+              compiler.report(t.makeError(
+                  n, UNEXPECTED_STRING_LITERAL_ERROR,
                   first.getString(), second.getString()));
 
             } else if (second.getType() == Token.STRING) {
@@ -149,14 +149,14 @@ class ReplaceCssNames implements CompilerPass {
               compiler.reportCodeChange();
 
             } else {
-              compiler.report(JSError.make(t, n, STRING_LITERAL_EXPECTED_ERROR,
+              compiler.report(t.makeError(n, STRING_LITERAL_EXPECTED_ERROR,
                   Token.name(second.getType())));
             }
             break;
 
           default:
-            compiler.report(JSError.make(
-                t, n, INVALID_NUM_ARGUMENTS_ERROR, String.valueOf(count)));
+            compiler.report(t.makeError(
+                n, INVALID_NUM_ARGUMENTS_ERROR, String.valueOf(count)));
         }
       }
     }
@@ -187,8 +187,8 @@ class ReplaceCssNames implements CompilerPass {
             String replacement = symbolMap.get(parts[i]);
             if (replacement == null) {
               // If we can't encode all parts, don't encode any of it.
-              compiler.report(JSError.make(
-                  t, n, UNKNOWN_SYMBOL_WARNING, parts[i], n.getString()));
+              compiler.report(t.makeError(
+                  n, UNKNOWN_SYMBOL_WARNING, parts[i], n.getString()));
               return;
             }
             parts[i] = replacement;

@@ -79,8 +79,8 @@ class CheckMissingGetCssName
         if (insideAssignmentToIdConstant(n, parent)) {
           continue;
         }
-        compiler.report(JSError.make(t, n, level, MISSING_GETCSSNAME,
-                                     blacklist.group()));
+        compiler.report(t.makeError(n, level, MISSING_GETCSSNAME,
+                blacklist.group()));
       }
     }
   }

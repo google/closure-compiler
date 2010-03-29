@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -124,33 +123,6 @@ public class JSError {
 
     return new JSError(sourceName, n.getLineno(), n.getCharno(), type, level,
         arguments);
-  }
-
-  /**
-   * Creates a JSError during NodeTraversal.
-   *
-   * @param t Determines source file name containing current script
-   * @param n Determines the line and char position within the source file name
-   * @param type The DiagnosticType
-   * @param arguments Arguments to be incorporated into the message
-   */
-  public static JSError make(NodeTraversal t, Node n,
-      CheckLevel level, DiagnosticType type, String... arguments) {
-    return new JSError(t.getSourceName(), n.getLineno(), n.getCharno(), type,
-        level, arguments);
-  }
-
-  /**
-   * Creates a JSError during NodeTraversal.
-   *
-   * @param t Determines source file name containing current script
-   * @param n Determines the line and char position within the source file name
-   * @param type The DiagnosticType
-   * @param arguments Arguments to be incorporated into the message
-   */
-  public static JSError make(NodeTraversal t, Node n,
-                             DiagnosticType type, String... arguments) {
-    return new JSError(t.getSourceName(), n, type, arguments);
   }
 
   //

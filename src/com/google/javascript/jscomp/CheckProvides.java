@@ -106,8 +106,8 @@ class CheckProvides implements CompilerPass {
       for (String ctorName : ctors.keySet()) {
         if (!provides.containsKey(ctorName)) {
           compiler.report(
-              JSError.make(t, ctors.get(ctorName), checkLevel,
-                           MISSING_PROVIDE_WARNING, ctorName));
+              t.makeError(ctors.get(ctorName), checkLevel,
+                  MISSING_PROVIDE_WARNING, ctorName));
         }
       }
       provides.clear();

@@ -410,7 +410,7 @@ class FoldConstants extends AbstractPostOrderCallback
   }
 
   private void error(NodeTraversal t, DiagnosticType diagnostic, Node n) {
-    t.getCompiler().report(JSError.make(t, n, diagnostic, n.toString()));
+    t.getCompiler().report(t.makeError(n, diagnostic, n.toString()));
   }
 
   /**
@@ -1600,13 +1600,13 @@ class FoldConstants extends AbstractPostOrderCallback
       double index = right.getDouble();
       int intIndex = (int) index;
       if (intIndex != index) {
-        t.getCompiler().report(JSError.make(t, right,
+        t.getCompiler().report(t.makeError(right,
             INVALID_GETELEM_INDEX_ERROR, String.valueOf(index)));
         return;
       }
 
       if (intIndex < 0) {
-        t.getCompiler().report(JSError.make(t, n, INDEX_OUT_OF_BOUNDS_ERROR,
+        t.getCompiler().report(t.makeError(n, INDEX_OUT_OF_BOUNDS_ERROR,
             String.valueOf(intIndex)));
         return;
       }
@@ -1617,7 +1617,7 @@ class FoldConstants extends AbstractPostOrderCallback
       }
 
       if (elem == null) {
-        t.getCompiler().report(JSError.make(t, n, INDEX_OUT_OF_BOUNDS_ERROR,
+        t.getCompiler().report(t.makeError(n, INDEX_OUT_OF_BOUNDS_ERROR,
             String.valueOf(intIndex)));
         return;
       }

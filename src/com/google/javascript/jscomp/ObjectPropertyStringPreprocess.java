@@ -98,14 +98,14 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
       }
 
       if (n.getChildCount() != 3) {
-        compiler.report(JSError.make(t, n, INVALID_NUM_ARGUMENTS_ERROR,
+        compiler.report(t.makeError(n, INVALID_NUM_ARGUMENTS_ERROR,
             "" + n.getChildCount()));
         return;
       }
 
       Node firstArgument = objectName.getNext();
       if (!firstArgument.isQualifiedName()) {
-        compiler.report(JSError.make(t, firstArgument,
+        compiler.report(t.makeError(firstArgument,
             QUALIFIED_NAME_EXPECTED_ERROR,
             Token.name(firstArgument.getType())));
         return;
@@ -113,7 +113,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
 
       Node secondArgument = firstArgument.getNext();
       if (secondArgument.getType() != Token.STRING) {
-        compiler.report(JSError.make(t, secondArgument,
+        compiler.report(t.makeError(secondArgument,
             STRING_LITERAL_EXPECTED_ERROR,
             Token.name(secondArgument.getType())));
         return;

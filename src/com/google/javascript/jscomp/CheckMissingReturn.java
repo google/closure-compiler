@@ -104,7 +104,7 @@ class CheckMissingReturn implements ScopedCallback {
 
     if (!test.allPathsSatisfyPredicate()) {
       compiler.report(
-          JSError.make(t, t.getScopeRoot(), level, MISSING_RETURN_STATEMENT));
+          t.makeError(t.getScopeRoot(), level, MISSING_RETURN_STATEMENT));
     }
   }
 
