@@ -161,6 +161,17 @@ Node.prototype.definition;
  */
 Node.prototype.document;
 
+
+/**
+ * Inserts the given HTML text into the element at the location.
+ * @param {string} sWhere Where to insert the HTML text, one of 'beforeBegin',
+ *     'afterBegin', 'beforeEnd', 'afterEnd'.
+ * @param {string} sText HTML text to insert.
+ * @see http://msdn.microsoft.com/en-us/library/ms536452(VS.85).aspx
+ */
+Node.prototype.insertAdjacentHTML = function(sWhere, sText) {};
+
+
 /**
  * @type {*}
  * @see http://msdn.microsoft.com/en-us/library/ms762308(VS.85).aspx

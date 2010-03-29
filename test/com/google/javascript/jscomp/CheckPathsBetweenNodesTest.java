@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link CheckPathsBetweenNodes}.
  *
- * @autohr acleung@google.com (Alan Leung)
+*
 *
  */
 public class CheckPathsBetweenNodesTest extends TestCase {
