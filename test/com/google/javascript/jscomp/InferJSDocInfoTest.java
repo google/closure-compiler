@@ -42,7 +42,6 @@ public class InferJSDocInfoTest extends CompilerTestCase {
 
   private JSTypeRegistry registry;
   private Scope globalScope;
-  private Scope lastLocalScope;
 
   @Override
   public int getNumRepetitions() {
@@ -61,8 +60,6 @@ public class InferJSDocInfoTest extends CompilerTestCase {
       Scope s = t.getScope();
       if (s.isGlobal()) {
         globalScope = s;
-      } else {
-        lastLocalScope = s;
       }
     }
   };

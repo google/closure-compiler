@@ -519,9 +519,12 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(invertContextualRenaming);
     }
 
-
     if (options.variableRenaming != VariableRenamingPolicy.OFF) {
       passes.add(renameVars);
+    }
+
+    if (options.groupVariableDeclarations) {
+      passes.add(groupVariableDeclarations);
     }
 
     // This pass should run after names stop changing.
@@ -1396,6 +1399,18 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       compiler.setUnnormalized();
       return new CollapseVariableDeclarations(compiler);
+    }
+  };
+
+  /**
+   * Simple global collapses of variable declarations.
+   */
+  private final PassFactory groupVariableDeclarations =
+      new PassFactory("groupVariableDeclarations", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      compiler.setNormalized();
+      return new GroupVariableDeclarations(compiler);
     }
   };
 

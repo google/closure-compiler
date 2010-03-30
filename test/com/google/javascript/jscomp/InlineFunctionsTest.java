@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 
 /**
  * Inline function tests.

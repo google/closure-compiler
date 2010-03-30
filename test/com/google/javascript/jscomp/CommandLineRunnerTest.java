@@ -280,10 +280,6 @@ public class CommandLineRunnerTest extends TestCase {
     }
   }
 
-  private Compiler compile(String original) {
-    return compile( new String[] { original });
-  }
-
   private Compiler compile(String[] original) {
     String[] argStrings = args.toArray(new String[] {});
     CommandLineRunner runner = null;

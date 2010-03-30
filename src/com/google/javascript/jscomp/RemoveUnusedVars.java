@@ -49,9 +49,6 @@ class RemoveUnusedVars implements CompilerPass {
 
   private final AbstractCompiler compiler_;
 
-  /** Maximum number of iterations we'll allow (for safety) */
-  private static final int MAX_ITERATIONS = 20;
-
   /** Keeps track of the number of variables removed per instance. */
   private int numRemoved_ = 0;
 

@@ -603,7 +603,6 @@ public class Node implements Cloneable, Serializable
 
     public void addChildrenToBack(Node children) {
         for (Node child = children; child != null; child = child.next) {
-          // Hmmm... IRFactory doesn't remove before calling this.
           Preconditions.checkArgument(child.parent == null);
           child.parent = this;
         }

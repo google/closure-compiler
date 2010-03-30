@@ -276,6 +276,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Collapses multiple variable declarations into one */
   public boolean collapseVariableDeclarations;
 
+  /** Group multiple variable declarations into one */
+  public boolean groupVariableDeclarations;
+
   /**
    * Collapses anonymous function declarations into named function
    * declarations
@@ -619,6 +622,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     removeUnusedVarsInGlobalScope = true;
     aliasExternals = false;
     collapseVariableDeclarations = false;
+    groupVariableDeclarations = false;
     collapseAnonymousFunctions = false;
     aliasableStrings = Collections.emptySet();
     aliasStringsBlacklist = "";

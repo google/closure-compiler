@@ -18,12 +18,12 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
-import java.text.*;
-import java.util.*;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Tests for {@link VariableMap}.
