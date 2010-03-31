@@ -17,16 +17,19 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.deps.DependencyInfo;
+import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -51,6 +54,14 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   // Provided and required symbols.
   private final Set<String> provides = Sets.newHashSet();
   private final Set<String> requires = Sets.newHashSet();
+  private boolean generatedDependencyInfoFromSource = false;
+
+  // An error manager for handling problems when dealing with
+  // provides/requires.
+  private ErrorManager errorManager;
+
+  // An AbstractCompiler for doing parsing.
+  private AbstractCompiler compiler;
 
   public CompilerInput(SourceAst ast) {
     this(ast, ast.getSourceFile().getName(), false);
@@ -114,65 +125,128 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     return ast;
   }
 
-  /** Gets a list of types depended on by this input. */
-  public Collection<String> getRequires(AbstractCompiler compiler) {
-    if (getAstRoot(compiler) != null) {
-      DepsFinder deps = new DepsFinder(compiler, true);
-      NodeTraversal.traverse(compiler, getAstRoot(compiler), deps);
-      requires.addAll(deps.types);
-      return requires;
-    } else {
-      return ImmutableSet.<String>of();
-    }
+  /** Sets an error manager for routing error messages. */
+  public void setErrorManager(ErrorManager errorManager) {
+    this.errorManager = errorManager;
+  }
+
+  /** Sets an abstract compiler for doing parsing. */
+  public void setCompiler(AbstractCompiler compiler) {
+    this.compiler = compiler;
+    setErrorManager(compiler.getErrorManager());
   }
 
   /** Gets a list of types depended on by this input. */
   @Override
   public Collection<String> getRequires() {
-    // TODO(nicksantos): Implement me.
-    throw new UnsupportedOperationException();
-  }
-
-  /** Gets a list of types provided by this input. */
-  public Collection<String> getProvides(AbstractCompiler compiler) {
-    if (getAstRoot(compiler) != null) {
-      DepsFinder deps = new DepsFinder(compiler, false);
-      NodeTraversal.traverse(compiler, getAstRoot(compiler), deps);
-      provides.addAll(deps.types);
-      return provides;
-    } else {
-      return ImmutableSet.<String>of();
+    Preconditions.checkNotNull(errorManager,
+        "Expected setErrorManager to be called first");
+    try {
+      regenerateDependencyInfoIfNecessary();
+      return Collections.<String>unmodifiableSet(requires);
+    } catch (IOException e) {
+      errorManager.report(CheckLevel.ERROR,
+          JSError.make(AbstractCompiler.READ_ERROR, getName()));
+      return ImmutableList.<String>of();
     }
   }
 
   /** Gets a list of types provided by this input. */
   @Override
   public Collection<String> getProvides() {
-    // TODO(nicksantos): Implement me.
-    throw new UnsupportedOperationException();
+    Preconditions.checkNotNull(errorManager,
+        "Expected setErrorManager to be called first");
+    try {
+      regenerateDependencyInfoIfNecessary();
+      return Collections.<String>unmodifiableSet(provides);
+    } catch (IOException e) {
+      errorManager.report(CheckLevel.ERROR,
+          JSError.make(AbstractCompiler.READ_ERROR, getName()));
+      return ImmutableList.<String>of();
+    }
   }
 
-  private class DepsFinder extends AbstractShallowCallback {
-    private boolean findRequire;
-    private List<String> types;
-    private CodingConvention codingConvention;
+  /**
+   * Regenerates the provides/requires if we need to do so.
+   */
+  private void regenerateDependencyInfoIfNecessary() throws IOException {
+    // If the code is NOT a JsAst, then it was not originally JS code.
+    // Look at the Ast for dependency info.
+    if (!(ast instanceof JsAst)) {
+      Preconditions.checkNotNull(compiler,
+          "Expected setCompiler to be called first");
+      DepsFinder finder = new DepsFinder();
+      Node root = getAstRoot(compiler);
+      if (root == null) {
+        return;
+      }
 
-    DepsFinder(AbstractCompiler compiler, boolean findRequire) {
-      this.findRequire = findRequire;
-      this.codingConvention = compiler.getCodingConvention();
-      this.types = Lists.newArrayList();
+      finder.visitTree(getAstRoot(compiler));
+
+      // TODO(nicksantos|user): This caching behavior is a bit
+      // odd, and only works if you assume the exact call flow that
+      // clients are currently using.  In that flow, they call
+      // getProvides(), then remove the goog.provide calls from the
+      // AST, and then call getProvides() again.
+      //
+      // This won't work for any other call flow, or any sort of incremental
+      // compilation scheme. The API needs to be fixed so callers aren't
+      // doing weird things like this, and then we should get rid of the
+      // multiple-scan strategy.
+
+      provides.addAll(finder.provides);
+      requires.addAll(finder.requires);
+    } else {
+      // Otherwise, look at the source code.
+      if (!generatedDependencyInfoFromSource) {
+        // Note: it's ok to use getName() instead of
+        // getPathRelativeToClosureBase() here because we're not using
+        // this to generate deps files. (We're only using it for
+        // symbol dependencies.)
+        DependencyInfo info = (new JsFileParser(errorManager)).parseFile(
+            getName(), getName(), getCode());
+
+        provides.addAll(info.getProvides());
+        requires.addAll(info.getRequires());
+
+        generatedDependencyInfoFromSource = true;
+      }
+    }
+  }
+
+  private static class DepsFinder {
+    private final List<String> provides = Lists.newArrayList();
+    private final List<String> requires = Lists.newArrayList();
+    private final CodingConvention codingConvention =
+        new ClosureCodingConvention();
+
+    void visitTree(Node n) {
+      visitSubtree(n, null);
     }
 
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getType()) {
-        case Token.CALL:
-          String className = findRequire
-              ? codingConvention.extractClassNameIfRequire(n, parent)
-              : codingConvention.extractClassNameIfProvide(n, parent);
-          if (className != null) {
-            types.add(className);
-          }
-          break;
+    void visitSubtree(Node n, Node parent) {
+      if (n.getType() == Token.CALL) {
+        String require =
+            codingConvention.extractClassNameIfRequire(n, parent);
+        if (require != null) {
+          requires.add(require);
+        }
+
+        String provide =
+            codingConvention.extractClassNameIfProvide(n, parent);
+        if (provide != null) {
+          provides.add(provide);
+        }
+        return;
+      } else if (parent != null &&
+          parent.getType() != Token.EXPR_RESULT &&
+          parent.getType() != Token.SCRIPT) {
+        return;
+      }
+
+      for (Node child = n.getFirstChild();
+           child != null; child = child.getNext()) {
+        visitSubtree(child, n);
       }
     }
   }

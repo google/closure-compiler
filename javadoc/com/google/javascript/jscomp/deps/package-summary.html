@@ -106,8 +106,35 @@ Analyzes information about dependencies between files.
 <B>Class Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html" title="class in com.google.javascript.jscomp.deps">DepsFileParser</A></B></TD>
+<TD>A parser that can extract dependency information from existing deps.js files.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser</A></B></TD>
+<TD>Base class for classes that parse Javascript sources on a line-by-line basis.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileParser.html" title="class in com.google.javascript.jscomp.deps">JsFileParser</A></B></TD>
+<TD>A parser that can extract goog.require() and goog.provide() dependency
+ information from a .js file.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/deps/SimpleDependencyInfo.html" title="class in com.google.javascript.jscomp.deps">SimpleDependencyInfo</A></B></TD>
 <TD>A class to hold JS dependency information for a single .js file.</TD>
+</TR>
+</TABLE>
+&nbsp;
+
+<P>
+
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Exception Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD WIDTH="15%"><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.ParseException.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser.ParseException</A></B></TD>
+<TD>Thrown by base classes to signify a problem parsing a line.</TD>
 </TR>
 </TABLE>
 &nbsp;

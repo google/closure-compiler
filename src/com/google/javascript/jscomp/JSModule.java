@@ -203,7 +203,8 @@ public class JSModule {
     final Map<String, CompilerInput> provides = Maps.newHashMap();
     // Collect all symbols provided in these files.
     for (CompilerInput input : inputs) {
-      for (String provide : input.getProvides(compiler)) {
+      input.setCompiler(compiler);
+      for (String provide : input.getProvides()) {
         provides.put(provide, input);
       }
     }
@@ -212,7 +213,7 @@ public class JSModule {
     final Multimap<CompilerInput, CompilerInput> deps =
         HashMultimap.create();
     for (CompilerInput input : inputs) {
-      for (String req : input.getRequires(compiler)) {
+      for (String req : input.getRequires()) {
         CompilerInput dep = provides.get(req);
         if (dep != null) {
           deps.put(input, dep);

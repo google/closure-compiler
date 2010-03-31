@@ -231,14 +231,6 @@ A class for the internal representation of an input to the compiler.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getProvides(com.google.javascript.jscomp.AbstractCompiler)">getProvides</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a list of types provided by this input.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Region.html" title="interface in com.google.javascript.jscomp">Region</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getRegion(int)">getRegion</A></B>(int&nbsp;lineNumber)</CODE>
 
@@ -249,14 +241,6 @@ A class for the internal representation of an input to the compiler.
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getRequires()">getRequires</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a list of types depended on by this input.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#getRequires(com.google.javascript.jscomp.AbstractCompiler)">getRequires</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a list of types depended on by this input.</TD>
@@ -284,6 +268,22 @@ A class for the internal representation of an input to the compiler.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#setCompiler(com.google.javascript.jscomp.AbstractCompiler)">setCompiler</A></B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets an abstract compiler for doing parsing.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html#setErrorManager(com.google.javascript.jscomp.ErrorManager)">setErrorManager</A></B>(<A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A>&nbsp;errorManager)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets an error manager for routing error messages.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -499,12 +499,28 @@ public <A HREF="../../../../com/google/javascript/jscomp/SourceAst.html" title="
 </DL>
 <HR>
 
-<A NAME="getRequires(com.google.javascript.jscomp.AbstractCompiler)"><!-- --></A><H3>
-getRequires</H3>
+<A NAME="setErrorManager(com.google.javascript.jscomp.ErrorManager)"><!-- --></A><H3>
+setErrorManager</H3>
 <PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getRequires</B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</PRE>
+public void <B>setErrorManager</B>(<A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A>&nbsp;errorManager)</PRE>
 <DL>
-<DD>Gets a list of types depended on by this input.
+<DD>Sets an error manager for routing error messages.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setCompiler(com.google.javascript.jscomp.AbstractCompiler)"><!-- --></A><H3>
+setCompiler</H3>
+<PRE>
+public void <B>setCompiler</B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</PRE>
+<DL>
+<DD>Sets an abstract compiler for doing parsing.
 <P>
 <DD><DL>
 </DL>
@@ -524,22 +540,6 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getRequires()">getRequires</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></CODE></DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getProvides(com.google.javascript.jscomp.AbstractCompiler)"><!-- --></A><H3>
-getProvides</H3>
-<PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getProvides</B>(<A HREF="../../../../com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>&nbsp;compiler)</PRE>
-<DL>
-<DD>Gets a list of types provided by this input.
-<P>
-<DD><DL>
-</DL>
 </DD>
 <DD><DL>
 </DL>
