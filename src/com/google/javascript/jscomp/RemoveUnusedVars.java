@@ -182,6 +182,11 @@ class RemoveUnusedVars implements CompilerPass {
     while ((lastArg = argList.getLastChild()) != null) {
       Var var = fnScope.getVar(lastArg.getString());
       if (!referenced.contains(var)) {
+        if (var == null) {
+          throw new IllegalStateException(
+              "Function parameter not declared in scope: "
+              + lastArg.getString());
+        }
         argList.removeChild(lastArg);
         fnScope.undeclare(var);
         numRemoved_++;

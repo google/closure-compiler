@@ -17,7 +17,7 @@
  * @fileoverview Definitions for all iPhone extensions. Created from:
  * http://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/
  *
-*
+ * @author agrieve@google.com (Andrew Grieve)
  */
 
 /**

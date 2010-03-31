@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * A class to hold JS dependency information for a single .js file.
  *
-*
+ * @author agrieve@google.com (Andrew Grieve)
  */
 public class SimpleDependencyInfo implements DependencyInfo {
 
