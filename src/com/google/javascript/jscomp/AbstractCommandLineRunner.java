@@ -162,10 +162,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           VariableMap.load(config.propertyMapInputFile).toBytes();
     }
 
-    if (config.thirdParty) {
-      options.setCodingConvention(new DefaultCodingConvention());
-    }
-
+    options.setCodingConvention(config.codingConvention);
     options.setSummaryDetailLevel(config.summaryDetailLevel);
 
     inputCharset = getInputCharset();
@@ -1111,14 +1108,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private boolean thirdParty = false;
+    private CodingConvention codingConvention = new DefaultCodingConvention();
 
     /**
-     * Check source validity but do not enforce Closure style rules and
-     * conventions
+     * Sets rules and conventions to enforce.
      */
-    CommandLineConfig setThirdParty(boolean thirdParty) {
-      this.thirdParty = thirdParty;
+    CommandLineConfig setCodingConvention(CodingConvention codingConvention) {
+      this.codingConvention = codingConvention;
       return this;
     }
 

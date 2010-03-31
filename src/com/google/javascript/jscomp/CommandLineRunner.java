@@ -401,7 +401,9 @@ public class CommandLineRunner extends
         .setVariableMapOutputFile(flags.variable_map_output_file)
         .setCreateNameMapFiles(flags.create_name_map_files)
         .setPropertyMapOutputFile(flags.property_map_output_file)
-        .setThirdParty(flags.third_party)
+        .setCodingConvention(flags.third_party ?
+             new DefaultCodingConvention() :
+             new ClosureCodingConvention())
         .setSummaryDetailLevel(flags.summary_detail_level)
         .setOutputWrapper(flags.output_wrapper)
         .setOutputWrapperMarker(flags.output_wrapper_marker)

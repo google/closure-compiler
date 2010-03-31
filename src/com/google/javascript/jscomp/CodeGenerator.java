@@ -185,6 +185,11 @@ class CodeGenerator {
         }
         break;
 
+      case Token.LABEL_NAME:
+        Preconditions.checkState(!n.getString().isEmpty());
+        addIdentifier(n.getString());
+        break;
+
       case Token.NAME:
         if (first == null || first.getType() == Token.EMPTY) {
           addIdentifier(n.getString());
@@ -200,7 +205,6 @@ class CodeGenerator {
             addExpr(first, 0, getContextForNoInOperator(context));
           }
         }
-
         break;
 
       case Token.ARRAYLIT:
@@ -483,6 +487,7 @@ class CodeGenerator {
         Preconditions.checkState(childCount <= 1);
         add("continue");
         if (childCount == 1) {
+          Preconditions.checkState(first.getType() == Token.LABEL_NAME);
           add(" ");
           add(first);
         }
@@ -499,6 +504,7 @@ class CodeGenerator {
         Preconditions.checkState(childCount <= 1);
         add("break");
         if (childCount == 1) {
+          Preconditions.checkState(first.getType() == Token.LABEL_NAME);
           add(" ");
           add(first);
         }
@@ -605,6 +611,7 @@ class CodeGenerator {
 
       case Token.LABEL:
         Preconditions.checkState(childCount == 2);
+        Preconditions.checkState(first.getType() == Token.LABEL_NAME);
         add(first);
         add(":");
         addNonEmptyExpression(
