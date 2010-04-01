@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.Node;
+
 /**
  * Tests for {@link RuntimeTypeCheck}.
  *
@@ -99,6 +101,21 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
         "function f(x) {" +
         "  jscomp.typecheck.checkType(x, " +
         "    [jscomp.typecheck.classChecker('goog.Foo')]);" +
+        "}");
+  }
+
+  public void testInnerClasses() {
+    enableNormalize(false);
+    testChecks(
+        "function f() { /** @constructor */ function inner() {} }" +
+        "function g() { /** @constructor */ function inner() {} }",
+        "function f() {" +
+        "  /** @constructor */ function inner() {}" +
+        "  inner.prototype['instance_of__inner'] = true;" +
+        "}" +
+        "function g() {" +
+        "  /** @constructor */ function inner$$1() {}" +
+        "  inner$$1.prototype['instance_of__inner$$1'] = true;" +
         "}");
   }
 
@@ -199,7 +216,14 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
 
   private void testChecks(String js, String expected) {
     String boilerplateCode = RuntimeTypeCheck.getBoilerplateCode(null);
-    test(js, boilerplateCode + expected);
+    Compiler compiler = new Compiler();
+    compiler.init(new JSSourceFile[0], new JSSourceFile[0],
+        new CompilerOptions());
+    Node ast = compiler.parseSyntheticCode(boilerplateCode + expected);
+    NodeTraversal.traverse(compiler, ast,
+        new Normalize.NormalizeStatements(compiler, false));
+
+    test(js, compiler.toSource(ast));
   }
 
   @Override

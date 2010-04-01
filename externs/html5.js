@@ -905,3 +905,22 @@ WebSocket.prototype.send = function(data) {};
  * Closes the Web Socket connection or connection attempt, if any.
  */
 WebSocket.prototype.close = function() {};
+
+// HTML5 History
+/**
+ * Pushes a new state into the session history.
+ * @see http://www.w3.org/TR/html5/history.html#the-history-interface
+ * @param {*} data New state.
+ * @param {string} title The title for a new session history entry.
+ * @param {string=} opt_url The URL for a new session history entry.
+ */
+History.prototype.pushState = function(data, title, opt_url) {};
+
+/**
+ * Replaces the current state in the session history.
+ * @see http://www.w3.org/TR/html5/history.html#the-history-interface
+ * @param {*} data New state.
+ * @param {string} title The title for a session history entry.
+ * @param {string=} opt_url The URL for a new session history entry.
+ */
+History.prototype.replaceState = function(data, title, opt_url) {};

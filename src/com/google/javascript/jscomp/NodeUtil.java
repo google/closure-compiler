@@ -146,10 +146,10 @@ public final class NodeUtil {
    * returned (the variable of qualified name).
    *
    * @param n a node whose type is {@link Token#FUNCTION}
-   * @param parent {@code n}'s parent (never {@code null})
    * @return the function's name, or {@code null} if it has no name
    */
-  static String getFunctionName(Node n, Node parent) {
+  static String getFunctionName(Node n) {
+    Node parent = n.getParent();
     String name = n.getFirstChild().getString();
     switch (parent.getType()) {
       case Token.NAME:

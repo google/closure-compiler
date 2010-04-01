@@ -751,7 +751,9 @@ class InlineFunctions implements CompilerPass {
   void verifyAllReferencesInlined(FunctionState fs) {
     for (Reference ref : fs.getReferences()) {
       if (!ref.inlined) {
-        throw new IllegalStateException("Call site missed.");
+        throw new IllegalStateException("Call site missed.\n call: "
+            + ref.callNode.toStringTree() + "\n parent:  " 
+            + ref.callNode.getParent().toStringTree());
       }
     }
   }

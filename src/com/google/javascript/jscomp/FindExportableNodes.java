@@ -72,7 +72,7 @@ public class FindExportableNodes extends AbstractPostOrderCallback {
       switch (n.getType()) {
         case Token.FUNCTION:
           if (parent.getType() == Token.SCRIPT) {
-            export = NodeUtil.getFunctionName(n, parent);
+            export = NodeUtil.getFunctionName(n);
             context = new GenerateNodeContext(n, parent, n);
           }
           break;

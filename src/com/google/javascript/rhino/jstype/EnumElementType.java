@@ -211,7 +211,7 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  protected void collectPropertyNames(Set<String> props) {
+  void collectPropertyNames(Set<String> props) {
     if (primitiveObjectType != null) {
       primitiveObjectType.collectPropertyNames(props);
     }

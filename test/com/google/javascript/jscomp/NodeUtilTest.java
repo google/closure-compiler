@@ -114,7 +114,7 @@ public class NodeUtilTest extends TestCase {
     Compiler compiler = new Compiler();
     Node parent = compiler.parseTestCode("function name(){}");
 
-    testGetFunctionName(parent.getFirstChild(), parent, "name");
+    testGetFunctionName(parent.getFirstChild(), "name");
   }
 
   public void testGetFunctionName2() throws Exception {
@@ -122,7 +122,7 @@ public class NodeUtilTest extends TestCase {
     Node parent = compiler.parseTestCode("var name = function(){}")
         .getFirstChild().getFirstChild();
 
-    testGetFunctionName(parent.getFirstChild(), parent, "name");
+    testGetFunctionName(parent.getFirstChild(), "name");
   }
 
   public void testGetFunctionName3() throws Exception {
@@ -130,7 +130,7 @@ public class NodeUtilTest extends TestCase {
     Node parent = compiler.parseTestCode("qualified.name = function(){}")
         .getFirstChild().getFirstChild();
 
-    testGetFunctionName(parent.getLastChild(), parent, "qualified.name");
+    testGetFunctionName(parent.getLastChild(), "qualified.name");
   }
 
   public void testGetFunctionName4() throws Exception {
@@ -138,7 +138,7 @@ public class NodeUtilTest extends TestCase {
     Node parent = compiler.parseTestCode("var name2 = function name1(){}")
         .getFirstChild().getFirstChild();
 
-    testGetFunctionName(parent.getFirstChild(), parent, "name2");
+    testGetFunctionName(parent.getFirstChild(), "name2");
   }
 
   public void testGetFunctionName5() throws Exception {
@@ -146,12 +146,12 @@ public class NodeUtilTest extends TestCase {
     Node n = compiler.parseTestCode("qualified.name2 = function name1(){}");
     Node parent = n.getFirstChild().getFirstChild();
 
-    testGetFunctionName(parent.getLastChild(), parent, "qualified.name2");
+    testGetFunctionName(parent.getLastChild(), "qualified.name2");
   }
 
-  private void testGetFunctionName(Node function, Node parent, String name) {
+  private void testGetFunctionName(Node function, String name) {
     assertEquals(Token.FUNCTION, function.getType());
-    assertEquals(name, NodeUtil.getFunctionName(function, parent));
+    assertEquals(name, NodeUtil.getFunctionName(function));
   }
 
   public void testContainsFunctionDeclaration() {

@@ -3221,7 +3221,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @return {number} */" +
         "function f() { var x = x || {}; return x; }",
         "inconsistent return type\n" +
-        "found   : {...}\n" +
+        "found   : {}\n" +
         "required: number");
   }
 
@@ -4687,7 +4687,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testBitOperation9() throws Exception {
     testTypes("var x = void 0; x |= {};",
         "bad right operand to bitwise operator\n" +
-        "found   : {...}\n" +
+        "found   : {}\n" +
         "required: (boolean|null|number|string|undefined)");
   }
 

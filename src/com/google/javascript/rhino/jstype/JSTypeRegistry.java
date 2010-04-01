@@ -1059,7 +1059,10 @@ public class JSTypeRegistry implements Serializable {
    * Create an anonymous object type.
    */
   public ObjectType createAnonymousObjectType() {
-    return createObjectType(null, null, null);
+    PrototypeObjectType type =
+        new PrototypeObjectType(this, null, null);
+    type.setPrettyPrint(true);
+    return type;
   }
 
   /**

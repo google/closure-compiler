@@ -5026,7 +5026,32 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // anonymous
     ObjectType anonymous = registry.createAnonymousObjectType();
     assertEquals(OBJECT_TYPE, anonymous.getImplicitPrototype());
-    assertEquals("{...}", anonymous.getReferenceName());
+    assertNull(anonymous.getReferenceName());
+    assertEquals("{}", anonymous.toString());
+  }
+
+  /**
+   * Tests the factory method
+   * {@link JSTypeRegistry#createAnonymousObjectType()}} and adds
+   * some properties to it.
+   */
+  public void testCreateAnonymousObjectType2() throws Exception {
+    // anonymous
+    ObjectType anonymous = registry.createAnonymousObjectType();
+    anonymous.defineDeclaredProperty(
+        "a", NUMBER_TYPE, false);
+    anonymous.defineDeclaredProperty(
+        "b", NUMBER_TYPE, false);
+    anonymous.defineDeclaredProperty(
+        "c", NUMBER_TYPE, false);
+    anonymous.defineDeclaredProperty(
+        "d", NUMBER_TYPE, false);
+    anonymous.defineDeclaredProperty(
+        "e", NUMBER_TYPE, false);
+    anonymous.defineDeclaredProperty(
+        "f", NUMBER_TYPE, false);
+    assertEquals("{a: number, b: number, c: number, d: number, ...}",
+        anonymous.toString());
   }
 
   /**
@@ -5040,7 +5065,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createObjectType(DATE_TYPE.getImplicitPrototype());
     assertEquals(DATE_TYPE.getImplicitPrototype(),
         subDate.getImplicitPrototype());
-    assertEquals("{...}", subDate.getReferenceName());
+    assertNull(subDate.getReferenceName());
+    assertEquals("{...}", subDate.toString());
 
     // name, node, prototype
     ObjectType subError = registry.createObjectType("Foo", null,

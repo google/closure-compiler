@@ -41,7 +41,9 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
@@ -73,6 +75,12 @@ class PrototypeObjectType extends ObjectType {
   private final Map<String, Property> properties;
   private ObjectType implicitPrototype;
   private final boolean nativeType;
+
+  // Whether the toString representation of this should be pretty-printed,
+  // by printing all properties.
+  private boolean prettyPrint = false;
+
+  private static final int MAX_PRETTY_PRINTED_PROPERTIES = 4;
 
   /**
    * Creates an object type.
@@ -165,7 +173,7 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  protected void collectPropertyNames(Set<String> props) {
+  void collectPropertyNames(Set<String> props) {
     for (String prop : properties.keySet()) {
       props.add(prop);
     }
@@ -319,7 +327,47 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public String toString() {
-    return getReferenceName();
+    if (hasReferenceName()) {
+      return getReferenceName();
+    } else if (prettyPrint) {
+      // Use a tree set so that the properties are sorted.
+      Set<String> propertyNames = Sets.newTreeSet();
+      for (ObjectType current = this;
+           current != null && !current.isNativeObjectType() &&
+               propertyNames.size() <= MAX_PRETTY_PRINTED_PROPERTIES;
+           current = current.getImplicitPrototype()) {
+        propertyNames.addAll(current.getOwnPropertyNames());
+      }
+
+      StringBuilder sb = new StringBuilder();
+      sb.append("{");
+
+      int i = 0;
+      for (String property : propertyNames) {
+        if (i > 0) {
+          sb.append(", ");
+        }
+
+        sb.append(property);
+        sb.append(": ");
+        sb.append(getPropertyType(property).toString());
+
+        ++i;
+        if (i == MAX_PRETTY_PRINTED_PROPERTIES) {
+          sb.append(", ...");
+          break;
+        }
+      }
+
+      sb.append("}");
+      return sb.toString();
+    } else {
+      return "{...}";
+    }
+  }
+
+  void setPrettyPrint(boolean prettyPrint) {
+    this.prettyPrint = prettyPrint;
   }
 
   @Override
@@ -348,7 +396,7 @@ class PrototypeObjectType extends ObjectType {
     if (className != null) {
       return className;
     } else {
-      return "{...}";
+      return null;
     }
   }
 

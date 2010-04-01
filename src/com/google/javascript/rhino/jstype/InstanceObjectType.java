@@ -99,7 +99,11 @@ public final class InstanceObjectType extends PrototypeObjectType {
 
   @Override
   public String toString() {
-    return constructor.getReferenceName();
+    if (constructor.hasReferenceName()) {
+      return constructor.getReferenceName();
+    } else {
+      return super.toString();
+    }
   }
 
   @Override

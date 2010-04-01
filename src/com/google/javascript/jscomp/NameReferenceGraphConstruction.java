@@ -121,7 +121,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
         // TODO(user): A global function foo() is treated as the same
         // function as a inner function named foo(). We should use some clever
         // naming scheme to avoid this lost of precision.
-        String name = NodeUtil.getFunctionName(root, parent);
+        String name = NodeUtil.getFunctionName(root);
 
         if (name == null) {
           // When the name is null, we have a function that is presumably not

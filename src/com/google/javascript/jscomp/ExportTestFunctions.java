@@ -54,7 +54,7 @@ class ExportTestFunctions implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (parent != null && parent.getType() == Token.SCRIPT &&
           n.getType() == Token.FUNCTION) {
-        String functionName = NodeUtil.getFunctionName(n, parent);
+        String functionName = NodeUtil.getFunctionName(n);
         if (isTestFunction(n, functionName) && t.inGlobalScope()) {
           exportTestFunction(functionName, n, parent);
         }

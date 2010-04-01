@@ -251,8 +251,27 @@ jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
 };
 
 
-jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(top);
-jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(window);
+/**
+ * Returns the global 'this' object. This will normally be the same as 'window'
+ * but when running in a worker thread, the DOM is not available.
+ * @return {!Object}
+ * @private
+ */
+jscomp.typecheck.ExternClassChecker_.getGlobalThis_ = function() {
+  return (function() { return this; }).call(null);
+};
+
+
+// Install listeners on the global 'this' object.
+(function() {
+  var globalThis = jscomp.typecheck.ExternClassChecker_.getGlobalThis_();
+  jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(globalThis);
+
+  var theTop = globalThis['top'];
+  if (theTop) {
+    jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow(theTop);
+  }
+})();
 
 
 /** @inheritDoc */

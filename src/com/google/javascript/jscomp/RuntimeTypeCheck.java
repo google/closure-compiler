@@ -137,7 +137,11 @@ class RuntimeTypeCheck implements CompilerPass {
             Node nodeToInsertAfter,
             @Nullable ObjectType interfaceType) {
 
-      String className = funType.getInstanceType().getReferenceName();
+      if (funType.getSource() == null) {
+        return nodeToInsertAfter;
+      }
+
+      String className = NodeUtil.getFunctionName(funType.getSource());
 
       // This can happen with anonymous classes declared with the type
       // {@code Function}.
@@ -358,6 +362,8 @@ class RuntimeTypeCheck implements CompilerPass {
     String boilerplateCode = getBoilerplateCode(logFunction);
 
     Node js = compiler.parseSyntheticCode(boilerplateCode);
+    NodeTraversal.traverse(compiler, js,
+        new Normalize.NormalizeStatements(compiler, false));
 
     compiler.getNodeForCodeInsertion(null).addChildrenToFront(
         js.removeChildren());
