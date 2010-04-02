@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp.graph;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -191,6 +193,15 @@ public class LinkedDirectedGraph<N, E>
 
   @Override
   public boolean isConnectedInDirection(N n1, N n2) {
+    return isConnectedInDirection(n1, Predicates.<E>alwaysTrue(), n2);
+  }
+
+  @Override
+  public boolean isConnectedInDirection(N n1, E edgeValue, N n2) {
+    return isConnectedInDirection(n1, Predicates.equalTo(edgeValue), n2);
+  }
+
+  private boolean isConnectedInDirection(N n1, Predicate<E> edgeMatcher, N n2) {
     // Verify the nodes.
     DiGraphNode<N, E> dNode1 = nodes.get(n1);
     if (dNode1 == null) {
@@ -202,7 +213,8 @@ public class LinkedDirectedGraph<N, E>
     }
 
     for (DiGraphEdge<N, E> outEdge : dNode1.getOutEdges()) {
-      if (outEdge.getDestination() == dNode2) {
+      if (outEdge.getDestination() == dNode2 &&
+          edgeMatcher.apply(outEdge.getValue())) {
         return true;
       }
     }

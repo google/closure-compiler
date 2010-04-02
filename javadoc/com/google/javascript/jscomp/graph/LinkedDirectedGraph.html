@@ -430,11 +430,22 @@ A directed graph using linked list within nodes to store edge information.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#isConnectedInDirection(N, E, N)">isConnectedInDirection</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n1,
+                       <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">E</A>&nbsp;edgeValue,
+                       <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether two nodes in the graph are connected via a directed edge
+ with the given value.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#isConnectedInDirection(N, N)">isConnectedInDirection</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n1,
                        <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n2)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether two nodes in the graph are connected via a directed edge.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -757,11 +768,36 @@ isConnectedInDirection</H3>
 public boolean <B>isConnectedInDirection</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n1,
                                       <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n2)</PRE>
 <DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#isConnectedInDirection(N, N)">DiGraph</A></CODE></B></DD>
+<DD>Checks whether two nodes in the graph are connected via a directed edge.
+<P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#isConnectedInDirection(N, N)">isConnectedInDirection</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">E</A>&gt;</CODE></DL>
 </DD>
 <DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node 1.<DD><CODE>n2</CODE> - Node 2.
+<DT><B>Returns:</B><DD><code>true</code> if the graph contains edge from n1 to n2.</DL>
+</DD>
 </DL>
+<HR>
+
+<A NAME="isConnectedInDirection(java.lang.Object,java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="isConnectedInDirection(N, E, N)"><!-- --></A><H3>
+isConnectedInDirection</H3>
+<PRE>
+public boolean <B>isConnectedInDirection</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n1,
+                                      <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">E</A>&nbsp;edgeValue,
+                                      <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>&nbsp;n2)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#isConnectedInDirection(N, E, N)">DiGraph</A></CODE></B></DD>
+<DD>Checks whether two nodes in the graph are connected via a directed edge
+ with the given value.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#isConnectedInDirection(N, E, N)">isConnectedInDirection</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="type parameter in LinkedDirectedGraph">E</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node 1.<DD><CODE>edgeValue</CODE> - edge value tag<DD><CODE>n2</CODE> - Node 2.
+<DT><B>Returns:</B><DD><code>true</code> if the edge exists.</DL>
 </DD>
 </DL>
 <HR>

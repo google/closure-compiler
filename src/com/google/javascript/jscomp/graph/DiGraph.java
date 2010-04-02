@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * A generic directed graph.
- * 
+ *
 *
  *
  * @param <N> Value type that the graph node stores.
@@ -60,9 +60,27 @@ public abstract class DiGraph<N, E> extends Graph<N, E> {
    * @param n2 Destination node.
    */
   public abstract void disconnectInDirection(N n1, N n2);
-  
+
+  /**
+   * Checks whether two nodes in the graph are connected via a directed edge.
+   *
+   * @param n1 Node 1.
+   * @param n2 Node 2.
+   * @return <code>true</code> if the graph contains edge from n1 to n2.
+   */
   public abstract boolean isConnectedInDirection(N n1, N n2);
-  
+
+  /**
+   * Checks whether two nodes in the graph are connected via a directed edge
+   * with the given value.
+   *
+   * @param n1 Node 1.
+   * @param edgeValue edge value tag
+   * @param n2 Node 2.
+   * @return <code>true</code> if the edge exists.
+   */
+  public abstract boolean isConnectedInDirection(N n1, E edgeValue, N n2);
+
 
   /**
    * A generic directed graph node.
@@ -94,5 +112,3 @@ public abstract class DiGraph<N, E> extends Graph<N, E> {
     public void setDestination(DiGraphNode<N, E> node);
   }
 }
-
-

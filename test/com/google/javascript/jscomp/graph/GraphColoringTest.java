@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.graph;
 
 import com.google.javascript.jscomp.graph.Graph;
 import com.google.javascript.jscomp.graph.GraphColoring;

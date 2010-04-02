@@ -17,9 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.CopySideEffectSubexpressions;
@@ -31,7 +33,6 @@ import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
-
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -40,6 +41,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 /**
@@ -129,6 +131,30 @@ final class NameAnalyzer implements CompilerPass {
   private final List<RefNode> refNodes = Lists.newArrayList();
 
   /**
+   * When multiple names in the global scope point to the same object, we
+   * call them aliases. Store a map from each alias name to the alias set.
+   */
+  private final Map<String, AliasSet> aliases = Maps.newHashMap();
+
+  /**
+   * All the aliases in a program form a graph, where each global name is
+   * a node in the graph, and two names are connected if one directly aliases
+   * the other.
+   *
+   * An {@code AliasSet} represents a connected component in that graph. We do
+   * not explicitly track the graph--we just track the connected components.
+   */
+  private static class AliasSet {
+    Set<String> names = Sets.newHashSet();
+
+    // Every alias set starts with exactly 2 names.
+    AliasSet(String name1, String name2) {
+      names.add(name1);
+      names.add(name2);
+    }
+  }
+
+  /**
    * Relationship between the two names.
    * Currently only two different reference types exists:
    * goog.inherits class relations and all other references.
@@ -198,6 +224,9 @@ final class NameAnalyzer implements CompilerPass {
     /** Whether this node is referenced */
     boolean referenced = false;
 
+    /** Whether the name has descendants that are written to. */
+    boolean hasWrittenDescendants = false;
+
     /**
      * Output the node as a string
      *
@@ -255,6 +284,7 @@ final class NameAnalyzer implements CompilerPass {
      * Parent node of the name access (ASSIGN, VAR, FUNCTION, or CALL)
      */
     Node parent;
+
 
     /**
      * Create a node that refers to a name
@@ -513,7 +543,24 @@ final class NameAnalyzer implements CompilerPass {
         Node nameNode = n.getFirstChild();
         NameInformation ns = createNameInformation(t, nameNode, n);
         if (ns != null) {
-          recordDepScope(parent, ns);
+          if (parent.getType() == Token.FOR && !NodeUtil.isForIn(parent)) {
+            // Patch for assignments that appear in the init,
+            // condition or iteration part of a FOR loop.  Without
+            // this change, all 3 of those parts try to claim the for
+            // loop as their dependency scope.  The last assignment in
+            // those three fields wins, which can result in incorrect
+            // reference edges between referenced and assigned variables.
+            //
+            // TODO(user) revisit the dependency scope calculation
+            // logic.
+            if (parent.getFirstChild().getNext() != n) {
+              recordDepScope(n, ns);
+            } else {
+              recordDepScope(nameNode, ns);
+            }
+          } else {
+            recordDepScope(parent, ns);
+          }
         }
       } else if (NodeUtil.isVarDeclaration(n)) {
         NameInformation ns = createNameInformation(t, n, parent);
@@ -597,11 +644,7 @@ final class NameAnalyzer implements CompilerPass {
         NameInformation ns = createNameInformation(t, nameNode, n);
         if (ns != null) {
           if (ns.isPrototype) {
-            JsName name = getName(ns.prototypeClass, false);
-            if (name != null) {
-              name.prototypeNames.add(ns.prototypeProperty);
-              refNodes.add(new PrototypeSetNode(name, n));
-            }
+            recordPrototypeSet(ns.prototypeClass, ns.prototypeProperty, n);
           } else {
             recordSet(ns.name, nameNode);
           }
@@ -629,6 +672,53 @@ final class NameAnalyzer implements CompilerPass {
       JsName jsn = getName(name, true);
       JsNameRefNode nameRefNode = new JsNameRefNode(jsn, node);
       refNodes.add(nameRefNode);
+
+      // Now, look at all parent names and record that their properties have
+      // been written to.
+      if (node.getType() == Token.GETELEM) {
+        recordWriteOnProperties(name);
+      } else if (name.indexOf('.') != -1) {
+        recordWriteOnProperties(name.substring(0, name.lastIndexOf('.')));
+      }
+    }
+
+    /**
+     * Records the assignment to a prototype property of a global name,
+     * if possible.
+     *
+     * @param className The name of the class.
+     * @param prototypeProperty The name of the prototype property.
+     * @param node The top node representing the name (GETPROP)
+     */
+    private void recordPrototypeSet(String className, String prototypeProperty,
+        Node node) {
+      JsName name = getName(className, false);
+      if (name != null) {
+        name.prototypeNames.add(prototypeProperty);
+        refNodes.add(new PrototypeSetNode(name, node));
+        recordWriteOnProperties(className);
+      }
+    }
+
+    /**
+     * Record that the properties of this name have been written to.
+     */
+    private void recordWriteOnProperties(String parentName) {
+      do {
+        JsName parent = getName(parentName, true);
+        if (parent.hasWrittenDescendants) {
+          // If we already recorded this name, then all its parents must
+          // also be recorded. short-circuit this loop.
+          return;
+        } else {
+          parent.hasWrittenDescendants = true;
+        }
+
+        if (parentName.indexOf('.') == -1) {
+          return;
+        }
+        parentName = parentName.substring(0, parentName.lastIndexOf('.'));
+      } while(true);
     }
   }
 
@@ -744,18 +834,16 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if (nameInfo.onlyAffectsClassDef) {
-        recordReference(nameInfo.name,
-                        nameInfo.superclass,
-                        RefType.INHERITANCE);
+        recordReference(
+            nameInfo.name, nameInfo.superclass, RefType.INHERITANCE);
 
         // Make sure that we record a reference to the function that does
         // the inheritance, so that the inherits() function itself does
         // not get stripped.
         String nodeName = n.getQualifiedName();
         if (nodeName != null) {
-          recordReference(nameInfo.name,
-                          nodeName,
-                          RefType.REGULAR);
+          recordReference(
+              nameInfo.name, nodeName, RefType.REGULAR);
         }
 
         return;
@@ -809,7 +897,15 @@ final class NameAnalyzer implements CompilerPass {
           recordReference(WINDOW, name, RefType.REGULAR);
         }
       } else if (referring != null) {
-        recordReference(referringName, name, RefType.REGULAR);
+        if ((parent.getType() == Token.NAME ||
+             parent.getType() == Token.ASSIGN) &&
+            scopes.get(parent) == referring) {
+          recordAlias(referringName, name);
+        } else {
+          RefType depType = referring.onlyAffectsClassDef ?
+              RefType.INHERITANCE : RefType.REGULAR;
+          recordReference(referringName, name, depType);
+        }
       } else {
         // No named dependency scope found.  Unfortunately that might
         // mean that the expression is a child of an anonymous
@@ -903,7 +999,15 @@ final class NameAnalyzer implements CompilerPass {
         compiler, root, new HoistVariableAndFunctionDeclarations());
     NodeTraversal.traverse(compiler, root, new FindDeclarationsAndSetters());
     NodeTraversal.traverse(compiler, root, new FindReferences());
+
+    // Create bi-directional references between parent names and their
+    // descendents. This may create new names.
     referenceParentNames();
+
+    // If we modify the property of an alias, make sure that modification
+    // gets reflected in the original object.
+    referenceAliases();
+
     calculateReferences();
 
     if (removeUnreferenced) {
@@ -912,15 +1016,57 @@ final class NameAnalyzer implements CompilerPass {
   }
 
   /**
+   * Records an alias of one name to another name.
+   */
+  private void recordAlias(String fromName, String toName) {
+    recordReference(fromName, toName, RefType.REGULAR);
+
+    // We need to add an edge to the alias graph. The alias graph is expressed
+    // implicitly as a set of connected components, called AliasSets.
+    //
+    // There are three possibilities:
+    // 1) Neither name is part of a connected component. Create a new one.
+    // 2) Exactly one name is part of a connected component. Merge the new
+    //    name into the component.
+    // 3) The two names are already part of connected components. Merge
+    //    those components together.
+    AliasSet toNameAliasSet = aliases.get(toName);
+    AliasSet fromNameAliasSet = aliases.get(fromName);
+    AliasSet resultSet = null;
+    if (toNameAliasSet == null && fromNameAliasSet == null) {
+      resultSet = new AliasSet(toName, fromName);
+    } else if (toNameAliasSet != null && fromNameAliasSet != null) {
+      resultSet = toNameAliasSet;
+      resultSet.names.addAll(fromNameAliasSet.names);
+      for (String name : fromNameAliasSet.names) {
+        aliases.put(name, resultSet);
+      }
+    } else if (toNameAliasSet != null) {
+      resultSet = toNameAliasSet;
+      resultSet.names.add(fromName);
+    } else {
+      resultSet = fromNameAliasSet;
+      resultSet.names.add(toName);
+    }
+    aliases.put(fromName, resultSet);
+    aliases.put(toName, resultSet);
+  }
+
+  /**
    * Records a reference from one name to another name.
    */
   private void recordReference(String fromName, String toName,
                                RefType depType) {
+    if (fromName.equals(toName)) {
+      // Don't bother recording self-references.
+      return;
+    }
+
     JsName from = getName(fromName, true);
     JsName to = getName(toName, true);
     referenceGraph.createNode(from);
     referenceGraph.createNode(to);
-    if (!referenceGraph.isConnectedInDirection(from, to)) {
+    if (!referenceGraph.isConnectedInDirection(from, depType, to)) {
       referenceGraph.connect(from, depType, to);
     }
   }
@@ -1059,6 +1205,38 @@ final class NameAnalyzer implements CompilerPass {
       jsn = new JsName();
       jsn.name = name;
       allNames.put(name, jsn);
+    }
+  }
+
+  /**
+   * The NameAnalyzer algorithm works best when all objects have a canonical
+   * name in the global scope. When multiple names in the global scope
+   * point to the same object, things start to break down.
+   *
+   * For example, if we have
+   * <code>
+   * var a = {};
+   * var b = a;
+   * a.foo = 3;
+   * alert(b.foo);
+   * </code>
+   * then a.foo and b.foo are the same name, even though NameAnalyzer doesn't
+   * represent them as such.
+   *
+   * To handle this case, we look at all the aliases in the program.
+   * If descendant properties of that alias are assigned, then we create a
+   * directional reference from the original name to the alias. For example,
+   * in this case, the assign to {@code a.foo} triggers a reference from
+   * {@code b} to {@code a}, but NOT from a to b.
+   */
+  private void referenceAliases() {
+    for (Map.Entry<String, AliasSet> entry : aliases.entrySet()) {
+      JsName name = getName(entry.getKey(), false);
+      if (name.hasWrittenDescendants) {
+        for (String alias : entry.getValue().names) {
+          recordReference(alias, entry.getKey(), RefType.REGULAR);
+        }
+      }
     }
   }
 

@@ -623,6 +623,118 @@ public class NameAnalyzerTest extends CompilerTestCase {
          "var i = 0; for(i = 1, i , 2; i = 0;);");
   }
 
+  public void testSetterInForStruct9() {
+    test("var Class = function() {}; " +
+         "for (var i = 1; Class.property_ = 0; i++);",
+         "for (var i = 1; 0; i++);");
+  }
+
+  public void testSetterInForStruct10() {
+    test("var Class = function() {}; " +
+         "for (var i = 1; Class.property_ = 0; i = 2);",
+         "for (; 0;);");
+  }
+
+  public void testSetterInForStruct11() {
+    test("var Class = function() {}; " +
+         "for (;Class.property_ = 0;);",
+         "for (;0;);");
+  }
+
+  public void testSetterInForStruct12() {
+    test("var a = 1; var Class = function() {}; " +
+         "for (;Class.property_ = a;);",
+         "var a = 1; for (; a;);");
+  }
+
+  public void testSetterInForStruct13() {
+    test("var a = 1; var Class = function() {}; " +
+         "for (Class.property_ = a; 0 ;);",
+         "for (; 0;);");
+  }
+
+  public void testSetterInForStruct14() {
+    test("var a = 1; var Class = function() {}; " +
+         "for (; 0; Class.property_ = a);",
+         "for (; 0;);");
+  }
+
+  public void testSetterInForStruct15() {
+    test("var Class = function() {}; " +
+         "for (var i = 1; 0; Class.prototype.property_ = 0);",
+         "for (; 0; 0);");
+  }
+
+  public void testSetterInForStruct16() {
+    test("var Class = function() {}; " +
+         "for (var i = 1; i = 0; Class.prototype.property_ = 0);",
+         "for (; 0; 0);");
+  }
+
+  public void testSetterInForIn1() {
+    test("var foo = {}; var bar; for(e in bar = foo.a);",
+         "var foo = {}; for(e in foo.a);");
+  }
+
+  public void testSetterInForIn2() {
+    testSame("var foo = {}; var bar; for(e in bar = foo.a); bar");
+  }
+
+  public void testSetterInForIn3() {
+    // TODO(user) Fix issue similar to b/2316773: bar should be preserved
+    // but isn't due to missing references between e and foo.a
+    test("var foo = {}; var bar; for(e in bar = foo.a); bar.b = 3",
+         "var foo = {}; for(e in foo.a);");
+  }
+
+  public void testSetterInForIn4() {
+    // TODO(user) Fix issue similar to b/2316773: bar should be preserved
+    // but isn't due to missing references between e and foo.a
+    test("var foo = {}; var bar; for (e in bar = foo.a); bar.b = 3; foo.a",
+         "var foo = {}; for (e in foo.a); foo.a");
+  }
+
+  public void testSetterInForIn5() {
+    // TODO(user) Fix issue similar to b/2316773: bar should be preserved
+    // but isn't due to missing references between e and foo.a
+    test("var foo = {}; var bar; for (e in foo.a) { bar = e } bar.b = 3; foo.a",
+         "var foo={};for(e in foo.a);foo.a");
+  }
+
+  public void testSetterInForIn6() {
+    testSame("var foo = {};for(e in foo);");
+  }
+
+  public void testSetterInIfPredicate() {
+    // TODO(user) Make NameAnalyzer smarter so it can remove "Class".
+    testSame("var a = 1;" +
+             "var Class = function() {}; " +
+             "if (Class.property_ = a);");
+  }
+
+  public void testSetterInWhilePredicate() {
+    // TODO(user) Make NameAnalyzer smarter so it can remove "Class".
+    testSame("var a = 1;" +
+             "var Class = function() {}; " +
+             "while (Class.property_ = a);");
+  }
+
+  public void testSetterInDoWhilePredicate() {
+    // TODO(user) Make NameAnalyzer smarter so it can remove "Class".
+    testSame("var a = 1;" +
+             "var Class = function() {}; " +
+             "do {} while(Class.property_ = a);");
+  }
+
+  public void testSetterInSwitchInput() {
+    // TODO(user) Make NameAnalyzer smarter so it can remove "Class".
+    testSame("var a = 1;" +
+             "var Class = function() {}; " +
+             "switch (Class.property_ = a) {" +
+             "  default:" +
+             "}");
+  }
+
   public void testComplexAssigns() {
     // Complex assigns are not removed by the current pass.
     testSame("var x = 0; x += 3; x *= 5;");
@@ -1151,6 +1263,78 @@ public class NameAnalyzerTest extends CompilerTestCase {
 
   public void testRemoveLabeledStatment4() {
     test("var a; LBL: a = f()", "LBL: f()");
+  }
+
+  public void testPreservePropertyMutationsToAlias1() {
+    // Test for issue b/2316773 - property get case
+    // Since a is referenced, property mutations via a's alias b must
+    // be preserved.
+    testSame("var a = {}; var b = a; b.x = 1; a");
+  }
+
+  public void testPreservePropertyMutationsToAlias2() {
+    // Test for issue b/2316773 - property get case, don't keep 'c'
+    test("var a = {}; var b = a; var c = a; b.x = 1; a",
+         "var a = {}; var b = a; b.x = 1; a");
+  }
+
+  public void testPreservePropertyMutationsToAlias3() {
+    // Test for issue b/2316773 - property get case, chain
+    testSame("var a = {}; var b = a; var c = b; c.x = 1; a");
+  }
+
+ public void testPreservePropertyMutationsToAlias4() {
+    // Test for issue b/2316773 - element get case
+    testSame("var a = {}; var b = a; b['x'] = 1; a");
+  }
+
+  public void testPreservePropertyMutationsToAlias5() {
+    // From issue b/2316773 description
+    testSame("function testCall(o){}" +
+             "var DATA = {'prop': 'foo','attr': {}};" +
+             "var SUBDATA = DATA['attr'];" +
+             "SUBDATA['subprop'] = 'bar';" +
+             "testCall(DATA);");
+  }
+
+  public void testPreservePropertyMutationsToAlias6() {
+    // Longer GETELEM chain
+    testSame("function testCall(o){}" +
+             "var DATA = {'prop': 'foo','attr': {}};" +
+             "var SUBDATA = DATA['attr'];" +
+             "var SUBSUBDATA = SUBDATA['subprop'];" +
+             "SUBSUBDATA['subsubprop'] = 'bar';" +
+             "testCall(DATA);");
+  }
+
+  public void testPreservePropertyMutationsToAlias7() {
+    // Make sure that the base class does not depend on the derived class.
+    test("var a = {}; var b = {}; b.x = 0;" +
+         "var goog = {}; goog.inherits(b, a); a",
+         "var a = {}; a");
+  }
+
+  public void testPreservePropertyMutationsToAlias8() {
+    // Make sure that the derived classes don't end up depending on each other.
+    test("var a = {};" +
+         "var b = {}; b.x = 0;" +
+         "var c = {}; c.y = 0;" +
+         "var goog = {}; goog.inherits(b, a); goog.inherits(c, a); c",
+         "var a = {}; var c = {}; c.y = 0;" +
+         "var goog = {}; goog.inherits(c, a); c");
+  }
+
+  public void testPreservePropertyMutationsToAlias9() {
+    testSame("var a = {b: {}};" +
+         "var c = a.b; c.d = 3;" +
+         "a.d = 3; a.d;");
+  }
+
+  public void testRemoveAlias() {
+    test("var a = {b: {}};" +
+         "var c = a.b;" +
+         "a.d = 3; a.d;",
+         "var a = {b: {}}; a.d = 3; a.d;");
   }
 
   // TODO(user): Make NameAnalyzer handle this. The OR subexpressions may
