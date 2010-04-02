@@ -91,6 +91,10 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
       return;
     }
 
+    if (NodeUtil.isLabelName(n)) {
+      return;
+    }
+
     String varName = n.getString();
 
     // Only a function can have an empty name.

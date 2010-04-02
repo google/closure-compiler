@@ -1328,8 +1328,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "var x = 1;" +
         "var JSCompiler_temp_const_0 = x;" +
         "{var JSCompiler_inline_result_1; a=1; JSCompiler_inline_result_1=1}" +
-        "JSCompiler_temp_const_0 += JSCompiler_inline_result_1;" +
-        "x = JSCompiler_temp_const_0");
+        "x = JSCompiler_temp_const_0 + JSCompiler_inline_result_1;");
   }
 
   public void testDecomposeAnonymousInCall() {

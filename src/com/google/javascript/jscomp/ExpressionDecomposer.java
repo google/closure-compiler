@@ -400,6 +400,12 @@ class ExpressionDecomposer {
     }
   }
 
+  private boolean isConstantName(Node n, Set<String> knownConstants) {
+    // Non-constant names values may have been changed.
+    return NodeUtil.isName(n) && (NodeUtil.isConstantName(n)
+        || knownConstants.contains(n.getString()));
+  }
+
   /**
    * @param expr The expression to extract.
    * @param injectionPoint The node before which to added the extracted
@@ -408,42 +414,74 @@ class ExpressionDecomposer {
    */
   private Node extractExpression(Node expr, Node injectionPoint) {
     Node parent = expr.getParent();
-    // The temp value is known to be constant.
-    String tempName = getTempConstantValueName();
 
-    // Replace the expression with the temporary name.
+    boolean isLhsOfAssignOp = NodeUtil.isAssignmentOp(parent)
+        && !NodeUtil.isAssign(parent)
+        && parent.getFirstChild() == expr;
+
+    Node firstExtractedNode = null;
+
+    // Expressions on the LHS of an assignment-op must have any possible
+    // side-effects extracted as the value must be duplicated:
+    //    next().foo += 2;
+    // becomes:
+    //    var t1 = next();
+    //    t1.foo = t1.foo + 2;
+    if (isLhsOfAssignOp && NodeUtil.isGet(expr)) {
+      for (Node n : expr.children()) {
+        if (n.getType() != Token.STRING && !isConstantName(n, knownConstants)) {
+          Node extractedNode = extractExpression(n, injectionPoint);
+          if (firstExtractedNode == null) {
+            firstExtractedNode = extractedNode;
+          }
+        }
+      }
+    }
+
+    // The temp is known to be constant.
+    String tempName = getTempConstantValueName();
     Node replacementValueNode = Node.newString(Token.NAME, tempName);
-    parent.replaceChild(expr, replacementValueNode);
+
+    Node tempNameValue;
+
+    // If it is ASSIGN_XXX, keep the assignment in place and extract the
+    // original value of the LHS operand.
+    if (isLhsOfAssignOp) {
+      Preconditions.checkState(NodeUtil.isName(expr) || NodeUtil.isGet(expr));
+      // Transform "x += 2" into "x = temp + 2"
+      Node opNode = new Node(NodeUtil.getOpFromAssignmentOp(parent))
+          .copyInformationFrom(parent);
+
+      Node rightOperand = parent.getLastChild();
+
+      parent.setType(Token.ASSIGN);
+      parent.replaceChild(rightOperand, opNode);
+      opNode.addChildToFront(replacementValueNode);
+      opNode.addChildToBack(rightOperand);
+
+      // The original expression is still being used, so make a clone.
+      tempNameValue = expr.cloneTree();
+    } else {
+      // Replace the expression with the temporary name.
+      parent.replaceChild(expr, replacementValueNode);
+
+      // Keep the original node so that CALL expressions can still be found
+      // and inlined properly.
+      tempNameValue = expr;
+    }
 
     // Re-add the expression in the declaration of the temporary name.
     Node tempNameNode = Node.newString(Token.NAME, tempName);
-    tempNameNode.addChildrenToBack(expr);
+    tempNameNode.addChildToBack(tempNameValue);
     Node tempVarNode = new Node(Token.VAR, tempNameNode);
 
     Node injectionPointParent = injectionPoint.getParent();
     injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
 
-    // If it is ASSIGN_XXX we need to assign it back to the original value.
-    // Note that calling the temp constant is a lie in this case, but we do know
-    // that it is not modified until after the exposed expression.
-    if (NodeUtil.isAssignmentOp(parent) && !NodeUtil.isAssign(parent)) {
-      Node gParent = parent.getParent();
-      Node assignBack = new Node(Token.ASSIGN,
-          expr.cloneTree(),
-          tempNameNode.cloneNode());
-      if (NodeUtil.isExpressionNode(gParent)) {
-        gParent.getParent().addChildAfter(
-            NodeUtil.newExpr(assignBack), gParent);
-      } else {
-        // TODO(user): Use comma here sucks. We might close some accuracy
-        // in flow sensitive passes but as far as I know it is unavoidable.
-        Node comma = new Node(Token.COMMA);
-        gParent.replaceChild(parent, comma);
-        comma.addChildrenToFront(assignBack);
-        comma.addChildrenToFront(parent);
-      }
+    if (firstExtractedNode == null) {
+      firstExtractedNode = tempVarNode;
     }
-    return tempVarNode;
+    return firstExtractedNode;
   }
 
   /**

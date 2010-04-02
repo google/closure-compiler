@@ -309,19 +309,88 @@ public class ExpresssionDecomposerTest extends TestCase {
         "if (temp_const_1(1, temp_const_0, temp_2));");
   }
 
-  public void testExposePlusEquals() {
+  // Simple name on LHS of assignment-op.
+  public void testExposePlusEquals1() {
     helperExposeExpression(
         "var x = 0; x += foo() + 1",
         "foo",
         "var x = 0; var temp_const_0 = x;" +
-        "temp_const_0 += foo() + 1;" +
-        "x = temp_const_0;");
+        "x = temp_const_0 + (foo() + 1);");
 
     helperExposeExpression(
         "var x = 0; y = (x += foo()) + x",
         "foo",
         "var x = 0; var temp_const_0 = x;" +
-        "y = (temp_const_0 += foo(), x=temp_const_0) + x");
+        "y = (x = temp_const_0 + foo()) + x");
+  }
+
+  // Structure on LHS of assignment-op.
+  public void testExposePlusEquals2() {
+    helperExposeExpression(
+        "var x = {}; x.a += foo() + 1",
+        "foo",
+        "var x = {}; var temp_const_0 = x; var temp_const_1 = temp_const_0.a;" +
+        "temp_const_0.a = temp_const_1 + (foo() + 1);");
+
+    helperExposeExpression(
+        "var x = {}; y = (x.a += foo()) + x.a",
+        "foo",
+        "var x = {}; var temp_const_0 = x; var temp_const_1 = temp_const_0.a;" +
+        "y = (temp_const_0.a = temp_const_1 + foo()) + x.a");
+  }
+
+  // Constant object on LHS of assignment-op.
+  public void testExposePlusEquals3() {
+    helperExposeExpression(
+        "var XX = {};\n" +
+        "XX.a += foo() + 1",
+        "foo",
+        "var XX = {}; var temp_const_0 = XX.a;" +
+        "XX.a = temp_const_0 + (foo() + 1);");
+
+    helperExposeExpression(
+        "var XX = {}; y = (XX.a += foo()) + XX.a",
+        "foo",
+        "var XX = {}; var temp_const_0 = XX.a;" +
+        "y = (XX.a = temp_const_0 + foo()) + XX.a");
+  }
+
+  // Function all on LHS of assignment-op.
+  public void testExposePlusEquals4() {
+    helperExposeExpression(
+        "var x = {}; goo().a += foo() + 1",
+        "foo",
+        "var x = {};" +
+        "var temp_const_0 = goo();" +
+        "var temp_const_1 = temp_const_0.a;" +
+        "temp_const_0.a = temp_const_1 + (foo() + 1);");
+
+    helperExposeExpression(
+        "var x = {}; y = (goo().a += foo()) + goo().a",
+        "foo",
+        "var x = {};" +
+        "var temp_const_0 = goo();" +
+        "var temp_const_1 = temp_const_0.a;" +
+        "y = (temp_const_0.a = temp_const_1 + foo()) + goo().a");
+  }
+
+  // Test mulitple levels
+  public void testExposePlusEquals5() {
+    helperExposeExpression(
+        "var x = {}; goo().a.b += foo() + 1",
+        "foo",
+        "var x = {};" +
+        "var temp_const_0 = goo().a;" +
+        "var temp_const_1 = temp_const_0.b;" +
+        "temp_const_0.b = temp_const_1 + (foo() + 1);");
+
+    helperExposeExpression(
+        "var x = {}; y = (goo().a.b += foo()) + goo().a",
+        "foo",
+        "var x = {};" +
+        "var temp_const_0 = goo().a;" +
+        "var temp_const_1 = temp_const_0.b;" +
+        "y = (temp_const_0.b = temp_const_1 + foo()) + goo().a");
   }
 
   /** Test case helpers. */
@@ -479,7 +548,7 @@ public class ExpresssionDecomposerTest extends TestCase {
   /**
    * @param name The name to look for.
    * @param call The call to look for.
-   * @return The return the Nth CALL node to name found in a pre-order 
+   * @return The return the Nth CALL node to name found in a pre-order
    * traversal.
    */
   private static Node findCall(

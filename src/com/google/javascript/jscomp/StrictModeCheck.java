@@ -96,7 +96,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
     if (n.getType() == Token.WITH) {
       t.report(n, WITH_DISALLOWED);
     } else if (n.getType() == Token.NAME) {
-      if (!isDeclaration(n)) {
+      if (!NodeUtil.isLabelName(n) && !isDeclaration(n)) {
         checkNameUse(t, n);
       }
     } else if (n.getType() == Token.ASSIGN) {

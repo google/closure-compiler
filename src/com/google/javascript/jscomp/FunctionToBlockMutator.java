@@ -262,7 +262,7 @@ class FunctionToBlockMutator {
 
         // Add label
         Node label = new Node(Token.LABEL);
-        Node name = Node.newString(Token.LABEL_NAME, labelName);
+        Node name = Node.newString(Token.NAME, labelName);
         label.addChildToFront(name);
         label.addChildToBack(block);
 
@@ -399,7 +399,7 @@ class FunctionToBlockMutator {
       Preconditions.checkState(NodeUtil.isStatementBlock(parent));
 
       Node resultNode = getReplacementReturnStatement(current, resultName);
-      Node name = Node.newString(Token.LABEL_NAME, labelName);
+      Node name = Node.newString(Token.NAME, labelName);
       Node breakNode = new Node(Token.BREAK, name);
 
       // Replace the node in parent, and reset current to the first new child.

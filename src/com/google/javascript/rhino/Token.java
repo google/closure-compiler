@@ -251,11 +251,7 @@ public class Token
         SETCONST       = 150,
         SETCONSTVAR    = 151,
         DEBUGGER       = 152,
-        
-        // JSCompiler introduced tokens
-        LABEL_NAME     = 153,
-        
-        LAST_TOKEN     = 153,
+        LAST_TOKEN     = 152,
 
         // JSDoc-only tokens
         ANNOTATION     = 300,
@@ -313,7 +309,6 @@ public class Token
           case SETELEM:         return "SETELEM";
           case CALL:            return "CALL";
           case NAME:            return "NAME";
-          case LABEL_NAME:      return "LABEL_NAME";
           case NUMBER:          return "NUMBER";
           case STRING:          return "STRING";
           case NULL:            return "NULL";

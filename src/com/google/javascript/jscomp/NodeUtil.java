@@ -1047,12 +1047,23 @@ public final class NodeUtil {
    *       function parameter (not a label or a empty anonymous function name).
    */
   static boolean isReferenceName(Node n) {
-    return isName(n) && !n.getString().isEmpty();
+    return isName(n) && !n.getString().isEmpty() && !isLabelName(n);
   }
 
   /** @return Whether the node is a label name. */
   static boolean isLabelName(Node n) {
-    return (n != null && n.getType() == Token.LABEL_NAME);
+    if (n != null && n.getType() == Token.NAME) {
+      Node parent = n.getParent();
+      switch (parent.getType()) {
+        case Token.LABEL:
+        case Token.BREAK:
+        case Token.CONTINUE:
+          if (n == parent.getFirstChild()) {
+            return true;
+          }
+      }
+    }
+    return false;
   }
 
   /** Whether the child node is the FINALLY block of a try. */
