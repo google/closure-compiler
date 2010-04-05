@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -349,6 +350,44 @@ class CodePrinter {
       // When pretty-printing, always place the statement in its own block
       // so it is printed on a separate line.  This allows breakpoints to be
       // placed on the statement.
+      return true;
+    }
+
+    /**
+     * @return The TRY node for the specified CATCH node.
+     */
+    private Node getTryForCatch(Node n) {
+      return n.getParent().getParent();
+    }
+
+    /**
+     * @return Whether the a line break should be added after the specified
+     * BLOCK.
+     */
+    @Override
+    boolean breakAfterBlockFor(Node n,  boolean isStatementContext) {
+      Preconditions.checkState(n.getType() == Token.BLOCK);
+      Node parent = n.getParent();
+      if (parent != null) {
+        int type = parent.getType();
+        switch (type) {
+          case Token.DO:
+            // Don't break before 'while' in DO-WHILE statements.
+            return false;
+          case Token.FUNCTION:
+            // FUNCTIONs are handled separately, don't break here.
+            return false;
+          case Token.TRY:
+            // Don't break before catch
+            return n != parent.getFirstChild();
+          case Token.CATCH:
+            // Don't break before finally
+            return !NodeUtil.hasFinally(getTryForCatch(parent));
+          case Token.IF:
+            // Don't break before else
+            return n == parent.getLastChild();
+        }
+      }
       return true;
     }
   }

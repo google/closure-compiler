@@ -66,7 +66,7 @@ class GatherRawExports extends AbstractPostOrderCallback
   private boolean isGlobalThisObject(NodeTraversal t, Node n) {
     if (n.getType() == Token.THIS) {
       return t.inGlobalScope();
-    } else if (n.getType() == Token.NAME && !NodeUtil.isLabelName(n)) {
+    } else if (n.getType() == Token.NAME) {
       String varName = n.getString();
       if (varName.equals(GLOBAL_THIS_NAME)) {
         return true;

@@ -1431,8 +1431,8 @@ Location.prototype.search;
 Location.prototype.assign;
 
 /**
- * @param opt_forceReload If true, reloads the page from the server. Defaults
- *     to false.
+ * @param {boolean=} opt_forceReload If true, reloads the page from
+ *     the server. Defaults to false.
  * @see http://msdn.microsoft.com/en-us/library/ms536691(VS.85).aspx
  */
 Location.prototype.reload = function(opt_forceReload) {};

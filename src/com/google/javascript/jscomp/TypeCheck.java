@@ -723,6 +723,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       // These nodes have no interesting type behavior.
       case Token.LABEL:
+      case Token.LABEL_NAME:
       case Token.SWITCH:
       case Token.BREAK:
       case Token.CATCH:

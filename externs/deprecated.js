@@ -29,6 +29,8 @@ Window.prototype.opera.postError;
 
 // Image can't be used as a function
 /**
+ * @param {number=} opt_width
+ * @param {number=} opt_height
  * @constructor
  * @extends {EventTarget}
  */

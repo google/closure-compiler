@@ -410,16 +410,16 @@ public class CodePrinterTest extends TestCase {
     assertPrettyPrint("if (1) {alert(\"\");}",
         "if(1) {\n" +
         "  alert(\"\")\n" +
-        "}");
+        "}\n");
     assertPrettyPrint("if (1)alert(\"\");",
         "if(1) {\n" +
         "  alert(\"\")\n" +
-        "}");
+        "}\n");
     assertPrettyPrint("if (1) {alert();alert();}",
         "if(1) {\n" +
         "  alert();\n" +
         "  alert()\n" +
-        "}");
+        "}\n");
 
     // Don't add blocks if they weren't there already.
     assertPrettyPrint("label: alert();",
@@ -429,20 +429,20 @@ public class CodePrinterTest extends TestCase {
     assertPrettyPrint("if (1) alert();",
         "if(1) {\n" +
         "  alert()\n" +
-        "}");
+        "}\n");
     assertPrettyPrint("for (;;) alert();",
         "for(;;) {\n" +
         "  alert()\n" +
-        "}");
+        "}\n");
 
     assertPrettyPrint("while (1) alert();",
         "while(1) {\n" +
         "  alert()\n" +
-        "}");
+        "}\n");
 
     // Do we put else clauses in blocks?
     assertPrettyPrint("if (1) {} else {alert(a);}",
-        "if(1);else {\n  alert(a)\n}");
+        "if(1);else {\n  alert(a)\n}\n");
 
     // Do we add blocks to else clauses?
     assertPrettyPrint("if (1) alert(a); else alert(b);",
@@ -450,20 +450,20 @@ public class CodePrinterTest extends TestCase {
         "  alert(a)\n" +
         "}else {\n" +
         "  alert(b)\n" +
-        "}");
+        "}\n");
 
     // Do we put for bodies in blocks?
     assertPrettyPrint("for(;;) { alert();}",
         "for(;;) {\n" +
          "  alert()\n" +
-         "}");
+         "}\n");
     assertPrettyPrint("for(;;) {}",
         "for(;;);");
     assertPrettyPrint("for(;;) { alert(); alert(); }",
         "for(;;) {\n" +
         "  alert();\n" +
         "  alert()\n" +
-        "}");
+        "}\n");
 
     // How about do loops?
     assertPrettyPrint("do { alert(); } while(true);",
@@ -475,14 +475,108 @@ public class CodePrinterTest extends TestCase {
     assertPrettyPrint("myLabel: { alert();}",
         "myLabel: {\n" +
         "  alert()\n" +
-        "}");
+        "}\n");
 
     // Don't move the label on a loop, because then break {label} and
     // continue {label} won't work.
     assertPrettyPrint("myLabel: for(;;) continue myLabel;",
         "myLabel:for(;;) {\n" +
         "  continue myLabel\n" +
-        "}");
+        "}\n");
+  }
+
+  public void testPrettyPrinter2() {
+    assertPrettyPrint(
+        "if(true) f();",
+        "if(true) {\n" +
+        "  f()\n" +
+        "}\n");
+
+    assertPrettyPrint(
+        "if (true) { f() } else { g() }",
+        "if(true) {\n" +
+        "  f()\n" +
+        "}else {\n" +
+        "  g()\n" +
+        "}\n");
+
+    assertPrettyPrint(
+        "if(true) f(); for(;;) g();",
+        "if(true) {\n" +
+        "  f()\n" +
+        "}\n" +
+        "for(;;) {\n" +
+        "  g()\n" +
+        "}\n");
+  }
+
+  public void testPrettyPrinter3() {
+    assertPrettyPrint(
+        "try {} catch(e) {}if (1) {alert();alert();}",
+        "try {\n" +
+        "}catch(e) {\n" +
+        "}\n" +
+        "if(1) {\n" +
+        "  alert();\n" +
+        "  alert()\n" +
+        "}\n");
+
+    assertPrettyPrint(
+        "try {} finally {}if (1) {alert();alert();}",
+        "try {\n" +
+        "}finally {\n" +
+        "}\n" +
+        "if(1) {\n" +
+        "  alert();\n" +
+        "  alert()\n" +
+        "}\n");
+
+    assertPrettyPrint(
+        "try {} catch(e) {} finally {} if (1) {alert();alert();}",
+        "try {\n" +
+        "}catch(e) {\n" +
+        "}finally {\n" +
+        "}\n" +
+        "if(1) {\n" +
+        "  alert();\n" +
+        "  alert()\n" +
+        "}\n");
+  }
+
+  public void testPrettyPrinter4() {
+    assertPrettyPrint(
+        "function f() {}if (1) {alert();}",
+        "function f() {\n" +
+        "}\n" +
+        "if(1) {\n" +
+        "  alert()\n" +
+        "}\n");
+
+    assertPrettyPrint(
+        "var f = function() {};if (1) {alert();}",
+        "var f = function() {\n" +
+        "};\n" +
+        "if(1) {\n" +
+        "  alert()\n" +
+        "}\n");
+
+    assertPrettyPrint(
+        "(function() {})();if (1) {alert();}",
+        "(function() {\n" +
+        "})();\n" +
+        "if(1) {\n" +
+        "  alert()\n" +
+        "}\n");
+
+    assertPrettyPrint(
+        "(function() {alert();alert();})();if (1) {alert();}",
+        "(function() {\n" +
+        "  alert();\n" +
+        "  alert()\n" +
+        "})();\n" +
+        "if(1) {\n" +
+        "  alert()\n" +
+        "}\n");    
   }
 
   public void testTypeAnnotations() {
@@ -596,7 +690,7 @@ public class CodePrinterTest extends TestCase {
         "a.Foo.prototype.foo = function() {\n" +
         "}");
   }
-  
+
   public void testU2UFunctionTypeAnnotation() {
     assertTypeAnnotations(
         "/** @type {!Function} */ var x = function() {}",

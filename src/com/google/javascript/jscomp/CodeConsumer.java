@@ -141,9 +141,9 @@ abstract class CodeConsumer {
     endBlock(false);
   }
 
-  void endBlock(boolean statementContext) {
+  void endBlock(boolean shouldEndLine) {
     appendBlockEnd();
-    if (statementContext) {
+    if (shouldEndLine) {
       endLine();
     }
     statementNeedsEnded = false;
@@ -303,5 +303,12 @@ abstract class CodeConsumer {
    */
   boolean shouldPreserveExtraBlocks() {
     return false;
+  }
+
+  /**
+   * @return Whether the a line break can be added after the specified BLOCK.
+   */
+  boolean breakAfterBlockFor(Node n, boolean statementContext) {
+    return statementContext;
   }
 }

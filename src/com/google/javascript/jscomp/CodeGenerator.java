@@ -34,7 +34,7 @@ import java.nio.charset.CharsetEncoder;
 *
  */
 class CodeGenerator {
-  
+
   private static final char[] HEX_CHARS
       = { '0', '1', '2', '3', '4', '5', '6', '7',
           '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
@@ -44,7 +44,7 @@ class CodeGenerator {
   private final CharsetEncoder outputCharsetEncoder;
 
   /** Whether to perform basic checks for obviously incorrect AST structure. */
-  // NOTE: This exists to support a few extern legacy parsers that don't 
+  // NOTE: This exists to support a few extern legacy parsers that don't
   // properly normalize the AST (JsMinimizer).
   private final boolean validation;
 
@@ -185,6 +185,11 @@ class CodeGenerator {
         }
         break;
 
+      case Token.LABEL_NAME:
+        Preconditions.checkState(!n.getString().isEmpty());
+        addIdentifier(n.getString());
+        break;
+
       case Token.NAME:
         if (first == null || first.getType() == Token.EMPTY) {
           addIdentifier(n.getString());
@@ -200,7 +205,6 @@ class CodeGenerator {
             addExpr(first, 0, getContextForNoInOperator(context));
           }
         }
-
         break;
 
       case Token.ARRAYLIT:
@@ -321,7 +325,7 @@ class CodeGenerator {
           }
         }
         if (!stripBlock) {
-          cc.endBlock(context == Context.STATEMENT);
+          cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
         }
         break;
       }
@@ -483,6 +487,9 @@ class CodeGenerator {
         Preconditions.checkState(childCount <= 1);
         add("continue");
         if (childCount == 1) {
+          if (first.getType() != Token.LABEL_NAME && validation) {
+            throw new Error("Unexpected token type. Should be LABEL_NAME.");
+          }
           add(" ");
           add(first);
         }
@@ -499,6 +506,9 @@ class CodeGenerator {
         Preconditions.checkState(childCount <= 1);
         add("break");
         if (childCount == 1) {
+          if (first.getType() != Token.LABEL_NAME && validation) {
+            throw new Error("Unexpected token type. Should be LABEL_NAME.");
+          }
           add(" ");
           add(first);
         }
@@ -605,6 +615,9 @@ class CodeGenerator {
 
       case Token.LABEL:
         Preconditions.checkState(childCount == 2);
+        if (first.getType() != Token.LABEL_NAME && validation) {
+          throw new Error("Unexpected token type. Should be LABEL_NAME.");
+        }
         add(first);
         add(":");
         addNonEmptyExpression(
@@ -661,7 +674,7 @@ class CodeGenerator {
           cc.beginBlock();
           add(firstAndOnlyChild, Context.STATEMENT);
           cc.maybeLineBreak();
-          cc.endBlock(context == Context.STATEMENT);
+          cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
           return;
         } else {
           // Continue with the only child.

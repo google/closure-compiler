@@ -412,7 +412,10 @@ public class IRFactory {
     Node processBreakStatement(BreakStatement statementNode) {
       Node node = new Node(Token.BREAK);
       if (statementNode.getBreakLabel() != null) {
-        node.addChildToBack(transform(statementNode.getBreakLabel()));
+        Node labelName = transform(statementNode.getBreakLabel());
+        // Change the NAME to LABEL_NAME
+        labelName.setType(Token.LABEL_NAME);
+        node.addChildToBack(labelName);
       }
       return node;
     }
@@ -450,7 +453,10 @@ public class IRFactory {
     Node processContinueStatement(ContinueStatement statementNode) {
       Node node = new Node(Token.CONTINUE);
       if (statementNode.getLabel() != null) {
-        node.addChildToBack(transform(statementNode.getLabel()));
+        Node labelName = transform(statementNode.getLabel());
+        // Change the NAME to LABEL_NAME
+        labelName.setType(Token.LABEL_NAME);
+        node.addChildToBack(labelName);
       }
       return node;
     }
@@ -607,7 +613,7 @@ public class IRFactory {
 
     @Override
     Node processLabel(Label labelNode) {
-      return Node.newString(Token.NAME, labelNode.getName());
+      return Node.newString(Token.LABEL_NAME, labelNode.getName());
     }
 
     @Override
