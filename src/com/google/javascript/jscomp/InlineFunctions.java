@@ -197,9 +197,8 @@ class InlineFunctions implements CompilerPass {
         case Token.FUNCTION:
           Preconditions.checkState(NodeUtil.isStatementBlock(parent)
               || parent.getType() == Token.LABEL);
-          Function fn = new NamedFunction(n);
-          String name = fn.getName();
-          if (!name.isEmpty()) {
+          if (!NodeUtil.isFunctionAnonymous(n)) {
+            Function fn = new NamedFunction(n);
             maybeAddFunction(fn, t.getModule());
           }
           break;
