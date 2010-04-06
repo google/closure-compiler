@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -65,16 +66,16 @@ public class Compiler extends AbstractCompiler {
   private PassConfig passes = null;
 
   // The externs inputs
-  private CompilerInput[] externs;
+  private List<CompilerInput> externs;
 
   // The JS source modules
-  private JSModule[] modules;
+  private List<JSModule> modules;
 
   // The graph of the JS source modules
   private JSModuleGraph moduleGraph;
 
   // The JS source inputs
-  private CompilerInput[] inputs;
+  private List<CompilerInput> inputs;
 
   // error manager to which error management is delegated
   private ErrorManager errorManager;
@@ -237,6 +238,15 @@ public class Compiler extends AbstractCompiler {
    */
   public void init(JSSourceFile[] externs, JSSourceFile[] inputs,
       CompilerOptions options) {
+    init(Lists.<JSSourceFile>newArrayList(externs),
+        Lists.<JSSourceFile>newArrayList(inputs), options);
+  }
+
+  /**
+   * Initializes the instance state needed for a compile job.
+   */
+  public void init(List<JSSourceFile> externs, List<JSSourceFile> inputs,
+      CompilerOptions options) {
     initOptions(options);
     
     this.externs = makeCompilerInput(externs, true);
@@ -254,9 +264,21 @@ public class Compiler extends AbstractCompiler {
               + "Modules must be listed in dependency order.");
 
   /**
-   * Initializes the instance state needed for a compile job.
+   * Initializes the instance state needed for a compile job if the sources
+   * are in modules.
    */
   public void init(JSSourceFile[] externs, JSModule[] modules,
+      CompilerOptions options) {
+    initModules(Lists.<JSSourceFile>newArrayList(externs),
+         Lists.<JSModule>newArrayList(modules), options);
+  }
+  
+  /**
+   * Initializes the instance state needed for a compile job if the sources
+   * are in modules.
+   */
+  public void initModules(
+      List<JSSourceFile> externs, List<JSModule> modules,
       CompilerOptions options) {
     initOptions(options);
 
@@ -292,11 +314,11 @@ public class Compiler extends AbstractCompiler {
     }
   }
 
-  private CompilerInput[] makeCompilerInput(
-      JSSourceFile[] files, boolean isExtern) {
-    CompilerInput [] inputs = new CompilerInput[files.length];
-    for (int i = 0; i < files.length; ++i) {
-      inputs[i] = new CompilerInput(files[i], isExtern);
+  private List<CompilerInput> makeCompilerInput(
+      List<JSSourceFile> files, boolean isExtern) {
+    List<CompilerInput> inputs = Lists.newArrayList();
+    for (JSSourceFile file : files) {
+      inputs.add(new CompilerInput(file, isExtern));
     }
     return inputs;
   }
@@ -313,12 +335,12 @@ public class Compiler extends AbstractCompiler {
    * Verifies that at least one module has been provided and that the first one
    * has at least one source code input.
    */
-  private void checkFirstModule(JSModule[] modules) {
-    if (modules.length == 0) {
+  private void checkFirstModule(List<JSModule> modules) {
+    if (modules.isEmpty()) {
       report(JSError.make(EMPTY_MODULE_LIST_ERROR));
-    } else if (modules[0].getInputs().isEmpty()) {
+    } else if (modules.get(0).getInputs().isEmpty()) {
       report(JSError.make(EMPTY_ROOT_MODULE_ERROR,
-          modules[0].getName()));
+          modules.get(0).getName()));
     }
   }
   
@@ -326,9 +348,8 @@ public class Compiler extends AbstractCompiler {
    * Fill any empty modules with a place holder file. It makes any cross module
    * motion easier.
    */
-  private void fillEmptyModules(JSModule[] modules) {
-    for (int i = 1; i < modules.length; i ++) {
-      JSModule module = modules[i];
+  private void fillEmptyModules(List<JSModule> modules) {
+    for (JSModule module : modules) {
       if (module.getInputs().isEmpty()) {
         module.add(JSSourceFile.fromCode("[" + module.getName() + "]", ""));
       }
@@ -354,9 +375,9 @@ public class Compiler extends AbstractCompiler {
    * Builds a single list of all module inputs. Verifies that it contains no
    * duplicates.
    */
-  private CompilerInput[] getAllInputsFromModules() {
-    List<CompilerInput> inputs = new ArrayList<CompilerInput>();
-    Map<String, JSModule> inputMap = new HashMap<String, JSModule>();
+  private List<CompilerInput> getAllInputsFromModules() {
+    List<CompilerInput> inputs = Lists.newArrayList();
+    Map<String, JSModule> inputMap = Maps.newHashMap();
     for (JSModule module : modules) {
       for (CompilerInput input : module.getInputs()) {
         String inputName = input.getName();
@@ -373,10 +394,10 @@ public class Compiler extends AbstractCompiler {
     if (hasErrors()) {
 
       // There's no reason to bother parsing the code.
-      return new CompilerInput[0];
+      return ImmutableList.of();
     }
 
-    return inputs.toArray(new CompilerInput[inputs.size()]);
+    return inputs;
   }
 
   static final DiagnosticType DUPLICATE_INPUT =
@@ -430,7 +451,16 @@ public class Compiler extends AbstractCompiler {
   public Result compile(JSSourceFile[] externs,
                         JSSourceFile[] inputs,
                         CompilerOptions options) {
-
+    return compile(Lists.<JSSourceFile>newArrayList(externs),
+        Lists.<JSSourceFile>newArrayList(inputs),
+        options);
+  }
+  
+  /**
+   * Compiles a list of inputs.
+   */
+  public Result compile(List<JSSourceFile> externs,
+      List<JSSourceFile> inputs, CompilerOptions options) {
     // The compile method should only be called once.
     Preconditions.checkState(jsRoot == null);
 
@@ -453,11 +483,21 @@ public class Compiler extends AbstractCompiler {
   public Result compile(JSSourceFile[] externs,
                         JSModule[] modules,
                         CompilerOptions options) {
+    return compileModules(Lists.<JSSourceFile>newArrayList(externs),
+        Lists.<JSModule>newArrayList(modules),
+        options);
+  }
+
+  /**
+   * Compiles a list of modules.
+   */
+  public Result compileModules(List<JSSourceFile> externs,
+      List<JSModule> modules, CompilerOptions options) {
     // The compile method should only be called once.
     Preconditions.checkState(jsRoot == null);
 
     try {
-      init(externs, modules, options);
+      initModules(externs, modules, options);
       if (hasErrors()) {
         return getResult();
       }
@@ -1130,11 +1170,11 @@ public class Compiler extends AbstractCompiler {
       public String[] call() throws Exception {
         Tracer tracer = newTracer("toSourceArray");
         try {
-          int numInputs = inputs.length;
+          int numInputs = inputs.size();
           String[] sources = new String[numInputs];
           CodeBuilder cb = new CodeBuilder();
           for (int i = 0; i < numInputs; i++) {
-            Node scriptNode = inputs[i].getAstRoot(Compiler.this);
+            Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
             cb.reset();
             toSource(cb, i, scriptNode);
             sources[i] = cb.toString();
@@ -1577,16 +1617,16 @@ public class Compiler extends AbstractCompiler {
   @Override
   Node getNodeForCodeInsertion(JSModule module) {
     if (module == null) {
-      if (inputs.length == 0) {
+      if (inputs.isEmpty()) {
         throw new IllegalStateException("No inputs");
       }
 
-      return inputs[0].getAstRoot(this);
+      return inputs.get(0).getAstRoot(this);
     }
 
-    List<CompilerInput> inputs = module.getInputs();
-    if (inputs.size() > 0) {
-      return inputs.get(0).getAstRoot(this);
+    List<CompilerInput> moduleInputs = module.getInputs();
+    if (moduleInputs.size() > 0) {
+      return moduleInputs.get(0).getAstRoot(this);
     }
     throw new IllegalStateException("Root module has no inputs");
   }
@@ -1653,9 +1693,9 @@ public class Compiler extends AbstractCompiler {
 
     Node externsRoot;
     private Node jsRoot;
-    private CompilerInput[] externs;
-    private CompilerInput[] inputs;
-    private JSModule[] modules;
+    private List<CompilerInput> externs;
+    private List<CompilerInput> inputs;
+    private List<JSModule> modules;
     private PassConfig.State passConfigState;
     private JSTypeRegistry typeRegistry;
     private boolean normalized;

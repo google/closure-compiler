@@ -19,6 +19,7 @@
  *  This file depends on w3c_dom1.js.
  *  Created from http://www.w3.org/TR/selectors-api/
  *
+ * @externs
 *
  */
 

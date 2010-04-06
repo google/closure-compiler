@@ -18,6 +18,7 @@
  * @fileoverview Definitions for W3C's CSS specification
  *  The whole file has been fully type annotated.
  *  http://www.w3.org/TR/DOM-Level-2-Style/css.html
+ * @externs
 *
 *
  */

@@ -19,6 +19,7 @@
  *  event specification by webkit. This file depends on w3c_event.js.
  *  All the provided definitions have been type annotated
  *
+ * @externs
 *
  */
 

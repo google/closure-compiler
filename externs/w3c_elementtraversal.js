@@ -21,6 +21,7 @@
  *  Created from:
  *    http://www.w3.org/TR/ElementTraversal/#ecmascript-bindings
  *
+ * @externs
 *
  */
 

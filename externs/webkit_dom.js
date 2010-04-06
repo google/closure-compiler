@@ -19,6 +19,7 @@
  *  specification by webkit. This file depends on w3c_dom2.js.
  *  All the provided definitions has been type annotated
  *
+ * @externs
 *
  */
 

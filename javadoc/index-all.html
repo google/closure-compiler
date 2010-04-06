@@ -952,6 +952,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html#compile(com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.CompilerOptions)"><B>compile(JSSourceFile[], JSSourceFile[], CompilerOptions)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
 <DD>Compiles a list of inputs.
+<DT><A HREF="./com/google/javascript/jscomp/Compiler.html#compile(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><B>compile(List&lt;JSSourceFile&gt;, List&lt;JSSourceFile&gt;, CompilerOptions)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
+<DD>Compiles a list of inputs.
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html#compile(com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.JSModule[], com.google.javascript.jscomp.CompilerOptions)"><B>compile(JSSourceFile[], JSModule[], CompilerOptions)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
 <DD>Compiles a list of modules.
@@ -961,6 +964,9 @@ Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/java
 <DT><A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Module.html#COMPILED_SOURCE_FIELD_NUMBER"><B>COMPILED_SOURCE_FIELD_NUMBER</B></A> - 
 Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Module.html" title="class in com.google.javascript.jscomp">FunctionInformationMap.Module</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/Compiler.html#compileModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><B>compileModules(List&lt;JSSourceFile&gt;, List&lt;JSModule&gt;, CompilerOptions)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
+<DD>Compiles a list of modules.
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp"><B>Compiler</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>Compiler (and the other classes in this package) does the following:
  
  parses JS code
@@ -4138,9 +4144,13 @@ Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html#init(com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.CompilerOptions)"><B>init(JSSourceFile[], JSSourceFile[], CompilerOptions)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
 <DD>Initializes the instance state needed for a compile job.
-<DT><A HREF="./com/google/javascript/jscomp/Compiler.html#init(com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.JSModule[], com.google.javascript.jscomp.CompilerOptions)"><B>init(JSSourceFile[], JSModule[], CompilerOptions)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/Compiler.html#init(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><B>init(List&lt;JSSourceFile&gt;, List&lt;JSSourceFile&gt;, CompilerOptions)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
 <DD>Initializes the instance state needed for a compile job.
+<DT><A HREF="./com/google/javascript/jscomp/Compiler.html#init(com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.JSModule[], com.google.javascript.jscomp.CompilerOptions)"><B>init(JSSourceFile[], JSModule[], CompilerOptions)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
+<DD>Initializes the instance state needed for a compile job if the sources
+ are in modules.
 <DT><A HREF="./com/google/javascript/jscomp/Instrumentation.html#INIT_FIELD_NUMBER"><B>INIT_FIELD_NUMBER</B></A> - 
 Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Instrumentation.html" title="class in com.google.javascript.jscomp">Instrumentation</A>
 <DD>&nbsp;
@@ -4166,6 +4176,10 @@ Method in exception com.google.javascript.rhino.<A HREF="./com/google/javascript
 <DT><A HREF="./com/google/javascript/rhino/RhinoException.html#initLineSource(java.lang.String)"><B>initLineSource(String)</B></A> - 
 Method in exception com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/RhinoException.html" title="class in com.google.javascript.rhino">RhinoException</A>
 <DD>Initialize the text of the source line containing the error.
+<DT><A HREF="./com/google/javascript/jscomp/Compiler.html#initModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><B>initModules(List&lt;JSSourceFile&gt;, List&lt;JSModule&gt;, CompilerOptions)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
+<DD>Initializes the instance state needed for a compile job if the sources
+ are in modules.
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html#initOptions(com.google.javascript.jscomp.CompilerOptions)"><B>initOptions(CompilerOptions)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
 <DD>Initialize the compiler options.
@@ -5026,6 +5040,9 @@ Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascr
 <DD>Creates an instance.
 <DT><A HREF="./com/google/javascript/jscomp/JSModuleGraph.html" title="class in com.google.javascript.jscomp"><B>JSModuleGraph</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>A <A HREF="./com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp"><CODE>JSModule</CODE></A> dependency graph that assigns a depth to each module and
  can answer depth-related queries about them.<DT><A HREF="./com/google/javascript/jscomp/JSModuleGraph.html#JSModuleGraph(com.google.javascript.jscomp.JSModule[])"><B>JSModuleGraph(JSModule[])</B></A> - 
+Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/JSModuleGraph.html" title="class in com.google.javascript.jscomp">JSModuleGraph</A>
+<DD>Creates a module graph from a list of modules in dependency order.
+<DT><A HREF="./com/google/javascript/jscomp/JSModuleGraph.html#JSModuleGraph(java.util.List)"><B>JSModuleGraph(List&lt;JSModule&gt;)</B></A> - 
 Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/JSModuleGraph.html" title="class in com.google.javascript.jscomp">JSModuleGraph</A>
 <DD>Creates a module graph from a list of modules in dependency order.
 <DT><A HREF="./com/google/javascript/jscomp/JSModuleGraph.ModuleDependenceException.html" title="class in com.google.javascript.jscomp"><B>JSModuleGraph.ModuleDependenceException</B></A> - Exception in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>&nbsp;<DT><A HREF="./com/google/javascript/jscomp/JSModuleGraph.ModuleDependenceException.html#JSModuleGraph.ModuleDependenceException(java.lang.String, com.google.javascript.jscomp.JSModule, com.google.javascript.jscomp.JSModule)"><B>JSModuleGraph.ModuleDependenceException(String, JSModule, JSModule)</B></A> - 

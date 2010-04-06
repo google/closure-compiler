@@ -19,6 +19,7 @@
  *  W3C's event specification by Gecko. This file depends on
  *  w3c_event.js.
  *
+ * @externs
 *
  */
 

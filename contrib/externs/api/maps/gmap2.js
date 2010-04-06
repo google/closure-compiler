@@ -16,6 +16,7 @@
 
 /**
  * @fileoverview Externs for Maps API V2
+ * @externs
 *
  */
 
@@ -1808,7 +1809,7 @@ GMapUIOptions.prototype.controls.largemapcontrol3d
 /**
  * @type {boolean}
  */
-GMapUIOptions.prototype.controls.smallzoomcontrol3d	
+GMapUIOptions.prototype.controls.smallzoomcontrol3d
 
 /**
  * @type {boolean}

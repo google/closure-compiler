@@ -43,7 +43,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   // Info about where the file lives.
   private JSModule module;
-  private final boolean isExtern;
+  private boolean isExtern;
   final private String name;
 
   // The AST.
@@ -293,5 +293,9 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   public boolean isExtern() {
     return isExtern;
+  }
+
+  void setIsExtern(boolean isExtern) {
+    this.isExtern = isExtern;
   }
 }

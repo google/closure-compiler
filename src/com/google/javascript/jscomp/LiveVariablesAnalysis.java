@@ -279,7 +279,7 @@ class LiveVariablesAnalysis extends
    * Give up computing liveness of formal parameter by putting all the parameter
    * names in the escaped set.
    */
-  private void markAllParametersEscaped() {
+  void markAllParametersEscaped() {
     Node lp = jsScope.getRootNode().getFirstChild().getNext();
     for(Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
       escaped.add(jsScope.getVar(arg.getString()));

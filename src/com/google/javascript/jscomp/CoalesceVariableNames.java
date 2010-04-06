@@ -101,6 +101,13 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
     LiveVariablesAnalysis liveness =
         new LiveVariablesAnalysis(cfg, scope, compiler);
+    // If the function has exactly 2 params, mark them as escaped. This is
+    // a work-around for an IE bug where it throws an exception if you
+    // write to the parameters of the callback in a sort(). See:
+    // http://code.google.com/p/closure-compiler/issues/detail?id=58
+    if (scope.getRootNode().getFirstChild().getNext().getChildCount() == 2) {
+      liveness.markAllParametersEscaped();
+    }
     liveness.analyze();
 
     UndiGraph<Var, Void> interferenceGraph =
@@ -137,7 +144,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return;
     }
     Var coalescedVar = colorings.peek().getPartitionSuperNode(var);
-    
+
     if (!usePseudoNames) {
       if (vNode.getValue().equals(coalescedVar)) {
         // The coalesced name is itself, nothing to do.
@@ -159,7 +166,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       Set<String> allMergedNames = Sets.newTreeSet();
       for (Iterator<Var> i = t.getScope().getVars(); i.hasNext();) {
         Var iVar = i.next();
-        
+
         // Look for all the variables that can be merged (in the graph by now)
         // and it is merged with the current coalscedVar.
         if (colorings.peek().getGraph().getNode(iVar) != null &&
@@ -167,18 +174,18 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           allMergedNames.add(iVar.name);
         }
       }
-      
+
       // Keep its original name.
       if (allMergedNames.size() == 1) {
         return;
       }
-      
+
       pseudoName = Joiner.on("_").join(allMergedNames);
-      
+
       while (t.getScope().isDeclared(pseudoName, true)) {
         pseudoName += "$";
       }
-      
+
       n.setString(pseudoName);
       compiler.reportCodeChange();
 
@@ -198,7 +205,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     for (Iterator<Var> i = scope.getVars(); i.hasNext();) {
       Var v = i.next();
       if (!escaped.contains(v)) {
-        
+
         // TODO(user): In theory, we CAN coalesce function names just like
         // any variables. Our Liveness analysis captures this just like it as
         // described in the specification. However, we saw some zipped and

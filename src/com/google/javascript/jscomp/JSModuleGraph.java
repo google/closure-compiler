@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
@@ -70,8 +71,15 @@ public class JSModuleGraph {
    * Creates a module graph from a list of modules in dependency order.
    */
   public JSModuleGraph(JSModule[] modulesInDepOrder) {
-    moduleDepths = new HashMap<JSModule, Integer>(modulesInDepOrder.length);
-    modulesByDepth = new ArrayList<List<JSModule>>();
+    this(Lists.<JSModule>newArrayList(modulesInDepOrder));
+  }
+
+  /**
+   * Creates a module graph from a list of modules in dependency order.
+   */
+  public JSModuleGraph(List<JSModule> modulesInDepOrder) {
+    moduleDepths = Maps.newHashMapWithExpectedSize(modulesInDepOrder.size());
+    modulesByDepth = Lists.newArrayList();
 
     for (JSModule module : modulesInDepOrder) {
       int depth = 0;

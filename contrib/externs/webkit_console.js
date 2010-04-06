@@ -18,6 +18,7 @@
  * @fileoverview Definitions for the Webkit console specification.
  * @see http://trac.webkit.org/browser/trunk/WebCore/page/Console.idl
  * @see http://trac.webkit.org/browser/trunk/WebCore/page/Console.cpp
+ * @externs
 *
  */
 

@@ -17,6 +17,7 @@
 /**
  * @fileoverview Definitions for IE's vector markup language, or VML.
  *
+ * @externs
 *
  */
 

@@ -16,6 +16,7 @@
 
 /**
  * @fileoverview Global symbols injected by Google Gears.
+ * @externs
  * @author nicksantos@google.com (Nick Santos)
  */
 

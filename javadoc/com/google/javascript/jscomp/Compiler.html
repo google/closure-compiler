@@ -294,6 +294,26 @@ Compiler (and the other classes in this package) does the following:
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compile(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">compile</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+        <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs,
+        <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a list of inputs.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#compileModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">compileModules</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+               <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
+               <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a list of modules.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#disableThreads()">disableThreads</A></B>()</CODE>
 
@@ -463,7 +483,8 @@ Compiler (and the other classes in this package) does the following:
      <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Initializes the instance state needed for a compile job.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Initializes the instance state needed for a compile job if the sources
+ are in modules.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -474,6 +495,27 @@ Compiler (and the other classes in this package) does the following:
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Initializes the instance state needed for a compile job.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#init(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">init</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+     <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs,
+     <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Initializes the instance state needed for a compile job.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/Compiler.html#initModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)">initModules</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+            <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
+            <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Initializes the instance state needed for a compile job if the sources
+ are in modules.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -802,6 +844,21 @@ public void <B>init</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSour
 </DL>
 <HR>
 
+<A NAME="init(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
+init</H3>
+<PRE>
+public void <B>init</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+                 <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs,
+                 <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+<DL>
+<DD>Initializes the instance state needed for a compile job.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="init(com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.JSModule[], com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 init</H3>
 <PRE>
@@ -809,7 +866,24 @@ public void <B>init</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSour
                  <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>[]&nbsp;modules,
                  <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
-<DD>Initializes the instance state needed for a compile job.
+<DD>Initializes the instance state needed for a compile job if the sources
+ are in modules.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="initModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
+initModules</H3>
+<PRE>
+public void <B>initModules</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+                        <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
+                        <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+<DL>
+<DD>Initializes the instance state needed for a compile job if the sources
+ are in modules.
 <P>
 <DD><DL>
 </DL>
@@ -886,12 +960,42 @@ public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="cla
 </DL>
 <HR>
 
+<A NAME="compile(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
+compile</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compile</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+                      <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;inputs,
+                      <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+<DL>
+<DD>Compiles a list of inputs.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="compile(com.google.javascript.jscomp.JSSourceFile[], com.google.javascript.jscomp.JSModule[], com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
 compile</H3>
 <PRE>
 public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compile</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>[]&nbsp;externs,
                       <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>[]&nbsp;modules,
                       <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
+<DL>
+<DD>Compiles a list of modules.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="compileModules(java.util.List, java.util.List, com.google.javascript.jscomp.CompilerOptions)"><!-- --></A><H3>
+compileModules</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A> <B>compileModules</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSSourceFile.html" title="class in com.google.javascript.jscomp">JSSourceFile</A>&gt;&nbsp;externs,
+                             <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules,
+                             <A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>&nbsp;options)</PRE>
 <DL>
 <DD>Compiles a list of modules.
 <P>

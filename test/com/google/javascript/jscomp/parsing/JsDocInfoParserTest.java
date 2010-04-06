@@ -39,6 +39,7 @@ import java.util.Set;
 public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   private Set<String> extraAnnotations;
+  private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder = null;
 
   @Override
   public void setUp() throws Exception {
@@ -1053,27 +1054,30 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertEquals(": [ ] ...", parse(comment).getDescription());
   }
 
-  //public void testParsePreserveWithNoBuilderGivesWarning() throws Exception {
-  //  String comment = "@preserve Foo\nBar\n*/";
-  //  parse(comment,
-  //      "@preserve or @license annotation without file to associate it with");
-  //}
+  public void testParsePreserve() throws Exception {
+    Node node = new Node(1);
+    this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
+    String comment = "@preserve Foo\nBar\n\nBaz*/";
+    parse(comment);
+    assertEquals(" Foo\n Bar\n\n Baz", node.getJSDocInfo().getLicense());
+  }
 
-  //public void testParsePreserve() throws Exception {
-  //  Node node = new Node(1);
-  //  this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
-  //  String comment = "@preserve Foo\nBar\n\nBaz*/";
-  //  parse(comment);
-  //  assertEquals(" Foo\n Bar\n\n Baz", node.getJSDocInfo().getLicense());
-  //}
+  public void testParseLicense() throws Exception {
+    Node node = new Node(1);
+    this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
+    String comment = "@license Foo\nBar\n\nBaz*/";
+    parse(comment);
+    assertEquals(" Foo\n Bar\n\n Baz", node.getJSDocInfo().getLicense());
+  }
 
-  //public void testParseLicense() throws Exception {
-  //  Node node = new Node(1);
-  //  this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
-  //  String comment = "@license Foo\nBar\n\nBaz*/";
-  //  parse(comment);
-  //  assertEquals(" Foo\n Bar\n\n Baz", node.getJSDocInfo().getLicense());
-  //}
+  public void testParseLicenseWithAnnotation() throws Exception {
+    Node node = new Node(1);
+    this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
+    String comment = "@license Foo \n * @author Charlie Brown */";
+    parse(comment);
+    assertEquals(" Foo \n @author Charlie Brown ",
+        node.getJSDocInfo().getLicense());
+  }
 
   public void testParseDefine1() throws Exception {
     assertTypeEquals(STRING_TYPE,
@@ -2300,9 +2304,9 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JsDocInfoParser jsdocParser = new JsDocInfoParser(stream(comment),
         "testcode", config, errorReporter);
 
-    //if (fileLevelJsDocBuilder != null) {
-    //  jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
-    //}
+    if (fileLevelJsDocBuilder != null) {
+      jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
+    }
 
     jsdocParser.parse();
 

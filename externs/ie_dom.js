@@ -19,6 +19,7 @@
  *  W3C's DOM specification by IE in JScript. This file depends on
  *  w3c_dom2.js. The whole file has NOT been fully type annotated.
  *
+ * @externs
 *
 *
  */

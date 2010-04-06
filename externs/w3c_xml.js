@@ -27,6 +27,7 @@
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html
  * @see http://www.w3.org/TR/XMLHttpRequest/
  *
+ * @externs
 *
 *
  */

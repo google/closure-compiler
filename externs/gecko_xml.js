@@ -18,24 +18,25 @@
  * @fileoverview Definitions for all the extensions over some of the
  *  W3C's XML specifications by Gecko. This file depends on
  *  w3c_xml.js. The whole file has been fully type annotated.
- * 
+ *
+ * @externs
 *
  */
 
 /**
  * MLSerializer can be used to convert DOM subtree or DOM document into text.
- * XMLSerializer is available to unprivileged scripts. 
+ * XMLSerializer is available to unprivileged scripts.
  *
  * XMLSerializer is mainly useful for applications and extensions based on
  * Mozilla platform. While it's available to web pages, it's not part of any
  * standard and level of support in other browsers is unknown.
  *
- * @constructor 
+ * @constructor
  */
 function XMLSerializer() {}
 
 /**
- * Returns the serialized subtree in the form of a string 
+ * Returns the serialized subtree in the form of a string
  * @param {Node} subtree
  * @return {string}
  */
@@ -43,24 +44,24 @@ XMLSerializer.prototype.serializeToString = function(subtree) {};
 
 /**
  * The subtree rooted by the specified element is serialized to a byte stream
- * using the character set specified. 
+ * using the character set specified.
  *
  * @param {Node} subtree
  * @return {Object}
  */
 XMLSerializer.prototype.serializeToStream = function(subtree) {};
 
-/** 
+/**
  * DOMParser is mainly useful for applications and extensions based on Mozilla
  * platform. While it's available to web pages, it's not part of any standard and
  * level of support in other browsers is unknown.
  *
- * @constructor 
+ * @constructor
  */
 function DOMParser() {}
 
 /**
- * The string passed in is parsed into a DOM document. 
+ * The string passed in is parsed into a DOM document.
  *
  * Example:
  *  var parser = new DOMParser();

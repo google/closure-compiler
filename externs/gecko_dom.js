@@ -19,6 +19,7 @@
  *  W3C's DOM specification by Gecko. This file depends on
  *  w3c_dom2.js.
  *
+ * @externs
 *
  */
 

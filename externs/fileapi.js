@@ -17,6 +17,7 @@
  * @fileoverview Definitions for objects in the File API. Details of the API are
  * at http://dev.w3.org/2006/webapi/FileAPI/
  *
+ * @externs
 *
  */
 

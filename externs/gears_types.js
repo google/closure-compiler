@@ -16,6 +16,7 @@
 
 /**
  * @fileoverview Extern types introduced by the Gears extension.
+ * @externs
  */
 
 

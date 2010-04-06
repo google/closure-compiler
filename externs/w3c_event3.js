@@ -21,6 +21,7 @@
  *  Created from
  *   http://www.w3.org/TR/DOM-Level-3-Events/#ecma-script-binding-ecma-binding
  *
+ * @externs
 *
  */
 

@@ -1109,6 +1109,7 @@ public final class JsDocInfoParser {
    *
    * @return The extraction information.
    */
+  @SuppressWarnings("fallthrough")
   private ExtractionInfo extractMultilineTextualBlock(JsDocToken token,
                                                       WhitespaceOption option) {
 
@@ -1138,25 +1139,6 @@ public final class JsDocInfoParser {
 
     do {
       switch (token) {
-        case ANNOTATION:
-        case EOC:
-        case EOF:
-          String multilineText = builder.toString();
-
-          if (option != WhitespaceOption.PRESERVE) {
-            multilineText = multilineText.trim();
-          }
-
-          int endLineno = stream.getLineno();
-          int endCharno = stream.getCharno();
-
-          if (multilineText.length() > 0) {
-            jsdocBuilder.markText(multilineText, startLineno, startCharno,
-                                  endLineno, endCharno);
-          }
-
-          return new ExtractionInfo(multilineText, token);
-
         case STAR:
           if (!ignoreStar) {
             if (builder.length() > 0) {
@@ -1177,6 +1159,32 @@ public final class JsDocInfoParser {
           ignoreStar = true;
           token = next();
           continue;
+
+        case ANNOTATION:
+        case EOC:
+        case EOF:
+          // When we're capturing a license block, annotations
+          // in the block are ok.
+          if (!(option == WhitespaceOption.PRESERVE &&
+                token == JsDocToken.ANNOTATION)) {
+            String multilineText = builder.toString();
+
+            if (option != WhitespaceOption.PRESERVE) {
+              multilineText = multilineText.trim();
+            }
+
+            int endLineno = stream.getLineno();
+            int endCharno = stream.getCharno();
+
+            if (multilineText.length() > 0) {
+              jsdocBuilder.markText(multilineText, startLineno, startCharno,
+                  endLineno, endCharno);
+            }
+
+            return new ExtractionInfo(multilineText, token);
+          }
+
+          // FALL THROUGH
 
         default:
           ignoreStar = false;

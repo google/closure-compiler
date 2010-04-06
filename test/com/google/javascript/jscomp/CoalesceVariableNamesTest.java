@@ -186,9 +186,16 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   public void testParameter4() {
-    // Make sure that we are taking advantage of correct merge opportunities.
+    // Make sure that we do not merge two-arg functions because of the
+    // IE sort bug (see comments in computeEscaped)
     test("function FUNC(x, y) {var a,b; y; a=0; a; x; b=0; b}",
-         "function FUNC(x, y) {         y; y=0; y; x; x=0; x}");
+         "function FUNC(x, y) {var a; y; a=0; a; x; a=0; a}");
+  }
+
+  public void testParameter4b() {
+    // Merge parameters
+    test("function FUNC(x, y, z) {var a,b; y; a=0; a; x; b=0; b}",
+         "function FUNC(x, y, z) {         y; y=0; y; x; x=0; x}");
   }
 
   public void testLiveRangeChangeWithinCfgNode() {

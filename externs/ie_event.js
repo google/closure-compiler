@@ -17,7 +17,8 @@
  * @fileoverview Definitions for all the extensions over the
  *  W3C's event specification by IE in JScript. This file depends on
  *  w3c_event.js. The whole file has NOT been fully type annotated.
- * 
+ *
+ * @externs
 *
  */
 
