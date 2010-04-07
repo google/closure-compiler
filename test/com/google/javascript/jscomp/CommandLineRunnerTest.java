@@ -132,6 +132,18 @@ public class CommandLineRunnerTest extends TestCase {
          "var FOO = true, BAR = 5, CCC = true, DDD = true;");
   }
 
+  public void testDefineFlag2() {
+    args.add("--define=FOO='x\"'");
+    test("/** @define {string} */ var FOO = \"a\";",
+         "var FOO = \"x\\\"\";");
+  }
+
+  public void testDefineFlag3() {
+    args.add("--define=FOO=\"x'\"");
+    test("/** @define {string} */ var FOO = \"a\";",
+         "var FOO = \"x'\";");
+  }
+
   public void testScriptStrictModeNoWarning() {
     test("'use strict';", "");
     test("'no use strict';", CheckSideEffects.USELESS_CODE_ERROR);

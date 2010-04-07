@@ -71,7 +71,7 @@ final class RemoveConstantExpressions implements CompilerPass {
       this.changeProxy.registerListener(
           new ReportCodeHasChangedListener(result));
     }
-    
+
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
       trySimplify(parent, node);
@@ -87,7 +87,9 @@ final class RemoveConstantExpressions implements CompilerPass {
       }
 
       Node exprBody = node.getFirstChild();
-      if (!NodeUtil.nodeTypeMayHaveSideEffects(exprBody)) {
+      if (!NodeUtil.nodeTypeMayHaveSideEffects(exprBody)
+          || exprBody.getType() == Token.NEW
+          || exprBody.getType() == Token.CALL) {
         changeProxy.replaceWith(parent, node, getSideEffectNodes(exprBody));
       }
     }
@@ -110,19 +112,19 @@ final class RemoveConstantExpressions implements CompilerPass {
       }
       return replacements;
     }
-    
+
     public Result getResult() {
       return result;
     }
   }
-  
+
   /**
    * Used to reports code changes to the compiler as they happen.
    */
   private static class ReportCodeHasChangedListener
       implements AstChangeProxy.ChangeListener {
     private final Result result;
-    
+
     private ReportCodeHasChangedListener(Result result) {
       this.result = result;
     }

@@ -544,7 +544,7 @@ public final class NodeUtil {
    * the reason's why a subtree has side effects.
    */
   static boolean nodeTypeMayHaveSideEffects(Node n) {
-    if (NodeUtil.isAssignmentOp(n)) {
+    if (isAssignmentOp(n)) {
       return true;
     }
 
@@ -589,7 +589,7 @@ public final class NodeUtil {
         return true;
       case Token.NAME:
         // Non-constant names values may have been changed.
-        return !NodeUtil.isConstantName(n)
+        return !isConstantName(n)
             && !knownConstants.contains(n.getString());
 
       // Properties on constant NAMEs can still be side-effected.
@@ -600,7 +600,7 @@ public final class NodeUtil {
       case Token.FUNCTION:
         // Anonymous functions definitions are not changed by side-effects,
         // and named functions are not part of expressions.
-        Preconditions.checkState(NodeUtil.isAnonymousFunction(n));
+        Preconditions.checkState(isAnonymousFunction(n));
         return false;
     }
 
@@ -1109,7 +1109,7 @@ public final class NodeUtil {
     Node parent = block.getParent();
     // Try to remove the block if its parent is a block/script or if its
     // parent is label and it has exactly one child.
-    if (NodeUtil.isStatementBlock(parent)) {
+    if (isStatementBlock(parent)) {
       Node previous = block;
       while (block.hasChildren()) {
         Node child = block.removeFirstChild();
@@ -1177,7 +1177,7 @@ public final class NodeUtil {
    * See {@link #isFunctionDeclaration}).
    */
   static boolean isHoistedFunctionDeclaration(Node n) {
-    return NodeUtil.isFunctionDeclaration(n)
+    return isFunctionDeclaration(n)
         && (n.getParent().getType() == Token.SCRIPT
             || n.getParent().getParent().getType() == Token.FUNCTION);
   }
@@ -1225,10 +1225,10 @@ public final class NodeUtil {
    */
   static boolean isVarArgsFunction(Node function) {
     Preconditions.checkArgument(isFunction(function));
-    return NodeUtil.isNameReferenced(
+    return isNameReferenced(
         function.getLastChild(),
         "arguments",
-        Predicates.<Node>not(new NodeUtil.MatchNodeType(Token.FUNCTION)));
+        Predicates.<Node>not(new MatchNodeType(Token.FUNCTION)));
   }
 
   /**
@@ -1239,7 +1239,7 @@ public final class NodeUtil {
   static boolean isObjectCallMethod(Node callNode, String methodName) {
     if (callNode.getType() == Token.CALL) {
       Node functionIndentifyingExpression = callNode.getFirstChild();
-      if (NodeUtil.isGet(functionIndentifyingExpression)) {
+      if (isGet(functionIndentifyingExpression)) {
         Node last = functionIndentifyingExpression.getLastChild();
         if (last != null && last.getType() == Token.STRING) {
           String propName = last.getString();
@@ -1399,7 +1399,7 @@ public final class NodeUtil {
    */
   static boolean containsTypeInOuterScope(Node node, int type) {
     return containsType(node, type,
-        Predicates.<Node>not(new NodeUtil.MatchNodeType(Token.FUNCTION)));
+        Predicates.<Node>not(new MatchNodeType(Token.FUNCTION)));
   }
 
   /**
@@ -1629,7 +1629,7 @@ public final class NodeUtil {
         // Note that by this point, unicode escapes have been converted
         // to UTF-16 characters, so we're only searching for character
         // values, not escapes.
-        NodeUtil.isLatin(name);
+        isLatin(name);
   }
 
   private static class VarCollector implements Visitor {
@@ -1656,7 +1656,7 @@ public final class NodeUtil {
     visitPreOrder(
         root,
         collector,
-        Predicates.<Node>not(new NodeUtil.MatchNodeType(Token.FUNCTION)));
+        Predicates.<Node>not(new MatchNodeType(Token.FUNCTION)));
     return collector.vars.values();
   }
 
@@ -1665,7 +1665,7 @@ public final class NodeUtil {
    *     some constructor.
    */
   static boolean isPrototypePropertyDeclaration(Node n) {
-    if (!NodeUtil.isExprAssign(n)) {
+    if (!isExprAssign(n)) {
       return false;
     }
     return isPrototypeProperty(n.getFirstChild().getFirstChild());

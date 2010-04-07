@@ -277,4 +277,20 @@ public class RemoveConstantExpressionsTest extends CompilerTestCase {
   public void testRemoveFromLabel2() {
     test("LBL: foo() + 1 + bar()", "LBL: {foo();bar()}");
   }
+
+  public void testCall1() {
+    test("Math.sin(0);", "");
+  }
+
+  public void testCall2() {
+    test("1 + Math.sin(0);", "");
+  }
+
+  public void testNew1() {
+    test("new Date;", "");
+  }
+
+  public void testNew2() {
+    test("1 + new Date;", "");
+  }
 }

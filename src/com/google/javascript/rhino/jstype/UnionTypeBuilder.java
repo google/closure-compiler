@@ -39,8 +39,8 @@
  
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.UnionType;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
@@ -144,7 +144,7 @@ class UnionTypeBuilder implements Serializable {
           result = registry.getNativeType(UNKNOWN_TYPE);
         }
       } else {
-        Set<JSType> alternateSet = Sets.newUnmodifiableHashSet(alternates);
+        Set<JSType> alternateSet = ImmutableSet.copyOf(alternates);
         int size = alternateSet.size();
         if (size > MAX_UNION_SIZE) {
           result = registry.getNativeType(UNKNOWN_TYPE);

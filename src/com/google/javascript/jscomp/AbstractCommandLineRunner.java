@@ -323,7 +323,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       } catch (NumberFormatException ignored) {
         numJsFiles = -1;
       }
-      
+
       // We will allow modules of zero input.
       if (numJsFiles < 0) {
         throw new FlagUsageException("Invalid js file count '" + parts[1]
@@ -865,14 +865,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           } else if (defValue.equals("false")) {
             options.setDefineToBooleanLiteral(defName, false);
             continue;
-          } else if (defValue.length() > 1 &&
-              defValue.charAt(0) == '\'' &&
-              defValue.charAt(defValue.length() - 1) == '\'') {
+          } else if (defValue.length() > 1
+              && ((defValue.charAt(0) == '\'' &&
+                  defValue.charAt(defValue.length() - 1) == '\'')
+                  || (defValue.charAt(0) == '\"' &&
+                      defValue.charAt(defValue.length() - 1) == '\"'))) {
             // If the value starts and ends with a single quote,
             // we assume that it's a string.
             String maybeStringVal =
                 defValue.substring(1, defValue.length() - 1);
-            if (maybeStringVal.indexOf('\'') == -1) {
+            if (maybeStringVal.indexOf(defValue.charAt(0)) == -1) {
               options.setDefineToStringLiteral(defName, maybeStringVal);
               continue;
             }
