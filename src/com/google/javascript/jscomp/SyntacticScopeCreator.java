@@ -46,6 +46,11 @@ class SyntacticScopeCreator implements ScopeCreator {
           "JSC_VAR_MULTIPLY_DECLARED_ERROR",
           "Variable {0} first declared in {1}");
 
+  public static final DiagnosticType VAR_ARGUMENTS_SHADOWED_ERROR =
+    DiagnosticType.error(
+        "JSC_VAR_ARGUMENTS_SHADOWED_ERROR",
+        "Shadowing \"arguments\" is not allowed");
+
   /**
    * Creates a ScopeCreator.
    */
@@ -212,6 +217,12 @@ class SyntacticScopeCreator implements ScopeCreator {
                             ? origVar.input.getName()
                             : "??")));
         }
+      } else if (name.equals(ARGUMENTS) && !NodeUtil.isVarDeclaration(n)) {
+        // Disallow shadowing "arguments" as we can't handle with our current
+        // scope modeling.
+        compiler.report(
+            JSError.make(sourceName, nodeWithLineNumber,
+                VAR_ARGUMENTS_SHADOWED_ERROR));        
       }
     }
   }

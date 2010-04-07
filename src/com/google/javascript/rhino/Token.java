@@ -322,7 +322,7 @@ public class Token
           case TRUE:            return "TRUE";
           case SHEQ:            return "SHEQ";
           case SHNE:            return "SHNE";
-          case REGEXP:          return "OBJECT";
+          case REGEXP:          return "REGEXP";
           case BINDNAME:        return "BINDNAME";
           case THROW:           return "THROW";
           case RETHROW:         return "RETHROW";

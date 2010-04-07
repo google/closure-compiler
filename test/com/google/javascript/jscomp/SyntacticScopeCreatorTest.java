@@ -35,10 +35,26 @@ public class SyntacticScopeCreatorTest extends TestCase {
     Compiler compiler = new Compiler();
     Node root = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
-
     Scope scope =
         new SyntacticScopeCreator(compiler).createScope(root, null);
     return scope;
+  }
+
+  /**
+   * Helper to traverse the tree creating the Scope object everywhere.
+   */
+  private static void testScopes(String js, int errorCount) {
+    Compiler compiler = new Compiler();
+    Node root = compiler.parseTestCode(js);
+    NodeTraversal.traverse(
+        compiler, root, new NodeTraversal.AbstractPostOrderCallback() {
+          @Override
+          public
+          void visit(NodeTraversal t, Node n, Node parent) {
+            t.getScope();
+          }
+        });
+    assertEquals(errorCount, compiler.getErrorCount());
   }
 
   public void testFunctionScope() {
@@ -89,7 +105,16 @@ public class SyntacticScopeCreatorTest extends TestCase {
     String js = "var a; /** @suppress {duplicate} */ var a;";
     int errors = createGlobalScopeHelper(js);
     assertEquals(0, errors);
- }
+  }
+
+  public void testFunctionScopeArguments() {
+    // A var declaration doesn't mask arguments
+    testScopes("function f() {var arguments}", 0);
+
+    testScopes("var f = function arguments() {}", 1);
+    testScopes("var f = function (arguments) {}", 1);
+    testScopes("function f() {try {} catch(arguments) {}}", 1);
+  }
 
   /**
    * Parse the supplied js and create the global SyntaticScope object.
