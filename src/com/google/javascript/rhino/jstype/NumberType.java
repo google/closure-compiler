@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -36,7 +36,7 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;

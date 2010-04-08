@@ -235,7 +235,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
       if (NodeUtil.mayHaveSideEffects(def.getLastChild())) {
         return false;
       }
-      
+
       // TODO(user): We could inline all the uses if the expression is short.
 
       // Finally we have to make sure that there are no more than one use
@@ -248,7 +248,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
       // We give up inling stuff with R-Value that has GETPROP, GETELEM,
       // or anything that creates a new object.
       // Example:
-      // var x = a.b.c; j.c = 1; print(x); 
+      // var x = a.b.c; j.c = 1; print(x);
       // Inlining print(a.b.c) is not safe consider j and be alias to a.b.
       // TODO(user): We could get more accuracy by looking more in-detail
       // what j is and what x is trying to into to.
@@ -277,7 +277,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
           })) {
         return false;
       }
-      
+
       Collection<Node> uses = reachingUses.getUses(varName, defCfgNode);
 
       if (uses.size() != 1) {

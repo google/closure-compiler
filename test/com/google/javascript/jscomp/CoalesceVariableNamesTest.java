@@ -28,17 +28,17 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
   // picking out which variable names are merged.
 
   private boolean usePseudoName = false;
-  
+
   @Override
   protected int getNumRepetitions() {
    return 1;
-  }  
-  
+  }
+
   @Override
   public void setUp() {
     usePseudoName = false;
   }
-  
+
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
@@ -221,7 +221,7 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
                "var x; var y; var a;       " +
                "y = 1, a = 1, y, x = 1; a; x; x = 1; x");
   }
-  
+
   public void testFunctionNameReuse() {
 // TODO(user): Figure out why this increase code size most of the time.
 //    inFunction("function x() {}; x(); var y = 1; y",
@@ -233,7 +233,7 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
 //    // Can't merge because of possible escape.
 //    inFunction("function x() {return x}; x(); var y = 1; y",
 //               "function x() {return x}; x(); var y = 1; y");
-// 
+//
 //    inFunction("var y = 1; y; x; function x() {}",
 //               "var y = 1; y; x; function x() {}");
 //    inFunction("var y = 1; y; function x() {}; x",
@@ -352,13 +352,13 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
     usePseudoName = true;
     inFunction("var x   = 0; print(x  ); var   y = 1; print(  y)",
                "var x_y = 0; print(x_y);     x_y = 1; print(x_y)");
-    
-    inFunction("var x_y = 1; var x   = 0; print(x  ); var     y = 1;" + 
+
+    inFunction("var x_y = 1; var x   = 0; print(x  ); var     y = 1;" +
                "print(  y); print(x_y);",
 
                "var x_y = 1; var x_y$ = 0; print(x_y$);     x_y$ = 1;" + "" +
                "print(x_y$); print(x_y);");
-    
+
     inFunction("var x_y = 1; function f() {" +
                "var x    = 0; print(x  ); var y = 1; print( y);" +
                "print(x_y);}",
@@ -366,13 +366,13 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
                "var x_y = 1; function f() {" +
                "var x_y$ = 0; print(x_y$); x_y$ = 1; print(x_y$);" +
                "print(x_y);}");
-    
+
     inFunction("var x   = 0; print(x  ); var   y = 1; print(  y); " +
                "var closure_var; function bar() { print(closure_var); }",
                "var x_y = 0; print(x_y);     x_y = 1; print(x_y); " +
                "var closure_var; function bar() { print(closure_var); }");
   }
-  
+
   private void inFunction(String src) {
     inFunction(src, src);
   }

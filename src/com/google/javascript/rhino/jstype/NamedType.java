@@ -36,7 +36,7 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;

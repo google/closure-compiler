@@ -764,12 +764,12 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("\"\" === ''", "1");
     fold("foo() === bar()", "foo()===bar()");
 
-    // TODO(johnlenz): It would be nice to handle these cases as well. 
+    // TODO(johnlenz): It would be nice to handle these cases as well.
     foldSame("1 === '1'");
     foldSame("1 === true");
     foldSame("1 !== '1'");
     foldSame("1 !== true");
-    
+
     fold("1 !== 0", "1");
     fold("'abc' !== 'def'", "1");
     fold("'a' !== 'a'", "0");
@@ -1126,11 +1126,11 @@ public class FoldConstantsTest extends CompilerTestCase {
     foldSame("a = (foo(), true);");
 
     fold("(x=2), foo()", "x=2; foo()");
-    fold("foo(), boo();", "foo(); boo()");    
-    fold("(a(), b()), (c(), d());", "a(); b(); c(); d();");    
+    fold("foo(), boo();", "foo(); boo()");
+    fold("(a(), b()), (c(), d());", "a(); b(); c(); d();");
     // TODO(johnlenz): interestingly we don't remove side-effect free expression
-    // in a script block (as it is currently part of block folding), so "1;" 
-    // is left. 
+    // in a script block (as it is currently part of block folding), so "1;"
+    // is left.
     fold("foo(), true", "foo();1");
     fold("function x(){foo(), true}", "function x(){foo();}");
   }

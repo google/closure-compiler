@@ -199,7 +199,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     for (Node ref : currentArgumentsAccess) {
 
       Node getElem = ref.getParent();
-      
+
       // Bail on anything but argument[c] access where c is a constant.
       // TODO(user): We might not need to bail out all the time, there might
       // be more cases that we can cover.
@@ -218,7 +218,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
         // it is never 'callee'.
         return false; // Give up.
       }
-      
+
       Node getElemParent = getElem.getParent();
       // When we have argument[0](), replacing it with a() is semantically
       // different if argument[0] is a function call that refers to 'this'

@@ -24,7 +24,7 @@ package com.google.javascript.jscomp;
 public class OptimizeArgumentsArrayTest extends CompilerTestCase {
 
   public OptimizeArgumentsArrayTest() {
-    
+
     super("var arguments, alert" /* Externs */);
   }
 
@@ -142,14 +142,14 @@ public class OptimizeArgumentsArrayTest extends CompilerTestCase {
   public void testNoOptimizationWhenGetProp() {
     testSame("function f() { arguments[0]; arguments.size }");
   }
-  
+
   public void testNoOptimizationWhenIndexIsNotNumberConstant() {
     testSame("function f() { arguments[0]; arguments['callee'].length}");
     testSame("function f() { arguments[0]; arguments.callee.length}");
     testSame(
         "function f() { arguments[0]; var x = 'callee'; arguments[x].length}");
   }
-  
+
   public void testNoOptimizationWhenArgumentIsUsedAsFunctionCall() {
     testSame("function f() {arguments[0]()}");
   }

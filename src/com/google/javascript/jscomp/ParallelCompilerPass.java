@@ -53,7 +53,7 @@ final class ParallelCompilerPass implements CompilerPass {
     // Result objects.
     public Result processSubtree(Node subtree);
   }
-  
+
   /**
    * Holds all the information about the ending result of a compilation task on
    * the subtree.
@@ -62,19 +62,19 @@ final class ParallelCompilerPass implements CompilerPass {
     boolean changed = false;
     List<JSError> errors = Lists.newArrayList();
     List<Exception> exceptions = Lists.newArrayList();
-    
+
     /**
      * creates a result without any error, exceptions or changes to the AST.
      */
     public Result() {}
-    
+
     /**
      * Creates a result without any error or exceptions.
      */
     public Result(boolean changed) {
       this.changed = changed;
     }
-    
+
     /**
      * Combines two results.
      */
@@ -83,7 +83,7 @@ final class ParallelCompilerPass implements CompilerPass {
       errors.addAll(other.errors);
       exceptions.addAll(other.exceptions);
     }
-    
+
     /**
      * Inform the compiler of all the changes this result object had recorded.
      * It might trigger a {@link Compiler#recentChange}, re-throw all the
@@ -103,10 +103,10 @@ final class ParallelCompilerPass implements CompilerPass {
       }
     }
   }
-  
+
   /**
    * Constructor.
-   * 
+   *
    * @param splitter Will be used to split up the AST into smaller subtrees.
    * @param taskSupply A supplier of tasks that should be thread-safe.
    * @param numWorkers Number of worker thread.
@@ -119,7 +119,7 @@ final class ParallelCompilerPass implements CompilerPass {
     this.numWorkers = numWorkers;
     this.compiler = compiler;
   }
-  
+
   @Override
   public void process(Node externs, Node root) {
     // List of subtree to work with.
@@ -128,10 +128,10 @@ final class ParallelCompilerPass implements CompilerPass {
     splitter.join();
     r.notifyCompiler(compiler);
   }
-  
+
   /**
    * Main loop that creates the worker threads and do work.
-   * 
+   *
    * @return the combined result of all task execution on the work list.
    */
   private Result execute() {
@@ -150,7 +150,7 @@ final class ParallelCompilerPass implements CompilerPass {
        workers[i] = worker;
        worker.start();
     }
-    
+
     Result result = processAllTasks();
 
     // Wait for the child to finish.
@@ -168,15 +168,15 @@ final class ParallelCompilerPass implements CompilerPass {
         Thread.currentThread().interrupt();
       }
     }
-    
+
     // Combine the result.
     for (int i = 0; i < numChildThread; i++) {
       result.combine(results[i]);
     }
-    
+
     return result;
   }
-  
+
   private Result processAllTasks() {
     Result result = new Result();
     while(true) {
@@ -189,12 +189,12 @@ final class ParallelCompilerPass implements CompilerPass {
     }
     return result;
   }
-  
+
   /**
    * Get a subtree from the work list and work on it. This method makes a call
    * to the supplier which is also assumed thread-safe. It also calls
    * getTask() which is synchronized.
-   * 
+   *
    * @return The result of performing the task specified by the task supplier
    * on the next subtree from the work list. {@code null} if there are no more
    * work load from the work list.
@@ -212,8 +212,8 @@ final class ParallelCompilerPass implements CompilerPass {
       r.exceptions.add(e);
       return r;
     }
-  } 
-  
+  }
+
   /** Retrieves a subtree to work on from the work list. This must be atomic. */
   private synchronized Node getTask() {
     // Since the method is protected by a lock, there is no need for a thread-

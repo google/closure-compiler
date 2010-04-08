@@ -1179,7 +1179,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
 
   private ConcreteType createTypeIntersection(
       ConcreteType concreteType, JSType jsType) {
-    // TODO(johnlenz): Even with memoizing all the time of this pass is still 
+    // TODO(johnlenz): Even with memoizing all the time of this pass is still
     // spent in this function (due to invalidation caused by changes to
     // allInstantiatedTypes), specifically calls to ConcreteUnionType.unionWith
     ConcreteJSTypePair key = new ConcreteJSTypePair(concreteType, jsType);

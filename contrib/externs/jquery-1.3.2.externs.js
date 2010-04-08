@@ -298,7 +298,7 @@ jQueryObject.prototype.end = function() {};
 // http://docs.jquery.com/Manipulation
 
 /**
- * @param {string|Element|jQueryObject} content
+ * @param {string|Node|Element|jQueryObject} content
  * @return {jQueryObject}
  */
 jQueryObject.prototype.append = function(content) {};
@@ -310,7 +310,7 @@ jQueryObject.prototype.append = function(content) {};
 jQueryObject.prototype.appendTo = function(selector) {};
 
 /**
- * @param {string|Element|jQueryObject} content
+ * @param {string|Node|Element|jQueryObject} content
  * @return {jQueryObject}
  */
 jQueryObject.prototype.prepend = function(content) {};
@@ -322,13 +322,13 @@ jQueryObject.prototype.prepend = function(content) {};
 jQueryObject.prototype.prependTo = function(selector) {};
 
 /**
- * @param {string|Element|jQueryObject} content
+ * @param {string|Node|Element|jQueryObject} content
  * @return {jQueryObject}
  */
 jQueryObject.prototype.after = function(content) {};
 
 /**
- * @param {string|Element|jQueryObject} content
+ * @param {string|Node|Element|jQueryObject} content
  * @return {jQueryObject}
  */
 jQueryObject.prototype.before = function(content) {};
@@ -364,7 +364,7 @@ jQueryObject.prototype.wrapAll = function(arg) {};
 jQueryObject.prototype.wrapInner = function(arg) {};
 
 /**
- * @param {string|Element|jQueryObject} content
+ * @param {string|Node|Element|jQueryObject} content
  * @return {jQueryObject}
  */
 jQueryObject.prototype.replaceWith = function(content) {};

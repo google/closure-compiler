@@ -42,14 +42,11 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
 import java.io.Serializable;
 import java.util.Comparator;
-import java.util.List;
 
 /**
  * Represents JavaScript value types.<p>

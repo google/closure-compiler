@@ -41,7 +41,7 @@ public class CheckMissingReturnTest extends CompilerTestCase {
 
     // Switch statement.
     testMissing("switch(1) { case 12: return 5; }");
-    
+
     // Test try catch finally.
     testMissing("try { foo() } catch (e) { return 5; } finally { }");
 
@@ -69,7 +69,7 @@ public class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("(number,void)", "var x;");
     testNotMissing("(number,undefined)", "var x;");
     testNotMissing("*", "var x;");
-    
+
     // Test try catch finally.
     testNotMissing("try { return foo() } catch (e) { } finally { }");
 
@@ -83,7 +83,7 @@ public class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("switch(1) { default: return 1; }");
     testNotMissing("switch(g) { case 1: return 1; default: return 2; }");
   }
-  
+
   public void testFinallyStatements() {
     // The control flow analysis (CFA) treats finally blocks somewhat strangely.
     // The CFA might indicate that a finally block implicitly returns. However,
@@ -104,7 +104,7 @@ public class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("try { return 1; } finally { }");
     testNotMissing("try { } finally { return 1; }");
     testMissing("try { } finally { }");
-    
+
     // Cycles in the CFG within the finally block were causing problems before.
     testNotMissing("try { return 1; } finally { while (true) { } }");
     testMissing("try { } finally { while (x) { } }");
@@ -155,34 +155,34 @@ public class CheckMissingReturnTest extends CompilerTestCase {
         "}" +
         "finally { }");
   }
-  
+
   public void testKnownConditions() {
     testNotMissing("if (true) return 1");
     testMissing("if (true) {} else {return 1}");
-    
+
     testMissing("if (false) return 1");
     testNotMissing("if (false) {} else {return 1}");
-    
+
     testNotMissing("if (1) return 1");
     testMissing("if (1) {} else {return 1}");
-    
+
     testMissing("if (0) return 1");
     testNotMissing("if (0) {} else {return 1}");
 
     testNotMissing("if (3) return 1");
     testMissing("if (3) {} else {return 1}");
   }
-  
+
   public void testKnownWhileLoop() {
     testNotMissing("while (1) return 1");
     testNotMissing("while (1) { if (x) {return 1} else {return 1}}");
     testNotMissing("while (0) {} return 1");
-    
+
     // TODO(user): The current algorithm will not detect this case. It is
     // still computable in most cases.
     testNotMissing("while (1) {} return 0");
     testMissing("while (false) return 1");
-    
+
     // Not known.
     testMissing("while(x) { return 1 }");
   }
@@ -191,7 +191,7 @@ public class CheckMissingReturnTest extends CompilerTestCase {
     testMissing("if (a) { } else { while (1) {return 1} }");
     testNotMissing("if (a) { return 1} else { while (1) {return 1} }");
   }
-  
+
   private static String createFunction(String returnType, String body) {
     return "/** @return {" + returnType + "} */ function foo() {" + body + "}";
   }
@@ -200,16 +200,16 @@ public class CheckMissingReturnTest extends CompilerTestCase {
     String js = createFunction(returnType, body);
     test(js, js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
-  
+
   private void testNotMissing(String returnType, String body) {
-    testSame(createFunction(returnType, body));    
+    testSame(createFunction(returnType, body));
   }
 
   /** Creates function with return type {number} */
   private void testNotMissing(String body) {
     testNotMissing("number", body);
   }
-  
+
   /** Creates function with return type {number} */
   private void testMissing(String body) {
     testMissing("number", body);

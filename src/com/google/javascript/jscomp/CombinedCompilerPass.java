@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
  * <p>A compiler pass combining multiple {@link Callback}
  * and {@link ScopedCallback} objects. This pass can be used to separate
  * logically different verifications without incurring any additional traversal
- * and CFG generation costs.</p> 
+ * and CFG generation costs.</p>
  *
  * <p>Due to this compiler pass' nature, none of the callbacks may mutate
  * the parse tree.</p>
@@ -44,7 +44,7 @@ import com.google.javascript.rhino.Node;
 *
  */
 final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
-  
+
   /** The callbacks that this pass combines. */
   private final CallbackWrapper[] callbacks;
   private final AbstractCompiler compiler;
@@ -61,7 +61,7 @@ final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
       this.callbacks[i] = new CallbackWrapper(callbacks[i]);
     }
   }
-  
+
   /**
    * Maintains information about a callback in order to simulate it being the
    * exclusive client of the shared {@link NodeTraversal}. In particular, this
@@ -69,26 +69,26 @@ final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
    * returns false for
    * {@link Callback#shouldTraverse(NodeTraversal, Node, Node)}.
    * The callback becomes inactive (i.e., traversal messages are not sent to it)
-   * until the main traversal revisits the node during the post-order visit. 
-   * 
+   * until the main traversal revisits the node during the post-order visit.
+   *
 *
    */
   private static class CallbackWrapper {
     /** The callback being wrapped. Never null. */
     private final Callback callback;
-    /** 
+    /**
      * if (callback instanceof ScopedCallback), then scopedCallback points
      * to an instance of ScopedCallback, otherwise scopedCallback points to null
      */
     private final ScopedCallback scopedCallback;
-    
+
     /**
      * The node that {@link Callback#shouldTraverse(NodeTraversal, Node, Node)}
      * returned false for. The wrapped callback doesn't receive messages until
      * after this node is revisited in the post-order traversal.
      */
     private Node waiting = null;
-    
+
     private CallbackWrapper(Callback callback) {
       this.callback = callback;
       if (callback instanceof ScopedCallback) {
@@ -100,7 +100,7 @@ final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
 
     /**
      * Visits the node unless the wrapped callback is inactive. Activates the
-     * callback if appropriate. 
+     * callback if appropriate.
      */
     void visitOrMaybeActivate(NodeTraversal t, Node n, Node parent) {
       if (isActive()) {
@@ -109,25 +109,25 @@ final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
         waiting = null;
       }
     }
-    
+
     void shouldTraverseIfActive(NodeTraversal t, Node n, Node parent) {
       if (isActive() && !callback.shouldTraverse(t, n, parent)) {
         waiting = n;
       }
     }
-    
+
     void enterScopeIfActive(NodeTraversal t) {
       if (isActive() && scopedCallback != null) {
         scopedCallback.enterScope(t);
       }
     }
-    
+
     void exitScopeIfActive(NodeTraversal t) {
       if (isActive() && scopedCallback != null) {
         scopedCallback.exitScope(t);
       }
     }
-    
+
     boolean isActive() {
       return waiting == null;
     }

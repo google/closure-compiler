@@ -63,7 +63,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
     if (scope.isGlobal()) {
       return;
     }
-    
+
     // We are not going to do any dead assignment elimination in when there is
     // at least one inner function because in most browsers, when there is a
     // closure, ALL the variables are saved (escaped).
@@ -125,7 +125,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
           continue;
         // TODO(user): case Token.VAR: Remove var a=1;a=2;.....
       }
-      
+
       tryRemoveAssignment(t, n, state);
     }
   }
@@ -134,7 +134,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       FlowState<LiveVariableLattice> state) {
     tryRemoveAssignment(t, n, n, state);
   }
-  
+
   /**
    * Determines if any local variables are dead after the instruction {@code n}
    * and are assigned within the subtree of {@code n}. Removes those assignments
@@ -149,13 +149,13 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       FlowState<LiveVariableLattice> state) {
 
     Node parent = n.getParent();
-    
+
     if (NodeUtil.isAssignmentOp(n) ||
         n.getType() == Token.INC || n.getType() == Token.DEC) {
 
       Node lhs = n.getFirstChild();
       Node rhs = lhs.getNext();
-      
+
       // Recurse first. Example: dead_x = dead_y = 1; We try to clean up dead_y
       // first.
       if (rhs != null) {
@@ -192,7 +192,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         // of GEN sets when we recurse here.
         return;
       }
-      
+
       if (NodeUtil.isAssign(n)) {
         n.removeChild(rhs);
         n.getParent().replaceChild(n, rhs);
@@ -201,7 +201,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         n.removeChild(lhs);
         Node op = new Node(NodeUtil.getOpFromAssignmentOp(n), lhs, rhs);
         parent.replaceChild(n, op);
-      } else if (n.getType() == Token.INC || n.getType() == Token.DEC) {        
+      } else if (n.getType() == Token.INC || n.getType() == Token.DEC) {
         if (NodeUtil.isExpressionNode(parent)) {
           parent.replaceChild(n, new Node(Token.VOID, Node.newNumber(0)));
         } else if(n.getType() == Token.COMMA && n != parent.getLastChild()) {
@@ -218,7 +218,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         // Not reachable.
         Preconditions.checkState(false, "Unknown statement");
       }
-      
+
       compiler.reportCodeChange();
       return;
 
@@ -233,19 +233,19 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       return;
     }
   }
-  
+
   /**
    * Given a variable, node n in the tree and a sub-tree denoted by exprRoot as
    * the root, this function returns true if there exists a read of that
    * variable before a write to that variable that is on the right side of n.
-   * 
+   *
    * For example, suppose the node is x = 1:
-   * 
+   *
    * y = 1, x = 1; // false, there is no reads at all.
    * y = 1, x = 1, print(x) // true, there is a read right of n.
-   * y = 1, x = 1, x = 2, print(x) // false, there is a read right of n but 
+   * y = 1, x = 1, x = 2, print(x) // false, there is a read right of n but
    *                               // it is after a write.
-   * 
+   *
    * @param n The current node we should look at.
    * @param exprRoot The node
    */
@@ -256,7 +256,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
           sibling = sibling.getNext()) {
         if (!ControlFlowGraph.isEnteringNewCfgNode(sibling)) {
           VariableLiveness state = readVariableBeforeKilling(sibling, variable);
-          
+
           // If we see a READ or KILL there is no need to continue.
           if (state == VariableLiveness.READ) {
             return true;
@@ -269,7 +269,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
     }
     return false;
   }
-  
+
   // The current liveness of the variable
   private enum VariableLiveness {
     MAYBE_LIVE, // May be still live in the current expression tree.
@@ -281,7 +281,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
    * Give an expression and a variable. It returns READ, if the right-most
    * reference of that variable is a read. It returns KILL, if the right-most
    * reference of that variable is an assignment. It returns MAY_LIVE otherwise.
-   * 
+   *
    * This need to be a pre-order traversal so we cannot use the normal node
    * traversals.
    */

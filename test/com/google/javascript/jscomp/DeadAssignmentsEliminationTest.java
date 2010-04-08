@@ -92,9 +92,9 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; switch(x=1){}","var x; switch(1){}");
     inFunction("var x; switch(x){case(x=1):break;}",
         "var x; switch(x){case(1):break;}");
-    
+
     inFunction("var x,y; switch(y) { case (x += 1): break; case (x): break;}");
-    
+
     inFunction("var x,y; switch(y) { case (x = 1): break; case (2): break;}",
                "var x,y; switch(y) { case (1): break; case (2): break;}");
     inFunction("var x,y; switch(y) { case (x+=1): break; case (x=2): break;}",
@@ -105,7 +105,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; return x = 1;", "var x; return 1");
     inFunction("var x; return");
   }
-  
+
   public void testAssignmentInArgs() {
     inFunction("var x; foo(x = 1);", "var x; foo(1);");
     inFunction("var x; return foo(x = 1);", "var x; return foo(1);");
@@ -153,7 +153,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x = function() { var x; x=1; }",
         "var x = function() { var x; 1; }");
   }
-  
+
   public void testInnerFunctions2() {
     // Give up DCE if there is a inner function.
     inFunction("var x = 0; print(x); x = 1; var y = function(){}; y()");
@@ -162,53 +162,53 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testSelfReAssignment() {
     inFunction("var x; x = x;", "var x; x");
   }
-  
+
   public void testSelfIncrement() {
     inFunction("var x; x = x + 1;", "var x; x + 1");
   }
-  
+
   public void testAssignmentOp() {
     // We have remove constant expressions that cleans this one up.
     inFunction("var x; x += foo()", "var x; x + foo()");
   }
-  
+
   public void testAssignmentOpUsedAsLhs() {
     inFunction("var x,y; y = x += foo(); print(y)",
                "var x,y; y = x +  foo(); print(y)");
   }
-  
-  public void testAssignmentOpUsedAsCondition() {    
+
+  public void testAssignmentOpUsedAsCondition() {
     inFunction("var x; if(x += foo()) {}",
                "var x; if(x +  foo()) {}");
 
     inFunction("var x; if((x += foo()) > 1) {}",
                "var x; if((x +  foo()) > 1) {}");
-    
+
     // Not in a while because this happens every loop.
     inFunction("var x; while((x += foo()) > 1) {}");
-    
+
     inFunction("var x; for(;--x;){}");
     inFunction("var x; for(;x--;){}");
     inFunction("var x; for(;x -= 1;){}");
     inFunction("var x; for(;x = 0;){}", "var x; for(;0;){}");
-    
+
     inFunction("var x; for(;;--x){}");
     inFunction("var x; for(;;x--){}");
     inFunction("var x; for(;;x -= 1){}");
     inFunction("var x; for(;;x = 0){}", "var x; for(;;0){}");
-    
+
     inFunction("var x; for(--x;;){}", "var x; for(;;){}");
     inFunction("var x; for(x--;;){}", "var x; for(;;){}");
     inFunction("var x; for(x -= 1;;){}", "var x; for(x - 1;;){}");
     inFunction("var x; for(x = 0;;){}", "var x; for(0;;){}");
   }
-  
+
   public void testDeadIncrement() {
     // TODO(user): Optimize this.
     inFunction("var x; x ++", "var x; void 0");
     inFunction("var x; x --", "var x; void 0");
   }
-  
+
   public void testDeadButAlivePartiallyWithinTheExpression() {
     inFunction("var x; x = 100, print(x), x = 101;",
                "var x; x = 100, print(x),     101;");
@@ -217,21 +217,21 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; x = 100, print(x), x = 0, print(x), x = 101;",
                "var x; x = 100, print(x), x = 0, print(x),     101;");
   }
-  
+
   public void testMutipleDeadAssignmentsButAlivePartiallyWithinTheExpression() {
-    inFunction("var x; x = 1, x = 2, x = 3, x = 4, x = 5," + 
+    inFunction("var x; x = 1, x = 2, x = 3, x = 4, x = 5," +
                "  print(x), x = 0, print(x), x = 101;",
-               
+
                "var x; 1, 2, 3, 4, x = 5, print(x), x = 0, print(x), 101;");
   }
-  
+
 
   public void testDeadPartiallyWithinTheExpression() {
     // Sadly, this is not covered. We don't suspect this would happend too
     // often.
     inFunction("var x; x = 100, x = 101; print(x);");
   }
-  
+
   public void testAssignmentChain() {
     inFunction("var a,b,c,d,e; a = b = c = d = e = 1",
                "var a,b,c,d,e; 1");
@@ -245,7 +245,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
                "var a,b,c,d,e; a = b =     d = e = 1; print(a + b + d + e)");
     inFunction("var a,b,c,d,e; a = b = c = d = e = 1; print(a+b+c+d+e)");
   }
-  
+
   public void testAssignmentOpChain() {
     inFunction("var a,b,c,d,e; a = b = c += d = e = 1",
                "var a,b,c,d,e;         c + 1");
@@ -256,7 +256,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var a,b,c,d,e; a = b = c += d = e = 1;  print(a)",
                "var a,b,c,d,e; a =     c +          1;  print(a)");
   }
-  
+
   public void testIncDecInSubExpressions() {
     inFunction("var a; a = 1, a++; a");
     inFunction("var a; a = 1, ++a; a");
@@ -267,7 +267,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var a; a = 1, ++a, print(a)");
     inFunction("var a; a = 1, a--, print(a)");
     inFunction("var a; a = 1, --a, print(a)");
-    
+
     inFunction("var a; a = 1, print(a++)");
     inFunction("var a; a = 1, print(++a)");
 
@@ -277,36 +277,36 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var a; a = 1, print(a--)");
     inFunction("var a; a = 1, print(--a)");
   }
-  
+
   public void testNestedReassignments() {
     inFunction("var a; a = (a = 1)", "var a; 1");
     inFunction("var a; a = (a *= 2)", "var a; a*2");
-       
+
     // Note a = (a++) is not same as a++. Only if 'a' is dead.
     inFunction("var a; a = (a++)", "var a; void 0");
     inFunction("var a; a = (++a)", "var a; void 0");
-    
+
     inFunction("var a; a = (b = (a = 1))", "var a; b = 1");
     inFunction("var a; a = (b = (a *= 2))", "var a; b = a * 2");
     inFunction("var a; a = (b = (a++))", "var a; b=a++");
     inFunction("var a; a = (b = (++a))", "var a; b=++a");
-    
+
     // Include b as local.
     inFunction("var a,b; a = (b = (a = 1))", "var a,b; 1");
     inFunction("var a,b; a = (b = (a *= 2))", "var a,b; a * 2");
     inFunction("var a,b; a = (b = (a++))", "var a,b; void 0");
     inFunction("var a,b; a = (b = (++a))", "var a,b; void 0");
-    
+
     inFunction("var a; a += (a++)", "var a; a + a++");
     inFunction("var a; a += (++a)", "var a; a+ (++a)");
-    
+
     // Include b as local.
     inFunction("var a,b; a += (b = (a = 1))", "var a,b; a + 1");
     inFunction("var a,b; a += (b = (a *= 2))", "var a,b; a + (a * 2)");
     inFunction("var a,b; a += (b = (a++))", "var a,b; a + a++");
-    inFunction("var a,b; a += (b = (++a))", "var a,b; a+(++a)"); 
+    inFunction("var a,b; a += (b = (++a))", "var a,b; a+(++a)");
   }
-  
+
   public void testIncrementalReassignmentInForLoops() {
     inFunction("for(;x+=1;x+=1) {}");
     inFunction("for(;x;x+=1){}");
