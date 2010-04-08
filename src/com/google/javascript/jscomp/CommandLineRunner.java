@@ -75,6 +75,10 @@ public class CommandLineRunner extends
     AbstractCommandLineRunner<Compiler, CompilerOptions> {
 
   private static class Flags {
+    @Option(name = "--help",
+        usage = "Displays this message")
+    private boolean display_help = false;
+
     @Option(name = "--print_tree",
         handler = BooleanOptionHandler.class,
         usage = "Prints out the parse tree and exits")
@@ -334,26 +338,24 @@ public class CommandLineRunner extends
 
   private final Flags flags = new Flags();
 
+  private boolean isConfigValid = false;
+
   /**
    * Create a new command-line runner. You should only need to call
    * the constructor if you're extending this class. Otherwise, the main
    * method should instantiate it.
    */
-  protected CommandLineRunner(String[] args)
-      throws CmdLineException {
+  protected CommandLineRunner(String[] args) {
     super();
     initConfigFromFlags(args, System.err);
   }
 
-  protected CommandLineRunner(String[] args, PrintStream out, PrintStream err)
-      throws CmdLineException {
+  protected CommandLineRunner(String[] args, PrintStream out, PrintStream err) {
     super(out, err);
     initConfigFromFlags(args, err);
   }
 
-  private void initConfigFromFlags(
-      String[] args, PrintStream err)
-      throws CmdLineException {
+  private void initConfigFromFlags(String[] args, PrintStream err) {
     // Args4j has a different format that the old command-line parser.
     // So we use some voodoo to get the args into the format that args4j
     // expects.
@@ -378,43 +380,49 @@ public class CommandLineRunner extends
     }
 
     CmdLineParser parser = new CmdLineParser(flags);
+    isConfigValid = true;
     try {
       parser.parseArgument(processedArgs.toArray(new String[] {}));
     } catch (CmdLineException e) {
       err.println(e.getMessage());
-      parser.printUsage(err);
-      throw e;
+      isConfigValid = false;
     }
-    getCommandLineConfig()
-        .setPrintTree(flags.print_tree)
-        .setComputePhaseOrdering(flags.compute_phase_ordering)
-        .setPrintAst(flags.print_ast)
-        .setPrintPassGraph(flags.print_pass_graph)
-        .setJscompDevMode(flags.jscomp_dev_mode)
-        .setLoggingLevel(flags.logging_level)
-        .setExterns(flags.externs)
-        .setJs(flags.js)
-        .setJsOutputFile(flags.js_output_file)
-        .setModule(flags.module)
-        .setVariableMapInputFile(flags.variable_map_input_file)
-        .setPropertyMapInputFile(flags.property_map_input_file)
-        .setVariableMapOutputFile(flags.variable_map_output_file)
-        .setCreateNameMapFiles(flags.create_name_map_files)
-        .setPropertyMapOutputFile(flags.property_map_output_file)
-        .setCodingConvention(flags.third_party ?
-             new DefaultCodingConvention() :
-             new ClosureCodingConvention())
-        .setSummaryDetailLevel(flags.summary_detail_level)
-        .setOutputWrapper(flags.output_wrapper)
-        .setOutputWrapperMarker(flags.output_wrapper_marker)
-        .setModuleWrapper(flags.module_wrapper)
-        .setModuleOutputPathPrefix(flags.module_output_path_prefix)
-        .setCreateSourceMap(flags.create_source_map)
-        .setJscompError(flags.jscomp_error)
-        .setJscompWarning(flags.jscomp_warning)
-        .setJscompOff(flags.jscomp_off)
-        .setDefine(flags.define)
-        .setCharset(flags.charset);
+
+    if (!isConfigValid || flags.display_help) {
+      isConfigValid = false;
+      parser.printUsage(err);
+    } else {
+      getCommandLineConfig()
+          .setPrintTree(flags.print_tree)
+          .setComputePhaseOrdering(flags.compute_phase_ordering)
+          .setPrintAst(flags.print_ast)
+          .setPrintPassGraph(flags.print_pass_graph)
+          .setJscompDevMode(flags.jscomp_dev_mode)
+          .setLoggingLevel(flags.logging_level)
+          .setExterns(flags.externs)
+          .setJs(flags.js)
+          .setJsOutputFile(flags.js_output_file)
+          .setModule(flags.module)
+          .setVariableMapInputFile(flags.variable_map_input_file)
+          .setPropertyMapInputFile(flags.property_map_input_file)
+          .setVariableMapOutputFile(flags.variable_map_output_file)
+          .setCreateNameMapFiles(flags.create_name_map_files)
+          .setPropertyMapOutputFile(flags.property_map_output_file)
+          .setCodingConvention(flags.third_party ?
+               new DefaultCodingConvention() :
+               new ClosureCodingConvention())
+          .setSummaryDetailLevel(flags.summary_detail_level)
+          .setOutputWrapper(flags.output_wrapper)
+          .setOutputWrapperMarker(flags.output_wrapper_marker)
+          .setModuleWrapper(flags.module_wrapper)
+          .setModuleOutputPathPrefix(flags.module_output_path_prefix)
+          .setCreateSourceMap(flags.create_source_map)
+          .setJscompError(flags.jscomp_error)
+          .setJscompWarning(flags.jscomp_warning)
+          .setJscompOff(flags.jscomp_off)
+          .setDefine(flags.define)
+          .setCharset(flags.charset);
+    }
   }
 
   @Override
@@ -473,12 +481,20 @@ public class CommandLineRunner extends
   }
 
   /**
+   * @return Whether the configuration is valid.
+   */
+  public boolean shouldRunCompiler() {
+    return this.isConfigValid;
+  }
+
+  /**
    * Runs the Compiler. Exits cleanly in the event of an error.
    */
   public static void main(String[] args) {
-    try {
-      (new CommandLineRunner(args)).run();
-    } catch (CmdLineException e) {
+    CommandLineRunner runner = new CommandLineRunner(args);
+    if (runner.shouldRunCompiler()) {
+      runner.run();
+    } else {
       System.exit(-1);
     }
   }

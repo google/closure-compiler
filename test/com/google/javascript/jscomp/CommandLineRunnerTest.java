@@ -22,8 +22,6 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
-import org.kohsuke.args4j.CmdLineException;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -232,6 +230,11 @@ public class CommandLineRunnerTest extends TestCase {
         "throw new $Foo$$().$x$;");
   }
 
+  public void testHelpFlag() {
+    args.add("--help");
+    testSame("function f() {}");
+  }  
+
   /* Helper functions */
 
   private void testSame(String original) {
@@ -294,12 +297,7 @@ public class CommandLineRunnerTest extends TestCase {
 
   private Compiler compile(String[] original) {
     String[] argStrings = args.toArray(new String[] {});
-    CommandLineRunner runner = null;
-    try {
-      runner = new CommandLineRunner(argStrings);
-    } catch (CmdLineException e) {
-      throw new RuntimeException(e);
-    }
+    CommandLineRunner runner = new CommandLineRunner(argStrings);
     Compiler compiler = runner.createCompiler();
     lastCompiler = compiler;
     JSSourceFile[] inputs = new JSSourceFile[original.length];
@@ -321,12 +319,7 @@ public class CommandLineRunnerTest extends TestCase {
 
   private Node parse(String[] original) {
     String[] argStrings = args.toArray(new String[] {});
-    CommandLineRunner runner = null;
-    try {
-      runner = new CommandLineRunner(argStrings);
-    } catch (CmdLineException e) {
-      throw new RuntimeException(e);
-    }
+    CommandLineRunner runner = new CommandLineRunner(argStrings);
     Compiler compiler = runner.createCompiler();
     JSSourceFile[] inputs = new JSSourceFile[original.length];
     for (int i = 0; i < inputs.length; i++) {
