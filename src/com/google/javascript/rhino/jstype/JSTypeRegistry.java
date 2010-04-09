@@ -1177,9 +1177,13 @@ public class JSTypeRegistry implements Serializable {
         return createFromTypeNodes(n.getFirstChild(), sourceName, scope)
             .restrictByNotNullOrUndefined();
 
-      case Token.QMARK: // Nullable
+      case Token.QMARK: // Nullable or unknown
+        Node firstChild = n.getFirstChild();
+        if (firstChild == null) {
+          return getNativeType(UNKNOWN_TYPE);
+        }
         return createNullableType(
-            createFromTypeNodes(n.getFirstChild(), sourceName, scope));
+            createFromTypeNodes(firstChild, sourceName, scope));
 
       case Token.EQUALS: // Optional
         return createOptionalType(

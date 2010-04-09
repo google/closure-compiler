@@ -38,6 +38,7 @@ import java.util.Set;
  * A parser for JSDoc comments.
  *
 *
+ * @author nicksantos@google.com (Nick Santos)
  */
 // TODO(nicksantos): Unify all the JSDocInfo stuff into one package, instead of
 // spreading it across mutliple packages.
@@ -1447,10 +1448,31 @@ public final class JsDocInfoParser {
    *     | '!' BasicTypeExpression
    *     | BasicTypeExpression '?'
    *     | BasicTypeExpression '!'
+   *     | '?'
    */
   private Node parseTypeExpression(JsDocToken token) {
     if (token == JsDocToken.QMARK) {
-      return wrapNode(Token.QMARK, parseBasicTypeExpression(next()));
+      // A QMARK could mean that a type is nullable, or that it's unknown.
+      // We use look-ahead 1 to determine whether it's unknown. Otherwise,
+      // we assume it means nullable. There are 5 cases:
+      // {?} - right curly
+      // {?=} - equals
+      // {function(?, number)} - comma
+      // {function(number, ?)} - right paren
+      // {function(): ?|number} - pipe
+      // I'm not a big fan of using look-ahead for this, but it makes
+      // the type language a lot nicer.
+      token = next();
+      if (token == JsDocToken.COMMA ||
+          token == JsDocToken.EQUALS ||
+          token == JsDocToken.RC ||
+          token == JsDocToken.RP ||
+          token == JsDocToken.PIPE) {
+        restoreLookAhead(token);
+        return newNode(Token.QMARK);
+      }
+
+      return wrapNode(Token.QMARK, parseBasicTypeExpression(token));
     } else if (token == JsDocToken.BANG) {
       return wrapNode(Token.BANG, parseBasicTypeExpression(next()));
     } else {
@@ -1956,6 +1978,11 @@ public final class JsDocInfoParser {
    * One token buffer.
    */
   private JsDocToken unreadToken = NO_UNREAD_TOKEN;
+
+  /** Restores the lookahead token to the token stream */
+  private void restoreLookAhead(JsDocToken token) {
+    unreadToken = token;
+  }
 
   /**
    * Tests whether the next symbol of the token stream matches the specific

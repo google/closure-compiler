@@ -353,6 +353,18 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "type not recognized due to syntax error");
   }
 
+  public void testParseUnknownType1() throws Exception {
+    testParseType("?");
+  }
+
+  public void testParseUnknownType2() throws Exception {
+    testParseType("(?|number)", "?");
+  }
+
+  public void testParseUnknownType3() throws Exception {
+    testParseType("(number|?)", "?");
+  }
+
   public void testParseFunctionalType1() throws Exception {
     testParseType("function (): number");
   }
@@ -421,6 +433,22 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseFunctionalType14() throws Exception {
     testParseType("function (*, string, number): boolean");
+  }
+
+  public void testParseFunctionalType15() throws Exception {
+    testParseType("function (?, string): boolean");
+  }
+
+  public void testParseFunctionalType16() throws Exception {
+    testParseType("function (string, ?): ?");
+  }
+
+  public void testParseFunctionalType17() throws Exception {
+    testParseType("(function (?): ?|number)");
+  }
+
+  public void testParseFunctionalType18() throws Exception {
+    testParseType("function (?): (?|number)", "function (?): ?");
   }
 
   public void testBug1419535() throws Exception {
@@ -779,6 +807,21 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(
         registry.createOptionalType(UNKNOWN_TYPE),
         info.getParameterType("index"));
+    assertTrue(info.getParameterType("index").isVarArgs());
+  }
+
+  public void testParseParam20() throws Exception {
+    JSDocInfo info = parse("@param {?=} index */");
+    assertEquals(1, info.getParameterCount());
+    assertTypeEquals(
+        UNKNOWN_TYPE, info.getParameterType("index"));
+  }
+
+  public void testParseParam21() throws Exception {
+    JSDocInfo info = parse("@param {...?} index */");
+    assertEquals(1, info.getParameterCount());
+    assertTypeEquals(
+        UNKNOWN_TYPE, info.getParameterType("index"));
     assertTrue(info.getParameterType("index").isVarArgs());
   }
 
