@@ -1315,7 +1315,7 @@ Element.prototype.createTextRange;
 Element.prototype.currentStyle;
 
 /**
- * @param {string} opt_action
+ * @param {string=} opt_action
  * @see http://msdn.microsoft.com/en-us/library/ms536414%28VS.85%29.aspx
  */
 Element.prototype.doScroll = function(opt_action) {};
@@ -1447,6 +1447,7 @@ Location.prototype.replace;
 // For IE, returns an object representing key-value pairs for all the global
 // variables prefixed with str, e.g. test*
 
+/** @param {*=} opt_str */
 function RuntimeObject(opt_str) {}
 
 

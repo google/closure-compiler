@@ -87,7 +87,7 @@ NotificationCenter.prototype.checkPermission = function() {};
 
 /**
  * Requests permission from the user to display notifications.
- * @param {Function} opt_callback
+ * @param {Function=} opt_callback
  * @return {void}
  */
 NotificationCenter.prototype.requestPermission = function(opt_callback) {};

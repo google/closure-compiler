@@ -16,12 +16,19 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.Node;
+
 /**
  * Unit tests for {@link FlowSensitiveInlineVariables}.
  *
 *
  */
 public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
+
+  public static final String EXTERN_FUNCTIONS = "" +
+      "/** @nosideeffects */ function noSFX() {} \n" +
+      "                      function hasSFX() {} \n";
+
   @Override
   public int getNumRepetitions() {
     // Test repeatedly inline.
@@ -29,8 +36,15 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   }
 
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new FlowSensitiveInlineVariables(compiler);
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    //return new FlowSensitiveInlineVariables(compiler);
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        (new MarkNoSideEffectCalls(compiler)).process(externs, root);
+        (new FlowSensitiveInlineVariables(compiler)).process(externs, root);
+      }
+    };
   }
 
   public void testSimpleAssign() {
@@ -73,6 +87,10 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   public void testMultiUseInTwoDifferentPath() {
     noInline("var x = 1; if (print) { print(x) } else { alert(x) }");
+  }
+
+  public void testAssignmentBeforeDefinition() {
+    inline("x = 1; var x = 0; print(x)","x = 1; var x; print(0)" );
   }
 
   public void testVarInConditionPath() {
@@ -261,6 +279,7 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = new Iterator(); x.next();");
   }
 
+  // TODO(user): These should be inlinable.
   public void testNoInlineArrayLits() {
     noInline("var x = []; print(x)");
   }
@@ -276,13 +295,48 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   public void testInlineConstructorCallsIntoLoop() {
     // Is a bad idea, a similar case was found in closure string.js
     noInline("var x = new Iterator();" +
-             "for(var x = 0; x < 10; x++) {j = x.next()};");
+             "for(i = 0; i < 10; i++) {j = x.next()}");
   }
 
   public void testRemoveWithLabels() {
     inline("var x = 1; L: x = 2; print(x)", "var x = 1; print(2)");
     inline("var x = 1; L: M: x = 2; print(x)", "var x = 1; print(2)");
     inline("var x = 1; L: M: N: x = 2; print(x)", "var x = 1; print(2)");
+  }
+
+  public void testInlineAcrossSideEffect1() {
+    inline("var y; var x = noSFX(y); print(x)", "var y;var x;print(noSFX(y))");
+  }
+
+  public void testInlineAcrossSideEffect2() {
+    // Think noSFX() as a function that reads y.foo and return it
+    // and SFX() write some new value of y.foo. If that's the case,
+    // inlining across hasSFX() is not valid.
+
+    // This is a case where hasSFX is right of the source of the inlining.
+    noInline("var y; var x = noSFX(y), z = hasSFX(y); print(x)");
+    noInline("var y; var x = noSFX(y), z = new hasSFX(y); print(x)");
+    noInline("var y; var x = new noSFX(y), z = new hasSFX(y); print(x)");
+  }
+
+  public void testInlineAcrossSideEffect3() {
+    // This is a case where hasSFX is left of the destination of the inlining.
+    noInline("var y; var x = noSFX(y); hasSFX(y), print(x)");
+    noInline("var y; var x = noSFX(y); new hasSFX(y), print(x)");
+    noInline("var y; var x = new noSFX(y); new hasSFX(y), print(x)");
+  }
+
+  public void testInlineAcrossSideEffect4() {
+    // This is a case where hasSFX is some control flow path between the
+    // source and its destination.
+    noInline("var y; var x = noSFX(y); hasSFX(y); print(x)");
+    noInline("var y; var x = noSFX(y); new hasSFX(y); print(x)");
+    noInline("var y; var x = new noSFX(y); new hasSFX(y); print(x)");
+  }
+
+  public void testCanInlineAcrossNoSideEffect() {
+    inline("var y; var x = noSFX(Y), z = noSFX(); noSFX(); noSFX(), print(x)",
+           "var y; var x, z = noSFX(); noSFX(); noSFX(), print(noSFX(Y))");
   }
 
   public void testInlineArguments() {
@@ -301,7 +355,7 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   }
 
   private void inline(String input, String expected) {
-    test("function _func() {" + input + "}",
-        "function _func() {" + expected + "}");
+    test(EXTERN_FUNCTIONS, "function _func() {" + input + "}",
+        "function _func() {" + expected + "}", null, null);
   }
 }

@@ -38,7 +38,9 @@ class TypedCodeGenerator extends CodeGenerator {
   @Override
   void add(Node n, Context context) {
     Node parent = n.getParent();
-    if (parent.getType() == Token.BLOCK || parent.getType() == Token.SCRIPT) {
+    if (parent != null 
+        && (parent.getType() == Token.BLOCK
+            || parent.getType() == Token.SCRIPT)) {
       if (n.getType() == Token.FUNCTION) {
         add(getFunctionAnnotation(n));
       } else if (n.getType() == Token.EXPR_RESULT

@@ -136,6 +136,7 @@ function confirm(x) {}
 function dump(x) {}
 
 /**
+ * @param {*=} opt_value
  * @see https://developer.mozilla.org/en/DOM/window.prompt
  */
 function prompt(x, opt_value) {}

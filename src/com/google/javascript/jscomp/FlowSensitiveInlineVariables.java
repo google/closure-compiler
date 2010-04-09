@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
@@ -26,6 +27,7 @@ import com.google.javascript.jscomp.MustBeReachingVariableDef.MustDef;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -76,6 +78,36 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
   private List<Candidate> candidates;
   private MustBeReachingVariableDef reachingDef;
   private MaybeReachingVariableUse reachingUses;
+
+  private static final Predicate<Node> SIDE_EFFECT_PREDICATE =
+    new Predicate<Node>() {
+      @Override
+      public boolean apply(Node n) {
+        // When the node is null it means, we reached the implicit return
+        // where the function returns (possibly without an return statement)
+        if (n == null) {
+          return false;
+        }
+
+        // TODO(user): We only care about calls to functions that
+        // passes one of the dependent variable to a non-sideeffect free
+        // function.
+        if (NodeUtil.isCall(n) && NodeUtil.functionCallHasSideEffects(n)) {
+          return true;
+        }
+
+        if (NodeUtil.isNew(n) && NodeUtil.constructorCallHasSideEffects(n)) {
+          return true;
+        }
+
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          if (!ControlFlowGraph.isEnteringNewCfgNode(c) && apply(c)) {
+            return true;
+          }
+        }
+        return false;
+      }
+  };
 
   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -229,6 +261,37 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         return false;
       }
 
+
+      // The right of the definition has side effect:
+      // Example, for x:
+      // x = readProp(b), modifyProp(b); print(x);
+      if (checkRightOf(def, defCfgNode, SIDE_EFFECT_PREDICATE)) {
+        return false;
+      }
+
+      // Similar check as the above but this time, all the sub-expressions
+      // left of the use of the variable.
+      // x = readProp(b); modifyProp(b), print(x);
+      if (checkLeftOf(use, useCfgNode, SIDE_EFFECT_PREDICATE)) {
+        return false;
+      }
+
+      // Similar side effect check as above but this time the side effect is
+      // else where along the path.
+      // x = readProp(b); while(modifyProp(b)) {}; print(x);
+      CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>
+        pathCheck = new CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>(
+               cfg,
+               cfg.getDirectedGraphNode(defCfgNode),
+               cfg.getDirectedGraphNode(useCfgNode),
+               SIDE_EFFECT_PREDICATE,
+               Predicates.
+                   <DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue(),
+               false);
+      if (pathCheck.somePathsSatisfyPredicate()) {
+        return false;
+      }
+
       // TODO(user): Side-effect is ok sometimes. As long as there are no
       // side-effect function down all paths to the use. Once we have all the
       // side-effect analysis tool.
@@ -362,5 +425,46 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
       NodeTraversal.traverse(compiler, n, gatherCb);
     }
+  }
+
+  /**
+   * Given an expression by its root and sub-expression n, return true if there
+   * the predicate is true for some expression on the right of n.
+   *
+   * Example:
+   *
+   * NotChecked(), NotChecked(), n, Checked(), Checked();
+   */
+  private static boolean checkRightOf(
+      Node n, Node expressionRoot, Predicate<Node> predicate) {
+    for (Node p = n; p != expressionRoot; p = p.getParent()) {
+      for (Node cur = p.getNext(); cur != null; cur = cur.getNext()) {
+        if (predicate.apply(cur)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Given an expression by its root and sub-expression n, return true if there
+   * the predicate is true for some expression on the left of n.
+   *
+   * Example:
+   *
+   * Checked(), Checked(), n, NotChecked(), NotChecked();
+   */
+  private static boolean checkLeftOf(
+      Node n, Node expressionRoot, Predicate<Node> predicate) {
+    for (Node p = n.getParent(); p != expressionRoot; p = p.getParent()) {
+      for (Node cur = p.getParent().getFirstChild(); cur != p;
+          cur = cur.getNext()) {
+        if (predicate.apply(cur)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

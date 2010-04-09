@@ -224,4 +224,17 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * If type aware optimizations are on, type equality is checked.
    */
   abstract boolean areNodesEqualForInlining(Node n1, Node n2);
+
+  /**
+   * Set if RegExp global properties are used.
+   * @param references Whether there are references to the RegExp global object
+   *     properties.
+   */
+  abstract void setHasRegExpGlobalReferences(boolean references);
+  
+  /**
+   * @return Whether the AST constains references to the RegExp global object
+   *     properties.
+   */
+  abstract boolean hasRegExpGlobalReferences();
 }

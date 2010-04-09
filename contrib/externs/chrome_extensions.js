@@ -44,7 +44,7 @@ chrome.extension.connect = function(opt_arg1, opt_connectInfo) {};
 chrome.extension.getBackgroundPage = function() {};
 
 /**
- * @param {number} opt_windowId An optional windowId.
+ * @param {number=} opt_windowId An optional windowId.
  * @return {Array.<Window>} The global JS objects for each content view.
  */
 chrome.extension.getExtensionTabs = function(opt_windowId) {};
@@ -62,9 +62,9 @@ chrome.extension.getURL = function(path) {};
 chrome.extension.getViews = function() {};
 
 /**
- * @param {number|*} opt_arg1 Either the extensionId to send the request to,
+ * @param {number|*=} opt_arg1 Either the extensionId to send the request to,
  *     in which case the request is passed as the next arg, or the request.
- * @param {*} opt_request The request value, if arg1 was the extensionId.
+ * @param {*=} opt_request The request value, if arg1 was the extensionId.
  * @param {function(*) : void=} opt_callback The callback function which
  *     takes a JSON response object sent by the handler of the request.
  */
@@ -148,13 +148,13 @@ chrome.tabs.insertCSS = function(tabId, details, opt_callback) {};
  * @param {number} tabId Tab id.
  * @param {Object.<string, number>} moveProperties An object with 'index'
  *     and optional 'windowId' keys.
- * @param {function(Tab) : void} opt_callback Callback.
+ * @param {function(Tab) : void=} opt_callback Callback.
  */
 chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
- * @param {function(Tab) : void} opt_callback Callback.
+ * @param {function(Tab) : void=} opt_callback Callback.
  */
 chrome.tabs.remove = function(tabId, opt_callback) {};
 
@@ -170,7 +170,7 @@ chrome.tabs.sendRequest = function(tabId, request, opt_callback) {};
  * @param {number} tabId Tab id.
  * @param {Object.<string, (string|boolean)>} updateProperties An object which
  *     may have 'url' or 'selected' key.
- * @param {function(Tab) : void} opt_callback Callback.
+ * @param {function(Tab) : void=} opt_callback Callback.
  */
 chrome.tabs.update = function(tabId, updateProperties, opt_callback) {};
 
@@ -218,7 +218,7 @@ chrome.windows.getLastFocused = function(callback) {};
 
 /**
  * @param {number} tabId Tab Id.
- * @param {function() : void} opt_callback Callback.
+ * @param {function() : void=} opt_callback Callback.
  */
 chrome.windows.remove = function(tabId, opt_callback) {};
 
@@ -226,7 +226,7 @@ chrome.windows.remove = function(tabId, opt_callback) {};
  * @param {number} tabId Tab Id.
  * @param {Object.<string, number>} updateProperties An object which may
  *     have 'left', 'top', 'width', or 'height' keys.
- * @param {function() : void} opt_callback Callback.
+ * @param {function() : void=} opt_callback Callback.
  */
 chrome.windows.update = function(tabId, updateProperties, opt_callback) {};
 

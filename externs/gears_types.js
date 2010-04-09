@@ -23,13 +23,21 @@
 /** @constructor */
 function GearsFactory() {}
 
-/** @return {Object} */
+/**
+ * @param {*=} opt_classVersion
+ * @return {Object}
+ */
 GearsFactory.prototype.create = function(className, opt_classVersion) {};
 
 /** @return {string} */
 GearsFactory.prototype.getBuildInfo = function() {};
 
-/** @return {boolean} */
+/**
+ * @param {*=} opt_siteName
+ * @param {*=} opt_imageUrl
+ * @param {*=} opt_extraMessage
+ * @return {boolean}
+ */
 GearsFactory.prototype.getPermission = function(opt_siteName,
                                                 opt_imageUrl,
                                                 opt_extraMessage) {};
@@ -70,7 +78,10 @@ function GearsDatabase() {}
 /** @param {string=} opt_name */
 GearsDatabase.prototype.open = function(opt_name) {};
 
-/** @return {GearsResultSet} */
+/**
+ * @param {*=} opt_argArray
+ * @return {GearsResultSet}
+ */
 GearsDatabase.prototype.execute = function(sqlStatement, opt_argArray) {};
 
 GearsDatabase.prototype.close = function() {};
@@ -396,22 +407,39 @@ function GearsLocalServer() {}
 /** @return {boolean} */
 GearsLocalServer.prototype.canServeLocally = function(url) {};
 
-/** @return {GearsResourceStore} */
+/**
+ * @param {*=} opt_requiredCookie
+ * @return {GearsResourceStore}
+ */
 GearsLocalServer.prototype.createStore = function(name, opt_requiredCookie) {};
 
-/** @return {GearsResourceStore} */
+/**
+ * @param {*=} opt_requiredCookie
+ * @return {GearsResourceStore}
+ */
 GearsLocalServer.prototype.openStore = function(name, opt_requiredCookie) {};
 
+/**
+ * @param {*=} opt_requiredCookie
+ */
 GearsLocalServer.prototype.removeStore = function(name, opt_requiredCookie) {};
 
-/** @return {GearsManagedResourceStore} */
+/**
+ * @param {*=} opt_requiredCookie
+ * @return {GearsManagedResourceStore}
+ */
 GearsLocalServer.prototype.createManagedStore = function(name,
                                                          opt_requiredCookie) {};
-
-/** @return {GearsManagedResourceStore} */
+/**
+ * @param {*=} opt_requiredCookie
+ * @return {GearsManagedResourceStore}
+ */
 GearsLocalServer.prototype.openManagedStore = function(name,
                                                        opt_requiredCookie) {};
 
+/**
+ * @param {*=} opt_requiredCookie
+ */
 GearsLocalServer.prototype.removeManagedStore = function(name,
                                                          opt_requiredCookie) {};
 

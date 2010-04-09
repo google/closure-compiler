@@ -111,6 +111,12 @@ public class Compiler extends AbstractCompiler {
   /** Whether to use threads. */
   private boolean useThreads = true;
 
+  /** 
+   * Whether to assume there are references to the RegExp Global object
+   * properties.
+   */
+  private boolean hasRegExpGlobalReferences = true;
+  
   /** The function information map */
   private FunctionInformationMap functionInformationMap;
 
@@ -1734,5 +1740,15 @@ public class Compiler extends AbstractCompiler {
     getPassConfig().setIntermediateState(state.passConfigState);
     typeRegistry = state.typeRegistry;
     normalized = state.normalized;
+  }
+
+  @Override
+  boolean hasRegExpGlobalReferences() {
+    return hasRegExpGlobalReferences;
+  }
+
+  @Override
+  void setHasRegExpGlobalReferences(boolean references) {
+    hasRegExpGlobalReferences = references;
   }
 }

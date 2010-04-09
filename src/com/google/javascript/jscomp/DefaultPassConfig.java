@@ -216,6 +216,9 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkVars);
+    if (options.computeFunctionSideEffects) {
+      checks.add(checkRegExp);
+    }
 
     if (options.checkShadowVars.isOn()) {
       checks.add(checkShadowVars);
@@ -811,6 +814,24 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new VarCheck(compiler);
+    }
+  };
+
+  /** Checks for RegExp references. */
+  private final PassFactory checkRegExp =
+      new PassFactory("checkRegExp", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      final CheckRegExp pass = new CheckRegExp(compiler);
+
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node root) {
+          pass.process(externs, root);
+          compiler.setHasRegExpGlobalReferences(
+              pass.isGlobalRegExpPropertiesUsed());
+        }
+      };
     }
   };
 

@@ -1048,6 +1048,13 @@ Math.SQRT2;
 
 
 /**
+ * @param [opt_yr_num]
+ * @param [opt_mo_num]
+ * @param [opt_day_num]
+ * @param [opt_hr_num]
+ * @param [opt_min_num]
+ * @param [opt_sec_num]
+ * @param [opt_ms_num]
  * @constructor
  * @return {string}
  * @nosideeffects

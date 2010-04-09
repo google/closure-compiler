@@ -47,8 +47,8 @@ public class DiagnosticGroups {
   // A bit a hack to display the available groups on the command-line.
   // New groups should be added to this list if they are public and should
   // be listed on the command-line as an available option.
-  static final String DIAGNOSTIC_GROUP_NAMES = "accessControls, checkVars, " +
-      "checkTypes, deprecated, fileoverviewTags, invalidCasts, " +
+  static final String DIAGNOSTIC_GROUP_NAMES = "accessControls, checkRegExp," +
+      "checkTypes, checkVars, deprecated, fileoverviewTags, invalidCasts, " +
       "missingProperties, nonStandardJsDocs, strictModuleDepCheck, " +
       "undefinedVars, unknownDefines, visibility";
 
@@ -104,17 +104,22 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("undefinedVars",
           new DiagnosticGroup(VarCheck.UNDEFINED_VAR_ERROR));
 
-  public static DiagnosticGroup CHECK_VARIABLES =
-      DiagnosticGroups.registerGroup("checkVars",
-          new DiagnosticGroup(
-              VarCheck.UNDEFINED_VAR_ERROR,
-              SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR));
+  public static DiagnosticGroup CHECK_REGEXP =
+    DiagnosticGroups.registerGroup("checkRegExp",
+        new DiagnosticGroup(
+            CheckRegExp.REGEXP_REFERENCE));
 
   public static DiagnosticGroup CHECK_TYPES =
       DiagnosticGroups.registerGroup("checkTypes",
           new DiagnosticGroup(
               TypeValidator.ALL_DIAGNOSTICS,
               TypeCheck.ALL_DIAGNOSTICS));
+
+  public static DiagnosticGroup CHECK_VARIABLES =
+    DiagnosticGroups.registerGroup("checkVars",
+        new DiagnosticGroup(
+            VarCheck.UNDEFINED_VAR_ERROR,
+            SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR));
 
   /**
    * Adds warning levels by name.

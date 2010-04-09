@@ -39,6 +39,10 @@ function Image(opt_width, opt_height) {}
 /** @constructor */ function XSLTProcessor() {}
 /** @constructor */ function NodeFilter() {}
 /**
+ * @param {*=} opt_text
+ * @param {*=} opt_value
+ * @param {*=} opt_defaultSelected
+ * @param {*=} opt_selected
  * @constructor
  * @extends {Element}
  */
