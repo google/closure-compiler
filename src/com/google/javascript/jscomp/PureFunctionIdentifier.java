@@ -282,21 +282,35 @@ class PureFunctionIdentifier implements CompilerPass {
       Node name = callNode.getFirstChild();
       Collection<Definition> defs =
           getCallableDefinitions(definitionProvider, name);
-      if (defs == null) {
-        continue;
+      boolean hasSideEffects = true;
+      if (defs != null) {
+        hasSideEffects = false;
+        for (Definition def : defs) {
+          FunctionInformation functionInfo =
+              functionSideEffectMap.get(def.getRValue());
+          Preconditions.checkNotNull(functionInfo);
+
+          if ((NodeUtil.isCall(callNode)
+                  && functionInfo.mayHaveSideEffects())
+               || (NodeUtil.isNew(callNode)
+                      && (functionInfo.mutatesGlobalState()
+                          || functionInfo.functionThrows()))) {
+            hasSideEffects = true;
+            break;
+          }
+        }
       }
 
-      boolean hasSideEffects = false;
-      for (Definition def : defs) {
-        FunctionInformation functionInfo =
-            functionSideEffectMap.get(def.getRValue());
-        Preconditions.checkNotNull(functionInfo);
-
-        if ((NodeUtil.isCall(callNode) && functionInfo.mayHaveSideEffects()) ||
-            (NodeUtil.isNew(callNode) && (functionInfo.mutatesGlobalState() ||
-                                          functionInfo.functionThrows()))) {
-          hasSideEffects = true;
-          break;
+      // Handle special cases (Math, RegEx)
+      if (NodeUtil.isCall(callNode)) {
+        Preconditions.checkState(compiler != null);
+        if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
+          hasSideEffects = false;
+        }
+      } else if (NodeUtil.isNew(callNode)) {
+        // Handle known cases now (Object, Date, RegExp, etc)
+        if (!NodeUtil.constructorCallHasSideEffects(callNode)) {
+          hasSideEffects = false;
         }
       }
 
@@ -420,6 +434,18 @@ class PureFunctionIdentifier implements CompilerPass {
      * Record information about a call site.
      */
     private void visitCall(FunctionInformation sideEffectInfo, Node node) {
+      // Handle special cases (Math, RegEx)
+      if (NodeUtil.isCall(node)
+          && !NodeUtil.functionCallHasSideEffects(node, compiler)) {
+        return;
+      }
+
+      // Handle known cases now (Object, Date, RegExp, etc)
+      if (NodeUtil.isNew(node)
+          && !NodeUtil.constructorCallHasSideEffects(node)) {
+        return;
+      }
+
       sideEffectInfo.appendCall(node);
     }
 

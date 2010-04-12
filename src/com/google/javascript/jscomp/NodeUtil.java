@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.javascript.rhino.FunctionNode;
 import com.google.javascript.rhino.JSDocInfo;
@@ -33,6 +34,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * NodeUtil contains utilities that get properties from the Node object.
@@ -333,14 +336,22 @@ public final class NodeUtil {
    * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
    */
   static boolean mayEffectMutableState(Node n) {
-    return checkForStateChangeHelper(n, true);
+    return mayEffectMutableState(n, null);
+  }
+
+  static boolean mayEffectMutableState(Node n, AbstractCompiler compiler) {
+    return checkForStateChangeHelper(n, true, compiler);
   }
 
   /**
    * Returns true if the node which may have side effects when executed.
    */
   static boolean mayHaveSideEffects(Node n) {
-    return checkForStateChangeHelper(n, false);
+    return mayHaveSideEffects(n, null);
+  }
+
+  static boolean mayHaveSideEffects(Node n, AbstractCompiler compiler) {
+    return checkForStateChangeHelper(n, false, compiler);
   }
 
   /**
@@ -350,7 +361,7 @@ public final class NodeUtil {
    * that they have no side effects.
    */
   private static boolean checkForStateChangeHelper(
-      Node n, boolean checkForNewObjects) {
+      Node n, boolean checkForNewObjects, AbstractCompiler compiler) {
     // Rather than id which ops may have side effects, id the ones
     // that we know to be safe
     switch (n.getType()) {
@@ -402,37 +413,21 @@ public final class NodeUtil {
         return !isFunctionAnonymous(n);
 
       case Token.NEW:
-        {
-          if (checkForNewObjects) {
-            return true;
-          }
+        if (checkForNewObjects) {
+          return true;
+        }
 
-          // calls to constructors that have no side effects have the
-          // no side effect property set.
-          if (n.isNoSideEffectsCall()) {
-            break;
-          }
-
-          // certain constructors are certified side effect free
-          Node constructor = n.getFirstChild();
-          if (Token.NAME == constructor.getType()) {
-            String className = constructor.getString();
-            if (CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(className)) {
-              // loop below will see if the constructor parameters have
-              // side-effects
-              break;
-            }
-          } else {
-            // the constructor could also be an expression like
-            // new (useArray ? Object : Array)();
-          }
+        if (!constructorCallHasSideEffects(n)) {
+          // loop below will see if the constructor parameters have
+          // side-effects
+          break;
         }
         return true;
 
       case Token.CALL:
         // calls to functions that have no side effects have the no
         // side effect property set.
-        if (n.isNoSideEffectsCall()) {
+        if (!functionCallHasSideEffects(n, compiler)) {
           // loop below will see if the function parameters have
           // side-effects
           break;
@@ -449,9 +444,9 @@ public final class NodeUtil {
           // b) The LHS has side effects, or
           // c) A name on the LHS will exist beyond the life of this statement.
           if (checkForStateChangeHelper(
-                  n.getFirstChild(), checkForNewObjects) ||
+                  n.getFirstChild(), checkForNewObjects, compiler) ||
               checkForStateChangeHelper(
-                  n.getLastChild(), checkForNewObjects)) {
+                  n.getLastChild(), checkForNewObjects, compiler)) {
             return true;
           }
 
@@ -469,7 +464,7 @@ public final class NodeUtil {
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (checkForStateChangeHelper(c, checkForNewObjects)) {
+      if (checkForStateChangeHelper(c, checkForNewObjects, compiler)) {
         return true;
       }
     }
@@ -500,12 +495,30 @@ public final class NodeUtil {
     return true;
   }
 
+  private static final Set<String> REGEXP_METHODS =
+      ImmutableSet.of("test", "exec");
+  private static final Set<String> STRING_REGEXP_METHODS =
+      ImmutableSet.of("match", "replace", "search", "split");
+
   /**
    * Returns true if calls to this function have side effects.
    *
    * @param callNode - function call node
    */
-  static boolean functionCallHasSideEffects(Node callNode) {
+  static boolean functionCallHasSideEffects(
+      Node callNode) {
+    return functionCallHasSideEffects(callNode, null);
+  }
+
+  /**
+   * Returns true if calls to this function have side effects.
+   *
+   * @param callNode The call node to inspected.
+   * @param compiler A compiler object to provide program state changing
+   *     context information. Can be null.
+   */
+  static boolean functionCallHasSideEffects(
+      Node callNode, @Nullable AbstractCompiler compiler) {
     Preconditions.checkArgument(
         callNode.getType() == Token.CALL,
         "Expected CALL node, got " + Token.name(callNode.getType()));
@@ -522,14 +535,28 @@ public final class NodeUtil {
       if (name.equals("String")) {
         return false;
       }
-    }
+    } else if (nameNode.getType() == Token.GETPROP) {
+      // Functions in the "Math" namespace have no side effects.
+      if (nameNode.getFirstChild().getType() == Token.NAME) {
+        String namespaceName = nameNode.getFirstChild().getString();
+        if (namespaceName.equals("Math")) {
+          return false;
+        }
+      }
 
-    // Functions in the "Math" namespace have no side effects.
-    if (nameNode.getType() == Token.GETPROP &&
-        nameNode.getFirstChild().getType() == Token.NAME) {
-      String namespaceName = nameNode.getFirstChild().getString();
-      if (namespaceName.equals("Math")) {
-        return false;
+      if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+        if (nameNode.getFirstChild().getType() == Token.REGEXP
+            && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+          return false;
+        } else if (nameNode.getFirstChild().getType() == Token.STRING
+            && STRING_REGEXP_METHODS.contains(
+                nameNode.getLastChild().getString())) {
+          Node param = nameNode.getNext();
+          if (param != null &&
+              (param.getType() == Token.STRING
+                  || param.getType() == Token.REGEXP))
+          return false;
+        }
       }
     }
 

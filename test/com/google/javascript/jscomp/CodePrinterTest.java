@@ -34,12 +34,14 @@ public class CodePrinterTest extends TestCase {
     Node n = compiler.parseTestCode(js);
 
     if (checkTypes) {
-      CompilerPass typeResolver = new DefaultPassConfig(null)
-          .resolveTypes.create(compiler);
+      DefaultPassConfig passConfig = new DefaultPassConfig(null);
+      CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
       Node externs = new Node(Token.SCRIPT);
       Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
       externAndJsRoot.setIsSyntheticBlock(true);
       typeResolver.process(externs, n);
+      CompilerPass inferTypes = passConfig.inferTypes.create(compiler);
+      inferTypes.process(externs, n);
     }
 
     assertEquals("Errors for: " + js, 0, compiler.getErrorCount());
@@ -395,7 +397,6 @@ public class CodePrinterTest extends TestCase {
             CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD));
   }
 
-
   public void testPrettyPrinter() {
     // Ensure that the pretty printer inserts line breaks at appropriate
     // places.
@@ -628,7 +629,7 @@ public class CodePrinterTest extends TestCase {
         + " * @return {number}\n"
         + " */\n"
         + "a.Foo.prototype.foo = function(foo) {\n};\n"
-        + "/** @type {(string|undefined)} */\n"
+        + "/** @type {string} */\n"
         + "a.Foo.prototype.bar = \"\"");
   }
 
@@ -695,6 +696,18 @@ public class CodePrinterTest extends TestCase {
     assertTypeAnnotations(
         "/** @type {!Function} */ var x = function() {}",
         "/**\n * @constructor\n */\nvar x = function() {\n}");
+  }
+
+  public void testTempConstructor() {
+    assertTypeAnnotations(
+        "var x = function() {\n/**\n * @constructor\n */\nfunction t1() {}\n" +
+        " /**\n * @constructor\n */\nfunction t2() {}\n" +
+        " t1.prototype = t2.prototype}",
+        "/**\n */\nvar x = function() {\n" +
+        "  /**\n * @constructor\n */\nfunction t1() {\n  }\n" +
+        "  /**\n * @constructor\n */\nfunction t2() {\n  }\n" +
+        "  t1.prototype = t2.prototype\n}"
+    );
   }
 
   private void assertPrettyPrint(String js, String expected) {

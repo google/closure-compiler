@@ -255,4 +255,133 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
           "x();"
         });
   }
+  
+  // Read of closure variable disables method motions.
+  public void testClosureVariableReads1() {
+    testSame(createModuleChain(
+            "function Foo() {}" +
+            "(function() {" +
+            "var x = 'x';" +
+            "Foo.prototype.baz = function() {x};" +
+            "})();",
+            // Module 2
+            "var y = new Foo(); y.baz();"));
+  }
+  
+  // Read of global variable is fine.
+  public void testClosureVariableReads2() {
+    test(createModuleChain(
+            "function Foo() {}" +
+            "Foo.prototype.b1 = function() {" +
+            "  var x = 1;" +
+            "  Foo.prototype.b2 = function() {" +
+            "    Foo.prototype.b3 = function() {" +
+            "      x;" +
+            "    }" +
+            "  }" +
+            "};",
+            // Module 2
+            "var y = new Foo(); y.b1();",
+            // Module 3
+            "y = new Foo(); z.b2();",
+            // Module 4
+            "y = new Foo(); z.b3();"
+            ),
+         new String[] {
+           STUB_DECLARATIONS +
+           "function Foo() {}" +
+           "Foo.prototype.b1 = JSCompiler_stubMethod(0);",
+           // Module 2
+           "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {" +
+           "  var x = 1;" +
+           "  Foo.prototype.b2 = function() {" +
+           "    Foo.prototype.b3 = function() {" +
+           "      x;" +
+           "    }" +
+           "  }" +
+           "});" +
+           "var y = new Foo(); y.b1();",
+           // Module 3
+           "y = new Foo(); z.b2();",
+           // Module 4
+           "y = new Foo(); z.b3();"
+        });
+  }
+  
+  public void testClosureVariableReads3() {
+    test(createModuleChain(
+            "function Foo() {}" +
+            "Foo.prototype.b1 = function() {" +
+            "  Foo.prototype.b2 = function() {" +
+            "    var x = 1;" +
+            "    Foo.prototype.b3 = function() {" +
+            "      x;" +
+            "    }" +
+            "  }" +
+            "};",
+            // Module 2
+            "var y = new Foo(); y.b1();",
+            // Module 3
+            "y = new Foo(); z.b2();",
+            // Module 4
+            "y = new Foo(); z.b3();"
+            ),
+         new String[] {
+           STUB_DECLARATIONS +
+           "function Foo() {}" +
+           "Foo.prototype.b1 = JSCompiler_stubMethod(0);",
+           // Module 2
+           "Foo.prototype.b1 = JSCompiler_unstubMethod(0, function() {" +
+           "  Foo.prototype.b2 = JSCompiler_stubMethod(1);" +
+           "});" +
+           "var y = new Foo(); y.b1();",
+           // Module 3
+           "Foo.prototype.b2 = JSCompiler_unstubMethod(1, function() {" +
+           "  var x = 1;" +
+           "  Foo.prototype.b3 = function() {" +
+           "    x;" +
+           "  }" +
+           "});" +
+           "y = new Foo(); z.b2();",
+           // Module 4
+           "y = new Foo(); z.b3();"
+        });
+  }
+  
+  // Read of global variable is fine.
+  public void testNoClosureVariableReads1() {
+    test(createModuleChain(
+            "function Foo() {}" +
+            "var x = 'x';" +
+            "Foo.prototype.baz = function(){x};",
+            // Module 2
+            "var y = new Foo(); y.baz();"),
+         new String[] {
+           STUB_DECLARATIONS +
+           "function Foo() {}" +
+           "var x = 'x';" +
+           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
+           // Module 2             
+           "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});" +
+           "var y = new Foo(); y.baz();"
+        });
+  }
+  
+  // Read of a local is fine.
+  public void testNoClosureVariableReads2() {
+    test(createModuleChain(
+            "function Foo() {}" +
+            "Foo.prototype.baz = function(){var x = 1;x};",
+            // Module 2
+            "var y = new Foo(); y.baz();"),
+         new String[] {
+           STUB_DECLARATIONS +
+           "function Foo() {}" +
+           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
+           // Module 2             
+           "Foo.prototype.baz = JSCompiler_unstubMethod(" + 
+           "    0, function(){var x = 1; x});" +
+           "var y = new Foo(); y.baz();"
+        });
+  }
 }

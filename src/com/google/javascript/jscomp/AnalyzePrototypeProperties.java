@@ -230,18 +230,36 @@ class AnalyzePrototypeProperties implements CompilerPass {
       } else if (n.getType() == Token.NAME) {
         String name = n.getString();
 
-        // Only process global functions.
         Var var = t.getScope().getVar(name);
-        if (var != null && var.isGlobal() &&
-            var.getInitialValue() != null &&
-            var.getInitialValue().getType() == Token.FUNCTION) {
-          if (t.inGlobalScope()) {
-            if (!processGlobalFunctionDeclaration(t, n, parent,
-                    parent.getParent())) {
-              addGlobalUseOfSymbol(name, t.getModule(), VAR);
+        if (var != null) {
+          // Only process global functions.
+          if (var.isGlobal()) {
+            if (var.getInitialValue() != null &&
+                var.getInitialValue().getType() == Token.FUNCTION) {
+              if (t.inGlobalScope()) {
+                if (!processGlobalFunctionDeclaration(t, n, parent,
+                        parent.getParent())) {
+                  addGlobalUseOfSymbol(name, t.getModule(), VAR);
+                }
+              } else {
+                addSymbolUse(name, t.getModule(), VAR);
+              }
             }
+
+          // If it is not a global, it might be accessing a local of the outer
+          // scope. If that's the case the functions between the variable's
+          // declaring scope and the variable reference scope cannot be moved.
           } else {
-            addSymbolUse(name, t.getModule(), VAR);
+            int level = 0;
+            for (Scope s = t.getScope(); s != var.getScope();
+                s = s.getParent()) {
+              level++;
+            }
+            for (level = symbolStack.size() < level ?
+                symbolStack.size() : level; level != 0; level--) {
+              symbolStack.get(symbolStack.size() - level)
+                  .readClosureVariables = true;
+            }
           }
         }
       }
@@ -575,6 +593,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
     private final Deque<Symbol> declarations = new ArrayDeque<Symbol>();
     private JSModule deepestCommonModuleRef = null;
 
+    // True if this property is a function that reads a variable from an
+    // outer scope which isn't the global scope.
+    private boolean readClosureVariables = false;
+
     /**
      * Constructs a new NameInfo.
      * @param name The name of the property that this represents. May be null
@@ -589,6 +611,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
     /** Determines whether we've marked a reference to this property name. */
     boolean isReferenced() {
       return referenced;
+    }
+
+    /** Determines whether it reads a closure variable. */
+    boolean readsClosureVariables() {
+      return readClosureVariables;
     }
 
     /**

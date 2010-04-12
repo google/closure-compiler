@@ -33,6 +33,8 @@ import java.util.List;
  */
 public class PureFunctionIdentifierTest extends CompilerTestCase {
   List<String> noSideEffectCalls = Lists.newArrayList();
+  
+  boolean regExpHaveSideEffects = true;
 
   private static String kExterns =
       CompilerTypeTestCase.DEFAULT_EXTERNS +
@@ -89,6 +91,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   protected void tearDown() throws Exception {
     super.tearDown();
     noSideEffectCalls.clear();
+    boolean regExpHaveSideEffects = true;
   }
 
   public void testAnnotationInExterns1() throws Exception {
@@ -654,6 +657,18 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     checkMarkedCalls(source, ImmutableList.<String>of("(g : g)", "k"));
   }
 
+  public void testCallRegExpWithSideEffects() throws Exception {
+    String source = "var x = 0;\n" +
+        "function k(){(/a/).exec('')}\n" +
+        "k()";
+
+    regExpHaveSideEffects = true;
+    checkMarkedCalls(source, ImmutableList.<String>of());
+    regExpHaveSideEffects = false;
+    checkMarkedCalls(source, ImmutableList.<String>of(
+        "REGEXP STRING exec", "k"));
+  }
+
   public void testInvalidAnnotation1() throws Exception {
     test("/** @nosideeffects */ function foo() {}",
          null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
@@ -706,6 +721,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
+      compiler.setHasRegExpGlobalReferences(regExpHaveSideEffects);
       SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
       defFinder.process(externs, root);
       PureFunctionIdentifier passUnderTest =
@@ -739,7 +755,12 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         return "(" + generateNameString(node.getFirstChild().getNext()) +
             " : " + generateNameString(node.getLastChild()) + ")";
       } else {
-        return node.getQualifiedName();
+        String result = node.getQualifiedName();
+        if (result == null) {
+          result = node.getFirstChild().toString(false, false, false);
+          result += " " + node.getLastChild().toString(false, false, false);
+        }
+        return result;
       }
     }
   }

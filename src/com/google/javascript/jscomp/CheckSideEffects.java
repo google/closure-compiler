@@ -99,7 +99,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
       }
     }
     if (NodeUtil.isSimpleOperatorType(n.getType()) ||
-        !NodeUtil.mayHaveSideEffects(n)) {
+        !NodeUtil.mayHaveSideEffects(n, t.getCompiler())) {
       if (n.isQualifiedName() && n.getJSDocInfo() != null) {
         // This no-op statement was there so that JSDoc information could
         // be attached to the name. This check should not complain about it.

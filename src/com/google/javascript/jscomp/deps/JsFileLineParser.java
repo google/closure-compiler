@@ -22,6 +22,10 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.JSError;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +46,7 @@ public abstract class JsFileLineParser {
   /**
    * Thrown by base classes to signify a problem parsing a line.
    */
-  protected static class ParseException extends Exception {
+  static class ParseException extends Exception {
     public static final long serialVersionUID = 1L;
     private boolean fatal;
 
@@ -62,29 +66,35 @@ public abstract class JsFileLineParser {
     }
   }
 
-  /** Pattern for stripping JavaScript comments from source files. */
-  private static final Pattern STRIP_COMMENTS_PATTERN =
-      Pattern.compile("/\\*.*?\\*/" + // Multi-line comments
-          "|//.*?$" // Single-line comments.
-          , Pattern.DOTALL | Pattern.MULTILINE);
+  /** Patterns for stripping JavaScript comments from source files. */
+  private static final Pattern COMMENT = Pattern.compile(
+      "//.*" + // single-line comment
+      "|/\\*([^\\*]*(\\*+[^/\\*])?)*(\\*+/)?" // start of multi-line comment
+      );
+  private static final Pattern END_MULTILINE_COMMENT =
+      Pattern.compile(".*?\\*/");
 
   /** Pattern for matching JavaScript string literals. */
   private static final Pattern STRING_LITERAL_PATTERN = Pattern.compile(
       "\\s*(?:'((?:\\\\'|[^'])*?)'|\"((?:\\\\\"|[^\"])*?)\")\\s*");
 
-  /** Matcher used in the parsing comments. */
-  private Matcher stripCommentsMatcher = STRIP_COMMENTS_PATTERN.matcher("");
+  /** Matchers for comments. */
+  private Matcher commentMatcher = COMMENT.matcher("");
+
+  private Matcher endMultilineCommentMatcher =
+      END_MULTILINE_COMMENT.matcher("");
+
   /** Matcher used in the parsing string literals. */
   private Matcher valueMatcher = STRING_LITERAL_PATTERN.matcher("");
 
   /** Path of the file currently being parsed. */
-  protected String filePath;
+  String filePath;
   /** The line number of the line currently being parsed. */
-  protected int lineNum;
+  int lineNum;
   /** Handles error messages. */
-  protected ErrorManager errorManager;
+  ErrorManager errorManager;
   /** Did our parse succeed. */
-  protected boolean parseSucceeded;
+  boolean parseSucceeded;
 
   /**
    * Constructor.
@@ -100,38 +110,81 @@ public abstract class JsFileLineParser {
   }
 
   /**
+   * @see parseLine(String, Reader)
+   */
+  void doParse(String filePath, String fileContents) {
+    doParse(filePath, new StringReader(fileContents));
+  }
+
+  /**
    * Performs the line-by-line parsing of the given fileContents. This method
    * strips out Javascript comments and then uses the abstract parseLine()
    * method to do the line parsing.
    *
    * @param filePath The path to the file being parsed. Used for reporting parse
    *     exceptions.
-   * @param fileContents The contents of the file.
+   * @param fileContents A reader for the contents of the file.
    */
-  protected void doParse(String filePath, String fileContents) {
+  void doParse(String filePath, Reader fileContents) {
     this.filePath = filePath;
     parseSucceeded = true;
 
-    // Strip all comments.
-    stripCommentsMatcher.reset(fileContents);
-    // TODO(agrieve): Multi-line comments will be removed, causing line-number reporting
-    // to be wrong.
-    fileContents = stripCommentsMatcher.replaceAll("");
-    lineNum = 0;
+    BufferedReader lineBuffer = new BufferedReader(fileContents);
+
     // Parse all lines.
-    for (String line : fileContents.split("\n")) {
-      ++lineNum;
-      try {
-        parseLine(line);
-      } catch (ParseException e) {
-        // Inform the error handler of the exception.
-        errorManager.report(
-            e.isFatal() ? CheckLevel.ERROR : CheckLevel.WARNING,
-            JSError.make(filePath, lineNum, 0 /* char offset */,
-                e.isFatal() ? PARSE_ERROR : PARSE_WARNING,
-                e.getMessage(), line));
-        parseSucceeded = parseSucceeded && !e.isFatal();
+    String line = null;
+    lineNum = 0;
+    boolean inMultilineComment = false;
+
+    try {
+      while (null != (line = lineBuffer.readLine())) {
+        ++lineNum;
+        try {
+          String revisedLine = line;
+          if (inMultilineComment) {
+            endMultilineCommentMatcher.reset(line);
+            if (endMultilineCommentMatcher.lookingAt()) {
+              revisedLine = endMultilineCommentMatcher.replaceFirst("");
+              inMultilineComment = false;
+            } else {
+              revisedLine = "";
+            }
+          }
+
+          if (!inMultilineComment) {
+            commentMatcher.reset(line);
+            if (commentMatcher.find()) {
+              do {
+                if (// The last match hit a /**-style comment.
+                    commentMatcher.group(1) != null &&
+                    // The /**-style comment didn't close.
+                    commentMatcher.group(3) == null) {
+                  inMultilineComment = true;
+                }
+              } while (commentMatcher.find());
+
+              revisedLine = commentMatcher.replaceAll("");
+            }
+          }
+
+          if (!revisedLine.isEmpty()) {
+            parseLine(revisedLine);
+          }
+        } catch (ParseException e) {
+          // Inform the error handler of the exception.
+          errorManager.report(
+              e.isFatal() ? CheckLevel.ERROR : CheckLevel.WARNING,
+              JSError.make(filePath, lineNum, 0 /* char offset */,
+                  e.isFatal() ? PARSE_ERROR : PARSE_WARNING,
+                  e.getMessage(), line));
+          parseSucceeded = parseSucceeded && !e.isFatal();
+        }
       }
+    } catch (IOException e) {
+      errorManager.report(CheckLevel.ERROR,
+          JSError.make(filePath, 0, 0 /* char offset */,
+              PARSE_ERROR, "Error reading file: " + filePath));
+      parseSucceeded = false;
     }
   }
 
@@ -141,7 +194,7 @@ public abstract class JsFileLineParser {
    * @param line The line to parse.
    * @throws ParseException Should be thrown to signify a problem with the line.
    */
-  protected abstract void parseLine(String line) throws ParseException;
+  abstract void parseLine(String line) throws ParseException;
 
   /**
    * Parses a JS string literal.
@@ -150,7 +203,7 @@ public abstract class JsFileLineParser {
    * @throws ParseException Thrown if there is a string literal that cannot be
    *     parsed.
    */
-  protected String parseJsString(String jsStringLiteral) throws ParseException {
+  String parseJsString(String jsStringLiteral) throws ParseException {
     valueMatcher.reset(jsStringLiteral);
     if (!valueMatcher.matches()) {
       throw new ParseException("Syntax error in JS String literal", true /* fatal */);

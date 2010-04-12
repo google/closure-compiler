@@ -171,6 +171,13 @@ public class NodeUtilTest extends TestCase {
     assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild()));
   }
 
+  private void assertSideEffect(boolean se, String js, boolean GlobalRegExp) {
+    Node n = parse(js);
+    Compiler compiler = new Compiler();
+    compiler.setHasRegExpGlobalReferences(GlobalRegExp);
+    assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler));
+  }
+
   public void testMayHaveSideEffects() {
     assertSideEffect(true, "i++");
     assertSideEffect(true, "[b, [a, i++]]");
@@ -232,6 +239,53 @@ public class NodeUtilTest extends TestCase {
     assertSideEffect(true, "a.foo = 4");
     assertSideEffect(true, "(function() { return n; })().foo = 4");
     assertSideEffect(true, "([]).foo = bar()");
+  }
+
+  public void testRegExpSideEffect() {
+    // A RegExp Object by itself doesn't have any side-effects
+    assertSideEffect(false, "/abc/gi", true);
+    assertSideEffect(false, "/abc/gi", false);
+
+    // RegExp instance methods have global side-effects, so whether they are
+    // considered side-effect free depends on whether the global properties
+    // are referenced.
+    assertSideEffect(true, "(/abc/gi).test('')", true);
+    assertSideEffect(false, "(/abc/gi).test('')", false);
+    assertSideEffect(true, "(/abc/gi).test(a)", true);
+    assertSideEffect(false, "(/abc/gi).test(b)", false);
+
+    assertSideEffect(true, "(/abc/gi).exec('')", true);
+    assertSideEffect(false, "(/abc/gi).exec('')", false);
+
+    // Some RegExp object method that may have side-effects.
+    assertSideEffect(true, "(/abc/gi).foo('')", true);
+    assertSideEffect(true, "(/abc/gi).foo('')", false);
+
+    // Try the string RegExp ops.
+    assertSideEffect(true, "''.match('a')", true);
+    assertSideEffect(false, "''.match('a')", false);
+    assertSideEffect(true, "''.match(/(a)/)", true);
+    assertSideEffect(false, "''.match(/(a)/)", false);
+
+    assertSideEffect(true, "''.replace('a')", true);
+    assertSideEffect(false, "''.replace('a')", false);
+
+    assertSideEffect(true, "''.search('a')", true);
+    assertSideEffect(false, "''.search('a')", false);
+
+    assertSideEffect(true, "''.split('a')", true);
+    assertSideEffect(false, "''.split('a')", false);
+
+    // Some non-RegExp string op that may have side-effects.
+    assertSideEffect(true, "''.foo('a')", true);
+    assertSideEffect(true, "''.foo('a')", false);
+
+    // 'a' might be a RegExp object with the 'g' flag, in which case 
+    // the state might change by running any of the string ops.
+    // Specifically, using these methods resets the "lastIndex" if used
+    // in combination with a RegExp instance "exec" method.
+    assertSideEffect(true, "''.match(a)", true);
+    assertSideEffect(true, "''.match(a)", false);
   }
 
   private void assertMutableState(boolean se, String js) {
@@ -802,5 +856,4 @@ public class NodeUtilTest extends TestCase {
     assertFalse(secondBreak.hasChildren());
     assertFalse(NodeUtil.isLabelName(secondBreak.getFirstChild()));
   }
-
 }

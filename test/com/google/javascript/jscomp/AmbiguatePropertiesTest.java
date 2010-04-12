@@ -346,6 +346,24 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
          "Bar.prototype.a = function(){};");
   }
 
+  public void testStaticAndSubInstanceProperties() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.x=0;\n"
+        + "/** @constructor \n @extends Foo */ var Bar = function(){};\n"
+        + "goog.inherits(Bar, Foo);\n"
+        + "Bar.y=0;\n"
+        + "Bar.prototype.z=0;\n";
+    String output = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.a=0;\n"
+        + "/** @constructor \n @extends Foo */ var Bar = function(){};\n"
+        + "goog.inherits(Bar, Foo);\n"
+        + "Bar.a=0;\n"
+        + "Bar.prototype.a=0;\n";
+    test(js, output);
+  }
+
   public void testTypeMismatch() {
     testSame(EXTERNS, "/** @constructor */var Foo = function(){};\n"
              + "/** @constructor */var Bar = function(){};\n"
@@ -430,4 +448,67 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
         + "function g(x) { x.a = 3; }";
     test(js, output);
   }
+
+  public void testImplementsAndExtends2() {
+    String js = ""
+        + "/** @interface */ function A() {}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " */\n"
+        + "function C1(){}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {C1}\n"
+        + " * @implements {A}\n"
+        + " */\n"
+        + "function C2(){}\n"
+        + "/** @param {C1} x */ function f(x) { x.y = 3; }\n"
+        + "/** @param {A} x */ function g(x) { x.z = 3; }\n";
+    String output = ""
+        + "function A(){}\n"
+        + "function C1(){}\n"
+        + "function C2(){}\n"
+        + "function f(x) { x.a = 3; }\n"
+        + "function g(x) { x.b = 3; }\n";
+    test(js, output);
+  }
+
+  public void testExtendsInterface() {
+    String js = ""
+        + "/** @interface */ function A() {}\n"
+        + "/** @interface \n @extends {A} */ function B() {}\n"
+        + "/** @param {A} x */ function f(x) { x.y = 3; }\n"
+        + "/** @param {B} x */ function g(x) { x.z = 3; }\n";
+    String output = ""
+        + "function A(){}\n"
+        + "function B(){}\n"
+        + "function f(x) { x.a = 3; }\n"
+        + "function g(x) { x.b = 3; }\n";
+    test(js, output);
+  }
+
+  public void testFunctionSubType() {
+    String js = ""
+        + "Function.prototype.a = 1;\n"
+        + "function f() {}\n"
+        + "f.y = 2;\n";
+    String output = ""
+        + "Function.prototype.a = 1;\n"
+        + "function f() {}\n"
+        + "f.b = 2;\n";
+    test(js, output);
+  }
+
+  public void testFunctionSubType2() {
+    String js = ""
+        + "Function.prototype.a = 1;\n"
+        + "/** @constructor */ function F() {}\n"
+        + "F.y = 2;\n";
+    String output = ""
+        + "Function.prototype.a = 1;\n"
+        + "function F() {}\n"
+        + "F.b = 2;\n";
+    test(js, output);
+  }
+
 }

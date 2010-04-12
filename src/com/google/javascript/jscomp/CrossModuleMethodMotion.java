@@ -99,6 +99,10 @@ class CrossModuleMethodMotion implements CompilerPass {
         // deepestCommonModuleRef is null.
         continue;
       }
+      
+      if (nameInfo.readsClosureVariables()) {
+        continue;
+      }
 
       JSModule deepestCommonModuleRef = nameInfo.getDeepestCommonModuleRef();
       if(deepestCommonModuleRef == null) {

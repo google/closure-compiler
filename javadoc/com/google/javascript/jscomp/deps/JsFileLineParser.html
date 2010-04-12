@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html" title="class in com.google.javascript.jscomp.deps"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.ParseException.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileParser.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/jscomp/deps/JsFileLineParser.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="JsFileLineParser.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -73,9 +73,9 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_top"></A>
@@ -109,65 +109,7 @@ Base class for classes that parse Javascript sources on a line-by-line basis. St
 <HR>
 
 <P>
-<!-- ======== NESTED CLASS SUMMARY ======== -->
 
-<A NAME="nested_class_summary"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
-<B>Nested Class Summary</B></FONT></TH>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected static&nbsp;class</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.ParseException.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser.ParseException</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Thrown by base classes to signify a problem parsing a line.</TD>
-</TR>
-</TABLE>
-&nbsp;<!-- =========== FIELD SUMMARY =========== -->
-
-<A NAME="field_summary"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
-<B>Field Summary</B></FONT></TH>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#errorManager">errorManager</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Handles error messages.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#filePath">filePath</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Path of the file currently being parsed.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#lineNum">lineNum</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The line number of the line currently being parsed.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#parseSucceeded">parseSucceeded</A></B></CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Did our parse succeed.</TD>
-</TR>
-</TABLE>
-&nbsp;
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 
 <A NAME="constructor_summary"><!-- --></A>
@@ -200,31 +142,6 @@ Base class for classes that parse Javascript sources on a line-by-line basis. St
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#doParse(java.lang.String, java.lang.String)">doParse</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;filePath,
-        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;fileContents)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Performs the line-by-line parsing of the given fileContents.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#parseJsString(java.lang.String)">parseJsString</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;jsStringLiteral)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parses a JS string literal.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected abstract &nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#parseLine(java.lang.String)">parseLine</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Called for each line of the file being parsed.</TD>
-</TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -237,63 +154,6 @@ Base class for classes that parse Javascript sources on a line-by-line basis. St
 </TABLE>
 &nbsp;
 <P>
-
-<!-- ============ FIELD DETAIL =========== -->
-
-<A NAME="field_detail"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
-<B>Field Detail</B></FONT></TH>
-</TR>
-</TABLE>
-
-<A NAME="filePath"><!-- --></A><H3>
-filePath</H3>
-<PRE>
-protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>filePath</B></PRE>
-<DL>
-<DD>Path of the file currently being parsed.
-<P>
-<DL>
-</DL>
-</DL>
-<HR>
-
-<A NAME="lineNum"><!-- --></A><H3>
-lineNum</H3>
-<PRE>
-protected int <B>lineNum</B></PRE>
-<DL>
-<DD>The line number of the line currently being parsed.
-<P>
-<DL>
-</DL>
-</DL>
-<HR>
-
-<A NAME="errorManager"><!-- --></A><H3>
-errorManager</H3>
-<PRE>
-protected <A HREF="../../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A> <B>errorManager</B></PRE>
-<DL>
-<DD>Handles error messages.
-<P>
-<DL>
-</DL>
-</DL>
-<HR>
-
-<A NAME="parseSucceeded"><!-- --></A><H3>
-parseSucceeded</H3>
-<PRE>
-protected boolean <B>parseSucceeded</B></PRE>
-<DL>
-<DD>Did our parse succeed.
-<P>
-<DL>
-</DL>
-</DL>
 
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 
@@ -335,56 +195,6 @@ public boolean <B>didParseSucceed</B>()</PRE>
 </DL>
 </DD>
 </DL>
-<HR>
-
-<A NAME="doParse(java.lang.String, java.lang.String)"><!-- --></A><H3>
-doParse</H3>
-<PRE>
-protected void <B>doParse</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;filePath,
-                       <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;fileContents)</PRE>
-<DL>
-<DD>Performs the line-by-line parsing of the given fileContents. This method
- strips out Javascript comments and then uses the abstract parseLine()
- method to do the line parsing.
-<P>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>filePath</CODE> - The path to the file being parsed. Used for reporting parse
-     exceptions.<DD><CODE>fileContents</CODE> - The contents of the file.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="parseLine(java.lang.String)"><!-- --></A><H3>
-parseLine</H3>
-<PRE>
-protected abstract void <B>parseLine</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)
-                           throws <A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.ParseException.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser.ParseException</A></PRE>
-<DL>
-<DD>Called for each line of the file being parsed.
-<P>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>line</CODE> - The line to parse.
-<DT><B>Throws:</B>
-<DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.ParseException.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser.ParseException</A></CODE> - Should be thrown to signify a problem with the line.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="parseJsString(java.lang.String)"><!-- --></A><H3>
-parseJsString</H3>
-<PRE>
-protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>parseJsString</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;jsStringLiteral)
-                        throws <A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.ParseException.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser.ParseException</A></PRE>
-<DL>
-<DD>Parses a JS string literal.
-<P>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>jsStringLiteral</CODE> - The literal. Must look like "asdf" or 'asdf'
-<DT><B>Throws:</B>
-<DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.ParseException.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser.ParseException</A></CODE> - Thrown if there is a string literal that cannot be
-     parsed.</DL>
-</DD>
-</DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
 
@@ -416,7 +226,7 @@ protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?i
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html" title="class in com.google.javascript.jscomp.deps"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.ParseException.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileParser.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/jscomp/deps/JsFileLineParser.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="JsFileLineParser.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -436,9 +246,9 @@ protected <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?i
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_bottom"></A>

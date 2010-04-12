@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -57,13 +58,13 @@ class TypedCodeGenerator extends CodeGenerator {
     super.add(n, context);
   }
 
-
   private String getTypeAnnotation(Node node) {
     JSType type = node.getJSType();
     if (type instanceof FunctionType) {
       return getFunctionAnnotation(node);
     } else if (type != null && !type.isUnknownType()
-        && !type.isEmptyType() && !type.isVoidType()) {
+        && !type.isEmptyType() && !type.isVoidType() &&
+        !type.isFunctionPrototypeType()) {
       return "/** @type {" + node.getJSType() + "} */\n";
     } else {
       return "";
@@ -76,9 +77,12 @@ class TypedCodeGenerator extends CodeGenerator {
   private String getFunctionAnnotation(Node node) {
     StringBuilder sb = new StringBuilder("/**\n");
 
-    if (node.getJSType().isUnknownType()) {
+    JSType type = node.getJSType();
+
+    if (type == null || type.isUnknownType()) {
       return "";
     }
+
     FunctionType funType = (FunctionType) node.getJSType();
 
     // We need to use the child nodes of the function as the nodes for the
@@ -113,10 +117,15 @@ class TypedCodeGenerator extends CodeGenerator {
 
     // Constructor/interface
     if (funType.isConstructor() || funType.isInterface()) {
-      ObjectType superInstance =
+      
+      FunctionType superConstructor = funType.getSuperClassConstructor();
+      
+      if (superConstructor != null) {
+        ObjectType superInstance =
           funType.getSuperClassConstructor().getInstanceType();
-      if (!superInstance.toString().equals("Object")) {
-        sb.append(" * @extends {"  + superInstance + "}\n");
+        if (!superInstance.toString().equals("Object")) {
+          sb.append(" * @extends {"  + superInstance + "}\n");
+        }
       }
 
       for (ObjectType interfaze : funType.getImplementedInterfaces()) {

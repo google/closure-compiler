@@ -874,7 +874,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Rusn type inference. */
-  private final PassFactory inferTypes =
+  final PassFactory inferTypes =
       new PassFactory("inferTypes", false) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {

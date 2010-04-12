@@ -98,9 +98,6 @@ class AmbiguateProperties implements CompilerPass {
   /** Map from original property name to new name. */
   private final Map<String, String> renamingMap = Maps.newHashMap();
 
-  /** Map from color assigned by GraphColoring to new name. */
-  private final Map<Integer, String> colorMap = Maps.newHashMap();
-
   /**
    * Sorts Property objects by their count, breaking ties alphabetically to
    * ensure a deterministic total ordering.
@@ -221,6 +218,7 @@ class AmbiguateProperties implements CompilerPass {
 
     NameGenerator nameGen = new NameGenerator(
         reservedNames, "", reservedCharacters);
+    Map<Integer, String> colorMap = Maps.newHashMap();
     for (int i = 0; i < numNewPropertyNames; ++i) {
       colorMap.put(i, nameGen.generateNextName());
     }
@@ -258,7 +256,30 @@ class AmbiguateProperties implements CompilerPass {
     }
   }
 
-  /** Add supertypes of the type to its JSTypeBitSet of related types. */
+  /**
+   * Adds subtypes - and implementors, in the case of interfaces - of the type
+   * to its JSTypeBitSet of related types. Union types are decomposed into their
+   * alternative types.
+   *
+   * <p>The 'is related to' relationship is best understood graphically. Draw an
+   * arrow from each instance type to the prototype of each of its
+   * subclass. Draw an arrow from each prototype to its instance type. Draw an
+   * arrow from each interface to its implementors. A type is related to another
+   * if there is a directed path in the graph from the type to other. Thus, the
+   * 'is related to' relationship is reflexive and transitive.
+   *
+   * <p>Example with Foo extends Bar which extends Baz and Bar implements I:
+   * <pre>
+   * Foo -> Bar.prototype -> Bar -> Baz.prototype -> Baz
+   *                          ^
+   *                          |
+   *                          I
+   * </pre>
+   *
+   * <p>Note that we don't need to correctly handle the relationships between
+   * functions, because the function type is invalidating (i.e. its properties
+   * won't be ambiguated).
+   */
   private void computeRelatedTypes(JSType type) {
     if (type instanceof UnionType) {
       type = type.restrictByNotNullOrUndefined();
@@ -277,25 +298,44 @@ class AmbiguateProperties implements CompilerPass {
 
     JSTypeBitSet related = new JSTypeBitSet(intForType.size());
     relatedBitsets.put(type, related);
+    related.set(getIntForType(type));
 
-    ObjectType parentType = type.toObjectType();
-    while (parentType != null) {
-      related.set(getIntForType(parentType));
-      parentType = parentType.getImplicitPrototype();
+    // A prototype is related to its instance.
+    if (type instanceof FunctionPrototypeType) {
+      addRelatedInstance(
+          ((FunctionPrototypeType) type).getOwnerFunction(), related);
+      return;
     }
 
-    FunctionType constructor = null;
-    if (type instanceof FunctionType) {
-      constructor = (FunctionType) type;
-    } else if (type instanceof FunctionPrototypeType) {
-      constructor = ((FunctionPrototypeType) type).getOwnerFunction();
-    } else {
-      constructor = type.toObjectType().getConstructor();
-    }
-    if (constructor != null) {
-      for (ObjectType itype : constructor.getAllImplementedInterfaces()) {
-        related.set(getIntForType(itype));
+    // An instance is related to its subclasses.
+    FunctionType constructor = type.toObjectType().getConstructor();
+    if (constructor != null && constructor.getSubTypes() != null) {
+      for (FunctionType subType : constructor.getSubTypes()) {
+        addRelatedInstance(subType, related);
       }
+    }
+
+    // An interface is related to its implementors.
+    for (FunctionType implementor : compiler.getTypeRegistry()
+        .getDirectImplementors(type.toObjectType())) {
+      addRelatedInstance(implementor, related);
+    }
+  }
+
+  /**
+   * Adds the instance of the given constructor, its implicit prototype and all
+   * its related types to the given bit set.
+   */
+  private void addRelatedInstance(
+      FunctionType constructor, JSTypeBitSet related) {
+    // TODO(user): A constructor which doesn't have an instance type
+    // (e.g. it's missing the @constructor annotation) should be an invalidating
+    // type which doesn't reach this code path.
+    if (constructor.hasInstanceType()) {
+      ObjectType instanceType = constructor.getInstanceType();
+      related.set(getIntForType(instanceType.getImplicitPrototype()));
+      computeRelatedTypes(instanceType);
+      related.or(relatedBitsets.get(instanceType));
     }
   }
 
@@ -332,37 +372,28 @@ class AmbiguateProperties implements CompilerPass {
   }
 
   /**
-   * A {@link SubGraph} that represents properties. The types of the properties
-   * are used to efficiently calculate adjacency information.
+   * A {@link SubGraph} that represents properties. The related types of
+   * the properties are used to efficiently calculate adjacency information.
    */
   class PropertySubGraph implements SubGraph<Property, Void> {
-    /** Types from which properties in this subgraph are referenced. */
-    JSTypeBitSet typesInSet = new JSTypeBitSet(intForType.size());
-
-    /** Types related to types in {@code typesInSet}. */
-    JSTypeBitSet typesRelatedToSet = new JSTypeBitSet(intForType.size());
+    /** Types related to properties referenced in this subgraph. */
+    JSTypeBitSet relatedTypes = new JSTypeBitSet(intForType.size());
 
     /**
-     * Returns true if prop is in an independent set from all properties in
-     * this sub graph.  That is, if none of its types is contained in the
-     * related types for this sub graph and if none if its related types is one
-     * of the types in the sub graph.
+     * Returns true if prop is in an independent set from all properties in this
+     * sub graph.  That is, if none of its related types intersects with the
+     * related types for this sub graph.
      */
     public boolean isIndependentOf(Property prop) {
-      if (typesRelatedToSet.intersects(prop.typesSet)) {
-        return false;
-      }
-      return !prop.relatedTypesSet.intersects(typesInSet);
+      return !relatedTypes.intersects(prop.relatedTypes);
     }
 
     /**
-     * Adds the node to the sub graph, adding all of its types to the set of
-     * types in the sub graph and all of its related types to the related types
-     * for the sub graph.
+     * Adds the node to the sub graph, adding all its related types to the
+     * related types for the sub graph.
      */
     public void addNode(Property prop) {
-      typesInSet.or(prop.typesSet);
-      typesRelatedToSet.or(prop.relatedTypesSet);
+      relatedTypes.or(prop.relatedTypes);
     }
   }
 
@@ -527,8 +558,7 @@ class AmbiguateProperties implements CompilerPass {
     String newName;
     int numOccurrences;
     boolean skipAmbiguating;
-    JSTypeBitSet typesSet = new JSTypeBitSet(intForType.size());
-    JSTypeBitSet relatedTypesSet = new JSTypeBitSet(intForType.size());
+    JSTypeBitSet relatedTypes = new JSTypeBitSet(intForType.size());
 
     Property(String name) {
       this.oldName = name;
@@ -565,11 +595,9 @@ class AmbiguateProperties implements CompilerPass {
         return;
       }
 
-      int typeInt = getIntForType(newType);
-      if (!typesSet.get(typeInt)) {
+      if (!relatedTypes.get(getIntForType(newType))) {
         computeRelatedTypes(newType);
-        typesSet.set(typeInt);
-        relatedTypesSet.or(getRelatedTypesOnNonUnion(newType));
+        relatedTypes.or(getRelatedTypesOnNonUnion(newType));
       }
     }
   }
