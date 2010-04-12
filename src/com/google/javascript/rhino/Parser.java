@@ -46,8 +46,6 @@
 
 package com.google.javascript.rhino;
 
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Hashtable;
@@ -75,7 +73,6 @@ public class Parser
         TI_CHECK_LABEL = 1 << 17;  // indicates to check for label
 
     CompilerEnvirons compilerEnv;
-    private JSTypeRegistry typeRegistry;
     private ErrorReporter errorReporter;
     private String sourceURI;
     boolean calledByCompileFunction;
@@ -174,17 +171,10 @@ public class Parser
         return root;
     }
 
-    public Parser(CompilerEnvirons compilerEnv, ErrorReporter errorReporter,
-                  JSTypeRegistry typeRegistry)
+    public Parser(CompilerEnvirons compilerEnv, ErrorReporter errorReporter)
     {
         this.compilerEnv = compilerEnv;
         this.errorReporter = errorReporter;
-        this.typeRegistry = typeRegistry;
-    }
-
-    public Parser(CompilerEnvirons compilerEnv, ErrorReporter errorReporter)
-    {
-        this(compilerEnv, errorReporter, null);
     }
 
     Decompiler createDecompiler(CompilerEnvirons compilerEnv)
@@ -401,18 +391,6 @@ public class Parser
             // Should never happen
             throw new IllegalStateException();
         }
-    }
-
-    /*
-     * Gets the type registry, initializing it on the first call.
-     * @return a type registry
-     */
-    public JSTypeRegistry getTypeRegistry()
-    {
-        if (typeRegistry == null) {
-            typeRegistry = new JSTypeRegistry(errorReporter);
-        }
-        return typeRegistry;
     }
 
     /*
@@ -1403,9 +1381,6 @@ public class Parser
                     addStrictWarning("msg.var.redecl", s);
             }
             name = nf.createTaggedName(s, info, lineno, charno);
-            if (info != null && info.hasEnumParameterType()) {
-                typeRegistry.identifyEnumName(s);
-            }
 
             // omitted check for argument hiding
 
@@ -1418,10 +1393,6 @@ public class Parser
             nf.addChildToBack(pn, name);
             if (!matchToken(Token.COMMA))
                 break;
-        }
-        if (varInfo != null && varInfo.hasEnumParameterType() &&
-            pn.getChildCount() == 1) {
-            typeRegistry.identifyEnumName(pn.getFirstChild().getString());
         }
         return pn;
     }
@@ -1462,11 +1433,6 @@ public class Parser
             pn = nf.createBinary(tt, pn, right, lineno, charno);
             if (info != null) {
                 pn.setJSDocInfo(info);
-                if (info.hasEnumParameterType() &&
-                    pn.getFirstChild().isUnscopedQualifiedName()) {
-                    typeRegistry.identifyEnumName(
-                            pn.getFirstChild().getQualifiedName());
-                }
             }
         } else if (tt == Token.SEMI && pn.getType() == Token.GETPROP) {
           // This may be dead code added intentionally, for JSDoc purposes.

@@ -333,7 +333,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     environment.setErrorReporter(testErrorReporter);
     environment.setParseJSDoc(true);
     environment.setParseJSDocDocumentation(true);
-    Parser p = new Parser(environment, testErrorReporter, registry);
+    Parser p = new Parser(environment, testErrorReporter);
     Node script = p.parse(string, null, 0);
 
     // verifying that all warnings were seen

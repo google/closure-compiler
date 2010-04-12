@@ -234,7 +234,7 @@ public class NodeTest extends TestCase {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
     environment.setErrorReporter(testErrorReporter);
     environment.setParseJSDoc(true);
-    Parser p = new Parser(environment, testErrorReporter, null);
+    Parser p = new Parser(environment, testErrorReporter);
     return p.parse(string, null, 0);
   }
 }
