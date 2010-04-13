@@ -825,7 +825,8 @@ final class TypedScopeCreator implements ScopeCreator {
                     typeRegistry.getNativeType(U2U_CONSTRUCTOR_TYPE));
                 FunctionType findDelegate = new FunctionType(
                     typeRegistry, null, null, functionParamBuilder.build(),
-                    typeRegistry.createNullableType(delegateBaseObject), null);
+                    typeRegistry.createDefaultObjectUnion(
+                        delegateBaseObject), null);
 
                 FunctionType delegateProxy =
                     typeRegistry.createConstructorType(

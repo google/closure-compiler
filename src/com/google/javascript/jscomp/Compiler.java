@@ -130,7 +130,7 @@ public class Compiler extends AbstractCompiler {
   private Config parserConfig = null;
 
   private ReverseAbstractInterpreter abstractInterpreter;
-  private final TypeValidator typeValidator;
+  private TypeValidator typeValidator;
 
   public PerformanceTracker tracker;
 
@@ -176,7 +176,6 @@ public class Compiler extends AbstractCompiler {
    */
   public Compiler(PrintStream stream) {
     addChangeHandler(recentChange);
-    this.typeValidator = new TypeValidator(this);
     outStream = stream;
   }
 
@@ -973,7 +972,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   public JSTypeRegistry getTypeRegistry() {
     if (typeRegistry == null) {
-      typeRegistry = new JSTypeRegistry(oldErrorReporter);
+      typeRegistry = new JSTypeRegistry(oldErrorReporter, options.looseTypes);
     }
     return typeRegistry;
   }
@@ -1006,6 +1005,9 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   TypeValidator getTypeValidator() {
+    if (typeValidator == null) {
+      typeValidator = new TypeValidator(this);
+    }
     return typeValidator;
   }
 

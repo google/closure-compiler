@@ -956,6 +956,15 @@ This class implements the root of the intermediate representation.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#copySourceLocationFrom(com.google.javascript.rhino.Node)">copySourceLocationFrom</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Copies source file, line and column number from the other
+ node given to the current node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#detachChildren()">detachChildren</A></B>()</CODE>
 
@@ -3617,6 +3626,24 @@ public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class 
 <DD><DL>
 
 <DT><B>Returns:</B><DD>A detached clone of the Node and all its children.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="copySourceLocationFrom(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+copySourceLocationFrom</H3>
+<PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>copySourceLocationFrom</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;other)</PRE>
+<DL>
+<DD>Copies source file, line and column number from the other
+ node given to the current node.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>this</DL>
 </DD>
 </DL>
 <HR>

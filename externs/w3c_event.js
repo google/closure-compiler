@@ -33,7 +33,7 @@ function EventTarget() {}
 
 /**
  * @param {string} type
- * @param {EventListener|function(Event):boolean} listener
+ * @param {EventListener|function(Event):(boolean|undefined)} listener
  * @param {boolean} useCapture
  * @return {undefined}
  */
@@ -41,7 +41,7 @@ EventTarget.prototype.addEventListener = function(type, listener, useCapture) {}
 
 /**
  * @param {string} type
- * @param {EventListener|function(Event):boolean} listener
+ * @param {EventListener|function(Event):(boolean|undefined)} listener
  * @param {boolean} useCapture
  * @return {undefined}
  */

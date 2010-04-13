@@ -33,7 +33,7 @@ import java.nio.charset.Charset;
  */
 class TypedCodeGenerator extends CodeGenerator {
   TypedCodeGenerator(CodeConsumer consumer, Charset outputCharset) {
-    super(consumer, outputCharset, true);
+    super(consumer, outputCharset);
   }
 
   @Override

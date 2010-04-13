@@ -43,14 +43,8 @@ class CodeGenerator {
 
   private final CharsetEncoder outputCharsetEncoder;
 
-  /** Whether to perform basic checks for obviously incorrect AST structure. */
-  // NOTE: This exists to support a few extern legacy parsers that don't
-  // properly normalize the AST (JsMinimizer).
-  private final boolean validation;
-
   CodeGenerator(
-      CodeConsumer consumer, Charset outputCharset, boolean validation) {
-    this.validation = validation;
+      CodeConsumer consumer, Charset outputCharset) {
     cc = consumer;
     if (outputCharset == null || outputCharset == Charsets.US_ASCII) {
       // If we want our default (pretending to be UTF-8, but escaping anything
@@ -63,12 +57,8 @@ class CodeGenerator {
     }
   }
 
-  CodeGenerator(CodeConsumer consumer, Charset outputCharset) {
-    this(consumer, outputCharset, true);
-  }
-
   CodeGenerator(CodeConsumer consumer) {
-    this(consumer, null, false);
+    this(consumer, null);
   }
 
   void add(String str) {
@@ -487,7 +477,7 @@ class CodeGenerator {
         Preconditions.checkState(childCount <= 1);
         add("continue");
         if (childCount == 1) {
-          if (first.getType() != Token.LABEL_NAME && validation) {
+          if (first.getType() != Token.LABEL_NAME) {
             throw new Error("Unexpected token type. Should be LABEL_NAME.");
           }
           add(" ");
@@ -506,7 +496,7 @@ class CodeGenerator {
         Preconditions.checkState(childCount <= 1);
         add("break");
         if (childCount == 1) {
-          if (first.getType() != Token.LABEL_NAME && validation) {
+          if (first.getType() != Token.LABEL_NAME) {
             throw new Error("Unexpected token type. Should be LABEL_NAME.");
           }
           add(" ");
@@ -517,7 +507,7 @@ class CodeGenerator {
 
       case Token.EXPR_VOID:
       case Token.EXPR_RESULT:
-        if (type == Token.EXPR_VOID && validation) {
+        if (type == Token.EXPR_VOID) {
           throw new Error("Unexpected EXPR_VOID. Should be EXPR_RESULT.");
         }
         Preconditions.checkState(childCount == 1);
@@ -615,7 +605,7 @@ class CodeGenerator {
 
       case Token.LABEL:
         Preconditions.checkState(childCount == 2);
-        if (first.getType() != Token.LABEL_NAME && validation) {
+        if (first.getType() != Token.LABEL_NAME) {
           throw new Error("Unexpected token type. Should be LABEL_NAME.");
         }
         add(first);
@@ -648,9 +638,7 @@ class CodeGenerator {
     Node nodeToProcess = n;
 
     if (!allowNonBlockChild && n.getType() != Token.BLOCK) {
-      if (validation) {
-        throw new Error("Missing BLOCK child.");
-      }
+      throw new Error("Missing BLOCK child.");
     }
 
     // Strip unneeded blocks, that is blocks with <2 children unless

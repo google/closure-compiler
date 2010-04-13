@@ -33,10 +33,23 @@ import java.util.Arrays;
 /**
  * Tests {@link TypeCheck}.
  *
+ * This is a temporary fork of the TypeCheckTest for the experimental
+ * "looseTypes" option.  These tests should be be folded into TypeCheckTest
+ * or removed along with the looseTypes option.
+ *
 *
 *
+ * @author johnlenz@google.com (John Lenz)
  */
-public class TypeCheckTest extends CompilerTypeTestCase {
+public class LooseTypeCheckTest extends CompilerTypeTestCase {
+
+  @Override
+  public CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.looseTypes = true;
+    return options;
+  }
+
   public void testInitialTypingScope() {
     Scope s = new TypedScopeCreator(compiler,
         new DefaultCodingConvention()).createInitialScope(null);
@@ -140,19 +153,25 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
 
   public void testTypeCheck15() throws Exception {
-    testTypes("/**@type {Number|null} */var x;x=null;x=10;",
+    testTypes("/**@type {Number} */var x;x=null;x=10;",
         "assignment\n" +
         "found   : number\n" +
-        "required: (Number|null)");
+        "required: (Number|null|undefined)");
   }
 
-  public void testTypeCheck16() throws Exception {
+  public void testTypeCheck16a() throws Exception {
     testTypes("/**@type {Number|null} */var x='';",
+              "initializing variable\n" +
+              "found   : string\n" +
+              "required: (Number|null|undefined)");
+  }
+
+  public void testTypeCheck16b() throws Exception {
+    testTypes("/**@type {!Number|null} */var x='';",
               "initializing variable\n" +
               "found   : string\n" +
               "required: (Number|null)");
   }
-
 
   public void testTypeCheck17() throws Exception {
     testTypes("/**@return {Number}\n@param {Number} opt_foo */\n" +
@@ -450,18 +469,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
    public void testBooleanReduction7() throws Exception {
-    testTypes("/** @constructor */var T = function() {};\n" +
-        "/**\n" +
-        "* @param {Array|T} x\n" +
-        "* @return {null}\n" +
-        "*/\n" +
-        "var f = function(x) {\n" +
-        "if (!x) {\n" +
-        "return x;\n" +
-        "}\n" +
-        "return null;\n" +
-        "};");
-  }
+     testTypes("/** @constructor */var T = function() {};\n" +
+         "/**\n" +
+         "* @param {Array|T} x\n" +
+         "* @return {null|undefined}\n" +
+         "*/\n" +
+         "var f = function(x) {\n" +
+         "if (!x) {\n" +
+         "return x;\n" +
+         "}\n" +
+         "return null;\n" +
+         "};");
+   }
 
   public void testNullAnd() throws Exception {
     testTypes("/** @type null */var x;\n" +
@@ -503,7 +522,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @param {Function?} x\n @return {boolean} */" +
         "function f(x) { return x && x == \"a\"; }",
         "inconsistent return type\n" +
-        "found   : (boolean|null)\n" +
+        "found   : (boolean|null|undefined)\n" +
         "required: boolean");
   }
 
@@ -1171,13 +1190,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testScoping3() throws Exception {
     testTypes("\n\n/** @type{Number}*/var b;\n/** @type{!String} */var b;",
         "variable b redefined with type String, original " +
-        "definition at [testcode]:3 with type (Number|null)");
+        "definition at [testcode]:3 with type (Number|null|undefined)");
   }
 
   public void testScoping4() throws Exception {
     testTypes("/** @type{Number}*/var b; if (true) /** @type{!String} */var b;",
         "variable b redefined with type String, original " +
-        "definition at [testcode]:1 with type (Number|null)");
+        "definition at [testcode]:1 with type (Number|null|undefined)");
   }
 
   public void testScoping5() throws Exception {
@@ -1990,7 +2009,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  /** @type {Function} */ this.foo;" +
         "}",
         "(new f).foo",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).toString());
+        createOptionalType(createNullableType(U2U_CONSTRUCTOR_TYPE))
+            .toString());
   }
 
   public void testStubFunctionDeclaration6() throws Exception {
@@ -1998,7 +2018,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function f() {} " +
         "/** @type {Function} */ f.prototype.foo;",
         "(new f).foo",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).toString());
+        createOptionalType(createNullableType(U2U_CONSTRUCTOR_TYPE))
+            .toString());
   }
 
   public void testStubFunctionDeclaration7() throws Exception {
@@ -2006,7 +2027,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function f() {} " +
         "/** @type {Function} */ f.prototype.foo = function() {};",
         "(new f).foo",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).toString());
+        createOptionalType(createNullableType(U2U_CONSTRUCTOR_TYPE))
+            .toString());
   }
 
   public void testStubFunctionDeclaration8() throws Exception {
@@ -2248,7 +2270,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/**@enum {String}*/var a={BB:'string'}",
         "element type must match enum's type\n" +
         "found   : string\n" +
-        "required: (String|null)");
+        "required: (String|null|undefined)");
   }
 
   public void testEnum6() throws Exception {
@@ -2378,7 +2400,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/**@enum {Object} */ var E = {A: {}};" +
         "/** @param {E} x \n* @return {!Object} */ function f(x) {return x}",
         "inconsistent return type\n" +
-        "found   : E.<(Object|null)>\n" +
+        "found   : E.<(Object|null|undefined)>\n" +
         "required: Object");
   }
 
@@ -2976,7 +2998,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @return {I?} */function f() { return null; }\n" +
         "/** @type {!I} */var i = f();\n",
         "initializing variable\n" +
-        "found   : (I|null)\n" +
+        "found   : (I|null|undefined)\n" +
         "required: I");
   }
 
@@ -3374,14 +3396,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testHookRestrictsType2() throws Exception {
     testTypes("/** @type {String} */" +
         "var a = null;" +
-        "/** @type null */" +
+        "/** @type (null|undefined) */" +
         "var b = a ? null : a;");
   }
 
   public void testHookRestrictsType3() throws Exception {
     testTypes("/** @type {String} */" +
         "var a;" +
-        "/** @type null */" +
+        "/** @type (null|undefined) */" +
         "var b = (!a) ? a : null;");
   }
 
@@ -3587,7 +3609,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testClosure2() throws Exception {
     testClosureTypes(
         CLOSURE_DEFS +
-        "/** @type {string?} */var a;" +
+        "/** @type {string|null} */var a;" +
         "/** @type string */" +
         "var b = goog.isNull(a) ? 'default' : a;",
         null);
@@ -3614,7 +3636,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testClosure5() throws Exception {
     testClosureTypes(
         CLOSURE_DEFS +
-        "/** @type {string?} */var a;" +
+        "/** @type {string|null} */var a;" +
         "/** @type string */" +
         "var b = !goog.isNull(a) ? a : 'default';",
         null);
@@ -3726,7 +3748,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @return number */goog.A.prototype.n = function() {" +
         "  return this.foo };",
         "inconsistent return type\n" +
-        "found   : (null|string)\n" +
+        "found   : (null|string|undefined)\n" +
         "required: number");
   }
 
@@ -3761,7 +3783,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @return number */A.prototype.n = function() {" +
         "  return this.foo };",
         "inconsistent return type\n" +
-        "found   : (null|string)\n" +
+        "found   : (null|string|undefined)\n" +
         "required: number");
   }
 
@@ -3847,15 +3869,40 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "this.alert(this.x);");
   }
 
-  public void testControlFlowRestrictsType1() throws Exception {
-    testTypes("/** @return {String?} */ function f() { return null; }" +
-        "/** @type {String?} */ var a = f();" +
-        "/** @type String */ var b = new String('foo');" +
-        "/** @type null */ var c = null;" +
-        "if (a) {" +
-        "  b = a;" +
-        "} else {" +
-        "  c = a;" +
+  public void testControlFlowRestrictsType1a() throws Exception {
+    testTypes("/** @return {String?} */ function f() { return null; }\n" +
+        "/** @type {String?} */ var a = f();\n" +
+        "/** @type String */ var b = new String('foo');\n" +
+        "/** @type (null|undefined) */ var c = null;\n" +
+        "if (a) {\n" +
+        "  b = a;\n" +
+        "} else {\n" +
+        "  c = a;\n" +
+        "}");
+  }
+
+  public void testControlFlowRestrictsType1b() throws Exception {
+    testTypes("/** @return {!String|null} */ function f() { return null; }\n" +
+        "/** @type {!String|null} */ var a = f();\n" +
+        "/** @type String */ var b = new String('foo');\n" +
+        "/** @type (null) */ var c = null;\n" +
+        "if (a) {\n" +
+        "  b = a;\n" +
+        "} else {\n" +
+        "  c = a;\n" +
+        "}");
+  }
+
+  public void testControlFlowRestrictsType1c() throws Exception {
+    testTypes("/** @return {!String|undefined} */\n" +
+        "function f() { return undefined; }\n" +
+        "/** @type {!String|undefined} */ var a = f();\n" +
+        "/** @type String */ var b = new String('foo');\n" +
+        "/** @type undefined */ var c = undefined;\n" +
+        "if (a) {\n" +
+        "  b = a;\n" +
+        "} else {\n" +
+        "  c = a;\n" +
         "}");
   }
 
@@ -4094,7 +4141,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @type Number */var a = 4;",
         "initializing variable\n" +
         "found   : number\n" +
-        "required: (Number|null)");
+        "required: (Number|null|undefined)");
   }
 
   public void testNumberUnboxing() throws Exception {
@@ -4108,7 +4155,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @type String */var a = 'hello';",
         "initializing variable\n" +
         "found   : string\n" +
-        "required: (String|null)");
+        "required: (String|null|undefined)");
   }
 
   public void testStringUnboxing() throws Exception {
@@ -4122,7 +4169,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @type Boolean */var a = true;",
         "initializing variable\n" +
         "found   : boolean\n" +
-        "required: (Boolean|null)");
+        "required: (Boolean|null|undefined)");
   }
 
   public void testBooleanUnboxing() throws Exception {
@@ -5038,7 +5085,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @param {Object} x\n@return {!Object} */\n" +
         "function f(x) { return x; }",
         "inconsistent return type\n" +
-        "found   : (Object|null)\n" +
+        "found   : (Object|null|undefined)\n" +
         "required: Object");
   }
 
@@ -5311,7 +5358,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         instanceType.getPropertiesCount());
     checkObjectType(instanceType, "m1", STRING_TYPE);
     checkObjectType(instanceType, "m2",
-        createUnionType(OBJECT_TYPE, NULL_TYPE));
+        createUnionType(createUnionType(OBJECT_TYPE, NULL_TYPE), VOID_TYPE));
     checkObjectType(instanceType, "m3", BOOLEAN_TYPE);
     checkObjectType(instanceType, "m4", STRING_TYPE);
     checkObjectType(instanceType, "m5", NUMBER_TYPE);
@@ -5959,7 +6006,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {Array} */ Bar.prototype = new Foo()",
         "assignment to property prototype of Bar\n" +
         "found   : Foo\n" +
-        "required: (Array|null)");
+        "required: (Array|null|undefined)");
   }
 
   // In all testResolutionViaRegistry* tests, since u is unknown, u.T can only
@@ -6222,7 +6269,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  return x === 3;" +
         "}",
         "condition always evaluates to the same value\n" +
-        "left : (null|string)\n" +
+        "left : (null|string|undefined)\n" +
         "right: number");
   }
 
@@ -6279,7 +6326,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "f(3);",
         "actual parameter 1 of f does not match formal parameter\n" +
         "found   : number\n" +
-        "required: (MyType|null)");
+        "required: (MyType|null|undefined)");
   }
 
   public void testMalformedOldTypeDef() throws Exception {
@@ -6734,7 +6781,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + "}");
 
     // check the type of afoo when referenced
-    assertEquals(registry.createNullableType(registry.getType("Foo")),
+    assertEquals(registry.createOptionalType(
+            registry.createNullableType(registry.getType("Foo"))),
         n.getLastChild().getLastChild().getLastChild().getLastChild()
         .getLastChild().getLastChild().getJSType());
   }

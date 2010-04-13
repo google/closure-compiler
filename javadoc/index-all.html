@@ -1088,6 +1088,10 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>Copies source file and name information from the other node to the
  entire tree rooted at this node.
+<DT><A HREF="./com/google/javascript/rhino/Node.html#copySourceLocationFrom(com.google.javascript.rhino.Node)"><B>copySourceLocationFrom(Node)</B></A> - 
+Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
+<DD>Copies source file, line and column number from the other
+ node given to the current node.
 <DT><A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#create()"><B>create()</B></A> - 
 Static method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>
 <DD>&nbsp;
@@ -1112,6 +1116,9 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createConstructorTypeWithVarArgs(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType...)"><B>createConstructorTypeWithVarArgs(JSType, JSType...)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Creates a function type which can act as a constructor.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createDefaultObjectUnion(com.google.javascript.rhino.jstype.JSType)"><B>createDefaultObjectUnion(JSType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>Creates a type representing nullable values of the given type.
 <DT><A HREF="./com/google/javascript/jscomp/graph/DiGraph.html#createDirectedGraphNode(N)"><B>createDirectedGraphNode(N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>
 <DD>&nbsp;
@@ -5051,6 +5058,9 @@ Constructor for class com.google.javascript.rhino.<A HREF="./com/google/javascri
  and other types that occur very often in the type system.<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype"><B>JSTypeRegistry</B></A> - Class in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>The type registry is used to resolve named types.<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#JSTypeRegistry(com.google.javascript.rhino.ErrorReporter)"><B>JSTypeRegistry(ErrorReporter)</B></A> - 
 Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Constructs a new type registry populated with the built-in types.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#JSTypeRegistry(com.google.javascript.rhino.ErrorReporter, boolean)"><B>JSTypeRegistry(ErrorReporter, boolean)</B></A> - 
+Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>Constructs a new type registry populated with the built-in types.
 </DL>
 <HR>
 <A NAME="_K_"><!-- --></A><H2>
@@ -6855,6 +6865,9 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DT><A HREF="./com/google/javascript/jscomp/Compiler.html#setLoggingLevel(java.util.logging.Level)"><B>setLoggingLevel(Level)</B></A> - 
 Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Compiler.html" title="class in com.google.javascript.jscomp">Compiler</A>
 <DD>Sets the logging level for the com.google.javascript.jscomp package.
+<DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#setLooseTypes(boolean)"><B>setLooseTypes(boolean)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
+<DD>Whether to include "undefined" in the default types.
 <DT><A HREF="./com/google/javascript/jscomp/CompilerInput.html#setModule(com.google.javascript.jscomp.JSModule)"><B>setModule(JSModule)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerInput.html" title="class in com.google.javascript.jscomp">CompilerInput</A>
 <DD>Sets the module to which the input belongs.
@@ -7055,6 +7068,9 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
  <A HREF="./com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A>.
 <DT><A HREF="./com/google/javascript/jscomp/CommandLineRunner.html#shouldRunCompiler()"><B>shouldRunCompiler()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CommandLineRunner.html" title="class in com.google.javascript.jscomp">CommandLineRunner</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#shouldTolerateUndefinedValues()"><B>shouldTolerateUndefinedValues()</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/NodeTraversal.AbstractNodeTypePruningCallback.html#shouldTraverse(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><B>shouldTraverse(NodeTraversal, Node, Node)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/NodeTraversal.AbstractNodeTypePruningCallback.html" title="class in com.google.javascript.jscomp">NodeTraversal.AbstractNodeTypePruningCallback</A>

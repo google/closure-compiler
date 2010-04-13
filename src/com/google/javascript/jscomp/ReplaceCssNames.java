@@ -16,11 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.Map;
 
@@ -86,10 +89,14 @@ class ReplaceCssNames implements CompilerPass {
 
   private CssRenamingMap symbolMap;
 
+  private final JSType nativeStringType;
+
   ReplaceCssNames(AbstractCompiler compiler,
       @Nullable Map<String, Integer> cssNames) {
     this.compiler = compiler;
     this.cssNames = cssNames;
+    this.nativeStringType =  compiler.getTypeRegistry()
+        .getNativeType(STRING_TYPE);
   }
 
   @Override
@@ -144,7 +151,10 @@ class ReplaceCssNames implements CompilerPass {
               processStringNode(t, second);
               n.removeChild(first);
               Node replacement = new Node(Token.ADD, first,
-                  Node.newString("-" + second.getString()));
+                  Node.newString("-" + second.getString())
+                      .copySourceLocationFrom(second))
+                  .copySourceLocationFrom(n);
+              replacement.setJSType(nativeStringType);
               parent.replaceChild(n, replacement);
               compiler.reportCodeChange();
 

@@ -361,14 +361,15 @@ public abstract class CompilerTestCase extends TestCase  {
     Compiler compiler = createCompiler();
     lastCompiler = compiler;
 
-    BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
-
     CompilerOptions options = getOptions();
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.
     options.checkTypes = parseTypeInfo;
     compiler.init(externs, new JSSourceFile[] {
         JSSourceFile.fromCode("testcode", js) }, options);
+
+    BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
+
     test(compiler, new String[] { expected }, error, warning, description);
   }
 

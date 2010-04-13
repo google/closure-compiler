@@ -193,10 +193,6 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(closureCheckGetCssName);
     }
 
-    if (options.closurePass) {
-      checks.add(closureReplaceGetCssName);
-    }
-
     if (options.syntheticBlockStartMarker != null) {
       // This pass must run before the first fold constants pass.
       checks.add(createSyntheticBlocks);
@@ -268,6 +264,12 @@ public class DefaultPassConfig extends PassConfig {
 
     if (options.checkCaja || options.checkEs5Strict) {
       checks.add(checkStrictMode);
+    }
+
+    // Replace 'goog.getCssName' before processing defines but after the
+    // other checks have been done.
+    if (options.closurePass) {
+      checks.add(closureReplaceGetCssName);
     }
 
     // Defines in code always need to be processed.

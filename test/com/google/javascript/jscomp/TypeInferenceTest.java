@@ -59,6 +59,7 @@ public class TypeInferenceTest extends TestCase {
   @Override
   public void setUp() {
     compiler = new Compiler();
+    compiler.initOptions(new CompilerOptions());
     registry = compiler.getTypeRegistry();
     assumptions = Maps.newHashMap();
     returnScope = null;

@@ -1829,6 +1829,25 @@ public class Node implements Cloneable, Serializable
     }
 
     /**
+     * Copies source file, line and column number from the other
+     * node given to the current node.
+     * @return this
+     */
+    public Node copySourceLocationFrom(Node other) {
+      if (getProp(SOURCEFILE_PROP) == null) {
+        putProp(SOURCEFILE_PROP, other.getProp(SOURCEFILE_PROP));
+        sourcePosition = other.sourcePosition;
+      }
+
+      if (getLineno() == -1 || getCharno() == -1) {
+        setLineno(other.getLineno());
+        setCharno(other.getCharno());
+      }
+
+      return this;
+    }
+
+    /**
      * Copies source file and name information from the other
      * node given to the current node. Used for maintaining
      * debug information across node append and remove operations.

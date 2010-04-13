@@ -1248,6 +1248,14 @@ Compiler options
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#setLooseTypes(boolean)">setLooseTypes</A></B>(boolean&nbsp;looseTypes)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Whether to include "undefined" in the default types.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#setNameAnonymousFunctionsOnly(boolean)">setNameAnonymousFunctionsOnly</A></B>(boolean&nbsp;value)</CODE>
 
 <BR>
@@ -3158,6 +3166,26 @@ public void <B>setSummaryDetailLevel</B>(int&nbsp;summaryDetailLevel)</PRE>
  errors or warnings), 2 (print summary if type checking is on,
  see --check_types), 3 (always print summary). The default level
  is 1
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="setLooseTypes(boolean)"><!-- --></A><H3>
+setLooseTypes</H3>
+<PRE>
+public void <B>setLooseTypes</B>(boolean&nbsp;looseTypes)</PRE>
+<DL>
+<DD>Whether to include "undefined" in the default types.
+   For example:
+     "{Object}" is normally "Object|null" becomes "Object|null|undefined"
+     "{?string}" is normally "string|null" becomes "string|null|undefined"
+ In either case "!" annotated types excluded both null and undefined.
 <P>
 <DD><DL>
 </DL>

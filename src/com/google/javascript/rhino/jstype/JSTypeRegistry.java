@@ -141,14 +141,29 @@ public class JSTypeRegistry implements Serializable {
   // The template type.
   private TemplateType templateType;
 
+  private final boolean tolerateUndefinedValues;
+
   /**
    * Constructs a new type registry populated with the built-in types.
    */
   public JSTypeRegistry(ErrorReporter reporter) {
+    this(reporter, false);
+  }
+
+  /**
+   * Constructs a new type registry populated with the built-in types.
+   */
+  public JSTypeRegistry(
+      ErrorReporter reporter, boolean tolerateUndefinedValues) {
     this.reporter = reporter;
     nativeTypes = new JSType[JSTypeNative.values().length];
     namesToTypes = new HashMap<String, JSType>();
     resetForTypeCheck();
+    this.tolerateUndefinedValues = tolerateUndefinedValues;
+  }
+
+  public boolean shouldTolerateUndefinedValues() {
+    return tolerateUndefinedValues;
   }
 
   /**
@@ -757,6 +772,16 @@ public class JSTypeRegistry implements Serializable {
    * Creates a type representing nullable values of the given type.
    * @return the union of the type and the Null type
    */
+  public JSType createDefaultObjectUnion(JSType type) {
+    return shouldTolerateUndefinedValues()
+        ? createOptionalNullableType(type)
+        : createNullableType(type);
+  }
+
+  /**
+   * Creates a type representing nullable values of the given type.
+   * @return the union of the type and the Null type
+   */
   public JSType createNullableType(JSType type) {
     return createUnionType(type, getNativeType(JSTypeNative.NULL_TYPE));
   }
@@ -1182,7 +1207,7 @@ public class JSTypeRegistry implements Serializable {
         if (firstChild == null) {
           return getNativeType(UNKNOWN_TYPE);
         }
-        return createNullableType(
+        return createDefaultObjectUnion(
             createFromTypeNodes(firstChild, sourceName, scope));
 
       case Token.EQUALS: // Optional
@@ -1236,7 +1261,7 @@ public class JSTypeRegistry implements Serializable {
                   this, (ObjectType) namedType, indexType);
             }
           }
-          return createNullableType(namedType);
+          return createDefaultObjectUnion(namedType);
 
         } else {
           return namedType;

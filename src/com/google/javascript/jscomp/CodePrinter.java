@@ -537,7 +537,6 @@ class CodePrinter {
     // Specify a charset to use when outputting source code.  If null,
     // then just output ASCII.
     private Charset outputCharset = null;
-    private boolean validation = true;
 
     /**
      * Sets the root node from which to generate the source code.
@@ -606,14 +605,6 @@ class CodePrinter {
     }
 
     /**
-     * Whether the input AST guaranteed to be properly formed, fail if it isn't.
-     */
-    Builder setValidation(boolean validation) {
-      this.validation = validation;
-      return this;
-    }
-
-    /**
      * Generates the source code and returns it.
      */
     String build() {
@@ -629,7 +620,7 @@ class CodePrinter {
               : Format.COMPACT;
 
       return toSource(root, outputFormat, lineBreak, lineLengthThreshold,
-          sourceMap, outputCharset, validation);
+          sourceMap, outputCharset);
     }
   }
 
@@ -645,8 +636,7 @@ class CodePrinter {
   private static String toSource(Node root, Format outputFormat,
                                  boolean lineBreak,  int lineLengthThreshold,
                                  SourceMap sourceMap,
-                                 Charset outputCharset,
-                                 boolean validation) {
+                                 Charset outputCharset) {
     boolean createSourceMap = (sourceMap != null);
     CodeConsumer cp =
         outputFormat == Format.COMPACT
@@ -656,7 +646,7 @@ class CodePrinter {
     CodeGenerator cg =
         outputFormat == Format.TYPED
         ? new TypedCodeGenerator(cp, outputCharset)
-        : new CodeGenerator(cp, outputCharset, validation);
+        : new CodeGenerator(cp, outputCharset);
     cg.add(root);
 
     String code = ((HasGetCode) cp).getCode();

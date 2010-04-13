@@ -34,17 +34,21 @@ public class MemoizedScopeCreatorTest extends TestCase {
     Node falseNode = new Node(Token.FALSE);
     // Wow, is there really a circular dependency between JSCompiler and
     // SyntacticScopeCreator?
+    Compiler compiler = new Compiler();
+    compiler.initOptions(new CompilerOptions());    
     ScopeCreator creator = new MemoizedScopeCreator(
-        new SyntacticScopeCreator(new Compiler()));
+        new SyntacticScopeCreator(compiler));
     Scope scopeA = creator.createScope(trueNode, null);
     assertSame(scopeA, creator.createScope(trueNode, null));
     assertNotSame(scopeA, creator.createScope(falseNode, null));
   }
 
   public void testPreconditionCheck() throws Exception {
+    Compiler compiler = new Compiler();
+    compiler.initOptions(new CompilerOptions());
     Node trueNode = new Node(Token.TRUE);
     ScopeCreator creator = new MemoizedScopeCreator(
-        new SyntacticScopeCreator(new Compiler()));
+        new SyntacticScopeCreator(compiler));
     Scope scopeA = creator.createScope(trueNode, null);
 
     boolean handled = false;
