@@ -44,8 +44,7 @@ public class ParserRunner {
 
   public static Config createConfig(
       JSTypeRegistry typeRegistry, boolean isIdeMode) {
-    return new Config(
-        typeRegistry, getAnnotationNames(), isIdeMode);
+    return new Config(getAnnotationNames(), isIdeMode);
   }
 
   /**

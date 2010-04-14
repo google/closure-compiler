@@ -860,7 +860,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // /** @type ... */object.name = ...;
       if (info != null && info.hasType()) {
         visitAnnotatedAssignGetprop(t, assign,
-            info.getType().evaluate(t.getScope()), object,
+            info.getType().evaluate(t.getScope(), typeRegistry), object,
             property, rvalue);
         return;
       }
@@ -868,7 +868,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // /** @enum ... */object.name = ...;
       if (info != null && info.hasEnumParameterType()) {
         checkEnumInitializer(
-            t, rvalue, info.getEnumParameterType().evaluate(t.getScope()));
+            t, rvalue, info.getEnumParameterType().evaluate(
+                t.getScope(), typeRegistry));
         return;
       }
 
@@ -1273,7 +1274,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           // var.getType() can never be null, this would indicate a bug in the
           // scope creation logic.
           checkEnumInitializer(
-              t, value,  info.getEnumParameterType().evaluate(t.getScope()));
+              t, value,
+              info.getEnumParameterType().evaluate(t.getScope(), typeRegistry));
         } else if (var.isTypeInferred()) {
           ensureTyped(t, name, valueType);
         } else {
@@ -1682,7 +1684,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     JSDocInfo info = n.getJSDocInfo();
     if (info != null) {
       if (info.hasType()) {
-        JSType infoType = info.getType().evaluate(t.getScope());
+        JSType infoType = info.getType().evaluate(t.getScope(), typeRegistry);
         validator.expectCanCast(t, n, infoType, type);
         type = infoType;
       }

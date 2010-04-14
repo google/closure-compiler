@@ -162,6 +162,9 @@ final class TypedScopeCreator implements ScopeCreator {
    */
   @VisibleForTesting
   Scope createInitialScope(Node root) {
+
+    NodeTraversal.traverse(compiler, root, new DiscoverEnums(typeRegistry));
+
     Scope s = new Scope(root, compiler);
     declareNativeFunctionType(s, ARRAY_FUNCTION_TYPE);
     declareNativeFunctionType(s, BOOLEAN_OBJECT_FUNCTION_TYPE);
@@ -207,6 +210,39 @@ final class TypedScopeCreator implements ScopeCreator {
 
   private void declareNativeType(Scope scope, String name, JSType t) {
     scope.declare(name, null, t, null, false);
+  }
+
+  private static class DiscoverEnums extends AbstractShallowCallback {
+    private final JSTypeRegistry registry;
+
+    DiscoverEnums(JSTypeRegistry registry) {
+      this.registry = registry;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node node, Node parent) {
+      Node nameNode = null;
+      switch (node.getType()) {
+        case Token.NAME:
+          nameNode = node;
+          break;
+        case Token.VAR:
+          if (node.hasOneChild()) {
+            nameNode = node.getFirstChild();
+          }
+          break;
+        case Token.ASSIGN:
+          nameNode = node.getFirstChild();
+          break;
+      }
+
+      if (nameNode != null) {
+        JSDocInfo info = node.getJSDocInfo();
+        if (info != null && info.hasEnumParameterType()) {
+          registry.identifyEnumName(nameNode.getQualifiedName());
+        }
+      }
+    }
   }
 
   /**
@@ -280,7 +316,7 @@ final class TypedScopeCreator implements ScopeCreator {
           node.getFirstChild() : null;
       if (info != null) {
         if (info.hasType()) {
-          jsType = info.getType().evaluate(scope);
+          jsType = info.getType().evaluate(scope, typeRegistry);
         } else if (FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
           String fnName = node.getQualifiedName();
 
@@ -391,7 +427,7 @@ final class TypedScopeCreator implements ScopeCreator {
           } else if (info != null && info.hasEnumParameterType()) {
             lvalue.setJSType(
                 getEnumType(lvalue.getQualifiedName(), n, rvalue,
-                    info.getEnumParameterType().evaluate(scope)));
+                    info.getEnumParameterType().evaluate(scope, typeRegistry)));
           }
           break;
 
@@ -429,7 +465,7 @@ final class TypedScopeCreator implements ScopeCreator {
               typeRegistry.getNativeType(UNKNOWN_TYPE) : null;
         } else if (info.hasEnumParameterType()) {
           type = getEnumType(name.getString(), var, value,
-              info.getEnumParameterType().evaluate(scope));
+              info.getEnumParameterType().evaluate(scope, typeRegistry));
         } else if (info.isConstructor()) {
           type = getFunctionType(name.getString(), value, info, name);
         } else {
@@ -480,7 +516,7 @@ final class TypedScopeCreator implements ScopeCreator {
           rValue.getFirstChild().getNext() : null;
 
       if (functionType == null && info != null && info.hasType()) {
-        JSType type = info.getType().evaluate(scope);
+        JSType type = info.getType().evaluate(scope, typeRegistry);
 
         // Known to be not null since we have the FUNCTION token there.
         type = type.restrictByNotNullOrUndefined();
@@ -934,7 +970,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // to handle these properly.
       typeRegistry.forwardDeclareType(typedef);
 
-      JSType realType = info.getTypedefType().evaluate(scope);
+      JSType realType = info.getTypedefType().evaluate(scope, typeRegistry);
       if (realType == null) {
         compiler.report(
             JSError.make(
@@ -966,7 +1002,7 @@ final class TypedScopeCreator implements ScopeCreator {
         JSDocInfo info = candidate.getJSDocInfo();
         JSType realType = null;
         if (info != null && info.getType() != null) {
-          realType = info.getType().evaluate(scope);
+          realType = info.getType().evaluate(scope, typeRegistry);
         }
 
         if (realType == null) {

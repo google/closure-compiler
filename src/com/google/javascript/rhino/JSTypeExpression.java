@@ -61,14 +61,9 @@ public final class JSTypeExpression implements Serializable {
   /** The source name where the type expression appears. */
   private final String sourceName;
 
-  /** The type registry to use for resolution. */
-  private final JSTypeRegistry registry;
-
-  public JSTypeExpression(Node root, String sourceName,
-      JSTypeRegistry registry) {
+  public JSTypeExpression(Node root, String sourceName) {
     this.root = root;
     this.sourceName = sourceName;
-    this.registry = registry;
   }
 
   /**
@@ -80,7 +75,7 @@ public final class JSTypeExpression implements Serializable {
       return expr;
     } else {
       return new JSTypeExpression(
-          new Node(Token.EQUALS, expr.root), expr.sourceName, expr.registry);
+          new Node(Token.EQUALS, expr.root), expr.sourceName);
     }
   }
 
@@ -101,7 +96,7 @@ public final class JSTypeExpression implements Serializable {
   /**
    * Evaluates the type expression into a {@code JSType} object.
    */
-  public JSType evaluate(StaticScope<JSType> scope) {
+  public JSType evaluate(StaticScope<JSType> scope, JSTypeRegistry registry) {
     JSType type = registry.createFromTypeNodes(root, sourceName, scope);
     if (root.getBooleanProp(Node.BRACELESS_TYPE)) {
       type.forgiveUnknownNames();

@@ -131,7 +131,7 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setBaseType(
         new JSTypeExpression(
-            new Node(Token.BANG, Node.newString("Number")), "", registry));
+            new Node(Token.BANG, Node.newString("Number")), ""));
     info.setReturnType(fromString("string"));
 
     assertEquals(getNativeType(NUMBER_OBJECT_TYPE),
@@ -421,11 +421,11 @@ public class JSDocInfoTest extends TestCase {
 
   /** Gets the type expression for a simple type name. */
   private JSTypeExpression fromString(String s) {
-    return new JSTypeExpression(Node.newString(s), "", registry);
+    return new JSTypeExpression(Node.newString(s), "");
   }
 
   private JSType resolve(JSTypeExpression n, String... warnings) {
     errorReporter.setWarnings(warnings);
-    return n.evaluate(null);
+    return n.evaluate(null, registry);
   }
 }

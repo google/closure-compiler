@@ -1689,7 +1689,7 @@ Variable in class com.google.javascript.rhino.testing.<A HREF="./com/google/java
 <DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#EVAL_ERROR_TYPE"><B>EVAL_ERROR_TYPE</B></A> - 
 Variable in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing">BaseJSTypeTestCase</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/JSTypeExpression.html#evaluate(com.google.javascript.rhino.jstype.StaticScope)"><B>evaluate(StaticScope&lt;JSType&gt;)</B></A> - 
+<DT><A HREF="./com/google/javascript/rhino/JSTypeExpression.html#evaluate(com.google.javascript.rhino.jstype.StaticScope, com.google.javascript.rhino.jstype.JSTypeRegistry)"><B>evaluate(StaticScope&lt;JSType&gt;, JSTypeRegistry)</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>
 <DD>Evaluates the type expression into a <code>JSType</code> object.
 <DT><A HREF="./com/google/javascript/rhino/EvaluatorException.html" title="class in com.google.javascript.rhino"><B>EvaluatorException</B></A> - Exception in <A HREF="./com/google/javascript/rhino/package-summary.html">com.google.javascript.rhino</A><DD>The class of exceptions thrown by the JavaScript engine.<DT><A HREF="./com/google/javascript/rhino/EvaluatorException.html#EvaluatorException(java.lang.String)"><B>EvaluatorException(String)</B></A> - 
@@ -2360,10 +2360,6 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DT><A HREF="./com/google/javascript/rhino/JSDocInfo.html#getDescriptionForParameter(java.lang.String)"><B>getDescriptionForParameter(String)</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>
 <DD>Returns the description for the parameter with the given name, if its
- exists.
-<DT><A HREF="./com/google/javascript/rhino/JSDocInfo.html#getDescriptionForThrownType(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.StaticScope)"><B>getDescriptionForThrownType(JSType, StaticScope&lt;JSType&gt;)</B></A> - 
-Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino">JSDocInfo</A>
-<DD>Returns the description for the given thrown type, if it
  exists.
 <DT><A HREF="./com/google/javascript/jscomp/FunctionInfo.html#getDescriptor()"><B>getDescriptor()</B></A> - 
 Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/FunctionInfo.html" title="class in com.google.javascript.jscomp">FunctionInfo</A>
@@ -5051,7 +5047,7 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.TypePair.html" title="class in com.google.javascript.rhino.jstype">JSType.TypePair</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino"><B>JSTypeExpression</B></A> - Class in <A HREF="./com/google/javascript/rhino/package-summary.html">com.google.javascript.rhino</A><DD>Represents a type expression as a miniture Rhino AST, so that the
- type expression can be evaluated later.<DT><A HREF="./com/google/javascript/rhino/JSTypeExpression.html#JSTypeExpression(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.JSTypeRegistry)"><B>JSTypeExpression(Node, String, JSTypeRegistry)</B></A> - 
+ type expression can be evaluated later.<DT><A HREF="./com/google/javascript/rhino/JSTypeExpression.html#JSTypeExpression(com.google.javascript.rhino.Node, java.lang.String)"><B>JSTypeExpression(Node, String)</B></A> - 
 Constructor for class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeNative.html" title="enum in com.google.javascript.rhino.jstype"><B>JSTypeNative</B></A> - Enum in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>Constants corresponding to types that are built into a JavaScript engine
@@ -7388,6 +7384,16 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/VariableMap.html#toBytes()"><B>toBytes()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/VariableMap.html" title="class in com.google.javascript.jscomp">VariableMap</A>
 <DD>Serializes the variable map to a byte array.
+<DT><A HREF="./com/google/javascript/rhino/jstype/FunctionType.html#toDebugHashCodeString()"><B>toDebugHashCodeString()</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#toDebugHashCodeString()"><B>toDebugHashCodeString()</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
+<DD>A hash code function for diagnosing complicated issues
+ around type-identity.
+<DT><A HREF="./com/google/javascript/rhino/jstype/UnionType.html#toDebugHashCodeString()"><B>toDebugHashCodeString()</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/UnionType.html" title="class in com.google.javascript.rhino.jstype">UnionType</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/DotFormatter.html#toDot(com.google.javascript.rhino.Node)"><B>toDot(Node)</B></A> - 
 Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DotFormatter.html" title="class in com.google.javascript.jscomp">DotFormatter</A>
 <DD>Converts an AST to dot representation.

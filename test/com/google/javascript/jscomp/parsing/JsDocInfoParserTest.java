@@ -1169,10 +1169,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@return {string}\n @define {string} */", "conflicting @define tag");
   }
 
-  public void testParseDefineErrors6() throws Exception {
-    parse("@define {String}*/", "@define tag only permits literal types");
-  }
-
   public void testParseDefineErrors7() throws Exception {
     parse("@define {string}\n @const */", "conflicting @const tag");
   }
@@ -1662,14 +1658,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo jsdoc = parse("@constructor\n@interface*/",
         "cannot be both an interface and a constructor");
     assertTrue(jsdoc.isConstructor());
-  }
-
-  public void testDocumentationThrows() throws Exception {
-    JSDocInfo jsdoc
-        = parse("@throws {number} This is a description.*/", true);
-
-    assertEquals("This is a description.",
-                 jsdoc.getDescriptionForThrownType(NUMBER_TYPE, null));
   }
 
   public void testDocumentationParameter() throws Exception {
@@ -2303,7 +2291,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Parser p = new Parser(environment, testErrorReporter);
     AstRoot script = p.parse(code, null, 0);
 
-    Config config = new Config(registry, extraAnnotations, true);
+    Config config = new Config(extraAnnotations, true);
     for (Comment comment : script.getComments()) {
       JsDocInfoParser jsdocParser =
         new JsDocInfoParser(
@@ -2342,8 +2330,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       boolean parseFileOverview, String... warnings) {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
-    Config config = new Config(
-        registry, extraAnnotations, parseDocumentation);
+    Config config = new Config(extraAnnotations, parseDocumentation);
     JsDocInfoParser jsdocParser = new JsDocInfoParser(stream(comment),
         "testcode", config, errorReporter);
 

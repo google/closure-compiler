@@ -24,8 +24,11 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
@@ -62,6 +65,11 @@ class ProcessDefines implements CompilerPass {
       "unknown @define variable {0}");
 
   // Errors
+  static final DiagnosticType INVALID_DEFINE_TYPE_ERROR =
+    DiagnosticType.error(
+        "JSC_INVALID_DEFINE_INIT_ERROR",
+        "@define tag only permits literal types");
+
   static final DiagnosticType INVALID_DEFINE_INIT_ERROR =
       DiagnosticType.error(
           "JSC_INVALID_DEFINE_INIT_ERROR",
@@ -146,6 +154,16 @@ class ProcessDefines implements CompilerPass {
   }
 
   /**
+   * Only defines of literal number, string, or boolean are supported.
+   */
+  private boolean isValidDefineType(JSTypeExpression expression) {
+    JSType type = expression.evaluate(null, compiler.getTypeRegistry());
+    return !type.isUnknownType() && type.isSubtype(
+        compiler.getTypeRegistry().getNativeType(
+            JSTypeNative.NUMBER_STRING_BOOLEAN));
+  }
+
+  /**
    * Finds all defines, and creates a {@link DefineInfo} data structure for
    * each one.
    * @return A map of {@link DefineInfo} structures, keyed by name.
@@ -156,7 +174,17 @@ class ProcessDefines implements CompilerPass {
     List<Name> allDefines = Lists.newArrayList();
     for (Name name : namespace.getNameIndex().values()) {
       if (name.docInfo != null && name.docInfo.isDefine()) {
-        allDefines.add(name);
+        // Process defines should not depend on check types being enabled,
+        // so we look for the JSDoc instead of the inferred type.
+        if (isValidDefineType(name.docInfo.getType())) {
+          allDefines.add(name);
+        } else {
+          JSError error = JSError.make(
+              name.declaration.sourceName,
+              name.declaration.node,
+              INVALID_DEFINE_TYPE_ERROR);
+          compiler.report(error);
+        }
       } else if (name.refs != null) {
         for (Ref ref : name.refs) {
           Node n = ref.node;

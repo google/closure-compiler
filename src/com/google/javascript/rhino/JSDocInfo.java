@@ -42,8 +42,6 @@ package com.google.javascript.rhino;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.StaticScope;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -1052,26 +1050,6 @@ public final class JSDocInfo implements Serializable {
     }
 
     return documentation.parameters.get(name);
-  }
-
-  /**
-   * Returns the description for the given thrown type, if it
-   * exists.
-   */
-  public String getDescriptionForThrownType(JSType type,
-      StaticScope<JSType> scope) {
-    if (documentation == null || documentation.throwsDescriptions == null) {
-      return null;
-    }
-
-    for (JSTypeExpression typeExpr :
-             documentation.throwsDescriptions.keySet()) {
-      if (type.canAssignTo(typeExpr.evaluate(scope))) {
-        return documentation.throwsDescriptions.get(typeExpr);
-      }
-    }
-
-    return null;
   }
 
   /**

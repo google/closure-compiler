@@ -67,8 +67,21 @@ public class ProcessDefinesTest extends CompilerTestCase {
     test(definitions + js, definitions + expected);
   }
 
-  public void testBasicDefine() {
+  public void testBasicDefine1() {
     test("/** @define {boolean} */ var DEF = true", "var DEF=true");
+  }
+
+  public void testBasicDefine2() {
+    test("/** @define {string} */ var DEF = 'a'", "var DEF=\"a\"");
+  }
+
+  public void testBasicDefine3() {
+    test("/** @define {number} */ var DEF = 0", "var DEF=0");
+  }
+
+  public void testDefineBadType() {
+    test("/** @define {Object} */ var DEF = {}",
+        null, ProcessDefines.INVALID_DEFINE_TYPE_ERROR);
   }
 
   public void testDefineWithBadValue() {

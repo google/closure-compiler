@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.Map;
 import java.util.Set;
@@ -29,11 +28,6 @@ import java.util.Set;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class Config {
-
-  /**
-   * Central registry for type info.
-   */
-  final JSTypeRegistry registry;
 
   /**
    * Whether to parse the descriptions of jsdoc comments.
@@ -55,9 +49,7 @@ public class Config {
    * Annotation names.
    */
 
-  Config(JSTypeRegistry registry, Set<String> annotationWhitelist,
-      boolean isIdeMode) {
-    this.registry = registry;
+  Config(Set<String> annotationWhitelist, boolean isIdeMode) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = isIdeMode;
     this.isIdeMode = isIdeMode;

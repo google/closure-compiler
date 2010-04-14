@@ -52,7 +52,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testInitialTypingScope() {
     Scope s = new TypedScopeCreator(compiler,
-        new DefaultCodingConvention()).createInitialScope(null);
+        new DefaultCodingConvention()).createInitialScope(
+            new Node(Token.BLOCK));
 
     assertEquals(ARRAY_FUNCTION_TYPE, s.getVar("Array").getType());
     assertEquals(BOOLEAN_OBJECT_FUNCTION_TYPE,

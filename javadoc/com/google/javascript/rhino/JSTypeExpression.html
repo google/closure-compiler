@@ -121,9 +121,8 @@ Represents a type expression as a miniture Rhino AST, so that the
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html#JSTypeExpression(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.JSTypeRegistry)">JSTypeExpression</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;root,
-                 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
-                 <A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html#JSTypeExpression(com.google.javascript.rhino.Node, java.lang.String)">JSTypeExpression</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;root,
+                 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -149,7 +148,8 @@ Represents a type expression as a miniture Rhino AST, so that the
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html#evaluate(com.google.javascript.rhino.jstype.StaticScope)">evaluate</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSTypeExpression.html#evaluate(com.google.javascript.rhino.jstype.StaticScope, com.google.javascript.rhino.jstype.JSTypeRegistry)">evaluate</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope,
+         <A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Evaluates the type expression into a <code>JSType</code> object.</TD>
@@ -210,12 +210,11 @@ Represents a type expression as a miniture Rhino AST, so that the
 </TR>
 </TABLE>
 
-<A NAME="JSTypeExpression(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.JSTypeRegistry)"><!-- --></A><H3>
+<A NAME="JSTypeExpression(com.google.javascript.rhino.Node, java.lang.String)"><!-- --></A><H3>
 JSTypeExpression</H3>
 <PRE>
 public <B>JSTypeExpression</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;root,
-                        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
-                        <A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry)</PRE>
+                        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName)</PRE>
 <DL>
 </DL>
 
@@ -276,10 +275,11 @@ public boolean <B>isVarArgs</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="evaluate(com.google.javascript.rhino.jstype.StaticScope)"><!-- --></A><H3>
+<A NAME="evaluate(com.google.javascript.rhino.jstype.StaticScope, com.google.javascript.rhino.jstype.JSTypeRegistry)"><!-- --></A><H3>
 evaluate</H3>
 <PRE>
-public <A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>evaluate</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope)</PRE>
+public <A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>evaluate</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope,
+                       <A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry)</PRE>
 <DL>
 <DD>Evaluates the type expression into a <code>JSType</code> object.
 <P>

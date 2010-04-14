@@ -405,7 +405,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
    * correct {@code JSType}.
    */
   protected void assertTypeEquals(JSType expected, Node actual) {
-    assertTypeEquals(expected, new JSTypeExpression(actual, "", registry));
+    assertTypeEquals(expected, new JSTypeExpression(actual, ""));
   }
 
   /**
@@ -420,7 +420,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
    */
   protected JSType resolve(JSTypeExpression n, String... warnings) {
     errorReporter.setWarnings(warnings);
-    return n.evaluate(null);
+    return n.evaluate(null, registry);
   }
 
   /**

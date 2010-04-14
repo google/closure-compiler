@@ -41,10 +41,13 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
 
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -499,5 +502,14 @@ public class UnionType extends JSType {
       alternates = newAlternates;
     }
     return this;
+  }
+
+  @Override
+  public String toDebugHashCodeString() {
+    List<String> hashCodes = Lists.newArrayList();
+    for (JSType a : alternates) {
+      hashCodes.add(a.toDebugHashCodeString());
+    }
+    return "{(" + Joiner.on(",").join(hashCodes) + ")}";
   }
 }

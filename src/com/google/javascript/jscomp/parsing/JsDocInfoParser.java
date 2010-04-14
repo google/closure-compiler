@@ -26,9 +26,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -45,7 +42,6 @@ import java.util.Set;
 public final class JsDocInfoParser {
 
   private final JsDocTokenStream stream;
-  private final JSTypeRegistry typeRegistry;
   private final JSDocInfoBuilder jsdocBuilder;
   private final String sourceName;
   private final ErrorReporter errorReporter;
@@ -103,7 +99,6 @@ public final class JsDocInfoParser {
                   ErrorReporter errorReporter) {
     this.stream = stream;
     this.sourceName = sourceName;
-    this.typeRegistry = config.registry;
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
     this.annotationNames = config.annotationNames;
 
@@ -116,7 +111,6 @@ public final class JsDocInfoParser {
    */
   public static Node parseTypeString(String typeString) {
     Config config = new Config(
-        new JSTypeRegistry(NullErrorReporter.forOldRhino()),
         Sets.<String>newHashSet(),
         false);
     JsDocInfoParser parser = new JsDocInfoParser(
@@ -691,10 +685,7 @@ public final class JsDocInfoParser {
                   } else {
                     switch (annotation) {
                       case DEFINE:
-                        if (!isValidDefineType(typeNode)) {
-                          parser.addWarning("msg.jsdoc.define.badtype",
-                              lineno, charno);
-                        } else if (!jsdocBuilder.recordDefineType(type)) {
+                        if (!jsdocBuilder.recordDefineType(type)) {
                           parser.addWarning("msg.jsdoc.define",
                               lineno, charno);
                         }
@@ -949,16 +940,6 @@ public final class JsDocInfoParser {
   }
 
   /**
-   * Determines whether the given type is a valid {@code @define} type.
-   */
-  // TODO(nicksantos): Move this into a check pass.
-  private boolean isValidDefineType(Node typeNode) {
-    JSType type = typeRegistry.createFromTypeNodes(typeNode, "", null);
-    return !type.isUnknownType() && type.isSubtype(
-        typeRegistry.getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN));
-  }
-
-  /**
    * Converts a JSDoc token to its string representation.
    */
   private String toString(JsDocToken token) {
@@ -1028,7 +1009,7 @@ public final class JsDocInfoParser {
    */
   private JSTypeExpression createJSTypeExpression(Node n) {
     return n == null ? null :
-        new JSTypeExpression(n, sourceName, typeRegistry);
+        new JSTypeExpression(n, sourceName);
   }
 
   /**

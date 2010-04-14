@@ -440,7 +440,7 @@ class TypeInference
     if (n.getType() != Token.FUNCTION) {
       JSDocInfo info = n.getJSDocInfo();
       if (info != null && info.hasType()) {
-        JSType castType = info.getType().evaluate(syntacticScope);
+        JSType castType = info.getType().evaluate(syntacticScope, registry);
 
         // A stubbed type cast on a qualified name should take
         // effect for all subsequent accesses of that name,

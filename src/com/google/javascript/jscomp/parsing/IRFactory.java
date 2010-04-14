@@ -69,7 +69,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptOrFnNode;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -85,7 +84,6 @@ public class IRFactory {
   private final String sourceString;
   private final String sourceName;
   private final Config config;
-  private final JSTypeRegistry registry;
   private final ErrorReporter errorReporter;
   private final TransformDispatcher transformDispatcher;
 
@@ -116,7 +114,6 @@ public class IRFactory {
                     ErrorReporter errorReporter) {
     this.sourceString = sourceString;
     this.sourceName = sourceName;
-    this.registry = config.registry;
     this.config = config;
     this.errorReporter = errorReporter;
     this.transformDispatcher = new TransformDispatcher();
@@ -263,18 +260,6 @@ public class IRFactory {
     Node node = candidateIter.next().node;
     candidateIter.remove();
     node.setJSDocInfo(info);
-    if (info.hasEnumParameterType()) {
-      if (node.getType() == Token.NAME) {
-        registry.identifyEnumName(node.getString());
-      } else if (node.getType() == Token.VAR &&
-            node.getChildCount() == 1) {
-        registry.identifyEnumName(
-            node.getFirstChild().getString());
-      } else if (node.getType() == Token.ASSIGN) {
-        registry.identifyEnumName(
-            node.getFirstChild().getQualifiedName());
-      }
-    }
   }
 
   private int position2charno(int position) {

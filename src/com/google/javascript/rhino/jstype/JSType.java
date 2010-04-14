@@ -41,7 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
@@ -901,5 +900,13 @@ public abstract class JSType implements Serializable {
       this.typeA = typeA;
       this.typeB = typeB;
     }
+  }
+
+  /**
+   * A hash code function for diagnosing complicated issues
+   * around type-identity.
+   */
+  public String toDebugHashCodeString() {
+    return "{" + this.hashCode() + "}";
   }
 }

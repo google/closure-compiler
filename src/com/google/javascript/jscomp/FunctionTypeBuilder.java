@@ -195,7 +195,7 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder inferReturnType(@Nullable JSDocInfo info) {
     returnType = info != null && info.hasReturnType() ?
-        info.getReturnType().evaluate(scope) :
+        info.getReturnType().evaluate(scope, typeRegistry) :
         typeRegistry.getNativeType(UNKNOWN_TYPE);
     if (templateTypeName != null &&
         returnType.restrictByNotNullOrUndefined().isTemplateType()) {
@@ -216,7 +216,7 @@ final class FunctionTypeBuilder {
       // base type
       if (info.hasBaseType()) {
         if (isConstructor || isInterface) {
-          baseType = ObjectType.cast(info.getBaseType().evaluate(scope));
+          baseType = ObjectType.cast(info.getBaseType().evaluate(scope, typeRegistry));
           if (baseType == null) {
             reportWarning(EXTENDS_NON_OBJECT, fnName, baseType.toString());
           }
@@ -229,7 +229,7 @@ final class FunctionTypeBuilder {
       if (isConstructor || isInterface) {
         implementedInterfaces = Lists.newArrayList();
         for (JSTypeExpression t : info.getImplementedInterfaces()) {
-          ObjectType interType = ObjectType.cast(t.evaluate(scope));
+          ObjectType interType = ObjectType.cast(t.evaluate(scope, typeRegistry));
           if (interType != null) {
             implementedInterfaces.add(interType);
           } else {
@@ -276,7 +276,8 @@ final class FunctionTypeBuilder {
       @Nullable Node owner) {
     ObjectType maybeThisType = null;
     if (info != null && info.hasThisType()) {
-      maybeThisType = ObjectType.cast(info.getThisType().evaluate(scope));
+      maybeThisType = ObjectType.cast(
+          info.getThisType().evaluate(scope, typeRegistry));
     }
     if (maybeThisType != null) {
       // TODO(user): Doing an instanceof check here is too
@@ -348,7 +349,7 @@ final class FunctionTypeBuilder {
       // type from JSDocInfo
       JSType parameterType =
           info != null && info.hasParameterType(argumentName) ?
-          info.getParameterType(argumentName).evaluate(scope) :
+          info.getParameterType(argumentName).evaluate(scope, typeRegistry) :
           typeRegistry.getNativeType(UNKNOWN_TYPE);
       if (templateTypeName != null &&
           parameterType.restrictByNotNullOrUndefined().isTemplateType()) {
