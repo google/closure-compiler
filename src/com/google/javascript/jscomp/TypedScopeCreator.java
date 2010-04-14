@@ -824,10 +824,8 @@ final class TypedScopeCreator implements ScopeCreator {
               FunctionType functionType = objectType.getConstructor();
 
               if (functionType != null) {
-                FunctionType getterType = new FunctionType(
-                    typeRegistry, null, null,
-                    new FunctionParamBuilder(typeRegistry).build(),
-                    objectType, null);
+                FunctionType getterType =
+                    typeRegistry.createFunctionType(objectType);
                 codingConvention.applySingletonGetter(functionType, getterType,
                                                       objectType);
               }
@@ -859,10 +857,10 @@ final class TypedScopeCreator implements ScopeCreator {
                     new FunctionParamBuilder(typeRegistry);
                 functionParamBuilder.addRequiredParams(
                     typeRegistry.getNativeType(U2U_CONSTRUCTOR_TYPE));
-                FunctionType findDelegate = new FunctionType(
-                    typeRegistry, null, null, functionParamBuilder.build(),
+                FunctionType findDelegate = typeRegistry.createFunctionType(
                     typeRegistry.createDefaultObjectUnion(
-                        delegateBaseObject), null);
+                        delegateBaseObject),
+                    functionParamBuilder.build());
 
                 FunctionType delegateProxy =
                     typeRegistry.createConstructorType(

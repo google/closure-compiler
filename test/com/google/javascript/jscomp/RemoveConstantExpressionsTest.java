@@ -29,6 +29,11 @@ public class RemoveConstantExpressionsTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(true);
+  }
+
+  @Override
   protected int getNumRepetitions() {
     // Pass reaches steady state after just 1 iteration
     return 1;

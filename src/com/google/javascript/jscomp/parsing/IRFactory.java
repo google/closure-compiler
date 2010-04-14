@@ -67,7 +67,6 @@ import com.google.javascript.jscomp.mozilla.rhino.ast.WhileLoop;
 import com.google.javascript.jscomp.mozilla.rhino.ast.WithStatement;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ScriptOrFnNode;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
@@ -345,7 +344,7 @@ public class IRFactory {
 
     @Override
     Node processAstRoot(AstRoot rootNode) {
-      Node node = new ScriptOrFnNode(Token.SCRIPT);
+      Node node = new Node(Token.SCRIPT);
       for (com.google.javascript.jscomp.mozilla.rhino.Node child : rootNode) {
         node.addChildToBack(transform((AstNode)child));
       }
@@ -518,8 +517,7 @@ public class IRFactory {
         name.setIdentifier("");
         isUnnamedFunction = true;
       }
-      Node node = new com.google.javascript.rhino.FunctionNode(
-          name.getIdentifier());
+      Node node = new Node(Token.FUNCTION);
       node.putProp(Node.SOURCENAME_PROP, functionNode.getSourceName());
       Node newName = transform(name);
       if (isUnnamedFunction) {

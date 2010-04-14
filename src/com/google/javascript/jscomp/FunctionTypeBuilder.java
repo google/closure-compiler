@@ -477,7 +477,8 @@ final class FunctionTypeBuilder {
       }
       maybeSetBaseType(fnType);
     } else {
-      fnType = new FunctionType(typeRegistry, fnName, sourceNode,
+      fnType = typeRegistry.createMethodTypeWithTypeTemplate(
+          fnName, sourceNode,
           parametersNode, returnType, thisType, templateTypeName);
       maybeSetBaseType(fnType);
     }

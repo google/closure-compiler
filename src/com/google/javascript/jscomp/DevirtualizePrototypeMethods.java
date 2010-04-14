@@ -278,7 +278,9 @@ class DevirtualizePrototypeMethods implements CompilerPass {
       Node objectNode = node.getFirstChild();
       node.removeChild(objectNode);
       parent.replaceChild(node, objectNode);
-      parent.addChildToFront(Node.newString(Token.NAME, newMethodName));
+      parent.addChildToFront(
+          Node.newString(Token.NAME, newMethodName)
+              .copyInformationFrom(node));
       compiler.reportCodeChange();
     }
   }
@@ -299,7 +301,8 @@ class DevirtualizePrototypeMethods implements CompilerPass {
     Node expr = parent.getParent();
     Node block = expr.getParent();
 
-    Node newNameNode = Node.newString(Token.NAME, newMethodName);
+    Node newNameNode = Node.newString(Token.NAME, newMethodName)
+        .copyInformationFrom(parent.getFirstChild());
     parent.removeChild(functionNode);
     newNameNode.addChildToFront(functionNode);
     block.replaceChild(expr, new Node(Token.VAR, newNameNode));
@@ -307,7 +310,8 @@ class DevirtualizePrototypeMethods implements CompilerPass {
     // add extra argument
     String self = newMethodName + "$self";
     Node argList = functionNode.getFirstChild().getNext();
-    argList.addChildToFront(Node.newString(Token.NAME, self));
+    argList.addChildToFront(Node.newString(Token.NAME, self)
+        .copyInformationFrom(functionNode));
 
     // rewrite body
     Node body = functionNode.getLastChild();

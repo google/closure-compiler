@@ -42,6 +42,11 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         compiler, collapsePropertiesOnExternTypes, true);
   }
 
+  @Override
+  public void setUp() {
+    super.enableLineNumberCheck(true);
+  }
+
   /** {@inheritDoc} */
   @Override public int getNumRepetitions() {
     return 1;

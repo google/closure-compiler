@@ -871,12 +871,8 @@ class TypeInference
                     // The new type will be picked up when we traverse the inner
                     // function.
                     jArgument.setJSType(
-                        new FunctionType(
-                            registry, jArgumentFnType.getReferenceName(),
-                            jArgumentFnType.getSource(),
-                            jArgumentFnType.getParametersNode(),
-                            jArgumentFnType.getReturnType(),
-                            (ObjectType) iArgumentType));
+                        registry.createFunctionTypeWithNewThisType(
+                            jArgumentFnType, (ObjectType) iArgumentType));
                   }
                 }
                 // TODO(user): Add code to TypeCheck to check that the

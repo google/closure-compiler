@@ -133,8 +133,7 @@ public class FunctionType extends PrototypeObjectType {
    * @param returnType the function's return type or {@code null} to indicate
    *        that the return type is unknown.
    */
-  @VisibleForTesting
-  public FunctionType(JSTypeRegistry registry, String name, Node source,
+  FunctionType(JSTypeRegistry registry, String name, Node source,
       Node parameters, JSType returnType) {
     this(registry, name, source, parameters, returnType, null, null, false,
          false);
@@ -154,7 +153,7 @@ public class FunctionType extends PrototypeObjectType {
    * @param typeOfThis The type of {@code this} in non-constructors.  May be
    *        {@code null} to indicate that the type of {@code this} is unknown.
    */
-  public FunctionType(JSTypeRegistry registry, String name, Node source,
+  FunctionType(JSTypeRegistry registry, String name, Node source,
       Node parameters, JSType returnType, ObjectType typeOfThis) {
     this(registry, name, source, parameters, returnType, typeOfThis,
         null, false, false);
@@ -175,7 +174,7 @@ public class FunctionType extends PrototypeObjectType {
    *        {@code null} to indicate that the type of {@code this} is unknown.
    * @param templateTypeName The template type name or {@code null}.
    */
-  public FunctionType(JSTypeRegistry registry, String name, Node source,
+  FunctionType(JSTypeRegistry registry, String name, Node source,
       Node parameters, JSType returnType, ObjectType typeOfThis,
       String templateTypeName) {
     this(registry, name, source, parameters, returnType, typeOfThis,

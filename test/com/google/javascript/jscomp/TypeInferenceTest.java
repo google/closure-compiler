@@ -321,8 +321,7 @@ public class TypeInferenceTest extends TestCase {
   public void testCall1() {
     assuming("x",
         createNullableType(
-            new FunctionType(registry, "x", null, null,
-                registry.getNativeType(NUMBER_TYPE), null)));
+            registry.createFunctionType(registry.getNativeType(NUMBER_TYPE))));
     inFunction("var y = x();");
     verify("y", NUMBER_TYPE);
   }

@@ -21,7 +21,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.javascript.rhino.FunctionNode;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -324,8 +323,8 @@ public final class NodeUtil {
    * @return Newly created EXPR node with the child as subexpression.
    */
   public static Node newExpr(Node child) {
-    Node expr = new Node(Token.EXPR_RESULT, child);
-    expr.copyInformationFrom(child);
+    Node expr = new Node(Token.EXPR_RESULT, child)
+        .copyInformationFrom(child);
     return expr;
   }
 
@@ -1460,7 +1459,10 @@ public final class NodeUtil {
     Node parent = getAddingRoot(branch);
     for (Node nameNode : vars) {
       Node var = new Node(
-          Token.VAR, Node.newString(Token.NAME, nameNode.getString()));
+          Token.VAR,
+          Node.newString(Token.NAME, nameNode.getString())
+              .copyInformationFrom(nameNode))
+          .copyInformationFrom(nameNode);
       copyNameAnnotations(nameNode, var.getFirstChild());
       parent.addChildToFront(var);
     }
@@ -1504,13 +1506,13 @@ public final class NodeUtil {
   }
 
   /** Creates function name(params_0, ..., params_n) { body }. */
-  public static FunctionNode newFunctionNode(String name, List<Node> params,
+  public static Node newFunctionNode(String name, List<Node> params,
       Node body, int lineno, int charno) {
     Node parameterParen = new Node(Token.LP, lineno, charno);
     for (Node param : params) {
       parameterParen.addChildToBack(param);
     }
-    FunctionNode function = new FunctionNode(name, lineno, charno);
+    Node function = new Node(Token.FUNCTION, lineno, charno);
     function.addChildrenToBack(
         Node.newString(Token.NAME, name, lineno, charno));
     function.addChildToBack(parameterParen);

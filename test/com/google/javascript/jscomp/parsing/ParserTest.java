@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ScriptOrFnNode;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -550,7 +549,7 @@ public class ParserTest extends BaseJSTypeTestCase {
   }
 
   private Node createScript(Node n) {
-    Node script = new ScriptOrFnNode(Token.SCRIPT);
+    Node script = new Node(Token.SCRIPT);
     script.addChildToBack(n);
     return script;
   }

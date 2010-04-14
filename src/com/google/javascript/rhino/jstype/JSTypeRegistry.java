@@ -1035,11 +1035,92 @@ public class JSTypeRegistry implements Serializable {
     return new FunctionType(
         this,
         existingFunctionType.getReferenceName(),
-        /** source node */ null,
+        existingFunctionType.getSource(),
         existingFunctionType.getParametersNode(),
         returnType,
         existingFunctionType.getTypeOfThis(),
         existingFunctionType.getTemplateTypeName());
+  }
+
+  /**
+   * Creates a new function type based on an existing function type but
+   * with a new {@code this} type.
+   * @param existingFunctionType the existing function type.
+   * @param thisType the new this type.
+   */
+  public FunctionType createFunctionTypeWithNewThisType(
+      FunctionType existingFunctionType, ObjectType thisType) {
+    return new FunctionType(
+        this,
+        existingFunctionType.getReferenceName(),
+        existingFunctionType.getSource(),
+        existingFunctionType.getParametersNode(),
+        existingFunctionType.getReturnType(),
+        thisType,
+        existingFunctionType.getTemplateTypeName());
+  }
+
+  /**
+   * @param parameters the function's parameters or {@code null}
+   *        to indicate that the parameter types are unknown.
+   * @param returnType the function's return type or {@code null} to indicate
+   *        that the return type is unknown.
+   */
+  public FunctionType createFunctionType(
+      JSType returnType, Node parameters) {
+    return new FunctionType(this, null, null, parameters, returnType);
+  }
+
+  /**
+   * @param name the function's name or {@code null} to indicate that the
+   *        function is anonymous.
+   * @param source the node defining this function. Its type
+   *        ({@link Node#getType()}) must be {@link Token#FUNCTION}.
+   * @param parameters the function's parameters or {@code null}
+   *        to indicate that the parameter types are unknown.
+   * @param returnType the function's return type or {@code null} to indicate
+   *        that the return type is unknown.
+   * @param typeOfThis The type of {@code this} in non-constructors.  May be
+   *        {@code null} to indicate that the type of {@code this} is unknown.
+   * @param templateTypeName The template type name or {@code null}.
+   */
+  public FunctionType createMethodTypeWithTypeTemplate(String name, Node source,
+      Node parameters, JSType returnType, ObjectType typeOfThis,
+      String templateTypeName) {
+    return new FunctionType(this, name, source, parameters, returnType,
+        typeOfThis, templateTypeName);
+  }
+
+  /**
+   * @param name the function's name or {@code null} to indicate that the
+   *        function is anonymous.
+   * @param source the node defining this function. Its type
+   *        ({@link Node#getType()}) must be {@link Token#FUNCTION}.
+   * @param parameters the function's parameters or {@code null}
+   *        to indicate that the parameter types are unknown.
+   * @param returnType the function's return type or {@code null} to indicate
+   *        that the return type is unknown.
+   * @param typeOfThis The type of {@code this} in non-constructors.  May be
+   *        {@code null} to indicate that the type of {@code this} is unknown.
+   */
+  public FunctionType createMethodType(String name, Node source,
+      Node parameters, JSType returnType, ObjectType typeOfThis) {
+    return new FunctionType(this, name, source, parameters, returnType,
+        typeOfThis);
+  }
+
+  /**
+   * @param parameters the function's parameters or {@code null}
+   *        to indicate that the parameter types are unknown.
+   * @param returnType the function's return type or {@code null} to indicate
+   *        that the return type is unknown.
+   * @param typeOfThis The type of {@code this} in non-constructors.  May be
+   *        {@code null} to indicate that the type of {@code this} is unknown.
+   */
+  public FunctionType createMethodType(
+      JSType returnType, Node parameters, ObjectType typeOfThis) {
+    return new FunctionType(this, null, null, parameters,
+        returnType, typeOfThis);
   }
 
   /**

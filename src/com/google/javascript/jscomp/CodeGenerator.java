@@ -271,6 +271,9 @@ class CodeGenerator {
         break;
 
       case Token.FUNCTION:
+        if (n.getClass() != Node.class) {
+          throw new Error("Unexpected Node subclass."); 
+        }        
         Preconditions.checkState(childCount == 3);
         boolean funcNeedsParens = (context == Context.START_OF_EXPR);
         if (funcNeedsParens) {
@@ -291,6 +294,9 @@ class CodeGenerator {
 
       case Token.SCRIPT:
       case Token.BLOCK: {
+        if (n.getClass() != Node.class) {
+          throw new Error("Unexpected Node subclass."); 
+        }
         boolean stripBlock = n.isSyntheticBlock() ||
             ((context != Context.PRESERVE_BLOCK) && (n.getChildCount() < 2));
         if (!stripBlock) {

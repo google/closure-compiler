@@ -108,7 +108,7 @@ final class RemoveConstantExpressions implements CompilerPass {
 
       List<Node> replacements = Lists.newArrayList();
       for (Node subexpression : subexpressions) {
-        replacements.add(new Node(Token.EXPR_RESULT, subexpression));
+        replacements.add(NodeUtil.newExpr(subexpression));
       }
       return replacements;
     }

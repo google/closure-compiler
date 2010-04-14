@@ -24,6 +24,11 @@ import com.google.javascript.rhino.Node;
 public class MinimizeExitPointsTest extends CompilerTestCase {
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(true);
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       public void process(Node externs, Node js) {

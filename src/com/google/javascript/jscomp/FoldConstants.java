@@ -584,7 +584,7 @@ class FoldConstants extends AbstractPostOrderCallback
             cond.removeChild(expr);
             ifNode.addChildToBack(expr);
           } else {
-            Node not = new Node(Token.NOT);
+            Node not = new Node(Token.NOT).copyInformationFrom(cond);
             n.removeChild(cond);
             not.addChildToBack(cond);
             ifNode.addChildToBack(not);
@@ -592,7 +592,8 @@ class FoldConstants extends AbstractPostOrderCallback
 
           n.removeChild(elseBody);
           ifNode.addChildToBack(
-              new Node(Token.BLOCK, NodeUtil.newExpr(elseBody)));
+              new Node(Token.BLOCK, NodeUtil.newExpr(elseBody))
+                  .copyInformationFrom(elseBody));
           parent.getParent().replaceChild(parent, ifNode);
           t.getCompiler().reportCodeChange();
           return true;
@@ -604,7 +605,8 @@ class FoldConstants extends AbstractPostOrderCallback
           n.removeChild(thenBody);
 
           ifNode.addChildToBack(
-              new Node(Token.BLOCK, NodeUtil.newExpr(thenBody)));
+              new Node(Token.BLOCK, NodeUtil.newExpr(thenBody))
+                  .copyInformationFrom(thenBody));
           parent.getParent().replaceChild(parent, ifNode);
           t.getCompiler().reportCodeChange();
           return true;
@@ -707,7 +709,7 @@ class FoldConstants extends AbstractPostOrderCallback
           }
 
           Node or = new Node(Token.OR, cond.removeFirstChild(),
-              expr.removeFirstChild());
+          expr.removeFirstChild()).copyInformationFrom(n);
           Node newExpr = NodeUtil.newExpr(or);
           parent.replaceChild(n, newExpr);
           t.getCompiler().reportCodeChange();
@@ -724,7 +726,8 @@ class FoldConstants extends AbstractPostOrderCallback
         }
 
         n.removeChild(cond);
-        Node and = new Node(Token.AND, cond, expr.removeFirstChild());
+        Node and = new Node(Token.AND, cond, expr.removeFirstChild())
+                       .copyInformationFrom(n);
         Node newExpr = NodeUtil.newExpr(and);
         parent.replaceChild(n, newExpr);
         t.getCompiler().reportCodeChange();
@@ -756,7 +759,8 @@ class FoldConstants extends AbstractPostOrderCallback
       // note - we ignore any cases with "return;", technically this
       // can be converted to "return undefined;" or some variant, but
       // that does not help code size.
-      Node hookNode = new Node(Token.HOOK, cond, thenExpr, elseExpr);
+      Node hookNode = new Node(Token.HOOK, cond, thenExpr, elseExpr)
+                          .copyInformationFrom(n);
       Node returnNode = new Node(Token.RETURN, hookNode);
       parent.replaceChild(n, returnNode);
       t.getCompiler().reportCodeChange();
@@ -786,10 +790,10 @@ class FoldConstants extends AbstractPostOrderCallback
             Node elseExpr = elseOp.getLastChild();
             elseOp.removeChild(elseExpr);
 
-            Node hookNode = new Node(Token.HOOK, cond, thenExpr,
-                elseExpr);
-            Node assign = new Node(thenOp.getType(), assignName,
-                hookNode);
+            Node hookNode = new Node(Token.HOOK, cond, thenExpr, elseExpr)
+                                .copyInformationFrom(n);
+            Node assign = new Node(thenOp.getType(), assignName, hookNode)
+                              .copyInformationFrom(thenOp);
             Node expr = NodeUtil.newExpr(assign);
             parent.replaceChild(n, expr);
             t.getCompiler().reportCodeChange();
@@ -799,7 +803,8 @@ class FoldConstants extends AbstractPostOrderCallback
           n.removeChild(cond);
           thenOp.detachFromParent();
           elseOp.detachFromParent();
-          Node hookNode = new Node(Token.HOOK, cond, thenOp, elseOp);
+          Node hookNode = new Node(Token.HOOK, cond, thenOp, elseOp)
+                              .copyInformationFrom(n);
           Node expr = NodeUtil.newExpr(hookNode);
           parent.replaceChild(n, expr);
           t.getCompiler().reportCodeChange();
@@ -827,7 +832,8 @@ class FoldConstants extends AbstractPostOrderCallback
         Node thenExpr = name1.removeChildren();
         Node elseExpr = elseAssign.getLastChild().detachFromParent();
         cond.detachFromParent();
-        Node hookNode = new Node(Token.HOOK, cond, thenExpr, elseExpr);
+        Node hookNode = new Node(Token.HOOK, cond, thenExpr, elseExpr)
+                            .copyInformationFrom(n);
         var.detachFromParent();
         name1.addChildrenToBack(hookNode);
         parent.replaceChild(n, var);
@@ -850,7 +856,8 @@ class FoldConstants extends AbstractPostOrderCallback
         Node thenExpr = thenAssign.getLastChild().detachFromParent();
         Node elseExpr = name2.removeChildren();
         cond.detachFromParent();
-        Node hookNode = new Node(Token.HOOK, cond, thenExpr, elseExpr);
+        Node hookNode = new Node(Token.HOOK, cond, thenExpr, elseExpr)
+                            .copyInformationFrom(n);
         var.detachFromParent();
         name2.addChildrenToBack(hookNode);
         parent.replaceChild(n, var);
@@ -1510,6 +1517,7 @@ class FoldConstants extends AbstractPostOrderCallback
     List<Node> arrayFoldedChildren = Lists.newLinkedList();
     StringBuilder sb = null;
     int foldedSize = 0;
+    Node prev = null;
     Node elem = arrayNode.getFirstChild();
     // Merges adjacent String nodes.
     while (elem != null) {
@@ -1522,21 +1530,26 @@ class FoldConstants extends AbstractPostOrderCallback
         sb.append(NodeUtil.getStringValue(elem));
       } else {
         if (sb != null) {
+          Preconditions.checkNotNull(prev);
           // + 2 for the quotes.
           foldedSize += sb.length() + 2;
-          arrayFoldedChildren.add(Node.newString(sb.toString()));
+          arrayFoldedChildren.add(
+              Node.newString(sb.toString()).copyInformationFrom(prev));
           sb = null;
         }
         foldedSize += InlineCostEstimator.getCost(elem);
         arrayFoldedChildren.add(elem);
       }
+      prev = elem;
       elem = elem.getNext();
     }
 
     if (sb != null) {
+      Preconditions.checkNotNull(prev);
       // + 2 for the quotes.
       foldedSize += sb.length() + 2;
-      arrayFoldedChildren.add(Node.newString(sb.toString()));
+      arrayFoldedChildren.add(
+          Node.newString(sb.toString()).copyInformationFrom(prev));
     }
     // one for each comma.
     foldedSize += arrayFoldedChildren.size() - 1;
@@ -1558,7 +1571,8 @@ class FoldConstants extends AbstractPostOrderCallback
           // If the Node is not a string literal, ensure that
           // it is coerced to a string.
           Node replacement = new Node(Token.ADD,
-              Node.newString(""), foldedStringNode);
+              Node.newString("").copyInformationFrom(right), 
+              foldedStringNode);
           foldedStringNode = replacement;
         }
         parent.replaceChild(n, foldedStringNode);
@@ -1764,7 +1778,7 @@ class FoldConstants extends AbstractPostOrderCallback
     if (null == sb) { return n.cloneTree(); }
 
     sb.append(s, pos, s.length());
-    return Node.newString(sb.toString());
+    return Node.newString(sb.toString()).copyInformationFrom(n);
   }
 
   /**

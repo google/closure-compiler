@@ -1146,10 +1146,17 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFunctionType(com.google.javascript.rhino.jstype.JSType, boolean, com.google.javascript.rhino.jstype.JSType...)"><B>createFunctionType(JSType, boolean, JSType...)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Creates a function type.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFunctionType(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)"><B>createFunctionType(JSType, Node)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFunctionTypeWithNewReturnType(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.JSType)"><B>createFunctionTypeWithNewReturnType(FunctionType, JSType)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Creates a new function type based on an existing function type but
  with a new return type.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFunctionTypeWithNewThisType(com.google.javascript.rhino.jstype.FunctionType, com.google.javascript.rhino.jstype.ObjectType)"><B>createFunctionTypeWithNewThisType(FunctionType, ObjectType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>Creates a new function type based on an existing function type but
+ with a new <code>this</code> type.
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFunctionTypeWithVarArgs(com.google.javascript.rhino.jstype.JSType, java.util.List)"><B>createFunctionTypeWithVarArgs(JSType, List&lt;JSType&gt;)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Creates a function type.
@@ -1165,6 +1172,15 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/jscomp/PassFactory.html#createInternal(com.google.javascript.jscomp.AbstractCompiler)"><B>createInternal(AbstractCompiler)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/PassFactory.html" title="class in com.google.javascript.jscomp">PassFactory</A>
 <DD>Creates a new compiler pass to be run.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createMethodType(java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType)"><B>createMethodType(String, Node, Node, JSType, ObjectType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createMethodType(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.ObjectType)"><B>createMethodType(JSType, Node, ObjectType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createMethodTypeWithTypeTemplate(java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType, java.lang.String)"><B>createMethodTypeWithTypeTemplate(String, Node, Node, JSType, ObjectType, String)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#createNode(N)"><B>createNode(N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>
 <DD>Gets a node from the graph given a value.
@@ -2011,16 +2027,7 @@ Constructor for class com.google.javascript.rhino.<A HREF="./com/google/javascri
 Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionParamBuilder.html" title="class in com.google.javascript.rhino.jstype">FunctionParamBuilder</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/FunctionPrototypeType.html" title="class in com.google.javascript.rhino.jstype"><B>FunctionPrototypeType</B></A> - Class in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>Represents the prototype of a <A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype"><CODE>FunctionType</CODE></A>.<DT><A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype"><B>FunctionType</B></A> - Class in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>This derived type provides extended information about a function, including
- its return type and argument types.<DT><A HREF="./com/google/javascript/rhino/jstype/FunctionType.html#FunctionType(com.google.javascript.rhino.jstype.JSTypeRegistry, java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType)"><B>FunctionType(JSTypeRegistry, String, Node, Node, JSType)</B></A> - 
-Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>
-<DD>Creates a function type.
-<DT><A HREF="./com/google/javascript/rhino/jstype/FunctionType.html#FunctionType(com.google.javascript.rhino.jstype.JSTypeRegistry, java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType)"><B>FunctionType(JSTypeRegistry, String, Node, Node, JSType, ObjectType)</B></A> - 
-Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>
-<DD>Creates a function type.
-<DT><A HREF="./com/google/javascript/rhino/jstype/FunctionType.html#FunctionType(com.google.javascript.rhino.jstype.JSTypeRegistry, java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType, java.lang.String)"><B>FunctionType(JSTypeRegistry, String, Node, Node, JSType, ObjectType, String)</B></A> - 
-Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>
-<DD>Creates a function type.
-</DL>
+ its return type and argument types.</DL>
 <HR>
 <A NAME="_G_"><!-- --></A><H2>
 <B>G</B></H2>
@@ -4803,8 +4810,8 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/Node.html#isQualifiedName()"><B>isQualifiedName()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
-<DD>Returns whether a node corresponds to a simple or a qualified name, such
- as <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
+<DD>Returns whether a node corresponds to a simple or a qualified name, such as
+ <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
 <DT><A HREF="./com/google/javascript/rhino/Node.html#isQuotedString()"><B>isQuotedString()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>This should only be called for STRING nodes created in object lits.
@@ -4935,9 +4942,9 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/Node.html#isUnscopedQualifiedName()"><B>isUnscopedQualifiedName()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
-<DD>Returns whether a node corresponds to a simple or a qualified name
- without a "this" reference, such as <code>a.b.c</code>, but not
- <code>this.a</code>.
+<DD>Returns whether a node corresponds to a simple or a qualified name without
+ a "this" reference, such as <code>a.b.c</code>, but not <code>this.a</code>
+ .
 <DT><A HREF="./com/google/javascript/rhino/CompilerEnvirons.html#isUseDynamicScope()"><B>isUseDynamicScope()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/CompilerEnvirons.html" title="class in com.google.javascript.rhino">CompilerEnvirons</A>
 <DD>&nbsp;

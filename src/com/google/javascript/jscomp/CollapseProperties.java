@@ -528,7 +528,8 @@ class CollapseProperties implements CompilerPass {
 
       // Create a stub variable declaration right
       // before the current statement.
-      Node stubVar = new Node(Token.VAR, nameNode.cloneTree());
+      Node stubVar = new Node(Token.VAR, nameNode.cloneTree())
+          .copyInformationFrom(nameNode);
       currentParent.addChildBefore(stubVar, current);
 
       parent.replaceChild(ref.node, nameNode);
@@ -763,7 +764,8 @@ class CollapseProperties implements CompilerPass {
       if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      Node newVar = new Node(Token.VAR, nameNode);
+      Node newVar = new Node(Token.VAR, nameNode)
+          .copyInformationFromForTree(key);
       if (nameToAddAfter != null) {
         varParent.addChildAfter(newVar, nameToAddAfter);
       } else {
@@ -814,19 +816,17 @@ class CollapseProperties implements CompilerPass {
   private int addStubsForUndeclaredProperties(
       Name n, String alias, Node parent, Node addAfter) {
     Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
+    Preconditions.checkNotNull(addAfter);
     int numStubs = 0;
     if (n.props != null) {
       for (Name p : n.props) {
         if (p.needsToBeStubbed()) {
           String propAlias = appendPropForAlias(alias, p.name);
           Node nameNode = Node.newString(Token.NAME, propAlias);
-          Node newVar = new Node(Token.VAR, nameNode);
-          if (addAfter == null) {
-            parent.addChildToFront(newVar);
-          } else {
-            parent.addChildAfter(newVar, addAfter);
-            addAfter = newVar;
-          }
+          Node newVar = new Node(Token.VAR, nameNode)
+              .copyInformationFromForTree(addAfter);
+          parent.addChildAfter(newVar, addAfter);
+          addAfter = newVar;
           numStubs++;
           compiler.reportCodeChange();
 

@@ -200,14 +200,12 @@ class MinimizeExitPoints
         break;
       }
     }
-
-    return;
   }
 
   /**
    * Look for exits (returns, breaks, or continues, depending on the context) at
-   * the end of a block removes them by moving the if node's siblings, if any,
-   * into the opposite condition block.
+   * the end of a block and removes them by moving the if node's siblings, 
+   * if any, into the opposite condition block.
    *
    * @param srcBlock The block to inspect.
    * @param destBlock The block to move sibling nodes into.
@@ -244,7 +242,7 @@ class MinimizeExitPoints
     if (ifNode.getNext() != null) {
       // Move siblings of the if block into the opposite
       // logic block of the exit.
-      Node newDestBlock = new Node(Token.BLOCK);
+      Node newDestBlock = new Node(Token.BLOCK).copyInformationFrom(ifNode);
       if (destBlock == null) {
         // Only possible if this is the false block.
         ifNode.addChildToBack(newDestBlock);

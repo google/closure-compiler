@@ -381,7 +381,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
       JSTypeRegistry registry, ObjectType receivingType, String methodName,
       JSType returnType) {
     receivingType.defineDeclaredProperty(methodName,
-        new FunctionType(registry, null, null, null, returnType), true);
+        registry.createMethodType(returnType, null, null), true);
   }
 
   protected JSType createUnionType(JSType... variants) {

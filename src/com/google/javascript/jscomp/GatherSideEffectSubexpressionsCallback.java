@@ -145,7 +145,8 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
         int type = thenHasSideEffects ? Token.AND : Token.OR;
         Node body = thenHasSideEffects ? thenBranch : elseBranch;
         Node simplified = new Node(
-            type, condition.cloneTree(), simplifyShortCircuitBranch(body));
+            type, condition.cloneTree(), simplifyShortCircuitBranch(body))
+            .copyInformationFrom(hook);
         replacements.add(simplified);
       } else {
         throw new IllegalArgumentException(
@@ -164,7 +165,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
       Node ret = null;
       for (Node part : parts) {
         if (ret != null) {
-          ret = new Node(Token.COMMA, ret, part);
+          ret = new Node(Token.COMMA, ret, part).copyInformationFrom(node);
         } else {
           ret = part;
         }

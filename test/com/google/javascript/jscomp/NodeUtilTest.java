@@ -18,9 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.javascript.rhino.FunctionNode;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ScriptOrFnNode;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
@@ -381,9 +379,9 @@ public class NodeUtilTest extends TestCase {
     List<Node> params = Lists.newArrayList(Node.newString(Token.NAME, "p1"),
                                            Node.newString(Token.NAME, "p2"),
                                            Node.newString(Token.NAME, "p3"));
-    FunctionNode function = NodeUtil.newFunctionNode(
+    Node function = NodeUtil.newFunctionNode(
         "foo", params, body, -1, -1);
-    ScriptOrFnNode actual = new ScriptOrFnNode(Token.SCRIPT);
+    Node actual = new Node(Token.SCRIPT);
     actual.addChildToFront(function);
     String difference = expected.checkTreeEquals(actual);
     if (difference != null) {

@@ -30,6 +30,11 @@ public class FoldConstantsTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(true);
+  }
+
+  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       public void process(Node externs, Node js) {

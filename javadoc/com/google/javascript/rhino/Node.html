@@ -1265,8 +1265,8 @@ This class implements the root of the intermediate representation.
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isQualifiedName()">isQualifiedName</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether a node corresponds to a simple or a qualified name, such
- as <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether a node corresponds to a simple or a qualified name, such as
+ <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1291,9 +1291,9 @@ This class implements the root of the intermediate representation.
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#isUnscopedQualifiedName()">isUnscopedQualifiedName</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether a node corresponds to a simple or a qualified name
- without a "this" reference, such as <code>a.b.c</code>, but not
- <code>this.a</code>.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns whether a node corresponds to a simple or a qualified name without
+ a "this" reference, such as <code>a.b.c</code>, but not <code>this.a</code>
+ .</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -3469,7 +3469,7 @@ getQualifiedName</H3>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getQualifiedName</B>()</PRE>
 <DL>
 <DD>This function takes a set of GETPROP nodes and produces a string that is
- each property separated by dots.  If the node ultimately under the left
+ each property separated by dots. If the node ultimately under the left
  sub-tree is not a simple name, this is not a valid qualified name.
 <P>
 <DD><DL>
@@ -3478,7 +3478,7 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 <DD><DL>
 
 <DT><B>Returns:</B><DD>a null if this is not a qualified name, or a dot-separated string
- of the name and properties.</DL>
+         of the name and properties.</DL>
 </DD>
 </DL>
 <HR>
@@ -3488,8 +3488,8 @@ isQualifiedName</H3>
 <PRE>
 public boolean <B>isQualifiedName</B>()</PRE>
 <DL>
-<DD>Returns whether a node corresponds to a simple or a qualified name, such
- as <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
+<DD>Returns whether a node corresponds to a simple or a qualified name, such as
+ <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
 <P>
 <DD><DL>
 </DL>
@@ -3505,9 +3505,9 @@ isUnscopedQualifiedName</H3>
 <PRE>
 public boolean <B>isUnscopedQualifiedName</B>()</PRE>
 <DL>
-<DD>Returns whether a node corresponds to a simple or a qualified name
- without a "this" reference, such as <code>a.b.c</code>, but not
- <code>this.a</code>.
+<DD>Returns whether a node corresponds to a simple or a qualified name without
+ a "this" reference, such as <code>a.b.c</code>, but not <code>this.a</code>
+ .
 <P>
 <DD><DL>
 </DL>
@@ -3523,8 +3523,8 @@ detachFromParent</H3>
 <PRE>
 public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>detachFromParent</B>()</PRE>
 <DL>
-<DD>Removes this node from its parent.  Equivalent to:
-     node.getParent().removeChild();
+<DD>Removes this node from its parent. Equivalent to:
+ node.getParent().removeChild();
 <P>
 <DD><DL>
 </DL>
@@ -3540,8 +3540,8 @@ removeFirstChild</H3>
 <PRE>
 public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>removeFirstChild</B>()</PRE>
 <DL>
-<DD>Removes the first child of Node.  Equivalent to:
-     node.removeChild(node.getFirstChild());
+<DD>Removes the first child of Node. Equivalent to:
+ node.removeChild(node.getFirstChild());
 <P>
 <DD><DL>
 </DL>
@@ -3609,8 +3609,7 @@ public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class 
 </DD>
 <DD><DL>
 
-<DT><B>Returns:</B><DD>A detached clone of the Node, specifically excluding its
- children.</DL>
+<DT><B>Returns:</B><DD>A detached clone of the Node, specifically excluding its children.</DL>
 </DD>
 </DL>
 <HR>
