@@ -233,7 +233,19 @@ public class CommandLineRunnerTest extends TestCase {
   public void testHelpFlag() {
     args.add("--help");
     testSame("function f() {}");
-  }  
+  }
+
+  public void testExternsLifting1() {
+    test(new String[] {"/** @externs */ function f() {}"},
+         new String[] {});
+  }
+
+  public void testExternsLifting2() {
+    args.add("--warning_level=VERBOSE");
+    test(new String[] {"/** @externs */ function f() {}", "f(3);"},
+         new String[] {"f(3);"},
+         TypeCheck.WRONG_ARGUMENT_COUNT);
+  }
 
   /* Helper functions */
 
@@ -254,11 +266,28 @@ public class CommandLineRunnerTest extends TestCase {
    * {@code original} is transformed into {@code compiled}.
    */
   private void test(String[] original, String[] compiled) {
+    test(original, compiled, null);
+  }
+
+  /**
+   * Asserts that when compiling with the given compiler options,
+   * {@code original} is transformed into {@code compiled}.
+   * If {@code warning} is non-null, we will also check if the given
+   * warning type was emitted.
+   */
+  private void test(String[] original, String[] compiled,
+                    DiagnosticType warning) {
     Compiler compiler = compile(original);
-    assertEquals("Expected no warnings or errors\n" +
-        "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
-        "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
-        0, compiler.getErrors().length + compiler.getWarnings().length);
+
+    if (warning == null) {
+      assertEquals("Expected no warnings or errors\n" +
+          "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
+          "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
+          0, compiler.getErrors().length + compiler.getWarnings().length);
+    } else {
+      assertEquals(1, compiler.getWarnings().length);
+      assertEquals(warning, compiler.getWarnings()[0].getType());
+    }
 
     Node root = compiler.getRoot().getLastChild();
     if (useStringComparison) {
@@ -289,8 +318,10 @@ public class CommandLineRunnerTest extends TestCase {
         "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         1, compiler.getErrors().length + compiler.getWarnings().length);
     if (compiler.getErrors().length > 0) {
+      assertEquals(1, compiler.getErrors().length);
       assertEquals(warning, compiler.getErrors()[0].getType());
     } else {
+      assertEquals(1, compiler.getWarnings().length);
       assertEquals(warning, compiler.getWarnings()[0].getType());
     }
   }

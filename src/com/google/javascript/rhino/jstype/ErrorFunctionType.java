@@ -50,16 +50,28 @@ class ErrorFunctionType extends FunctionType {
   private static final long serialVersionUID = 1L;
 
   ErrorFunctionType(JSTypeRegistry registry, String name) {
-    super(registry, name, null,
-          registry.createOptionalParameters(
-              registry.getNativeType(ALL_TYPE),
-              registry.getNativeType(ALL_TYPE),
-              registry.getNativeType(ALL_TYPE)),
-          null, null, null, true, true);
-  }
+    super(
+        registry, name, null,
+        registry.createArrowType(
+            registry.createOptionalParameters(
+                registry.getNativeType(ALL_TYPE),
+                registry.getNativeType(ALL_TYPE),
+                registry.getNativeType(ALL_TYPE)),
+            null),
+        null, null, true, true);
 
-  @Override
-  public JSType getReturnType() {
-    return getInstanceType();
+    // NOTE(nicksantos): Errors have the weird behavior in that they can
+    // be called as functions, and they will return instances of themselves.
+    // Error('x') instanceof Error => true
+    //
+    // In user-defined types, we would deal with this case by creating
+    // a NamedType with the name "Error" and then resolve it later.
+    //
+    // For native types, we don't really want the native types to
+    // depend on type-resolution. So we just set the return type manually
+    // at the end of construction.
+    //
+    // There's similar logic in JSTypeRegistry for Array and RegExp.
+    getInternalArrowType().returnType = getInstanceType();
   }
 }

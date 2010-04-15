@@ -36,6 +36,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1057,7 +1058,10 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
-      for (CompilerInput input : inputs) {
+      List<CompilerInput> annotatedExterns = Lists.newArrayList();
+      Iterator<CompilerInput> inputIterator = inputs.iterator();
+      while (inputIterator.hasNext()) {
+        CompilerInput input = inputIterator.next();
         Node n = input.getAstRoot(this);
         if (hasErrors()) {
           return null;
@@ -1065,6 +1069,17 @@ public class Compiler extends AbstractCompiler {
 
         // Inputs can have a null AST during initial parse.
         if (n == null) {
+          continue;
+        }
+
+        if (n.getJSDocInfo() != null && n.getJSDocInfo().isExterns()) {
+          // If the input file is explicitly marked as an externs file, then
+          // assume the programmer made a mistake and throw it into
+          // the externs pile anyways.
+          externsRoot.addChildToBack(n);
+          input.setIsExtern(true);
+          inputIterator.remove();
+          externs.add(input);
           continue;
         }
 

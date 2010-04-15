@@ -41,6 +41,7 @@ package com.google.javascript.rhino.testing;
 
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -49,7 +50,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 
 import junit.framework.TestCase;
-
 
 public abstract class BaseJSTypeTestCase extends TestCase {
   protected JSTypeRegistry registry;
@@ -381,7 +381,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
       JSTypeRegistry registry, ObjectType receivingType, String methodName,
       JSType returnType) {
     receivingType.defineDeclaredProperty(methodName,
-        registry.createMethodType(returnType, null, null), true);
+        new FunctionBuilder(registry).withReturnType(returnType).build(), true);
   }
 
   protected JSType createUnionType(JSType... variants) {

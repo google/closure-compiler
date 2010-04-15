@@ -341,41 +341,6 @@ The type registry is used to resolve named types.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createMethodType(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.ObjectType)">createMethodType</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;returnType,
-                 <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameters,
-                 <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;typeOfThis)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createMethodType(java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType)">createMethodType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                 <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;source,
-                 <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameters,
-                 <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;returnType,
-                 <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;typeOfThis)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createMethodTypeWithTypeTemplate(java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType, java.lang.String)">createMethodTypeWithTypeTemplate</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                                 <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;source,
-                                 <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameters,
-                                 <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;returnType,
-                                 <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;typeOfThis,
-                                 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;templateTypeName)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createNullableType(com.google.javascript.rhino.jstype.JSType)">createNullableType</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type)</CODE>
 
@@ -1467,72 +1432,6 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.h
 <DT><B>Parameters:</B><DD><CODE>parameters</CODE> - the function's parameters or <code>null</code>
         to indicate that the parameter types are unknown.<DD><CODE>returnType</CODE> - the function's return type or <code>null</code> to indicate
         that the return type is unknown.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="createMethodTypeWithTypeTemplate(java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType, java.lang.String)"><!-- --></A><H3>
-createMethodTypeWithTypeTemplate</H3>
-<PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>createMethodTypeWithTypeTemplate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                                                     <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;source,
-                                                     <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameters,
-                                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;returnType,
-                                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;typeOfThis,
-                                                     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;templateTypeName)</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>name</CODE> - the function's name or <code>null</code> to indicate that the
-        function is anonymous.<DD><CODE>source</CODE> - the node defining this function. Its type
-        (<A HREF="../../../../../com/google/javascript/rhino/Node.html#getType()"><CODE>Node.getType()</CODE></A>) must be <A HREF="../../../../../com/google/javascript/rhino/Token.html#FUNCTION"><CODE>Token.FUNCTION</CODE></A>.<DD><CODE>parameters</CODE> - the function's parameters or <code>null</code>
-        to indicate that the parameter types are unknown.<DD><CODE>returnType</CODE> - the function's return type or <code>null</code> to indicate
-        that the return type is unknown.<DD><CODE>typeOfThis</CODE> - The type of <code>this</code> in non-constructors.  May be
-        <code>null</code> to indicate that the type of <code>this</code> is unknown.<DD><CODE>templateTypeName</CODE> - The template type name or <code>null</code>.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="createMethodType(java.lang.String, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.ObjectType)"><!-- --></A><H3>
-createMethodType</H3>
-<PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>createMethodType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name,
-                                     <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;source,
-                                     <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameters,
-                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;returnType,
-                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;typeOfThis)</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>name</CODE> - the function's name or <code>null</code> to indicate that the
-        function is anonymous.<DD><CODE>source</CODE> - the node defining this function. Its type
-        (<A HREF="../../../../../com/google/javascript/rhino/Node.html#getType()"><CODE>Node.getType()</CODE></A>) must be <A HREF="../../../../../com/google/javascript/rhino/Token.html#FUNCTION"><CODE>Token.FUNCTION</CODE></A>.<DD><CODE>parameters</CODE> - the function's parameters or <code>null</code>
-        to indicate that the parameter types are unknown.<DD><CODE>returnType</CODE> - the function's return type or <code>null</code> to indicate
-        that the return type is unknown.<DD><CODE>typeOfThis</CODE> - The type of <code>this</code> in non-constructors.  May be
-        <code>null</code> to indicate that the type of <code>this</code> is unknown.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="createMethodType(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node, com.google.javascript.rhino.jstype.ObjectType)"><!-- --></A><H3>
-createMethodType</H3>
-<PRE>
-public <A HREF="../../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A> <B>createMethodType</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;returnType,
-                                     <A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameters,
-                                     <A HREF="../../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&nbsp;typeOfThis)</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>parameters</CODE> - the function's parameters or <code>null</code>
-        to indicate that the parameter types are unknown.<DD><CODE>returnType</CODE> - the function's return type or <code>null</code> to indicate
-        that the return type is unknown.<DD><CODE>typeOfThis</CODE> - The type of <code>this</code> in non-constructors.  May be
-        <code>null</code> to indicate that the type of <code>this</code> is unknown.</DL>
 </DD>
 </DL>
 <HR>

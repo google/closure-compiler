@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
@@ -114,24 +115,17 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
               moduleVarParentMap.put(deepestDependency, destParent);
             }
 
-            // Nodes which are 1 of many children of a VAR need to be moved
-            // carefully. We must dissect them out of the VAR, and create a new
-            // VAR to hold them.
+            // VAR Nodes are normalized to have only one child.
             Node declParent = decl.node.getParent();
-            if (declParent.getType() == Token.VAR &&
-                declParent.getChildCount() > 1) {
-              declParent.removeChild(decl.node);
+            Preconditions.checkState(
+                declParent.getType() != Token.VAR || declParent.hasOneChild(),
+                "AST not normalized.");
 
-              // Make a new node
-              Node var = new Node(Token.VAR, decl.node);
-              destParent.addChildToFront(var);
-            } else {
-              // Remove it
-              declParent.detachFromParent();
+            // Remove it
+            declParent.detachFromParent();
 
-              // Add it to the new spot
-              destParent.addChildToFront(declParent);
-            }
+            // Add it to the new spot
+            destParent.addChildToFront(declParent);
 
             compiler.reportCodeChange();
           }
@@ -249,13 +243,13 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
     boolean recursive = false;
     Node rootNode = t.getScope().getRootNode();
     if (rootNode.getType() == Token.FUNCTION) {
-      
+
       // CASE #1:
       String scopeFuncName = rootNode.getFirstChild().getString();
       if (scopeFuncName.equals(name)) {
         recursive = true;
       }
-      
+
       // CASE #2:
 
 

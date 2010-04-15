@@ -18,31 +18,36 @@ package com.google.javascript.jscomp;
 
 /**
  * Tests for {@link ExtractPrototypeMemberDeclarations}.
- * 
+ *
 *
  */
 public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
   private static final String TMP = "a";
-  
+
+  @Override
+  protected void setUp() {
+    super.enableLineNumberCheck(true);
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new ExtractPrototypeMemberDeclarations(compiler);
   }
-  
+
   public void testNotEnoughPrototypeToExtract() {
     // switch statement with stuff after "return"
     for (int i = 0; i < 7; i++) {
       testSame(generatePrototypeDeclarations("x", i));
     }
   }
-  
-  public void testExtractingSingleClassPrototype() { 
-    extract(generatePrototypeDeclarations("x", 7), 
+
+  public void testExtractingSingleClassPrototype() {
+    extract(generatePrototypeDeclarations("x", 7),
         loadPrototype("x") +
         generateExtractedDeclarations(7));
   }
 
-  public void testExtractingTwoClassPrototype() { 
+  public void testExtractingTwoClassPrototype() {
     extract(
         generatePrototypeDeclarations("x", 6) +
         generatePrototypeDeclarations("y", 6),
@@ -52,7 +57,7 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         generateExtractedDeclarations(6));
   }
 
-  public void testExtractingTwoClassPrototypeInDifferentBlocks() { 
+  public void testExtractingTwoClassPrototypeInDifferentBlocks() {
     extract(
         generatePrototypeDeclarations("x", 6) +
         "if (foo()) {" +
@@ -64,18 +69,18 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         loadPrototype("y") +
         generateExtractedDeclarations(6) +
         "}");
-  }  
-  
-  public void testNoMemberDeclarations() { 
+  }
+
+  public void testNoMemberDeclarations() {
     testSame(
         "x.prototype = {}; x.prototype = {}; x.prototype = {};" +
         "x.prototype = {}; x.prototype = {}; x.prototype = {};" +
         "x.prototype = {}; x.prototype = {}; x.prototype = {};");
   }
-  
-  public void testExtractingPrototypeWithQName() { 
+
+  public void testExtractingPrototypeWithQName() {
     extract(
-        generatePrototypeDeclarations("com.google.javascript.jscomp.x", 7), 
+        generatePrototypeDeclarations("com.google.javascript.jscomp.x", 7),
         loadPrototype("com.google.javascript.jscomp.x") +
         generateExtractedDeclarations(7));
   }
@@ -108,7 +113,7 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         TMP + ".y.f = 1;" +
         TMP + ".y.g = 1;");
   }
-  
+
   public void testUsedNameInScope() {
     test(
         "var a = 0;" +
@@ -134,11 +139,11 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
   public String loadPrototype(String qName) {
     return TMP + " = " + qName + ".prototype;";
   }
-  
+
   public void extract(String src, String expected) {
     test(src, "var " + TMP + ";" + expected);
   }
-  
+
   public String generatePrototypeDeclarations(String className, int num) {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < num; i++) {
@@ -148,12 +153,12 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
     }
     return builder.toString();
   }
-  
-  public String generatePrototypeDeclaration(String className, String member, 
+
+  public String generatePrototypeDeclaration(String className, String member,
       String value) {
     return className + ".prototype." + member + " = " + value + ";";
   }
-  
+
   public String generateExtractedDeclarations(int num) {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < num; i++) {
@@ -162,7 +167,7 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
     }
     return builder.toString();
   }
-  
+
   public String generateExtractedDeclaration(String member, String value) {
     return TMP + "." + member + " = " + value + ";";
   }

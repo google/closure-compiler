@@ -28,6 +28,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.InstanceObjectType;
@@ -477,9 +478,14 @@ final class FunctionTypeBuilder {
       }
       maybeSetBaseType(fnType);
     } else {
-      fnType = typeRegistry.createMethodTypeWithTypeTemplate(
-          fnName, sourceNode,
-          parametersNode, returnType, thisType, templateTypeName);
+      fnType = new FunctionBuilder(typeRegistry)
+          .withName(fnName)
+          .withSourceNode(sourceNode)
+          .withParamsNode(parametersNode)
+          .withReturnType(returnType)
+          .withTypeOfThis(thisType)
+          .withTemplateName(templateTypeName)
+          .build();
       maybeSetBaseType(fnType);
     }
 

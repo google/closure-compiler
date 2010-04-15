@@ -99,7 +99,7 @@ class CrossModuleMethodMotion implements CompilerPass {
         // deepestCommonModuleRef is null.
         continue;
       }
-      
+
       if (nameInfo.readsClosureVariables()) {
         continue;
       }
@@ -144,8 +144,9 @@ class CrossModuleMethodMotion implements CompilerPass {
           valueParent.replaceChild(value,
               // A.prototype.b = JSCompiler_stubMethod(id);
               new Node(Token.CALL,
-                  Node.newString(Token.NAME, STUB_METHOD_NAME),
-                  Node.newNumber(stubId)));
+                      Node.newString(Token.NAME, STUB_METHOD_NAME),
+                      Node.newNumber(stubId))
+                  .copyInformationFromForTree(value));
 
           // unstub the function body in the deeper module
           Node unstubParent = compiler.getNodeForCodeInsertion(
@@ -160,7 +161,8 @@ class CrossModuleMethodMotion implements CompilerPass {
                       new Node(Token.CALL,
                           Node.newString(Token.NAME, UNSTUB_METHOD_NAME),
                           Node.newNumber(stubId),
-                          value))));
+                          value)))
+                  .copyInformationFromForTree(value));
 
           compiler.reportCodeChange();
           logger.fine("Moved method: " +

@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.mozilla.rhino.Token;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -54,7 +54,11 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
     if (NodeUtil.isReferenceName(n)) {
       String name = n.getString();
       if (name.equals("RegExp") && t.getScope().getVar(name) == null) {
-        if (parent.getType() != Token.NEW || n != parent.getFirstChild()) {
+        int parentType = parent.getType();
+        boolean first = (n == parent.getFirstChild()); 
+        if (!((parentType == Token.NEW && first)
+               || (parentType == Token.CALL && first)
+               || (parentType == Token.INSTANCEOF && !first))) {
           t.report(n, REGEXP_REFERENCE);
           globalRegExpPropertiesUsed = true;
         }

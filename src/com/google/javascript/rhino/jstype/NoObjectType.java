@@ -208,17 +208,11 @@ public class NoObjectType extends FunctionType {
   }
 
   NoObjectType(JSTypeRegistry registry) {
-    super(registry, null, null, null, null, null, null, true, true);
-  }
-
-  @Override
-  public JSType getReturnType() {
-    return this;
-  }
-
-  @Override
-  public ObjectType getInstanceType() {
-    return this;
+    super(registry, null, null,
+          registry.createArrowType(null, null),
+          null, null, true, true);
+    getInternalArrowType().returnType = this;
+    this.setInstanceType(this);
   }
 
   @Override

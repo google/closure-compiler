@@ -40,9 +40,14 @@ public class CheckRegExpTest extends CompilerTestCase {
   }
 
   public void testRegExp() {
-    // creating regexp's is ok
+    // Creating regexp's is ok
+    testReference("RegExp();", false);
+    testReference("var x = RegExp();", false);
     testReference("new RegExp();", false);
     testReference("var x = new RegExp();", false);
+
+    // Checking for RegExp instances is ok, as well.
+    testReference("x instanceof RegExp;", false);
 
     // Any other reference isn't
     testReference("RegExp.test();", true);
@@ -50,9 +55,12 @@ public class CheckRegExpTest extends CompilerTestCase {
     testReference("RegExp.exec();", true);
     testReference("RegExp.$1;", true);
     testReference("RegExp.foobar;", true);
+    testReference("delete RegExp;", true);
 
     // Aliases aren't allowed
     testReference("var x = RegExp;", true);
+    testReference("f(RegExp);", true);
+    testReference("new f(RegExp);", true);
     testReference("var x = RegExp; x.test()", true);
 
     // No RegExp reference is ok

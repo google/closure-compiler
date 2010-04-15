@@ -371,7 +371,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       if (name.hasChildren()) {
         Node value = name.removeFirstChild();
         var.removeChild(name);
-        Node assign = new Node(Token.ASSIGN, name, value);
+        Node assign = new Node(Token.ASSIGN, name, value)
+            .copyInformationFrom(name);
 
         // We don't need to wrapped it with EXPR node if it is within a FOR.
         if (parent.getType() != Token.FOR) {

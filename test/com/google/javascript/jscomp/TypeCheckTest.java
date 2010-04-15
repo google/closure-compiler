@@ -6831,6 +6831,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format(), true);
   }
 
+  public void testActiveXObject() throws Exception {
+    testTypes(
+        "/** @type {Object} */ var x = new ActiveXObject();" +
+        "/** @type { {impossibleProperty} } */ var y = new ActiveXObject();");
+  }
+
   private void checkObjectType(ObjectType objectType, String propertyName,
         JSType expectedType) {
     assertTrue("Expected " + objectType.getReferenceName() +

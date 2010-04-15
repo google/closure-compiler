@@ -203,7 +203,8 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         parent.replaceChild(n, op);
       } else if (n.getType() == Token.INC || n.getType() == Token.DEC) {
         if (NodeUtil.isExpressionNode(parent)) {
-          parent.replaceChild(n, new Node(Token.VOID, Node.newNumber(0)));
+          parent.replaceChild(n,
+              new Node(Token.VOID, Node.newNumber(0).copyInformationFrom(n)));
         } else if(n.getType() == Token.COMMA && n != parent.getLastChild()) {
           parent.removeChild(n);
         } else if (parent.getType() == Token.FOR && !NodeUtil.isForIn(parent) &&

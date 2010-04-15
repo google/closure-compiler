@@ -113,8 +113,12 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    */
   private void doExtraction(GatherExtractionInfo info) {
     // First declare the temp variable.
-    Node var = new Node(Token.VAR, Node.newString(Token.NAME, prototypeAlias));
-    compiler.getNodeForCodeInsertion(null).addChildrenToFront(var);
+    Node injectionPoint = compiler.getNodeForCodeInsertion(null);
+
+    Node var = NodeUtil.newVarNode(prototypeAlias, null)
+        .copyInformationFromForTree(injectionPoint);
+    
+    injectionPoint.addChildrenToFront(var);
 
     // Go through all extraction instances and extract each of them.
     for (ExtractionInstance instance : info.instances) {
@@ -129,14 +133,16 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    */
   private void extractInstance(ExtractionInstance instance) {
     // Use the temp variable to hold the prototype.
-    String className = instance.declarations.getFirst().qualifiedClassName;
-    Node stmt = new Node(instance.declarations.getFirst().node.getType(),
+    PrototypeMemberDeclaration first = instance.declarations.getFirst();
+    String className = first.qualifiedClassName;
+    Node stmt = new Node(first.node.getType(),
         new Node(Token.ASSIGN,
             Node.newString(Token.NAME, prototypeAlias),
             NodeUtil.newQualifiedNameNode(className + ".prototype",
-                instance.parent, className + ".prototype")));
+                instance.parent, className + ".prototype")))
+        .copyInformationFromForTree(first.node);
 
-    instance.parent.addChildBefore(stmt, instance.declarations.getFirst().node);
+    instance.parent.addChildBefore(stmt, first.node);
 
     // Go thought each member declaration and replace it with an assignment
     // to the prototype variable.

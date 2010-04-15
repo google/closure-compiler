@@ -213,7 +213,7 @@ public class JSTypeRegistry implements Serializable {
     // Object
     FunctionType OBJECT_FUNCTION_TYPE =
         new FunctionType(this, "Object", null,
-            createOptionalParameters(ALL_TYPE), UNKNOWN_TYPE,
+            createArrowType(createOptionalParameters(ALL_TYPE), UNKNOWN_TYPE),
             null, null, true, true);
     OBJECT_FUNCTION_TYPE.defineDeclaredProperty(
         "prototype", TOP_LEVEL_PROTOTYPE, true);
@@ -228,7 +228,8 @@ public class JSTypeRegistry implements Serializable {
     // Function
     FunctionType FUNCTION_FUNCTION_TYPE =
         new FunctionType(this, "Function", null,
-            createParametersWithVarArgs(ALL_TYPE), UNKNOWN_TYPE,
+            createArrowType(
+                createParametersWithVarArgs(ALL_TYPE), UNKNOWN_TYPE),
             null, null, true, true);
     FUNCTION_FUNCTION_TYPE.setPrototypeBasedOn(OBJECT_TYPE);
     registerNativeType(
@@ -246,14 +247,11 @@ public class JSTypeRegistry implements Serializable {
     // Array
     FunctionType ARRAY_FUNCTION_TYPE =
       new FunctionType(this, "Array", null,
-          createParametersWithVarArgs(ALL_TYPE), null, null, null, true, true) {
-        private static final long serialVersionUID = 1L;
+          createArrowType(createParametersWithVarArgs(ALL_TYPE), null),
+          null, null, true, true);
+    ARRAY_FUNCTION_TYPE.getInternalArrowType().returnType =
+        ARRAY_FUNCTION_TYPE.getInstanceType();
 
-        @Override
-        public JSType getReturnType() {
-          return getInstanceType();
-        }
-      };
     ObjectType arrayPrototype = ARRAY_FUNCTION_TYPE.getPrototype();
     registerNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE, ARRAY_FUNCTION_TYPE);
 
@@ -263,8 +261,8 @@ public class JSTypeRegistry implements Serializable {
     // Boolean
     FunctionType BOOLEAN_OBJECT_FUNCTION_TYPE =
         new FunctionType(this, "Boolean", null,
-            createParameters(false, ALL_TYPE), BOOLEAN_TYPE, null, null, true,
-            true);
+            createArrowType(createParameters(false, ALL_TYPE), BOOLEAN_TYPE),
+            null, null, true, true);
     ObjectType booleanPrototype = BOOLEAN_OBJECT_FUNCTION_TYPE.getPrototype();
     registerNativeType(
         JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE, BOOLEAN_OBJECT_FUNCTION_TYPE);
@@ -276,9 +274,11 @@ public class JSTypeRegistry implements Serializable {
     // Date
     FunctionType DATE_FUNCTION_TYPE =
       new FunctionType(this, "Date", null,
-          createOptionalParameters(UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE,
-              UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE),
-          STRING_TYPE, null, null, true, true);
+          createArrowType(
+              createOptionalParameters(UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE,
+                  UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE, UNKNOWN_TYPE),
+              STRING_TYPE),
+          null, null, true, true);
     ObjectType datePrototype = DATE_FUNCTION_TYPE.getPrototype();
     registerNativeType(JSTypeNative.DATE_FUNCTION_TYPE, DATE_FUNCTION_TYPE);
 
@@ -355,8 +355,9 @@ public class JSTypeRegistry implements Serializable {
 
     // Number
     FunctionType NUMBER_OBJECT_FUNCTION_TYPE =
-        new FunctionType(this, "Number", null, createParameters(false, ALL_TYPE),
-            NUMBER_TYPE, null, null, true, true);
+        new FunctionType(this, "Number", null,
+            createArrowType(createParameters(false, ALL_TYPE), NUMBER_TYPE),
+            null, null, true, true);
     ObjectType numberPrototype = NUMBER_OBJECT_FUNCTION_TYPE.getPrototype();
     registerNativeType(
         JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE, NUMBER_OBJECT_FUNCTION_TYPE);
@@ -368,15 +369,11 @@ public class JSTypeRegistry implements Serializable {
     // RegExp
     FunctionType REGEXP_FUNCTION_TYPE =
       new FunctionType(this, "RegExp", null,
-          createOptionalParameters(ALL_TYPE, ALL_TYPE),
-          null, null, null, true, true) {
-        private static final long serialVersionUID = 1L;
+          createArrowType(createOptionalParameters(ALL_TYPE, ALL_TYPE)),
+          null, null, true, true);
+    REGEXP_FUNCTION_TYPE.getInternalArrowType().returnType =
+        REGEXP_FUNCTION_TYPE.getInstanceType();
 
-        @Override
-        public JSType getReturnType() {
-          return getInstanceType();
-        }
-      };
     ObjectType regexpPrototype = REGEXP_FUNCTION_TYPE.getPrototype();
     registerNativeType(JSTypeNative.REGEXP_FUNCTION_TYPE, REGEXP_FUNCTION_TYPE);
 
@@ -385,8 +382,9 @@ public class JSTypeRegistry implements Serializable {
 
     // String
     FunctionType STRING_OBJECT_FUNCTION_TYPE =
-        new FunctionType(this, "String", null, createParameters(false, ALL_TYPE),
-        STRING_TYPE, null, null, true, true);
+        new FunctionType(this, "String", null,
+            createArrowType(createParameters(false, ALL_TYPE), STRING_TYPE),
+            null, null, true, true);
     ObjectType stringPrototype = STRING_OBJECT_FUNCTION_TYPE.getPrototype();
     registerNativeType(
         JSTypeNative.STRING_OBJECT_FUNCTION_TYPE, STRING_OBJECT_FUNCTION_TYPE);
@@ -444,8 +442,10 @@ public class JSTypeRegistry implements Serializable {
         // in addition, overrides getInstanceType() to return the NoObject type
         // instead of a new anonymous object.
         new FunctionType(this, "Function", null,
-          createParametersWithVarArgs(
-              UNKNOWN_TYPE), UNKNOWN_TYPE, NO_OBJECT_TYPE, null, true, true) {
+            createArrowType(
+                createParametersWithVarArgs(UNKNOWN_TYPE),
+                UNKNOWN_TYPE),
+            NO_OBJECT_TYPE, null, true, true) {
           private static final long serialVersionUID = 1L;
 
           @Override public FunctionType getConstructor() {
@@ -826,6 +826,28 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
+   * Creates an arrow type, an abstract representation of the parameters
+   * and return value of a function.
+   *
+   * @param parametersNode the parameters' types, formatted as a Node with
+   *     param names and optionality info.
+   * @param returnType the function's return type
+   */
+  ArrowType createArrowType(Node parametersNode, JSType returnType) {
+    return new ArrowType(this, parametersNode, returnType);
+  }
+
+  /**
+   * Creates an arrow type with an unknown return type.
+   *
+   * @param parametersNode the parameters' types, formatted as a Node with
+   *     param names and optionality info.
+   */
+  ArrowType createArrowType(Node parametersNode) {
+    return new ArrowType(this, parametersNode, null);
+  }
+
+  /**
    * Creates a function type.
    *
    * @param returnType the function's return type
@@ -833,8 +855,7 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createFunctionType(
       JSType returnType, JSType... parameterTypes) {
-    return new FunctionType(
-        this, null, null, createParameters(parameterTypes), returnType);
+    return createFunctionType(returnType, createParameters(parameterTypes));
   }
 
   /**
@@ -846,9 +867,8 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createFunctionTypeWithVarArgs(
       JSType returnType, List<JSType> parameterTypes) {
-    return new FunctionType(
-        this, null, null, createParametersWithVarArgs(parameterTypes),
-        returnType);
+    return createFunctionType(
+        returnType, createParametersWithVarArgs(parameterTypes));
   }
 
   /**
@@ -859,8 +879,7 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createFunctionType(
       JSType returnType, List<JSType> parameterTypes) {
-    return new FunctionType(
-        this, null, null, createParameters(parameterTypes), returnType);
+    return createFunctionType(returnType, createParameters(parameterTypes));
   }
 
   /**
@@ -872,8 +891,8 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createFunctionTypeWithVarArgs(
       JSType returnType, JSType... parameterTypes) {
-    return new FunctionType(
-        this, null, null, createParametersWithVarArgs(parameterTypes), returnType);
+    return createFunctionType(
+        returnType, createParametersWithVarArgs(parameterTypes));
   }
 
   /**
@@ -910,8 +929,11 @@ public class JSTypeRegistry implements Serializable {
    */
   public JSType createFunctionType(ObjectType instanceType,
       JSType returnType, List<JSType> parameterTypes) {
-    return new FunctionType(this, null, null, createParameters(parameterTypes),
-        returnType, instanceType);
+    return new FunctionBuilder(this)
+        .withParamsNode(createParameters(parameterTypes))
+        .withReturnType(returnType)
+        .withTypeOfThis(instanceType)
+        .build();
   }
 
   /**
@@ -925,8 +947,11 @@ public class JSTypeRegistry implements Serializable {
    */
   public JSType createFunctionTypeWithVarArgs(ObjectType instanceType,
       JSType returnType, List<JSType> parameterTypes) {
-    return new FunctionType(this, null, null,
-        createParametersWithVarArgs(parameterTypes), returnType, instanceType);
+    return new FunctionBuilder(this)
+        .withParamsNode(createParametersWithVarArgs(parameterTypes))
+        .withReturnType(returnType)
+        .withTypeOfThis(instanceType)
+        .build();
   }
 
   /**
@@ -1032,14 +1057,10 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createFunctionTypeWithNewReturnType(
       FunctionType existingFunctionType, JSType returnType) {
-    return new FunctionType(
-        this,
-        existingFunctionType.getReferenceName(),
-        existingFunctionType.getSource(),
-        existingFunctionType.getParametersNode(),
-        returnType,
-        existingFunctionType.getTypeOfThis(),
-        existingFunctionType.getTemplateTypeName());
+    return new FunctionBuilder(this)
+        .copyFromOtherFunction(existingFunctionType)
+        .withReturnType(returnType)
+        .build();
   }
 
   /**
@@ -1050,14 +1071,10 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createFunctionTypeWithNewThisType(
       FunctionType existingFunctionType, ObjectType thisType) {
-    return new FunctionType(
-        this,
-        existingFunctionType.getReferenceName(),
-        existingFunctionType.getSource(),
-        existingFunctionType.getParametersNode(),
-        existingFunctionType.getReturnType(),
-        thisType,
-        existingFunctionType.getTemplateTypeName());
+    return new FunctionBuilder(this)
+        .copyFromOtherFunction(existingFunctionType)
+        .withTypeOfThis(thisType)
+        .build();
   }
 
   /**
@@ -1068,59 +1085,10 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createFunctionType(
       JSType returnType, Node parameters) {
-    return new FunctionType(this, null, null, parameters, returnType);
-  }
-
-  /**
-   * @param name the function's name or {@code null} to indicate that the
-   *        function is anonymous.
-   * @param source the node defining this function. Its type
-   *        ({@link Node#getType()}) must be {@link Token#FUNCTION}.
-   * @param parameters the function's parameters or {@code null}
-   *        to indicate that the parameter types are unknown.
-   * @param returnType the function's return type or {@code null} to indicate
-   *        that the return type is unknown.
-   * @param typeOfThis The type of {@code this} in non-constructors.  May be
-   *        {@code null} to indicate that the type of {@code this} is unknown.
-   * @param templateTypeName The template type name or {@code null}.
-   */
-  public FunctionType createMethodTypeWithTypeTemplate(String name, Node source,
-      Node parameters, JSType returnType, ObjectType typeOfThis,
-      String templateTypeName) {
-    return new FunctionType(this, name, source, parameters, returnType,
-        typeOfThis, templateTypeName);
-  }
-
-  /**
-   * @param name the function's name or {@code null} to indicate that the
-   *        function is anonymous.
-   * @param source the node defining this function. Its type
-   *        ({@link Node#getType()}) must be {@link Token#FUNCTION}.
-   * @param parameters the function's parameters or {@code null}
-   *        to indicate that the parameter types are unknown.
-   * @param returnType the function's return type or {@code null} to indicate
-   *        that the return type is unknown.
-   * @param typeOfThis The type of {@code this} in non-constructors.  May be
-   *        {@code null} to indicate that the type of {@code this} is unknown.
-   */
-  public FunctionType createMethodType(String name, Node source,
-      Node parameters, JSType returnType, ObjectType typeOfThis) {
-    return new FunctionType(this, name, source, parameters, returnType,
-        typeOfThis);
-  }
-
-  /**
-   * @param parameters the function's parameters or {@code null}
-   *        to indicate that the parameter types are unknown.
-   * @param returnType the function's return type or {@code null} to indicate
-   *        that the return type is unknown.
-   * @param typeOfThis The type of {@code this} in non-constructors.  May be
-   *        {@code null} to indicate that the type of {@code this} is unknown.
-   */
-  public FunctionType createMethodType(
-      JSType returnType, Node parameters, ObjectType typeOfThis) {
-    return new FunctionType(this, null, null, parameters,
-        returnType, typeOfThis);
+    return new FunctionBuilder(this)
+        .withParamsNode(parameters)
+        .withReturnType(returnType)
+        .build();
   }
 
   /**
@@ -1184,7 +1152,8 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createConstructorType(String name, Node source,
       Node parameters, JSType returnType) {
-    return new FunctionType(this, name, source, parameters, returnType, null,
+    return new FunctionType(this, name, source,
+        createArrowType(parameters, returnType), null,
         null, true, false);
   }
 
@@ -1195,7 +1164,7 @@ public class JSTypeRegistry implements Serializable {
    *     ({@link Node#getType()}) must be {@link Token#FUNCTION}.
    */
   public FunctionType createInterfaceType(String name, Node source) {
-    return new FunctionType(this, name, source);
+    return FunctionType.forInterface(this, name, source);
   }
 
   /**
@@ -1399,8 +1368,11 @@ public class JSTypeRegistry implements Serializable {
 
         JSType returnType = createFromTypeNodes(current, sourceName, scope);
 
-        return new FunctionType(this, null, null, paramBuilder.build(),
-             returnType, thisType, null);
+        return new FunctionBuilder(this)
+            .withParams(paramBuilder)
+            .withReturnType(returnType)
+            .withTypeOfThis(thisType)
+            .build();
     }
 
     throw new IllegalStateException(

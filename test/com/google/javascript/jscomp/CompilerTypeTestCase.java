@@ -21,6 +21,15 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
 
+  static final String ACTIVE_X_OBJECT_DEF =
+      "/**\n" +
+      " * @param {string} progId\n" +
+      " * @param {string=} opt_location\n" +
+      " * @constructor\n" +
+      " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx\n" +
+      " */\n" +
+      "function ActiveXObject(progId, opt_location) {}\n";
+
   static final String CLOSURE_DEFS =
       "var goog = {};" +
       "goog.inherits = function(x, y) {};" +
@@ -44,7 +53,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "/** @type {number} */ String.prototype.length;" +
       "/** @constructor \n * @param {*} var_args \n @return {!Array} */" +
       "function Array(var_args) {}" +
-      "/** @type {number} */ Array.prototype.length;";
+      "/** @type {number} */ Array.prototype.length;" + ACTIVE_X_OBJECT_DEF;
 
   protected Compiler compiler;
 

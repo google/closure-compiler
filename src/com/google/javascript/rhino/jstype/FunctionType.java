@@ -121,69 +121,9 @@ public class FunctionType extends PrototypeObjectType {
    */
   private String templateTypeName;
 
-  /**
-   * Creates a function type.
-   * @param registry the owner registry for this type
-   * @param name the function's name or {@code null} to indicate that the
-   *        function is anonymous.
-   * @param source the node defining this function. Its type
-   *        ({@link Node#getType()}) must be {@link Token#FUNCTION}.
-   * @param parameters the function's parameters or {@code null}
-   *        to indicate that the parameter types are unknown.
-   * @param returnType the function's return type or {@code null} to indicate
-   *        that the return type is unknown.
-   */
-  FunctionType(JSTypeRegistry registry, String name, Node source,
-      Node parameters, JSType returnType) {
-    this(registry, name, source, parameters, returnType, null, null, false,
-         false);
-  }
-
-  /**
-   * Creates a function type.
-   * @param registry the owner registry for this type
-   * @param name the function's name or {@code null} to indicate that the
-   *        function is anonymous.
-   * @param source the node defining this function. Its type
-   *        ({@link Node#getType()}) must be {@link Token#FUNCTION}.
-   * @param parameters the function's parameters or {@code null}
-   *        to indicate that the parameter types are unknown.
-   * @param returnType the function's return type or {@code null} to indicate
-   *        that the return type is unknown.
-   * @param typeOfThis The type of {@code this} in non-constructors.  May be
-   *        {@code null} to indicate that the type of {@code this} is unknown.
-   */
-  FunctionType(JSTypeRegistry registry, String name, Node source,
-      Node parameters, JSType returnType, ObjectType typeOfThis) {
-    this(registry, name, source, parameters, returnType, typeOfThis,
-        null, false, false);
-  }
-
-  /**
-   * Creates a function type.
-   * @param registry the owner registry for this type
-   * @param name the function's name or {@code null} to indicate that the
-   *        function is anonymous.
-   * @param source the node defining this function. Its type
-   *        ({@link Node#getType()}) must be {@link Token#FUNCTION}.
-   * @param parameters the function's parameters or {@code null}
-   *        to indicate that the parameter types are unknown.
-   * @param returnType the function's return type or {@code null} to indicate
-   *        that the return type is unknown.
-   * @param typeOfThis The type of {@code this} in non-constructors.  May be
-   *        {@code null} to indicate that the type of {@code this} is unknown.
-   * @param templateTypeName The template type name or {@code null}.
-   */
-  FunctionType(JSTypeRegistry registry, String name, Node source,
-      Node parameters, JSType returnType, ObjectType typeOfThis,
-      String templateTypeName) {
-    this(registry, name, source, parameters, returnType, typeOfThis,
-        templateTypeName, false, false);
-  }
-
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(JSTypeRegistry registry, String name, Node source,
-      Node parameters, JSType returnType, ObjectType typeOfThis,
+      ArrowType arrowType, ObjectType typeOfThis,
       String templateTypeName,  boolean isConstructor, boolean nativeType) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
@@ -200,15 +140,12 @@ public class FunctionType extends PrototypeObjectType {
           typeOfThis :
           registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     }
-    // The call type should be set up last because we are calling getReturnType,
-    // which may be overloaded and depend on other properties being set.
-    this.call = new ArrowType(registry, parameters,
-        (returnType == null ? getReturnType() : returnType));
+    this.call = arrowType;
     this.templateTypeName = templateTypeName;
   }
 
   /** Creates an instance for a function that is an interface. */
-  FunctionType(JSTypeRegistry registry, String name, Node source) {
+  private FunctionType(JSTypeRegistry registry, String name, Node source) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE));
     Preconditions.checkArgument(source == null ||
@@ -218,6 +155,12 @@ public class FunctionType extends PrototypeObjectType {
     this.call = null;
     this.kind = Kind.INTERFACE;
     this.typeOfThis = new InstanceObjectType(registry, this);
+  }
+
+  /** Creates an instance for a function that is an interface. */
+  static FunctionType forInterface(
+      JSTypeRegistry registry, String name, Node source) {
+    return new FunctionType(registry, name, source);
   }
 
   @Override
@@ -299,6 +242,11 @@ public class FunctionType extends PrototypeObjectType {
 
   public JSType getReturnType() {
     return call == null ? null : call.returnType;
+  }
+
+  /** Gets the internal arrow type. For use by subclasses only. */
+  ArrowType getInternalArrowType() {
+    return call;
   }
 
   /**
@@ -426,8 +374,9 @@ public class FunctionType extends PrototypeObjectType {
             // If there's no params array, don't do any type-checking
             // in this CALL function.
             defineDeclaredProperty(name,
-                new FunctionType(registry, null, null,
-                    null, getReturnType()),
+                new FunctionBuilder(registry)
+                    .withReturnType(getReturnType())
+                    .build(),
                 false);
           } else {
             params = params.cloneTree();
@@ -438,8 +387,10 @@ public class FunctionType extends PrototypeObjectType {
             thisTypeNode.setOptionalArg(true);
 
             defineDeclaredProperty(name,
-                new FunctionType(registry, null, null,
-                    params, getReturnType()),
+                new FunctionBuilder(registry)
+                    .withParamsNode(params)
+                    .withReturnType(getReturnType())
+                    .build(),
                 false);
           }
         } else if ("apply".equals(name)) {
@@ -456,8 +407,10 @@ public class FunctionType extends PrototypeObjectType {
                   registry.getNativeType(JSTypeNative.OBJECT_TYPE)));
 
           defineDeclaredProperty(name,
-              new FunctionType(registry, null, null,
-                  builder.build(), getReturnType()),
+              new FunctionBuilder(registry)
+                  .withParams(builder)
+                  .withReturnType(getReturnType())
+                  .build(),
               false);
         }
       }
@@ -850,6 +803,11 @@ public class FunctionType extends PrototypeObjectType {
     }
 
     return super.resolveInternal(t, scope);
+  }
+
+  // A helper method for creating arrow types.
+  private ArrowType createArrowType(Node parameters, JSType returnType) {
+    return registry.createArrowType(parameters, returnType);
   }
 
   @Override

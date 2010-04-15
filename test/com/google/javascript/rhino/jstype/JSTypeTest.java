@@ -49,6 +49,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.ArrowType;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -99,20 +100,25 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     enumType = new EnumType(registry, "Enum", NUMBER_TYPE);
     elementsType = enumType.getElementsType();
-    functionType = new FunctionType(registry, null, null, null, NUMBER_TYPE);
-    dateMethod = new FunctionType(registry, null, null, new Node(Token.LP),
-        NUMBER_TYPE, DATE_TYPE);
+    functionType = new FunctionBuilder(registry)
+        .withReturnType(NUMBER_TYPE)
+        .build();
+    dateMethod = new FunctionBuilder(registry)
+        .withParamsNode(new Node(Token.LP))
+        .withReturnType(NUMBER_TYPE)
+        .withTypeOfThis(DATE_TYPE)
+        .build();
     unresolvedNamedType =
         new NamedType(registry, "not.resolved.named.type", null, -1, -1);
     namedGoogBar = new NamedType(registry, "goog.Bar", null, -1, -1);
 
     subclassCtor =
-        new FunctionType(registry, null, null, null, null, null, null,
-                         true, false);
+        new FunctionType(registry, null, null, createArrowType(null),
+            null, null, true, false);
     subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
     subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 
-    interfaceType = new FunctionType(registry, "Interface", null);
+    interfaceType = FunctionType.forInterface(registry, "Interface", null);
     interfaceInstType = interfaceType.getInstanceType();
 
     googBar = registry.createConstructorType("goog.Bar", null, null, null);
@@ -2732,30 +2738,33 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             STRING_TYPE).toString());
 
     assertEquals("function (this:Date, number): (boolean|number|string)",
-        new FunctionType(registry, null,
-            null,
-            new JSTypeRegistry(null).createParameters(NUMBER_TYPE),
-            NUMBER_STRING_BOOLEAN,
-            DATE_TYPE).toString());
+        new FunctionBuilder(registry)
+            .withParamsNode(registry.createParameters(NUMBER_TYPE))
+            .withReturnType(NUMBER_STRING_BOOLEAN)
+            .withTypeOfThis(DATE_TYPE)
+            .build().toString());
   }
 
   /**
    * Tests relationships between structural function types.
    */
   public void testFunctionTypeRelationships() {
-    FunctionType dateMethodEmpty = new FunctionType(registry, null, null,
-        null, null, DATE_TYPE);
-    FunctionType dateMethodWithParam = new FunctionType(registry, null, null,
-        new JSTypeRegistry(null).createParameters(NUMBER_TYPE), null, DATE_TYPE);
-    FunctionType dateMethodWithReturn = new FunctionType(registry, null, null,
-        null, NUMBER_TYPE, DATE_TYPE);
-    FunctionType stringMethodEmpty = new FunctionType(registry, null, null,
-        null, null, STRING_OBJECT_TYPE);
-    FunctionType stringMethodWithParam = new FunctionType(registry, null, null,
-        new JSTypeRegistry(null).createParameters(NUMBER_TYPE), null,
-        STRING_OBJECT_TYPE);
-    FunctionType stringMethodWithReturn = new FunctionType(registry, null,
-        null, null, NUMBER_TYPE, STRING_OBJECT_TYPE);
+    FunctionType dateMethodEmpty = new FunctionBuilder(registry)
+        .withTypeOfThis(DATE_TYPE).build();
+    FunctionType dateMethodWithParam = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .withTypeOfThis(DATE_TYPE).build();
+    FunctionType dateMethodWithReturn = new FunctionBuilder(registry)
+        .withReturnType(NUMBER_TYPE)
+        .withTypeOfThis(DATE_TYPE).build();
+    FunctionType stringMethodEmpty = new FunctionBuilder(registry)
+        .withTypeOfThis(STRING_OBJECT_TYPE).build();
+    FunctionType stringMethodWithParam = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .withTypeOfThis(STRING_OBJECT_TYPE).build();
+    FunctionType stringMethodWithReturn = new FunctionBuilder(registry)
+        .withReturnType(NUMBER_TYPE)
+        .withTypeOfThis(STRING_OBJECT_TYPE).build();
 
     // One-off tests.
     assertFalse(stringMethodEmpty.isSubtype(dateMethodEmpty));
@@ -2793,18 +2802,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests relationships between structural function types.
    */
   public void testFunctionSubTypeRelationships() {
-    FunctionType googBarMethod = new FunctionType(registry, null, null,
-        null, null, googBar);
-    FunctionType googBarParamFn = new FunctionType(registry, null, null,
-        new JSTypeRegistry(null).createParameters(googBar), null, null);
-    FunctionType googBarReturnFn = new FunctionType(registry, null, null,
-        null, googBar, null);
-    FunctionType googSubBarMethod = new FunctionType(registry, null, null,
-        null, null, googSubBar);
-    FunctionType googSubBarParamFn = new FunctionType(registry, null, null,
-        new JSTypeRegistry(null).createParameters(googSubBar), null, null);
-    FunctionType googSubBarReturnFn = new FunctionType(registry, null, null,
-        null, googSubBar, null);
+    FunctionType googBarMethod = new FunctionBuilder(registry)
+        .withTypeOfThis(googBar).build();
+    FunctionType googBarParamFn = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(googBar)).build();
+    FunctionType googBarReturnFn = new FunctionBuilder(registry)
+        .withReturnType(googBar).build();
+    FunctionType googSubBarMethod = new FunctionBuilder(registry)
+        .withTypeOfThis(googSubBar).build();
+    FunctionType googSubBarParamFn = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(googSubBar)).build();
+    FunctionType googSubBarReturnFn = new FunctionBuilder(registry)
+        .withReturnType(googSubBar).build();
 
     assertTrue(googBarMethod.isSubtype(googSubBarMethod));
     assertTrue(googBarReturnFn.isSubtype(googSubBarReturnFn));
@@ -5215,5 +5224,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testImplementingType() throws Exception {
     assertTrue(registry.getDirectImplementors(
         interfaceType.getInstanceType()).contains(googBar));
+  }
+
+  private ArrowType createArrowType(Node params) {
+    return registry.createArrowType(params);
+  }
+
+  private ArrowType createArrowType(Node params, JSType retType) {
+    return registry.createArrowType(params, retType);
   }
 }

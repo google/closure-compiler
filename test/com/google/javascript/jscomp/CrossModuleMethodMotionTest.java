@@ -42,6 +42,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
+    super.enableLineNumberCheck(true);
     canMoveExterns = false;
   }
 
@@ -255,7 +256,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
           "x();"
         });
   }
-  
+
   // Read of closure variable disables method motions.
   public void testClosureVariableReads1() {
     testSame(createModuleChain(
@@ -267,7 +268,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
             // Module 2
             "var y = new Foo(); y.baz();"));
   }
-  
+
   // Read of global variable is fine.
   public void testClosureVariableReads2() {
     test(createModuleChain(
@@ -307,7 +308,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
            "y = new Foo(); z.b3();"
         });
   }
-  
+
   public void testClosureVariableReads3() {
     test(createModuleChain(
             "function Foo() {}" +
@@ -347,7 +348,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
            "y = new Foo(); z.b3();"
         });
   }
-  
+
   // Read of global variable is fine.
   public void testNoClosureVariableReads1() {
     test(createModuleChain(
@@ -361,12 +362,12 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
            "function Foo() {}" +
            "var x = 'x';" +
            "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-           // Module 2             
+           // Module 2
            "Foo.prototype.baz = JSCompiler_unstubMethod(0, function(){x});" +
            "var y = new Foo(); y.baz();"
         });
   }
-  
+
   // Read of a local is fine.
   public void testNoClosureVariableReads2() {
     test(createModuleChain(
@@ -378,8 +379,8 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
            STUB_DECLARATIONS +
            "function Foo() {}" +
            "Foo.prototype.baz = JSCompiler_stubMethod(0);",
-           // Module 2             
-           "Foo.prototype.baz = JSCompiler_unstubMethod(" + 
+           // Module 2
+           "Foo.prototype.baz = JSCompiler_unstubMethod(" +
            "    0, function(){var x = 1; x});" +
            "var y = new Foo(); y.baz();"
         });

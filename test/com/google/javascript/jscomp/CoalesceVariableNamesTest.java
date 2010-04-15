@@ -36,6 +36,7 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
+    super.enableLineNumberCheck(true);
     usePseudoName = false;
   }
 
