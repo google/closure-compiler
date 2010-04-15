@@ -33,6 +33,11 @@ public class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(true);
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new InlineVariables(
         compiler,

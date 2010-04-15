@@ -152,8 +152,8 @@ class ReplaceCssNames implements CompilerPass {
               n.removeChild(first);
               Node replacement = new Node(Token.ADD, first,
                   Node.newString("-" + second.getString())
-                      .copySourceLocationFrom(second))
-                  .copySourceLocationFrom(n);
+                      .copyInformationFrom(second))
+                  .copyInformationFrom(n);
               replacement.setJSType(nativeStringType);
               parent.replaceChild(n, replacement);
               compiler.reportCodeChange();

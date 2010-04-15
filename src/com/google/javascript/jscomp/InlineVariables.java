@@ -239,7 +239,8 @@ class InlineVariables implements CompilerPass {
           value = init.getAssignedValue();
         } else {
           // Create a new node for variable that is never initialized.
-          value = NodeUtil.newUndefinedNode();
+          value = NodeUtil.newUndefinedNode()
+              .copyInformationFromForTree(declaration.getNameNode());
         }
         Preconditions.checkNotNull(value);
         inlineWellDefinedVariable(v, value, referenceInfo.references);
@@ -395,13 +396,13 @@ class InlineVariables implements CompilerPass {
      *     to re-parent.
      */
     private void inlineValue(Var v, Reference ref, Node value) {
-      Node parent = ref.getParent();
       if (ref.isSimpleAssignmentToName()) {
         // This is the initial assignment.
-        ref.getGrandparent().replaceChild(parent, value);
+        ref.getGrandparent().replaceChild(ref.getParent(), value);
       } else {
         ref.getParent().replaceChild(ref.getNameNode(), value);
       }
+
       blacklistVarReferencesInTree(value, v.scope);
       compiler.reportCodeChange();
     }
