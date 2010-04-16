@@ -34,6 +34,12 @@ public class NameAnalyzerTest extends CompilerTestCase {
   }
 
   @Override
+  protected void setUp() {
+    super.enableNormalize();
+    super.enableLineNumberCheck(true);
+  }
+
+  @Override
   protected int getNumRepetitions() {
     // pass reaches steady state after 1 iteration.
     return 1;
@@ -329,13 +335,15 @@ public class NameAnalyzerTest extends CompilerTestCase {
 
   public void testAssignmentToUnknownPrototype() {
     testSame(
-        "var window;" +
+        "/** @suppress {duplicate} */ var window;" +
         "window['a'].prototype = {};");
   }
 
   public void testBug2099540() {
     testSame(
-        "var document,window,klass;" +
+        "/** @suppress {duplicate} */ var document;\n" +
+        "/** @suppress {duplicate} */ var window;\n" +
+        "var klass;\n" +
         "window[klass].prototype = " +
             "document.createElement(tagName)['__proto__'];");
   }
@@ -595,12 +603,12 @@ public class NameAnalyzerTest extends CompilerTestCase {
 
   public void testSetterInForStruct3() {
     test("var j = 0; for (var i = 1 + f() + g() + h(); i = 0; j++);",
-         "var j = 0; for (f(), g(), h(); 0; j++);");
+         "var j = 0; f(); g(); h(); for (; 0; j++);");
   }
 
   public void testSetterInForStruct4() {
     test("var i = 0;var j = 0; for (i = 1 + f() + g() + h(); i = 0; j++);",
-         "var j = 0; for (f(), g(), h(); 0; j++);");
+         "var j = 0; f(); g(); h(); for (; 0; j++);");
   }
 
   public void testSetterInForStruct5() {
@@ -713,10 +721,10 @@ public class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testSetterInWhilePredicate() {
-    // TODO(user) Make NameAnalyzer smarter so it can remove "Class".
-    testSame("var a = 1;" +
-             "var Class = function() {}; " +
-             "while (Class.property_ = a);");
+    test("var a = 1;" +
+         "var Class = function() {}; " +
+         "while (Class.property_ = a);",
+         "var a = 1; for (;a;) {}");
   }
 
   public void testSetterInDoWhilePredicate() {

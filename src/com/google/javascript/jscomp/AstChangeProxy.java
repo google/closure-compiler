@@ -111,6 +111,7 @@ class AstChangeProxy {
     if (parentType == Token.LABEL && size != 1) {
       Node block = new Node(Token.BLOCK);
       for (Node newChild : replacements) {
+        newChild.copyInformationFrom(node);
         Node oldParent = newChild.getParent();
         block.addChildToBack(newChild);
       }
@@ -119,6 +120,7 @@ class AstChangeProxy {
 
     } else {
       for (Node newChild : replacements) {
+        newChild.copyInformationFrom(node);
         Node oldParent = newChild.getParent();
         parent.addChildBefore(newChild, node);
       }

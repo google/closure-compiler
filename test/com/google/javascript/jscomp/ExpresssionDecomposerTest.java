@@ -466,6 +466,18 @@ public class ExpresssionDecomposerTest extends TestCase {
         code, fnName, expectedResult, null);
   }
 
+  private void validateSourceInfo(Compiler compiler, Node subtree) {
+    (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
+    // Source information problems are reported as compiler errors.
+    if (compiler.getErrorCount() != 0) {
+      String msg = "Error encountered: ";
+      for (JSError err : compiler.getErrors()) {
+        msg += err.toString() + "\n";
+      }
+      assertTrue(msg, compiler.getErrorCount() == 0);
+    }
+  }
+
   private void helperExposeExpression(
       String code,
       String fnName,
@@ -494,6 +506,7 @@ public class ExpresssionDecomposerTest extends TestCase {
 
     compiler.resetUniqueNameId();
     decomposer.exposeExpression(callSite);
+    validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
     assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
         "\nResult: " + compiler.toSource(tree) +
@@ -535,6 +548,7 @@ public class ExpresssionDecomposerTest extends TestCase {
 
     compiler.resetUniqueNameId();
     decomposer.moveExpression(callSite);
+    validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
     assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
         "\nResult: " + compiler.toSource(tree) +

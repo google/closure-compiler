@@ -1738,9 +1738,13 @@ public final class NodeUtil {
    * Create a node for an empty result expression:
    *   "void 0"
    */
-  static Node newUndefinedNode() {
+  static Node newUndefinedNode(Node srcReferenceNode) {
     // TODO(johnlenz): Why this instead of the more common "undefined"?
-    return new Node(Token.VOID, Node.newNumber(0));
+    Node node = new Node(Token.VOID, Node.newNumber(0));
+    if (srcReferenceNode != null) {
+        node.copyInformationFromForTree(srcReferenceNode);
+    }
+    return node;
   }
 
   /**
@@ -1749,9 +1753,12 @@ public final class NodeUtil {
   static Node newVarNode(String name, Node value) {
     Node nodeName = Node.newString(Token.NAME, name);
     if (value != null) {
-      nodeName.addChildrenToBack(value);
+      Preconditions.checkState(value.getNext() == null);
+      nodeName.addChildToBack(value);
+      nodeName.copyInformationFrom(value);
     }
-    Node var = new Node(Token.VAR, nodeName);
+    Node var = new Node(Token.VAR, nodeName)
+        .copyInformationFrom(nodeName);
 
     return var;
   }

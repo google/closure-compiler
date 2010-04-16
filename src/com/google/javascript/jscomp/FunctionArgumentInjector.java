@@ -102,7 +102,8 @@ class FunctionArgumentInjector {
         argMap.put(fnArg.getString(), cArg);
         cArg = cArg.getNext();
       } else {
-        argMap.put(fnArg.getString(), NodeUtil.newUndefinedNode());
+        Node srcLocation = callNode;
+        argMap.put(fnArg.getString(), NodeUtil.newUndefinedNode(srcLocation));
       }
     }
 

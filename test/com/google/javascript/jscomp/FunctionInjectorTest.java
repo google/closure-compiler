@@ -1235,6 +1235,18 @@ public class FunctionInjectorTest extends TestCase {
         code, expectedResult, fnName, mode, false);
   }
 
+  private void validateSourceInfo(Compiler compiler, Node subtree) {
+    (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
+    // Source information problems are reported as compiler errors.
+    if (compiler.getErrorCount() != 0) {
+      String msg = "Error encountered: ";
+      for (JSError err : compiler.getErrors()) {
+        msg += err.toString() + "\n";
+      }
+      assertTrue(msg, compiler.getErrorCount() == 0);
+    }
+  }
+
   public void helperInlineReferenceToFunction(
       String code, final String expectedResult,
       final String fnName, final InliningMode mode,
@@ -1297,6 +1309,7 @@ public class FunctionInjectorTest extends TestCase {
 
         Node result = injector.inline(
             t, n, fnName, fnNode, mode);
+        validateSourceInfo(compiler, result);
         String explanation = expectedRoot.checkTreeEquals(tree.getFirstChild());
         assertNull("\nExpected: " + toSource(expectedRoot) +
             "\nResult: " + toSource(tree.getFirstChild()) +

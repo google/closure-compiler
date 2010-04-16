@@ -239,8 +239,8 @@ class InlineVariables implements CompilerPass {
           value = init.getAssignedValue();
         } else {
           // Create a new node for variable that is never initialized.
-          value = NodeUtil.newUndefinedNode()
-              .copyInformationFromForTree(declaration.getNameNode());
+          Node srcLocation = declaration.getNameNode();
+          value = NodeUtil.newUndefinedNode(srcLocation);
         }
         Preconditions.checkNotNull(value);
         inlineWellDefinedVariable(v, value, referenceInfo.references);

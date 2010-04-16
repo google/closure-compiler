@@ -17,6 +17,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -142,7 +143,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
         "}",
         "foo", null);
   }
-  
+
   public void testMutateCallInLoopVars1() {
     // baseline: outside a loop, the constant remains constant.
     boolean callInLoop = false;
@@ -157,7 +158,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
         "function foo(a){var B = bar(); a;}; foo(1);",
         "{var B$$inline_3 = bar(); 1;}",
         "foo", null, false, callInLoop);
-  }  
+  }
 
 
   public void helperMutate(
@@ -179,6 +180,18 @@ public class FunctionToBlockMutatorTest extends TestCase {
     helperMutate(code, expectedResult, fnName, resultName, false, false);
   }
 
+  private void validateSourceInfo(Compiler compiler, Node subtree) {
+    (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
+    // Source information problems are reported as compiler errors.
+    if (compiler.getErrorCount() != 0) {
+      String msg = "Error encountered: ";
+      for (JSError err : compiler.getErrors()) {
+        msg += err.toString() + "\n";
+      }
+      assertTrue(msg, compiler.getErrorCount() == 0);
+    }
+  }
+
   public void helperMutate(
       String code, final String expectedResult, final String fnName,
       final String resultName,
@@ -188,8 +201,10 @@ public class FunctionToBlockMutatorTest extends TestCase {
     final FunctionToBlockMutator mutator = new FunctionToBlockMutator(
         compiler, compiler.getUniqueNameIdSupplier());
     Node expectedRoot = parse(compiler, expectedResult);
+    Preconditions.checkState(compiler.getErrorCount() == 0);
     final Node expected = expectedRoot.getFirstChild();
     final Node tree = parse(compiler, code);
+    Preconditions.checkState(compiler.getErrorCount() == 0);
 
     Node externsRoot = new Node(Token.EMPTY);
     Node mainRoot = tree;
@@ -210,6 +225,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
         Node result = mutator.mutate(
             fnName, fnNode, n, resultName,
             needsDefaultResult, isCallInLoop);
+        validateSourceInfo(compiler, result);
         String explanation = expected.checkTreeEquals(result);
         assertNull("\nExpected: " + compiler.toSource(expected) +
             "\nResult: " + compiler.toSource(result) +

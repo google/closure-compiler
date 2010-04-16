@@ -228,7 +228,8 @@ class FunctionInjector {
 
     Node newExpression;
     if (!block.hasChildren()) {
-      newExpression = NodeUtil.newUndefinedNode();
+      Node srcLocation = block;
+      newExpression = NodeUtil.newUndefinedNode(srcLocation);
     } else {
       Node returnNode = block.getFirstChild();
       Preconditions.checkArgument(returnNode.getType() == Token.RETURN);
@@ -448,7 +449,9 @@ class FunctionInjector {
             NodeUtil.isStatementBlock(injectionPointParent));
 
         // Declare the intermediate result name.
-        newBlock.addChildrenToFront(NodeUtil.newVarNode(resultName, null));
+        newBlock.addChildrenToFront(
+            NodeUtil.newVarNode(resultName, null)
+                 .copyInformationFromForTree(callNode));
         // Inline the function before the selected injection point (before
         // the call).
         injectionPointParent.addChildBefore(newBlock, injectionPoint);
@@ -645,7 +648,7 @@ class FunctionInjector {
       if (fnParam != null) {
         if (cArg != null) {
           // Check for arguments that are evaluated more than once.
-          // Note: Unlike block inlining, there it is not possible that a 
+          // Note: Unlike block inlining, there it is not possible that a
           // parameter reference will be in a loop.
           if (NodeUtil.mayEffectMutableState(cArg)
               && NodeUtil.getNameReferenceCount(

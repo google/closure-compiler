@@ -28,10 +28,10 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.DiGraph;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
-import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -305,51 +305,8 @@ final class NameAnalyzer implements CompilerPass {
       Node containingNode = parent.getParent();
       switch (parent.getType()) {
         case Token.VAR:
-          if (parent.getFirstChild() ==
-              parent.getLastChild()) {
-            replaceWithRhs(containingNode, parent);
-          } else {
-            // Break up var expression into the parts before the
-            // current declaration and the ones after.  Replace
-            // the current declaration with its RHS, after
-            // removing subexpressions with no side effects.
-            // Replacement nodes should end up between the two
-            // sets of variable declarations.
-            List<Node> earlyChildren = Lists.newArrayList();
-            List<Node> lateChildren = Lists.newArrayList();
-            boolean seen = false;
-            for (Node child : parent.children()) {
-              if (child == node) {
-                seen = true;
-                continue;
-              }
-
-              if (seen) {
-                lateChildren.add(child);
-              } else {
-                earlyChildren.add(child);
-              }
-            }
-
-            if (!earlyChildren.isEmpty() && !lateChildren.isEmpty()) {
-              Node earlyDecls = new Node(Token.VAR);
-              for (Node child : earlyChildren) {
-                parent.removeChild(child);
-                earlyDecls.addChildToBack(child);
-              }
-              containingNode.addChildBefore(earlyDecls, parent);
-            }
-
-            Node currDecl = new Node(Token.VAR);
-            parent.removeChild(node);
-            currDecl.addChildToBack(node);
-            if (earlyChildren.isEmpty() || !lateChildren.isEmpty()) {
-              containingNode.addChildBefore(currDecl, parent);
-            } else {
-              containingNode.addChildAfter(currDecl, parent);
-            }
-            replaceWithRhs(containingNode, currDecl);
-          }
+          Preconditions.checkState(parent.hasOneChild());
+          replaceWithRhs(containingNode, parent);
           break;
         case Token.FUNCTION:
           replaceWithRhs(containingNode, parent);
@@ -1527,7 +1484,7 @@ final class NameAnalyzer implements CompilerPass {
     List<Node> replacements =
         Lists.newArrayListWithExpectedSize(subexpressions.size());
     for (Node subexpression : subexpressions) {
-      replacements.add(new Node(Token.EXPR_RESULT, subexpression));
+      replacements.add(NodeUtil.newExpr(subexpression));
     }
     return replacements;
   }

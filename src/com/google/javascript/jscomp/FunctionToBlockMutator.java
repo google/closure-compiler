@@ -123,7 +123,8 @@ class FunctionToBlockMutator {
       Node name = n.getFirstChild();
       // It isn't initialized.
       if (!name.hasChildren()) {
-        name.addChildToBack(NodeUtil.newUndefinedNode());
+        Node srcLocation = name;
+        name.addChildToBack(NodeUtil.newUndefinedNode(srcLocation));
       }
       return;
     }
@@ -192,7 +193,8 @@ class FunctionToBlockMutator {
         String name = entry.getKey();
         if (namesToAlias.contains(name)) {
           Node newValue = entry.getValue().cloneTree();
-          Node newNode = NodeUtil.newVarNode(name, newValue);
+          Node newNode = NodeUtil.newVarNode(name, newValue)
+              .copyInformationFromForTree(newValue);
           newVars.add(0, newNode);
           // Remove the parameter from the list to replace.
           newArgMap.remove(name);
@@ -261,13 +263,15 @@ class FunctionToBlockMutator {
         replaceReturnWithBreak(block, null, resultName, labelName);
 
         // Add label
-        Node label = new Node(Token.LABEL);
-        Node name = Node.newString(Token.LABEL_NAME, labelName);
+        Node label = new Node(Token.LABEL).copyInformationFrom(block);
+        Node name = Node.newString(Token.LABEL_NAME, labelName)
+            .copyInformationFrom(block);
         label.addChildToFront(name);
         label.addChildToBack(block);
 
-        Node newRoot = new Node(Token.BLOCK);
+        Node newRoot = new Node(Token.BLOCK).copyInformationFrom(block);
         newRoot.addChildrenToBack(label);
+        
 
         // The label is now the root.
         root = newRoot;
@@ -295,8 +299,10 @@ class FunctionToBlockMutator {
     Preconditions.checkArgument(node.getType() == Token.BLOCK);
 
     // A result is needed create a dummy value.
-    Node retVal = NodeUtil.newUndefinedNode();
+    Node srcLocation = node;
+    Node retVal = NodeUtil.newUndefinedNode(srcLocation);
     Node resultNode = createAssignStatementNode(resultName, retVal);
+    resultNode.copyInformationFromForTree(node);
 
     node.addChildrenToBack(resultNode);
   }
@@ -318,6 +324,7 @@ class FunctionToBlockMutator {
     if (resultNode == null) {
       block.removeChild(ret);
     } else {
+      resultNode.copyInformationFromForTree(ret);
       block.replaceChild(ret, resultNode);
     }
   }
@@ -361,7 +368,8 @@ class FunctionToBlockMutator {
     } else {
       if (retVal == null) {
         // A result is needed create a dummy value.
-        retVal = NodeUtil.newUndefinedNode();
+        Node srcLocation = node;
+        retVal = NodeUtil.newUndefinedNode(srcLocation);
       }
       // Create a "resultName = retVal;" statement.
       resultNode = createAssignStatementNode(resultName, retVal);
@@ -403,8 +411,10 @@ class FunctionToBlockMutator {
       Node breakNode = new Node(Token.BREAK, name);
 
       // Replace the node in parent, and reset current to the first new child.
+      breakNode.copyInformationFromForTree(current);
       parent.replaceChild(current, breakNode);
       if (resultNode != null) {
+        resultNode.copyInformationFromForTree(current);
         parent.addChildBefore(resultNode, breakNode);
       }
       current = breakNode;

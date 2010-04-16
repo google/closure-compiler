@@ -23,6 +23,12 @@ public class InlineGettersTest extends CompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    super.enableLineNumberCheck(true);
+  }
+
+  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new InlineGetters(compiler);
   }
@@ -241,10 +247,10 @@ public class InlineGettersTest extends CompilerTestCase {
   public void testIssue2508576_2() {
     // Anonymous object definition with a side-effect should be left alone.
     testSame("({a:function(){},b:x()}).a(\"a\")");
-  }  
+  }
 
   public void testIssue2508576_3() {
     // Anonymous object definition without side-effect should be removed.
     test("({a:function(){},b:alert}).a(\"a\")", "");
-  }  
+  }
 }

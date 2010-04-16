@@ -303,7 +303,7 @@ class ExpressionDecomposer {
   /**
    *
    * @param expr The conditional expression to extract.
-   * @param injectionPoint The before which extracted expression, whould be
+   * @param injectionPoint The before which extracted expression, would be
    *     injected.
    * @param needResult  Whether the result of the expression is required.
    * @return The node that contains the logic of the expression after
@@ -324,27 +324,27 @@ class ExpressionDecomposer {
 
     // Transform the conditional to an IF statement.
     Node cond = null;
-    Node trueExpr = new Node(Token.BLOCK);
-    Node falseExpr = new Node(Token.BLOCK);
+    Node trueExpr = new Node(Token.BLOCK).copyInformationFrom(expr);
+    Node falseExpr = new Node(Token.BLOCK).copyInformationFrom(expr);
     switch (expr.getType()) {
       case Token.HOOK:
         // a = x?y:z --> if (x) {a=y} else {a=z}
         cond = first;
-        trueExpr.addChildToFront(new Node(Token.EXPR_RESULT,
+        trueExpr.addChildToFront(NodeUtil.newExpr(
             buildResultExpression(second, needResult, tempName)));
-        falseExpr.addChildToFront(new Node(Token.EXPR_RESULT,
+        falseExpr.addChildToFront(NodeUtil.newExpr(
             buildResultExpression(last, needResult, tempName)));
         break;
       case Token.AND:
         // a = x&&y --> if (a=x) {a=y} else {}
         cond = buildResultExpression(first, needResult, tempName);
-        trueExpr.addChildToFront(new Node(Token.EXPR_RESULT,
+        trueExpr.addChildToFront(NodeUtil.newExpr(
             buildResultExpression(last, needResult, tempName)));
         break;
       case Token.OR:
         // a = x||y --> if (a=x) {} else {a=y}
         cond = buildResultExpression(first, needResult, tempName);
-        falseExpr.addChildToFront(new Node(Token.EXPR_RESULT,
+        falseExpr.addChildToFront(NodeUtil.newExpr(
             buildResultExpression(last, needResult, tempName)));
         break;
       default:
@@ -358,10 +358,11 @@ class ExpressionDecomposer {
     } else {
       ifNode = new Node(Token.IF, cond, trueExpr);
     }
+    ifNode.copyInformationFrom(expr);
 
     if (needResult) {
-      Node tempVarNode = new Node(Token.VAR,
-          Node.newString(Token.NAME, tempName));
+      Node tempVarNode = NodeUtil.newVarNode(tempName, null)
+          .copyInformationFromForTree(expr);
       Node injectionPointParent = injectionPoint.getParent();
       injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
       injectionPointParent.addChildAfter(ifNode, tempVarNode);
@@ -394,7 +395,7 @@ class ExpressionDecomposer {
     if (needResult) {
       return new Node(Token.ASSIGN,
           Node.newString(Token.NAME, tempName),
-          expr);
+          expr).copyInformationFromForTree(expr);
     } else {
       return expr;
     }
@@ -440,7 +441,8 @@ class ExpressionDecomposer {
 
     // The temp is known to be constant.
     String tempName = getTempConstantValueName();
-    Node replacementValueNode = Node.newString(Token.NAME, tempName);
+    Node replacementValueNode = Node.newString(Token.NAME, tempName)
+        .copyInformationFrom(expr);
 
     Node tempNameValue;
 
@@ -471,9 +473,7 @@ class ExpressionDecomposer {
     }
 
     // Re-add the expression in the declaration of the temporary name.
-    Node tempNameNode = Node.newString(Token.NAME, tempName);
-    tempNameNode.addChildToBack(tempNameValue);
-    Node tempVarNode = new Node(Token.VAR, tempNameNode);
+    Node tempVarNode = NodeUtil.newVarNode(tempName, tempNameValue);
 
     Node injectionPointParent = injectionPoint.getParent();
     injectionPointParent.addChildBefore(tempVarNode, injectionPoint);

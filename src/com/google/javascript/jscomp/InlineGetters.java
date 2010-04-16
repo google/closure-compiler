@@ -255,7 +255,8 @@ class InlineGetters extends MethodCompilerPass {
     if (NodeUtil.isExprCall(parent)) {
       parent.getParent().replaceChild(parent, new Node(Token.EMPTY));
     } else {
-      parent.replaceChild(call, new Node(Token.VOID, Node.newNumber(0)));
+      Node srcLocation = call;
+      parent.replaceChild(call, NodeUtil.newUndefinedNode(srcLocation));
     }
     compiler.reportCodeChange();
   }
