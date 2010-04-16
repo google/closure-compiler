@@ -49,6 +49,11 @@ public class FunctionRewriterTest extends CompilerTestCase {
     "}";
 
   @Override
+  protected void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
+  @Override
   protected FunctionRewriter getProcessor(Compiler compiler) {
     return new FunctionRewriter(compiler);
   }

@@ -53,6 +53,7 @@ public class AliasExternalsTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
+    super.enableLineNumberCheck(false);
     unaliasableGlobals = null;
     aliasableGlobals = null;
   }

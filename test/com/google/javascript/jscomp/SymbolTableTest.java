@@ -37,6 +37,7 @@ public class SymbolTableTest extends CompilerTestCase {
   }
 
   @Override public void setUp() {
+    super.enableLineNumberCheck(false);
     setExpectedSymbolTableError(null);
     targetError = null;
   }

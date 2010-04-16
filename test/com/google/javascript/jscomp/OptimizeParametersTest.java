@@ -28,6 +28,11 @@ public class OptimizeParametersTest extends CompilerTestCase {
     return new OptimizeParameters(compiler);
   }
 
+  @Override
+  public void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
   public void testNoRemoval() {
     testSame("function foo(p1) { } foo(1); foo(2)");
     testSame("function foo(p1) { } foo(1,2); foo(3,4)");

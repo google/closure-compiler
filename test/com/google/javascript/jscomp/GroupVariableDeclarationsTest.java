@@ -18,6 +18,11 @@ package com.google.javascript.jscomp;
 
 public class GroupVariableDeclarationsTest extends CompilerTestCase {
 
+  @Override
+  protected void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
   public void testGroupingUninitializedVarsInScope() {
     // basic with just one fn call in between
     test("var a = 1; f1(); var b;", "var a = 1, b; f1();");

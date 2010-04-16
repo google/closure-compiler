@@ -163,10 +163,10 @@ class InlineFunctions implements CompilerPass {
       if ((t.inGlobalScope() && inlineGlobalFunctions)
           || (!t.inGlobalScope() && inlineLocalFunctions)) {
         findNamedFunctions(t, n, parent);
-      } 
-      
-      if (inlineAnonymousFunctionExpressions) {
-        findAnonymousFunctionExpressions(t, n);
+
+        if (inlineAnonymousFunctionExpressions) {
+          findAnonymousFunctionExpressions(t, n);
+        }
       }
     }
 
@@ -313,7 +313,7 @@ class InlineFunctions implements CompilerPass {
       // by external definitions.
       return false;
     }
-    
+
     // Don't inline this special function
     if (RenameProperties.RENAME_PROPERTY_FUNCTION_NAME.equals(fnName)) {
       return false;
@@ -751,7 +751,7 @@ class InlineFunctions implements CompilerPass {
     for (Reference ref : fs.getReferences()) {
       if (!ref.inlined) {
         throw new IllegalStateException("Call site missed.\n call: "
-            + ref.callNode.toStringTree() + "\n parent:  " 
+            + ref.callNode.toStringTree() + "\n parent:  "
             + ref.callNode.getParent().toStringTree());
       }
     }

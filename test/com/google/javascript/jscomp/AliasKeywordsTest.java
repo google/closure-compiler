@@ -33,6 +33,11 @@ public class AliasKeywordsTest extends CompilerTestCase {
     = ENOUGH_TO_ALIAS_THROW - 1;
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
+  @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new AliasKeywords(compiler);
   }

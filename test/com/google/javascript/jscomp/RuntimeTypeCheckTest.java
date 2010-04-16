@@ -30,6 +30,11 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
     enableTypeCheck(CheckLevel.WARNING);
   }
 
+  @Override
+  protected void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
   public void testValue() {
     testChecks("/** @param {number} i */ function f(i) {}",
         "function f(i) {" +

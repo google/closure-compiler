@@ -66,7 +66,7 @@ public abstract class CompilerTestCase extends TestCase  {
   private boolean normalizeExpected = false;
 
   /** Whether to check that all line number information is preserved. */
-  private boolean checkLineNumbers = false;
+  private boolean checkLineNumbers = true;
 
   /**
    * An expected symbol table error. Only useful for testing the

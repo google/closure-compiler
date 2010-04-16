@@ -39,6 +39,11 @@ public class AliasStringsTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
+  @Override
   public CompilerPass getProcessor(Compiler compiler) {
     AliasStrings pass =
         new AliasStrings(compiler, moduleGraph, strings, "(?i)secret", false);

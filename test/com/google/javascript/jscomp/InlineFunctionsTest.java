@@ -24,9 +24,9 @@ package com.google.javascript.jscomp;
 public class InlineFunctionsTest extends CompilerTestCase {
   boolean allowGlobalFunctionInlining = true;
   boolean allowBlockInlining = true;
-  boolean allowExpressionDecomposition = true;
-  boolean allowAnonymousFunctionExpressionInlining = true;
-  boolean allowLocalFunctionInlining = true;
+  final boolean allowExpressionDecomposition = true;
+  final boolean allowAnonymousFunctionExpressionInlining = true;
+  final boolean allowLocalFunctionInlining = true;
 
   public InlineFunctionsTest() {
     this.enableNormalize();
@@ -37,6 +37,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableLineNumberCheck(true);
+    allowGlobalFunctionInlining = true;
     allowBlockInlining = true;
   }
 
@@ -1494,6 +1495,37 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testLocalFunctionInlining6() {
     testSame("function _f(){ function g() {this;} return g; }");
+  }
+
+  public void testLocalFunctionInliningOnly1() {
+    this.allowGlobalFunctionInlining = true;
+    test("function f(){} f()", "void 0;");
+    this.allowGlobalFunctionInlining = false;
+    testSame("function f(){} f()");
+  }
+
+  public void testLocalFunctionInliningOnly2() {
+    this.allowGlobalFunctionInlining = false;
+    testSame("function f(){} f()");
+
+    test("function f(){ function g() {return 1} return g() }; f();",
+         "function f(){ return 1 }; f();");
+  }
+
+  public void testLocalFunctionInliningOnly3() {
+    this.allowGlobalFunctionInlining = false;
+    testSame("function f(){} f()");
+
+    test("(function(){ function g() {return 1} return g() })();",
+         "(function(){ return 1 })();");
+  }
+
+  public void testLocalFunctionInliningOnly4() {
+    this.allowGlobalFunctionInlining = false;
+    testSame("function f(){} f()");
+
+    test("(function(){ return (function() {return 1})() })();",
+         "(function(){ return 1 })();");
   }
 
   // http://en.wikipedia.org/wiki/Fixed_point_combinator#Y_combinator

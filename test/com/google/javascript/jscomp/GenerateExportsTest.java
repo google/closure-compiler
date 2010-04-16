@@ -46,6 +46,7 @@ public class GenerateExportsTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    super.enableLineNumberCheck(false);
   }
 
   public void testExportSymbol() {

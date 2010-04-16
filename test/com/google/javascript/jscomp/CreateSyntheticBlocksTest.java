@@ -32,6 +32,11 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       public void process(Node externs, Node js) {

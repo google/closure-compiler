@@ -36,6 +36,11 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new ExportTestFunctions(compiler, "google_exportSymbol");
   }

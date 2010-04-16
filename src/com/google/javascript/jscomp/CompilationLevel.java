@@ -94,6 +94,8 @@ public enum CompilationLevel {
     options.closurePass = true;
     options.variableRenaming = VariableRenamingPolicy.LOCAL;
     options.inlineLocalVariables = true;
+    options.inlineLocalFunctions = true;
+    options.inlineAnonymousFunctionExpressions = true;    
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
     options.removeConstantExpressions = true;
@@ -161,6 +163,10 @@ public enum CompilationLevel {
     options.removeUnusedVars = true;
     options.removeUnusedVarsInGlobalScope = true;
 
+    // Move code around based on the defined modules.
+    options.crossModuleCodeMotion = true;
+    options.crossModuleMethodMotion = true;
+    
     // Kindly tell the user that they have JsDocs that we don't understand.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
         CheckLevel.WARNING);

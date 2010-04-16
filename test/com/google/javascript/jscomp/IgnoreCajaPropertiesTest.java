@@ -24,7 +24,7 @@ package com.google.javascript.jscomp;
  */
 public class IgnoreCajaPropertiesTest extends CompilerTestCase {
 
-  private static final String EXTERNS = 
+  private static final String EXTERNS =
       "var z = {}, " +
       "f = function(y) { z[y] = z[y] ? (z[y]+1) : 1; }, " +
       "x, i;";
@@ -34,10 +34,15 @@ public class IgnoreCajaPropertiesTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    super.enableLineNumberCheck(false);
+  }
+
+  @Override
   public int getNumRepetitions() {
     return 1;
   }
-  
+
   public void testSimpleKey() {
     // Test a one-statement body.
     test("for (i in x) f(i);",
@@ -53,7 +58,7 @@ public class IgnoreCajaPropertiesTest extends CompilerTestCase {
          "    i = JSCompiler_IgnoreCajaProperties_0;" +
          "    { f(i); f(i); }" +
          "  }");
-    // Check that the counter's incrementing properly and 
+    // Check that the counter's incrementing properly and
     //   that nested loops work.
     test("for (i in x) for (j in y) f(i,j);",
          "for (var JSCompiler_IgnoreCajaProperties_1 in x)" +
@@ -91,7 +96,7 @@ public class IgnoreCajaPropertiesTest extends CompilerTestCase {
          "  }" +
          "}");
   }
-  
+
   public void testVarKey() {
     // Test a one-statement body.
     test("for (var j in x) { f(j); }",
@@ -127,12 +132,12 @@ public class IgnoreCajaPropertiesTest extends CompilerTestCase {
          "    }" +
          "  }");
   }
-  
+
   public void testFourChildFor() {
     test("for (i = 0; i < 10; ++i) { f(i); }",
          "for (i = 0; i < 10; ++i) { f(i); }");
   }
-  
+
   /** {@inheritDoc} */
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
