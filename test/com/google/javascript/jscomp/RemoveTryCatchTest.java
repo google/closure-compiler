@@ -24,12 +24,10 @@ public class RemoveTryCatchTest extends CompilerTestCase {
     super("", false);
   }
 
-  /** {@inheritDoc} */
   @Override public CompilerPass getProcessor(Compiler compiler) {
     return new RemoveTryCatch(compiler);
   }
 
-  /** {@inheritDoc} */
   @Override public int getNumRepetitions() {
     // Use only one repetition because test code contains JSDoc comments.
     return 1;

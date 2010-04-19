@@ -39,7 +39,6 @@ public class SanityCheckTest extends CompilerTestCase {
     return 1;
   }
 
-  /** {@inheritDoc} */
   @Override public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {

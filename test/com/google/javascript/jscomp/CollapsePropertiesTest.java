@@ -36,7 +36,6 @@ public class CollapsePropertiesTest extends CompilerTestCase {
     super(EXTERNS);
   }
 
-  /** {@inheritDoc} */
   @Override public CompilerPass getProcessor(Compiler compiler) {
     return new CollapseProperties(
         compiler, collapsePropertiesOnExternTypes, true);
@@ -47,7 +46,6 @@ public class CollapsePropertiesTest extends CompilerTestCase {
     super.enableLineNumberCheck(true);
   }
 
-  /** {@inheritDoc} */
   @Override public int getNumRepetitions() {
     return 1;
   }

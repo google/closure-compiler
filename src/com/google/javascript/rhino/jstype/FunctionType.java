@@ -780,6 +780,8 @@ public class FunctionType extends PrototypeObjectType {
 
   @Override
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    setResolvedTypeInternal(this);
+
     call = (ArrowType) safeResolve(call, t, scope);
     prototype = (FunctionPrototypeType) safeResolve(prototype, t, scope);
     typeOfThis = (ObjectType) safeResolve(typeOfThis, t, scope);

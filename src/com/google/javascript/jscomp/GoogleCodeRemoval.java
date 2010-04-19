@@ -149,9 +149,7 @@ final class GoogleCodeRemoval implements CompilerPass {
     this.compiler = compiler;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new FindAbstractMethods());
 

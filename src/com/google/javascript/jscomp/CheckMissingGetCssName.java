@@ -50,17 +50,11 @@ class CheckMissingGetCssName
         Pattern.compile("\\b(?:" + blacklistRegex + ")").matcher("");
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.getType() == Token.STRING &&

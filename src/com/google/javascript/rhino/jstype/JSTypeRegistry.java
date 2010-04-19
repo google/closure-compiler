@@ -162,6 +162,10 @@ public class JSTypeRegistry implements Serializable {
     this.tolerateUndefinedValues = tolerateUndefinedValues;
   }
 
+  public ErrorReporter getErrorReporter() {
+    return reporter;
+  }
+
   public boolean shouldTolerateUndefinedValues() {
     return tolerateUndefinedValues;
   }
@@ -730,6 +734,9 @@ public class JSTypeRegistry implements Serializable {
     return type;
   }
 
+  /**
+   * Resolve all the unresolved types in the given scope.
+   */
   public void resolveTypesInScope(StaticScope<JSType> scope) {
     for (NamedType type : unresolvedNamedTypes.get(scope)) {
       type.resolve(reporter, scope);

@@ -70,9 +70,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
     this.graph = graph;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     logger.info("Moving functions + variable into deeper modules");
 
@@ -275,9 +273,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.getType() != Token.NAME) {
       return;

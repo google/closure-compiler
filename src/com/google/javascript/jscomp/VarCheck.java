@@ -78,14 +78,14 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
     this.sanityCheck = sanityCheck;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, externs, new NameRefInExternsCheck());
     NodeTraversal.traverseRoots(
         compiler, Lists.newArrayList(externs, root), this);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.getType() != Token.NAME) {
       return;

@@ -108,9 +108,7 @@ class AliasStrings extends AbstractPostOrderCallback
     this.outputStringUsage = outputStringUsage;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     logger.info("Aliasing common strings");
 
@@ -128,9 +126,7 @@ class AliasStrings extends AbstractPostOrderCallback
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.getType() == Token.STRING &&
         parent.getType() != Token.GETPROP &&

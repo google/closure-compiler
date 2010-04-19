@@ -1290,9 +1290,9 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
   public StaticScope<ConcreteType> createInstanceScope(
       ObjectType instanceType) {
     ConcreteScope parentScope = null;
-    if (instanceType.getImplicitPrototype() != null) {
-      ConcreteInstanceType prototype =
-          createConcreteInstance(instanceType.getImplicitPrototype());
+    ObjectType implicitProto = instanceType.getImplicitPrototype();
+    if (implicitProto != null && !implicitProto.isUnknownType()) {
+      ConcreteInstanceType prototype = createConcreteInstance(implicitProto);
       parentScope = (ConcreteScope) prototype.getScope();
     }
     ConcreteScope scope = new ConcreteScope(parentScope);

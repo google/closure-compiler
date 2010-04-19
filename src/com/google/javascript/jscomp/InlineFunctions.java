@@ -103,9 +103,7 @@ class InlineFunctions implements CompilerPass {
     return fs;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.isNormalized());
 

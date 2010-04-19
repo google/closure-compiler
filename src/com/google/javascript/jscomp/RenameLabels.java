@@ -233,9 +233,7 @@ final class RenameLabels implements CompilerPass {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     // Do variable reference counting.
     NodeTraversal.traverse(compiler, root, new ProcessLabels());

@@ -2544,6 +2544,9 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DT><A HREF="./com/google/javascript/rhino/Context.html#getErrorReporter()"><B>getErrorReporter()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Context.html" title="class in com.google.javascript.rhino">Context</A>
 <DD>Get the current error reporter.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#getErrorReporter()"><B>getErrorReporter()</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/BasicErrorManager.html#getErrors()"><B>getErrors()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/BasicErrorManager.html" title="class in com.google.javascript.jscomp">BasicErrorManager</A>
 <DD>&nbsp;
@@ -4732,9 +4735,7 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DD>Returns whether this node is an optional argument node.
 <DT><A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)"><B>isOptionalParameter(Node)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A>
-<DD>This checks whether a given parameter name should be treated as an
- optional parameter as far as type checking or function call arg count
- checking is concerned.
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)"><B>isOptionalParameter(Node)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
 <DD>This checks whether a given parameter name should be treated as an
@@ -4770,7 +4771,7 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
  fileoverview tag.
 <DT><A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html#isPrivate(java.lang.String)"><B>isPrivate(String)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A>
-<DD>Checks whether a name should be considered private.
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)"><B>isPrivate(String)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
 <DD>Checks whether a name should be considered private.
@@ -4979,8 +4980,7 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DD>Returns whether this node is a variable length argument node.
 <DT><A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)"><B>isVarArgsParameter(Node)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp">ClosureCodingConvention</A>
-<DD>This checks whether a given parameter should be treated as a marker
- for a variable argument list function.
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)"><B>isVarArgsParameter(Node)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
 <DD>This checks whether a given parameter should be treated as a marker
@@ -6576,7 +6576,7 @@ Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javasc
 <DD>Resolves a type expression, expecting the given warnings.
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#resolveTypesInScope(com.google.javascript.rhino.jstype.StaticScope)"><B>resolveTypesInScope(StaticScope&lt;JSType&gt;)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
-<DD>&nbsp;
+<DD>Resolve all the unresolved types in the given scope.
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#restrictByNotNullOrUndefined()"><B>restrictByNotNullOrUndefined()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
 <DD>If this is a union type, returns a union type that does not include

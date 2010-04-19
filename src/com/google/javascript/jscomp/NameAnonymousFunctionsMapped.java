@@ -62,7 +62,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
     renameMap = Maps.newHashMap();
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void process(Node externs, Node root) {
     AnonymousFunctionNamingCallback namingCallback =
         new AnonymousFunctionNamingCallback(new MappedFunctionNamer());
@@ -84,7 +84,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
       implements AnonymousFunctionNamingCallback.FunctionNamer {
     static final char DELIMITER = '.';
 
-    /** {@inheritDoc} */
+    @Override
     public final String getName(Node node) {
       switch (node.getType()) {
         case Token.NAME:
@@ -95,7 +95,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
       }
     }
 
-    /** {@inheritDoc} */
+    @Override
     public final void setFunctionName(String name, Node fnNode) {
       Node fnNameNode = fnNode.getFirstChild();
       String newName = renameMap.get(name);
@@ -108,7 +108,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
       bytesUsed += newName.length();
     }
 
-    /** {@inheritDoc} */
+    @Override
     public final String getCombinedName(String lhs, String rhs) {
       return lhs + DELIMITER + rhs;
     }

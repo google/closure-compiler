@@ -20,30 +20,29 @@ import static com.google.javascript.jscomp.TypeCheck.ENUM_DUP;
 import static com.google.javascript.jscomp.TypeCheck.ENUM_NOT_CONSTANT;
 import static com.google.javascript.jscomp.TypeCheck.MULTIPLE_VAR_DEF;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.DATE_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.EVAL_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.RANGE_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.TYPE_ERROR_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.URI_ERROR_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
-import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -53,6 +52,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -64,8 +64,11 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * Creates the symbol table of variables available in the current scope and
@@ -97,10 +100,35 @@ final class TypedScopeCreator implements ScopeCreator {
           "Constructor expected as first argument");
 
   private final AbstractCompiler compiler;
+  private final ErrorReporter typeParsingErrorReporter;
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
   private Map<ObjectType, ObjectType> delegateProxyMap = Maps.newHashMap();
+
+  /**
+   * Defer attachment of types to nodes until all type names
+   * have been resolved. Then, we can resolve the type and attach it.
+   */
+  private class DeferredSetType {
+    final Node node;
+    final JSType type;
+
+    DeferredSetType(Node node, JSType type) {
+      Preconditions.checkNotNull(node);
+      Preconditions.checkNotNull(type);
+      this.node = node;
+      this.type = type;
+
+      // Other parts of this pass may read off the node.
+      // (like when we set the LHS of an assign with a typed RHS function.)
+      node.setJSType(type);
+    }
+
+    void resolve(Scope scope) {
+      node.setJSType(type.resolve(typeParsingErrorReporter, scope));
+    }
+  }
 
   TypedScopeCreator(AbstractCompiler compiler) {
     this(compiler, compiler.getCodingConvention());
@@ -112,6 +140,7 @@ final class TypedScopeCreator implements ScopeCreator {
     this.validator = compiler.getTypeValidator();
     this.codingConvention = codingConvention;
     this.typeRegistry = compiler.getTypeRegistry();
+    this.typeParsingErrorReporter = typeRegistry.getErrorReporter();
   }
 
   /**
@@ -130,6 +159,7 @@ final class TypedScopeCreator implements ScopeCreator {
       GlobalScopeBuilder scopeBuilder = new GlobalScopeBuilder(newScope);
       NodeTraversal.traverse(compiler, root, scopeBuilder);
       scopeBuilder.resolveStubDeclarations();
+      scopeBuilder.resolveTypes();
 
       // Gather the properties in each function that we found in the
       // global scope, if that function has a @this type that we can
@@ -150,9 +180,10 @@ final class TypedScopeCreator implements ScopeCreator {
           typeRegistry, newScope, delegateProxyMap);
     } else {
       newScope = new Scope(parent, root);
-      (new LocalScopeBuilder(newScope)).build();
+      LocalScopeBuilder scopeBuilder = new LocalScopeBuilder(newScope);
+      scopeBuilder.build();
+      scopeBuilder.resolveTypes();
     }
-    typeRegistry.resolveTypesInScope(newScope);
     return newScope;
   }
 
@@ -272,6 +303,9 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     final Scope scope;
 
+    private final List<DeferredSetType> deferredSetTypes =
+        Lists.newArrayList();
+
     /**
      * The current source file that we're in.
      */
@@ -279,6 +313,27 @@ final class TypedScopeCreator implements ScopeCreator {
 
     private AbstractScopeBuilder(Scope scope) {
       this.scope = scope;
+    }
+
+    void setDeferredType(Node node, JSType type) {
+      deferredSetTypes.add(new DeferredSetType(node, type));
+    }
+
+    void resolveTypes() {
+      // Resolve types and attach them to nodes.
+      for (DeferredSetType deferred : deferredSetTypes) {
+        deferred.resolve(scope);
+      }
+
+      // Resolve types and attach them to scope slots.
+      Iterator<Var> vars = scope.getVars();
+      while (vars.hasNext()) {
+        vars.next().resolveType(typeParsingErrorReporter);
+      }
+
+      // Tell the type registry that any remaining types
+      // are unknown.
+      typeRegistry.resolveTypesInScope(scope);
     }
 
     @Override
@@ -425,9 +480,11 @@ final class TypedScopeCreator implements ScopeCreator {
             getFunctionType(lvalue.getQualifiedName(), rvalue, info,
                 lvalue);
           } else if (info != null && info.hasEnumParameterType()) {
-            lvalue.setJSType(
-                getEnumType(lvalue.getQualifiedName(), n, rvalue,
-                    info.getEnumParameterType().evaluate(scope, typeRegistry)));
+            JSType type = getEnumType(lvalue.getQualifiedName(), n, rvalue,
+                info.getEnumParameterType().evaluate(scope, typeRegistry));
+            if (type != null) {
+              setDeferredType(lvalue, type);
+            }
           }
           break;
 
@@ -576,7 +633,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // assigning the function type to the function node
       if (rValue != null) {
-        rValue.setJSType(functionType);
+        setDeferredType(rValue, functionType);
       }
 
       // all done
@@ -720,7 +777,7 @@ final class TypedScopeCreator implements ScopeCreator {
             sourceName, n, parent, oldVar, variableName, type);
       } else {
         if (!inferred) {
-          n.setJSType(type);
+          setDeferredType(n, type);
         }
         CompilerInput input = compiler.getInput(sourceName);
         scope.declare(variableName, n, type, input, inferred);
@@ -884,7 +941,7 @@ final class TypedScopeCreator implements ScopeCreator {
             ObjectType type = ObjectType.cast(
                 typeRegistry.getType(objectLiteralCast.typeName));
             if (type != null && type.getConstructor() != null) {
-              objectLiteralCast.objectNode.setJSType(type);
+              setDeferredType(objectLiteralCast.objectNode, type);
             } else {
               compiler.report(JSError.make(t.getSourceName(), n,
                                            CONSTRUCTOR_EXPECTED));

@@ -230,7 +230,7 @@ class GlobalNamespace {
       this.nodeFilter = nodeFilter;
     }
 
-    /** {@inheritDoc} */
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (nodeFilter != null && !nodeFilter.apply(n)) {
         return;
@@ -948,7 +948,6 @@ class GlobalNamespace {
       return parent == null;
     }
 
-    /** {@inheritDoc} */
     @Override public String toString() {
       return fullName() + " (" + type + "): globalSets=" + globalSets +
           ", localSets=" + localSets + ", totalGets=" + totalGets +

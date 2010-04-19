@@ -650,6 +650,7 @@ isOptionalParameter</H3>
 <PRE>
 public boolean <B>isOptionalParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
 <DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isOptionalParameter(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
 <DD>This checks whether a given parameter name should be treated as an
  optional parameter as far as type checking or function call arg count
  checking is concerned. Note that an optional function parameter may be
@@ -672,6 +673,7 @@ isVarArgsParameter</H3>
 <PRE>
 public boolean <B>isVarArgsParameter</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;parameter)</PRE>
 <DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isVarArgsParameter(com.google.javascript.rhino.Node)">CodingConvention</A></CODE></B></DD>
 <DD>This checks whether a given parameter should be treated as a marker
  for a variable argument list function. A VarArgs parameter must be the
  last parameter in a function declaration.
@@ -692,6 +694,7 @@ isPrivate</H3>
 <PRE>
 public boolean <B>isPrivate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
 <DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isPrivate(java.lang.String)">CodingConvention</A></CODE></B></DD>
 <DD>Checks whether a name should be considered private. Private global
  variables and functions can only be referenced within the source file in
  which they are declared. Private properties and methods should only be

@@ -168,7 +168,6 @@ class AliasKeywords implements CompilerPass {
     }
 
     @Override
-    /** {@inheritDoc} */
     protected void aliasNode(Node throwNode, Node parent) {
       Node name = NodeUtil.newName(getAliasName(), throwNode, getAliasName());
       Node aliasCall = new Node(Token.CALL, name, throwNode.removeFirstChild());
@@ -185,7 +184,6 @@ class AliasKeywords implements CompilerPass {
     }
 
     @Override
-    /** {@inheritDoc} */
     protected int minOccurrencesRequiredToAlias() {
       return MIN_OCCURRENCES_REQUIRED_TO_ALIAS_THROW;
     }
@@ -227,13 +225,11 @@ class AliasKeywords implements CompilerPass {
     }
 
     @Override
-    /** {@inheritDoc} */
     protected int minOccurrencesRequiredToAlias() {
       return MIN_OCCURRENCES_REQUIRED_TO_ALIAS_LITERAL;
     }
 
     @Override
-    /** {@inheritDoc} */
     protected void aliasNode(Node n, Node parent) {
       Node aliasNode = NodeUtil.newName(getAliasName(), n, getAliasName());
       parent.replaceChild(n, aliasNode);

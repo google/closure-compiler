@@ -334,7 +334,6 @@ public class RenamePropertiesTest extends CompilerTestCase {
     return compiler;
   }
 
-  /** {@inheritDoc} */
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return renameProperties =

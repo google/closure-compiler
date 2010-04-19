@@ -119,9 +119,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     return exportedVariables;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     new NodeTraversal(compiler, this).traverse(root);
 
@@ -146,9 +144,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.CALL:

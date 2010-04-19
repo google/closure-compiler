@@ -539,13 +539,15 @@ public class TightenTypesTest extends CompilerTestCase {
     testSame(BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES
              + "/** @constructor */ function A() {};\n"
              + "/** @constructor \n@extends A */ function B() {};\n"
-             + "/** @return {Object} */ Object.prototype.eval = function(code) {};\n"
+             + "/** @return {Object} */ "
+             + "Object.prototype.eval = function(code) {};\n"
              + "/** @type {Object} */\n"
              + "A.prototype.a;\n"
              + "/** @return {Object} */\n"
              + "A.prototype.b = function(){};\n",
              "var a = (new A).b()", null, null);
-    assertType("(A,Array,B,Boolean,Date,Error,EvalError,Function,Number,Object,"
+    assertType("(A,ActiveXObject,Array,B,Boolean,Date,Error,EvalError,"
+               + "Function,Number,Object,"
                + "RangeError,ReferenceError,RegExp,String,SyntaxError,"
                + "TypeError,URIError)", getType("a"));
   }

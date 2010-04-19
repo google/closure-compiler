@@ -114,9 +114,7 @@ class CollapseProperties implements CompilerPass {
     this.inlineAliases = inlineAliases;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     GlobalNamespace namespace;
     if (collapsePropertiesOnExternTypes) {

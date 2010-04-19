@@ -67,7 +67,6 @@ public class StripCodeTest extends CompilerTestCase {
         stripNamePrefixes);
   }
 
-  /** {@inheritDoc} */
   @Override public CompilerPass getProcessor(Compiler compiler) {
     return createLoggerInstance(compiler);
   }

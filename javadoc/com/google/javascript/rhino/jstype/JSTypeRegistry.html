@@ -493,6 +493,14 @@ The type registry is used to resolve named types.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#getErrorReporter()">getErrorReporter</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#getGreatestSubtypeWithProperty(com.google.javascript.rhino.jstype.JSType, java.lang.String)">getGreatestSubtypeWithProperty</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;type,
                                <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;propertyName)</CODE>
@@ -609,7 +617,7 @@ The type registry is used to resolve named types.
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#resolveTypesInScope(com.google.javascript.rhino.jstype.StaticScope)">resolveTypesInScope</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Resolve all the unresolved types in the given scope.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -687,6 +695,20 @@ public <B>JSTypeRegistry</B>(<A HREF="../../../../../com/google/javascript/rhino
 <B>Method Detail</B></FONT></TH>
 </TR>
 </TABLE>
+
+<A NAME="getErrorReporter()"><!-- --></A><H3>
+getErrorReporter</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/ErrorReporter.html" title="interface in com.google.javascript.rhino">ErrorReporter</A> <B>getErrorReporter</B>()</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
 
 <A NAME="shouldTolerateUndefinedValues()"><!-- --></A><H3>
 shouldTolerateUndefinedValues</H3>
@@ -1005,6 +1027,8 @@ resolveTypesInScope</H3>
 <PRE>
 public void <B>resolveTypesInScope</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope)</PRE>
 <DL>
+<DD>Resolve all the unresolved types in the given scope.
+<P>
 <DD><DL>
 </DL>
 </DD>

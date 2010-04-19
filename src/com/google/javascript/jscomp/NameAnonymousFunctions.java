@@ -49,7 +49,7 @@ class NameAnonymousFunctions implements CompilerPass {
     this.compiler = compiler;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void process(Node externs, Node root) {
     AnonymousFunctionNamingCallback namingCallback =
         new AnonymousFunctionNamingCallback(new AnonymousFunctionNamer());
@@ -80,12 +80,12 @@ class NameAnonymousFunctions implements CompilerPass {
       return DELIMITER + name + DELIMITER;
     }
 
-    /** {@inheritDoc} */
+    @Override
     public final String getName(Node node) {
       return nameExtractor.getName(node);
     }
 
-    /** {@inheritDoc} */
+    @Override
     public final void setFunctionName(String name, Node fnNode) {
       Node fnNameNode = fnNode.getFirstChild();
       String uniqueName = getLikelyNonConflictingName(name);

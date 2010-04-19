@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -31,7 +32,6 @@ import com.google.javascript.rhino.jstype.StaticSlot;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 
 /**
  * Scope contains information about a variable scope in javascript.
@@ -221,6 +221,15 @@ public class Scope implements StaticScope<JSType> {
     void setType(JSType type) {
       Preconditions.checkState(isTypeInferred());
       this.type = type;
+    }
+
+    /**
+     * Resolve this variable's type.
+     */
+    void resolveType(ErrorReporter errorReporter) {
+      if (type != null) {
+        type = type.resolve(errorReporter, scope);
+      }
     }
 
     /**

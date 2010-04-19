@@ -59,7 +59,7 @@ class FunctionNames implements CompilerPass, Serializable {
     this.functionListExtractor = new FunctionListExtractor(functionMap);
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, functionListExtractor);
     AnonymousFunctionNamer namer = new AnonymousFunctionNamer(functionMap);

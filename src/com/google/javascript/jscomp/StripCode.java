@@ -76,9 +76,7 @@ class StripCode implements CompilerPass {
     this.varsToRemove = Sets.newHashSet();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new Strip());
   }
@@ -90,9 +88,7 @@ class StripCode implements CompilerPass {
    */
   private class Strip extends AbstractPostOrderCallback {
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.VAR:

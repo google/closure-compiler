@@ -26,7 +26,6 @@ public class RenamePrototypesTest extends CompilerTestCase {
     super(EXTERNS);
   }
 
-  /** {@inheritDoc} */
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return renamePrototypes =

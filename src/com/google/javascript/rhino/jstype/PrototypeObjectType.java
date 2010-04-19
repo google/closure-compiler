@@ -501,6 +501,8 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    setResolvedTypeInternal(this);
+
     // Don't try to resolve native types, because it's unnecessary and
     // there are infinite loops between native types.
     if (implicitPrototype != null && !implicitPrototype.isNativeObjectType()) {

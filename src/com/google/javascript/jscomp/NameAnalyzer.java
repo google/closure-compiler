@@ -884,17 +884,17 @@ final class NameAnalyzer implements CompilerPass {
     private class NodeAccumulator
         implements SideEffectAccumulator {
 
-      /** {@inheritDoc} */
+      @Override
       public boolean classDefiningCallsHaveSideEffects() {
         return false;
       }
 
-      /** {@inheritDoc} */
+      @Override
       public void keepSubTree(Node original) {
         addAllChildren(original);
       }
 
-      /** {@inheritDoc} */
+      @Override
       public void keepSimplifiedShortCircuitExpression(Node original) {
         Node condition = original.getFirstChild();
         Node thenBranch = condition.getNext();
@@ -902,7 +902,7 @@ final class NameAnalyzer implements CompilerPass {
         addSimplifiedChildren(thenBranch);
       }
 
-      /** {@inheritDoc} */
+      @Override
       public void keepSimplifiedHookExpression(Node hook,
                                                boolean thenHasSideEffects,
                                                boolean elseHasSideEffects) {
@@ -945,9 +945,7 @@ final class NameAnalyzer implements CompilerPass {
     this.changeProxy = new AstChangeProxy();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, externs, new ProcessExternals());
     NodeTraversal.traverse(compiler, root, new FindDependencyScopes());

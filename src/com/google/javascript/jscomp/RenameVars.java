@@ -272,9 +272,7 @@ final class RenameVars implements CompilerPass {
       }
     };
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     assignmentLog = new StringBuilder();
 

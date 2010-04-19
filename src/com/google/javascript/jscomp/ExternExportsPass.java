@@ -264,9 +264,7 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     this.mappedPaths = Maps.newHashMap();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     new NodeTraversal(compiler, this).traverse(root);
 
@@ -295,9 +293,7 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     return sb.toString();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
 

@@ -153,9 +153,7 @@ class RenameProperties implements CompilerPass {
     this.reservedCharacters = reservedCharacters;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, externs, new ProcessExterns());
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
@@ -291,7 +289,7 @@ class RenameProperties implements CompilerPass {
    */
   private class ProcessExterns extends AbstractPostOrderCallback {
 
-    /** {@inheritDoc} */
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:
@@ -321,7 +319,7 @@ class RenameProperties implements CompilerPass {
    */
   private class ProcessProperties extends AbstractPostOrderCallback {
 
-    /** {@inheritDoc} */
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:

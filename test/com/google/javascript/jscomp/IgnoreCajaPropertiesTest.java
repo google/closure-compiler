@@ -138,7 +138,6 @@ public class IgnoreCajaPropertiesTest extends CompilerTestCase {
          "for (i = 0; i < 10; ++i) { f(i); }");
   }
 
-  /** {@inheritDoc} */
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new IgnoreCajaProperties(compiler);

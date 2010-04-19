@@ -421,7 +421,7 @@ class AmbiguateProperties implements CompilerPass {
 
   /** A traversal callback that collects externed property names. */
   private class ProcessExterns extends AbstractPostOrderCallback {
-    /** {@inheritDoc} */
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:

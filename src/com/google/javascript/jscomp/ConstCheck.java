@@ -51,16 +51,12 @@ class ConstCheck extends AbstractPostOrderCallback
     this.initializedConstants = new HashSet<Scope.Var>();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.NAME:

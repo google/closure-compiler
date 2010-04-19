@@ -316,25 +316,16 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
                                  typeNode.getNext());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean isOptionalParameter(Node parameter) {
     return false;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean isVarArgsParameter(Node parameter) {
     return false;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean isPrivate(String name) {
     return false;
