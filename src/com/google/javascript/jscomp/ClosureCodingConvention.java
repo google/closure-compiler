@@ -253,18 +253,17 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
 
   @Override
   public String getSingletonGetterClassName(Node callNode) {
-    Node callName = callNode.getFirstChild();
-    if (!"goog.addSingletonGetter".equals(callName.getQualifiedName()) ||
-        callName.getChildCount() != 2) {
+    Node callArg = callNode.getFirstChild();
+    String callName = callArg.getQualifiedName();
+
+    // Use both the original name and the post-CollapseProperties name.
+    if (!("goog.addSingletonGetter".equals(callName) ||
+          "goog$addSingletonGetter".equals(callName)) ||
+        callNode.getChildCount() != 2) {
       return null;
     }
 
-    Node classNode = callName.getNext();
-    if (!classNode.isQualifiedName()) {
-      return null;
-    }
-
-    return callName.getNext().getQualifiedName();
+    return callArg.getNext().getQualifiedName();
   }
 
   @Override

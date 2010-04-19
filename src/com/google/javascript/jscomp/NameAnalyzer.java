@@ -788,8 +788,10 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if (nameInfo.onlyAffectsClassDef) {
-        recordReference(
-            nameInfo.name, nameInfo.superclass, RefType.INHERITANCE);
+        if (nameInfo.superclass != null) {
+          recordReference(
+              nameInfo.name, nameInfo.superclass, RefType.INHERITANCE);
+        }
 
         // Make sure that we record a reference to the function that does
         // the inheritance, so that the inherits() function itself does
@@ -1253,13 +1255,22 @@ final class NameAnalyzer implements CompilerPass {
     // Check whether this is a class-defining call. Classes may only be defined
     // in the global scope.
     if (NodeUtil.isCall(parent) && t.inGlobalScope()) {
-      SubclassRelationship classes =
-          compiler.getCodingConvention().getClassesDefinedByCall(parent);
+      CodingConvention convention = compiler.getCodingConvention();
+      SubclassRelationship classes = convention.getClassesDefinedByCall(parent);
       if (classes != null) {
         NameInformation nameInfo = new NameInformation();
         nameInfo.name = classes.subclassName;
         nameInfo.onlyAffectsClassDef = true;
         nameInfo.superclass = classes.superclassName;
+        return nameInfo;
+      }
+
+      String singletonGetterClass =
+          convention.getSingletonGetterClassName(parent);
+      if (singletonGetterClass != null) {
+        NameInformation nameInfo = new NameInformation();
+        nameInfo.name = singletonGetterClass;
+        nameInfo.onlyAffectsClassDef = true;
         return nameInfo;
       }
     }

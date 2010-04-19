@@ -17,23 +17,17 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.deps.DependencyInfo;
+import com.google.javascript.jscomp.deps.SortedDependencies;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 
 /**
@@ -43,7 +37,7 @@ import java.util.Set;
 *
 *
  */
-public class JSModule {
+public class JSModule implements DependencyInfo {
   /** Module name */
   private final String name;
 
@@ -65,6 +59,25 @@ public class JSModule {
   /** Gets the module name. */
   public String getName() {
     return name;
+  }
+
+  @Override
+  public List<String> getProvides() {
+    return ImmutableList.<String>of(name);
+  }
+
+  @Override
+  public List<String> getRequires() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    for (JSModule m : deps) {
+      builder.add(m.getName());
+    }
+    return builder.build();
+  }
+
+  @Override
+  public String getPathRelativeToClosureBase() {
+    throw new UnsupportedOperationException();
   }
 
   /** Adds a source file input to this module. */
@@ -200,30 +213,17 @@ public class JSModule {
    * Puts the JS files into a topologically sorted order by their dependencies.
    */
   public void sortInputsByDeps(Compiler compiler) {
-    final Map<String, CompilerInput> provides = Maps.newHashMap();
-    // Collect all symbols provided in these files.
+    // Set the compiler, so that we can parse requires/provides and report
+    // errors properly.
     for (CompilerInput input : inputs) {
       input.setCompiler(compiler);
-      for (String provide : input.getProvides()) {
-        provides.put(provide, input);
-      }
-    }
-
-    // Get the direct dependencies.
-    final Multimap<CompilerInput, CompilerInput> deps =
-        HashMultimap.create();
-    for (CompilerInput input : inputs) {
-      for (String req : input.getRequires()) {
-        CompilerInput dep = provides.get(req);
-        if (dep != null) {
-          deps.put(input, dep);
-        }
-      }
     }
 
     // Sort the JSModule in this order.
-    List<CompilerInput> sortedList = topologicalStableSort(
-        inputs, deps);
+    List<CompilerInput> sortedList =
+        (new SortedDependencies<CompilerInput>(
+            Collections.<CompilerInput>unmodifiableList(inputs)))
+        .getSortedList();
     inputs.clear();
     inputs.addAll(sortedList);
   }
@@ -237,61 +237,9 @@ public class JSModule {
    * the modules do not properly specify all dependencies.
    */
   public static JSModule[] sortJsModules(Collection<JSModule> modules) {
-    final Multimap<JSModule, JSModule> deps = HashMultimap.create();
-    for (JSModule module : modules) {
-      for (JSModule dep : module.getDependencies()) {
-        deps.put(module, dep);
-      }
-    }
-
     // Sort the JSModule in this order.
-    List<JSModule> sortedList = topologicalStableSort(
-        Lists.newArrayList(modules), deps);
+    List<JSModule> sortedList = (new SortedDependencies<JSModule>(
+            Lists.newArrayList(modules))).getSortedList();
     return sortedList.toArray(new JSModule[sortedList.size()]);
-  }
-
-  private static <T> List<T> topologicalStableSort(
-      List<T> items, Multimap<T, T> deps) {
-    final Map<T, Integer> originalIndex = Maps.newHashMap();
-    for (int i = 0; i < items.size(); i++) {
-      originalIndex.put(items.get(i), i);
-    }
-
-    PriorityQueue<T> inDegreeZero = new PriorityQueue<T>(items.size(),
-        new Comparator<T>() {
-      @Override
-      public int compare(T a, T b) {
-        return originalIndex.get(a).intValue() -
-            originalIndex.get(b).intValue();
-      }
-    });
-    List<T> result = Lists.newArrayList();
-
-    Multiset<T> inDegree = HashMultiset.create();
-    Multimap<T, T> reverseDeps = ArrayListMultimap.create();
-    Multimaps.invertFrom(deps, reverseDeps);
-
-    // First, add all the inputs with in-degree 0.
-    for (T item : items) {
-      Collection<T> itemDeps = deps.get(item);
-      inDegree.add(item, itemDeps.size());
-      if (itemDeps.isEmpty()) {
-        inDegreeZero.add(item);
-      }
-    }
-
-    // Then, iterate to a fixed point over the reverse dependency graph.
-    while (!inDegreeZero.isEmpty()) {
-      T item = inDegreeZero.remove();
-      result.add(item);
-      for (T inWaiting : reverseDeps.get(item)) {
-        inDegree.remove(inWaiting, 1);
-        if (inDegree.count(inWaiting) == 0) {
-          inDegreeZero.add(inWaiting);
-        }
-      }
-    }
-
-    return result;
   }
 }

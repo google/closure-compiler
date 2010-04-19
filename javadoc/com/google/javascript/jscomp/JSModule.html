@@ -92,9 +92,12 @@ Class JSModule</H2>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
   <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.JSModule</B>
 </PRE>
+<DL>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></DD>
+</DL>
 <HR>
 <DL>
-<DT><PRE>public class <B>JSModule</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+<DT><PRE>public class <B>JSModule</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></DL>
 </PRE>
 
 <P>
@@ -231,6 +234,30 @@ A JavaScript module has a unique name, consists of a list of compiler inputs,
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#getPathRelativeToClosureBase()">getPathRelativeToClosureBase</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the path of this file relative to Closure's base.js file.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#getProvides()">getProvides</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the symbols provided by this file.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#getRequires()">getRequires</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets the symbols required by this file.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-external=true" title="class or interface in java.util">Set</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JSModule.html#getThisAndAllDependencies()">getThisAndAllDependencies</A></B>()</CODE>
 
@@ -329,6 +356,60 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 <DD>Gets the module name.
 <P>
 <DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getName()">getName</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getProvides()"><!-- --></A><H3>
+getProvides</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getProvides</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getProvides()">DependencyInfo</A></CODE></B></DD>
+<DD>Gets the symbols provided by this file.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getProvides()">getProvides</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getRequires()"><!-- --></A><H3>
+getRequires</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>getRequires</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getRequires()">DependencyInfo</A></CODE></B></DD>
+<DD>Gets the symbols required by this file.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getRequires()">getRequires</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getPathRelativeToClosureBase()"><!-- --></A><H3>
+getPathRelativeToClosureBase</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getPathRelativeToClosureBase</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getPathRelativeToClosureBase()">DependencyInfo</A></CODE></B></DD>
+<DD>Gets the path of this file relative to Closure's base.js file.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html#getPathRelativeToClosureBase()">getPathRelativeToClosureBase</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A></CODE></DL>
+</DD>
+<DD><DL>
 </DL>
 </DD>
 </DL>
@@ -341,6 +422,9 @@ public void <B>add</B>(<A HREF="../../../../com/google/javascript/jscomp/JSSourc
 <DL>
 <DD>Adds a source file input to this module.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -357,6 +441,9 @@ public void <B>addFirst</B>(<A HREF="../../../../com/google/javascript/jscomp/JS
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -370,6 +457,9 @@ public void <B>add</B>(<A HREF="../../../../com/google/javascript/jscomp/Compile
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -380,6 +470,9 @@ public void <B>addFirst</B>(<A HREF="../../../../com/google/javascript/jscomp/Co
 <DL>
 <DD>Adds a source code input to this module.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -397,6 +490,9 @@ public void <B>addAfter</B>(<A HREF="../../../../com/google/javascript/jscomp/Co
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -407,6 +503,9 @@ public void <B>addDependency</B>(<A HREF="../../../../com/google/javascript/jsco
 <DL>
 <DD>Adds a dependency on another module.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -423,6 +522,9 @@ public void <B>removeAll</B>()</PRE>
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -433,6 +535,9 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-ext
 <DL>
 <DD>Gets the list of modules that this module depends on.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 
 <DT><B>Returns:</B><DD>A list that may be empty but not null</DL>
@@ -451,6 +556,9 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-exte
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -464,6 +572,9 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Set.html?is-exte
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -474,6 +585,9 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-ext
 <DL>
 <DD>Gets this module's list of source code inputs.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 
 <DT><B>Returns:</B><DD>A list that may be empty but not null</DL>
@@ -491,6 +605,9 @@ public <A HREF="../../../../com/google/javascript/jscomp/CompilerInput.html" tit
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -501,6 +618,9 @@ public boolean <B>removeByName</B>(<A HREF="http://java.sun.com/javase/6/docs/ap
 <DL>
 <DD>Removes any input with the given name. Returns whether any were removed.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -534,6 +654,9 @@ public void <B>clearAsts</B>()</PRE>
 <DD><DL>
 </DL>
 </DD>
+<DD><DL>
+</DL>
+</DD>
 </DL>
 <HR>
 
@@ -544,6 +667,9 @@ public void <B>sortInputsByDeps</B>(<A HREF="../../../../com/google/javascript/j
 <DL>
 <DD>Puts the JS files into a topologically sorted order by their dependencies.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>
@@ -562,6 +688,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" t
  satisfy the ordering dependencies.  This can be important for cases where
  the modules do not properly specify all dependencies.
 <P>
+<DD><DL>
+</DL>
+</DD>
 <DD><DL>
 </DL>
 </DD>

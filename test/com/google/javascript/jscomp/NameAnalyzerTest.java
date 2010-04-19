@@ -1345,6 +1345,20 @@ public class NameAnalyzerTest extends CompilerTestCase {
          "var a = {b: {}}; a.d = 3; a.d;");
   }
 
+  public void testSingletonGetter1() {
+    test("function Foo() {} goog.addSingletonGetter(Foo);", "");
+  }
+
+  public void testSingletonGetter2() {
+    test("function Foo() {} goog$addSingletonGetter(Foo);", "");
+  }
+
+  public void testSingletonGetter3() {
+    // addSingletonGetter adds a getInstance method to a class.
+    testSame("function Foo() {} goog$addSingletonGetter(Foo);" +
+        "this.x = Foo.getInstance();");
+  }
+
   // TODO(user): Make NameAnalyzer handle this. The OR subexpressions may
   // modify global state.
   // public void testConditionallyDefinedFunction2() {
