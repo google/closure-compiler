@@ -273,6 +273,13 @@ public class CommandLineRunner extends
         + "goog.require(), goog.provide(), and goog.exportSymbol()")
     private boolean process_closure_primitives = true;
 
+    @Option(name = "--sort_closure_dependencies",
+        handler = BooleanOptionHandler.class,
+        usage = "Automatically sort dependencies so that a file that "
+        + "goog.provides symbol X will always come before a file that "
+        + "goog.requires symbol X.")
+    private boolean sort_closure_dependencies = false;
+
     // Our own option parser to be backwards-compatible.
     // It needs to be public because of the crazy reflection that args4j does.
     public static class BooleanOptionHandler extends OptionHandler<Boolean> {
@@ -421,7 +428,8 @@ public class CommandLineRunner extends
           .setJscompWarning(flags.jscomp_warning)
           .setJscompOff(flags.jscomp_off)
           .setDefine(flags.define)
-          .setCharset(flags.charset);
+          .setCharset(flags.charset)
+          .setSortClosureDependencies(flags.sort_closure_dependencies);
     }
   }
 

@@ -67,6 +67,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   DevMode devMode;
 
   //--------------------------------
+  // Input Options
+  //--------------------------------
+
+  boolean sortClosureDependencies = false;
+
+  //--------------------------------
   // Checks
   //--------------------------------
 
@@ -882,6 +888,13 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public CodingConvention getCodingConvention() {
     return codingConvention;
+  }
+
+  /**
+   * Sort inputs by their goog.provide/goog.require calls.
+   */
+  public void setSortClosureDependencies(boolean newVal) {
+    sortClosureDependencies = newVal;
   }
 
   /**

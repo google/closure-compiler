@@ -125,7 +125,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   protected void initOptionsFromFlags(CompilerOptions options) {
-
     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 
     diagnosticGroups.setWarningLevels(
@@ -136,6 +135,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         options, config.jscompOff, CheckLevel.OFF);
 
     createDefineReplacements(config.define, options);
+
+    options.sortClosureDependencies = config.sortClosureDependencies;
   }
 
   final protected A getCompiler() {
@@ -1251,6 +1252,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setCharset(String charset) {
       this.charset = charset;
+      return this;
+    }
+
+    private boolean sortClosureDependencies = false;
+
+    /**
+     * Sets whether to sort files by their goog.provide/require deps.
+     */
+    CommandLineConfig setSortClosureDependencies(boolean newVal) {
+      this.sortClosureDependencies = newVal;
       return this;
     }
   }

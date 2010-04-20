@@ -37,6 +37,8 @@ public class CommandLineRunnerTest extends TestCase {
   // If set to true, uses comparison by string instead of by AST.
   private boolean useStringComparison = false;
 
+  private boolean useModules = false;
+
   private List<String> args = Lists.newArrayList();
 
   /** Externs for the test */
@@ -57,6 +59,7 @@ public class CommandLineRunnerTest extends TestCase {
     super.setUp();
     lastCompiler = null;
     useStringComparison = false;
+    useModules = false;
     args.clear();
   }
 
@@ -247,6 +250,25 @@ public class CommandLineRunnerTest extends TestCase {
          TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
+  public void testSourceSortingOff() {
+    test(new String[] {
+          "goog.require('beer');",
+          "goog.provide('beer');"
+         }, ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+  }
+
+  public void testSourceSortingOn() {
+    args.add("--sort_closure_dependencies=true");
+    test(new String[] {
+          "goog.require('beer');",
+          "goog.provide('beer');"
+         },
+         new String[] {
+           "var beer = {};",
+           ""
+         });
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
@@ -331,10 +353,6 @@ public class CommandLineRunnerTest extends TestCase {
     CommandLineRunner runner = new CommandLineRunner(argStrings);
     Compiler compiler = runner.createCompiler();
     lastCompiler = compiler;
-    JSSourceFile[] inputs = new JSSourceFile[original.length];
-    for (int i = 0; i < original.length; i++) {
-      inputs[i] = JSSourceFile.fromCode("input" + i, original[i]);
-    }
     CompilerOptions options = runner.createOptions();
     try {
       runner.setRunOptions(options);
@@ -343,8 +361,21 @@ public class CommandLineRunnerTest extends TestCase {
     } catch (IOException e) {
       assert(false);
     }
-    compiler.compile(
-        externs, CompilerTestCase.createModuleChain(original), options);
+    if (useModules) {
+      compiler.compile(
+          externs,
+          CompilerTestCase.createModuleChain(original),
+          options);
+    } else {
+      JSSourceFile[] inputs = new JSSourceFile[original.length];
+      for (int i = 0; i < original.length; i++) {
+        inputs[i] = JSSourceFile.fromCode("input" + i, original[i]);
+      }
+      compiler.compile(
+          externs,
+          inputs,
+          options);
+    }
     return compiler;
   }
 

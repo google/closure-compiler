@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
+import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -112,12 +113,12 @@ public class Compiler extends AbstractCompiler {
   /** Whether to use threads. */
   private boolean useThreads = true;
 
-  /** 
+  /**
    * Whether to assume there are references to the RegExp Global object
    * properties.
    */
   private boolean hasRegExpGlobalReferences = true;
-  
+
   /** The function information map */
   private FunctionInformationMap functionInformationMap;
 
@@ -254,7 +255,7 @@ public class Compiler extends AbstractCompiler {
   public void init(List<JSSourceFile> externs, List<JSSourceFile> inputs,
       CompilerOptions options) {
     initOptions(options);
-    
+
     this.externs = makeCompilerInput(externs, true);
     this.modules = null;
     this.moduleGraph = null;
@@ -278,7 +279,7 @@ public class Compiler extends AbstractCompiler {
     initModules(Lists.<JSSourceFile>newArrayList(externs),
          Lists.<JSModule>newArrayList(modules), options);
   }
-  
+
   /**
    * Initializes the instance state needed for a compile job if the sources
    * are in modules.
@@ -349,7 +350,7 @@ public class Compiler extends AbstractCompiler {
           modules.get(0).getName()));
     }
   }
-  
+
   /**
    * Fill any empty modules with a place holder file. It makes any cross module
    * motion easier.
@@ -361,7 +362,7 @@ public class Compiler extends AbstractCompiler {
       }
     }
   }
-  
+
   static final DiagnosticType DUPLICATE_INPUT_IN_MODULES =
       DiagnosticType.error("JSC_DUPLICATE_INPUT_IN_MODULES_ERROR",
           "Two modules cannot contain the same input, but module {0} and {1} "
@@ -461,7 +462,7 @@ public class Compiler extends AbstractCompiler {
         Lists.<JSSourceFile>newArrayList(inputs),
         options);
   }
-  
+
   /**
    * Compiles a list of inputs.
    */
@@ -1058,6 +1059,16 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
+      if (options.sortClosureDependencies) {
+        for (CompilerInput input : inputs) {
+          input.setCompiler(this);
+        }
+
+        SortedDependencies<CompilerInput> sorter =
+            new SortedDependencies<CompilerInput>(inputs);
+        inputs = Lists.newArrayList(sorter.getSortedList());
+      }
+
       List<CompilerInput> annotatedExterns = Lists.newArrayList();
       Iterator<CompilerInput> inputIterator = inputs.iterator();
       while (inputIterator.hasNext()) {
@@ -1283,13 +1294,13 @@ public class Compiler extends AbstractCompiler {
             cb.append("\n");  // Make sure that the label starts on a new line
           }
           Preconditions.checkState(root.getType() == Token.SCRIPT);
-          
+
           String delimiter = options.inputDelimiter;
-          
+
           String sourceName = (String)root.getProp(Node.SOURCENAME_PROP);
           Preconditions.checkState(sourceName != null);
           Preconditions.checkState(!sourceName.isEmpty());
-          
+
           delimiter = delimiter.replaceAll("%name%", sourceName)
             .replaceAll("%num%", String.valueOf(inputSeqNum));
 
@@ -1328,7 +1339,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   String toSource(Node n) {
     initCompilerOptionsIfTesting();
-    
+
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setPrettyPrint(options.prettyPrint);
     builder.setLineBreak(options.lineBreak);

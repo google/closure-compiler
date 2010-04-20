@@ -44,6 +44,8 @@ import java.util.PriorityQueue;
  */
 public class SortedDependencies<INPUT extends DependencyInfo> {
 
+  private final List<INPUT> inputs;
+
   // A topologically sorted list of the inputs.
   private final List<INPUT> sortedList;
 
@@ -51,6 +53,8 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   private final List<INPUT> noProvides;
 
   public SortedDependencies(List<INPUT> inputs) {
+    this.inputs = Lists.newArrayList(inputs);
+
     final Map<String, INPUT> provides = Maps.newHashMap();
     noProvides = Lists.newArrayList();
 
