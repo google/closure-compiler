@@ -705,13 +705,6 @@ public class Compiler extends AbstractCompiler {
     }
 
     runCustomPasses(CustomPassExecutionTime.BEFORE_OPTIMIZATIONS);
-
-    // Ideally, this pass should be the first pass run, however:
-    // 1) VariableReferenceCheck reports unexpected warnings if Normalize
-    // is done first.
-    // 2) ReplaceMessages, stripCode, and potentially custom passes rely on
-    // unmodified local names.
-    normalize();
   }
 
   private void externExports() {
@@ -1408,6 +1401,13 @@ public class Compiler extends AbstractCompiler {
   //------------------------------------------------------------------------
 
   public void optimize() {
+    // Ideally, this pass should be the first pass run, however:
+    // 1) VariableReferenceCheck reports unexpected warnings if Normalize
+    // is done first.    
+    // 2) ReplaceMessages, stripCode, and potentially custom passes rely on
+    // unmodified local names.
+    normalize();    
+    
     PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker);
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);

@@ -652,7 +652,12 @@ class CodeGenerator {
     if (n.getType() == Token.BLOCK ) {
       int count = getNonEmptyChildCount(n);
       if (count == 0) {
-        cc.endStatement(true);
+        if (cc.shouldPreserveExtraBlocks()) {
+          cc.beginBlock();
+          cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
+        } else {
+          cc.endStatement(true);
+        }
         return;
       }
 

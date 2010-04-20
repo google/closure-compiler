@@ -407,7 +407,8 @@ public class CodePrinterTest extends TestCase {
     // Check we correctly handle putting brackets around all if clauses so
     // we can put breakpoints inside statements.
     assertPrettyPrint("if (1) {}",
-        "if(1);");
+        "if(1) {\n" +
+        "}\n");
     assertPrettyPrint("if (1) {alert(\"\");}",
         "if(1) {\n" +
         "  alert(\"\")\n" +
@@ -443,7 +444,8 @@ public class CodePrinterTest extends TestCase {
 
     // Do we put else clauses in blocks?
     assertPrettyPrint("if (1) {} else {alert(a);}",
-        "if(1);else {\n  alert(a)\n}\n");
+        "if(1) {\n" +
+        "}else {\n  alert(a)\n}\n");
 
     // Do we add blocks to else clauses?
     assertPrettyPrint("if (1) alert(a); else alert(b);",
@@ -459,7 +461,8 @@ public class CodePrinterTest extends TestCase {
          "  alert()\n" +
          "}\n");
     assertPrettyPrint("for(;;) {}",
-        "for(;;);");
+        "for(;;) {\n" +
+        "}\n");
     assertPrettyPrint("for(;;) { alert(); alert(); }",
         "for(;;) {\n" +
         "  alert();\n" +
