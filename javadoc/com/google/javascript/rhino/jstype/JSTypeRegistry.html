@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeNative.html" title="enum in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/JSTypeRegistry.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="JSTypeRegistry.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -338,6 +338,17 @@ The type registry is used to resolve named types.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates an interface function type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createNamedType(java.lang.String, java.lang.String, int, int)">createNamedType</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;reference,
+                <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
+                int&nbsp;lineno,
+                int&nbsp;charno)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a named type.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -841,7 +852,7 @@ setLastGeneration</H3>
 public void <B>setLastGeneration</B>(boolean&nbsp;lastGeneration)</PRE>
 <DL>
 <DD>Sets whether this is the last generation. In the last generation,
- <A HREF="../../../../../com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype"><CODE>NamedType</CODE></A> warns about unresolved types.
+ <CODE>NamedType</CODE> warns about unresolved types.
 <P>
 <DD><DL>
 </DL>
@@ -1603,6 +1614,25 @@ public com.google.javascript.rhino.jstype.ParameterizedType <B>createParameteriz
 </DL>
 <HR>
 
+<A NAME="createNamedType(java.lang.String, java.lang.String, int, int)"><!-- --></A><H3>
+createNamedType</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>createNamedType</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;reference,
+                              <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
+                              int&nbsp;lineno,
+                              int&nbsp;charno)</PRE>
+<DL>
+<DD>Creates a named type.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="identifyEnumName(java.lang.String)"><!-- --></A><H3>
 identifyEnumName</H3>
 <PRE>
@@ -1716,7 +1746,7 @@ public void <B>clearTemplateTypeName</B>()</PRE>
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeNative.html" title="enum in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/JSTypeRegistry.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="JSTypeRegistry.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;

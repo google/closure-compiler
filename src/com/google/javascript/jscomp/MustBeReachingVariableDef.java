@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -30,6 +29,8 @@ import com.google.javascript.rhino.Token;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * Computes reaching definition for all use of each variables.
@@ -99,7 +100,7 @@ final class MustBeReachingVariableDef extends
    *          (BOTTOM)
    *
    */
-  static final class MustDef implements DataFlowAnalysis.LatticeElement {
+  static final class MustDef implements LatticeElement {
 
     // TODO(user): Use bit vector instead of maps might get better
     // performance. Change it after this is tested to be fully functional.

@@ -39,6 +39,13 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
@@ -48,11 +55,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Token;
-import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -1180,6 +1182,15 @@ public class JSTypeRegistry implements Serializable {
   public ParameterizedType createParameterizedType(
       ObjectType objectType, JSType parameterType) {
     return new ParameterizedType(this, objectType, parameterType);
+  }
+
+  /**
+   * Creates a named type.
+   */
+  @VisibleForTesting
+  public JSType createNamedType(String reference,
+      String sourceName, int lineno, int charno) {
+    return new NamedType(this, reference, sourceName, lineno, charno);
   }
 
   /**

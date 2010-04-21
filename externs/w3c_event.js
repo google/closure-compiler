@@ -16,7 +16,6 @@
 
 /**
  * @fileoverview Definitions for W3C's event specification.
- *  This file depends on w3c_dom2.js.
  *  The whole file has been fully type annotated.
  *  Created from
  *   http://www.w3.org/TR/DOM-Level-2-Events/ecma-script-binding.html

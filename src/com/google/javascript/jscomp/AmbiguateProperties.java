@@ -521,7 +521,7 @@ class AmbiguateProperties implements CompilerPass {
     return objType == null
         || invalidatingTypes.contains(objType)
         || !objType.hasReferenceName()
-        || (objType.isNamedType() && objType.isUnknownType())
+        || objType.isUnknownType() /* unresolved types */
         || objType.isEnumType() || objType.autoboxesTo() != null;
   }
 

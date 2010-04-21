@@ -102,7 +102,6 @@ public enum CompilationLevel {
     options.removeConstantExpressions = true;
     options.coalesceVariableNames = true;
     options.deadAssignmentElimination = true;
-    options.extractPrototypeMemberDeclarations = true;
     options.collapseVariableDeclarations = true;
     options.convertToDottedProperties = true;
     options.labelRenaming = true;

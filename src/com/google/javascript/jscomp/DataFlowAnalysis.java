@@ -70,7 +70,7 @@ import java.util.Set;
  * <li>JOIN Operation: Implement
  *    {@link JoinOp#join(LatticeElement, LatticeElement)}.
  * <li>Flow Equations: Implement
- * {@link #flowThrough(Object, DataFlowAnalysis.LatticeElement)}.
+ * {@link #flowThrough(Object, LatticeElement)}.
  * <li>Initial Entry Value: Implement {@link #createEntryLattice()}.
  * <li>Initial Estimate: Implement {@link #createInitialEstimateLattice()}.
  * </ol>
@@ -85,13 +85,7 @@ import java.util.Set;
  * @param <N> The control flow graph's node value type.
  * @param <L> Lattice element type.
  */
-abstract class DataFlowAnalysis<N, L extends DataFlowAnalysis.LatticeElement> {
-
-  /**
-   * A lattice element in the data flow analysis.
-   */
-  static interface LatticeElement {
-  }
+abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
   static interface JoinOp<L extends LatticeElement>
       extends Function<List<L>, L> {

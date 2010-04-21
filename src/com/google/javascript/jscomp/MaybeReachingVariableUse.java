@@ -81,7 +81,7 @@ class MaybeReachingVariableUse extends
    *
    * At N_3, reads of A in {N_4, N_5} are said to be upward exposed.
    */
-  static final class ReachingUses implements DataFlowAnalysis.LatticeElement {
+  static final class ReachingUses implements LatticeElement {
     final Multimap<Var, Node> mayUseMap;
 
     public ReachingUses() {

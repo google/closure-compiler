@@ -76,7 +76,7 @@ import com.google.javascript.rhino.ErrorReporter;
 *
 *
  */
-public class NamedType extends ProxyObjectType {
+class NamedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String reference;
@@ -99,7 +99,7 @@ public class NamedType extends ProxyObjectType {
   /**
    * Create a named type based on the reference.
    */
-  public NamedType(JSTypeRegistry registry, String reference,
+  NamedType(JSTypeRegistry registry, String reference,
       String sourceName, int lineno, int charno) {
     super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
 
@@ -136,7 +136,7 @@ public class NamedType extends ProxyObjectType {
   }
 
   @Override
-  public boolean isNamedType() {
+  boolean isNamedType() {
     return true;
   }
 

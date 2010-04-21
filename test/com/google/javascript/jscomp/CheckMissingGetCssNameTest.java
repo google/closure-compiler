@@ -40,6 +40,7 @@ public class CheckMissingGetCssNameTest extends CompilerTestCase {
 
   public void testIgnoreGetUniqueIdArguments() {
     testNotMissing("var s = goog.events.getUniqueId('goog-some-event')");
+    testNotMissing("var s = joe.random.getUniqueId('joe-is-a-goob')");
   }
 
   public void testIgnoreAssignmentsToIdConstant() {

@@ -669,7 +669,7 @@ class DisambiguateProperties<T> implements CompilerPass {
 
     @Override public boolean isInvalidatingType(JSType type) {
       if (type == null || invalidatingTypes.contains(type) ||
-          (type.isNamedType() && type.isUnknownType())) {
+          type.isUnknownType() /* unresolved types */) {
         return true;
       }
 

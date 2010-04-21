@@ -39,10 +39,8 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TernaryValue;
-import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Iterator;
 
@@ -789,44 +787,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       nullCount++;
     } else if (type.isUnknownType()) {
       if (reportUnknownTypes.isOn()) {
-        String unresolvedReference = getUnresolvedReference(type);
-        if (unresolvedReference != null) {
-          compiler.report(
-              t.makeError(n, reportUnknownTypes,
-                  UNRESOLVED_TYPE, unresolvedReference));
-        } else {
-          compiler.report(
-              t.makeError(n, reportUnknownTypes, UNKNOWN_EXPR_TYPE));
-        }
+        compiler.report(
+            t.makeError(n, reportUnknownTypes, UNKNOWN_EXPR_TYPE));
       }
       unknownCount++;
     } else {
       typedCount++;
     }
-  }
-
-  /**
-   * Looks through the type to see if it contains an unresolved reference.  This
-   * is often the reason that a type is unresolved, and it can occur because of
-   * a simple misspelling of a type name.
-   */
-  private String getUnresolvedReference(JSType type) {
-    if (type.isNamedType()) {
-      NamedType namedType = (NamedType) type;
-      if (!namedType.isResolved()) {
-        return namedType.getReferenceName();
-      }
-    } else if (type.isUnionType()) {
-      for (JSType alt : ((UnionType) type).getAlternates()) {
-        if (alt.isUnknownType()) {
-          String unresolvedReference = getUnresolvedReference(alt);
-          if (unresolvedReference != null) {
-            return unresolvedReference;
-          }
-        }
-      }
-    }
-    return null;
   }
 
   /**

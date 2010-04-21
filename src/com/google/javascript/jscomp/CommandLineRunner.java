@@ -476,7 +476,7 @@ public class CommandLineRunner extends
    * @return a mutable list
    * @throws IOException
    */
-  private List<JSSourceFile> getDefaultExterns() throws IOException {
+  public static List<JSSourceFile> getDefaultExterns() throws IOException {
     InputStream input = CommandLineRunner.class.getResourceAsStream(
         "/externs.zip");
     ZipInputStream zip = new ZipInputStream(input);

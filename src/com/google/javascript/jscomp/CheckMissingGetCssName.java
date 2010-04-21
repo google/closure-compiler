@@ -35,7 +35,7 @@ class CheckMissingGetCssName
   private final Matcher blacklist;
 
   static final String GET_CSS_NAME_FUNCTION = "goog.getCssName";
-  static final String GET_UNIQUE_ID_FUNCTION = "goog.events.getUniqueId";
+  static final String GET_UNIQUE_ID_FUNCTION = ".getUniqueId";
 
   static final DiagnosticType MISSING_GETCSSNAME =
       DiagnosticType.disabled(
@@ -87,13 +87,15 @@ class CheckMissingGetCssName
   }
 
   /**
-   * Returns whether the node is an argument of a goog.events.getUniqueId
-   * call.
+   * Returns whether the node is an argument of a function that returns
+   * a unique id (the last part of the qualified name matches
+   * GET_UNIQUE_ID_FUNCTION).
    */
   private boolean insideGetUniqueIdCall(Node n, Node parent) {
-    return parent.getType() == Token.CALL &&
-        GET_UNIQUE_ID_FUNCTION.equals(
-            parent.getFirstChild().getQualifiedName());
+    String name = parent.getType() == Token.CALL ?
+        parent.getFirstChild().getQualifiedName() : null;
+
+    return name != null && name.endsWith(GET_UNIQUE_ID_FUNCTION);
   }
 
   /**

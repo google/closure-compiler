@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.DataFlowAnalysis.BinaryJoinOp;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnalysis;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
-import com.google.javascript.jscomp.DataFlowAnalysis.LatticeElement;
 import com.google.javascript.jscomp.DataFlowAnalysis.MaxIterationsExceededException;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;

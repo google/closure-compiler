@@ -536,14 +536,18 @@ Window.prototype.execScript;
 Window.prototype.focus;
 
 /**
+ * @param {number} x
+ * @param {number} y
  * @see http://msdn.microsoft.com/en-us/library/ms536618(VS.85).aspx
  */
-Window.prototype.moveBy;
+Window.prototype.moveBy = function(x, y) {};
 
 /**
+ * @param {number} x
+ * @param {number} y
  * @see http://msdn.microsoft.com/en-us/library/ms536626(VS.85).aspx
  */
-Window.prototype.moveTo;
+Window.prototype.moveTo = function(x, y) {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536638(VS.85).aspx
@@ -569,37 +573,50 @@ Window.prototype.postMessage;
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536672(VS.85).aspx
  */
-Window.prototype.print;
+Window.prototype.print = function() {};
 
 /**
+ * @param {string} message
+ * @param {string=} opt_defValue
+ * @return {?string}
  * @see http://msdn.microsoft.com/en-us/library/ms536673(VS.85).aspx
  */
-Window.prototype.prompt;
+Window.prototype.prompt = function(message, opt_defValue) {};
 
 /**
+ * @param {number} width
+ * @param {number} height
  * @see http://msdn.microsoft.com/en-us/library/ms536722(VS.85).aspx
  */
-Window.prototype.resizeBy;
+Window.prototype.resizeBy = function(width, height) {};
 
 /**
+ * @param {number} width
+ * @param {number} height
  * @see http://msdn.microsoft.com/en-us/library/ms536723(VS.85).aspx
  */
-Window.prototype.resizeTo;
+Window.prototype.resizeTo = function(width, height) {};
 
 /**
+ * @param {number} x
+ * @param {number} y
  * @see http://msdn.microsoft.com/en-us/library/ms536726(VS.85).aspx
  */
-Window.prototype.scroll;
+Window.prototype.scroll = function(x, y) {};
 
 /**
+ * @param {number} x
+ * @param {number} y
  * @see http://msdn.microsoft.com/en-us/library/ms536728(VS.85).aspx
  */
-Window.prototype.scrollBy;
+Window.prototype.scrollBy = function(x, y) {};
 
 /**
+ * @param {number} x
+ * @param {number} y
  * @see http://msdn.microsoft.com/en-us/library/ms536731(VS.85).aspx
  */
-Window.prototype.scrollTo;
+Window.prototype.scrollTo = function(x, y) {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536738(VS.85).aspx

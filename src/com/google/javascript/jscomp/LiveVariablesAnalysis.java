@@ -67,7 +67,7 @@ class LiveVariablesAnalysis extends
    * point in the program. The whole lattice is the power set of all local
    * variables and a variable is live if it is in the set.
    */
-  static class LiveVariableLattice implements DataFlowAnalysis.LatticeElement {
+  static class LiveVariableLattice implements LatticeElement {
     private final BitSet liveSet;
 
     /**

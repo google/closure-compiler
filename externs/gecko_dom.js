@@ -426,22 +426,13 @@ Window.prototype.getSelection = function() {};
 
 /** @see https://developer.mozilla.org/en/DOM/window.home */
 Window.prototype.home = function() {};
-Window.prototype.moveBy;
-Window.prototype.moveTo;
 
 Window.prototype.openDialog;
 Window.prototype.postMessage;
-Window.prototype.print;
-Window.prototype.prompt;
 Window.prototype.releaseEvents;
 Window.prototype.removeEventListener;
-Window.prototype.resizeBy;
-Window.prototype.resizeTo;
-Window.prototype.scroll;
-Window.prototype.scrollBy;
 Window.prototype.scrollByLines;
 Window.prototype.scrollByPages;
-Window.prototype.scrollTo;
 
 /**
  * @param {Function|string} callback
@@ -460,7 +451,12 @@ Window.prototype.setInterval;
 Window.prototype.setTimeout = function(callback, delay, var_args) {};
 Window.prototype.showModalDialog;
 Window.prototype.sizeToContent;
+
+/**
+ * @see http://msdn.microsoft.com/en-us/library/ms536769(VS.85).aspx
+ */
 Window.prototype.stop;
+
 Window.prototype.unescape;
 Window.prototype.updateCommands;
 /** @type {?function (Event)} */ Window.prototype.onabort;

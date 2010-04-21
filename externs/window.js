@@ -136,10 +136,12 @@ function confirm(x) {}
 function dump(x) {}
 
 /**
- * @param {*=} opt_value
+ * @param {string} message
+ * @param {string=} opt_value
+ * @return {?string}
  * @see https://developer.mozilla.org/en/DOM/window.prompt
  */
-function prompt(x, opt_value) {}
+function prompt(message, opt_value) {}
 
 /**
  * @param {Function|string} callback

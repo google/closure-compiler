@@ -237,7 +237,7 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
-  public boolean isNamedType() {
+  boolean isNamedType() {
     return false;
   }
 

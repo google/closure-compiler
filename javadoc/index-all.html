@@ -1174,6 +1174,9 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/jscomp/PassFactory.html#createInternal(com.google.javascript.jscomp.AbstractCompiler)"><B>createInternal(AbstractCompiler)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/PassFactory.html" title="class in com.google.javascript.jscomp">PassFactory</A>
 <DD>Creates a new compiler pass to be run.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createNamedType(java.lang.String, java.lang.String, int, int)"><B>createNamedType(String, String, int, int)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>Creates a named type.
 <DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#createNode(N)"><B>createNode(N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>
 <DD>Gets a node from the graph given a value.
@@ -1616,9 +1619,6 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DD>This method relies on the fact that for the base <A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype"><CODE>JSType</CODE></A>, only one
  instance of each sub-type will ever be created in a given registry, so
  there is no need to verify members.
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>Two named types are equal if they are the same <code>ObjectType</code> object.
 <DT><A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype">NoObjectType</A>
 <DD>&nbsp;
@@ -1883,9 +1883,6 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#forgiveUnknownNames()"><B>forgiveUnknownNames()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
 <DD>If we see a type name without braces, it might be legacy jsdoc.
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#forgiveUnknownNames()"><B>forgiveUnknownNames()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/UnionType.html#forgiveUnknownNames()"><B>forgiveUnknownNames()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/UnionType.html" title="class in com.google.javascript.rhino.jstype">UnionType</A>
 <DD>&nbsp;
@@ -2300,6 +2297,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/JSModuleGraph.html#getDeepestCommonDependencyInclusive(java.util.Collection)"><B>getDeepestCommonDependencyInclusive(Collection&lt;JSModule&gt;)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/JSModuleGraph.html" title="class in com.google.javascript.jscomp">JSModuleGraph</A>
 <DD>Returns the deepest common dependency of the given modules.
+<DT><A HREF="./com/google/javascript/jscomp/CommandLineRunner.html#getDefaultExterns()"><B>getDefaultExterns()</B></A> - 
+Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CommandLineRunner.html" title="class in com.google.javascript.jscomp">CommandLineRunner</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.html#getDefaultInstance()"><B>getDefaultInstance()</B></A> - 
 Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.html" title="class in com.google.javascript.jscomp">FunctionInformationMap.Entry</A>
 <DD>&nbsp;
@@ -3331,9 +3331,6 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>This function takes a set of GETPROP nodes and produces a string that is
  each property separated by dots.
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#getReferencedType()"><B>getReferencedType()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>Returns the type to which this refers (which is unknown if unresolved).
 <DT><A HREF="./com/google/javascript/rhino/jstype/EnumElementType.html#getReferenceName()"><B>getReferenceName()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/EnumElementType.html" title="class in com.google.javascript.rhino.jstype">EnumElementType</A>
 <DD>&nbsp;
@@ -3342,9 +3339,6 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html#getReferenceName()"><B>getReferenceName()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype">InstanceObjectType</A>
-<DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#getReferenceName()"><B>getReferenceName()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html#getReferenceName()"><B>getReferenceName()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype">NoObjectType</A>
@@ -3911,9 +3905,6 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#hashCode()"><B>hashCode()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#hashCode()"><B>hashCode()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html#hashCode()"><B>hashCode()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype">NoObjectType</A>
 <DD>&nbsp;
@@ -4014,9 +4005,6 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html#hasReferenceName()"><B>hasReferenceName()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype">InstanceObjectType</A>
-<DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#hasReferenceName()"><B>hasReferenceName()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/ObjectType.html#hasReferenceName()"><B>hasReferenceName()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>
@@ -4604,12 +4592,6 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/Scope.Var.html#isLocal()"><B>isLocal()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>
 <DD>Returns whether this is a local variable.
-<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#isNamedType()"><B>isNamedType()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
-<DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#isNamedType()"><B>isNamedType()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/ObjectType.html#isNativeObjectType()"><B>isNativeObjectType()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>
 <DD>Whether this is a built-in object.
@@ -4627,9 +4609,6 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
 <DD>Whether this type is a nominal type (a named instance object or
  a named enum).
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#isNominalType()"><B>isNominalType()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#isNoObjectType()"><B>isNoObjectType()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
 <DD>&nbsp;
@@ -5534,9 +5513,6 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/jscomp/Result.html#namedAnonFunctionMap"><B>namedAnonFunctionMap</B></A> - 
 Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype"><B>NamedType</B></A> - Class in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>A <code>NamedType</code> is a named reference to some other type.<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#NamedType(com.google.javascript.rhino.jstype.JSTypeRegistry, java.lang.String, java.lang.String, int, int)"><B>NamedType(JSTypeRegistry, String, String, int, int)</B></A> - 
-Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
-<DD>Create a named type based on the reference.
 <DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#nameReferenceGraphPath"><B>nameReferenceGraphPath</B></A> - 
 Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
 <DD>Where to save the name reference graph
@@ -7492,9 +7468,6 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
  <code>this:T</code> if the function expects a known type for <code>this</code>.
 <DT><A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html#toString()"><B>toString()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype">InstanceObjectType</A>
-<DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/NamedType.html#toString()"><B>toString()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NamedType.html" title="class in com.google.javascript.rhino.jstype">NamedType</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html#toString()"><B>toString()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype">NoObjectType</A>

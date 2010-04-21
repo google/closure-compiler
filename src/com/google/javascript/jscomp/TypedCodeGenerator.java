@@ -16,14 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.nio.charset.Charset;
+import java.util.Set;
 
 
 /**
@@ -46,7 +48,7 @@ class TypedCodeGenerator extends CodeGenerator {
         add(getFunctionAnnotation(n));
       } else if (n.getType() == Token.EXPR_RESULT
           && n.getFirstChild().getType() == Token.ASSIGN) {
-        Node rhs = n.getFirstChild().getFirstChild();
+        Node rhs = n.getFirstChild().getLastChild();
         add(getTypeAnnotation(rhs));
       } else if (n.getType() == Token.VAR
           && n.getFirstChild().getFirstChild() != null
@@ -74,16 +76,17 @@ class TypedCodeGenerator extends CodeGenerator {
   /**
    * @param node A node for a function for which to generate a type annotation
    */
-  private String getFunctionAnnotation(Node node) {
+  private String getFunctionAnnotation(Node fnNode) {
+    Preconditions.checkState(fnNode.getType() == Token.FUNCTION);
     StringBuilder sb = new StringBuilder("/**\n");
 
-    JSType type = node.getJSType();
+    JSType type = fnNode.getJSType();
 
     if (type == null || type.isUnknownType()) {
       return "";
     }
 
-    FunctionType funType = (FunctionType) node.getJSType();
+    FunctionType funType = (FunctionType) fnNode.getJSType();
 
     // We need to use the child nodes of the function as the nodes for the
     // parameters of the function type do not have the real parameter names.
@@ -92,7 +95,6 @@ class TypedCodeGenerator extends CodeGenerator {
     //   LP
     //     NAME param1
     //     NAME param2
-    Node fnNode = funType.getSource();
     if (fnNode != null) {
       Node paramNode = NodeUtil.getFnParameters(fnNode).getFirstChild();
 
@@ -128,7 +130,12 @@ class TypedCodeGenerator extends CodeGenerator {
         }
       }
 
+      // Avoid duplicates, add implemented type to a set first
+      Set<String> interfaces = Sets.newTreeSet();
       for (ObjectType interfaze : funType.getImplementedInterfaces()) {
+        interfaces.add(interfaze.toString());
+      }
+      for (String interfaze : interfaces) {
         sb.append(" * @implements {"  + interfaze + "}\n");
       }
 
