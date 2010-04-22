@@ -112,13 +112,19 @@ DOMImplementation.prototype.hasFeature = function(feature, version) {};
 
 /**
  * @constructor
- * @extends {EventTarget}
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1950641247
  */
-// NOTE(nicksantos): Technically, this doesn't extend EventTarget until DOM
-// Level 2. But there's no easy way to express this and still maintain
-// separate files for DOM level 1 and DOM level 2.
 function Node() {}
+
+/** @inheritDoc */
+Node.prototype.addEventListener = function(type, listener, useCapture) {};
+
+/** @inheritDoc */
+Node.prototype.removeEventListener = function(type, listener, useCapture) {};
+
+/** @inheritDoc */
+Node.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @type {NamedNodeMap}

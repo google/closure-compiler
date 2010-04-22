@@ -33,9 +33,19 @@ Window.prototype.opera.postError;
  * @param {number=} opt_width
  * @param {number=} opt_height
  * @constructor
- * @extends {EventTarget}
+ * @implements {EventTarget}
  */
 function Image(opt_width, opt_height) {}
+
+/** @inheritDoc */
+Image.prototype.addEventListener = function(type, listener, useCapture) {};
+
+/** @inheritDoc */
+Image.prototype.removeEventListener = function(type, listener, useCapture) {};
+
+/** @inheritDoc */
+Image.prototype.dispatchEvent = function(evt) {};
+
 /** @constructor */ function XSLTProcessor() {}
 /** @constructor */ function NodeFilter() {}
 /**

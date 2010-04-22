@@ -26,7 +26,7 @@
 
 
 /**
- * @constructor
+ * @interface
  */
 function EventTarget() {}
 

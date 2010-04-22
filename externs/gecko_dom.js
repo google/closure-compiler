@@ -430,7 +430,6 @@ Window.prototype.home = function() {};
 Window.prototype.openDialog;
 Window.prototype.postMessage;
 Window.prototype.releaseEvents;
-Window.prototype.removeEventListener;
 Window.prototype.scrollByLines;
 Window.prototype.scrollByPages;
 
