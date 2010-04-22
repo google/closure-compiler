@@ -714,11 +714,143 @@ var applicationCache;
 Window.prototype.applicationCache;
 
 /**
- * Addition for accessing clipboard file data that are part of the proposed
- * HTML5 spec.
- * @type {ClipboardData}
+ * @type {boolean}
  */
-MouseEvent.prototype.dataTransfer;
+HTMLElement.prototype.draggable;
+
+/** @type {FileList} */
+HTMLInputElement.prototype.files;
+
+/** @type {boolean} */
+HTMLInputElement.prototype.multiple;
+
+/**
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLMediaElement() {}
+
+/** @type {MediaError} */
+HTMLMediaElement.prototype.error;
+
+/** @type {string} */
+HTMLMediaElement.prototype.src;
+
+/** @type {string} */
+HTMLMediaElement.prototype.currentSrc;
+
+/** @type {number} */
+HTMLMediaElement.prototype.networkState;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.autobuffer;
+
+/** @type {TimeRanges} */
+HTMLMediaElement.prototype.buffered;
+
+/**
+ * Loads the media element.
+ */
+HTMLMediaElement.prototype.load = function() {};
+
+/**
+ * @param {string} type Type of the element in question in question.
+ * @return {string} Whether it can play the type.
+ */
+HTMLMediaElement.prototype.canPlayType = function(type) {};
+
+/** @type {number} */
+HTMLMediaElement.prototype.readyState;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.seeking;
+
+/** @type {number} */
+HTMLMediaElement.prototype.currentTime;
+
+/** @type {number} */
+HTMLMediaElement.prototype.startTime;
+
+/** @type {number} */
+HTMLMediaElement.prototype.duration;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.paused;
+
+/** @type {number} */
+HTMLMediaElement.prototype.defaultPlaybackRate;
+
+/** @type {number} */
+HTMLMediaElement.prototype.playbackRate;
+
+/** @type {TimeRanges} */
+HTMLMediaElement.prototype.played;
+
+/** @type {TimeRanges} */
+HTMLMediaElement.prototype.seekable;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.ended;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.autoplay;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.loop;
+
+/**
+ * Starts playing the media.
+ */
+HTMLMediaElement.prototype.play = function() {};
+
+/**
+ * Pauses the media.
+ */
+HTMLMediaElement.prototype.pause = function() {};
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.controls;
+
+/** @type {number} */
+HTMLMediaElement.prototype.volume;
+
+/** @type {boolean} */
+HTMLMediaElement.prototype.muted;
+
+/**
+ * @constructor
+ * @extends {HTMLMediaElement}
+ */
+function HTMLAudioElement() {}
+
+/**
+ * @constructor
+ * @extends {HTMLMediaElement}
+ */
+function HTMLVideoElement() {}
+
+/** @type {string} */
+HTMLVideoElement.prototype.width;
+
+/** @type {string} */
+HTMLVideoElement.prototype.height;
+
+/** @type {number} */
+HTMLVideoElement.prototype.videoWidth;
+
+/** @type {number} */
+HTMLVideoElement.prototype.videoHeight;
+
+/** @type {string} */
+HTMLVideoElement.prototype.poster;
+
+/**
+ * @constructor
+ */
+function MediaError() {}
+
+/** @type {number} */
+MediaError.prototype.code;
 
 // HTML5 MessageChannel
 /**
@@ -854,6 +986,54 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
     canBubbleArg, cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg,
     portsArg) {};
 
+
+/**
+ * Addition for accessing clipboard file data that are part of the proposed
+ * HTML5 spec.
+ * @type {ClipboardData}
+ */
+MouseEvent.prototype.dataTransfer;
+
+
+/**
+ * @constructor
+ * @extends {Event}
+ */
+function ProgressEvent() {}
+
+/** @type {number} */
+ProgressEvent.prototype.total;
+
+/** @type {number} */
+ProgressEvent.prototype.loaded;
+
+/** @type {boolean} */
+ProgressEvent.prototype.lengthComputable;
+
+
+/**
+ * @constructor
+ */
+function TimeRanges() {}
+
+/** @type {number} */
+TimeRanges.prototype.length;
+
+/**
+ * @param {number} index The index.
+ * @return {number} The start time of the range at index.
+ * @throws {DOMException}
+ */
+TimeRanges.prototype.start = function(index) { return 0; };
+
+/**
+ * @param {number} index The index.
+ * @return {number} The end time of the range at index.
+ * @throws {DOMException}
+ */
+TimeRanges.prototype.end = function(index) { return 0; };
+
+
 // HTML5 Web Socket class
 /**
  * @see http://dev.w3.org/html5/websockets/
@@ -959,3 +1139,64 @@ History.prototype.pushState = function(data, title, opt_url) {};
  * @param {string=} opt_url The URL for a new session history entry.
  */
 History.prototype.replaceState = function(data, title, opt_url) {};
+
+/**
+ * @constructor
+ */
+function FileList() {}
+
+/** @type {number} */
+FileList.prototype.length;
+
+/**
+ * @param {number} i File to return from the list.
+ * @return {File} The ith file in the list.
+ */
+FileList.prototype.item = function(i) { return null; };
+
+/**
+ * @type {boolean}
+ * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#withcredentials
+ */
+XMLHttpRequest.prototype.withCredentials;
+
+/**
+ * @type {XMLHttpRequestUpload}
+ * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-upload-attribute
+ */
+XMLHttpRequest.prototype.upload;
+
+/**
+ * @param {string} mimeType The mime type to override with.
+ */
+XMLHttpRequest.prototype.overrideMimeType = function(mimeType) {};
+
+/**
+ * XMLHttpRequestEventTarget defines events for checking the status of a data
+ * transfer between a client and a server. This should be a common base class
+ * for XMLHttpRequest and XMLHttpRequestUpload.
+ *
+ * @constructor
+ * @implements {EventTarget}
+ */
+function XMLHttpRequestEventTarget() {}
+
+/** @inheritDoc */
+XMLHttpRequestEventTarget.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+XMLHttpRequestEventTarget.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+XMLHttpRequestEventTarget.prototype.dispatchEvent = function(evt) {};
+
+/**
+ * An event target to track the status of an upload.
+ *
+ * @constructor
+ * @extends {XMLHttpRequestEventTarget}
+ */
+function XMLHttpRequestUpload() {}
+
