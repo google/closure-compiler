@@ -92,7 +92,7 @@ class CheckRequiresForConstructors implements CompilerPass {
           }
           break;
         case Token.FUNCTION:
-          if (NodeUtil.isFunctionAnonymous(n)) {
+          if (NodeUtil.isFunctionExpression(n)) {
             if (parent.getType() == Token.NAME) {
               String functionName = parent.getString();
               info = (JSDocInfo) parent.getProp(Node.JSDOC_INFO_PROP);

@@ -57,7 +57,7 @@ public class DefinitionsRemoverTest extends CompilerTestCase {
     test("foo({ 'one' : 1 , 'two' : 2 })", "foo({ })");
   }
 
-  public void testRemoveAnonymousFunctionName() {
+  public void testRemoveFunctionExpressionName() {
     test("foo(function f(){})", "foo(function (){})");
   }
 

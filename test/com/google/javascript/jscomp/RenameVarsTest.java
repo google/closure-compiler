@@ -34,7 +34,7 @@ public class RenameVarsTest extends CompilerTestCase {
   private RenameVars renameVars;
   private boolean withClosurePass = false;
   private boolean localRenamingOnly = false;
-  private boolean preserveAnonymousFunctionNames = false;
+  private boolean preserveFunctionExpressionNames = false;
   private boolean useGoogleCodingConvention = true;
   private boolean generatePseudoNames = false;
 
@@ -53,7 +53,7 @@ public class RenameVarsTest extends CompilerTestCase {
       return new ClosurePassAndRenameVars(compiler);
     } else {
       return renameVars = new RenameVars(compiler, prefix,
-          localRenamingOnly, preserveAnonymousFunctionNames,
+          localRenamingOnly, preserveFunctionExpressionNames,
           generatePseudoNames,
           previouslyUsedMap, null, null);
     }
@@ -71,7 +71,7 @@ public class RenameVarsTest extends CompilerTestCase {
     prefix = DEFAULT_PREFIX;
     withClosurePass = false;
     localRenamingOnly = false;
-    preserveAnonymousFunctionNames = false;
+    preserveFunctionExpressionNames = false;
     generatePseudoNames = false;
 
     // TODO(johnlenz): Enable Normalize during these tests.
@@ -129,7 +129,7 @@ public class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testRecursiveFunctions2() {
-    preserveAnonymousFunctionNames = true;
+    preserveFunctionExpressionNames = true;
 
     test("var walk = function walk(node, aFunction) {" +
          "  walk(node, aFunction);" +

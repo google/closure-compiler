@@ -328,6 +328,8 @@ class InlineVariables implements CompilerPass {
                         Reference init, Reference reference) {
       Node value = init.getAssignedValue();
       Preconditions.checkState(value != null);
+      // Check for function declarations before the value is moved in the AST.
+      boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(value);
 
       inlineValue(v, reference, value.detachFromParent());
       if (declaration != init) {
@@ -335,7 +337,13 @@ class InlineVariables implements CompilerPass {
         Preconditions.checkState(expressRoot.getType() == Token.EXPR_RESULT);
         NodeUtil.removeChild(expressRoot.getParent(), expressRoot);
       }
-      removeDeclaration(declaration);
+
+      // Function declarations have already been removed.
+      if (!isFunctionDeclaration) {
+        removeDeclaration(declaration);
+      } else {
+        compiler.reportCodeChange();
+      }
     }
 
     /**
@@ -429,7 +437,7 @@ class InlineVariables implements CompilerPass {
       Node value = init.getAssignedValue();
       if (value == null) {
         // This constant is either externally defined or initialized indirectly
-        // (e.g. in an anonymous function used to hide
+        // (e.g. in an function expression used to hide
         // temporary variables), so the constant is ineligible for inlining.
         return false;
       }
@@ -539,7 +547,7 @@ class InlineVariables implements CompilerPass {
      * If the value is a literal, we can cross more boundaries to inline it.
      */
     private boolean canMoveAggressively(Node value) {
-      // Anonymous functions and other mutable objects can move within
+      // Function expressions and other mutable objects can move within
       // the same basic block.
       return NodeUtil.isLiteralValue(value)
           || value.getType() == Token.FUNCTION;
@@ -584,23 +592,25 @@ class InlineVariables implements CompilerPass {
     }
 
     /**
-     * @return true if the reference is a normal VAR declaration (only normal
-     * VARs can be inlined).
+     * @return true if the reference is a normal VAR or FUNCTION declaration.
      */
     private boolean isValidDeclaration(Reference declaration) {
-      return declaration.getParent().getType() == Token.VAR
-          && declaration.getGrandparent().getType() != Token.FOR;
+      return (declaration.getParent().getType() == Token.VAR
+          && declaration.getGrandparent().getType() != Token.FOR)
+          || NodeUtil.isFunctionDeclaration(declaration.getParent());
     }
 
     /**
-     * @return Whether
+     * @return Whether there is a initial value.
      */
     private boolean isValidInitialization(Reference initialization) {
       if (initialization == null) {
         return false;
       } else if (initialization.isDeclaration()) {
-        // The reference is a normal VAR declaration with
-        return initialization.getNameNode().getFirstChild() != null;
+        // The reference is a FUNCTION declaration or normal VAR declaration
+        // with a value.
+        return NodeUtil.isFunctionDeclaration(initialization.getParent())
+            || initialization.getNameNode().getFirstChild() != null;
       } else {
         Node parent = initialization.getParent();
         Preconditions.checkState(

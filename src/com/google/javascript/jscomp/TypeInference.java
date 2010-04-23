@@ -864,7 +864,7 @@ class TypeInference
                 JSType jArgumentType = getJSType(jArgument);
                 if (jArgument.getType() == Token.FUNCTION &&
                     jArgumentType instanceof FunctionType) {
-                  // If it's an anonymous function, update the type of this
+                  // If it's an function expression, update the type of this
                   // using the actual type of T.
                   FunctionType jArgumentFnType =(FunctionType) jArgumentType;
                   if (jArgumentFnType.getTypeOfThis().isUnknownType()) {

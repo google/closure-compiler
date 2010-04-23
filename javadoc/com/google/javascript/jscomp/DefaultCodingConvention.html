@@ -196,7 +196,7 @@ CodingConvention defines a set of hooks to customize the behavior of the
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#defineDelegateProxyProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.Map)">defineDelegateProxyProperties</A></B>(<A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry,
                               <A HREF="../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp">Scope</A>&nbsp;scope,
-                              <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>,<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;&nbsp;delegateProxyMap)</CODE>
+                              <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>,<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&gt;&nbsp;delegateProxyMap)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Defines the delegate proxy properties.</TD>
@@ -751,7 +751,7 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getAbstractMethodName()">CodingConvention</A></CODE></B></DD>
 <DD>Function name for abstract methods. An abstract method can be assigned to
- an interface method instead of an anonymous function in order to avoid
+ an interface method instead of an function expression in order to avoid
  linter warnings produced by assigning a function without a return value
  where a return value is expected.
 <P>
@@ -860,7 +860,7 @@ defineDelegateProxyProperties</H3>
 <PRE>
 public void <B>defineDelegateProxyProperties</B>(<A HREF="../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>&nbsp;registry,
                                           <A HREF="../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp">Scope</A>&nbsp;scope,
-                                          <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>,<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;&nbsp;delegateProxyMap)</PRE>
+                                          <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>,<A HREF="../../../../com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>&gt;&nbsp;delegateProxyMap)</PRE>
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#defineDelegateProxyProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.Map)">CodingConvention</A></CODE></B></DD>
 <DD>Defines the delegate proxy properties. Their types depend on properties of
@@ -870,7 +870,8 @@ public void <B>defineDelegateProxyProperties</B>(<A HREF="../../../../com/google
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#defineDelegateProxyProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.Map)">defineDelegateProxyProperties</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE></DL>
 </DD>
 <DD><DL>
-</DL>
+<DD><CODE>delegateProxyMap</CODE> - Map from delegate proxy prototype to delegate base
+     constructor.</DL>
 </DD>
 </DL>
 <HR>

@@ -104,7 +104,7 @@ final class TypedScopeCreator implements ScopeCreator {
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
-  private Map<ObjectType, ObjectType> delegateProxyMap = Maps.newHashMap();
+  private Map<ObjectType, FunctionType> delegateProxyMap = Maps.newHashMap();
 
   /**
    * Defer attachment of types to nodes until all type names
@@ -892,47 +892,7 @@ final class TypedScopeCreator implements ScopeCreator {
           DelegateRelationship delegateRelationship =
               codingConvention.getDelegateRelationship(n);
           if (delegateRelationship != null) {
-            ObjectType delegatorObject = ObjectType.cast(
-                typeRegistry.getType(delegateRelationship.delegator));
-            ObjectType delegateBaseObject = ObjectType.cast(
-                typeRegistry.getType(delegateRelationship.delegateBase));
-            ObjectType delegateSuperObject = ObjectType.cast(
-                typeRegistry.getType(
-                    codingConvention.getDelegateSuperclassName()));
-            if (delegatorObject != null &&
-                delegateBaseObject != null &&
-                delegateSuperObject != null) {
-              FunctionType delegatorCtor = delegatorObject.getConstructor();
-              FunctionType delegateBaseCtor =
-                  delegateBaseObject.getConstructor();
-              FunctionType delegateSuperCtor =
-                  delegateSuperObject.getConstructor();
-
-              if (delegatorCtor != null && delegateBaseCtor != null &&
-                  delegateSuperCtor != null) {
-                FunctionParamBuilder functionParamBuilder =
-                    new FunctionParamBuilder(typeRegistry);
-                functionParamBuilder.addRequiredParams(
-                    typeRegistry.getNativeType(U2U_CONSTRUCTOR_TYPE));
-                FunctionType findDelegate = typeRegistry.createFunctionType(
-                    typeRegistry.createDefaultObjectUnion(
-                        delegateBaseObject),
-                    functionParamBuilder.build());
-
-                FunctionType delegateProxy =
-                    typeRegistry.createConstructorType(
-                        delegateBaseObject.getReferenceName(), null, null,
-                        null);
-                delegateProxy.setPrototypeBasedOn(delegateBaseCtor);
-
-                codingConvention.applyDelegateRelationship(
-                    delegateSuperObject, delegateBaseObject, delegatorObject,
-                    delegateProxy, findDelegate);
-                delegateProxyMap.put(
-                    delegateProxy.getPrototype(),
-                    delegateBaseCtor.getPrototype());
-              }
-            }
+            applyDelegateRelationship(delegateRelationship);
           }
 
           ObjectLiteralCast objectLiteralCast =
@@ -1000,6 +960,46 @@ final class TypedScopeCreator implements ScopeCreator {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
           }
           break;
+      }
+    }
+
+    private void applyDelegateRelationship(
+        DelegateRelationship delegateRelationship) {
+      ObjectType delegatorObject = ObjectType.cast(
+          typeRegistry.getType(delegateRelationship.delegator));
+      ObjectType delegateBaseObject = ObjectType.cast(
+          typeRegistry.getType(delegateRelationship.delegateBase));
+      ObjectType delegateSuperObject = ObjectType.cast(
+          typeRegistry.getType(codingConvention.getDelegateSuperclassName()));
+      if (delegatorObject != null &&
+          delegateBaseObject != null &&
+          delegateSuperObject != null) {
+        FunctionType delegatorCtor = delegatorObject.getConstructor();
+        FunctionType delegateBaseCtor = delegateBaseObject.getConstructor();
+        FunctionType delegateSuperCtor = delegateSuperObject.getConstructor();
+
+        if (delegatorCtor != null && delegateBaseCtor != null &&
+            delegateSuperCtor != null) {
+          FunctionParamBuilder functionParamBuilder =
+              new FunctionParamBuilder(typeRegistry);
+          functionParamBuilder.addRequiredParams(
+              typeRegistry.getNativeType(U2U_CONSTRUCTOR_TYPE));
+          FunctionType findDelegate = typeRegistry.createFunctionType(
+              typeRegistry.createDefaultObjectUnion(delegateBaseObject),
+              functionParamBuilder.build());
+
+          // The suffix is necessary for the proxy to be distinguished from
+          // the base.
+          FunctionType delegateProxy = typeRegistry.createConstructorType(
+              delegateBaseObject.getReferenceName() + "(Proxy)",
+              null, null, null);
+          delegateProxy.setPrototypeBasedOn(delegateBaseObject);
+
+          codingConvention.applyDelegateRelationship(
+              delegateSuperObject, delegateBaseObject, delegatorObject,
+              delegateProxy, findDelegate);
+          delegateProxyMap.put(delegateProxy.getPrototype(), delegateBaseCtor);
+        }
       }
     }
 

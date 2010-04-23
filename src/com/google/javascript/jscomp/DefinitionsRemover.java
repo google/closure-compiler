@@ -44,10 +44,10 @@ class DefinitionsRemover {
     if (NodeUtil.isVarDeclaration(n) && n.hasChildren()) {
       return new VarDefinition(n);
     } else if(NodeUtil.isFunction(parent) && parent.getFirstChild() == n) {
-      if (!NodeUtil.isAnonymousFunction(parent)) {
+      if (!NodeUtil.isFunctionExpression(parent)) {
         return new NamedFunctionDefinition(parent);
       } else if (!n.getString().equals("")) {
-        return new AnonymousFunctionDefinition(parent);
+        return new FunctionExpressionDefinition(parent);
       }
     } else if (NodeUtil.isAssign(parent) && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent);
@@ -201,11 +201,11 @@ class DefinitionsRemover {
    * Represents a function expression that acts as a rhs.  The defined
    * name is only reachable from within the function.
    */
-  static final class AnonymousFunctionDefinition extends FunctionDefinition {
-    AnonymousFunctionDefinition(Node node) {
+  static final class FunctionExpressionDefinition extends FunctionDefinition {
+    FunctionExpressionDefinition(Node node) {
       super(node);
       Preconditions.checkArgument(
-          NodeUtil.isAnonymousFunction(node));
+          NodeUtil.isFunctionExpression(node));
     }
 
     @Override

@@ -99,7 +99,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
 
       // A function declaration with an empty name passes Rhino,
       // but is supposed to be a syntax error according to the spec.
-      if (!NodeUtil.isAnonymousFunction(parent)) {
+      if (!NodeUtil.isFunctionExpression(parent)) {
         t.report(n, INVALID_FUNCTION_DECL);
       }
       return;
@@ -109,7 +109,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
     Scope scope = t.getScope();
     Scope.Var var = scope.getVar(varName);
     if (var == null) {
-      if (NodeUtil.isAnonymousFunction(parent)) {
+      if (NodeUtil.isFunctionExpression(parent)) {
         // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
         // current scope.
       } else {

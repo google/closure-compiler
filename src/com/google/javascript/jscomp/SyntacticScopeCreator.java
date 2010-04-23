@@ -92,7 +92,7 @@ class SyntacticScopeCreator implements ScopeCreator {
       // Bleed the function name into the scope, if it hasn't
       // been declared in the outer scope.
       String fnName = fnNameNode.getString();
-      if (!fnName.isEmpty() && NodeUtil.isFunctionAnonymous(n)) {
+      if (!fnName.isEmpty() && NodeUtil.isFunctionExpression(n)) {
         declareVar(fnName, fnNameNode, n, null, null, n);
       }
 
@@ -132,7 +132,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         return;
 
       case Token.FUNCTION:
-        if (NodeUtil.isFunctionAnonymous(n)) {
+        if (NodeUtil.isFunctionExpression(n)) {
           return;
         }
 

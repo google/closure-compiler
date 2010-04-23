@@ -281,9 +281,14 @@ public class InlineVariablesTest extends CompilerTestCase {
     testSame(
         new String[] { "var x = a;", "",
             "(function() { a++; })(); var z = x;"});
+    test(
+        new String[] { "var x = a;", "",
+            "function cow() { a++; }; cow(); var z = x;"}, 
+        new String[] { "var x = a;", "",
+            ";(function cow(){ a++; })(); var z = x;"});
     testSame(
         new String[] { "var x = a;", "",
-            "function cow() { a++; }; cow(); var z = x;"});
+            "cow(); var z = x; function cow() { a++; };"});
   }
 
   // Test movement of constant values
@@ -532,6 +537,10 @@ public class InlineVariablesTest extends CompilerTestCase {
     testSame("var x = 0; (function x() { return x ? x() : 3; })();");
   }
 
+  public void testRecursiveFunction2() {
+    testSame("function y() { return y(); }");
+  }
+
   public void testUnreferencedBleedingFunction() {
     testSame("var x = function y() {}");
   }
@@ -717,26 +726,50 @@ public class InlineVariablesTest extends CompilerTestCase {
       );
   }
 
-  public void testInlineFunctionAlias1() {
+  public void testInlineFunctionAlias1a() {
     test(
-      "function f(x) {};" +
+      "function f(x) {}" +
       "var y = f;" +
       "g();" +
       "y();y();",
-      "function f(x) {};" +
+      "var y = function f(x) {};" +
       "g();" +
+      "y();y();"
+      );
+  }
+
+  public void testInlineFunctionAlias1b() {
+    test(
+      "function f(x) {};" +
+      "f;var y = f;" +
+      "g();" +
+      "y();y();",
+      "function f(x) {};" +
+      "f;g();" +
       "f();f();"
       );
   }
 
-  public void testInlineFunctionAlias2() {
+  public void testInlineFunctionAlias2a() {
     test(
-      "function f(x) {};" +
+      "function f(x) {}" +
       "var y; y = f;" +
       "g();" +
       "y();y();",
+      "var y; y = function f(x) {};" +
+      "g();" +
+      "y();y();"
+      );
+  }
+
+  public void testInlineFunctionAlias2b() {
+    test(
       "function f(x) {};" +
-      "f;" +
+      "f; var y; y = f;" +
+      "g();" +
+      "y();y();",
+      "function f(x) {};" +
+      "f; f;" +
       "g();" +
       "f();f();"
       );
@@ -835,5 +868,9 @@ public class InlineVariablesTest extends CompilerTestCase {
   public void testThisEscapedAlias() {
     testSame(
         "function f() { var a = this; var g = function() { a.y(); }; a.z(); }");
+  }
+
+  public void testInlineNamedFunction() {
+    test("function f() {} f();", "(function f(){})()");
   }
 }

@@ -137,7 +137,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
          "function foo(a){var b}" +
          "function boo(a$$1){var b$$1}");
 
-    // Verify anonymous functions are renamed.
+    // Verify functions expressions are renamed.
     testWithInversion(
         "var a = function foo(){foo()};var b = function foo(){foo()};",
         "var a = function foo(){foo()};var b = function foo$$1(){foo$$1()};");
@@ -236,7 +236,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
          "function foo$$unique_1(){var b$$unique_3;a$$unique_0}" +
          "function boo$$unique_2(){var b$$unique_4;a$$unique_0}");
 
-    // Verify anonymous functions are renamed.
+    // Verify function expressions are renamed.
     test("var a = function foo(){foo()};",
          "var a$$unique_0 = function foo$$unique_1(){foo$$unique_1()};");
 

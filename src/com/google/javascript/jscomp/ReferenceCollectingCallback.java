@@ -453,11 +453,12 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     }
 
    /**
-    * @return For an assignment or variable declaration return the assigned
-    * value, otherwise null.
+    * @return For an assignment, variable declaration, or function declaration 
+    * return the assigned value, otherwise null.
     */
     Node getAssignedValue() {
-      return NodeUtil.getAssignedValue(getNameNode());
+      return (parent.getType() == Token.FUNCTION)
+          ? parent : NodeUtil.getAssignedValue(getNameNode());
     }
 
     BasicBlock getBasicBlock() {

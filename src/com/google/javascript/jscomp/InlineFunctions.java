@@ -69,7 +69,7 @@ class InlineFunctions implements CompilerPass {
   private final FunctionInjector injector;
 
   private final boolean blockFunctionInliningEnabled;
-  private final boolean inlineAnonymousFunctionExpressions;
+  private final boolean inlineFunctionExpressions;
   private final boolean inlineGlobalFunctions;
   private final boolean inlineLocalFunctions;
 
@@ -77,7 +77,7 @@ class InlineFunctions implements CompilerPass {
       Supplier<String> safeNameIdSupplier,
       boolean inlineGlobalFunctions,
       boolean inlineLocalFunctions,
-      boolean inlineAnonymousFunctionExpressions,
+      boolean inlineFunctionExpressions,
       boolean blockFunctionInliningEnabled,
       boolean enableExpressionDecomposition) {
     Preconditions.checkArgument(compiler != null);
@@ -86,8 +86,8 @@ class InlineFunctions implements CompilerPass {
 
     this.inlineGlobalFunctions = inlineGlobalFunctions;
     this.inlineLocalFunctions = inlineLocalFunctions;
-    this.inlineAnonymousFunctionExpressions =
-      inlineAnonymousFunctionExpressions;
+    this.inlineFunctionExpressions =
+      inlineFunctionExpressions;
     this.blockFunctionInliningEnabled = blockFunctionInliningEnabled;
 
     this.injector = new FunctionInjector(
@@ -152,7 +152,7 @@ class InlineFunctions implements CompilerPass {
         NodeTraversal nodeTraversal, Node n, Node parent) {
       // Don't traverse into function bodies
       // if we aren't inlining local functions.
-      return inlineLocalFunctions || inlineAnonymousFunctionExpressions
+      return inlineLocalFunctions || inlineFunctionExpressions
          || parent == null || NodeUtil.isControlStructure(parent)
          || NodeUtil.isStatementBlock(parent);
     }
@@ -162,8 +162,8 @@ class InlineFunctions implements CompilerPass {
           || (!t.inGlobalScope() && inlineLocalFunctions)) {
         findNamedFunctions(t, n, parent);
 
-        if (inlineAnonymousFunctionExpressions) {
-          findAnonymousFunctionExpressions(t, n);
+        if (inlineFunctionExpressions) {
+          findFunctionExpressions(t, n);
         }
       }
     }
@@ -175,7 +175,7 @@ class InlineFunctions implements CompilerPass {
       }
 
       switch (n.getType()) {
-        // Anonymous functions in the form of:
+        // Functions expressions in the form of:
         //   var fooFn = function(x) { return ... }
         case Token.VAR:
           // TODO(johnlenz): Make this a Preconditions check.
@@ -195,7 +195,7 @@ class InlineFunctions implements CompilerPass {
         case Token.FUNCTION:
           Preconditions.checkState(NodeUtil.isStatementBlock(parent)
               || parent.getType() == Token.LABEL);
-          if (!NodeUtil.isFunctionAnonymous(n)) {
+          if (!NodeUtil.isFunctionExpression(n)) {
             Function fn = new NamedFunction(n);
             maybeAddFunction(fn, t.getModule());
           }
@@ -204,14 +204,14 @@ class InlineFunctions implements CompilerPass {
     }
 
     /**
-     * Find anonymous functions that are called directly in the form of
+     * Find function expressions that are called directly in the form of
      *   (function(a,b,...){...})(a,b,...)
      * or
      *   (function(a,b,...){...}).call(this,a,b, ...)
      */
-    public void findAnonymousFunctionExpressions(NodeTraversal t, Node n) {
+    public void findFunctionExpressions(NodeTraversal t, Node n) {
       switch (n.getType()) {
-        // Anonymous functions in the form of:
+        // Functions expressions in the form of:
         //   (function(){})();
         case Token.CALL:
           Node fnNode = null;
@@ -226,7 +226,7 @@ class InlineFunctions implements CompilerPass {
 
           // If a interesting function was discovered, add it.
           if (fnNode != null) {
-            Function fn = new AnonymousFunction(fnNode, callsSeen++);
+            Function fn = new FunctionExpression(fnNode, callsSeen++);
             maybeAddFunction(fn, t.getModule());
             anonFns.put(fnNode, fn.getName());
           }
@@ -893,7 +893,10 @@ class InlineFunctions implements CompilerPass {
     }
   }
 
-  /** Interface for dealing with named and anonymous functions equally */
+  /** 
+   * Interface for dealing with function declarations and function 
+   * expressions equally 
+   */
   private static interface Function {
     /** Gets the name of the function */
     public String getName();
@@ -947,12 +950,12 @@ class InlineFunctions implements CompilerPass {
     }
   }
 
-  /** AnonymousFunction implementation of the Function interface */
-  private static class AnonymousFunction implements Function {
+  /** FunctionExpression implementation of the Function interface */
+  private static class FunctionExpression implements Function {
     private final Node fn;
     private final String fakeName;
 
-    public AnonymousFunction(Node fn, int index) {
+    public FunctionExpression(Node fn, int index) {
       this.fn = fn;
       // A number is not a valid function javascript indentifier
       // so we don't need to worry about collisions.

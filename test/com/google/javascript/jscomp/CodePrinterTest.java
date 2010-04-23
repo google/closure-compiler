@@ -184,7 +184,7 @@ public class CodePrinterTest extends TestCase {
     assertPrint("typeof ({})", "typeof{}");
     assertPrint("f({})", "f({})");
 
-    // Anonymous functions.
+    // Anonymous function expressions.
     assertPrint("(function(){})", "(function(){})");
     assertPrint("(function(){})()", "(function(){})()");
     assertPrint("(function(){})instanceof Object",
@@ -195,8 +195,10 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x = function() { }();", "var x=function(){}()");
     assertPrint("(function() {}), 2", "(function(){}),2");
 
-    // Named functions
+    // Name functions expression.
     assertPrint("(function f(){})", "(function f(){})");
+    
+    // Function declaration.
     assertPrint("function f(){}", "function f(){}");
 
     // Make sure we don't treat non-latin character escapes as raw strings.

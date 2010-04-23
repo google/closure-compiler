@@ -486,18 +486,20 @@ public class NodeTraversal {
 
     final Node fnName = n.getFirstChild();
 
-    boolean anonymous = parent != null && NodeUtil.isFunctionAnonymous(n);
+    boolean isFunctionExpression = (parent != null)
+        && NodeUtil.isFunctionExpression(n);
 
-    if (!anonymous) {
-      // Named functions are parent of the containing scope.
+    if (!isFunctionExpression) {
+      // Functions declarations are in the scope containing the declaration.
       traverseBranch(fnName, n);
     }
 
     curNode = n;
     pushScope(n);
 
-    if (anonymous) {
-      // Anonymous function names are parent of the contained scope.
+    if (isFunctionExpression) {
+      // Function expression names are only accessible within the function
+      // scope.
       traverseBranch(fnName, n);
     }
 

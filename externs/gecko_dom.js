@@ -454,7 +454,7 @@ Window.prototype.sizeToContent;
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536769(VS.85).aspx
  */
-Window.prototype.stop;
+Window.prototype.stop = function() {};
 
 Window.prototype.unescape;
 Window.prototype.updateCommands;

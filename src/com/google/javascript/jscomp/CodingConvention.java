@@ -166,7 +166,7 @@ public interface CodingConvention {
 
   /**
    * Function name for abstract methods. An abstract method can be assigned to
-   * an interface method instead of an anonymous function in order to avoid
+   * an interface method instead of an function expression in order to avoid
    * linter warnings produced by assigning a function without a return value
    * where a return value is expected.
    * @return function name.
@@ -208,10 +208,13 @@ public interface CodingConvention {
   /**
    * Defines the delegate proxy properties. Their types depend on properties of
    * the delegate base methods.
+   *
+   * @param delegateProxyMap Map from delegate proxy prototype to delegate base
+   *     constructor.
    */
   public void defineDelegateProxyProperties(
       JSTypeRegistry registry, Scope scope,
-      Map<ObjectType, ObjectType> delegateProxyMap);
+      Map<ObjectType, FunctionType> delegateProxyMap);
 
   /**
    * Gets the name of the global object.

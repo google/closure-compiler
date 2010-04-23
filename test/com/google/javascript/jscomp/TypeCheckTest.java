@@ -1234,7 +1234,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testScoping11() throws Exception {
-    // named anonymous functions create a binding in their body only
+    // named function expressions create a binding in their body only
     // the return is wrong but the assignment is ok since the type of b is ?
     testTypes(
         "/** @return number */var a = function b(){ return b };",
@@ -4214,7 +4214,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
    * inferred and calling this variable is legal.
    */
   public void testBug911118() throws Exception {
-    // verifying the type assigned to anonymous functions assigned variables
+    // verifying the type assigned to function expressions assigned variables
     Scope s = parseAndTypeCheckWithScope("var a = function(){};").scope;
     JSType type = s.getVar("a").getType();
     assertEquals("function (): ?", type.toString());

@@ -606,7 +606,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
   }
 
   /**
-   * Find the first containing function that's not an anonymous
+   * Find the first containing function that's not an function expression
    * closure.
    */
   private Name getNamedContainingFunction() {

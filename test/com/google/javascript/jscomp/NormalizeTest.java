@@ -212,7 +212,7 @@ public class NormalizeTest extends CompilerTestCase {
          "function foo(a){var b}" +
          "function boo(a$$1){var b$$1}");
 
-    // Verify anonymous functions are renamed.
+    // Verify function expressions are renamed.
     test("var a = function foo(){foo()};var b = function foo(){foo()};",
          "var a = function foo(){foo()};var b = function foo$$1(){foo$$1()};");
 

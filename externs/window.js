@@ -146,17 +146,17 @@ function prompt(message, opt_value) {}
 /**
  * @param {Function|string} callback
  * @param {number} delay
- * @param {...*} var_args
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setInterval
+ * @see https://msdn.microsoft.com/en-us/library/ms536749(v=VS.85).aspx
  */
-function setInterval(callback, delay, var_args) {}
+function setInterval(callback, delay) {}
 
 /**
  * @param {Function|string} callback
  * @param {number} delay
- * @param {...*} var_args
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setTimeout
+ * @see https://msdn.microsoft.com/en-us/library/ms536753(VS.85).aspx
  */
-function setTimeout(callback, delay, var_args) {}
+function setTimeout(callback, delay) {}

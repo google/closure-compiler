@@ -25,7 +25,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   boolean allowGlobalFunctionInlining = true;
   boolean allowBlockInlining = true;
   final boolean allowExpressionDecomposition = true;
-  final boolean allowAnonymousFunctionExpressionInlining = true;
+  final boolean allowFunctionExpressionInlining = true;
   final boolean allowLocalFunctionInlining = true;
 
   public InlineFunctionsTest() {
@@ -49,7 +49,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         compiler.getUniqueNameIdSupplier(),
         allowGlobalFunctionInlining,
         allowLocalFunctionInlining,
-        allowAnonymousFunctionExpressionInlining,
+        allowFunctionExpressionInlining,
         allowBlockInlining,
         allowExpressionDecomposition);
   }
@@ -1333,7 +1333,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "x = JSCompiler_temp_const_0 + JSCompiler_inline_result_1;");
   }
 
-  public void testDecomposeAnonymousInCall() {
+  public void testDecomposeFunctionExpressionInCall() {
     test(
         "(function(map){descriptions_=map})(\n" +
            "function(){\n" +
@@ -1380,89 +1380,89 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function _g() {var t; {x.call(this); t = void 0}}");
   }
 
-  public void testAnonymousFunctionInlining1() {
+  public void testFunctionExpressionInlining1() {
     test("(function(){})()",
          "void 0");
   }
 
-  public void testAnonymousFunctionInlining2() {
+  public void testFunctionExpressionInlining2() {
     test("(function(){foo()})()",
          "{foo()}");
   }
 
-  public void testAnonymousFunctionInlining3() {
+  public void testFunctionExpressionInlining3() {
     test("var a = (function(){return foo()})()",
          "var a = foo()");
   }
 
-  public void testAnonymousFunctionInlining4() {
+  public void testFunctionExpressionInlining4() {
     test("var a; a = 1 + (function(){return foo()})()",
          "var a; a = 1 + foo()");
   }
 
-  public void testAnonymousFunctionCallInlining1() {
+  public void testFunctionExpressionCallInlining1() {
     test("(function(){}).call(this)",
          "void 0");
   }
 
-  public void testAnonymousFunctionCallInlining2() {
+  public void testFunctionExpressionCallInlining2() {
     test("(function(){foo(this)}).call(this)",
          "{foo(this)}");
   }
 
-  public void testAnonymousFunctionCallInlining3() {
+  public void testFunctionExpressionCallInlining3() {
     test("var a = (function(){return foo(this)}).call(this)",
          "var a = foo(this)");
   }
 
-  public void testAnonymousFunctionCallInlining4() {
+  public void testFunctionExpressionCallInlining4() {
     test("var a; a = 1 + (function(){return foo(this)}).call(this)",
          "var a; a = 1 + foo(this)");
   }
 
-  public void testAnonymousFunctionCallInlining5() {
+  public void testFunctionExpressionCallInlining5() {
     test("a:(function(){return foo()})()",
          "a:foo()");
   }
 
-  public void testAnonymousFunctionCallInlining6() {
+  public void testFunctionExpressionCallInlining6() {
     test("a:(function(){return foo()}).call(this)",
          "a:foo()");
   }
 
-  public void testAnonymousFunctionCallInlining7() {
+  public void testFunctionExpressionCallInlining7() {
     test("a:(function(){})()",
          "a:void 0");
   }
 
-  public void testAnonymousFunctionCallInlining8() {
+  public void testFunctionExpressionCallInlining8() {
     test("a:(function(){}).call(this)",
          "a:void 0");
   }
 
-  public void testAnonymousFunctionCallInlining9() {
+  public void testFunctionExpressionCallInlining9() {
     // ... with unused recursive name.
     test("(function foo(){})()",
          "void 0");
   }
 
-  public void testAnonymousFunctionCallInlining10() {
+  public void testFunctionExpressionCallInlining10() {
     // ... with unused recursive name.
     test("(function foo(){}).call(this)",
          "void 0");
   }
 
-  public void testAnonymousFunctionCallInlining11() {
+  public void testFunctionExpressionCallInlining11() {
     // Can't inline functions that return inner functions.
     testSame("((function(){return function(){foo()}})())();");
   }
 
-  public void testAnonymousFunctionCallInlining12() {
+  public void testFunctionExpressionCallInlining12() {
     // Can't inline functions that recurse.
     testSame("(function foo(){foo()})()");
   }
 
-  public void testAnonymousFunctionOmega() {
+  public void testFunctionExpressionOmega() {
     // ... with unused recursive name.
     test("(function (f){f(f)})(function(f){f(f)})",
          "{var f$$inline_1=function(f$$1){f$$1(f$$1)};" +
@@ -1529,7 +1529,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   // http://en.wikipedia.org/wiki/Fixed_point_combinator#Y_combinator
-  public void testAnonymousFunctionYCombinator() {
+  public void testFunctionExpressionYCombinator() {
     testSame(
         "var factorial = ((function(M) {\n" +
         "      return ((function(f) {\n" +

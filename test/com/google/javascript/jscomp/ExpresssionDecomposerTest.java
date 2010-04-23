@@ -134,8 +134,8 @@ public class ExpresssionDecomposerTest extends TestCase {
   }
 
   public void testCanExposeExpression7() {
-    // Verify calls to anonymous function are movable.
-    helperCanExposeAnonymousFunctionExpression(
+    // Verify calls to function expressions are movable.
+    helperCanExposeFunctionExpression(
         DecompositionType.MOVABLE,
         "(function(map){descriptions_=map})(\n" +
             "function(){\n" +
@@ -403,7 +403,7 @@ public class ExpresssionDecomposerTest extends TestCase {
     helperCanExposeExpression(expectedResult, code, fnName, null);
   }
 
-  private void helperCanExposeAnonymousFunctionExpression(
+  private void helperCanExposeFunctionExpression(
       DecompositionType expectedResult, String code, int call) {
     Compiler compiler = new Compiler();
     Set<String> knownConstants = Sets.newHashSet();

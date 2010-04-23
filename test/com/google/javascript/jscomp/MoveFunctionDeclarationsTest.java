@@ -37,7 +37,7 @@ public class MoveFunctionDeclarationsTest extends CompilerTestCase {
          new String[] { "function f(){} function g(){} a" });
   }
 
-  public void testAnonymousFunctions() {
+  public void testFunctionsExpression() {
     testSame("a; f = function(){}");
   }
 

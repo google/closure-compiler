@@ -51,12 +51,12 @@ public class NodeIteratorsTest extends TestCase {
         Token.VAR, Token.NAME, Token.VAR, Token.SCRIPT);
   }
 
-  public void testAnonymousFunction() {
+  public void testFunctionExpression() {
     testVarMotionWithCode("var X = 3, Y = function() {}; 3;",
         Token.NAME, Token.VAR, Token.NUMBER, Token.EXPR_RESULT, Token.SCRIPT);
   }
 
-  public void testAnonymousFunction2() {
+  public void testFunctionExpression2() {
     testVarMotionWithCode("var X = 3; var Y = function() {}; 3;",
         Token.VAR, Token.NAME, Token.VAR, Token.NUMBER,
         Token.EXPR_RESULT, Token.SCRIPT);

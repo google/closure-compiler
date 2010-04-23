@@ -167,7 +167,7 @@ class SuspiciousPropertiesCheck implements CompilerPass {
           String name = n.getString();
 
           // Avoid anonymous functions
-          if (name.length() > 0) {
+          if (!name.isEmpty()) {
             // Only count globals
             Scope.Var var = t.getScope().getVar(name);
             if (var != null && !var.isLocal()) {

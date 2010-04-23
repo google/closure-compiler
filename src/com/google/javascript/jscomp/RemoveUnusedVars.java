@@ -54,7 +54,7 @@ class RemoveUnusedVars implements CompilerPass {
 
   private final boolean removeGlobals;
 
-  private boolean preserveAnonymousFunctionNames;
+  private boolean preserveFunctionExpressionNames;
 
   /**
    * Keeps track of what variables we've warned about, so that we don't do it
@@ -70,10 +70,10 @@ class RemoveUnusedVars implements CompilerPass {
   RemoveUnusedVars(
       AbstractCompiler compiler,
       boolean removeGlobals,
-      boolean preserveAnonymousFunctionNames) {
+      boolean preserveFunctionExpressionNames) {
     compiler_ = compiler;
     this.removeGlobals = removeGlobals;
-    this.preserveAnonymousFunctionNames = preserveAnonymousFunctionNames;
+    this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
   }
 
   /**
@@ -121,9 +121,9 @@ class RemoveUnusedVars implements CompilerPass {
       // Otherwise we traverse into the function only when we encounter
       // a reference to it (see markReferencedVar())
       case Token.FUNCTION:
-        // If it's an exported function, or an anonymous function, assume
+        // If it's an exported function, or an function expression, assume
         // that it'll be called.
-        if (NodeUtil.isFunctionAnonymous(n) ||
+        if (NodeUtil.isFunctionExpression(n) ||
             compiler_.getCodingConvention().isExported(
                 n.getFirstChild().getString())) {
           traverseFunction(n, scope);
@@ -245,9 +245,8 @@ class RemoveUnusedVars implements CompilerPass {
             parent.getType() == Token.FUNCTION) {
           // Don't remove function arguments here. That's a special case
           // that's taken care of in removeUnreferencedFunctionArgs.
-        } else if (toRemove.getType() == Token.FUNCTION &&
-            NodeUtil.isFunctionAnonymous(toRemove)) {
-          if (!preserveAnonymousFunctionNames) {
+        } else if (NodeUtil.isFunctionExpression(toRemove)) {
+          if (!preserveFunctionExpressionNames) {
             toRemove.getFirstChild().setString("");
             compiler_.reportCodeChange();
           }

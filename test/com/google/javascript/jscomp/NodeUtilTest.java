@@ -347,7 +347,7 @@ public class NodeUtilTest extends TestCase {
   }
 
 
-  public void testIsFunctionAnonymous() {
+  public void testIsFunctionExpression() {
     assertContainsAnonFunc(true, "(function(){})");
     assertContainsAnonFunc(true, "[function a(){}]");
     assertContainsAnonFunc(false, "{x: function a(){}}");
@@ -393,7 +393,7 @@ public class NodeUtilTest extends TestCase {
     Node funcParent = findParentOfFuncDescendant(parse(js));
     assertNotNull("Expected function node in parse tree of: " + js, funcParent);
     Node funcNode = getFuncChild(funcParent);
-    assertEquals(expected, NodeUtil.isFunctionAnonymous(funcNode));
+    assertEquals(expected, NodeUtil.isFunctionExpression(funcNode));
   }
 
   private Node findParentOfFuncDescendant(Node n) {
@@ -539,7 +539,7 @@ public class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.isControlStructureCodeBlock(ifNode, elseCase));
   }
 
-  public void testIsAnonymousFunction1() {
+  public void testIsFunctionExpression1() {
     Compiler compiler = new Compiler();
 
     Node root = parse("(function foo() {})");
@@ -547,16 +547,16 @@ public class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.isExpressionNode(StatementNode));
     Node functionNode = StatementNode.getFirstChild();
     assertTrue(NodeUtil.isFunction(functionNode));
-    assertTrue(NodeUtil.isAnonymousFunction(functionNode));
+    assertTrue(NodeUtil.isFunctionExpression(functionNode));
   }
 
-  public void testIsAnonymousFunction2() {
+  public void testIsFunctionExpression2() {
     Compiler compiler = new Compiler();
 
     Node root = parse("function foo() {}");
     Node functionNode = root.getFirstChild();
     assertTrue(NodeUtil.isFunction(functionNode));
-    assertFalse(NodeUtil.isAnonymousFunction(functionNode));
+    assertFalse(NodeUtil.isFunctionExpression(functionNode));
   }
 
   public void testRemoveTryChild() {

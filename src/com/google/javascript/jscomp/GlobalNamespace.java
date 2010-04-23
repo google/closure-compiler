@@ -278,7 +278,7 @@ class GlobalNamespace {
               case Token.FUNCTION:
                 Node gramps = parent.getParent();
                 if (gramps == null ||
-                    NodeUtil.isFunctionAnonymous(parent)) return;
+                    NodeUtil.isFunctionExpression(parent)) return;
                 isSet = true;
                 type = Name.Type.FUNCTION;
                 break;

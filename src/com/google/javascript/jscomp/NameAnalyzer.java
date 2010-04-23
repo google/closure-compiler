@@ -864,8 +864,8 @@ final class NameAnalyzer implements CompilerPass {
         }
       } else {
         // No named dependency scope found.  Unfortunately that might
-        // mean that the expression is a child of an anonymous
-        // function or assignment with a complex lhs.  In those cases,
+        // mean that the expression is a child of an function expression
+        // or assignment with a complex lhs.  In those cases,
         // protect this node by creating a reference to WINDOW.
         for (Node ancestor : n.getAncestors()) {
           if (NodeUtil.isAssignmentOp(ancestor) ||
@@ -1388,8 +1388,8 @@ final class NameAnalyzer implements CompilerPass {
 
   /**
    * Get dependency scope defined by the enclosing function, or null.
-   * If enclosing function is anonymous, determine scope based on its
-   * parent if the parent node is a variable declaration or
+   * If enclosing function is a function expression, determine scope based on
+   * its parent if the parent node is a variable declaration or
    * assignment.
    */
   private NameInformation getEnclosingFunctionDependencyScope(NodeTraversal t) {
@@ -1403,7 +1403,7 @@ final class NameAnalyzer implements CompilerPass {
       return ref;
     }
 
-    // anonymous function.  try to get a name from the parent var
+    // Function expression.  try to get a name from the parent var
     // declaration or assignment.
     Node parent = function.getParent();
     if (parent != null) {

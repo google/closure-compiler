@@ -21,7 +21,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * Collapses anonymous function declarations into named function declarations,
+ * Collapses anonymous function expressions into named function declarations,
  * i.e. the following:
  *
  * <pre>

@@ -243,7 +243,7 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (!NodeUtil.isAnonymousFunction(node)) {
+      if (!NodeUtil.isFunctionExpression(node)) {
         return node;
       }
 
@@ -314,7 +314,7 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (!NodeUtil.isAnonymousFunction(node)) {
+      if (!NodeUtil.isFunctionExpression(node)) {
         return node;
       }
 
@@ -374,7 +374,7 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (!NodeUtil.isAnonymousFunction(node)) {
+      if (!NodeUtil.isFunctionExpression(node)) {
         return node;
       }
 
@@ -428,7 +428,7 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (!NodeUtil.isAnonymousFunction(node)) {
+      if (!NodeUtil.isFunctionExpression(node)) {
         return node;
       }
 
@@ -490,7 +490,7 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (!NodeUtil.isAnonymousFunction(node)) {
+      if (!NodeUtil.isFunctionExpression(node)) {
         return node;
       }
 

@@ -62,7 +62,7 @@ class FunctionNames implements CompilerPass, Serializable {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, functionListExtractor);
-    AnonymousFunctionNamer namer = new AnonymousFunctionNamer(functionMap);
+    FunctionExpressionNamer namer = new FunctionExpressionNamer(functionMap);
     AnonymousFunctionNamingCallback namingCallback =
         new AnonymousFunctionNamingCallback(namer);
     NodeTraversal.traverse(compiler, root, namingCallback);
@@ -145,14 +145,14 @@ class FunctionNames implements CompilerPass, Serializable {
     }
   }
 
-  private static class AnonymousFunctionNamer
+  private static class FunctionExpressionNamer
       implements AnonymousFunctionNamingCallback.FunctionNamer {
     private static final char DELIMITER = '.';
     private static final NodeNameExtractor extractor =
         new NodeNameExtractor(DELIMITER);
     private final Map<Node, FunctionRecord> functionMap;
 
-    AnonymousFunctionNamer(Map<Node, FunctionRecord> functionMap) {
+    FunctionExpressionNamer(Map<Node, FunctionRecord> functionMap) {
       this.functionMap = functionMap;
     }
 

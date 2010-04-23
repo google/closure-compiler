@@ -215,22 +215,20 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     args.add("--warning_level=QUIET");
     args.add("--debug=false");
-    test("function Foo() {};" +
+    test("function Foo() {}" +
          "Foo.x = 1;" +
          "function f() {throw new Foo().x;} f();",
-         "function a() {};" +
-         "throw new a().a;");
+         "throw (new function() {}).a;");
   }
 
   public void testDebugFlag4() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     args.add("--warning_level=QUIET");
     args.add("--debug=true");
-    test("function Foo() {};" +
+    test("function Foo() {}" +
         "Foo.x = 1;" +
         "function f() {throw new Foo().x;} f();",
-        "function $Foo$$() {};" +
-        "throw new $Foo$$().$x$;");
+        "throw (new function Foo() {}).$x$;");
   }
 
   public void testHelpFlag() {

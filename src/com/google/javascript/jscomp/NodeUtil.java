@@ -144,7 +144,7 @@ public final class NodeUtil {
    * <li>{@code var name2 = function name1() ...}</li>
    * <li>{@code qualified.name2 = function name1() ...}</li>
    * </ul>
-   * In two last cases with named anonymous functions, the second name is
+   * In two last cases with named function expressions, the second name is
    * returned (the variable of qualified name).
    *
    * @param n a node whose type is {@link Token#FUNCTION}
@@ -404,12 +404,10 @@ public final class NodeUtil {
         break;
 
       case Token.FUNCTION:
-        // Anonymous functions don't have side-effects, but named ones
-        // change the namespace. Therefore, we check if the function has
-        // a name. Either way, we don't need to check the children, since
-        // they aren't executed at declaration time.
-        //
-        return !isFunctionAnonymous(n);
+        // Function expressions don't have side-effects, but function
+        // declarations change the namespace. Either way, we don't need to
+        // check the children, since they aren't executed at declaration time.
+        return !isFunctionExpression(n);
 
       case Token.NEW:
         if (checkForNewObjects) {
@@ -624,9 +622,9 @@ public final class NodeUtil {
         return true;
 
       case Token.FUNCTION:
-        // Anonymous functions definitions are not changed by side-effects,
-        // and named functions are not part of expressions.
-        Preconditions.checkState(isAnonymousFunction(n));
+        // Function expression are not changed by side-effects,
+        // and function declarations are not part of expressions.
+        Preconditions.checkState(isFunctionExpression(n));
         return false;
     }
 
@@ -1049,9 +1047,8 @@ public final class NodeUtil {
   static boolean isStatement(Node n) {
     Node parent = n.getParent();
     // It is not possible to determine definitely if a node is a statement
-    // or not if it is not part of the AST.  A FUNCTION node, for instance,
-    // is either part of an expression (as a anonymous function) or as
-    // a statement.
+    // or not if it is not part of the AST.  A FUNCTION node can be
+    // either part of an expression or a statement.
     Preconditions.checkState(parent != null);
     switch (parent.getType()) {
       case Token.SCRIPT:
@@ -1070,7 +1067,7 @@ public final class NodeUtil {
 
   /**
    * @return Whether the name is a reference to a variable, function or
-   *       function parameter (not a label or a empty anonymous function name).
+   *       function parameter (not a label or a empty function expression name).
    */
   static boolean isReferenceName(Node n) {
     return isName(n) && !n.getString().isEmpty();
@@ -1191,10 +1188,10 @@ public final class NodeUtil {
   /**
    * Is this node a function declaration? A function declaration is a function
    * that has a name that is added to the current scope (i.e. a function that
-   * is not anonymous; see {@link #isFunctionAnonymous}).
+   * is not part of a expression; see {@link #isFunctionExpression}).
    */
   static boolean isFunctionDeclaration(Node n) {
-    return n.getType() == Token.FUNCTION && !isFunctionAnonymous(n);
+    return n.getType() == Token.FUNCTION && isStatement(n);
   }
 
   /**
@@ -1208,41 +1205,31 @@ public final class NodeUtil {
             || n.getParent().getParent().getType() == Token.FUNCTION);
   }
 
-
   /**
-   * Is this node an anonymous function? An anonymous function is one that has
-   * either no name or a name that is not added to the current scope (see
-   * {@link #isFunctionAnonymous}).
-   */
-  static boolean isAnonymousFunction(Node n) {
-    return n.getType() == Token.FUNCTION && isFunctionAnonymous(n);
-  }
-
-  /**
-   * Is a FUNCTION node an anonymous function? An anonymous function is one that
-   * has either no name or a name that is not added to the current scope.
+   * Is a FUNCTION node an function expression? An function expression is one
+   * that has either no name or a name that is not added to the current scope.
    *
-   * <p>Some examples of anonymous functions:
+   * <p>Some examples of function expressions:
    * <pre>
-   * function () {}
+   * (function () {})
    * (function f() {})()
    * [ function f() {} ]
    * var f = function f() {};
    * for (function f() {};;) {}
    * </pre>
    *
-   * <p>Some examples of functions that are <em>not</em> anonymous:
+   * <p>Some examples of functions that are <em>not</em> expressions:
    * <pre>
    * function f() {}
    * if (x); else function f() {}
    * for (;;) { function f() {} }
    * </pre>
    *
-   * @param n A FUNCTION node
-   * @return Whether n is an anonymous function
+   * @param n A node
+   * @return Whether n is an function used within an expression.
    */
-  static boolean isFunctionAnonymous(Node n) {
-    return !isStatement(n);
+  static boolean isFunctionExpression(Node n) {
+    return n.getType() == Token.FUNCTION && !isStatement(n);
   }
 
   /**

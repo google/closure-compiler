@@ -296,7 +296,7 @@ class Normalize implements CompilerPass {
      */
     private void normalizeFunctionDeclaration(Node n) {
       Preconditions.checkState(n.getType() == Token.FUNCTION);
-      if (!NodeUtil.isFunctionAnonymous(n)
+      if (!NodeUtil.isFunctionExpression(n)
           && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n);
       }

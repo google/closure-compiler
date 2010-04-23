@@ -53,7 +53,7 @@ import javax.annotation.Nullable;
  * Foo.prototype.bar = goog.abstractMethod;
  * </code>
  * the JSDocInfo will appear in two places in the type system: in the 'bar'
- * slot of Foo.prototype, and on the anonymous function type created by
+ * slot of Foo.prototype, and on the function expression type created by
  * this expression.
  *
  * @author nicksantos@google.com (Nick Santos)

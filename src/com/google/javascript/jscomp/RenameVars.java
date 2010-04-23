@@ -100,11 +100,11 @@ final class RenameVars implements CompilerPass {
   private final boolean localRenamingOnly;
 
   /**
-   * Whether anonymous function names should be preserved. Typically, for
+   * Whether function expression names should be preserved. Typically, for
    * debugging purposes.
    * @see NameAnonymousFunctions
    */
-  private boolean preserveAnonymousFunctionNames;
+  private boolean preserveFunctionExpressionNames;
 
   /** Generate pseudo names for variables for debugging purposes */
   private boolean generatePseudoNames;
@@ -118,7 +118,7 @@ final class RenameVars implements CompilerPass {
   RenameVars(AbstractCompiler compiler,
       String prefix,
       boolean localRenamingOnly,
-      boolean preserveAnonymousFunctionNames,
+      boolean preserveFunctionExpressionNames,
       boolean generatePseudoNames,
       VariableMap prevUsedRenameMap,
       @Nullable char[] reservedCharacters,
@@ -126,7 +126,7 @@ final class RenameVars implements CompilerPass {
     this.compiler = compiler;
     this.prefix = prefix == null ? "" : prefix;
     this.localRenamingOnly = localRenamingOnly;
-    this.preserveAnonymousFunctionNames = preserveAnonymousFunctionNames;
+    this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
     this.generatePseudoNames = generatePseudoNames;
     this.prevUsedRenameMap = prevUsedRenameMap;
     this.reservedCharacters = reservedCharacters;
@@ -190,10 +190,10 @@ final class RenameVars implements CompilerPass {
         return;
       }
 
-      // Are we renaming anonymous function names?
-      if (preserveAnonymousFunctionNames
+      // Are we renaming function expression names?
+      if (preserveFunctionExpressionNames
           && var != null
-          && NodeUtil.isAnonymousFunction(var.getParentNode())) {
+          && NodeUtil.isFunctionExpression(var.getParentNode())) {
         reservedNames.add(name);
         return;
       }
