@@ -206,6 +206,14 @@ public class AliasExternalsTest extends CompilerTestCase {
          "window++");
   }
 
+  public void testNewOperator() {
+    test("var x;new x(window);window;window;window;window;window",
+        
+         "var GLOBAL_window=window; var x;" +
+         "  new x(GLOBAL_window);GLOBAL_window;GLOBAL_window;" +
+         "  GLOBAL_window;GLOBAL_window;GLOBAL_window");
+  }
+  
   /**
    * Test the standard replacement for GETPROP
    */

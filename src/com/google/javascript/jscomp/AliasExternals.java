@@ -660,16 +660,16 @@ class AliasExternals implements CompilerPass {
 
         Property global = globals.get(name);
         if (global != null) {
+          boolean isFirst = parent.getFirstChild() == n;
           // If a global is being assigned to or otherwise modified, then we
           // don't want to alias it.
           // Using "new" with this global is not a mutator, but it's also
           // something that we want to avoid when aliasing, since we may be
           // dealing with external objects (e.g. ActiveXObject in MSIE)
-          if ((NodeUtil.isAssignmentOp(parent) &&
-              parent.getFirstChild() == n) ||
+          if ((NodeUtil.isAssignmentOp(parent) && isFirst) ||
+              (parent.getType() == Token.NEW && isFirst) ||
               parent.getType() == Token.INC ||
-              parent.getType() == Token.DEC ||
-              parent.getType() == Token.NEW) {
+              parent.getType() == Token.DEC) {
             global.recordMutator(t);
           } else {
             global.recordAccessor(t);
