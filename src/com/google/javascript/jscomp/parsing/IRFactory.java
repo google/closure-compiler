@@ -646,8 +646,14 @@ public class IRFactory {
 
       Node node = new Node(Token.OBJECTLIT);
       for (ObjectProperty el : literalNode.getElements()) {
-        node.addChildToBack(transformAsString(el.getLeft()));
-        node.addChildToBack(transform(el.getRight()));
+        if (el.isGetter()) {
+          reportGetter(el);
+        } else if (el.isSetter()) {
+          reportSetter(el);
+        } else {
+          node.addChildToBack(transformAsString(el.getLeft()));
+          node.addChildToBack(transform(el.getRight()));
+        }
       }
       return node;
     }
@@ -838,6 +844,20 @@ public class IRFactory {
     void reportDestructuringAssign(AstNode node) {
       errorReporter.error(
           "destructuring assignment forbidden",
+          sourceName,
+          node.getLineno(), "", 0);
+    }
+
+    void reportGetter(AstNode node) {
+      errorReporter.error(
+          "getters are not supported in Internet Explorer",
+          sourceName,
+          node.getLineno(), "", 0);
+    }
+
+    void reportSetter(AstNode node) {
+      errorReporter.error(
+          "setters are not supported in Internet Explorer",
           sourceName,
           node.getLineno(), "", 0);
     }

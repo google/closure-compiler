@@ -153,9 +153,9 @@ public class DefaultCodingConvention implements CodingConvention {
   }
 
   @Override
-  public void defineDelegateProxyProperties(
+  public void defineDelegateProxyPrototypeProperties(
       JSTypeRegistry registry, Scope scope,
-      Map<ObjectType, FunctionType> delegateProxyMap) {
+      List<ObjectType> delegateProxyPrototypes) {
     // do nothing.
   }
 

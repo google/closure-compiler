@@ -215,14 +215,6 @@ The <code>UnionType</code> implements a common JavaScript idiom in which the
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/UnionType.html#forgiveUnknownNames()">forgiveUnknownNames</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If we see a type name without braces, it might be legacy jsdoc.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/UnionType.html#getAlternates()">getAlternates</A></B>()</CODE>
 
@@ -462,25 +454,6 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is
 
 <DT><B>Returns:</B><DD>The alternate types of this union type. The returned set is
      immutable.</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="forgiveUnknownNames()"><!-- --></A><H3>
-forgiveUnknownNames</H3>
-<PRE>
-public void <B>forgiveUnknownNames</B>()</PRE>
-<DL>
-<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#forgiveUnknownNames()">JSType</A></CODE></B></DD>
-<DD>If we see a type name without braces, it might be legacy jsdoc.
- So we shouldn't emit warnings about it. This method is how we skip
- those warnings.
-<P>
-<DD><DL>
-<DT><B>Overrides:</B><DD><CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#forgiveUnknownNames()">forgiveUnknownNames</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></DL>
-</DD>
-<DD><DL>
-</DL>
 </DD>
 </DL>
 <HR>

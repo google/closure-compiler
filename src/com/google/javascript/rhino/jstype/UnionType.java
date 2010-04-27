@@ -93,7 +93,7 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public void forgiveUnknownNames() {
+  void forgiveUnknownNames() {
     for (JSType type : getAlternates()) {
       type.forgiveUnknownNames();
     }

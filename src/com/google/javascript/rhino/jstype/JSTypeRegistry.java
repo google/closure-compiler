@@ -146,6 +146,36 @@ public class JSTypeRegistry implements Serializable {
   private final boolean tolerateUndefinedValues;
 
   /**
+   * The type registry has three modes, which control how type ASTs are
+   * converted to types in {@link @createFromTypeNodes}.
+   */
+  public static enum ResolveMode {
+    /**
+     * Expressions are converted into Unknown blobs that can be
+     * resolved into complex types.
+     */
+    LAZY_EXPRESSIONS,
+
+    /**
+     * Expressions are evaluated. If any names in the expression point to
+     * unknown types, then we create a proxy {@code NamedType} structure
+     * until the type can be resolved.
+     *
+     * This is the legacy way of resolving ways, and may not exist in the
+     * future.
+     */
+    LAZY_NAMES,
+
+    /**
+     * Expressions and type names are evaluated aggressively. A warning
+     * will be emitted if a type name fails to resolve to a real type.
+     */
+    IMMEDIATE
+  }
+
+  private ResolveMode resolveMode = ResolveMode.LAZY_NAMES;
+
+  /**
    * Constructs a new type registry populated with the built-in types.
    */
   public JSTypeRegistry(ErrorReporter reporter) {
@@ -162,6 +192,14 @@ public class JSTypeRegistry implements Serializable {
     namesToTypes = new HashMap<String, JSType>();
     resetForTypeCheck();
     this.tolerateUndefinedValues = tolerateUndefinedValues;
+  }
+
+  /**
+   * Set the current resolving mode of the type registry.
+   * @see ResolveMode
+   */
+  public void setResolveMode(ResolveMode mode) {
+    this.resolveMode = mode;
   }
 
   public ErrorReporter getErrorReporter() {
@@ -1262,12 +1300,30 @@ public class JSTypeRegistry implements Serializable {
    */
   public JSType createFromTypeNodes(Node n, String sourceName,
       StaticScope<JSType> scope) {
+    return createFromTypeNodes(n, sourceName, scope, false);
+  }
+
+  /**
+   * Creates a JSType from the nodes representing a type.
+   * @param n The node with type info.
+   * @param sourceName The source file name.
+   * @param scope A scope for doing type name lookups.
+   * @param forgiving Whether we should be forgiving about type names
+   *     that we can't find.
+   */
+  public JSType createFromTypeNodes(Node n, String sourceName,
+      StaticScope<JSType> scope, boolean forgiving) {
+    if (resolveMode == ResolveMode.LAZY_EXPRESSIONS) {
+      return new UnresolvedTypeExpression(this, n, sourceName, forgiving);
+    }
+
     switch (n.getType()) {
       case Token.LC: // Record type.
         return createRecordTypeFromNodes(n.getFirstChild(), sourceName, scope);
 
       case Token.BANG: // Not nullable
-        return createFromTypeNodes(n.getFirstChild(), sourceName, scope)
+        return createFromTypeNodes(
+            n.getFirstChild(), sourceName, scope, forgiving)
             .restrictByNotNullOrUndefined();
 
       case Token.QMARK: // Nullable or unknown
@@ -1276,7 +1332,7 @@ public class JSTypeRegistry implements Serializable {
           return getNativeType(UNKNOWN_TYPE);
         }
         return createDefaultObjectUnion(
-            createFromTypeNodes(firstChild, sourceName, scope));
+            createFromTypeNodes(firstChild, sourceName, scope, forgiving));
 
       case Token.EQUALS: // Optional
         return createOptionalType(
@@ -1310,6 +1366,12 @@ public class JSTypeRegistry implements Serializable {
       case Token.STRING:
         JSType namedType = getType(scope, n.getString(), sourceName,
             n.getLineno(), n.getCharno());
+        if (forgiving) {
+          namedType.forgiveUnknownNames();
+        }
+        if (resolveMode != ResolveMode.LAZY_NAMES) {
+          namedType = namedType.resolveInternal(reporter, scope);
+        }
         if ((namedType instanceof ObjectType) &&
             !(enumTypeNames.contains(n.getString()))) {
           Node typeList = n.getFirstChild();
@@ -1330,7 +1392,6 @@ public class JSTypeRegistry implements Serializable {
             }
           }
           return createDefaultObjectUnion(namedType);
-
         } else {
           return namedType;
         }

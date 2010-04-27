@@ -296,14 +296,6 @@ Represents JavaScript value types.<p>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#forgiveUnknownNames()">forgiveUnknownNames</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If we see a type name without braces, it might be legacy jsdoc.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html#getGreatestSubtype(com.google.javascript.rhino.jstype.JSType)">getGreatestSubtype</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&nbsp;that)</CODE>
 
@@ -883,24 +875,6 @@ public <A HREF="../../../../../com/google/javascript/rhino/JSDocInfo.html" title
 <DD>Gets the docInfo for this type. By default, documentation cannot be
  attached to arbitrary types. This must be overridden for
  programmer-defined types.
-<P>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="forgiveUnknownNames()"><!-- --></A><H3>
-forgiveUnknownNames</H3>
-<PRE>
-public void <B>forgiveUnknownNames</B>()</PRE>
-<DL>
-<DD>If we see a type name without braces, it might be legacy jsdoc.
- So we shouldn't emit warnings about it. This method is how we skip
- those warnings.
 <P>
 <DD><DL>
 </DL>

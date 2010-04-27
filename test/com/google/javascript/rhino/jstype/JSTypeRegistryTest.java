@@ -38,9 +38,13 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode;
 
 import junit.framework.TestCase;
+
 
 /**
  * Tests {@link JSTypeRegistry}.
@@ -141,5 +145,49 @@ public class JSTypeRegistryTest extends TestCase {
     typeRegistry.setLastGeneration(true);
     typeRegistry.resolveTypesInScope(scope);
     assertFalse(subNamed.isUnknownType());
+  }
+
+  public void testTypeResolutionModes() {
+    SimpleErrorReporter reporter = new SimpleErrorReporter();
+
+    JSTypeRegistry lazyExprRegistry = new JSTypeRegistry(reporter);
+    lazyExprRegistry.setResolveMode(ResolveMode.LAZY_EXPRESSIONS);
+
+    JSTypeRegistry lazyNameRegistry = new JSTypeRegistry(reporter);
+    lazyNameRegistry.setResolveMode(ResolveMode.LAZY_NAMES);
+
+    JSTypeRegistry immediateRegistry = new JSTypeRegistry(reporter);
+    immediateRegistry.setResolveMode(ResolveMode.IMMEDIATE);
+
+    Node expr = new Node(Token.QMARK, Node.newString("foo"));
+    StaticScope<JSType> empty = new EmptyScope();
+
+    JSType type = lazyExprRegistry.createFromTypeNodes(
+        expr, "source.js", empty);
+    assertTrue(type instanceof UnresolvedTypeExpression);
+    assertTrue(type.isUnknownType());
+    assertEquals("?", type.toString());
+    assertNull("Unexpected warnings: " + reporter.warnings(),
+        reporter.warnings());
+
+    type = lazyNameRegistry.createFromTypeNodes(
+        expr, "source.js", empty);
+    assertTrue(type instanceof UnionType);
+    assertTrue(type.isUnknownType());
+    assertEquals("(foo|null)", type.toString());
+    assertNull("Unexpected warnings: " + reporter.warnings(),
+        reporter.warnings());
+
+    type = immediateRegistry.createFromTypeNodes(
+        expr, "source.js", empty);
+    assertTrue(type instanceof UnknownType);
+    assertEquals("Expected warnings", 1, reporter.warnings().size());
+  }
+
+  private static class EmptyScope implements StaticScope<JSType> {
+    public StaticSlot<JSType> getSlot(final String name) { return null; }
+    public StaticSlot<JSType> getOwnSlot(String name) { return null; }
+    public StaticScope<JSType> getParentScope() { return null; }
+    public JSType getTypeOfThis() { return null; }
   }
 }

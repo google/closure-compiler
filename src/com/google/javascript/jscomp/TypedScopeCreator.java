@@ -45,7 +45,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -66,7 +65,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -104,7 +102,7 @@ final class TypedScopeCreator implements ScopeCreator {
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
-  private Map<ObjectType, FunctionType> delegateProxyMap = Maps.newHashMap();
+  private List<ObjectType> delegateProxyPrototypes = Lists.newArrayList();
 
   /**
    * Defer attachment of types to nodes until all type names
@@ -176,8 +174,8 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
 
-      codingConvention.defineDelegateProxyProperties(
-          typeRegistry, newScope, delegateProxyMap);
+      codingConvention.defineDelegateProxyPrototypeProperties(
+          typeRegistry, newScope, delegateProxyPrototypes);
     } else {
       newScope = new Scope(parent, root);
       LocalScopeBuilder scopeBuilder = new LocalScopeBuilder(newScope);
@@ -998,7 +996,7 @@ final class TypedScopeCreator implements ScopeCreator {
           codingConvention.applyDelegateRelationship(
               delegateSuperObject, delegateBaseObject, delegatorObject,
               delegateProxy, findDelegate);
-          delegateProxyMap.put(delegateProxy.getPrototype(), delegateBaseCtor);
+          delegateProxyPrototypes.add(delegateProxy.getPrototype());
         }
       }
     }

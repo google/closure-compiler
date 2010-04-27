@@ -206,15 +206,14 @@ public interface CodingConvention {
   public String getDelegateSuperclassName();
 
   /**
-   * Defines the delegate proxy properties. Their types depend on properties of
-   * the delegate base methods.
+   * Defines the delegate proxy prototype properties. Their types depend on 
+   * properties of the delegate base methods.
    *
-   * @param delegateProxyMap Map from delegate proxy prototype to delegate base
-   *     constructor.
+   * @param delegateProxyPrototypes List of delegate proxy prototypes.
    */
-  public void defineDelegateProxyProperties(
+  public void defineDelegateProxyPrototypeProperties(
       JSTypeRegistry registry, Scope scope,
-      Map<ObjectType, FunctionType> delegateProxyMap);
+      List<ObjectType> delegateProxyPrototypes);
 
   /**
    * Gets the name of the global object.

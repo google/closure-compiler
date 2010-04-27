@@ -124,7 +124,7 @@ public abstract class JSType implements Serializable {
    * So we shouldn't emit warnings about it. This method is how we skip
    * those warnings.
    */
-  public void forgiveUnknownNames() {}
+  void forgiveUnknownNames() {}
 
   public boolean isNoType() {
     return false;

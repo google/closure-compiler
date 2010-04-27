@@ -123,9 +123,7 @@ class RemoveUnusedVars implements CompilerPass {
       case Token.FUNCTION:
         // If it's an exported function, or an function expression, assume
         // that it'll be called.
-        if (NodeUtil.isFunctionExpression(n) ||
-            compiler_.getCodingConvention().isExported(
-                n.getFirstChild().getString())) {
+        if (NodeUtil.isFunctionExpression(n) || isExportedFunction(n, scope)) {
           traverseFunction(n, scope);
         }
         return;
@@ -144,6 +142,19 @@ class RemoveUnusedVars implements CompilerPass {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       traverseNode(c, n, scope);
     }
+  }
+
+  /**
+   * @param n The function node.
+   * @return Whether the function is exported.
+   */
+  private boolean isExportedFunction(Node n, Scope scope) {
+    Preconditions.checkState(NodeUtil.isFunctionDeclaration(n));
+    // If we aren't removing global names, assume that all global functions
+    // are exported.
+    return (!removeGlobals && scope.isGlobal()) || 
+        compiler_.getCodingConvention().isExported(
+           n.getFirstChild().getString());
   }
 
   /**

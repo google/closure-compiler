@@ -201,14 +201,15 @@ public class CommandLineRunnerTest extends TestCase {
   public void testDebugFlag1() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     args.add("--debug=false");
-    testSame("function foo(a) {}");
+    test("function foo(a) {}", 
+         "function foo() {}");
   }
 
   public void testDebugFlag2() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     args.add("--debug=true");
-    test("function foo(a) {}",
-         "function foo($a$$) {}");
+    test("function foo(a) {alert(a)}",
+         "function foo($a$$) {alert($a$$)}");
   }
 
   public void testDebugFlag3() {

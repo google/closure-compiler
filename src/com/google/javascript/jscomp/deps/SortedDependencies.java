@@ -16,21 +16,27 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 /**
  * A sorted list of inputs with dependency information. Uses a stable
@@ -52,10 +58,10 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   // A list of all the inputs that do not have provides.
   private final List<INPUT> noProvides;
 
+  private final Map<String, INPUT> provideMap = Maps.newHashMap();
+
   public SortedDependencies(List<INPUT> inputs) {
     this.inputs = Lists.newArrayList(inputs);
-
-    final Map<String, INPUT> provides = Maps.newHashMap();
     noProvides = Lists.newArrayList();
 
     // Collect all symbols provided in these files.
@@ -66,7 +72,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
       }
 
       for (String provide : currentProvides) {
-        provides.put(provide, input);
+        provideMap.put(provide, input);
       }
     }
 
@@ -74,7 +80,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
     final Multimap<INPUT, INPUT> deps = HashMultimap.create();
     for (INPUT input : inputs) {
       for (String req : input.getRequires()) {
-        INPUT dep = provides.get(req);
+        INPUT dep = provideMap.get(req);
         if (dep != null) {
           deps.put(input, dep);
         }
@@ -87,6 +93,37 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
 
   public List<INPUT> getSortedList() {
     return Collections.<INPUT>unmodifiableList(sortedList);
+  }
+
+  /**
+   * Gets all the dependencies of the given roots. The inputs must be returned
+   * in a stable order. In other words, if A comes before B, and A does not
+   * transitively depend on B, then A must also come before B in the returned
+   * list.
+   */
+  public List<INPUT> getSortedDependenciesOf(List<INPUT> roots) {
+    Preconditions.checkArgument(inputs.containsAll(roots));
+    Set<INPUT> included = Sets.newHashSet();
+    Deque<INPUT> worklist = new ArrayDeque<INPUT>(roots);
+    while (!worklist.isEmpty()) {
+      INPUT current = worklist.pop();
+      if (included.add(current)) {
+        for (String req : current.getRequires()) {
+          INPUT dep = provideMap.get(req);
+          if (dep != null) {
+            worklist.add(dep);
+          }
+        }
+      }
+    }
+
+    ImmutableList.Builder builder = ImmutableList.builder();
+    for (INPUT current : sortedList) {
+      if (included.contains(current)) {
+        builder.add(current);
+      }
+    }
+    return builder.build();
   }
 
   public List<INPUT> getInputsWithoutProvides() {

@@ -146,6 +146,14 @@ A sorted list of inputs with dependency information. Uses a stable
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/deps/SortedDependencies.html" title="type parameter in SortedDependencies">INPUT</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/SortedDependencies.html#getSortedDependenciesOf(java.util.List)">getSortedDependenciesOf</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/deps/SortedDependencies.html" title="type parameter in SortedDependencies">INPUT</A>&gt;&nbsp;roots)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets all the dependencies of the given roots.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/deps/SortedDependencies.html" title="type parameter in SortedDependencies">INPUT</A>&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/SortedDependencies.html#getSortedList()">getSortedList</A></B>()</CODE>
 
 <BR>
@@ -196,6 +204,22 @@ getSortedList</H3>
 <PRE>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/deps/SortedDependencies.html" title="type parameter in SortedDependencies">INPUT</A>&gt; <B>getSortedList</B>()</PRE>
 <DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSortedDependenciesOf(java.util.List)"><!-- --></A><H3>
+getSortedDependenciesOf</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/deps/SortedDependencies.html" title="type parameter in SortedDependencies">INPUT</A>&gt; <B>getSortedDependenciesOf</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/deps/SortedDependencies.html" title="type parameter in SortedDependencies">INPUT</A>&gt;&nbsp;roots)</PRE>
+<DL>
+<DD>Gets all the dependencies of the given roots. The inputs must be returned
+ in a stable order. In other words, if A comes before B, and A does not
+ transitively depend on B, then A must also come before B in the returned
+ list.
+<P>
 <DD><DL>
 </DL>
 </DD>

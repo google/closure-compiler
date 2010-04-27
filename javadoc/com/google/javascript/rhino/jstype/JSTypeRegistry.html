@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeNative.html" title="enum in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/JSTypeRegistry.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="JSTypeRegistry.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -73,7 +73,7 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
@@ -112,7 +112,25 @@ The type registry is used to resolve named types.
 <HR>
 
 <P>
+<!-- ======== NESTED CLASS SUMMARY ======== -->
 
+<A NAME="nested_class_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Nested Class Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype">JSTypeRegistry.ResolveMode</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The type registry has three modes, which control how type ASTs are
+ converted to types in <CODE>@createFromTypeNodes</CODE>.</TD>
+</TR>
+</TABLE>
+&nbsp;
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 
 <A NAME="constructor_summary"><!-- --></A>
@@ -231,6 +249,17 @@ The type registry is used to resolve named types.
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFromTypeNodes(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.StaticScope)">createFromTypeNodes</A></B>(<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
                     <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
                     <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a JSType from the nodes representing a type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFromTypeNodes(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.StaticScope, boolean)">createFromTypeNodes</A></B>(<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
+                    <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
+                    <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope,
+                    boolean&nbsp;forgiving)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a JSType from the nodes representing a type.</TD>
@@ -641,6 +670,14 @@ The type registry is used to resolve named types.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#setResolveMode(com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode)">setResolveMode</A></B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype">JSTypeRegistry.ResolveMode</A>&nbsp;mode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Set the current resolving mode of the type registry.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.html#setTemplateTypeName(java.lang.String)">setTemplateTypeName</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
 <BR>
@@ -706,6 +743,22 @@ public <B>JSTypeRegistry</B>(<A HREF="../../../../../com/google/javascript/rhino
 <B>Method Detail</B></FONT></TH>
 </TR>
 </TABLE>
+
+<A NAME="setResolveMode(com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode)"><!-- --></A><H3>
+setResolveMode</H3>
+<PRE>
+public void <B>setResolveMode</B>(<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype">JSTypeRegistry.ResolveMode</A>&nbsp;mode)</PRE>
+<DL>
+<DD>Set the current resolving mode of the type registry.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype"><CODE>JSTypeRegistry.ResolveMode</CODE></A></DL>
+</DD>
+</DL>
+<HR>
 
 <A NAME="getErrorReporter()"><!-- --></A><H3>
 getErrorReporter</H3>
@@ -1685,6 +1738,26 @@ public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" t
 </DL>
 <HR>
 
+<A NAME="createFromTypeNodes(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.StaticScope, boolean)"><!-- --></A><H3>
+createFromTypeNodes</H3>
+<PRE>
+public <A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A> <B>createFromTypeNodes</B>(<A HREF="../../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n,
+                                  <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;sourceName,
+                                  <A HREF="../../../../../com/google/javascript/rhino/jstype/StaticScope.html" title="interface in com.google.javascript.rhino.jstype">StaticScope</A>&lt;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>&gt;&nbsp;scope,
+                                  boolean&nbsp;forgiving)</PRE>
+<DL>
+<DD>Creates a JSType from the nodes representing a type.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n</CODE> - The node with type info.<DD><CODE>sourceName</CODE> - The source file name.<DD><CODE>scope</CODE> - A scope for doing type name lookups.<DD><CODE>forgiving</CODE> - Whether we should be forgiving about type names
+     that we can't find.</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="setTemplateTypeName(java.lang.String)"><!-- --></A><H3>
 setTemplateTypeName</H3>
 <PRE>
@@ -1746,7 +1819,7 @@ public void <B>clearTemplateTypeName</B>()</PRE>
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeNative.html" title="enum in com.google.javascript.rhino.jstype"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/rhino/jstype/JSTypeRegistry.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="JSTypeRegistry.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -1766,7 +1839,7 @@ public void <B>clearTemplateTypeName</B>()</PRE>
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>

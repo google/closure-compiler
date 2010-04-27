@@ -110,8 +110,7 @@ class NamedType extends ProxyObjectType {
     this.charno = charno;
   }
 
-  @Override
-  public void forgiveUnknownNames() {
+  void forgiveUnknownNames() {
     forgiving = true;
   }
 

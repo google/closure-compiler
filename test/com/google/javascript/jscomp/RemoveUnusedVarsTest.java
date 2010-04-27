@@ -21,7 +21,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
   private boolean removeGlobal = true;
   private boolean preserveFunctionExpressionNames = false;
-  
+
   public RemoveUnusedVarsTest() {
     super("", false);
   }
@@ -31,7 +31,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
   }
-  
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new RemoveUnusedVars(
@@ -210,13 +210,32 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "foo(function(){})");
 
     preserveFunctionExpressionNames = true;
-    testSame("foo(function bar(){})");    
+    testSame("foo(function bar(){})");
   }
-  
 
-  public void testRemoveGlobal() {
+  public void testRemoveGlobal1() {
     removeGlobal = false;
     testSame("var x=1");
     test("var y=function(x){var z;}", "var y=function(){}");
   }
+
+  public void testRemoveGlobal2() {
+    removeGlobal = false;
+    testSame("var x=1");
+    test("function y(x){var z;}", "function y(){}");
+  }
+  
+  public void testRemoveGlobal3() {
+    removeGlobal = false;
+    testSame("var x=1");
+    test("function x(){function y(x){var z;}y()}", 
+         "function x(){function y(){}y()}");
+  }
+  
+  public void testRemoveGlobal4() {
+    removeGlobal = false;
+    testSame("var x=1");
+    test("function x(){function y(x){var z;}}", 
+         "function x(){}");
+  }   
 }

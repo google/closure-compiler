@@ -1136,6 +1136,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFromTypeNodes(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.StaticScope)"><B>createFromTypeNodes(Node, String, StaticScope&lt;JSType&gt;)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Creates a JSType from the nodes representing a type.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFromTypeNodes(com.google.javascript.rhino.Node, java.lang.String, com.google.javascript.rhino.jstype.StaticScope, boolean)"><B>createFromTypeNodes(Node, String, StaticScope&lt;JSType&gt;, boolean)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>Creates a JSType from the nodes representing a type.
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#createFunctionType(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType...)"><B>createFunctionType(JSType, JSType...)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Creates a function type.
@@ -1336,10 +1339,10 @@ Constructor for class com.google.javascript.jscomp.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/ObjectType.html#defineDeclaredProperty(java.lang.String, com.google.javascript.rhino.jstype.JSType, boolean)"><B>defineDeclaredProperty(String, JSType, boolean)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>
 <DD>Defines a property whose type is synthesized (i.e.
-<DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#defineDelegateProxyProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.Map)"><B>defineDelegateProxyProperties(JSTypeRegistry, Scope, Map&lt;ObjectType, FunctionType&gt;)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/CodingConvention.html#defineDelegateProxyPrototypeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.List)"><B>defineDelegateProxyPrototypeProperties(JSTypeRegistry, Scope, List&lt;ObjectType&gt;)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A>
-<DD>Defines the delegate proxy properties.
-<DT><A HREF="./com/google/javascript/jscomp/DefaultCodingConvention.html#defineDelegateProxyProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.Map)"><B>defineDelegateProxyProperties(JSTypeRegistry, Scope, Map&lt;ObjectType, FunctionType&gt;)</B></A> - 
+<DD>Defines the delegate proxy prototype properties.
+<DT><A HREF="./com/google/javascript/jscomp/DefaultCodingConvention.html#defineDelegateProxyPrototypeProperties(com.google.javascript.rhino.jstype.JSTypeRegistry, com.google.javascript.jscomp.Scope, java.util.List)"><B>defineDelegateProxyPrototypeProperties(JSTypeRegistry, Scope, List&lt;ObjectType&gt;)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/EnumType.html#defineElement(java.lang.String)"><B>defineElement(String)</B></A> - 
@@ -1880,12 +1883,6 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/rhino/jstype/FunctionBuilder.html#forConstructor()"><B>forConstructor()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionBuilder.html" title="class in com.google.javascript.rhino.jstype">FunctionBuilder</A>
 <DD>Make this a constructor.
-<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#forgiveUnknownNames()"><B>forgiveUnknownNames()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
-<DD>If we see a type name without braces, it might be legacy jsdoc.
-<DT><A HREF="./com/google/javascript/rhino/jstype/UnionType.html#forgiveUnknownNames()"><B>forgiveUnknownNames()</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/UnionType.html" title="class in com.google.javascript.rhino.jstype">UnionType</A>
-<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/DiagnosticType.html#format"><B>format</B></A> - 
 Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>
 <DD>The default way to format errors
@@ -3494,6 +3491,9 @@ Method in interface com.google.javascript.rhino.jstype.<A HREF="./com/google/jav
 <DT><A HREF="./com/google/javascript/rhino/testing/EmptyScope.html#getSlot(java.lang.String)"><B>getSlot(String)</B></A> - 
 Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/EmptyScope.html" title="class in com.google.javascript.rhino.testing">EmptyScope</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/deps/SortedDependencies.html#getSortedDependenciesOf(java.util.List)"><B>getSortedDependenciesOf(List&lt;INPUT&gt;)</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SortedDependencies.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies</A>
+<DD>Gets all the dependencies of the given roots.
 <DT><A HREF="./com/google/javascript/jscomp/deps/SortedDependencies.html#getSortedList()"><B>getSortedList()</B></A> - 
 Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/SortedDependencies.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies</A>
 <DD>&nbsp;
@@ -5051,7 +5051,8 @@ Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/j
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#JSTypeRegistry(com.google.javascript.rhino.ErrorReporter, boolean)"><B>JSTypeRegistry(ErrorReporter, boolean)</B></A> - 
 Constructor for class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
 <DD>Constructs a new type registry populated with the built-in types.
-</DL>
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype"><B>JSTypeRegistry.ResolveMode</B></A> - Enum in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>The type registry has three modes, which control how type ASTs are
+ converted to types in <CODE>@createFromTypeNodes</CODE>.</DL>
 <HR>
 <A NAME="_K_"><!-- --></A><H2>
 <B>K</B></H2>
@@ -6955,6 +6956,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/rhino/CompilerEnvirons.html#setReservedKeywordAsIdentifier(boolean)"><B>setReservedKeywordAsIdentifier(boolean)</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/CompilerEnvirons.html" title="class in com.google.javascript.rhino">CompilerEnvirons</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html#setResolveMode(com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode)"><B>setResolveMode(JSTypeRegistry.ResolveMode)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.html" title="class in com.google.javascript.rhino.jstype">JSTypeRegistry</A>
+<DD>Set the current resolving mode of the type registry.
 <DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#setRewriteNewDateGoogNow(boolean)"><B>setRewriteNewDateGoogNow(boolean)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
 <DD>&nbsp;
@@ -7734,6 +7738,9 @@ Static method in enum com.google.javascript.rhino.jstype.<A HREF="./com/google/j
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeNative.html#valueOf(java.lang.String)"><B>valueOf(String)</B></A> - 
 Static method in enum com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeNative.html" title="enum in com.google.javascript.rhino.jstype">JSTypeNative</A>
 <DD>Returns the enum constant of this type with the specified name.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html#valueOf(java.lang.String)"><B>valueOf(String)</B></A> - 
+Static method in enum com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype">JSTypeRegistry.ResolveMode</A>
+<DD>Returns the enum constant of this type with the specified name.
 <DT><A HREF="./com/google/javascript/rhino/jstype/TernaryValue.html#valueOf(java.lang.String)"><B>valueOf(String)</B></A> - 
 Static method in enum com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/TernaryValue.html" title="enum in com.google.javascript.rhino.jstype">TernaryValue</A>
 <DD>Returns the enum constant of this type with the specified name.
@@ -7799,6 +7806,10 @@ Static method in enum com.google.javascript.rhino.jstype.<A HREF="./com/google/j
 the order they are declared.
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeNative.html#values()"><B>values()</B></A> - 
 Static method in enum com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeNative.html" title="enum in com.google.javascript.rhino.jstype">JSTypeNative</A>
+<DD>Returns an array containing the constants of this enum type, in
+the order they are declared.
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html#values()"><B>values()</B></A> - 
+Static method in enum com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSTypeRegistry.ResolveMode.html" title="enum in com.google.javascript.rhino.jstype">JSTypeRegistry.ResolveMode</A>
 <DD>Returns an array containing the constants of this enum type, in
 the order they are declared.
 <DT><A HREF="./com/google/javascript/rhino/jstype/TernaryValue.html#values()"><B>values()</B></A> - 

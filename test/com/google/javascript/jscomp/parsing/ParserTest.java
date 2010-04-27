@@ -622,6 +622,41 @@ public class ParserTest extends BaseJSTypeTestCase {
         "missing ) in parenthetical");
   }
 
+  public void testGettersForbidden1() {
+    parseError("var x = {get foo() { return 3; }};",
+        "getters are not supported in Internet Explorer");
+  }
+
+  public void testGettersForbidden2() {
+    parseError("var x = {get foo bar() { return 3; }};",
+        "invalid property id");
+  }
+
+  public void testGettersForbidden3() {
+    parseError("var x = {a getter:function b() { return 3; }};",
+        "missing : after property id", "syntax error");
+  }
+
+  public void testGettersForbidden4() {
+    parseError("var x = {\"a\" getter:function b() { return 3; }};",
+        "missing : after property id", "syntax error");
+  }
+
+  public void testGettersForbidden5() {
+    parseError("var x = {a: 2, get foo() { return 3; }};",
+        "getters are not supported in Internet Explorer");
+  }
+
+  public void testSettersForbidden() {
+    parseError("var x = {set foo() { return 3; }};",
+        "setters are not supported in Internet Explorer");
+  }
+
+  public void testSettersForbidden2() {
+    parseError("var x = {a setter:function b() { return 3; }};",
+        "missing : after property id", "syntax error");
+  }
+
   public void testFileOverviewJSDoc1() {
     Node n = parse("/** @fileoverview Hi mom! */ function Foo() {}");
     assertEquals(Token.FUNCTION, n.getFirstChild().getType());
