@@ -834,7 +834,7 @@ public class Compiler extends AbstractCompiler {
     PassConfig.State state = getPassConfig().getIntermediateState();
     return new Result(getErrors(), getWarnings(), debugLog.toString(),
         state.variableMap, state.propertyMap,
-        state.anonymousFunctionNameMap, functionInformationMap,
+        state.anonymousFunctionNameMap, state.stringMap, functionInformationMap,
         sourceMap, externExports, state.cssNames);
   }
 
@@ -1403,11 +1403,11 @@ public class Compiler extends AbstractCompiler {
   public void optimize() {
     // Ideally, this pass should be the first pass run, however:
     // 1) VariableReferenceCheck reports unexpected warnings if Normalize
-    // is done first.    
+    // is done first.
     // 2) ReplaceMessages, stripCode, and potentially custom passes rely on
     // unmodified local names.
-    normalize();    
-    
+    normalize();
+
     PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker);
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);

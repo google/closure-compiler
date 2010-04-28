@@ -116,6 +116,9 @@ public class DefaultPassConfig extends PassConfig {
   /** Fully qualified function names and globally unique ids */
   private FunctionNames functionNames = null;
 
+  /** String replacement map */
+  private VariableMap stringMap = null;
+
   public DefaultPassConfig(CompilerOptions options) {
     super(options);
   }
@@ -127,7 +130,7 @@ public class DefaultPassConfig extends PassConfig {
         exportedNames == null ? null :
             Collections.unmodifiableSet(exportedNames),
         crossModuleIdGenerator, variableMap, propertyMap,
-        anonymousFunctionNameMap, functionNames);
+        anonymousFunctionNameMap, stringMap, functionNames);
   }
 
   @Override
@@ -140,6 +143,7 @@ public class DefaultPassConfig extends PassConfig {
     this.variableMap = state.variableMap;
     this.propertyMap = state.propertyMap;
     this.anonymousFunctionNameMap = state.anonymousFunctionNameMap;
+    this.stringMap = state.stringMap;
     this.functionNames = state.functionNames;
   }
 
@@ -296,6 +300,10 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(createEmptyPass("beforeStandardOptimizations"));
+
+    if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
+      passes.add(replaceStrings);
+    }
 
     if (!options.idGenerators.isEmpty()) {
       passes.add(replaceIdGenerators);
@@ -1078,6 +1086,25 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new ReplaceIdGenerators(compiler, options.idGenerators);
+    }
+  };
+
+  /** Replace strings. */
+  private final PassFactory replaceStrings =
+      new PassFactory("replaceStrings", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      VariableMap map = null;
+      return new CompilerPass() {
+        @Override public void process(Node externs, Node root) {
+          ReplaceStrings pass = new ReplaceStrings(
+              compiler,
+              options.replaceStringsPlaceholderToken,
+              options.replaceStringsFunctionDescriptions);
+          pass.process(externs, root);
+          stringMap = pass.getStringMap();
+        }
+      };
     }
   };
 

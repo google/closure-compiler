@@ -29,6 +29,7 @@ public class Result {
   public final VariableMap variableMap;
   public final VariableMap propertyMap;
   public final VariableMap namedAnonFunctionMap;
+  public final VariableMap stringMap;
   public final FunctionInformationMap functionInformationMap;
   public final SourceMap sourceMap;
   public final Map<String, Integer> cssNames;
@@ -37,6 +38,7 @@ public class Result {
   Result(JSError[] errors, JSError[] warnings, String debugLog,
          VariableMap variableMap, VariableMap propertyMap,
          VariableMap namedAnonFunctionMap,
+         VariableMap stringMap,
          FunctionInformationMap functionInformationMap,
          SourceMap sourceMap,  String externExport,
          Map<String, Integer> cssNames) {
@@ -47,6 +49,7 @@ public class Result {
     this.variableMap = variableMap;
     this.propertyMap = propertyMap;
     this.namedAnonFunctionMap = namedAnonFunctionMap;
+    this.stringMap = stringMap;
     this.functionInformationMap = functionInformationMap;
     this.sourceMap = sourceMap;
     this.externExport = externExport;
@@ -60,7 +63,7 @@ public class Result {
                 FunctionInformationMap functionInformationMap,
                 SourceMap sourceMap, String externExport) {
     this(errors, warnings, debugLog, variableMap, propertyMap,
-         namedAnonFunctionMap, functionInformationMap, sourceMap,
+         namedAnonFunctionMap, null, functionInformationMap, sourceMap,
          externExport, null);
   }
 }

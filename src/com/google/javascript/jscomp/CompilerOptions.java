@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -26,6 +27,7 @@ import com.google.javascript.rhino.Token;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -507,6 +509,10 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Id generators to replace. */
   Set<String> idGenerators;
 
+  /** Configuration strings */
+  List<String> replaceStringsFunctionDescriptions;
+  String replaceStringsPlaceholderToken;
+
   //--------------------------------
   // Output options
   //--------------------------------
@@ -687,6 +693,8 @@ public class CompilerOptions implements Serializable, Cloneable {
     cssRenamingMap = null;
     processObjectPropertyString = false;
     idGenerators = Collections.emptySet();
+    replaceStringsFunctionDescriptions = Collections.emptyList();
+    replaceStringsPlaceholderToken = "";
 
     // Output
     printInputDelimiter = false;
@@ -835,6 +843,16 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setIdGenerators(Set<String> idGenerators) {
     this.idGenerators = Sets.newHashSet(idGenerators);
+  }
+
+  /**
+   * Sets the id generators to replace.
+   */
+  public void setReplaceStringsConfiguration(
+      String placeholderToken, List<String> functionDescriptors) {
+    this.replaceStringsPlaceholderToken = placeholderToken;
+    this.replaceStringsFunctionDescriptions =
+        Lists.newArrayList(functionDescriptors);
   }
 
   public void setRewriteNewDateGoogNow(boolean rewrite) {

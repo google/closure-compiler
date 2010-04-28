@@ -6115,6 +6115,9 @@ Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascrip
 <DT><A HREF="./com/google/javascript/jscomp/ObjectPropertyStringPreprocess.html#process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><B>process(Node, Node)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ObjectPropertyStringPreprocess.html" title="class in com.google.javascript.jscomp">ObjectPropertyStringPreprocess</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/ReplaceStrings.html#process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><B>process(Node, Node)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ReplaceStrings.html" title="class in com.google.javascript.jscomp">ReplaceStrings</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/TypeCheck.html#process(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><B>process(Node, Node)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/TypeCheck.html" title="class in com.google.javascript.jscomp">TypeCheck</A>
 <DD>Main entry point for this phase of processing.
@@ -6471,7 +6474,8 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DT><A HREF="./com/google/javascript/rhino/Node.html#replaceChildAfter(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><B>replaceChildAfter(Node, Node)</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/jscomp/AbstractCompiler.html#report(com.google.javascript.jscomp.JSError)"><B>report(JSError)</B></A> - 
+<DT><A HREF="./com/google/javascript/jscomp/ReplaceStrings.html" title="class in com.google.javascript.jscomp"><B>ReplaceStrings</B></A> - Class in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>Replaces JavaScript strings in the list of supplied methods with shortened
+ forms.<DT><A HREF="./com/google/javascript/jscomp/AbstractCompiler.html#report(com.google.javascript.jscomp.JSError)"><B>report(JSError)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/AbstractCompiler.html" title="class in com.google.javascript.jscomp">AbstractCompiler</A>
 <DD>Report an error or warning.
 <DT><A HREF="./com/google/javascript/jscomp/BasicErrorManager.html#report(com.google.javascript.jscomp.CheckLevel, com.google.javascript.jscomp.JSError)"><B>report(CheckLevel, JSError)</B></A> - 
@@ -6944,6 +6948,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DD>Sets the variable and property renaming policies for the compiler,
  in a way that clears warnings about the renaming policy being
  uninitialized from flags.
+<DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#setReplaceStringsConfiguration(java.lang.String, java.util.List)"><B>setReplaceStringsConfiguration(String, List&lt;String&gt;)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
+<DD>Sets the id generators to replace.
 <DT><A HREF="./com/google/javascript/jscomp/Instrumentation.Builder.html#setReportCall(java.lang.String)"><B>setReportCall(String)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Instrumentation.Builder.html" title="class in com.google.javascript.jscomp">Instrumentation.Builder</A>
 <DD>&nbsp;
@@ -7232,6 +7239,9 @@ Variable in class com.google.javascript.rhino.testing.<A HREF="./com/google/java
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#STRING_TYPE"><B>STRING_TYPE</B></A> - 
 Variable in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing">BaseJSTypeTestCase</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/Result.html#stringMap"><B>stringMap</B></A> - 
+Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Result.html" title="class in com.google.javascript.jscomp">Result</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/StringType.html" title="class in com.google.javascript.rhino.jstype"><B>StringType</B></A> - Class in <A HREF="./com/google/javascript/rhino/jstype/package-summary.html">com.google.javascript.rhino.jstype</A><DD>String type.<DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#stripNamePrefixes"><B>stripNamePrefixes</B></A> - 
 Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
@@ -7870,6 +7880,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/NodeTraversal.Callback.html#visit(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><B>visit(NodeTraversal, Node, Node)</B></A> - 
 Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/NodeTraversal.Callback.html" title="interface in com.google.javascript.jscomp">NodeTraversal.Callback</A>
 <DD>Visits a node in post order (after its children have been visited).
+<DT><A HREF="./com/google/javascript/jscomp/ReplaceStrings.html#visit(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><B>visit(NodeTraversal, Node, Node)</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/ReplaceStrings.html" title="class in com.google.javascript.jscomp">ReplaceStrings</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/TypeCheck.html#visit(com.google.javascript.jscomp.NodeTraversal, com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><B>visit(NodeTraversal, Node, Node)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/TypeCheck.html" title="class in com.google.javascript.jscomp">TypeCheck</A>
 <DD>This is the meat of the type checking.
