@@ -136,7 +136,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     createDefineReplacements(config.define, options);
 
-    options.sortClosureDependencies = config.sortClosureDependencies;
+    options.manageClosureDependencies = config.manageClosureDependencies;
   }
 
   final protected A getCompiler() {
@@ -1255,13 +1255,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private boolean sortClosureDependencies = false;
+    private boolean manageClosureDependencies = false;
 
     /**
-     * Sets whether to sort files by their goog.provide/require deps.
+     * Sets whether to sort files by their goog.provide/require deps,
+     * and prune inputs that are not required.
      */
-    CommandLineConfig setSortClosureDependencies(boolean newVal) {
-      this.sortClosureDependencies = newVal;
+    CommandLineConfig setManageClosureDependencies(boolean newVal) {
+      this.manageClosureDependencies = newVal;
       return this;
     }
   }

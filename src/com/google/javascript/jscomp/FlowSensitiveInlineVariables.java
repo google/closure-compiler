@@ -201,7 +201,8 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
             }
 
             Node defNode = reachingDef.getDef(name, cfgNode);
-            if (defNode != null) {
+            if (defNode != null &&
+                !reachingDef.dependsOnOuterScopeVars(name, cfgNode)) {
               candidates.add(new Candidate(name, defNode, n, cfgNode));
             }
           }

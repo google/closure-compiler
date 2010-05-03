@@ -1052,14 +1052,16 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
-      if (options.sortClosureDependencies) {
+      if (options.manageClosureDependencies) {
         for (CompilerInput input : inputs) {
           input.setCompiler(this);
         }
 
         SortedDependencies<CompilerInput> sorter =
             new SortedDependencies<CompilerInput>(inputs);
-        inputs = Lists.newArrayList(sorter.getSortedList());
+        inputs = Lists.newArrayList(
+            sorter.getSortedDependenciesOf(
+                sorter.getInputsWithoutProvides()));
       }
 
       List<CompilerInput> annotatedExterns = Lists.newArrayList();

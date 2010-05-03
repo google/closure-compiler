@@ -260,9 +260,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private ScopeCreator scopeCreator;
 
-  private final PotentialCheckManager potentialChecks =
-      new PotentialCheckManager();
-
   private final CheckLevel reportMissingOverride;
   private final CheckLevel reportUnknownTypes;
 
@@ -338,8 +335,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       check(externsRoot, true);
     }
     check(jsRoot, false);
-
-    potentialChecks.flush();
   }
 
   /** Main entry point of this phase for testing code. */

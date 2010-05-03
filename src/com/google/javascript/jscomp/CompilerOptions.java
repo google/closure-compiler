@@ -72,7 +72,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Input Options
   //--------------------------------
 
-  boolean sortClosureDependencies = false;
+  boolean manageClosureDependencies = false;
 
   //--------------------------------
   // Checks
@@ -846,7 +846,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * Sets the id generators to replace.
+   * Sets the functions whose debug strings to replace.
    */
   public void setReplaceStringsConfiguration(
       String placeholderToken, List<String> functionDescriptors) {
@@ -909,10 +909,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
-   * Sort inputs by their goog.provide/goog.require calls.
+   * Sort inputs by their goog.provide/goog.require calls, and prune inputs
+   * whose symbols are not required.
    */
-  public void setSortClosureDependencies(boolean newVal) {
-    sortClosureDependencies = newVal;
+  public void setManageClosureDependencies(boolean newVal) {
+    manageClosureDependencies = newVal;
   }
 
   /**

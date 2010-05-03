@@ -34,7 +34,7 @@ import java.util.List;
  *        removing these methods altogether for production builds.</li>
  * </ul>
  *
-*
+ * @author robbyw@google.com (Robby Walker)
  */
 final class GoogleCodeRemoval implements CompilerPass {
 

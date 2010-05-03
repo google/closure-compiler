@@ -18,7 +18,7 @@
  * @fileoverview Definitions for IE's vector markup language, or VML.
  *
  * @externs
-*
+ * @author robbyw@google.com (Robby Walker)
  */
 
 

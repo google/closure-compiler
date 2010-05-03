@@ -1256,6 +1256,15 @@ Compiler options
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#setManageClosureDependencies(boolean)">setManageClosureDependencies</A></B>(boolean&nbsp;newVal)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sort inputs by their goog.provide/goog.require calls, and prune inputs
+ whose symbols are not required.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#setNameAnonymousFunctionsOnly(boolean)">setNameAnonymousFunctionsOnly</A></B>(boolean&nbsp;value)</CODE>
 
 <BR>
@@ -1295,7 +1304,7 @@ Compiler options
                                <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;functionDescriptors)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the id generators to replace.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the functions whose debug strings to replace.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1304,14 +1313,6 @@ Compiler options
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CompilerOptions.html#setSortClosureDependencies(boolean)">setSortClosureDependencies</A></B>(boolean&nbsp;newVal)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sort inputs by their goog.provide/goog.require calls.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -3032,7 +3033,7 @@ setReplaceStringsConfiguration</H3>
 public void <B>setReplaceStringsConfiguration</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;placeholderToken,
                                            <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;functionDescriptors)</PRE>
 <DL>
-<DD>Sets the id generators to replace.
+<DD>Sets the functions whose debug strings to replace.
 <P>
 <DD><DL>
 </DL>
@@ -3190,12 +3191,13 @@ public <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" 
 </DL>
 <HR>
 
-<A NAME="setSortClosureDependencies(boolean)"><!-- --></A><H3>
-setSortClosureDependencies</H3>
+<A NAME="setManageClosureDependencies(boolean)"><!-- --></A><H3>
+setManageClosureDependencies</H3>
 <PRE>
-public void <B>setSortClosureDependencies</B>(boolean&nbsp;newVal)</PRE>
+public void <B>setManageClosureDependencies</B>(boolean&nbsp;newVal)</PRE>
 <DL>
-<DD>Sort inputs by their goog.provide/goog.require calls.
+<DD>Sort inputs by their goog.provide/goog.require calls, and prune inputs
+ whose symbols are not required.
 <P>
 <DD><DL>
 </DL>

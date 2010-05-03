@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link GoogleCodeRemoval}
  *
-*
+ * @author robbyw@google.com (Robby Walker)
  */
 public class GoogleCodeRemovalTest extends CompilerTestCase {
 

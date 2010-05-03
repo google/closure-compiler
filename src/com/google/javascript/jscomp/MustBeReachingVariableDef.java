@@ -346,7 +346,7 @@ final class MustBeReachingVariableDef extends
         new AbstractCfgNodeTraversalCallback() {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (NodeUtil.isName(n) && jsScope.isDeclared(n.getString(), false)) {
+        if (NodeUtil.isName(n) && jsScope.isDeclared(n.getString(), true)) {
           def.depends.add(jsScope.getVar(n.getString()));
         }
       }
@@ -372,5 +372,18 @@ final class MustBeReachingVariableDef extends
     } else {
       return def.node;
     }
+  }
+
+  boolean dependsOnOuterScopeVars(String name, Node useNode) {
+    Preconditions.checkArgument(getCfg().hasNode(useNode));
+    GraphNode<Node, Branch> n = getCfg().getNode(useNode);
+    FlowState<MustDef> state = n.getAnnotation();
+    Definition def = state.getIn().reachingDef.get(jsScope.getVar(name));
+    for (Var s : def.depends) {
+      if (s.scope != jsScope) {
+        return true;
+      }
+    }
+    return false;
   }
 }

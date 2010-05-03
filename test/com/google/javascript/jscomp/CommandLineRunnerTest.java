@@ -257,10 +257,23 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceSortingOn() {
-    args.add("--sort_closure_dependencies=true");
+    args.add("--manage_closure_dependencies=true");
     test(new String[] {
           "goog.require('beer');",
           "goog.provide('beer');"
+         },
+         new String[] {
+           "var beer = {};",
+           ""
+         });
+  }
+
+  public void testSourcePruningOn() {
+    args.add("--manage_closure_dependencies=true");
+    test(new String[] {
+          "goog.require('beer');",
+          "goog.provide('beer');",
+          "goog.provide('scotch'); var x = 3;"
          },
          new String[] {
            "var beer = {};",

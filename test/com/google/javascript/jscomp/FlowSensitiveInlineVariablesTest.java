@@ -275,6 +275,7 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = a[i]; a[j] = 2; print(x); ");
   }
 
+  // TODO(user): These should be inlinable.
   public void testNoInlineConstructors() {
     noInline("var x = new Iterator(); x.next();");
   }
@@ -284,16 +285,18 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = []; print(x)");
   }
 
+  // TODO(user): These should be inlinable.
   public void testNoInlineObjectLits() {
     noInline("var x = {}; print(x)");
   }
 
+  // TODO(user): These should be inlinable after the REGEX checks.
   public void testNoInlineRegExpLits() {
     noInline("var x = /y/; print(x)");
   }
 
   public void testInlineConstructorCallsIntoLoop() {
-    // Is a bad idea, a similar case was found in closure string.js
+    // Don't inline construction into loops.
     noInline("var x = new Iterator();" +
              "for(i = 0; i < 10; i++) {j = x.next()}");
   }
@@ -337,6 +340,16 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   public void testCanInlineAcrossNoSideEffect() {
     inline("var y; var x = noSFX(Y), z = noSFX(); noSFX(); noSFX(), print(x)",
            "var y; var x, z = noSFX(); noSFX(); noSFX(), print(noSFX(Y))");
+  }
+
+  public void testDependOnOuterScopeVariables() {
+    noInline("var x; function foo() { var y = x; x = 0; print(y) }");
+    noInline("var x; function foo() { var y = x; x++; print(y) }");
+
+    // Sadly, we don't understand the data flow of outer scoped variables as
+    // it can be modified by code outside of this scope. We can't inline
+    // at all if the definition has dependence on such variable.
+    noInline("var x; function foo() { var y = x; print(y) }");
   }
 
   public void testInlineArguments() {
