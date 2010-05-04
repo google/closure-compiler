@@ -184,6 +184,33 @@ public class JSTypeRegistryTest extends TestCase {
     assertEquals("Expected warnings", 1, reporter.warnings().size());
   }
 
+  public void testForceResolve() {
+    SimpleErrorReporter reporter = new SimpleErrorReporter();
+
+    JSTypeRegistry lazyExprRegistry = new JSTypeRegistry(reporter);
+    lazyExprRegistry.setResolveMode(ResolveMode.LAZY_EXPRESSIONS);
+
+    Node expr = new Node(Token.QMARK, Node.newString("foo"));
+    StaticScope<JSType> empty = new EmptyScope();
+
+    JSType type = lazyExprRegistry.createFromTypeNodes(
+        expr, "source.js", empty);
+    assertFalse(type.isResolved());
+    assertTrue(type.forceResolve(reporter, empty).isResolved());
+    assertEquals("Expected warnings", 1, reporter.warnings().size());
+  }
+
+  public void testAllTypeResolvesImmediately() {
+    JSTypeRegistry lazyExprRegistry = new JSTypeRegistry(
+        new SimpleErrorReporter());
+    lazyExprRegistry.setResolveMode(ResolveMode.LAZY_EXPRESSIONS);
+
+    Node expr = new Node(Token.STAR);
+    JSType type = lazyExprRegistry.createFromTypeNodes(
+        expr, "source.js", new EmptyScope());
+    assertTrue(type instanceof AllType);
+  }
+
   private static class EmptyScope implements StaticScope<JSType> {
     public StaticSlot<JSType> getSlot(final String name) { return null; }
     public StaticSlot<JSType> getOwnSlot(String name) { return null; }

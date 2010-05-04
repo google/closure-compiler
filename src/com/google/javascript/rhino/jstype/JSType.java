@@ -43,6 +43,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -836,6 +837,20 @@ public abstract class JSType implements Serializable {
   public abstract <T> T visit(Visitor<T> visitor);
 
   /**
+   * Force this type to resolve, even if the registry is in a lazy
+   * resolving mode.
+   * @see #resolve
+   */
+  public final JSType forceResolve(ErrorReporter t, StaticScope<JSType> scope) {
+    ResolveMode oldResolveMode = registry.getResolveMode();
+    registry.setResolveMode(ResolveMode.IMMEDIATE);
+    JSType result = resolve(t, scope);
+    registry.setResolveMode(oldResolveMode);
+    return result;
+  }
+
+
+  /**
    * Resolve this type in the given scope.
    *
    * The returned value must be equal to {@code this}, as defined by
@@ -859,6 +874,7 @@ public abstract class JSType implements Serializable {
     }
     resolved = true;
     resolveResult = resolveInternal(t, scope);
+    resolveResult.setResolvedTypeInternal(resolveResult);
     return resolveResult;
   }
 
