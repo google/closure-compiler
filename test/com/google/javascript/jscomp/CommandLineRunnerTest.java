@@ -201,7 +201,7 @@ public class CommandLineRunnerTest extends TestCase {
   public void testDebugFlag1() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     args.add("--debug=false");
-    test("function foo(a) {}", 
+    test("function foo(a) {}",
          "function foo() {}");
   }
 
@@ -237,9 +237,24 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("function f() {}");
   }
 
-  public void testExternsLifting1() {
-    test(new String[] {"/** @externs */ function f() {}"},
+  public void testExternsLifting1() throws Exception{
+    String code = "/** @externs */ function f() {}";
+    test(new String[] {code},
          new String[] {});
+
+    assertEquals(2, lastCompiler.getExternsForTesting().size());
+
+    CompilerInput extern = lastCompiler.getExternsForTesting().get(1);
+    assertNull(extern.getModule());
+    assertTrue(extern.isExtern());
+    assertEquals(code, extern.getCode());
+
+    assertEquals(1, lastCompiler.getInputsForTesting().size());
+
+    CompilerInput input = lastCompiler.getInputsForTesting().get(0);
+    assertNotNull(input.getModule());
+    assertFalse(input.isExtern());
+    assertEquals("", input.getCode());
   }
 
   public void testExternsLifting2() {

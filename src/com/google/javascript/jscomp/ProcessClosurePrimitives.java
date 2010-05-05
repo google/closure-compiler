@@ -245,8 +245,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             new UnrecognizedRequire(n, ns, t.getSourceName()));
       } else {
         JSModule module = t.getModule();
-        if (module != provided.firstModule /* covers null case */ &&
-            !compiler.getModuleGraph().dependsOn(module,
+        if (moduleGraph != null &&
+            module != provided.firstModule /* covers null case */ &&
+            !moduleGraph.dependsOn(module,
                 provided.firstModule)) {
           compiler.report(
               t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
@@ -720,13 +721,16 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     private void updateMinimumModule(JSModule newModule) {
-      if (moduleGraph != null) {
-        if (minimumModule == null) {
-          minimumModule = newModule;
-        } else {
-          minimumModule = moduleGraph.getDeepestCommonDependencyInclusive(
-              minimumModule, newModule);
-        }
+      if (minimumModule == null) {
+        minimumModule = newModule;
+      } else if (moduleGraph != null) {
+        minimumModule = moduleGraph.getDeepestCommonDependencyInclusive(
+            minimumModule, newModule);
+      } else {
+        // If there is no module graph, then there must be exactly one
+        // module in the program.
+        Preconditions.checkState(newModule == minimumModule,
+                                 "Missing module graph");
       }
     }
 

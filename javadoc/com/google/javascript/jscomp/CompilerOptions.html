@@ -1671,6 +1671,9 @@ public <A HREF="../../../../com/google/javascript/jscomp/CheckLevel.html" title=
 <DD>Checks for certain uses of the <code>this</code> keyword that are considered
  unsafe because they are likely to reference the global <code>this</code>
  object unintentionally.
+
+ If this is off, but collapseProperties is on, then the compiler will
+ usually ignore you and run this check anyways.
 <P>
 <DL>
 </DL>

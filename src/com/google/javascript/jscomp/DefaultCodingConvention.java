@@ -15,13 +15,15 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * CodingConvention defines a set of hooks to customize the behavior of the
@@ -59,7 +61,7 @@ public class DefaultCodingConvention implements CodingConvention {
   public boolean isExported(String name, boolean local) {
     return local && name.startsWith("$super");
   }
-  
+
   @Override
   public boolean isExported(String name) {
     return isExported(name, false) || isExported(name, true);
@@ -173,5 +175,10 @@ public class DefaultCodingConvention implements CodingConvention {
   public ObjectLiteralCast getObjectLiteralCast(NodeTraversal t,
       Node callNode) {
     return null;
+  }
+
+  @Override
+  public Collection<AssertionFunctionSpec> getAssertionFunctions() {
+    return Collections.emptySet();
   }
 }

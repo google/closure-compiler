@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -52,6 +53,7 @@ import com.google.javascript.rhino.jstype.UnionType;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -73,13 +75,13 @@ class TypeInference
       "A function type with the template type as the type of this must be a " +
       "parameter type");
 
-
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
   private final Scope syntacticScope;
   private final FlowScope functionScope;
   private final FlowScope bottomScope;
+  private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
 
   /**
    * Local variables that do not belong to this scope, but are assigned
@@ -95,24 +97,29 @@ class TypeInference
 
   TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
                 ReverseAbstractInterpreter reverseInterpreter,
-                Scope functionScope) {
+                Scope functionScope,
+                Map<String, AssertionFunctionSpec> assertionFunctionsMap) {
     this(compiler, cfg, reverseInterpreter, functionScope,
-         ImmutableSet.<Var>of());
+         assertionFunctionsMap, ImmutableSet.<Var>of());
   }
 
   /**
    * @param unflowableVars Do not do infer flow on the types of these vars.
+   * @param assertionFunctionsMap
    */
   // TODO(nicksantos): Create a builder for this class.
   TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
                 ReverseAbstractInterpreter reverseInterpreter,
-                Scope functionScope, Collection<Var> unflowableVars) {
+                Scope functionScope,
+                Map<String, AssertionFunctionSpec> assertionFunctionsMap,
+                Collection<Var> unflowableVars) {
     super(cfg, new LinkedFlowScope.FlowScopeJoinOp());
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
     this.reverseInterpreter = reverseInterpreter;
     this.syntacticScope = functionScope;
     this.functionScope = LinkedFlowScope.createEntryLattice(functionScope);
+    this.assertionFunctionsMap = assertionFunctionsMap;
 
     for (Var unflowableVar : unflowableVars) {
       String name = unflowableVar.getName();
@@ -780,6 +787,54 @@ class TypeInference
         updateTypeOfThisOnClosure(n, fnType);
       } else if (functionType.equals(getNativeType(CHECKED_UNKNOWN_TYPE))) {
         n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
+      }
+    }
+
+    scope = tightenTypesAfterAssertions(scope, n);
+    return scope;
+  }
+
+  private FlowScope tightenTypesAfterAssertions(FlowScope scope,
+      Node callNode) {
+    Node left = callNode.getFirstChild();
+    Node firstParam = left.getNext();
+    AssertionFunctionSpec assertionFunctionSpec =
+        assertionFunctionsMap.get(left.getQualifiedName());
+    if (assertionFunctionSpec == null || firstParam == null) {
+      return scope;
+    }
+    Node assertedNode = assertionFunctionSpec.getAssertedParam(firstParam);
+    if (assertedNode == null) {
+      return scope;
+    }
+    JSTypeNative assertedType = assertionFunctionSpec.getAssertedType();
+    // Handle assertions that enforce expressions evaluate to true.
+    if (assertedType == null) {
+      switch (assertedNode.getType()) {
+        case Token.NAME:
+          JSType type = getJSType(assertedNode);
+          JSType narrowed = type.restrictByNotNullOrUndefined();
+          if (type != narrowed) {
+            scope = scope.createChildFlowScope();
+            redeclare(scope, assertedNode.getString(), narrowed);
+          }
+          break;
+        case Token.AND:
+        case Token.OR:
+          BooleanOutcomePair conditionOutcomes =
+              traverseWithinShortCircuitingBinOp(assertedNode, scope);
+          scope = reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
+              assertedNode, conditionOutcomes.getOutcomeFlowScope(
+                  assertedNode.getType(), true), true);
+          break;
+      }
+    } else if (assertedNode.getType() == Token.NAME) {
+      // Handle assertions that enforce expressions are of a certain type.
+      JSType type = getJSType(assertedNode);
+      JSType narrowed = type.getGreatestSubtype(getNativeType(assertedType));
+      if (type != narrowed) {
+        scope = scope.createChildFlowScope();
+        redeclare(scope, assertedNode.getString(), narrowed);
       }
     }
     return scope;

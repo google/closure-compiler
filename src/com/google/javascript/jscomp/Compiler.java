@@ -254,15 +254,12 @@ public class Compiler extends AbstractCompiler {
    */
   public void init(List<JSSourceFile> externs, List<JSSourceFile> inputs,
       CompilerOptions options) {
-    initOptions(options);
+    JSModule module = new JSModule("[singleton]");
+    for (JSSourceFile input : inputs) {
+      module.add(input);
+    }
 
-    this.externs = makeCompilerInput(externs, true);
-    this.modules = null;
-    this.moduleGraph = null;
-    this.inputs = makeCompilerInput(inputs, false);
-    initBasedOnOptions();
-
-    initInputsByNameMap();
+    initModules(externs, Lists.newArrayList(module), options);
   }
 
   static final DiagnosticType MODULE_DEPENDENCY_ERROR =
@@ -293,19 +290,25 @@ public class Compiler extends AbstractCompiler {
     fillEmptyModules(modules);
 
     this.externs = makeCompilerInput(externs, true);
-    this.modules = modules;
+
     // Generate the module graph, and report any errors in the module
     // specification as errors.
-    try {
-      this.moduleGraph = new JSModuleGraph(modules);
-    } catch (JSModuleGraph.ModuleDependenceException e) {
-      // problems with the module format.  Report as an error.  The
-      // message gives all details.
-      report(JSError.make(MODULE_DEPENDENCY_ERROR,
-          e.getModule().getName(), e.getDependentModule().getName()));
-      return;
+    this.modules = modules;
+    if (modules.size() > 1) {
+      try {
+        this.moduleGraph = new JSModuleGraph(modules);
+      } catch (JSModuleGraph.ModuleDependenceException e) {
+        // problems with the module format.  Report as an error.  The
+        // message gives all details.
+        report(JSError.make(MODULE_DEPENDENCY_ERROR,
+                e.getModule().getName(), e.getDependentModule().getName()));
+        return;
+      }
+    } else {
+      this.moduleGraph = null;
     }
-    this.inputs = getAllInputsFromModules();
+
+    this.inputs = getAllInputsFromModules(modules);
     initBasedOnOptions();
 
     initInputsByNameMap();
@@ -345,7 +348,8 @@ public class Compiler extends AbstractCompiler {
   private void checkFirstModule(List<JSModule> modules) {
     if (modules.isEmpty()) {
       report(JSError.make(EMPTY_MODULE_LIST_ERROR));
-    } else if (modules.get(0).getInputs().isEmpty()) {
+    } else if (modules.get(0).getInputs().isEmpty() && modules.size() > 1) {
+      // The root module may only be empty if there is exactly 1 module.
       report(JSError.make(EMPTY_ROOT_MODULE_ERROR,
           modules.get(0).getName()));
     }
@@ -355,7 +359,7 @@ public class Compiler extends AbstractCompiler {
    * Fill any empty modules with a place holder file. It makes any cross module
    * motion easier.
    */
-  private void fillEmptyModules(List<JSModule> modules) {
+  private static void fillEmptyModules(List<JSModule> modules) {
     for (JSModule module : modules) {
       if (module.getInputs().isEmpty()) {
         module.add(JSSourceFile.fromCode("[" + module.getName() + "]", ""));
@@ -363,18 +367,13 @@ public class Compiler extends AbstractCompiler {
     }
   }
 
-  static final DiagnosticType DUPLICATE_INPUT_IN_MODULES =
-      DiagnosticType.error("JSC_DUPLICATE_INPUT_IN_MODULES_ERROR",
-          "Two modules cannot contain the same input, but module {0} and {1} "
-              + "both include \"{2}\"");
-
   /**
    * Rebuilds the internal list of inputs by iterating over all modules.
    * This is necessary if inputs have been added to or removed from a module
    * after the {@link #init(JSSourceFile[], JSModule[], CompilerOptions)} call.
    */
   public void rebuildInputsFromModules() {
-    inputs = getAllInputsFromModules();
+    inputs = getAllInputsFromModules(modules);
     initInputsByNameMap();
   }
 
@@ -382,28 +381,21 @@ public class Compiler extends AbstractCompiler {
    * Builds a single list of all module inputs. Verifies that it contains no
    * duplicates.
    */
-  private List<CompilerInput> getAllInputsFromModules() {
+  private static List<CompilerInput> getAllInputsFromModules(
+      List<JSModule> modules) {
     List<CompilerInput> inputs = Lists.newArrayList();
     Map<String, JSModule> inputMap = Maps.newHashMap();
     for (JSModule module : modules) {
       for (CompilerInput input : module.getInputs()) {
         String inputName = input.getName();
-        JSModule firstModule = inputMap.get(inputName);
-        if (firstModule == null) {
-          inputs.add(input);
-          inputMap.put(inputName, module);
-        } else {
-          report(JSError.make(DUPLICATE_INPUT_IN_MODULES,
-              firstModule.getName(), module.getName(), inputName));
-        }
+
+        // NOTE(nicksantos): If an input is in more than one module,
+        // it will show up twice in the inputs list, and then we
+        // will get an error down the line.
+        inputs.add(input);
+        inputMap.put(inputName, module);
       }
     }
-    if (hasErrors()) {
-
-      // There's no reason to bother parsing the code.
-      return ImmutableList.of();
-    }
-
     return inputs;
   }
 
@@ -1052,6 +1044,7 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
+      // Check if the sources need to be re-ordered.
       if (options.manageClosureDependencies) {
         for (CompilerInput input : inputs) {
           input.setCompiler(this);
@@ -1064,10 +1057,9 @@ public class Compiler extends AbstractCompiler {
                 sorter.getInputsWithoutProvides()));
       }
 
-      List<CompilerInput> annotatedExterns = Lists.newArrayList();
-      Iterator<CompilerInput> inputIterator = inputs.iterator();
-      while (inputIterator.hasNext()) {
-        CompilerInput input = inputIterator.next();
+      // Check if externs files need to be lifted.
+      boolean liftedExterns = false;
+      for (CompilerInput input : inputs) {
         Node n = input.getAstRoot(this);
         if (hasErrors()) {
           return null;
@@ -1084,8 +1076,25 @@ public class Compiler extends AbstractCompiler {
           // the externs pile anyways.
           externsRoot.addChildToBack(n);
           input.setIsExtern(true);
-          inputIterator.remove();
+
+          // TODO(nicksantos): We need a better mechanism to make sure
+          // changes to the inputs array get reflected in JSModules.
+          input.getModule().remove(input);
+
           externs.add(input);
+          liftedExterns = true;
+        }
+      }
+
+      if (liftedExterns) {
+        fillEmptyModules(modules);
+        rebuildInputsFromModules();
+      }
+
+      // Build the AST.
+      for (CompilerInput input : inputs) {
+        Node n = input.getAstRoot(this);
+        if (n == null) {
           continue;
         }
 
@@ -1770,6 +1779,16 @@ public class Compiler extends AbstractCompiler {
     getPassConfig().setIntermediateState(state.passConfigState);
     typeRegistry = state.typeRegistry;
     normalized = state.normalized;
+  }
+
+  @VisibleForTesting
+  List<CompilerInput> getInputsForTesting() {
+    return inputs;
+  }
+
+  @VisibleForTesting
+  List<CompilerInput> getExternsForTesting() {
+    return externs;
   }
 
   @Override

@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +38,9 @@ import java.util.Set;
 *
 *
  */
-public class JSModule implements DependencyInfo {
+public class JSModule implements DependencyInfo, Serializable {
+  private static final long serialVersionUID = 1;
+
   /** Module name */
   private final String name;
 
@@ -113,6 +116,12 @@ public class JSModule implements DependencyInfo {
   public void addDependency(JSModule dep) {
     Preconditions.checkState(dep != this);
     deps.add(dep);
+  }
+
+  /** Removes an input from this module. */
+  public void remove(CompilerInput input) {
+    input.setModule(null);
+    inputs.remove(input);
   }
 
   /** Removes all of the inputs from this module. */

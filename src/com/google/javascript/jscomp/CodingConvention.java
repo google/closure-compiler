@@ -17,18 +17,20 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * CodingConvention defines a set of hooks to customize the behavior of the
  * Compiler for a specific team/company.
  *
  * // TODO(bolinfest): Tighten up this interface -- it is far too big.
- * 
+ *
 *
 *
  */
@@ -85,7 +87,7 @@ public interface CodingConvention {
    * @return {@code true} if the name should be considered exported.
    */
   public boolean isExported(String name, boolean local);
-  
+
   /**
    * Should be isExported(name, true) || isExported(name, false);
    */
@@ -206,7 +208,7 @@ public interface CodingConvention {
   public String getDelegateSuperclassName();
 
   /**
-   * Defines the delegate proxy prototype properties. Their types depend on 
+   * Defines the delegate proxy prototype properties. Their types depend on
    * properties of the delegate base methods.
    *
    * @param delegateProxyPrototypes List of delegate proxy prototypes.
@@ -235,6 +237,11 @@ public interface CodingConvention {
    */
   public ObjectLiteralCast getObjectLiteralCast(NodeTraversal t,
       Node callNode);
+
+  /**
+   * Returns the set of AssertionFunction.
+   */
+  public Collection<AssertionFunctionSpec> getAssertionFunctions();
 
   static enum SubclassType {
     INHERITS,
@@ -287,6 +294,47 @@ public interface CodingConvention {
     ObjectLiteralCast(String typeName, Node objectNode) {
       this.typeName = typeName;
       this.objectNode = objectNode;
+    }
+  }
+
+  /**
+   * A function that will throw an exception when either:
+   *   -One or more of its parameters evaluate to false.
+   *   -One or more of its parameters are not of a certain type.
+   */
+  public class AssertionFunctionSpec {
+    private final String functionName;
+    private final JSTypeNative assertedType;
+
+    public AssertionFunctionSpec(String functionName) {
+      this(functionName, null);
+    }
+
+    public AssertionFunctionSpec(String functionName,
+        JSTypeNative assertedType) {
+      this.functionName = functionName;
+      this.assertedType = assertedType;
+    }
+
+    /** Returns the name of the function. */
+    public String getFunctionName() {
+      return functionName;
+    }
+
+    /**
+     * Returns the parameter of the assertion function that is being checked.
+     * @param firstParam The first parameter of the function call.
+     */
+    public Node getAssertedParam(Node firstParam) {
+      return firstParam;
+    }
+
+    /**
+     * Returns the type for a type assertion, or null if the function asserts
+     * that the node must not be null or undefined. 
+     */
+    public JSTypeNative getAssertedType() {
+      return assertedType;
     }
   }
 }

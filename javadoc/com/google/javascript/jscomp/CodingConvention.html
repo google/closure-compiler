@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/CodingConvention.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="CodingConvention.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -114,6 +114,15 @@ CodingConvention defines a set of hooks to customize the behavior of the
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
 <B>Nested Class Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A function that will throw an exception when either:
+   -One or more of its parameters evaluate to false.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -231,6 +240,14 @@ CodingConvention defines a set of hooks to customize the behavior of the
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Function name for abstract methods.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getAssertionFunctions()">getAssertionFunctions</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the set of AssertionFunction.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -753,7 +770,7 @@ void <B>defineDelegateProxyPrototypeProperties</B>(<A HREF="../../../../com/goog
                                             <A HREF="../../../../com/google/javascript/jscomp/Scope.html" title="class in com.google.javascript.jscomp">Scope</A>&nbsp;scope,
                                             <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../com/google/javascript/rhino/jstype/ObjectType.html" title="class in com.google.javascript.rhino.jstype">ObjectType</A>&gt;&nbsp;delegateProxyPrototypes)</PRE>
 <DL>
-<DD>Defines the delegate proxy prototype properties. Their types depend on 
+<DD>Defines the delegate proxy prototype properties. Their types depend on
  properties of the delegate base methods.
 <P>
 <DD><DL>
@@ -802,6 +819,19 @@ getObjectLiteralCast</H3>
 <DT><B>Parameters:</B><DD><CODE>t</CODE> - The node traversal.<DD><CODE>callNode</CODE> - A CALL node.</DL>
 </DD>
 </DL>
+<HR>
+
+<A NAME="getAssertionFunctions()"><!-- --></A><H3>
+getAssertionFunctions</H3>
+<PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>&gt; <B>getAssertionFunctions</B>()</PRE>
+<DL>
+<DD>Returns the set of AssertionFunction.
+<P>
+<DD><DL>
+</DL>
+</DD>
+</DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
 
@@ -833,7 +863,7 @@ getObjectLiteralCast</H3>
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/CodingConvention.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="CodingConvention.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;

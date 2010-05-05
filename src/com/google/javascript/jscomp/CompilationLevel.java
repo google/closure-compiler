@@ -75,7 +75,6 @@ public enum CompilationLevel {
    */
   private static void applyBasicCompilationOptions(CompilerOptions options) {
     options.skipAllCompilerPasses();
-    options.checkGlobalThisLevel = CheckLevel.OFF;
 
     // Allows annotations that are not standard.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
@@ -126,7 +125,6 @@ public enum CompilationLevel {
 
     // All the safe optimizations.
     options.closurePass = true;
-    options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
     options.removeConstantExpressions = true;
     options.coalesceVariableNames = true;
@@ -147,6 +145,7 @@ public enum CompilationLevel {
     options.removeUnusedPrototypePropertiesInExterns = true;
     options.collapseAnonymousFunctions = true;
     options.collapseProperties = true;
+    options.checkGlobalThisLevel = CheckLevel.WARNING;
     options.rewriteFunctionExpressions = true;
     options.devirtualizePrototypeMethods = true;
     options.smartNameRemoval = true;

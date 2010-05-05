@@ -162,7 +162,8 @@ public class DefaultPassConfig extends PassConfig {
       return checks;
     }
 
-    if (options.checkSuspiciousCode) {
+    if (options.checkSuspiciousCode ||
+        options.checkGlobalThisLevel.isOn()) {
       checks.add(suspiciousCode);
     }
 
@@ -626,11 +627,15 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
       List<Callback> sharedCallbacks = Lists.newArrayList();
-      sharedCallbacks.add(new CheckAccidentalSemicolon(CheckLevel.WARNING));
-      sharedCallbacks.add(new CheckSideEffects(CheckLevel.WARNING));
-      if (options.checkGlobalThisLevel.isOn()) {
+      if (options.checkSuspiciousCode) {
+        sharedCallbacks.add(new CheckAccidentalSemicolon(CheckLevel.WARNING));
+        sharedCallbacks.add(new CheckSideEffects(CheckLevel.WARNING));
+      }
+
+      CheckLevel checkGlobalThisLevel = options.checkGlobalThisLevel;
+      if (checkGlobalThisLevel.isOn()) {
         sharedCallbacks.add(
-            new CheckGlobalThis(compiler, options.checkGlobalThisLevel));
+            new CheckGlobalThis(compiler, checkGlobalThisLevel));
       }
       return combineChecks(compiler, sharedCallbacks);
     }

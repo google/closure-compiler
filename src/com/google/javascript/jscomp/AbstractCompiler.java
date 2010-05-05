@@ -52,7 +52,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract CompilerInput newExternInput(String name);
 
   /**
-   * Gets the module graph. May return null if there are no modules.
+   * Gets the module graph. May return null if there aren't at least two
+   * modules.
    */
   abstract JSModuleGraph getModuleGraph();
 

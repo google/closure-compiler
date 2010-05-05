@@ -168,6 +168,9 @@ public class CompilerOptions implements Serializable, Cloneable {
    * Checks for certain uses of the {@code this} keyword that are considered
    * unsafe because they are likely to reference the global {@code this}
    * object unintentionally.
+   *
+   * If this is off, but collapseProperties is on, then the compiler will
+   * usually ignore you and run this check anyways.
    */
   public CheckLevel checkGlobalThisLevel;
 
@@ -607,7 +610,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkProvides = CheckLevel.OFF;
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
-    checkGlobalThisLevel = CheckLevel.WARNING;
+    checkGlobalThisLevel = CheckLevel.OFF;
     checkUnreachableCode = CheckLevel.OFF;
     checkMissingReturn = CheckLevel.OFF;
     checkMissingGetCssNameLevel = CheckLevel.OFF;

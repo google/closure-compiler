@@ -19,13 +19,16 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A compiler pass to run the type inference analysis.
@@ -42,6 +45,7 @@ class TypeInferencePass implements CompilerPass {
   private final ReverseAbstractInterpreter reverseInterpreter;
   private Scope topScope;
   private ScopeCreator scopeCreator;
+  private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
 
   /**
    * Local variables that are declared in an outer scope, but are assigned in
@@ -56,6 +60,13 @@ class TypeInferencePass implements CompilerPass {
     this.reverseInterpreter = reverseInterpreter;
     this.topScope = topScope;
     this.scopeCreator = scopeCreator;
+
+    assertionFunctionsMap = Maps.newHashMap();
+    for (AssertionFunctionSpec assertionFucntion :
+        compiler.getCodingConvention().getAssertionFunctions()) {
+      assertionFunctionsMap.put(assertionFucntion.getFunctionName(),
+          assertionFucntion);
+    }
   }
 
   /**
@@ -93,7 +104,7 @@ class TypeInferencePass implements CompilerPass {
     TypeInference typeInference =
         new TypeInference(
             compiler, computeCfg(n), reverseInterpreter, scope,
-            getUnflowableVars(scope));
+            assertionFunctionsMap, getUnflowableVars(scope));
     try {
       typeInference.analyze();
       escapedLocalVars.putAll(typeInference.getAssignedOuterLocalVars());

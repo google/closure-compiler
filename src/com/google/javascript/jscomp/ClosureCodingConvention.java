@@ -18,12 +18,15 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -329,5 +332,26 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
   @Override
   public boolean isPrivate(String name) {
     return false;
+  }
+
+  @Override
+  public Collection<AssertionFunctionSpec> getAssertionFunctions() {
+    return ImmutableList.<AssertionFunctionSpec>of(
+        new AssertionFunctionSpec("goog.asserts.assert"),
+        new AssertionFunctionSpec("goog.asserts.assertNumber",
+            JSTypeNative.NUMBER_TYPE),
+        new AssertionFunctionSpec("goog.asserts.assertString",
+            JSTypeNative.STRING_TYPE),
+        new AssertionFunctionSpec("goog.asserts.assertFunction",
+            JSTypeNative.FUNCTION_INSTANCE_TYPE),
+        new AssertionFunctionSpec("goog.asserts.assertObject",
+            JSTypeNative.OBJECT_TYPE),
+        new AssertionFunctionSpec("goog.asserts.assertArray",
+            JSTypeNative.ARRAY_TYPE),
+        // TODO(agrieve): It would be better if this could make the first
+        // parameter the type of the second parameter.
+        new AssertionFunctionSpec("goog.asserts.assertInstanceof",
+            JSTypeNative.OBJECT_TYPE)
+    );
   }
 }

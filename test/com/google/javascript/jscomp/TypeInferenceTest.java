@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_INSTANCE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -31,10 +32,10 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -55,6 +56,14 @@ public class TypeInferenceTest extends TestCase {
   private JSTypeRegistry registry;
   private Map<String,JSType> assumptions;
   private FlowScope returnScope;
+  private static final Map<String, AssertionFunctionSpec>
+      ASSERTION_FUNCTION_MAP = Maps.newHashMap();
+  static {
+    for (AssertionFunctionSpec func :
+        new ClosureCodingConvention().getAssertionFunctions()) {
+      ASSERTION_FUNCTION_MAP.put(func.getFunctionName(), func);
+    }
+  }
 
   @Override
   public void setUp() {
@@ -92,10 +101,10 @@ public class TypeInferenceTest extends TestCase {
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     // Create a simple reverse abstract interpreter.
     ReverseAbstractInterpreter rai = new SemanticReverseAbstractInterpreter(
-            compiler.getCodingConvention(), registry);
+        compiler.getCodingConvention(), registry);
     // Do the type inference by data-flow analysis.
-    TypeInference dfa =
-        new TypeInference(compiler, cfg, rai, assumedScope);
+    TypeInference dfa = new TypeInference(compiler, cfg, rai, assumedScope,
+        ASSERTION_FUNCTION_MAP);
     dfa.analyze();
     // Get the scope of the implicit return.
     BranchedFlowState<FlowScope> rtnState =
@@ -206,6 +215,114 @@ public class TypeInferenceTest extends TestCase {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("var y = 1; if (x) { y = x; }");
     verify("y", createUnionType(OBJECT_TYPE, NUMBER_TYPE));
+  }
+
+  public void testAssert1() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assert(x); out2 = x;");
+    verify("out1", startType);
+    verify("out2", OBJECT_TYPE);
+  }
+
+  public void testAssert2() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    inFunction("goog.asserts.assert(1, x); out1 = x;");
+    verify("out1", startType);
+  }
+
+  public void testAssert3() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    assuming("y", startType);
+    inFunction("out1 = x; goog.asserts.assert(x && y); out2 = x; out3 = y;");
+    verify("out1", startType);
+    verify("out2", OBJECT_TYPE);
+    verify("out3", OBJECT_TYPE);
+  }
+
+  public void testAssert4() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    assuming("y", startType);
+    inFunction("out1 = x; goog.asserts.assert(x && !y); out2 = x; out3 = y;");
+    verify("out1", startType);
+    verify("out2", OBJECT_TYPE);
+    verify("out3", NULL_TYPE);
+  }
+
+  public void testAssert5() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    assuming("y", startType);
+    inFunction("goog.asserts.assert(x || y); out1 = x; out2 = y;");
+    verify("out1", startType);
+    verify("out2", startType);
+  }
+
+  public void testAssertNumber() {
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertNumber(x); out2 = x;");
+    verify("out1", startType);
+    verify("out2", NUMBER_TYPE);
+  }
+
+  public void testAssertNumber2() {
+    // Make sure it ignores expressions.
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("goog.asserts.assertNumber(x + x); out1 = x;");
+    verify("out1", startType);
+  }
+
+  public void testAssertString() {
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertString(x); out2 = x;");
+    verify("out1", startType);
+    verify("out2", STRING_TYPE);
+  }
+
+  public void testAssertFunction() {
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertFunction(x); out2 = x;");
+    verify("out1", startType);
+    verifySubtypeOf("out2", FUNCTION_INSTANCE_TYPE);
+  }
+
+  public void testAssertObject() {
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertObject(x); out2 = x;");
+    verify("out1", startType);
+    verifySubtypeOf("out2", OBJECT_TYPE);
+  }
+
+  public void testAssertObject2() {
+    JSType startType = createNullableType(ARRAY_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertObject(x); out2 = x;");
+    verify("out1", startType);
+    verify("out2", ARRAY_TYPE);
+  }
+
+  public void testAssertArray() {
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertArray(x); out2 = x;");
+    verify("out1", startType);
+    verifySubtypeOf("out2", ARRAY_TYPE);
+  }
+
+  public void testAssertInstanceof() {
+    JSType startType = createNullableType(ALL_TYPE);
+    assuming("x", startType);
+    inFunction("out1 = x; goog.asserts.assertInstanceof(x); out2 = x;");
+    verify("out1", startType);
+    verifySubtypeOf("out2", OBJECT_TYPE);
   }
 
   public void testReturn1() {

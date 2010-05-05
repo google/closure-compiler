@@ -127,7 +127,7 @@ This describes the Closure-specific JavaScript coding conventions.
 <TH ALIGN="left"><B>Nested classes/interfaces inherited from interface com.google.javascript.jscomp.<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.DelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.ObjectLiteralCast.html" title="class in com.google.javascript.jscomp">CodingConvention.ObjectLiteralCast</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.SubclassRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp">CodingConvention.SubclassType</A></CODE></TD>
+<TD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.DelegateRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.DelegateRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.ObjectLiteralCast.html" title="class in com.google.javascript.jscomp">CodingConvention.ObjectLiteralCast</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassRelationship.html" title="class in com.google.javascript.jscomp">CodingConvention.SubclassRelationship</A>, <A HREF="../../../../com/google/javascript/jscomp/CodingConvention.SubclassType.html" title="enum in com.google.javascript.jscomp">CodingConvention.SubclassType</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -203,6 +203,14 @@ This describes the Closure-specific JavaScript coding conventions.
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Function name for abstract methods.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/ClosureCodingConvention.html#getAssertionFunctions()">getAssertionFunctions</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the set of AssertionFunction.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -707,6 +715,23 @@ public boolean <B>isPrivate</B>(<A HREF="http://java.sun.com/javase/6/docs/api/j
 <DT><B>Parameters:</B><DD><CODE>name</CODE> - The name of a global variable or function, or a method or
      property.
 <DT><B>Returns:</B><DD><code>true</code> if the name should be considered private.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAssertionFunctions()"><!-- --></A><H3>
+getAssertionFunctions</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/CodingConvention.AssertionFunctionSpec.html" title="class in com.google.javascript.jscomp">CodingConvention.AssertionFunctionSpec</A>&gt; <B>getAssertionFunctions</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getAssertionFunctions()">CodingConvention</A></CODE></B></DD>
+<DD>Returns the set of AssertionFunction.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#getAssertionFunctions()">getAssertionFunctions</A></CODE> in interface <CODE><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html" title="interface in com.google.javascript.jscomp">CodingConvention</A></CODE><DT><B>Overrides:</B><DD><CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html#getAssertionFunctions()">getAssertionFunctions</A></CODE> in class <CODE><A HREF="../../../../com/google/javascript/jscomp/DefaultCodingConvention.html" title="class in com.google.javascript.jscomp">DefaultCodingConvention</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
