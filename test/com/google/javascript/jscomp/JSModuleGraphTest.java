@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import junit.framework.*;
 
@@ -37,6 +38,9 @@ public class JSModuleGraphTest extends TestCase {
   private final JSModule F = new JSModule("F");
   private JSModuleGraph graph = null;
 
+  // For resolving dependencies only.
+  private Compiler compiler;
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
@@ -49,6 +53,7 @@ public class JSModuleGraphTest extends TestCase {
     F.addDependency(C);  //       F
     F.addDependency(E);
     graph = new JSModuleGraph(new JSModule[] {A, B, C, D, E, F});
+    compiler = new Compiler();
   }
 
   public void testModuleDepth() {
@@ -141,6 +146,78 @@ public class JSModuleGraphTest extends TestCase {
     assertEquals("d.js", E.getInputs().get(0).getName());
   }
 
+  public void testManageDependencies() {
+    List<CompilerInput> inputs = Lists.newArrayList();
+
+    A.add(code("a1", provides("a1"), requires()));
+    A.add(code("a2", provides("a2"), requires("a1")));
+    A.add(code("a3", provides(), requires("a1")));
+
+    B.add(code("b1", provides("b1"), requires("a2")));
+    B.add(code("b2", provides(), requires("a1", "a2")));
+
+    C.add(code("c1", provides("c1"), requires("a1")));
+    C.add(code("c2", provides("c2"), requires("c1")));
+
+    E.add(code("e1", provides(), requires("c1")));
+    E.add(code("e2", provides(), requires("c1")));
+
+    inputs.addAll(A.getInputs());
+    inputs.addAll(B.getInputs());
+    inputs.addAll(C.getInputs());
+    inputs.addAll(E.getInputs());
+
+    for (CompilerInput input : inputs) {
+      input.setCompiler(compiler);
+    }
+
+    List<CompilerInput> results = graph.manageDependencies(inputs);
+
+    assertInputs(A, "a1", "a3");
+    assertInputs(B, "a2", "b2");
+    assertInputs(C); // no inputs
+    assertInputs(E, "c1", "e1", "e2");
+
+    assertEquals(
+        Lists.newArrayList("a1", "a3", "a2", "b2", "c1", "e1", "e2"),
+        sourceNames(results));
+  }
+
+  private void assertInputs(JSModule module, String ... sourceNames) {
+    List<CompilerInput> actualInputs = module.getInputs();
+
+    assertEquals(
+        Lists.newArrayList(sourceNames),
+        sourceNames(module.getInputs()));
+  }
+
+  private List<String> sourceNames(List<CompilerInput> inputs) {
+    List<String> inputNames = Lists.newArrayList();
+    for (CompilerInput input : inputs) {
+      inputNames.add(input.getName());
+    }
+    return inputNames;
+  }
+
+  private JSSourceFile code(
+      String sourceName, List<String> provides, List<String> requires) {
+    String text = "";
+    for (String p : provides) {
+      text += "goog.provide('" + p + "');\n";
+    }
+    for (String r : requires) {
+      text += "goog.require('" + r + "');\n";
+    }
+    return JSSourceFile.fromCode(sourceName, text);
+  }
+
+  private List<String> provides(String ... strings) {
+    return Lists.newArrayList(strings);
+  }
+
+  private List<String> requires(String ... strings) {
+    return Lists.newArrayList(strings);
+  }
 
   private void assertDeepestCommonDepInclusive(
       JSModule expected, JSModule m1, JSModule m2) {

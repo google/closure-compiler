@@ -19,11 +19,11 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.DataFlowAnalysis.BinaryJoinOp;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnalysis;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.MaxIterationsExceededException;
+import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 
@@ -624,15 +624,15 @@ public class DataFlowAnalysisTest extends TestCase {
   }
 
   public void testLatticeArrayMinimizationWhenMidpointIsEven() {
-    assertEquals(6, DataFlowAnalysis.BinaryJoinOp.computeMidPoint(12));
+    assertEquals(6, JoinOp.BinaryJoinOp.computeMidPoint(12));
   }
 
   public void testLatticeArrayMinimizationWhenMidpointRoundsDown() {
-    assertEquals(8, DataFlowAnalysis.BinaryJoinOp.computeMidPoint(18));
+    assertEquals(8, JoinOp.BinaryJoinOp.computeMidPoint(18));
   }
 
   public void testLatticeArrayMinimizationWithTwoElements() {
-    assertEquals(1, DataFlowAnalysis.BinaryJoinOp.computeMidPoint(2));
+    assertEquals(1, JoinOp.BinaryJoinOp.computeMidPoint(2));
   }
 
 

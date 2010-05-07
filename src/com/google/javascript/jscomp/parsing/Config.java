@@ -46,12 +46,19 @@ public class Config {
   final Map<String, Annotation> annotationNames;
 
   /**
+   * Recognized names in a {@code @suppress} tag.
+   */
+  final Set<String> suppressionNames;
+
+  /**
    * Annotation names.
    */
 
-  Config(Set<String> annotationWhitelist, boolean isIdeMode) {
+  Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
+      boolean isIdeMode) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = isIdeMode;
+    this.suppressionNames = suppressionNames;
     this.isIdeMode = isIdeMode;
   }
 

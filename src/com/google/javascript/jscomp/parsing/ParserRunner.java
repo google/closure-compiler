@@ -39,35 +39,33 @@ public class ParserRunner {
 
   private static Set<String> annotationNames = null;
 
+  private static Set<String> suppressionNames = null;
+
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
 
-  public static Config createConfig(
-      JSTypeRegistry typeRegistry, boolean isIdeMode) {
-    return new Config(getAnnotationNames(), isIdeMode);
+  public static Config createConfig(boolean isIdeMode) {
+    initResourceConfig();
+    return new Config(annotationNames, suppressionNames, isIdeMode);
   }
 
-  /**
-   * Gets a list of extra annotations that are OK, even if the parser
-   * doesn't have handlers for them built-in.
-   */
-  static Set<String> getAnnotationNames() {
-    initAnnotationNames();
-    return annotationNames;
-  }
-
-  private static synchronized void initAnnotationNames() {
+  private static synchronized void initResourceConfig() {
     if (annotationNames != null) {
       return;
     }
 
-    Set<String> trimmedNames = Sets.newHashSet();
     ResourceBundle config = ResourceBundle.getBundle(configResource);
-    String[] names = config.getString("jsdoc.annotations").split(",");
+    annotationNames = extractList(config.getString("jsdoc.annotations"));
+    suppressionNames = extractList(config.getString("jsdoc.suppressions"));
+  }
+
+  private static Set<String> extractList(String configProp) {
+    String[] names = configProp.split(",");
+    Set<String> trimmedNames = Sets.newHashSet();
     for (String name : names) {
       trimmedNames.add(name.trim());
     }
-    annotationNames = ImmutableSet.copyOf(trimmedNames);
+    return ImmutableSet.copyOf(trimmedNames);
   }
 
   /**

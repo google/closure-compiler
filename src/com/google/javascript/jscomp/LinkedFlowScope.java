@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.DataFlowAnalysis.BinaryJoinOp;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleSlot;
@@ -235,7 +234,7 @@ class LinkedFlowScope implements FlowScope {
   }
 
   /** Join the two FlowScopes. */
-  static class FlowScopeJoinOp extends BinaryJoinOp<FlowScope> {
+  static class FlowScopeJoinOp extends JoinOp.BinaryJoinOp<FlowScope> {
     @SuppressWarnings("unchecked")
     @Override
     public FlowScope apply(FlowScope a, FlowScope b) {

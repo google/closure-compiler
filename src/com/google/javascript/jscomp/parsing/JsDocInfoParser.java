@@ -64,6 +64,7 @@ public final class JsDocInfoParser {
   private State state;
 
   private final Map<String, Annotation> annotationNames;
+  private final Set<String> suppressionNames;
 
   private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder;
 
@@ -101,6 +102,7 @@ public final class JsDocInfoParser {
     this.sourceName = sourceName;
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
     this.annotationNames = config.annotationNames;
+    this.suppressionNames = config.suppressionNames;
 
     this.errorReporter = errorReporter;
   }
@@ -111,6 +113,7 @@ public final class JsDocInfoParser {
    */
   public static Node parseTypeString(String typeString) {
     Config config = new Config(
+        Sets.<String>newHashSet(),
         Sets.<String>newHashSet(),
         false);
     JsDocInfoParser parser = new JsDocInfoParser(
@@ -793,6 +796,12 @@ public final class JsDocInfoParser {
       Set<String> suppressions = new HashSet<String>();
       while (true) {
         if (match(JsDocToken.STRING)) {
+          String name = stream.getString();
+          if (!suppressionNames.contains(name)) {
+            parser.addWarning("msg.jsdoc.suppress.unknown", name,
+                stream.getLineno(), stream.getCharno());
+          }
+
           suppressions.add(stream.getString());
           token = next();
         } else {

@@ -51,7 +51,7 @@ final class MustBeReachingVariableDef extends
 
   MustBeReachingVariableDef(
       ControlFlowGraph<Node> cfg, Scope jsScope, AbstractCompiler compiler) {
-    super(cfg, new JoinOp());
+    super(cfg, new MustDefJoin());
     this.jsScope = jsScope;
     this.compiler = compiler;
     this.escaped = Sets.newHashSet();
@@ -141,7 +141,7 @@ final class MustBeReachingVariableDef extends
     }
   }
 
-  private static class JoinOp extends DataFlowAnalysis.BinaryJoinOp<MustDef> {
+  private static class MustDefJoin extends JoinOp.BinaryJoinOp<MustDef> {
     @Override
     public MustDef apply(MustDef a, MustDef b) {
       MustDef result = new MustDef();

@@ -16,16 +16,20 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.deps.SortedDependencies;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +111,15 @@ public class JSModuleGraph {
    */
   Iterable<JSModule> getAllModules() {
     return moduleDepths.keySet();
+  }
+
+  /**
+   * Gets all the modules in dependency order.
+   */
+  private Iterable<JSModule> getAllModulesInDependencyOrder() {
+    List<JSModule> modules = Lists.newArrayList(getAllModules());
+    Collections.sort(modules, new DepthComparator());
+    return modules;
   }
 
   /**
@@ -269,18 +282,102 @@ public class JSModuleGraph {
   }
 
   /**
+   * Sort the sources of modules in dependency-order.
+   *
+   * If a source file provides a symbol that is not required, then that
+   * file will be removed from the compilation. If a source file provides
+   * a symbol that is not required until a later module, then that
+   * file will be moved to the later module.
+   *
+   * @param The original list of sources. Used to ensure that the sort
+   *     is stable.
+   * @return The sorted list of sources.
+   */
+  List<CompilerInput> manageDependencies(List<CompilerInput> inputs) {
+    SortedDependencies<CompilerInput> sorter =
+        new SortedDependencies<CompilerInput>(inputs);
+    List<CompilerInput> inputsWithoutProvides =
+        sorter.getInputsWithoutProvides();
+
+    // The order of inputs, sorted independently of modules.
+    List<CompilerInput> absoluteOrder = sorter.getSortedDependenciesOf(inputs);
+
+    // Figure out which sources *must* be in each module.
+    ListMultimap<JSModule, CompilerInput> inputsWithoutProvidesPerModule =
+        LinkedListMultimap.create();
+    for (CompilerInput input : inputsWithoutProvides) {
+      JSModule module = input.getModule();
+      Preconditions.checkNotNull(module);
+      inputsWithoutProvidesPerModule.put(module, input);
+    }
+
+    // Clear the modules of their inputs. This also nulls out
+    // the input's reference to its module.
+    for (JSModule module : getAllModules()) {
+      module.removeAll();
+    }
+
+    // Figure out which sources *must* be in each module, or in one
+    // of that module's dependencies.
+    for (JSModule module : inputsWithoutProvidesPerModule.keySet()) {
+      List<CompilerInput> transitiveClosure =
+          sorter.getSortedDependenciesOf(
+              inputsWithoutProvidesPerModule.get(module));
+      for (CompilerInput input : transitiveClosure) {
+        JSModule oldModule = input.getModule();
+        input.setModule(
+            oldModule == null ?
+                module :
+                getDeepestCommonDependencyInclusive(oldModule, module));
+      }
+    }
+
+    // All the inputs are pointing to the modules that own them. Yeah!
+    // Update the modules to reflect this.
+    for (CompilerInput input : absoluteOrder) {
+      JSModule module = input.getModule();
+      if (module != null) {
+        module.add(input);
+      }
+    }
+
+    // Now, generate the sorted result.
+    List<CompilerInput> result = Lists.newArrayList();
+    for (JSModule module : getAllModulesInDependencyOrder()) {
+      result.addAll(module.getInputs());
+    }
+
+    return result;
+  }
+
+  /**
+   * A module depth comparator that considers a deeper module to be
+   * "greater than" a shallower module. Uses module names to
+   * consistently break ties.
+   */
+  private class DepthComparator implements Comparator<JSModule> {
+    public int compare(JSModule m1, JSModule m2) {
+      return depthCompare(m1, m2);
+    }
+  }
+
+  /**
    * A module depth comparator that considers a deeper module to be "less than"
    * a shallower module. Uses module names to consistently break ties.
    */
   private class InverseDepthComparator implements Comparator<JSModule> {
     public int compare(JSModule m1, JSModule m2) {
-      if (m1 == m2) {
-        return 0;
-      }
-      int d1 = getDepth(m1);
-      int d2 = getDepth(m2);
-      return d2 < d1 ? -1 : d2 == d1 ? m2.getName().compareTo(m1.getName()) : 1;
+      return depthCompare(m2, m1);
     }
+  }
+
+  private int depthCompare(JSModule m1, JSModule m2) {
+    if (m1 == m2) {
+      return 0;
+    }
+    int d1 = getDepth(m1);
+    int d2 = getDepth(m2);
+    return d1 < d2 ? -1 : d2 == d1 ? m1.getName().compareTo(m2.getName()) : 1;
   }
 
   /*

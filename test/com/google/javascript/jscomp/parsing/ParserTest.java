@@ -729,7 +729,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     Node script = null;
     try {
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(registry, true),
+          "input", string, ParserRunner.createConfig(true),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -745,7 +745,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     Node script = null;
     try {
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(registry, true),
+          "input", string, ParserRunner.createConfig(true),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);

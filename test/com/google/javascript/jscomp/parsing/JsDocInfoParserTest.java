@@ -38,12 +38,22 @@ import java.util.Set;
 public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   private Set<String> extraAnnotations;
+  private Set<String> extraSuppressions;
   private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder = null;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    extraAnnotations = Sets.newHashSet(ParserRunner.getAnnotationNames());
+    extraAnnotations =
+        Sets.newHashSet(
+            ParserRunner.createConfig(true).annotationNames.keySet());
+    extraSuppressions =
+        Sets.newHashSet(
+            ParserRunner.createConfig(true).suppressionNames);
+
+    extraSuppressions.add("x");
+    extraSuppressions.add("y");
+    extraSuppressions.add("z");
   }
 
   public void testParseTypeViaStatic1() throws Exception {
@@ -1761,6 +1771,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@suppress {x} \n * @suppress {y} */", "duplicate @suppress tag");
   }
 
+  public void testBadSuppress7() throws Exception {
+    parse("@suppress {impossible} */",
+          "unknown @suppress parameter: impossible");
+  }
+
   //public void testNoParseFileOverview() throws Exception {
   //  JSDocInfo jsdoc = parseFileOverviewWithoutDoc("@fileoverview Hi mom! */");
   //  assertNull(jsdoc.getFileOverview());
@@ -2294,7 +2309,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Parser p = new Parser(environment, testErrorReporter);
     AstRoot script = p.parse(code, null, 0);
 
-    Config config = new Config(extraAnnotations, true);
+    Config config =
+        new Config(extraAnnotations, extraSuppressions, true);
     for (Comment comment : script.getComments()) {
       JsDocInfoParser jsdocParser =
         new JsDocInfoParser(
@@ -2333,7 +2349,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       boolean parseFileOverview, String... warnings) {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
-    Config config = new Config(extraAnnotations, parseDocumentation);
+    Config config = new Config(extraAnnotations, extraSuppressions,
+        parseDocumentation);
     JsDocInfoParser jsdocParser = new JsDocInfoParser(stream(comment),
         "testcode", config, errorReporter);
 

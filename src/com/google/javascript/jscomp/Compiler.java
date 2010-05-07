@@ -19,12 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
-import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -35,9 +33,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,7 +69,8 @@ public class Compiler extends AbstractCompiler {
   // The JS source modules
   private List<JSModule> modules;
 
-  // The graph of the JS source modules
+  // The graph of the JS source modules. Must be null if there are less than
+  // 2 modules, because we use this as a signal for which passes to run.
   private JSModuleGraph moduleGraph;
 
   // The JS source inputs
@@ -1050,11 +1047,9 @@ public class Compiler extends AbstractCompiler {
           input.setCompiler(this);
         }
 
-        SortedDependencies<CompilerInput> sorter =
-            new SortedDependencies<CompilerInput>(inputs);
-        inputs = Lists.newArrayList(
-            sorter.getSortedDependenciesOf(
-                sorter.getInputsWithoutProvides()));
+        inputs =
+            (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
+            .manageDependencies(inputs);
       }
 
       // Check if externs files need to be lifted.
@@ -1537,8 +1532,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   Config getParserConfig() {
     if (parserConfig == null) {
-      parserConfig = ParserRunner.createConfig(
-          getTypeRegistry(), isIdeMode());
+      parserConfig = ParserRunner.createConfig(isIdeMode());
     }
     return parserConfig;
   }
