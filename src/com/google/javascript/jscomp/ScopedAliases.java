@@ -44,7 +44,30 @@ class ScopedAliases implements CompilerPass {
   /** Name used to denote an scoped function block used for aliasing. */
   static final String SCOPING_METHOD_NAME = "goog.scope";
 
-  final AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
+
+  // Errors
+  static final DiagnosticType GOOG_SCOPE_USED_IMPROPERLY = DiagnosticType.error(
+      "JSC_GOOG_SCOPE_USED_IMPROPERLY",
+      "The call to goog.scope must be alone in a single statement.");
+
+  static final DiagnosticType GOOG_SCOPE_HAS_BAD_PARAMETERS =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_HAS_BAD_PARAMETERS",
+          "The call to goog.scope must take only a single parameter.  It must" +
+              " be an anonymous function that itself takes no parameters.");
+
+  static final DiagnosticType GOOG_SCOPE_REFERENCES_THIS = DiagnosticType.error(
+      "JSC_GOOG_SCOPE_REFERENCES_THIS",
+      "The body of a goog.scope function cannot reference 'this'.");
+
+  static final DiagnosticType GOOG_SCOPE_USES_RETURN = DiagnosticType.error(
+      "JSC_GOOG_SCOPE_USES_RETURN",
+      "The body of a goog.scope function cannot use 'return'.");
+
+  static final DiagnosticType GOOG_SCOPE_ALIAS_REDEFINED = DiagnosticType.error(
+      "JSC_GOOG_SCOPE_ALIAS_REDEFINED",
+      "The alias {0} is assigned a value more than once.");
 
   ScopedAliases(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -55,38 +78,40 @@ class ScopedAliases implements CompilerPass {
     Traversal traversal = new Traversal();
     NodeTraversal.traverse(compiler, root, traversal);
 
-    // Apply the aliases.
-    for (AliasedNode entry : traversal.getAliasUsages()) {
-      entry.getAliasReference().getParent().replaceChild(
-          entry.getAliasReference(),
-          entry.getAliasDefinition().cloneTree());
-    }
-
-    // Remove the alias definitions.
-    for (Node aliasDefinition : traversal.getAliasDefinitions()) {
-      if (aliasDefinition.getParent().getType() == Token.VAR &&
-          aliasDefinition.getParent().getChildCount() == 1) {
-        aliasDefinition.getParent().detachFromParent();
-      } else {
-        aliasDefinition.detachFromParent();
+    if (!traversal.hasErrors()) {
+      // Apply the aliases.
+      for (AliasedNode entry : traversal.getAliasUsages()) {
+        entry.getAliasReference().getParent().replaceChild(
+            entry.getAliasReference(),
+            entry.getAliasDefinition().cloneTree());
       }
-    }
 
-    // Collapse the scopes.
-    for (Node scopeCall : traversal.getScopeCalls()) {
-      Node expressionWithScopeCall = scopeCall.getParent();
-      Node scopeClosureBlock = scopeCall.getLastChild().getLastChild();
-      scopeClosureBlock.detachFromParent();
-      expressionWithScopeCall.getParent().replaceChild(
-          expressionWithScopeCall,
-          scopeClosureBlock);
-      NodeUtil.tryMergeBlock(scopeClosureBlock);
-    }
+      // Remove the alias definitions.
+      for (Node aliasDefinition : traversal.getAliasDefinitions()) {
+        if (aliasDefinition.getParent().getType() == Token.VAR &&
+            aliasDefinition.getParent().getChildCount() == 1) {
+          aliasDefinition.getParent().detachFromParent();
+        } else {
+          aliasDefinition.detachFromParent();
+        }
+      }
 
-    if (traversal.getAliasUsages().size() > 0 ||
-        traversal.getAliasDefinitions().size() > 0 ||
-        traversal.getScopeCalls().size() > 0) {
-      compiler.reportCodeChange();
+      // Collapse the scopes.
+      for (Node scopeCall : traversal.getScopeCalls()) {
+        Node expressionWithScopeCall = scopeCall.getParent();
+        Node scopeClosureBlock = scopeCall.getLastChild().getLastChild();
+        scopeClosureBlock.detachFromParent();
+        expressionWithScopeCall.getParent().replaceChild(
+            expressionWithScopeCall,
+            scopeClosureBlock);
+        NodeUtil.tryMergeBlock(scopeClosureBlock);
+      }
+
+      if (traversal.getAliasUsages().size() > 0 ||
+          traversal.getAliasDefinitions().size() > 0 ||
+          traversal.getScopeCalls().size() > 0) {
+        compiler.reportCodeChange();
+      }
     }
   }
 
@@ -120,6 +145,7 @@ class ScopedAliases implements CompilerPass {
     // This map is temporary and cleared for each scope.
     private Map<String, Node> aliases = Maps.newHashMap();
 
+    private boolean hasErrors = false;
 
     List<Node> getAliasDefinitions() {
       return aliasDefinitions;
@@ -131,6 +157,10 @@ class ScopedAliases implements CompilerPass {
 
     List<Node> getScopeCalls() {
       return scopeCalls;
+    }
+
+    boolean hasErrors() {
+      return hasErrors;
     }
 
     private boolean isCallToScopeMethod(Node n) {
@@ -160,18 +190,32 @@ class ScopedAliases implements CompilerPass {
       return true;
     }
 
+    private void report(NodeTraversal t, Node n, DiagnosticType error,
+        String... arguments) {
+      compiler.report(t.makeError(n, error, arguments));
+      hasErrors = true;
+    }
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (isCallToScopeMethod(n)) {
-        // TODO(robbyw): Report an error if the call is not at the root of an
-        // expression: NodeUtil.isExpressionNode(parent)
-        // TODO(robbyw): Report an error if the parameter is not anonymous
-        // or has extra parameters.
-        // Node firstParam = n.getFirstChild().getNext();
-        // NodeUtil.isFunction(firstParam);
-        // NodeUtil.getFunctionName(firstParam).isEmpty();
-        // NodeUtil.getFnParameters(firstParam).hasChildren();
-        scopeCalls.add(n);
+        if (!NodeUtil.isExpressionNode(parent)) {
+          report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+        }
+        if (n.getChildCount() != 2) {
+          // The goog.scope call should have exactly 1 parameter.  The first
+          // child is the "goog.scope" and the second should be the parameter.
+          report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+        } else {
+          Node anonymousFnNode = n.getChildAtIndex(1);
+          if (!NodeUtil.isFunction(anonymousFnNode) ||
+              NodeUtil.getFunctionName(anonymousFnNode) != null ||
+              NodeUtil.getFnParameters(anonymousFnNode).hasChildren()) {
+            report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+          } else {
+            scopeCalls.add(n);
+          }
+        }
       }
 
       if (t.getScopeDepth() == 2) {
@@ -193,8 +237,9 @@ class ScopedAliases implements CompilerPass {
 
       if (t.getScopeDepth() >= 2) {
         if (n.getType() == Token.NAME) {
-          // TODO(robbyw): Check if the name is overridden locally.
-          // TODO(robbyw): Check if this is a place where the name is being set.
+          if (NodeUtil.isAssignmentOp(parent)) {
+            report(t, n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());
+          }
           Node aliasedNode = aliases.get(n.getString());
           // The variable should not exist since we undeclared it when we found
           // it.  If it does exist, it's because it's been overridden.
@@ -210,7 +255,13 @@ class ScopedAliases implements CompilerPass {
           }
         }
 
-        // TODO(robbyw): Disallow RETURN nodes and THIS nodes.
+        if (n.getType() == Token.RETURN) {
+          report(t, n, GOOG_SCOPE_USES_RETURN);
+        }
+
+        if (n.getType() == Token.THIS) {
+          report(t, n, GOOG_SCOPE_REFERENCES_THIS);
+        }
       }
     }
   }
