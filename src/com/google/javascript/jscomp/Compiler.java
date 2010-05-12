@@ -1045,6 +1045,12 @@ public class Compiler extends AbstractCompiler {
       if (options.manageClosureDependencies) {
         for (CompilerInput input : inputs) {
           input.setCompiler(this);
+
+          // Forward-declare all the provided types, so that they
+          // are not flagged even if they are dropped from the process.
+          for (String provide : input.getProvides()) {
+            getTypeRegistry().forwardDeclareType(provide);
+          }
         }
 
         inputs =

@@ -389,6 +389,14 @@ Class JSDocInfo</H2>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getTypeNodes()">getTypeNodes</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a collection of all type nodes that are a part of this JSDocInfo.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html#getVersion()">getVersion</A></B>()</CODE>
 
@@ -1650,6 +1658,26 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-e
 </DD>
 <DD><DL>
 </DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getTypeNodes()"><!-- --></A><H3>
+getTypeNodes</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&gt; <B>getTypeNodes</B>()</PRE>
+<DL>
+<DD>Returns a collection of all type nodes that are a part of this JSDocInfo.
+ This includes @type, @this, @extends, @implements, @param, @throws,
+ and @return.  Any future type specific JSDoc should make sure to add the
+ appropriate nodes here.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>collection of all type nodes</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->

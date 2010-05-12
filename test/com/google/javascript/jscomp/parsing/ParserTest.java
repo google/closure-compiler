@@ -716,6 +716,10 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("var x = /** @type {void} */ (y);");
   }
 
+  public void testUnfinishedComment() {
+    parseError("/** this is a comment ", "unterminated comment");
+  }
+
   public void testParseBlockDescription() {
     Node n = parse("/** This is a variable. */ var x;");
     Node var = n.getFirstChild();

@@ -901,7 +901,12 @@ public class Node implements Cloneable, Serializable {
         sb.append(getString());
       } else if (type == Token.FUNCTION) {
         sb.append(' ');
-        sb.append(first.getString());
+        // In the case of JsDoc trees, the first child is often not a string
+        // which causes exceptions to be thrown when calling toString or
+        // toStringTree.
+        if (first.getType() == Token.STRING) {
+          sb.append(first.getString());
+        }
       } else if (this instanceof ScriptOrFnNode) {
         ScriptOrFnNode sof = (ScriptOrFnNode) this;
         if (this instanceof FunctionNode) {

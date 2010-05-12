@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -80,10 +81,8 @@ class ScopedAliases implements CompilerPass {
 
     if (!traversal.hasErrors()) {
       // Apply the aliases.
-      for (AliasedNode entry : traversal.getAliasUsages()) {
-        entry.getAliasReference().getParent().replaceChild(
-            entry.getAliasReference(),
-            entry.getAliasDefinition().cloneTree());
+      for (AliasUsage aliasUsage : traversal.getAliasUsages()) {
+        aliasUsage.applyAlias();
       }
 
       // Remove the alias definitions.
@@ -115,7 +114,11 @@ class ScopedAliases implements CompilerPass {
     }
   }
 
-  private class AliasedNode {
+  private interface AliasUsage {
+    public void applyAlias();
+  }
+
+  private class AliasedNode implements AliasUsage {
     private final Node aliasReference;
 
     private final Node aliasDefinition;
@@ -125,14 +128,27 @@ class ScopedAliases implements CompilerPass {
       this.aliasDefinition = aliasDefinition;
     }
 
-    public Node getAliasReference() {
-      return aliasReference;
-    }
-
-    public Node getAliasDefinition() {
-      return aliasDefinition;
+    public void applyAlias() {
+      aliasReference.getParent().replaceChild(
+          aliasReference, aliasDefinition.cloneTree());
     }
   }
+
+  private class AliasedTypeNode implements AliasUsage {
+    private final Node aliasReference;
+
+    private final String correctedType;
+
+    AliasedTypeNode(Node aliasReference, String correctedType) {
+      this.aliasReference = aliasReference;
+      this.correctedType = correctedType;
+    }
+
+    public void applyAlias() {
+      aliasReference.setString(correctedType);
+    }
+  }
+
 
   private class Traversal implements NodeTraversal.ScopedCallback {
     // The job of this class is to collect these three data sets.
@@ -140,7 +156,7 @@ class ScopedAliases implements CompilerPass {
 
     private List<Node> scopeCalls = Lists.newArrayList();
 
-    private List<AliasedNode> aliasUsages = Lists.newArrayList();
+    private List<AliasUsage> aliasUsages = Lists.newArrayList();
 
     // This map is temporary and cleared for each scope.
     private Map<String, Node> aliases = Maps.newHashMap();
@@ -151,7 +167,7 @@ class ScopedAliases implements CompilerPass {
       return aliasDefinitions;
     }
 
-    private List<AliasedNode> getAliasUsages() {
+    private List<AliasUsage> getAliasUsages() {
       return aliasUsages;
     }
 
@@ -222,6 +238,7 @@ class ScopedAliases implements CompilerPass {
         if (n.getType() == Token.NAME && parent.getType() == Token.VAR) {
           if (n.hasChildren() && n.isQualifiedName()) {
             // TODO(robbyw): What other checks go here?
+            // TODO(robbyw): Emit errors about non-alias local variables.
 
             aliases.put(n.getString(), n.getFirstChild());
             aliasDefinitions.add(n);
@@ -262,6 +279,36 @@ class ScopedAliases implements CompilerPass {
         if (n.getType() == Token.THIS) {
           report(t, n, GOOG_SCOPE_REFERENCES_THIS);
         }
+
+        JSDocInfo info = n.getJSDocInfo();
+        if (info != null) {
+          for (Node node : info.getTypeNodes()) {
+            fixTypeNode(node);
+          }
+        }
+
+        // TODO(robbyw): Error for goog.scope not at root.
+      }
+    }
+
+    private void fixTypeNode(Node typeNode) {
+      if (typeNode.getType() == Token.STRING) {
+        String name = typeNode.getString();
+        int endIndex = name.indexOf('.');
+        if (endIndex == -1) {
+          endIndex = name.length();
+        }
+        String baseName = name.substring(0, endIndex);
+        Node aliasedNode = aliases.get(baseName);
+        if (aliasedNode != null) {
+          aliasUsages.add(new AliasedTypeNode(typeNode,
+              aliasedNode.getQualifiedName() + name.substring(endIndex)));
+        }
+      }
+
+      for (Node child = typeNode.getFirstChild(); child != null;
+           child = child.getNext()) {
+        fixTypeNode(child);
       }
     }
   }

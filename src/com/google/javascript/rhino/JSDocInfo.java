@@ -1123,4 +1123,49 @@ public final class JSDocInfo implements Serializable {
     }
     return info.templateTypeName;
   }
+
+  /**
+   * Returns a collection of all type nodes that are a part of this JSDocInfo.
+   * This includes @type, @this, @extends, @implements, @param, @throws,
+   * and @return.  Any future type specific JSDoc should make sure to add the
+   * appropriate nodes here.
+   * @return collection of all type nodes
+   */
+  public Collection<Node> getTypeNodes() {
+    List<Node> nodes = Lists.newArrayList();
+
+    if (type != null) {
+      nodes.add(type.getRoot());
+    }
+
+    if (thisType != null) {
+      nodes.add(thisType.getRoot());
+    }
+
+    if (info != null) {
+      if (info.baseType != null) {
+        nodes.add(info.baseType.getRoot());
+      }
+
+      if (info.implementedInterfaces != null) {
+        for (JSTypeExpression interfaceType : info.implementedInterfaces) {
+          nodes.add(interfaceType.getRoot());
+        }
+      }
+
+      if (info.parameters != null) {
+        for (JSTypeExpression parameterType : info.parameters.values()) {
+          nodes.add(parameterType.getRoot());
+        }
+      }
+
+      if (info.thrownTypes != null) {
+        for (JSTypeExpression thrownType : info.thrownTypes) {
+          nodes.add(thrownType.getRoot());
+        }
+      }
+    }
+
+    return nodes;    
+  }
 }

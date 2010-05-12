@@ -16,6 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Lists;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Node;
+
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Tests for {@link ScopedAliases}
  *
@@ -89,7 +96,151 @@ public class ScopedAliasesTest extends CompilerTestCase {
         "goog.method();g.method();");
   }
 
-  // TODO(robbyw): Test JsDoc aliasing.
+  public void testPropertiesNotChanged() {
+    testScopedNoChanges("var x = goog.dom;", "y.x();");
+  }
+
+  private void testTypes(String aliases, String code) {
+    testScopedNoChanges(aliases, code);
+    Compiler lastCompiler = getLastCompiler();
+    new TypeVerifyingPass(lastCompiler).process(lastCompiler.externsRoot,
+        lastCompiler.jsRoot);
+  }
+
+  public void testJsDocType() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @type {x} */ types.actual;"
+        + "/** @type {goog.Timer} */ types.expected;");
+  }
+
+  public void testJsDocParameter() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @param {x} a */ types.actual;"
+        + "/** @param {goog.Timer} a */ types.expected;");
+  }
+
+  public void testJsDocExtends() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @extends {x} */ types.actual;"
+        + "/** @extends {goog.Timer} */ types.expected;");
+  }
+
+  public void testJsDocImplements() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @implements {x} */ types.actual;"
+        + "/** @implements {goog.Timer} */ types.expected;");
+  }
+
+  public void testJsDocEnum() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @enum {x} */ types.actual;"
+        + "/** @enum {goog.Timer} */ types.expected;");
+  }
+
+  public void testJsDocReturn() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @return {x} */ types.actual;"
+        + "/** @return {goog.Timer} */ types.expected;");
+  }
+
+  public void testJsDocThis() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @this {x} */ types.actual;"
+        + "/** @this {goog.Timer} */ types.expected;");
+  }
+
+  public void testJsDocThrows() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @throws {x} */ types.actual;"
+        + "/** @throws {goog.Timer} */ types.expected;");
+  }
+
+  public void testJsDocSubType() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @type {x.Enum} */ types.actual;"
+        + "/** @type {goog.Timer.Enum} */ types.expected;");
+  }
+
+  public void testJsDocTypedef() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @typedef {x} */ types.actual;"
+        + "/** @typedef {goog.Timer} */ types.expected;");
+  }
+
+  public void testArrayJsDoc() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @type {Array.<x>} */ types.actual;"
+        + "/** @type {Array.<goog.Timer>} */ types.expected;");
+  }
+
+  public void testObjectJsDoc() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @type {{someKey: x}} */ types.actual;"
+        + "/** @type {{someKey: goog.Timer}} */ types.expected;");
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @type {{x: number}} */ types.actual;"
+        + "/** @type {{x: number}} */ types.expected;");
+  }
+
+  public void testUnionJsDoc() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @type {x|Object} */ types.actual;"
+        + "/** @type {goog.Timer|Object} */ types.expected;");
+  }
+
+  public void testFunctionJsDoc() {
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @type {function(x) : void} */ types.actual;"
+        + "/** @type {function(goog.Timer) : void} */ types.expected;");
+    testTypes(
+        "var x = goog.Timer;",
+        ""
+        + "/** @type {function() : x} */ types.actual;"
+        + "/** @type {function() : goog.Timer} */ types.expected;");
+  }
+
+  public void testTestTypes() {
+    try {
+      testTypes(
+          "var x = goog.Timer;",
+          ""
+          + "/** @type {function() : x} */ types.actual;"
+          + "/** @type {function() : wrong.wrong} */ types.expected;");
+      fail("Test types should fail here.");
+    } catch (AssertionError e) {
+    }
+  }
+
   // TODO(robbyw): What if it's recursive?  var goog = goog.dom;
 
   // FAILURE CASES
@@ -139,5 +290,45 @@ public class ScopedAliasesTest extends CompilerTestCase {
   @Override
   protected ScopedAliases getProcessor(Compiler compiler) {
     return new ScopedAliases(compiler);
+  }
+
+  private static class TypeVerifyingPass
+      implements CompilerPass, NodeTraversal.Callback {
+    private final Compiler compiler;
+    private List<String> actualTypes = null;
+
+    public TypeVerifyingPass(Compiler compiler) {
+      this.compiler = compiler;
+    }
+
+    public void process(Node externs, Node root) {
+      NodeTraversal.traverse(compiler, root, this);
+    }
+
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
+        Node parent) {
+      return true;
+    }
+
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null) {
+        Collection<Node> typeNodes = info.getTypeNodes();
+        if (typeNodes.size() > 0) {
+          if (actualTypes != null) {
+            List<String> expectedTypes = Lists.newArrayList();
+            for (Node typeNode : info.getTypeNodes()) {
+              expectedTypes.add(typeNode.toStringTree());
+            }
+            assertEquals(expectedTypes, actualTypes);
+          } else {
+            actualTypes = Lists.newArrayList();
+            for (Node typeNode : info.getTypeNodes()) {
+              actualTypes.add(typeNode.toStringTree());
+            }
+          }
+        }
+      }
+    }
   }
 }
