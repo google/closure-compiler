@@ -28,10 +28,19 @@ import java.util.List;
  */
 public abstract class DiGraph<N, E> extends Graph<N, E> {
 
-  public abstract List<DiGraphNode<N, E>> getDirectedGraphNodes();
+  /**
+   * Gets an immutable iterable over all the nodes in the graph.
+   */
+  public abstract Iterable<DiGraphNode<N, E>> getDirectedGraphNodes();
 
+  /**
+   * Gets an immutable list of out edges of the given node.
+   */
   public abstract List<DiGraphEdge<N, E>> getOutEdges(N nodeValue);
 
+  /**
+   * Gets an immutable list of in edges of the given node.
+   */
   public abstract List<DiGraphEdge<N, E>> getInEdges(N nodeValue);
 
   public abstract List<DiGraphNode<N, E>> getDirectedPredNodes(
@@ -81,6 +90,16 @@ public abstract class DiGraph<N, E> extends Graph<N, E> {
    */
   public abstract boolean isConnectedInDirection(N n1, E edgeValue, N n2);
 
+  @Override
+  public boolean isConnected(N n1, N n2) {
+    return isConnectedInDirection(n1, n2) || isConnectedInDirection(n2, n1);
+  }
+
+  @Override
+  public boolean isConnected(N n1, E e, N n2) {
+    return isConnectedInDirection(n1, e, n2) ||
+        isConnectedInDirection(n2, e, n1);
+  }
 
   /**
    * A generic directed graph node.

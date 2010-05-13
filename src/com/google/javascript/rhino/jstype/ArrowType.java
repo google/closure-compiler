@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
@@ -59,8 +61,12 @@ final class ArrowType extends JSType {
   ArrowType(JSTypeRegistry registry, Node parameters,
       JSType returnType) {
     super(registry);
-    this.parameters = parameters;
-    this.returnType = returnType;
+
+    this.parameters = parameters == null ?
+        registry.createParametersWithVarArgs(getNativeType(UNKNOWN_TYPE)) :
+        parameters;
+    this.returnType = returnType == null ?
+        getNativeType(UNKNOWN_TYPE) : returnType;
   }
 
   @Override
@@ -72,67 +78,57 @@ final class ArrowType extends JSType {
     ArrowType that = (ArrowType) other;
 
     // this.returnType <: that.returnType (covariant)
-    // If the return type is null, this is equivalent to unknown so we do not
-    // base our decision on that.
-    if (this.returnType != null &&
-        that.returnType != null &&
-        !this.returnType.isSubtype(that.returnType)) {
+    if (!this.returnType.isSubtype(that.returnType)) {
       return false;
     }
     // that.paramType[i] <: this.paramType[i] (contravariant)
     // TODO(nicksantos): This is incorrect. It should be invariant.
     // Follow up with closure team on how to fix this without everyone
     // hating on us.
-    //
-    // If the parameter list is null, this is equivalent of ?... so we do not
-    // base our decision on that.
-    if (this.parameters != null && that.parameters != null) {
-      Node thisParam = parameters.getFirstChild();
-      Node thatParam = that.parameters.getFirstChild();
-      while (thisParam != null && thatParam != null) {
-        JSType thisParamType = thisParam.getJSType();
-        if (thisParamType != null) {
-          JSType thatParamType = thatParam.getJSType();
-          if (thatParamType == null ||
-              !thatParamType.isSubtype(thisParamType)) {
-            return false;
-          }
-        }
-        boolean thisIsVarArgs = thisParam.isVarArgs();
-        boolean thatIsVarArgs = thatParam.isVarArgs();
-        // don't advance if we have variable arguments
-        if (!thisIsVarArgs) {
-          thisParam = thisParam.getNext();
-        }
-        if (!thatIsVarArgs) {
-          thatParam = thatParam.getNext();
-        }
-        // both var_args indicates the end
-        if (thisIsVarArgs && thatIsVarArgs) {
-          thisParam = null;
-          thatParam = null;
+    Node thisParam = parameters.getFirstChild();
+    Node thatParam = that.parameters.getFirstChild();
+    while (thisParam != null && thatParam != null) {
+      JSType thisParamType = thisParam.getJSType();
+      if (thisParamType != null) {
+        JSType thatParamType = thatParam.getJSType();
+        if (thatParamType == null ||
+            !thatParamType.isSubtype(thisParamType)) {
+          return false;
         }
       }
-
-      // Right now, the parser's type system doesn't have a good way
-      // to model optional arguments.
-      //
-      // Suppose we have
-      // function f(number, number) {}
-      // function g(number) {}
-      // If the second arg of f is optional, then f is a subtype of g,
-      // but g is not a subtype of f.
-      // If the second arg of f is required, then g is a subtype of f,
-      // but f is not a subtype of g.
-      //
-      // Until we model optional params, let's just punt on this.
-      // If one type has more arguments than the other, we won't check them.
-      //
-      // NOTE(nicksantos): This is described in Draft 2 of the ES4 spec,
-      // Section 3.4.6: Subtyping Function Types. It seems really
-      // strange but I haven't thought a lot about the implementation.
+      boolean thisIsVarArgs = thisParam.isVarArgs();
+      boolean thatIsVarArgs = thatParam.isVarArgs();
+      // don't advance if we have variable arguments
+      if (!thisIsVarArgs) {
+        thisParam = thisParam.getNext();
+      }
+      if (!thatIsVarArgs) {
+        thatParam = thatParam.getNext();
+      }
+      // both var_args indicates the end
+      if (thisIsVarArgs && thatIsVarArgs) {
+        thisParam = null;
+        thatParam = null;
+      }
     }
 
+    // Right now, the parser's type system doesn't have a good way
+    // to model optional arguments.
+    //
+    // Suppose we have
+    // function f(number, number) {}
+    // function g(number) {}
+    // If the second arg of f is optional, then f is a subtype of g,
+    // but g is not a subtype of f.
+    // If the second arg of f is required, then g is a subtype of f,
+    // but f is not a subtype of g.
+    //
+    // Until we model optional params, let's just punt on this.
+    // If one type has more arguments than the other, we won't check them.
+    //
+    // NOTE(nicksantos): This is described in Draft 2 of the ES4 spec,
+    // Section 3.4.6: Subtyping Function Types. It seems really
+    // strange but I haven't thought a lot about the implementation.
     return true;
   }
 
@@ -143,25 +139,10 @@ final class ArrowType extends JSType {
       return false;
     }
     ArrowType that = (ArrowType) object;
-    // if both return types are specified, then they should be equal
-    if (returnType == null) {
-      if (that.returnType != null) {
-        return false;
-      }
-    } else {
-      if (that.returnType == null) {
-        return false;
-      }
-      if (!returnType.equals(that.returnType)) {
-        return false;
-      }
-    }
-    // if both types include parameters, the lists should be the same
-    if (parameters == null) {
-      return that.parameters == null;
-    } else if (that.parameters == null) {
+    if (!returnType.equals(that.returnType)) {
       return false;
     }
+
     Node thisParam = parameters.getFirstChild();
     Node otherParam = that.parameters.getFirstChild();
     while (thisParam != null && otherParam != null) {

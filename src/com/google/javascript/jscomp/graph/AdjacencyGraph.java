@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.graph;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * A minimal graph interface.  Provided is add nodes to the graph, adjacency
@@ -31,8 +31,8 @@ import java.util.List;
  * @see Graph
  */
 public interface AdjacencyGraph<N, E> {
-  /** Gets a mutable list of all nodes. */
-  List<GraphNode<N, E>> getNodes();
+  /** Gets an immutable list of all nodes. */
+  Collection<GraphNode<N, E>> getNodes();
 
   /**
    * Gets a node from the graph given a value. Values equality are compared

@@ -564,7 +564,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
             config.outputWrapperMarker);
 
         // Output the source map if requested.
-        outputSourceMap(options, options.jsOutputFile);
+        outputSourceMap(options);
       } else {
         String moduleFilePrefix = config.moduleOutputPathPrefix;
         maybeCreateDirsForPath(moduleFilePrefix);
@@ -577,13 +577,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         PrintStream mapOut = null;
 
         if (!shouldGenerateMapPerModule(options)) {
-          mapOut = openSourceMapStream(options, moduleFilePrefix);
+          mapOut = toPrintStream(expandSourceMapPath(options, null));
         }
 
         for (JSModule m : modules) {
           if (shouldGenerateMapPerModule(options)) {
-            mapOut = openSourceMapStream(
-                options, moduleFilePrefix + m.getName() + ".js");
+            mapOut = toPrintStream(expandSourceMapPath(options, m));
           }
 
           PrintStream ps =
@@ -688,33 +687,50 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Returns a stream to give to an instance of the SourceMap class to which it
-   * can append the source map. If no source mapping was specified in the
-   * options, this method returns null.
+   * Expand a file path specified on the command-line.
    *
-   * @param options The options to the Compiler.
-   * @param path The directory or a file in the directory in which to place the
-   *        source map.
+   * Most file paths on the command-line allow an %outname% placeholder.
+   * The placeholder will expand to a different value depending on
+   * the current output mode. There are three scenarios:
+   *
+   * 1) Single js output, single extra output: sub in jsOutputPath.
+   * 2) Multiple js output, single extra output: sub in the base module name.
+   * 3) Multiple js output, multiple extra output: sub in the module output file.
+   *
+   * Passing a JSModule to this function automatically triggers case #3.
+   * Otherwise, we'll use strategy #1 or #2 based on the current output mode.
    */
-  private PrintStream openSourceMapStream(B options, String path)
-      throws IOException {
-    if (options.sourceMapOutputPath == null) {
+  private String expandCommandLinePath(
+      String path, JSModule forModule) {
+    String sub;
+    if (forModule != null) {
+      sub = config.moduleOutputPathPrefix + forModule.getName() + ".js";
+    } else if (!config.module.isEmpty()) {
+      sub = config.moduleOutputPathPrefix;
+    } else {
+      sub = config.jsOutputFile;
+    }
+    return path.replace("%outname%", sub);
+  }
+
+  /** Expansion function for source map. */
+  @VisibleForTesting
+  String expandSourceMapPath(B options, JSModule forModule) {
+    if (Strings.isEmpty(options.sourceMapOutputPath)) {
       return null;
     }
+    return expandCommandLinePath(options.sourceMapOutputPath, forModule);
+  }
 
-    String sourceMapPath = options.sourceMapOutputPath;
-    sourceMapPath = sourceMapPath.replace("%outname%", path);
-
-    String mapPath = null;
-
-    if (sourceMapPath.contains("/") || sourceMapPath.contains("\\")) {
-      mapPath = sourceMapPath;
-    } else {
-      File outputFile = new File(path);
-      mapPath = outputFile.getParent() + File.separatorChar + sourceMapPath;
+  /**
+   * Coverts a file name into a print stream.
+   * Returns null if the file name is null.
+   */
+  private PrintStream toPrintStream(String fileName) throws IOException {
+    if (fileName == null) {
+      return null;
     }
-
-    return new PrintStream(new FileOutputStream(mapPath));
+    return new PrintStream(new FileOutputStream(fileName));
   }
 
   /**
@@ -725,15 +741,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param path The path of the generated file for which the source map was
    *        created.
    */
-  private void outputSourceMap(B options, String path)
+  private void outputSourceMap(B options)
       throws IOException {
-    if (options.sourceMapOutputPath == null) {
+    if (Strings.isEmpty(options.sourceMapOutputPath)) {
       return;
     }
 
-    File outputFile = new File(path);
-    PrintStream out = openSourceMapStream(options, path);
-    compiler.getSourceMap().appendTo(out, outputFile.getName());
+    String outName = expandSourceMapPath(options, null);
+    PrintStream out = toPrintStream(outName);
+    compiler.getSourceMap().appendTo(out, outName);
     out.close();
   }
 

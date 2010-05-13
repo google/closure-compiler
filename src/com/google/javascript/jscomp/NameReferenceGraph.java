@@ -64,8 +64,8 @@ class NameReferenceGraph extends
 
   // This is the key result of the name graph. Given a node in the AST, this map
   // will give us the Reference edges. For example a CALL node will map to a
-  // list of possible call edge.
-  private final Multimap<Node, DiGraphEdge<Name, Reference>>
+  // list of possible call edge destinations.
+  private final Multimap<Node, Name>
       referenceMap = HashMultimap.create();
 
   // Given a qualified name, provides the Name object.
@@ -122,8 +122,7 @@ class NameReferenceGraph extends
     Preconditions.checkArgument(
         NodeUtil.isGetProp(site) || NodeUtil.isName(site));
     List<Name> result = new ArrayList<Name>();
-    for (DiGraphEdge<Name, Reference> edge : referenceMap.get(site)) {
-      Name target = edge.getDestination().getValue();
+    for (Name target : referenceMap.get(site)) {
       result.add(target);
     }
     return result;
@@ -164,11 +163,9 @@ class NameReferenceGraph extends
   }
 
   @Override
-  public GraphEdge<Name, Reference> connect(Name src, Reference ref,
-      Name dest) {
-    GraphEdge<Name, Reference> edge = super.connect(src, ref, dest);
-    referenceMap.put(ref.site, (DiGraphEdge<Name, Reference>) edge);
-    return edge;
+  public void connect(Name src, Reference ref, Name dest) {
+    super.connect(src, ref, dest);
+    referenceMap.put(ref.site, dest);
   }
 
   /**

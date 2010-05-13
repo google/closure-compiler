@@ -1318,7 +1318,8 @@ public class ControlFlowAnalysisTest extends TestCase {
    */
   private void assertNodeOrder(ControlFlowGraph<Node> cfg,
       List<Integer> nodeTypes) {
-    List<DiGraphNode<Node, Branch>> cfgNodes = cfg.getDirectedGraphNodes();
+    List<DiGraphNode<Node, Branch>> cfgNodes =
+        Lists.newArrayList(cfg.getDirectedGraphNodes());
     Collections.sort(cfgNodes, cfg.getOptionalNodeComparator(true));
 
     // IMPLICIT RETURN must always be last.

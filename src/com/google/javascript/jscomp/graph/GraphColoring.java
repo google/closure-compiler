@@ -131,7 +131,7 @@ public abstract class GraphColoring<N, E> {
     @Override
     public int color() {
       graph.clearNodeAnnotations();
-      List<GraphNode<N, E>> worklist = graph.getNodes();
+      List<GraphNode<N, E>> worklist = Lists.newArrayList(graph.getNodes());
 
       // Sort nodes by degree.
       Collections.sort(worklist, new Comparator<GraphNode<N, E>>() {
@@ -143,7 +143,6 @@ public abstract class GraphColoring<N, E> {
               tieBreaker.compare(o1.getValue(), o2.getValue()) : result;
         }
       });
-      worklist = Lists.newLinkedList(worklist);
 
       // Idea: From the highest to lowest degree, assign any uncolored node with
       // a unique color if none of its neighbor has been assigned that color.

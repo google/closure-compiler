@@ -93,10 +93,10 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     // careful when something is exported. Liveness uses bit-vector for live
     // sets so I don't see compilation time will be a problem for running this
     // pass in the global scope.
-    Scope scope = t.getScope();
-    if (scope.isGlobal()) {
+    if (t.inGlobalScope()) {
       return;
     }
+    Scope scope = t.getScope();
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
 
     LiveVariablesAnalysis liveness =

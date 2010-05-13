@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.List;
 
 /**
  * Removes local variable assignments that are useless based on information from
@@ -95,7 +94,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
    */
   private void tryRemoveDeadAssignments(NodeTraversal t,
       ControlFlowGraph<Node> cfg) {
-    List<DiGraphNode<Node, Branch>> nodes = cfg.getDirectedGraphNodes();
+    Iterable<DiGraphNode<Node, Branch>> nodes = cfg.getDirectedGraphNodes();
 
     for (DiGraphNode<Node, Branch> cfgNode : nodes) {
       FlowState<LiveVariableLattice> state =

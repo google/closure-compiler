@@ -22,6 +22,8 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -52,24 +54,13 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public GraphEdge<N, E> connect(N srcValue, E edgeValue, N destValue) {
-    DiGraphNode<N, E> node = getDirectedGraphNode(srcValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          srcValue + " does not exist in graph");
-    }
-    LinkedDirectedGraphNode<N, E> src = (LinkedDirectedGraphNode<N, E>) node;
-    node = getDirectedGraphNode(destValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          destValue + " does not exist in graph");
-    }
-    LinkedDirectedGraphNode<N, E> dest = (LinkedDirectedGraphNode<N, E>) node;
+  public void connect(N srcValue, E edgeValue, N destValue) {
+    LinkedDirectedGraphNode<N, E> src = getNodeOrFail(srcValue);
+    LinkedDirectedGraphNode<N, E> dest = getNodeOrFail(destValue);
     LinkedDirectedGraphEdge<N, E> edge =
         new LinkedDirectedGraphEdge<N, E>(src, edgeValue, dest);
     src.getOutEdges().add(edge);
     dest.getInEdges().add(edge);
-    return edge;
   }
 
   @Override
@@ -77,21 +68,11 @@ public class LinkedDirectedGraph<N, E>
     disconnectInDirection(n1, n2);
     disconnectInDirection(n2, n1);
   }
-  
+
   @Override
   public void disconnectInDirection(N srcValue, N destValue) {
-    DiGraphNode<N, E> node = getDirectedGraphNode(srcValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          srcValue + " does not exist in graph");
-    }
-    LinkedDirectedGraphNode<N, E> src = (LinkedDirectedGraphNode<N, E>) node;
-    node = getDirectedGraphNode(destValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          destValue + " does not exist in graph");
-    }
-    LinkedDirectedGraphNode<N, E> dest = (LinkedDirectedGraphNode<N, E>) node;
+    LinkedDirectedGraphNode<N, E> src = getNodeOrFail(srcValue);
+    LinkedDirectedGraphNode<N, E> dest = getNodeOrFail(destValue);
     for (DiGraphEdge<?, E> edge : getDirectedGraphEdges(srcValue, destValue)) {
       src.getOutEdges().remove(edge);
       dest.getInEdges().remove(edge);
@@ -99,10 +80,9 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public List<DiGraphNode<N, E>> getDirectedGraphNodes() {
-    List<DiGraphNode<N, E>> nodeList = Lists.newArrayList();
-    nodeList.addAll(nodes.values());
-    return nodeList;
+  public Iterable<DiGraphNode<N, E>> getDirectedGraphNodes() {
+    return Collections.<DiGraphNode<N, E>>unmodifiableCollection(
+        nodes.values());
   }
 
   @Override
@@ -117,31 +97,14 @@ public class LinkedDirectedGraph<N, E>
 
   @Override
   public List<DiGraphEdge<N, E>> getInEdges(N nodeValue) {
-    LinkedDirectedGraphNode<N, E> node = nodes.get(nodeValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          nodeValue + " does not exist in graph");
-    }
-    List<DiGraphEdge<N, E>> edgeList = Lists.newArrayList();
-    for (DiGraphEdge<N, E> edge : node.getInEdges()) {
-      edgeList.add(edge);
-    }
-
-    return edgeList;
+    LinkedDirectedGraphNode<N, E> node = getNodeOrFail(nodeValue);
+    return Collections.<DiGraphEdge<N, E>>unmodifiableList(node.getInEdges());
   }
 
   @Override
   public List<DiGraphEdge<N, E>> getOutEdges(N nodeValue) {
-    LinkedDirectedGraphNode<N, E> node = nodes.get(nodeValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          nodeValue + " does not exist in graph");
-    }
-    List<DiGraphEdge<N, E>> edgeList = Lists.newArrayList();
-    for (DiGraphEdge<N, E> edge : node.getOutEdges()) {
-      edgeList.add(edge);
-    }
-    return edgeList;
+    LinkedDirectedGraphNode<N, E> node = getNodeOrFail(nodeValue);
+    return Collections.<DiGraphEdge<N, E>>unmodifiableList(node.getOutEdges());
   }
 
   @Override
@@ -174,14 +137,8 @@ public class LinkedDirectedGraph<N, E>
 
   @Override
   public List<DiGraphEdge<N, E>> getDirectedGraphEdges(N n1, N n2) {
-    DiGraphNode<N, E> dNode1 = nodes.get(n1);
-    if (dNode1 == null) {
-      throw new IllegalArgumentException(n1 + " does not exist in graph");
-    }
-    DiGraphNode<N, E> dNode2 = nodes.get(n2);
-    if (dNode2 == null) {
-      throw new IllegalArgumentException(n1 + " does not exist in graph");
-    }
+    DiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
+    DiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
     List<DiGraphEdge<N, E>> edges = Lists.newArrayList();
     for (DiGraphEdge<N, E> outEdge : dNode1.getOutEdges()) {
       if (outEdge.getDestination() == dNode2) {
@@ -203,15 +160,8 @@ public class LinkedDirectedGraph<N, E>
 
   private boolean isConnectedInDirection(N n1, Predicate<E> edgeMatcher, N n2) {
     // Verify the nodes.
-    DiGraphNode<N, E> dNode1 = nodes.get(n1);
-    if (dNode1 == null) {
-      throw new IllegalArgumentException(n1 + " does not exist in graph");
-    }
-    DiGraphNode<N, E> dNode2 = nodes.get(n2);
-    if (dNode2 == null) {
-      throw new IllegalArgumentException(n1 + " does not exist in graph");
-    }
-
+    DiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
+    DiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
     for (DiGraphEdge<N, E> outEdge : dNode1.getOutEdges()) {
       if (outEdge.getDestination() == dNode2 &&
           edgeMatcher.apply(outEdge.getValue())) {
@@ -259,11 +209,6 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public boolean isConnected(N n1, N n2) {
-    return isConnectedInDirection(n1, n2) || isConnectedInDirection(n2, n1);
-  }
-
-  @Override
   public List<GraphvizEdge> getGraphvizEdges() {
     List<GraphvizEdge> edgeList = Lists.newArrayList();
     for (LinkedDirectedGraphNode<N, E> node : nodes.values()) {
@@ -295,10 +240,8 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public List<GraphNode<N, E>> getNodes() {
-    List<GraphNode<N, E>> list = Lists.newArrayList();
-    list.addAll(nodes.values());
-    return list;
+  public Collection<GraphNode<N, E>> getNodes() {
+    return Collections.<GraphNode<N, E>>unmodifiableCollection(nodes.values());
   }
 
   @Override
@@ -322,7 +265,7 @@ public class LinkedDirectedGraph<N, E>
     Preconditions.checkNotNull(node);
     return node.neighborIterator();
   }
-  
+
   @Override
   public List<GraphEdge<N, E>> getEdges() {
     List<GraphEdge<N, E>> result = Lists.newArrayList();
@@ -331,15 +274,12 @@ public class LinkedDirectedGraph<N, E>
         result.add(edge);
       }
     }
-    return result;
+    return Collections.unmodifiableList(result);
   }
 
   @Override
   public int getNodeDegree(N value) {
-    DiGraphNode<N, E> node = getDirectedGraphNode(value);
-    if (node == null) {
-      throw new IllegalArgumentException(value + " not found in graph");
-    }
+    DiGraphNode<N, E> node = getNodeOrFail(value);
     return node.getInEdges().size() + node.getOutEdges().size();
   }
 
@@ -350,8 +290,8 @@ public class LinkedDirectedGraph<N, E>
   static class LinkedDirectedGraphNode<N, E> implements DiGraphNode<N, E>,
       GraphvizNode {
 
-    protected List<DiGraphEdge<N, E>> inEdgeList = Lists.newArrayList();
-    protected List<DiGraphEdge<N, E>> outEdgeList =
+    List<DiGraphEdge<N, E>> inEdgeList = Lists.newArrayList();
+    List<DiGraphEdge<N, E>> outEdgeList =
         Lists.newArrayList();
 
     protected final N value;
@@ -367,7 +307,7 @@ public class LinkedDirectedGraph<N, E>
      *
      * @param nodeValue Node's value.
      */
-    public LinkedDirectedGraphNode(N nodeValue) {
+    LinkedDirectedGraphNode(N nodeValue) {
       this.value = nodeValue;
       this.id = totalNodes++;
     }
@@ -417,13 +357,13 @@ public class LinkedDirectedGraph<N, E>
     public List<DiGraphEdge<N, E>> getOutEdges() {
       return outEdgeList;
     }
-    
+
     private Iterator<GraphNode<N, E>> neighborIterator() {
       return new NeighborIterator();
     }
-    
+
     private class NeighborIterator implements Iterator<GraphNode<N, E>> {
-      
+
       private final Iterator<DiGraphEdge<N, E>> in = inEdgeList.iterator();
       private final Iterator<DiGraphEdge<N, E>> out = outEdgeList.iterator();
 
@@ -467,7 +407,7 @@ public class LinkedDirectedGraph<N, E>
      *
      * @param edgeValue Edge Value.
      */
-    public LinkedDirectedGraphEdge(DiGraphNode<N, E> sourceNode,
+    LinkedDirectedGraphEdge(DiGraphNode<N, E> sourceNode,
         E edgeValue, DiGraphNode<N, E> destNode) {
       this.value = edgeValue;
       this.sourceNode = sourceNode;

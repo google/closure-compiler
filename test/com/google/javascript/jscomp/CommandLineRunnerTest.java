@@ -33,6 +33,7 @@ import java.util.List;
 public class CommandLineRunnerTest extends TestCase {
 
   private Compiler lastCompiler = null;
+  private CommandLineRunner lastCommandLineRunner = null;
 
   // If set to true, uses comparison by string instead of by AST.
   private boolean useStringComparison = false;
@@ -321,6 +322,35 @@ public class CommandLineRunnerTest extends TestCase {
          RhinoErrorReporter.PARSE_ERROR);
   }
 
+  public void testSourceMapExpansion1() {
+    args.add("--create_source_map=%outname%.map");
+    testSame("var x = 3;");
+    assertEquals("/path/to/out.js.map",
+        lastCommandLineRunner.expandSourceMapPath(
+            lastCompiler.getOptions(), null));
+  }
+
+  public void testSourceMapExpansion2() {
+    useModules = true;
+    args.add("--create_source_map=%outname%.map");
+    args.add("--module_output_path_prefix=foo");
+    testSame(new String[] {"var x = 3;", "var y = 5;"});
+    assertEquals("foo.map",
+        lastCommandLineRunner.expandSourceMapPath(
+            lastCompiler.getOptions(), null));
+  }
+
+  public void testSourceMapExpansion3() {
+    useModules = true;
+    args.add("--create_source_map=%outname%.map");
+    args.add("--module_output_path_prefix=foo_");
+    testSame(new String[] {"var x = 3;", "var y = 5;"});
+    assertEquals("foo_m0.js.map",
+        lastCommandLineRunner.expandSourceMapPath(
+            lastCompiler.getOptions(),
+            lastCompiler.getModuleGraph().getRootModule()));
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
@@ -401,9 +431,22 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   private Compiler compile(String[] original) {
+    args.add("--js_output_file");
+    args.add("/path/to/out.js");
+
+    for (int i = 0; i < original.length; i++) {
+      args.add("--js");
+      args.add("/path/to/input" + i + ".js");
+      if (useModules) {
+        args.add("--module");
+        args.add("mod" + i + ":1" + (i > 0 ? (":mod" + (i - 1)) : ""));
+      }
+    }
+
     String[] argStrings = args.toArray(new String[] {});
     CommandLineRunner runner = new CommandLineRunner(argStrings);
     Compiler compiler = runner.createCompiler();
+    lastCommandLineRunner = runner;
     lastCompiler = compiler;
     CompilerOptions options = runner.createOptions();
     try {

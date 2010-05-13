@@ -17,9 +17,13 @@
 package com.google.javascript.jscomp.graph;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -43,46 +47,20 @@ public class LinkedUndirectedGraph<N, E>
   }
 
   @Override
-  public GraphEdge<N, E> connect(N srcValue, E edgeValue, N destValue) {
-    UndiGraphNode<N, E> node = getUndirectedGraphNode(srcValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          srcValue + " does not exist in graph");
-    }
-    LinkedUndirectedGraphNode<N, E> src =
-        (LinkedUndirectedGraphNode<N, E>) node;
-    node = getUndirectedGraphNode(destValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          destValue + " does not exist in graph");
-    }
-    LinkedUndirectedGraphNode<N, E> dest =
-        (LinkedUndirectedGraphNode<N, E>) node;
+  public void connect(N srcValue, E edgeValue, N destValue) {
+    LinkedUndirectedGraphNode<N, E> src = getNodeOrFail(srcValue);
+    LinkedUndirectedGraphNode<N, E> dest = getNodeOrFail(destValue);
     LinkedUndirectedGraphEdge<N, E> edge =
         new LinkedUndirectedGraphEdge<N, E>(src, edgeValue, dest);
     src.getNeighborEdges().add(edge);
     dest.getNeighborEdges().add(edge);
-    return edge;
   }
 
   @Override
   public void disconnect(N srcValue, N destValue) {
-    UndiGraphNode<N, E> node = getUndirectedGraphNode(srcValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          srcValue + " does not exist in graph");
-    }
-    LinkedUndirectedGraphNode<N, E> src = 
-      (LinkedUndirectedGraphNode<N, E>) node;
-    node = getUndirectedGraphNode(destValue);
-    if (node == null) {
-      throw new IllegalArgumentException(
-          destValue + " does not exist in graph");
-    }
-    LinkedUndirectedGraphNode<N, E> dest = 
-      (LinkedUndirectedGraphNode<N, E>) node;
-
-    for (UndiGraphEdge<N, E> edge : 
+    LinkedUndirectedGraphNode<N, E> src = getNodeOrFail(srcValue);
+    LinkedUndirectedGraphNode<N, E> dest = getNodeOrFail(destValue);
+    for (UndiGraphEdge<N, E> edge :
       getUndirectedGraphEdges(srcValue, destValue)) {
       src.getNeighborEdges().remove(edge);
       dest.getNeighborEdges().remove(edge);
@@ -110,7 +88,7 @@ public class LinkedUndirectedGraph<N, E>
     }
     return nodeList;
   }
-  
+
   @Override
   public Iterator<GraphNode<N, E>> getNeighborNodesIterator(N value) {
     UndiGraphNode<N, E> uNode = getUndirectedGraphNode(value);
@@ -144,10 +122,9 @@ public class LinkedUndirectedGraph<N, E>
   }
 
   @Override
-  public List<UndiGraphNode<N, E>> getUndirectedGraphNodes() {
-    List<UndiGraphNode<N, E>> nodeList = Lists.newArrayList();
-    nodeList.addAll(nodes.values());
-    return nodeList;
+  public Collection<UndiGraphNode<N, E>> getUndirectedGraphNodes() {
+    return Collections.<UndiGraphNode<N, E>>unmodifiableCollection(
+        nodes.values());
   }
 
   @Override
@@ -157,9 +134,8 @@ public class LinkedUndirectedGraph<N, E>
 
   @Override
   public List<GraphEdge<N, E>> getEdges(N n1, N n2) {
-    List<GraphEdge<N, E>> result = Lists.newArrayList();
-    result.addAll(getUndirectedGraphEdges(n1, n2));
-    return result;
+    return Collections.<GraphEdge<N, E>>unmodifiableList(
+        getUndirectedGraphEdges(n1, n2));
   }
 
   @Override
@@ -169,6 +145,15 @@ public class LinkedUndirectedGraph<N, E>
 
   @Override
   public boolean isConnected(N n1, N n2) {
+    return isConnected(n1, Predicates.<E>alwaysTrue(), n2);
+  }
+
+  @Override
+  public boolean isConnected(N n1, E e, N n2) {
+    return isConnected(n1, Predicates.<E>equalTo(e), n2);
+  }
+
+  private boolean isConnected(N n1, Predicate<E> edgePredicate, N n2) {
     UndiGraphNode<N, E> dNode1 = nodes.get(n1);
     if (dNode1 == null) {
       return false;
@@ -180,7 +165,9 @@ public class LinkedUndirectedGraph<N, E>
     for (UndiGraphEdge<N, E> outEdge : dNode1.getNeighborEdges()) {
       if ((outEdge.getNodeA() == dNode1 && outEdge.getNodeB() == dNode2) ||
           (outEdge.getNodeA() == dNode2 && outEdge.getNodeB() == dNode1)) {
-        return true;
+        if (edgePredicate.apply(outEdge.getValue())) {
+          return true;
+        }
       }
     }
     return false;
@@ -220,10 +207,8 @@ public class LinkedUndirectedGraph<N, E>
   }
 
   @Override
-  public List<GraphNode<N, E>> getNodes() {
-    List<GraphNode<N, E>> list = Lists.newArrayList();
-    list.addAll(nodes.values());
-    return list;
+  public Collection<GraphNode<N, E>> getNodes() {
+    return Collections.<GraphNode<N, E>> unmodifiableCollection(nodes.values());
   }
 
   @SuppressWarnings("unchecked")
@@ -248,7 +233,7 @@ public class LinkedUndirectedGraph<N, E>
     }
     return uNode.getNeighborEdges().size();
   }
-  
+
   /**
    * An undirected graph node that stores outgoing edges and incoming edges as
    * an list within the node itself.
@@ -303,13 +288,13 @@ public class LinkedUndirectedGraph<N, E>
     public String getLabel() {
       return value != null ? value.toString() : "null";
     }
-    
+
     public Iterator<GraphNode<N, E>> neighborIterator() {
       return new NeighborIterator();
     }
 
     private class NeighborIterator implements Iterator<GraphNode<N, E>> {
-      
+
       private final Iterator<UndiGraphEdge<N, E>> edgeIterator =
           neighborList.iterator();
 
@@ -334,7 +319,7 @@ public class LinkedUndirectedGraph<N, E>
       }
     }
   }
-  
+
   /**
    * An undirected graph edge that stores two nodes at each edge.
    */
@@ -407,4 +392,3 @@ public class LinkedUndirectedGraph<N, E>
     }
   }
 }
-

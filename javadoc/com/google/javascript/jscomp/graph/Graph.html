@@ -195,7 +195,7 @@ The base generic class for graph-like data structure and algorithms in
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>abstract &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;</CODE></FONT></TD>
+<CODE>abstract &nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)">connect</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n1,
         <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&nbsp;edge,
         <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n2)</CODE>
@@ -237,7 +237,7 @@ The base generic class for graph-like data structure and algorithms in
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges()">getEdges</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a mutable list of all edges.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets an immutable list of all edges.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -274,11 +274,11 @@ The base generic class for graph-like data structure and algorithms in
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>abstract &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;&gt;</CODE></FONT></TD>
+<CODE>abstract &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodes()">getNodes</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a mutable list of all nodes.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets an immutable list of all nodes.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -296,6 +296,17 @@ The base generic class for graph-like data structure and algorithms in
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether the node exists in the graph (<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#createNode(N)"><CODE>createNode(Object)</CODE></A>
  has been called with that value).</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>abstract &nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, E, N)">isConnected</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n1,
+            <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&nbsp;e,
+            <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether two nodes in the graph are connected by the given
+ edge type.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -392,9 +403,9 @@ public <B>Graph</B>()</PRE>
 <A NAME="connect(java.lang.Object,java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="connect(N, E, N)"><!-- --></A><H3>
 connect</H3>
 <PRE>
-public abstract <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt; <B>connect</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n1,
-                                             <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&nbsp;edge,
-                                             <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n2)</PRE>
+public abstract void <B>connect</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n1,
+                             <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&nbsp;edge,
+                             <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n2)</PRE>
 <DL>
 <DD>Connects two nodes in the graph with an edge.
 <P>
@@ -402,8 +413,7 @@ public abstract <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph
 </DL>
 </DD>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>n1</CODE> - First node.<DD><CODE>edge</CODE> - The edge.<DD><CODE>n2</CODE> - Second node.
-<DT><B>Returns:</B><DD>The newly created graph edge.</DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - First node.<DD><CODE>edge</CODE> - The edge.<DD><CODE>n2</CODE> - Second node.</DL>
 </DD>
 </DL>
 <HR>
@@ -466,9 +476,9 @@ public abstract <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph
 <A NAME="getNodes()"><!-- --></A><H3>
 getNodes</H3>
 <PRE>
-public abstract <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;&gt; <B>getNodes</B>()</PRE>
+public abstract <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;&gt; <B>getNodes</B>()</PRE>
 <DL>
-<DD>Gets a mutable list of all nodes.
+<DD>Gets an immutable list of all nodes.
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/AdjacencyGraph.html#getNodes()">getNodes</A></CODE> in interface <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/AdjacencyGraph.html" title="interface in com.google.javascript.jscomp.graph">AdjacencyGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;</CODE></DL>
@@ -484,7 +494,7 @@ getEdges</H3>
 <PRE>
 public abstract <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&gt;&gt; <B>getEdges</B>()</PRE>
 <DL>
-<DD>Gets a mutable list of all edges.
+<DD>Gets an immutable list of all edges.
 <P>
 <DD><DL>
 </DL>
@@ -611,6 +621,25 @@ public abstract boolean <B>isConnected</B>(<A HREF="../../../../../com/google/ja
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node 1.<DD><CODE>n2</CODE> - Node 2.
 <DT><B>Returns:</B><DD><code>true</code> if the two nodes are connected.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isConnected(java.lang.Object,java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="isConnected(N, E, N)"><!-- --></A><H3>
+isConnected</H3>
+<PRE>
+public abstract boolean <B>isConnected</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n1,
+                                    <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">E</A>&nbsp;e,
+                                    <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="type parameter in Graph">N</A>&nbsp;n2)</PRE>
+<DL>
+<DD>Checks whether two nodes in the graph are connected by the given
+ edge type.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node 1.<DD><CODE>e</CODE> - The edge type.<DD><CODE>n2</CODE> - Node 2.</DL>
 </DD>
 </DL>
 <HR>

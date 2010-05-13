@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.graph;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -26,7 +27,10 @@ import java.util.List;
  */
 public abstract class UndiGraph<N, E> extends Graph<N, E> {
 
-  abstract List<UndiGraphNode<N, E>> getUndirectedGraphNodes();
+  /**
+   * Gets an immutable collection of all the nodes in this graph.
+   */
+  abstract Collection<UndiGraphNode<N, E>> getUndirectedGraphNodes();
 
   abstract UndiGraphNode<N, E> createUndirectedGraphNode(N nodeValue);
 

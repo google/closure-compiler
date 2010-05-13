@@ -2435,7 +2435,7 @@ Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascr
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/DiGraph.html#getDirectedGraphNodes()"><B>getDirectedGraphNodes()</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>
-<DD>&nbsp;
+<DD>Gets an immutable iterable over all the nodes in the graph.
 <DT><A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#getDirectedGraphNodes()"><B>getDirectedGraphNodes()</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>
 <DD>&nbsp;
@@ -2474,7 +2474,7 @@ Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhi
 <DD>Can only be called when <tt>getType() == TokenStream.NUMBER</tt>
 <DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#getEdges()"><B>getEdges()</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>
-<DD>Gets a mutable list of all edges.
+<DD>Gets an immutable list of all edges.
 <DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#getEdges(N, N)"><B>getEdges(N, N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>
 <DD>Retrieves an edge from the graph.
@@ -2737,7 +2737,7 @@ Method in interface com.google.javascript.jscomp.graph.<A HREF="./com/google/jav
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/DiGraph.html#getInEdges(N)"><B>getInEdges(N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>
-<DD>&nbsp;
+<DD>Gets an immutable list of in edges of the given node.
 <DT><A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#getInEdges(N)"><B>getInEdges(N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>
 <DD>&nbsp;
@@ -3100,10 +3100,10 @@ Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascr
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/AdjacencyGraph.html#getNodes()"><B>getNodes()</B></A> - 
 Method in interface com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/AdjacencyGraph.html" title="interface in com.google.javascript.jscomp.graph">AdjacencyGraph</A>
-<DD>Gets a mutable list of all nodes.
+<DD>Gets an immutable list of all nodes.
 <DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#getNodes()"><B>getNodes()</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>
-<DD>Gets a mutable list of all nodes.
+<DD>Gets an immutable list of all nodes.
 <DT><A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#getNodes()"><B>getNodes()</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>
 <DD>&nbsp;
@@ -3146,7 +3146,7 @@ Method in interface com.google.javascript.jscomp.graph.<A HREF="./com/google/jav
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/DiGraph.html#getOutEdges(N)"><B>getOutEdges(N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>
-<DD>&nbsp;
+<DD>Gets an immutable list of out edges of the given node.
 <DT><A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#getOutEdges(N)"><B>getOutEdges(N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>
 <DD>&nbsp;
@@ -4358,13 +4358,23 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/UnknownType.html#isCheckedUnknownType()"><B>isCheckedUnknownType()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/UnknownType.html" title="class in com.google.javascript.rhino.jstype">UnknownType</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/DiGraph.html#isConnected(N, N)"><B>isConnected(N, N)</B></A> - 
+Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/DiGraph.html#isConnected(N, E, N)"><B>isConnected(N, E, N)</B></A> - 
+Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#isConnected(N, N)"><B>isConnected(N, N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>
 <DD>Checks whether two nodes in the graph are connected.
-<DT><A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html#isConnected(N, N)"><B>isConnected(N, N)</B></A> - 
-Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/LinkedDirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedDirectedGraph</A>
-<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/Graph.html#isConnected(N, E, N)"><B>isConnected(N, E, N)</B></A> - 
+Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>
+<DD>Checks whether two nodes in the graph are connected by the given
+ edge type.
 <DT><A HREF="./com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html#isConnected(N, N)"><B>isConnected(N, N)</B></A> - 
+Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedUndirectedGraph</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html#isConnected(N, E, N)"><B>isConnected(N, E, N)</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="class in com.google.javascript.jscomp.graph">LinkedUndirectedGraph</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/DiGraph.html#isConnectedInDirection(N, N)"><B>isConnectedInDirection(N, N)</B></A> - 

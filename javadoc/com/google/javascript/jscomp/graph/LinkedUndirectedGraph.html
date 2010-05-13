@@ -196,7 +196,7 @@ An undirected graph using linked list within nodes to store edge
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;</CODE></FONT></TD>
+<CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html#connect(N, E, N)">connect</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;srcValue,
         <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&nbsp;edgeValue,
         <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;destValue)</CODE>
@@ -235,7 +235,7 @@ An undirected graph using linked list within nodes to store edge
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html#getEdges()">getEdges</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a mutable list of all edges.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets an immutable list of all edges.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -304,11 +304,11 @@ An undirected graph using linked list within nodes to store edge
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt;</CODE></FONT></TD>
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html#getNodes()">getNodes</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets a mutable list of all nodes.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets an immutable list of all nodes.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -329,11 +329,22 @@ An undirected graph using linked list within nodes to store edge
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.UndiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">UndiGraph.UndiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt;</CODE></FONT></TD>
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.UndiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">UndiGraph.UndiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html#getUndirectedGraphNodes()">getUndirectedGraphNodes</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets an immutable collection of all the nodes in this graph.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html#isConnected(N, E, N)">isConnected</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;n1,
+            <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&nbsp;e,
+            <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;n2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether two nodes in the graph are connected by the given
+ edge type.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -448,9 +459,9 @@ public <A HREF="../../../../../com/google/javascript/jscomp/graph/SubGraph.html"
 <A NAME="connect(java.lang.Object,java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="connect(N, E, N)"><!-- --></A><H3>
 connect</H3>
 <PRE>
-public <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt; <B>connect</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;srcValue,
-                                    <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&nbsp;edgeValue,
-                                    <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;destValue)</PRE>
+public void <B>connect</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;srcValue,
+                    <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&nbsp;edgeValue,
+                    <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;destValue)</PRE>
 <DL>
 <DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)">Graph</A></CODE></B></DD>
 <DD>Connects two nodes in the graph with an edge.
@@ -459,8 +470,7 @@ public <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdg
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)">connect</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;</CODE></DL>
 </DD>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>srcValue</CODE> - First node.<DD><CODE>edgeValue</CODE> - The edge.<DD><CODE>destValue</CODE> - Second node.
-<DT><B>Returns:</B><DD>The newly created graph edge.</DL>
+<DT><B>Parameters:</B><DD><CODE>srcValue</CODE> - First node.<DD><CODE>edgeValue</CODE> - The edge.<DD><CODE>destValue</CODE> - Second node.</DL>
 </DD>
 </DL>
 <HR>
@@ -561,8 +571,11 @@ public <A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.Undi
 <A NAME="getUndirectedGraphNodes()"><!-- --></A><H3>
 getUndirectedGraphNodes</H3>
 <PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.UndiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">UndiGraph.UndiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt; <B>getUndirectedGraphNodes</B>()</PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.UndiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">UndiGraph.UndiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt; <B>getUndirectedGraphNodes</B>()</PRE>
 <DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/UndiGraph.html#getUndirectedGraphNodes()">UndiGraph</A></CODE></B></DD>
+<DD>Gets an immutable collection of all the nodes in this graph.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -650,6 +663,26 @@ public boolean <B>isConnected</B>(<A HREF="../../../../../com/google/javascript/
 </DL>
 <HR>
 
+<A NAME="isConnected(java.lang.Object,java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="isConnected(N, E, N)"><!-- --></A><H3>
+isConnected</H3>
+<PRE>
+public boolean <B>isConnected</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;n1,
+                           <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&nbsp;e,
+                           <A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>&nbsp;n2)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, E, N)">Graph</A></CODE></B></DD>
+<DD>Checks whether two nodes in the graph are connected by the given
+ edge type.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, E, N)">isConnected</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node 1.<DD><CODE>e</CODE> - The edge type.<DD><CODE>n2</CODE> - Node 2.</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="getGraphvizEdges()"><!-- --></A><H3>
 getGraphvizEdges</H3>
 <PRE>
@@ -725,10 +758,10 @@ public boolean <B>isDirected</B>()</PRE>
 <A NAME="getNodes()"><!-- --></A><H3>
 getNodes</H3>
 <PRE>
-public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt; <B>getNodes</B>()</PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph">GraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt; <B>getNodes</B>()</PRE>
 <DL>
 <DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodes()">Graph</A></CODE></B></DD>
-<DD>Gets a mutable list of all nodes.
+<DD>Gets an immutable list of all nodes.
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/AdjacencyGraph.html#getNodes()">getNodes</A></CODE> in interface <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/AdjacencyGraph.html" title="interface in com.google.javascript.jscomp.graph">AdjacencyGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;</CODE><DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodes()">getNodes</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;</CODE></DL>
@@ -745,7 +778,7 @@ getEdges</H3>
 public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.GraphEdge.html" title="interface in com.google.javascript.jscomp.graph">Graph.GraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;&gt; <B>getEdges</B>()</PRE>
 <DL>
 <DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges()">Graph</A></CODE></B></DD>
-<DD>Gets a mutable list of all edges.
+<DD>Gets an immutable list of all edges.
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges()">getEdges</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/LinkedUndirectedGraph.html" title="type parameter in LinkedUndirectedGraph">E</A>&gt;</CODE></DL>

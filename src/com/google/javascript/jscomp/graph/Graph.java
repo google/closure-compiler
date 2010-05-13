@@ -98,9 +98,8 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * @param n1 First node.
    * @param edge The edge.
    * @param n2 Second node.
-   * @return The newly created graph edge.
    */
-  public abstract GraphEdge<N, E> connect(N n1, E edge, N n2);
+  public abstract void connect(N n1, E edge, N n2);
 
   /**
    * Disconnects two nodes in the graph by removing all edges between them.
@@ -119,22 +118,9 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * @param n2 Second node.
    */
   public final void connectIfNotFound(N n1, E edge, N n2) {
-    GraphNode<N, E> node1 = getNode(n1);
-    GraphNode<N, E> node2 = getNode(n2);
-    if (node1 == null) {
-      throw new IllegalArgumentException(n1 + " does not exist in graph");
+    if (!isConnected(n1, edge, n2)) {
+      connect(n1, edge, n2);
     }
-    if (node2 == null) {
-      throw new IllegalArgumentException(n2 + " does not exist in graph");
-    }
-    List<GraphEdge<N, E>> edgeList = getEdges(n1, n2);
-    for (GraphEdge<N, E> e : edgeList) {
-      // Check == first to short circuit nulls.
-      if (e.getValue() == edge || e.getValue().equals(edge)) {
-        return;
-      }
-    }
-    connect(n1, edge, n2);
   }
 
   /**
@@ -147,10 +133,10 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    */
   public abstract GraphNode<N, E> createNode(N value);
 
-  /** Gets a mutable list of all nodes. */
-  public abstract List<GraphNode<N, E>> getNodes();
+  /** Gets an immutable list of all nodes. */
+  public abstract Collection<GraphNode<N, E>> getNodes();
 
-  /** Gets a mutable list of all edges. */
+  /** Gets an immutable list of all edges. */
   public abstract List<GraphEdge<N, E>> getEdges();
 
   /**
@@ -203,6 +189,29 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * @return <code>true</code> if the two nodes are connected.
    */
   public abstract boolean isConnected(N n1, N n2);
+
+  /**
+   * Checks whether two nodes in the graph are connected by the given
+   * edge type.
+   *
+   * @param n1 Node 1.
+   * @param e The edge type.
+   * @param n2 Node 2.
+   */
+  public abstract boolean isConnected(N n1, E e, N n2);
+
+  /**
+   * Gets the node of the specified type, or throws an
+   * IllegalArgumentException.
+   */
+  @SuppressWarnings("unchecked")
+  <T extends GraphNode<N, E>> T getNodeOrFail(N val) {
+    T node = (T) getNode(val);
+    if (node == null) {
+      throw new IllegalArgumentException(val + " does not exist in graph");
+    }
+    return node;
+  }
 
   public final void clearNodeAnnotations() {
     for (GraphNode<N, E> n : getNodes()) {
@@ -301,10 +310,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
     }
 
     public void addNode(N value) {
-      if (!graph.hasNode(value)) {
-        throw new IllegalArgumentException(value + " does not exist in graph");
-      }
-      nodes.add(graph.getNode(value));
+      nodes.add(graph.getNodeOrFail(value));
     }
   }
 

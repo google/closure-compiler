@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.Annotation;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -395,9 +394,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     protected void initialize() {
       orderedWorkSet.clear();
       for (DiGraphNode<N, Branch> node : getCfg().getDirectedGraphNodes()) {
-        List<DiGraphEdge<N, Branch>> edgeList =
-          getCfg().getOutEdges(node.getValue());
-        int outEdgeCount = edgeList.size();
+        int outEdgeCount = getCfg().getOutEdges(node.getValue()).size();
         List<L> outLattices = Lists.newArrayList();
         for (int i = 0; i < outEdgeCount; i++) {
           outLattices.add(createInitialEstimateLattice());

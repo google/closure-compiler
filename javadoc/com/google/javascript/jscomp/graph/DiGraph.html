@@ -210,11 +210,11 @@ A generic directed graph.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>abstract &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.DiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">DiGraph.DiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&gt;&gt;</CODE></FONT></TD>
+<CODE>abstract &nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.DiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">DiGraph.DiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&gt;&gt;</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#getDirectedGraphNodes()">getDirectedGraphNodes</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets an immutable iterable over all the nodes in the graph.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -254,7 +254,7 @@ A generic directed graph.
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#getInEdges(N)">getInEdges</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;nodeValue)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets an immutable list of in edges of the given node.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -262,7 +262,27 @@ A generic directed graph.
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#getOutEdges(N)">getOutEdges</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;nodeValue)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gets an immutable list of out edges of the given node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#isConnected(N, E, N)">isConnected</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;n1,
+            <A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&nbsp;e,
+            <A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;n2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether two nodes in the graph are connected by the given
+ edge type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html#isConnected(N, N)">isConnected</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;n1,
+            <A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;n2)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Checks whether two nodes in the graph are connected.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -291,7 +311,7 @@ A generic directed graph.
 <TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.graph.<A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#clearEdgeAnnotations()">clearEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#clearNodeAnnotations()">clearNodeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)">connect</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connectIfNotFound(N, E, N)">connectIfNotFound</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#createNode(N)">createNode</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#disconnect(N, N)">disconnect</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges()">getEdges</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges(N, N)">getEdges</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodes(N)">getNeighborNodes</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodesIterator(N)">getNeighborNodesIterator</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodeDegree(N)">getNodeDegree</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodes()">getNodes</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getWeight(N)">getWeight</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#hasNode(N)">hasNode</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, N)">isConnected</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#popEdgeAnnotations()">popEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#popNodeAnnotations()">popNodeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#pushEdgeAnnotations()">pushEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#pushNodeAnnotations()">pushNodeAnnotations</A></CODE></TD>
+<TD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#clearEdgeAnnotations()">clearEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#clearNodeAnnotations()">clearNodeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connect(N, E, N)">connect</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#connectIfNotFound(N, E, N)">connectIfNotFound</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#createNode(N)">createNode</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#disconnect(N, N)">disconnect</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges()">getEdges</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getEdges(N, N)">getEdges</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodes(N)">getNeighborNodes</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNeighborNodesIterator(N)">getNeighborNodesIterator</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodeDegree(N)">getNodeDegree</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getNodes()">getNodes</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#getWeight(N)">getWeight</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#hasNode(N)">hasNode</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#popEdgeAnnotations()">popEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#popNodeAnnotations()">popNodeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#pushEdgeAnnotations()">pushEdgeAnnotations</A>, <A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#pushNodeAnnotations()">pushNodeAnnotations</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -345,8 +365,10 @@ public <B>DiGraph</B>()</PRE>
 <A NAME="getDirectedGraphNodes()"><!-- --></A><H3>
 getDirectedGraphNodes</H3>
 <PRE>
-public abstract <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.DiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">DiGraph.DiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&gt;&gt; <B>getDirectedGraphNodes</B>()</PRE>
+public abstract <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang">Iterable</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.DiGraphNode.html" title="interface in com.google.javascript.jscomp.graph">DiGraph.DiGraphNode</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&gt;&gt; <B>getDirectedGraphNodes</B>()</PRE>
 <DL>
+<DD>Gets an immutable iterable over all the nodes in the graph.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -358,6 +380,8 @@ getOutEdges</H3>
 <PRE>
 public abstract <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.DiGraphEdge.html" title="interface in com.google.javascript.jscomp.graph">DiGraph.DiGraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&gt;&gt; <B>getOutEdges</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;nodeValue)</PRE>
 <DL>
+<DD>Gets an immutable list of out edges of the given node.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -369,6 +393,8 @@ getInEdges</H3>
 <PRE>
 public abstract <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.DiGraphEdge.html" title="interface in com.google.javascript.jscomp.graph">DiGraph.DiGraphEdge</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&gt;&gt; <B>getInEdges</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;nodeValue)</PRE>
 <DL>
+<DD>Gets an immutable list of in edges of the given node.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -495,6 +521,45 @@ public abstract boolean <B>isConnectedInDirection</B>(<A HREF="../../../../../co
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node 1.<DD><CODE>edgeValue</CODE> - edge value tag<DD><CODE>n2</CODE> - Node 2.
 <DT><B>Returns:</B><DD><code>true</code> if the edge exists.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isConnected(java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="isConnected(N, N)"><!-- --></A><H3>
+isConnected</H3>
+<PRE>
+public boolean <B>isConnected</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;n1,
+                           <A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;n2)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, N)">Graph</A></CODE></B></DD>
+<DD>Checks whether two nodes in the graph are connected.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, N)">isConnected</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node 1.<DD><CODE>n2</CODE> - Node 2.
+<DT><B>Returns:</B><DD><code>true</code> if the two nodes are connected.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isConnected(java.lang.Object,java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="isConnected(N, E, N)"><!-- --></A><H3>
+isConnected</H3>
+<PRE>
+public boolean <B>isConnected</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;n1,
+                           <A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&nbsp;e,
+                           <A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>&nbsp;n2)</PRE>
+<DL>
+<DD><B>Description copied from class: <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, E, N)">Graph</A></CODE></B></DD>
+<DD>Checks whether two nodes in the graph are connected by the given
+ edge type.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html#isConnected(N, E, N)">isConnected</A></CODE> in class <CODE><A HREF="../../../../../com/google/javascript/jscomp/graph/Graph.html" title="class in com.google.javascript.jscomp.graph">Graph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="type parameter in DiGraph">E</A>&gt;</CODE></DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>n1</CODE> - Node 1.<DD><CODE>e</CODE> - The edge type.<DD><CODE>n2</CODE> - Node 2.</DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
