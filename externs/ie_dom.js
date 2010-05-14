@@ -1366,6 +1366,18 @@ Element.prototype.innerText;
 Element.prototype.isContentEditable;
 
 /**
+ * @type {?function(Event)}
+ * @see http://msdn.microsoft.com/en-us/library/ms536945(VS.85).aspx
+ */
+Element.prototype.onmouseenter;
+
+/**
+ * @type {?function(Event)}
+ * @see http://msdn.microsoft.com/en-us/library/ms536946(VS.85).aspx
+ */
+Element.prototype.onmouseleave;
+
+/**
  * @see http://msdn.microsoft.com/en-us/library/aa752326(VS.85).aspx
  */
 Element.prototype.outerHTML;
