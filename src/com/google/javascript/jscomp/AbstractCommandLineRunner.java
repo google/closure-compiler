@@ -623,6 +623,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
       // Output the variable and property name maps if requested.
       outputNameMaps(options);
+
+      // Output the manifest if requested.
+      outputManifest();
     }
 
     // return 0 if no errors, the error count otherwise
@@ -720,6 +723,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return null;
     }
     return expandCommandLinePath(options.sourceMapOutputPath, forModule);
+  }
+
+  /** Expansion function for the manifest. */
+  @VisibleForTesting
+  String expandManifest(JSModule forModule) {
+    if (Strings.isEmpty(config.outputManifest)) {
+      return null;
+    }
+    return expandCommandLinePath(config.outputManifest, forModule);
   }
 
   /**
@@ -910,6 +922,53 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       throw new RuntimeException(
           "--define flag syntax invalid: " + override);
     }
+  }
+
+  /**
+   * Returns true if and only if a manifest should be generated for each
+   * module, as opposed to one unified manifest.
+   */
+  private boolean shouldGenerateManifestPerModule() {
+    return !config.module.isEmpty()
+        && config.outputManifest != null
+        && config.outputManifest.contains("%outname%");
+  }
+
+  /**
+   * Writes the manifest of all compiler input files that survived
+   * manage_closure_dependencies, if requested.
+   */
+  private void outputManifest() throws IOException {
+    String outputManifest = config.outputManifest;
+    if (Strings.isEmpty(outputManifest)) {
+      return;
+    }
+
+    if (shouldGenerateManifestPerModule()) {
+      // Generate per-module manifests.
+      Iterable<JSModule> modules = compiler.getModuleGraph().getAllModules();
+      for (JSModule module : modules) {
+        printManifestTo(module.getInputs(), expandManifest(module));
+      }
+    } else {
+      // Generate a single file manifest.
+      printManifestTo(compiler.getInputsInOrder(), expandManifest(null));
+    }
+  }
+
+  /**
+   * Prints a list of input names, delimited by newlines, to the manifest file.
+   */
+  private void printManifestTo(Iterable<CompilerInput> inputs, String path)
+      throws IOException {
+    List<String> names = Lists.newArrayList();
+    for (CompilerInput input : inputs) {
+      names.add(input.getName());
+    }
+    String result = Joiner.on("\n").join(names);
+    PrintStream out = toPrintStream(path);
+    out.append(result);
+    out.close();
   }
 
   private class RunTimeStats {
@@ -1279,6 +1338,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setManageClosureDependencies(boolean newVal) {
       this.manageClosureDependencies = newVal;
+      return this;
+    }
+
+    private String outputManifest = "";
+
+    /**
+     * Sets whether to print an output manifest file.
+     */
+    CommandLineConfig setOutputManifest(String outputManifest) {
+      this.outputManifest = outputManifest;
       return this;
     }
   }

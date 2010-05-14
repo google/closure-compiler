@@ -33,6 +33,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1720,6 +1721,11 @@ public class Compiler extends AbstractCompiler {
       initOptions(new CompilerOptions());
     }
     return errorManager;
+  }
+
+  @Override
+  List<CompilerInput> getInputsInOrder() {
+    return Collections.<CompilerInput>unmodifiableList(inputs);
   }
 
   /**

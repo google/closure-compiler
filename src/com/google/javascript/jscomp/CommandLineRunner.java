@@ -282,6 +282,15 @@ public class CommandLineRunner extends
         + "be included in the compilation.")
     private boolean manage_closure_dependencies = false;
 
+    @Option(name = "--output_manifest",
+        usage = "Prints out a list of all the files in the compilation. "
+        + "If --manage_closure_dependencies is on, this will not include "
+        + "files that got dropped because they were not required. "
+        + "The %outname% placeholder expands to the js output file. "
+        + "If you're using modularization, using %outname% will create "
+        + "a manifest for each module.")
+    private String output_manifest = "";
+
     // Our own option parser to be backwards-compatible.
     // It needs to be public because of the crazy reflection that args4j does.
     public static class BooleanOptionHandler extends OptionHandler<Boolean> {
@@ -431,7 +440,8 @@ public class CommandLineRunner extends
           .setJscompOff(flags.jscomp_off)
           .setDefine(flags.define)
           .setCharset(flags.charset)
-          .setManageClosureDependencies(flags.manage_closure_dependencies);
+          .setManageClosureDependencies(flags.manage_closure_dependencies)
+          .setOutputManifest(flags.output_manifest);
     }
   }
 

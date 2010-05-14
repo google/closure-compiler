@@ -22,6 +22,8 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
+import java.util.List;
+
 /**
  * An abstract compiler, to help remove the circular dependency of
  * passes on JSCompiler.
@@ -56,6 +58,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * modules.
    */
   abstract JSModuleGraph getModuleGraph();
+
+  /**
+   * Gets the inputs in the order in which they are being processed.
+   * Only for use by {@code AbstractCompilerRunner}.
+   */
+  abstract List<CompilerInput> getInputsInOrder();
 
   /**
    * Gets a central registry of type information from the compiled JS.
