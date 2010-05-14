@@ -385,4 +385,24 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
            "var y = new Foo(); y.baz();"
         });
   }
+  
+  // An anonymous inner function reading a closure variable is fine.
+  public void testInnerFunctionClosureVariableReads() {
+    test(createModuleChain(
+            "function Foo() {}" +
+            "Foo.prototype.baz = function(){var x = 1;" +
+            "  return function(){x}};",
+            // Module 2
+            "var y = new Foo(); y.baz();"),
+         new String[] {
+           STUB_DECLARATIONS +
+           "function Foo() {}" +
+           "Foo.prototype.baz = JSCompiler_stubMethod(0);",
+           // Module 2
+           "Foo.prototype.baz = JSCompiler_unstubMethod(" +
+           "    0, function(){var x = 1; return function(){x}});" +
+           "var y = new Foo(); y.baz();"
+        });
+  }
+  
 }

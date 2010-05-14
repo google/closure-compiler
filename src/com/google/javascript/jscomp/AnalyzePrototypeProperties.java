@@ -24,8 +24,8 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
-import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
+import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -87,10 +87,13 @@ class AnalyzePrototypeProperties implements CompilerPass {
       new LinkedDirectedGraph<NameInfo, JSModule>();
 
   // A dummy node for representing global references.
-  private final NameInfo globalNode = new NameInfo(null);
+  private final NameInfo globalNode = new NameInfo("[global]");
 
   // A dummy node for representing extern references.
-  private final NameInfo externNode = new NameInfo(null);
+  private final NameInfo externNode = new NameInfo("[extern]");
+
+  // A dummy node for representing all anonymous functions with no names.
+  private final NameInfo anonymousNode = new NameInfo("[anonymous]");
 
   // All the real NameInfo for prototype properties, hashed by the name
   // of the property that they represent.
@@ -184,18 +187,34 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
   }
 
-  private class ProcessProperties implements NodeTraversal.Callback {
-    private Stack<NameInfo> symbolStack = new Stack<NameInfo>();
+  private class ProcessProperties implements NodeTraversal.ScopedCallback {
+    private Stack<NameContext> symbolStack = new Stack<NameContext>();
+
+    private ProcessProperties() {
+      symbolStack.push(new NameContext(globalNode));
+    }
+
+    @Override
+    public void enterScope(NodeTraversal t) {
+      symbolStack.peek().scope = t.getScope();
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+
+    }
 
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (isPrototypePropertyAssign(n)) {
-        symbolStack.push(getNameInfoForName(
-                n.getFirstChild().getLastChild().getString(), PROPERTY));
-      } else if (isGlobalFunctionDeclaration(t, n, parent)) {
+        symbolStack.push(new NameContext(getNameInfoForName(
+                n.getFirstChild().getLastChild().getString(), PROPERTY)));
+      } else if (isGlobalFunctionDeclaration(t, n)) {
         String name = parent.getType() == Token.NAME ?
             parent.getString() /* VAR */ :
             n.getFirstChild().getString() /* named function */;
-        symbolStack.push(getNameInfoForName(name, VAR));
+        symbolStack.push(new NameContext(getNameInfoForName(name, VAR)));
+      } else if (NodeUtil.isFunction(n)) {
+        symbolStack.push(new NameContext(anonymousNode));
       }
       return true;
     }
@@ -249,35 +268,37 @@ class AnalyzePrototypeProperties implements CompilerPass {
           // If it is not a global, it might be accessing a local of the outer
           // scope. If that's the case the functions between the variable's
           // declaring scope and the variable reference scope cannot be moved.
-          } else {
-            int level = 0;
-            for (Scope s = t.getScope(); s != var.getScope();
-                s = s.getParent()) {
-              level++;
-            }
-            for (level = symbolStack.size() < level ?
-                symbolStack.size() : level; level != 0; level--) {
-              symbolStack.get(symbolStack.size() - level)
-                  .readClosureVariables = true;
+          } else if (var.getScope() != t.getScope()){
+            for (int i = symbolStack.size() - 1; i >= 0; i--) {
+              NameContext context = symbolStack.get(i);
+              context.name.readClosureVariables = true;
+              if (context.scope == var.getScope()) {
+                break;
+              }
             }
           }
         }
       }
 
       if (isPrototypePropertyAssign(n) ||
-          isGlobalFunctionDeclaration(t, n, parent)) {
+          isGlobalFunctionDeclaration(t, n) ||
+          NodeUtil.isFunction(n)) {
         symbolStack.pop();
       }
     }
 
     private void addSymbolUse(String name, JSModule module, SymbolType type) {
-      if (symbolStack.empty()) {
-        addGlobalUseOfSymbol(name, module, type);
-      } else {
-        NameInfo info = getNameInfoForName(name, type);
-        if (!symbolStack.peek().equals(info)) {
-          symbolGraph.connect(symbolStack.peek(), module, info);
+      NameInfo info = getNameInfoForName(name, type);
+      NameInfo def = null;
+      // Skip all anonymous nodes. We care only about symbols with names.
+      for (int i = symbolStack.size() - 1; i >= 0; i--) {
+        def = symbolStack.get(i).name;
+        if (def != anonymousNode) {
+          break;
         }
+      }
+      if (!def.equals(info)) {
+        symbolGraph.connect(def, module, info);
       }
     }
 
@@ -285,11 +306,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
      * Determines whether {@code n} is the FUNCTION node in a global function
      * declaration.
      */
-    private boolean isGlobalFunctionDeclaration(NodeTraversal t,
-        Node n, Node parent) {
+    private boolean isGlobalFunctionDeclaration(NodeTraversal t, Node n) {
       return t.inGlobalScope() &&
           (NodeUtil.isFunctionDeclaration(n) ||
-           n.getType() == Token.FUNCTION && parent.getType() == Token.NAME);
+           n.getType() == Token.FUNCTION &&
+           n.getParent().getType() == Token.NAME);
     }
 
     private boolean isPrototypePropertyAssign(Node assign) {
@@ -322,10 +343,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
       Node firstChild = nameNode.getFirstChild();
 
       if (// Check for a named FUNCTION.
-          isGlobalFunctionDeclaration(t, parent, gramps) ||
+          isGlobalFunctionDeclaration(t, parent) ||
           // Check for a VAR declaration.
           firstChild != null &&
-          isGlobalFunctionDeclaration(t, firstChild, nameNode)) {
+          isGlobalFunctionDeclaration(t, firstChild)) {
         String name = nameNode.getString();
         getNameInfoForName(name, VAR).getDeclarations().add(
             new GlobalFunction(nameNode, parent, gramps, t.getModule()));
@@ -579,6 +600,18 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public JSModule getModule() {
       return module;
+    }
+  }
+
+  /**
+   * The context of the current name. This includes the NameInfo and the scope
+   * if it is a scope defining name (function).
+   */
+  private class NameContext {
+    final NameInfo name;
+    Scope scope;
+    NameContext(NameInfo name) {
+      this.name = name;
     }
   }
 
