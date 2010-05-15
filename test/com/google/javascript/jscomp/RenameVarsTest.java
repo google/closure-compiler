@@ -488,6 +488,9 @@ public class RenameVarsTest extends CompilerTestCase {
     generatePseudoNames = true;
     test("var foo = function(a, b, c){}",
          "var $foo$$ = function($a$$, $b$$, $c$$){}");
+    
+    test("var a = function(a, b, c){}",
+         "var $a$$ = function($a$$, $b$$, $c$$){}");
   }
 
   private void testRenameMapUsingOldMap(String input, String expected,

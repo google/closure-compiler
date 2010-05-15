@@ -16,14 +16,26 @@
 
 package com.google.javascript.jscomp;
 
-import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import javax.annotation.Nullable;
 
 
 /**
@@ -41,9 +53,12 @@ final class RenameVars implements CompilerPass {
 
   /** List of local NAME nodes */
   private final ArrayList<Node> localNameNodes = new ArrayList<Node>();
-
-  /** List of local names that corresponds to the localNameNodes */
-  private final ArrayList<String> localTempNames = new ArrayList<String>();
+  
+  /**
+   * Maps a name node to its pseudo name, null if we are not generating so
+   * there will not no overhead unless we are debugging.
+   */
+  private final Map<Node, String> pseudoNameMap;
 
   /** Set of extern variable names */
   private final Set<String> externNames = new HashSet<String>();
@@ -106,9 +121,6 @@ final class RenameVars implements CompilerPass {
    */
   private boolean preserveFunctionExpressionNames;
 
-  /** Generate pseudo names for variables for debugging purposes */
-  private boolean generatePseudoNames;
-
   /** Characters that shouldn't be used in variable names. */
   private final char[] reservedCharacters;
 
@@ -127,7 +139,11 @@ final class RenameVars implements CompilerPass {
     this.prefix = prefix == null ? "" : prefix;
     this.localRenamingOnly = localRenamingOnly;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
-    this.generatePseudoNames = generatePseudoNames;
+    if (generatePseudoNames) {
+      this.pseudoNameMap = Maps.newHashMap();
+    } else {
+      this.pseudoNameMap = null;
+    }
     this.prevUsedRenameMap = prevUsedRenameMap;
     this.reservedCharacters = reservedCharacters;
     if (reservedNames == null) {
@@ -220,12 +236,16 @@ final class RenameVars implements CompilerPass {
         return;
       }
 
+      if (pseudoNameMap != null) {
+        recordPseudoName(n);
+      }
+      
       if (local) {
         // Local var: assign a new name
         String tempName = LOCAL_VAR_PREFIX + var.getLocalVarIndex();
         incCount(tempName, null);
         localNameNodes.add(n);
-        localTempNames.add(tempName);
+        n.setString(tempName);
       } else if (var != null) {  // Not an extern
         // If it's global, increment global count
         incCount(name, var.input);
@@ -311,7 +331,7 @@ final class RenameVars implements CompilerPass {
     // Rename the locals!
     int count = 0;
     for (Node n : localNameNodes) {
-      String newName = getNewLocalName(n, count);
+      String newName = getNewLocalName(n);
       if (newName != null) {
         n.setString(newName);
         changed = true;
@@ -332,8 +352,8 @@ final class RenameVars implements CompilerPass {
     String oldName = n.getString();
     Assignment a = assignments.get(oldName);
     if (a.newName != null && !a.newName.equals(oldName)) {
-      if (generatePseudoNames) {
-        return getPseudoName(oldName);
+      if (pseudoNameMap != null) {
+        return pseudoNameMap.get(n);
       }
       return a.newName;
     } else {
@@ -341,23 +361,22 @@ final class RenameVars implements CompilerPass {
     }
   }
 
-  private String getNewLocalName(Node n, int index) {
-    String oldTempName = localTempNames.get(index);
+  private String getNewLocalName(Node n) {
+    String oldTempName = n.getString();
     Assignment a = assignments.get(oldTempName);
     if (!a.newName.equals(oldTempName)) {
-      if (generatePseudoNames) {
-        return getPseudoName(n.getString());
+      if (pseudoNameMap != null) {
+        return pseudoNameMap.get(n);
       }
       return a.newName;
     }
     return null;
   }
 
-  private String getPseudoName(String s) {
-    Preconditions.checkState(generatePseudoNames);
+  private void recordPseudoName(Node n) {
     // Variable names should be in a different name space than
     // property pseudo names.
-    return '$' + s + "$$";
+    pseudoNameMap.put(n, '$' + n.getString() + "$$" );
   }
 
   /**

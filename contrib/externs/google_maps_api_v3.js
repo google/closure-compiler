@@ -17,6 +17,7 @@
 /**
  * @fileoverview Externs for the Google Maps V3 API.
  * @see http://code.google.com/apis/maps/documentation/v3/reference.html
+*
  */
 
 google.maps = {};
@@ -57,6 +58,12 @@ google.maps.Map.prototype.getDiv = function() {};
  * @return {google.maps.MapTypeId}
  */
 google.maps.Map.prototype.getMapTypeId = function() {};
+
+/**
+ * @nosideeffects
+ * @return {google.maps.Projection}
+ */
+google.maps.Map.prototype.getProjection = function() {};
 
 /**
  * @nosideeffects
@@ -269,7 +276,7 @@ google.maps.Marker.prototype.getShadow = function() {};
 
 /**
  * @nosideeffects
- * @return {Object}
+ * @return {google.maps.MarkerShape}
  */
 google.maps.Marker.prototype.getShape = function() {};
 
@@ -318,7 +325,7 @@ google.maps.Marker.prototype.setPosition = function(position) {};
 /** @param {(string|Object.<string,*>)} shadow */
 google.maps.Marker.prototype.setShadow = function(shadow) {};
 
-/** @param {Object} shape */
+/** @param {google.maps.MarkerShape} shape */
 google.maps.Marker.prototype.setShape = function(shape) {};
 
 /** @param {string} title */
@@ -339,6 +346,18 @@ google.maps.Marker.prototype.setZIndex= function(zIndex) {};
  * @param {google.maps.Size=} scaledSize
  */
 google.maps.MarkerImage = function(url, size, origin, anchor, scaledSize) {};
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.MarkerShape = function() {};
+
+/** @type {Array.<number>} */
+google.maps.MarkerShape.prototype.coord;
+
+/** @type {string} */
+google.maps.MarkerShape.prototype.type;
 
 /**
  * @constructor
@@ -413,7 +432,9 @@ google.maps.Polygon.prototype.setOptions = function(opts) {};
 google.maps.Polygon.prototype.setPath = function(path) {};
 
 /**
- * @param {(google.maps.MVCArray|Array.<Array.<google.maps.LatLng>>|Array.<google.maps.LatLng>)} paths
+ * @param {(google.maps.MVCArray|
+ *          Array.<Array.<google.maps.LatLng>>|
+ *          Array.<google.maps.LatLng>)} paths
  */
 google.maps.Polygon.prototype.setPaths = function(paths) {};
 
@@ -424,6 +445,7 @@ google.maps.Polygon.prototype.setPaths = function(paths) {};
  */
 google.maps.InfoWindow = function(opt_opts) {};
 
+/** @returns {undefined} */
 google.maps.InfoWindow.prototype.close = function() {};
 
 /**
@@ -446,9 +468,9 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
 
 /**
  * @param {google.maps.Map} map
- * @param {?google.maps.MVCObject} anchor
+ * @param {google.maps.MVCObject=} opt_anchor
  */
-google.maps.InfoWindow.prototype.open = function(map, anchor) {};
+google.maps.InfoWindow.prototype.open = function(map, opt_anchor) {};
 
 /** @param {(string|Node)} content */
 google.maps.InfoWindow.prototype.setContent = function(content) {};
@@ -467,56 +489,10 @@ google.maps.Geocoder = function() {};
 
 /**
  * @param {Object.<string, *>} req
- * @param {function(Array.<Object.<string, *>>,
- *         google.maps.GeocoderStatus)} callback
+ * @param {function(Array.<google.maps.GeocoderResult>,
+ *                  google.maps.GeocoderStatus)} callback
  */
 google.maps.Geocoder.prototype.geocode = function(req, callback) {};
-
-/**
- * This type is not in the API reference. We use it purely to
- * help specify the GeocoderResponse.
- * @constructor
- * @private
- */
-google.maps.AddressComponent_ = function() {};
-
-/** @type {string} */
-google.maps.AddressComponent_.prototype.short_name;
-
-/** @type {string} */
-google.maps.AddressComponent_.prototype.long_name;
-
-/** @type {Array.<string>} */
-google.maps.AddressComponent_.prototype.types;
-
-/**
- * @constructor
- * @private
- */
-google.maps.GeocoderResponse = function() {};
-
-/** @type {Array.<string>} */
-google.maps.GeocoderResponse.prototype.types;
-
-/** @type {string} */
-google.maps.GeocoderResponse.prototype.formatted_address;
-
-/** @type {Array.<google.maps.AddressComponent_>} */
-google.maps.GeocoderResponse.prototype.address_components;
-
-google.maps.GeocoderResponse.prototype.geometry = {};
-
-/** @type {google.maps.LatLng} */
-google.maps.GeocoderResponse.prototype.geometry.location;
-
-/** @type {google.maps.GeocoderLocationType} */
-google.maps.GeocoderResponse.prototype.geometry.location_type;
-
-/** @type {google.maps.LatLngBounds} */
-google.maps.GeocoderResponse.prototype.geometry.viewport;
-
-/** @type {google.maps.LatLngBounds|undefined} */
-google.maps.GeocoderResponse.prototype.geometry.bounds;
 
 /** @enum */
 google.maps.GeocoderStatus = {
@@ -528,6 +504,54 @@ google.maps.GeocoderStatus = {
   UNKNOWN_ERROR: 5,
   ZERO_RESULTS: 6
 };
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.GeocoderResult = function() {};
+
+/** @type {google.maps.GeocoderAddressComponent} */
+google.maps.GeocoderResult.prototype.address_components;
+
+/** @type {google.maps.GeocoderGeometry} */
+google.maps.GeocoderResult.prototype.geometry;
+
+/** @type {Array.<string>} */
+google.maps.GeocoderResult.prototype.types;
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.GeocoderAddressComponent = function() {};
+
+/** @type {string} */
+google.maps.GeocoderAddressComponent.prototype.short_name;
+
+/** @type {string} */
+google.maps.GeocoderAddressComponent.prototype.long_name;
+
+/** @type {Array.<string>} */
+google.maps.GeocoderAddressComponent.prototype.types;
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.GeocoderGeometry = function() {};
+
+/** @type {google.maps.LatLngBounds} */
+google.maps.GeocoderGeometry.prototype.bounds;
+
+/** @type {google.maps.LatLng} */
+google.maps.GeocoderGeometry.prototype.location;
+
+/** @type {google.maps.GeocoderLocationType} */
+google.maps.GeocoderGeometry.prototype.location_type;
+
+/** @type {google.maps.LatLngBounds} */
+google.maps.GeocoderGeometry.prototype.viewport;
 
 /** @enum */
 google.maps.GeocoderLocationType = {
@@ -568,13 +592,6 @@ google.maps.DirectionsRenderer.prototype.getPanel = function() {};
  */
 google.maps.DirectionsRenderer.prototype.getRouteIndex = function() {};
 
-/**
- * @nosideeffects
- * @deprecated
- * @return {number}
- */
-google.maps.DirectionsRenderer.prototype.getTripIndex = function() {};
-
 /** @param {google.maps.DirectionsResult} dir */
 google.maps.DirectionsRenderer.prototype.setDirections = function(dir) {};
 
@@ -587,12 +604,6 @@ google.maps.DirectionsRenderer.prototype.setPanel = function(elem) {};
 /** @param {number} routeIndex */
 google.maps.DirectionsRenderer.prototype.setRouteIndex =
     function(routeIndex) {};
-
-/**
- * @param {number} index
- * @deprecated
- */
-google.maps.DirectionsRenderer.prototype.setTripIndex = function(index) {};
 
 /** @constructor */
 google.maps.DirectionsService = function() {};
@@ -649,15 +660,7 @@ google.maps.DirectionsStatus = {
 google.maps.DirectionsResult = function() {};
 
 /** @type {Array.<google.maps.DirectionsRoute>} */
-google.maps.DirectionsResult.prototype.trips;
-
-/**
- * @private
- * @constructor
- * @deprecated
- * @extends {google.maps.DirectionsRoute}
- */
-google.maps.DirectionsTrip = function() {};
+google.maps.DirectionsResult.prototype.routes;
 
 /**
  * @private
@@ -668,11 +671,17 @@ google.maps.DirectionsRoute = function() {};
 /** @type {string} */
 google.maps.DirectionsRoute.prototype.copyrights;
 
-/** @type {Array.<google.maps.DirectionsRoute>} */
-google.maps.DirectionsRoute.prototype.routes;
+/** @type {Array.<google.maps.DirectionsLeg>} */
+google.maps.DirectionsRoute.prototype.legs;
+
+/** @type {Array.<google.maps.LatLng>} */
+google.maps.DirectionsRoute.prototype.overview_path;
 
 /** @type {Array.<string>} */
 google.maps.DirectionsRoute.prototype.warnings;
+
+/** @type {Array.<number>} */
+google.maps.DirectionsRoute.prototype.waypoint_order;
 
 /**
  * @private
@@ -686,11 +695,17 @@ google.maps.DirectionsLeg.prototype.distance;
 /** @type {Array.<google.maps.DirectionsDuration>} */
 google.maps.DirectionsLeg.prototype.duration;
 
-/** @type {google.maps.GeocoderResponse} */
-google.maps.DirectionsLeg.prototype.end_geocode;
+/** @type {string} */
+google.maps.DirectionsLeg.prototype.end_address;
 
-/** @type {google.maps.GeocoderResponse} */
-google.maps.DirectionsLeg.prototype.start_geocode;
+/** @type {google.maps.LatLng} */
+google.maps.DirectionsLeg.prototype.end_location;
+
+/** @type {string} */
+google.maps.DirectionsLeg.prototype.start_address;
+
+/** @type {google.maps.LatLng} */
+google.maps.DirectionsLeg.prototype.start_location;
 
 /** @type {Array.<google.maps.DirectionsStep>} */
 google.maps.DirectionsLeg.prototype.steps;
@@ -711,16 +726,16 @@ google.maps.DirectionsStep.prototype.duration;
 google.maps.DirectionsStep.prototype.endcoded_lat_lngs;
 
 /** @type {google.maps.LatLng} */
-google.maps.DirectionsStep.prototype.end_point;
+google.maps.DirectionsStep.prototype.end_location;
 
 /** @type {string} */
 google.maps.DirectionsStep.prototype.instructions;
 
 /** @type {Array.<google.maps.LatLng>} */
-google.maps.DirectionsStep.prototype.lat_lngs;
+google.maps.DirectionsStep.prototype.path;
 
 /** @type {google.maps.LatLng} */
-google.maps.DirectionsStep.prototype.start_point;
+google.maps.DirectionsStep.prototype.start_location;
 
 /**
  * @private
@@ -748,10 +763,68 @@ google.maps.DirectionsDuration.prototype.value;
 
 /**
  * @constructor
+ */
+google.maps.ElevationService = function() {};
+
+/**
+ * @param {google.maps.PathElevationRequest} request
+ * @param {function(Array.<google.maps.ElevationResult>,
+ *                  google.maps.ElevationStatus)} callback
+ */
+google.maps.ElevationService.prototype.getElevationAlongPath =
+    function(request, callback) {};
+
+/**
+ * @param {google.maps.LocationElevationRequest} request
+ * @param {function(Array.<google.maps.ElevationResult>,
+ *                  google.maps.ElevationStatus)} callback
+ */
+google.maps.ElevationService.prototype.getElevationForLocations =
+    function(request, callback) {};
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.ElevationResult = function() {};
+
+/** @type {Number} */
+google.maps.ElevationResult.prototype.elevation;
+
+/** @type {google.maps.LatLng} */
+google.maps.ElevationResult.prototype.location;
+
+/** @enum */
+google.maps.ElevationStatus = {
+    INVALID_REQUEST: 0,
+    OK: 1,
+    OVER_QUERY_LIMIT: 2,
+    REQUEST_DENIED: 3,
+    UNKNOWN_ERROR: 4
+};
+
+/** @constructor */
+google.maps.LocationElevationRequest = function() {};
+
+/** @type {Array.<google.maps.LatLng>} */
+google.maps.LocationElevationRequest.prototype.locations;
+
+/** @constructor */
+google.maps.PathElevationRequest = function() {};
+
+/** @type {Array.<google.maps.LatLng>} */
+google.maps.PathElevationRequest.prototype.path;
+
+/** @type {number} */
+google.maps.PathElevationRequest.prototype.samples;
+
+/**
+ * @constructor
  * @extends {google.maps.MVCObject}
  */
 google.maps.OverlayView = function() {};
 
+/** @returns {undefined} */
 google.maps.OverlayView.prototype.draw = function() {};
 
 /**
@@ -772,8 +845,10 @@ google.maps.OverlayView.prototype.getPanes = function() {};
  */
 google.maps.OverlayView.prototype.getProjection = function() {};
 
+/** @returns {undefined} */
 google.maps.OverlayView.prototype.onAdd = function() {};
 
+/** @returns {undefined} */
 google.maps.OverlayView.prototype.onRemove = function() {};
 
 /** @param {google.maps.Map} map */
@@ -792,9 +867,7 @@ google.maps.MapType = function() {};
  */
 google.maps.MapType.prototype.getTile = function(tileCoord, zoom, doc) {};
 
-/**
- * @param {Node} tile
- */
+/** @param {Node} tile */
 google.maps.MapType.prototype.releaseTile = function(tile) {};
 
 /** @type {string} */
@@ -811,6 +884,9 @@ google.maps.MapType.prototype.name;
 
 /** @type {google.maps.Projection} */
 google.maps.MapType.prototype.projection;
+
+/** @type {number} */
+google.maps.MapType.prototype.radius;
 
 /** @type {google.maps.Size} */
 google.maps.MapType.prototype.tileSize;
@@ -838,7 +914,7 @@ google.maps.Projection = function() {};
  * @return {google.maps.Point}
  */
 google.maps.Projection.prototype.fromLatLngToPoint =
-        function(latLng, point) {};
+    function(latLng, point) {};
 
 /**
  * @nosideeffects
@@ -847,7 +923,7 @@ google.maps.Projection.prototype.fromLatLngToPoint =
  * @return {google.maps.LatLng}
  */
 google.maps.Projection.prototype.fromPointToLatLng =
-        function(pixel, nowrap) {};
+    function(pixel, nowrap) {};
 
 /**
  * @constructor
@@ -864,9 +940,7 @@ google.maps.ImageMapType = function(opts) {};
  */
 google.maps.ImageMapType.prototype.getTile = function(tileCoord, zoom, doc) {};
 
-/**
- * @param {Node} tile
- */
+/** @param {Node} tile */
 google.maps.ImageMapType.prototype.releaseTile = function(tile) {};
 
 /** @type {string} */
@@ -883,6 +957,9 @@ google.maps.ImageMapType.prototype.name;
 
 /** @type {google.maps.Projection} */
 google.maps.ImageMapType.prototype.projection;
+
+/** @type {number} */
+google.maps.ImageMapType.prototype.radius;
 
 /** @type {google.maps.Size} */
 google.maps.ImageMapType.prototype.tileSize;
@@ -957,6 +1034,166 @@ google.maps.Circle.prototype.setOptions = function(options) {};
 
 /** @param {number} radius */
 google.maps.Circle.prototype.setRadius = function(radius) {};
+
+/**
+ * @constructor
+ * @extends {google.maps.MVCObject}
+ * @param {string} url
+ * @param {google.maps.LatLngBounds} bounds
+ */
+google.maps.GroundOverlay = function(url, bounds) {};
+
+/**
+ * @nosideeffects
+ * @returns {google.maps.LatLngBounds}
+ * */
+google.maps.GroundOverlay.prototype.getBounds = function() {};
+
+/**
+ * @nosideeffects
+ * @returns {google.maps.Map}
+ */
+google.maps.GroundOverlay.prototype.getMap = function() {};
+
+/**
+ * @nosideeffects
+ * @returns {string}
+ */
+google.maps.GroundOverlay.prototype.getUrl = function() {};
+
+/** @param {google.maps.Map} map */
+google.maps.GroundOverlay.prototype.setMap = function(map) {};
+
+/**
+ * @constructor
+ * @extends {google.maps.MVCObject}
+ */
+google.maps.BicyclingLayer = function() {};
+
+/**
+ * @nosideeffects
+ * @returns {google.maps.Map}
+ */
+google.maps.BicyclingLayer.prototype.getMap = function() {};
+
+/** @param {google.maps.Map} map */
+google.maps.BicyclingLayer.prototype.setMap = function(map) {};
+
+/**
+ * @constructor
+ * @extends {google.maps.MVCObject}
+ * @param {string} url
+ * @param {Object.<string, *>=} opt_opts
+ */
+google.maps.KmlLayer = function(url, opt_opts) {};
+
+/**
+ * @nosideeffects
+ * @returns {google.maps.Map}
+ */
+google.maps.KmlLayer.prototype.getMap = function() {};
+
+/**
+ * @nosideeffects
+ * @returns {google.maps.KmlLayerMetadata}
+ */
+google.maps.KmlLayer.prototype.getMetadata = function() {};
+
+/**
+ * @nosideeffects
+ * @returns {string}
+ */
+google.maps.KmlLayer.prototype.getUrl = function() {};
+
+/** @param {google.maps.Map} map */
+google.maps.KmlLayer.prototype.setMap = function(map) {};
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.KmlLayerMetadata = function() {};
+
+/** @type {google.maps.KmlAuthor} */
+google.maps.KmlLayerMetadata.prototype.author;
+
+/** @type {string} */
+google.maps.KmlLayerMetadata.prototype.description;
+
+/** @type {string} */
+google.maps.KmlLayerMetadata.prototype.name;
+
+/** @type {string} */
+google.maps.KmlLayerMetadata.prototype.snippet;
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.KmlMouseEvent = function() {};
+
+/** @type {google.maps.KmlFeatureData} */
+google.maps.KmlMouseEvent.prototype.featureData;
+
+/** @type {google.maps.Point} */
+google.maps.KmlMouseEvent.prototype.pixelOffset;
+
+/** @type {google.maps.LatLng} */
+google.maps.KmlMouseEvent.prototype.position;
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.KmlFeatureData = function() {};
+
+/** @type {google.maps.KmlAuthor} */
+google.maps.KmlFeatureData.prototype.author;
+
+/** @type {string} */
+google.maps.KmlFeatureData.prototype.description;
+
+/** @type {string} */
+google.maps.KmlFeatureData.prototype.id;
+
+/** @type {string} */
+google.maps.KmlFeatureData.prototype.infoWindowHtml;
+
+/** @type {string} */
+google.maps.KmlFeatureData.prototype.name;
+
+/** @type {string} */
+google.maps.KmlFeatureData.prototype.snippet;
+
+/**
+ * @constructor
+ * @private
+ */
+google.maps.KmlAuthor = function() {};
+
+/** @type {string} */
+google.maps.KmlAuthor.prototype.email;
+
+/** @type {string} */
+google.maps.KmlAuthor.prototype.name;
+
+/** @type {string} */
+google.maps.KmlAuthor.prototype.uri;
+
+/**
+ * @constructor
+ * @extends {google.maps.MVCObject}
+ */
+google.maps.TrafficLayer = function() {};
+
+/**
+ * @nosideeffects
+ * @returns {google.maps.Map}
+ */
+google.maps.TrafficLayer.prototype.getMap = function() {};
+
+/** @param {google.maps.Map} map */
+google.maps.TrafficLayer.prototype.setMap = function(map) {};
 
 /**
  * @constructor
@@ -1246,6 +1483,7 @@ google.maps.MVCObject.prototype.setValues = function(opt_values) {};
 /** @param {string} key */
 google.maps.MVCObject.prototype.unbind = function(key) {};
 
+/** @returns {undefined} */
 google.maps.MVCObject.prototype.unbindAll = function() {};
 
 /**
