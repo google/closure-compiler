@@ -30,7 +30,7 @@ import java.util.*;
  *
  * This class is designed for such behaviour.
  *
-*
+ * @author anatol@google.com (Anatol Pomazau)
  */
 public class ComposeWarningsGuard extends WarningsGuard {
 

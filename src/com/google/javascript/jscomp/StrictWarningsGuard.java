@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * All warnings should be reported as errors.
  *
-*
+ * @author anatol@google.com (Anatol Pomazau)
  */
 public class StrictWarningsGuard extends WarningsGuard {
 

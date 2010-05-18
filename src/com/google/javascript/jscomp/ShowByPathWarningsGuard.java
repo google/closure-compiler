@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
  * Control whether warnings should be restricted or suppressed for specified
  * paths.
  *
-*
+ * @author anatol@google.com (Anatol Pomazau)
  */
 public class ShowByPathWarningsGuard extends WarningsGuard {
   /**

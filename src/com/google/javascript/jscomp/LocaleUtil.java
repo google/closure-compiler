@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  *
  * Class duplicated from the i18n.LocaleUtil class.
  *
-*
+ * @author anatol@google.com (Anatol Pomazau)
  */
 class LocaleUtil {
   private static final Pattern LOCALE_PATTERN =
