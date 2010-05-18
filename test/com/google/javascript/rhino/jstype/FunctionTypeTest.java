@@ -51,4 +51,65 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType f = new FunctionBuilder(registry).build();
     assertEquals(UNKNOWN_TYPE, f.getReturnType());
   }
+
+  public void testSupAndInfOfReturnTypes() {
+    FunctionType retString = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
+        .withInferredReturnType(STRING_TYPE).build();
+    FunctionType retNumber = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
+        .withReturnType(NUMBER_TYPE).build();
+
+    assertLeastSupertype(
+        "function (): (number|string)", retString, retNumber);
+    assertGreatestSubtype(
+        "function (): None", retString, retNumber);
+
+    assertTrue(retString.isReturnTypeInferred());
+    assertFalse(retNumber.isReturnTypeInferred());
+    assertTrue(
+        ((FunctionType) retString.getLeastSupertype(retNumber))
+        .isReturnTypeInferred());
+    assertTrue(
+        ((FunctionType) retString.getGreatestSubtype(retString))
+        .isReturnTypeInferred());
+  }
+
+  public void testSupAndInfWithDifferentParams() {
+    FunctionType retString = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .withReturnType(STRING_TYPE).build();
+    FunctionType retNumber = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(STRING_TYPE))
+        .withReturnType(NUMBER_TYPE).build();
+
+    assertLeastSupertype(
+        "Function", retString, retNumber);
+    assertGreatestSubtype(
+        "NoObject", retString, retNumber);
+  }
+
+  public void testSupAndInfWithDifferentThisTypes() {
+    FunctionType retString = new FunctionBuilder(registry)
+        .withTypeOfThis(OBJECT_TYPE)
+        .withReturnType(STRING_TYPE).build();
+    FunctionType retNumber = new FunctionBuilder(registry)
+        .withTypeOfThis(DATE_TYPE)
+        .withReturnType(NUMBER_TYPE).build();
+
+    assertLeastSupertype(
+        "Function", retString, retNumber);
+    assertGreatestSubtype(
+        "NoObject", retString, retNumber);
+  }
+
+  private void assertLeastSupertype(String s, JSType t1, JSType t2) {
+    assertEquals(s, t1.getLeastSupertype(t2).toString());
+    assertEquals(s, t2.getLeastSupertype(t1).toString());
+  }
+
+  private void assertGreatestSubtype(String s, JSType t1, JSType t2) {
+    assertEquals(s, t1.getGreatestSubtype(t2).toString());
+    assertEquals(s, t2.getGreatestSubtype(t1).toString());
+  }
 }

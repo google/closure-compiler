@@ -59,6 +59,11 @@ public class ScopedAliasesTest extends CompilerTestCase {
         "goog.dom.createElement(goog.dom.TagName.DIV);");
   }
 
+  public void testTransitiveInSameVar() {
+    testScoped("var d = goog.dom, DIV = d.TagName.DIV;d.createElement(DIV);",
+        "goog.dom.createElement(goog.dom.TagName.DIV);");
+  }
+
   public void testMultipleTransitive() {
     testScoped(
         "var g=goog;var d=g.dom;var t=d.TagName;var DIV=t.DIV;" +
@@ -285,6 +290,16 @@ public class ScopedAliasesTest extends CompilerTestCase {
         ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
     testFailure("goog.scope(function(a, b, c) {})",
         ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
+  }
+
+  public void testNonAliasLocal() {
+    testScopedFailure("var x = 10", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+    testScopedFailure("var x = goog.dom + 10",
+        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+    testScopedFailure("var x = goog['dom']",
+        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+    testScopedFailure("var x = goog.dom, y = 10",
+        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
   }
 
   @Override

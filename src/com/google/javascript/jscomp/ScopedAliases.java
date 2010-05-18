@@ -70,6 +70,10 @@ class ScopedAliases implements CompilerPass {
       "JSC_GOOG_SCOPE_ALIAS_REDEFINED",
       "The alias {0} is assigned a value more than once.");
 
+  static final DiagnosticType GOOG_SCOPE_NON_ALIAS_LOCAL = DiagnosticType.error(
+      "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
+      "The local variable {0} is in a goog.scope and is not an alias.");
+
   ScopedAliases(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -236,10 +240,7 @@ class ScopedAliases implements CompilerPass {
 
       if (t.getScopeDepth() == 2) {
         if (n.getType() == Token.NAME && parent.getType() == Token.VAR) {
-          if (n.hasChildren() && n.isQualifiedName()) {
-            // TODO(robbyw): What other checks go here?
-            // TODO(robbyw): Emit errors about non-alias local variables.
-
+          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
             aliases.put(n.getString(), n.getFirstChild());
             aliasDefinitions.add(n);
 
@@ -248,6 +249,9 @@ class ScopedAliases implements CompilerPass {
 
             // If we found an alias, we are done.
             return;
+          } else {
+            // TODO(robbyw): Support using locals for private variables.
+            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
           }
         }
       }

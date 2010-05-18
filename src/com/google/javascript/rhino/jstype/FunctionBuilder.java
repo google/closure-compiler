@@ -57,6 +57,7 @@ public final class FunctionBuilder {
   private JSType returnType = null;
   private ObjectType typeOfThis = null;
   private String templateTypeName = null;
+  private boolean inferredReturnType = false;
   private boolean isConstructor = false;
   private boolean isNativeType = false;
 
@@ -93,6 +94,13 @@ public final class FunctionBuilder {
   /** Set the return type. */
   public FunctionBuilder withReturnType(JSType returnType) {
     this.returnType = returnType;
+    return this;
+  }
+
+  /** Sets an inferred return type. */
+  public FunctionBuilder withInferredReturnType(JSType returnType) {
+    this.returnType = returnType;
+    this.inferredReturnType = true;
     return this;
   }
 
@@ -136,7 +144,7 @@ public final class FunctionBuilder {
   /** Construct a new function type. */
   public FunctionType build() {
     return new FunctionType(registry, name, sourceNode,
-        registry.createArrowType(parametersNode, returnType),
+        new ArrowType(registry, parametersNode, returnType, inferredReturnType),
         typeOfThis, templateTypeName, isConstructor, isNativeType);
   }
 }

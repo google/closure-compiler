@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -130,6 +131,7 @@ public class FunctionType extends PrototypeObjectType {
         nativeType);
     Preconditions.checkArgument(source == null ||
         Token.FUNCTION == source.getType());
+    Preconditions.checkNotNull(arrowType);
     this.source = source;
     this.kind = isConstructor ? Kind.CONSTRUCTOR : Kind.ORDINARY;
     if (isConstructor) {
@@ -152,7 +154,7 @@ public class FunctionType extends PrototypeObjectType {
         Token.FUNCTION == source.getType());
     Preconditions.checkArgument(name != null);
     this.source = source;
-    this.call = null;
+    this.call = new ArrowType(registry, new Node(Token.LP), null);
     this.kind = Kind.INTERFACE;
     this.typeOfThis = new InstanceObjectType(registry, this);
   }
@@ -205,7 +207,7 @@ public class FunctionType extends PrototypeObjectType {
 
   /** Gets an LP node that contains all params. May be null. */
   public Node getParametersNode() {
-    return call == null ? null : call.parameters;
+    return call.parameters;
   }
 
   /** Gets the minimum number of arguments that this function requires. */
@@ -241,7 +243,11 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   public JSType getReturnType() {
-    return call == null ? null : call.returnType;
+    return call.returnType;
+  }
+
+  public boolean isReturnTypeInferred() {
+    return call.returnTypeInferred;
   }
 
   /** Gets the internal arrow type. For use by subclasses only. */
@@ -446,6 +452,15 @@ public class FunctionType extends PrototypeObjectType {
 
   @Override
   public JSType getLeastSupertype(JSType that) {
+    return supAndInfHelper(that, true);
+  }
+
+  @Override
+  public JSType getGreatestSubtype(JSType that) {
+    return supAndInfHelper(that, false);
+  }
+
+  private JSType supAndInfHelper(JSType that, boolean leastSuper) {
     // NOTE(nicksantos): When we remove the unknown type, the function types
     // form a lattice with the universal constructor at the top of the lattice,
     // and the NoObject type at the bottom of the lattice.
@@ -464,39 +479,43 @@ public class FunctionType extends PrototypeObjectType {
         return this;
       }
 
+      // If this is a normal function, look to see if the arguments are equal.
+      // If they are, we can just take the least supertype (or greatest
+      // subtype) of the return types.
+      if (isOrdinaryFunction() && that.isOrdinaryFunction() &&
+          that instanceof FunctionType) {
+        FunctionType other = (FunctionType) that;
+        if (call.hasEqualParameters(other.call) &&
+            Objects.equal(typeOfThis, other.typeOfThis)) {
+          JSType newReturnType = leastSuper ?
+              call.returnType.getLeastSupertype(other.call.returnType) :
+              call.returnType.getGreatestSubtype(other.call.returnType);
+          return new FunctionType(
+              registry, null, null,
+              new ArrowType(
+                  registry, call.parameters, newReturnType,
+                  call.returnTypeInferred ||
+                  other.call.returnTypeInferred),
+              typeOfThis, null, false, false);
+        }
+      }
+
       JSType functionInstance = registry.getNativeType(
           JSTypeNative.FUNCTION_INSTANCE_TYPE);
       if (functionInstance.equals(that)) {
-        return that;
+        return leastSuper ? that : this;
       } else if (functionInstance.equals(this)) {
-        return this;
+        return leastSuper ? this : that;
       }
 
-      return registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
+      return leastSuper ?
+          registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE) :
+          registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE);
     }
 
-    return super.getLeastSupertype(that);
-  }
-
-  @Override
-  public JSType getGreatestSubtype(JSType that) {
-    if (isFunctionType() && that.isFunctionType()) {
-      if (equals(that)) {
-        return this;
-      }
-
-      JSType functionInstance = registry.getNativeType(
-          JSTypeNative.FUNCTION_INSTANCE_TYPE);
-      if (functionInstance.equals(that)) {
-        return this;
-      } else if (functionInstance.equals(this)) {
-        return that;
-      }
-
-      return registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE);
-    }
-
-    return super.getGreatestSubtype(that);
+    return leastSuper ?
+        super.getLeastSupertype(that) :
+        super.getGreatestSubtype(that);
   }
 
   /**
@@ -611,8 +630,7 @@ public class FunctionType extends PrototypeObjectType {
 
     StringBuilder b = new StringBuilder(32);
     b.append("function (");
-    int paramNum = (call == null || call.parameters == null) ?
-        0 : call.parameters.getChildCount();
+    int paramNum = call.parameters.getChildCount();
     boolean hasKnownTypeOfThis = !typeOfThis.isUnknownType();
     if (hasKnownTypeOfThis) {
       b.append("this:");
@@ -639,11 +657,8 @@ public class FunctionType extends PrototypeObjectType {
         p = p.getNext();
       }
     }
-    b.append(")");
-    if (call != null && call.returnType != null) {
-      b.append(": ");
-      b.append(call.returnType);
-    }
+    b.append("): ");
+    b.append(call.returnType);
     return b.toString();
   }
 
@@ -820,8 +835,7 @@ public class FunctionType extends PrototypeObjectType {
 
     StringBuilder b = new StringBuilder(32);
     b.append("function (");
-    int paramNum = (call == null || call.parameters == null) ?
-        0 : call.parameters.getChildCount();
+    int paramNum = call.parameters.getChildCount();
     boolean hasKnownTypeOfThis = !typeOfThis.isUnknownType();
     if (hasKnownTypeOfThis) {
       b.append("this:");
@@ -841,10 +855,8 @@ public class FunctionType extends PrototypeObjectType {
       }
     }
     b.append(")");
-    if (call != null && call.returnType != null) {
-      b.append(": ");
-      b.append(getDebugHashCodeStringOf(call.returnType));
-    }
+    b.append(": ");
+    b.append(getDebugHashCodeStringOf(call.returnType));
     return b.toString();
   }
 

@@ -58,8 +58,16 @@ final class ArrowType extends JSType {
   final Node parameters;
   JSType returnType;
 
+  // Whether the return type is inferred.
+  final boolean returnTypeInferred;
+
   ArrowType(JSTypeRegistry registry, Node parameters,
       JSType returnType) {
+    this(registry, parameters, returnType, false);
+  }
+
+  ArrowType(JSTypeRegistry registry, Node parameters,
+      JSType returnType, boolean returnTypeInferred) {
     super(registry);
 
     this.parameters = parameters == null ?
@@ -67,6 +75,7 @@ final class ArrowType extends JSType {
         parameters;
     this.returnType = returnType == null ?
         getNativeType(UNKNOWN_TYPE) : returnType;
+    this.returnTypeInferred = returnTypeInferred;
   }
 
   @Override
@@ -132,17 +141,11 @@ final class ArrowType extends JSType {
     return true;
   }
 
-  @Override
-  public boolean equals(Object object) {
-    // Please keep this method in sync with the hashCode() method below.
-    if (!(object instanceof ArrowType)) {
-      return false;
-    }
-    ArrowType that = (ArrowType) object;
-    if (!returnType.equals(that.returnType)) {
-      return false;
-    }
-
+  /**
+   * @return True if our parameter spec is equal to {@code that}'s parameter
+   *     spec.
+   */
+  boolean hasEqualParameters(ArrowType that) {
     Node thisParam = parameters.getFirstChild();
     Node otherParam = that.parameters.getFirstChild();
     while (thisParam != null && otherParam != null) {
@@ -168,10 +171,27 @@ final class ArrowType extends JSType {
   }
 
   @Override
+  public boolean equals(Object object) {
+    // Please keep this method in sync with the hashCode() method below.
+    if (!(object instanceof ArrowType)) {
+      return false;
+    }
+    ArrowType that = (ArrowType) object;
+    if (!returnType.equals(that.returnType) ||
+        returnTypeInferred != that.returnTypeInferred) {
+      return false;
+    }
+    return hasEqualParameters(that);
+  }
+
+  @Override
   public int hashCode() {
     int hashCode = 0;
     if (returnType != null) {
       hashCode += returnType.hashCode();
+    }
+    if (returnTypeInferred) {
+      hashCode += 1;
     }
     if (parameters != null) {
       Node param = parameters.getFirstChild();

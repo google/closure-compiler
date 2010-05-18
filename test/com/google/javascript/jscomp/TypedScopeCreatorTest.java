@@ -342,7 +342,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "I.prototype.baz = function(){};");
 
     Var i = globalScope.getVar("I");
-    assertEquals("function (this:I)", i.getType().toString());
+    assertEquals("function (this:I): ?", i.getType().toString());
     assertTrue(i.getType().isInterface());
 
     ObjectType iPrototype = (ObjectType)
