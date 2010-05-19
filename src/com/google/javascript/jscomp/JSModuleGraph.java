@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.deps.SortedDependencies;
+import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -293,7 +294,8 @@ public class JSModuleGraph {
    *     is stable.
    * @return The sorted list of sources.
    */
-  List<CompilerInput> manageDependencies(List<CompilerInput> inputs) {
+  List<CompilerInput> manageDependencies(List<CompilerInput> inputs)
+      throws CircularDependencyException {
     SortedDependencies<CompilerInput> sorter =
         new SortedDependencies<CompilerInput>(inputs);
     List<CompilerInput> inputsWithoutProvides =

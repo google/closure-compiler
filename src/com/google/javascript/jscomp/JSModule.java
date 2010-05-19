@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.SortedDependencies;
+import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -40,6 +41,10 @@ import java.util.Set;
  */
 public class JSModule implements DependencyInfo, Serializable {
   private static final long serialVersionUID = 1;
+
+  static final DiagnosticType CIRCULAR_DEPENDENCY_ERROR =
+      DiagnosticType.error("JSC_CIRCULAR_DEP",
+          "Circular dependency detected: {0}");
 
   /** Module name */
   private final String name;
@@ -229,12 +234,17 @@ public class JSModule implements DependencyInfo, Serializable {
     }
 
     // Sort the JSModule in this order.
-    List<CompilerInput> sortedList =
-        (new SortedDependencies<CompilerInput>(
-            Collections.<CompilerInput>unmodifiableList(inputs)))
-        .getSortedList();
-    inputs.clear();
-    inputs.addAll(sortedList);
+    try {
+      List<CompilerInput> sortedList =
+          (new SortedDependencies<CompilerInput>(
+              Collections.<CompilerInput>unmodifiableList(inputs)))
+          .getSortedList();
+      inputs.clear();
+      inputs.addAll(sortedList);
+    } catch (CircularDependencyException e) {
+      compiler.report(
+          JSError.make(CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
+    }
   }
 
   /**
@@ -245,7 +255,8 @@ public class JSModule implements DependencyInfo, Serializable {
    * satisfy the ordering dependencies.  This can be important for cases where
    * the modules do not properly specify all dependencies.
    */
-  public static JSModule[] sortJsModules(Collection<JSModule> modules) {
+  public static JSModule[] sortJsModules(Collection<JSModule> modules)
+      throws CircularDependencyException {
     // Sort the JSModule in this order.
     List<JSModule> sortedList = (new SortedDependencies<JSModule>(
             Lists.newArrayList(modules))).getSortedList();

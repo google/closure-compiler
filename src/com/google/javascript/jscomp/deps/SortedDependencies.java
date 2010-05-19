@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
@@ -37,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * A sorted list of inputs with dependency information. Uses a stable
@@ -60,7 +63,8 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
 
   private final Map<String, INPUT> provideMap = Maps.newHashMap();
 
-  public SortedDependencies(List<INPUT> inputs) {
+  public SortedDependencies(List<INPUT> inputs)
+      throws CircularDependencyException {
     this.inputs = Lists.newArrayList(inputs);
     noProvides = Lists.newArrayList();
 
@@ -89,6 +93,77 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
 
     // Sort the inputs by sucking in 0-in-degree nodes until we're done.
     sortedList = topologicalStableSort(inputs, deps);
+
+    // The dependency graph of inputs has a cycle iff sortedList is a proper
+    // subset of inputs. Also, it has a cycle iff the subgraph
+    // (inputs - sortedList) has a cycle. It's fairly easy to prove this
+    // by the lemma that a graph has a cycle iff it has a subgraph where
+    // no nodes have out-degree 0. I'll leave the proof of this as an exercise
+    // to the reader.
+    if (sortedList.size() < inputs.size()) {
+      List<INPUT> subGraph = Lists.newArrayList(inputs);
+      subGraph.removeAll(sortedList);
+
+      throw new CircularDependencyException(
+          cycleToString(findCycle(subGraph, deps)));
+    }
+  }
+
+  /**
+   * Returns the first circular dependency found. Expressed as a list of
+   * items in reverse dependency order (the second element depends on the
+   * first, etc.).
+   */
+  private List<INPUT> findCycle(
+      List<INPUT> subGraph, Multimap<INPUT, INPUT> deps) {
+    return findCycle(subGraph.get(0), Sets.<INPUT>newHashSet(subGraph),
+        deps, Sets.<INPUT>newHashSet());
+  }
+
+  private List<INPUT> findCycle(
+      INPUT current, Set<INPUT> subGraph, Multimap<INPUT, INPUT> deps,
+      Set<INPUT> covered) {
+    if (covered.add(current)) {
+      List<INPUT> cycle = findCycle(
+          findRequireInSubGraphOrFail(current, subGraph),
+          subGraph, deps, covered);
+
+      // Don't add the input to the list if the cycle has closed already.
+      if (cycle.get(0) != cycle.get(cycle.size() - 1)) {
+        cycle.add(current);
+      }
+
+      return cycle;
+    } else {
+      // Explicitly use the add() method, to prevent a generics constructor
+      // warning that is dumb. The condition it's protecting is
+      // obscure, and I think people have proposed that it be removed.
+      List<INPUT> cycle = Lists.<INPUT>newArrayList();
+      cycle.add(current);
+      return cycle;
+    }
+  }
+
+  private INPUT findRequireInSubGraphOrFail(INPUT input, Set<INPUT> subGraph) {
+    for (String symbol : input.getRequires()) {
+      INPUT candidate = provideMap.get(symbol);
+      if (subGraph.contains(candidate)) {
+        return candidate;
+      }
+    }
+    throw new IllegalStateException("no require found in subgraph");
+  }
+
+  /**
+   * @param cycle A cycle in reverse-dependency order.
+   */
+  private String cycleToString(List<INPUT> cycle) {
+    List<String> symbols = Lists.newArrayList();
+    for (int i = cycle.size() - 1; i >= 0; i--) {
+      symbols.add(cycle.get(i).getProvides().iterator().next());
+    }
+    symbols.add(symbols.get(0));
+    return Joiner.on(" -> ").join(symbols);
   }
 
   public List<INPUT> getSortedList() {
@@ -117,7 +192,7 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
       }
     }
 
-    ImmutableList.Builder builder = ImmutableList.builder();
+    ImmutableList.Builder<INPUT> builder = ImmutableList.builder();
     for (INPUT current : sortedList) {
       if (included.contains(current)) {
         builder.add(current);
@@ -173,5 +248,11 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
     }
 
     return result;
+  }
+
+  public static class CircularDependencyException extends Exception {
+    CircularDependencyException(String message) {
+      super(message);
+    }
   }
 }

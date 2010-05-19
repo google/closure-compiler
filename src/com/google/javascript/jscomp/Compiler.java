@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
+import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -1054,9 +1055,15 @@ public class Compiler extends AbstractCompiler {
           }
         }
 
-        inputs =
-            (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
-            .manageDependencies(inputs);
+        try {
+          inputs =
+              (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
+              .manageDependencies(inputs);
+        } catch (CircularDependencyException e) {
+          report(JSError.make(
+              JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
+          return null;
+        }
       }
 
       // Check if externs files need to be lifted.

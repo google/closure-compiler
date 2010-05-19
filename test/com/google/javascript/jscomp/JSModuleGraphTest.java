@@ -146,7 +146,7 @@ public class JSModuleGraphTest extends TestCase {
     assertEquals("d.js", E.getInputs().get(0).getName());
   }
 
-  public void testManageDependencies() {
+  public void testManageDependencies() throws Exception {
     List<CompilerInput> inputs = Lists.newArrayList();
 
     A.add(code("a1", provides("a1"), requires()));

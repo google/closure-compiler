@@ -284,6 +284,29 @@ public class CommandLineRunnerTest extends TestCase {
          });
   }
 
+  public void testSourceSortingCircularDeps1() {
+    args.add("--manage_closure_dependencies=true");
+    test(new String[] {
+          "goog.provide('gin'); goog.require('tonic'); var gin = {};",
+          "goog.provide('tonic'); goog.require('gin'); var tonic = {};",
+          "goog.require('gin'); goog.require('tonic');"
+         },
+         JSModule.CIRCULAR_DEPENDENCY_ERROR);
+  }
+
+  public void testSourceSortingCircularDeps2() {
+    args.add("--manage_closure_dependencies=true");
+    test(new String[] {
+          "goog.provide('roses.lime.juice');",
+          "goog.provide('gin'); goog.require('tonic'); var gin = {};",
+          "goog.provide('tonic'); goog.require('gin'); var tonic = {};",
+          "goog.require('gin'); goog.require('tonic');",
+          "goog.provide('gimlet');" +
+          "     goog.require('gin'); goog.require('roses.lime.juice');"
+         },
+         JSModule.CIRCULAR_DEPENDENCY_ERROR);
+  }
+
   public void testSourcePruningOn() {
     args.add("--manage_closure_dependencies=true");
     test(new String[] {

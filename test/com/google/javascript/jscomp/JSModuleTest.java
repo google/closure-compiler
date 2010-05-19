@@ -74,7 +74,7 @@ public class JSModuleTest extends TestCase {
                  mod4.getThisAndAllDependencies());
   }
 
-  public void testSortInputs() {
+  public void testSortInputs() throws Exception {
     CompilerInput a = new CompilerInput(
         JSSourceFile.fromCode("a.js",
             "goog.require('b');goog.require('c')"));
@@ -111,7 +111,8 @@ public class JSModuleTest extends TestCase {
   }
 
   private void assertSortedInputs(
-      List<CompilerInput> expected, List<CompilerInput> shuffled) {
+      List<CompilerInput> expected, List<CompilerInput> shuffled)
+      throws Exception {
     JSModule mod = new JSModule("mod");
     for (CompilerInput input : shuffled) {
       input.setModule(null);
@@ -124,7 +125,7 @@ public class JSModuleTest extends TestCase {
     assertEquals(expected, mod.getInputs());
   }
 
-  public void testSortJsModules() {
+  public void testSortJsModules() throws Exception {
     // already in order:
     assertEquals(ImmutableList.of(mod1, mod2, mod3, mod4),
         Arrays.asList(JSModule.sortJsModules(

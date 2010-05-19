@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.deps;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 
 import junit.framework.TestCase;
 
@@ -29,19 +30,19 @@ import java.util.List;
  */
 public class SortedDependenciesTest extends TestCase {
 
-  public void testSort() {
+  public void testSort() throws Exception {
     SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", symbols(), symbols("b", "c"));
+        "a", "a", provides(), requires("b", "c"));
     SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "b", "b", symbols("b"), symbols("d"));
+        "b", "b", provides("b"), requires("d"));
     SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", symbols("c"), symbols("d"));
+        "c", "c", provides("c"), requires("d"));
     SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "d", "d", symbols("d"), symbols());
+        "d", "d", provides("d"), requires());
     SimpleDependencyInfo e = new SimpleDependencyInfo(
-        "e", "e", symbols("e"), symbols());
+        "e", "e", provides("e"), requires());
     SimpleDependencyInfo f = new SimpleDependencyInfo(
-        "f", "f", symbols("f"), symbols());
+        "f", "f", provides("f"), requires());
 
     assertSortedInputs(
         ImmutableList.of(d, b, c, a),
@@ -78,19 +79,19 @@ public class SortedDependenciesTest extends TestCase {
     } catch (IllegalArgumentException expected) {}
   }
 
-  public void testSort2() {
+  public void testSort2() throws Exception {
     SimpleDependencyInfo ab = new SimpleDependencyInfo(
-        "ab", "ab", symbols("a", "b"), symbols("d", "f"));
+        "ab", "ab", provides("a", "b"), requires("d", "f"));
     SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", symbols("c"), symbols("h"));
+        "c", "c", provides("c"), requires("h"));
     SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "d", "d", symbols("d"), symbols("e", "f"));
+        "d", "d", provides("d"), requires("e", "f"));
     SimpleDependencyInfo ef = new SimpleDependencyInfo(
-        "ef", "ef", symbols("e", "f"), symbols("g", "c"));
+        "ef", "ef", provides("e", "f"), requires("g", "c"));
     SimpleDependencyInfo g = new SimpleDependencyInfo(
-        "g", "g", symbols("g"), symbols());
+        "g", "g", provides("g"), requires());
     SimpleDependencyInfo hi = new SimpleDependencyInfo(
-        "hi", "hi", symbols("h", "i"), symbols());
+        "hi", "hi", provides("h", "i"), requires());
 
     assertSortedInputs(
         ImmutableList.of(g, hi, c, ef, d, ab),
@@ -106,9 +107,53 @@ public class SortedDependenciesTest extends TestCase {
         ImmutableList.of(d, hi));
   }
 
+  public void testSort3() {
+    SimpleDependencyInfo a = new SimpleDependencyInfo(
+        "a", "a", provides("a"), requires("c"));
+    SimpleDependencyInfo b = new SimpleDependencyInfo(
+        "b", "b", provides("b"), requires("a"));
+    SimpleDependencyInfo c = new SimpleDependencyInfo(
+        "c", "c", provides("c"), requires("b"));
+
+    try {
+      new SortedDependencies<SimpleDependencyInfo>(
+          Lists.newArrayList(a, b, c));
+      fail("expected exception");
+    } catch (CircularDependencyException e) {}
+  }
+
+  public void testSort4() {
+    SimpleDependencyInfo a = new SimpleDependencyInfo(
+        "a", "a", provides("a"), requires("a"));
+
+    try {
+      new SortedDependencies<SimpleDependencyInfo>(
+          Lists.newArrayList(a));
+      fail("expected exception");
+    } catch (CircularDependencyException e){
+      assertEquals("a -> a", e.getMessage());
+    }
+  }
+
+  public void testSort5() throws Exception {
+    SimpleDependencyInfo a = new SimpleDependencyInfo(
+        "a", "a", provides("a"), requires());
+    SimpleDependencyInfo b = new SimpleDependencyInfo(
+        "b", "b", provides("b"), requires());
+    SimpleDependencyInfo c = new SimpleDependencyInfo(
+        "c", "c", provides("c"), requires());
+
+    assertSortedInputs(
+        ImmutableList.of(a, b, c),
+        ImmutableList.of(a, b, c));
+    assertSortedInputs(
+        ImmutableList.of(c, b, a),
+        ImmutableList.of(c, b, a));
+  }
+
   private void assertSortedInputs(
       List<SimpleDependencyInfo> expected,
-      List<SimpleDependencyInfo> shuffled) {
+      List<SimpleDependencyInfo> shuffled) throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted =
         new SortedDependencies<SimpleDependencyInfo>(shuffled);
     assertEquals(expected, sorted.getSortedList());
@@ -117,13 +162,17 @@ public class SortedDependenciesTest extends TestCase {
   private void assertSortedDeps(
       List<SimpleDependencyInfo> expected,
       List<SimpleDependencyInfo> shuffled,
-      List<SimpleDependencyInfo> roots) {
+      List<SimpleDependencyInfo> roots) throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted =
         new SortedDependencies<SimpleDependencyInfo>(shuffled);
     assertEquals(expected, sorted.getSortedDependenciesOf(roots));
   }
 
-  private List<String> symbols(String ... strings) {
+  private List<String> requires(String ... strings) {
+    return Lists.newArrayList(strings);
+  }
+
+  private List<String> provides(String ... strings) {
     return Lists.newArrayList(strings);
   }
 }

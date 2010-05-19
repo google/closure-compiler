@@ -3,7 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>
-MessageFormatter (Compiler)
+JsMessage.IdGenerator (Compiler)
 </TITLE>
 
 
@@ -13,7 +13,7 @@ MessageFormatter (Compiler)
 function windowTitle()
 {
     if (location.href.indexOf('is-external=true') == -1) {
-        parent.document.title="MessageFormatter (Compiler)";
+        parent.document.title="JsMessage.IdGenerator (Compiler)";
     }
 }
 </SCRIPT>
@@ -52,11 +52,11 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/MessageBundle.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.Builder.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.PlaceholderReference.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/MessageFormatter.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="MessageFormatter.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/JsMessage.IdGenerator.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="JsMessage.IdGenerator.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -87,19 +87,14 @@ DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHO
 <FONT SIZE="-1">
 com.google.javascript.jscomp</FONT>
 <BR>
-Interface MessageFormatter</H2>
+Interface JsMessage.IdGenerator</H2>
 <DL>
-<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../com/google/javascript/jscomp/AbstractMessageFormatter.html" title="class in com.google.javascript.jscomp">AbstractMessageFormatter</A>, <A HREF="../../../../com/google/javascript/jscomp/LightweightMessageFormatter.html" title="class in com.google.javascript.jscomp">LightweightMessageFormatter</A></DD>
+<DT><B>Enclosing class:</B><DD><A HREF="../../../../com/google/javascript/jscomp/JsMessage.html" title="class in com.google.javascript.jscomp">JsMessage</A></DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public interface <B>MessageFormatter</B></DL>
+<DT><PRE>public static interface <B>JsMessage.IdGenerator</B></DL>
 </PRE>
-
-<P>
-Format warnings and errors. This interface may be used by implementations of
- <A HREF="../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp"><CODE>ErrorManager</CODE></A> to request message formatting capabilities.
-<P>
 
 <P>
 <HR>
@@ -117,18 +112,11 @@ Format warnings and errors. This interface may be used by implementations of
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/MessageFormatter.html#formatError(com.google.javascript.jscomp.JSError)">formatError</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A>&nbsp;error)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/JsMessage.IdGenerator.html#generateId(java.lang.String, java.util.List)">generateId</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;key,
+           <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/CharSequence.html?is-external=true" title="class or interface in java.lang">CharSequence</A>&gt;&nbsp;messageParts)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Format an error.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/MessageFormatter.html#formatWarning(com.google.javascript.jscomp.JSError)">formatWarning</A></B>(<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A>&nbsp;warning)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Format a warning.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -144,26 +132,12 @@ Format warnings and errors. This interface may be used by implementations of
 </TR>
 </TABLE>
 
-<A NAME="formatError(com.google.javascript.jscomp.JSError)"><!-- --></A><H3>
-formatError</H3>
+<A NAME="generateId(java.lang.String, java.util.List)"><!-- --></A><H3>
+generateId</H3>
 <PRE>
-<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>formatError</B>(<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A>&nbsp;error)</PRE>
+<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>generateId</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;key,
+                  <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/CharSequence.html?is-external=true" title="class or interface in java.lang">CharSequence</A>&gt;&nbsp;messageParts)</PRE>
 <DL>
-<DD>Format an error.
-<P>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="formatWarning(com.google.javascript.jscomp.JSError)"><!-- --></A><H3>
-formatWarning</H3>
-<PRE>
-<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>formatWarning</B>(<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp">JSError</A>&nbsp;warning)</PRE>
-<DL>
-<DD>Format a warning.
-<P>
 <DD><DL>
 </DL>
 </DD>
@@ -198,11 +172,11 @@ formatWarning</H3>
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/MessageBundle.html" title="interface in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/NodeTraversal.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.Builder.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.PlaceholderReference.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/MessageFormatter.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="MessageFormatter.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/JsMessage.IdGenerator.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="JsMessage.IdGenerator.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {

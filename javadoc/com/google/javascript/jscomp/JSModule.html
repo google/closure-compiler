@@ -52,7 +52,7 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.Style.html" title="enum in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/JSModuleGraph.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/JSModule.html" target="_top"><B>FRAMES</B></A>  &nbsp;
@@ -705,7 +705,8 @@ public void <B>sortInputsByDeps</B>(<A HREF="../../../../com/google/javascript/j
 <A NAME="sortJsModules(java.util.Collection)"><!-- --></A><H3>
 sortJsModules</H3>
 <PRE>
-public static <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>[] <B>sortJsModules</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules)</PRE>
+public static <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>[] <B>sortJsModules</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/util/Collection.html?is-external=true" title="class or interface in java.util">Collection</A>&lt;<A HREF="../../../../com/google/javascript/jscomp/JSModule.html" title="class in com.google.javascript.jscomp">JSModule</A>&gt;&nbsp;modules)
+                                throws <A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.CircularDependencyException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.CircularDependencyException</A></PRE>
 <DL>
 <DD>Returns the given collection of modules in topological order.
 
@@ -718,7 +719,9 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" t
 </DL>
 </DD>
 <DD><DL>
-</DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="../../../../com/google/javascript/jscomp/deps/SortedDependencies.CircularDependencyException.html" title="class in com.google.javascript.jscomp.deps">SortedDependencies.CircularDependencyException</A></CODE></DL>
 </DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
@@ -751,7 +754,7 @@ public static <A HREF="../../../../com/google/javascript/jscomp/JSModule.html" t
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JSError.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/JsMessage.Style.html" title="enum in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
 &nbsp;<A HREF="../../../../com/google/javascript/jscomp/JSModuleGraph.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../index.html?com/google/javascript/jscomp/JSModule.html" target="_top"><B>FRAMES</B></A>  &nbsp;
