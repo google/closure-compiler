@@ -66,23 +66,9 @@ public abstract class JsFileLineParser {
     }
   }
 
-  /** Patterns for stripping JavaScript comments from source files. */
-  private static final Pattern COMMENT = Pattern.compile(
-      "//.*" + // single-line comment
-      "|/\\*([^\\*]*(\\*+[^/\\*])?)*(\\*+/)?" // start of multi-line comment
-      );
-  private static final Pattern END_MULTILINE_COMMENT =
-      Pattern.compile(".*?\\*/");
-
   /** Pattern for matching JavaScript string literals. */
   private static final Pattern STRING_LITERAL_PATTERN = Pattern.compile(
       "\\s*(?:'((?:\\\\'|[^'])*?)'|\"((?:\\\\\"|[^\"])*?)\")\\s*");
-
-  /** Matchers for comments. */
-  private Matcher commentMatcher = COMMENT.matcher("");
-
-  private Matcher endMultilineCommentMatcher =
-      END_MULTILINE_COMMENT.matcher("");
 
   /** Matcher used in the parsing string literals. */
   private Matcher valueMatcher = STRING_LITERAL_PATTERN.matcher("");
@@ -107,13 +93,6 @@ public abstract class JsFileLineParser {
 
   public boolean didParseSucceed() {
     return parseSucceeded;
-  }
-
-  /**
-   * @see parseLine(String, Reader)
-   */
-  void doParse(String filePath, String fileContents) {
-    doParse(filePath, new StringReader(fileContents));
   }
 
   /**
@@ -142,9 +121,9 @@ public abstract class JsFileLineParser {
         try {
           String revisedLine = line;
           if (inMultilineComment) {
-            endMultilineCommentMatcher.reset(line);
-            if (endMultilineCommentMatcher.lookingAt()) {
-              revisedLine = endMultilineCommentMatcher.replaceFirst("");
+            int endOfComment = revisedLine.indexOf("*/");
+            if (endOfComment != -1) {
+              revisedLine = revisedLine.substring(endOfComment + 2);
               inMultilineComment = false;
             } else {
               revisedLine = "";
@@ -152,23 +131,37 @@ public abstract class JsFileLineParser {
           }
 
           if (!inMultilineComment) {
-            commentMatcher.reset(line);
-            if (commentMatcher.find()) {
-              do {
-                if (// The last match hit a /**-style comment.
-                    commentMatcher.group(1) != null &&
-                    // The /**-style comment didn't close.
-                    commentMatcher.group(3) == null) {
+            while (true) {
+              int startOfLineComment = revisedLine.indexOf("//");
+              int startOfMultilineComment = revisedLine.indexOf("/*");
+              if (startOfLineComment != -1 &&
+                  (startOfMultilineComment == -1 ||
+                   startOfLineComment < startOfMultilineComment)) {
+                revisedLine = revisedLine.substring(0, startOfLineComment);
+                break;
+              } else if (startOfMultilineComment != -1) {
+                int endOfMultilineComment = revisedLine.indexOf("*/",
+                    startOfMultilineComment + 2);
+                if (endOfMultilineComment == -1) {
+                  revisedLine = revisedLine.substring(
+                      0, startOfMultilineComment);
                   inMultilineComment = true;
+                  break;
+                } else {
+                  revisedLine =
+                      revisedLine.substring(0, startOfMultilineComment) +
+                      revisedLine.substring(endOfMultilineComment + 2);
                 }
-              } while (commentMatcher.find());
-
-              revisedLine = commentMatcher.replaceAll("");
+              } else {
+                break;
+              }
             }
           }
 
           if (!revisedLine.isEmpty()) {
-            parseLine(revisedLine);
+            if (!parseLine(revisedLine)) {
+              break;
+            }
           }
         } catch (ParseException e) {
           // Inform the error handler of the exception.
@@ -192,9 +185,10 @@ public abstract class JsFileLineParser {
    * Called for each line of the file being parsed.
    *
    * @param line The line to parse.
+   * @return true to keep going, false otherwise.
    * @throws ParseException Should be thrown to signify a problem with the line.
    */
-  abstract void parseLine(String line) throws ParseException;
+  abstract boolean parseLine(String line) throws ParseException;
 
   /**
    * Parses a JS string literal.

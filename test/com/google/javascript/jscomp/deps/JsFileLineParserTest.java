@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.PrintStreamErrorManager;
 
 import junit.framework.TestCase;
 
+import java.io.StringReader;
 import java.util.Collections;
 
 /**
@@ -81,7 +82,7 @@ public class JsFileLineParserTest extends TestCase {
   }
 
   private void assertStrip(String expected, String input) {
-    parser.doParse("file", input);
+    parser.doParse("file", new StringReader(input));
     assertEquals(expected, parser.toString());
   }
 
@@ -92,8 +93,9 @@ public class JsFileLineParserTest extends TestCase {
       super(errorManager);
     }
 
-    void parseLine(String line) {
+    boolean parseLine(String line) {
       sb.append(line);
+      return true;
     }
 
     public String toString() {

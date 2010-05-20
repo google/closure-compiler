@@ -16,13 +16,18 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.ErrorManager;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -49,6 +54,8 @@ public class JsFileParser extends JsFileLineParser {
   private List<String> provides;
   private List<String> requires;
 
+  private boolean shortcutMode = false;
+
   /**
    * Constructor
    *
@@ -56,6 +63,10 @@ public class JsFileParser extends JsFileLineParser {
    */
   public JsFileParser(ErrorManager errorManager) {
     super(errorManager);
+  }
+
+  public void setShortcutMode(boolean mode) {
+    this.shortcutMode = mode;
   }
 
   /**
@@ -70,8 +81,7 @@ public class JsFileParser extends JsFileLineParser {
    */
   public DependencyInfo parseFile(String filePath, String closureRelativePath)
       throws IOException {
-    return parseFile(filePath, closureRelativePath,
-        Files.toString(new File(filePath), Charsets.UTF_8));
+    return parseReader(filePath, closureRelativePath, new FileReader(filePath));
   }
 
   /**
@@ -86,6 +96,12 @@ public class JsFileParser extends JsFileLineParser {
    */
   public DependencyInfo parseFile(String filePath, String closureRelativePath,
       String fileContents) {
+    return parseReader(filePath, closureRelativePath,
+        new StringReader(fileContents));
+  }
+
+  private DependencyInfo parseReader(String filePath,
+      String closureRelativePath, Reader fileContents) {
     provides = Lists.newArrayList();
     requires = Lists.newArrayList();
 
@@ -103,10 +119,14 @@ public class JsFileParser extends JsFileLineParser {
    * information.
    */
   @Override
-  protected void parseLine(String line) throws ParseException {
+  protected boolean parseLine(String line) throws ParseException {
+    boolean hasProvidesOrRequires = false;
+
     // Iterate over the provides/requires.
     googMatcher.reset(line);
     while (googMatcher.find()) {
+      hasProvidesOrRequires = true;
+
       // See if it's a require or provide.
       boolean isRequire = googMatcher.group(1).charAt(0) == 'r';
       // Parse the param.
@@ -124,5 +144,8 @@ public class JsFileParser extends JsFileLineParser {
         provides.add(arg);
       }
     }
+
+    return !shortcutMode || hasProvidesOrRequires ||
+        CharMatcher.WHITESPACE.matchesAllOf(line);
   }
 }

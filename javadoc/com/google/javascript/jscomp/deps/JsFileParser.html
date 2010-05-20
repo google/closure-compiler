@@ -155,12 +155,20 @@ A parser that can extract goog.require() and goog.provide() dependency
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;void</CODE></FONT></TD>
+<CODE>protected &nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileParser.html#parseLine(java.lang.String)">parseLine</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parses a line of javascript, extracting goog.provide and goog.require
  information.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileParser.html#setShortcutMode(boolean)">setShortcutMode</A></B>(boolean&nbsp;mode)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_com.google.javascript.jscomp.deps.JsFileLineParser"><!-- --></A>
@@ -215,6 +223,17 @@ public <B>JsFileParser</B>(<A HREF="../../../../../com/google/javascript/jscomp/
 </TR>
 </TABLE>
 
+<A NAME="setShortcutMode(boolean)"><!-- --></A><H3>
+setShortcutMode</H3>
+<PRE>
+public void <B>setShortcutMode</B>(boolean&nbsp;mode)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
 <A NAME="parseFile(java.lang.String, java.lang.String)"><!-- --></A><H3>
 parseFile</H3>
 <PRE>
@@ -256,8 +275,8 @@ public <A HREF="../../../../../com/google/javascript/jscomp/deps/DependencyInfo.
 <A NAME="parseLine(java.lang.String)"><!-- --></A><H3>
 parseLine</H3>
 <PRE>
-protected void <B>parseLine</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)
-                  throws com.google.javascript.jscomp.deps.JsFileLineParser.ParseException</PRE>
+protected boolean <B>parseLine</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)
+                     throws com.google.javascript.jscomp.deps.JsFileLineParser.ParseException</PRE>
 <DL>
 <DD>Parses a line of javascript, extracting goog.provide and goog.require
  information.
@@ -267,6 +286,7 @@ protected void <B>parseLine</B>(<A HREF="http://java.sun.com/javase/6/docs/api/j
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>line</CODE> - The line to parse.
+<DT><B>Returns:</B><DD>true to keep going, false otherwise.
 <DT><B>Throws:</B>
 <DD><CODE>com.google.javascript.jscomp.deps.JsFileLineParser.ParseException</CODE></DL>
 </DD>

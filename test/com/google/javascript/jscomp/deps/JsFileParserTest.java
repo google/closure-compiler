@@ -41,6 +41,7 @@ public class JsFileParserTest extends TestCase {
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);
     parser = new JsFileParser(errorManager);
+    parser.setShortcutMode(true);
   }
 
   /**
@@ -78,6 +79,51 @@ public class JsFileParserTest extends TestCase {
     DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
         ImmutableList.of("yes1", "yes2", "yes3"), Collections.<String>emptyList());
 
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
+
+    assertEquals(EXPECTED, result);
+    assertEquals(0, errorManager.getErrorCount());
+    assertEquals(0, errorManager.getWarningCount());
+  }
+
+  public void testShortcutMode1() {
+    // For efficiency reasons, we stop reading after the ctor.
+    final String CONTENTS = " // hi ! \n /* this is a comment */ "
+        + "goog.provide('yes1');\n /* and another comment */ \n"
+        + "goog.provide('yes2'); // include this\n"
+        + "function foo() {}\n"
+        + "goog.provide('no1');";
+
+    DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.of("yes1", "yes2"), Collections.<String>emptyList());
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
+
+    assertEquals(EXPECTED, result);
+    assertEquals(0, errorManager.getErrorCount());
+    assertEquals(0, errorManager.getWarningCount());
+  }
+
+  public void testShortcutMode2() {
+    final String CONTENTS = "/** goog.provide('no1'); \n" +
+        " * goog.provide('no2');\n */\n"
+        + "goog.provide('yes1');\n";
+
+    DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.of("yes1"), Collections.<String>emptyList());
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
+
+    assertEquals(EXPECTED, result);
+    assertEquals(0, errorManager.getErrorCount());
+    assertEquals(0, errorManager.getWarningCount());
+  }
+
+  public void testShortcutMode3() {
+    final String CONTENTS = "/**\n" +
+        " * goog.provide('no1');\n */\n"
+        + "goog.provide('yes1');\n";
+
+    DependencyInfo EXPECTED = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.of("yes1"), Collections.<String>emptyList());
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, CONTENTS);
 
     assertEquals(EXPECTED, result);

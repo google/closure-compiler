@@ -154,7 +154,7 @@ A parser that can extract dependency information from existing deps.js files.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>protected &nbsp;void</CODE></FONT></TD>
+<CODE>protected &nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html#parseLine(java.lang.String)">parseLine</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)</CODE>
 
 <BR>
@@ -253,8 +253,8 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-ext
 <A NAME="parseLine(java.lang.String)"><!-- --></A><H3>
 parseLine</H3>
 <PRE>
-protected void <B>parseLine</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)
-                  throws com.google.javascript.jscomp.deps.JsFileLineParser.ParseException</PRE>
+protected boolean <B>parseLine</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)
+                     throws com.google.javascript.jscomp.deps.JsFileLineParser.ParseException</PRE>
 <DL>
 <DD>Extracts dependency information from lines that look like
    goog.addDependency('pathRelativeToClosure', ['provides'], ['requires']);
@@ -265,6 +265,7 @@ protected void <B>parseLine</B>(<A HREF="http://java.sun.com/javase/6/docs/api/j
 </DD>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>line</CODE> - The line to parse.
+<DT><B>Returns:</B><DD>true to keep going, false otherwise.
 <DT><B>Throws:</B>
 <DD><CODE>ParseException</CODE> - Thrown if the given line has a malformed
      goog.addDependency().

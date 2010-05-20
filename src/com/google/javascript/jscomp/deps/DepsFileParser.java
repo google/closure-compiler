@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.ErrorManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -92,7 +93,7 @@ public class DepsFileParser extends JsFileLineParser {
   public List<DependencyInfo> parseFile(String filePath, String fileContents) {
     depInfos = Lists.newArrayList();
     logger.info("Parsing Dep: " + filePath);
-    doParse(filePath, fileContents);
+    doParse(filePath, new StringReader(fileContents));
 
     return depInfos;
   }
@@ -106,7 +107,7 @@ public class DepsFileParser extends JsFileLineParser {
    *     goog.addDependency().
    */
   @Override
-  protected void parseLine(String line) throws ParseException {
+  protected boolean parseLine(String line) throws ParseException {
     depMatcher.reset(line);
     // See if the line looks like: goog.addDependency(...)
     if (depMatcher.matches()) {
@@ -132,5 +133,7 @@ public class DepsFileParser extends JsFileLineParser {
       }
       depInfos.add(depInfo);
     }
+
+    return true;
   }
 }
