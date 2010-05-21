@@ -3,7 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>
-JsFileLineParser (Compiler)
+GraphReachability.EdgeTuple (Compiler)
 </TITLE>
 
 
@@ -13,7 +13,7 @@ JsFileLineParser (Compiler)
 function windowTitle()
 {
     if (location.href.indexOf('is-external=true') == -1) {
-        parent.document.title="JsFileLineParser (Compiler)";
+        parent.document.title="GraphReachability.EdgeTuple (Compiler)";
     }
 }
 </SCRIPT>
@@ -52,11 +52,11 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html" title="class in com.google.javascript.jscomp.deps"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileParser.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="class in com.google.javascript.jscomp.graph"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphvizGraph.html" title="interface in com.google.javascript.jscomp.graph"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../../index.html?com/google/javascript/jscomp/deps/JsFileLineParser.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="JsFileLineParser.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="GraphReachability.EdgeTuple.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -73,9 +73,9 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#methods_inherited_from_class_java.lang.Object">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;METHOD</FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_top"></A>
@@ -85,31 +85,63 @@ DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&n
 <!-- ======== START OF CLASS DATA ======== -->
 <H2>
 <FONT SIZE="-1">
-com.google.javascript.jscomp.deps</FONT>
+com.google.javascript.jscomp.graph</FONT>
 <BR>
-Class JsFileLineParser</H2>
+Class GraphReachability.EdgeTuple&lt;N,E&gt;</H2>
 <PRE>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
-  <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.deps.JsFileLineParser</B>
+  <IMG SRC="../../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple&lt;N,E&gt;</B>
 </PRE>
 <DL>
-<DT><B>Direct Known Subclasses:</B> <DD><A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html" title="class in com.google.javascript.jscomp.deps">DepsFileParser</A>, <A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileParser.html" title="class in com.google.javascript.jscomp.deps">JsFileParser</A></DD>
+<DT><B>Enclosing class:</B><DD><A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="class in com.google.javascript.jscomp.graph">GraphReachability</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">E</A>&gt;</DD>
 </DL>
 <HR>
 <DL>
-<DT><PRE>public abstract class <B>JsFileLineParser</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+<DT><PRE>public static final class <B>GraphReachability.EdgeTuple&lt;N,E&gt;</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
 </PRE>
 
 <P>
-Base class for classes that parse Javascript sources on a line-by-line basis. Strips comments
- from files and records all parsing errors.
+Represents Source Node, Edge and Destination Node.
 <P>
 
 <P>
 <HR>
 
 <P>
+<!-- =========== FIELD SUMMARY =========== -->
 
+<A NAME="field_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Field Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html#destNode">destNode</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">E</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html#edge">edge</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html#sourceNode">sourceNode</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 
 <A NAME="constructor_summary"><!-- --></A>
@@ -119,10 +151,12 @@ Base class for classes that parse Javascript sources on a line-by-line basis. St
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#JsFileLineParser(com.google.javascript.jscomp.ErrorManager)">JsFileLineParser</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A>&nbsp;errorManager)</CODE>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html#GraphReachability.EdgeTuple(N, E, N)">GraphReachability.EdgeTuple</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A>&nbsp;sourceNode,
+                            <A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">E</A>&nbsp;edge,
+                            <A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A>&nbsp;destNode)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Constructor.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -133,23 +167,6 @@ Base class for classes that parse Javascript sources on a line-by-line basis. St
 <TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
 <TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
 <B>Method Summary</B></FONT></TH>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#didParseSucceed()">didParseSucceed</A></B>()</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#setShortcutMode(boolean)">setShortcutMode</A></B>(boolean&nbsp;mode)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In shortcut mode, the file line parser can stop reading early if
- it thinks it found enough information.</TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -164,6 +181,45 @@ Base class for classes that parse Javascript sources on a line-by-line basis. St
 &nbsp;
 <P>
 
+<!-- ============ FIELD DETAIL =========== -->
+
+<A NAME="field_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Field Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="sourceNode"><!-- --></A><H3>
+sourceNode</H3>
+<PRE>
+public final <A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A> <B>sourceNode</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="edge"><!-- --></A><H3>
+edge</H3>
+<PRE>
+public final <A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">E</A> <B>edge</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+<HR>
+
+<A NAME="destNode"><!-- --></A><H3>
+destNode</H3>
+<PRE>
+public final <A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A> <B>destNode</B></PRE>
+<DL>
+<DL>
+</DL>
+</DL>
+
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 
 <A NAME="constructor_detail"><!-- --></A>
@@ -174,52 +230,13 @@ Base class for classes that parse Javascript sources on a line-by-line basis. St
 </TR>
 </TABLE>
 
-<A NAME="JsFileLineParser(com.google.javascript.jscomp.ErrorManager)"><!-- --></A><H3>
-JsFileLineParser</H3>
+<A NAME="GraphReachability.EdgeTuple(java.lang.Object,java.lang.Object,java.lang.Object)"><!-- --></A><A NAME="GraphReachability.EdgeTuple(N, E, N)"><!-- --></A><H3>
+GraphReachability.EdgeTuple</H3>
 <PRE>
-public <B>JsFileLineParser</B>(<A HREF="../../../../../com/google/javascript/jscomp/ErrorManager.html" title="interface in com.google.javascript.jscomp">ErrorManager</A>&nbsp;errorManager)</PRE>
+public <B>GraphReachability.EdgeTuple</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A>&nbsp;sourceNode,
+                                   <A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">E</A>&nbsp;edge,
+                                   <A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A>&nbsp;destNode)</PRE>
 <DL>
-<DD>Constructor.
-<P>
-<DL>
-<DT><B>Parameters:</B><DD><CODE>errorManager</CODE> - Parse error handler.</DL>
-</DL>
-
-<!-- ============ METHOD DETAIL ========== -->
-
-<A NAME="method_detail"><!-- --></A>
-<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
-<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
-<B>Method Detail</B></FONT></TH>
-</TR>
-</TABLE>
-
-<A NAME="setShortcutMode(boolean)"><!-- --></A><H3>
-setShortcutMode</H3>
-<PRE>
-public void <B>setShortcutMode</B>(boolean&nbsp;mode)</PRE>
-<DL>
-<DD>In shortcut mode, the file line parser can stop reading early if
- it thinks it found enough information.
-
- For example, many parsers assume that dependency information never
- shows up after "real" code.
-<P>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="didParseSucceed()"><!-- --></A><H3>
-didParseSucceed</H3>
-<PRE>
-public boolean <B>didParseSucceed</B>()</PRE>
-<DL>
-<DD><DL>
-</DL>
-</DD>
 </DL>
 <!-- ========= END OF CLASS DATA ========= -->
 <HR>
@@ -251,11 +268,11 @@ public boolean <B>didParseSucceed</B>()</PRE>
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html" title="class in com.google.javascript.jscomp.deps"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileParser.html" title="class in com.google.javascript.jscomp.deps"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="class in com.google.javascript.jscomp.graph"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphvizGraph.html" title="interface in com.google.javascript.jscomp.graph"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../../index.html?com/google/javascript/jscomp/deps/JsFileLineParser.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="JsFileLineParser.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../../index.html?com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="GraphReachability.EdgeTuple.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -272,9 +289,9 @@ public boolean <B>didParseSucceed</B>()</PRE>
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#methods_inherited_from_class_java.lang.Object">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;METHOD</FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_bottom"></A>

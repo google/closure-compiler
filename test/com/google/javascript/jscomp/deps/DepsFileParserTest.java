@@ -37,11 +37,13 @@ public class DepsFileParserTest extends TestCase {
   private DepsFileParser parser;
   private ErrorManager errorManager;
   private static final String SRC_PATH = "/path/1.js";
+  private final List<String> EMPTY = Collections.emptyList();
 
   @Override
   public void setUp() {
     errorManager = new PrintStreamErrorManager(System.err);
     parser = new DepsFileParser(errorManager);
+    parser.setShortcutMode(true);
   }
 
   /**
@@ -63,7 +65,6 @@ public class DepsFileParserTest extends TestCase {
         + "goog.addDependency(\"yes4\", [], [ \"a\",'b' , 'c' ]); //no new line at eof";
 
     List<DependencyInfo> result = parser.parseFile(SRC_PATH, CONTENTS);
-    List<String> EMPTY = Collections.emptyList();
     ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
         new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY),
         new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY),
@@ -88,5 +89,27 @@ public class DepsFileParserTest extends TestCase {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], []);");
     assertEquals(1, errorManager.getErrorCount());
     assertEquals(0, errorManager.getWarningCount());
+  }
+
+  public void testShortcutMode() {
+    List<DependencyInfo> result = parser.parseFile(SRC_PATH,
+        "goog.addDependency('yes1', [], []); \n" +
+        "foo();\n" +
+        "goog.addDependency('no1', [], []);");
+    ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
+        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY));
+    assertEquals(EXPECTED, result);
+  }
+
+  public void testNoShortcutMode() {
+    parser.setShortcutMode(false);
+    List<DependencyInfo> result = parser.parseFile(SRC_PATH,
+        "goog.addDependency('yes1', [], []); \n" +
+        "foo();\n" +
+        "goog.addDependency('yes2', [], []);");
+    ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
+        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY),
+        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY));
+    assertEquals(EXPECTED, result);
   }
 }

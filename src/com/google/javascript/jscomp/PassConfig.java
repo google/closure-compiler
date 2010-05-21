@@ -140,17 +140,37 @@ public abstract class PassConfig {
             DiagnosticGroup.forType(TypeCheck.INEXISTENT_PROPERTY)));
   }
 
+  /**
+   * Insert the given pass factory before the factory of the given name.
+   */
   final static void addPassFactoryBefore(
       List<PassFactory> factoryList, PassFactory factory, String passName) {
+    factoryList.add(
+        findPassIndexByName(factoryList, passName), factory);
+  }
+
+  /**
+   * Find a pass factory with the same name as the given one, and replace it.
+   */
+  final static void replacePassFactory(
+      List<PassFactory> factoryList, PassFactory factory) {
+    factoryList.set(
+        findPassIndexByName(factoryList, factory.getName()), factory);
+  }
+
+  /**
+   * Throws an exception if no pass with the given name exists.
+   */
+  private static int findPassIndexByName(
+      List<PassFactory> factoryList, String name) {
     for (int i = 0; i < factoryList.size(); i++) {
-      if (factoryList.get(i).getName().equals(passName)) {
-        factoryList.add(i, factory);
-        return;
+      if (factoryList.get(i).getName().equals(name)) {
+        return i;
       }
     }
 
     throw new IllegalArgumentException(
-        "No factory named '" + passName + "' in the factory list");
+        "No factory named '" + name + "' in the factory list");
   }
 
   /**

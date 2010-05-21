@@ -154,6 +154,16 @@ A parser that can extract dependency information from existing deps.js files.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html#parseFileReader(java.lang.String, java.io.Reader)">parseFileReader</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;filePath,
+                <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Reader.html?is-external=true" title="class or interface in java.io">Reader</A>&nbsp;reader)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parses the file from the given reader and returns a list of
+ dependency information that it contained.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/deps/DepsFileParser.html#parseLine(java.lang.String)">parseLine</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;line)</CODE>
 
@@ -169,7 +179,7 @@ A parser that can extract dependency information from existing deps.js files.
 <TH ALIGN="left"><B>Methods inherited from class com.google.javascript.jscomp.deps.<A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser</A></B></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#didParseSucceed()">didParseSucceed</A></CODE></TD>
+<TD><CODE><A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#didParseSucceed()">didParseSucceed</A>, <A HREF="../../../../../com/google/javascript/jscomp/deps/JsFileLineParser.html#setShortcutMode(boolean)">setShortcutMode</A></CODE></TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -245,6 +255,22 @@ public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-ext
 <P>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>filePath</CODE> - Path to the file to parse.<DD><CODE>fileContents</CODE> - The contents to parse.
+<DT><B>Returns:</B><DD>A list of DependencyInfo objects.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="parseFileReader(java.lang.String, java.io.Reader)"><!-- --></A><H3>
+parseFileReader</H3>
+<PRE>
+public <A HREF="http://java.sun.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/deps/DependencyInfo.html" title="interface in com.google.javascript.jscomp.deps">DependencyInfo</A>&gt; <B>parseFileReader</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;filePath,
+                                            <A HREF="http://java.sun.com/javase/6/docs/api/java/io/Reader.html?is-external=true" title="class or interface in java.io">Reader</A>&nbsp;reader)</PRE>
+<DL>
+<DD>Parses the file from the given reader and returns a list of
+ dependency information that it contained.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>filePath</CODE> - Path to the file to parse.<DD><CODE>reader</CODE> - A reader for the file.
 <DT><B>Returns:</B><DD>A list of DependencyInfo objects.</DL>
 </DD>
 </DL>

@@ -151,6 +151,10 @@ public class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = Lists.newArrayList();
 
+    if (options.closurePass) {
+      checks.add(closureGoogScopeAliases);
+    }
+
     if (options.nameAnonymousFunctionsOnly) {
       if (options.anonymousFunctionNaming ==
           AnonymousFunctionNamingPolicy.MAPPED) {
@@ -276,6 +280,13 @@ public class DefaultPassConfig extends PassConfig {
     if (options.closurePass) {
       checks.add(closureReplaceGetCssName);
     }
+
+    // i18n
+    // If you want to customize the compiler to use a different i18n pass,
+    // you can create a PassConfig that calls replacePassFactory
+    // to replace this.
+    checks.add(options.messageBundle != null ?
+        replaceMessages : createEmptyPass("replaceMessages"));
 
     // Defines in code always need to be processed.
     checks.add(processDefines);
@@ -760,6 +771,35 @@ public class DefaultPassConfig extends PassConfig {
           exportedNames = pass.getExportedVariableNames();
         }
       };
+    }
+  };
+
+  /**
+   * The default i18n pass.
+   * A lot of the options are not configurable, because ReplaceMessages
+   * has a lot of legacy logic.
+   */
+  private final PassFactory replaceMessages =
+      new PassFactory("replaceMessages", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new ReplaceMessages(compiler,
+          options.messageBundle,
+          /* warn about message dupes */
+          true,
+          /* allow messages with goog.getMsg */
+          JsMessage.Style.getFromParams(true, false),
+          /* if we can't find a translation, don't worry about it. */
+          false);
+    }
+  };
+
+  /** Applies aliases and inlines goog.scope. */
+  final PassFactory closureGoogScopeAliases =
+      new PassFactory("processGoogScopeAliases", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new ScopedAliases(compiler);
     }
   };
 

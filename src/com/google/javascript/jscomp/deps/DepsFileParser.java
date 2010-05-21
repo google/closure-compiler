@@ -16,13 +16,16 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.ErrorManager;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 import java.util.logging.Level;
@@ -78,7 +81,7 @@ public class DepsFileParser extends JsFileLineParser {
    * @throws IOException Thrown if the file could not be read.
    */
   public List<DependencyInfo> parseFile(String filePath) throws IOException {
-    return parseFile(filePath, Files.toString(new File(filePath), Charsets.UTF_8));
+    return parseFileReader(filePath, new FileReader(filePath));
   }
 
   /**
@@ -91,10 +94,22 @@ public class DepsFileParser extends JsFileLineParser {
    * @return A list of DependencyInfo objects.
    */
   public List<DependencyInfo> parseFile(String filePath, String fileContents) {
+    return parseFileReader(filePath, new StringReader(fileContents));
+  }
+
+
+  /**
+   * Parses the file from the given reader and returns a list of
+   * dependency information that it contained.
+   *
+   * @param filePath Path to the file to parse.
+   * @param reader A reader for the file.
+   * @return A list of DependencyInfo objects.
+   */
+  public List<DependencyInfo> parseFileReader(String filePath, Reader reader) {
     depInfos = Lists.newArrayList();
     logger.info("Parsing Dep: " + filePath);
-    doParse(filePath, new StringReader(fileContents));
-
+    doParse(filePath, reader);
     return depInfos;
   }
 
@@ -108,38 +123,40 @@ public class DepsFileParser extends JsFileLineParser {
    */
   @Override
   protected boolean parseLine(String line) throws ParseException {
+    boolean hasDependencies = false;
+
     // Quick sanity check that will catch most cases. This is a performance
     // win for people with a lot of JS.
-    if (line.indexOf("addDependency") == -1) {
-      return true;
+    if (line.indexOf("addDependency") != -1) {
+      depMatcher.reset(line);
+      // See if the line looks like: goog.addDependency(...)
+      if (depMatcher.matches()) {
+        hasDependencies = true;
+        String addDependencyParams = depMatcher.group(1);
+        depArgsMatch.reset(addDependencyParams);
+        // Extract the three parameters.
+        if (!depArgsMatch.matches()) {
+          // Although we could recover, we mark this as fatal since there should
+          // not be problems with generated deps.js files.
+          throw new ParseException("Invalid arguments to goog.addDependency(). Found: "
+              + addDependencyParams, true);
+        }
+        // Parse the file path.
+        String path = parseJsString(depArgsMatch.group(1));
+        DependencyInfo depInfo = new SimpleDependencyInfo(path, filePath,
+            // Parse the provides.
+            parseJsStringArray(depArgsMatch.group(2)),
+            // Parse the requires.
+            parseJsStringArray(depArgsMatch.group(3)));
+
+        if (logger.isLoggable(Level.FINE)) {
+          logger.fine("Found dep: " + depInfo);
+        }
+        depInfos.add(depInfo);
+      }
     }
 
-    depMatcher.reset(line);
-    // See if the line looks like: goog.addDependency(...)
-    if (depMatcher.matches()) {
-      String addDependencyParams = depMatcher.group(1);
-      depArgsMatch.reset(addDependencyParams);
-      // Extract the three parameters.
-      if (!depArgsMatch.matches()) {
-        // Although we could recover, we mark this as fatal since there should
-        // not be problems with generated deps.js files.
-        throw new ParseException("Invalid arguments to goog.addDependency(). Found: "
-            + addDependencyParams, true);
-      }
-      // Parse the file path.
-      String path = parseJsString(depArgsMatch.group(1));
-      DependencyInfo depInfo = new SimpleDependencyInfo(path, filePath,
-          // Parse the provides.
-          parseJsStringArray(depArgsMatch.group(2)),
-          // Parse the requires.
-          parseJsStringArray(depArgsMatch.group(3)));
-
-      if (logger.isLoggable(Level.FINE)) {
-        logger.fine("Found dep: " + depInfo);
-      }
-      depInfos.add(depInfo);
-    }
-
-    return true;
+    return !shortcutMode || hasDependencies ||
+        CharMatcher.WHITESPACE.matchesAllOf(line);
   }
 }

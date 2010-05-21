@@ -17,10 +17,8 @@
 package com.google.javascript.jscomp.graph;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.graph.Annotation;
-import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
-import com.google.javascript.jscomp.graph.GraphNode;
 
 /**
  * Computes all the reachable nodes. Upon execution of {@link #compute(Object)},
@@ -36,8 +34,22 @@ public class GraphReachability<N, E> implements EdgeCallback<N, E> {
   // FixedPointGraphTraversal accepts them.
   private final DiGraph<N, E> graph;
 
+  private final Predicate<EdgeTuple<N, E>> edgePredicate;
+
   public GraphReachability(DiGraph<N, E> graph) {
+    this(graph, null);
+  }
+
+  /**
+   * @param graph The graph.
+   * @param edgePredicate Given the predecessor P of the a node S and the edge
+   *      coming from P to S, this predicate should return true if S is
+   *      reachable from P using the edge.
+   */
+  public GraphReachability(DiGraph<N, E> graph,
+                           Predicate<EdgeTuple<N, E>> edgePredicate) {
     this.graph = graph;
+    this.edgePredicate = edgePredicate;
   }
 
   public void compute(N entry) {
@@ -57,7 +69,9 @@ public class GraphReachability<N, E> implements EdgeCallback<N, E> {
 
   @Override
   public boolean traverseEdge(N source, E e, N destination) {
-    if (graph.getNode(source).getAnnotation() == REACHABLE) {
+    if (graph.getNode(source).getAnnotation() == REACHABLE &&
+        (edgePredicate == null ||
+            edgePredicate.apply(new EdgeTuple<N, E>(source, e, destination)))) {
       GraphNode<N, E> destNode = graph.getNode(destination);
       if (destNode.getAnnotation() != REACHABLE) {
         destNode.setAnnotation(REACHABLE);
@@ -68,4 +82,18 @@ public class GraphReachability<N, E> implements EdgeCallback<N, E> {
   }
 
   public static final Annotation REACHABLE = new Annotation() {};
+
+  /**
+   * Represents Source Node, Edge and Destination Node.
+   */
+  public static final class EdgeTuple<N, E> {
+    public final N sourceNode;
+    public final E edge;
+    public final N destNode;
+    public EdgeTuple(N sourceNode, E edge, N destNode) {
+      this.sourceNode = sourceNode;
+      this.edge = edge;
+      this.destNode = destNode;
+    }
+  }
 }

@@ -140,7 +140,23 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("function f() {try { if (value instanceof type) return true; } " +
              "catch (e) { }}");
   }
-  
+
+  public void testFalseCondition() {
+    assertUnreachable("if(false) { }");
+    assertUnreachable("if(0) { }");
+  }
+
+  public void testUnreachableLoop() {
+    assertUnreachable("while(false) {}");
+  }
+
+  public void testInfiniteLoop() {
+    testSame("while (true) { foo(); break; }");
+
+    // TODO(user): Have a infinite loop warning instead.
+    assertUnreachable("while(true) {} foo()");
+  }
+
   private void assertUnreachable(String js) {
     test(js, js, CheckUnreachableCode.UNREACHABLE_CODE);
   }

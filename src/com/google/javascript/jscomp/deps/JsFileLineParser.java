@@ -43,6 +43,8 @@ public abstract class JsFileLineParser {
   static final DiagnosticType PARSE_ERROR = DiagnosticType.error(
       "DEPS_PARSE_ERROR", "{0}\n{1}");
 
+  boolean shortcutMode = false;
+
   /**
    * Thrown by base classes to signify a problem parsing a line.
    */
@@ -89,6 +91,17 @@ public abstract class JsFileLineParser {
    */
   public JsFileLineParser(ErrorManager errorManager) {
     this.errorManager = errorManager;
+  }
+
+  /**
+   * In shortcut mode, the file line parser can stop reading early if
+   * it thinks it found enough information.
+   *
+   * For example, many parsers assume that dependency information never
+   * shows up after "real" code.
+   */
+  public void setShortcutMode(boolean mode) {
+    this.shortcutMode = mode;
   }
 
   public boolean didParseSucceed() {
@@ -159,7 +172,9 @@ public abstract class JsFileLineParser {
           }
 
           if (!revisedLine.isEmpty()) {
-            if (!parseLine(revisedLine)) {
+            // This check for shortcut mode should be redundant, but
+            // it's done for safety reasons.
+            if (!parseLine(revisedLine) && shortcutMode) {
               break;
             }
           }

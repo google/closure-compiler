@@ -135,6 +135,52 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         "b.y.f = 1;" +
         "b.y.g = 1;");
   }
+  
+  public void testWithDevirtualization() {
+    extract(
+        "x.prototype.a = 1;" +
+        "x.prototype.b = 1;" +
+        "function devirtualize1() { }" +
+        "x.prototype.c = 1;" +
+        "x.prototype.d = 1;" +
+        "x.prototype.e = 1;" +
+        "x.prototype.f = 1;" +
+        "x.prototype.g = 1;",
+        
+        loadPrototype("x") +
+        TMP + ".a = 1;" +
+        TMP + ".b = 1;" +
+        "function devirtualize1() { }" +
+        TMP + ".c = 1;" +
+        TMP + ".d = 1;" +
+        TMP + ".e = 1;" +
+        TMP + ".f = 1;" +
+        TMP + ".g = 1;");
+    
+    extract(
+        "x.prototype.a = 1;" +
+        "x.prototype.b = 1;" +
+        "function devirtualize1() { }" +
+        "x.prototype.c = 1;" +
+        "x.prototype.d = 1;" +
+        "function devirtualize2() { }" +
+        "x.prototype.e = 1;" +
+        "x.prototype.f = 1;" +
+        "function devirtualize3() { }" +
+        "x.prototype.g = 1;",
+        
+        loadPrototype("x") +
+        TMP + ".a = 1;" +
+        TMP + ".b = 1;" +
+        "function devirtualize1() { }" +
+        TMP + ".c = 1;" +
+        TMP + ".d = 1;" +
+        "function devirtualize2() { }" +
+        TMP + ".e = 1;" +
+        TMP + ".f = 1;" +
+        "function devirtualize3() { }" +
+        TMP + ".g = 1;");
+  }
 
   public String loadPrototype(String qName) {
     return TMP + " = " + qName + ".prototype;";

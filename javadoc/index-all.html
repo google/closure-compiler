@@ -1397,6 +1397,9 @@ Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/
 <DT><A HREF="./com/google/javascript/rhino/JSDocInfo.Marker.html#description"><B>description</B></A> - 
 Variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSDocInfo.Marker.html" title="class in com.google.javascript.rhino">JSDocInfo.Marker</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html#destNode"><B>destNode</B></A> - 
+Variable in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph">GraphReachability.EdgeTuple</A>
+<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/Node.html#detachChildren()"><B>detachChildren()</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>Removes all children from this node and isolates the children from each
@@ -1520,7 +1523,10 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <B>E</B></H2>
 <DL>
 <DT><A HREF="./com/google/javascript/rhino/EcmaError.html" title="class in com.google.javascript.rhino"><B>EcmaError</B></A> - Exception in <A HREF="./com/google/javascript/rhino/package-summary.html">com.google.javascript.rhino</A><DD>The class of exceptions raised by the engine as described in
- ECMA edition 3.<DT><A HREF="./com/google/javascript/jscomp/graph/StandardUnionFind.html#elements()"><B>elements()</B></A> - 
+ ECMA edition 3.<DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html#edge"><B>edge</B></A> - 
+Variable in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph">GraphReachability.EdgeTuple</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/StandardUnionFind.html#elements()"><B>elements()</B></A> - 
 Method in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/StandardUnionFind.html" title="class in com.google.javascript.jscomp.graph">StandardUnionFind</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/UnionFind.html#elements()"><B>elements()</B></A> - 
@@ -2239,6 +2245,9 @@ Method in interface com.google.javascript.jscomp.<A HREF="./com/google/javascrip
 <DT><A HREF="./com/google/javascript/jscomp/SourceFile.html#getCode()"><B>getCode()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>
 <DD>Gets all the code in this source file.
+<DT><A HREF="./com/google/javascript/jscomp/SourceFile.html#getCodeReader()"><B>getCodeReader()</B></A> - 
+Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/SourceFile.html" title="class in com.google.javascript.jscomp">SourceFile</A>
+<DD>Gets a reader for the code in this source file.
 <DT><A HREF="./com/google/javascript/jscomp/PerformanceTracker.html#getCodeSizeRecord()"><B>getCodeSizeRecord()</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/PerformanceTracker.html" title="class in com.google.javascript.jscomp">PerformanceTracker</A>
 <DD>&nbsp;
@@ -3879,6 +3888,12 @@ Constructor for class com.google.javascript.jscomp.graph.<A HREF="./com/google/j
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph"><B>GraphNode</B></A>&lt;<A HREF="./com/google/javascript/jscomp/graph/GraphNode.html" title="type parameter in GraphNode">N</A>,<A HREF="./com/google/javascript/jscomp/graph/GraphNode.html" title="type parameter in GraphNode">E</A>&gt; - Interface in <A HREF="./com/google/javascript/jscomp/graph/package-summary.html">com.google.javascript.jscomp.graph</A><DD>A generic node.<DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html" title="class in com.google.javascript.jscomp.graph"><B>GraphReachability</B></A>&lt;<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">N</A>,<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">E</A>&gt; - Class in <A HREF="./com/google/javascript/jscomp/graph/package-summary.html">com.google.javascript.jscomp.graph</A><DD>Computes all the reachable nodes.<DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html#GraphReachability(com.google.javascript.jscomp.graph.DiGraph)"><B>GraphReachability(DiGraph&lt;N, E&gt;)</B></A> - 
 Constructor for class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html" title="class in com.google.javascript.jscomp.graph">GraphReachability</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html#GraphReachability(com.google.javascript.jscomp.graph.DiGraph, com.google.common.base.Predicate)"><B>GraphReachability(DiGraph&lt;N, E&gt;, Predicate&lt;GraphReachability.EdgeTuple&lt;N, E&gt;&gt;)</B></A> - 
+Constructor for class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.html" title="class in com.google.javascript.jscomp.graph">GraphReachability</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph"><B>GraphReachability.EdgeTuple</B></A>&lt;<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A>,<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">E</A>&gt; - Class in <A HREF="./com/google/javascript/jscomp/graph/package-summary.html">com.google.javascript.jscomp.graph</A><DD>Represents Source Node, Edge and Destination Node.<DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html#GraphReachability.EdgeTuple(N, E, N)"><B>GraphReachability.EdgeTuple(N, E, N)</B></A> - 
+Constructor for class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph">GraphReachability.EdgeTuple</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/jscomp/graph/GraphvizGraph.html" title="interface in com.google.javascript.jscomp.graph"><B>GraphvizGraph</B></A> - Interface in <A HREF="./com/google/javascript/jscomp/graph/package-summary.html">com.google.javascript.jscomp.graph</A><DD>A graph that can be dumped to a Graphviz DOT file.<DT><A HREF="./com/google/javascript/jscomp/graph/GraphvizGraph.GraphvizEdge.html" title="interface in com.google.javascript.jscomp.graph"><B>GraphvizGraph.GraphvizEdge</B></A> - Interface in <A HREF="./com/google/javascript/jscomp/graph/package-summary.html">com.google.javascript.jscomp.graph</A><DD>A Graphviz edge.<DT><A HREF="./com/google/javascript/jscomp/graph/GraphvizGraph.GraphvizNode.html" title="interface in com.google.javascript.jscomp.graph"><B>GraphvizGraph.GraphvizNode</B></A> - Interface in <A HREF="./com/google/javascript/jscomp/graph/package-summary.html">com.google.javascript.jscomp.graph</A><DD>A Graphviz node.<DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#GREATEST_FUNCTION_TYPE"><B>GREATEST_FUNCTION_TYPE</B></A> - 
 Variable in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing">BaseJSTypeTestCase</A>
@@ -5606,6 +5621,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/rhino/Node.html#mergeLineCharNo(int, int)"><B>mergeLineCharNo(int, int)</B></A> - 
 Static method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>Merges the line number and character number in one integer.
+<DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#messageBundle"><B>messageBundle</B></A> - 
+Variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
+<DD>Returns localized replacement for MSG_* variables
 <DT><A HREF="./com/google/javascript/jscomp/MessageBundle.html" title="interface in com.google.javascript.jscomp"><B>MessageBundle</B></A> - Interface in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>An interface for providing alterative values for user-visible messages in
  javascript code.<DT><A HREF="./com/google/javascript/jscomp/MessageFormatter.html" title="interface in com.google.javascript.jscomp"><B>MessageFormatter</B></A> - Interface in <A HREF="./com/google/javascript/jscomp/package-summary.html">com.google.javascript.jscomp</A><DD>Format warnings and errors.<DT><A HREF="./com/google/javascript/jscomp/DiagnosticGroups.html#MISSING_PROPERTIES"><B>MISSING_PROPERTIES</B></A> - 
 Static variable in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/DiagnosticGroups.html" title="class in com.google.javascript.jscomp">DiagnosticGroups</A>
@@ -6057,6 +6075,10 @@ Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascri
 Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/JsFileParser.html" title="class in com.google.javascript.jscomp.deps">JsFileParser</A>
 <DD>Parses the given file and returns the dependency information that it
  contained.
+<DT><A HREF="./com/google/javascript/jscomp/deps/DepsFileParser.html#parseFileReader(java.lang.String, java.io.Reader)"><B>parseFileReader(String, Reader)</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/DepsFileParser.html" title="class in com.google.javascript.jscomp.deps">DepsFileParser</A>
+<DD>Parses the file from the given reader and returns a list of
+ dependency information that it contained.
 <DT><A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.html#parseFrom(com.google.protobuf.ByteString)"><B>parseFrom(ByteString)</B></A> - 
 Static method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.html" title="class in com.google.javascript.jscomp">FunctionInformationMap.Entry</A>
 <DD>&nbsp;
@@ -7131,9 +7153,10 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/jscomp/CompilerOptions.html#setRewriteNewDateGoogNow(boolean)"><B>setRewriteNewDateGoogNow(boolean)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/CompilerOptions.html" title="class in com.google.javascript.jscomp">CompilerOptions</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/jscomp/deps/JsFileParser.html#setShortcutMode(boolean)"><B>setShortcutMode(boolean)</B></A> - 
-Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/JsFileParser.html" title="class in com.google.javascript.jscomp.deps">JsFileParser</A>
-<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/deps/JsFileLineParser.html#setShortcutMode(boolean)"><B>setShortcutMode(boolean)</B></A> - 
+Method in class com.google.javascript.jscomp.deps.<A HREF="./com/google/javascript/jscomp/deps/JsFileLineParser.html" title="class in com.google.javascript.jscomp.deps">JsFileLineParser</A>
+<DD>In shortcut mode, the file line parser can stop reading early if
+ it thinks it found enough information.
 <DT><A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.Builder.html#setSize(int)"><B>setSize(int)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/FunctionInformationMap.Entry.Builder.html" title="class in com.google.javascript.jscomp">FunctionInformationMap.Entry.Builder</A>
 <DD>&nbsp;
@@ -7352,6 +7375,9 @@ Method in exception com.google.javascript.rhino.<A HREF="./com/google/javascript
  if that information is not available.
 <DT><A HREF="./com/google/javascript/rhino/Node.html#SOURCENAME_PROP"><B>SOURCENAME_PROP</B></A> - 
 Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html#sourceNode"><B>sourceNode</B></A> - 
+Variable in class com.google.javascript.jscomp.graph.<A HREF="./com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph">GraphReachability.EdgeTuple</A>
 <DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/SourcePosition.html" title="class in com.google.javascript.rhino"><B>SourcePosition</B></A>&lt;<A HREF="./com/google/javascript/rhino/SourcePosition.html" title="type parameter in SourcePosition">T</A>&gt; - Class in <A HREF="./com/google/javascript/rhino/package-summary.html">com.google.javascript.rhino</A><DD>Represents a position in some piece of source code, with an associated
  item of type T found at that position.<DT><A HREF="./com/google/javascript/rhino/SourcePosition.html#SourcePosition()"><B>SourcePosition()</B></A> - 

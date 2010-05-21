@@ -108,7 +108,6 @@ public enum CompilationLevel {
     options.optimizeArgumentsArray = true;
     options.removeUnusedVars = true;
     options.removeUnusedVarsInGlobalScope = false;
-    options.flowSensitiveInlineVariables = true;
 
     // Allows annotations that are not standard.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
@@ -137,7 +136,6 @@ public enum CompilationLevel {
     options.labelRenaming = true;
     options.removeDeadCode = true;
     options.optimizeArgumentsArray = true;
-    options.flowSensitiveInlineVariables = true;
 
     // All the advance optimizations.
     options.reserveRawExports = true;

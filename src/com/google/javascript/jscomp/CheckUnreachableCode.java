@@ -16,11 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.GraphReachability;
+import com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -42,11 +43,11 @@ class CheckUnreachableCode implements ScopedCallback {
     this.compiler = compiler;
     this.level = level;
   }
-
+  
   @Override
   public void enterScope(NodeTraversal t) {
     new GraphReachability<Node, ControlFlowGraph.Branch>(
-        t.getControlFlowGraph()).compute(
+        t.getControlFlowGraph(), new ReachablePredicate()).compute(
             t.getControlFlowGraph().getEntry().getValue());
   }
 
@@ -74,12 +75,34 @@ class CheckUnreachableCode implements ScopedCallback {
     }
     return true;
   }
-
+  
   @Override
   public void exitScope(NodeTraversal t) {
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+  }
+  
+  private final class ReachablePredicate implements
+      Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> {
+
+    @Override
+    public boolean apply(EdgeTuple<Node, Branch> input) {
+      Branch branch = input.edge;
+      if (!branch.isConditional()) {
+        return true;
+      }
+      Node predecessor = input.sourceNode;
+      Node condition = NodeUtil.getConditionExpression(predecessor);
+      
+      // TODO(user): Handle more complicated expression like true == true,
+      // etc....
+      if (condition != null && NodeUtil.isImmutableValue(condition)) {
+        return NodeUtil.getBooleanValue(condition) ==
+            (branch == Branch.ON_TRUE);
+      }
+      return true;
+    }
   }
 }

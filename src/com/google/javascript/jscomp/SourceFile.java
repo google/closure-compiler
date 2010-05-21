@@ -16,17 +16,18 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 
-import com.google.common.io.CharStreams;
-import com.google.common.annotations.VisibleForTesting;
-
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.Charset;
 
 /**
@@ -93,6 +94,13 @@ public abstract class SourceFile {
     return code;
   }
 
+  /**
+   * Gets a reader for the code in this source file.
+   */
+  public Reader getCodeReader() throws IOException {
+    return new StringReader(getCode());
+  }
+
   @VisibleForTesting
   String getCodeNoCache() {
     return code;
@@ -117,6 +125,10 @@ public abstract class SourceFile {
   public void clearCachedSource() {
     // By default, do nothing.  Not all kinds of SourceFiles can regenerate
     // code.
+  }
+
+  boolean hasSourceInMemory() {
+    return code != null;
   }
 
   /** Returns a unique name for the source file. */
@@ -354,6 +366,18 @@ public abstract class SourceFile {
         super.setCode(cachedCode);
       }
       return cachedCode;
+    }
+
+    /**
+     * Gets a reader for the code in this source file.
+     */
+    public Reader getCodeReader() throws IOException {
+      if (hasSourceInMemory()) {
+        return super.getCodeReader();
+      } else {
+        // If we haven't pulled the code into memory yet, don't.
+        return new FileReader(file);
+      }
     }
 
     // Flush the cached code after the compile; we can read it off disk

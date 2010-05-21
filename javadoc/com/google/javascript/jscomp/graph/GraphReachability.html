@@ -53,7 +53,7 @@ function windowTitle()
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphvizGraph.html" title="interface in com.google.javascript.jscomp.graph"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/jscomp/graph/GraphReachability.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="GraphReachability.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -73,7 +73,7 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
@@ -112,7 +112,24 @@ Computes all the reachable nodes. Upon execution of <A HREF="../../../../../com/
 <HR>
 
 <P>
-<!-- =========== FIELD SUMMARY =========== -->
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+
+<A NAME="nested_class_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Nested Class Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;class</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph">GraphReachability.EdgeTuple</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="type parameter in GraphReachability.EdgeTuple">E</A>&gt;</B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Represents Source Node, Edge and Destination Node.</TD>
+</TR>
+</TABLE>
+&nbsp;<!-- =========== FIELD SUMMARY =========== -->
 
 <A NAME="field_summary"><!-- --></A>
 <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
@@ -140,6 +157,13 @@ Computes all the reachable nodes. Upon execution of <A HREF="../../../../../com/
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html#GraphReachability(com.google.javascript.jscomp.graph.DiGraph)">GraphReachability</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">E</A>&gt;&nbsp;graph)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html#GraphReachability(com.google.javascript.jscomp.graph.DiGraph, com.google.common.base.Predicate)">GraphReachability</A></B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">E</A>&gt;&nbsp;graph,
+                  com.google.common.base.Predicate&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph">GraphReachability.EdgeTuple</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">E</A>&gt;&gt;&nbsp;edgePredicate)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -228,6 +252,19 @@ GraphReachability</H3>
 <PRE>
 public <B>GraphReachability</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">E</A>&gt;&nbsp;graph)</PRE>
 <DL>
+</DL>
+<HR>
+
+<A NAME="GraphReachability(com.google.javascript.jscomp.graph.DiGraph, com.google.common.base.Predicate)"><!-- --></A><H3>
+GraphReachability</H3>
+<PRE>
+public <B>GraphReachability</B>(<A HREF="../../../../../com/google/javascript/jscomp/graph/DiGraph.html" title="class in com.google.javascript.jscomp.graph">DiGraph</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">E</A>&gt;&nbsp;graph,
+                         com.google.common.base.Predicate&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph">GraphReachability.EdgeTuple</A>&lt;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">N</A>,<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.html" title="type parameter in GraphReachability">E</A>&gt;&gt;&nbsp;edgePredicate)</PRE>
+<DL>
+<DL>
+<DT><B>Parameters:</B><DD><CODE>graph</CODE> - The graph.<DD><CODE>edgePredicate</CODE> - Given the predecessor P of the a node S and the edge
+      coming from P to S, this predicate should return true if S is
+      reachable from P using the edge.</DL>
 </DL>
 
 <!-- ============ METHOD DETAIL ========== -->
@@ -320,7 +357,7 @@ public boolean <B>traverseEdge</B>(<A HREF="../../../../../com/google/javascript
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
 &nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphNode.html" title="interface in com.google.javascript.jscomp.graph"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphvizGraph.html" title="interface in com.google.javascript.jscomp.graph"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../../com/google/javascript/jscomp/graph/GraphReachability.EdgeTuple.html" title="class in com.google.javascript.jscomp.graph"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
   <A HREF="../../../../../index.html?com/google/javascript/jscomp/graph/GraphReachability.html" target="_top"><B>FRAMES</B></A>  &nbsp;
 &nbsp;<A HREF="GraphReachability.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
@@ -340,7 +377,7 @@ public boolean <B>traverseEdge</B>(<A HREF="../../../../../com/google/javascript
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;<A HREF="#nested_class_summary">NESTED</A>&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
 DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>

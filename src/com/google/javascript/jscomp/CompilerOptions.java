@@ -74,6 +74,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   boolean manageClosureDependencies = false;
 
+  /** Returns localized replacement for MSG_* variables */
+  // Transient so that clients don't have to implement Serializable.
+  public transient MessageBundle messageBundle = null;
+
   //--------------------------------
   // Checks
   //--------------------------------

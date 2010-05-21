@@ -54,8 +54,6 @@ public class JsFileParser extends JsFileLineParser {
   private List<String> provides;
   private List<String> requires;
 
-  private boolean shortcutMode = false;
-
   /**
    * Constructor
    *
@@ -63,10 +61,6 @@ public class JsFileParser extends JsFileLineParser {
    */
   public JsFileParser(ErrorManager errorManager) {
     super(errorManager);
-  }
-
-  public void setShortcutMode(boolean mode) {
-    this.shortcutMode = mode;
   }
 
   /**
