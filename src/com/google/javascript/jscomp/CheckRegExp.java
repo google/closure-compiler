@@ -27,7 +27,6 @@ import com.google.javascript.rhino.Node;
  */
 class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
 
-  // TODO(johnlenz): Get this warning turned on by default.
   static final DiagnosticType REGEXP_REFERENCE =
     DiagnosticType.warning("JSC_REGEXP_REFERENCE",
         "References to the global RegExp object prevents " +

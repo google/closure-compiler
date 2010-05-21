@@ -122,26 +122,31 @@ public class JsFileParser extends JsFileLineParser {
   protected boolean parseLine(String line) throws ParseException {
     boolean hasProvidesOrRequires = false;
 
-    // Iterate over the provides/requires.
-    googMatcher.reset(line);
-    while (googMatcher.find()) {
-      hasProvidesOrRequires = true;
+    // Quick sanity check that will catch most cases. This is a performance
+    // win for people with a lot of JS.
+    if (line.indexOf("provide") != -1 ||
+        line.indexOf("require") != -1) {
+      // Iterate over the provides/requires.
+      googMatcher.reset(line);
+      while (googMatcher.find()) {
+        hasProvidesOrRequires = true;
 
-      // See if it's a require or provide.
-      boolean isRequire = googMatcher.group(1).charAt(0) == 'r';
-      // Parse the param.
-      String arg = parseJsString(googMatcher.group(2));
+        // See if it's a require or provide.
+        boolean isRequire = googMatcher.group(1).charAt(0) == 'r';
+        // Parse the param.
+        String arg = parseJsString(googMatcher.group(2));
 
-      // Add the dependency.
-      if (isRequire) {
-        // goog is always implicit.
-        // TODO(nicksantos): I'm pretty sure we don't need this anymore.
-        // Remove this later.
-        if (!"goog".equals(arg)) {
-          requires.add(arg);
+        // Add the dependency.
+        if (isRequire) {
+          // goog is always implicit.
+          // TODO(nicksantos): I'm pretty sure we don't need this anymore.
+          // Remove this later.
+          if (!"goog".equals(arg)) {
+            requires.add(arg);
+          }
+        } else {
+          provides.add(arg);
         }
-      } else {
-        provides.add(arg);
       }
     }
 

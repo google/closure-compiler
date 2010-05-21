@@ -108,6 +108,12 @@ public class DepsFileParser extends JsFileLineParser {
    */
   @Override
   protected boolean parseLine(String line) throws ParseException {
+    // Quick sanity check that will catch most cases. This is a performance
+    // win for people with a lot of JS.
+    if (line.indexOf("addDependency") == -1) {
+      return true;
+    }
+
     depMatcher.reset(line);
     // See if the line looks like: goog.addDependency(...)
     if (depMatcher.matches()) {
