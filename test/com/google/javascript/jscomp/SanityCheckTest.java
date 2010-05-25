@@ -106,36 +106,4 @@ public class SanityCheckTest extends CompilerTestCase {
     }
     assertTrue(exceptionCaught);
   }
-
-  public void testSymbolTable() throws Exception {
-    otherPass = new CompilerPass() {
-      @Override public void process(Node externs, Node root) {
-        SymbolTable st = getLastCompiler().acquireSymbolTable();
-        st.createScope(root.getParent(), null);
-        Node script = root.getFirstChild();
-        script.removeChild(script.getFirstChild());
-        st.release();
-      }
-    };
-
-    test("var x;", null, SymbolTable.VARIABLE_COUNT_MISMATCH);
-  }
-
-  public void testSymbolTableWrongRoot() throws Exception {
-    otherPass = new CompilerPass() {
-      @Override public void process(Node externs, Node root) {
-        SymbolTable st = getLastCompiler().acquireSymbolTable();
-        st.createScope(root, null);
-        st.release();
-      }
-    };
-
-    try {
-      testSame("var x;");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "May only create scopes for the global node and functions",
-          e.getMessage());
-    }
-  }
 }

@@ -50,24 +50,7 @@ class SanityCheck implements CompilerPass {
 
   public void process(Node externs, Node root) {
     sanityCheckNormalization(externs, root);
-    Node reparsedRoot = sanityCheckCodeGeneration(root);
-    if (reparsedRoot != null) {
-      Node clonedExterns = externs.cloneTree();
-      sanityCheckSymbolTable(
-          new Node(Token.BLOCK,
-              clonedExterns,
-              new Node(Token.BLOCK, reparsedRoot)),
-          root.getParent());
-    }
-  }
-
-  /**
-   * Sanity checks that symbol table is up-to-date.
-   */
-  private void sanityCheckSymbolTable(Node reparsedRoot, Node originalRoot) {
-    SymbolTable table = compiler.acquireSymbolTable();
-    table.verify(reparsedRoot, originalRoot);
-    table.release();
+    sanityCheckCodeGeneration(root);
   }
 
   /**

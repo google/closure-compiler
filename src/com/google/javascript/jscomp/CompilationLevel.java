@@ -94,8 +94,6 @@ public enum CompilationLevel {
     options.variableRenaming = VariableRenamingPolicy.LOCAL;
     options.inlineLocalVariables = true;
     options.inlineLocalFunctions = true;
-    options.inlineAnonymousFunctionExpressions = true;
-    options.decomposeExpressions = true;
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
     options.removeConstantExpressions = true;
@@ -152,8 +150,6 @@ public enum CompilationLevel {
     options.inlineConstantVars = true;
     options.inlineFunctions = true;
     options.inlineLocalFunctions = true;
-    options.inlineAnonymousFunctionExpressions = true;
-    options.decomposeExpressions = true;
     options.inlineGetters = true;
     options.inlineVariables = true;
     options.removeConstantExpressions = true;

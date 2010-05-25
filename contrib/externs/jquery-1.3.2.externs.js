@@ -704,3 +704,12 @@ jQuery.fx = {};
 
 /** @type {boolean} */
 jQuery.fx.off;
+
+// http://docs.jquery.com/Utilities
+
+/**
+ * @param {number|string|Object} value
+ * @param {Array} array
+ * @return {number}
+ */
+jQueryObject.prototype.inArray = function(value, array) {};

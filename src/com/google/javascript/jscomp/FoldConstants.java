@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
@@ -213,18 +214,34 @@ class FoldConstants extends AbstractPostOrderCallback
             break;
         }
         return;
-    } else if (type == Token.NEW) {
+    } 
+
+    if (type == Token.NEW) {
+      tryFoldStandardConstructors(t, n);
+
+      // The type might have changed from NEW to CALL, update it
+      // and continue.
+      type = n.getType();
+    }
+
+    if (type == Token.NEW || type == Token.CALL) {
       if (Token.NAME == left.getType()) {
         String className = left.getString();
         if ("RegExp".equals(className)) {
-          tryFoldRegularExpressionConstructor(t, n, parent);
+          if (tryFoldRegularExpressionConstructor(t, n, parent)) {
+            return;
+          }
         } else if (left.getNext() == null) {
           if ("Array".equals(className)) {
-            tryFoldLiteralConstructor(
-                t, n, parent, className, Token.ARRAYLIT);
+            if (tryFoldLiteralConstructor(
+                t, n, parent, className, Token.ARRAYLIT)) {
+              return;
+            }
           } else if ("Object".equals(className)) {
-            tryFoldLiteralConstructor(
-                t, n, parent, className, Token.OBJECTLIT);
+            if (tryFoldLiteralConstructor(
+                t, n, parent, className, Token.OBJECTLIT)) {
+              return;
+            }
           }
         }
       }
@@ -384,6 +401,37 @@ class FoldConstants extends AbstractPostOrderCallback
     }
 
     // other types aren't handled
+  }
+
+  private static final ImmutableSet<String> STANDARD_OBJECT_CONSTRUCTORS =
+    // String, Number, and Boolean functions return non-object types, whereas
+    // new String, new Number, and new Boolean return object types, so don't
+    // include them here.
+    ImmutableSet.of(
+      "Object",
+      "Array",
+      "RegExp",
+      "Error"
+      );
+  
+  /**
+   * Fold "new Object()" to "Object()".
+   */
+  private void tryFoldStandardConstructors(NodeTraversal t, Node n) {
+    Preconditions.checkState(n.getType() == Token.NEW);
+    
+    if (n.getFirstChild().getType() == Token.NAME) {
+      String className = n.getFirstChild().getString();
+      if (STANDARD_OBJECT_CONSTRUCTORS.contains(className)) {
+        // The var check isn't really needed here due to name normalizations
+        // but we do it here to simplify unit testing.
+        Scope.Var var = t.getScope().getVar(className);
+        if (var == null || var.isGlobal()) {
+          n.setType(Token.CALL);
+          compiler.reportCodeChange();
+        }    
+      }
+    }
   }
 
   private void tryFoldComma(
@@ -1677,7 +1725,7 @@ class FoldConstants extends AbstractPostOrderCallback
   /**
    * Try to fold a RegExp constructor to a regular expression literal.
    */
-  void tryFoldRegularExpressionConstructor(
+  private boolean tryFoldRegularExpressionConstructor(
       NodeTraversal t, Node n, Node parent) {
     Node constructor = n.getFirstChild();
     Node pattern = constructor.getNext();  // e.g.  ^foobar$
@@ -1685,7 +1733,7 @@ class FoldConstants extends AbstractPostOrderCallback
 
     if (null == pattern || (null != flags && null != flags.getNext())) {
       // too few or too many arguments
-      return;
+      return false;
     }
 
     if (// is pattern folded
@@ -1714,10 +1762,10 @@ class FoldConstants extends AbstractPostOrderCallback
         // fold to /foobar/gi
         if (!areValidRegexpFlags(flags.getString())) {
           error(t, INVALID_REGULAR_EXPRESSION_FLAGS, flags);
-          return;
+          return false;
         }
         if (!areSafeFlagsToFold(flags.getString())) {
-          return;
+          return false;
         }
         n.removeChild(flags);
         regexLiteral = new Node(Token.REGEXP, pattern, flags);
@@ -1725,7 +1773,10 @@ class FoldConstants extends AbstractPostOrderCallback
 
       parent.replaceChild(n, regexLiteral);
       t.getCompiler().reportCodeChange();
+      return true;
     }
+
+    return false;
   }
 
   private static final Pattern REGEXP_FLAGS_RE = Pattern.compile("^[gmi]*$");
@@ -1790,17 +1841,19 @@ class FoldConstants extends AbstractPostOrderCallback
    * @param parent
    * @param type type of object literal to replace the new call node with
    */
-  void tryFoldLiteralConstructor(
+  boolean tryFoldLiteralConstructor(
       NodeTraversal t, Node n, Node parent, String className, int type) {
     // Ignore calls to local functions with the same name.
     Scope.Var var = t.getScope().getVar(className);
     if (var != null && var.isLocal()) {
-      return;
+      // no change.
+      return false;
     }
 
     Node literalNode = new Node(type);
     parent.replaceChild(n, literalNode);
     t.getCompiler().reportCodeChange();
+    return true;
   }
 
   /**

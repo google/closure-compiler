@@ -69,7 +69,6 @@ class InlineFunctions implements CompilerPass {
   private final FunctionInjector injector;
 
   private final boolean blockFunctionInliningEnabled;
-  private final boolean inlineFunctionExpressions;
   private final boolean inlineGlobalFunctions;
   private final boolean inlineLocalFunctions;
 
@@ -77,21 +76,16 @@ class InlineFunctions implements CompilerPass {
       Supplier<String> safeNameIdSupplier,
       boolean inlineGlobalFunctions,
       boolean inlineLocalFunctions,
-      boolean inlineFunctionExpressions,
-      boolean blockFunctionInliningEnabled,
-      boolean enableExpressionDecomposition) {
+      boolean blockFunctionInliningEnabled) {
     Preconditions.checkArgument(compiler != null);
     Preconditions.checkArgument(safeNameIdSupplier != null);
     this.compiler = compiler;
 
     this.inlineGlobalFunctions = inlineGlobalFunctions;
     this.inlineLocalFunctions = inlineLocalFunctions;
-    this.inlineFunctionExpressions =
-      inlineFunctionExpressions;
     this.blockFunctionInliningEnabled = blockFunctionInliningEnabled;
 
-    this.injector = new FunctionInjector(
-        compiler, safeNameIdSupplier, enableExpressionDecomposition);
+    this.injector = new FunctionInjector(compiler, safeNameIdSupplier, true);
   }
 
   FunctionState getOrCreateFunctionState(String fnName) {
@@ -152,9 +146,7 @@ class InlineFunctions implements CompilerPass {
         NodeTraversal nodeTraversal, Node n, Node parent) {
       // Don't traverse into function bodies
       // if we aren't inlining local functions.
-      return inlineLocalFunctions || inlineFunctionExpressions
-         || parent == null || NodeUtil.isControlStructure(parent)
-         || NodeUtil.isStatementBlock(parent);
+      return inlineLocalFunctions || nodeTraversal.inGlobalScope();
     }
 
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -162,9 +154,7 @@ class InlineFunctions implements CompilerPass {
           || (!t.inGlobalScope() && inlineLocalFunctions)) {
         findNamedFunctions(t, n, parent);
 
-        if (inlineFunctionExpressions) {
-          findFunctionExpressions(t, n);
-        }
+        findFunctionExpressions(t, n);
       }
     }
 

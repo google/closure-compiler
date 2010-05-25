@@ -1420,9 +1420,7 @@ public class DefaultPassConfig extends PassConfig {
           compiler.getUniqueNameIdSupplier(),
           options.inlineFunctions,
           options.inlineLocalFunctions,
-          options.inlineAnonymousFunctionExpressions,
-          enableBlockInlining,
-          options.decomposeExpressions);
+          enableBlockInlining);
     }
   };
 

@@ -207,11 +207,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract void prepareAst(Node root);
 
   /**
-   * Acquires the symbol table.
-   */
-  abstract SymbolTable acquireSymbolTable();
-
-  /**
    * Gets the error manager.
    */
   abstract public ErrorManager getErrorManager();

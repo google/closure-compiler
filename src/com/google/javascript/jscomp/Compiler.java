@@ -81,9 +81,6 @@ public class Compiler extends AbstractCompiler {
   // error manager to which error management is delegated
   private ErrorManager errorManager;
 
-  // Cached data structures.
-  private SymbolTable symbolTable = null;
-
   // Parse tree root nodes
   Node externsRoot;
   Node jsRoot;
@@ -186,18 +183,6 @@ public class Compiler extends AbstractCompiler {
   public Compiler(ErrorManager errorManager) {
     this();
     setErrorManager(errorManager);
-  }
-
-  /**
-   * Acquires the symbol table.
-   */
-  @Override
-  SymbolTable acquireSymbolTable() {
-    if (symbolTable == null) {
-      symbolTable = new SymbolTable(this);
-    }
-    symbolTable.acquire();
-    return symbolTable;
   }
 
   /**

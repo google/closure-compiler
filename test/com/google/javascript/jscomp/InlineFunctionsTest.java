@@ -49,9 +49,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         compiler.getUniqueNameIdSupplier(),
         allowGlobalFunctionInlining,
         allowLocalFunctionInlining,
-        allowFunctionExpressionInlining,
-        allowBlockInlining,
-        allowExpressionDecomposition);
+        allowBlockInlining);
   }
 
   /**

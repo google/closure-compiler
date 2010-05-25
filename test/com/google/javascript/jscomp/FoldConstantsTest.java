@@ -837,22 +837,23 @@ public class FoldConstantsTest extends CompilerTestCase {
   public void testFoldRegExpConstructor() {
     // Cannot fold
     // Too few arguments
-    fold("x = new RegExp",                    "x = new RegExp");
+    fold("x = new RegExp",                    "x = RegExp()");
     // Empty regexp should not fold to // since that is a line comment in js
-    fold("x = new RegExp(\"\")",              "x = new RegExp(\"\")");
-    fold("x = new RegExp(\"\", \"i\")",       "x = new RegExp(\"\",\"i\")");
+    fold("x = new RegExp(\"\")",              "x = RegExp(\"\")");
+    fold("x = new RegExp(\"\", \"i\")",       "x = RegExp(\"\",\"i\")");
     // Bogus flags should not fold
     fold("x = new RegExp(\"foobar\", \"bogus\")",
-         "x = new RegExp(\"foobar\",\"bogus\")",
+         "x = RegExp(\"foobar\",\"bogus\")",
          FoldConstants.INVALID_REGULAR_EXPRESSION_FLAGS);
     // Don't fold if the flags contain 'g'
     fold("x = new RegExp(\"foobar\", \"g\")",
-         "x = new RegExp(\"foobar\",\"g\")");
+         "x = RegExp(\"foobar\",\"g\")");
     fold("x = new RegExp(\"foobar\", \"ig\")",
-         "x = new RegExp(\"foobar\",\"ig\")");
+         "x = RegExp(\"foobar\",\"ig\")");
 
     // Can Fold
     fold("x = new RegExp(\"foobar\")",        "x = /foobar/");
+    fold("x = RegExp(\"foobar\")",            "x = /foobar/");
     fold("x = new RegExp(\"foobar\", \"i\")", "x = /foobar/i");
     // Make sure that escaping works
     fold("x = new RegExp(\"\\\\.\", \"i\")",  "x = /\\./i");
@@ -861,14 +862,14 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("x = new RegExp(\"\\\\\\/\", \"\")", "x = /\\//");
     // Don't fold things that crash older versions of Safari and that don't work
     // as regex literals on recent versions of Safari
-    fold("x = new RegExp(\"\\u2028\")", "x = new RegExp(\"\\u2028\")");
+    fold("x = new RegExp(\"\\u2028\")", "x = RegExp(\"\\u2028\")");
     fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
 
     // Don't fold really long regexp literals, because Opera 9.2's
     // regexp parser will explode.
     String longRegexp = "";
     for (int i = 0; i < 200; i++) longRegexp += "x";
-    foldSame("x = new RegExp(\"" + longRegexp + "\")");
+    foldSame("x = RegExp(\"" + longRegexp + "\")");
   }
 
   public void testFoldRegExpConstructorStringCompare() {
@@ -897,11 +898,13 @@ public class FoldConstantsTest extends CompilerTestCase {
     // Can fold
     fold("x = new Array", "x = []");
     fold("x = new Array()", "x = []");
+    fold("x = Array()", "x = []");
     fold("x = new Object", "x = ({})");
     fold("x = new Object()", "x = ({})");
+    fold("x = Object()", "x = ({})");
 
     // Cannot fold, there are arguments
-    fold("x = new Array(7)", "x = new Array(7)");
+    fold("x = new Array(7)", "x = Array(7)");
 
     // Cannot fold, the constructor being used is actually a local function
     fold("x = " +
@@ -1138,5 +1141,17 @@ public class FoldConstantsTest extends CompilerTestCase {
     // is left.
     fold("foo(), true", "foo();1");
     fold("function x(){foo(), true}", "function x(){foo();}");
+  }
+
+  public void testFoldStandardConstructors() {
+    foldSame("new Foo('a')");
+    foldSame("var x = new goog.Foo(1)");
+    foldSame("var x = new String(1)");
+    foldSame("var x = new Number(1)");
+    foldSame("var x = new Boolean(1)");
+    fold("var x = new Object('a')", "var x = Object('a')");
+    fold("var x = new RegExp('')", "var x = RegExp('')");
+    fold("var x = new Error('20')", "var x = Error(\"20\")");
+    fold("var x = new Array('20')", "var x = Array(\"20\")");
   }
 }

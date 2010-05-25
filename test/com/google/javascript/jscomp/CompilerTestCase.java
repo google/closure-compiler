@@ -719,11 +719,6 @@ public abstract class CompilerTestCase extends TestCase  {
           new BlackHoleErrorManager(compiler);
       Node expectedRoot = parseExpectedJs(expected);
       expectedRoot.detachFromParent();
-      SymbolTable table = compiler.acquireSymbolTable();
-      table.verify(
-          new Node(Token.BLOCK, externsRoot.cloneTree(), expectedRoot),
-          mainRoot.getParent());
-      table.release();
 
       JSError[] stErrors = symbolTableErrorManager.getErrors();
       if (expectedSymbolTableError != null) {
