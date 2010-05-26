@@ -167,11 +167,11 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean equals(Object that) {
+  public boolean isEquivalentTo(JSType that) {
     if (this == that) {
       return true;
     }
-    return referencedType.equals(that);
+    return referencedType.isEquivalentTo(that);
   }
 
   @Override

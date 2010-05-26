@@ -384,7 +384,7 @@ public abstract class ObjectType extends JSType {
     for (ObjectType current = this;
          current != null;
          current = current.getImplicitPrototype()) {
-      if (current.equals(prototype)) {
+      if (current.isEquivalentTo(prototype)) {
         return true;
       }
     }

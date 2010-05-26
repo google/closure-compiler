@@ -42,6 +42,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode;
+import com.google.javascript.rhino.testing.Asserts;
 
 import junit.framework.TestCase;
 
@@ -56,7 +57,7 @@ public class JSTypeRegistryTest extends TestCase {
   // now much larger
   public void testGetBuiltInType() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertEquals(typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE),
+    assertTypeEquals(typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE),
         typeRegistry.getType("boolean"));
   }
 
@@ -65,12 +66,12 @@ public class JSTypeRegistryTest extends TestCase {
     JSType type = typeRegistry.createAnonymousObjectType();
     String name = "Foo";
     typeRegistry.declareType(name, type);
-    assertEquals(type, typeRegistry.getType(name));
+    assertTypeEquals(type, typeRegistry.getType(name));
 
     // Ensure different instances are independent.
     JSTypeRegistry typeRegistry2 = new JSTypeRegistry(null);
     assertEquals(null, typeRegistry2.getType(name));
-    assertEquals(type, typeRegistry.getType(name));
+    assertTypeEquals(type, typeRegistry.getType(name));
   }
 
   public void testGetDeclaredTypeInNamespace() {
@@ -78,7 +79,7 @@ public class JSTypeRegistryTest extends TestCase {
     JSType type = typeRegistry.createAnonymousObjectType();
     String name = "a.b.Foo";
     typeRegistry.declareType(name, type);
-    assertEquals(type, typeRegistry.getType(name));
+    assertTypeEquals(type, typeRegistry.getType(name));
     assertTrue(typeRegistry.hasNamespace("a"));
     assertTrue(typeRegistry.hasNamespace("a.b"));
   }
@@ -89,12 +90,12 @@ public class JSTypeRegistryTest extends TestCase {
     JSType type = typeRegistry.createAnonymousObjectType();
     String name = "a.b.Foo";
     typeRegistry.declareType(name, type);
-    assertEquals(type, typeRegistry.getType(name));
+    assertTypeEquals(type, typeRegistry.getType(name));
 
     type = typeRegistry.createAnonymousObjectType();
     name = "a.b.Foo.Bar";
     typeRegistry.declareType(name, type);
-    assertEquals(type, typeRegistry.getType(name));
+    assertTypeEquals(type, typeRegistry.getType(name));
 
     assertTrue(typeRegistry.hasNamespace("a"));
     assertTrue(typeRegistry.hasNamespace("a.b"));
@@ -209,6 +210,10 @@ public class JSTypeRegistryTest extends TestCase {
     JSType type = lazyExprRegistry.createFromTypeNodes(
         expr, "source.js", new EmptyScope());
     assertTrue(type instanceof AllType);
+  }
+
+  private void assertTypeEquals(JSType a, JSType b) {
+    Asserts.assertTypeEquals(a, b);
   }
 
   private static class EmptyScope implements StaticScope<JSType> {

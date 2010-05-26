@@ -275,7 +275,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public boolean equals(Object that) {
+  public boolean isEquivalentTo(JSType that) {
     return this == that;
   }
 

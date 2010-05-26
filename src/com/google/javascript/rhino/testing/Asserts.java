@@ -67,10 +67,23 @@ public class Asserts {
       JSType type, StaticScope<JSType> scope) {
     ErrorReporter t = TestErrorReporter.forNoExpectedReports();
     JSType resolvedType = type.resolve(t, scope);
-    Assert.assertEquals("JSType#resolve should not affect object equality",
+    assertTypeEquals("JSType#resolve should not affect object equality",
         type, resolvedType);
     Assert.assertEquals("JSType#resolve should not affect hash codes",
         type.hashCode(), resolvedType.hashCode());
     return resolvedType;
+  }
+
+  public static void assertTypeEquals(JSType a, JSType b) {
+    assertTypeEquals("", a, b);
+  }
+
+  public static void assertTypeEquals(String message, JSType a, JSType b) {
+    Assert.assertTrue(
+        message +
+        (message.isEmpty() ? "" : "\n") +
+        "Expected: " + b + "\n" +
+        "Actual  : " + a,
+        a.isEquivalentTo(b));
   }
 }

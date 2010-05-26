@@ -168,7 +168,7 @@ public class FunctionType extends PrototypeObjectType {
   @Override
   public boolean isInstanceType() {
     // The universal constructor is its own instance, bizarrely.
-    return equals(registry.getNativeType(U2U_CONSTRUCTOR_TYPE));
+    return isEquivalentTo(registry.getNativeType(U2U_CONSTRUCTOR_TYPE));
   }
 
   @Override
@@ -431,7 +431,7 @@ public class FunctionType extends PrototypeObjectType {
     if ("prototype".equals(name)) {
       ObjectType objType = type.toObjectType();
       if (objType != null) {
-        if (objType.equals(prototype)) {
+        if (objType.isEquivalentTo(prototype)) {
           return true;
         }
         return setPrototype(
@@ -475,7 +475,7 @@ public class FunctionType extends PrototypeObjectType {
     // approach of using the universal constructor and the AnyObject as
     // the supremum and infinum of all function types.
     if (isFunctionType() && that.isFunctionType()) {
-      if (equals(that)) {
+      if (isEquivalentTo(that)) {
         return this;
       }
 
@@ -486,7 +486,7 @@ public class FunctionType extends PrototypeObjectType {
           that instanceof FunctionType) {
         FunctionType other = (FunctionType) that;
         if (call.hasEqualParameters(other.call) &&
-            Objects.equal(typeOfThis, other.typeOfThis)) {
+            isEquivalent(typeOfThis, other.typeOfThis)) {
           JSType newReturnType = leastSuper ?
               call.returnType.getLeastSupertype(other.call.returnType) :
               call.returnType.getGreatestSubtype(other.call.returnType);
@@ -502,9 +502,9 @@ public class FunctionType extends PrototypeObjectType {
 
       JSType functionInstance = registry.getNativeType(
           JSTypeNative.FUNCTION_INSTANCE_TYPE);
-      if (functionInstance.equals(that)) {
+      if (functionInstance.isEquivalentTo(that)) {
         return leastSuper ? that : this;
-      } else if (functionInstance.equals(this)) {
+      } else if (functionInstance.isEquivalentTo(this)) {
         return leastSuper ? this : that;
       }
 
@@ -580,7 +580,7 @@ public class FunctionType extends PrototypeObjectType {
    * have signatures, two interfaces are equal if their names match.
    */
   @Override
-  public boolean equals(Object otherType) {
+  public boolean isEquivalentTo(JSType otherType) {
     if (!(otherType instanceof FunctionType)) {
       return false;
     }
@@ -603,8 +603,8 @@ public class FunctionType extends PrototypeObjectType {
     if (that.isInterface()) {
       return false;
     }
-    return this.typeOfThis.equals(that.typeOfThis) &&
-        this.call.equals(that.call);
+    return this.typeOfThis.isEquivalentTo(that.typeOfThis) &&
+        this.call.isEquivalentTo(that.call);
   }
 
   @Override
@@ -613,7 +613,7 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   public boolean hasEqualCallType(FunctionType otherType) {
-    return this.call.equals(otherType.call);
+    return this.call.isEquivalentTo(otherType.call);
   }
 
   /**
@@ -679,7 +679,7 @@ public class FunctionType extends PrototypeObjectType {
    */
   @Override
   public boolean isSubtype(JSType that) {
-    if (this.equals(that)) {
+    if (this.isEquivalentTo(that)) {
       return true;
     }
     if (that.isFunctionType()) {

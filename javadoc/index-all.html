@@ -366,7 +366,13 @@ Static variable in class com.google.javascript.rhino.<A HREF="./com/google/javas
 <DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html#assertResolvesToSame(com.google.javascript.rhino.jstype.JSType)"><B>assertResolvesToSame(JSType)</B></A> - 
 Static method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing">Asserts</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing"><B>Asserts</B></A> - Class in <A HREF="./com/google/javascript/rhino/testing/package-summary.html">com.google.javascript.rhino.testing</A><DD>Helper methods for making assertions about the validity of types.<DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)"><B>assertTypeEquals(JSType, Node)</B></A> - 
+<DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing"><B>Asserts</B></A> - Class in <A HREF="./com/google/javascript/rhino/testing/package-summary.html">com.google.javascript.rhino.testing</A><DD>Helper methods for making assertions about the validity of types.<DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html#assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)"><B>assertTypeEquals(JSType, JSType)</B></A> - 
+Static method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing">Asserts</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/testing/Asserts.html#assertTypeEquals(java.lang.String, com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)"><B>assertTypeEquals(String, JSType, JSType)</B></A> - 
+Static method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/Asserts.html" title="class in com.google.javascript.rhino.testing">Asserts</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html#assertTypeEquals(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.Node)"><B>assertTypeEquals(JSType, Node)</B></A> - 
 Method in class com.google.javascript.rhino.testing.<A HREF="./com/google/javascript/rhino/testing/BaseJSTypeTestCase.html" title="class in com.google.javascript.rhino.testing">BaseJSTypeTestCase</A>
 <DD>Asserts that a Node representing a type expression resolves to the
  correct <code>JSType</code>.
@@ -1639,30 +1645,9 @@ Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/js
 <DT><A HREF="./com/google/javascript/jscomp/Scope.Var.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
 Method in class com.google.javascript.jscomp.<A HREF="./com/google/javascript/jscomp/Scope.Var.html" title="class in com.google.javascript.jscomp">Scope.Var</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/EnumElementType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/EnumElementType.html" title="class in com.google.javascript.rhino.jstype">EnumElementType</A>
-<DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/FunctionType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>
-<DD>Two function types are equal if their signatures match.
-<DT><A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype">InstanceObjectType</A>
-<DD>&nbsp;
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
-<DD>This method relies on the fact that for the base <A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype"><CODE>JSType</CODE></A>, only one
- instance of each sub-type will ever be created in a given registry, so
- there is no need to verify members.
-<DT><A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype">NoObjectType</A>
 <DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/RecordType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/RecordType.html" title="class in com.google.javascript.rhino.jstype">RecordType</A>
-<DD>&nbsp;
-<DT><A HREF="./com/google/javascript/rhino/jstype/UnionType.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
-Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/UnionType.html" title="class in com.google.javascript.rhino.jstype">UnionType</A>
-<DD>Two union types are equal if they have the same number of alternates
- and all alternates are equal.
 <DT><A HREF="./com/google/javascript/rhino/JSTypeExpression.html#equals(java.lang.Object)"><B>equals(Object)</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/JSTypeExpression.html" title="class in com.google.javascript.rhino">JSTypeExpression</A>
 <DD>&nbsp;
@@ -4572,6 +4557,31 @@ Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascr
 <DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#isEnumType()"><B>isEnumType()</B></A> - 
 Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
 <DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#isEquivalent(com.google.javascript.rhino.jstype.JSType, com.google.javascript.rhino.jstype.JSType)"><B>isEquivalent(JSType, JSType)</B></A> - 
+Static method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/EnumElementType.html#isEquivalentTo(com.google.javascript.rhino.jstype.JSType)"><B>isEquivalentTo(JSType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/EnumElementType.html" title="class in com.google.javascript.rhino.jstype">EnumElementType</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/FunctionType.html#isEquivalentTo(com.google.javascript.rhino.jstype.JSType)"><B>isEquivalentTo(JSType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/FunctionType.html" title="class in com.google.javascript.rhino.jstype">FunctionType</A>
+<DD>Two function types are equal if their signatures match.
+<DT><A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html#isEquivalentTo(com.google.javascript.rhino.jstype.JSType)"><B>isEquivalentTo(JSType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/InstanceObjectType.html" title="class in com.google.javascript.rhino.jstype">InstanceObjectType</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/JSType.html#isEquivalentTo(com.google.javascript.rhino.jstype.JSType)"><B>isEquivalentTo(JSType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/JSType.html" title="class in com.google.javascript.rhino.jstype">JSType</A>
+<DD>Checks if two types are equivalent.
+<DT><A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html#isEquivalentTo(com.google.javascript.rhino.jstype.JSType)"><B>isEquivalentTo(JSType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/NoObjectType.html" title="class in com.google.javascript.rhino.jstype">NoObjectType</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/RecordType.html#isEquivalentTo(com.google.javascript.rhino.jstype.JSType)"><B>isEquivalentTo(JSType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/RecordType.html" title="class in com.google.javascript.rhino.jstype">RecordType</A>
+<DD>&nbsp;
+<DT><A HREF="./com/google/javascript/rhino/jstype/UnionType.html#isEquivalentTo(com.google.javascript.rhino.jstype.JSType)"><B>isEquivalentTo(JSType)</B></A> - 
+Method in class com.google.javascript.rhino.jstype.<A HREF="./com/google/javascript/rhino/jstype/UnionType.html" title="class in com.google.javascript.rhino.jstype">UnionType</A>
+<DD>Two union types are equal if they have the same number of alternates
+ and all alternates are equal.
 <DT><A HREF="./com/google/javascript/rhino/Node.html#isEquivalentTo(com.google.javascript.rhino.Node)"><B>isEquivalentTo(Node)</B></A> - 
 Method in class com.google.javascript.rhino.<A HREF="./com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>
 <DD>Returns true if this node is equivalent semantically to another

@@ -43,6 +43,7 @@ import com.google.javascript.rhino.ErrorReporter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A record (structural) type.
@@ -82,14 +83,24 @@ public class RecordType extends PrototypeObjectType {
   }
 
   @Override
-  public boolean equals(Object other) {
+  public boolean isEquivalentTo(JSType other) {
     if (!(other instanceof RecordType)) {
       return false;
     }
 
     // Compare properties.
     RecordType otherRecord = (RecordType) other;
-    return otherRecord.properties.equals(properties);
+    Set<String> keySet = properties.keySet();
+    Map<String, JSType> otherProps = otherRecord.properties;
+    if (!otherProps.keySet().equals(keySet)) {
+      return false;
+    }
+    for (String key : keySet) {
+      if (!otherProps.get(key).isEquivalentTo(properties.get(key))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override
@@ -125,7 +136,7 @@ public class RecordType extends PrototypeObjectType {
     // type of the properties themselves.
     for (String property : properties.keySet()) {
       if (thatRecord.hasProperty(property) &&
-          thatRecord.getPropertyType(property).equals(
+          thatRecord.getPropertyType(property).isEquivalentTo(
               getPropertyType(property))) {
         builder.addProperty(property, getPropertyType(property));
       }
@@ -145,7 +156,7 @@ public class RecordType extends PrototypeObjectType {
       // is returned.
       for (String property : properties.keySet()) {
         if (thatRecord.hasProperty(property) &&
-            !thatRecord.getPropertyType(property).equals(
+            !thatRecord.getPropertyType(property).isEquivalentTo(
                 getPropertyType(property))) {
           return registry.getNativeObjectType(JSTypeNative.NO_TYPE);
         }
@@ -176,10 +187,10 @@ public class RecordType extends PrototypeObjectType {
         UnionTypeBuilder builder = new UnionTypeBuilder(registry);
         for (ObjectType alt : registry.getTypesWithProperty(propName)) {
           JSType altPropType = alt.getPropertyType(propName);
-          if (altPropType != null && !alt.equals(this) &&
+          if (altPropType != null && !alt.isEquivalentTo(this) &&
               alt.isSubtype(that) &&
               (propType.isUnknownType() || altPropType.isUnknownType() ||
-               altPropType.equals(propType))) {
+               altPropType.isEquivalentTo(propType))) {
             builder.addAlternate(alt);
           }
         }
@@ -244,7 +255,7 @@ public class RecordType extends PrototypeObjectType {
       JSType propB = typeB.getPropertyType(property);
       if (!propA.isUnknownType() && !propB.isUnknownType()) {
         if (typeA.isPropertyTypeDeclared(property)) {
-          if (!propA.equals(propB)) {
+          if (!propA.isEquivalentTo(propB)) {
             return false;
           }
         } else {

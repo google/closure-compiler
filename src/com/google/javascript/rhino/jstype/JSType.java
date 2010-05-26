@@ -298,16 +298,28 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * This method relies on the fact that for the base {@link JSType}, only one
-   * instance of each sub-type will ever be created in a given registry, so
-   * there is no need to verify members. If the object pointers are not
-   * identical, then the type member must be different.
+   * Checks if two types are equivalent.
    */
-  @Override public boolean equals(Object jsType) {
+  public boolean isEquivalentTo(JSType jsType) {
     if (jsType instanceof ProxyObjectType) {
-      return jsType.equals(this);
+      return jsType.isEquivalentTo(this);
     }
+    // Relies on the fact that for the base {@link JSType}, only one
+    // instance of each sub-type will ever be created in a given registry, so
+    // there is no need to verify members. If the object pointers are not
+    // identical, then the type member must be different.
     return this == jsType;
+  }
+
+  public static boolean isEquivalent(JSType typeA, JSType typeB) {
+    return (typeA == null || typeB == null) ?
+        typeA == typeB : typeA.isEquivalentTo(typeB);
+  }
+
+  @Override
+  public boolean equals(Object jsType) {
+    return (jsType instanceof JSType) ?
+        isEquivalentTo((JSType) jsType) : false;
   }
 
   @Override
@@ -579,7 +591,7 @@ public abstract class JSType implements Serializable {
     } else if (thisType.isUnknownType() || thatType.isUnknownType()) {
       // The greatest subtype with any unknown type is the universal
       // unknown type, unless the two types are equal.
-      return thisType.equals(thatType) ? thisType :
+      return thisType.isEquivalentTo(thatType) ? thisType :
           thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else if (thisType.isSubtype(thatType)) {
       return thisType;
@@ -790,7 +802,7 @@ public abstract class JSType implements Serializable {
   public boolean differsFrom(JSType that) {
     // if there are no unknowns, just use normal equality.
     if (!this.isUnknownType() && !that.isUnknownType()) {
-      return !this.equals(that);
+      return !this.isEquivalentTo(that);
     }
     // otherwise, they're different iff one is unknown and the other is not.
     return this.isUnknownType() ^ that.isUnknownType();
@@ -806,7 +818,7 @@ public abstract class JSType implements Serializable {
       return true;
     }
     // equality
-    if (thisType.equals(thatType)) {
+    if (thisType.isEquivalentTo(thatType)) {
       return true;
     }
     // all type
@@ -854,7 +866,7 @@ public abstract class JSType implements Serializable {
    * Resolve this type in the given scope.
    *
    * The returned value must be equal to {@code this}, as defined by
-   * {@link Object#equals}. It may or may not be the same object. This method
+   * {@link #isEquivalentTo}. It may or may not be the same object. This method
    * may modify the internal state of {@code this}, as long as it does
    * so in a way that preserves Object equality.
    *

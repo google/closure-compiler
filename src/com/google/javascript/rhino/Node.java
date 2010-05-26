@@ -1415,7 +1415,7 @@ public class Node implements Cloneable, Serializable {
     if (type == node2.getType()
         && getChildCount() == node2.getChildCount()
         && getClass() == node2.getClass()
-        && Objects.equal(jsType, node2.getJSType())) {
+        && JSType.isEquivalent(jsType, node2.getJSType())) {
 
       eq = this.isEquivalentTo(node2);
     }

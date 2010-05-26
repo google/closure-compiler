@@ -50,6 +50,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import junit.framework.TestCase;
@@ -81,7 +82,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getEnumParameterType());
     assertEquals(0, info.getParameterCount());
     assertNull(info.getReturnType());
-    assertEquals(getNativeType(STRING_TYPE), resolve(info.getType()));
+    assertTypeEquals(STRING_TYPE, resolve(info.getType()));
     assertNull(info.getVisibility());
     assertTrue(info.hasType());
     assertFalse(info.isConstant());
@@ -100,7 +101,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getEnumParameterType());
     assertEquals(0, info.getParameterCount());
     assertNull(info.getReturnType());
-    assertEquals(getNativeType(STRING_TYPE), resolve(info.getType()));
+    assertTypeEquals(STRING_TYPE, resolve(info.getType()));
     assertEquals(PROTECTED, info.getVisibility());
     assertTrue(info.hasType());
     assertFalse(info.isConstant());
@@ -117,7 +118,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getDescription());
     assertNull(info.getEnumParameterType());
     assertEquals(0, info.getParameterCount());
-    assertEquals(getNativeType(STRING_TYPE), resolve(info.getReturnType()));
+    assertTypeEquals(STRING_TYPE, resolve(info.getReturnType()));
     assertNull(info.getType());
     assertNull(info.getVisibility());
     assertFalse(info.hasType());
@@ -134,12 +135,12 @@ public class JSDocInfoTest extends TestCase {
             new Node(Token.BANG, Node.newString("Number")), ""));
     info.setReturnType(fromString("string"));
 
-    assertEquals(getNativeType(NUMBER_OBJECT_TYPE),
+    assertTypeEquals(NUMBER_OBJECT_TYPE,
         resolve(info.getBaseType()));
     assertNull(info.getDescription());
     assertNull(info.getEnumParameterType());
     assertEquals(0, info.getParameterCount());
-    assertEquals(getNativeType(STRING_TYPE), resolve(info.getReturnType()));
+    assertTypeEquals(STRING_TYPE, resolve(info.getReturnType()));
     assertNull(info.getType());
     assertNull(info.getVisibility());
     assertFalse(info.hasType());
@@ -155,7 +156,7 @@ public class JSDocInfoTest extends TestCase {
 
     assertNull(info.getBaseType());
     assertNull(info.getDescription());
-    assertEquals(getNativeType(STRING_TYPE),
+    assertTypeEquals(STRING_TYPE,
         resolve(info.getEnumParameterType()));
     assertEquals(0, info.getParameterCount());
     assertNull(info.getReturnType());
@@ -187,7 +188,7 @@ public class JSDocInfoTest extends TestCase {
       fail("Expected exception");
     } catch (IllegalStateException e) {}
 
-    assertEquals(getNativeType(NUMBER_TYPE), resolve(info.getType()));
+    assertTypeEquals(NUMBER_TYPE, resolve(info.getType()));
     assertNull(info.getReturnType());
     assertNull(info.getEnumParameterType());
     assertNull(info.getTypedefType());
@@ -214,7 +215,7 @@ public class JSDocInfoTest extends TestCase {
       fail("Expected exception");
     } catch (IllegalStateException e) {}
 
-    assertEquals(getNativeType(BOOLEAN_TYPE),
+    assertTypeEquals(BOOLEAN_TYPE,
         resolve(info.getReturnType()));
     assertNull(info.getEnumParameterType());
     assertNull(info.getType());
@@ -244,7 +245,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getType());
     assertNull(info.getTypedefType());
     assertNull(info.getReturnType());
-    assertEquals(getNativeType(BOOLEAN_TYPE),
+    assertTypeEquals(BOOLEAN_TYPE,
         resolve(info.getEnumParameterType()));
   }
 
@@ -252,7 +253,7 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo info = new JSDocInfo();
     info.setTypedefType(fromString("boolean"));
 
-    assertEquals(getNativeType(BOOLEAN_TYPE),
+    assertTypeEquals(BOOLEAN_TYPE,
         resolve(info.getTypedefType()));
     assertTrue(info.hasTypedefType());
     assertFalse(info.hasType());
@@ -427,5 +428,13 @@ public class JSDocInfoTest extends TestCase {
   private JSType resolve(JSTypeExpression n, String... warnings) {
     errorReporter.setWarnings(warnings);
     return n.evaluate(null, registry);
+  }
+
+  private void assertTypeEquals(JSTypeNative a, JSType b) {
+    assertTypeEquals(getNativeType(a), b);
+  }
+
+  private void assertTypeEquals(JSType a, JSType b) {
+    Asserts.assertTypeEquals(a, b);
   }
 }

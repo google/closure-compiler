@@ -145,24 +145,25 @@ class NamedType extends ProxyObjectType {
   }
 
   /**
-   * Two named types are equal if they are the same {@code ObjectType} object.
-   * This is complicated by the fact that equals is sometimes called before we
-   * have a chance to resolve the type names.
+   * Two named types are equivalent if they are the same {@code
+   * ObjectType} object.  This is complicated by the fact that isEquivalent
+   * is sometimes called before we have a chance to resolve the type
+   * names.
    *
    * @return {@code true} iff {@code that} == {@code this} or {@code that}
    *         is a {@link NamedType} whose reference is the same as ours,
    *         or {@code that} is the type we reference.
    */
   @Override
-  public boolean equals(Object that) {
+  public boolean isEquivalentTo(JSType that) {
     if (this == that) {
       return true;
-    } else if (that instanceof JSType) {
-      ObjectType objType = ObjectType.cast((JSType) that);
-      if (objType != null) {
-        return objType.isNominalType() &&
-            reference.equals(objType.getReferenceName());
-      }
+    }
+
+    ObjectType objType = ObjectType.cast(that);
+    if (objType != null) {
+      return objType.isNominalType() &&
+          reference.equals(objType.getReferenceName());
     }
     return false;
   }

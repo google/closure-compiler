@@ -47,8 +47,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -69,7 +69,7 @@ import java.util.TreeSet;
 public class UnionType extends JSType {
   private static final long serialVersionUID = 1L;
 
-  Set<JSType> alternates;
+  Collection<JSType> alternates;
   private final int hashcode;
 
   /**
@@ -77,7 +77,7 @@ public class UnionType extends JSType {
    *
    * @param alternates the alternates of the union
    */
-  UnionType(JSTypeRegistry registry, Set<JSType> alternates) {
+  UnionType(JSTypeRegistry registry, Collection<JSType> alternates) {
     super(registry);
     this.alternates = alternates;
     this.hashcode = this.alternates.hashCode();
@@ -308,10 +308,10 @@ public class UnionType extends JSType {
    * and all alternates are equal.
    */
   @Override
-  public boolean equals(Object object) {
+  public boolean isEquivalentTo(JSType object) {
     if (object instanceof UnionType) {
       UnionType that = (UnionType) object;
-      return alternates.equals(that.alternates);
+      return this.isSubtype(that) && that.isSubtype(this);
     } else {
       return false;
     }
@@ -497,7 +497,7 @@ public class UnionType extends JSType {
       resolvedTypes.add(alternate);
     }
     if (changed) {
-      Set<JSType> newAlternates = resolvedTypes.build();
+      Collection<JSType> newAlternates = resolvedTypes.build();
       Preconditions.checkState(newAlternates.hashCode() == this.hashcode);
       alternates = newAlternates;
     }

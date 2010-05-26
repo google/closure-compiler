@@ -110,13 +110,13 @@ public class EnumType extends PrototypeObjectType {
     if (result != null) {
       return result;
     }
-    return this.equals(that) ? TRUE : FALSE;
+    return this.isEquivalentTo(that) ? TRUE : FALSE;
   }
 
   @Override
   public boolean isSubtype(JSType that) {
-    return that.equals(getNativeType(JSTypeNative.OBJECT_TYPE)) ||
-        that.equals(getNativeType(JSTypeNative.OBJECT_PROTOTYPE)) ||
+    return that.isEquivalentTo(getNativeType(JSTypeNative.OBJECT_TYPE)) ||
+        that.isEquivalentTo(getNativeType(JSTypeNative.OBJECT_PROTOTYPE)) ||
         JSType.isSubtype(this, that);
   }
 

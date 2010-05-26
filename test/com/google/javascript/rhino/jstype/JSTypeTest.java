@@ -367,7 +367,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         U2U_CONSTRUCTOR_TYPE.toString());
 
     // getPropertyType
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         U2U_CONSTRUCTOR_TYPE.getPropertyType("anyProperty"));
 
     assertTrue(U2U_CONSTRUCTOR_TYPE.isNative());
@@ -506,7 +506,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("NoObject", NO_OBJECT_TYPE.toString());
 
     // getPropertyType
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         NO_OBJECT_TYPE.getPropertyType("anyProperty"));
 
     Asserts.assertResolvesToSame(NO_OBJECT_TYPE);
@@ -634,7 +634,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("None", NO_TYPE.toString());
 
     // getPropertyType
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         NO_TYPE.getPropertyType("anyProperty"));
 
     Asserts.assertResolvesToSame(NO_TYPE);
@@ -733,18 +733,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(ARRAY_TYPE.isObject());
 
     // getLeastSupertype
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ARRAY_TYPE.getLeastSupertype(ALL_TYPE));
-    assertEquals(createUnionType(STRING_OBJECT_TYPE, ARRAY_TYPE),
+    assertTypeEquals(createUnionType(STRING_OBJECT_TYPE, ARRAY_TYPE),
         ARRAY_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertEquals(createUnionType(NUMBER_TYPE, ARRAY_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_TYPE, ARRAY_TYPE),
         ARRAY_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(createUnionType(ARRAY_TYPE, functionType),
+    assertTypeEquals(createUnionType(ARRAY_TYPE, functionType),
         ARRAY_TYPE.getLeastSupertype(functionType));
-    assertEquals(OBJECT_TYPE, ARRAY_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(createUnionType(DATE_TYPE, ARRAY_TYPE),
+    assertTypeEquals(OBJECT_TYPE, ARRAY_TYPE.getLeastSupertype(OBJECT_TYPE));
+    assertTypeEquals(createUnionType(DATE_TYPE, ARRAY_TYPE),
         ARRAY_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(createUnionType(REGEXP_TYPE, ARRAY_TYPE),
+    assertTypeEquals(createUnionType(REGEXP_TYPE, ARRAY_TYPE),
         ARRAY_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // getPropertyType
@@ -767,7 +767,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertReturnTypeEquals(ARRAY_TYPE, ARRAY_TYPE.getPropertyType("sort"));
     assertReturnTypeEquals(ARRAY_TYPE, ARRAY_TYPE.getPropertyType("splice"));
     assertReturnTypeEquals(NUMBER_TYPE, ARRAY_TYPE.getPropertyType("unshift"));
-    assertEquals(NUMBER_TYPE, ARRAY_TYPE.getPropertyType("length"));
+    assertTypeEquals(NUMBER_TYPE, ARRAY_TYPE.getPropertyType("length"));
 
     // isPropertyType*
     assertPropertyTypeDeclared(ARRAY_TYPE, "pop");
@@ -860,19 +860,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(UNKNOWN_TYPE.isNullable());
 
     // getGreatestCommonType
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(UNKNOWN_TYPE));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(STRING_TYPE));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(functionType));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
@@ -979,19 +979,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ALL_TYPE.isNullable());
 
     // getLeastSupertype
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(ALL_TYPE));
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(functionType));
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
@@ -1013,7 +1013,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testTheObjectType() throws Exception {
     // implicit prototype
-    assertEquals(OBJECT_PROTOTYPE, OBJECT_TYPE.getImplicitPrototype());
+    assertTypeEquals(OBJECT_PROTOTYPE, OBJECT_TYPE.getImplicitPrototype());
 
     // isXxx
     assertFalse(OBJECT_TYPE.isNoObjectType());
@@ -1108,19 +1108,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(OBJECT_TYPE.isNullable());
 
     // getLeastSupertype
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         OBJECT_TYPE.getLeastSupertype(ALL_TYPE));
-    assertEquals(OBJECT_TYPE,
+    assertTypeEquals(OBJECT_TYPE,
         OBJECT_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertEquals(createUnionType(OBJECT_TYPE, NUMBER_TYPE),
+    assertTypeEquals(createUnionType(OBJECT_TYPE, NUMBER_TYPE),
         OBJECT_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(OBJECT_TYPE,
+    assertTypeEquals(OBJECT_TYPE,
         OBJECT_TYPE.getLeastSupertype(functionType));
-    assertEquals(OBJECT_TYPE,
+    assertTypeEquals(OBJECT_TYPE,
         OBJECT_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(OBJECT_TYPE,
+    assertTypeEquals(OBJECT_TYPE,
         OBJECT_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(OBJECT_TYPE,
+    assertTypeEquals(OBJECT_TYPE,
         OBJECT_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // getPropertyType
@@ -1148,7 +1148,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(OBJECT_TYPE.matchesUint32Context());
 
     // implicit prototype
-    assertEquals(OBJECT_PROTOTYPE, OBJECT_TYPE.getImplicitPrototype());
+    assertTypeEquals(OBJECT_PROTOTYPE, OBJECT_TYPE.getImplicitPrototype());
 
     // toString
     assertEquals("Object", OBJECT_TYPE.toString());
@@ -1189,10 +1189,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NUMBER_OBJECT_TYPE.isInstanceType());
 
     // autoboxesTo
-    assertEquals(NUMBER_OBJECT_TYPE, NUMBER_TYPE.autoboxesTo());
+    assertTypeEquals(NUMBER_OBJECT_TYPE, NUMBER_TYPE.autoboxesTo());
 
     // unboxesTo
-    assertEquals(NUMBER_TYPE, NUMBER_OBJECT_TYPE.unboxesTo());
+    assertTypeEquals(NUMBER_TYPE, NUMBER_OBJECT_TYPE.unboxesTo());
 
     // canAssignTo
     assertTrue(NUMBER_OBJECT_TYPE.canAssignTo(ALL_TYPE));
@@ -1266,19 +1266,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_OBJECT_TYPE.isNullable());
 
     // getLeastSupertype
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         NUMBER_OBJECT_TYPE.getLeastSupertype(ALL_TYPE));
-    assertEquals(createUnionType(NUMBER_OBJECT_TYPE, STRING_OBJECT_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_OBJECT_TYPE, STRING_OBJECT_TYPE),
         NUMBER_OBJECT_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertEquals(createUnionType(NUMBER_OBJECT_TYPE, NUMBER_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_OBJECT_TYPE, NUMBER_TYPE),
         NUMBER_OBJECT_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(createUnionType(NUMBER_OBJECT_TYPE, functionType),
+    assertTypeEquals(createUnionType(NUMBER_OBJECT_TYPE, functionType),
         NUMBER_OBJECT_TYPE.getLeastSupertype(functionType));
-    assertEquals(OBJECT_TYPE,
+    assertTypeEquals(OBJECT_TYPE,
         NUMBER_OBJECT_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(createUnionType(NUMBER_OBJECT_TYPE, DATE_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_OBJECT_TYPE, DATE_TYPE),
         NUMBER_OBJECT_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(createUnionType(NUMBER_OBJECT_TYPE, REGEXP_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_OBJECT_TYPE, REGEXP_TYPE),
         NUMBER_OBJECT_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
@@ -1324,7 +1324,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_TYPE.isInstanceType());
 
     // autoboxesTo
-    assertEquals(NUMBER_OBJECT_TYPE, NUMBER_TYPE.autoboxesTo());
+    assertTypeEquals(NUMBER_OBJECT_TYPE, NUMBER_TYPE.autoboxesTo());
 
     // canAssignTo
     assertTrue(NUMBER_TYPE.canAssignTo(ALL_TYPE));
@@ -1388,19 +1388,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_TYPE.isNullable());
 
     // getLeastSupertype
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         NUMBER_TYPE.getLeastSupertype(ALL_TYPE));
-    assertEquals(createUnionType(NUMBER_TYPE, STRING_OBJECT_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_TYPE, STRING_OBJECT_TYPE),
         NUMBER_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertEquals(NUMBER_TYPE,
+    assertTypeEquals(NUMBER_TYPE,
         NUMBER_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(createUnionType(NUMBER_TYPE, functionType),
+    assertTypeEquals(createUnionType(NUMBER_TYPE, functionType),
         NUMBER_TYPE.getLeastSupertype(functionType));
-    assertEquals(createUnionType(NUMBER_TYPE, OBJECT_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_TYPE, OBJECT_TYPE),
         NUMBER_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(createUnionType(NUMBER_TYPE, DATE_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_TYPE, DATE_TYPE),
         NUMBER_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(createUnionType(NUMBER_TYPE, REGEXP_TYPE),
+    assertTypeEquals(createUnionType(NUMBER_TYPE, REGEXP_TYPE),
         NUMBER_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
@@ -1529,19 +1529,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             createNullableType(STRING_OBJECT_TYPE)));
 
     // getLeastSupertype
-    assertEquals(NULL_TYPE, NULL_TYPE.getLeastSupertype(NULL_TYPE));
-    assertEquals(ALL_TYPE, NULL_TYPE.getLeastSupertype(ALL_TYPE));
-    assertEquals(createNullableType(STRING_OBJECT_TYPE),
+    assertTypeEquals(NULL_TYPE, NULL_TYPE.getLeastSupertype(NULL_TYPE));
+    assertTypeEquals(ALL_TYPE, NULL_TYPE.getLeastSupertype(ALL_TYPE));
+    assertTypeEquals(createNullableType(STRING_OBJECT_TYPE),
         NULL_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertEquals(createNullableType(NUMBER_TYPE),
+    assertTypeEquals(createNullableType(NUMBER_TYPE),
         NULL_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(createNullableType(functionType),
+    assertTypeEquals(createNullableType(functionType),
         NULL_TYPE.getLeastSupertype(functionType));
-    assertEquals(createNullableType(OBJECT_TYPE),
+    assertTypeEquals(createNullableType(OBJECT_TYPE),
         NULL_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(createNullableType(DATE_TYPE),
+    assertTypeEquals(createNullableType(DATE_TYPE),
         NULL_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(createNullableType(REGEXP_TYPE),
+    assertTypeEquals(createNullableType(REGEXP_TYPE),
         NULL_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
@@ -1657,17 +1657,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(createNullableType(DATE_TYPE).isNullable());
 
     // getLeastSupertype
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         DATE_TYPE.getLeastSupertype(ALL_TYPE));
-    assertEquals(createUnionType(DATE_TYPE, STRING_OBJECT_TYPE),
+    assertTypeEquals(createUnionType(DATE_TYPE, STRING_OBJECT_TYPE),
         DATE_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertEquals(createUnionType(DATE_TYPE, NUMBER_TYPE),
+    assertTypeEquals(createUnionType(DATE_TYPE, NUMBER_TYPE),
         DATE_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(createUnionType(DATE_TYPE, functionType),
+    assertTypeEquals(createUnionType(DATE_TYPE, functionType),
         DATE_TYPE.getLeastSupertype(functionType));
-    assertEquals(OBJECT_TYPE, DATE_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(DATE_TYPE, DATE_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(createUnionType(DATE_TYPE, REGEXP_TYPE),
+    assertTypeEquals(OBJECT_TYPE, DATE_TYPE.getLeastSupertype(OBJECT_TYPE));
+    assertTypeEquals(DATE_TYPE, DATE_TYPE.getLeastSupertype(DATE_TYPE));
+    assertTypeEquals(createUnionType(DATE_TYPE, REGEXP_TYPE),
         DATE_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // getPropertyType
@@ -1862,18 +1862,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(createNullableType(REGEXP_TYPE).isNullable());
 
     // getLeastSupertype
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         REGEXP_TYPE.getLeastSupertype(ALL_TYPE));
-    assertEquals(createUnionType(REGEXP_TYPE, STRING_OBJECT_TYPE),
+    assertTypeEquals(createUnionType(REGEXP_TYPE, STRING_OBJECT_TYPE),
         REGEXP_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertEquals(createUnionType(REGEXP_TYPE, NUMBER_TYPE),
+    assertTypeEquals(createUnionType(REGEXP_TYPE, NUMBER_TYPE),
         REGEXP_TYPE.getLeastSupertype(NUMBER_TYPE));
-    assertEquals(createUnionType(REGEXP_TYPE, functionType),
+    assertTypeEquals(createUnionType(REGEXP_TYPE, functionType),
         REGEXP_TYPE.getLeastSupertype(functionType));
-    assertEquals(OBJECT_TYPE, REGEXP_TYPE.getLeastSupertype(OBJECT_TYPE));
-    assertEquals(createUnionType(DATE_TYPE, REGEXP_TYPE),
+    assertTypeEquals(OBJECT_TYPE, REGEXP_TYPE.getLeastSupertype(OBJECT_TYPE));
+    assertTypeEquals(createUnionType(DATE_TYPE, REGEXP_TYPE),
         REGEXP_TYPE.getLeastSupertype(DATE_TYPE));
-    assertEquals(REGEXP_TYPE,
+    assertTypeEquals(REGEXP_TYPE,
         REGEXP_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // getPropertyType
@@ -1887,11 +1887,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         REGEXP_TYPE.getPropertyType("test"));
     assertReturnTypeEquals(STRING_TYPE,
         REGEXP_TYPE.getPropertyType("toString"));
-    assertEquals(STRING_TYPE, REGEXP_TYPE.getPropertyType("source"));
-    assertEquals(BOOLEAN_TYPE, REGEXP_TYPE.getPropertyType("global"));
-    assertEquals(BOOLEAN_TYPE, REGEXP_TYPE.getPropertyType("ignoreCase"));
-    assertEquals(BOOLEAN_TYPE, REGEXP_TYPE.getPropertyType("multiline"));
-    assertEquals(NUMBER_TYPE, REGEXP_TYPE.getPropertyType("lastIndex"));
+    assertTypeEquals(STRING_TYPE, REGEXP_TYPE.getPropertyType("source"));
+    assertTypeEquals(BOOLEAN_TYPE, REGEXP_TYPE.getPropertyType("global"));
+    assertTypeEquals(BOOLEAN_TYPE, REGEXP_TYPE.getPropertyType("ignoreCase"));
+    assertTypeEquals(BOOLEAN_TYPE, REGEXP_TYPE.getPropertyType("multiline"));
+    assertTypeEquals(NUMBER_TYPE, REGEXP_TYPE.getPropertyType("lastIndex"));
 
     // matchesXxx
     assertFalse(REGEXP_TYPE.matchesInt32Context());
@@ -1937,10 +1937,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(STRING_OBJECT_TYPE.isInstanceType());
 
     // autoboxesTo
-    assertEquals(STRING_OBJECT_TYPE, STRING_TYPE.autoboxesTo());
+    assertTypeEquals(STRING_OBJECT_TYPE, STRING_TYPE.autoboxesTo());
 
     // unboxesTo
-    assertEquals(STRING_TYPE, STRING_OBJECT_TYPE.unboxesTo());
+    assertTypeEquals(STRING_TYPE, STRING_OBJECT_TYPE.unboxesTo());
 
     // canAssignTo
     assertTrue(STRING_OBJECT_TYPE.canAssignTo(ALL_TYPE));
@@ -2047,7 +2047,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         STRING_OBJECT_TYPE.getPropertyType("toUpperCase"));
     assertReturnTypeEquals(STRING_TYPE,
         STRING_OBJECT_TYPE.getPropertyType("toLocaleUpperCase"));
-    assertEquals(NUMBER_TYPE, STRING_OBJECT_TYPE.getPropertyType("length"));
+    assertTypeEquals(NUMBER_TYPE, STRING_OBJECT_TYPE.getPropertyType("length"));
 
     // matchesXxx
     assertTrue(STRING_OBJECT_TYPE.matchesInt32Context());
@@ -2093,10 +2093,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_TYPE.isInstanceType());
 
     // autoboxesTo
-    assertEquals(STRING_OBJECT_TYPE, STRING_TYPE.autoboxesTo());
+    assertTypeEquals(STRING_OBJECT_TYPE, STRING_TYPE.autoboxesTo());
 
     // unboxesTo
-    assertEquals(STRING_TYPE, STRING_OBJECT_TYPE.unboxesTo());
+    assertTypeEquals(STRING_TYPE, STRING_OBJECT_TYPE.unboxesTo());
 
     // canAssignTo
     assertTrue(STRING_TYPE.canAssignTo(ALL_TYPE));
@@ -2168,7 +2168,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("string", STRING_TYPE.toString());
 
     // findPropertyType
-    assertEquals(NUMBER_TYPE, STRING_TYPE.findPropertyType("length"));
+    assertTypeEquals(NUMBER_TYPE, STRING_TYPE.findPropertyType("length"));
     assertEquals(null, STRING_TYPE.findPropertyType("unknownProperty"));
 
     Asserts.assertResolvesToSame(STRING_TYPE);
@@ -2193,7 +2193,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private void assertReturnTypeEquals(JSType expectedReturnType,
       JSType function) {
     assertTrue(function instanceof FunctionType);
-    assertEquals(expectedReturnType, ((FunctionType) function).getReturnType());
+    assertTypeEquals(expectedReturnType,
+        ((FunctionType) function).getReturnType());
   }
 
 
@@ -2345,9 +2346,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertPropertyTypeInferred(functionInst, "prototype");
 
     // misc
-    assertEquals(FUNCTION_FUNCTION_TYPE, functionInst.getConstructor());
-    assertEquals(FUNCTION_PROTOTYPE, functionInst.getImplicitPrototype());
-    assertEquals(functionInst, FUNCTION_FUNCTION_TYPE.getInstanceType());
+    assertTypeEquals(FUNCTION_FUNCTION_TYPE, functionInst.getConstructor());
+    assertTypeEquals(FUNCTION_PROTOTYPE, functionInst.getImplicitPrototype());
+    assertTypeEquals(functionInst, FUNCTION_FUNCTION_TYPE.getInstanceType());
 
     Asserts.assertResolvesToSame(functionInst);
   }
@@ -2486,7 +2487,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType subRecordType = builder.build();
 
     JSType leastSupertype = recordType.getLeastSupertype(subRecordType);
-    assertEquals(leastSupertype, recordType);
+    assertTypeEquals(leastSupertype, recordType);
   }
 
   public void testRecordTypeLeastSuperType2() {
@@ -2501,7 +2502,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder = new RecordTypeBuilder(registry);
     builder.addProperty("b", STRING_TYPE);
 
-    assertEquals(leastSupertype, builder.build());
+    assertTypeEquals(leastSupertype, builder.build());
   }
 
   public void testRecordTypeLeastSuperType3() {
@@ -2512,12 +2513,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType subRecordType = builder.build();
 
     JSType leastSupertype = recordType.getLeastSupertype(subRecordType);
-    assertEquals(leastSupertype, OBJECT_TYPE);
+    assertTypeEquals(leastSupertype, OBJECT_TYPE);
   }
 
   public void testRecordTypeLeastSuperType4() {
     JSType leastSupertype = recordType.getLeastSupertype(OBJECT_TYPE);
-    assertEquals(leastSupertype, OBJECT_TYPE);
+    assertTypeEquals(leastSupertype, OBJECT_TYPE);
   }
 
   /**
@@ -2540,7 +2541,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("a", NUMBER_TYPE);
     builder.addProperty("b", STRING_TYPE);
 
-    assertEquals(subtype, builder.build());
+    assertTypeEquals(subtype, builder.build());
   }
 
   public void testRecordTypeGreatestSubType2() {
@@ -2554,7 +2555,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("a", NUMBER_TYPE);
     builder.addProperty("b", STRING_TYPE);
 
-    assertEquals(subtype, builder.build());
+    assertTypeEquals(subtype, builder.build());
   }
 
   public void testRecordTypeGreatestSubType3() {
@@ -2572,7 +2573,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("b", STRING_TYPE);
     builder.addProperty("c", STRING_TYPE);
 
-    assertEquals(subtype, builder.build());
+    assertTypeEquals(subtype, builder.build());
   }
 
   public void testRecordTypeGreatestSubType4() {
@@ -2584,7 +2585,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType subRecordType = builder.build();
 
     JSType subtype = recordType.getGreatestSubtype(subRecordType);
-    assertEquals(subtype, NO_TYPE);
+    assertTypeEquals(subtype, NO_TYPE);
   }
 
   public void testRecordTypeGreatestSubType5() {
@@ -2593,15 +2594,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType recordType = builder.build();
 
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
 
     // if Function is given a property "a" of type "string", then it's
     // a subtype of the record type {a: string}.
     U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("a", STRING_TYPE, false);
-    assertEquals(U2U_CONSTRUCTOR_TYPE,
+    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
-    assertEquals(U2U_CONSTRUCTOR_TYPE,
+    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
                  U2U_CONSTRUCTOR_TYPE.getGreatestSubtype(recordType));
   }
 
@@ -2611,15 +2612,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType recordType = builder.build();
 
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
 
     // if Function is given a property "x" of type "string", then it's
     // also a subtype of the record type {x: ?}.
     U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("x", STRING_TYPE, false);
-    assertEquals(U2U_CONSTRUCTOR_TYPE,
+    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
-    assertEquals(U2U_CONSTRUCTOR_TYPE,
+    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
                  U2U_CONSTRUCTOR_TYPE.getGreatestSubtype(recordType));
   }
 
@@ -2632,7 +2633,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // if Function is given a property "x" of type "string", then it's
     // not a subtype of the record type {x: number}.
     U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("x", STRING_TYPE, false);
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
   }
   public void testRecordTypeGreatestSubType8() {
@@ -2641,22 +2642,22 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType recordType = builder.build();
 
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
 
     // if goog.Bar is given a property "xyz" of type "string", then it's
     // also a subtype of the record type {x: ?}.
     googBar.defineDeclaredProperty("xyz", STRING_TYPE, false);
 
-    assertEquals(googBar,
+    assertTypeEquals(googBar,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
-    assertEquals(googBar,
+    assertTypeEquals(googBar,
                  U2U_CONSTRUCTOR_TYPE.getGreatestSubtype(recordType));
 
     ObjectType googBarInst = googBar.getInstanceType();
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
                  recordType.getGreatestSubtype(googBarInst));
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
                  googBarInst.getGreatestSubtype(recordType));
   }
 
@@ -2669,16 +2670,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         applyType instanceof FunctionType);
 
     FunctionType applyFn = (FunctionType) applyType;
-    assertEquals("apply should have the same return type as its function",
+    assertTypeEquals("apply should have the same return type as its function",
         NUMBER_TYPE, applyFn.getReturnType());
 
     Node params = applyFn.getParametersNode();
     assertEquals("apply takes two args",
         2, params.getChildCount());
-    assertEquals("apply's first arg is the @this type",
+    assertTypeEquals("apply's first arg is the @this type",
         registry.createOptionalNullableType(DATE_TYPE),
         params.getFirstChild().getJSType());
-    assertEquals("apply's second arg is an Array",
+    assertTypeEquals("apply's second arg is an Array",
         registry.createOptionalNullableType(OBJECT_TYPE),
         params.getLastChild().getJSType());
     assertTrue("apply's args must be optional",
@@ -2696,13 +2697,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         callType instanceof FunctionType);
 
     FunctionType callFn = (FunctionType) callType;
-    assertEquals("call should have the same return type as its function",
+    assertTypeEquals("call should have the same return type as its function",
         NUMBER_TYPE, callFn.getReturnType());
 
     Node params = callFn.getParametersNode();
     assertEquals("call takes one argument in this case",
         1, params.getChildCount());
-    assertEquals("call's first arg is the @this type",
+    assertTypeEquals("call's first arg is the @this type",
         registry.createOptionalNullableType(DATE_TYPE),
         params.getFirstChild().getJSType());
     assertTrue("call's args must be optional",
@@ -2780,21 +2781,21 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         FunctionType typeA = allFunctions.get(i);
         FunctionType typeB = allFunctions.get(j);
         assertEquals(String.format("equals(%s, %s)", typeA, typeB),
-            i == j, typeA.equals(typeB));
+            i == j, typeA.isEquivalentTo(typeB));
 
         // For this particular set of functions, the functions are subtypes
         // of each other iff they have the same "this" type.
         assertEquals(String.format("isSubtype(%s, %s)", typeA, typeB),
-            typeA.getTypeOfThis().equals(typeB.getTypeOfThis()),
+            typeA.getTypeOfThis().isEquivalentTo(typeB.getTypeOfThis()),
             typeA.isSubtype(typeB));
 
         if (i == j) {
-          assertEquals(typeA, typeA.getLeastSupertype(typeB));
-          assertEquals(typeA, typeA.getGreatestSubtype(typeB));
+          assertTypeEquals(typeA, typeA.getLeastSupertype(typeB));
+          assertTypeEquals(typeA, typeA.getGreatestSubtype(typeB));
         } else {
-          assertEquals(String.format("sup(%s, %s)", typeA, typeB),
+          assertTypeEquals(String.format("sup(%s, %s)", typeA, typeB),
               U2U_CONSTRUCTOR_TYPE, typeA.getLeastSupertype(typeB));
-          assertEquals(String.format("inf(%s, %s)", typeA, typeB),
+          assertTypeEquals(String.format("inf(%s, %s)", typeA, typeB),
               NO_OBJECT_TYPE, typeA.getGreatestSubtype(typeB));
         }
       }
@@ -2829,17 +2830,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         FunctionType typeA = allFunctions.get(i);
         FunctionType typeB = allFunctions.get(j);
         assertEquals(String.format("equals(%s, %s)", typeA, typeB),
-            i == j, typeA.equals(typeB));
+            i == j, typeA.isEquivalentTo(typeB));
 
         // TODO(nicksantos): This formulation of least subtype and greatest
         // supertype is a bit loose. We might want to tighten it up later.
         if (i == j) {
-          assertEquals(typeA, typeA.getLeastSupertype(typeB));
-          assertEquals(typeA, typeA.getGreatestSubtype(typeB));
+          assertTypeEquals(typeA, typeA.getLeastSupertype(typeB));
+          assertTypeEquals(typeA, typeA.getGreatestSubtype(typeB));
         } else {
-          assertEquals(String.format("sup(%s, %s)", typeA, typeB),
+          assertTypeEquals(String.format("sup(%s, %s)", typeA, typeB),
               U2U_CONSTRUCTOR_TYPE, typeA.getLeastSupertype(typeB));
-          assertEquals(String.format("inf(%s, %s)", typeA, typeB),
+          assertTypeEquals(String.format("inf(%s, %s)", typeA, typeB),
               NO_OBJECT_TYPE, typeA.getGreatestSubtype(typeB));
         }
       }
@@ -2979,10 +2980,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_TYPE.isInstanceType());
 
     // autoboxesTo
-    assertEquals(BOOLEAN_OBJECT_TYPE, BOOLEAN_TYPE.autoboxesTo());
+    assertTypeEquals(BOOLEAN_OBJECT_TYPE, BOOLEAN_TYPE.autoboxesTo());
 
     // unboxesTo
-    assertEquals(BOOLEAN_TYPE, BOOLEAN_OBJECT_TYPE.unboxesTo());
+    assertTypeEquals(BOOLEAN_TYPE, BOOLEAN_OBJECT_TYPE.unboxesTo());
 
     // canAssignTo
     assertTrue(BOOLEAN_TYPE.canAssignTo(ALL_TYPE));
@@ -3374,10 +3375,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     EnumElementType stringEnum =
         new EnumType(registry, "Enum", STRING_TYPE).getElementsType();
 
-    assertEquals(UNKNOWN_TYPE, stringEnum.getPropertyType("length"));
-    assertEquals(NUMBER_TYPE, stringEnum.findPropertyType("length"));
+    assertTypeEquals(UNKNOWN_TYPE, stringEnum.getPropertyType("length"));
+    assertTypeEquals(NUMBER_TYPE, stringEnum.findPropertyType("length"));
     assertEquals(false, stringEnum.hasProperty("length"));
-    assertEquals(STRING_OBJECT_TYPE, stringEnum.autoboxesTo());
+    assertTypeEquals(STRING_OBJECT_TYPE, stringEnum.autoboxesTo());
     assertNull(stringEnum.getConstructor());
 
     Asserts.assertResolvesToSame(stringEnum);
@@ -3387,10 +3388,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     EnumElementType stringEnum =
         new EnumType(registry, "Enum", STRING_OBJECT_TYPE).getElementsType();
 
-    assertEquals(NUMBER_TYPE, stringEnum.getPropertyType("length"));
-    assertEquals(NUMBER_TYPE, stringEnum.findPropertyType("length"));
+    assertTypeEquals(NUMBER_TYPE, stringEnum.getPropertyType("length"));
+    assertTypeEquals(NUMBER_TYPE, stringEnum.findPropertyType("length"));
     assertEquals(true, stringEnum.hasProperty("length"));
-    assertEquals(STRING_OBJECT_FUNCTION_TYPE, stringEnum.getConstructor());
+    assertTypeEquals(STRING_OBJECT_FUNCTION_TYPE, stringEnum.getConstructor());
   }
 
 
@@ -3460,8 +3461,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeCanAssignToItself(namedGoogBar);
     googBar.canAssignTo(namedGoogBar);
     namedGoogBar.canAssignTo(googBar);
-    assertTrue(googBar.equals(googBar));
-    assertFalse(googBar.equals(googSubBar));
+    assertTrue(googBar.isEquivalentTo(googBar));
+    assertFalse(googBar.isEquivalentTo(googSubBar));
 
     Asserts.assertResolvesToSame(googBar);
     Asserts.assertResolvesToSame(googSubBar);
@@ -3491,7 +3492,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType prototype = googBar.getPrototype();
     ObjectType instance = googBar.getInstanceType();
 
-    assertEquals(instance.getImplicitPrototype(), prototype);
+    assertTypeEquals(instance.getImplicitPrototype(), prototype);
 
     // Test declarations.
     assertTrue(
@@ -3500,14 +3501,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         prototype.defineDeclaredProperty("declared", NUMBER_TYPE, false));
     assertFalse(
         instance.defineDeclaredProperty("declared", NUMBER_TYPE, false));
-    assertEquals(NUMBER_TYPE, instance.getPropertyType("declared"));
+    assertTypeEquals(NUMBER_TYPE, instance.getPropertyType("declared"));
 
     // Test inferring different types.
     assertTrue(
         prototype.defineInferredProperty("inferred1", STRING_TYPE, false));
     assertTrue(
         prototype.defineInferredProperty("inferred1", NUMBER_TYPE, false));
-    assertEquals(
+    assertTypeEquals(
         createUnionType(NUMBER_TYPE, STRING_TYPE),
         instance.getPropertyType("inferred1"));
 
@@ -3516,7 +3517,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         prototype.defineInferredProperty("inferred2", STRING_TYPE, false));
     assertTrue(
         instance.defineInferredProperty("inferred2", NUMBER_TYPE, false));
-    assertEquals(
+    assertTypeEquals(
         createUnionType(NUMBER_TYPE, STRING_TYPE),
         instance.getPropertyType("inferred2"));
 
@@ -3525,8 +3526,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         prototype.defineInferredProperty("prop", STRING_TYPE, false));
     assertTrue(
         instance.defineDeclaredProperty("prop", NUMBER_TYPE, false));
-    assertEquals(NUMBER_TYPE, instance.getPropertyType("prop"));
-    assertEquals(STRING_TYPE, prototype.getPropertyType("prop"));
+    assertTypeEquals(NUMBER_TYPE, instance.getPropertyType("prop"));
+    assertTypeEquals(STRING_TYPE, prototype.getPropertyType("prop"));
   }
 
   /**
@@ -3581,7 +3582,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertNull(namedGoogBar.autoboxesTo());
 
     // properties
-    assertEquals(DATE_TYPE, namedGoogBar.getPropertyType("date"));
+    assertTypeEquals(DATE_TYPE, namedGoogBar.getPropertyType("date"));
 
     assertFalse(namedGoogBar.isNativeObjectType());
     assertFalse(namedGoogBar.getImplicitPrototype().isNativeObjectType());
@@ -3596,31 +3597,44 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testPrototypeChaining() throws Exception {
     // equals
-    assertEquals(ARRAY_TYPE.getImplicitPrototype().getImplicitPrototype(),
+    assertTypeEquals(
+        ARRAY_TYPE.getImplicitPrototype().getImplicitPrototype(),
         OBJECT_TYPE);
-    assertEquals(BOOLEAN_OBJECT_TYPE.getImplicitPrototype().
+    assertTypeEquals(
+        BOOLEAN_OBJECT_TYPE.getImplicitPrototype().
         getImplicitPrototype(), OBJECT_TYPE);
-    assertEquals(DATE_TYPE.getImplicitPrototype().getImplicitPrototype(),
+    assertTypeEquals(
+        DATE_TYPE.getImplicitPrototype().getImplicitPrototype(),
         OBJECT_TYPE);
-    assertEquals(ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
+    assertTypeEquals(
+        ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
         OBJECT_TYPE);
-    assertEquals(EVAL_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
+    assertTypeEquals(
+        EVAL_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
         ERROR_TYPE);
-    assertEquals(NUMBER_OBJECT_TYPE.getImplicitPrototype().
+    assertTypeEquals(
+        NUMBER_OBJECT_TYPE.getImplicitPrototype().
         getImplicitPrototype(), OBJECT_TYPE);
-    assertEquals(URI_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
+    assertTypeEquals(
+        URI_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
         ERROR_TYPE);
-    assertEquals(RANGE_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
+    assertTypeEquals(
+        RANGE_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
         ERROR_TYPE);
-    assertEquals(REFERENCE_ERROR_TYPE.getImplicitPrototype().
+    assertTypeEquals(
+        REFERENCE_ERROR_TYPE.getImplicitPrototype().
         getImplicitPrototype(), ERROR_TYPE);
-    assertEquals(STRING_OBJECT_TYPE.getImplicitPrototype().
+    assertTypeEquals(
+        STRING_OBJECT_TYPE.getImplicitPrototype().
         getImplicitPrototype(), OBJECT_TYPE);
-    assertEquals(REGEXP_TYPE.getImplicitPrototype().getImplicitPrototype(),
+    assertTypeEquals(
+        REGEXP_TYPE.getImplicitPrototype().getImplicitPrototype(),
         OBJECT_TYPE);
-    assertEquals(SYNTAX_ERROR_TYPE.getImplicitPrototype().
+    assertTypeEquals(
+        SYNTAX_ERROR_TYPE.getImplicitPrototype().
         getImplicitPrototype(), ERROR_TYPE);
-    assertEquals(TYPE_ERROR_TYPE.getImplicitPrototype().
+    assertTypeEquals(
+        TYPE_ERROR_TYPE.getImplicitPrototype().
         getImplicitPrototype(), ERROR_TYPE);
 
     // not same
@@ -3666,51 +3680,64 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testInstanceFunctionChaining() throws Exception {
     // Array
-    assertEquals(ARRAY_FUNCTION_TYPE, ARRAY_TYPE.getConstructor());
+    assertTypeEquals(
+        ARRAY_FUNCTION_TYPE, ARRAY_TYPE.getConstructor());
 
     // Boolean
-    assertEquals(BOOLEAN_OBJECT_FUNCTION_TYPE,
+    assertTypeEquals(
+        BOOLEAN_OBJECT_FUNCTION_TYPE,
         BOOLEAN_OBJECT_TYPE.getConstructor());
 
     // Date
-    assertEquals(DATE_FUNCTION_TYPE, DATE_TYPE.getConstructor());
+    assertTypeEquals(
+        DATE_FUNCTION_TYPE, DATE_TYPE.getConstructor());
 
     // Error
-    assertEquals(ERROR_FUNCTION_TYPE, ERROR_TYPE.getConstructor());
+    assertTypeEquals(
+        ERROR_FUNCTION_TYPE, ERROR_TYPE.getConstructor());
 
     // EvalError
-    assertEquals(EVAL_ERROR_FUNCTION_TYPE, EVAL_ERROR_TYPE.getConstructor());
+    assertTypeEquals(
+        EVAL_ERROR_FUNCTION_TYPE, EVAL_ERROR_TYPE.getConstructor());
 
     // Number
-    assertEquals(NUMBER_OBJECT_FUNCTION_TYPE,
+    assertTypeEquals(
+        NUMBER_OBJECT_FUNCTION_TYPE,
         NUMBER_OBJECT_TYPE.getConstructor());
 
     // Object
-    assertEquals(OBJECT_FUNCTION_TYPE, OBJECT_TYPE.getConstructor());
+    assertTypeEquals(
+        OBJECT_FUNCTION_TYPE, OBJECT_TYPE.getConstructor());
 
     // RangeError
-    assertEquals(RANGE_ERROR_FUNCTION_TYPE, RANGE_ERROR_TYPE.getConstructor());
+    assertTypeEquals(
+        RANGE_ERROR_FUNCTION_TYPE, RANGE_ERROR_TYPE.getConstructor());
 
     // ReferenceError
-    assertEquals(REFERENCE_ERROR_FUNCTION_TYPE,
+    assertTypeEquals(
+        REFERENCE_ERROR_FUNCTION_TYPE,
         REFERENCE_ERROR_TYPE.getConstructor());
 
     // RegExp
-    assertEquals(REGEXP_FUNCTION_TYPE, REGEXP_TYPE.getConstructor());
+    assertTypeEquals(REGEXP_FUNCTION_TYPE, REGEXP_TYPE.getConstructor());
 
     // String
-    assertEquals(STRING_OBJECT_FUNCTION_TYPE,
+    assertTypeEquals(
+        STRING_OBJECT_FUNCTION_TYPE,
         STRING_OBJECT_TYPE.getConstructor());
 
     // SyntaxError
-    assertEquals(SYNTAX_ERROR_FUNCTION_TYPE,
+    assertTypeEquals(
+        SYNTAX_ERROR_FUNCTION_TYPE,
         SYNTAX_ERROR_TYPE.getConstructor());
 
     // TypeError
-    assertEquals(TYPE_ERROR_FUNCTION_TYPE, TYPE_ERROR_TYPE.getConstructor());
+    assertTypeEquals(
+        TYPE_ERROR_FUNCTION_TYPE, TYPE_ERROR_TYPE.getConstructor());
 
     // URIError
-    assertEquals(URI_ERROR_FUNCTION_TYPE, URI_ERROR_TYPE.getConstructor());
+    assertTypeEquals(
+        URI_ERROR_FUNCTION_TYPE, URI_ERROR_TYPE.getConstructor());
   }
 
   /**
@@ -4258,7 +4285,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType aOnB = typeA.getLeastSupertype(typeB);
         JSType bOnA = typeB.getLeastSupertype(typeA);
 
-        // Use a custom assert message instead of the normal assertEquals,
+        // Use a custom assert message instead of the normal assertTypeEquals,
         // to make it more helpful.
         assertTrue(
             String.format("getLeastSupertype not symmetrical:\n" +
@@ -4266,14 +4293,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
                 "a.getLeastSupertype(b): %s\n" +
                 "b.getLeastSupertype(a): %s\n",
                 typeA, typeB, aOnB, bOnA),
-            aOnB.equals(bOnA));
+            aOnB.isEquivalentTo(bOnA));
       }
     }
   }
 
   public void testWeirdBug() {
-    assertFalse(googBar.equals(googBar.getInstanceType()));
-    assertFalse(googBar.getInstanceType().equals(googBar));
+    assertFalse(googBar.isEquivalentTo(googBar.getInstanceType()));
+    assertFalse(googBar.getInstanceType().isEquivalentTo(googBar));
     assertFalse(googBar.isSubtype(googBar.getInstanceType()));
     assertFalse(googBar.getInstanceType().isSubtype(googBar));
   }
@@ -4289,7 +4316,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType aOnB = typeA.getGreatestSubtype(typeB);
         JSType bOnA = typeB.getGreatestSubtype(typeA);
 
-        // Use a custom assert message instead of the normal assertEquals,
+        // Use a custom assert message instead of the normal assertTypeEquals,
         // to make it more helpful.
         assertTrue(
             String.format("getGreatestSubtype not symmetrical:\n" +
@@ -4297,7 +4324,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
                 "a.getGreatestSubtype(b): %s\n" +
                 "b.getGreatestSubtype(a): %s\n",
                 typeA, typeB, aOnB, bOnA),
-            aOnB.equals(bOnA));
+            aOnB.isEquivalentTo(bOnA));
       }
     }
   }
@@ -4308,7 +4335,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testReflexivityOfLeastSupertype() {
     List<JSType> list = getTypesToTestForSymmetry();
     for (JSType type : list) {
-      assertEquals("getLeastSupertype not reflexive",
+      assertTypeEquals("getLeastSupertype not reflexive",
           type, type.getLeastSupertype(type));
     }
   }
@@ -4319,7 +4346,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testReflexivityOfGreatestSubtype() {
     List<JSType> list = getTypesToTestForSymmetry();
     for (JSType type : list) {
-      assertEquals("getGreatestSubtype not reflexive",
+      assertTypeEquals("getGreatestSubtype not reflexive",
           type, type.getGreatestSubtype(type));
     }
   }
@@ -4331,9 +4358,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // (undefined,function(?):?) and ? unresolved named type
     JSType expected = registry.createUnionType(
         unresolvedNamedType, U2U_FUNCTION_TYPE);
-    assertEquals(expected,
+    assertTypeEquals(expected,
         unresolvedNamedType.getLeastSupertype(U2U_FUNCTION_TYPE));
-    assertEquals(expected,
+    assertTypeEquals(expected,
         U2U_FUNCTION_TYPE.getLeastSupertype(unresolvedNamedType));
     assertEquals("(function (...[?]): ?|not.resolved.named.type)",
         expected.toString());
@@ -4342,21 +4369,21 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testLeastSupertypeUnresolvedNamedType2() {
     JSType expected = registry.createUnionType(
         unresolvedNamedType, UNKNOWN_TYPE);
-    assertEquals(expected,
+    assertTypeEquals(expected,
         unresolvedNamedType.getLeastSupertype(UNKNOWN_TYPE));
-    assertEquals(expected,
+    assertTypeEquals(expected,
         UNKNOWN_TYPE.getLeastSupertype(unresolvedNamedType));
-    assertEquals(UNKNOWN_TYPE, expected);
+    assertTypeEquals(UNKNOWN_TYPE, expected);
   }
 
   public void testLeastSupertypeUnresolvedNamedType3() {
     JSType expected = registry.createUnionType(
         unresolvedNamedType, CHECKED_UNKNOWN_TYPE);
-    assertEquals(expected,
+    assertTypeEquals(expected,
         unresolvedNamedType.getLeastSupertype(CHECKED_UNKNOWN_TYPE));
-    assertEquals(expected,
+    assertTypeEquals(expected,
         CHECKED_UNKNOWN_TYPE.getLeastSupertype(unresolvedNamedType));
-    assertEquals(CHECKED_UNKNOWN_TYPE, expected);
+    assertTypeEquals(CHECKED_UNKNOWN_TYPE, expected);
   }
 
   /** Tests the subclass of an unresolve named type */
@@ -4373,14 +4400,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // test == if references are equal
     NamedType a = new NamedType(jst, "type1", "source", 1, 0);
     NamedType b = new NamedType(jst, "type1", "source", 1, 0);
-    assertTrue(a.equals(b));
+    assertTrue(a.isEquivalentTo(b));
 
     // test != to non-NamedType
     assertFalse(a.equals("type1"));
 
     // test == instance of referenced type
-    assertTrue(namedGoogBar.equals(googBar.getInstanceType()));
-    assertTrue(googBar.getInstanceType().equals(namedGoogBar));
+    assertTrue(namedGoogBar.isEquivalentTo(googBar.getInstanceType()));
+    assertTrue(googBar.getInstanceType().isEquivalentTo(namedGoogBar));
   }
 
   /**
@@ -4399,9 +4426,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     registry.declareType("typeB", realB);
 
     assertEquals(a.hashCode(), realA.hashCode());
-    assertEquals(a, realA);
+    assertTypeEquals(a, realA);
     assertEquals(b.hashCode(), realB.hashCode());
-    assertEquals(b, realB);
+    assertTypeEquals(b, realB);
 
     a.resolve(null, null);
     b.resolve(null, null);
@@ -4409,9 +4436,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(a.isResolved());
     assertTrue(b.isResolved());
     assertEquals(a.hashCode(), realA.hashCode());
-    assertEquals(a, realA);
+    assertTypeEquals(a, realA);
     assertEquals(b.hashCode(), realB.hashCode());
-    assertEquals(b, realB);
+    assertTypeEquals(b, realB);
 
     JSType resolvedA = Asserts.assertValidResolve(a);
     assertNotSame(resolvedA, a);
@@ -4433,7 +4460,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     registry.forwardDeclareType("typeA");
 
     assertEquals(a.hashCode(), b.hashCode());
-    assertEquals(a, b);
+    assertTypeEquals(a, b);
 
     a.resolve(null, EMPTY_SCOPE);
 
@@ -4441,21 +4468,21 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(b.isResolved());
 
     assertEquals(a.hashCode(), b.hashCode());
-    assertEquals(a, b);
+    assertTypeEquals(a, b);
 
-    assertFalse(a.equals(UNKNOWN_TYPE));
-    assertFalse(b.equals(UNKNOWN_TYPE));
+    assertFalse(a.isEquivalentTo(UNKNOWN_TYPE));
+    assertFalse(b.isEquivalentTo(UNKNOWN_TYPE));
   }
 
   public void testForwardDeclaredNamedType() {
     NamedType a = new NamedType(registry, "typeA", "source", 1, 0);
     registry.forwardDeclareType("typeA");
 
-    assertEquals(UNKNOWN_TYPE, a.getLeastSupertype(UNKNOWN_TYPE));
-    assertEquals(CHECKED_UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE, a.getLeastSupertype(UNKNOWN_TYPE));
+    assertTypeEquals(CHECKED_UNKNOWN_TYPE,
         a.getLeastSupertype(CHECKED_UNKNOWN_TYPE));
-    assertEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getLeastSupertype(a));
-    assertEquals(CHECKED_UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getLeastSupertype(a));
+    assertTypeEquals(CHECKED_UNKNOWN_TYPE,
         CHECKED_UNKNOWN_TYPE.getLeastSupertype(a));
   }
 
@@ -4463,31 +4490,34 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests {@link JSType#getGreatestSubtype(JSType)} on simple types.
    */
   public void testGreatestSubtypeSimpleTypes() {
-    assertEquals(ARRAY_TYPE,
+    assertTypeEquals(ARRAY_TYPE,
         ARRAY_TYPE.getGreatestSubtype(ALL_TYPE));
-    assertEquals(ARRAY_TYPE,
+    assertTypeEquals(ARRAY_TYPE,
         ALL_TYPE.getGreatestSubtype(ARRAY_TYPE));
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
         REGEXP_TYPE.getGreatestSubtype(NO_OBJECT_TYPE));
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
         NO_OBJECT_TYPE.getGreatestSubtype(REGEXP_TYPE));
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
         ARRAY_TYPE.getGreatestSubtype(STRING_OBJECT_TYPE));
-    assertEquals(NO_TYPE, ARRAY_TYPE.getGreatestSubtype(NUMBER_TYPE));
-    assertEquals(NO_OBJECT_TYPE, ARRAY_TYPE.getGreatestSubtype(functionType));
-    assertEquals(STRING_OBJECT_TYPE,
+    assertTypeEquals(NO_TYPE, ARRAY_TYPE.getGreatestSubtype(NUMBER_TYPE));
+    assertTypeEquals(NO_OBJECT_TYPE,
+        ARRAY_TYPE.getGreatestSubtype(functionType));
+    assertTypeEquals(STRING_OBJECT_TYPE,
         STRING_OBJECT_TYPE.getGreatestSubtype(OBJECT_TYPE));
-    assertEquals(STRING_OBJECT_TYPE,
+    assertTypeEquals(STRING_OBJECT_TYPE,
         OBJECT_TYPE.getGreatestSubtype(STRING_OBJECT_TYPE));
-    assertEquals(NO_OBJECT_TYPE, ARRAY_TYPE.getGreatestSubtype(DATE_TYPE));
-    assertEquals(NO_OBJECT_TYPE, ARRAY_TYPE.getGreatestSubtype(REGEXP_TYPE));
-    assertEquals(EVAL_ERROR_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
+        ARRAY_TYPE.getGreatestSubtype(DATE_TYPE));
+    assertTypeEquals(NO_OBJECT_TYPE,
+        ARRAY_TYPE.getGreatestSubtype(REGEXP_TYPE));
+    assertTypeEquals(EVAL_ERROR_TYPE,
         ERROR_TYPE.getGreatestSubtype(EVAL_ERROR_TYPE));
-    assertEquals(EVAL_ERROR_TYPE,
+    assertTypeEquals(EVAL_ERROR_TYPE,
         EVAL_ERROR_TYPE.getGreatestSubtype(ERROR_TYPE));
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         NULL_TYPE.getGreatestSubtype(ERROR_TYPE));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         NUMBER_TYPE.getGreatestSubtype(UNKNOWN_TYPE));
   }
 
@@ -4686,10 +4716,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType typeJ = typeChain.get(j);
 
         if (i == j) {
-          assertTrue(typeI + " should equal itself", typeI.equals(typeI));
+          assertTrue(typeI + " should equal itself",
+              typeI.isEquivalentTo(typeI));
         } else {
           assertFalse(typeI + " should not equal " + typeJ,
-              typeI.equals(typeJ));
+              typeI.isEquivalentTo(typeJ));
         }
 
         if (checkSubtyping) {
@@ -4703,11 +4734,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
           JSType expectedSupremum = i < j ? typeI : typeJ;
           JSType expectedInfimum = i > j ? typeI : typeJ;
-          assertEquals(
+          assertTypeEquals(
               expectedSupremum + " should be the least supertype of " + typeI +
               " and " + typeJ,
               expectedSupremum, typeI.getLeastSupertype(typeJ));
-          assertEquals(
+          assertTypeEquals(
               expectedInfimum + " should be the greatest subtype of " + typeI +
               " and " + typeJ,
               expectedInfimum, typeI.getGreatestSubtype(typeJ));
@@ -4723,69 +4754,69 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   @SuppressWarnings("checked")
       public void testRestrictedTypeGivenToBoolean() {
     // simple cases
-    assertEquals(BOOLEAN_TYPE,
+    assertTypeEquals(BOOLEAN_TYPE,
         BOOLEAN_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(BOOLEAN_TYPE,
+    assertTypeEquals(BOOLEAN_TYPE,
         BOOLEAN_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         NULL_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(NULL_TYPE,
+    assertTypeEquals(NULL_TYPE,
         NULL_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(NUMBER_TYPE,
+    assertTypeEquals(NUMBER_TYPE,
         NUMBER_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(NUMBER_TYPE,
+    assertTypeEquals(NUMBER_TYPE,
         NUMBER_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(STRING_TYPE,
+    assertTypeEquals(STRING_TYPE,
         STRING_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(STRING_TYPE,
+    assertTypeEquals(STRING_TYPE,
         STRING_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(STRING_OBJECT_TYPE,
+    assertTypeEquals(STRING_OBJECT_TYPE,
         STRING_OBJECT_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         STRING_OBJECT_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         VOID_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(VOID_TYPE,
+    assertTypeEquals(VOID_TYPE,
         VOID_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
         NO_OBJECT_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         NO_OBJECT_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         NO_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(NO_TYPE,
+    assertTypeEquals(NO_TYPE,
         NO_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(ALL_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(UNKNOWN_TYPE,
+    assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
 
     // unions
     UnionType nullableStringValue =
         (UnionType) createNullableType(STRING_TYPE);
-    assertEquals(STRING_TYPE,
+    assertTypeEquals(STRING_TYPE,
         nullableStringValue.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(nullableStringValue,
+    assertTypeEquals(nullableStringValue,
         nullableStringValue.getRestrictedTypeGivenToBooleanOutcome(false));
 
     UnionType nullableStringObject =
         (UnionType) createNullableType(STRING_OBJECT_TYPE);
-    assertEquals(STRING_OBJECT_TYPE,
+    assertTypeEquals(STRING_OBJECT_TYPE,
         nullableStringObject.getRestrictedTypeGivenToBooleanOutcome(true));
-    assertEquals(NULL_TYPE,
+    assertTypeEquals(NULL_TYPE,
         nullableStringObject.getRestrictedTypeGivenToBooleanOutcome(false));
   }
 
@@ -4798,11 +4829,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ObjectType objType = (ObjectType) type;
         objType.defineDeclaredProperty(propName, UNKNOWN_TYPE, false);
         objType.defineDeclaredProperty("allHaz", UNKNOWN_TYPE, false);
-        assertEquals(type,
+        assertTypeEquals(type,
             registry.getGreatestSubtypeWithProperty(type, propName));
         assertEquals(Sets.newHashSet(type),
             registry.getTypesWithProperty(propName));
-        assertEquals(NO_TYPE,
+        assertTypeEquals(NO_TYPE,
             registry.getGreatestSubtypeWithProperty(type, "GRRR"));
         allObjects.add(type);
       }
@@ -4818,16 +4849,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     derived1.defineDeclaredProperty("propz", UNKNOWN_TYPE, false);
 
-    assertEquals(derived1,
+    assertTypeEquals(derived1,
         registry.getGreatestSubtypeWithProperty(derived1, "propz"));
-    assertEquals(NO_OBJECT_TYPE,
+    assertTypeEquals(NO_OBJECT_TYPE,
         registry.getGreatestSubtypeWithProperty(derived2, "propz"));
 
     derived2.defineDeclaredProperty("propz", UNKNOWN_TYPE, false);
 
-    assertEquals(derived1,
+    assertTypeEquals(derived1,
         registry.getGreatestSubtypeWithProperty(derived1, "propz"));
-    assertEquals(derived2,
+    assertTypeEquals(derived2,
         registry.getGreatestSubtypeWithProperty(derived2, "propz"));
   }
 
@@ -4841,7 +4872,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     foo.defineDeclaredProperty("propz", UNKNOWN_TYPE, false);
     bar.defineDeclaredProperty("propz", UNKNOWN_TYPE, false);
 
-    assertEquals(bar,
+    assertTypeEquals(bar,
         registry.getGreatestSubtypeWithProperty(namedGoogBar, "propz"));
   }
 
@@ -4923,12 +4954,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     TypePair p21 = t2.getTypesUnderEquality(t1);
 
     // t1Eq
-    assertEquals(t1Eq, p12.typeA);
-    assertEquals(t1Eq, p21.typeB);
+    assertTypeEquals(t1Eq, p12.typeA);
+    assertTypeEquals(t1Eq, p21.typeB);
 
     // t2Eq
-    assertEquals(t2Eq, p12.typeB);
-    assertEquals(t2Eq, p21.typeA);
+    assertTypeEquals(t2Eq, p12.typeB);
+    assertTypeEquals(t2Eq, p21.typeA);
   }
 
   @SuppressWarnings("checked")
@@ -4987,12 +5018,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     TypePair p21 = t2.getTypesUnderInequality(t1);
 
     // t1Eq
-    assertEquals(t1Eq, p12.typeA);
-    assertEquals(t1Eq, p21.typeB);
+    assertTypeEquals(t1Eq, p12.typeA);
+    assertTypeEquals(t1Eq, p21.typeB);
 
     // t2Eq
-    assertEquals(t2Eq, p12.typeB);
-    assertEquals(t2Eq, p21.typeA);
+    assertTypeEquals(t2Eq, p12.typeB);
+    assertTypeEquals(t2Eq, p21.typeA);
   }
 
 
@@ -5037,7 +5068,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testCreateAnonymousObjectType() throws Exception {
     // anonymous
     ObjectType anonymous = registry.createAnonymousObjectType();
-    assertEquals(OBJECT_TYPE, anonymous.getImplicitPrototype());
+    assertTypeEquals(OBJECT_TYPE, anonymous.getImplicitPrototype());
     assertNull(anonymous.getReferenceName());
     assertEquals("{}", anonymous.toString());
   }
@@ -5075,7 +5106,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // simple
     ObjectType subDate =
         registry.createObjectType(DATE_TYPE.getImplicitPrototype());
-    assertEquals(DATE_TYPE.getImplicitPrototype(),
+    assertTypeEquals(DATE_TYPE.getImplicitPrototype(),
         subDate.getImplicitPrototype());
     assertNull(subDate.getReferenceName());
     assertEquals("{...}", subDate.toString());
@@ -5083,7 +5114,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // name, node, prototype
     ObjectType subError = registry.createObjectType("Foo", null,
         ERROR_TYPE.getImplicitPrototype());
-    assertEquals(ERROR_TYPE.getImplicitPrototype(),
+    assertTypeEquals(ERROR_TYPE.getImplicitPrototype(),
         subError.getImplicitPrototype());
     assertEquals("Foo", subError.getReferenceName());
   }
@@ -5180,7 +5211,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     namedGoogBar.setPropertyJSDocInfo("X", info, false);
     assertTrue(namedGoogBar.getOwnPropertyJSDocInfo("X").isDeprecated());
     assertPropertyTypeInferred(namedGoogBar, "X");
-    assertEquals(UNKNOWN_TYPE, namedGoogBar.getPropertyType("X"));
+    assertTypeEquals(UNKNOWN_TYPE, namedGoogBar.getPropertyType("X"));
   }
 
   public void testGetAndSetJSDocInfoWithObjectTypes() throws Exception {
@@ -5202,10 +5233,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(sup.getOwnPropertyJSDocInfo("X").isDeprecated());
     assertEquals(Visibility.PRIVATE,
         sup.getOwnPropertyJSDocInfo("X").getVisibility());
-    assertEquals(NUMBER_TYPE, sup.getPropertyType("X"));
+    assertTypeEquals(NUMBER_TYPE, sup.getPropertyType("X"));
     assertTrue(sub.getOwnPropertyJSDocInfo("X").isDeprecated());
     assertNull(sub.getOwnPropertyJSDocInfo("X").getVisibility());
-    assertEquals(NUMBER_TYPE, sub.getPropertyType("X"));
+    assertTypeEquals(NUMBER_TYPE, sub.getPropertyType("X"));
   }
 
   public void testGetAndSetJSDocInfoWithNoType() throws Exception {
@@ -5235,5 +5266,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   private ArrowType createArrowType(Node params, JSType retType) {
     return registry.createArrowType(params, retType);
+  }
+
+  private void assertTypeEquals(JSType a, JSType b) {
+    Asserts.assertTypeEquals(a, b);
+  }
+
+  private void assertTypeEquals(String msg, JSType a, JSType b) {
+    Asserts.assertTypeEquals(msg, a, b);
   }
 }

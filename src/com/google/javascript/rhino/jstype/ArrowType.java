@@ -154,7 +154,7 @@ final class ArrowType extends JSType {
       if (thisParamType != null) {
         // Both parameter lists give a type for this param, it should be equal
         if (otherParamType != null &&
-            !thisParamType.equals(otherParamType)) {
+            !thisParamType.isEquivalentTo(otherParamType)) {
           return false;
         }
       } else {
@@ -171,13 +171,13 @@ final class ArrowType extends JSType {
   }
 
   @Override
-  public boolean equals(Object object) {
+  public boolean isEquivalentTo(JSType object) {
     // Please keep this method in sync with the hashCode() method below.
     if (!(object instanceof ArrowType)) {
       return false;
     }
     ArrowType that = (ArrowType) object;
-    if (!returnType.equals(that.returnType) ||
+    if (!returnType.isEquivalentTo(that.returnType) ||
         returnTypeInferred != that.returnTypeInferred) {
       return false;
     }

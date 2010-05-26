@@ -39,6 +39,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 
@@ -55,14 +56,17 @@ public class FunctionParamBuilderTest extends BaseJSTypeTestCase {
     assertTrue(builder.addVarArgs(STRING_TYPE));
 
     Node params = builder.build();
-    assertEquals(NUMBER_TYPE, params.getFirstChild().getJSType());
-    assertEquals(registry.createOptionalType(BOOLEAN_TYPE),
+    assertTypeEquals(NUMBER_TYPE, params.getFirstChild().getJSType());
+    assertTypeEquals(registry.createOptionalType(BOOLEAN_TYPE),
         params.getFirstChild().getNext().getJSType());
-    assertEquals(registry.createOptionalType(STRING_TYPE),
+    assertTypeEquals(registry.createOptionalType(STRING_TYPE),
         params.getLastChild().getJSType());
 
     assertTrue(params.getFirstChild().getNext().isOptionalArg());
     assertTrue(params.getLastChild().isVarArgs());
   }
 
+  private void assertTypeEquals(JSType a, JSType b) {
+    Asserts.assertTypeEquals(a, b);
+  }
 }

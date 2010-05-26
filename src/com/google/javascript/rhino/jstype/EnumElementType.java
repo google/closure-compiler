@@ -126,11 +126,11 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  public boolean equals(Object that) {
+  public boolean isEquivalentTo(JSType that) {
     if (this == that) {
       return true;
-    } else if (that instanceof JSType && this.isNominalType()) {
-      ObjectType thatObj = ObjectType.cast((JSType) that);
+    } else if (this.isNominalType()) {
+      ObjectType thatObj = ObjectType.cast(that);
       if (thatObj != null && thatObj.isNominalType()) {
         return getReferenceName().equals(thatObj.getReferenceName());
       }
