@@ -524,7 +524,7 @@ public class IRFactory {
         // Old Rhino tagged the empty name node with the line number of the
         // declaration.
         newName.setLineno(functionNode.getLineno());
-        // TODO(user) Mark line number of paren correctly.
+        // TODO(bowdidge) Mark line number of paren correctly.
         // Same problem as below - the left paren might not be on the
         // same line as the function keyword.
         int lpColumn = functionNode.getAbsolutePosition() +
@@ -539,7 +539,7 @@ public class IRFactory {
       // appeared on.  We know the paren has to appear on the same line as the
       // function name (or else a semicolon will be inserted.)  If there's no
       // function name, assume the paren was on the same line as the function.
-      // TODO(user): Mark line number of paren correctly.
+      // TODO(bowdidge): Mark line number of paren correctly.
       Name fnName = functionNode.getFunctionName();
       if (fnName != null) {
         lp.setLineno(fnName.getLineno());

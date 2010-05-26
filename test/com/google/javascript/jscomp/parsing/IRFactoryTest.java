@@ -488,7 +488,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     assertNodePosition(1, 0, forNode);
     assertNodePosition(2, 0, initClause);
     assertNodePosition(3, 0, condClause);
-    // TODO(user) Incorrectly gets charno position when EmptyExpression
+    // TODO(bowdidge) Incorrectly gets charno position when EmptyExpression
     // has its absolute position on the carriage return.  For now, the
     // line number gets reported correctly (on the next line) but the
     // character position is -1, so the overall line/char pair in our tree
@@ -927,7 +927,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Node lastNameComponent = firstNameComponent.getNext();
 
     assertNodePosition(3, 4, functionCall);
-    // TODO(user) New Rhino doesn't keep the position of the dot handy.
+    // TODO(bowdidge) New Rhino doesn't keep the position of the dot handy.
     // New Rhino treats the location of the qualified name as the beginning of
     // the whole name.
     // assertNodePosition(1, 0, firstNameComponent);
@@ -949,7 +949,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Node fnName = fnNode.getFirstChild();
 
     assertNodePosition(2, 1, fnAssignment);
-    // TODO(user) New Rhino doesn't keep track of the position of the dot.
+    // TODO(bowdidge) New Rhino doesn't keep track of the position of the dot.
     //assertNodePosition(1, 1, aDotbName);
     assertNodePosition(1, 0, aName);
     assertNodePosition(2, 0, bName);
