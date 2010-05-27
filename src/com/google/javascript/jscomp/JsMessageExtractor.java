@@ -28,8 +28,7 @@ import java.util.List;
 
 
 /**
- * Extracts messages and message comments from JS code, and writes them to a
- * properties file, an XMB file, or an XLB, to facilitate translation.
+ * Extracts messages and message comments from JS code.
  *
  * <p> Uses a special prefix (e.g. {@code MSG_}) to determine which variables
  * are messages. Here are the recognized formats:
