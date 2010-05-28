@@ -41,8 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -820,11 +818,6 @@ public class FunctionType extends PrototypeObjectType {
     }
 
     return super.resolveInternal(t, scope);
-  }
-
-  // A helper method for creating arrow types.
-  private ArrowType createArrowType(Node parameters, JSType returnType) {
-    return registry.createArrowType(parameters, returnType);
   }
 
   @Override

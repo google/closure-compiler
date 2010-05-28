@@ -41,7 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 
 /**

@@ -22,7 +22,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**

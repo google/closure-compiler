@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;

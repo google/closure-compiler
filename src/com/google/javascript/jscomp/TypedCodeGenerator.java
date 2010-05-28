@@ -74,7 +74,7 @@ class TypedCodeGenerator extends CodeGenerator {
   }
 
   /**
-   * @param node A node for a function for which to generate a type annotation
+   * @param fnNode A node for a function for which to generate a type annotation
    */
   private String getFunctionAnnotation(Node fnNode) {
     Preconditions.checkState(fnNode.getType() == Token.FUNCTION);

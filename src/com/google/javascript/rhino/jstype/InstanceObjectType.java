@@ -41,10 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.rhino.ErrorReporter;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * An object type that is an instance of some function constructor.

@@ -371,6 +371,7 @@ public abstract class SourceFile {
     /**
      * Gets a reader for the code in this source file.
      */
+    @Override
     public Reader getCodeReader() throws IOException {
       if (hasSourceInMemory()) {
         return super.getCodeReader();

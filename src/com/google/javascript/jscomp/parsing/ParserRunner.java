@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.mozilla.rhino.EvaluatorException;
 import com.google.javascript.jscomp.mozilla.rhino.Parser;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.io.IOException;
 import java.util.ResourceBundle;

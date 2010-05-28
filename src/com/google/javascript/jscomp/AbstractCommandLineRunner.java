@@ -750,8 +750,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * exists.
    *
    * @param options The options to the Compiler.
-   * @param path The path of the generated file for which the source map was
-   *        created.
    */
   private void outputSourceMap(B options)
       throws IOException {

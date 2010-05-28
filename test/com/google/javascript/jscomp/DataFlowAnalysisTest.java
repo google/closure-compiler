@@ -338,14 +338,7 @@ public class DataFlowAnalysisTest extends TestCase {
      * Constructor.
      *
      * @param isTop To define if the lattice is top.
-     * @param constMap A map from name to constant variable.
      */
-    ConstPropLatticeElement(
-        boolean isTop, Map<Variable, Integer> constMap) {
-      this.isTop = isTop;
-      this.constMap = constMap;
-    }
-
     ConstPropLatticeElement(boolean isTop) {
       this.isTop = isTop;
       this.constMap = Maps.newHashMap();

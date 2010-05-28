@@ -26,13 +26,15 @@ import com.google.javascript.rhino.Token;
  * Checks for certain uses of the {@code this} keyword that are considered
  * unsafe because they are likely to reference the global {@code this} object
  * unintentionally.
- * 
+ *
  * <p>A use of {@code this} is considered unsafe if it's on the left side of an
- * assignment and not inside one of the following:
+ * assignment or a property access, and not inside one of the following:
  * <ol>
  * <li>a prototype method
  * <li>a function annotated with {@code @constructor}
  * <li>a function annotated with {@code @this}.
+ * <li>a function where there's no logical place to put a
+ *     {@code this} annotation.
  * </ol>
  *
  * <p>Note that this check does not track assignments of {@code this} to
@@ -62,7 +64,7 @@ final class CheckGlobalThis implements Callback {
 
   private final AbstractCompiler compiler;
   private final CheckLevel level;
-
+  
   /**
    * If {@code assignLhsChild != null}, then the node being traversed is
    * a descendant of the first child of an ASSIGN node. assignLhsChild's
@@ -80,7 +82,7 @@ final class CheckGlobalThis implements Callback {
    * is encountered, there is no reason to traverse non global contexts.
    */
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    
+
     if (n.getType() == Token.FUNCTION) {
       // Don't traverse functions that are constructors or have the @this
       // annotation.
@@ -88,8 +90,21 @@ final class CheckGlobalThis implements Callback {
       if (jsDoc != null && (jsDoc.isConstructor() || jsDoc.hasThisType())) {
         return false;
       }
+
+      // Don't traverse functions unless they would normally
+      // be able to have a @this annotation associated with them. e.g.,
+      // var a = function() { }; // or
+      // function a() {} // or
+      // a.x = function() {};
+      int pType = parent.getType();
+      if (!(pType == Token.BLOCK ||
+            pType == Token.SCRIPT ||
+            pType == Token.NAME ||
+            pType == Token.ASSIGN)) {
+        return false;
+      }
     }
-    
+
     if (parent != null && parent.getType() == Token.ASSIGN) {
       Node lhs = parent.getFirstChild();
       Node rhs = lhs.getNext();
@@ -115,17 +130,27 @@ final class CheckGlobalThis implements Callback {
         }
       }
     }
-    
+
     return true;
   }
 
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (assignLhsChild != null && n.getType() == Token.THIS) {
+    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
       compiler.report(t.makeError(n, level, GLOBAL_THIS));
     }
     if (n == assignLhsChild) {
       assignLhsChild = null;
     }
+  }
+
+  private boolean shouldReportThis(Node n, Node parent) {
+    if (assignLhsChild != null) {
+      // Always report a THIS on the left side of an assign.
+      return true;
+    }
+
+    // Also report a THIS with a property access.
+    return parent != null && NodeUtil.isGet(parent);
   }
 
   /**

@@ -42,7 +42,6 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
-import java.util.List;
 import java.util.Set;
 
 /**

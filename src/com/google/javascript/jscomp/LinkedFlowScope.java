@@ -148,7 +148,6 @@ class LinkedFlowScope implements FlowScope {
     return cache.getSlot(name);
   }
 
-  /** @inheritDoc */
   @Override
   public StaticSlot<JSType> getOwnSlot(String name) {
     throw new UnsupportedOperationException();

@@ -224,7 +224,7 @@ final class Tracer {
   static final int MAX_TRACE_SIZE = 1000;
 
   /**
-   * For unit testing. Can't use {@link com.google.common.time} because
+   * For unit testing. Can't use {@link com.google.common.time.Clock} because
    * this code is in base and has minimal dependencies.
    */
   static interface InternalClock {

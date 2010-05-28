@@ -290,7 +290,7 @@ public class JSModuleGraph {
    * a symbol that is not required until a later module, then that
    * file will be moved to the later module.
    *
-   * @param The original list of sources. Used to ensure that the sort
+   * @param inputs The original list of sources. Used to ensure that the sort
    *     is stable.
    * @return The sorted list of sources.
    */

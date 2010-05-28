@@ -1034,14 +1034,6 @@ public final class JsDocInfoParser {
       this.string = string;
       this.token = token;
     }
-
-    public String getString() {
-      return string;
-    }
-
-    public JsDocToken getToken() {
-      return token;
-    }
   }
 
   /**

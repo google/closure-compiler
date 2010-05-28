@@ -38,7 +38,6 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 

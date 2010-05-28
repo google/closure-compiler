@@ -40,9 +40,6 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-
-import java.util.Map;
 
 /**
  * A builder for record types.

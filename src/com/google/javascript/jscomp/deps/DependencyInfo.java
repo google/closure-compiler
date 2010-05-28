@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp.deps;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * A data structure for JS dependency information for a single .js file.

@@ -4863,7 +4863,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Tests {@link JSTypeRegistry#getGreatestSubtypeWithProperty(JSType)}.
+   * Tests
+   * {@link JSTypeRegistry#getGreatestSubtypeWithProperty(JSType, String)}.
    */
   public void testGreatestSubtypeWithProperty() {
     ObjectType foo = registry.createObjectType("foo", null, OBJECT_TYPE);
@@ -5262,10 +5263,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   private ArrowType createArrowType(Node params) {
     return registry.createArrowType(params);
-  }
-
-  private ArrowType createArrowType(Node params, JSType retType) {
-    return registry.createArrowType(params, retType);
   }
 
   private void assertTypeEquals(JSType a, JSType b) {

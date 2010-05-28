@@ -24,8 +24,6 @@ import com.google.javascript.jscomp.ScopeCreator;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Deque;
@@ -40,7 +38,6 @@ import java.util.Deque;
 // assertions about type information.
 public class InferJSDocInfoTest extends CompilerTestCase {
 
-  private JSTypeRegistry registry;
   private Scope globalScope;
 
   @Override
@@ -66,7 +63,6 @@ public class InferJSDocInfoTest extends CompilerTestCase {
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
-    registry = compiler.getTypeRegistry();
     return new CompilerPass() {
       public void process(Node externs, Node root) {
         ScopeCreator scopeCreator =
@@ -216,13 +212,5 @@ public class InferJSDocInfoTest extends CompilerTestCase {
       }
     }
     return null;
-  }
-
-  private JSType getNativeType(JSTypeNative type) {
-    return registry.getNativeType(type);
-  }
-
-  private ObjectType getNativeObjectType(JSTypeNative type) {
-    return (ObjectType) registry.getNativeType(type);
   }
 }

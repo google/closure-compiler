@@ -46,7 +46,6 @@ import com.google.javascript.rhino.testing.Asserts;
 
 import junit.framework.TestCase;
 
-
 /**
  * Tests {@link JSTypeRegistry}.
  *

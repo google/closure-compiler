@@ -35,7 +35,7 @@ public class CheckGlobalThisTest extends CompilerTestCase {
   private void testFailure(String js) {
     test(js, null, CheckGlobalThis.GLOBAL_THIS);
   }
-  
+
   public void testGlobalThis1() throws Exception {
     testSame("var a = this;");
   }
@@ -51,13 +51,17 @@ public class CheckGlobalThisTest extends CompilerTestCase {
   public void testGlobalThis4() {
     testFailure("this['foo'] = 5;");
   }
-  
+
   public void testGlobalThis5() {
     testFailure("(a = this).foo = 4;");
   }
-  
+
   public void testGlobalThis6() {
     testSame("a = this;");
+  }
+
+  public void testGlobalThis7() {
+    testFailure("var a = this.foo;");
   }
 
   public void testStaticFunction1() {
@@ -81,11 +85,15 @@ public class CheckGlobalThisTest extends CompilerTestCase {
   }
 
   public void testStaticFunction6() {
-    testFailure("function a() { return function() { this = 8; } }");
+    testSame("function a() { return function() { this = 8; } }");
   }
 
   public void testStaticFunction7() {
-    testFailure("var a = function() { return function() { this = 8; } }");
+    testSame("var a = function() { return function() { this = 8; } }");
+  }
+
+  public void testStaticFunction8() {
+    testFailure("var a = function() { return this.foo; };");
   }
 
   public void testConstructor1() {
@@ -137,11 +145,11 @@ public class CheckGlobalThisTest extends CompilerTestCase {
   }
 
   public void testStaticMethod2() {
-    testFailure("a.b = function() { return function() { this.m2 = 5; } }");
+    testSame("a.b = function() { return function() { this.m2 = 5; } }");
   }
 
   public void testStaticMethod3() {
-    testFailure("a.b.c = function() { return function() { this.m2 = 5; } }");
+    testSame("a.b.c = function() { return function() { this.m2 = 5; } }");
   }
 
   public void testMethodInStaticFunction() {
@@ -157,5 +165,23 @@ public class CheckGlobalThisTest extends CompilerTestCase {
         "  function me() {" +
         "    function myself() {" +
         "      function andI() { this.m2 = 5; } } } }");
+  }
+
+  public void testInnerFunction1() {
+    testFailure("function f() { function g() { return this.x; } }");
+  }
+
+  public void testInnerFunction2() {
+    testFailure("function f() { var g = function() { return this.x; } }");
+  }
+
+  public void testInnerFunction3() {
+    testFailure(
+        "function f() { var x = {}; x.y = function() { return this.x; } }");
+  }
+
+  public void testInnerFunction4() {
+    testSame(
+        "function f() { var x = {}; x.y(function() { return this.x; }); }");
   }
 }

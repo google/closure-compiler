@@ -147,7 +147,7 @@ public class JSTypeRegistry implements Serializable {
 
   /**
    * The type registry has three modes, which control how type ASTs are
-   * converted to types in {@link @createFromTypeNodes}.
+   * converted to types in {@link #createFromTypeNodes}.
    */
   public static enum ResolveMode {
     /**

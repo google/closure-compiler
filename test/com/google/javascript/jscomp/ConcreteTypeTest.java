@@ -244,7 +244,7 @@ public class ConcreteTypeTest extends TestCase {
       return registry;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public ConcreteFunctionType createConcreteFunction(
         Node decl, StaticScope<ConcreteType> parent) {
       ConcreteFunctionType funcType = functionByDeclaration.get(decl);
@@ -258,7 +258,7 @@ public class ConcreteTypeTest extends TestCase {
       return funcType;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public ConcreteInstanceType createConcreteInstance(
         ObjectType instanceType) {
       ConcreteInstanceType instType = instanceByJSType.get(instanceType);
@@ -269,17 +269,17 @@ public class ConcreteTypeTest extends TestCase {
       return instType;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public ConcreteFunctionType getConcreteFunction(FunctionType functionType) {
       return functionByJSType.get(functionType);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public ConcreteInstanceType getConcreteInstance(ObjectType instanceType) {
       return instanceByJSType.get(instanceType);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public StaticScope<ConcreteType> createFunctionScope(
         Node decl, StaticScope<ConcreteType> parent) {
       FakeScope scope = new FakeScope((FakeScope) parent);
@@ -294,7 +294,7 @@ public class ConcreteTypeTest extends TestCase {
       return scope;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public StaticScope<ConcreteType> createInstanceScope(
         ObjectType instanceType) {
       FakeScope parentScope = null;
@@ -321,15 +321,15 @@ public class ConcreteTypeTest extends TestCase {
       this.parent = parent;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public StaticScope<ConcreteType> getParentScope() { return parent; }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public StaticSlot<ConcreteType> getOwnSlot(String name) {
       return slots.get(name);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public StaticSlot<ConcreteType> getSlot(String name) {
       if (slots.containsKey(name)) {
         return slots.get(name);
@@ -340,7 +340,7 @@ public class ConcreteTypeTest extends TestCase {
       }
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public ConcreteType getTypeOfThis() { return ConcreteType.ALL; }
 
     void addSlot(String name) {
@@ -356,13 +356,13 @@ public class ConcreteTypeTest extends TestCase {
       this.name = name;
     }
 
-    /* @inheritDoc */
+    /* {@inheritDoc} */
     public String getName() { return name; }
 
-    /* @inheritDoc */
+    /* {@inheritDoc} */
     public ConcreteType getType() { return ConcreteType.ALL; }
 
-    /* @inheritDoc */
+    /* {@inheritDoc} */
     public boolean isTypeInferred() { return true; }
   }
 }
