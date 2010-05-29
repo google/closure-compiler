@@ -168,15 +168,11 @@ class InlineFunctions implements CompilerPass {
         // Functions expressions in the form of:
         //   var fooFn = function(x) { return ... }
         case Token.VAR:
-          // TODO(johnlenz): Make this a Preconditions check.
-          //     Currently this fails for some targets.
-          if (n.hasOneChild()) {
-            // Only look at declarations in the global scope.
-            Node nameNode = n.getFirstChild();
-            if (nameNode.getType() == Token.NAME && nameNode.hasChildren()
-                && nameNode.getFirstChild().getType() == Token.FUNCTION) {
-              maybeAddFunction(new FunctionVar(n), t.getModule());
-            }
+          Preconditions.checkState(n.hasOneChild());
+          Node nameNode = n.getFirstChild();
+          if (nameNode.getType() == Token.NAME && nameNode.hasChildren()
+              && nameNode.getFirstChild().getType() == Token.FUNCTION) {
+            maybeAddFunction(new FunctionVar(n), t.getModule());
           }
           break;
 
@@ -273,6 +269,18 @@ class InlineFunctions implements CompilerPass {
           if (NodeUtil.referencesThis(block)) {
             fs.setReferencesThis(true);
           }
+
+          if (NodeUtil.containsFunction(block)) {
+            fs.setHasInnerFunctions(true);
+            // If there are inner functions, we can inline into global scope
+            // if there are no local vars or named functions.
+            // TODO(johnlenz): this can be improved by looking at the possible
+            // values for locals.  If there are simple values, or constants
+            // we could still inline.
+            if (hasLocalNames(fnNode)) {
+              fs.setInline(false);
+            }
+          }
         }
 
         // Check if block inlining is allowed.
@@ -283,6 +291,19 @@ class InlineFunctions implements CompilerPass {
         }
       }
     }
+  }
+
+  /**
+   * @param fnNode The function to inspect.
+   * @return Whether the function has parameters, var, or function declarations.
+   */
+  private boolean hasLocalNames(Node fnNode) {
+    Node block = NodeUtil.getFunctionBody(fnNode);
+    return NodeUtil.getFnParameters(fnNode).hasChildren()
+        || NodeUtil.has(
+             block, 
+             new NodeUtil.MatchDeclaration(), 
+             new NodeUtil.MatchShallowStatement());
   }
 
   /**
@@ -429,7 +450,8 @@ class InlineFunctions implements CompilerPass {
         JSModule module, InliningMode mode) {
       CanInlineResult result = injector.canInlineReferenceToFunction(
           t, callNode, fs.getFn().getFunctionNode(),
-          fs.getNamesToAlias(), mode, fs.getReferencesThis());
+          fs.getNamesToAlias(), mode, fs.getReferencesThis(),
+          fs.hasInnerFunctions());
       if (result != CanInlineResult.NO) {
         // Yeah!
         boolean decompose =
@@ -755,6 +777,7 @@ class InlineFunctions implements CompilerPass {
     private boolean remove = true;
     private boolean inlineDirectly = false;
     private boolean referencesThis = false;
+    private boolean hasInnerFunctions = false;
     private Map<Node, Reference> references = null;
     private JSModule module = null;
     private Set<String> namesToAlias = null;
@@ -769,6 +792,15 @@ class InlineFunctions implements CompilerPass {
 
     public boolean getReferencesThis() {
       return this.referencesThis;
+    }
+
+    public void setHasInnerFunctions(boolean hasInnerFunctions) {
+      this.hasInnerFunctions = hasInnerFunctions;
+    }
+
+
+    public boolean hasInnerFunctions() {
+      return hasInnerFunctions;
     }
 
     void removeBlockInliningReferences() {
@@ -883,9 +915,9 @@ class InlineFunctions implements CompilerPass {
     }
   }
 
-  /** 
-   * Interface for dealing with function declarations and function 
-   * expressions equally 
+  /**
+   * Interface for dealing with function declarations and function
+   * expressions equally
    */
   private static interface Function {
     /** Gets the name of the function */

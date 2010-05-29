@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
@@ -153,14 +154,14 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testContainsFunctionDeclaration() {
-    assertTrue(NodeUtil.containsFunctionDeclaration(
+    assertTrue(NodeUtil.containsFunction(
                    getNode("function foo(){}")));
-    assertTrue(NodeUtil.containsFunctionDeclaration(
+    assertTrue(NodeUtil.containsFunction(
                    getNode("(b?function(){}:null)")));
 
-    assertFalse(NodeUtil.containsFunctionDeclaration(
+    assertFalse(NodeUtil.containsFunction(
                    getNode("(b?foo():null)")));
-    assertFalse(NodeUtil.containsFunctionDeclaration(
+    assertFalse(NodeUtil.containsFunction(
                     getNode("foo()")));
   }
 
@@ -452,11 +453,14 @@ public class NodeUtilTest extends TestCase {
 
   public void testGetNodeTypeReferenceCount() {
     assertEquals(0, NodeUtil.getNodeTypeReferenceCount(
-        parse("function foo(){}"), Token.THIS));
+        parse("function foo(){}"), Token.THIS, 
+            Predicates.<Node>alwaysTrue()));
     assertEquals(1, NodeUtil.getNodeTypeReferenceCount(
-        parse("this"), Token.THIS));
+        parse("this"), Token.THIS, 
+            Predicates.<Node>alwaysTrue()));
     assertEquals(2, NodeUtil.getNodeTypeReferenceCount(
-        parse("this;function foo(){}(this)"), Token.THIS));
+        parse("this;function foo(){}(this)"), Token.THIS,
+            Predicates.<Node>alwaysTrue()));
   }
 
   public void testIsNameReferenceCount() {

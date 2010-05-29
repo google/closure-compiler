@@ -373,6 +373,56 @@ public class FunctionInjectorTest extends TestCase {
         "foo", INLINE_BLOCK);
   }
 
+  public void testCanInlineReferenceToFunction45() {
+    // Call with inner function expression.
+    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+        "function foo(){return function() {return true;}}; foo();",
+        "foo", INLINE_DIRECT);
+  }
+
+  public void testCanInlineReferenceToFunction46() {
+    // Call with inner function expression.
+    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+        "function foo(){return function() {return true;}}; foo();",
+        "foo", INLINE_BLOCK);
+  }
+
+  public void testCanInlineReferenceToFunction47() {
+    // Call with inner function expression and variable decl.
+    helperCanInlineReferenceToFunction(CanInlineResult.NO,
+        "function foo(){var a; return function() {return true;}}; foo();",
+        "foo", INLINE_DIRECT);
+  }
+
+  public void testCanInlineReferenceToFunction48() {
+    // Call with inner function expression and variable decl.
+    // TODO(johnlenz): should we validate no values in scope?
+    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+        "function foo(){var a; return function() {return true;}}; foo();",
+        "foo", INLINE_BLOCK);
+  }
+
+  public void testCanInlineReferenceToFunction49() {
+    // Call with inner function expression.
+    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+        "function foo(){return function() {var a; return true;}}; foo();",
+        "foo", INLINE_DIRECT);
+  }
+
+  public void testCanInlineReferenceToFunction50() {
+    // Call with inner function expression.
+    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+        "function foo(){return function() {var a; return true;}}; foo();",
+        "foo", INLINE_BLOCK);
+  }
+
+  public void testCanInlineReferenceToFunction51() {
+    // Call with inner function statement.
+    helperCanInlineReferenceToFunction(CanInlineResult.YES,
+        "function foo(){function x() {var a; return true;} return x}; foo();",
+        "foo", INLINE_BLOCK);
+  }
+
   public void testCanInlineReferenceToFunctionInExpression1() {
     // Call in if condition
     helperCanInlineReferenceToFunction(CanInlineResult.YES,
@@ -874,6 +924,51 @@ public class FunctionInjectorTest extends TestCase {
         "foo", INLINE_BLOCK);
   }
 
+  public void testInlineFunctionWithInnerFunction1() {
+    // Call with inner function expression.
+    helperInlineReferenceToFunction(
+        "function foo(){return function() {return true;}}; foo();",
+        "function foo(){return function() {return true;}};" +
+            "(function() {return true;})",
+        "foo", INLINE_DIRECT);
+  }
+
+  public void testInlineFunctionWithInnerFunction2() {
+    // Call with inner function expression.
+    helperInlineReferenceToFunction(
+        "function foo(){return function() {return true;}}; foo();",
+        "function foo(){return function() {return true;}};" +
+            "{(function() {return true;})}",
+        "foo", INLINE_BLOCK);
+  }
+
+  public void testInlineFunctionWithInnerFunction3() {
+    // Call with inner function expression.
+    helperInlineReferenceToFunction(
+        "function foo(){return function() {var a; return true;}}; foo();",
+        "function foo(){return function() {var a; return true;}};" +
+            "(function() {var a; return true;});",
+        "foo", INLINE_DIRECT);
+  }
+
+  public void testInlineFunctionWithInnerFunction4() {
+    // Call with inner function expression.
+    helperInlineReferenceToFunction(
+        "function foo(){return function() {var a; return true;}}; foo();",
+        "function foo(){return function() {var a; return true;}};" +
+            "{(function() {var a$$inline_0; return true;});}",
+        "foo", INLINE_BLOCK);
+  }
+
+  public void testInlineFunctionWithInnerFunction5() {
+    // Call with inner function statement.
+    helperInlineReferenceToFunction(
+        "function foo(){function x() {var a; return true;} return x}; foo();",
+        "function foo(){function x(){var a;return true}return x};" +
+            "{function x$$inline_1(){var a$$inline_2;return true}x$$inline_1}",
+        "foo", INLINE_BLOCK);
+  }
+
   public void testInlineReferenceInExpression1() {
     // Call in if condition
     helperInlineReferenceToFunction(
@@ -1217,7 +1312,9 @@ public class FunctionInjectorTest extends TestCase {
     Method tester = new Method() {
       public boolean call(NodeTraversal t, Node n, Node parent) {
         CanInlineResult result = injector.canInlineReferenceToFunction(
-            t, n, fnNode, unsafe, mode, NodeUtil.referencesThis(fnNode));
+            t, n, fnNode, unsafe, mode,
+            NodeUtil.referencesThis(fnNode),
+            NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
         assertEquals(expectedResult, result);
         return true;
       }
@@ -1289,7 +1386,9 @@ public class FunctionInjectorTest extends TestCase {
       public boolean call(NodeTraversal t, Node n, Node parent) {
 
         CanInlineResult canInline = injector.canInlineReferenceToFunction(
-            t, n, fnNode, unsafe, mode, NodeUtil.referencesThis(fnNode));
+            t, n, fnNode, unsafe, mode,
+            NodeUtil.referencesThis(fnNode),
+            NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
         assertTrue("canInlineReferenceToFunction should not be CAN_NOT_INLINE",
             CanInlineResult.NO != canInline);
         if (decompose) {

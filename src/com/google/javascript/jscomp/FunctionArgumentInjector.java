@@ -432,8 +432,13 @@ class FunctionArgumentInjector {
    * Gather any names declared in the local scope.
    */
   private static void gatherLocalNames(Node n, Set<String> names) {
-    Preconditions.checkState(n.getType() != Token.FUNCTION);
-    if (n.getType() == Token.NAME) {
+    if (n.getType() == Token.FUNCTION) {
+      if (NodeUtil.isFunctionDeclaration(n)) {
+        names.add(n.getFirstChild().getString());
+      }
+      // Don't traverse into inner function scopes;
+      return;
+    } else if (n.getType() == Token.NAME) {
       switch (n.getParent().getType()) {
         case Token.VAR:
         case Token.CATCH:

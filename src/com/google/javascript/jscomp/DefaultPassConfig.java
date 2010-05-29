@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -614,6 +615,7 @@ public class DefaultPassConfig extends PassConfig {
       // These used to be one pass.
       passes.add(minimizeExitPoints);
       passes.add(foldConstants);
+      passes.add(peepholeOptimizations);
     }
 
     if (options.removeDeadCode) {
@@ -860,6 +862,23 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new FoldConstants(compiler);
+    }
+  };
+
+  /** Various peephole optimizations. */
+  private static final PassFactory peepholeOptimizations =
+      new PassFactory("peepholeOptimizations", false) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+
+      ImmutableSet<AbstractPeepholeOptimization> optimizations =
+        ImmutableSet.<AbstractPeepholeOptimization>of(
+            new PeepholeSubstituteAlternateSyntax());
+
+      final PeepholeOptimizationsPass peepholePass =
+          new PeepholeOptimizationsPass(compiler, optimizations);
+
+      return peepholePass;
     }
   };
 

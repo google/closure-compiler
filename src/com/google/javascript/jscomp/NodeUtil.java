@@ -802,17 +802,18 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines if the given node contains a function declaration.
+   * Determines if the given node contains a function statement or function
+   * expression.
    */
-  static boolean containsFunctionDeclaration(Node n) {
+  static boolean containsFunction(Node n) {
     return containsType(n, Token.FUNCTION);
   }
 
   /**
-   * Returns true if the subtree contains references to 'this' keyword
+   * Returns true if the shallow scope contains references to 'this' keyword
    */
   static boolean referencesThis(Node n) {
-    return containsType(n, Token.THIS);
+    return containsType(n, Token.THIS, new MatchNotFunction());
   }
 
   /**
@@ -1241,7 +1242,7 @@ public final class NodeUtil {
     return isNameReferenced(
         function.getLastChild(),
         "arguments",
-        Predicates.<Node>not(new MatchNodeType(Token.FUNCTION)));
+        new MatchNotFunction());
   }
 
   /**
@@ -1404,15 +1405,6 @@ public final class NodeUtil {
                       Token.name(operator));
     }
     return res;
-  }
-
-  /**
-   * @return true if n or any of its children are of the specified type.
-   *     Does not traverse into functions.
-   */
-  static boolean containsTypeInOuterScope(Node node, int type) {
-    return containsType(node, type,
-        Predicates.<Node>not(new MatchNodeType(Token.FUNCTION)));
   }
 
   /**
@@ -1672,7 +1664,7 @@ public final class NodeUtil {
     visitPreOrder(
         root,
         collector,
-        Predicates.<Node>not(new MatchNodeType(Token.FUNCTION)));
+        new MatchNotFunction());
     return collector.vars.values();
   }
 
@@ -1781,26 +1773,44 @@ public final class NodeUtil {
     }
   }
 
+
   /**
-   * Whether a Node type is within the node tree.
+   * A predicate for matching var or function declarations.
    */
-  static boolean isNodeTypeReferenced(Node node, int type) {
-    return isNodeTypeReferenced(node, type, Predicates.<Node>alwaysTrue());
+  static class MatchDeclaration implements Predicate<Node> {
+    public boolean apply(Node n) {
+      return isFunctionDeclaration(n) || n.getType() == Token.VAR;
+    }
   }
 
   /**
-   * Whether a Node type is within the node tree.
+   * A predicate for matching anything except function nodes.
    */
-  static boolean isNodeTypeReferenced(
-      Node node, int type, Predicate<Node> traverseChildrenPred) {
-    return has(node, new MatchNodeType(type), traverseChildrenPred);
+  static class MatchNotFunction implements Predicate<Node>{
+    public boolean apply(Node n) {
+      return !isFunction(n);
+    }
+  }
+
+  /**
+   * A predicate for matching statements without exiting the current scope.
+   */
+  static class MatchShallowStatement implements Predicate<Node>{
+    public boolean apply(Node n) {
+      Node parent = n.getParent();
+      return n.getType() == Token.BLOCK
+          || (!isFunction(n) && (parent == null
+              || isControlStructure(parent)
+              || isStatementBlock(parent)));
+    }
   }
 
   /**
    * Finds the number of times a type is referenced within the node tree.
    */
-  static int getNodeTypeReferenceCount(Node node, int type) {
-    return getCount(node, new MatchNodeType(type));
+  static int getNodeTypeReferenceCount(
+      Node node, int type, Predicate<Node> traverseChildrenPred) {
+    return getCount(node, new MatchNodeType(type), traverseChildrenPred);
   }
 
   /**
@@ -1823,7 +1833,8 @@ public final class NodeUtil {
    * Finds the number of times a simple name is referenced within the node tree.
    */
   static int getNameReferenceCount(Node node, String name) {
-    return getCount(node, new MatchNameNode(name) );
+    return getCount(
+        node, new MatchNameNode(name), Predicates.<Node>alwaysTrue());
   }
 
   /**
@@ -1853,15 +1864,18 @@ public final class NodeUtil {
    * @return The number of times the the predicate is true for the node
    * or any of its children.
    */
-  static int getCount(Node n, Predicate<Node> pred) {
+  static int getCount(
+      Node n, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     int total = 0;
 
     if (pred.apply(n)) {
       total++;
     }
 
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      total += getCount(c, pred);
+    if (traverseChildrenPred.apply(n)) {
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        total += getCount(c, pred, traverseChildrenPred);
+      }
     }
 
     return total;

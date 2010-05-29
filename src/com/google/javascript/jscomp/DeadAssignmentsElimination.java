@@ -66,7 +66,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
     // We are not going to do any dead assignment elimination in when there is
     // at least one inner function because in most browsers, when there is a
     // closure, ALL the variables are saved (escaped).
-    if (!NodeUtil.containsFunctionDeclaration(
+    if (!NodeUtil.containsFunction(
         t.getScopeRoot().getLastChild())) {
       // Computes liveness information first.
       ControlFlowGraph<Node> cfg = t.getControlFlowGraph();

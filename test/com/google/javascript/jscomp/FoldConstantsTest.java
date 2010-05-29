@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 
 public class FoldConstantsTest extends CompilerTestCase {
@@ -39,6 +40,28 @@ public class FoldConstantsTest extends CompilerTestCase {
     return new CompilerPass() {
       public void process(Node externs, Node js) {
         NodeTraversal.traverse(compiler, js, new FoldConstants(compiler));
+
+        /* TODO(dcc): For now we run all remaining FoldConstants tests under
+         * both the FoldConstants pass and the new PeepholeOptimizationPass,
+         * since many remaining FoldConstants tests rely on functionality
+         * that used to be in FoldConstants but is now in some
+         * PeepholeOptimization (e.g. PeepholeSubstituteAlternateSyntax).
+         *
+         * As we continue with refactoring FoldConstants, more and more of
+         * these tests will be moved to their own PeepholeFooTest files.
+         *
+         * Those that genuinely need to test combinations of different
+         * Peephole passes will be moved to AbstractPeepholeOptimizationTest.
+         */
+
+        ImmutableSet<AbstractPeepholeOptimization> peepholeOptimizations =
+          ImmutableSet.<AbstractPeepholeOptimization>of(
+              new PeepholeSubstituteAlternateSyntax());
+
+        PeepholeOptimizationsPass peepholePass =
+            new PeepholeOptimizationsPass(compiler, peepholeOptimizations);
+
+        peepholePass.process(externs, js);
       }
     };
   }
@@ -136,7 +159,6 @@ public class FoldConstantsTest extends CompilerTestCase {
     // Test an obscure case with do and while
     fold("if(x){do{foo()}while(y)}else bar()",
          "if(x){do foo();while(y)}else bar()");
-
 
     // Play with nested IFs
     fold("function(){if(x){if(y)foo()}}",
@@ -382,7 +404,7 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("function z() {if (a()) { return true }" +
          "else if (b()) { return true }" +
          "else { return true }}",
-         "function z() {if (!a()) { b() } return true;}");
+         "function z() {a()||b();return true;}");
     fold("function z() {" +
          "  if (a) { bar(); foo(); return true }" +
          "    else { bar(); goo(); return true }" +
@@ -609,7 +631,6 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("x = 'abcundefineddef'.indexOf(undefined)", "x = 3");
     fold("x = 'abcnulldef'.indexOf(null)", "x = 3");
     fold("x = 'abctruedef'.indexOf(true)", "x = 3");
-
 
     // The following testcase fails with JSC_PARSE_ERROR. Hence omitted.
     // foldSame("x = 1.indexOf('bcd');");
@@ -844,7 +865,7 @@ public class FoldConstantsTest extends CompilerTestCase {
     // Bogus flags should not fold
     fold("x = new RegExp(\"foobar\", \"bogus\")",
          "x = RegExp(\"foobar\",\"bogus\")",
-         FoldConstants.INVALID_REGULAR_EXPRESSION_FLAGS);
+         PeepholeSubstituteAlternateSyntax.INVALID_REGULAR_EXPRESSION_FLAGS);
     // Don't fold if the flags contain 'g'
     fold("x = new RegExp(\"foobar\", \"g\")",
          "x = RegExp(\"foobar\",\"g\")");
@@ -926,19 +947,23 @@ public class FoldConstantsTest extends CompilerTestCase {
   }
 
   public void testContainsUnicodeEscape() throws Exception {
-    assertTrue(!FoldConstants.containsUnicodeEscape(""));
-    assertTrue(!FoldConstants.containsUnicodeEscape("foo"));
-    assertTrue( FoldConstants.containsUnicodeEscape("\u2028"));
-    assertTrue( FoldConstants.containsUnicodeEscape("\\u2028"));
-    assertTrue( FoldConstants.containsUnicodeEscape("foo\\u2028"));
-    assertTrue(!FoldConstants.containsUnicodeEscape("foo\\\\u2028"));
-    assertTrue( FoldConstants.containsUnicodeEscape("foo\\\\u2028bar\\u2028"));
+    assertTrue(!PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(""));
+    assertTrue(!PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo"));
+    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
+        "\u2028"));
+    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
+        "\\u2028"));
+    assertTrue(
+        PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo\\u2028"));
+    assertTrue(!PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
+        "foo\\\\u2028"));
+    assertTrue(PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(
+            "foo\\\\u2028bar\\u2028"));
   }
 
   public void testBug1438784() throws Exception {
     fold("for(var i=0;i<10;i++)if(x)x.y;", "for(var i=0;i<10;i++);");
   }
-
 
   public void testFoldUselessWhile() {
     fold("while(false) { foo() }", "");
@@ -1035,12 +1060,15 @@ public class FoldConstantsTest extends CompilerTestCase {
   }
 
   public void testBug1509085() {
-    new FoldConstantsTest() {
+    FoldConstantsTest oneRepetitiontest = new FoldConstantsTest() {
       @Override
       protected int getNumRepetitions() {
         return 1;
       }
-    }.fold("x ? x() : void 0", "if(x) x();");
+    };
+
+    oneRepetitiontest.fold("x ? x() : void 0", "x&&x();");
+    oneRepetitiontest.foldSame("y = x ? x() : void 0");
   }
 
   public void testFoldInstanceOf() {

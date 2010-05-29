@@ -184,6 +184,15 @@ public class FunctionArgumentInjectorTest extends TestCase {
         Sets.newHashSet("a", "b"));
   }
 
+  public void testMaybeAddTempsForCallArguments14() {
+    // Parameters referenced in a loop must
+    // be assigned to temps.
+    testNeededTemps(
+        "function foo(a,b){goo();for(;;){a;b;}}; foo(x,y);",
+        "foo",
+        Sets.newHashSet("a", "b"));
+  }  
+
   public void testMaybeAddTempsForCallArguments20() {
     // A long string referenced more than once should have a temp.
     testNeededTemps(

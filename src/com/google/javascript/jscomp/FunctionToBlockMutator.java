@@ -246,7 +246,8 @@ class FunctionToBlockMutator {
     Node root = block;
 
     boolean hasReturnAtExit = false;
-    int returnCount = NodeUtil.getNodeTypeReferenceCount(block, Token.RETURN);
+    int returnCount = NodeUtil.getNodeTypeReferenceCount(
+        block, Token.RETURN, new NodeUtil.MatchShallowStatement());
     if (returnCount > 0) {
       hasReturnAtExit = hasReturnAtExit(block);
       // TODO(johnlenz): Simpler not to special case this,

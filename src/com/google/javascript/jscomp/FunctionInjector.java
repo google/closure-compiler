@@ -131,30 +131,39 @@ class FunctionInjector {
       return false;
     }
 
-    // Don't inline functions that introduce function boundaries to prevent
-    // memory leaks.
-    if (NodeUtil.containsFunctionDeclaration(block)) {
-      return false;
-    }
-
     return true;
   }
 
   /**
    * @param t  The traversal use to reach the call site.
    * @param callNode The CALL node.
-   * @param fnNode The function to evaluate.
+   * @param fnNode The function to evaluate for inlining.
    * @param needAliases A set of function parameter names that can not be
    *     used without aliasing. Returned by getUnsafeParameterNames().
-   * @param mode  Inlining mode to be used.
+   * @param mode Inlining mode to be used.
+   * @param referencesThis Whether fnNode contains references to its this
+   *     object.
+   * @param containsFunctions Whether fnNode contains inner functions.
    * @return Whether the inlining can occur.
    */
   CanInlineResult canInlineReferenceToFunction(NodeTraversal t,
       Node callNode, Node fnNode, Set<String> needAliases,
-      InliningMode mode, boolean referencesThis) {
-
+      InliningMode mode, boolean referencesThis, boolean containsFunctions) {
+    // TODO(johnlenz): This function takes too many parameter, without
+    // context.  Modify the API to take a structure describing the function.
+    
     // Allow direct function calls or "fn.call" style calls.
     if (!isSupportedCallType(callNode)) {
+      return CanInlineResult.NO;
+    }
+
+    // Limit where functions that contain functions can be inline.  Introducing
+    // an inner function into another function can capture a variable and cause
+    // a memory leak.  This isn't a problem in the global scope as those values
+    // last until explicitly cleared.
+    if (containsFunctions && !t.inGlobalScope()) {
+      // TODO(johnlenz): Allow inlining into any scope without local names or
+      // inner functions.
       return CanInlineResult.NO;
     }
 
@@ -567,15 +576,16 @@ class FunctionInjector {
     // Don't inline functions with var declarations into a scope with inner
     // functions as the new vars would leak into the inner function and
     // cause memory leaks.
-    boolean fnContainsVars = NodeUtil.isNodeTypeReferenced(
-        NodeUtil.getFunctionBody(fnNode), Token.VAR);
+    boolean fnContainsVars = NodeUtil.has(
+        NodeUtil.getFunctionBody(fnNode),
+        new NodeUtil.MatchDeclaration(),
+        new NodeUtil.MatchShallowStatement());
     boolean callerContainsFunction = false;
     if (!t.inGlobalScope()) {
       Node fnCaller = t.getScopeRoot();
       Node fnCallerBody = fnCaller.getLastChild();
 
-      callerContainsFunction = NodeUtil.containsFunctionDeclaration(
-          fnCallerBody);
+      callerContainsFunction = NodeUtil.containsFunction(fnCallerBody);
     }
 
     if (fnContainsVars && callerContainsFunction) {
@@ -844,7 +854,8 @@ class FunctionInjector {
       // TODO(johnlenz): Counting the number of returns is relatively expensive
       //   this information should be determined during the traversal and
       //   cached.
-      int returnCount = NodeUtil.getNodeTypeReferenceCount(block, Token.RETURN);
+      int returnCount = NodeUtil.getNodeTypeReferenceCount(
+          block, Token.RETURN, new NodeUtil.MatchShallowStatement());
       int resultCount = (returnCount > 0) ? returnCount - 1 : 0;
       int baseOverhead = (returnCount > 0) ? INLINE_BLOCK_OVERHEAD : 0;
 

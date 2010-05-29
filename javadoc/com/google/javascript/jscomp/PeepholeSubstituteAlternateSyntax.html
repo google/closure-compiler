@@ -3,7 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>
-PerformanceTracker (Compiler)
+PeepholeSubstituteAlternateSyntax (Compiler)
 </TITLE>
 
 
@@ -13,7 +13,7 @@ PerformanceTracker (Compiler)
 function windowTitle()
 {
     if (location.href.indexOf('is-external=true') == -1) {
-        parent.document.title="PerformanceTracker (Compiler)";
+        parent.document.title="PeepholeSubstituteAlternateSyntax (Compiler)";
     }
 }
 </SCRIPT>
@@ -52,11 +52,11 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PrintStreamErrorManager.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PassFactory.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PerformanceTracker.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/PerformanceTracker.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="PerformanceTracker.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="PeepholeSubstituteAlternateSyntax.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -73,9 +73,9 @@ function windowTitle()
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_top"></A>
@@ -87,21 +87,43 @@ DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHO
 <FONT SIZE="-1">
 com.google.javascript.jscomp</FONT>
 <BR>
-Class PerformanceTracker</H2>
+Class PeepholeSubstituteAlternateSyntax</H2>
 <PRE>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
-  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.PerformanceTracker</B>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.PeepholeSubstituteAlternateSyntax</B>
 </PRE>
 <HR>
 <DL>
-<DT><PRE>public class <B>PerformanceTracker</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+<DT><PRE>public class <B>PeepholeSubstituteAlternateSyntax</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
 </PRE>
+
+<P>
+A peephole optimization that minimizes code by simplifying conditional 
+ expressions, replacing IFs with HOOKs, replacing object constructors
+ with literals, and simplifying returns.
+<P>
 
 <P>
 <HR>
 
 <P>
 
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+<A NAME="constructor_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Constructor Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#PeepholeSubstituteAlternateSyntax()">PeepholeSubstituteAlternateSyntax</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
 <!-- ========== METHOD SUMMARY =========== -->
 
 <A NAME="method_summary"><!-- --></A>
@@ -112,27 +134,39 @@ Class PerformanceTracker</H2>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;com.google.common.collect.ImmutableMap&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PerformanceTracker.html#getCodeSizeRecord()">getCodeSizeRecord</A></B>()</CODE>
+<CODE>protected &nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#areNodesEqualForInlining(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">areNodesEqualForInlining</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n1,
+                         <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n2)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Are the nodes equal for the purpose of inlining?
+ If type aware optimizations are on, type equality is checked.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;com.google.common.collect.ImmutableMap&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PerformanceTracker.html#getRuntimeRecord()">getRuntimeRecord</A></B>()</CODE>
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#error(com.google.javascript.jscomp.DiagnosticType, com.google.javascript.rhino.Node)">error</A></B>(<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;diagnostic,
+      <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Helper method for reporting an error to the compiler when applying a 
+ peephole optimization.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;com.google.common.collect.ImmutableMap&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</A>&gt;</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PerformanceTracker.html#getZippedCodeSizeRecord()">getZippedCodeSizeRecord</A></B>()</CODE>
+<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#optimizeSubtree(com.google.javascript.rhino.Node)">optimizeSubtree</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tries apply our various peephole minimizations on the passed in node.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>protected &nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#reportCodeChange()">reportCodeChange</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Helper method for telling the compiler that something has changed.</TD>
 </TR>
 </TABLE>
 &nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
@@ -147,6 +181,23 @@ Class PerformanceTracker</H2>
 &nbsp;
 <P>
 
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+<A NAME="constructor_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Constructor Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="PeepholeSubstituteAlternateSyntax()"><!-- --></A><H3>
+PeepholeSubstituteAlternateSyntax</H3>
+<PRE>
+public <B>PeepholeSubstituteAlternateSyntax</B>()</PRE>
+<DL>
+</DL>
+
 <!-- ============ METHOD DETAIL ========== -->
 
 <A NAME="method_detail"><!-- --></A>
@@ -157,33 +208,63 @@ Class PerformanceTracker</H2>
 </TR>
 </TABLE>
 
-<A NAME="getRuntimeRecord()"><!-- --></A><H3>
-getRuntimeRecord</H3>
+<A NAME="optimizeSubtree(com.google.javascript.rhino.Node)"><!-- --></A><H3>
+optimizeSubtree</H3>
 <PRE>
-public com.google.common.collect.ImmutableMap&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Long.html?is-external=true" title="class or interface in java.lang">Long</A>&gt; <B>getRuntimeRecord</B>()</PRE>
+public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>optimizeSubtree</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</PRE>
 <DL>
+<DD>Tries apply our various peephole minimizations on the passed in node.
+<P>
+<DD><DL>
+</DL>
+</DD>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>node</CODE> - The subtree that will be optimized.
+<DT><B>Returns:</B><DD>The new version of the subtree (or null if the subtree or one of
+ its parents was removed from the AST). If the subtree has not changed,
+ this method must return <code>subtree</code>.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="error(com.google.javascript.jscomp.DiagnosticType, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+error</H3>
+<PRE>
+protected void <B>error</B>(<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;diagnostic,
+                     <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</PRE>
+<DL>
+<DD>Helper method for reporting an error to the compiler when applying a 
+ peephole optimization.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>diagnostic</CODE> - The error type<DD><CODE>n</CODE> - The node for which the error should be reported</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="reportCodeChange()"><!-- --></A><H3>
+reportCodeChange</H3>
+<PRE>
+protected void <B>reportCodeChange</B>()</PRE>
+<DL>
+<DD>Helper method for telling the compiler that something has changed. 
+ Subclasses must call these if they have changed the AST.
+<P>
 <DD><DL>
 </DL>
 </DD>
 </DL>
 <HR>
 
-<A NAME="getCodeSizeRecord()"><!-- --></A><H3>
-getCodeSizeRecord</H3>
+<A NAME="areNodesEqualForInlining(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)"><!-- --></A><H3>
+areNodesEqualForInlining</H3>
 <PRE>
-public com.google.common.collect.ImmutableMap&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</A>&gt; <B>getCodeSizeRecord</B>()</PRE>
+protected boolean <B>areNodesEqualForInlining</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n1,
+                                           <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n2)</PRE>
 <DL>
-<DD><DL>
-</DL>
-</DD>
-</DL>
-<HR>
-
-<A NAME="getZippedCodeSizeRecord()"><!-- --></A><H3>
-getZippedCodeSizeRecord</H3>
-<PRE>
-public com.google.common.collect.ImmutableMap&lt;<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Integer.html?is-external=true" title="class or interface in java.lang">Integer</A>&gt; <B>getZippedCodeSizeRecord</B>()</PRE>
-<DL>
+<DD>Are the nodes equal for the purpose of inlining?
+ If type aware optimizations are on, type equality is checked.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -218,11 +299,11 @@ public com.google.common.collect.ImmutableMap&lt;<A HREF="http://java.sun.com/ja
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PrintStreamErrorManager.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PassFactory.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PerformanceTracker.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/PerformanceTracker.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="PerformanceTracker.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="PeepholeSubstituteAlternateSyntax.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -239,9 +320,9 @@ public com.google.common.collect.ImmutableMap&lt;<A HREF="http://java.sun.com/ja
 </TR>
 <TR>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
 <TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
-DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
 </TR>
 </TABLE>
 <A NAME="skip-navbar_bottom"></A>
