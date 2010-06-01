@@ -21,12 +21,12 @@ import com.google.javascript.rhino.Token;
 
 
 /**
- * Tests for NodeTypeNormalizer.
+ * Tests for PrepareAst.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class NodeTypeNormalizerTest extends CompilerTestCase {
+public class PrepareAstTest extends CompilerTestCase {
 
-  public NodeTypeNormalizerTest() {
+  public PrepareAstTest() {
     super.enableLineNumberCheck(true);
   }
 
