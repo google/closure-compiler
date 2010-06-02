@@ -298,6 +298,54 @@ public class NormalizeTest extends CompilerTestCase {
          "var b = EXTERN; var c = ext.FOO", null, null);
   }
 
+  public void testIssue166a() {
+    test("try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
+         "try { throw 1 } catch(e) { var e=2 }",
+         Normalize.CATCH_BLOCK_VAR_ERROR);
+  }
+
+  public void testIssue166b() {
+    test("function a() {" +
+         "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }" +
+         "};",
+         "function a() {" +
+         "try { throw 1 } catch(e) { var e=2 }" +
+         "}",
+         Normalize.CATCH_BLOCK_VAR_ERROR);
+  }
+
+  public void testIssue166c() {
+    test("var e = 0; try { throw 1 } catch(e) {" +
+             "/** @suppress {duplicate} */ var e=2 }",
+         "var e = 0; try { throw 1 } catch(e) { var e=2 }",
+         Normalize.CATCH_BLOCK_VAR_ERROR);
+  }
+
+  public void testIssue166d() {
+    test("function a() {" +
+         "var e = 0; try { throw 1 } catch(e) {" +
+             "/** @suppress {duplicate} */ var e=2 }" +
+         "};",
+         "function a() {" +
+         "var e = 0; try { throw 1 } catch(e) { var e=2 }" +
+         "}",
+         Normalize.CATCH_BLOCK_VAR_ERROR);
+  }
+
+  public void testIssue166e() {
+    test("var e = 2; try { throw 1 } catch(e) {}",
+         "var e = 2; try { throw 1 } catch(e$$1) {}");
+  }
+
+  public void testIssue166f() {
+    test("function a() {" +
+         "var e = 2; try { throw 1 } catch(e) {}" +
+         "}",
+         "function a() {" +
+         "var e = 2; try { throw 1 } catch(e$$1) {}" +
+         "}");
+  }
+
   public void testRenamingConstantProperties() {
     // In order to detecte that foo.BAR is a constant, we need collapse
     // properties to run first so that we can tell if the initial value is

@@ -123,7 +123,7 @@ class RemoveUnusedVars implements CompilerPass {
       case Token.FUNCTION:
         // If it's an exported function, or an function expression, assume
         // that it'll be called.
-        if (NodeUtil.isFunctionExpression(n) || isExportedFunction(n, scope)) {
+        if (traverseFunctionWhenFirstSeen(n, scope)) {
           traverseFunction(n, scope);
         }
         return;
@@ -146,13 +146,21 @@ class RemoveUnusedVars implements CompilerPass {
 
   /**
    * @param n The function node.
+   * @return Whether to traverse the function immediately.
+   */
+  private boolean traverseFunctionWhenFirstSeen(Node n, Scope scope) {
+    return NodeUtil.isFunctionExpression(n) || isExportedFunction(n, scope);
+  }
+
+  /**
+   * @param n The function node.
    * @return Whether the function is exported.
    */
   private boolean isExportedFunction(Node n, Scope scope) {
     Preconditions.checkState(NodeUtil.isFunctionDeclaration(n));
     // If we aren't removing global names, assume that all global functions
     // are exported.
-    return (!removeGlobals && scope.isGlobal()) || 
+    return (!removeGlobals && scope.isGlobal()) ||
         compiler_.getCodingConvention().isExported(
            n.getFirstChild().getString());
   }
@@ -218,13 +226,12 @@ class RemoveUnusedVars implements CompilerPass {
     referenced.add(var);
 
     Node parent = var.getParentNode();
-    if (parent.getType() == Token.FUNCTION &&
-        var.getInitialValue() != var.scope.getRootNode()) {
-      // Now that the function has been referenced, traverse it.
-      // Unless it's a bleeding function, in which case we're already
-      // traversing it.
-
-      traverseFunction(parent, var.scope);
+    if (parent.getType() == Token.FUNCTION) {
+      // Now that the function has been referenced traverse it if it won't be
+      // traversed otherwise.
+      if (!traverseFunctionWhenFirstSeen(parent, var.getScope())) {
+        traverseFunction(parent, var.scope);
+      }
     }
   }
 

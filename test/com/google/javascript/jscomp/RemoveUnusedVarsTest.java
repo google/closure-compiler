@@ -224,18 +224,42 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     testSame("var x=1");
     test("function y(x){var z;}", "function y(){}");
   }
-  
+
   public void testRemoveGlobal3() {
     removeGlobal = false;
     testSame("var x=1");
-    test("function x(){function y(x){var z;}y()}", 
+    test("function x(){function y(x){var z;}y()}",
          "function x(){function y(){}y()}");
   }
-  
+
   public void testRemoveGlobal4() {
     removeGlobal = false;
     testSame("var x=1");
-    test("function x(){function y(x){var z;}}", 
+    test("function x(){function y(x){var z;}}",
          "function x(){}");
-  }   
+  }
+
+  public void testIssue168a() {
+    test("function _a(){" +
+         "  (function(x){ _b(); })(1);" +
+         "}" +
+         "function _b(){" +
+         "  _a();" +
+         "}",
+         "function _a(){(function(){_b()})(1)}" +
+         "function _b(){_a()}");
+  }
+
+  public void testIssue168b() {
+    removeGlobal = false;
+    test("function a(){" +
+         "  (function(x){ b(); })(1);" +
+         "}" +
+         "function b(){" +
+         "  a();" +
+         "}",
+         "function a(){(function(){b()})(1)}" +
+         "function b(){a()}");
+  }
+
 }

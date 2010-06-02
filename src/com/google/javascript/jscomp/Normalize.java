@@ -64,6 +64,13 @@ class Normalize implements CompilerPass {
   private static final boolean CONVERT_WHILE_TO_FOR = true;
   static final boolean MAKE_LOCAL_NAMES_UNIQUE = true;
 
+  public static final DiagnosticType CATCH_BLOCK_VAR_ERROR =
+    DiagnosticType.error(
+        "JSC_CATCH_BLOCK_VAR_ERROR",
+        "The use of scope variable {0} is not allowed within a catch block " +
+        "with a catch exception of the same name.");
+
+
   Normalize(AbstractCompiler compiler, boolean assertOnChange) {
     this.compiler = compiler;
     this.assertOnChange = assertOnChange;
@@ -546,9 +553,29 @@ class Normalize implements CompilerPass {
       Preconditions.checkState(n.getType() == Token.NAME);
       Var v = s.getVar(name);
       // If name is "arguments", Var maybe null.
-      Preconditions.checkState(
-          v == null || v.getParentNode().getType() != Token.CATCH);
-      if (v != null && parent.getType() == Token.FUNCTION) {
+      if (v != null && v.getParentNode().getType() == Token.CATCH) {
+        // Redeclaration of a catch expression variable is hard to model
+        // without support for "with" expressions.
+        // The EcmaScript spec (section 12.14), declares that a catch
+        // "catch (e) {}" is handled like "with ({'e': e}) {}" so that
+        // "var e" would refer to the scope variable, but any following
+        // reference would still refer to "e" of the catch expression.
+        // Until we have support for this disallow it.
+        // Currently the Scope object adds the catch expression to the
+        // function scope, which is technically not true but a good
+        // approximation for most uses.
+
+        // TODO(johnlenz): Consider improving how scope handles catch
+        // expression.
+
+        // Use the name of the var before it was made unique.
+        name = MakeDeclaredNamesUnique.ContextualRenameInverter.getOrginalName(
+            name);
+        compiler.report(
+            JSError.make(
+                NodeUtil.getSourceName(nodeWithLineNumber), nodeWithLineNumber,
+                CATCH_BLOCK_VAR_ERROR, name));
+      } else if (v != null && parent.getType() == Token.FUNCTION) {
         if (v.getParentNode().getType() == Token.VAR) {
           s.undeclare(v);
           s.declare(name, n, n.getJSType(), v.input);
