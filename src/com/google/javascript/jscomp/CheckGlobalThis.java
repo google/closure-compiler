@@ -89,6 +89,7 @@ final class CheckGlobalThis implements Callback {
       JSDocInfo jsDoc = getFunctionJsDocInfo(n);
       if (jsDoc != null &&
           (jsDoc.isConstructor() ||
+           jsDoc.isInterface() ||
            jsDoc.hasThisType() ||
            jsDoc.isOverride())) {
         return false;
@@ -122,12 +123,14 @@ final class CheckGlobalThis implements Callback {
       } else {
         // Only traverse the right side if it's not an assignment to a prototype
         // property or subproperty.
-        if (lhs.getType() == Token.GETPROP) {
-          if (lhs.getLastChild().getString().equals("prototype")) {
+        if (NodeUtil.isGet(lhs)) {
+          if (lhs.getType() == Token.GETPROP &&
+              lhs.getLastChild().getString().equals("prototype")) {
             return false;
           }
-          String leftName = lhs.getQualifiedName();
-          if (leftName != null && leftName.contains(".prototype.")) {
+          Node llhs = lhs.getFirstChild();
+          if (llhs.getType() == Token.GETPROP &&
+              llhs.getLastChild().getString().equals("prototype")) {
             return false;
           }
         }

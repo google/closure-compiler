@@ -108,6 +108,11 @@ public class CheckGlobalThisTest extends CompilerTestCase {
     testSame("/** @constructor */a.A = function() { this.m2 = 5; }");
   }
 
+  public void testInterface1() {
+    testSame(
+        "/** @interface */function A() { /** @type {string} */ this.m2; }");
+  }
+
   public void testOverride1() {
     testSame("/** @constructor */function A() { } var a = new A();" +
              "/** @override */ a.foo = function() { this.bar = 5; };");
@@ -143,6 +148,15 @@ public class CheckGlobalThisTest extends CompilerTestCase {
 
   public void testMethod3() {
     testSame("a.b.c.D.prototype.m1 = function() { this.m2 = 5; }");
+  }
+
+  public void testMethod4() {
+    testSame("a.prototype['x' + 'y'] =  function() { this.foo = 3; };");
+  }
+
+  public void testPropertyOfMethod() {
+    testFailure("a.protoype.b = {}; " +
+        "a.prototype.b.c = function() { this.foo = 3; };");
   }
 
   public void testStaticMethod1() {

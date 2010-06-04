@@ -178,7 +178,7 @@ public  final class Instrumentation extends
     return size;
   }
   
-  @Override
+  @java.lang.Override
   protected Object writeReplace() throws java.io.ObjectStreamException {
     return super.writeReplace();
   }

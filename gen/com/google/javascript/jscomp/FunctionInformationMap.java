@@ -212,7 +212,7 @@ public  final class FunctionInformationMap extends
       return size;
     }
     
-    @Override
+    @java.lang.Override
     protected Object writeReplace() throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
@@ -687,7 +687,7 @@ public  final class FunctionInformationMap extends
       return size;
     }
     
-    @Override
+    @java.lang.Override
     protected Object writeReplace() throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
@@ -1014,7 +1014,7 @@ public  final class FunctionInformationMap extends
     return size;
   }
   
-  @Override
+  @java.lang.Override
   protected Object writeReplace() throws java.io.ObjectStreamException {
     return super.writeReplace();
   }
