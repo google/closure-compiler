@@ -108,6 +108,11 @@ public class CheckGlobalThisTest extends CompilerTestCase {
     testSame("/** @constructor */a.A = function() { this.m2 = 5; }");
   }
 
+  public void testOverride1() {
+    testSame("/** @constructor */function A() { } var a = new A();" +
+             "/** @override */ a.foo = function() { this.bar = 5; };");
+  }
+
   public void testThisJSDoc1() throws Exception {
     testSame("/** @this whatever */function h() { this.foo = 56; }");
   }

@@ -85,9 +85,12 @@ final class CheckGlobalThis implements Callback {
 
     if (n.getType() == Token.FUNCTION) {
       // Don't traverse functions that are constructors or have the @this
-      // annotation.
+      // or @override annotation.
       JSDocInfo jsDoc = getFunctionJsDocInfo(n);
-      if (jsDoc != null && (jsDoc.isConstructor() || jsDoc.hasThisType())) {
+      if (jsDoc != null &&
+          (jsDoc.isConstructor() ||
+           jsDoc.hasThisType() ||
+           jsDoc.isOverride())) {
         return false;
       }
 
