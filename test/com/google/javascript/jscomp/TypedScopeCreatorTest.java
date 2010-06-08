@@ -46,15 +46,6 @@ import java.util.Deque;
  */
 public class TypedScopeCreatorTest extends CompilerTestCase {
 
-  private static final String ACTIVE_X_OBJECT_DEF =
-      "/**\n" +
-      " * @param {string} progId\n" +
-      " * @param {string=} opt_location\n" +
-      " * @constructor\n" +
-      " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx\n" +
-      " */\n" +
-      "function ActiveXObject(progId, opt_location) {}\n";
-
   private JSTypeRegistry registry;
   private Scope globalScope;
   private Scope lastLocalScope;
