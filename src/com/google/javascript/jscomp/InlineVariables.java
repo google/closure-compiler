@@ -178,7 +178,7 @@ class InlineVariables implements CompilerPass {
           // another pass that handles unused variables much more elegantly.
           if (referenceInfo != null && referenceInfo.references.size() >= 2 &&
               referenceInfo.isWellDefined() &&
-              referenceInfo.isAssignedOnce()) {
+              referenceInfo.isAssignedOnceInLifetime()) {
             Reference init = referenceInfo.getInitializingReference();
             Node value = init.getAssignedValue();
             if (value != null && value.getType() == Token.NAME) {
@@ -270,7 +270,7 @@ class InlineVariables implements CompilerPass {
       // reference data is out of sync. We're better off just waiting for
       // the next pass.)
       if (!staleVars.contains(v) && referenceInfo.isWellDefined() &&
-          referenceInfo.isAssignedOnce()) {
+          referenceInfo.isAssignedOnceInLifetime()) {
         List<Reference> refs = referenceInfo.references;
         for (int i = 1 /* start from a read */; i < refs.size(); i++) {
           Node nameNode = refs.get(i).getNameNode();
@@ -425,7 +425,7 @@ class InlineVariables implements CompilerPass {
         return false;
       }
 
-      if (!refInfo.isAssignedOnce()) {
+      if (!refInfo.isAssignedOnceInLifetime()) {
         return false;
       }
 

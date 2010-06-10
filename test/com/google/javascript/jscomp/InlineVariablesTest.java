@@ -593,6 +593,38 @@ public class InlineVariablesTest extends CompilerTestCase {
          "var x; x = this.foo(); this.bar(); function f() { this.baz(x); }");
   }
 
+  public void testInlineAliasesInLoop() {
+    test(
+        "function f() { " +
+        "  var x = extern();" +
+        "  for (var i = 0; i < 5; i++) {" +
+        "    (function() {" +
+        "       var y = x; window.setTimeout(function() { extern(y); }, 0);" +
+        "     })();" +
+        "  }" +
+        "}",
+        "function f() { " +
+        "  var x = extern();" +
+        "  for (var i = 0; i < 5; i++) {" +
+        "    (function() {" +
+        "       window.setTimeout(function() { extern(x); }, 0);" +
+        "     })();" +
+        "  }" +
+        "}");
+  }
+
+  public void testNoInlineAliasesInLoop() {
+    testSame(
+        "function f() { " +
+        "  for (var i = 0; i < 5; i++) {" +
+        "    var x = extern();" +
+        "    (function() {" +
+        "       var y = x; window.setTimeout(function() { extern(y); }, 0);" +
+        "     })();" +
+        "  }" +
+        "}");
+  }
+
   public void testNoInlineAliases1() {
     testSame(
         "var x = this.foo(); this.bar(); var y = x; x = 3; this.baz(y);");

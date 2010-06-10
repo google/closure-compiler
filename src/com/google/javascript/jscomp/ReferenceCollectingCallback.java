@@ -348,22 +348,46 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     }
 
     /**
-     * @return Whether the variable is only assigned a value once.
+     * @return Whether the variable is only assigned a value once for its
+     *     lifetime.
      */
-    boolean isAssignedOnce() {
-      boolean assigned = false;
+    boolean isAssignedOnceInLifetime() {
+      Reference ref = getOneAndOnlyAssignment();
+      if (ref == null) {
+        return false;
+      }
+
+      // Make sure this assignment is not in a loop.
+      for (BasicBlock block = ref.getBasicBlock();
+           block != null; block = block.getParent()) {
+        if (block.isFunction) {
+          break;
+        } else if (block.isLoop) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    /**
+     * @return The one and only assignment. Returns if there are 0 or 2+
+     *    assignments.
+     */
+    private Reference getOneAndOnlyAssignment() {
+      Reference assignment = null;
       int size = references.size();
       for (int i = 0; i < size; i++) {
         Reference ref = references.get(i);
         if (ref.isLvalue() || ref.isInitializingDeclaration()) {
-          if (!assigned) {
-            assigned = true;
+          if (assignment == null) {
+            assignment = ref;
           } else {
-            return false;
+            return null;
           }
         }
       }
-      return assigned;
+      return assignment;
     }
 
     /**
@@ -453,7 +477,7 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     }
 
    /**
-    * @return For an assignment, variable declaration, or function declaration 
+    * @return For an assignment, variable declaration, or function declaration
     * return the assigned value, otherwise null.
     */
     Node getAssignedValue() {
@@ -524,6 +548,16 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     private final boolean isHoisted;
 
     /**
+     * Whether this block denotes a function scope.
+     */
+    private final boolean isFunction;
+
+    /**
+     * Whether this block denotes a loop.
+     */
+    private final boolean isLoop;
+
+    /**
      * Creates a new block.
      * @param parent The containing block.
      * @param root The root node of the block.
@@ -533,6 +567,17 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
 
       // only named functions may be hoisted.
       this.isHoisted = NodeUtil.isHoistedFunctionDeclaration(root);
+
+      this.isFunction = root.getType() == Token.FUNCTION;
+
+      if (root.getParent() != null) {
+        int pType = root.getParent().getType();
+        this.isLoop = pType == Token.DO ||
+            pType == Token.WHILE ||
+            pType == Token.FOR;
+      } else {
+        this.isLoop = false;
+      }
     }
 
     BasicBlock getParent() {
