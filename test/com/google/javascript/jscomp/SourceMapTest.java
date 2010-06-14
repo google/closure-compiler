@@ -136,6 +136,23 @@ public class SourceMapTest extends TestCase {
                    "[\"c:\\\\myfile.js\",1,0,\"foo\"]\n");
   }
 
+  public void testBasicDeterminism() throws Exception {
+    RunResult result1 = compile("file1", "foo;", "file2", "bar;");
+    RunResult result2 = compile("file2", "foo;", "file1", "bar;");
+
+    String map1 = getSourceMap(result1);
+    String map2 = getSourceMap(result2);
+
+    // Assert that the files section of the maps are the same. The actual
+    // entries will differ, so we cannot do a simple full comparison.
+
+    // Line 5 has the file information.
+    String files1 = map1.split("\n")[4];
+    String files2 = map2.split("\n")[4];
+
+    assertEquals(files1, files2);
+  }
+
   /**
    * Creates a source map for the given JS code and asserts it is
    * equal to the expected golden map.
@@ -145,12 +162,16 @@ public class SourceMapTest extends TestCase {
     checkSourceMap("testcode", js, expectedMap);
   }
 
+  private String getSourceMap(RunResult result) throws IOException {
+    StringBuilder sb = new StringBuilder();
+    result.sourceMap.appendTo(sb, "testMap");
+    return sb.toString();
+  }
+
   private void checkSourceMap(String fileName, String js, String expectedMap)
       throws IOException {
     RunResult result = compile(js, fileName);
-    StringBuilder sb = new StringBuilder();
-    result.sourceMap.appendTo(sb, "testMap");
-    assertEquals(expectedMap, sb.toString());
+    assertEquals(expectedMap, getSourceMap(result));
   }
 
   private static class RunResult {
@@ -264,6 +285,11 @@ public class SourceMapTest extends TestCase {
   }
 
   private RunResult compile(String js, String fileName) {
+    return compile(js, fileName, null, null);
+  }
+
+  private RunResult compile(String js1, String fileName1, String js2,
+      String fileName2) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.sourceMapOutputPath = "testcode_source_map.out";
@@ -271,7 +297,14 @@ public class SourceMapTest extends TestCase {
     // Turn on IDE mode to get rid of optimizations.
     options.ideMode = true;
 
-    JSSourceFile[] inputs = { JSSourceFile.fromCode(fileName, js) };
+    JSSourceFile[] inputs = { JSSourceFile.fromCode(fileName1, js1) };
+
+    if (js2 != null && fileName2 != null) {
+      JSSourceFile[] multiple =  { JSSourceFile.fromCode(fileName1, js1),
+                                   JSSourceFile.fromCode(fileName2, js2) };
+      inputs = multiple;
+    }
+
     Result result = compiler.compile(EXTERNS, inputs, options);
 
     assertTrue(result.success);

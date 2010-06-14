@@ -784,6 +784,13 @@ Element.prototype.className;
 /** @type {number} */ Element.prototype.clientTop;
 /** @type {number} */ Element.prototype.clientWidth;
 /** @type {string} */ Element.prototype.dir;
+
+/**
+ * Firebug sets this property on elements it is inserting into the DOM.
+ * @type {boolean}
+ */
+Element.prototype.firebugIgnore;
+
 /** @type {Node} */ Element.prototype.firstChild;
 /**
  * @type {string}

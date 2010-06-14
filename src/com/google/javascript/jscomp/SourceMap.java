@@ -23,6 +23,8 @@ import com.google.javascript.rhino.Node;
 import java.io.IOException;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -168,6 +170,9 @@ public class SourceMap {
      * buffer.
      */
     void appendFileMapTo(Appendable out) throws IOException {
+      // Sort the files list for deterministic consistency.
+      Collections.sort(files);
+
       out.append("[");
 
       for (int j = 0; j < files.size(); ++j) {
@@ -253,10 +258,10 @@ public class SourceMap {
     mapping.originalPosition = new Position(node.getLineno(), node.getCharno());
 
     Object originalName = node.getProp(Node.ORIGINALNAME_PROP);
-
     if (originalName != null) {
       mapping.originalName = originalName.toString();
     }
+
 
     // If the mapping is found on the first line, we need to offset
     // its character position by the number of characters found on
@@ -441,6 +446,23 @@ public class SourceMap {
       for (int i = 0; i <= lineMapping.length; ++i) {
         int minLength = Integer.MAX_VALUE;
         LineCharMapping current = null;
+
+        Collections.sort(lineMapping.characterMappings,
+            new Comparator<LineCharMapping>() {
+            @Override
+            public int compare(LineCharMapping first, LineCharMapping second) {
+              Mapping firstBasis = first.basisMapping;
+              Mapping secondBasis = second.basisMapping;
+
+              String firstName = firstBasis.originalName;
+              String secondName = secondBasis.originalName;
+
+              firstName = firstName == null ? "" : firstName;
+              secondName = secondName == null ? "" : secondName;
+
+              return firstName.compareTo(secondName);
+            }
+          });
 
         for (LineCharMapping lcm : lineMapping.characterMappings) {
           // Ignore LCMs that do not include the current character.

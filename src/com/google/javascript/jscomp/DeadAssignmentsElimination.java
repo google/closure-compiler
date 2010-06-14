@@ -171,12 +171,28 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         return;
       }
       Var var = scope.getVar(name);
+
       if (liveness.getEscapedLocals().contains(var)) {
         return; // Local variable that might be escaped due to closures.
       }
+
+      // If we have an identity assignment such as a=a, always remove it
+      // regardless of what the liveness results because it
+      // does not change the result afterward.
+      if (rhs != null &&
+          NodeUtil.isName(rhs) &&
+          rhs.getString().equals(var.name) &&
+          NodeUtil.isAssign(n)) {
+        n.removeChild(rhs);
+        n.getParent().replaceChild(n, rhs);
+        compiler.reportCodeChange();
+        return;
+      }
+
       if (state.getOut().isLive(var)) {
         return; // Variable not dead.
       }
+
       if (state.getIn().isLive(var) &&
           isVariableStillLiveWithinExpression(n, exprRoot, var.name)) {
         // The variable is killed here but it is also live before it.

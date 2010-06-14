@@ -319,6 +319,10 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("for(;1;x+=1){foo(x)}");
   }
 
+  public void testIdentityAssignments() {
+    inFunction("var x; x=x", "var x; x");
+  }
+
   private void inFunction(String src) {
     inFunction(src, src);
   }
