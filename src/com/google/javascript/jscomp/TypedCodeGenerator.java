@@ -103,8 +103,8 @@ class TypedCodeGenerator extends CodeGenerator {
         // Bail out if the paramNode is not there.
         if (paramNode == null) {
           break;
-        }
-        sb.append(" * @param {" + n.getJSType() + "} ");
+        }             
+        sb.append(" * @param {" + getParameterNodeJSDocType(n) + "} ");
         sb.append(paramNode.getString());
         sb.append("\n");
         paramNode = paramNode.getNext();
@@ -152,5 +152,32 @@ class TypedCodeGenerator extends CodeGenerator {
 
     sb.append(" */\n");
     return sb.toString();
+  }
+  
+  /**
+   * Creates a JSDoc-suitable String representation the type of a parameter.
+   * 
+   * @param parameterNode The parameter node. 
+   */
+  private String getParameterNodeJSDocType(Node parameterNode) {
+    JSType parameterType = parameterNode.getJSType();
+    String typeString;
+    
+    // Emit unknown types as '*' (AllType) since '?' (UnknownType) is not
+    // a valid JSDoc type.
+    if (parameterType.isUnknownType()) {
+      typeString = "*";
+    } else {     
+      // Fix-up optional and vararg parameters to match JSDoc type language
+      if (parameterNode.isOptionalArg()) {
+        typeString = parameterType.restrictByNotNullOrUndefined() + "=";
+      } else if (parameterNode.isVarArgs()) {
+        typeString = "..." + parameterType.restrictByNotNullOrUndefined();
+      } else {
+        typeString = parameterType.toString();
+      }
+    }
+    
+    return typeString;
   }
 }

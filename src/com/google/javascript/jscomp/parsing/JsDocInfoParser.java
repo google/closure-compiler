@@ -402,6 +402,14 @@ public final class JsDocInfoParser {
                   token = eatTokensUntilEOL();
                   continue retry;
 
+                case NO_COMPILE:
+                  if (!jsdocBuilder.recordNoCompile()) {
+                    parser.addWarning("msg.jsdoc.nocompile",
+                        stream.getLineno(), stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
                 case NO_TYPE_CHECK:
                   if (!jsdocBuilder.recordNoTypeCheck()) {
                     parser.addWarning("msg.jsdoc.nocheck",

@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyEx
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -1051,8 +1052,8 @@ public class Compiler extends AbstractCompiler {
         }
       }
 
-      // Check if externs files need to be lifted.
-      boolean liftedExterns = false;
+      // Check if inputs need to be rebuilt from modules.
+      boolean staleInputs = false;
       for (CompilerInput input : inputs) {
         Node n = input.getAstRoot(this);
         if (hasErrors()) {
@@ -1064,23 +1065,27 @@ public class Compiler extends AbstractCompiler {
           continue;
         }
 
-        if (n.getJSDocInfo() != null && n.getJSDocInfo().isExterns()) {
-          // If the input file is explicitly marked as an externs file, then
-          // assume the programmer made a mistake and throw it into
-          // the externs pile anyways.
-          externsRoot.addChildToBack(n);
-          input.setIsExtern(true);
+        if (n.getJSDocInfo() != null) {
+          JSDocInfo info = n.getJSDocInfo();
+          if (info.isExterns()) {
+            // If the input file is explicitly marked as an externs file, then
+            // assume the programmer made a mistake and throw it into
+            // the externs pile anyways.
+            externsRoot.addChildToBack(n);
+            input.setIsExtern(true);
 
-          // TODO(nicksantos): We need a better mechanism to make sure
-          // changes to the inputs array get reflected in JSModules.
-          input.getModule().remove(input);
+            input.getModule().remove(input);
 
-          externs.add(input);
-          liftedExterns = true;
+            externs.add(input);
+            staleInputs = true;
+          } else if (info.isNoCompile()) {
+            input.getModule().remove(input);
+            staleInputs = true;
+          }
         }
       }
 
-      if (liftedExterns) {
+      if (staleInputs) {
         fillEmptyModules(modules);
         rebuildInputsFromModules();
       }

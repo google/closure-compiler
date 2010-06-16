@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -545,7 +546,7 @@ class ExpressionDecomposer {
     return newCall;
   }
 
-  private String tempNamePrefix = "JSCompiler_temp_";
+  private String tempNamePrefix = "JSCompiler_temp";
 
   /**
    * Allow the temp name to be overriden to make tests more readable.
@@ -559,16 +560,19 @@ class ExpressionDecomposer {
    * Create a unique temp name.
    */
   private String getTempValueName(){
-    return tempNamePrefix + safeNameIdSupplier.get();
+    return tempNamePrefix + ContextualRenamer.UNIQUE_ID_SEPARATOR
+        + safeNameIdSupplier.get();
   }
 
   /**
    * Create a constant unique temp name.
    */
   private String getTempConstantValueName(){
-    String sName = tempNamePrefix + "const_" + safeNameIdSupplier.get();
-    this.knownConstants.add(sName);
-    return sName;
+    String name = tempNamePrefix + "_const"
+        + ContextualRenamer.UNIQUE_ID_SEPARATOR
+        + safeNameIdSupplier.get();
+    this.knownConstants.add(name);
+    return name;
   }
 
   /**

@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -45,8 +45,11 @@ abstract class MethodCompilerPass implements CompilerPass {
   /** List of property names that may not be methods */
   final Set<String> nonMethodProperties = Sets.newHashSet();
 
+  // Use a linked map here to keep the output deterministic.  Otherwise,
+  // the choice of method bodies is random when multiple identical definitions
+  // are found which causes problems in the source maps.
   final Multimap<String, Node> methodDefinitions =
-      HashMultimap.create();
+      LinkedHashMultimap.create();
 
   final AbstractCompiler compiler;
 

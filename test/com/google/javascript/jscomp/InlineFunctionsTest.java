@@ -1200,27 +1200,27 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testComplexInlineInExpresssions2() {
     test("function f(){a()}c=z=f()",
-         "{var JSCompiler_inline_result_0;a();}" +
-         "c=z=JSCompiler_inline_result_0");
+         "{var JSCompiler_inline_result$$0;a();}" +
+         "c=z=JSCompiler_inline_result$$0");
   }
 
   public void testComplexInlineInExpresssions3() {
     test("function f(){a()}c=f()=z",
-        "{var JSCompiler_inline_result_0;a();}" +
-        "c=JSCompiler_inline_result_0=z");
+        "{var JSCompiler_inline_result$$0;a();}" +
+        "c=JSCompiler_inline_result$$0=z");
   }
 
   public void testComplexInlineInExpresssions4() {
     test("function f(){a()}if(z=f());",
-        "{var JSCompiler_inline_result_0;a();}" +
-        "if(z=JSCompiler_inline_result_0);");
+        "{var JSCompiler_inline_result$$0;a();}" +
+        "if(z=JSCompiler_inline_result$$0);");
   }
 
   public void testComplexInlineInExpresssions5() {
     test("function f(){a()}if(z.y=f());",
-         "var JSCompiler_temp_const_0=z;" +
-         "{var JSCompiler_inline_result_1;a()}" +
-         "if(JSCompiler_temp_const_0.y=JSCompiler_inline_result_1);");
+         "var JSCompiler_temp_const$$0=z;" +
+         "{var JSCompiler_inline_result$$1;a()}" +
+         "if(JSCompiler_temp_const$$0.y=JSCompiler_inline_result$$1);");
   }
 
   public void testComplexNoInline1() {
@@ -1356,9 +1356,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testDecomposePlusEquals() {
     test("function f(){a=1;return 1} var x = 1; x += f()",
         "var x = 1;" +
-        "var JSCompiler_temp_const_0 = x;" +
-        "{var JSCompiler_inline_result_1; a=1; JSCompiler_inline_result_1=1}" +
-        "x = JSCompiler_temp_const_0 + JSCompiler_inline_result_1;");
+        "var JSCompiler_temp_const$$0 = x;" +
+        "{var JSCompiler_inline_result$$1; a=1; JSCompiler_inline_result$$1=1}" +
+        "x = JSCompiler_temp_const$$0 + JSCompiler_inline_result$$1;");
   }
 
   public void testDecomposeFunctionExpressionInCall() {
@@ -1372,14 +1372,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
            "}()\n" +
         ");",
         "{" +
-        "var JSCompiler_inline_result_0;" +
+        "var JSCompiler_inline_result$$0;" +
         "var ret$$inline_2={};\n" +
         "ret$$inline_2[ONE]='a';\n" +
         "ret$$inline_2[TWO]='b';\n" +
-        "JSCompiler_inline_result_0 = ret$$inline_2;\n" +
+        "JSCompiler_inline_result$$0 = ret$$inline_2;\n" +
         "}" +
         "{" +
-        "descriptions_=JSCompiler_inline_result_0;" +
+        "descriptions_=JSCompiler_inline_result$$0;" +
         "}"
         );
   }

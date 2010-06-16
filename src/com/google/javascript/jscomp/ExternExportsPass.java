@@ -17,12 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.Comparator;
 import java.util.List;
@@ -35,10 +39,21 @@ import java.util.TreeSet;
  * for later consumption.
  *
 *
+ * @author dcc@google.com (Devin Coughlin)
  */
-class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
+final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
 
+  static final DiagnosticType EXPORTED_FUNCTION_UNKNOWN_PARAMETER_TYPE =
+    DiagnosticType.warning(
+        "JSC_EXPORTED_FUNCTION_UNKNOWN_PARAMETER_TYPE",
+        "Unable to determine type of parameter {0} for exported function {1}");
+  
+  static final DiagnosticType EXPORTED_FUNCTION_UNKNOWN_RETURN_TYPE =
+    DiagnosticType.warning(
+        "JSC_EXPORTED_FUNCTION_UNKNOWN_RETURN_TYPE",
+        "Unable to determine return type for exported function {0}");
+  
   /** The exports found. */
   private final List<Export> exports;
 
@@ -48,68 +63,222 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   /** The parent compiler. */
   private final AbstractCompiler compiler;
 
-  /** The builder which holds the externs generated. */
-  private final StringBuilder sb;
+  /** The AST root which holds the externs generated. */
+  private final Node externsRoot;
 
   /** A mapping of internal paths to exported paths. */
   private final Map<String, String> mappedPaths;
 
   /** A list of exported paths. */
-  private final List<String> paths;
+  private final Set<String> alreadyExportedPaths;
 
   private abstract class Export {
+    protected final String symbolName;
+    protected final Node value;
 
+    Export(String symbolName, Node value) {
+      this.symbolName = symbolName;
+      this.value = value;
+    }
+        
     /**
      * Generates the externs representation of this export and appends
-     * it to the parent pass's builder.
+     * it to the externsRoot AST.
      */
-    abstract void generateExterns();
+    void generateExterns() {
+      appendExtern(getExportedPath(), getFunctionValue(value));    
+    }
 
     /**
      * Returns the path exported by this export.
      */
     abstract String getExportedPath();
-
+    
     /**
-     * Appends all paths necessary for the path to be declared.
-     * For example, for "a.b.c", the paths "a", "a.b" and "a.b.c"
-     * will be appended (if they have not already).
+     * Appends the exported function and all paths necessary for the path to be
+     * declared. For example, for a property "a.b.c", the initializers for
+     * paths "a", "a.b" will be appended (if they have not already) and a.b.c
+     * will be initialized with the exported version of the function:
+     * <pre>
+     * var a = {};
+     * a.b = {};
+     * a.b.c = function(x,y) { }
+     * </pre>
      */
-    protected void appendInferredPaths(String path) {
-      // We wrap in a list here so we have an Iterable for the
-      // Iterables lib.
-      List<String> pieces = Lists.newArrayList(path.split("\\."));
-
-      // For each path prefix, append.
-      for (int i = 0; i < pieces.size(); ++i) {
-
-        String cPath = Joiner.on(".").join(Iterables.limit(pieces, i + 1));
-
-        // Actually append the path if it is needed (i.e. it is not
-        // already present OR it is the path given to the method).
-        if (i == pieces.size() - 1 || !paths.contains(cPath)) {
-          if (i == 0) {
-            sb.append("var ");
+    protected void appendExtern(String path, Node functionToExport) {
+      List<String> pathPrefixes = computePathPrefixes(path);
+      
+      for (int i = 0; i < pathPrefixes.size(); ++i) {  
+        String pathPrefix = pathPrefixes.get(i);
+        
+        /* The complete path (the last path prefix) must be emitted and
+         * it gets initialized to the externed version of the value.
+         */      
+        boolean isCompletePathPrefix = (i == pathPrefixes.size() - 1);
+           
+        boolean skipPathPrefix = pathPrefix.endsWith(".prototype")
+            || (alreadyExportedPaths.contains(pathPrefix) 
+                && !isCompletePathPrefix);
+          
+        if (!skipPathPrefix) {
+           Node initializer;
+                
+          /* Namespaces get initialized to {}, functions to
+           * externed versions of their value, and if we can't
+           * figure out where the value came from we initialize
+           * it to {}.
+           * 
+           * Since externs are always exported in sorted order,
+           * we know that if we export a.b = function() {} and later 
+           * a.b.c = function then a.b will always be in alreadyExportedPaths
+           * when we emit a.b.c and thus we will never overwrite the function
+           * exported for a.b with a namespace.
+           */
+           
+          if (isCompletePathPrefix && functionToExport != null) {
+            initializer = createExternFunction(functionToExport);
+          } else {
+            initializer = new Node(Token.OBJECTLIT);
           }
-
-          sb.append(cPath);
-
-          if (i < pieces.size() - 1) {
-            sb.append(";\n");
-          }
-
-          paths.add(cPath);
-        }
+          
+          appendPathDefinition(pathPrefix, initializer);        
+        }      
       }
     }
-
-
+ 
+    /** 
+     * Computes a list of the path prefixes constructed from the components
+     * of the path.
+     * <pre>
+     * E.g., if the path is:
+     *      "a.b.c"
+     * then then path prefixes will be
+     *    ["a","a.b","a.b.c"]:
+     * </pre>
+     */
+    private List<String> computePathPrefixes(String path) {
+      List<String> pieces = Lists.newArrayList(path.split("\\."));
+      
+      List<String> pathPrefixes = Lists.newArrayList();
+      
+      for (int i = 0; i < pieces.size(); i++) {
+        pathPrefixes.add(Joiner.on(".").join(Iterables.limit(pieces, i + 1)));
+      }
+      
+      return pathPrefixes;
+    }
+    
+    private void appendPathDefinition(String path, Node initializer) {
+      Node pathDefinition;
+      
+      if (!path.contains(".")) {
+        pathDefinition = NodeUtil.newVarNode(path, initializer);
+      } else {
+        Node qualifiedPath = NodeUtil.newQualifiedNameNode(path, -1, -1);
+        pathDefinition = NodeUtil.newExpr(new Node(Token.ASSIGN, qualifiedPath,
+            initializer));
+      } 
+      
+      externsRoot.addChildToBack(pathDefinition);
+      
+      alreadyExportedPaths.add(path);
+    }
+    
+    /**
+     * Given a function to export, create the empty function that
+     * will be put in the externs file. This extern function should have
+     * the same type as the original function and the same parameter
+     * name but no function body.
+     * 
+     * We create a warning here if the the function to export is missing
+     * parameter or return types.
+     */
+    private Node createExternFunction(Node exportedFunction) {   
+      checkForFunctionsWithUnknownTypes(exportedFunction);
+      
+      List<Node> externParameters = Lists.newLinkedList();
+      Node actualParameterIterator = NodeUtil.getFnParameters(exportedFunction)
+        .getFirstChild();
+      
+      while (actualParameterIterator != null) {
+        externParameters.add(actualParameterIterator.cloneNode());
+        
+        actualParameterIterator = actualParameterIterator.getNext();
+      }
+      
+      Node externFunction = NodeUtil.newFunctionNode("", externParameters, 
+          new Node(Token.BLOCK), -1, -1);      
+      externFunction.setJSType(exportedFunction.getJSType());
+      
+      return externFunction;
+    }
+    
+    /**
+     * Warn the user if there is an exported function for which a parameter
+     * or return type is unknown.
+     */
+    private void checkForFunctionsWithUnknownTypes(Node function) {
+      Preconditions.checkArgument(NodeUtil.isFunction(function));
+      
+      /* We must get the JSDocInfo from the function's type since the function
+       * itself does not have an associated JSDocInfo node.
+       */
+      JSDocInfo functionJSDocInfo = function.getJSType().getJSDocInfo();
+      
+      FunctionType functionType = (FunctionType) function.getJSType();
+      
+      JSType returnType = functionType.getReturnType();
+      
+      /* It is OK if a constructor doesn't have a return type */
+      if (!functionType.isConstructor() && 
+          (returnType == null || returnType.isUnknownType())) {
+        reportUnknownReturnType(function);
+      }
+      
+      /* We can't just use the function's type's getParameters() to get the
+       * parameter nodes because the nodes returned from that method
+       * do not have names or locations. Similarly, the function's AST parameter
+       * nodes do not have JSTypes(). So we walk both lists of parameter nodes 
+       * in lock step getting parameter names from the first and types from the
+       * second.
+       */    
+      Node astParameterIterator = NodeUtil.getFnParameters(function)
+        .getFirstChild();
+           
+      Node typeParameterIterator = functionType.getParametersNode()
+        .getFirstChild();
+      
+      while (astParameterIterator != null) {
+        JSType parameterType = typeParameterIterator.getJSType();
+        
+        if (parameterType == null || parameterType.isUnknownType()) {
+          reportUnknownParameterType(function, astParameterIterator);
+        }
+        
+        astParameterIterator = astParameterIterator.getNext();
+        typeParameterIterator = typeParameterIterator.getNext();
+      }
+    }
+    
+    private void reportUnknownParameterType(Node function, Node parameter) {
+      compiler.report(JSError.make(NodeUtil.getSourceName(function),
+          parameter, CheckLevel.WARNING, 
+          EXPORTED_FUNCTION_UNKNOWN_PARAMETER_TYPE,
+          NodeUtil.getFunctionName(function), parameter.getString()));
+    }
+    
+    private void reportUnknownReturnType(Node function) {
+      compiler.report(JSError.make(NodeUtil.getSourceName(function),
+          function, CheckLevel.WARNING, EXPORTED_FUNCTION_UNKNOWN_RETURN_TYPE,
+          NodeUtil.getFunctionName(function)));
+    }
+    
     /**
      * If the given value is a qualified name which refers
      * a function, the function's node is returned. Otherwise,
      * {@code null} is returned.
      */
-    protected Node getFunctionValue(Node value) {
+    protected Node getFunctionValue(Node qualifiedNameNode) {
       String qualifiedName = value.getQualifiedName();
 
       if (qualifiedName == null) {
@@ -121,7 +290,18 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       }
 
       Node definitionParent = definitionMap.get(qualifiedName);
-      Node definition = definitionParent.getLastChild();
+      Node definition;
+      
+      switch(definitionParent.getType()) {
+        case Token.ASSIGN:
+          definition = definitionParent.getLastChild();
+          break;
+        case Token.VAR:
+          definition = definitionParent.getLastChild().getLastChild();
+          break;
+        default:
+            return null;
+      }
 
       if (definition.getType() != Token.FUNCTION) {
         return null;
@@ -129,47 +309,16 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
       return definition;
     }
-
-
-    /**
-     * Appends the given function definition to the builder.
-     */
-    protected void appendFunctionValue(Node definition) {
-      sb.append(" = ");
-      sb.append("function(");
-
-      // Add the parameters.
-      Node parameters = definition.getFirstChild().getNext();
-
-      int i = 0;
-      for (Node current = parameters.getFirstChild();
-           current != null;
-           current = current.getNext()) {
-
-        if (i > 0) {
-          sb.append(", ");
-        }
-
-        sb.append(current.getString());
-
-        ++i;
-      }
-
-      sb.append(") {}");
-    }
   }
 
   /**
    * A symbol export.
    */
   private class SymbolExport extends Export {
-    private final String symbolName;
-    private final Node value;
 
     public SymbolExport(String symbolName, Node value) {
-      this.symbolName = symbolName;
-      this.value = value;
-
+      super(symbolName, value);
+      
       String qualifiedName = value.getQualifiedName();
 
       if (qualifiedName != null) {
@@ -181,19 +330,6 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     String getExportedPath() {
       return symbolName;
     }
-
-    @Override
-    void generateExterns() {
-      appendInferredPaths(symbolName);
-
-      Node functionValue = getFunctionValue(value);
-
-      if (functionValue != null) {
-        appendFunctionValue(functionValue);
-      }
-
-      sb.append(";\n");
-    }
   }
 
   /**
@@ -201,13 +337,11 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
    */
   private class PropertyExport extends Export {
     private final String exportPath;
-    private final String symbolName;
-    private final Node value;
 
     public PropertyExport(String exportPath, String symbolName, Node value) {
+      super(symbolName, value);
+      
       this.exportPath = exportPath;
-      this.symbolName = symbolName;
-      this.value = value;
     }
 
     @Override
@@ -235,21 +369,6 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
       return exportPath + "." + symbolName;
     }
-
-    @Override
-    void generateExterns() {
-      String exportedPath = getExportedPath();
-
-      appendInferredPaths(exportedPath);
-
-      Node functionValue = getFunctionValue(value);
-
-      if (functionValue != null) {
-        appendFunctionValue(functionValue);
-      }
-
-      sb.append(";\n");
-    }
   }
 
   /**
@@ -259,8 +378,9 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     this.exports = Lists.newArrayList();
     this.compiler = compiler;
     this.definitionMap = Maps.newHashMap();
-    this.sb = new StringBuilder();
-    this.paths = Lists.newArrayList();
+    this.externsRoot = new Node(Token.BLOCK);
+    this.externsRoot.setIsSyntheticBlock(true);
+    this.alreadyExportedPaths = Sets.newHashSet();
     this.mappedPaths = Maps.newHashMap();
   }
 
@@ -290,7 +410,10 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
    * Returns the generated externs.
    */
   public String getGeneratedExterns() {
-    return sb.toString();
+    CodePrinter.Builder builder = new CodePrinter.Builder(externsRoot)
+      .setPrettyPrint(false).setOutputTypes(true);
+    
+    return builder.build();
   }
 
   @Override
@@ -299,7 +422,7 @@ class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
       case Token.NAME:
       case Token.GETPROP:
-        if (parent.getType() == Token.ASSIGN) {
+        if (parent.getType() == Token.ASSIGN || parent.getType() == Token.VAR) {
           definitionMap.put(n.getQualifiedName(), parent);
         }
 

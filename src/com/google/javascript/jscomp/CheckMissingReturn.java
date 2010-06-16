@@ -25,6 +25,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Checks functions for missing return statements. Return statements are only
@@ -67,9 +68,11 @@ class CheckMissingReturn implements ScopedCallback {
         // constants. We DO have a full blown ReverseAbstractInterupter and
         // type system that can evaluate some impressions' boolean value but
         // for now we will keep this pass lightweight.
-        if (condition != null && NodeUtil.isLiteralValue(condition) ) {
-          return NodeUtil.getBooleanValue(condition) ==
-            (Branch.ON_TRUE == branch);
+        if (condition != null) {
+          TernaryValue val = NodeUtil.getBooleanValue(condition);
+          if (val != TernaryValue.UNKNOWN) {
+            return val.toBoolean(true) == (Branch.ON_TRUE == branch);
+          }
         }
       }
       return true;

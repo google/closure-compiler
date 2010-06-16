@@ -280,7 +280,7 @@ class MakeDeclaredNamesUnique
     }
 
     /**
-     * Rename vars for the current scope, and merge any referenced 
+     * Rename vars for the current scope, and merge any referenced
      * names into the parent scope reference set.
      */
     public void exitScope(NodeTraversal t) {
@@ -312,26 +312,47 @@ class MakeDeclaredNamesUnique
      */
     void handleScopeVar(Var v) {
       String name  = v.getName();
-      if (containsSeparator(name)) {
-        String newName = getOrginalName(name);
-        // Check if the new name is valid and if it would cause conflicts.
-        if (TokenStream.isJSIdentifier(newName) &&
-            !referencedNames.contains(newName) && 
-            !newName.equals(ARGUMENTS)) {
-          referencedNames.remove(name);
-          // Adding a reference to the new name to prevent either the parent
-          // scopes or the current scope renaming another var to this new name.
-          referencedNames.add(newName);
-          List<Node> references = nameMap.get(name);
-          Preconditions.checkState(references != null);
-          for (Node n : references) {
-            Preconditions.checkState(n.getType() == Token.NAME);
-            n.setString(newName);
-          }
-          compiler.reportCodeChange();
+      if (containsSeparator(name) && !getOrginalName(name).isEmpty()) {
+        String newName = findReplacementName(name);
+        referencedNames.remove(name);
+        // Adding a reference to the new name to prevent either the parent
+        // scopes or the current scope renaming another var to this new name.
+        referencedNames.add(newName);
+        List<Node> references = nameMap.get(name);
+        Preconditions.checkState(references != null);
+        for (Node n : references) {
+          Preconditions.checkState(n.getType() == Token.NAME);
+          n.setString(newName);
         }
+        compiler.reportCodeChange();
         nameMap.remove(name);
       }
+    }
+ 
+    /**
+     * Find a name usable in the local scope.
+     */
+    private String findReplacementName(String name) {
+      String original = getOrginalName(name);
+      String newName = original;
+      int i = 0;
+      while (!isValidName(newName)) {
+        newName = original + 
+            ContextualRenamer.UNIQUE_ID_SEPARATOR + String.valueOf(i++);
+      }
+      return newName;
+    }
+
+    /**
+     * @return Whether the name is valid to use in the local scope.
+     */
+    private boolean isValidName(String name) {
+      if (TokenStream.isJSIdentifier(name) &&
+          !referencedNames.contains(name) &&
+          !name.equals(ARGUMENTS)) {
+        return true;
+      }
+      return false;
     }
 
     @Override

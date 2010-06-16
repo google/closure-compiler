@@ -108,7 +108,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     invert = true;
     test(
         "var a;function foo(){var a$$inline_1; a = 1}",
-        "var a;function foo(){var a$$inline_1; a = 1}");
+        "var a;function foo(){var a$$0; a = 1}");
     test(
         "var a;function foo(){var a$$inline_1;}",
         "var a;function foo(){var a;}");
@@ -191,27 +191,34 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
     invert = true;
 
-    testSameInFunction(
-        "var e; try { } catch(e$$1) {e$$1;}; try { } catch(e$$2) {e$$2;}");
-    testSameInFunction(
-        "var e; try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} };");
-    testSameInFunction(
-        "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;};var e$$2;");
-    testSameInFunction(
-        "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} };var e$$2");
+    testInFunction(
+        "var e; try { } catch(e$$0) {e$$0;}; try { } catch(e$$1) {e$$1;}",
+        "var e; try { } catch(e$$2) {e$$2;}; try { } catch(e$$0) {e$$0;}");
+    testInFunction(
+        "var e; try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} };",
+        "var e; try { } catch(e$$0) {e$$0; try { } catch(e$$1) {e$$1;} };");
+    testInFunction(
+        "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;};var e$$2;",
+        "try { } catch(e) {e;}; try { } catch(e$$0) {e$$0;};var e$$1;");
+    testInFunction(
+        "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} };var e$$2",
+        "try { } catch(e) {e; try { } catch(e$$0) {e$$0;} };var e$$1");
   }
 
   public void testArguments() {
     // Set the test type
     this.useDefaultRenamer = true;
 
-    invert = true;
     // Don't distinguish between "arguments", it can't be made unique.
     testSameWithInversion(
         "function foo(){var arguments;function bar(){var arguments;}}");
+
+    invert = true;
+    
     // Don't introduce new references to arguments, it is special.
-    testSameWithInversion(
-        "function foo(){var arguments$$1;}");
+    test(
+        "function foo(){var arguments$$1;}",
+        "function foo(){var arguments$$0;}");
   }
 
   public void testMakeLocalNamesUniqueWithoutContext() {
@@ -256,11 +263,11 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testOnlyInversion() {
     invert = true;
     test("function f(a, a$$1) {}",
-         "function f(a, a$$1) {}");
+         "function f(a, a$$0) {}");
     test("function f(a$$1, b$$2) {}",
          "function f(a, b) {}");
     test("function f(a$$1, a$$2) {}",
-         "function f(a, a$$2) {}");
+         "function f(a, a$$0) {}");
     testSame("try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}");
     testSame("try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
     testSame("var a$$1;");
@@ -273,8 +280,8 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testOnlyInversion2() {
     invert = true;
-    testSame("function () {" +
-        "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}}");
+    test("function () {try { } catch(e) {e;}; try { } catch(e$$0) {e$$0;}}",
+        "function () {try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}}");
   }
 
   public void testOnlyInversion3() {
@@ -290,7 +297,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         "  }" +
         "}",
         "function x1() {" +
-        "  var a$$1;" +
+        "  var a$$0;" +
         "  function x2() {" +
         "    var a;" +
         "  }" +
@@ -304,9 +311,9 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     invert = true;
     test(
         "function x1() {" +
-        "  var a$$1;" +
+        "  var a$$0;" +
         "  function x2() {" +
-        "    var a;a$$1++" +
+        "    var a;a$$0++" +
         "  }" +
         "}",
         "function x1() {" +

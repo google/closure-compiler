@@ -66,7 +66,7 @@ public class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     checkKeepSimplifiedHookExpr(hook,
                                 true,
                                 true,
-                                ImmutableList.of("foo?(bar=0):(baz=0)"));
+                                ImmutableList.of("foo?bar=0:baz=0"));
   }
 
   public void testIllegalArgumentIfNotHook() throws Exception {

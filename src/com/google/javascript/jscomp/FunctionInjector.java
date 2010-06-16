@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
+import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -151,7 +152,7 @@ class FunctionInjector {
       InliningMode mode, boolean referencesThis, boolean containsFunctions) {
     // TODO(johnlenz): This function takes too many parameter, without
     // context.  Modify the API to take a structure describing the function.
-    
+
     // Allow direct function calls or "fn.call" style calls.
     if (!isSupportedCallType(callNode)) {
       return CanInlineResult.NO;
@@ -688,7 +689,8 @@ class FunctionInjector {
    * Parameter names will be name unique when at a later time.
    */
   private String getUniqueResultName() {
-    return "JSCompiler_inline_result_" + safeNameIdSupplier.get();
+    return "JSCompiler_inline_result"
+        + ContextualRenamer.UNIQUE_ID_SEPARATOR + safeNameIdSupplier.get();
   }
 
   /**

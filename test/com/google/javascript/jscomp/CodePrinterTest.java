@@ -16,13 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
-
-import java.util.List;
 
 public class CodePrinterTest extends TestCase {
   static Node parse(String js) {
@@ -289,6 +286,25 @@ public class CodePrinterTest extends TestCase {
     assertPrint("if(x){;;function y(){};;}", "if(x){function y(){}}");
   }
 
+  public void testHook() {
+    assertPrint("a ? b = 1 : c = 2", "a?b=1:c=2");
+    assertPrint("x = a ? b = 1 : c = 2", "x=a?b=1:c=2");
+    assertPrint("(x = a) ? b = 1 : c = 2", "(x=a)?b=1:c=2");
+
+    assertPrint("x, a ? b = 1 : c = 2", "x,a?b=1:c=2");
+    assertPrint("x, (a ? b = 1 : c = 2)", "x,a?b=1:c=2");
+    assertPrint("(x, a) ? b = 1 : c = 2", "(x,a)?b=1:c=2");
+
+    assertPrint("a ? (x, b) : c = 2", "a?(x,b):c=2");
+    assertPrint("a ? b = 1 : (x,c)", "a?b=1:(x,c)");
+
+    assertPrint("a ? b = 1 : c = 2 + x", "a?b=1:c=2+x");
+    assertPrint("(a ? b = 1 : c = 2) + x", "(a?b=1:c=2)+x");
+    assertPrint("a ? b = 1 : (c = 2) + x", "a?b=1:(c=2)+x");
+
+    assertPrint("a ? (b?1:2) : 3", "a?b?1:2:3");
+  }
+
   public void testPrintInOperatorInForLoop() {
     // Check for in expression in for's init expression.
     // Check alone, with + (higher precedence), with ?: (lower precedence),
@@ -322,6 +338,7 @@ public class CodePrinterTest extends TestCase {
   }
 
   private void assertPrint(String js, String expected) {
+    parse(expected); // validate the expected string is valid js
     assertEquals(expected,
         parsePrint(js, false, CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD));
   }
@@ -703,6 +720,39 @@ public class CodePrinterTest extends TestCase {
         "/**\n * @constructor\n */\nvar x = function() {\n}");
   }
 
+  public void testEmitUnknownParamTypesAsAllType() {
+    assertTypeAnnotations(
+        "var a = function(x) {}",
+        "/**\n" +
+        " * @param {*} x\n" +
+        " */\n" + 
+        "var a = function(x) {\n}");
+  }
+  
+  public void testOptionalTypesAnnotation() {
+    assertTypeAnnotations(
+        "/**\n" +
+        " * @param {string=} x \n" +
+        " */\n" +
+        "var a = function(x) {}",
+        "/**\n" +
+        " * @param {string=} x\n" +
+        " */\n" +
+        "var a = function(x) {\n}");
+  }
+  
+  public void testVariableArgumentsTypesAnnotation() {
+    assertTypeAnnotations(
+        "/**\n" +
+        " * @param {...string} x \n" +
+        " */\n" +
+        "var a = function(x) {}",
+        "/**\n" +
+        " * @param {...string} x\n" +
+        " */\n" +
+        "var a = function(x) {\n}");
+  }
+  
   public void testTempConstructor() {
     assertTypeAnnotations(
         "var x = function() {\n/**\n * @constructor\n */\nfunction t1() {}\n" +
@@ -789,56 +839,55 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testParsePrintParse() {
-    List<String> parsePrintParseTestCases = ImmutableList.of(
-        "3;",
-        "var a = b;",
-        "var x, y, z;",
-        "try { foo() } catch(e) { bar() }",
-        "try { foo() } catch(e) { bar() } finally { stuff() }",
-        "try { foo() } finally { stuff() }",
-        "throw 'me'",
-        "function foo(a) { return a + 4; }",
-        "function foo() { return; }",
-        "var a = function(a, b) { foo(); return a + b; }",
-        "b = [3, 4, 'paul', \"Buchhe it\",,5];",
-        "v = (5, 6, 7, 8)",
-        "d = 34.0; x = 0; y = .3; z = -22",
-        "d = -x; t = !x + ~y;",
-        "'hi'; /* just a test */ stuff(a,b) \n foo(); // and another \n bar();",
-        "a = b++ + ++c; a = b++-++c; a = - --b; a = - ++b;",
-        "a++; b= a++; b = ++a; b = a--; b = --a; a+=2; b-=5",
-        "a = (2 + 3) * 4;",
-        "a = 1 + (2 + 3) + 4;",
-        "x = a ? b : c; x = a ? (b,3,5) : (foo(),bar());",
-        "a = b | c || d ^ e && f & !g != h << i <= j < k >>> l > m * n % !o",
-        "a == b; a != b; a === b; a == b == a; (a == b) == a; a == (b == a);",
-        "if (a > b) a = b; if (b < 3) a = 3; else c = 4;",
-        "if (a == b) { a++; } if (a == 0) { a++; } else { a --; }",
-        "for (var i in a) b += i;",
-        "for (var i = 0; i < 10; i++){ b /= 2; if (b == 2)break;else continue;}",
-        "for (x = 0; x < 10; x++) a /= 2;",
-        "for (;;) a++;",
-        "while(true) { blah(); }while(true) blah();",
-        "do stuff(); while(a>b);",
-        "[0, null, , true, false, this];",
-        "s.replace(/absc/, 'X').replace(/ab/gi, 'Y');",
-        "new Foo; new Bar(a, b,c);",
-        "with(foo()) { x = z; y = t; } with(bar()) a = z;",
-        "delete foo['bar']; delete foo;",
-        "var x = { 'a':'paul', 1:'3', 2:(3,4) };",
-        "switch(a) { case 2: case 3: { stuff(); break; }" +
-        "case 4: morestuff(); break; default: done();}",
-        "x = foo['bar'] + foo['my stuff'] + foo[bar] + f.stuff;",
-        "a.v = b.v; x['foo'] = y['zoo'];",
-        "'test' in x; 3 in x; a in x;",
-        "'foo\"bar' + \"foo'c\" + 'stuff\\n and \\\\more'",
-        "x.__proto__;");
-
-    for (String testCase : parsePrintParseTestCases) {
-      Node parse1 = parse(testCase);
-      Node parse2 = parse(new CodePrinter.Builder(parse1).build());
-      assertTrue(testCase, parse1.checkTreeEqualsSilent(parse2));
-    }
+    testReparse("3;");
+    testReparse("var a = b;");
+    testReparse("var x, y, z;");
+    testReparse("try { foo() } catch(e) { bar() }");
+    testReparse("try { foo() } catch(e) { bar() } finally { stuff() }");
+    testReparse("try { foo() } finally { stuff() }");
+    testReparse("throw 'me'");
+    testReparse("function foo(a) { return a + 4; }");
+    testReparse("function foo() { return; }");
+    testReparse("var a = function(a, b) { foo(); return a + b; }");
+    testReparse("b = [3, 4, 'paul', \"Buchhe it\",,5];");
+    testReparse("v = (5, 6, 7, 8)");
+    testReparse("d = 34.0; x = 0; y = .3; z = -22");
+    testReparse("d = -x; t = !x + ~y;");
+    testReparse("'hi'; /* just a test */ stuff(a,b) \n foo(); // and another \n bar();");
+    testReparse("a = b++ + ++c; a = b++-++c; a = - --b; a = - ++b;");
+    testReparse("a++; b= a++; b = ++a; b = a--; b = --a; a+=2; b-=5");
+    testReparse("a = (2 + 3) * 4;");
+    testReparse("a = 1 + (2 + 3) + 4;");
+    testReparse("x = a ? b : c; x = a ? (b,3,5) : (foo(),bar());");
+    testReparse("a = b | c || d ^ e && f & !g != h << i <= j < k >>> l > m * n % !o");
+    testReparse("a == b; a != b; a === b; a == b == a; (a == b) == a; a == (b == a);");
+    testReparse("if (a > b) a = b; if (b < 3) a = 3; else c = 4;");
+    testReparse("if (a == b) { a++; } if (a == 0) { a++; } else { a --; }");
+    testReparse("for (var i in a) b += i;");
+    testReparse("for (var i = 0; i < 10; i++){ b /= 2; if (b == 2)break;else continue;}");
+    testReparse("for (x = 0; x < 10; x++) a /= 2;");
+    testReparse("for (;;) a++;");
+    testReparse("while(true) { blah(); }while(true) blah();");
+    testReparse("do stuff(); while(a>b);");
+    testReparse("[0, null, , true, false, this];");
+    testReparse("s.replace(/absc/, 'X').replace(/ab/gi, 'Y');");
+    testReparse("new Foo; new Bar(a, b,c);");
+    testReparse("with(foo()) { x = z; y = t; } with(bar()) a = z;");
+    testReparse("delete foo['bar']; delete foo;");
+    testReparse("var x = { 'a':'paul', 1:'3', 2:(3,4) };");
+    testReparse("switch(a) { case 2: case 3: { stuff(); break; }" +
+        "case 4: morestuff(); break; default: done();}");
+    testReparse("x = foo['bar'] + foo['my stuff'] + foo[bar] + f.stuff;");
+    testReparse("a.v = b.v; x['foo'] = y['zoo'];");
+    testReparse("'test' in x; 3 in x; a in x;");
+    testReparse("'foo\"bar' + \"foo'c\" + 'stuff\\n and \\\\more'");
+    testReparse("x.__proto__;");
+  }
+  
+  private void testReparse(String code) {
+    Node parse1 = parse(code);
+    Node parse2 = parse(new CodePrinter.Builder(parse1).build());
+    assertTrue(code, parse1.checkTreeEqualsSilent(parse2));
   }
 
   public void testDoLoopIECompatiblity() {

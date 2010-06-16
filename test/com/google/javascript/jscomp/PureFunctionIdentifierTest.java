@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class PureFunctionIdentifierTest extends CompilerTestCase {
   List<String> noSideEffectCalls = Lists.newArrayList();
-  
+
   boolean regExpHaveSideEffects = true;
 
   private static String kExterns =
@@ -669,6 +669,36 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "REGEXP STRING exec", "k"));
   }
 
+  public void testAnonymousFunction1() throws Exception {
+    String source = "(function (){})();";
+
+    checkMarkedCalls(source, ImmutableList.<String>of(
+        "FUNCTION"));
+  }
+
+  public void testAnonymousFunction2() throws Exception {
+    String source = "(Error || function (){})();";
+
+    checkMarkedCalls(source, ImmutableList.<String>of(
+        "(Error || FUNCTION)"));
+  }
+  
+  public void testAnonymousFunction3() throws Exception {
+    String source = "var a = (Error || function (){})();";
+
+    checkMarkedCalls(source, ImmutableList.<String>of(
+        "(Error || FUNCTION)"));
+  }  
+
+  // Indirect complex function definitions aren't yet supported.
+  public void testAnonymousFunction4() throws Exception {
+    String source = "var a = (Error || function (){});" +
+                    "a();";
+
+    // This should be "(Error || FUNCTION)" but isn't.
+    checkMarkedCalls(source, ImmutableList.<String>of());
+  }  
+  
   public void testInvalidAnnotation1() throws Exception {
     test("/** @nosideeffects */ function foo() {}",
          null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
@@ -757,8 +787,12 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       } else {
         String result = node.getQualifiedName();
         if (result == null) {
-          result = node.getFirstChild().toString(false, false, false);
-          result += " " + node.getLastChild().toString(false, false, false);
+          if (node.getType() == Token.FUNCTION) {
+            result = node.toString(false, false, false).trim();
+          } else {
+            result = node.getFirstChild().toString(false, false, false);
+            result += " " + node.getLastChild().toString(false, false, false);
+          }
         }
         return result;
       }

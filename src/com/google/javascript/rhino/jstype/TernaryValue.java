@@ -195,4 +195,11 @@ public enum TernaryValue {
    *     unknown</pre>
    */
   public abstract boolean toBoolean(boolean unknown);
+
+  /**
+   * Gets the TernaryValue for the given boolean.
+   */
+  public static TernaryValue forBoolean(boolean val) {
+    return val ? TernaryValue.TRUE : TernaryValue.FALSE;
+  }
 }

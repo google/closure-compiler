@@ -20,10 +20,11 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Transform the structure of the AST so that the number of explicit exits
@@ -65,7 +66,7 @@ class MinimizeExitPoints
             NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
 
         Node cond = NodeUtil.getConditionExpression(n);
-        if (NodeUtil.isLiteralValue(cond) && !NodeUtil.getBooleanValue(cond)) {
+        if (NodeUtil.getBooleanValue(cond) == TernaryValue.FALSE) {
           // Normally, we wouldn't be able to optimize BREAKs inside a loop
           // but as we know the condition will always false, we can treat them
           // as we would a CONTINUE.

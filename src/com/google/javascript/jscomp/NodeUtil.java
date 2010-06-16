@@ -25,6 +25,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,18 +67,18 @@ public final class NodeUtil {
    *
    * @throws IllegalArgumentException If {@code n} is not a literal value
    */
-  static boolean getBooleanValue(Node n) {
+  static TernaryValue getBooleanValue(Node n) {
     switch (n.getType()) {
       case Token.STRING:
-        return n.getString().length() > 0;
+        return TernaryValue.forBoolean(n.getString().length() > 0);
 
       case Token.NUMBER:
-        return n.getDouble() != 0;
+        return TernaryValue.forBoolean(n.getDouble() != 0);
 
       case Token.NULL:
       case Token.FALSE:
       case Token.VOID:
-        return false;
+        return TernaryValue.FALSE;
 
       case Token.NAME:
         String name = n.getString();
@@ -85,9 +86,9 @@ public final class NodeUtil {
             || "NaN".equals(name)) {
           // We assume here that programs don't change the value of the keyword
           // undefined to something other than the value undefined.
-          return false;
+          return TernaryValue.FALSE;
         } else if ("Infinity".equals(name)) {
-          return true;
+          return TernaryValue.TRUE;
         }
         break;
 
@@ -95,9 +96,10 @@ public final class NodeUtil {
       case Token.ARRAYLIT:
       case Token.OBJECTLIT:
       case Token.REGEXP:
-        return true;
+        return TernaryValue.TRUE;
     }
-    throw new IllegalArgumentException("Non-literal value: " + n);
+
+    return TernaryValue.UNKNOWN;
   }
 
 

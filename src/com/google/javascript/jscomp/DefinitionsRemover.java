@@ -43,7 +43,7 @@ class DefinitionsRemover {
 
     if (NodeUtil.isVarDeclaration(n) && n.hasChildren()) {
       return new VarDefinition(n);
-    } else if(NodeUtil.isFunction(parent) && parent.getFirstChild() == n) {
+    } else if (NodeUtil.isFunction(parent) && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
         return new NamedFunctionDefinition(parent);
       } else if (!n.getString().equals("")) {

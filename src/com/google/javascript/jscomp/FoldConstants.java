@@ -17,12 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.List;
 
@@ -81,11 +81,6 @@ class FoldConstants extends AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     int type = n.getType();
 
-    if (type == Token.BLOCK) {
-      tryFoldBlock(t, n, parent);
-      return;
-    }
-
     Node left = n.getFirstChild();
     if (left == null) {
       return;
@@ -140,14 +135,14 @@ class FoldConstants extends AbstractPostOrderCallback
           return;
         }
 
-        if (!NodeUtil.isLiteralValue(left)) {
+        TernaryValue leftVal = NodeUtil.getBooleanValue(left);
+        if (leftVal == TernaryValue.UNKNOWN) {
           return;
         }
 
         switch (type) {
           case Token.NOT:
-            int result = NodeUtil.getBooleanValue(left) ? Token.FALSE :
-                         Token.TRUE;
+            int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;           
             parent.replaceChild(n, new Node(result));
             t.getCompiler().reportCodeChange();
             break;
@@ -259,31 +254,6 @@ class FoldConstants extends AbstractPostOrderCallback
       }
     }
 
-    if (type == Token.IF || type == Token.HOOK) {
-      tryFoldHookIf(t, n, parent);
-      return;
-    }
-
-    if (type == Token.DO) {
-      tryFoldDo(t, n, parent);
-      return;
-    }
-
-    if (type == Token.WHILE) {
-      tryFoldWhile(t, n, parent);
-      return;
-    }
-
-    if (type == Token.FOR) {
-      Node condition = NodeUtil.getConditionExpression(n);
-      if (condition != null) {
-        this.tryFoldForCondition(condition, n);
-      }
-
-      tryFoldFor(t, n, parent);
-      return;
-    }
-
     if (type == Token.AND ||
         type == Token.OR) {
       tryFoldAndOr(t, n, left, right, parent);
@@ -311,11 +281,6 @@ class FoldConstants extends AbstractPostOrderCallback
     if (type == Token.CALL) {
       tryFoldStringJoin(t, n, left, right, parent);
       tryFoldStringIndexOf(t, n, left, right, parent);
-      return;
-    }
-
-    if (type == Token.COMMA) {
-      tryFoldComma(t, n, left, right, parent);
       return;
     }
 
@@ -399,29 +364,6 @@ class FoldConstants extends AbstractPostOrderCallback
     }
   }
 
-  private void tryFoldComma(
-      NodeTraversal t, Node n, Node left, Node right, Node parent) {
-    // If the left side does nothing replace the comma with the result.
-    if (!NodeUtil.mayHaveSideEffects(left)) {
-      // Fold it!
-      n.removeChild(right);
-      parent.replaceChild(n, right);
-      t.getCompiler().reportCodeChange();
-    } else {
-      if (parent.getType() == Token.EXPR_RESULT) {
-        // split comma
-        n.detachChildren();
-        // Replace the original expression with the left operand.
-        parent.replaceChild(n, left);
-        // Add the right expression afterward.
-        Node newStatement = new Node(Token.EXPR_RESULT, right);
-        newStatement.copyInformationFrom(n);
-        parent.getParent().addChildAfter(newStatement, parent);
-        t.getCompiler().reportCodeChange();
-      }
-    }
-  }
-
   private void error(NodeTraversal t, DiagnosticType diagnostic, Node n) {
     t.getCompiler().report(t.makeError(n, diagnostic, n.toString()));
   }
@@ -490,157 +432,7 @@ class FoldConstants extends AbstractPostOrderCallback
   }
 
   /**
-   * Try removing unneeded block nodes and their useless children
-   */
-  void tryFoldBlock(NodeTraversal t, Node n, Node parent) {
-    // Remove any useless children
-    for (Node c = n.getFirstChild(); c != null; ) {
-      Node next = c.getNext();  // save c.next, since 'c' may be removed
-      if (!NodeUtil.mayHaveSideEffects(c)) {
-        n.removeChild(c);  // lazy kids
-        t.getCompiler().reportCodeChange();
-      }
-      c = next;
-    }
 
-    if (n.isSyntheticBlock() || parent == null) {
-      return;
-    }
-
-    // Try to remove the block.
-    if (NodeUtil.tryMergeBlock(n)) {
-      t.getCompiler().reportCodeChange();
-    }
-  }
-
-  /**
-   * Try folding :? (hook) and IF nodes by removing dead branches.
-   * @return were any changes performed?
-   */
-  boolean tryFoldHookIf(NodeTraversal t, Node n, Node parent) {
-    int type = n.getType();
-    Node cond = n.getFirstChild();
-    Node thenBody = cond.getNext();
-    Node elseBody = thenBody.getNext();
-
-    boolean changes = false;
-
-    if (type == Token.IF) {
-      // if (x) { .. } else { } --> if (x) { ... }
-      if (elseBody != null && !NodeUtil.mayHaveSideEffects(elseBody)) {
-        n.removeChild(elseBody);
-        elseBody = null;
-        t.getCompiler().reportCodeChange();
-        changes = true;
-      }
-
-      // if (x) { } else { ... } --> if (!x) { ... }
-      if (!NodeUtil.mayHaveSideEffects(thenBody) && elseBody != null) {
-        n.removeChild(elseBody);
-        n.replaceChild(thenBody, elseBody);
-        Node notCond = new Node(Token.NOT);
-        n.replaceChild(cond, notCond);
-        notCond.addChildToFront(cond);
-        cond = notCond;
-        thenBody = cond.getNext();
-        elseBody = null;
-        t.getCompiler().reportCodeChange();
-        changes = true;
-      }
-
-      // if (x()) { }
-      if (!NodeUtil.mayHaveSideEffects(thenBody) && elseBody == null) {
-        if (NodeUtil.mayHaveSideEffects(cond)) {
-          // x() has side effects, just leave the condition on its own.
-          n.removeChild(cond);
-          parent.replaceChild(n, NodeUtil.newExpr(cond));
-        } else {
-          // x() has no side effects, the whole tree is useless now.
-          NodeUtil.removeChild(parent, n);
-        }
-        t.getCompiler().reportCodeChange();
-        return true; // The if has been removed. There is nothing to do.
-      }
-    } else {
-      Preconditions.checkState(type == Token.HOOK);
-      if (NodeUtil.isExpressionNode(parent)) {
-        // Try to remove useless nodes.
-        if (!NodeUtil.mayHaveSideEffects(thenBody)) {
-          // x?void 0:y --> if(!x)y
-          Node ifNode = new Node(Token.IF);
-          if (cond.getType() == Token.NOT) {
-            Node expr = cond.getFirstChild();
-            cond.removeChild(expr);
-            ifNode.addChildToBack(expr);
-          } else {
-            Node not = new Node(Token.NOT).copyInformationFrom(cond);
-            n.removeChild(cond);
-            not.addChildToBack(cond);
-            ifNode.addChildToBack(not);
-          }
-
-          n.removeChild(elseBody);
-          ifNode.addChildToBack(
-              new Node(Token.BLOCK, NodeUtil.newExpr(elseBody))
-                  .copyInformationFrom(elseBody));
-          parent.getParent().replaceChild(parent, ifNode);
-          t.getCompiler().reportCodeChange();
-          return true;
-        } else if (!NodeUtil.mayHaveSideEffects(elseBody)) {
-          // x?y:void 0 --> if(x)y
-          Node ifNode = new Node(Token.IF);
-          n.removeChild(cond);
-          ifNode.addChildToBack(cond);
-          n.removeChild(thenBody);
-
-          ifNode.addChildToBack(
-              new Node(Token.BLOCK, NodeUtil.newExpr(thenBody))
-                  .copyInformationFrom(thenBody));
-          parent.getParent().replaceChild(parent, ifNode);
-          t.getCompiler().reportCodeChange();
-          return true;
-        }
-      }
-    }
-
-    // Try transforms that apply to both IF and HOOK.
-    if (!NodeUtil.isLiteralValue(cond)) {
-      return changes;  // We can't remove branches otherwise!
-    }
-
-    boolean condTrue = NodeUtil.getBooleanValue(cond);
-
-    if (n.getChildCount() == 2) {
-      Preconditions.checkState(type == Token.IF);
-
-      if (condTrue) {
-        // Replace "if (true) { X }" with "X".
-        Node thenStmt = n.getFirstChild().getNext();
-        n.removeChild(thenStmt);
-        parent.replaceChild(n, thenStmt);
-        t.getCompiler().reportCodeChange();
-      } else {
-        // Replace "if (false) { X }" with empty node.
-        NodeUtil.redeclareVarsInsideBranch(n);
-        NodeUtil.removeChild(parent, n);
-        t.getCompiler().reportCodeChange();
-      }
-    } else {
-      // Replace "if (true) { X } else { Y }" with X, or
-      // replace "if (false) { X } else { Y }" with Y.
-      Node firstBranch = n.getFirstChild().getNext();
-      Node secondBranch = firstBranch.getNext();
-      Node branch = condTrue ? firstBranch : secondBranch;
-      Node notBranch = condTrue ? secondBranch : firstBranch;
-      NodeUtil.redeclareVarsInsideBranch(notBranch);
-      n.removeChild(branch);
-      parent.replaceChild(n, branch);
-      t.getCompiler().reportCodeChange();
-    }
-    return true;
-  }
-   
-  /**
    * Try to fold a AND/OR node.
    */
   void tryFoldAndOr(NodeTraversal t, Node n, Node left, Node right,
@@ -648,8 +440,11 @@ class FoldConstants extends AbstractPostOrderCallback
     Node result = null;
 
     int type = n.getType();
-    if (NodeUtil.isLiteralValue(left)) {
-      boolean lval = NodeUtil.getBooleanValue(left);
+   
+    TernaryValue leftVal = NodeUtil.getBooleanValue(left);
+
+    if (leftVal != TernaryValue.UNKNOWN) {
+      boolean lval = leftVal.toBoolean(true);
 
       // (TRUE || x) => TRUE (also, (3 || x) => 3)
       // (FALSE && x) => FALSE
@@ -662,7 +457,10 @@ class FoldConstants extends AbstractPostOrderCallback
         // (TRUE && x) => x
         result = right;
       }
-    } else if (NodeUtil.isLiteralValue(right)) {
+    } else {
+      TernaryValue rightVal = NodeUtil.getBooleanValue(right);
+      if (rightVal != TernaryValue.UNKNOWN) {
+  
       // Note: We cannot always fold when the constant is on the
       // right, because the typed value of the expression will depend
       // on the type of the constant on the right, even if the boolean
@@ -675,7 +473,7 @@ class FoldConstants extends AbstractPostOrderCallback
       if (pt == Token.IF || pt == Token.WHILE || pt == Token.DO ||
           (pt == Token.FOR && NodeUtil.getConditionExpression(parent) == n) ||
           (pt == Token.HOOK && parent.getFirstChild() == n)) {
-        boolean rval = NodeUtil.getBooleanValue(right);
+        boolean rval = rightVal.toBoolean(true);
 
         // (x || FALSE) => x
         // (x && TRUE) => x
@@ -689,6 +487,7 @@ class FoldConstants extends AbstractPostOrderCallback
           if (!NodeUtil.mayHaveSideEffects(left)) {
             result = right;
           }
+        }
         }
       }
     }
@@ -1363,93 +1162,7 @@ class FoldConstants extends AbstractPostOrderCallback
     parent.replaceChild(n, literalNode);
     t.getCompiler().reportCodeChange();
     return true;
-  }
 
-  /**
-   * Removes WHILEs that always evaluate to false.
-   */
-  void tryFoldWhile(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkArgument(n.getType() == Token.WHILE);
-    Node cond = NodeUtil.getConditionExpression(n);
-    if (!NodeUtil.isLiteralValue(cond) || NodeUtil.getBooleanValue(cond)) {
-      return;
-    }
-    NodeUtil.redeclareVarsInsideBranch(n);
-    NodeUtil.removeChild(parent, n);
-    t.getCompiler().reportCodeChange();
-  }
-
-  /**
-   * Removes FORs that always evaluate to false.
-   */
-  void tryFoldFor(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkArgument(n.getType() == Token.FOR);
-    // This is not a FOR-IN loop
-    if (n.getChildCount() != 4) return;
-    // There isn't an initializer
-    if (n.getFirstChild().getType() != Token.EMPTY) return;
-
-    Node cond = NodeUtil.getConditionExpression(n);
-    if (!NodeUtil.isLiteralValue(cond) || NodeUtil.getBooleanValue(cond)) {
-      return;
-    }
-    NodeUtil.redeclareVarsInsideBranch(n);
-    NodeUtil.removeChild(parent, n);
-    t.getCompiler().reportCodeChange();
-  }
-
-  /**
-   * Removes DOs that always evaluate to false. This leaves the
-   * statements that were in the loop in a BLOCK node.
-   * The block will be removed in a later pass, if possible.
-   */
-  void tryFoldDo(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkArgument(n.getType() == Token.DO);
-
-    Node cond = NodeUtil.getConditionExpression(n);
-    if (!NodeUtil.isLiteralValue(cond) || NodeUtil.getBooleanValue(cond)) {
-      return;
-    }
-
-    // TODO(johnlenz): The do-while can be turned into a label with
-    // named breaks and the label optimized away (maybe).
-    if (hasBreakOrContinue(n)) {
-      return;
-    }
-
-    Preconditions.checkState(
-        NodeUtil.isControlStructureCodeBlock(n, n.getFirstChild()));
-    Node block = n.removeFirstChild();
-
-    parent.replaceChild(n, block);
-    t.getCompiler().reportCodeChange();
-  }
-
-  /**
-   *
-   */
-  boolean hasBreakOrContinue(Node n) {
-    // TODO(johnlenz): This is overkill as named breaks may refer to outer
-    // loops or labels, and any break my refer to an inner loop.
-    // More generally, this check may be more expensive than we like.
-    return NodeUtil.has(
-        n,
-        Predicates.<Node>or(
-            new NodeUtil.MatchNodeType(Token.BREAK),
-            new NodeUtil.MatchNodeType(Token.CONTINUE)),
-        new NodeUtil.MatchNotFunction());
-  }
-
-  /**
-   * Remove always true loop conditions.
-   */
-  private void tryFoldForCondition(Node n, Node parent) {
-    if (NodeUtil.isLiteralValue(n)) {
-      boolean result = NodeUtil.getBooleanValue(n);
-      if (result) {
-        parent.replaceChild(n, new Node(Token.EMPTY));
-        compiler.reportCodeChange();
-      }
-    }
   } 
 }
+

@@ -45,6 +45,10 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
         NodeTraversal.traverse(compiler, js, new FoldConstants(compiler));
         NodeTraversal.traverse(compiler, js, new MinimizeExitPoints(compiler));
         NodeTraversal.traverse(compiler, js, new FoldConstants(compiler));
+                
+        new PeepholeOptimizationsPass(compiler, new 
+            PeepholeRemoveDeadCode()).process(externs, js);
+        
         new Denormalize(compiler).process(externs, js);
       }
     };

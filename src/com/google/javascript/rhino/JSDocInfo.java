@@ -215,6 +215,7 @@ public final class JSDocInfo implements Serializable {
   private static final int MASK_NOSIDEEFFECTS = 0x00004000; // @nosideeffects
   private static final int MASK_EXTERNS       = 0x00008000; // @externs
   private static final int MASK_JAVADISPATCH  = 0x00010000; // @javadispath
+  private static final int MASK_NOCOMPILE     = 0x00020000; // @nocompile
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
@@ -298,6 +299,10 @@ public final class JSDocInfo implements Serializable {
 
   void setJavaDispatch(boolean value) {
     setFlag(value, MASK_JAVADISPATCH);
+  }
+
+  void setNoCompile(boolean value) {
+    setFlag(value, MASK_NOCOMPILE);
   }
 
   private void setFlag(boolean value, int mask) {
@@ -435,6 +440,14 @@ public final class JSDocInfo implements Serializable {
    */
   public boolean isJavaDispatch() {
     return getFlag(MASK_JAVADISPATCH);
+  }
+
+  /**
+   * Returns whether the {@code @nocompile} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean isNoCompile() {
+    return getFlag(MASK_NOCOMPILE);
   }
 
   private boolean getFlag(int mask) {

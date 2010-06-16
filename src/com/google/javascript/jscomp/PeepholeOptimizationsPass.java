@@ -38,6 +38,15 @@ class PeepholeOptimizationsPass extends AbstractPostOrderCallback
     this.peepholeOptimizations = optimizations;
   }
   
+  /**
+   * Creates a peephole optimization pass that runs the given
+   * optimizations.
+   */
+  PeepholeOptimizationsPass(AbstractCompiler compiler, 
+      AbstractPeepholeOptimization... optimizations) {
+    this(compiler, ImmutableSet.copyOf(optimizations));     
+  }
+  
   public AbstractCompiler getCompiler() {
     return compiler;
   }

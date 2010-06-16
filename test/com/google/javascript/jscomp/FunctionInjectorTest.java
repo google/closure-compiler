@@ -975,9 +975,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { if (foo(1)) throw 'test'; }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "if (JSCompiler_inline_result_0) throw 'test'; }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "if (JSCompiler_inline_result$$0) throw 'test'; }",
         "foo", INLINE_BLOCK);
   }
 
@@ -987,9 +987,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { return foo(1); }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "return JSCompiler_inline_result_0; }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "return JSCompiler_inline_result$$0; }",
         "foo", INLINE_BLOCK);
   }
 
@@ -999,9 +999,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { switch(foo(1)) { default:break; } }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "switch(JSCompiler_inline_result_0) { default:break; } }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "switch(JSCompiler_inline_result$$0) { default:break; } }",
         "foo", INLINE_BLOCK);
   }
 
@@ -1011,9 +1011,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1)?0:1 }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "JSCompiler_inline_result_0?0:1 }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "JSCompiler_inline_result$$0?0:1 }",
         "foo", INLINE_BLOCK);
   }
 
@@ -1023,9 +1023,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1)&&1 }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "JSCompiler_inline_result_0&&1 }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "JSCompiler_inline_result$$0&&1 }",
         "foo", INLINE_BLOCK);
   }
 
@@ -1035,9 +1035,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {1 + foo(1) }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "1 + JSCompiler_inline_result_0 }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "1 + JSCompiler_inline_result$$0 }",
         "foo", INLINE_BLOCK);
   }
 
@@ -1047,9 +1047,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {foo(1) && 1 }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "JSCompiler_inline_result_0&&1 }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "JSCompiler_inline_result$$0&&1 }",
         "foo", INLINE_BLOCK);
   }
 
@@ -1059,9 +1059,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {1 + foo(1) }",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "1 + JSCompiler_inline_result_0 }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "1 + JSCompiler_inline_result$$0 }",
         "foo", INLINE_BLOCK);
   }
 
@@ -1071,9 +1071,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {var b = 1 + foo(1)}",
         "function foo(a){return true;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "var b = 1 + JSCompiler_inline_result_0 }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "var b = 1 + JSCompiler_inline_result$$0 }",
         "foo", INLINE_BLOCK);
   }
 
@@ -1085,9 +1085,9 @@ public class FunctionInjectorTest extends TestCase {
 //         "function x() {var b; b += 1 + foo(1) }",
 //         "function foo(a){return true;}; " +
 //         "function x() {var b;" +
-//         "{var JSCompiler_inline_result_0; " +
-//         "JSCompiler_inline_result_0=true;}" +
-//         "b += 1 + JSCompiler_inline_result_0 }",
+//         "{var JSCompiler_inline_result$$0; " +
+//         "JSCompiler_inline_result$$0=true;}" +
+//         "b += 1 + JSCompiler_inline_result$$0 }",
 //         "foo", INLINE_BLOCK);
 //   }
 
@@ -1097,9 +1097,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() {a:foo(1)?0:1 }",
         "function foo(a){return true;}; " +
-        "function x() { a:{{var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=true;}" +
-        "JSCompiler_inline_result_0?0:1 }}",
+        "function x() { a:{{var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=true;}" +
+        "JSCompiler_inline_result$$0?0:1 }}",
         "foo", INLINE_BLOCK);
   }
 
@@ -1117,14 +1117,14 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(a){return true;}; " +
         "function x() { goo() + (1?foo(1):1) }",
         "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_temp_const_0=goo();" +
-            "var JSCompiler_temp_1;" +
+        "function x() { var JSCompiler_temp_const$$0=goo();" +
+            "var JSCompiler_temp$$1;" +
             "if(1) {" +
-            "  {JSCompiler_temp_1=true;} " +
+            "  {JSCompiler_temp$$1=true;} " +
             "} else {" +
-            "  JSCompiler_temp_1=1;" +
+            "  JSCompiler_temp$$1=1;" +
             "}" +
-            "JSCompiler_temp_const_0 + JSCompiler_temp_1" +
+            "JSCompiler_temp_const$$0 + JSCompiler_temp$$1" +
             "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1138,13 +1138,13 @@ public class FunctionInjectorTest extends TestCase {
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
-            "var JSCompiler_temp_const_0=z;" +
+            "var JSCompiler_temp_const$$0=z;" +
             "{" +
-             "var JSCompiler_inline_result_1;" +
+             "var JSCompiler_inline_result$$1;" +
              "z= {};" +
-             "JSCompiler_inline_result_1 = true;" +
+             "JSCompiler_inline_result$$1 = true;" +
             "}" +
-            "JSCompiler_temp_const_0.gack = JSCompiler_inline_result_1;" +
+            "JSCompiler_temp_const$$0.gack = JSCompiler_inline_result$$1;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1158,13 +1158,13 @@ public class FunctionInjectorTest extends TestCase {
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
-            "var JSCompiler_temp_const_0=z;" +
+            "var JSCompiler_temp_const$$0=z;" +
             "{" +
-             "var JSCompiler_inline_result_1;" +
+             "var JSCompiler_inline_result$$1;" +
              "z= {};" +
-             "JSCompiler_inline_result_1 = true;" +
+             "JSCompiler_inline_result$$1 = true;" +
             "}" +
-            "JSCompiler_temp_const_0.gack = JSCompiler_inline_result_1;" +
+            "JSCompiler_temp_const$$0.gack = JSCompiler_inline_result$$1;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1178,15 +1178,15 @@ public class FunctionInjectorTest extends TestCase {
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
-            "var JSCompiler_temp_const_1=z;" +
-            "var JSCompiler_temp_const_0=bar();" +
+            "var JSCompiler_temp_const$$1=z;" +
+            "var JSCompiler_temp_const$$0=bar();" +
             "{" +
-             "var JSCompiler_inline_result_2;" +
+             "var JSCompiler_inline_result$$2;" +
              "z= {};" +
-             "JSCompiler_inline_result_2 = true;" +
+             "JSCompiler_inline_result$$2 = true;" +
             "}" +
-            "JSCompiler_temp_const_1[JSCompiler_temp_const_0] = " +
-                "JSCompiler_inline_result_2;" +
+            "JSCompiler_temp_const$$1[JSCompiler_temp_const$$0] = " +
+                "JSCompiler_inline_result$$2;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1200,13 +1200,13 @@ public class FunctionInjectorTest extends TestCase {
         "var z = {};" +
         "function foo(a){z = {};return true;}; " +
         "function x() {" +
-            "var JSCompiler_temp_const_0=z.y.x;" +
+            "var JSCompiler_temp_const$$0=z.y.x;" +
             "{" +
-             "var JSCompiler_inline_result_1;" +
+             "var JSCompiler_inline_result$$1;" +
              "z= {};" +
-             "JSCompiler_inline_result_1 = true;" +
+             "JSCompiler_inline_result$$1 = true;" +
             "}" +
-            "JSCompiler_temp_const_0.gack = JSCompiler_inline_result_1;" +
+            "JSCompiler_temp_const$$0.gack = JSCompiler_inline_result$$1;" +
         "}",
         "foo", INLINE_BLOCK, true);
   }
@@ -1218,9 +1218,9 @@ public class FunctionInjectorTest extends TestCase {
         "function foo(){return _g;}; " +
         "function x() {1 + foo()() }",
         "function foo(){return _g;}; " +
-        "function x() { {var JSCompiler_inline_result_0; " +
-        "JSCompiler_inline_result_0=_g;}" +
-        "1 + JSCompiler_inline_result_0() }",
+        "function x() { {var JSCompiler_inline_result$$0; " +
+        "JSCompiler_inline_result$$0=_g;}" +
+        "1 + JSCompiler_inline_result$$0() }",
         "foo", INLINE_BLOCK);
   }
 
@@ -1230,9 +1230,9 @@ public class FunctionInjectorTest extends TestCase {
 //         "/** @nosideeffects */ function foo(){return true;}; " +
 //         "function x() {1 + _g(foo()) }",
 //         "function foo(){return true;}; " +
-//         "function x() { {var JSCompiler_inline_result_0; " +
-//         "JSCompiler_inline_result_0=true;}" +
-//         "1 + _g(JSCompiler_inline_result_0) }",
+//         "function x() { {var JSCompiler_inline_result$$0; " +
+//         "JSCompiler_inline_result$$0=true;}" +
+//         "1 + _g(JSCompiler_inline_result$$0) }",
 //         "foo", INLINE_BLOCK);
 //   }
 
@@ -1244,8 +1244,8 @@ public class FunctionInjectorTest extends TestCase {
 
         "function foo(){return _g;}; " +
         "function x() {" +
-        "  {var JSCompiler_inline_result_0; JSCompiler_inline_result_0=_g;}" +
-        "  var CONSTANT_RESULT = JSCompiler_inline_result_0;" +
+        "  {var JSCompiler_inline_result$$0; JSCompiler_inline_result$$0=_g;}" +
+        "  var CONSTANT_RESULT = JSCompiler_inline_result$$0;" +
         "}",
         "foo", INLINE_BLOCK);
   }

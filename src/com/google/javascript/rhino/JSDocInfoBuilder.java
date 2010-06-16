@@ -85,7 +85,8 @@ final public class JSDocInfoBuilder {
    */
   public boolean isPopulatedWithFileOverview() {
     return isPopulated() &&
-        (currentInfo.hasFileOverview() || currentInfo.isExterns());
+        (currentInfo.hasFileOverview() || currentInfo.isExterns() ||
+         currentInfo.isNoCompile());
   }
 
   /**
@@ -532,6 +533,23 @@ final public class JSDocInfoBuilder {
   public boolean recordHiddenness() {
     if (!currentInfo.isHidden()) {
       currentInfo.setHidden(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isNoCompilek()} flag set to {@code true}.
+   *
+   * @return {@code true} if the no compile flag was recorded and {@code false}
+   *     if it was already recorded
+   */
+  public boolean recordNoCompile() {
+    if (!currentInfo.isNoCompile()) {
+      currentInfo.setNoCompile(true);
       populated = true;
       return true;
     } else {

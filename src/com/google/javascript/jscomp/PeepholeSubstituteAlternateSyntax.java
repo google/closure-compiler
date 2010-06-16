@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.regex.Pattern;
 
@@ -173,6 +174,14 @@ public class PeepholeSubstituteAlternateSyntax
     Node parent = n.getParent();
     
     Node cond = n.getFirstChild();
+    
+    /* If the condition is a literal, we'll let other
+     * optimizations try to remove useless code.
+     */
+    if (NodeUtil.isLiteralValue(cond)) {
+      return n;
+    }
+    
     Node thenBranch = cond.getNext();
     Node elseBranch = thenBranch.getNext();
 
@@ -612,9 +621,10 @@ public class PeepholeSubstituteAlternateSyntax
         break;
 
       default:
-        // if(true) --> if(1)
-        if (NodeUtil.isLiteralValue(n)) {
-          boolean result = NodeUtil.getBooleanValue(n);
+        // while(true) --> while(1)
+        TernaryValue nVal = NodeUtil.getBooleanValue(n);
+        if (nVal != TernaryValue.UNKNOWN) {
+          boolean result = nVal.toBoolean(true);
           int equivalentResult = result ? 1 : 0;
           return maybeReplaceChildWithNumber(n, parent, equivalentResult);
         }

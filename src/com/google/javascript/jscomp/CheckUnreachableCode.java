@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Use {@link ControlFlowGraph} and {@link GraphReachability} to inform user
@@ -43,7 +44,7 @@ class CheckUnreachableCode implements ScopedCallback {
     this.compiler = compiler;
     this.level = level;
   }
-  
+
   @Override
   public void enterScope(NodeTraversal t) {
     new GraphReachability<Node, ControlFlowGraph.Branch>(
@@ -75,7 +76,7 @@ class CheckUnreachableCode implements ScopedCallback {
     }
     return true;
   }
-  
+
   @Override
   public void exitScope(NodeTraversal t) {
   }
@@ -83,7 +84,7 @@ class CheckUnreachableCode implements ScopedCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
   }
-  
+
   private final class ReachablePredicate implements
       Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> {
 
@@ -95,12 +96,14 @@ class CheckUnreachableCode implements ScopedCallback {
       }
       Node predecessor = input.sourceNode;
       Node condition = NodeUtil.getConditionExpression(predecessor);
-      
+
       // TODO(user): Handle more complicated expression like true == true,
       // etc....
-      if (condition != null && NodeUtil.isImmutableValue(condition)) {
-        return NodeUtil.getBooleanValue(condition) ==
-            (branch == Branch.ON_TRUE);
+      if (condition != null) {
+        TernaryValue val = NodeUtil.getBooleanValue(condition);
+        if (val != TernaryValue.UNKNOWN) {
+          return val.toBoolean(true) == (branch == Branch.ON_TRUE);
+        }
       }
       return true;
     }

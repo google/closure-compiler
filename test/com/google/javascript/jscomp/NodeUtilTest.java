@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 import junit.framework.TestCase;
 
@@ -79,18 +80,32 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testGetBooleanValue() {
-    assertTrue(NodeUtil.getBooleanValue(getNode("true")));
-    assertTrue(NodeUtil.getBooleanValue(getNode("10")));
-    assertTrue(NodeUtil.getBooleanValue(getNode("'0'")));
-    assertTrue(NodeUtil.getBooleanValue(getNode("/a/")));
-    assertTrue(NodeUtil.getBooleanValue(getNode("{}")));
-    assertTrue(NodeUtil.getBooleanValue(getNode("[]")));
-    assertFalse(NodeUtil.getBooleanValue(getNode("false")));
-    assertFalse(NodeUtil.getBooleanValue(getNode("null")));
-    assertFalse(NodeUtil.getBooleanValue(getNode("0")));
-    assertFalse(NodeUtil.getBooleanValue(getNode("''")));
-    assertFalse(NodeUtil.getBooleanValue(getNode("undefined")));
-    assertFalse(NodeUtil.getBooleanValue(getNode("void 0")));
+    assertBooleanTrue("true");
+    assertBooleanTrue("10");
+    assertBooleanTrue("'0'");
+    assertBooleanTrue("/a/");
+    assertBooleanTrue("{}");
+    assertBooleanTrue("[]");
+    assertBooleanFalse("false");
+    assertBooleanFalse("null");
+    assertBooleanFalse("0");
+    assertBooleanFalse("''");
+    assertBooleanFalse("undefined");
+    assertBooleanFalse("void 0");
+    assertBooleanUnknown("b");
+    assertBooleanUnknown("-'0.0'");
+  }
+
+  private void assertBooleanTrue(String val) {
+    assertEquals(TernaryValue.TRUE, NodeUtil.getBooleanValue(getNode(val)));
+  }
+
+  private void assertBooleanFalse(String val) {
+    assertEquals(TernaryValue.FALSE, NodeUtil.getBooleanValue(getNode(val)));
+  }
+
+  private void assertBooleanUnknown(String val) {
+    assertEquals(TernaryValue.UNKNOWN, NodeUtil.getBooleanValue(getNode(val)));
   }
 
   public void testGetStringValue() {

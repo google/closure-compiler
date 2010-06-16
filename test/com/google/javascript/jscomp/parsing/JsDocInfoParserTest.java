@@ -1268,6 +1268,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNull(parseFileOverview("@javadispatch*/"));
   }
 
+  public void testParseNoCompile1() throws Exception {
+    assertTrue(parseFileOverview("@nocompile*/").isNoCompile());
+  }
+
+  public void testParseNoCompile2() throws Exception {
+    parseFileOverview("@nocompile\n@nocompile*/", "extra @nocompile tag");
+  }
+
   public void testBugAnnotation() throws Exception {
     parse("@bug */");
   }
@@ -2132,6 +2140,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @mods \n" +
       "* @name \n" +
       "* @namespace \n" +
+      "* @nocompile \n" +
       "* @property \n" +
       "* @requires \n" +
       "* @since \n" +

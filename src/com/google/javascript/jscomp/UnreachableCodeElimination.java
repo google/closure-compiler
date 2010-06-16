@@ -94,6 +94,8 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       return;
     }
     // Removes TRYs that had its CATCH removed and/or empty FINALLY.
+    // TODO(dcc): Move the parts of this that don't require a control flow
+    // graph to PeepholeRemoveDeadCode
     if (n.getType() == Token.TRY) {
       Node body = n.getFirstChild();
       Node catchOrFinallyBlock = body.getNext();

@@ -236,9 +236,9 @@ class CodeGenerator {
         int p = NodeUtil.precedence(type);
         addLeftExpr(first, p + 1, context);
         cc.addOp("?", true);
-        addExpr(first.getNext(), p);
+        addExpr(first.getNext(), 1);
         cc.addOp(":", true);
-        addExpr(last, p);
+        addExpr(last, 1);
         break;
       }
 

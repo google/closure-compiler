@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 
 public class FoldConstantsTest extends CompilerTestCase {
+  private boolean runFoldConstantsFirst = true;
 
   // TODO(user): Remove this when we no longer need to do string comparison.
   private FoldConstantsTest(boolean compareAsTree) {
@@ -39,8 +39,20 @@ public class FoldConstantsTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       public void process(Node externs, Node js) {
-        NodeTraversal.traverse(compiler, js, new FoldConstants(compiler));
+        if (runFoldConstantsFirst) {
+          runFoldConstants(externs, js);
+          runPeepholePasses(externs, js);
+        } else {
+          runPeepholePasses(externs, js);
+          runFoldConstants(externs, js);
+        }
+      }
 
+      private void runFoldConstants(Node externs, Node js) {
+        NodeTraversal.traverse(compiler, js, new FoldConstants(compiler));
+      }
+
+      private void runPeepholePasses(Node externs, Node js) {
         /* TODO(dcc): For now we run all remaining FoldConstants tests under
          * both the FoldConstants pass and the new PeepholeOptimizationPass,
          * since many remaining FoldConstants tests rely on functionality
@@ -53,13 +65,10 @@ public class FoldConstantsTest extends CompilerTestCase {
          * Those that genuinely need to test combinations of different
          * Peephole passes will be moved to AbstractPeepholeOptimizationTest.
          */
-
-        ImmutableSet<AbstractPeepholeOptimization> peepholeOptimizations =
-          ImmutableSet.<AbstractPeepholeOptimization>of(
-              new PeepholeSubstituteAlternateSyntax());
-
         PeepholeOptimizationsPass peepholePass =
-            new PeepholeOptimizationsPass(compiler, peepholeOptimizations);
+            new PeepholeOptimizationsPass(compiler,
+                new PeepholeSubstituteAlternateSyntax(),
+                new PeepholeRemoveDeadCode());
 
         peepholePass.process(externs, js);
       }
@@ -73,15 +82,27 @@ public class FoldConstantsTest extends CompilerTestCase {
   }
 
   void foldSame(String js) {
+    runFoldConstantsFirst = true;
     testSame(js);
+    runFoldConstantsFirst = false;
+    testSame(js);
+    runFoldConstantsFirst = true;
   }
 
   void fold(String js, String expected) {
+    runFoldConstantsFirst = true;
     test(js, expected);
+    runFoldConstantsFirst = false;
+    test(js, expected);
+    runFoldConstantsFirst = true;
   }
 
   void fold(String js, String expected, DiagnosticType warning) {
+    runFoldConstantsFirst = true;
     test(js, expected, warning);
+    runFoldConstantsFirst = false;
+    test(js, expected, warning);
+    runFoldConstantsFirst = true;
   }
 
   // TODO(user): This is same as fold() except it uses string comparison. Any
@@ -466,11 +487,11 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("x = 3 || x", "x = 3");
     fold("x = false || 0", "x = 0");
 
-    fold("if(x && true) z()", "x&&z()");
-    fold("if(x && false) z()", "");
+    test("if(x && true) z()", "x&&z()");
+    test("if(x && false) z()", "");
     fold("if(x || 3) z()", "z()");
     fold("if(x || false) z()", "x&&z()");
-    fold("if(x==y && false) z()", "");
+    test("if(x==y && false) z()", "");
 
     // This would be foldable, but it isn't detected, because 'if' isn't
     // the parent of 'x || 3'. Cf. FoldConstants.tryFoldAndOr().
@@ -1003,7 +1024,7 @@ public class FoldConstantsTest extends CompilerTestCase {
 
   public void testFoldUselessDo() {
     fold("do { foo() } while(false);", "foo()");
-    fold("do { foo() } while(!true);", "foo()");
+    test("do { foo() } while(!true);", "foo()");
     fold("do { foo() } while(void 0);", "foo()");
     fold("do { foo() } while(undefined);", "foo()");
     fold("do { foo() } while(!false);", "do { foo() } while(1);");
@@ -1016,7 +1037,7 @@ public class FoldConstantsTest extends CompilerTestCase {
     foldSame("do { foo(); break; } while(0)");
 
     // Make sure proper empty nodes are inserted.
-    fold("if(foo())do {foo()} while(false) else bar()", "foo()?foo():bar()");
+    test("if(foo())do {foo()} while(false) else bar()", "foo()?foo():bar()");
   }
 
   public void testMinimizeCondition() {
@@ -1052,9 +1073,9 @@ public class FoldConstantsTest extends CompilerTestCase {
   }
 
   public void testMinimizeExpr() {
-    fold("!!true", "0");
+    test("!!true", "0");
     fold("!!x", "x");
-    fold("!(!x&&!y)", "!x&&!y");
+    test("!(!x&&!y)", "!x&&!y");
     fold("x||!!y", "x||y");
     fold("!(!!x&&y)", "x&&y");
   }
@@ -1067,7 +1088,7 @@ public class FoldConstantsTest extends CompilerTestCase {
       }
     };
 
-    oneRepetitiontest.fold("x ? x() : void 0", "x&&x();");
+    oneRepetitiontest.test("x ? x() : void 0", "x&&x();");
     oneRepetitiontest.foldSame("y = x ? x() : void 0");
   }
 
@@ -1181,5 +1202,9 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("var x = new RegExp('')", "var x = RegExp('')");
     fold("var x = new Error('20')", "var x = Error(\"20\")");
     fold("var x = new Array('20')", "var x = Array(\"20\")");
+  }
+
+  public void testFoldNegativeBug() {
+    fold("(-3);", "1;");
   }
 }
