@@ -275,6 +275,10 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private int unknownCount = 0;
   private boolean inExterns;
 
+  // A state boolean to see we are currently in @notypecheck section of the
+  // code.
+  private int noTypeCheckSection = 0;
+
   public TypeCheck(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry,
@@ -372,27 +376,38 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
 
-  public boolean shouldTraverse(
-      NodeTraversal t, Node n, Node parent) {
-    JSDocInfo info;
+  private void checkNoTypeCheckSection(Node n, boolean enterSection) {
     switch (n.getType()) {
       case Token.SCRIPT:
+      case Token.BLOCK:
       case Token.VAR:
-        // @notypecheck
-        info = n.getJSDocInfo();
-        if (info != null && info.isNoTypeCheck()) {
-          return false;
-        }
-        break;
-
       case Token.FUNCTION:
-        // @notypecheck
-        info = n.getJSDocInfo();
-        info = (info == null) ? parent.getJSDocInfo() : info;
+      case Token.ASSIGN:
+        JSDocInfo info = n.getJSDocInfo();
         if (info != null && info.isNoTypeCheck()) {
-          return false;
+          if (enterSection) {
+            noTypeCheckSection++;
+          } else {
+            noTypeCheckSection--;
+          }
         }
+        validator.setShouldReport(noTypeCheckSection == 0);
+        break;
+    }
+  }
 
+  private void report(NodeTraversal t, Node n, DiagnosticType diagnosticType,
+      String... arguments) {
+    if (noTypeCheckSection == 0) {
+      t.report(n, diagnosticType, arguments);
+    }
+  }
+
+  public boolean shouldTraverse(
+      NodeTraversal t, Node n, Node parent) {
+    checkNoTypeCheckSection(n, true);
+    switch (n.getType()) {
+      case Token.FUNCTION:
         // normal type checking
         final TypeCheck outerThis = this;
         final Scope outerScope = t.getScope();
@@ -405,7 +420,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             // redeclarations of built-in types generates spurious warnings.
             !(outerScope.getVar(
                 functionPrivateName).getType() instanceof FunctionType)) {
-          t.report(n, FUNCTION_MASKS_VARIABLE, functionPrivateName);
+          report(t, n, FUNCTION_MASKS_VARIABLE, functionPrivateName);
         }
 
         // TODO(user): Only traverse the function's body. The function's
@@ -554,7 +569,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.BITNOT:
         childType = getJSType(n.getFirstChild());
         if (!childType.matchesInt32Context()) {
-          t.report(n, BIT_OPERATION, NodeUtil.opToStr(n.getType()),
+          report(t, n, BIT_OPERATION, NodeUtil.opToStr(n.getType()),
               childType.toString());
         }
         ensureTyped(t, n, NUMBER_TYPE);
@@ -580,7 +595,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           if (n.getType() == Token.NE) {
             result = result.not();
           }
-          t.report(n, DETERMINISTIC_TEST, leftType.toString(),
+          report(t, n, DETERMINISTIC_TEST, leftType.toString(),
               rightType.toString(), result.toString());
         }
         ensureTyped(t, n, BOOLEAN_TYPE);
@@ -596,7 +611,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
         if (!leftTypeRestricted.canTestForShallowEqualityWith(
                 rightTypeRestricted)) {
-          t.report(n, DETERMINISTIC_TEST_NO_RESULT, leftType.toString(),
+          report(t, n, DETERMINISTIC_TEST_NO_RESULT, leftType.toString(),
               rightType.toString());
         }
         ensureTyped(t, n, BOOLEAN_TYPE);
@@ -689,7 +704,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case Token.DELPROP:
         if (!isReference(n.getFirstChild())) {
-          t.report(n, BAD_DELETE);
+          report(t, n, BAD_DELETE);
         }
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
@@ -759,7 +774,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       default:
-        t.report(n, UNEXPECTED_TOKEN, Token.name(n.getType()));
+        report(t, n, UNEXPECTED_TOKEN, Token.name(n.getType()));
         ensureTyped(t, n);
         break;
     }
@@ -770,6 +785,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (typeable) {
       doPercentTypedAccounting(t, n);
     }
+
+    checkNoTypeCheckSection(n, false);
   }
 
   /**
@@ -1147,11 +1164,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
            objectType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) &&
           propType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
         if (objectType instanceof EnumType) {
-          t.report(n, INEXISTENT_ENUM_ELEMENT, propName);
+          report(t, n, INEXISTENT_ENUM_ELEMENT, propName);
         } else if (!objectType.isEmptyType() &&
             reportMissingProperties && !isPropertyTest(n)) {
           if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
-            t.report(n, INEXISTENT_PROPERTY, propName,
+            report(t, n, INEXISTENT_PROPERTY, propName,
                 validator.getReadableJSTypeName(n.getFirstChild(), true));
           }
         }
@@ -1269,7 +1286,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         } else {
           line = constructor;
         }
-        t.report(line, NOT_A_CONSTRUCTOR);
+        report(t, line, NOT_A_CONSTRUCTOR);
       }
       ensureTyped(t, n);
     }
@@ -1312,7 +1329,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           badImplementedType = true;
         }
         if (badImplementedType) {
-          t.report(n, BAD_IMPLEMENTED_TYPE, functionPrivateName);
+          report(t, n, BAD_IMPLEMENTED_TYPE, functionPrivateName);
         }
       }
       if (functionType.isConstructor()) {
@@ -1333,7 +1350,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     JSType childType = getJSType(child).restrictByNotNullOrUndefined();
 
     if (!childType.canBeCalled()) {
-      t.report(n, NOT_CALLABLE, childType.toString());
+      report(t, n, NOT_CALLABLE, childType.toString());
       ensureTyped(t, n);
       return;
     }
@@ -1346,7 +1363,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // Non-native constructors should never be called directly.
       if (functionType.isConstructor() &&
           !functionType.isNativeObjectType()) {
-        t.report(n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+        report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
       }
 
       visitParameterList(t, n, functionType);
@@ -1459,11 +1476,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.ASSIGN_URSH:
       case Token.URSH:
         if (!leftType.matchesInt32Context()) {
-          t.report(left, BIT_OPERATION,
+          report(t, left, BIT_OPERATION,
                    NodeUtil.opToStr(n.getType()), leftType.toString());
         }
         if (!rightType.matchesUint32Context()) {
-          t.report(right, BIT_OPERATION,
+          report(t, right, BIT_OPERATION,
                    NodeUtil.opToStr(n.getType()), rightType.toString());
         }
         break;
@@ -1497,7 +1514,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       default:
-        t.report(n, UNEXPECTED_TOKEN, Node.tokenToName(op));
+        report(t, n, UNEXPECTED_TOKEN, Node.tokenToName(op));
     }
     ensureTyped(t, n);
   }

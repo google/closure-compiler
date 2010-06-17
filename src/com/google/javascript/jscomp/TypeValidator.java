@@ -59,6 +59,7 @@ class TypeValidator {
   private final AbstractCompiler compiler;
   private final JSTypeRegistry typeRegistry;
   private final JSType allValueTypes;
+  private boolean shouldReport = true;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -127,6 +128,10 @@ class TypeValidator {
    */
   Iterable<TypeMismatch> getMismatches() {
     return mismatches;
+  }
+
+  void setShouldReport(boolean report) {
+    this.shouldReport = report;
   }
 
   // All non-private methods should have the form:
@@ -378,10 +383,12 @@ class TypeValidator {
       JSType hiddenType, String propertyName, JSType ownerType) {
     if (!overridingType.canAssignTo(hiddenType)) {
       registerMismatch(overridingType, hiddenType);
-      compiler.report(
-          t.makeError(n, HIDDEN_PROPERTY_MISMATCH,
-              propertyName, ownerType.toString(),
-              hiddenType.toString(), overridingType.toString()));
+      if (shouldReport) {
+        compiler.report(
+            t.makeError(n, HIDDEN_PROPERTY_MISMATCH,
+                propertyName, ownerType.toString(),
+                hiddenType.toString(), overridingType.toString()));
+      }
     }
   }
 
@@ -400,9 +407,11 @@ class TypeValidator {
         subObject.getImplicitPrototype().getImplicitPrototype();
     if (!declaredSuper.equals(superObject)) {
       if (declaredSuper.equals(getNativeType(OBJECT_TYPE))) {
-        compiler.report(
-            t.makeError(n, MISSING_EXTENDS_TAG_WARNING,
-                subObject.toString()));
+        if (shouldReport) {
+          compiler.report(
+              t.makeError(n, MISSING_EXTENDS_TAG_WARNING,
+                  subObject.toString()));
+        }
         registerMismatch(superObject, declaredSuper);
       } else {
         mismatch(t.getSourceName(), n,
@@ -431,9 +440,11 @@ class TypeValidator {
     type = type.restrictByNotNullOrUndefined();
 
     if (!type.canAssignTo(castType) && !castType.canAssignTo(type)) {
-      compiler.report(
-          t.makeError(n, INVALID_CAST,
-              castType.toString(), type.toString()));
+      if (shouldReport) {
+        compiler.report(
+            t.makeError(n, INVALID_CAST,
+                castType.toString(), type.toString()));
+      }
       registerMismatch(type, castType);
     }
   }
@@ -494,11 +505,13 @@ class TypeValidator {
         if (!(allowDupe ||
               var.getParentNode().getType() == Token.EXPR_RESULT) ||
             !newType.equals(varType)) {
-          compiler.report(
-              JSError.make(sourceName, n, DUP_VAR_DECLARATION,
-                  variableName, newType.toString(), var.getInputName(),
-                  String.valueOf(var.nameNode.getLineno()),
-                  varType.toString()));
+          if (shouldReport) {
+            compiler.report(
+                JSError.make(sourceName, n, DUP_VAR_DECLARATION,
+                    variableName, newType.toString(), var.getInputName(),
+                    String.valueOf(var.nameNode.getLineno()),
+                    varType.toString()));
+          }
         }
       }
     }
@@ -519,10 +532,11 @@ class TypeValidator {
             Preconditions.checkNotNull(source);
             String sourceName = (String) source.getProp(Node.SOURCENAME_PROP);
             sourceName = sourceName == null ? "" : sourceName;
-
-            compiler.report(JSError.make(sourceName, source,
-                INTERFACE_METHOD_NOT_IMPLEMENTED,
-                prop, implemented.toString(), instance.toString()));
+            if (shouldReport) {
+              compiler.report(JSError.make(sourceName, source,
+                  INTERFACE_METHOD_NOT_IMPLEMENTED,
+                  prop, implemented.toString(), instance.toString()));
+            }
             registerMismatch(instance, implemented);
           }
         }
@@ -546,9 +560,11 @@ class TypeValidator {
   private void mismatch(String sourceName, Node n,
                         String msg, JSType found, JSType required) {
     registerMismatch(found, required);
-    compiler.report(
-        JSError.make(sourceName, n, TYPE_MISMATCH_WARNING,
-                     formatFoundRequired(msg, found, required)));
+    if (shouldReport) {
+      compiler.report(
+          JSError.make(sourceName, n, TYPE_MISMATCH_WARNING,
+                       formatFoundRequired(msg, found, required)));
+    }
   }
 
   private void registerMismatch(JSType found, JSType required) {

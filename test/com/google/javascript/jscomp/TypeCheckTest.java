@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -4023,6 +4022,46 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testNoTypeCheck8() throws Exception {
     testTypes("/** @fileoverview \n * @notypecheck */ var foo;" +
         "var bar = 3; /** @param {string} x */ function f(x) {} f(bar);");
+  }
+
+  public void testNoTypeCheck9() throws Exception {
+    testTypes("/** @notypecheck */ function g() { }" +
+        " /** @type {string} */ var a = 1",
+        "initializing variable\n" +
+        "found   : number\n" +
+        "required: string"
+        );
+  }
+
+  public void testNoTypeCheck10() throws Exception {
+    testTypes("/** @notypecheck */ function g() { }" +
+        " function h() {/** @type {string} */ var a = 1}",
+        "initializing variable\n" +
+        "found   : number\n" +
+        "required: string"
+        );
+  }
+
+  public void testNoTypeCheck11() throws Exception {
+    testTypes("/** @notypecheck */ function g() { }" +
+        "/** @notypecheck */ function h() {/** @type {string} */ var a = 1}"
+        );
+  }
+
+  public void testNoTypeCheck12() throws Exception {
+    testTypes("/** @notypecheck */ function g() { }" +
+        "function h() {/** @type {string}\n * @notypecheck\n*/ var a = 1}"
+        );
+  }
+
+  public void testNoTypeCheck13() throws Exception {
+    testTypes("/** @notypecheck */ function g() { }" +
+        "function h() {/** @type {string}\n * @notypecheck\n*/ var a = 1;" +
+        "/** @type {string}*/ var b = 1}",
+        "initializing variable\n" +
+        "found   : number\n" +
+        "required: string"
+        );
   }
 
   public void testImplicitCast() throws Exception {
