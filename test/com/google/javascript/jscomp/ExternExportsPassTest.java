@@ -27,6 +27,25 @@ import junit.framework.TestCase;
  */
 public class ExternExportsPassTest extends TestCase {
 
+  private boolean runCheckTypes = true;
+
+  /**
+   * ExternExportsPass relies on type information to emit JSDoc annotations for
+   * exported externs. However, the user can disable typechecking and still
+   * ask for externs to be exported. Set this flag to enable or disable checking
+   * of types during a test.
+   */
+  private void setRunCheckTypes(boolean shouldRunCheckTypes) {
+    runCheckTypes = shouldRunCheckTypes;
+  }
+  
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    
+    setRunCheckTypes(true);
+  }
+  
   public void testExportSymbol() throws Exception {
     compileAndCheck("var a = {}; a.b = {}; a.b.c = function(d, e, f) {};" +
                     "goog.exportSymbol('foobar', a.b.c)",
@@ -172,6 +191,24 @@ public class ExternExportsPassTest extends TestCase {
                     "var externalName = function(param1, param2) {\n}");
   }
 
+  public void testExportSymbolWithoutTypeCheck() {
+    // ExternExportsPass should not emit annotations
+    // if there is no type information available.
+    setRunCheckTypes(false);
+    
+    compileAndCheck("var internalName;\n" +
+                    "/**\n" +
+                    " * @param {string} param1\n" +
+                    " * @param {number} param2\n" +
+                    " * @return {string}\n" +
+                    " */\n" +  
+                    "internalName = function(param1, param2) {" +
+                      "return param1 + param2;" +
+                    "};" +
+                    "goog.exportSymbol('externalName', internalName)",
+                    "var externalName = function(param1, param2) {\n}");
+  }
+  
   public void testExportSymbolWithConstructor() {
     compileAndCheck("var internalName;\n" +
                     "/**\n" +
@@ -183,6 +220,25 @@ public class ExternExportsPassTest extends TestCase {
                     "/**\n" +
                     " * @constructor\n" +
                     " */\n" + 
+                    "var externalName = function() {\n}");
+  }
+  
+  public void testExportSymbolWithConstructorWithoutTypeCheck() {
+    // For now, skipping type checking should prevent generating
+    // annotations of any kind, so, e.g., @constructor is not preserved.
+    // This is probably not ideal, but since JSDocInfo for functions is attached
+    // to JSTypes and not Nodes (and no JSTypes are created when checkTypes
+    // is false), we don't really have a choice.
+    
+    setRunCheckTypes(false);
+    
+    compileAndCheck("var internalName;\n" +
+                    "/**\n" +
+                    " * @constructor\n" +
+                    " */\n" +  
+                    "internalName = function() {" +
+                    "};" +
+                    "goog.exportSymbol('externalName', internalName)",
                     "var externalName = function() {\n}");
   }
   
@@ -360,7 +416,7 @@ public class ExternExportsPassTest extends TestCase {
      * type information.
      */  
     options.checkSymbols = true;
-    options.checkTypes = true;
+    options.checkTypes = runCheckTypes;
     
     JSSourceFile[] inputs = {
       JSSourceFile.fromCode("testcode",

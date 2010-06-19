@@ -45,6 +45,13 @@ public interface CodingConvention {
   public boolean isConstant(String variableName);
 
   /**
+   * This checks whether a given key of an object literal, such as a
+   * name in all-caps should be treated as if it had the @const
+   * annotation.
+   */
+  public boolean isConstantKey(String keyName);
+  
+  /**
    * This checks that a given {@code key} may be used as a key for an enum.
    *
    * @param key the potential key to an enum

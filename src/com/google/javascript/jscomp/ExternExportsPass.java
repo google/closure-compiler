@@ -193,9 +193,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * We create a warning here if the the function to export is missing
      * parameter or return types.
      */
-    private Node createExternFunction(Node exportedFunction) {   
-      checkForFunctionsWithUnknownTypes(exportedFunction);
-      
+    private Node createExternFunction(Node exportedFunction) {
       List<Node> externParameters = Lists.newLinkedList();
       Node actualParameterIterator = NodeUtil.getFnParameters(exportedFunction)
         .getFirstChild();
@@ -207,7 +205,9 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       }
       
       Node externFunction = NodeUtil.newFunctionNode("", externParameters, 
-          new Node(Token.BLOCK), -1, -1);      
+          new Node(Token.BLOCK), -1, -1);
+      
+      checkForFunctionsWithUnknownTypes(exportedFunction);    
       externFunction.setJSType(exportedFunction.getJSType());
       
       return externFunction;
@@ -220,13 +220,19 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     private void checkForFunctionsWithUnknownTypes(Node function) {
       Preconditions.checkArgument(NodeUtil.isFunction(function));
       
+      FunctionType functionType = (FunctionType) function.getJSType();
+      
+      if (functionType == null) {
+        // No type information is available (CheckTypes was probably not run)
+        // so just bail.
+        return;
+      }
+      
       /* We must get the JSDocInfo from the function's type since the function
        * itself does not have an associated JSDocInfo node.
        */
-      JSDocInfo functionJSDocInfo = function.getJSType().getJSDocInfo();
-      
-      FunctionType functionType = (FunctionType) function.getJSType();
-      
+      JSDocInfo functionJSDocInfo = functionType.getJSDocInfo();
+        
       JSType returnType = functionType.getReturnType();
       
       /* It is OK if a constructor doesn't have a return type */

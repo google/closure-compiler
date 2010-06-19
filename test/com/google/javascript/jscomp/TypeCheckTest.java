@@ -4064,6 +4064,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         );
   }
 
+  public void testNoTypeCheck14() throws Exception {
+    testTypes("/** @fileoverview \n * @notypecheck */ function g() { }" +
+        "g(1,2,3)");
+  }
+
   public void testImplicitCast() throws Exception {
     testTypes("/** @constructor */ function Element() {};\n" +
              "/** @type {string}\n" +

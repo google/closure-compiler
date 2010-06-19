@@ -1324,7 +1324,7 @@ public class Compiler extends AbstractCompiler {
               cb.getLineIndex(), cb.getColumnIndex());
         }
 
-        String code = toSource(root);
+        String code = toSource(root, sourceMap);
         if (!code.isEmpty()) {
           cb.append(code);
           if (!code.endsWith(";")) {
@@ -1337,12 +1337,19 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Generates JavaScript source code for an AST.
+   * Generates JavaScript source code for an AST, doesn't generate source
+   * map info.
    */
   @Override
   String toSource(Node n) {
     initCompilerOptionsIfTesting();
+    return toSource(n, null);
+  }
 
+  /**
+   * Generates JavaScript source code for an AST.
+   */
+  private String toSource(Node n, SourceMap sourceMap) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setPrettyPrint(options.prettyPrint);
     builder.setLineBreak(options.lineBreak);

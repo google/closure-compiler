@@ -101,6 +101,27 @@ public class ScopedAliasesTest extends CompilerTestCase {
         "goog.method();g.method();");
   }
 
+  public void testScopedFunctionReturnThis() {
+    test("goog.scope(function() { " +
+         "  var g = goog; g.f = function() { return this; };" +
+         "});",
+         "goog.f = function() { return this; };");
+  }
+
+  public void testScopedFunctionAssignsToVar() {
+    test("goog.scope(function() { " +
+         "  var g = goog; g.f = function(x) { x = 3; return x; };" +
+         "});",
+         "goog.f = function(x) { x = 3; return x; };");
+  }
+
+  public void testScopedFunctionThrows() {
+    test("goog.scope(function() { " +
+         "  var g = goog; g.f = function() { throw 'error'; };" +
+         "});",
+         "goog.f = function() { throw 'error'; };");
+  }
+
   public void testPropertiesNotChanged() {
     testScopedNoChanges("var x = goog.dom;", "y.x();");
   }
@@ -274,6 +295,10 @@ public class ScopedAliasesTest extends CompilerTestCase {
     testScopedFailure("return;", ScopedAliases.GOOG_SCOPE_USES_RETURN);
     testScopedFailure("var x = goog.dom; return;",
         ScopedAliases.GOOG_SCOPE_USES_RETURN);
+  }
+
+  public void testScopedThrow() {
+    testScopedFailure("throw 'error';", ScopedAliases.GOOG_SCOPE_USES_THROW);
   }
 
   public void testUsedImproperly() {

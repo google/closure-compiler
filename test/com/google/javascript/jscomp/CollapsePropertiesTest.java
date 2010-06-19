@@ -43,7 +43,8 @@ public class CollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    super.enableLineNumberCheck(true);
+    enableLineNumberCheck(true);
+    enableNormalize(true);
   }
 
   @Override public int getNumRepetitions() {
@@ -77,7 +78,8 @@ public class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testObjLitDeclarationWithDuplicateKeys() {
     test("var a = {b: 0, b: 1}; var c = a.b;",
-         "var a$b = 0; var a$b = 1; var c = a$b;");
+         "var a$b = 0; var a$b = 1; var c = a$b;",
+         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testObjLitAssignmentDepth1() {
@@ -1069,12 +1071,12 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testReferenceInAnonymousObject3() {
-    test("function CreateClass(a) {}" +
+    test("function CreateClass(a$$1) {}" +
          "var a = {};" +
          "a.b = function(){};" +
          "a.b.prototype.c = function(){};" +
          "a.d = CreateClass({c: a.b.prototype.c});",
-         "function CreateClass(a) {}" +
+         "function CreateClass(a$$1) {}" +
          "var a$b = function(){};" +
          "a$b.prototype.c = function(){};" +
          "var a$d = CreateClass({c: a$b.prototype.c});");
@@ -1085,7 +1087,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "var a = {};" +
          "a.b = CreateClass({c: function() {}});" +
          "a.d = CreateClass({c: a.b.c});",
-         "function CreateClass(a) {}" +
+         "function CreateClass(a$$1) {}" +
          "var a$b = CreateClass({c: function() {}});" +
          "var a$d = CreateClass({c: a$b.c});");
   }
@@ -1095,7 +1097,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "var a = {};" +
          "a.b = CreateClass({c: function() {}});" +
          "a.d = CreateClass({c: a.b.prototype.c});",
-         "function CreateClass(a) {}" +
+         "function CreateClass(a$$1) {}" +
          "var a$b = CreateClass({c: function() {}});" +
          "var a$d = CreateClass({c: a$b.prototype.c});");
   }
@@ -1135,5 +1137,9 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   public void testPropWithDollarSign5() {
     test("var a = {b: {$0c: true}, b$0c: false};",
          "var a$b$$00c = true; var a$b$00c = false;");
+  }
+
+  public void testConstKey() {
+    test("var foo = {A: 3};", "var foo$A = 3;");
   }
 }

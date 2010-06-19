@@ -72,7 +72,12 @@ public class GoogleCodingConvention extends ClosureCodingConvention {
       }
     }
 
-    if (!Character.isUpperCase(name.charAt(0))) {
+    return isConstantKey(name);
+  }
+
+  @Override
+  public boolean isConstantKey(String name) {
+    if (name.isEmpty() || !Character.isUpperCase(name.charAt(0))) {
       return false;
     }
 

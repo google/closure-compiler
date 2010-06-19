@@ -77,8 +77,8 @@ class SanityCheck implements CompilerPass {
     String source2 = compiler.toSource(root2);
     if (!source.equals(source2)) {
       compiler.report(JSError.make(GENERATED_BAD_CODE,
-              Strings.truncateAtMaxLength(source, 100, true),
-              Strings.truncateAtMaxLength(source2, 100, true)));
+              Strings.truncateAtMaxLength(source, 1000, true),
+              Strings.truncateAtMaxLength(source2, 1000, true)));
     }
 
     return root2;

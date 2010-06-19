@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -36,22 +36,24 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-package com.google.javascript.rhino.jstype;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.javascript.rhino.jstype.UnionType;
+package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.javascript.rhino.jstype.UnionType;
+
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * A builder for union types.
@@ -104,18 +106,29 @@ class UnionTypeBuilder implements Serializable {
           addAlternate(unionAlt);
         }
       } else {
-        if (!alternate.isUnknownType()) {
-          Iterator<JSType> it = alternates.iterator();
-          while (it.hasNext()) {
-            JSType current = it.next();
-            if (!current.isUnknownType()) {
-              if (alternate.isSubtype(current)) {
-                // Alternate is unnecessary.
-                return this;
-              } else if (current.isSubtype(alternate)) {
-                // Alternate makes current obsolete
-                it.remove();
-              }
+        if (alternates.size() > MAX_UNION_SIZE) {
+          return this;
+        }
+
+        // Look through the alternates we've got so far,
+        // and check if any of them are duplicates of
+        // one another.
+        Iterator<JSType> it = alternates.iterator();
+        while (it.hasNext()) {
+          JSType current = it.next();
+          if (alternate.isUnknownType() ||
+              current.isUnknownType()) {
+            if (alternate.isEquivalentTo(current)) {
+              // Alternate is unnecessary.
+              return this;
+            }
+          } else {
+            if (alternate.isSubtype(current)) {
+              // Alternate is unnecessary.
+              return this;
+            } else if (current.isSubtype(alternate)) {
+              // Alternate makes current obsolete
+              it.remove();
             }
           }
         }
@@ -144,13 +157,12 @@ class UnionTypeBuilder implements Serializable {
           result = registry.getNativeType(UNKNOWN_TYPE);
         }
       } else {
-        Set<JSType> alternateSet = ImmutableSet.copyOf(alternates);
-        int size = alternateSet.size();
+        int size = alternates.size();
         if (size > MAX_UNION_SIZE) {
           result = registry.getNativeType(UNKNOWN_TYPE);
         } else {
           if (size > 1) {
-            result = new UnionType(registry, alternateSet);
+            result = new UnionType(registry, getAlternateListCopy());
           } else if (size == 1) {
             result = alternates.iterator().next();
           } else {
@@ -160,5 +172,21 @@ class UnionTypeBuilder implements Serializable {
       }
     }
     return result;
+  }
+
+  private static final Comparator<JSType> typeSorter =
+      new Comparator<JSType>() {
+    @Override public int compare(JSType a, JSType b) {
+      return b.hashCode() - a.hashCode();
+    }
+  };
+
+  private Collection<JSType> getAlternateListCopy() {
+    // TODO(nicksantos): Until we're at a place where we're no longer
+    // using java's built-in equals to test type equivalence, we need
+    // hash codes to be the same. So the alternates need to be sorted.
+    Collections.sort(alternates, typeSorter);
+
+    return ImmutableList.copyOf(alternates);
   }
 }

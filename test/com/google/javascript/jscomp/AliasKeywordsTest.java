@@ -113,15 +113,15 @@ public class AliasKeywordsTest extends CompilerTestCase {
   public void testAlias() {
     test(generateCode("true", ENOUGH_TO_ALIAS_LITERAL),
          generateCode(AliasKeywords.ALIAS_TRUE, ENOUGH_TO_ALIAS_LITERAL,
-                      "var $$ALIAS_TRUE=true;"));
+                      "var JSCompiler_alias_TRUE=true;"));
 
     test(generateCode("false", ENOUGH_TO_ALIAS_LITERAL),
          generateCode(AliasKeywords.ALIAS_FALSE, ENOUGH_TO_ALIAS_LITERAL,
-                      "var $$ALIAS_FALSE=false;"));
+                      "var JSCompiler_alias_FALSE=false;"));
 
     test(generateCode("null", ENOUGH_TO_ALIAS_LITERAL),
          generateCode(AliasKeywords.ALIAS_NULL, ENOUGH_TO_ALIAS_LITERAL,
-                      "var $$ALIAS_NULL=null;"));
+                      "var JSCompiler_alias_NULL=null;"));
     test(generatePreProcessThrowCode(ENOUGH_TO_ALIAS_THROW, "1"),
          generatePostProcessThrowCode(ENOUGH_TO_ALIAS_THROW, "", "1"));
   }
@@ -134,7 +134,9 @@ public class AliasKeywordsTest extends CompilerTestCase {
 
     StringBuffer expected = new StringBuffer();
     expected.append(
-        "var $$ALIAS_TRUE=true;var $$ALIAS_NULL=null;var $$ALIAS_FALSE=false;");
+        "var JSCompiler_alias_TRUE=true;" +
+        "var JSCompiler_alias_NULL=null;" +
+        "var JSCompiler_alias_FALSE=false;");
     expected.append(
         generateCode(AliasKeywords.ALIAS_TRUE, ENOUGH_TO_ALIAS_LITERAL));
     expected.append(
@@ -148,13 +150,14 @@ public class AliasKeywordsTest extends CompilerTestCase {
   public void testAliasThrowKeywordLiteral() {
     int repitions = Math.max(ENOUGH_TO_ALIAS_THROW, ENOUGH_TO_ALIAS_LITERAL);
     String afterCode = generatePostProcessThrowCode(
-          repitions, "var $$ALIAS_TRUE=true;", AliasKeywords.ALIAS_TRUE);
+          repitions, "var JSCompiler_alias_TRUE=true;",
+          AliasKeywords.ALIAS_TRUE);
     test(generatePreProcessThrowCode(repitions, "true"), afterCode);
   }
 
   public void testExistingAliasDefinitionFails() {
     try {
-      testSame("var $$ALIAS_TRUE='foo';");
+      testSame("var JSCompiler_alias_TRUE='foo';");
       fail();
     } catch (RuntimeException expected) {
       assertTrue(-1 != expected.getMessage().indexOf(

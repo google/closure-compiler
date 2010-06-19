@@ -43,7 +43,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
 
@@ -311,10 +311,27 @@ public class UnionType extends JSType {
   public boolean isEquivalentTo(JSType object) {
     if (object instanceof UnionType) {
       UnionType that = (UnionType) object;
-      return this.isSubtype(that) && that.isSubtype(this);
+      if (alternates.size() != that.alternates.size()) {
+        return false;
+      }
+      for (JSType alternate : that.alternates) {
+        if (!hasAlternate(alternate)) {
+          return false;
+        }
+      }
+      return true;
     } else {
       return false;
     }
+  }
+
+  private boolean hasAlternate(JSType type) {
+    for (JSType alternate : alternates) {
+      if (alternate.isEquivalentTo(type)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -490,7 +507,7 @@ public class UnionType extends JSType {
     setResolvedTypeInternal(this); // for circularly defined types.
 
     boolean changed = false;
-    ImmutableSet.Builder<JSType> resolvedTypes = ImmutableSet.builder();
+    ImmutableList.Builder<JSType> resolvedTypes = ImmutableList.builder();
     for (JSType alternate : alternates) {
       JSType newAlternate = alternate.resolve(t, scope);
       changed |= (alternate != newAlternate);
@@ -498,7 +515,8 @@ public class UnionType extends JSType {
     }
     if (changed) {
       Collection<JSType> newAlternates = resolvedTypes.build();
-      Preconditions.checkState(newAlternates.hashCode() == this.hashcode);
+      Preconditions.checkState(
+          newAlternates.hashCode() == this.hashcode);
       alternates = newAlternates;
     }
     return this;

@@ -199,8 +199,9 @@ class Normalize implements CompilerPass {
         boolean isConst = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (checkUserDeclarations) {
           boolean expectedConst = false;
+          CodingConvention convention = compiler.getCodingConvention();
           if (NodeUtil.isConstantName(n)
-              || compiler.getCodingConvention().isConstant(n.getString())) {
+              || NodeUtil.isConstantByConvention(convention, n, parent)) {
             expectedConst = true;
           } else {
             expectedConst = false;

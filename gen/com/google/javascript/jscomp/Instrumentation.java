@@ -5,8 +5,8 @@ package com.google.javascript.jscomp;
 public  final class Instrumentation extends
     com.google.protobuf.GeneratedMessage {
   // Use Instrumentation.newBuilder() to construct.
-  private Instrumentation() {
-    initFields();
+  private Instrumentation(Builder builder) {
+    super(builder);
   }
   private Instrumentation(boolean noInit) {}
   
@@ -32,7 +32,7 @@ public  final class Instrumentation extends
   // optional string report_defined = 1;
   public static final int REPORT_DEFINED_FIELD_NUMBER = 1;
   private boolean hasReportDefined;
-  private java.lang.String reportDefined_ = "";
+  private java.lang.String reportDefined_;
   public boolean hasReportDefined() {
     return hasReportDefined;
   }
@@ -43,7 +43,7 @@ public  final class Instrumentation extends
   // optional string report_call = 2;
   public static final int REPORT_CALL_FIELD_NUMBER = 2;
   private boolean hasReportCall;
-  private java.lang.String reportCall_ = "";
+  private java.lang.String reportCall_;
   public boolean hasReportCall() {
     return hasReportCall;
   }
@@ -54,7 +54,7 @@ public  final class Instrumentation extends
   // optional string report_exit = 6;
   public static final int REPORT_EXIT_FIELD_NUMBER = 6;
   private boolean hasReportExit;
-  private java.lang.String reportExit_ = "";
+  private java.lang.String reportExit_;
   public boolean hasReportExit() {
     return hasReportExit;
   }
@@ -64,8 +64,7 @@ public  final class Instrumentation extends
   
   // repeated string declaration_to_remove = 3;
   public static final int DECLARATION_TO_REMOVE_FIELD_NUMBER = 3;
-  private java.util.List<java.lang.String> declarationToRemove_ =
-    java.util.Collections.emptyList();
+  private java.util.List<java.lang.String> declarationToRemove_;
   public java.util.List<java.lang.String>
       getDeclarationToRemoveList() {
     return declarationToRemove_;
@@ -79,8 +78,7 @@ public  final class Instrumentation extends
   
   // repeated string init = 4;
   public static final int INIT_FIELD_NUMBER = 4;
-  private java.util.List<java.lang.String> init_ =
-    java.util.Collections.emptyList();
+  private java.util.List<java.lang.String> init_;
   public java.util.List<java.lang.String>
       getInitList() {
     return init_;
@@ -95,7 +93,7 @@ public  final class Instrumentation extends
   // optional string app_name_setter = 5;
   public static final int APP_NAME_SETTER_FIELD_NUMBER = 5;
   private boolean hasAppNameSetter;
-  private java.lang.String appNameSetter_ = "";
+  private java.lang.String appNameSetter_;
   public boolean hasAppNameSetter() {
     return hasAppNameSetter;
   }
@@ -104,6 +102,12 @@ public  final class Instrumentation extends
   }
   
   private void initFields() {
+    reportDefined_ = "";
+    reportCall_ = "";
+    reportExit_ = "";
+    declarationToRemove_ = java.util.Collections.emptyList();
+    init_ = java.util.Collections.emptyList();
+    appNameSetter_ = "";
   }
   public final boolean isInitialized() {
     return true;
@@ -259,32 +263,43 @@ public  final class Instrumentation extends
   
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> {
-    private com.google.javascript.jscomp.Instrumentation result;
-    
-    // Construct using com.google.javascript.jscomp.Instrumentation.newBuilder()
-    private Builder() {}
-    
-    private static Builder create() {
-      Builder builder = new Builder();
-      builder.result = new com.google.javascript.jscomp.Instrumentation();
-      return builder;
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.google.javascript.jscomp.InstrumentationTemplate.internal_static_jscomp_Instrumentation_descriptor;
     }
     
-    protected com.google.javascript.jscomp.Instrumentation internalGetResult() {
-      return result;
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.google.javascript.jscomp.InstrumentationTemplate.internal_static_jscomp_Instrumentation_fieldAccessorTable;
+    }
+    
+    // Construct using com.google.javascript.jscomp.Instrumentation.newBuilder()
+    private Builder() {
+    }
+    
+    private static Builder create() {
+      return new Builder();
     }
     
     public Builder clear() {
-      if (result == null) {
-        throw new IllegalStateException(
-          "Cannot call clear() after build().");
-      }
-      result = new com.google.javascript.jscomp.Instrumentation();
+      super.clear();
+      reportDefined_ = "";
+      hasReportDefined = false;
+      reportCall_ = "";
+      hasReportCall = false;
+      reportExit_ = "";
+      hasReportExit = false;
+      declarationToRemove_ = java.util.Collections.emptyList();
+      isDeclarationToRemoveMutable = false;
+      init_ = java.util.Collections.emptyList();
+      isInitMutable = false;
+      appNameSetter_ = "";
+      hasAppNameSetter = false;
       return this;
     }
     
     public Builder clone() {
-      return create().mergeFrom(result);
+      return create().mergeFrom(buildPartial());
     }
     
     public com.google.protobuf.Descriptors.Descriptor
@@ -296,41 +311,45 @@ public  final class Instrumentation extends
       return com.google.javascript.jscomp.Instrumentation.getDefaultInstance();
     }
     
-    public boolean isInitialized() {
-      return result.isInitialized();
-    }
     public com.google.javascript.jscomp.Instrumentation build() {
-      if (result != null && !isInitialized()) {
+      com.google.javascript.jscomp.Instrumentation result = buildPartial();
+      if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
-      return buildPartial();
+      return result;
     }
     
     private com.google.javascript.jscomp.Instrumentation buildParsed()
         throws com.google.protobuf.InvalidProtocolBufferException {
-      if (!isInitialized()) {
+      com.google.javascript.jscomp.Instrumentation result = buildPartial();
+      if (!result.isInitialized()) {
         throw newUninitializedMessageException(
           result).asInvalidProtocolBufferException();
       }
-      return buildPartial();
+      return result;
     }
     
     public com.google.javascript.jscomp.Instrumentation buildPartial() {
-      if (result == null) {
-        throw new IllegalStateException(
-          "build() has already been called on this Builder.");
+      com.google.javascript.jscomp.Instrumentation result = new com.google.javascript.jscomp.Instrumentation(this);
+      result.hasReportDefined = hasReportDefined;
+      result.reportDefined_ = reportDefined_;
+      result.hasReportCall = hasReportCall;
+      result.reportCall_ = reportCall_;
+      result.hasReportExit = hasReportExit;
+      result.reportExit_ = reportExit_;
+      if (isDeclarationToRemoveMutable) {
+        declarationToRemove_ = java.util.Collections.unmodifiableList(declarationToRemove_);
+        isDeclarationToRemoveMutable = false;
       }
-      if (result.declarationToRemove_ != java.util.Collections.EMPTY_LIST) {
-        result.declarationToRemove_ =
-          java.util.Collections.unmodifiableList(result.declarationToRemove_);
+      result.declarationToRemove_ = declarationToRemove_;
+      if (isInitMutable) {
+        init_ = java.util.Collections.unmodifiableList(init_);
+        isInitMutable = false;
       }
-      if (result.init_ != java.util.Collections.EMPTY_LIST) {
-        result.init_ =
-          java.util.Collections.unmodifiableList(result.init_);
-      }
-      com.google.javascript.jscomp.Instrumentation returnMe = result;
-      result = null;
-      return returnMe;
+      result.init_ = init_;
+      result.hasAppNameSetter = hasAppNameSetter;
+      result.appNameSetter_ = appNameSetter_;
+      return result;
     }
     
     public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -354,22 +373,32 @@ public  final class Instrumentation extends
         setReportExit(other.getReportExit());
       }
       if (!other.declarationToRemove_.isEmpty()) {
-        if (result.declarationToRemove_.isEmpty()) {
-          result.declarationToRemove_ = new java.util.ArrayList<java.lang.String>();
+        if (declarationToRemove_.isEmpty()) {
+          declarationToRemove_ = other.declarationToRemove_;
+          isDeclarationToRemoveMutable = false;
+        } else {
+          ensureDeclarationToRemoveIsMutable();
+          declarationToRemove_.addAll(other.declarationToRemove_);
         }
-        result.declarationToRemove_.addAll(other.declarationToRemove_);
       }
       if (!other.init_.isEmpty()) {
-        if (result.init_.isEmpty()) {
-          result.init_ = new java.util.ArrayList<java.lang.String>();
+        if (init_.isEmpty()) {
+          init_ = other.init_;
+          isInitMutable = false;
+        } else {
+          ensureInitIsMutable();
+          init_.addAll(other.init_);
         }
-        result.init_.addAll(other.init_);
       }
       if (other.hasAppNameSetter()) {
         setAppNameSetter(other.getAppNameSetter());
       }
       this.mergeUnknownFields(other.getUnknownFields());
       return this;
+    }
+    
+    public final boolean isInitialized() {
+      return true;
     }
     
     public Builder mergeFrom(
@@ -423,170 +452,192 @@ public  final class Instrumentation extends
     
     
     // optional string report_defined = 1;
+    private boolean hasReportDefined;
+    private java.lang.String reportDefined_ = "";
     public boolean hasReportDefined() {
-      return result.hasReportDefined();
+      return hasReportDefined;
     }
     public java.lang.String getReportDefined() {
-      return result.getReportDefined();
+      return reportDefined_;
     }
     public Builder setReportDefined(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  result.hasReportDefined = true;
-      result.reportDefined_ = value;
+  hasReportDefined = true;
+      reportDefined_ = value;
       return this;
     }
     public Builder clearReportDefined() {
-      result.hasReportDefined = false;
-      result.reportDefined_ = getDefaultInstance().getReportDefined();
+      hasReportDefined = false;
+      reportDefined_ = getDefaultInstance().getReportDefined();
       return this;
     }
     
     // optional string report_call = 2;
+    private boolean hasReportCall;
+    private java.lang.String reportCall_ = "";
     public boolean hasReportCall() {
-      return result.hasReportCall();
+      return hasReportCall;
     }
     public java.lang.String getReportCall() {
-      return result.getReportCall();
+      return reportCall_;
     }
     public Builder setReportCall(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  result.hasReportCall = true;
-      result.reportCall_ = value;
+  hasReportCall = true;
+      reportCall_ = value;
       return this;
     }
     public Builder clearReportCall() {
-      result.hasReportCall = false;
-      result.reportCall_ = getDefaultInstance().getReportCall();
+      hasReportCall = false;
+      reportCall_ = getDefaultInstance().getReportCall();
       return this;
     }
     
     // optional string report_exit = 6;
+    private boolean hasReportExit;
+    private java.lang.String reportExit_ = "";
     public boolean hasReportExit() {
-      return result.hasReportExit();
+      return hasReportExit;
     }
     public java.lang.String getReportExit() {
-      return result.getReportExit();
+      return reportExit_;
     }
     public Builder setReportExit(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  result.hasReportExit = true;
-      result.reportExit_ = value;
+  hasReportExit = true;
+      reportExit_ = value;
       return this;
     }
     public Builder clearReportExit() {
-      result.hasReportExit = false;
-      result.reportExit_ = getDefaultInstance().getReportExit();
+      hasReportExit = false;
+      reportExit_ = getDefaultInstance().getReportExit();
       return this;
     }
     
     // repeated string declaration_to_remove = 3;
+    private java.util.List<java.lang.String> declarationToRemove_ =
+      java.util.Collections.emptyList();
+    private boolean isDeclarationToRemoveMutable;
+    private void ensureDeclarationToRemoveIsMutable() {
+      if (!isDeclarationToRemoveMutable) {
+        declarationToRemove_ = new java.util.ArrayList<java.lang.String>(declarationToRemove_);
+        isDeclarationToRemoveMutable = true;
+       }
+    }
     public java.util.List<java.lang.String>
         getDeclarationToRemoveList() {
-      return java.util.Collections.unmodifiableList(result.declarationToRemove_);
+      return java.util.Collections.unmodifiableList(declarationToRemove_);
     }
     public int getDeclarationToRemoveCount() {
-      return result.getDeclarationToRemoveCount();
+      return declarationToRemove_.size();
     }
     public java.lang.String getDeclarationToRemove(int index) {
-      return result.getDeclarationToRemove(index);
+      return declarationToRemove_.get(index);
     }
     public Builder setDeclarationToRemove(
         int index, java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  result.declarationToRemove_.set(index, value);
+  ensureDeclarationToRemoveIsMutable();
+      declarationToRemove_.set(index, value);
       return this;
     }
     public Builder addDeclarationToRemove(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  if (result.declarationToRemove_.isEmpty()) {
-        result.declarationToRemove_ = new java.util.ArrayList<java.lang.String>();
-      }
-      result.declarationToRemove_.add(value);
+  ensureDeclarationToRemoveIsMutable();
+      declarationToRemove_.add(value);
       return this;
     }
     public Builder addAllDeclarationToRemove(
         java.lang.Iterable<? extends java.lang.String> values) {
-      if (result.declarationToRemove_.isEmpty()) {
-        result.declarationToRemove_ = new java.util.ArrayList<java.lang.String>();
-      }
-      super.addAll(values, result.declarationToRemove_);
+      ensureDeclarationToRemoveIsMutable();
+      super.addAll(values, declarationToRemove_);
       return this;
     }
     public Builder clearDeclarationToRemove() {
-      result.declarationToRemove_ = java.util.Collections.emptyList();
+      declarationToRemove_ = java.util.Collections.emptyList();
+      isDeclarationToRemoveMutable = false;
       return this;
     }
     
     // repeated string init = 4;
+    private java.util.List<java.lang.String> init_ =
+      java.util.Collections.emptyList();
+    private boolean isInitMutable;
+    private void ensureInitIsMutable() {
+      if (!isInitMutable) {
+        init_ = new java.util.ArrayList<java.lang.String>(init_);
+        isInitMutable = true;
+       }
+    }
     public java.util.List<java.lang.String>
         getInitList() {
-      return java.util.Collections.unmodifiableList(result.init_);
+      return java.util.Collections.unmodifiableList(init_);
     }
     public int getInitCount() {
-      return result.getInitCount();
+      return init_.size();
     }
     public java.lang.String getInit(int index) {
-      return result.getInit(index);
+      return init_.get(index);
     }
     public Builder setInit(
         int index, java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  result.init_.set(index, value);
+  ensureInitIsMutable();
+      init_.set(index, value);
       return this;
     }
     public Builder addInit(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  if (result.init_.isEmpty()) {
-        result.init_ = new java.util.ArrayList<java.lang.String>();
-      }
-      result.init_.add(value);
+  ensureInitIsMutable();
+      init_.add(value);
       return this;
     }
     public Builder addAllInit(
         java.lang.Iterable<? extends java.lang.String> values) {
-      if (result.init_.isEmpty()) {
-        result.init_ = new java.util.ArrayList<java.lang.String>();
-      }
-      super.addAll(values, result.init_);
+      ensureInitIsMutable();
+      super.addAll(values, init_);
       return this;
     }
     public Builder clearInit() {
-      result.init_ = java.util.Collections.emptyList();
+      init_ = java.util.Collections.emptyList();
+      isInitMutable = false;
       return this;
     }
     
     // optional string app_name_setter = 5;
+    private boolean hasAppNameSetter;
+    private java.lang.String appNameSetter_ = "";
     public boolean hasAppNameSetter() {
-      return result.hasAppNameSetter();
+      return hasAppNameSetter;
     }
     public java.lang.String getAppNameSetter() {
-      return result.getAppNameSetter();
+      return appNameSetter_;
     }
     public Builder setAppNameSetter(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  result.hasAppNameSetter = true;
-      result.appNameSetter_ = value;
+  hasAppNameSetter = true;
+      appNameSetter_ = value;
       return this;
     }
     public Builder clearAppNameSetter() {
-      result.hasAppNameSetter = false;
-      result.appNameSetter_ = getDefaultInstance().getAppNameSetter();
+      hasAppNameSetter = false;
+      appNameSetter_ = getDefaultInstance().getAppNameSetter();
       return this;
     }
     

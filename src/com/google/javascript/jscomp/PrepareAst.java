@@ -35,35 +35,40 @@ import com.google.javascript.rhino.Token;
 class PrepareAst implements CompilerPass {
 
   private final AbstractCompiler compiler;
-  private final boolean assertOnChange;
+  private final boolean checkOnly;
 
   PrepareAst(AbstractCompiler compiler) {
     this(compiler, false);
   }
 
-  PrepareAst(AbstractCompiler compiler, boolean forbidChanges) {
+  PrepareAst(AbstractCompiler compiler, boolean checkOnly) {
     this.compiler = compiler;
-    this.assertOnChange = forbidChanges;
+    this.checkOnly = checkOnly;
   }
 
   private void reportChange() {
-    if (assertOnChange) {
+    if (checkOnly) {
       Preconditions.checkState(false, "normalizeNodeType constraints violated");
     }
   }
 
   @Override
   public void process(Node externs, Node root) {
-    if (assertOnChange) {
+    if (checkOnly) {
       normalizeNodeTypes(root);
-    }
-    if (externs != null) {
-      NodeTraversal.traverse(
-          compiler, externs, new PrepareAnnotations(compiler));
-    }
-    if (root != null) {
-      NodeTraversal.traverse(
-          compiler, root, new PrepareAnnotations(compiler));
+    } else {
+      // Don't perform "PrepareAnnoations" when doing checks as
+      // they currently aren't valid during sanity checks.  In particular,
+      // they DIRECT_EVAL shouldn't be applied after inlining has been
+      // performed.
+      if (externs != null) {
+        NodeTraversal.traverse(
+            compiler, externs, new PrepareAnnotations(compiler));
+      }
+      if (root != null) {
+        NodeTraversal.traverse(
+            compiler, root, new PrepareAnnotations(compiler));
+      }
     }
   }
 
@@ -148,18 +153,28 @@ class PrepareAst implements CompilerPass {
      * But in few narrow cases (in particular, function literals), it's
      * a lot easier for us if the doc is attached to the value.
      */
+    @SuppressWarnings("fallthrough")
     public void visit(NodeTraversal t, Node n, Node parent) {
       int nType = n.getType();
       switch (nType) {
-        case Token.NAME:
         case Token.STRING:
+          // There are only two cases where a string token
+          // may be a variable reference: The right side of a GETPROP
+          // or an OBJECTLIT key.
+          if (parent.getType() != Token.OBJECTLIT &&
+              parent.getType() != Token.GETPROP) {
+            break;
+          }
+          // fall-through
+
+        case Token.NAME:
           String nString = n.getString();
           if (nType == Token.NAME &&
               n.getParent().getType() == Token.CALL &&
               "eval".equals(nString)) {
             n.putBooleanProp(Node.DIRECT_EVAL, true);
           }
-          if (convention.isConstant(nString)) {
+          if (NodeUtil.isConstantByConvention(convention, n, parent)) {
             n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
           }
           break;

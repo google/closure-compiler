@@ -1400,12 +1400,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     int minArgs = functionType.getMinArguments();
     int maxArgs = functionType.getMaxArguments();
     if (minArgs > numArgs || maxArgs < numArgs) {
-      t.getCompiler().report(
-          t.makeError(call, WRONG_ARGUMENT_COUNT,
+      report(t, call, WRONG_ARGUMENT_COUNT,
               validator.getReadableJSTypeName(call.getFirstChild(), false),
               String.valueOf(numArgs), String.valueOf(minArgs),
               maxArgs != Integer.MAX_VALUE ?
-              " and no more than " + maxArgs + " argument(s)" : ""));
+              " and no more than " + maxArgs + " argument(s)" : "");
     }
   }
 

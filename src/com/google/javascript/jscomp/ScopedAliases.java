@@ -66,6 +66,10 @@ class ScopedAliases implements CompilerPass {
       "JSC_GOOG_SCOPE_USES_RETURN",
       "The body of a goog.scope function cannot use 'return'.");
 
+  static final DiagnosticType GOOG_SCOPE_USES_THROW = DiagnosticType.error(
+      "JSC_GOOG_SCOPE_USES_THROW",
+      "The body of a goog.scope function cannot use 'throw'.");
+
   static final DiagnosticType GOOG_SCOPE_ALIAS_REDEFINED = DiagnosticType.error(
       "JSC_GOOG_SCOPE_ALIAS_REDEFINED",
       "The alias {0} is assigned a value more than once.");
@@ -239,7 +243,8 @@ class ScopedAliases implements CompilerPass {
       }
 
       if (t.getScopeDepth() == 2) {
-        if (n.getType() == Token.NAME && parent.getType() == Token.VAR) {
+        int type = n.getType();
+        if (type == Token.NAME && parent.getType() == Token.VAR) {
           if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
             aliases.put(n.getString(), n.getFirstChild());
             aliasDefinitions.add(n);
@@ -254,13 +259,22 @@ class ScopedAliases implements CompilerPass {
             report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
           }
         }
+
+        if (type == Token.NAME && NodeUtil.isAssignmentOp(parent)) {
+          report(t, n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());
+        }
+
+        if (type == Token.RETURN) {
+          report(t, n, GOOG_SCOPE_USES_RETURN);
+        } else if (type == Token.THIS) {
+          report(t, n, GOOG_SCOPE_REFERENCES_THIS);
+        } else if (type == Token.THROW) {
+          report(t, n, GOOG_SCOPE_USES_THROW);
+        }
       }
 
       if (t.getScopeDepth() >= 2) {
         if (n.getType() == Token.NAME) {
-          if (NodeUtil.isAssignmentOp(parent)) {
-            report(t, n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());
-          }
           Node aliasedNode = aliases.get(n.getString());
           // The variable should not exist since we undeclared it when we found
           // it.  If it does exist, it's because it's been overridden.
@@ -274,14 +288,6 @@ class ScopedAliases implements CompilerPass {
             // with <code>g.dom.createElement('DIV')</code>.
             aliasUsages.add(new AliasedNode(n, aliasedNode));
           }
-        }
-
-        if (n.getType() == Token.RETURN) {
-          report(t, n, GOOG_SCOPE_USES_RETURN);
-        }
-
-        if (n.getType() == Token.THIS) {
-          report(t, n, GOOG_SCOPE_REFERENCES_THIS);
         }
 
         JSDocInfo info = n.getJSDocInfo();

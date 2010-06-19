@@ -249,10 +249,10 @@ class AliasKeywords implements CompilerPass {
     }
   }
 
-  static final String ALIAS_NULL = "$$ALIAS_NULL";
-  static final String ALIAS_TRUE = "$$ALIAS_TRUE";
-  static final String ALIAS_FALSE = "$$ALIAS_FALSE";
-  static final String ALIAS_THROW = "$$ALIAS_THROW";
+  static final String ALIAS_NULL = "JSCompiler_alias_NULL";
+  static final String ALIAS_TRUE = "JSCompiler_alias_TRUE";
+  static final String ALIAS_FALSE = "JSCompiler_alias_FALSE";
+  static final String ALIAS_THROW = "JSCompiler_alias_THROW";
 
   /**
    * Don't alias a keyword unless it's referenced at least

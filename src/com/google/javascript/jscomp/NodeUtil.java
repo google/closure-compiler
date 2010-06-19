@@ -1980,6 +1980,20 @@ public final class NodeUtil {
     return node.getBooleanProp(Node.IS_CONSTANT_NAME);
   }
 
+  /** Whether the given name is constant by coding convention. */
+  static boolean isConstantByConvention(
+      CodingConvention convention, Node node, Node parent) {
+    String name = node.getString();
+    if (parent.getType() == Token.GETPROP &&
+        node == parent.getLastChild()) {
+      return convention.isConstantKey(name);
+    } else if (isObjectLitKey(node, parent)) {
+      return convention.isConstantKey(name);
+    } else {
+      return convention.isConstant(name);
+    }
+  }
+
   /**
    * @param nameNode A name node
    * @return The JSDocInfo for the name node

@@ -53,13 +53,16 @@ class CrossModuleMethodMotion implements CompilerPass {
   // Visible for testing
   static final String STUB_DECLARATIONS =
       "var JSCompiler_stubMap = [];" +
-      "function JSCompiler_stubMethod(id) {" +
+      "function JSCompiler_stubMethod(JSCompiler_stubMethod_id) {" +
       "  return function() {" +
-      "    return JSCompiler_stubMap[id].apply(this, arguments);" +
+      "    return JSCompiler_stubMap[JSCompiler_stubMethod_id].apply(" +
+      "        this, arguments);" +
       "  };" +
       "}" +
-      "function JSCompiler_unstubMethod(id, body) {" +
-      "  return JSCompiler_stubMap[id] = body;" +
+      "function JSCompiler_unstubMethod(" +
+      "    JSCompiler_unstubMethod_id, JSCompiler_unstubMethod_body) {" +
+      "  return JSCompiler_stubMap[JSCompiler_unstubMethod_id] = " +
+      "      JSCompiler_unstubMethod_body;" +
       "}";
 
   /**

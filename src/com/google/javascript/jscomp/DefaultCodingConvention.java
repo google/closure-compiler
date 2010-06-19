@@ -39,6 +39,11 @@ public class DefaultCodingConvention implements CodingConvention {
   }
 
   @Override
+  public boolean isConstantKey(String variableName) {
+    return false;
+  }
+
+  @Override
   public boolean isValidEnumKey(String key) {
     return key != null && key.length() > 0;
   }
