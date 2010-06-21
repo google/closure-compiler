@@ -71,7 +71,7 @@ public class RenameLabelsTest extends CompilerTestCase {
          "a:b:while(1){a(); continue b;break a;}");
 
     test("Foo:Bar:X:{ break Bar; }",
-         "a:break a;");
+         "a:{ break a; }");
     test("Foo:Bar:X:{ break Bar; break X; }",
          "a:b:{ break a; break b;}");
     test("Foo:Bar:X:{ break Bar; break Foo; }",

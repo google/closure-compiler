@@ -32,7 +32,11 @@ public class FoldConstantsTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    super.enableLineNumberCheck(true);
+    enableLineNumberCheck(true);
+
+    // TODO(nicksantos): Turn this on. There are some normalizations
+    // that cause weirdness here.
+    disableNormalize();
   }
 
   @Override
@@ -1206,5 +1210,11 @@ public class FoldConstantsTest extends CompilerTestCase {
 
   public void testFoldNegativeBug() {
     fold("(-3);", "1;");
+  }
+
+  public void testNoNormalizeLabeledExpr() {
+    enableNormalize(true);
+    foldSame("var x; foo:{x = 3;}");
+    foldSame("var x; foo:x = 3;");
   }
 }

@@ -807,10 +807,7 @@ public class NodeUtilTest extends TestCase {
     Node parentLabel = actual.getFirstChild();
     Node childBlock = parentLabel.getLastChild();
 
-    assertTrue(NodeUtil.tryMergeBlock(childBlock));
-    String expected = "foo:a();";
-    String difference = parse(expected).checkTreeEquals(actual);
-    assertNull("Nodes do not match:\n" + difference, difference);
+    assertFalse(NodeUtil.tryMergeBlock(childBlock));
   }
 
   public void testMergeBlock3() {

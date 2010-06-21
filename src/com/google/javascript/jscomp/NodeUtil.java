@@ -1144,9 +1144,6 @@ public final class NodeUtil {
       }
       parent.removeChild(block);
       return true;
-    } else if (parent.getType() == Token.LABEL && block.hasOneChild()) {
-      parent.replaceChild(block, block.removeFirstChild());
-      return true;
     } else {
       return false;
     }
