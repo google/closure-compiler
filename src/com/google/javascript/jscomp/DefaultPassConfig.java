@@ -481,10 +481,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(extractPrototypeMemberDeclarations);
     }
 
-    if (options.coalesceVariableNames) {
-      passes.add(coalesceVariableNames);
-    }
-
     if (options.ambiguateProperties &&
         (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED)) {
       passes.add(ambiguateProperties);
@@ -527,11 +523,15 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(aliasKeywords);
     }
 
+    passes.add(denormalize);
+
+    if (options.coalesceVariableNames) {
+      passes.add(coalesceVariableNames);
+    }
+
     if (options.collapseVariableDeclarations) {
       passes.add(collapseVariableDeclarations);
     }
-
-    passes.add(denormalize);
 
     if (options.instrumentationTemplate != null) {
       passes.add(instrumentFunctions);
@@ -871,7 +871,8 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new PeepholeOptimizationsPass(compiler,
             new PeepholeSubstituteAlternateSyntax(),
-            new PeepholeRemoveDeadCode());
+            new PeepholeRemoveDeadCode(),
+            new PeepholeFoldConstants());
     }
   };
 
@@ -1502,7 +1503,6 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("collapseVariableDeclarations", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      compiler.setUnnormalized();
       return new CollapseVariableDeclarations(compiler);
     }
   };
@@ -1514,7 +1514,6 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("groupVariableDeclarations", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      compiler.setNormalized();
       return new GroupVariableDeclarations(compiler);
     }
   };
@@ -1643,7 +1642,6 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("denormalize", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      compiler.setUnnormalized();
       return new Denormalize(compiler);
     }
   };

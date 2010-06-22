@@ -19,15 +19,23 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 
 public class FoldConstantsTest extends CompilerTestCase {
+
+  // Externs for builtin constructors
+  // Needed for testFoldLiteralConstructors() and testFoldRegExp...()
+  private static final String FOLD_CONSTANTS_TEST_EXTERNS =
+      "var Object = function(){};\n" +
+      "var RegExp = function(a){};\n" +
+      "var Array = function(a){};\n";
+
   private boolean runFoldConstantsFirst = true;
 
   // TODO(user): Remove this when we no longer need to do string comparison.
   private FoldConstantsTest(boolean compareAsTree) {
-    super("", compareAsTree);
+    super(FOLD_CONSTANTS_TEST_EXTERNS, compareAsTree);
   }
 
   public FoldConstantsTest() {
-    super();
+    super(FOLD_CONSTANTS_TEST_EXTERNS);
   }
 
   @Override
@@ -72,7 +80,8 @@ public class FoldConstantsTest extends CompilerTestCase {
         PeepholeOptimizationsPass peepholePass =
             new PeepholeOptimizationsPass(compiler,
                 new PeepholeSubstituteAlternateSyntax(),
-                new PeepholeRemoveDeadCode());
+                new PeepholeRemoveDeadCode(),
+                new PeepholeFoldConstants());
 
         peepholePass.process(externs, js);
       }
@@ -109,10 +118,20 @@ public class FoldConstantsTest extends CompilerTestCase {
     runFoldConstantsFirst = true;
   }
 
+  void assertResultString(String js, String expected) {
+    assertResultString(js, expected, false);
+  }
   // TODO(user): This is same as fold() except it uses string comparison. Any
   // test that needs tell us where a folding is constructing an invalid AST.
-  void assertResultString(String js, String expected) {
+  void assertResultString(String js, String expected, boolean normalize) {
     FoldConstantsTest scTest = new FoldConstantsTest(false);
+
+    if (normalize) {
+      scTest.enableNormalize();
+    } else {
+      scTest.disableNormalize();
+    }
+
     scTest.test(js, expected);
   }
 
@@ -468,10 +487,10 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("a=~~10", "a=10");
     fold("a=~-7", "a=6");
     fold("a=~0x100000000", "a=~0x100000000",
-         FoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
+         PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
     fold("a=~-0x100000000", "a=~-0x100000000",
-         FoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
-    fold("a=~.5", "~.5", FoldConstants.FRACTIONAL_BITWISE_OPERAND);
+         PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
+    fold("a=~.5", "~.5", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
   public void testUnaryOpsStringCompare() {
@@ -597,21 +616,27 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("x = -1 >>> 1", "x = " + 0x7fffffff);
 
     fold("3000000000 << 1", "3000000000<<1",
-         FoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
+         PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
     fold("1 << 32", "1<<32",
-         FoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
+        PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
     fold("1 << -1", "1<<32",
-         FoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
+        PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
     fold("3000000000 >> 1", "3000000000>>1",
-         FoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
+        PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
     fold("1 >> 32", "1>>32",
-         FoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
-    fold("1.5 << 0",  "1.5<<0",  FoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1 << .5",   "1.5<<0",  FoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1.5 >>> 0", "1.5>>>0", FoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1 >>> .5",  "1.5>>>0", FoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1.5 >> 0",  "1.5>>0",  FoldConstants.FRACTIONAL_BITWISE_OPERAND);
-    fold("1 >> .5",   "1.5>>0",  FoldConstants.FRACTIONAL_BITWISE_OPERAND);
+        PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS);
+    fold("1.5 << 0",  "1.5<<0",
+        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    fold("1 << .5",   "1.5<<0",
+        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    fold("1.5 >>> 0", "1.5>>>0",
+        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    fold("1 >>> .5",  "1.5>>>0",
+        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    fold("1.5 >> 0",  "1.5>>0",
+        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    fold("1 >> .5",   "1.5>>0",
+        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
   public void testFoldBitShiftsStringCompare() {
@@ -720,7 +745,7 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("x = 2.25 * 3", "x = 6.75");
     fold("z = x * y", "z = x * y");
     fold("x = y * 5", "x = y * 5");
-    fold("x = 1 / 0", "", FoldConstants.DIVIDE_BY_0_ERROR);
+    fold("x = 1 / 0", "", PeepholeFoldConstants.DIVIDE_BY_0_ERROR);
   }
 
   public void testFoldArithmeticStringComp() {
@@ -849,9 +874,12 @@ public class FoldConstantsTest extends CompilerTestCase {
   public void testFoldGetElem() {
     fold("x = [10, 20][0]", "x = 10");
     fold("x = [10, 20][1]", "x = 20");
-    fold("x = [10, 20][0.5]", "", FoldConstants.INVALID_GETELEM_INDEX_ERROR);
-    fold("x = [10, 20][-1]",    "", FoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
-    fold("x = [10, 20][2]",     "", FoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
+    fold("x = [10, 20][0.5]", "",
+        PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    fold("x = [10, 20][-1]",    "",
+        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
+    fold("x = [10, 20][2]",     "",
+        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
   }
 
   public void testFoldComplex() {
@@ -881,8 +909,9 @@ public class FoldConstantsTest extends CompilerTestCase {
   }
 
   public void testFoldRegExpConstructor() {
-    // Cannot fold
-    // Too few arguments
+    enableNormalize();
+
+    // Cannot fold all the way to a literal because there are too few arguments.
     fold("x = new RegExp",                    "x = RegExp()");
     // Empty regexp should not fold to // since that is a line comment in js
     fold("x = new RegExp(\"\")",              "x = RegExp(\"\")");
@@ -916,12 +945,18 @@ public class FoldConstantsTest extends CompilerTestCase {
     String longRegexp = "";
     for (int i = 0; i < 200; i++) longRegexp += "x";
     foldSame("x = RegExp(\"" + longRegexp + "\")");
+
+    // Shouldn't fold RegExp unnormalized because
+    // we can't be sure that RegExp hasn't been redefined
+    disableNormalize();
+
+    foldSame("x = new RegExp(\"foobar\")");
   }
 
   public void testFoldRegExpConstructorStringCompare() {
     // Might have something to do with the internal representation of \n and how
     // it is used in node comparison.
-    assertResultString("x=new RegExp(\"\\n\", \"i\")", "x=/\\n/i");
+    assertResultString("x=new RegExp(\"\\n\", \"i\")", "x=/\\n/i", true);
   }
 
   public void testFoldTypeof() {
@@ -941,7 +976,9 @@ public class FoldConstantsTest extends CompilerTestCase {
   }
 
   public void testFoldLiteralConstructors() {
-    // Can fold
+    enableNormalize();
+
+    // Can fold when normalized
     fold("x = new Array", "x = []");
     fold("x = new Array()", "x = []");
     fold("x = Array()", "x = []");
@@ -949,6 +986,16 @@ public class FoldConstantsTest extends CompilerTestCase {
     fold("x = new Object()", "x = ({})");
     fold("x = Object()", "x = ({})");
 
+    disableNormalize();
+    // Cannot fold above when not normalized
+    foldSame("x = new Array");
+    foldSame("x = new Array()");
+    foldSame("x = Array()");
+    foldSame("x = new Object");
+    foldSame("x = new Object()");
+    foldSame("x = Object()");
+
+    enableNormalize();
     // Cannot fold, there are arguments
     fold("x = new Array(7)", "x = Array(7)");
 
@@ -1202,6 +1249,9 @@ public class FoldConstantsTest extends CompilerTestCase {
     foldSame("var x = new String(1)");
     foldSame("var x = new Number(1)");
     foldSame("var x = new Boolean(1)");
+
+    enableNormalize();
+
     fold("var x = new Object('a')", "var x = Object('a')");
     fold("var x = new RegExp('')", "var x = RegExp('')");
     fold("var x = new Error('20')", "var x = Error(\"20\")");

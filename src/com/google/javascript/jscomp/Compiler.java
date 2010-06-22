@@ -1478,7 +1478,6 @@ public class Compiler extends AbstractCompiler {
     logger.info("Normalizing");
     startPass("normalize");
     process(new Normalize(this, false));
-    setNormalized();
     endPass();
   }
 

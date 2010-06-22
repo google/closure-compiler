@@ -132,6 +132,7 @@ class AmbiguateProperties implements CompilerPass {
 
   AmbiguateProperties(AbstractCompiler compiler,
       char[] reservedCharacters) {
+    Preconditions.checkState(compiler.isNormalized());
     this.compiler = compiler;
     this.reservedCharacters = reservedCharacters;
 

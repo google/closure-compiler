@@ -921,22 +921,34 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testExponents() {
-    assertPrint("1", "1");
-    assertPrint("10", "10");
-    assertPrint("100", "100");
-    assertPrint("1000", "1E3");
-    assertPrint("10000", "1E4");
-    assertPrint("100000", "1E5");
-    assertPrint("-1", "-1");
-    assertPrint("-10", "-10");
-    assertPrint("-100", "-100");
-    assertPrint("-1000", "-1E3");
-    assertPrint("-123412340000", "-12341234E4");
-    assertPrint("1000000000000000000", "1E18");
-    assertPrint("100000.0", "1E5");
-    assertPrint("100000.1", "100000.1");
+    assertPrintNumber("1", 1);
+    assertPrintNumber("10", 10);
+    assertPrintNumber("100", 100);
+    assertPrintNumber("1E3", 1000);
+    assertPrintNumber("1E4", 10000);
+    assertPrintNumber("1E5", 100000);
+    assertPrintNumber("-1", -1);
+    assertPrintNumber("-10", -10);
+    assertPrintNumber("-100", -100);
+    assertPrintNumber("-1E3", -1000);
+    assertPrintNumber("-12341234E4", -123412340000L);
+    assertPrintNumber("1E18", 1000000000000000000L);
+    assertPrintNumber("1E5", 100000.0);
+    assertPrintNumber("100000.1", 100000.1);
 
-    assertPrint("0.000001", "1.0E-6");
+    assertPrintNumber("1.0E-6", 0.000001);
+  }
+
+  // Make sure to test as both a String and a Node, because
+  // negative numbers do not parse consistently from strings.
+  private void assertPrintNumber(String expected, double number) {
+    assertPrint(String.valueOf(number), expected);
+    assertPrintNode(expected, Node.newNumber(number));
+  }
+
+  private void assertPrintNumber(String expected, int number) {
+    assertPrint(String.valueOf(number), expected);
+    assertPrintNode(expected, Node.newNumber(number));
   }
 
   public void testDirectEval() {

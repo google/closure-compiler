@@ -413,7 +413,7 @@ class CodeGenerator {
       case Token.DEC: {
         Preconditions.checkState(childCount == 1);
         String o = type == Token.INC ? "++" : "--";
-        int postProp = n.getIntProp(Node.INCRDECR_PROP, 0);
+        int postProp = n.getIntProp(Node.INCRDECR_PROP);
         // A non-zero post-prop value indicates a post inc/dec, default of zero
         // is a pre-inc/dec.
         if (postProp != 0) {

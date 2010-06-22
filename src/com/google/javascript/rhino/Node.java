@@ -40,6 +40,7 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.jstype.JSType;
@@ -342,13 +343,30 @@ public class Node implements Cloneable, Serializable {
     private String str;
   }
 
+  // PropListItems are immutable so that they can be shared.
   private static class PropListItem implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    PropListItem next;
-    int type;
-    int intValue;
-    Object objectValue;
+    final PropListItem next;
+    final int type;
+    final int intValue;
+    final Object objectValue;
+
+    PropListItem(int type, int intValue, PropListItem next) {
+      this(type, intValue, null, next);
+    }
+
+    PropListItem(int type, Object objectValue, PropListItem next) {
+      this(type, 0, objectValue, next);
+    }
+
+    PropListItem(
+        int type, int intValue, Object objectValue, PropListItem next) {
+      this.type = type;
+      this.intValue = intValue;
+      this.objectValue = objectValue;
+      this.next = next;
+    }
   }
 
 
@@ -723,7 +741,8 @@ public class Node implements Cloneable, Serializable {
     child.parent = null;
   }
 
-  private PropListItem lookupProperty(int propType) {
+  @VisibleForTesting
+  PropListItem lookupProperty(int propType) {
     PropListItem x = propListHead;
     while (x != null && propType != x.type) {
       x = x.next;
@@ -731,32 +750,31 @@ public class Node implements Cloneable, Serializable {
     return x;
   }
 
-  private PropListItem ensureProperty(int propType) {
-    PropListItem item = lookupProperty(propType);
-    if (item == null) {
-      item = new PropListItem();
-      item.type = propType;
-      item.next = propListHead;
-      propListHead = item;
+  public void removeProp(int propType) {
+    PropListItem result = removeProp(propListHead, propType);
+    if (result != propListHead) {
+      propListHead = result;
     }
-    return item;
   }
 
-  public void removeProp(int propType) {
-    PropListItem x = propListHead;
-    if (x != null) {
-      PropListItem prev = null;
-      while (x.type != propType) {
-        prev = x;
-        x = x.next;
-        if (x == null) {
-          return;
-        }
-      }
-      if (prev == null) {
-        propListHead = x.next;
+  /**
+   * @param item The item to inspect
+   * @param propType The property to look for
+   * @return The replacement list if the property was removed, or
+   *   'item' otherwise.
+   */
+  private PropListItem removeProp(PropListItem item, int propType) {
+    if (item == null) {
+      return null;
+    } else if (item.type == propType) {
+      return item.next;
+    } else {
+      PropListItem result = removeProp(item.next, propType);
+      if (result != item.next) {
+        return new PropListItem(
+            item.type, item.intValue, item.objectValue, result);
       } else {
-        prev.next = x.next;
+        return item;
       }
     }
   }
@@ -770,13 +788,17 @@ public class Node implements Cloneable, Serializable {
   }
 
   public boolean getBooleanProp(int propType) {
-    return getIntProp(propType, 0) != 0;
+    return getIntProp(propType) != 0;
   }
 
-  public int getIntProp(int propType, int defaultValue) {
+  /**
+   * Returns the integer value for the property, or 0 if the property
+   * is not defined.
+   */
+  public int getIntProp(int propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
-      return defaultValue;
+      return 0;
     }
     return item.intValue;
   }
@@ -789,22 +811,22 @@ public class Node implements Cloneable, Serializable {
     return item.intValue;
   }
 
-  public void putProp(int propType, Object prop) {
-    if (prop == null) {
-      removeProp(propType);
-    } else {
-      PropListItem item = ensureProperty(propType);
-      item.objectValue = prop;
+  public void putProp(int propType, Object value) {
+    removeProp(propType);
+    if (value != null) {
+      propListHead = new PropListItem(propType, value, propListHead);
     }
   }
 
-  public void putBooleanProp(int propType, boolean prop) {
-    putIntProp(propType, prop ? 1 : 0);
+  public void putBooleanProp(int propType, boolean value) {
+    putIntProp(propType, value ? 1 : 0);
   }
 
-  public void putIntProp(int propType, int prop) {
-    PropListItem item = ensureProperty(propType);
-    item.intValue = prop;
+  public void putIntProp(int propType, int value) {
+    removeProp(propType);
+    if (value != 0) {
+      propListHead = new PropListItem(propType, value, propListHead);
+    }
   }
 
   // Gets all the property types, in sorted order.
@@ -1585,14 +1607,14 @@ public class Node implements Cloneable, Serializable {
         return false;
       }
     } else if (type == Token.INC || type == Token.DEC) {
-      int post1 = this.getIntProp(INCRDECR_PROP, 0);
-      int post2 = node.getIntProp(INCRDECR_PROP, 0);
+      int post1 = this.getIntProp(INCRDECR_PROP);
+      int post2 = node.getIntProp(INCRDECR_PROP);
       if (post1 != post2) {
         return false;
       }
     } else if (type == Token.STRING) {
-      int quoted1 = this.getIntProp(QUOTED_PROP, 0);
-      int quoted2 = node.getIntProp(QUOTED_PROP, 0);
+      int quoted1 = this.getIntProp(QUOTED_PROP);
+      int quoted2 = node.getIntProp(QUOTED_PROP);
       if (quoted1 != quoted2) {
         return false;
       }
@@ -1816,6 +1838,8 @@ public class Node implements Cloneable, Serializable {
     Node result;
     try {
       result = (Node) super.clone();
+      // PropListItem lists are immutable and can be shared so there is no
+      // need to clone them here.
       result.next = null;
       result.first = null;
       result.last = null;

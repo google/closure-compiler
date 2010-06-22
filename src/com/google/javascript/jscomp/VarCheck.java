@@ -53,9 +53,14 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
       "module {1}");
 
   static final DiagnosticType NAME_REFERENCE_IN_EXTERNS_ERROR =
-    DiagnosticType.warning(
+    DiagnosticType.error(
       "JSC_NAME_REFERENCE_IN_EXTERNS",
       "accessing name {0} in externs has no effect");
+
+  static final DiagnosticType UNDEFINED_EXTERN_VAR_ERROR =
+    DiagnosticType.error(
+      "JSC_UNDEFINED_EXTERN_VAR_ERROR",
+      "name {0} is not undefined in the externs.");
 
   static final DiagnosticType INVALID_FUNCTION_DECL =
     DiagnosticType.error("JSC_INVALID_FUNCTION_DECL",
@@ -113,7 +118,10 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
         // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
         // current scope.
       } else {
-        t.report(n, UNDEFINED_VAR_ERROR, varName);
+        // The extern checks are stricter, don't report a second error.
+        if (!t.getInput().isExtern()) {
+          t.report(n, UNDEFINED_VAR_ERROR, varName);
+        }
 
         if (sanityCheck) {
           throw new IllegalStateException("Unexpected variable " + varName);
@@ -175,9 +183,17 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
         switch (parent.getType()) {
           case Token.VAR:
           case Token.FUNCTION:
-          case Token.GETPROP:
           case Token.LP:
             // These are okay.
+            break;
+          case Token.GETPROP:
+            if (n == parent.getFirstChild()) {
+              Scope scope = t.getScope();
+              Scope.Var var = scope.getVar(n.getString());
+              if (var == null) {
+                t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
+              }
+            }
             break;
           default:
             t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());

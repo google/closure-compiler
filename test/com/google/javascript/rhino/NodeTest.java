@@ -222,6 +222,45 @@ public class NodeTest extends TestCase {
     assertTrue(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME));
   }
 
+  public void testBooleanProp() {
+    Node n = getNode("a");
+
+    n.putBooleanProp(Node.IS_CONSTANT_NAME, false);
+
+    assertNull(n.lookupProperty(Node.IS_CONSTANT_NAME));
+    assertFalse(n.getBooleanProp(Node.IS_CONSTANT_NAME));
+
+    n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+
+    assertNotNull(n.lookupProperty(Node.IS_CONSTANT_NAME));
+    assertTrue(n.getBooleanProp(Node.IS_CONSTANT_NAME));
+
+    n.putBooleanProp(Node.IS_CONSTANT_NAME, false);
+
+    assertNull(n.lookupProperty(Node.IS_CONSTANT_NAME));
+    assertFalse(n.getBooleanProp(Node.IS_CONSTANT_NAME));
+  }
+
+  // Verify that annotations on cloned nodes are properly handled.
+  public void testCloneAnnontations2() {
+    Node n = getNode("a");
+    n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    n.putBooleanProp(Node.IS_DISPATCHER, true);
+    assertTrue(n.getBooleanProp(Node.IS_CONSTANT_NAME));
+    assertTrue(n.getBooleanProp(Node.IS_DISPATCHER));
+
+    Node nodeClone = n.cloneNode();
+    assertTrue(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME));
+    assertTrue(nodeClone.getBooleanProp(Node.IS_DISPATCHER));
+
+    n.putBooleanProp(Node.IS_DISPATCHER, false);
+    assertTrue(n.getBooleanProp(Node.IS_CONSTANT_NAME));
+    assertFalse(n.getBooleanProp(Node.IS_DISPATCHER));
+
+    assertTrue(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME));
+    assertTrue(nodeClone.getBooleanProp(Node.IS_DISPATCHER));
+  }
+
   private static Node getNode(String js) {
     Node root = parse("var a=(" + js + ");");
     Node expr = root.getFirstChild();

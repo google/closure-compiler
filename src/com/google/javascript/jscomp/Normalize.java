@@ -74,6 +74,9 @@ class Normalize implements CompilerPass {
   Normalize(AbstractCompiler compiler, boolean assertOnChange) {
     this.compiler = compiler;
     this.assertOnChange = assertOnChange;
+
+    // TODO(nicksantos): assertOnChange should only be true if the tree
+    // is normalized.
   }
 
   private void reportCodeChange(String changeDescription) {
@@ -110,6 +113,8 @@ class Normalize implements CompilerPass {
     removeDuplicateDeclarations(root);
     new PropogateConstantAnnotations(compiler, assertOnChange)
         .process(externs, root);
+
+    compiler.setNormalized();
   }
 
   public static class PropogateConstantAnnotations

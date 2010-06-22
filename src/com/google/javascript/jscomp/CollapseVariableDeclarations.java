@@ -95,6 +95,7 @@ class CollapseVariableDeclarations implements CompilerPass {
   private final Set<Node> nodesToCollapse = Sets.newHashSet();
 
   CollapseVariableDeclarations(AbstractCompiler compiler) {
+    Preconditions.checkState(!compiler.isNormalized());
     this.compiler = compiler;
   }
 

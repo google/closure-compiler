@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -55,21 +56,27 @@ public class PeepholeSubstituteAlternateSyntax
    * Tries apply our various peephole minimizations on the passed in node.
    */
   @Override
+  @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
     switch(node.getType()) {
       case Token.RETURN:
-        return tryReduceReturn(node);        
+        return tryReduceReturn(node);  
+        
       case Token.NOT:
         return tryMinimizeNot(node);
+        
       case Token.IF:
         tryMinimizeCondition(node.getFirstChild());
-        return tryMinimizeIf(node);     
+        return tryMinimizeIf(node);   
+        
       case Token.EXPR_RESULT:
         tryMinimizeCondition(node.getFirstChild());
         return node;
+        
       case Token.HOOK:
-          tryMinimizeCondition(node.getFirstChild());
+        tryMinimizeCondition(node.getFirstChild());
         return node;
+        
       case Token.WHILE:
       case Token.DO:
       case Token.FOR:
@@ -79,19 +86,16 @@ public class PeepholeSubstituteAlternateSyntax
         return node;
         
       case Token.NEW:
-      case Token.CALL:{
-        Node left = node.getFirstChild();
-        if (left != null) {
-          if (Token.NAME == left.getType()) {
-            String className = left.getString();
-            if ("RegExp".equals(className)) {
-              return tryFoldRegularExpressionConstructor(node);
-            }
-          }
-        }    
-      }
-        return node;
-        default:
+        node = tryFoldStandardConstructors(node);
+        if (node.getType() != Token.CALL) {
+          return node;
+        }
+        // Fall through on purpose because tryFoldStandardConstructors() may
+        // convert a NEW node into a CALL node
+      case Token.CALL:
+        return tryFoldLiteralConstructor(node);
+        
+      default:
           return node; //Nothing changed
     }
   }
@@ -169,7 +173,7 @@ public class PeepholeSubstituteAlternateSyntax
    * Returns the replacement for n or the original if no replacement was
    * necessary.
    */
-  Node tryMinimizeIf(Node n) {
+  private Node tryMinimizeIf(Node n) {
     
     Node parent = n.getParent();
     
@@ -572,7 +576,7 @@ public class PeepholeSubstituteAlternateSyntax
    *   
    *   Returns the replacement for n, or the original if no change was made
    */
-  Node tryMinimizeCondition(Node n) {
+  private Node tryMinimizeCondition(Node n) {
     Node parent = n.getParent();
     
     switch (n.getType()) {
@@ -658,6 +662,84 @@ public class PeepholeSubstituteAlternateSyntax
     
     return n;
   }
+  
+  private static final ImmutableSet<String> STANDARD_OBJECT_CONSTRUCTORS =
+    // String, Number, and Boolean functions return non-object types, whereas
+    // new String, new Number, and new Boolean return object types, so don't
+    // include them here.
+    ImmutableSet.of(
+      "Object",
+      "Array",
+      "RegExp",
+      "Error"
+      );
+  
+  /**
+   * Fold "new Object()" to "Object()".
+   */
+  private Node tryFoldStandardConstructors(Node n) {
+    Preconditions.checkState(n.getType() == Token.NEW);
+    
+    // If name normalization has been run then we know that
+    // new Object() does in fact refer to what we think it is
+    // and not some custom-defined Object().
+    if (isASTNormalized()) {
+      if (n.getFirstChild().getType() == Token.NAME) {
+        String className = n.getFirstChild().getString();
+        if (STANDARD_OBJECT_CONSTRUCTORS.contains(className)) {
+            n.setType(Token.CALL);
+            reportCodeChange();
+        }
+      }
+    }
+    
+    return n;
+  }
+  
+  /**
+   * Replaces a new Array or Object node with an object literal, unless the
+   * call to Array or Object is to a local function with the same name.
+   */
+  private Node tryFoldLiteralConstructor(Node n) {
+    Preconditions.checkArgument(n.getType() == Token.CALL
+        || n.getType() == Token.NEW);
+  
+    Node constructorNameNode = n.getFirstChild();
+    
+    Node newLiteralNode = null;
+    
+    // We require the AST to be normalized to ensure that, say,
+    // Object() really refers to the built-in Object constructor
+    // and not a user-defined constructor with the same name.
+
+    if (isASTNormalized() && Token.NAME == constructorNameNode.getType()) {
+
+      String className = constructorNameNode.getString();
+
+      if ("RegExp".equals(className)) {
+        // "RegExp("boo", "g")" --> /boo/g
+        return tryFoldRegularExpressionConstructor(n);
+      } else {
+        boolean constructorHasArguments = constructorNameNode.getNext() != null;
+
+        if (!constructorHasArguments) {
+          if ("Array".equals(className)) {
+            // "Array()" --> "[]"
+            newLiteralNode = new Node(Token.ARRAYLIT);
+          } else if ("Object".equals(className)) {
+            // "Object()" --> "{}"
+            newLiteralNode = new Node(Token.OBJECTLIT);
+          }
+        }
+        if (newLiteralNode != null) {
+          n.getParent().replaceChild(n, newLiteralNode);
+          reportCodeChange();
+          return newLiteralNode;
+        }   
+      }
+    }
+    return n;
+  } 
 
   private Node tryFoldRegularExpressionConstructor(Node n) { 
     Node parent = n.getParent();
@@ -665,6 +747,13 @@ public class PeepholeSubstituteAlternateSyntax
     Node pattern = constructor.getNext();  // e.g.  ^foobar$
     Node flags = null != pattern ? pattern.getNext() : null;  // e.g. gi
 
+    // Only run on normalized AST to make sure RegExp() is actually
+    // the RegExp we expect (if the AST has been normalized then
+    // other RegExp's will have been renamed to something like RegExp$1)
+    if (!isASTNormalized()) {
+      return n;
+    }
+    
     if (null == pattern || (null != flags && null != flags.getNext())) {
       // too few or too many arguments
       return n;

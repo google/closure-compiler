@@ -75,6 +75,17 @@ abstract class AbstractPeepholeOptimization {
   }
   
   /**
+   *  Is the current AST normalized? (e.g. has the Normalize pass been run
+   *  and has the Denormalize pass not yet been run?) 
+   */
+  protected boolean isASTNormalized() {
+    Preconditions.checkNotNull(currentTraversal);
+    Preconditions.checkNotNull(currentTraversal.getCompiler());
+    
+    return currentTraversal.getCompiler().isNormalized();
+  }
+  
+  /**
    * Informs the optimization that a traversal will begin.  
    */
   void beginTraversal(NodeTraversal traversal) {

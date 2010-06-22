@@ -50,6 +50,11 @@ chrome.extension.getBackgroundPage = function() {};
 chrome.extension.getExtensionTabs = function(opt_windowId) {};
 
 /**
+ * @return {Array.<Window>} The global JS objects for each toolstrip view.
+ */
+chrome.extension.getToolstrips();
+
+/**
  * @param {string} path A path to a resource within an extension expressed
  *     relative to it's install directory.
  * @return {string} The fully-qualified URL to the resource.
@@ -255,7 +260,6 @@ chrome.i18n.getAcceptLanguages = function(callback) {};
 chrome.i18n.getMessage = function(messageName, opt_args) {};
 
 
-
 /** @see http://code.google.com/chrome/extensions/pageAction.html */
 chrome.pageAction = {};
 
@@ -401,6 +405,87 @@ chrome.bookmarks.onMoved;
 chrome.bookmarks.onRemoved;
 
 
+/** @see http://code.google.com/chrome/extensions/experimental.html */
+chrome.experimental = {};
+
+
+/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
+chrome.experimental.extension = {};
+
+/**
+ * @return {Window}
+ */
+chrome.experimental.extension.getPopupView = function() {};
+
+
+/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
+chrome.experimental.metrics = {};
+
+/**
+ * @param {string} metricName
+ */
+chrome.experimental.metrics.recordUserAction = function(metricName) {};
+
+/**
+ * @param {string} metricName
+ * @param {number} value
+ */
+chrome.experimental.metrics.recordPercentage = function(metricName, value) {};
+
+/**
+ * @param {string} metricName
+ * @param {number} value
+ */
+chrome.experimental.metrics.recordCount = function(metricName, value) {};
+
+/**
+ * @param {string} metricName
+ * @param {number} value
+ */
+chrome.experimental.metrics.recordSmallCount = function(metricName, value) {};
+
+/**
+ * @param {string} metricName
+ * @param {number} value
+ */
+chrome.experimental.metrics.recordMediumCount = function(metricName, value) {};
+
+/**
+ * @param {string} metricName
+ * @param {number} value
+ */
+chrome.experimental.metrics.recordTime = function(metricName, value) {};
+
+/**
+ * @param {string} metricName
+ * @param {number} value
+ */
+chrome.experimental.metrics.recordMediumTime = function(metricName, value) {};
+
+/**
+ * @param {string} metricName
+ * @param {number} value
+ */
+chrome.experimental.metrics.recordLongTime = function(metricName, value) {};
+
+/**
+ * @param {MetricType} metric
+ * @param {number} value
+ */
+chrome.experimental.metrics.recordValue = function(metric, value) {};
+
+
+/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
+chrome.experimental.popup = {};
+
+/**
+ * @param {string} url
+ * @param {Object} showDetails
+ * @param {function() : void=} opt_callback
+ */
+chrome.experimental.popup.show = function(url, showDetails, opt_callback) {};
+
+
 // Classes
 
 /**
@@ -444,6 +529,10 @@ ChromeWindow.prototype.width;
 ChromeWindow.prototype.height;
 /** @type {Array.<Tab>} */
 ChromeWindow.prototype.tabs;
+/** @type {boolean} */
+ChromeWindow.prototype.incognito;
+/** @type {string} */
+ChromeWindow.prototype.type;
 
 /**
  * @see http://code.google.com/chrome/extensions/events.html
@@ -478,6 +567,7 @@ Port.prototype.onDisconnect;
  * @param {Object.<string>} obj Message object.
  */
 Port.prototype.postMessage = function(obj) {};
+Port.prototype.disconnect = function() {};
 
 /**
  * @see http://code.google.com/chrome/extensions/extension.html#type-MessageSender
@@ -510,3 +600,19 @@ BookmarkTreeNode.prototype.dateAdded;
 BookmarkTreeNode.prototype.dateGroupModified;
 /** @type {Array.<BookmarkTreeNode>} */
 BookmarkTreeNode.prototype.children;
+
+/**
+ * Experimental MetricType
+ * @constructor
+ */
+function MetricType() {}
+/** @type {string} */
+MetricType.prototype.metricName;
+/** @type {string} */
+MetricType.prototype.type;
+/** @type {number} */
+MetricType.prototype.min;
+/** @type {number} */
+MetricType.prototype.max;
+/** @type {number} */
+MetricType.prototype.buckets;

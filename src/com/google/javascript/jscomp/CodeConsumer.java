@@ -271,7 +271,7 @@ abstract class CodeConsumer {
       long value = (long) x;
       long mantissa = value;
       int exp = 0;
-      if (x >= 100) {
+      if (Math.abs(x) >= 100) {
         while (mantissa / 10 * Math.pow(10, exp + 1) == value) {
           mantissa /= 10;
           exp++;

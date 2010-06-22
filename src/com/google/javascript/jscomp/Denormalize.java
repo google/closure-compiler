@@ -46,6 +46,7 @@ class Denormalize implements CompilerPass, Callback {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
+    compiler.setUnnormalized();
   }
 
   @Override

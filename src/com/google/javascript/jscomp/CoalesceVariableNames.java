@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
@@ -77,6 +78,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * to foo, rename both variable to foo_bar.
    */
   CoalesceVariableNames(AbstractCompiler compiler, boolean usePseudoNames) {
+    Preconditions.checkState(!compiler.isNormalized());
+
     this.compiler = compiler;
     colorings = Lists.newLinkedList();
     this.usePseudoNames = usePseudoNames;

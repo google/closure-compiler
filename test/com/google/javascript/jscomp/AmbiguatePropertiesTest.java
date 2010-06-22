@@ -37,18 +37,14 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
 
   public AmbiguatePropertiesTest() {
     super(EXTERNS);
+    enableNormalize();
+    enableTypeCheck(CheckLevel.WARNING);
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       public void process(Node externs, Node root) {
-        new TypeCheck(compiler,
-            new SemanticReverseAbstractInterpreter(
-                compiler.getCodingConvention(), compiler.getTypeRegistry()),
-            compiler.getTypeRegistry())
-            .processForTesting(externs, root);
-
         lastPass = new AmbiguateProperties(compiler, new char[]{'$'});
         lastPass.process(externs, root);
       }
