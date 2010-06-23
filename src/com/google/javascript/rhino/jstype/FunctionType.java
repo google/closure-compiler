@@ -488,13 +488,9 @@ public class FunctionType extends PrototypeObjectType {
           JSType newReturnType = leastSuper ?
               call.returnType.getLeastSupertype(other.call.returnType) :
               call.returnType.getGreatestSubtype(other.call.returnType);
-          return new FunctionType(
-              registry, null, null,
-              new ArrowType(
-                  registry, call.parameters, newReturnType,
-                  call.returnTypeInferred ||
-                  other.call.returnTypeInferred),
-              typeOfThis, null, false, false);
+          return cloneWithNewReturnType(
+              newReturnType,
+              call.returnTypeInferred || other.call.returnTypeInferred);
         }
       }
 
@@ -514,6 +510,14 @@ public class FunctionType extends PrototypeObjectType {
     return leastSuper ?
         super.getLeastSupertype(that) :
         super.getGreatestSubtype(that);
+  }
+
+  FunctionType cloneWithNewReturnType(JSType newReturnType, boolean inferred) {
+    return new FunctionType(
+        registry, null, source,
+        new ArrowType(
+            registry, call.parameters, newReturnType, inferred),
+        typeOfThis, null, false, false);
   }
 
   /**

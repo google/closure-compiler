@@ -295,11 +295,12 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     String output = ""
         + "function Foo(){}"
         + "function Bar(){}"
-        + "Foo.function__this_Foo____$a = 0;"
-        + "Bar.function__this_Bar____$a = 0;";
+        + "Foo.function__this_Foo___undefined$a = 0;"
+        + "Bar.function__this_Bar___undefined$a = 0;";
 
     testSets(false, js, output,
-        "{a=[[function (this:Bar): ?], [function (this:Foo): ?]]}");
+        "{a=[[function (this:Bar): undefined]," +
+        " [function (this:Foo): undefined]]}");
   }
 
   public void testSupertypeWithSameField() {
@@ -387,7 +388,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ var Foo = function() {};\n"
         + "/** @constructor */ var Bar = function() {};\n"
-        + "function fun() {}\n"
+        + "/** @return {?} */ function fun() {}\n"
         + "Foo.prototype.a = fun();\n"
         + "fun().a;\n"
         + "Bar.prototype.a = 0;";

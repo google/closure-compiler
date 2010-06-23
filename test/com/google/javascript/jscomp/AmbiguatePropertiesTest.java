@@ -237,13 +237,13 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ function Foo(){};\n"
         + "/** @return Bar */\n"
-        + "Foo.prototype.fun = function() { new Bar };\n"
+        + "Foo.prototype.fun = function() { return new Bar(); };\n"
         + "/** @constructor */ function Bar(){};\n"
         + "Bar.prototype.bazz;\n"
         + "(new Foo).fun().bazz();";
     String output = ""
         + "function Foo(){};\n"
-        + "Foo.prototype.a = function() { new Bar };\n"
+        + "Foo.prototype.a = function() { return new Bar(); };\n"
         + "function Bar(){};\n"
         + "Bar.prototype.a;\n"
         + "(new Foo).a().a();";

@@ -97,6 +97,13 @@ public final class FunctionBuilder {
     return this;
   }
 
+  /** Set the return type and whether it's inferred. */
+  public FunctionBuilder withReturnType(JSType returnType, boolean inferred) {
+    this.returnType = returnType;
+    this.inferredReturnType = inferred;
+    return this;
+  }
+
   /** Sets an inferred return type. */
   public FunctionBuilder withInferredReturnType(JSType returnType) {
     this.returnType = returnType;

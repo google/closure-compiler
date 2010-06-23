@@ -1150,7 +1150,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testInstanceof5() throws Exception {
     // No warning for unknown types.
-    testTypes("function foo(){" +
+    testTypes("/** @return {?} */ function foo(){" +
         "if (foo() instanceof Object)return;}");
   }
 
@@ -1249,7 +1249,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     assertFalse(p.scope.isDeclared("b", false));
 
     // checking that a has the correct assigned type
-    assertEquals("function (): ?", p.scope.getVar("a").getType().toString());
+    assertEquals("function (): undefined",
+        p.scope.getVar("a").getType().toString());
   }
 
   public void testScoping11() throws Exception {
@@ -1392,25 +1393,25 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testFunctionInference1() throws Exception {
     testFunctionType(
         "function f(a) {}",
-        "function (?): ?");
+        "function (?): undefined");
   }
 
   public void testFunctionInference2() throws Exception {
     testFunctionType(
         "function f(a,b) {}",
-        "function (?, ?): ?");
+        "function (?, ?): undefined");
   }
 
   public void testFunctionInference3() throws Exception {
     testFunctionType(
         "function f(var_args) {}",
-        "function (...[?]): ?");
+        "function (...[?]): undefined");
   }
 
   public void testFunctionInference4() throws Exception {
     testFunctionType(
         "function f(a,b,c,var_args) {}",
-        "function (?, ?, ?, ...[?]): ?");
+        "function (?, ?, ?, ...[?]): undefined");
   }
 
   public void testFunctionInference5() throws Exception {
@@ -1428,19 +1429,19 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testFunctionInference7() throws Exception {
     testFunctionType(
         "/** @this Date */function f(a,b,c,var_args) {}",
-        "function (this:Date, ?, ?, ?, ...[?]): ?");
+        "function (this:Date, ?, ?, ?, ...[?]): undefined");
   }
 
   public void testFunctionInference8() throws Exception {
     testFunctionType(
         "function f() {}",
-        "function (): ?");
+        "function (): undefined");
   }
 
   public void testFunctionInference9() throws Exception {
     testFunctionType(
         "var f = function() {};",
-        "function (): ?");
+        "function (): undefined");
   }
 
   public void testFunctionInference10() throws Exception {
@@ -1463,7 +1464,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "var goog = {};" +
         "goog.f = function(){};",
         "goog.f",
-        "function (): ?");
+        "function (): undefined");
   }
 
   public void testFunctionInference13() throws Exception {
@@ -1472,7 +1473,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ goog.Foo = function(){};" +
         "/** @param {!goog.Foo} f */function eatFoo(f){};",
         "eatFoo",
-        "function (goog.Foo): ?");
+        "function (goog.Foo): undefined");
   }
 
   public void testFunctionInference14() throws Exception {
@@ -1489,7 +1490,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function f() {};" +
         "f.prototype.foo = function(){};",
         "f.prototype.foo",
-        "function (this:f): ?");
+        "function (this:f): undefined");
   }
 
   public void testFunctionInference16() throws Exception {
@@ -1497,7 +1498,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function f() {};" +
         "f.prototype.foo = function(){};",
         "(new f).foo",
-        "function (this:f): ?");
+        "function (this:f): undefined");
   }
 
   public void testFunctionInference17() throws Exception {
@@ -1851,8 +1852,9 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "var goog = goog || {};" +
         "/** @param {number} x */ goog.foo = function(x) {};" +
         "/** @param {number} x */ goog.foo = function(x) {};",
-        "variable goog.foo redefined with type function (number): ?, " +
-        "original definition at [testcode]:1 with type function (number): ?");
+        "variable goog.foo redefined with type function (number): undefined, " +
+        "original definition at [testcode]:1 " +
+        "with type function (number): undefined");
   }
 
   public void testDuplicateStaticMethodDecl2() throws Exception {
@@ -1883,7 +1885,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "goog.foo = function(x) {};" +
         "/** @return {undefined} */ goog.foo = function(x) {};",
         "variable goog.foo redefined with type function (?): undefined, " +
-        "original definition at [testcode]:1 with type function (?): ?");
+        "original definition at [testcode]:1 with type " +
+        "function (?): undefined");
   }
 
   public void testDuplicateStaticPropertyDecl1() throws Exception {
@@ -2061,7 +2064,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function f() {};" +
         "f.prototype.foo = f.prototype.bar = function(){};";
     testFunctionType(nestedAssignOfFooAndBar, "(new f).bar",
-        "function (this:f): ?");
+        "function (this:f): undefined");
   }
 
   /**
@@ -2091,7 +2094,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testTypeRedefinition() throws Exception {
     testTypes("a={};/**@enum {string}*/ a.A = {ZOR:'b'};"
         + "/** @constructor */ a.A = function() {}",
-        "variable a.A redefined with type function (this:a.A): ?, " +
+        "variable a.A redefined with type function (this:a.A): undefined, " +
         "original definition at [testcode]:1 with type enum{a.A}");
   }
 
@@ -2671,7 +2674,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @extends {base}\n * @constructor */function derived() {}\n" +
         "derived.inherits(base);",
         "(new derived).constructor",
-        "function (this:derived): ?");
+        "function (this:derived): undefined");
   }
 
   public void testGoodExtends8() throws Exception {
@@ -4264,7 +4267,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     // verifying the type assigned to anonymous functions assigned variables
     Scope s = parseAndTypeCheckWithScope("var a = function(){};").scope;
     JSType type = s.getVar("a").getType();
-    assertEquals("function (): ?", type.toString());
+    assertEquals("function (): undefined", type.toString());
 
     // verifying the bug example
     testTypes("function nullFunction() {};" +
@@ -4995,7 +4998,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "Foo();",
-        "Constructor function (this:Foo): ? should be called " +
+        "Constructor function (this:Foo): undefined should be called " +
         "with the \"new\" keyword");
   }
 
@@ -5310,7 +5313,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "A.prototype = {m1: 5, m2: true}");
 
     JSType functionAType = js1Node.getFirstChild().getJSType();
-    assertEquals("function (): ?", functionAType.toString());
+    assertEquals("function (): undefined", functionAType.toString());
     assertEquals(UNKNOWN_TYPE,
         U2U_FUNCTION_TYPE.getPropertyType("m1"));
     assertEquals(UNKNOWN_TYPE,
@@ -5498,7 +5501,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testInheritanceCheck9_1() throws Exception {
     testTypes(
         "/** @constructor */function Super() {};" +
-        "Super.prototype.foo = function() {};" +
+        "Super.prototype.foo = function() { return 3; };" +
         "/** @constructor\n @extends {Super} */function Sub() {};" +
         "/** @override\n @return number */Sub.prototype.foo =\n" +
         "function() { return 1; };");
@@ -5529,7 +5532,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testInheritanceCheck10_1() throws Exception {
     testTypes(
         "/** @constructor */function Root() {};" +
-        "Root.prototype.foo = function() {};" +
+        "Root.prototype.foo = function() { return 4; };" +
         "/** @constructor\n @extends {Root} */function Super() {};" +
         "/** @constructor\n @extends {Super} */function Sub() {};" +
         "/** @override\n @return number */Sub.prototype.foo =\n" +
@@ -5569,8 +5572,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "function(bar) {};",
         "mismatch of the foo property type and the type of the property it " +
         "overrides from superclass Super\n" +
-        "original: function (this:Super, number): ?\n" +
-        "override: function (this:Sub, string): ?");
+        "original: function (this:Super, number): undefined\n" +
+        "override: function (this:Sub, string): undefined");
   }
 
   public void testInheritanceCheck12() throws Exception {
@@ -5709,8 +5712,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "function(bar) {};",
         "mismatch of the foo property type and the type of the property it " +
         "overrides from interface Super\n" +
-        "original: function (this:Super, number): ?\n" +
-        "override: function (this:Sub, string): ?");
+        "original: function (this:Super, number): undefined\n" +
+        "override: function (this:Sub, string): undefined");
   }
 
   public void testInterfaceInheritanceCheck8() throws Exception {
@@ -5957,7 +5960,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @interface */ function T() {};\n" +
         "/** @type {number} */T.prototype.x = function() { };",
         "assignment to property x of T.prototype\n" +
-        "found   : function (): ?\n" +
+        "found   : function (): undefined\n" +
         "required: number");
   }
 
@@ -6186,7 +6189,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testDfa12() throws Exception {
     testTypes("/** @param {string} x \n * @constructor \n */" +
         "var Bar = function(x) {};" +
-        "/** @param {string} x */ function g(x) {}" +
+        "/** @param {string} x */ function g(x) { return true; }" +
         "/** @param {string|number} opt_x */ " +
         "function f(opt_x) { " +
         "  if (opt_x) { new Bar(g(opt_x) && 'x'); }" +
@@ -6351,7 +6354,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @type {number} */ goog.Bar = goog.typedef",
         "variable goog.Bar redefined with type number, " +
         "original definition at [testcode]:1 " +
-        "with type function (this:goog.Bar): ?");
+        "with type function (this:goog.Bar): undefined");
   }
 
   public void testOldTypeDef1() throws Exception {
@@ -6399,7 +6402,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @typedef {number} */ goog.Bar;",
         "variable goog.Bar redefined with type None, " +
         "original definition at [testcode]:1 " +
-        "with type function (this:goog.Bar): ?");
+        "with type function (this:goog.Bar): undefined");
   }
 
   public void testTypeDef1() throws Exception {
@@ -6498,7 +6501,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
     assertTrue(p.scope.getVar("Foo").getType() instanceof FunctionType);
     FunctionType fooType = (FunctionType) p.scope.getVar("Foo").getType();
-    assertEquals("function (this:Foo, number): ?",
+    assertEquals("function (this:Foo, number): undefined",
                  fooType.getPrototype().getPropertyType("bar").toString());
   }
 

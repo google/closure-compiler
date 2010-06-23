@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -70,6 +71,7 @@ final class FunctionTypeBuilder {
   private final Scope scope;
 
   private JSType returnType = null;
+  private boolean returnTypeInferred = false;
   private List<ObjectType> implementedInterfaces = null;
   private ObjectType baseType = null;
   private ObjectType thisType = null;
@@ -196,11 +198,47 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder inferReturnType(@Nullable JSDocInfo info) {
     returnType = info != null && info.hasReturnType() ?
-        info.getReturnType().evaluate(scope, typeRegistry) :
-        typeRegistry.getNativeType(UNKNOWN_TYPE);
+        info.getReturnType().evaluate(scope, typeRegistry) : null;
     if (templateTypeName != null &&
+        returnType != null &&
         returnType.restrictByNotNullOrUndefined().isTemplateType()) {
       reportError(TEMPLATE_TYPE_EXPECTED, fnName);
+    }
+    return this;
+  }
+
+  /**
+   * If we haven't found a return value yet, try to look at the "return"
+   * statements in the function.
+   */
+  FunctionTypeBuilder inferReturnStatements(@Nullable Node functionBlock) {
+    if (functionBlock == null || compiler.getInput(sourceName).isExtern()) {
+      return this;
+    }
+    Preconditions.checkArgument(functionBlock.getType() == Token.BLOCK);
+    if (returnType == null) {
+      boolean hasNonEmptyReturns = false;
+      List<Node> worklist = Lists.newArrayList(functionBlock);
+      while (!worklist.isEmpty()) {
+        Node current = worklist.remove(worklist.size() - 1);
+        int cType = current.getType();
+        if (cType == Token.RETURN && current.getFirstChild() != null ||
+            cType == Token.THROW) {
+          hasNonEmptyReturns = true;
+          break;
+        } else if (NodeUtil.isStatementBlock(current) ||
+            NodeUtil.isControlStructure(current)) {
+          for (Node child = current.getFirstChild();
+               child != null; child = child.getNext()) {
+            worklist.add(child);
+          }
+        }
+      }
+
+      if (!hasNonEmptyReturns) {
+        returnType = typeRegistry.getNativeType(VOID_TYPE);
+        returnTypeInferred = true;
+      }
     }
     return this;
   }
@@ -463,7 +501,11 @@ final class FunctionTypeBuilder {
    * Builds the function type, and puts it in the registry.
    */
   FunctionType buildAndRegister() {
-    if (returnType == null || parametersNode == null) {
+    if (returnType == null) {
+      returnType = typeRegistry.getNativeType(UNKNOWN_TYPE);
+    }
+
+    if (parametersNode == null) {
       throw new IllegalStateException(
           "All Function types must have params and a return type");
     }
@@ -482,7 +524,7 @@ final class FunctionTypeBuilder {
           .withName(fnName)
           .withSourceNode(sourceNode)
           .withParamsNode(parametersNode)
-          .withReturnType(returnType)
+          .withReturnType(returnType, returnTypeInferred)
           .withTypeOfThis(thisType)
           .withTemplateName(templateTypeName)
           .build();

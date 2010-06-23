@@ -53,6 +53,7 @@ public class ExternExportsPassTest extends TestCase {
                     " * @param {*} d\n" +
                     " * @param {*} e\n" +
                     " * @param {*} f\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "var foobar = function(d, e, f) {\n}");
   }
@@ -64,6 +65,7 @@ public class ExternExportsPassTest extends TestCase {
                     " * @param {*} d\n" +
                     " * @param {*} e\n" +
                     " * @param {*} f\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "var foobar = function(d, e, f) {\n}");
   }
@@ -77,6 +79,7 @@ public class ExternExportsPassTest extends TestCase {
                     " * @param {*} d\n" +
                     " * @param {*} e\n" +
                     " * @param {*} f\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "a.b.cprop = function(d, e, f) {\n}");
   }
@@ -92,18 +95,21 @@ public class ExternExportsPassTest extends TestCase {
                     "var a = {};\n" +
                     "/**\n" +
                     " * @param {*} p1\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "a.b = function(p1) {\n};\n" +
                     "/**\n" +
                     " * @param {*} d\n" +
                     " * @param {*} e\n" +
                     " * @param {*} f\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "a.b.c = function(d, e, f) {\n};\n" +
                     "/**\n" +
                     " * @param {*} g\n" +
                     " * @param {*} h\n" +
                     " * @param {*} i\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "a.b.prototype.c = function(g, h, i) {\n}");
   }
@@ -122,12 +128,14 @@ public class ExternExportsPassTest extends TestCase {
                     " * @param {*} d\n" +
                     " * @param {*} e\n" +
                     " * @param {*} f\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "hello.b.c = function(d, e, f) {\n};\n" +
                     "/**\n" +
                     " * @param {*} g\n" +
                     " * @param {*} h\n" +
                     " * @param {*} i\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "hello.b.prototype.c = function(g, h, i) {\n}");
   }
@@ -141,12 +149,14 @@ public class ExternExportsPassTest extends TestCase {
 
                     "/**\n" +
                     " * @param {*} p1\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "var prefix = function(p1) {\n};\n" +
                     "/**\n" +
                     " * @param {*} d\n" +
                     " * @param {*} e\n" +
                     " * @param {*} f\n" +
+                    " * @return {undefined}\n" +
                     " */\n" +
                     "prefix.c = function(d, e, f) {\n}");
   }
@@ -218,6 +228,7 @@ public class ExternExportsPassTest extends TestCase {
                     "};" +
                     "goog.exportSymbol('externalName', internalName)",
                     "/**\n" +
+                    " * @return {undefined}\n" +
                     " * @constructor\n" +
                     " */\n" + 
                     "var externalName = function() {\n}");
@@ -291,6 +302,7 @@ public class ExternExportsPassTest extends TestCase {
         "goog.exportSymbol('Foo', Foo);\n" +
         "goog.exportProperty(Foo.prototype, 'm', Foo.prototype.m);",
         "/**\n" +
+        " * @return {undefined}\n" +
         " * @constructor\n" +
         " */\n" +
         "var Foo = function() {\n};\n" +

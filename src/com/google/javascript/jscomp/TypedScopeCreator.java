@@ -508,7 +508,12 @@ final class TypedScopeCreator implements ScopeCreator {
         String functionName = name.getString();
         FunctionType functionType =
             getFunctionType(functionName, value, info, null);
-        defineSlot(name, var, functionType);
+        if (functionType.isReturnTypeInferred() &&
+            scope.isLocal()) {
+          defineSlot(name, var, null);
+        } else {
+          defineSlot(name, var, functionType);
+        }
       } else {
         // variable's type
         JSType type = null;
@@ -569,6 +574,7 @@ final class TypedScopeCreator implements ScopeCreator {
       Node fnRoot = isFnLiteral ? rValue : null;
       Node parametersNode = isFnLiteral ?
           rValue.getFirstChild().getNext() : null;
+      Node fnBlock = isFnLiteral ? parametersNode.getNext() : null;
 
       if (functionType == null && info != null && info.hasType()) {
         JSType type = info.getType().evaluate(scope, typeRegistry);
@@ -598,8 +604,8 @@ final class TypedScopeCreator implements ScopeCreator {
               ObjectType ownerType = ObjectType.cast(var.getType());
               FunctionType propType = null;
               if (ownerType != null) {
-                propType = findOverriddenFunction(
-                    ownerType, lvalueNode.getLastChild().getString());
+                String propName = lvalueNode.getLastChild().getString();
+                propType = findOverriddenFunction(ownerType, propName);
               }
 
               if (propType != null) {
@@ -609,6 +615,7 @@ final class TypedScopeCreator implements ScopeCreator {
                     .setSourceNode(fnRoot)
                     .inferFromOverriddenFunction(propType, parametersNode)
                     .inferThisType(info, owner)
+                    .inferReturnStatements(fnBlock)
                     .buildAndRegister();
               }
             }
@@ -626,6 +633,7 @@ final class TypedScopeCreator implements ScopeCreator {
             .inferInheritance(info)
             .inferThisType(info, owner)
             .inferParameterTypes(parametersNode, info)
+            .inferReturnStatements(fnBlock)
             .buildAndRegister();
       }
 

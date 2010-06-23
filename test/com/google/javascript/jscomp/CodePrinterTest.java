@@ -603,27 +603,35 @@ public class CodePrinterTest extends TestCase {
   }
 
   public void testTypeAnnotations() {
-    assertTypeAnnotations("/** @constructor */ function Foo(){}",
-        "/**\n * @constructor\n */\nfunction Foo() {\n}\n");
+    assertTypeAnnotations(
+        "/** @constructor */ function Foo(){}",
+        "/**\n * @return {undefined}\n * @constructor\n */\n"
+        + "function Foo() {\n}\n");
   }
 
   public void testTypeAnnotationsAssign() {
     assertTypeAnnotations("/** @constructor */ var Foo = function(){}",
-        "/**\n * @constructor\n */\nvar Foo = function() {\n}");
+        "/**\n * @return {undefined}\n * @constructor\n */\n"
+        + "var Foo = function() {\n}");
   }
 
   public void testTypeAnnotationsNamespace() {
     assertTypeAnnotations("var a = {};"
         + "/** @constructor */ a.Foo = function(){}",
-        "var a = {};\n/**\n * @constructor\n */\na.Foo = function() {\n}");
+        "var a = {};\n"
+        + "/**\n * @return {undefined}\n * @constructor\n */\n"
+        + "a.Foo = function() {\n}");
   }
 
   public void testTypeAnnotationsMemberSubclass() {
     assertTypeAnnotations("var a = {};"
         + "/** @constructor */ a.Foo = function(){};"
         + "/** @constructor \n @extends {a.Foo} */ a.Bar = function(){}",
-        "var a = {};\n/**\n * @constructor\n */\na.Foo = function() {\n};\n"
-        + "/**\n * @extends {a.Foo}\n * @constructor\n */\n"
+        "var a = {};\n"
+        + "/**\n * @return {undefined}\n * @constructor\n */\n"
+        + "a.Foo = function() {\n};\n"
+        + "/**\n * @return {undefined}\n * @extends {a.Foo}\n"
+        + " * @constructor\n */\n"
         + "a.Bar = function() {\n}");
   }
 
@@ -631,8 +639,11 @@ public class CodePrinterTest extends TestCase {
     assertTypeAnnotations("var a = {};"
         + "/** @interface */ a.Foo = function(){};"
         + "/** @interface \n @extends {a.Foo} */ a.Bar = function(){}",
-        "var a = {};\n/**\n * @interface\n */\na.Foo = function() {\n};\n"
-        + "/**\n * @extends {a.Foo}\n * @interface\n */\n"
+        "var a = {};\n"
+        + "/**\n * @interface\n */\n"
+        + "a.Foo = function() {\n};\n"
+        + "/**\n * @extends {a.Foo}\n"
+        + " * @interface\n */\n"
         + "a.Bar = function() {\n}");
   }
 
@@ -641,16 +652,17 @@ public class CodePrinterTest extends TestCase {
         + "/** @constructor */ a.Foo = function(){}"
         + "/** @param {string} foo\n"
         + "  * @return {number} */\n"
-        + "a.Foo.prototype.foo = function(foo) {};"
+        + "a.Foo.prototype.foo = function(foo) { return 3; };"
         + "/** @type {string|undefined} */"
         + "a.Foo.prototype.bar = '';",
         "var a = {};\n"
-        + "/**\n * @constructor\n */\na.Foo = function() {\n};\n"
+        + "/**\n * @return {undefined}\n * @constructor\n */\n"
+        + "a.Foo = function() {\n};\n"
         + "/**\n"
         + " * @param {string} foo\n"
         + " * @return {number}\n"
         + " */\n"
-        + "a.Foo.prototype.foo = function(foo) {\n};\n"
+        + "a.Foo.prototype.foo = function(foo) {\n  return 3\n};\n"
         + "/** @type {string} */\n"
         + "a.Foo.prototype.bar = \"\"");
   }
@@ -664,10 +676,14 @@ public class CodePrinterTest extends TestCase {
         + " * @implements {a.I} \n @implements {a.I2}\n"
         + "*/ a.Bar = function(){}",
         "var a = {};\n"
-        + "/**\n * @constructor\n */\na.Foo = function() {\n};\n"
-        + "/**\n * @interface\n */\na.I = function() {\n};\n"
-        + "/**\n * @interface\n */\na.I2 = function() {\n};\n"
-        + "/**\n * @extends {a.Foo}\n * @implements {a.I}\n"
+        + "/**\n * @return {undefined}\n * @constructor\n */\n"
+        + "a.Foo = function() {\n};\n"
+        + "/**\n * @interface\n */\n"
+        + "a.I = function() {\n};\n"
+        + "/**\n * @interface\n */\n"
+        + "a.I2 = function() {\n};\n"
+        + "/**\n * @return {undefined}\n * @extends {a.Foo}\n"
+        + " * @implements {a.I}\n"
         + " * @implements {a.I2}\n * @constructor\n */\n"
         + "a.Bar = function() {\n}");
   }
@@ -682,6 +698,7 @@ public class CodePrinterTest extends TestCase {
         "a.Foo = function(){}",
         "var a = {};\n" +
         "/**\n" +
+        " * @return {undefined}\n" +
         " * @constructor\n" +
         " * @javadispatch\n" +
         " */\n" +
@@ -703,11 +720,13 @@ public class CodePrinterTest extends TestCase {
 
         "var a = {};\n" +
         "/**\n" +
+        " * @return {undefined}\n" +
         " * @constructor\n" +
         " */\n" +
         "a.Foo = function() {\n" +
         "};\n" +
         "/**\n" +
+        " * @return {undefined}\n" +
         " * @javadispatch\n" +
         " */\n" +
         "a.Foo.prototype.foo = function() {\n" +
@@ -725,6 +744,7 @@ public class CodePrinterTest extends TestCase {
         "var a = function(x) {}",
         "/**\n" +
         " * @param {*} x\n" +
+        " * @return {undefined}\n" +
         " */\n" + 
         "var a = function(x) {\n}");
   }
@@ -737,6 +757,7 @@ public class CodePrinterTest extends TestCase {
         "var a = function(x) {}",
         "/**\n" +
         " * @param {string=} x\n" +
+        " * @return {undefined}\n" +
         " */\n" +
         "var a = function(x) {\n}");
   }
@@ -749,6 +770,7 @@ public class CodePrinterTest extends TestCase {
         "var a = function(x) {}",
         "/**\n" +
         " * @param {...string} x\n" +
+        " * @return {undefined}\n" +
         " */\n" +
         "var a = function(x) {\n}");
   }
@@ -758,9 +780,11 @@ public class CodePrinterTest extends TestCase {
         "var x = function() {\n/**\n * @constructor\n */\nfunction t1() {}\n" +
         " /**\n * @constructor\n */\nfunction t2() {}\n" +
         " t1.prototype = t2.prototype}",
-        "/**\n */\nvar x = function() {\n" +
-        "  /**\n * @constructor\n */\nfunction t1() {\n  }\n" +
-        "  /**\n * @constructor\n */\nfunction t2() {\n  }\n" +
+        "/**\n * @return {undefined}\n */\nvar x = function() {\n" +
+        "  /**\n * @return {undefined}\n * @constructor\n */\n" +
+        "function t1() {\n  }\n" +
+        "  /**\n * @return {undefined}\n * @constructor\n */\n" +
+        "function t2() {\n  }\n" +
         "  t1.prototype = t2.prototype\n}"
     );
   }
