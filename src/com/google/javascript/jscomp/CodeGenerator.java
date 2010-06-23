@@ -512,10 +512,9 @@ class CodeGenerator {
         break;
 
       case Token.EXPR_VOID:
+        throw new Error("Unexpected EXPR_VOID. Should be EXPR_RESULT.");
+
       case Token.EXPR_RESULT:
-        if (type == Token.EXPR_VOID) {
-          throw new Error("Unexpected EXPR_VOID. Should be EXPR_RESULT.");
-        }
         Preconditions.checkState(childCount == 1);
         add(first, Context.START_OF_EXPR);
         cc.endStatement();

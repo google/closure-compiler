@@ -52,7 +52,7 @@ chrome.extension.getExtensionTabs = function(opt_windowId) {};
 /**
  * @return {Array.<Window>} The global JS objects for each toolstrip view.
  */
-chrome.extension.getToolstrips();
+chrome.extension.getToolstrips = function() {};
 
 /**
  * @param {string} path A path to a resource within an extension expressed
