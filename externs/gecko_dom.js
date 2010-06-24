@@ -482,6 +482,7 @@ Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onmouseout;
 /** @type {?function (Event)} */ Window.prototype.onmouseover;
 /** @type {?function (Event)} */ Window.prototype.onmouseup;
+/** @type {?function (Event)} */ Window.prototype.onmousewheel;
 /** @type {?function (Event)} */ Window.prototype.onpaint;
 /** @type {?function (Event)} */ Window.prototype.onreset;
 /** @type {?function (Event)} */ Window.prototype.onresize;
@@ -925,6 +926,7 @@ Element.prototype.scrollIntoView = function(opt_alignWithTop) {};
 /** @type {?function (Event)} */ Element.prototype.onmouseout;
 /** @type {?function (Event)} */ Element.prototype.onmouseover;
 /** @type {?function (Event)} */ Element.prototype.onmouseup;
+/** @type {?function (Event)} */ Element.prototype.onmousewheel;
 /** @type {?function (Event)} */ Element.prototype.onresize;
 /** @type {?function (Event)} */ Element.prototype.onscroll;
 
