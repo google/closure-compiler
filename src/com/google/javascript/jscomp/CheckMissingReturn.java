@@ -39,7 +39,7 @@ class CheckMissingReturn implements ScopedCallback {
   static final DiagnosticType MISSING_RETURN_STATEMENT =
       DiagnosticType.warning(
           "JSC_MISSING_RETURN_STATEMENT",
-          "missing return statement");
+          "Missing return statement. Function expected to return {0}.");
 
   private final AbstractCompiler compiler;
   private final CheckLevel level;
@@ -90,7 +90,8 @@ class CheckMissingReturn implements ScopedCallback {
 
   @Override
   public void enterScope(NodeTraversal t) {
-    if (!explicitReturnExpected(t.getScopeRoot())) {
+    JSType returnType = explicitReturnExpected(t.getScopeRoot());
+    if (returnType == null) {
       return;
     }
 
@@ -107,7 +108,8 @@ class CheckMissingReturn implements ScopedCallback {
 
     if (!test.allPathsSatisfyPredicate()) {
       compiler.report(
-          t.makeError(t.getScopeRoot(), level, MISSING_RETURN_STATEMENT));
+          t.makeError(t.getScopeRoot(), level,
+              MISSING_RETURN_STATEMENT, returnType.toString()));
     }
   }
 
@@ -143,25 +145,30 @@ class CheckMissingReturn implements ScopedCallback {
   /**
    * Determines if the given scope should explicitly return. All functions
    * with non-void or non-unknown return types must have explicit returns.
+   * @return If a return type is expected, returns it. Otherwise returns null.
    */
-  private boolean explicitReturnExpected(Node scope) {
+  private JSType explicitReturnExpected(Node scope) {
     JSType scopeType = scope.getJSType();
 
     if (!(scopeType instanceof FunctionType)) {
-      return false;
+      return null;
     }
 
     if (isEmptyFunction(scope)) {
-      return false;
+      return null;
     }
 
     JSType returnType = ((FunctionType) scopeType).getReturnType();
 
     if (returnType == null) {
-      return false;
+      return null;
     }
 
-    return !isVoidOrUnknown(returnType);
+    if (!isVoidOrUnknown(returnType)) {
+      return returnType;
+    }
+
+    return null;
   }
 
 

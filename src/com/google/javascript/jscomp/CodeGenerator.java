@@ -275,8 +275,8 @@ class CodeGenerator {
 
       case Token.FUNCTION:
         if (n.getClass() != Node.class) {
-          throw new Error("Unexpected Node subclass."); 
-        }        
+          throw new Error("Unexpected Node subclass.");
+        }
         Preconditions.checkState(childCount == 3);
         boolean funcNeedsParens = (context == Context.START_OF_EXPR);
         if (funcNeedsParens) {
@@ -298,7 +298,7 @@ class CodeGenerator {
       case Token.SCRIPT:
       case Token.BLOCK: {
         if (n.getClass() != Node.class) {
-          throw new Error("Unexpected Node subclass."); 
+          throw new Error("Unexpected Node subclass.");
         }
         boolean stripBlock = n.isSyntheticBlock() ||
             ((context != Context.PRESERVE_BLOCK) && (n.getChildCount() < 2));
@@ -658,7 +658,7 @@ class CodeGenerator {
     // Strip unneeded blocks, that is blocks with <2 children unless
     // the CodePrinter specifically wants to keep them.
     if (n.getType() == Token.BLOCK ) {
-      int count = getNonEmptyChildCount(n);
+      int count = getNonEmptyChildCount(n, 2);
       if (count == 0) {
         if (cc.shouldPreserveExtraBlocks()) {
           cc.beginBlock();
@@ -675,9 +675,7 @@ class CodeGenerator {
         //   IE6/7 needs a block around DOs.
         Node firstAndOnlyChild = getFirstNonEmptyChild(n);
         boolean alwaysWrapInBlock = cc.shouldPreserveExtraBlocks();
-        if (alwaysWrapInBlock ||
-            firstAndOnlyChild.getType() == Token.FUNCTION ||
-            firstAndOnlyChild.getType() == Token.DO) {
+        if (alwaysWrapInBlock || isOneExactlyFunctionOrDo(firstAndOnlyChild)) {
           cc.beginBlock();
           add(firstAndOnlyChild, Context.STATEMENT);
           cc.maybeLineBreak();
@@ -700,6 +698,32 @@ class CodeGenerator {
       if (nodeToProcess.getType() == Token.VAR) {
         cc.endStatement();
       }
+    }
+  }
+
+  /**
+   * @return Whether the Node is a DO or FUNCTION (with or without
+   * labels).
+   */
+  private boolean isOneExactlyFunctionOrDo(Node n) {
+    if (n.getType() == Token.LABEL) {
+      Node labeledStatement = n.getLastChild();
+      if (labeledStatement.getType() != Token.BLOCK) {
+        return isOneExactlyFunctionOrDo(labeledStatement);
+      } else {
+        // For labels with block children, we need to ensure that a
+        // labeled FUNCTION or DO isn't generated when extraneous BLOCKs 
+        // are skipped. 
+        if (getNonEmptyChildCount(n, 2) == 1) { 
+          return isOneExactlyFunctionOrDo(getFirstNonEmptyChild(n));
+        } else {
+          // Either a empty statement or an block with more than one child,
+          // way it isn't a FUNCTION or DO.
+          return false;
+        }
+      }
+    } else {
+      return (n.getType() == Token.FUNCTION || n.getType() == Token.DO);
     }
   }
 
@@ -930,11 +954,15 @@ class CodeGenerator {
     }
     return sb.toString();
   }
-
-  /** Gets the number of children of this node that are non empty. */
-  private static int getNonEmptyChildCount(Node n) {
+  /**
+   * @param maxCount The maximum number of children to look for.
+   * @return The number of children of this node that are non empty up to
+   * maxCount.
+   */
+  private static int getNonEmptyChildCount(Node n, int maxCount) {
     int i = 0;
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+    Node c = n.getFirstChild();
+    for (; c != null && i < maxCount; c = c.getNext()) {
       if (c.getType() != Token.EMPTY) {
         i++;
       }

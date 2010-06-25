@@ -194,7 +194,7 @@ public class CodePrinterTest extends TestCase {
 
     // Name functions expression.
     assertPrint("(function f(){})", "(function f(){})");
-    
+
     // Function declaration.
     assertPrint("function f(){}", "function f(){}");
 
@@ -599,7 +599,7 @@ public class CodePrinterTest extends TestCase {
         "})();\n" +
         "if(1) {\n" +
         "  alert()\n" +
-        "}\n");    
+        "}\n");
   }
 
   public void testTypeAnnotations() {
@@ -745,10 +745,10 @@ public class CodePrinterTest extends TestCase {
         "/**\n" +
         " * @param {*} x\n" +
         " * @return {undefined}\n" +
-        " */\n" + 
+        " */\n" +
         "var a = function(x) {\n}");
   }
-  
+
   public void testOptionalTypesAnnotation() {
     assertTypeAnnotations(
         "/**\n" +
@@ -761,7 +761,7 @@ public class CodePrinterTest extends TestCase {
         " */\n" +
         "var a = function(x) {\n}");
   }
-  
+
   public void testVariableArgumentsTypesAnnotation() {
     assertTypeAnnotations(
         "/**\n" +
@@ -774,7 +774,7 @@ public class CodePrinterTest extends TestCase {
         " */\n" +
         "var a = function(x) {\n}");
   }
-  
+
   public void testTempConstructor() {
     assertTypeAnnotations(
         "var x = function() {\n/**\n * @constructor\n */\nfunction t1() {}\n" +
@@ -907,7 +907,7 @@ public class CodePrinterTest extends TestCase {
     testReparse("'foo\"bar' + \"foo'c\" + 'stuff\\n and \\\\more'");
     testReparse("x.__proto__;");
   }
-  
+
   private void testReparse(String code) {
     Node parse1 = parse(code);
     Node parse2 = parse(new CodePrinter.Builder(parse1).build());
@@ -927,10 +927,22 @@ public class CodePrinterTest extends TestCase {
 
     assertPrint("if(x)do{foo()}while(y);else bar()",
         "if(x){do foo();while(y)}else bar()");
+
+    assertPrint("if(x){do{foo()}while(y)}",
+        "if(x){do foo();while(y)}");
+
+    assertPrint("if(x)do{foo()}while(y);",
+        "if(x){do foo();while(y)}");
+
+    assertPrint("if(x)A:do{foo()}while(y);",
+        "if(x){A:do foo();while(y)}");
+    
+    assertPrint("var i = 0;a: do{b: do{i++;break b;} while(0);} while(0);",
+        "var i=0;a:do{b:do{i++;break b}while(0)}while(0)");
   }
 
   public void testFunctionSafariCompatiblity() {
-    // Do loops within IFs cause syntax errors in IE6 and IE7.
+    // Functions within IFs cause syntax errors on Safari.
     assertPrint("function(){if(e1){function goo(){return true}}else foo()}",
         "function(){if(e1){function goo(){return true}}else foo()}");
 
@@ -942,6 +954,9 @@ public class CodePrinterTest extends TestCase {
 
     assertPrint("if(e1)function goo(){return true}",
         "if(e1){function goo(){return true}}");
+
+    assertPrint("if(e1)A:function goo(){return true}",
+        "if(e1){A:function goo(){return true}}");
   }
 
   public void testExponents() {
