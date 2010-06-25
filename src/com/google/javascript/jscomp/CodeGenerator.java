@@ -86,7 +86,10 @@ class CodeGenerator {
 
     // Handle all binary operators
     if (opstr != null && first != last) {
-      Preconditions.checkState(childCount == 2);
+      Preconditions.checkState(
+          childCount == 2,
+          "Bad binary operator \"%s\": expected 2 arguments but got %s",
+          opstr, childCount);
       int p = NodeUtil.precedence(type);
       addLeftExpr(first, p, context);
       cc.addOp(opstr, true);
@@ -377,8 +380,12 @@ class CodeGenerator {
         break;
 
       case Token.GETPROP: {
-        Preconditions.checkState(childCount == 2);
-        Preconditions.checkState(last.getType() == Token.STRING);
+        Preconditions.checkState(
+            childCount == 2,
+            "Bad GETPROP: expected 2 children, but got %s", childCount);
+        Preconditions.checkState(
+            last.getType() == Token.STRING,
+            "Bad GETPROP: RHS should be STRING");
         boolean needsParens = (first.getType() == Token.NUMBER);
         if (needsParens) {
           add("(");
@@ -393,7 +400,9 @@ class CodeGenerator {
       }
 
       case Token.GETELEM:
-        Preconditions.checkState(childCount == 2);
+        Preconditions.checkState(
+            childCount == 2,
+            "Bad GETELEM: expected 2 children but got %s", childCount);
         addLeftExpr(first, NodeUtil.precedence(type), context);
         add("[");
         add(first.getNext());
