@@ -1267,4 +1267,9 @@ public class FoldConstantsTest extends CompilerTestCase {
     foldSame("var x; foo:{x = 3;}");
     foldSame("var x; foo:x = 3;");
   }
+
+  public void testShortCircuitLargeNumberFolding() {
+    fold("var b = 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000;",
+         "var b = 1000000000000000 * 1000 * 1000;");
+  }
 }

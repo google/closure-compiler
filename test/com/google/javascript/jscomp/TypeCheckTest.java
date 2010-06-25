@@ -3765,6 +3765,27 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testInferredReturn7() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number} x */ Foo.prototype.bar = function(x) {};" +
+        "Foo.prototype.bar = function(x) { return 3; };",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: undefined");
+  }
+
+  public void testInferredParam1() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number} x */ Foo.prototype.bar = function(x) {};" +
+        "/** @param {string} x */ function f(x) {}" +
+        "Foo.prototype.bar = function(y) { f(y); };",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testThis1() throws Exception {
     testTypes("var goog = {};" +
         "/** @constructor */goog.A = function(){};" +

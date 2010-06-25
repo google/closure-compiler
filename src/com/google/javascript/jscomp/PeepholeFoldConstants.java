@@ -63,6 +63,8 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   static final DiagnosticType FRACTIONAL_BITWISE_OPERAND = DiagnosticType.error(
       "JSC_FRACTIONAL_BITWISE_OPERAND",
       "Fractional bitwise operand: {0}");
+
+  private static final double MAX_FOLD_NUMBER = Math.pow(2, 53);
   
   @Override
   Node optimizeSubtree(Node subtree) {
@@ -558,7 +560,11 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       // length of the left and right value plus 1 byte for the operator.
       if (String.valueOf(result).length() <=
-          String.valueOf(lval).length() + String.valueOf(rval).length() + 1) {
+          String.valueOf(lval).length() + String.valueOf(rval).length() + 1 &&
+
+          // Do not try to fold arithmetic for numbers > 2^53. After that
+          // point, fixed-point math starts to break down and become inaccurate.
+          Math.abs(result) <= MAX_FOLD_NUMBER) {
         Node newNumber = Node.newNumber(result);
         n.getParent().replaceChild(n, newNumber);
         reportCodeChange();

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.ant;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.LimitInputStream;
+import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -32,9 +33,11 @@ import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileList;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
@@ -53,8 +56,11 @@ public final class CompileTask
     extends Task {
   private WarningLevel warningLevel;
   private boolean debugOptions;
+  private String encoding = "UTF-8";
+  private String outputEncoding = "UTF-8"; 
   private CompilationLevel compilationLevel;
   private boolean customExternsOnly;
+  private boolean manageDependencies;
   private File outputFile;
   private final List<FileList> externFileLists;
   private final List<FileList> sourceFileLists;
@@ -64,6 +70,7 @@ public final class CompileTask
     this.debugOptions = false;
     this.compilationLevel = CompilationLevel.SIMPLE_OPTIMIZATIONS;
     this.customExternsOnly = false;
+    this.manageDependencies = false;
     this.externFileLists = Lists.newLinkedList();
     this.sourceFileLists = Lists.newLinkedList();
   }
@@ -111,6 +118,10 @@ public final class CompileTask
     }
   }
 
+  public void setManageDependencies(boolean value) {
+    this.manageDependencies = value;
+  }
+
   /**
    * Use only custom externs.
    */
@@ -123,6 +134,20 @@ public final class CompileTask
    */
   public void setOutput(File value) {
     this.outputFile = value;
+  }
+
+  /** 
+   * Set input file encoding 
+   */
+  public void setEncoding(String encoding) {
+    this.encoding = encoding;
+  }
+
+  /** 
+   * Set output file encoding 
+   */
+  public void setOutputEncoding(String outputEncoding) {
+    this.outputEncoding = outputEncoding;
   }
 
   /**
@@ -171,6 +196,7 @@ public final class CompileTask
     }
 
     this.warningLevel.setOptionsForWarningLevel(options);
+    options.setManageClosureDependencies(manageDependencies);
     return options;
   }
 
@@ -215,7 +241,8 @@ public final class CompileTask
     File baseDir = fileList.getDir(getProject());
 
     for (String included : fileList.getFiles(getProject())) {
-      files.add(JSSourceFile.fromFile(new File(baseDir, included)));
+      files.add(JSSourceFile.fromFile(new File(baseDir, included),
+          Charset.forName(encoding)));
     }
 
     return files;
@@ -253,8 +280,10 @@ public final class CompileTask
     }
 
     try {
-      FileWriter out = new FileWriter(this.outputFile);
+      OutputStreamWriter out = new OutputStreamWriter(
+          new FileOutputStream(this.outputFile), outputEncoding);
       out.append(source);
+      out.flush();
       out.close();
     } catch (IOException e) {
       throw new BuildException(e);
@@ -264,3 +293,4 @@ public final class CompileTask
         Project.MSG_DEBUG);
   }
 }
+

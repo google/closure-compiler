@@ -98,6 +98,12 @@ StyleSheet.prototype.removeExpression;
 
 /** @type {string} */ CSSProperties.prototype.backgroundPositionY;
 
+/**
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/ms533883.aspx
+ */
+CSSProperties.prototype.imeMode;
+
 /** @type {string} */ CSSProperties.prototype.msInterpolationMode;
 
 /** @type {string} */ CSSProperties.prototype.overflowX;

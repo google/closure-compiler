@@ -486,6 +486,40 @@ chrome.experimental.popup = {};
 chrome.experimental.popup.show = function(url, showDetails, opt_callback) {};
 
 
+/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
+chrome.experimental.cookies = {};
+
+/**
+ * @param {Object} details
+ * @param {function(Cookie=) : void} callback
+ */
+chrome.experimental.cookies.get = function(details, callback) {};
+
+/**
+ * @param {Object} details
+ * @param {function(Array.<Cookie>) : void} callback
+ */
+chrome.experimental.cookies.getAll = function(details, callback) {};
+
+/**
+ * @param {function(Array.<CookieStore>) : void} callback
+ */
+chrome.experimental.cookies.getAllCookieStores = function(callback) {};
+
+/**
+ * @param {Object} details
+ */
+chrome.experimental.cookies.remove = function(details) {};
+
+/**
+ * @param {Object} details
+ */
+chrome.experimental.cookies.set = function(details) {};
+
+/** @type {ChromeEvent} */
+chrome.experimental.cookies.onChanged;
+
+
 // Classes
 
 /**
@@ -616,3 +650,39 @@ MetricType.prototype.min;
 MetricType.prototype.max;
 /** @type {number} */
 MetricType.prototype.buckets;
+
+/**
+ * Experimental Cookie
+ * @constructor
+ */
+function Cookie() {}
+/** @type {string} */
+Cookie.prototype.name;
+/** @type {string} */
+Cookie.prototype.value;
+/** @type {string} */
+Cookie.prototype.domain;
+/** @type {boolean} */
+Cookie.prototype.hostOnly;
+/** @type {string} */
+Cookie.prototype.path;
+/** @type {boolean} */
+Cookie.prototype.secure;
+/** @type {boolean} */
+Cookie.prototype.httpOnly;
+/** @type {boolean} */
+Cookie.prototype.session;
+/** @type {number} */
+Cookie.prototype.expirationDate;
+/** @type {string} */
+Cookie.prototype.storeId;
+
+/**
+ * Experimental CookieStore
+ * @constructor
+ */
+function CookieStore() {}
+/** @type {string} */
+CookieStore.prototype.id;
+/** @type {Array.<number>} */
+CookieStore.prototype.tabIds;

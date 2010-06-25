@@ -195,13 +195,8 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      */
     private Node createExternFunction(Node exportedFunction) {
       List<Node> externParameters = Lists.newLinkedList();
-      Node actualParameterIterator = NodeUtil.getFnParameters(exportedFunction)
-        .getFirstChild();
-      
-      while (actualParameterIterator != null) {
-        externParameters.add(actualParameterIterator.cloneNode());
-        
-        actualParameterIterator = actualParameterIterator.getNext();
+      for (Node param : NodeUtil.getFnParameters(exportedFunction).children()) {
+        externParameters.add(param.cloneNode());
       }
       
       Node externFunction = NodeUtil.newFunctionNode("", externParameters, 
