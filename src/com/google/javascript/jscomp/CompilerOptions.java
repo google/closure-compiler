@@ -555,6 +555,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Special Output Options
   //--------------------------------
 
+  /**
+   * Whether the exports should be made available via {@link Result} after
+   * compilation. This is implicitly true if {@link #externExportsPath} is set.
+   */
+  private boolean externExports;
+
   /** The output path for the created externs file. */
   String externExportsPath;
 
@@ -714,6 +720,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     warningsGuard = null;
     debugFunctionSideEffectsPath = null;
     jsOutputFile = "";
+    externExports = false;
     nameReferenceReportPath = null;
     nameReferenceGraphPath = null;
   }
@@ -932,6 +939,14 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setSummaryDetailLevel(int summaryDetailLevel) {
     this.summaryDetailLevel = summaryDetailLevel;
+  }
+
+  public void enableExternExports(boolean enable) {
+    this.externExports = enable;
+  }
+
+  public boolean isExternExportsEnabled() {
+    return externExports;
   }
 
   /**

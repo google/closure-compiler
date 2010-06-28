@@ -584,7 +584,8 @@ public class Compiler extends AbstractCompiler {
         return;
       }
 
-      if (options.externExportsPath != null) {
+      if (options.isExternExportsEnabled()
+          || options.externExportsPath != null) {
         externExports();
       }
 
