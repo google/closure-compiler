@@ -209,6 +209,11 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
     
+    // TODO(dcc): Just dropping the unary op makes some tests
+    // (e.g. PeepholeIntegration.testMinimizeExpr) very confusing because it
+    // leads to transformations like "!!true" --> "!false" --> "false".
+    // Do we really need to do this here?
+    
     if (NodeUtil.isExpressionNode(parent)) {
       // If the value isn't used, then just throw
       // away the operator

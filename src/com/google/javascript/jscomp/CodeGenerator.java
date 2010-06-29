@@ -213,6 +213,7 @@ class CodeGenerator {
         break;
 
       case Token.COMMA:
+        Preconditions.checkState(childCount == 2);
         addList(first, false, context);
         break;
 
