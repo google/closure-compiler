@@ -301,16 +301,68 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
 
   // The old and new parser produce different results now with labels, and
   // named breaks and continues, so disable these tests.
-  public void disable_testLabel() {
-    parse("foo: bar");
+  public void testLabel() {
+    testNewParser("foo: bar",
+      "SCRIPT 0\n" +
+      "    LABEL 0\n" +
+      "        LABEL_NAME foo 0\n" +
+      "        EXPR_RESULT 0\n" +
+      "            NAME bar 0\n");
   }
 
-  public void disable_testLabel2() {
-    parse("l: while (f()) { if (g()) { continue l; } }");
+  public void testLabel2() {
+    testNewParser("l: while (f()) { if (g()) { continue l; } }",
+      "SCRIPT 0\n" +
+      "    LABEL 0\n" +
+      "        LABEL_NAME l 0\n" +
+      "        WHILE 0\n" +
+      "            CALL 0\n" +
+      "                NAME f 0\n" +
+      "            BLOCK 0\n" +
+      "                IF 0\n" +
+      "                    CALL 0\n" +
+      "                        NAME g 0\n" +
+      "                    BLOCK 0\n" +
+      "                        CONTINUE 0\n" +
+      "                            LABEL_NAME l 0\n");
   }
 
-  public void disable_testLabel3() {
-    parse("Foo:Bar:X:{ break Bar; }");
+  public void testLabel3() {
+    testNewParser("Foo:Bar:X:{ break Bar; }",
+      "SCRIPT 0\n" +
+      "    LABEL 0\n" +
+      "        LABEL_NAME Foo 0\n" +
+      "        LABEL 0\n" +
+      "            LABEL_NAME Bar 0\n" +
+      "            LABEL 0\n" +
+      "                LABEL_NAME X 0\n" +
+      "                BLOCK 0\n" +
+      "                    BREAK 0\n" +
+      "                        LABEL_NAME Bar 0\n");
+  }
+
+  public void testNegation1() {
+    testNewParser("-a",
+      "SCRIPT 0\n" +
+      "    EXPR_RESULT 0\n" +
+      "        NEG 0\n" +
+      "            NAME a 0\n");
+  }
+
+  public void testNegation2() {
+    testNewParser("-2",
+      "SCRIPT 0\n" +
+      "    EXPR_RESULT 0\n" +
+      "        NUMBER -2.0 0\n");
+  }
+
+  public void testNegation3() {
+    testNewParser("1 - -2",
+      "SCRIPT 0\n" +
+      "    EXPR_RESULT 0\n" +
+      "        SUB 0\n" +
+      "            NUMBER 1.0 0\n" +
+      "            NUMBER -2.0 0\n");
   }
 
   public void testSwitch() {
@@ -970,6 +1022,11 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   private void assertNodePosition(int lineno, int charno, Node n) {
     assertEquals("Line number", lineno, n.getLineno());
     assertEquals("Column position", charno, n.getCharno());
+  }
+
+  private void testNewParser(String code, String expected) {
+    String actual = newParse(code).toStringTree();
+    assertEquals(expected, actual);
   }
 
   private void parse(String string) {

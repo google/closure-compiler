@@ -177,6 +177,13 @@ DOMImplementationSource.prototype.getDOMImplementationList = function(features) 
 DOMImplementation.prototype.getFeature = function(feature, version) {};
 
 /**
+ * @param {Node} externalNode
+ * @return {Node}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-adoptNode
+ */
+Document.prototype.adoptNode = function(externalNode) {};
+
+/**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-documentURI
  */

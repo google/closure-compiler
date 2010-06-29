@@ -24,7 +24,8 @@ package com.google.javascript.jscomp;
 public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   
   // Externs for builtin constructors
-  // Needed for testFoldLiteralConstructors() and testFoldRegExp...()
+  // Needed for testFoldLiteralObjectConstructors(),
+  // testFoldLiteralArrayConstructors() and testFoldRegExp...()
   private static final String FOLD_CONSTANTS_TEST_EXTERNS = 
       "var Object = function(){};\n" +
       "var RegExp = function(a){};\n" +
@@ -325,35 +326,88 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
             "foo\\\\u2028bar\\u2028"));
   }
 
-  public void testFoldLiteralConstructors() {
+  public void testFoldLiteralObjectConstructors() {
     enableNormalize();
     
     // Can fold when normalized
-    fold("x = new Array", "x = []");
-    fold("x = new Array()", "x = []");
-    fold("x = Array()", "x = []");
     fold("x = new Object", "x = ({})");
     fold("x = new Object()", "x = ({})");
     fold("x = Object()", "x = ({})");
 
     disableNormalize();
     // Cannot fold above when not normalized
-    foldSame("x = new Array");
-    foldSame("x = new Array()");
-    foldSame("x = Array()");
     foldSame("x = new Object");
     foldSame("x = new Object()");
     foldSame("x = Object()");
-    
+
     enableNormalize();
-    // Cannot fold, there are arguments
-    fold("x = new Array(7)", "x = Array(7)");
 
     // Cannot fold, the constructor being used is actually a local function
     foldSame("x = " +
          "(function(){function Object(){this.x=4};return new Object();})();");
   }
- 
+
+  public void testFoldLiteralArrayConstructors() {
+    enableNormalize();
+
+    // No arguments - can fold when normalized
+    fold("x = new Array", "x = []");
+    fold("x = new Array()", "x = []");
+    fold("x = Array()", "x = []");
+
+    // One argument - can be fold when normalized
+    fold("x = new Array(0)", "x = []");
+    fold("x = Array(0)", "x = []");
+    fold("x = new Array(\"a\")", "x = [\"a\"]");
+    fold("x = Array(\"a\")", "x = [\"a\"]");
+
+    // One argument - cannot be fold when normalized
+    fold("x = new Array(7)", "x = Array(7)");
+    fold("x = Array(7)", "x = Array(7)");
+    fold("x = new Array(y)", "x = Array(y)");
+    fold("x = Array(y)", "x = Array(y)");
+    fold("x = new Array(foo())", "x = Array(foo())");
+    fold("x = Array(foo())", "x = Array(foo())");
+
+    // More than one argument - can be fold when normalized
+    fold("x = new Array(1, 2, 3, 4)", "x = [1, 2, 3, 4]");
+    fold("x = Array(1, 2, 3, 4)", "x = [1, 2, 3, 4]");
+    fold("x = new Array('a', 1, 2, 'bc', 3, {}, 'abc')",
+         "x = ['a', 1, 2, 'bc', 3, {}, 'abc']");
+    fold("x = Array('a', 1, 2, 'bc', 3, {}, 'abc')",
+         "x = ['a', 1, 2, 'bc', 3, {}, 'abc']");
+    fold("x = new Array(Array(1, '2', 3, '4'))", "x = [[1, '2', 3, '4']]");
+    fold("x = Array(Array(1, '2', 3, '4'))", "x = [[1, '2', 3, '4']]");
+    fold("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
+         "x = [{}, [\"abc\", {}, [[]]]");
+    fold("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
+         "x = [{}, [\"abc\", {}, [[]]]");
+    
+    disableNormalize();
+    // Cannot fold above when not normalized
+    foldSame("x = new Array");
+    foldSame("x = new Array()");
+    foldSame("x = Array()");
+
+    foldSame("x = new Array(0)");
+    foldSame("x = Array(0)");
+    foldSame("x = new Array(\"a\")");
+    foldSame("x = Array(\"a\")");
+    foldSame("x = new Array(7)");
+    foldSame("x = Array(7)");
+    foldSame("x = new Array(foo())");
+    foldSame("x = Array(foo())");
+
+    foldSame("x = new Array(1, 2, 3, 4)");
+    foldSame("x = Array(1, 2, 3, 4)");
+    foldSame("x = new Array('a', 1, 2, 'bc', 3, {}, 'abc')");
+    foldSame("x = Array('a', 1, 2, 'bc', 3, {}, 'abc')");
+    foldSame("x = new Array(Array(1, '2', 3, '4'))");
+    foldSame("x = Array(Array(1, '2', 3, '4'))");
+    foldSame("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))");
+    foldSame("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))");
+  }
+
   public void testMinimizeCondition() {
     // This test uses constant folding logic, so is only here for completeness.
     fold("while(!!true) foo()", "while(1) foo()");
@@ -404,6 +458,6 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("var x = new Object('a')", "var x = Object('a')");
     fold("var x = new RegExp('')", "var x = RegExp('')");
     fold("var x = new Error('20')", "var x = Error(\"20\")");
-    fold("var x = new Array('20')", "var x = Array(\"20\")");
+    fold("var x = new Array(20)", "var x = Array(20)");
   }
 }

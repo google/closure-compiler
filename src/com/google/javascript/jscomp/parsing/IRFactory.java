@@ -787,12 +787,18 @@ public class IRFactory {
 
     @Override
     Node processUnaryExpression(UnaryExpression exprNode) {
-      Node node = new Node(transformTokenType(exprNode.getType()),
-                           transform(exprNode.getOperand()));
-      if (exprNode.isPostfix()) {
-        node.putBooleanProp(Node.INCRDECR_PROP, true);
+      int type = transformTokenType(exprNode.getType());
+      Node operand = transform(exprNode.getOperand());
+      if (type == Token.NEG && operand.getType() == Token.NUMBER) {
+        operand.setDouble(-operand.getDouble());
+        return operand;
+      } else {
+        Node node = new Node(type, operand);
+        if (exprNode.isPostfix()) {
+          node.putBooleanProp(Node.INCRDECR_PROP, true);
+        }
+        return node;
       }
-      return node;
     }
 
     @Override

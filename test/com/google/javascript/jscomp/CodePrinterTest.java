@@ -801,16 +801,10 @@ public class CodePrinterTest extends TestCase {
             CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD, true));
   }
 
-  /**
-   * This test case is more involved since we need to run a constant folding
-   * pass to get the -4 converted to a negative number, as opposed to a
-   * number node with a number 4 attached to the negation unary operator.
-   */
   public void testSubtraction() {
     Compiler compiler = new Compiler();
     Node n = compiler.parseTestCode("x - -4");
     assertEquals(0, compiler.getErrorCount());
-    NodeTraversal.traverse(compiler, n, new FoldConstants(compiler));
 
     assertEquals(
         "x- -4",

@@ -707,7 +707,7 @@ public class PeepholeSubstituteAlternateSyntax
     Node constructorNameNode = n.getFirstChild();
     
     Node newLiteralNode = null;
-    
+
     // We require the AST to be normalized to ensure that, say,
     // Object() really refers to the built-in Object constructor
     // and not a user-defined constructor with the same name.
@@ -720,17 +720,26 @@ public class PeepholeSubstituteAlternateSyntax
         // "RegExp("boo", "g")" --> /boo/g
         return tryFoldRegularExpressionConstructor(n);
       } else {
-        boolean constructorHasArguments = constructorNameNode.getNext() != null;
+        boolean constructorHasArgs = constructorNameNode.getNext() != null;
 
-        if (!constructorHasArguments) {
-          if ("Array".equals(className)) {
-            // "Array()" --> "[]"
+        if ("Object".equals(className) && !constructorHasArgs) {
+          // "Object()" --> "{}"
+          newLiteralNode = new Node(Token.OBJECTLIT);
+        } else if ("Array".equals(className)) {
+          // "Array(arg0, arg1, ...)" --> "[arg0, arg1, ...]"
+          Node arg0 = constructorNameNode.getNext();
+          FoldArrayAction action = isSafeToFoldArrayConstructor(arg0);
+
+          if (action == FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS ||
+              action == FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS) {
             newLiteralNode = new Node(Token.ARRAYLIT);
-          } else if ("Object".equals(className)) {
-            // "Object()" --> "{}"
-            newLiteralNode = new Node(Token.OBJECTLIT);
+            n.removeChildren();
+            if (action == FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS) {
+              newLiteralNode.addChildrenToFront(arg0);
+            }
           }
         }
+
         if (newLiteralNode != null) {
           n.getParent().replaceChild(n, newLiteralNode);
           reportCodeChange();
@@ -740,6 +749,44 @@ public class PeepholeSubstituteAlternateSyntax
     }
     return n;
   } 
+
+  private static enum FoldArrayAction {
+    NOT_SAFE_TO_FOLD, SAFE_TO_FOLD_WITH_ARGS, SAFE_TO_FOLD_WITHOUT_ARGS}
+
+  /**
+   * Checks if it is safe to fold Array() constructor into []. It can be
+   * obviously done, if the initial constructor has either no arguments or
+   * at least two. The remaining case may be unsafe since Array(number)
+   * actually reserves memory for an empty array which contains number elements. 
+   */
+  private FoldArrayAction isSafeToFoldArrayConstructor(Node arg) {
+    FoldArrayAction action = FoldArrayAction.NOT_SAFE_TO_FOLD;
+
+    if (arg == null) {
+      action = FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS;
+    } else if (arg.getNext() != null) {
+      action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
+    } else {
+      switch (arg.getType()) {
+        case (Token.STRING):
+          // "Array('a')" --> "['a']"
+          action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
+          break;
+        case (Token.NUMBER):
+          // "Array(0)" --> "[]"
+          if (arg.getDouble() == 0) {
+            action = FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS;
+          }
+          break;
+        case (Token.ARRAYLIT):
+          // "Array([args])" --> "[[args]]"
+          action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
+          break;
+        default:
+      }
+    }
+    return action;
+  }
 
   private Node tryFoldRegularExpressionConstructor(Node n) { 
     Node parent = n.getParent();

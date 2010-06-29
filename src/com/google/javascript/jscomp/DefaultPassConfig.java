@@ -613,7 +613,6 @@ public class DefaultPassConfig extends PassConfig {
     if (options.foldConstants) {
       // These used to be one pass.
       passes.add(minimizeExitPoints);
-      passes.add(foldConstants);
       passes.add(peepholeOptimizations);
     }
 
@@ -852,15 +851,6 @@ public class DefaultPassConfig extends PassConfig {
       return new CreateSyntheticBlocks(compiler,
           options.syntheticBlockStartMarker,
           options.syntheticBlockEndMarker);
-    }
-  };
-
-  /** Local constant folding */
-  static final PassFactory foldConstants =
-      new PassFactory("foldConstants", false) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new FoldConstants(compiler);
     }
   };
 
