@@ -162,3 +162,31 @@ TouchEvent.prototype.scale;
  */
 TouchEvent.prototype.rotation;
 
+/**
+ * Specifies the JavaScript method to invoke when the system cancels tracking
+ * for the touch.
+ * @param {Event} e
+ */
+Element.prototype.ontouchcancel = function(e) {};
+
+/**
+ * Specifies the JavaScript method to invoke when a given event lifts from the
+ * surface.
+ * @param {Event} e
+ */
+Element.prototype.ontouchend = function(e) {};
+
+/**
+ * Specifies the JavaScript method to invoke when a finger for a given event
+ * moves on the surface.
+ * @param {Event} e
+ */
+Element.prototype.ontouchmove = function(e) {};
+
+/**
+ * Specifies the JavaScript method to invoke when a finger for a given event
+ * touches the surface.
+ * @param {Event} e
+ */
+Element.prototype.ontouchstart = function(e) {};
+

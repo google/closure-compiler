@@ -154,14 +154,19 @@ final class FunctionTypeBuilder {
    * Infer the parameter and return types of a function from
    * the parameter and return types of the function it is overriding.
    *
-   * @param oldType The function being overridden.
+   * @param oldType The function being overridden. Does nothing if this is null.
    * @param paramsParent The LP node of the function that we're assigning to.
    *     If null, that just means we're not initializing this to a function
    *     literal.
    */
   FunctionTypeBuilder inferFromOverriddenFunction(
-      FunctionType oldType, @Nullable Node paramsParent) {
+      @Nullable FunctionType oldType, @Nullable Node paramsParent) {
+    if (oldType == null) {
+      return this;
+    }
+
     returnType = oldType.getReturnType();
+    returnTypeInferred = oldType.isReturnTypeInferred();
     if (paramsParent == null) {
       // Not a function literal.
       parametersNode = oldType.getParametersNode();
@@ -175,16 +180,27 @@ final class FunctionTypeBuilder {
           new FunctionParamBuilder(typeRegistry);
       Iterator<Node> oldParams = oldType.getParameters().iterator();
       boolean warnedAboutArgList = false;
+      boolean oldParamsNodeHasVarArgs = false;
       for (Node currentParam = paramsParent.getFirstChild();
            currentParam != null; currentParam = currentParam.getNext()) {
         if (oldParams.hasNext()) {
-          paramBuilder.newParameterFromNode(oldParams.next());
+          Node oldParam = oldParams.next();
+          Node newParam = paramBuilder.newParameterFromNode(oldParam);
+
+          // The subclass method might right its var_args as individual
+          // arguments.
+          if (currentParam.getNext() != null && newParam.isVarArgs()) {
+            newParam.setVarArgs(false);
+            newParam.setOptionalArg(true);
+            oldParamsNodeHasVarArgs = true;
+          }
         } else {
           warnedAboutArgList |= addParameter(
               paramBuilder,
               typeRegistry.getNativeType(UNKNOWN_TYPE),
               warnedAboutArgList,
-              codingConvention.isOptionalParameter(currentParam),
+              codingConvention.isOptionalParameter(currentParam) ||
+                  oldParamsNodeHasVarArgs,
               codingConvention.isVarArgsParameter(currentParam));
         }
       }
@@ -197,8 +213,11 @@ final class FunctionTypeBuilder {
    * Infer the return type from JSDocInfo.
    */
   FunctionTypeBuilder inferReturnType(@Nullable JSDocInfo info) {
-    returnType = info != null && info.hasReturnType() ?
-        info.getReturnType().evaluate(scope, typeRegistry) : null;
+    if (info != null && info.hasReturnType()) {
+      returnType = info.getReturnType().evaluate(scope, typeRegistry);
+      returnTypeInferred = false;
+    }
+
     if (templateTypeName != null &&
         returnType != null &&
         returnType.restrictByNotNullOrUndefined().isTemplateType()) {
@@ -211,7 +230,8 @@ final class FunctionTypeBuilder {
    * If we haven't found a return value yet, try to look at the "return"
    * statements in the function.
    */
-  FunctionTypeBuilder inferReturnStatements(@Nullable Node functionBlock) {
+  FunctionTypeBuilder inferReturnStatementsAsLastResort(
+      @Nullable Node functionBlock) {
     if (functionBlock == null || compiler.getInput(sourceName).isExtern()) {
       return this;
     }
@@ -375,6 +395,11 @@ final class FunctionTypeBuilder {
     }
 
     // arguments
+    Node oldParameterType = null;
+    if (parametersNode != null) {
+      oldParameterType = parametersNode.getFirstChild();
+    }
+
     FunctionParamBuilder builder = new FunctionParamBuilder(typeRegistry);
     boolean warnedAboutArgList = false;
     Set<String> allJsDocParams = (info == null) ?
@@ -386,10 +411,21 @@ final class FunctionTypeBuilder {
       allJsDocParams.remove(argumentName);
 
       // type from JSDocInfo
-      JSType parameterType =
-          info != null && info.hasParameterType(argumentName) ?
-          info.getParameterType(argumentName).evaluate(scope, typeRegistry) :
-          typeRegistry.getNativeType(UNKNOWN_TYPE);
+      JSType parameterType = null;
+      boolean isOptionalParam = isOptionalParameter(arg, info);
+      boolean isVarArgs = isVarArgsParameter(arg, info);
+      if (info != null && info.hasParameterType(argumentName)) {
+        parameterType =
+            info.getParameterType(argumentName).evaluate(scope, typeRegistry);
+      } else if (oldParameterType != null &&
+          oldParameterType.getJSType() != null) {
+        parameterType = oldParameterType.getJSType();
+        isOptionalParam = oldParameterType.isOptionalArg();
+        isVarArgs = oldParameterType.isVarArgs();
+      } else {
+        parameterType = typeRegistry.getNativeType(UNKNOWN_TYPE);
+      }
+
       if (templateTypeName != null &&
           parameterType.restrictByNotNullOrUndefined().isTemplateType()) {
         if (foundTemplateType) {
@@ -399,8 +435,12 @@ final class FunctionTypeBuilder {
       }
       warnedAboutArgList |= addParameter(
           builder, parameterType, warnedAboutArgList,
-          isOptionalParameter(arg, info),
-          isVarArgsParameter(arg, info));
+          isOptionalParam,
+          isVarArgs);
+
+      if (oldParameterType != null) {
+        oldParameterType = oldParameterType.getNext();
+      }
     }
 
     if (templateTypeName != null && !foundTemplateType) {

@@ -36,6 +36,14 @@ import java.util.Arrays;
 *
  */
 public class TypeCheckTest extends CompilerTypeTestCase {
+
+  private CheckLevel reportMissingOverrides = CheckLevel.WARNING;
+
+  public void setUp() throws Exception {
+    super.setUp();
+    reportMissingOverrides = CheckLevel.WARNING;
+  }
+
   public void testInitialTypingScope() {
     Scope s = new TypedScopeCreator(compiler,
         new DefaultCodingConvention()).createInitialScope(
@@ -3775,6 +3783,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: undefined");
   }
 
+  public void testInferredReturn8() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number} x */ Foo.prototype.bar = function(x) {};" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "/** @param {number} x */ SubFoo.prototype.bar = " +
+        "    function(x) { return 3; }",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: undefined");
+  }
+
   public void testInferredParam1() throws Exception {
     testTypes(
         "/** @constructor */ function Foo() {}" +
@@ -3784,6 +3805,90 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "actual parameter 1 of f does not match formal parameter\n" +
         "found   : number\n" +
         "required: string");
+  }
+
+  public void testInferredParam2() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
+    testTypes(
+        "/** @param {string} x */ function f(x) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number} x */ Foo.prototype.bar = function(x) {};" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "/** @return {void} */ SubFoo.prototype.bar = " +
+        "    function(x) { f(x); }",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testInferredParam3() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
+    testTypes(
+        "/** @param {string} x */ function f(x) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number=} x */ Foo.prototype.bar = function(x) {};" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "/** @return {void} */ SubFoo.prototype.bar = " +
+        "    function(x) { f(x); }; (new SubFoo()).bar();",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : (number|undefined)\n" +
+        "required: string");
+  }
+
+  public void testInferredParam4() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
+    testTypes(
+        "/** @param {string} x */ function f(x) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {...number} x */ Foo.prototype.bar = function(x) {};" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "/** @return {void} */ SubFoo.prototype.bar = " +
+        "    function(x) { f(x); }; (new SubFoo()).bar();",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : (number|undefined)\n" +
+        "required: string");
+  }
+
+  public void testInferredParam5() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
+    testTypes(
+        "/** @param {string} x */ function f(x) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {...number} x */ Foo.prototype.bar = function(x) {};" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "/** @param {number=} x \n * @param {...number} y  */ " +
+        "SubFoo.prototype.bar = " +
+        "    function(x, y) { f(x); }; (new SubFoo()).bar();",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : (number|undefined)\n" +
+        "required: string");
+  }
+
+  public void testOverriddenReturn1() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @return {Object} */ Foo.prototype.bar = " +
+        "    function() { return {}; };" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "/** @return {SubFoo}\n * @override */ SubFoo.prototype.bar = " +
+        "    function() { return new Foo(); }",
+        "inconsistent return type\n" +
+        "found   : Foo\n" +
+        "required: (SubFoo|null)");
+  }
+
+  public void testOverriddenReturn2() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @return {SubFoo} */ Foo.prototype.bar = " +
+        "    function() { return new SubFoo(); };" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "/** @return {Foo} x\n * @override */ SubFoo.prototype.bar = " +
+        "    function() { return new SubFoo(); }",
+        "mismatch of the bar property type and the type of the " +
+        "property it overrides from superclass Foo\n" +
+        "original: function (this:Foo): (SubFoo|null)\n" +
+        "override: function (this:SubFoo): (Foo|null)");
   }
 
   public void testThis1() throws Exception {
@@ -7124,7 +7229,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         compiler,
         new SemanticReverseAbstractInterpreter(
             compiler.getCodingConvention(), registry),
-        registry);
+        registry,
+        reportMissingOverrides,
+        CheckLevel.OFF);
   }
 
   void testTypes(String js, String[] warnings) throws Exception {

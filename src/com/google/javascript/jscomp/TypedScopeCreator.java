@@ -588,52 +588,32 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       if (functionType == null) {
-        if (info == null ||
-            !FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
-          // We don't really have any type information in the annotation.
-          // Before we give up on this function, look at the object we're
-          // assigning it to. For example, if the function looks like this:
-          // SubFoo.prototype.bar = function() { ... };
-          // We can use type information on Foo.prototype.bar and apply it
-          // to this function.
-          if (lvalueNode != null && lvalueNode.getType() == Token.GETPROP &&
-              lvalueNode.isQualifiedName()) {
-            Var var = scope.getVar(
-                lvalueNode.getFirstChild().getQualifiedName());
-            if (var != null) {
-              ObjectType ownerType = ObjectType.cast(var.getType());
-              FunctionType propType = null;
-              if (ownerType != null) {
-                String propName = lvalueNode.getLastChild().getString();
-                propType = findOverriddenFunction(ownerType, propName);
-              }
-
-              if (propType != null) {
-                functionType =
-                    new FunctionTypeBuilder(
-                        name, compiler, errorRoot, sourceName, scope)
-                    .setSourceNode(fnRoot)
-                    .inferFromOverriddenFunction(propType, parametersNode)
-                    .inferThisType(info, owner)
-                    .inferReturnStatements(fnBlock)
-                    .buildAndRegister();
-              }
+        // Find the type of any overridden function.
+        FunctionType overriddenPropType = null;
+        if (lvalueNode != null && lvalueNode.getType() == Token.GETPROP &&
+            lvalueNode.isQualifiedName()) {
+          Var var = scope.getVar(
+              lvalueNode.getFirstChild().getQualifiedName());
+          if (var != null) {
+            ObjectType ownerType = ObjectType.cast(var.getType());
+            if (ownerType != null) {
+              String propName = lvalueNode.getLastChild().getString();
+              overriddenPropType = findOverriddenFunction(ownerType, propName);
             }
           }
         }
-      } // end if (functionType == null)
 
-      if (functionType == null) {
         functionType =
             new FunctionTypeBuilder(name, compiler, errorRoot, sourceName,
                 scope)
             .setSourceNode(fnRoot)
+            .inferFromOverriddenFunction(overriddenPropType, parametersNode)
             .inferTemplateTypeName(info)
             .inferReturnType(info)
             .inferInheritance(info)
             .inferThisType(info, owner)
             .inferParameterTypes(parametersNode, info)
-            .inferReturnStatements(fnBlock)
+            .inferReturnStatementsAsLastResort(fnBlock)
             .buildAndRegister();
       }
 

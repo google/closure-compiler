@@ -111,10 +111,11 @@ public class FunctionParamBuilder {
   /**
    * Copies the parameter specification from the given node.
    */
-  public void newParameterFromNode(Node n) {
+  public Node newParameterFromNode(Node n) {
     Node newParam = newParameter(n.getJSType());
     newParam.setVarArgs(n.isVarArgs());
     newParam.setOptionalArg(n.isOptionalArg());
+    return newParam;
   }
 
   // Add a parameter to the list with the given type.
