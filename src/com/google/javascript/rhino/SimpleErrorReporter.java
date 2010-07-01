@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -36,7 +36,7 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 package com.google.javascript.rhino;
 
 import java.util.ArrayList;
@@ -95,7 +95,7 @@ public class SimpleErrorReporter implements ErrorReporter {
     {
         return warnings;
     }
-  
+
     private String formatDetailedMessage(
         String message, String sourceName, int line, String lineSource,
         int lineOffset)

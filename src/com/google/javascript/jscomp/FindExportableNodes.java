@@ -54,9 +54,9 @@ public class FindExportableNodes extends AbstractPostOrderCallback {
    * they are encountered.
    */
   private final LinkedHashMap<String, GenerateNodeContext> exports;
-  
+
   private final AbstractCompiler compiler;
-  
+
   public FindExportableNodes(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.exports = Maps.newLinkedHashMap();
@@ -102,7 +102,7 @@ public class FindExportableNodes extends AbstractPostOrderCallback {
       }
     }
   }
-  
+
   public LinkedHashMap<String, GenerateNodeContext> getExports() {
     return exports;
   }

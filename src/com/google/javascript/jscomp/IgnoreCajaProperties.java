@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Token;
 
 /**
  * Caja is a system that rewrites web content (JavaScript, CSS, HTML)
- * into web content that is safe to inline directly into a page.  
+ * into web content that is safe to inline directly into a page.
  * The rewritten ("cajoled") code runs in the presence of a JS library
  * that adds some properties to Object.prototype.  Because JS does not
  * yet (until ES5) allow programmers to mark properties as DontEnum,
@@ -37,20 +37,20 @@ import com.google.javascript.rhino.Token;
 class IgnoreCajaProperties implements CompilerPass {
 
   final AbstractCompiler compiler;
-  
+
   // Counts the number of temporary variables introduced.
   int counter;
- 
+
   public IgnoreCajaProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.counter = 0;
   }
- 
+
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new Traversal());
   }
- 
+
   private class Traversal extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -60,7 +60,7 @@ class IgnoreCajaProperties implements CompilerPass {
         n.removeChild(body);
         Node key = n.getFirstChild();
         n.removeChild(key);
-        Node tmp = Node.newString(Token.NAME, 
+        Node tmp = Node.newString(Token.NAME,
             "JSCompiler_IgnoreCajaProperties_" + counter++);
         n.addChildToFront(new Node(Token.VAR, tmp));
         Node assignment;
@@ -68,8 +68,8 @@ class IgnoreCajaProperties implements CompilerPass {
 
         // Construct the body of the if statement.
         if (key.getType() == Token.VAR) {
-          // for (var key in x) { body; } 
-          // => 
+          // for (var key in x) { body; }
+          // =>
           // for (var tmp in x) {
           //   if (!tmp.match(/___$/)) {
           //     var key;
@@ -83,13 +83,13 @@ class IgnoreCajaProperties implements CompilerPass {
               new Node(
                   Token.EXPR_RESULT,
                   new Node(
-                    Token.ASSIGN, 
-                    key.getFirstChild().cloneNode(), 
+                    Token.ASSIGN,
+                    key.getFirstChild().cloneNode(),
                     tmp.cloneTree())),
               body);
         } else {
-          // for (key in x) { body; } 
-          // => 
+          // for (key in x) { body; }
+          // =>
           // for (var tmp in x) {
           //   if (!tmp.match(/___$/)) {
           //     key = tmp;
@@ -101,28 +101,28 @@ class IgnoreCajaProperties implements CompilerPass {
               new Node(
                   Token.EXPR_RESULT,
                   new Node(
-                    Token.ASSIGN, 
-                    key, 
+                    Token.ASSIGN,
+                    key,
                     tmp.cloneTree())),
               body);
-        }          
+        }
 
         // Construct the new body of the for loop.
         Node newBody = new Node(
-            Token.BLOCK, 
+            Token.BLOCK,
             new Node(
-                Token.IF, 
+                Token.IF,
                 new Node(
-                    Token.NOT, 
+                    Token.NOT,
                     new Node(
-                        Token.CALL, 
+                        Token.CALL,
                         new Node(
-                            Token.GETPROP, 
-                            tmp.cloneTree(), 
-                            Node.newString("match")), 
+                            Token.GETPROP,
+                            tmp.cloneTree(),
+                            Node.newString("match")),
                         new Node(
-                            Token.REGEXP, 
-                            Node.newString("___$")))), 
+                            Token.REGEXP,
+                            Node.newString("___$")))),
                 ifBody));
         n.addChildToBack(newBody);
         compiler.reportCodeChange();

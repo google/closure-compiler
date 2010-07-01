@@ -92,6 +92,11 @@ public class DiagnosticGroups {
           new DiagnosticGroup(VarCheck.STRICT_MODULE_DEP_ERROR,
                               CheckGlobalNames.STRICT_MODULE_DEP_QNAME));
 
+  public static DiagnosticGroup EXTERNS_VALIDATION =
+    DiagnosticGroups.registerGroup("externsValidation",
+          new DiagnosticGroup(VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
+                              VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
+
   public static DiagnosticGroup UNKNOWN_DEFINES =
     DiagnosticGroups.registerGroup("unknownDefines",
           new DiagnosticGroup(ProcessDefines.UNKNOWN_DEFINE_WARNING));

@@ -34,7 +34,7 @@ final class NameGenerator {
   /** Generate short name with this first character */
   static final char[] FIRST_CHAR =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
-  
+
   /** These appear after after the first character */
   static final char[] NONFIRST_CHAR =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$"
@@ -79,7 +79,7 @@ final class NameGenerator {
   static char[] reserveCharacters(char[] chars, char[] reservedCharacters) {
     if (reservedCharacters == null || reservedCharacters.length == 0) {
       return chars;
-    }    
+    }
     Set<Character> charSet = Sets.newLinkedHashSet(Chars.asList(chars));
     for (char reservedCharacter : reservedCharacters) {
       charSet.remove(reservedCharacter);
@@ -120,9 +120,9 @@ final class NameGenerator {
   String generateNextName() {
     while (true) {
       String name = prefix;
-      
+
       int i = nameCount;
-      
+
       if (name.isEmpty()) {
         int pos = i % firstChars.length;
         name += firstChars[pos];
@@ -137,12 +137,12 @@ final class NameGenerator {
       }
 
       nameCount++;
-      
+
       // Make sure it's not a JS keyword or reserved name.
       if (TokenStream.isKeyword(name) || reservedNames.contains(name)) {
         continue;
       }
-      
+
       return name;
     }
   }

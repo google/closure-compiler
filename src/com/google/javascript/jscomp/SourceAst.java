@@ -50,4 +50,3 @@ public interface SourceAst extends Serializable {
    */
   public void setSourceFile(SourceFile file);
 }
-

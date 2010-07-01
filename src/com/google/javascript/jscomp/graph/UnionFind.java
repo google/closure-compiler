@@ -36,11 +36,11 @@ import java.util.Set;
  */
 public interface UnionFind<E> {
 
-  /** 
-   * Adds the given element to a new set if it is not already in a set. 
-   * 
-   * @throws UnsupportedOperationException if the add operation is not 
-   *     supported by this union-find. 
+  /**
+   * Adds the given element to a new set if it is not already in a set.
+   *
+   * @throws UnsupportedOperationException if the add operation is not
+   *     supported by this union-find.
    */
   public void add(E e);
 
@@ -48,9 +48,9 @@ public interface UnionFind<E> {
    * Unions the equivalence classes of {@code a} and {@code b} and returns the
    * representative of the resulting equivalence class.  The elements will be
    * added if they are not already present.
-   * 
-   * @throws UnsupportedOperationException if the add operation is not 
-   *     supported by this union-find. 
+   *
+   * @throws UnsupportedOperationException if the add operation is not
+   *     supported by this union-find.
    */
   public E union(E a, E b);
 
@@ -61,7 +61,7 @@ public interface UnionFind<E> {
    * Returns true if {@code a} and {@code b} belong to the same equivalence
    * class.
    *
-   * @throws IllegalArgumentException if any argument is not an element of this 
+   * @throws IllegalArgumentException if any argument is not an element of this
    *     structure.
    */
   public boolean areEquivalent(E a, E b);

@@ -43,10 +43,10 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
         new CreateSyntheticBlocks(compiler, START_MARKER, END_MARKER).process(
             externs, js);
         NodeTraversal.traverse(compiler, js, new MinimizeExitPoints(compiler));
-                
-        new PeepholeOptimizationsPass(compiler, new 
+
+        new PeepholeOptimizationsPass(compiler, new
             PeepholeRemoveDeadCode()).process(externs, js);
-        
+
         new Denormalize(compiler).process(externs, js);
       }
     };

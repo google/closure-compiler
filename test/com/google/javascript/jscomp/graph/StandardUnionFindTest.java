@@ -98,7 +98,7 @@ public class StandardUnionFindTest extends TestCase {
 
     Collection<Set<String>> classes = union.allEquivalenceClasses();
     assertEquals(3, classes.size());
-    assertContentsAnyOrder(classes, 
+    assertContentsAnyOrder(classes,
         ImmutableSet.of("A", "B", "C"),
         ImmutableSet.of("D", "E"),
         ImmutableSet.of("F"));
@@ -177,7 +177,7 @@ public class StandardUnionFindTest extends TestCase {
     assertEquals(ImmutableSet.of("A", "B", "C", "D", "E"), elements);
     assertFalse(elements.contains("F"));
   }
-  
+
   public void testCopy() {
     union.union("A", "B");
     union.union("B", "Z");
@@ -203,7 +203,7 @@ public class StandardUnionFindTest extends TestCase {
       // Expected.
     }
   }
-  
+
   public void testCheckEquivalent() {
     union.union("A", "B");
     union.add("C");
@@ -216,7 +216,7 @@ public class StandardUnionFindTest extends TestCase {
       // Expected.
     }
   }
-  
+
   /**
    * Asserts that {@code actual} contains precisely the elements
    * {@code expected}, in any order.  Both collections may contain

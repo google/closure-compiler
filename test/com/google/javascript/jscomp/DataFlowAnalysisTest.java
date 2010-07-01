@@ -654,7 +654,7 @@ public class DataFlowAnalysisTest extends TestCase {
     List<ConstPropLatticeElement> branchedFlowThrough(Instruction node,
         ConstPropLatticeElement input) {
       List<ConstPropLatticeElement> result = Lists.newArrayList();
-      List<DiGraphEdge<Instruction, Branch>> outEdges = 
+      List<DiGraphEdge<Instruction, Branch>> outEdges =
         getCfg().getOutEdges(node);
       if (node.isArithmetic()) {
         assertTrue(outEdges.size() < 2);

@@ -131,7 +131,7 @@ public class CollapseVariableDeclarationsTest extends CompilerTestCase {
     testSame("a.b = a.c = a.x; if (a.c) {}");
     testSame("a.b = a.c = a.x; if (a.b) {}");
   }
-  
+
   public void testBug2072343() {
     testSame("a = a.x;a = a.x");
     testSame("a = a.x;b = a.x");

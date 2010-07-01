@@ -222,7 +222,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         // scope modeling.
         compiler.report(
             JSError.make(sourceName, nodeWithLineNumber,
-                VAR_ARGUMENTS_SHADOWED_ERROR));        
+                VAR_ARGUMENTS_SHADOWED_ERROR));
       }
     }
   }

@@ -713,9 +713,9 @@ class CodeGenerator {
         return isOneExactlyFunctionOrDo(labeledStatement);
       } else {
         // For labels with block children, we need to ensure that a
-        // labeled FUNCTION or DO isn't generated when extraneous BLOCKs 
-        // are skipped. 
-        if (getNonEmptyChildCount(n, 2) == 1) { 
+        // labeled FUNCTION or DO isn't generated when extraneous BLOCKs
+        // are skipped.
+        if (getNonEmptyChildCount(n, 2) == 1) {
           return isOneExactlyFunctionOrDo(getFirstNonEmptyChild(n));
         } else {
           // Either a empty statement or an block with more than one child,

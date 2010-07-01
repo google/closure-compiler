@@ -64,7 +64,7 @@ final class CheckGlobalThis implements Callback {
 
   private final AbstractCompiler compiler;
   private final CheckLevel level;
-  
+
   /**
    * If {@code assignLhsChild != null}, then the node being traversed is
    * a descendant of the first child of an ASSIGN node. assignLhsChild's
@@ -112,7 +112,7 @@ final class CheckGlobalThis implements Callback {
     if (parent != null && parent.getType() == Token.ASSIGN) {
       Node lhs = parent.getFirstChild();
       Node rhs = lhs.getNext();
-      
+
       if (n == lhs) {
         // Always traverse the left side of the assignment. To handle
         // nested assignments properly (e.g., (a = this).property = c;),

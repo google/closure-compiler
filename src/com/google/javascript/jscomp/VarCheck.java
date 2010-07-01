@@ -53,12 +53,12 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
       "module {1}");
 
   static final DiagnosticType NAME_REFERENCE_IN_EXTERNS_ERROR =
-    DiagnosticType.error(
+    DiagnosticType.warning(
       "JSC_NAME_REFERENCE_IN_EXTERNS",
       "accessing name {0} in externs has no effect");
 
   static final DiagnosticType UNDEFINED_EXTERN_VAR_ERROR =
-    DiagnosticType.error(
+    DiagnosticType.disabled(
       "JSC_UNDEFINED_EXTERN_VAR_ERROR",
       "name {0} is not undefined in the externs.");
 
@@ -74,12 +74,17 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
   // Whether this is the post-processing sanity check.
   private final boolean sanityCheck;
 
+  // Whether extern checks emit error.
+  private boolean strictExternCheck;
+
   VarCheck(AbstractCompiler compiler) {
     this(compiler, false);
   }
 
   VarCheck(AbstractCompiler compiler, boolean sanityCheck) {
     this.compiler = compiler;
+    this.strictExternCheck = compiler.getErrorLevel(
+        JSError.make("", 0, 0, UNDEFINED_EXTERN_VAR_ERROR)) == CheckLevel.ERROR;
     this.sanityCheck = sanityCheck;
   }
 
@@ -119,7 +124,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
         // current scope.
       } else {
         // The extern checks are stricter, don't report a second error.
-        if (!t.getInput().isExtern()) {
+        if (!strictExternCheck || !t.getInput().isExtern()) {
           t.report(n, UNDEFINED_VAR_ERROR, varName);
         }
 

@@ -50,7 +50,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   private static final Predicate<String> FALSE = Predicates.alwaysFalse();
-  
+
   private static final Predicate<DiGraphEdge<String, String>> ALL_EDGE =
       Predicates.alwaysTrue();
 
@@ -152,7 +152,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     assertGood(createTest(g, "a", "e", Predicates.equalTo("e"), ALL_EDGE));
     assertBad(createTest(g, "a", "e", Predicates.equalTo("f"), ALL_EDGE));
   }
-  
+
   /**
    * Tests another graph with cycles. The topology of this graph was inspired
    * by a control flow graph that was being incorrectly analyzed by an early
@@ -164,16 +164,16 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");
     g.createDirectedGraphNode("d");
-    
+
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
     g.connect("c", "-", "b");
     g.connect("b", "-", "d");
-    
+
     assertGood(createTest(g, "a", "d", Predicates.equalTo("a"), ALL_EDGE));
     assertBad(createTest(g, "a", "d", Predicates.equalTo("z"), ALL_EDGE));
   }
-  
+
   /**
    * Tests another graph with cycles. The topology of this graph was inspired
    * by a control flow graph that was being incorrectly analyzed by an early
@@ -185,18 +185,18 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");
     g.createDirectedGraphNode("d");
-    
+
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
     g.connect("c", "-", "b");
     g.connect("b", "-", "d");
     g.connect("c", "-", "d");
-    
+
     assertGood(createTest(g, "a", "d", Predicates.equalTo("a"), ALL_EDGE));
     assertBad(createTest(g, "a", "d", Predicates.equalTo("z"), ALL_EDGE));
   }
 
-  
+
   /**
    * Much of the tests are done by testing all paths. We quickly verified
    * that some paths are indeed correct for the some path case.
@@ -212,7 +212,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     g.connect("a", "-", "c");
     g.connect("b", "-", "d");
     g.connect("c", "-", "d");
-    
+
     assertTrue(createTest(g, "a", "d", Predicates.equalTo("b"), ALL_EDGE)
         .somePathsSatisfyPredicate());
     assertTrue(createTest(g, "a", "d", Predicates.equalTo("c"), ALL_EDGE)
@@ -224,7 +224,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     assertFalse(createTest(g, "a", "d", Predicates.equalTo("NONE"), ALL_EDGE)
         .somePathsSatisfyPredicate());
   }
-  
+
   public void testSomePath2() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
@@ -238,7 +238,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
     assertTrue(createTest(g, "a", "b", Predicates.equalTo("a"), ALL_EDGE)
         .somePathsSatisfyPredicate());
   }
-  
+
   public void testNonInclusive() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
@@ -258,7 +258,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
   private static <N, E> void assertGood(CheckPathsBetweenNodes<N, E> test) {
     assertTrue(test.allPathsSatisfyPredicate());
   }
-  
+
   private static <N, E> void assertBad(CheckPathsBetweenNodes<N, E> test) {
     assertFalse(test.allPathsSatisfyPredicate());
   }
@@ -273,7 +273,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
         graph.getDirectedGraphNode(entry), graph.getDirectedGraphNode(exit),
         nodePredicate, edgePredicate);
   }
-  
+
   private static CheckPathsBetweenNodes<String, String>
       createNonInclusiveTest(
         DiGraph<String, String> graph,
@@ -285,7 +285,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
         graph.getDirectedGraphNode(entry), graph.getDirectedGraphNode(exit),
         nodePredicate, edgePredicate, false);
   }
-  
+
   private static Predicate<DiGraphEdge<String, String>>
       edgeIs(final Object val) {
     return new Predicate<DiGraphEdge<String, String>>() {

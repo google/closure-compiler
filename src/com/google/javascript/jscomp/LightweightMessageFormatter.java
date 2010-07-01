@@ -81,7 +81,7 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
       }
       b.append(": ");
     }
-    
+
     b.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
     b.append(" - ");
 

@@ -61,7 +61,7 @@ class CheckPathsBetweenNodes<N, E> {
   private static final Annotation GRAY = new Annotation() {};
   // Finished visiting.
   private static final Annotation BLACK = new Annotation() {};
-  
+
   private final DiGraph<N, E> graph;
   private final DiGraphNode<N, E> start;
   private final DiGraphNode<N, E> end;
@@ -92,7 +92,7 @@ class CheckPathsBetweenNodes<N, E> {
     this.edgePredicate = edgePredicate;
     this.inclusive = inclusive;
   }
-  
+
   /**
    * Inclusive check.
    */
@@ -101,7 +101,7 @@ class CheckPathsBetweenNodes<N, E> {
       Predicate<DiGraphEdge<N, E>> edgePredicate) {
     this(graph, a, b, nodePredicate, edgePredicate, true);
   }
-  
+
 
   /**
    * @return true iff all paths contain at least one node that satisfy the
@@ -113,7 +113,7 @@ class CheckPathsBetweenNodes<N, E> {
     tearDown();
     return result;
   }
-  
+
   /**
    * @return true iff some paths contain at least one node that satisfy the
    *     predicate
@@ -130,12 +130,12 @@ class CheckPathsBetweenNodes<N, E> {
     graph.pushEdgeAnnotations();
     discoverBackEdges(this.start);
   }
-  
+
   private void tearDown() {
     graph.popNodeAnnotations();
     graph.popEdgeAnnotations();
   }
-  
+
   private void discoverBackEdges(DiGraphNode<N, E> u) {
     u.setAnnotation(GRAY);
     for (DiGraphEdge<N, E> e : u.getOutEdges()) {
@@ -183,7 +183,7 @@ class CheckPathsBetweenNodes<N, E> {
     }
     return true;
   }
-  
+
   /**
    * Verify that some non-looping paths from {@code a} to {@code b} pass
    * through at least one node where {@code nodePredicate} is true.

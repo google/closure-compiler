@@ -34,10 +34,10 @@ import com.google.javascript.rhino.Node;
  *
  * The two pieces of information will be annotated to {@link NameReferenceGraph}
  * by {@link NameInfo} objects.
- * 
+ *
  * This is an analysis based on {@link AnalyzeNameReferences} using the more
  * accurate graph and will soon replace it.
- * 
+ *
 *
  */
 class AnalyzeNameReferences implements CompilerPass {
@@ -45,7 +45,7 @@ class AnalyzeNameReferences implements CompilerPass {
   private NameReferenceGraph graph;
   private final JSModuleGraph moduleGraph;
   private final AbstractCompiler compiler;
-  
+
   AnalyzeNameReferences(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.moduleGraph = compiler.getModuleGraph();
@@ -66,7 +66,7 @@ class AnalyzeNameReferences implements CompilerPass {
   public NameReferenceGraph getGraph() {
     return graph;
   }
-  
+
   private class PropagateReferences implements EdgeCallback<Name, Reference> {
     public boolean traverseEdge(Name start, Reference edge, Name dest) {
       NameInfo startInfo = getInfo(start);
@@ -93,7 +93,7 @@ class AnalyzeNameReferences implements CompilerPass {
     }
     return info;
   }
-  
+
   final class NameInfo implements Annotation {
     private boolean referenced = false;
     private JSModule deepestCommonModuleRef = null;
@@ -102,7 +102,7 @@ class AnalyzeNameReferences implements CompilerPass {
     boolean isReferenced() {
       return referenced;
     }
-    
+
     /**
      * Returns the deepest common module of all the references to this
      * property.

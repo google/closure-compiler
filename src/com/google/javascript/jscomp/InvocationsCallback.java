@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Token;
 
 /**
  * Traversal callback that finds method invocations of the form
- * 
+ *
  * <pre>
  * call
  *   getprop
@@ -30,9 +30,9 @@ import com.google.javascript.rhino.Token;
  *     string
  *   ...
  * </pre>
- * 
+ *
  * and invokes a method defined by subclasses for processing these invocations.
- * 
+ *
 *
  */
 abstract class InvocationsCallback extends AbstractPostOrderCallback {
@@ -60,7 +60,7 @@ abstract class InvocationsCallback extends AbstractPostOrderCallback {
 
   /**
    * Called for each callnode that is a method invocation.
-   * 
+   *
    * @param callNode node of type call
    * @param parent parent of callNode
    * @param callName name of method invoked by first child of call

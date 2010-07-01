@@ -141,7 +141,7 @@ class ControlFlowGraph<N> extends
       return !isEnteringNewCfgNode(n);
     }
   }
-  
+
   /**
    * @return True if n should be represented by a new CFG node in the control
    * flow graph.
@@ -169,7 +169,7 @@ class ControlFlowGraph<N> extends
         // Theses control structure is represented by its node that holds the
         // condition. Each of them is a branch node based on its condition.
         return NodeUtil.getConditionExpression(parent) != n;
-        
+
       case Token.FOR:
         // The FOR(;;) node differs from other control structure in that
         // it has a initialization and a increment statement. Those
@@ -179,7 +179,7 @@ class ControlFlowGraph<N> extends
         // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
         // var x = 0; while(x<10) {  x++; }
         if (NodeUtil.isForIn(parent)) {
-          return n == parent.getLastChild(); 
+          return n == parent.getLastChild();
         } else {
           return NodeUtil.getConditionExpression(parent) != n;
         }

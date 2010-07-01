@@ -50,7 +50,7 @@ public interface CodingConvention {
    * annotation.
    */
   public boolean isConstantKey(String keyName);
-  
+
   /**
    * This checks that a given {@code key} may be used as a key for an enum.
    *
@@ -337,7 +337,7 @@ public interface CodingConvention {
 
     /**
      * Returns the type for a type assertion, or null if the function asserts
-     * that the node must not be null or undefined. 
+     * that the node must not be null or undefined.
      */
     public JSTypeNative getAssertedType() {
       return assertedType;

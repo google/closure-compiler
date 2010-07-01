@@ -235,10 +235,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    *     properties.
    */
   abstract void setHasRegExpGlobalReferences(boolean references);
-  
+
   /**
    * @return Whether the AST constains references to the RegExp global object
    *     properties.
    */
   abstract boolean hasRegExpGlobalReferences();
+
+  /**
+   * @return The error level the given error object will be reported at.
+   */
+  abstract CheckLevel getErrorLevel(JSError error);
 }

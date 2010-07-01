@@ -28,6 +28,8 @@ public class VarCheckTest extends CompilerTestCase {
   private CheckLevel strictModuleDepErrorLevel;
   private boolean sanityCheck = false;
 
+  private CheckLevel externValidationpErrorLevel;
+
   public VarCheckTest() {
     super(EXTERNS);
   }
@@ -36,6 +38,7 @@ public class VarCheckTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     strictModuleDepErrorLevel = CheckLevel.OFF;
+    externValidationpErrorLevel = CheckLevel.ERROR;
     sanityCheck = false;
   }
 
@@ -44,6 +47,8 @@ public class VarCheckTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
         strictModuleDepErrorLevel);
+    options.setWarningLevel(DiagnosticGroups.EXTERNS_VALIDATION,
+        externValidationpErrorLevel);
     return options;
   }
 
@@ -109,13 +114,25 @@ public class VarCheckTest extends CompilerTestCase {
   }
 
   public void testPropReferenceInExterns1() {
+    externValidationpErrorLevel = CheckLevel.ERROR;
     testSame("asdf.foo;", "var asdf;",
         VarCheck.UNDEFINED_EXTERN_VAR_ERROR, true);
   }
 
   public void testPropReferenceInExterns2() {
+    externValidationpErrorLevel = CheckLevel.ERROR;
     testSame("asdf.foo;", "",
         VarCheck.UNDEFINED_EXTERN_VAR_ERROR, true);
+  }
+
+  public void testPropReferenceInExterns3() {
+    externValidationpErrorLevel = CheckLevel.WARNING;
+    test("asdf.foo;", "", "",
+        VarCheck.UNDEFINED_VAR_ERROR, VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
+
+    externValidationpErrorLevel = CheckLevel.OFF;
+    test("asdf.foo;", "", "",
+        VarCheck.UNDEFINED_VAR_ERROR, null);
   }
 
   public void testVarInWithBlock() {
@@ -327,7 +344,8 @@ public class VarCheckTest extends CompilerTestCase {
     Node expected = compiler.parseTestCode(expectedExtern);
     assertFalse(compiler.hasErrors());
 
-    (new VarCheck(compiler, sanityCheck)).process(externs, root);
+    (new VarCheck(compiler, sanityCheck))
+        .process(externs, root);
     if (!sanityCheck) {
       (new VariableTestCheck(compiler)).process(externs, root);
     }

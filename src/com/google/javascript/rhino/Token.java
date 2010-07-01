@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -251,10 +251,10 @@ public class Token
         SETCONST       = 150,
         SETCONSTVAR    = 151,
         DEBUGGER       = 152,
-        
+
         // JSCompiler introduced tokens
         LABEL_NAME     = 153,
-        
+
         LAST_TOKEN     = 153,
 
         // JSDoc-only tokens
@@ -433,7 +433,7 @@ public class Token
           case QMARK:           return "QMARK";
           case ELLIPSIS:        return "ELLIPSIS";
           case BANG:            return "BANG";
-          case VOID:            return "VOID"; 
+          case VOID:            return "VOID";
           case EQUALS:          return "EQUALS";
         }
 

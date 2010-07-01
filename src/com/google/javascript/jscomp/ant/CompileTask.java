@@ -57,7 +57,7 @@ public final class CompileTask
   private WarningLevel warningLevel;
   private boolean debugOptions;
   private String encoding = "UTF-8";
-  private String outputEncoding = "UTF-8"; 
+  private String outputEncoding = "UTF-8";
   private CompilationLevel compilationLevel;
   private boolean customExternsOnly;
   private boolean manageDependencies;
@@ -136,15 +136,15 @@ public final class CompileTask
     this.outputFile = value;
   }
 
-  /** 
-   * Set input file encoding 
+  /**
+   * Set input file encoding
    */
   public void setEncoding(String encoding) {
     this.encoding = encoding;
   }
 
-  /** 
-   * Set output file encoding 
+  /**
+   * Set output file encoding
    */
   public void setOutputEncoding(String outputEncoding) {
     this.outputEncoding = outputEncoding;
@@ -293,4 +293,3 @@ public final class CompileTask
         Project.MSG_DEBUG);
   }
 }
-

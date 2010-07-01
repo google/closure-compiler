@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Node;
  * the root node of the parsed JS tree, as well as the
  * root node of the external JS tree (used to provide a public API
  * and prevent renaming of system functions).</p>
- * 
+ *
  * <p>Use this class to support testing with BaseCompilerTest</p>
  *
 *

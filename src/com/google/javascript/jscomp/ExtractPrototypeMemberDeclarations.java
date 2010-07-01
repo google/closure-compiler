@@ -117,7 +117,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
     Node var = NodeUtil.newVarNode(prototypeAlias, null)
         .copyInformationFromForTree(injectionPoint);
-    
+
     injectionPoint.addChildrenToFront(var);
 
     // Go through all extraction instances and extract each of them.
@@ -246,7 +246,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       delta = PER_EXTRACTION_INSTANCE_OVERHEAD + PER_PROTOTYPE_MEMBER_DELTA;
 
       for (Node cur = head.node.getNext(); cur != null; cur = cur.getNext()) {
-        
+
         // We can skip over any named functions because they have no effect on
         // the control flow. In fact, they are lifted to the beginning of the
         // block. This happens a lot when devirtualization breaks the whole
@@ -254,7 +254,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         if (NodeUtil.isFunction(cur)) {
           continue;
         }
-        
+
         PrototypeMemberDeclaration prototypeMember =
             PrototypeMemberDeclaration.extractDeclaration(cur);
         if (prototypeMember == null || !head.isSameClass(prototypeMember)) {

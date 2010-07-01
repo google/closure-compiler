@@ -53,7 +53,7 @@ final class RenameVars implements CompilerPass {
 
   /** List of local NAME nodes */
   private final ArrayList<Node> localNameNodes = new ArrayList<Node>();
-  
+
   /**
    * Maps a name node to its pseudo name, null if we are not generating so
    * there will not no overhead unless we are debugging.
@@ -239,7 +239,7 @@ final class RenameVars implements CompilerPass {
       if (pseudoNameMap != null) {
         recordPseudoName(n);
       }
-      
+
       if (local) {
         // Local var: assign a new name
         String tempName = LOCAL_VAR_PREFIX + var.getLocalVarIndex();

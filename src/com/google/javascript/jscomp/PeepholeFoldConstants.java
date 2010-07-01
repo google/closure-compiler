@@ -65,54 +65,54 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       "Fractional bitwise operand: {0}");
 
   private static final double MAX_FOLD_NUMBER = Math.pow(2, 53);
-  
+
   @Override
   Node optimizeSubtree(Node subtree) {
     switch(subtree.getType()) {
       case Token.CALL:
         return tryFoldKnownMethods(subtree);
-        
+
       case Token.TYPEOF:
         return tryFoldTypeof(subtree);
-        
+
       case Token.NOT:
       case Token.NEG:
       case Token.BITNOT:
         return tryFoldUnaryOperator(subtree);
-        
+
       default:
         return tryFoldBinaryOperator(subtree);
     }
   }
-  
+
   private Node tryFoldBinaryOperator(Node subtree) {
     Node left = subtree.getFirstChild();
-    
+
     if (left == null) {
       return subtree;
     }
-    
+
     Node right = left.getNext();
-    
+
     if (right == null) {
       return subtree;
     }
-    
+
     // If we've reached here, node is truly a binary operator.
     switch(subtree.getType()) {
       case Token.GETPROP:
         return tryFoldGetProp(subtree, left, right);
-        
+
       case Token.GETELEM:
         return tryFoldGetElem(subtree, left, right);
-        
+
       case Token.INSTANCEOF:
         return tryFoldInstanceof(subtree, left, right);
-        
+
       case Token.AND:
       case Token.OR:
-        return tryFoldAndOr(subtree, left, right);    
-        
+        return tryFoldAndOr(subtree, left, right);
+
       case Token.BITAND:
       case Token.BITOR:
         return tryFoldBitAndOr(subtree, left, right);
@@ -121,18 +121,18 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.RSH:
       case Token.URSH:
         return tryFoldShift(subtree, left, right);
-        
+
       case Token.ASSIGN:
         return tryFoldAssign(subtree, left, right);
 
       case Token.ADD:
         return tryFoldAdd(subtree, left, right);
-        
+
       case Token.SUB:
       case Token.MUL:
       case Token.DIV:
         return tryFoldArithmetic(subtree, left, right);
-        
+
       case Token.LT:
       case Token.GT:
       case Token.LE:
@@ -142,12 +142,12 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.SHEQ:
       case Token.SHNE:
         return tryFoldComparison(subtree, left, right);
-        
+
       default:
         return subtree;
     }
   }
-  
+
   /**
    * Folds 'typeof(foo)' if foo is a literal, e.g.
    * typeof("bar") --> "string"
@@ -160,7 +160,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (argumentNode == null || !NodeUtil.isLiteralValue(argumentNode)) {
       return originalTypeofNode;
     }
-    
+
     String typeNameString = null;
 
     switch (argumentNode.getType()) {
@@ -179,7 +179,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.ARRAYLIT:
         typeNameString = "object";
         break;
-      case Token.NAME:          
+      case Token.NAME:
         // We assume here that programs don't change the value of the
         // keyword undefined to something other than the value undefined.
         if ("undefined".equals(argumentNode.getString())) {
@@ -192,28 +192,28 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       Node newNode = Node.newString(typeNameString);
       originalTypeofNode.getParent().replaceChild(originalTypeofNode, newNode);
       reportCodeChange();
-      
+
       return newNode;
     }
-  
+
     return originalTypeofNode;
   }
-  
+
   private Node tryFoldUnaryOperator(Node n) {
     Preconditions.checkState(n.hasOneChild());
 
     Node left = n.getFirstChild();
     Node parent = n.getParent();
-    
+
     if (left == null) {
       return n;
     }
-    
+
     // TODO(dcc): Just dropping the unary op makes some tests
     // (e.g. PeepholeIntegration.testMinimizeExpr) very confusing because it
     // leads to transformations like "!!true" --> "!false" --> "false".
     // Do we really need to do this here?
-    
+
     if (NodeUtil.isExpressionNode(parent)) {
       // If the value isn't used, then just throw
       // away the operator
@@ -229,7 +229,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     switch (n.getType()) {
       case Token.NOT:
-        int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;           
+        int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;
         Node replacementNode = new Node(result);
         parent.replaceChild(n, replacementNode);
         reportCodeChange();
@@ -250,7 +250,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           }
 
           double negNum = -left.getDouble();
-          
+
           Node negNumNode = Node.newNumber(negNum);
           parent.replaceChild(n, negNumNode);
           reportCodeChange();
@@ -284,26 +284,26 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           // user because they can't be doing anything good
           error(NEGATING_A_NON_NUMBER_ERROR, left);
           return n;
-        }    
+        }
         default:
           return n;
     }
   }
-  
+
   /**
-   * Try to fold {@code left instanceof right} into {@code true} 
+   * Try to fold {@code left instanceof right} into {@code true}
    * or {@code false}.
    */
   private Node tryFoldInstanceof(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.INSTANCEOF);
-     
+
     // TODO(johnlenz) Use type information if available to fold
     // instanceof.
     if (NodeUtil.isLiteralValue(left)
         && !NodeUtil.mayHaveSideEffects(right)) {
-      
+
       Node replacementNode = null;
-      
+
       if (NodeUtil.isImmutableValue(left)) {
         // Non-object types are never instances.
         replacementNode = new Node(Token.FALSE);
@@ -311,17 +311,17 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           && "Object".equals(right.getString())) {
         replacementNode = new Node(Token.TRUE);
       }
-      
+
       if (replacementNode != null) {
         n.getParent().replaceChild(n, replacementNode);
         reportCodeChange();
         return replacementNode;
-      }     
+      }
     }
-    
+
     return n;
   }
-  
+
   private Node tryFoldAssign(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.ASSIGN);
 
@@ -383,22 +383,22 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node newNode = new Node(newType,
         left.detachFromParent(), right.getLastChild().detachFromParent());
     n.getParent().replaceChild(n, newNode);
-    
+
     reportCodeChange();
-    
+
     return newNode;
   }
-  
+
   /**
    * Try to fold a AND/OR node.
    */
   private Node tryFoldAndOr(Node n, Node left, Node right) {
     Node parent = n.getParent();
-    
+
     Node result = null;
 
     int type = n.getType();
-   
+
     TernaryValue leftVal = NodeUtil.getBooleanValue(left);
 
     if (leftVal != TernaryValue.UNKNOWN) {
@@ -418,7 +418,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     } else {
       TernaryValue rightVal = NodeUtil.getBooleanValue(right);
       if (rightVal != TernaryValue.UNKNOWN) {
-  
+
       // Note: We cannot always fold when the constant is on the
       // right, because the typed value of the expression will depend
       // on the type of the constant on the right, even if the boolean
@@ -459,13 +459,13 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       n.removeChild(result);
       parent.replaceChild(n, result);
       reportCodeChange();
-      
+
       return result;
     } else {
       return n;
     }
   }
-  
+
   /**
    * Expressions such as [foo() + 'a' + 'b'] generate parse trees
    * where no node has two const children ((foo() + 'a') + 'b'), so
@@ -493,7 +493,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (lr.getType() != Token.STRING) {
         return n;
       }
-      
+
       String leftString = NodeUtil.getStringValue(lr);
       String rightString = NodeUtil.getStringValue(right);
       if (leftString != null && rightString != null) {
@@ -504,7 +504,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         reportCodeChange();
       }
     }
-    
+
     return n;
   }
 
@@ -528,10 +528,10 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // Try arithmetic add
       return tryFoldArithmetic(n, left, right);
     }
-    
+
     return n;
   }
-  
+
   /**
    * Try to fold arithmetic binary operators
    */
@@ -578,10 +578,10 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    }
     return n;
   }
-   
+
   private Node tryFoldAdd(Node node, Node left, Node right) {
     Preconditions.checkArgument(node.getType() == Token.ADD);
-    
+
     if (NodeUtil.isLiteralValue(left) && NodeUtil.isLiteralValue(right)) {
       // 6 + 7
       return tryFoldAddConstant(node, left, right);
@@ -590,14 +590,14 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return tryFoldLeftChildAdd(node, left, right);
     }
   }
-  
+
   /**
    * Try to fold arithmetic binary operators
    */
   private Node tryFoldBitAndOr(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.BITAND
         || n.getType() == Token.BITOR);
-    
+
     if (left.getType() == Token.NUMBER &&
         right.getType() == Token.NUMBER) {
       double resultDouble;
@@ -634,15 +634,15 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         default:
           throw new Error("Unknown bitwise operator");
       }
-      
+
       Node newNumber = Node.newNumber(resultDouble);
       n.getParent().replaceChild(n, newNumber);
       reportCodeChange();
     }
-    
+
     return n;
   }
-  
+
   /**
    * Try to fold shift operations
    */
@@ -695,17 +695,17 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           throw new AssertionError("Unknown shift operator: " +
               Node.tokenToName(n.getType()));
       }
-      
+
       Node newNumber = Node.newNumber(result);
       n.getParent().replaceChild(n, newNumber);
       reportCodeChange();
-      
+
       return newNumber;
     }
-    
+
     return n;
   }
-  
+
   /**
    * Try to fold comparison nodes, e.g ==
    */
@@ -717,7 +717,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return n;
       }
     }
-    
+
     int op = n.getType();
     boolean result;
 
@@ -912,22 +912,22 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node newNode = new Node(result ? Token.TRUE : Token.FALSE);
     n.getParent().replaceChild(n, newNode);
     reportCodeChange();
-    
+
     return newNode;
   }
-  
+
   private Node tryFoldKnownMethods(Node subtree) {
     // For now we only support .join() and .indexOf()
-    
+
     subtree = tryFoldStringJoin(subtree);
-    
+
     if (subtree.getType() == Token.CALL) {
       subtree = tryFoldStringIndexOf(subtree);
     }
-    
+
     return subtree;
   }
-  
+
   /**
    * Try to evaluate String.indexOf/lastIndexOf:
    *     "abcdef".indexOf("bc") -> 1
@@ -935,19 +935,19 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private Node tryFoldStringIndexOf(Node n) {
     Preconditions.checkArgument(n.getType() == Token.CALL);
-    
+
     Node left = n.getFirstChild();
-    
+
     if (left == null) {
       return n;
     }
-    
+
     Node right = left.getNext();
-    
+
     if (right == null) {
       return n;
     }
-    
+
     if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
       return n;
     }
@@ -986,7 +986,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     n.getParent().replaceChild(n, newNode);
 
     reportCodeChange();
-    
+
     return newNode;
   }
 
@@ -995,17 +995,17 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private Node tryFoldStringJoin(Node n) {
     Node left = n.getFirstChild();
-    
+
     if (left == null) {
       return n;
     }
-    
+
     Node right = left.getNext();
-    
+
     if (right == null) {
       return n;
     }
-    
+
     if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
       return n;
     }
@@ -1076,7 +1076,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           // If the Node is not a string literal, ensure that
           // it is coerced to a string.
           Node replacement = new Node(Token.ADD,
-              Node.newString("").copyInformationFrom(right), 
+              Node.newString("").copyInformationFrom(right),
               foldedStringNode);
           foldedStringNode = replacement;
         }
@@ -1101,7 +1101,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         reportCodeChange();
         break;
     }
-   
+
     return n;
   }
 
@@ -1110,7 +1110,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private Node tryFoldGetElem(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.GETELEM);
- 
+
     if (left.getType() == Token.ARRAYLIT) {
 
       if (right.getType() != Token.NUMBER) {
@@ -1149,13 +1149,13 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
     return n;
   }
-  
+
   /**
    * Try to fold array-length. e.g [1, 2, 3].length ==> 3, [x, y].length ==> 2
    */
   private Node tryFoldGetProp(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.GETPROP);
- 
+
     if (right.getType() == Token.STRING &&
         right.getString().equals("length")) {
       int knownLength = -1;
@@ -1179,11 +1179,11 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       Node lengthNode = Node.newNumber(knownLength);
       n.getParent().replaceChild(n, lengthNode);
       reportCodeChange();
-      
+
       return lengthNode;
     }
-    
+
     return n;
   }
-  
+
 }

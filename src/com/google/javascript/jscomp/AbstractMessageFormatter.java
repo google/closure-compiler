@@ -82,7 +82,7 @@ public abstract class AbstractMessageFormatter implements MessageFormatter {
   private String maybeColorize(String text, Color color) {
     if (!colorize) return text;
 
-    return color.getControlCharacter() + 
+    return color.getControlCharacter() +
         text + Color.RESET.getControlCharacter();
   }
 }

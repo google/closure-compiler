@@ -377,7 +377,7 @@ final class Tracer {
         break;
     }
   }
-  
+
   /**
    * Adds a new tracing statistic to a trace
    *
@@ -953,7 +953,7 @@ final class Tracer {
         }
         etime = e.eventTime();
       }
-      // Minimum is 3 to preserve an indent even when max is small. 
+      // Minimum is 3 to preserve an indent even when max is small.
       return Math.max(3, numDigits(max_time));
     }
   }

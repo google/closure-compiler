@@ -682,13 +682,13 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     checkMarkedCalls(source, ImmutableList.<String>of(
         "(Error || FUNCTION)"));
   }
-  
+
   public void testAnonymousFunction3() throws Exception {
     String source = "var a = (Error || function (){})();";
 
     checkMarkedCalls(source, ImmutableList.<String>of(
         "(Error || FUNCTION)"));
-  }  
+  }
 
   // Indirect complex function definitions aren't yet supported.
   public void testAnonymousFunction4() throws Exception {
@@ -697,8 +697,8 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
     // This should be "(Error || FUNCTION)" but isn't.
     checkMarkedCalls(source, ImmutableList.<String>of());
-  }  
-  
+  }
+
   public void testInvalidAnnotation1() throws Exception {
     test("/** @nosideeffects */ function foo() {}",
          null, INVALID_NO_SIDE_EFFECT_ANNOTATION);

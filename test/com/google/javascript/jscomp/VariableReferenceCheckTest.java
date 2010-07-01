@@ -131,8 +131,8 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   public void testNonHoistedFunction7() {
     assertUndeclared("function g() { if (false) { f(); function f() {} }}");
   }
-  
-  
+
+
   public void testNonHoistedRecursiveFunction1() {
     assertNoWarning("if (false) { function f() { f(); }}");
   }

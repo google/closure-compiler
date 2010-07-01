@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -36,7 +36,7 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 package com.google.javascript.rhino.jstype;
 
 
@@ -177,7 +177,7 @@ public final class InstanceObjectType extends PrototypeObjectType {
   public Iterable<ObjectType> getCtorImplementedInterfaces() {
     return getConstructor().getImplementedInterfaces();
   }
-  
+
   // The owner will always be a resolved type, so there's no need to set
   // the constructor in resolveInternal.
   // (it would lead to infinite loops if we did).

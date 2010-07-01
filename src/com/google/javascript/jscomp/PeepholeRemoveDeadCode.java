@@ -32,20 +32,20 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
   // TODO(dcc): Some (all) of these can probably be better achieved
-  // using the control flow graph (like CheckUnreachableCode). 
+  // using the control flow graph (like CheckUnreachableCode).
   // There is an existing CFG pass (UnreachableCodeElimination) that
   // could be changed to use code from CheckUnreachableCode to do this.
-  
+
   @Override
-  Node optimizeSubtree(Node subtree) {   
+  Node optimizeSubtree(Node subtree) {
     switch(subtree.getType()) {
       case Token.COMMA:
         return tryFoldComma(subtree);
       case Token.BLOCK:
-        return tryFoldBlock(subtree);       
+        return tryFoldBlock(subtree);
       case Token.IF:
       case Token.HOOK:
-        return tryFoldHookIf(subtree);      
+        return tryFoldHookIf(subtree);
       case Token.WHILE:
         return tryFoldWhile(subtree);
        case Token.FOR: {
@@ -59,16 +59,16 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryFoldDo(subtree);
         default:
           return subtree;
-    }    
+    }
   }
-  
+
   private Node tryFoldComma(Node n) {
     // If the left side does nothing replace the comma with the result.
-    
+
     Node parent = n.getParent();
     Node left = n.getFirstChild();
     Node right = left.getNext();
-    
+
     if (!NodeUtil.mayHaveSideEffects(left)) {
       // Fold it!
       n.removeChild(right);
@@ -84,7 +84,7 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         // Add the right expression afterward.
         Node newStatement = new Node(Token.EXPR_RESULT, right);
         newStatement.copyInformationFrom(n);
-        
+
         //This modifies outside the subtree, which is not
         //desirable in a peephole optimization.
         parent.getParent().addChildAfter(newStatement, parent);
@@ -92,7 +92,7 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return left;
       }
     }
-    
+
     return n;
   }
 
@@ -100,8 +100,8 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Try removing unneeded block nodes and their useless children
    */
   Node tryFoldBlock(Node n) {
-    // TODO(dcc): Make sure this is also applied in the global scope 
-    // (i.e. with Token.SCRIPT) parents 
+    // TODO(dcc): Make sure this is also applied in the global scope
+    // (i.e. with Token.SCRIPT) parents
     // Remove any useless children
     for (Node c = n.getFirstChild(); c != null; ) {
       Node next = c.getNext();  // save c.next, since 'c' may be removed
@@ -121,10 +121,10 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       reportCodeChange();
       return null;
     }
-    
+
     return n;
   }
- 
+
   /**
    * Try folding :? (hook) and IF nodes by removing dead branches.
    * @return the replacement node, if changed, or the original if not
@@ -199,7 +199,7 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           ifNode.addChildToBack(
               new Node(Token.BLOCK, NodeUtil.newExpr(elseBody))
                   .copyInformationFrom(elseBody));
-          
+
           //This modifies outside the subtree, which is not
           //desirable in a peephole optimization.
           parent.getParent().replaceChild(parent, ifNode);
@@ -215,7 +215,7 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           ifNode.addChildToBack(
               new Node(Token.BLOCK, NodeUtil.newExpr(thenBody))
                   .copyInformationFrom(thenBody));
-          
+
           //This modifies outside the subtree, which is not
           //desirable in a peephole optimization.
           parent.getParent().replaceChild(parent, ifNode);
@@ -267,7 +267,7 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return branch;
     }
   }
-  
+
   /**
    * Removes WHILEs that always evaluate to false.
    */
@@ -280,15 +280,15 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     NodeUtil.redeclareVarsInsideBranch(n);
     NodeUtil.removeChild(n.getParent(), n);
     reportCodeChange();
-    
+
     return null;
   }
-  
+
   /**
    * Removes FORs that always evaluate to false.
    */
   Node tryFoldFor(Node n) {
-    Preconditions.checkArgument(n.getType() == Token.FOR);    
+    Preconditions.checkArgument(n.getType() == Token.FOR);
     // This is not a FOR-IN loop
     if (n.getChildCount() != 4) {
       return n;
@@ -302,13 +302,13 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
       return n;
     }
-    
+
     NodeUtil.redeclareVarsInsideBranch(n);
     NodeUtil.removeChild(n.getParent(), n);
     reportCodeChange();
     return null;
   }
-  
+
   /**
    * Removes DOs that always evaluate to false. This leaves the
    * statements that were in the loop in a BLOCK node.
@@ -334,10 +334,10 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     n.getParent().replaceChild(n, block);
     reportCodeChange();
-    
+
     return n;
   }
-  
+
   /**
    *
    */
@@ -357,10 +357,10 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Remove always true loop conditions.
    */
   private void tryFoldForCondition(Node forCondition) {
-    if (NodeUtil.getBooleanValue(forCondition) == TernaryValue.TRUE) { 
+    if (NodeUtil.getBooleanValue(forCondition) == TernaryValue.TRUE) {
       forCondition.getParent().replaceChild(forCondition,
           new Node(Token.EMPTY));
-      reportCodeChange();     
+      reportCodeChange();
     }
-  } 
+  }
 }

@@ -58,7 +58,7 @@ public class JsAst implements SourceAst {
     root = null;
     // While we're at it, clear out any saved text in the source file on
     // the assumption that if we're dumping the parse tree, then we probably
-    // assume regenerating everything else is a smart idea also. 
+    // assume regenerating everything else is a smart idea also.
     sourceFile.clearCachedSource();
   }
 

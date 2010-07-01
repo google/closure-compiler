@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
 
 /**
  * Execute {@link RemoveConstantExpressions} in parallel.
- * 
+ *
 *
  */
 final class RemoveConstantExpressionsParallel implements CompilerPass {
@@ -32,12 +32,12 @@ final class RemoveConstantExpressionsParallel implements CompilerPass {
   private final AbstractCompiler compiler;
 
   private final int numThreads;
-  
+
   RemoveConstantExpressionsParallel(AbstractCompiler compiler, int numThreads) {
     this.compiler = compiler;
     this.numThreads = numThreads;
   }
-  
+
   RemoveConstantExpressionsParallel(AbstractCompiler compiler) {
     this(compiler, Runtime.getRuntime().availableProcessors());
   }
@@ -47,7 +47,7 @@ final class RemoveConstantExpressionsParallel implements CompilerPass {
     // Estimate the number of CPU needed.
     AstParallelizer splitter = AstParallelizer
       .createNewFileLevelAstParallelizer(root);
-      
+
     // Clean supply of RemoveConstantRValuesCallback.
     Supplier<Task> supplier = new Supplier<Task>() {
       @Override

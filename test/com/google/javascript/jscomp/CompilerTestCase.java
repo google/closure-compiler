@@ -835,6 +835,16 @@ public abstract class CompilerTestCase extends TestCase  {
       assertEquals("There should be one error. " + errors,
           1, compiler.getErrorCount());
       assertEquals(errors, error, compiler.getErrors()[0].getType());
+
+      if (warning != null) {
+        String warnings = "";
+        for (JSError actualError : compiler.getWarnings()) {
+          warnings += actualError.description + "\n";
+        }
+        assertEquals("There should be one warning. " + warnings,
+            1, compiler.getWarningCount());
+        assertEquals(warnings, warning, compiler.getWarnings()[0].getType());
+      }
     }
   }
 

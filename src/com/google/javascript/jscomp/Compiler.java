@@ -1574,6 +1574,17 @@ public class Compiler extends AbstractCompiler {
     }
   }
 
+  @Override
+  public CheckLevel getErrorLevel(JSError error) {
+    Preconditions.checkNotNull(options);
+    WarningsGuard guards = options.getWarningsGuard();
+    if (guards == null) {
+      return error.level;
+    } else {
+      return guards.level(error);
+    }
+  }
+
   /**
    * Report an internal error.
    */

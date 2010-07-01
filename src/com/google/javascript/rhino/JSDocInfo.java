@@ -1179,6 +1179,6 @@ public final class JSDocInfo implements Serializable {
       }
     }
 
-    return nodes;    
+    return nodes;
   }
 }

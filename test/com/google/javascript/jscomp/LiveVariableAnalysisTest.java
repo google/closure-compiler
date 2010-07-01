@@ -258,7 +258,7 @@ public class LiveVariableAnalysisTest extends TestCase {
     assertNotEscaped("var a;function b(){};a()", "a");
     assertNotEscaped("var a;function f(){function b(){}}a()", "a");
     assertNotEscaped("var a;function b(){var a;a()};a()", "a");
-    
+
     // Escaped by exporting.
     assertEscaped("var _x", "_x");
   }

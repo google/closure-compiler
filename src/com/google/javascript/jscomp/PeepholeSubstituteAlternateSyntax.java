@@ -26,14 +26,14 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.regex.Pattern;
 
 /**
- * A peephole optimization that minimizes code by simplifying conditional 
+ * A peephole optimization that minimizes code by simplifying conditional
  * expressions, replacing IFs with HOOKs, replacing object constructors
  * with literals, and simplifying returns.
- * 
+ *
 *
 *
  */
-public class PeepholeSubstituteAlternateSyntax 
+public class PeepholeSubstituteAlternateSyntax
   extends AbstractPeepholeOptimization {
 
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
@@ -43,7 +43,7 @@ public class PeepholeSubstituteAlternateSyntax
     DiagnosticType.error(
         "JSC_INVALID_REGULAR_EXPRESSION_FLAGS",
         "Invalid flags to RegExp constructor: {0}");
-  
+
   static final Predicate<Node> DONT_TRAVERSE_FUNCTIONS_PREDICATE
       = new Predicate<Node>() {
     @Override
@@ -51,7 +51,7 @@ public class PeepholeSubstituteAlternateSyntax
       return input.getType() != Token.FUNCTION;
     }
   };
-  
+
   /**
    * Tries apply our various peephole minimizations on the passed in node.
    */
@@ -60,23 +60,23 @@ public class PeepholeSubstituteAlternateSyntax
   public Node optimizeSubtree(Node node) {
     switch(node.getType()) {
       case Token.RETURN:
-        return tryReduceReturn(node);  
-        
+        return tryReduceReturn(node);
+
       case Token.NOT:
         return tryMinimizeNot(node);
-        
+
       case Token.IF:
         tryMinimizeCondition(node.getFirstChild());
-        return tryMinimizeIf(node);   
-        
+        return tryMinimizeIf(node);
+
       case Token.EXPR_RESULT:
         tryMinimizeCondition(node.getFirstChild());
         return node;
-        
+
       case Token.HOOK:
         tryMinimizeCondition(node.getFirstChild());
         return node;
-        
+
       case Token.WHILE:
       case Token.DO:
       case Token.FOR:
@@ -84,7 +84,7 @@ public class PeepholeSubstituteAlternateSyntax
           tryMinimizeCondition(NodeUtil.getConditionExpression(node));
         }
         return node;
-        
+
       case Token.NEW:
         node = tryFoldStandardConstructors(node);
         if (node.getType() != Token.CALL) {
@@ -94,15 +94,15 @@ public class PeepholeSubstituteAlternateSyntax
         // convert a NEW node into a CALL node
       case Token.CALL:
         return tryFoldLiteralConstructor(node);
-        
+
       default:
           return node; //Nothing changed
     }
   }
-  
+
   /**
    * Reduce "return undefined" or "return void 0" to simply "return".
-   * 
+   *
    * Returns the replacement for n, or the original if no change was made.
    */
   private Node tryReduceReturn(Node n) {
@@ -128,18 +128,18 @@ public class PeepholeSubstituteAlternateSyntax
             break;
       }
     }
-    
+
     return n;
   }
-  
+
   /**
    * Try to minimize NOT nodes such as !(x==y).
-   * 
+   *
    * Returns the replacement for n or the original if no change was made
    */
   private Node tryMinimizeNot(Node n) {
     Node parent = n.getParent();
-    
+
     Node notChild = n.getFirstChild();
     // negative operator of the current one : == -> != for instance.
     int complementOperator;
@@ -166,26 +166,26 @@ public class PeepholeSubstituteAlternateSyntax
     reportCodeChange();
     return newOperator;
   }
-  
+
   /**
    * Try turning IF nodes into smaller HOOKs
-   * 
+   *
    * Returns the replacement for n or the original if no replacement was
    * necessary.
    */
   private Node tryMinimizeIf(Node n) {
-    
+
     Node parent = n.getParent();
-    
+
     Node cond = n.getFirstChild();
-    
+
     /* If the condition is a literal, we'll let other
      * optimizations try to remove useless code.
      */
     if (NodeUtil.isLiteralValue(cond)) {
       return n;
     }
-    
+
     Node thenBranch = cond.getNext();
     Node elseBranch = thenBranch.getNext();
 
@@ -230,13 +230,13 @@ public class PeepholeSubstituteAlternateSyntax
         Node newExpr = NodeUtil.newExpr(and);
         parent.replaceChild(n, newExpr);
         reportCodeChange();
-        
+
         return newExpr;
       }
 
       return n;
     }
-   
+
     /* TODO(dcc) This modifies the siblings of n, which is undesirable for a
      * peephole optimization. This should probably get moved to another pass.
      */
@@ -301,7 +301,7 @@ public class PeepholeSubstituteAlternateSyntax
             Node expr = NodeUtil.newExpr(assign);
             parent.replaceChild(n, expr);
             reportCodeChange();
-            
+
             return expr;
           }
         } else if (NodeUtil.isCall(thenOp)) {
@@ -314,7 +314,7 @@ public class PeepholeSubstituteAlternateSyntax
           Node expr = NodeUtil.newExpr(hookNode);
           parent.replaceChild(n, expr);
           reportCodeChange();
-          
+
           return expr;
         }
       }
@@ -371,14 +371,14 @@ public class PeepholeSubstituteAlternateSyntax
         name2.addChildrenToBack(hookNode);
         parent.replaceChild(n, var);
         reportCodeChange();
-        
+
         return var;
       }
     }
-    
+
     return n;
   }
-  
+
   /**
    * Try to remove duplicate statements from IF blocks. For example:
    *
@@ -443,7 +443,7 @@ public class PeepholeSubstituteAlternateSyntax
 
     return false;
   }
- 
+
   /**
    * @return The expression node.
    */
@@ -501,7 +501,7 @@ public class PeepholeSubstituteAlternateSyntax
     Preconditions.checkState(isVarBlock(n));
     return n.getFirstChild();
   }
-  
+
   /**
    * Does a statement consume a 'dangling else'? A statement consumes
    * a 'dangling else' if an 'else' token following the statement
@@ -527,20 +527,20 @@ public class PeepholeSubstituteAlternateSyntax
       }
     }
   }
-  
+
   /**
    * Does the expression contain an operator with lower precedence than
    * the argument?
    */
   private boolean isLowerPrecedenceInExpression(Node n,
-      final int precedence) {  
+      final int precedence) {
     Predicate<Node> isLowerPrecedencePredicate = new Predicate<Node>() {
       @Override
       public boolean apply(Node input) {
         return NodeUtil.precedence(input.getType()) < precedence;
       }
     };
-    
+
     return NodeUtil.has(n, isLowerPrecedencePredicate,
         DONT_TRAVERSE_FUNCTIONS_PREDICATE);
   }
@@ -549,15 +549,15 @@ public class PeepholeSubstituteAlternateSyntax
    * Does the expression contain a property assignment?
    */
   private boolean isPropertyAssignmentInExpression(Node n) {
-    Predicate<Node> isPropertyAssignmentInExpressionPredicate = 
+    Predicate<Node> isPropertyAssignmentInExpressionPredicate =
         new Predicate<Node>() {
       @Override
       public boolean apply(Node input) {
-        return (input.getType() == Token.GETPROP && 
+        return (input.getType() == Token.GETPROP &&
             input.getParent().getType() == Token.ASSIGN);
       }
     };
-    
+
     return NodeUtil.has(n, isPropertyAssignmentInExpressionPredicate,
         DONT_TRAVERSE_FUNCTIONS_PREDICATE);
   }
@@ -573,12 +573,12 @@ public class PeepholeSubstituteAlternateSyntax
    *   !!x     --> x
    * Thus:
    *   !(x&&!y) --> !x||!!y --> !x||y
-   *   
+   *
    *   Returns the replacement for n, or the original if no change was made
    */
   private Node tryMinimizeCondition(Node n) {
     Node parent = n.getParent();
-    
+
     switch (n.getType()) {
       case Token.NOT:
         Node first = n.getFirstChild();
@@ -590,7 +590,7 @@ public class PeepholeSubstituteAlternateSyntax
               reportCodeChange();
 
               // The child has moved up, to minimize it recurse.
-              
+
               return tryMinimizeCondition(n);
             }
           case Token.AND:
@@ -641,14 +641,14 @@ public class PeepholeSubstituteAlternateSyntax
       tryMinimizeCondition(c);
       c = next;
     }
-    
+
     return n;
   }
-  
+
   /**
    * Replaces a node with a number node if the new number node is not equivalent
    * to the current node.
-   * 
+   *
    * Returns the replacement for n if it was replaced, otherwise returns n.
    */
   private Node maybeReplaceChildWithNumber(Node n, Node parent, int num) {
@@ -656,13 +656,13 @@ public class PeepholeSubstituteAlternateSyntax
     if (!newNode.isEquivalentTo(n)) {
       parent.replaceChild(n, newNode);
       reportCodeChange();
-      
+
       return newNode;
     }
-    
+
     return n;
   }
-  
+
   private static final ImmutableSet<String> STANDARD_OBJECT_CONSTRUCTORS =
     // String, Number, and Boolean functions return non-object types, whereas
     // new String, new Number, and new Boolean return object types, so don't
@@ -673,13 +673,13 @@ public class PeepholeSubstituteAlternateSyntax
       "RegExp",
       "Error"
       );
-  
+
   /**
    * Fold "new Object()" to "Object()".
    */
   private Node tryFoldStandardConstructors(Node n) {
     Preconditions.checkState(n.getType() == Token.NEW);
-    
+
     // If name normalization has been run then we know that
     // new Object() does in fact refer to what we think it is
     // and not some custom-defined Object().
@@ -692,10 +692,10 @@ public class PeepholeSubstituteAlternateSyntax
         }
       }
     }
-    
+
     return n;
   }
-  
+
   /**
    * Replaces a new Array or Object node with an object literal, unless the
    * call to Array or Object is to a local function with the same name.
@@ -703,9 +703,9 @@ public class PeepholeSubstituteAlternateSyntax
   private Node tryFoldLiteralConstructor(Node n) {
     Preconditions.checkArgument(n.getType() == Token.CALL
         || n.getType() == Token.NEW);
-  
+
     Node constructorNameNode = n.getFirstChild();
-    
+
     Node newLiteralNode = null;
 
     // We require the AST to be normalized to ensure that, say,
@@ -744,11 +744,11 @@ public class PeepholeSubstituteAlternateSyntax
           n.getParent().replaceChild(n, newLiteralNode);
           reportCodeChange();
           return newLiteralNode;
-        }   
+        }
       }
     }
     return n;
-  } 
+  }
 
   private static enum FoldArrayAction {
     NOT_SAFE_TO_FOLD, SAFE_TO_FOLD_WITH_ARGS, SAFE_TO_FOLD_WITHOUT_ARGS}
@@ -757,7 +757,7 @@ public class PeepholeSubstituteAlternateSyntax
    * Checks if it is safe to fold Array() constructor into []. It can be
    * obviously done, if the initial constructor has either no arguments or
    * at least two. The remaining case may be unsafe since Array(number)
-   * actually reserves memory for an empty array which contains number elements. 
+   * actually reserves memory for an empty array which contains number elements.
    */
   private FoldArrayAction isSafeToFoldArrayConstructor(Node arg) {
     FoldArrayAction action = FoldArrayAction.NOT_SAFE_TO_FOLD;
@@ -788,7 +788,7 @@ public class PeepholeSubstituteAlternateSyntax
     return action;
   }
 
-  private Node tryFoldRegularExpressionConstructor(Node n) { 
+  private Node tryFoldRegularExpressionConstructor(Node n) {
     Node parent = n.getParent();
     Node constructor = n.getFirstChild();
     Node pattern = constructor.getNext();  // e.g.  ^foobar$
@@ -800,7 +800,7 @@ public class PeepholeSubstituteAlternateSyntax
     if (!isASTNormalized()) {
       return n;
     }
-    
+
     if (null == pattern || (null != flags && null != flags.getNext())) {
       // too few or too many arguments
       return n;
@@ -901,7 +901,7 @@ public class PeepholeSubstituteAlternateSyntax
     sb.append(s, pos, s.length());
     return Node.newString(sb.toString()).copyInformationFrom(n);
   }
-  
+
   /**
    * true if the javascript string would contain a unicode escape when written
    * out as the body of a regular expression literal.

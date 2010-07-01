@@ -36,14 +36,14 @@ public class MaybeReachingVariableUseTest extends TestCase {
   private MaybeReachingVariableUse useDef = null;
   private Node def = null;
   private List<Node> uses = null;
-  
+
   /*
    * The test cases consist of a short code snipplet that has an instruction
    * labeled with D and one or more with label starting with U. When assertMatch
    * is called, the test suite verifies that all the uses with label starting
    * with U is reachable to the definition label at D.
    */
-  
+
   public void testStraightLine() {
     assertMatch("D:var x=1; U: x");
     assertMatch("var x; D:x=1; U: x");
@@ -52,13 +52,13 @@ public class MaybeReachingVariableUseTest extends TestCase {
     assertNotMatch("U:x; D:var x = 1");
     assertMatch("D: var x = 1; var y = 2; y; U:x");
   }
-  
+
   public void testIf() {
     assertMatch("var x; if(a){ D:x=1 }else { x=2 }; U:x");
     assertMatch("var x; if(a){ x=1 }else { D:x=2 }; U:x");
     assertMatch("D:var x=1; if(a){ U1: x }else { U2: x };");
   }
-  
+
   public void testLoops() {
     assertMatch("var x=0; while(a){ D:x=1 }; U:x");
     assertMatch("var x=0; for(;;) { D:x=1 }; U:x");
@@ -76,7 +76,7 @@ public class MaybeReachingVariableUseTest extends TestCase {
     assertMatch("D: var x=0; var y=0; (y=1)&&((y=2)||(x=1)); U:x");
     assertMatch("D: var x=0; var y=0; (y=0)&&(x=1); U:x");
   }
-  
+
   public void testUseAndDefInSameInstruction() {
     assertNotMatch("D:var x=0; U:x=1,x");
     assertMatch("D:var x=0; U:x,x=1");
@@ -91,13 +91,13 @@ public class MaybeReachingVariableUseTest extends TestCase {
     assertMatch("var x=0; D:foo() ? x=1 : bar(); U:x");
     assertMatch("var x=0; D:foo() ? x=1 : x=2; U:x");
   }
-  
+
   public void testAssignmentOps() {
     assertNotMatch("D: var x = 0; U: x = 100");
     assertMatch("D: var x = 0; U: x += 100");
     assertMatch("D: var x = 0; U: x -= 100");
   }
-  
+
   public void testInc() {
     assertMatch("D: var x = 0; U:x++");
     assertMatch("var x = 0; D:x++; U:x");

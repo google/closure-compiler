@@ -215,7 +215,7 @@ class PureFunctionIdentifier implements CompilerPass {
       // The anonymous function reference is also the definition.
       return Lists.newArrayList(
           (Definition)
-              new DefinitionsRemover.FunctionExpressionDefinition(name));     
+              new DefinitionsRemover.FunctionExpressionDefinition(name));
     } else {
       return null;
     }

@@ -32,7 +32,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
   private MustBeReachingVariableDef defUse = null;
   private Node def = null;
   private Node use = null;
-  
+
   public static final String EXTERNS = "var goog = {}";
 
   public void testStraightLine() {
@@ -94,12 +94,12 @@ public class MustBeReachingVariableDefTest extends TestCase {
   public void testMergeDefinitions() {
     assertNotMatch("var x,y; D: y = x + x; if(x) { x = 1 }; U:y");
   }
-  
+
   public void testMergesWithOneDefinition() {
     assertNotMatch(
         "var x,y; while(y) { if (y) { print(x) } else { D: x = 1 } } U:x");
   }
-  
+
   public void testRedefinitionUsingItself() {
     assertMatch("var x = 1; D: x = x + 1; U:x;");
     assertNotMatch("var x = 1; D: x = x + 1; x = 1; U:x;");
@@ -110,7 +110,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
     assertMatch("var x, a, b; D: x = a, x = b; a = 1; U: x");
     assertNotMatch("var x, a, b; D: x = a, x = b; b = 1; U: x");
   }
-    
+
   public void testExterns() {
     assertNotMatch("D: goog = {}; U: goog");
   }
@@ -120,7 +120,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
     assertMatch("var x = 0; D: x *= 1; U: x");
     assertNotMatch("D: var x = 0; x += 1; U: x");
   }
-  
+
   public void testIncAndDec() {
     assertMatch("var x; D: x++; U: x");
     assertMatch("var x; D: x--; U: x");
@@ -128,14 +128,14 @@ public class MustBeReachingVariableDefTest extends TestCase {
 
   public void testFunctionParams1() {
     computeDefUse("if (param2) { D: param1 = 1; U: param1 }");
-    assertSame(def, defUse.getDef("param1", use));  
+    assertSame(def, defUse.getDef("param1", use));
   }
-  
+
   public void testFunctionParams2() {
     computeDefUse("if (param2) { D: param1 = 1} U: param1");
     assertNotSame(def, defUse.getDef("param1", use));
   }
-  
+
   /**
    * The use of x at U: is the definition of x at D:.
    */
@@ -143,7 +143,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
     computeDefUse(src);
     assertSame(def, defUse.getDef("x", use));
   }
-  
+
   /**
    * The use of x at U: is not the definition of x at D:.
    */
@@ -151,7 +151,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
     computeDefUse(src);
     assertNotSame(def, defUse.getDef("x", use));
   }
-  
+
   /**
    * Computes reaching definition on given source.
    */

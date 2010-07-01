@@ -135,7 +135,7 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         "b.y.f = 1;" +
         "b.y.g = 1;");
   }
-  
+
   public void testWithDevirtualization() {
     extract(
         "x.prototype.a = 1;" +
@@ -146,7 +146,7 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         "x.prototype.e = 1;" +
         "x.prototype.f = 1;" +
         "x.prototype.g = 1;",
-        
+
         loadPrototype("x") +
         TMP + ".a = 1;" +
         TMP + ".b = 1;" +
@@ -156,7 +156,7 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         TMP + ".e = 1;" +
         TMP + ".f = 1;" +
         TMP + ".g = 1;");
-    
+
     extract(
         "x.prototype.a = 1;" +
         "x.prototype.b = 1;" +
@@ -168,7 +168,7 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         "x.prototype.f = 1;" +
         "function devirtualize3() { }" +
         "x.prototype.g = 1;",
-        
+
         loadPrototype("x") +
         TMP + ".a = 1;" +
         TMP + ".b = 1;" +

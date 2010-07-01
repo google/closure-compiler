@@ -26,32 +26,32 @@ import junit.framework.TestCase;
 
 /**
  * Unit tests for {@link ParallelCompilerPass}.
- * 
+ *
  * The correctness of ParallelCompilerPass depends largely on the Task so this
  * class is here for a quick sanity test purpose. At the very least, it verifies
  * that all the worker terminates and no dead lock exists in the test cases.
- * 
+ *
 *
  */
 public class ParallelCompilerPassTest extends TestCase {
-  
+
   public void testNoFunction() {
     replace("\"foo\"");
     replace("var foo");
   }
-  
+
   public void testOneFunction() {
     replace("\"foo\";function foo(){\"foo\"}");
   }
-  
+
   public void testTwoFunctions() {
     replace("\"foo\";function f1(){\"foo\"}function f2(){\"foo\"}");
   }
-  
+
   public void testInnerFunctions() {
     replace("\"foo\";function f1(){\"foo\";function f2(){\"foo\"}}");
   }
-  
+
   public void testManyFunctions() {
     StringBuffer sb = new StringBuffer("\"foo\";");
     for (int i = 0; i < 20; i++) {
@@ -64,38 +64,38 @@ public class ParallelCompilerPassTest extends TestCase {
 
   private void replace(String input) {
     String replace = input.replaceAll("foo", "bar");
-    
+
     final Compiler compiler = new Compiler();
-    
+
     int[] threadCounts = new int[]{1 , 2 , 4};
-    
+
     for (int threadCount : threadCounts) {
       Node tree = compiler.parseTestCode(input);
-      
+
       AstParallelizer splitter = AstParallelizer
           .createNewFunctionLevelAstParallelizer(tree, true);
-      
+
       Supplier<Task> supplier = new Supplier<Task>() {
         @Override
         public Task get() {
           return new ReplaceStrings(compiler);
-        }      
+        }
       };
-      
+
       ParallelCompilerPass pass = new ParallelCompilerPass(
           compiler, splitter, supplier, threadCount);
       pass.process(null, tree);
       assertEquals(replace, compiler.toSource(tree));
     }
   }
-  
+
   /**
    * Replace all occurrences of "foo" with "bar".
    */
   private static class ReplaceStrings implements Task {
     private final Result result = new Result();
     private final AbstractCompiler compiler;
-    
+
     private ReplaceStrings(AbstractCompiler compiler) {
       this.compiler = compiler;
     }
@@ -113,6 +113,6 @@ public class ParallelCompilerPassTest extends TestCase {
             }
       });
       return result;
-    }    
+    }
   }
 }

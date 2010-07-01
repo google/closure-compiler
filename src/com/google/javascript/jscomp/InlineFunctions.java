@@ -301,8 +301,8 @@ class InlineFunctions implements CompilerPass {
     Node block = NodeUtil.getFunctionBody(fnNode);
     return NodeUtil.getFnParameters(fnNode).hasChildren()
         || NodeUtil.has(
-             block, 
-             new NodeUtil.MatchDeclaration(), 
+             block,
+             new NodeUtil.MatchDeclaration(),
              new NodeUtil.MatchShallowStatement());
   }
 
