@@ -15,12 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Comparator;
+import java.util.TreeSet;
 
 /**
  * Records information about functions and modules.
@@ -68,11 +70,13 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
       addModuleInformation(null);
     } else {
       // The test expects a consistent module order.
-      for (JSModule m : Sets.newTreeSet(new Comparator<JSModule>() {
-            public int compare(JSModule o1, JSModule o2) {
-              return o1.getName().compareTo(o2.getName());
-            }
-          }, moduleGraph.getAllModules())) {
+      TreeSet<JSModule> modules = Sets.newTreeSet(new Comparator<JSModule>() {
+        public int compare(JSModule o1, JSModule o2) {
+          return o1.getName().compareTo(o2.getName());
+        }
+      });
+      Iterables.addAll(modules, moduleGraph.getAllModules());
+      for (JSModule m : modules) {
         addModuleInformation(m);
       }
     }

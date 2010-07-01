@@ -16,21 +16,24 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.UnionType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.CharStreams;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.UnionType;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
@@ -125,8 +128,9 @@ class RuntimeTypeCheck implements CompilerPass {
 
       nodeToInsertAfter = addMarker(funType, nodeToInsertAfter, null);
 
-      for (ObjectType interfaceType :
-          Sets.newTreeSet(ALPHA, funType.getAllImplementedInterfaces())) {
+      TreeSet<ObjectType> stuff = Sets.newTreeSet(ALPHA);
+      Iterables.addAll(stuff, funType.getAllImplementedInterfaces());
+      for (ObjectType interfaceType : stuff) {
         nodeToInsertAfter =
             addMarker(funType, nodeToInsertAfter, interfaceType);
       }
@@ -300,9 +304,13 @@ class RuntimeTypeCheck implements CompilerPass {
      */
     private Node createCheckTypeCallNode(JSType type, Node expr) {
       Node arrayNode = new Node(Token.ARRAYLIT);
-      Iterable<JSType> alternates = type.isUnionType()
-               ? Sets.newTreeSet(ALPHA, ((UnionType) type).getAlternates())
-               : ImmutableList.of(type);
+      Collection<JSType> alternates;
+      if (type.isUnionType()) {
+        alternates = Sets.newTreeSet(ALPHA);
+        Iterables.addAll(alternates, ((UnionType)type).getAlternates());
+      } else {
+        alternates = ImmutableList.of(type);
+      }
       for (JSType alternate : alternates) {
         Node checkerNode = createCheckerNode(alternate);
         if (checkerNode == null) {

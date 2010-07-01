@@ -515,7 +515,10 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
 
     void setOut(List<L> out) {
-      Preconditions.checkContentsNotNull(out);
+      Preconditions.checkNotNull(out);
+      for (L item : out) {
+        Preconditions.checkNotNull(item);
+      }
       this.out = out;
     }
 
