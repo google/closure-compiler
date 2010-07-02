@@ -35,6 +35,7 @@ public class AliasKeywordsTest extends CompilerTestCase {
   @Override
   public void setUp() {
     super.enableLineNumberCheck(false);
+    super.enableNormalize();
   }
 
   @Override
@@ -85,7 +86,7 @@ public class AliasKeywordsTest extends CompilerTestCase {
     StringBuilder sb = new StringBuilder();
     sb.append("function ");
     sb.append(AliasKeywords.ALIAS_THROW);
-    sb.append("(t){throw t;}");
+    sb.append("(jscomp_throw_param){throw jscomp_throw_param;}");
     sb.append(code);
     for (int i = 0; i < repetitions; i++) {
       sb.append(AliasKeywords.ALIAS_THROW);

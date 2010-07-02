@@ -50,7 +50,7 @@ class MakeDeclaredNamesUnique
   private final Renamer rootRenamer;
 
   MakeDeclaredNamesUnique() {
-    this.rootRenamer = new ContextualRenamer();
+    this(new ContextualRenamer());
   }
 
   MakeDeclaredNamesUnique(Renamer renamer) {
@@ -539,6 +539,27 @@ class MakeDeclaredNamesUnique
     @Override
     public boolean stripConstIfReplaced() {
       return removeConstness;
+    }
+  }
+
+  /**
+   * For injecting boilerplate libraries. Leaves global names alone
+   * and renames local names like InlineRenamer.
+   */
+  static class BoilerplateRenamer extends ContextualRenamer {
+    private final Supplier<String> uniqueIdSupplier;
+    private final String idPrefix;
+    
+    BoilerplateRenamer(
+        Supplier<String> uniqueIdSupplier,
+        String idPrefix) {
+      this.uniqueIdSupplier = uniqueIdSupplier;
+      this.idPrefix = idPrefix;
+    }
+
+    @Override
+    public Renamer forChildScope() {
+      return new InlineRenamer(uniqueIdSupplier, idPrefix, false);
     }
   }
 

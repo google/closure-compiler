@@ -423,6 +423,15 @@ A builder for <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" t
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordNoCompile()">recordNoCompile</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <CODE>JSDocInfo#isNoCompilek()</CODE> flag set to <code>true</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/JSDocInfoBuilder.html#recordNoShadow()">recordNoShadow</A></B>()</CODE>
 
 <BR>
@@ -1088,6 +1097,22 @@ public boolean <B>recordHiddenness</B>()</PRE>
 
 <DT><B>Returns:</B><DD><code>true</code> if the hiddenness was recorded and <code>false</code>
      if it was already defined</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="recordNoCompile()"><!-- --></A><H3>
+recordNoCompile</H3>
+<PRE>
+public boolean <B>recordNoCompile</B>()</PRE>
+<DL>
+<DD>Records that the <A HREF="../../../../com/google/javascript/rhino/JSDocInfo.html" title="class in com.google.javascript.rhino"><CODE>JSDocInfo</CODE></A> being built should have its
+ <CODE>JSDocInfo#isNoCompilek()</CODE> flag set to <code>true</code>.
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD><code>true</code> if the no compile flag was recorded and <code>false</code>
+     if it was already recorded</DL>
 </DD>
 </DL>
 <HR>

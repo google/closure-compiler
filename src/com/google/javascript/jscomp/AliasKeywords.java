@@ -210,7 +210,7 @@ class AliasKeywords implements CompilerPass {
      * throw. The function throws the object.
      */
     private static Node createAliasFunctionNode(String aliasName) {
-      Node parameterName = Node.newString(Token.NAME, "t");
+      Node parameterName = Node.newString(Token.NAME, "jscomp_throw_param");
       List<Node> parameters = Lists.newArrayList(parameterName.cloneNode());
       Node throwStatement = new Node(Token.THROW, parameterName);
       Node body = new Node(Token.BLOCK, throwStatement);

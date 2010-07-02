@@ -47,4 +47,13 @@ interface CodeChangeHandler {
       hasChanged = false;
     }
   }
+
+  /**
+   * A change handler that throws an exception if any changes are made.
+   */
+  static final class ForbiddenChange implements CodeChangeHandler {
+    public void reportChange() {
+      throw new IllegalStateException("Code changes forbidden");
+    }
+  }
 }

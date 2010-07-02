@@ -313,10 +313,6 @@ public class DefaultPassConfig extends PassConfig {
 
     passes.add(createEmptyPass("beforeStandardOptimizations"));
 
-    if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
-      passes.add(replaceStrings);
-    }
-
     if (!options.idGenerators.isEmpty()) {
       passes.add(replaceIdGenerators);
     }
@@ -379,6 +375,12 @@ public class DefaultPassConfig extends PassConfig {
     // property collapsing can introduce new constants (e.g. enum values).
     if (options.inlineConstantVars) {
       passes.add(checkConsts);
+    }
+
+    // ReplaceStrings needs the strings literals to be at in CALL to
+    // replace them so do this after constants have been inlined.
+    if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
+      passes.add(replaceStrings);
     }
 
     // The Caja library adds properties to Object.prototype, which breaks
@@ -1624,6 +1626,21 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new AmbiguateProperties(
           compiler, options.anonymousFunctionNaming.getReservedCharacters());
+    }
+  };
+
+  /**
+   * Mark the point at which the normalized AST assumptions no longer hold.
+   */
+  private final PassFactory markUnnormalized =
+      new PassFactory("markUnnormalized", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override public void process(Node externs, Node root) {
+          compiler.setUnnormalized();
+        }
+      };
     }
   };
 

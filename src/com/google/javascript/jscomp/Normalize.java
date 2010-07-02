@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.Scope.Var;
@@ -26,7 +27,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Map;
-
 
 /**
  * The goal with this pass is to simplify the other passes,
@@ -77,6 +77,20 @@ class Normalize implements CompilerPass {
 
     // TODO(nicksantos): assertOnChange should only be true if the tree
     // is normalized.
+  }
+
+  static Node parseAndNormalizeSyntheticCode(
+      AbstractCompiler compiler, String code, String prefix) {
+    Node js = compiler.parseSyntheticCode(code);
+    NodeTraversal.traverse(compiler, js,
+        new Normalize.NormalizeStatements(compiler, false));
+    NodeTraversal.traverse(
+        compiler, js,
+        new MakeDeclaredNamesUnique(
+            new BoilerplateRenamer(
+                compiler.getUniqueNameIdSupplier(),
+                prefix)));
+    return js;
   }
 
   private void reportCodeChange(String changeDescription) {

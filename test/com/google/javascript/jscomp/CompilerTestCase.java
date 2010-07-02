@@ -697,9 +697,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
         // Only run the normalize pass once, if asked.
         if (normalizeEnabled && i == 0) {
-          Normalize normalize = new Normalize(compiler, false);
-          normalize.process(externsRoot, mainRoot);
-          compiler.setNormalized();
+          normalizeActualCode(compiler, externsRoot, mainRoot);
         }
 
         if (markNoSideEffects && i == 0) {
@@ -776,8 +774,7 @@ public abstract class CompilerTestCase extends TestCase  {
       }
 
       if (normalizeEnabled) {
-        Normalize normalize = new Normalize(compiler, false);
-        normalize.process(externsRootClone, mainRootClone);
+        normalizeActualCode(compiler, externsRootClone, mainRootClone);
       }
 
       if (mainRootClone.checkTreeEqualsSilent(mainRoot)) {
@@ -848,10 +845,16 @@ public abstract class CompilerTestCase extends TestCase  {
     }
   }
 
+  private void normalizeActualCode(
+      Compiler compiler, Node externsRoot, Node mainRoot) {
+    Normalize normalize = new Normalize(compiler, false);
+    normalize.process(externsRoot, mainRoot);
+  }
+
   /**
    * Parses expected js inputs and returns the root of the parse tree.
    */
-  private Node parseExpectedJs(String[] expected) {
+  Node parseExpectedJs(String[] expected) {
     Compiler compiler = createCompiler();
     JSSourceFile[] inputs = new JSSourceFile[expected.length];
     for (int i = 0; i < expected.length; i++) {
@@ -867,7 +870,6 @@ public abstract class CompilerTestCase extends TestCase  {
     if (normalizeEnabled && normalizeExpected && !compiler.hasErrors()) {
       Normalize normalize = new Normalize(compiler, false);
       normalize.process(externsRoot, mainRoot);
-      compiler.setNormalized();
     }
     return mainRoot;
   }

@@ -347,6 +347,16 @@ CodingConvention defines a set of hooks to customize the behavior of the
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;boolean</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isConstantKey(java.lang.String)">isConstantKey</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;keyName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This checks whether a given key of an object literal, such as a
+ name in all-caps should be treated as if it had the @const
+ annotation.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;boolean</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/CodingConvention.html#isExported(java.lang.String)">isExported</A></B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
 
 <BR>
@@ -438,6 +448,21 @@ boolean <B>isConstant</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/la
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>variableName</CODE> - potentially constant variable name
 <DT><B>Returns:</B><DD><code>true</code> if the name should be treated as a constant.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="isConstantKey(java.lang.String)"><!-- --></A><H3>
+isConstantKey</H3>
+<PRE>
+boolean <B>isConstantKey</B>(<A HREF="http://java.sun.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;keyName)</PRE>
+<DL>
+<DD>This checks whether a given key of an object literal, such as a
+ name in all-caps should be treated as if it had the @const
+ annotation.
+<P>
+<DD><DL>
+</DL>
 </DD>
 </DL>
 <HR>

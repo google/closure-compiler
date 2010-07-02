@@ -185,11 +185,13 @@ public class ReplaceStrings extends AbstractPostOrderCallback
             Collection<String> classes = methods.get(methodName);
             if (classes != null) {
               Node lhs = calledFn.getFirstChild();
-              JSType type = lhs.getJSType().restrictByNotNullOrUndefined();
-              Config config = findMatchingClass(type, classes);
-              if (config != null) {
-                doSubstitutions(t, config, n);
-                return;
+              if (lhs.getJSType() != null) {
+                JSType type = lhs.getJSType().restrictByNotNullOrUndefined();
+                Config config = findMatchingClass(type, classes);
+                if (config != null) {
+                  doSubstitutions(t, config, n);
+                  return;
+                }
               }
             }
           }
@@ -437,7 +439,8 @@ public class ReplaceStrings extends AbstractPostOrderCallback
         Preconditions.checkState(replacementParameter == -1);
         replacementParameter = paramCount;
       } else {
-        Preconditions.checkState(param.isEmpty(), "Unknown marker");
+        // TODO(johnlenz): report an error.
+        Preconditions.checkState(param.isEmpty(), "Unknown marker", param);
       }
     }
 

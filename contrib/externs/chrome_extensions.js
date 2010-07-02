@@ -520,6 +520,29 @@ chrome.experimental.cookies.set = function(details) {};
 chrome.experimental.cookies.onChanged;
 
 
+chrome.experimental.rlz = {};
+
+/**
+ * @param {string} product
+ * @param {string} accessPoint
+ * @param {string} event
+ */
+chrome.experimental.rlz.recordProductEvent = function(product, accessPoint,
+                                                      event) {};
+
+/**
+ * @param {string} product
+ * @param {Array.<string>} accessPoints
+ */
+chrome.experimental.rlz.clearProductState = function(product, accessPoints) {};
+
+/**
+ * @param {string} accessPoint
+ * @param {function(string): void} callback
+ */
+chrome.experimental.rlz.getAccessPointRlz = function(accessPoint, callback) {};
+
+
 // Classes
 
 /**

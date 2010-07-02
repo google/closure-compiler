@@ -1263,6 +1263,7 @@ google.maps.event.trigger = function(instance, eventName, var_args) {};
 /**
  * @private
  * @constructor
+ * @extends {Event}
  */
 google.maps.MouseEvent = function() {};
 

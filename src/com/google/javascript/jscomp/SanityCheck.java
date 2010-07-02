@@ -39,7 +39,7 @@ class SanityCheck implements CompilerPass {
       "----------------------------------------\n" +
       "Expected:\n{0}\n" +
       "----------------------------------------\n" +
-      "Actual\n{1}");
+      "Actual:\n{1}");
 
   private final AbstractCompiler compiler;
 
@@ -71,7 +71,10 @@ class SanityCheck implements CompilerPass {
     if (compiler.hasHaltingErrors()) {
       compiler.report(JSError.make(CANNOT_PARSE_GENERATED_CODE,
               Strings.truncateAtMaxLength(source, 100, true)));
-      return null;
+
+      // Throw an exception, so that the infrastructure will tell us
+      // which pass violated the sanity check.
+      throw new IllegalStateException("Sanity Check failed");
     }
 
     String source2 = compiler.toSource(root2);
@@ -79,6 +82,10 @@ class SanityCheck implements CompilerPass {
       compiler.report(JSError.make(GENERATED_BAD_CODE,
               Strings.truncateAtMaxLength(source, 1000, true),
               Strings.truncateAtMaxLength(source2, 1000, true)));
+
+      // Throw an exception, so that the infrastructure will tell us
+      // which pass violated the sanity check.
+      throw new IllegalStateException("Sanity Check failed");
     }
 
     return root2;
@@ -90,21 +97,16 @@ class SanityCheck implements CompilerPass {
    */
   private void sanityCheckNormalization(Node externs, Node root) {
     // Verify nothing has inappropriately denormalize the AST.
-    CodeChangeHandler.RecentChange handler =
-        new CodeChangeHandler.RecentChange();
+    CodeChangeHandler handler =
+        new CodeChangeHandler.ForbiddenChange();
     compiler.addChangeHandler(handler);
 
     // TODO(johnlenz): Change these normalization checks Preconditions and
     // Exceptions into Errors so that it is easier to find the root cause
     // when there are cascading issues.
     new PrepareAst(compiler, true).process(null, root);
-    Preconditions.checkState(!handler.hasCodeChanged(),
-        "This should never fire, NodeTypeNormalizer should assert first.");
-
     if (compiler.isNormalized()) {
       (new Normalize(compiler, true)).process(externs, root);
-      Preconditions.checkState(!handler.hasCodeChanged(),
-          "This should never fire, Normalize should assert first.");
 
       boolean checkUserDeclarations = true;
       CompilerPass pass = new Normalize.VerifyConstants(

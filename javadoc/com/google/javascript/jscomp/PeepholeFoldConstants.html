@@ -3,7 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>
-PeepholeSubstituteAlternateSyntax (Compiler)
+PeepholeFoldConstants (Compiler)
 </TITLE>
 
 
@@ -13,7 +13,7 @@ PeepholeSubstituteAlternateSyntax (Compiler)
 function windowTitle()
 {
     if (location.href.indexOf('is-external=true') == -1) {
-        parent.document.title="PeepholeSubstituteAlternateSyntax (Compiler)";
+        parent.document.title="PeepholeFoldConstants (Compiler)";
     }
 }
 </SCRIPT>
@@ -52,11 +52,11 @@ function windowTitle()
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PeepholeRemoveDeadCode.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PerformanceTracker.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PassFactory.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PeepholeFoldWithTypes.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="PeepholeSubstituteAlternateSyntax.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/PeepholeFoldConstants.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="PeepholeFoldConstants.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {
@@ -87,20 +87,18 @@ DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&n
 <FONT SIZE="-1">
 com.google.javascript.jscomp</FONT>
 <BR>
-Class PeepholeSubstituteAlternateSyntax</H2>
+Class PeepholeFoldConstants</H2>
 <PRE>
 <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
-  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.PeepholeSubstituteAlternateSyntax</B>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>com.google.javascript.jscomp.PeepholeFoldConstants</B>
 </PRE>
 <HR>
 <DL>
-<DT><PRE>public class <B>PeepholeSubstituteAlternateSyntax</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+<DT><PRE>public class <B>PeepholeFoldConstants</B><DT>extends <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
 </PRE>
 
 <P>
-A peephole optimization that minimizes code by simplifying conditional
- expressions, replacing IFs with HOOKs, replacing object constructors
- with literals, and simplifying returns.
+Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
 <P>
 
 <P>
@@ -117,7 +115,7 @@ A peephole optimization that minimizes code by simplifying conditional
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#PeepholeSubstituteAlternateSyntax()">PeepholeSubstituteAlternateSyntax</A></B>()</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeFoldConstants.html#PeepholeFoldConstants()">PeepholeFoldConstants</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -135,7 +133,7 @@ A peephole optimization that minimizes code by simplifying conditional
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#areNodesEqualForInlining(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">areNodesEqualForInlining</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n1,
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeFoldConstants.html#areNodesEqualForInlining(com.google.javascript.rhino.Node, com.google.javascript.rhino.Node)">areNodesEqualForInlining</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n1,
                          <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n2)</CODE>
 
 <BR>
@@ -145,7 +143,7 @@ A peephole optimization that minimizes code by simplifying conditional
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#error(com.google.javascript.jscomp.DiagnosticType, com.google.javascript.rhino.Node)">error</A></B>(<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;diagnostic,
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeFoldConstants.html#error(com.google.javascript.jscomp.DiagnosticType, com.google.javascript.rhino.Node)">error</A></B>(<A HREF="../../../../com/google/javascript/jscomp/DiagnosticType.html" title="class in com.google.javascript.jscomp">DiagnosticType</A>&nbsp;diagnostic,
       <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;n)</CODE>
 
 <BR>
@@ -155,23 +153,15 @@ A peephole optimization that minimizes code by simplifying conditional
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;boolean</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#isASTNormalized()">isASTNormalized</A></B>()</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeFoldConstants.html#isASTNormalized()">isASTNormalized</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Is the current AST normalized? (e.g.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
-<CODE>&nbsp;<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A></CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#optimizeSubtree(com.google.javascript.rhino.Node)">optimizeSubtree</A></B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</CODE>
-
-<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tries apply our various peephole minimizations on the passed in node.</TD>
-</TR>
-<TR BGCOLOR="white" CLASS="TableRowColor">
-<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html#reportCodeChange()">reportCodeChange</A></B>()</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/jscomp/PeepholeFoldConstants.html#reportCodeChange()">reportCodeChange</A></B>()</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Helper method for telling the compiler that something has changed.</TD>
@@ -199,10 +189,10 @@ A peephole optimization that minimizes code by simplifying conditional
 </TR>
 </TABLE>
 
-<A NAME="PeepholeSubstituteAlternateSyntax()"><!-- --></A><H3>
-PeepholeSubstituteAlternateSyntax</H3>
+<A NAME="PeepholeFoldConstants()"><!-- --></A><H3>
+PeepholeFoldConstants</H3>
 <PRE>
-public <B>PeepholeSubstituteAlternateSyntax</B>()</PRE>
+public <B>PeepholeFoldConstants</B>()</PRE>
 <DL>
 </DL>
 
@@ -215,25 +205,6 @@ public <B>PeepholeSubstituteAlternateSyntax</B>()</PRE>
 <B>Method Detail</B></FONT></TH>
 </TR>
 </TABLE>
-
-<A NAME="optimizeSubtree(com.google.javascript.rhino.Node)"><!-- --></A><H3>
-optimizeSubtree</H3>
-<PRE>
-public <A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A> <B>optimizeSubtree</B>(<A HREF="../../../../com/google/javascript/rhino/Node.html" title="class in com.google.javascript.rhino">Node</A>&nbsp;node)</PRE>
-<DL>
-<DD>Tries apply our various peephole minimizations on the passed in node.
-<P>
-<DD><DL>
-</DL>
-</DD>
-<DD><DL>
-<DT><B>Parameters:</B><DD><CODE>node</CODE> - The subtree that will be optimized.
-<DT><B>Returns:</B><DD>The new version of the subtree (or null if the subtree or one of
- its parents was removed from the AST). If the subtree has not changed,
- this method must return <code>subtree</code>.</DL>
-</DD>
-</DL>
-<HR>
 
 <A NAME="error(com.google.javascript.jscomp.DiagnosticType, com.google.javascript.rhino.Node)"><!-- --></A><H3>
 error</H3>
@@ -321,11 +292,11 @@ protected boolean <B>isASTNormalized</B>()</PRE>
 
 <TR>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PeepholeRemoveDeadCode.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
-&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PerformanceTracker.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PassFactory.html" title="class in com.google.javascript.jscomp"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../com/google/javascript/jscomp/PeepholeFoldWithTypes.html" title="class in com.google.javascript.jscomp"><B>NEXT CLASS</B></A></FONT></TD>
 <TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
-  <A HREF="../../../../index.html?com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.html" target="_top"><B>FRAMES</B></A>  &nbsp;
-&nbsp;<A HREF="PeepholeSubstituteAlternateSyntax.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+  <A HREF="../../../../index.html?com/google/javascript/jscomp/PeepholeFoldConstants.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="PeepholeFoldConstants.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
 &nbsp;<SCRIPT type="text/javascript">
   <!--
   if(window==top) {

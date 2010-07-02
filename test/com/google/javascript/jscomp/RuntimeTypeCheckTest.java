@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -26,6 +27,8 @@ import com.google.javascript.rhino.Node;
  */
 public class RuntimeTypeCheckTest extends CompilerTestCase {
 
+  private Node runtimeTypeCheckCode = null;
+
   public RuntimeTypeCheckTest() {
     enableTypeCheck(CheckLevel.WARNING);
   }
@@ -33,6 +36,7 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
   @Override
   protected void setUp() {
     super.enableLineNumberCheck(false);
+    enableNormalize();
   }
 
   public void testValue() {
@@ -110,7 +114,6 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   public void testInnerClasses() {
-    enableNormalize(false);
     testChecks(
         "function f() { /** @constructor */ function inner() {} }" +
         "function g() { /** @constructor */ function inner() {} }",
@@ -220,15 +223,13 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   private void testChecks(String js, String expected) {
-    String boilerplateCode = RuntimeTypeCheck.getBoilerplateCode(null);
     Compiler compiler = new Compiler();
-    compiler.init(new JSSourceFile[0], new JSSourceFile[0],
-        new CompilerOptions());
-    Node ast = compiler.parseSyntheticCode(boilerplateCode + expected);
-    NodeTraversal.traverse(compiler, ast,
-        new Normalize.NormalizeStatements(compiler, false));
-
-    test(js, compiler.toSource(ast));
+    compiler.init(Lists.<JSSourceFile>newArrayList(),
+                  Lists.<JSSourceFile>newArrayList(),
+                  new CompilerOptions());
+    Node boilerplateCode =
+        RuntimeTypeCheck.getBoilerplateCode(compiler, null);
+    test(js, compiler.toSource(boilerplateCode) + ";" + expected);
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -344,6 +345,18 @@ public class NormalizeTest extends CompilerTestCase {
          "function a() {" +
          "var e = 2; try { throw 1 } catch(e$$1) {}" +
          "}");
+  }
+
+  public void testNormalizeSyntheticCode() {
+    Compiler compiler = new Compiler();
+    compiler.init(
+        Lists.<JSSourceFile>newArrayList(),
+        Lists.<JSSourceFile>newArrayList(), new CompilerOptions());
+    Node code = Normalize.parseAndNormalizeSyntheticCode(
+        compiler, "function f(x) {} function g(x) {}", "prefix_");
+    assertEquals(
+        "function f(x$$prefix_0){}function g(x$$prefix_1){}",
+        compiler.toSource(code));
   }
 
   public void testRenamingConstantProperties() {

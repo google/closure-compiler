@@ -367,15 +367,9 @@ class RuntimeTypeCheck implements CompilerPass {
   }
 
   private void addBoilerplateCode() {
-    String boilerplateCode = getBoilerplateCode(logFunction);
-
-    Node js = compiler.parseSyntheticCode(boilerplateCode);
-    NodeTraversal.traverse(compiler, js,
-        new Normalize.NormalizeStatements(compiler, false));
-
+    Node js = getBoilerplateCode(compiler, logFunction);
     compiler.getNodeForCodeInsertion(null).addChildrenToFront(
         js.removeChildren());
-
     compiler.reportCodeChange();
   }
 
@@ -384,7 +378,8 @@ class RuntimeTypeCheck implements CompilerPass {
   }
 
   @VisibleForTesting
-  static String getBoilerplateCode(@Nullable String logFunction) {
+  static Node getBoilerplateCode(
+      AbstractCompiler compiler, @Nullable String logFunction) {
     String boilerplateCode;
     try {
       boilerplateCode = CharStreams.toString(new InputStreamReader(
@@ -397,6 +392,7 @@ class RuntimeTypeCheck implements CompilerPass {
     boilerplateCode = boilerplateCode.replace("%%LOG%%",
         logFunction == null ? "function(warning, expr) {}" : logFunction);
 
-    return boilerplateCode;
+    return Normalize.parseAndNormalizeSyntheticCode(
+        compiler, boilerplateCode, "jscomp_runtimeTypeCheck_");
   }
 }

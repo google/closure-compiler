@@ -1088,11 +1088,11 @@ This class implements the root of the intermediate representation.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;int</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getIntProp(int, int)">getIntProp</A></B>(int&nbsp;propType,
-           int&nbsp;defaultValue)</CODE>
+<TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#getIntProp(int)">getIntProp</A></B>(int&nbsp;propType)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the integer value for the property, or 0 if the property
+ is not defined.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -1379,7 +1379,7 @@ This class implements the root of the intermediate representation.
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#putBooleanProp(int, boolean)">putBooleanProp</A></B>(int&nbsp;propType,
-               boolean&nbsp;prop)</CODE>
+               boolean&nbsp;value)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -1388,7 +1388,7 @@ This class implements the root of the intermediate representation.
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#putIntProp(int, int)">putIntProp</A></B>(int&nbsp;propType,
-           int&nbsp;prop)</CODE>
+           int&nbsp;value)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -1397,7 +1397,7 @@ This class implements the root of the intermediate representation.
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
 <TD><CODE><B><A HREF="../../../../com/google/javascript/rhino/Node.html#putProp(int, java.lang.Object)">putProp</A></B>(int&nbsp;propType,
-        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&nbsp;prop)</CODE>
+        <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&nbsp;value)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -2917,12 +2917,14 @@ public boolean <B>getBooleanProp</B>(int&nbsp;propType)</PRE>
 </DL>
 <HR>
 
-<A NAME="getIntProp(int, int)"><!-- --></A><H3>
+<A NAME="getIntProp(int)"><!-- --></A><H3>
 getIntProp</H3>
 <PRE>
-public int <B>getIntProp</B>(int&nbsp;propType,
-                      int&nbsp;defaultValue)</PRE>
+public int <B>getIntProp</B>(int&nbsp;propType)</PRE>
 <DL>
+<DD>Returns the integer value for the property, or 0 if the property
+ is not defined.
+<P>
 <DD><DL>
 </DL>
 </DD>
@@ -2950,7 +2952,7 @@ public int <B>getExistingIntProp</B>(int&nbsp;propType)</PRE>
 putProp</H3>
 <PRE>
 public void <B>putProp</B>(int&nbsp;propType,
-                    <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&nbsp;prop)</PRE>
+                    <A HREF="http://java.sun.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A>&nbsp;value)</PRE>
 <DL>
 <DD><DL>
 </DL>
@@ -2965,7 +2967,7 @@ public void <B>putProp</B>(int&nbsp;propType,
 putBooleanProp</H3>
 <PRE>
 public void <B>putBooleanProp</B>(int&nbsp;propType,
-                           boolean&nbsp;prop)</PRE>
+                           boolean&nbsp;value)</PRE>
 <DL>
 <DD><DL>
 </DL>
@@ -2980,7 +2982,7 @@ public void <B>putBooleanProp</B>(int&nbsp;propType,
 putIntProp</H3>
 <PRE>
 public void <B>putIntProp</B>(int&nbsp;propType,
-                       int&nbsp;prop)</PRE>
+                       int&nbsp;value)</PRE>
 <DL>
 <DD><DL>
 </DL>
