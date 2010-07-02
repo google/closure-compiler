@@ -525,7 +525,9 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(aliasKeywords);
     }
 
-    passes.add(denormalize);
+    // Passes after this point can no longer depend on normalized AST
+    // assumptions.
+    passes.add(markUnnormalized);
 
     if (options.coalesceVariableNames) {
       passes.add(coalesceVariableNames);
@@ -534,6 +536,9 @@ public class DefaultPassConfig extends PassConfig {
     if (options.collapseVariableDeclarations) {
       passes.add(collapseVariableDeclarations);
     }
+
+    // This pass works best after collapseVariableDeclarations.
+    passes.add(denormalize);
 
     if (options.instrumentationTemplate != null) {
       passes.add(instrumentFunctions);
