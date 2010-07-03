@@ -79,4 +79,34 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
              + "google_exportSymbol(\"testBar\",testBar)");
     testSame("var testCase = {}; testCase.setUpPage = function() {}");
   }
+
+  /**
+   * Make sure this works for global functions declared as function expressions:
+   * <pre>
+   * var testFunctionName = function() {
+   *   // Implementation
+   * };
+   * </pre>
+   * This format should be supported in addition to function statements.
+   */
+  public void testFunctionExpressionsAreExported() {
+    test("var Foo = function() {var testA = function() {}}",
+         "var Foo = function() {var testA = function() {}}");
+    test("var setUp = function() {}",
+         "var setUp = function() {}; " +
+         "google_exportSymbol(\"setUp\",setUp)");
+    test("var setUpPage = function() {}",
+         "var setUpPage = function() {}; " +
+         "google_exportSymbol(\"setUpPage\",setUpPage)");
+    test("var tearDown = function() {}",
+         "var tearDown = function() {}; " +
+         "google_exportSymbol(\"tearDown\",tearDown)");
+    test("var tearDownPage = function() {}",
+         "var tearDownPage = function() {}; " +
+         "google_exportSymbol(\"tearDownPage\", tearDownPage)");
+    test("var testBar = function() { var testB = function() {}}",
+         "var testBar = function(){ var testB = function() {}}; " +
+         "google_exportSymbol(\"testBar\",testBar)");
+  }
+
 }

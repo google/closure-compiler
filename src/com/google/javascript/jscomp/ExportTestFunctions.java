@@ -52,13 +52,42 @@ class ExportTestFunctions implements CompilerPass {
       NodeTraversal.AbstractPostOrderCallback {
 
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (parent != null && parent.getType() == Token.SCRIPT &&
-          n.getType() == Token.FUNCTION) {
-        String functionName = NodeUtil.getFunctionName(n);
-        if (isTestFunction(n, functionName) && t.inGlobalScope()) {
-          exportTestFunction(functionName, n, parent);
+      if (parent != null && parent.getType() == Token.SCRIPT
+          && t.inGlobalScope()) {
+        if (NodeUtil.isFunctionDeclaration(n)) {
+          // Check for a test function statement.
+          String functionName = NodeUtil.getFunctionName(n);
+          if (isTestFunction(n, functionName)) {
+            exportTestFunction(functionName, n, parent);
+          }
+        } else if (isVarDeclaredFunction(n)) {
+          // Check for a test function expression.
+          Node functionNode = n.getFirstChild().getFirstChild();
+          String functionName = NodeUtil.getFunctionName(functionNode);
+          if (isTestFunction(functionNode, functionName)) {
+            exportTestFunction(functionName, n, parent);
+          }          
         }
       }
+    }
+    
+    /**
+     * Whether node corresponds to a function expression declared with var,
+     * which is of the form:
+     * <pre>
+     * var functionName = function() {
+     *   // Implementation
+     * };
+     * </pre>
+     * This has the AST structure VAR -> NAME -> FUNCTION
+     * @param node
+     */
+    private boolean isVarDeclaredFunction(Node node) {
+      if (node.getType() != Token.VAR) {
+        return false;
+      }
+      Node grandchild = node.getFirstChild().getFirstChild();
+      return grandchild != null && grandchild.getType() == Token.FUNCTION;
     }
   }
 
