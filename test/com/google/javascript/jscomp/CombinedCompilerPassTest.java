@@ -93,8 +93,8 @@ public class CombinedCompilerPassTest extends TestCase  {
    * rooted with specified strings.
    */
   private static class ConcatTraversal implements Callback {
-    private StringBuffer visited = new StringBuffer();
-    private StringBuffer shouldTraversed = new StringBuffer();
+    private StringBuilder visited = new StringBuilder();
+    private StringBuilder shouldTraversed = new StringBuilder();
     private Set<String> ignoring = Sets.newHashSet();
 
     ConcatTraversal ignore(String s) {

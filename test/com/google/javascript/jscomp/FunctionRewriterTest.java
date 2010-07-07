@@ -167,8 +167,8 @@ public class FunctionRewriterTest extends CompilerTestCase {
                                String expectedHdr,
                                String expectedBody,
                                int repetitions) {
-    StringBuffer srcBuffer = new StringBuffer();
-    StringBuffer expectedBuffer = new StringBuffer();
+    StringBuilder srcBuffer = new StringBuilder();
+    StringBuilder expectedBuffer = new StringBuilder();
 
     expectedBuffer.append(expectedHdr);
 

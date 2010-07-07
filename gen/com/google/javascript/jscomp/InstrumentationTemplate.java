@@ -53,7 +53,5 @@ public final class InstrumentationTemplate {
         }, assigner);
   }
   
-  public static void internalForceInit() {}
-  
   // @@protoc_insertion_point(outer_class_scope)
 }

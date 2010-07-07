@@ -703,7 +703,8 @@ public abstract class JSType implements Serializable {
     // other types
     switch (this.testForEquality(that)) {
       case TRUE:
-        return new TypePair(null, null);
+        JSType noType = getNativeType(JSTypeNative.NO_TYPE);
+        return new TypePair(noType, noType);
 
       case FALSE:
       case UNKNOWN:

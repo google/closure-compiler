@@ -107,6 +107,12 @@ public class IRFactory {
   private final Multimap<String, NodeWithJsDoc> nodesWithJsDoc =
       LinkedHashMultimap.create();
 
+  // Use a template node for properties set on all nodes to minimize the
+  // memory footprint associated with these.
+  private Node templateNode;
+
+  // TODO(johnlenz): Consider creating a template pool for ORIGINALNAME_PROP.
+
   private IRFactory(String sourceString,
                     String sourceName,
                     Config config,
@@ -116,6 +122,18 @@ public class IRFactory {
     this.config = config;
     this.errorReporter = errorReporter;
     this.transformDispatcher = new TransformDispatcher();
+    // The template node properties are applied to all nodes in this transform.
+    this.templateNode = createTemplateNode();
+  }
+
+  // Create a template node to use as a source of common attributes, this allows
+  // the prop structure to be shared among all the node from this source file.
+  // This reduces the cost of these properties to O(nodes) to O(files).
+  private Node createTemplateNode() {
+    // The Node type choice is arbitrary.
+    Node templateNode = new Node(Token.SCRIPT);
+    templateNode.putProp(Node.SOURCEFILE_PROP, sourceName);
+    return templateNode;
   }
 
   public static Node transformTree(AstRoot node,
@@ -173,8 +191,9 @@ public class IRFactory {
         irNode.setType(Token.BLOCK);
         irNode.setWasEmptyNode(true);
       } else {
-        Node newBlock = new Node(Token.BLOCK, irNode,
-            irNode.getLineno(), irNode.getCharno());
+        Node newBlock = newNode(Token.BLOCK, irNode);
+        newBlock.setLineno(irNode.getLineno());
+        newBlock.setCharno(irNode.getCharno());
         irNode = newBlock;
       }
     }
@@ -278,7 +297,7 @@ public class IRFactory {
   private class TransformDispatcher extends TypeSafeDispatcher<Node> {
     private Node processGeneric(
         com.google.javascript.jscomp.mozilla.rhino.Node n) {
-      Node node = new Node(transformTokenType(n.getType()));
+      Node node = newNode(transformTokenType(n.getType()));
       for (com.google.javascript.jscomp.mozilla.rhino.Node child : n) {
         node.addChildToBack(transform((AstNode)child));
       }
@@ -310,7 +329,7 @@ public class IRFactory {
         reportDestructuringAssign(literalNode);
       }
 
-      Node node = new Node(Token.ARRAYLIT);
+      Node node = newNode(Token.ARRAYLIT);
       int skipCount = 0;
       for (AstNode child : literalNode.getElements()) {
         Node c = transform(child);
@@ -344,7 +363,7 @@ public class IRFactory {
 
     @Override
     Node processAstRoot(AstRoot rootNode) {
-      Node node = new Node(Token.SCRIPT);
+      Node node = newNode(Token.SCRIPT);
       for (com.google.javascript.jscomp.mozilla.rhino.Node child : rootNode) {
         node.addChildToBack(transform((AstNode)child));
       }
@@ -394,7 +413,7 @@ public class IRFactory {
 
     @Override
     Node processBreakStatement(BreakStatement statementNode) {
-      Node node = new Node(Token.BREAK);
+      Node node = newNode(Token.BREAK);
       if (statementNode.getBreakLabel() != null) {
         Node labelName = transform(statementNode.getBreakLabel());
         // Change the NAME to LABEL_NAME
@@ -407,11 +426,11 @@ public class IRFactory {
     @Override
     Node processCatchClause(CatchClause clauseNode) {
       AstNode catchVar = clauseNode.getVarName();
-      Node node = new Node(Token.CATCH, transform(catchVar));
+      Node node = newNode(Token.CATCH, transform(catchVar));
       if (clauseNode.getCatchCondition() != null) {
         node.addChildToBack(transform(clauseNode.getCatchCondition()));
       } else {
-        Node catchCondition = new Node(Token.EMPTY);
+        Node catchCondition = newNode(Token.EMPTY);
         // Old Rhino used the position of the catchVar as the position
         // for the (nonexistent) error being caught.
         catchCondition.setLineno(catchVar.getLineno());
@@ -426,7 +445,7 @@ public class IRFactory {
 
     @Override
     Node processConditionalExpression(ConditionalExpression exprNode) {
-      return new Node(
+      return newNode(
           Token.HOOK,
           transform(exprNode.getTestExpression()),
           transform(exprNode.getTrueExpression()),
@@ -435,7 +454,7 @@ public class IRFactory {
 
     @Override
     Node processContinueStatement(ContinueStatement statementNode) {
-      Node node = new Node(Token.CONTINUE);
+      Node node = newNode(Token.CONTINUE);
       if (statementNode.getLabel() != null) {
         Node labelName = transform(statementNode.getLabel());
         // Change the NAME to LABEL_NAME
@@ -447,7 +466,7 @@ public class IRFactory {
 
     @Override
     Node processDoLoop(DoLoop loopNode) {
-      return new Node(
+      return newNode(
           Token.DO,
           transformBlock(loopNode.getBody()),
           transform(loopNode.getCondition()));
@@ -455,7 +474,7 @@ public class IRFactory {
 
     @Override
     Node processElementGet(ElementGet getNode) {
-      return new Node(
+      return newNode(
           Token.GETELEM,
           transform(getNode.getTarget()),
           transform(getNode.getElement()));
@@ -463,20 +482,20 @@ public class IRFactory {
 
     @Override
     Node processEmptyExpression(EmptyExpression exprNode) {
-      Node node = new Node(Token.EMPTY);
+      Node node = newNode(Token.EMPTY);
       return node;
     }
 
     @Override
     Node processExpressionStatement(ExpressionStatement statementNode) {
-      Node node = new Node(transformTokenType(statementNode.getType()));
+      Node node = newNode(transformTokenType(statementNode.getType()));
       node.addChildToBack(transform(statementNode.getExpression()));
       return node;
     }
 
     @Override
     Node processForInLoop(ForInLoop loopNode) {
-      return new Node(
+      return newNode(
           Token.FOR,
           transform(loopNode.getIterator()),
           transform(loopNode.getIteratedObject()),
@@ -485,7 +504,7 @@ public class IRFactory {
 
     @Override
     Node processForLoop(ForLoop loopNode) {
-      Node node = new Node(
+      Node node = newNode(
           Token.FOR,
           transform(loopNode.getInitializer()),
           transform(loopNode.getCondition()),
@@ -496,7 +515,7 @@ public class IRFactory {
 
     @Override
     Node processFunctionCall(FunctionCall callNode) {
-      Node node = new Node(transformTokenType(callNode.getType()),
+      Node node = newNode(transformTokenType(callNode.getType()),
                            transform(callNode.getTarget()));
       for (AstNode child : callNode.getArguments()) {
         node.addChildToBack(transform(child));
@@ -517,7 +536,7 @@ public class IRFactory {
         name.setIdentifier("");
         isUnnamedFunction = true;
       }
-      Node node = new Node(Token.FUNCTION);
+      Node node = newNode(Token.FUNCTION);
       node.putProp(Node.SOURCENAME_PROP, functionNode.getSourceName());
       Node newName = transform(name);
       if (isUnnamedFunction) {
@@ -533,7 +552,7 @@ public class IRFactory {
       }
 
       node.addChildToBack(newName);
-      Node lp = new Node(Token.LP);
+      Node lp = newNode(Token.LP);
       // The left paren's complicated because it's not represented by an
       // AstNode, so there's nothing that has the actual line number that it
       // appeared on.  We know the paren has to appear on the same line as the
@@ -563,7 +582,7 @@ public class IRFactory {
 
     @Override
     Node processIfStatement(IfStatement statementNode) {
-      Node node = new Node(Token.IF);
+      Node node = newNode(Token.IF);
       node.addChildToBack(transform(statementNode.getCondition()));
       node.addChildToBack(transformBlock(statementNode.getThenPart()));
       if (statementNode.getElsePart() != null) {
@@ -574,7 +593,7 @@ public class IRFactory {
 
     @Override
     Node processInfixExpression(InfixExpression exprNode) {
-      Node n =  new Node(
+      Node n =  newNode(
           transformTokenType(exprNode.getType()),
           transform(exprNode.getLeft()),
           transform(exprNode.getRight()));
@@ -591,17 +610,17 @@ public class IRFactory {
 
     @Override
     Node processKeywordLiteral(KeywordLiteral literalNode) {
-      return new Node(transformTokenType(literalNode.getType()));
+      return newNode(transformTokenType(literalNode.getType()));
     }
 
     @Override
     Node processLabel(Label labelNode) {
-      return Node.newString(Token.LABEL_NAME, labelNode.getName());
+      return newStringNode(Token.LABEL_NAME, labelNode.getName());
     }
 
     @Override
     Node processLabeledStatement(LabeledStatement statementNode) {
-      Node node = new Node(Token.LABEL);
+      Node node = newNode(Token.LABEL);
       Node prev = null;
       Node cur = node;
       for (Label label : statementNode.getLabels()) {
@@ -616,7 +635,7 @@ public class IRFactory {
         cur.setCharno(clauseAbsolutePosition);
 
         prev = cur;
-        cur = new Node(Token.LABEL);
+        cur = newNode(Token.LABEL);
       }
       prev.addChildToBack(transform(statementNode.getStatement()));
       return node;
@@ -624,7 +643,7 @@ public class IRFactory {
 
     @Override
     Node processName(Name nameNode) {
-      return Node.newString(Token.NAME, nameNode.getIdentifier());
+      return newStringNode(Token.NAME, nameNode.getIdentifier());
     }
 
     @Override
@@ -634,8 +653,7 @@ public class IRFactory {
 
     @Override
     Node processNumberLiteral(NumberLiteral literalNode) {
-      Node newNode = Node.newNumber(literalNode.getNumber());
-      return newNode;
+      return newNumberNode(literalNode.getNumber());
     }
 
     @Override
@@ -644,7 +662,7 @@ public class IRFactory {
         reportDestructuringAssign(literalNode);
       }
 
-      Node node = new Node(Token.OBJECTLIT);
+      Node node = newNode(Token.OBJECTLIT);
       for (ObjectProperty el : literalNode.getElements()) {
         if (el.isGetter()) {
           reportGetter(el);
@@ -672,7 +690,7 @@ public class IRFactory {
 
     @Override
     Node processPropertyGet(PropertyGet getNode) {
-      return new Node(
+      return newNode(
           Token.GETPROP,
           transform(getNode.getTarget()),
           transformAsString(getNode.getProperty()));
@@ -680,13 +698,13 @@ public class IRFactory {
 
     @Override
     Node processRegExpLiteral(RegExpLiteral literalNode) {
-      Node literalStringNode = Node.newString(literalNode.getValue());
+      Node literalStringNode = newStringNode(literalNode.getValue());
       // assume it's on the same line.
       literalStringNode.setLineno(literalNode.getLineno());
-      Node node = new Node(Token.REGEXP, literalStringNode);
+      Node node = newNode(Token.REGEXP, literalStringNode);
       String flags = literalNode.getFlags();
       if (flags != null && !flags.isEmpty()) {
-        Node flagsNode = Node.newString(flags);
+        Node flagsNode = newStringNode(flags);
         // Assume the flags are on the same line as the literal node.
         flagsNode.setLineno(literalNode.getLineno());
         node.addChildToBack(flagsNode);
@@ -696,7 +714,7 @@ public class IRFactory {
 
     @Override
     Node processReturnStatement(ReturnStatement statementNode) {
-      Node node = new Node(Token.RETURN);
+      Node node = newNode(Token.RETURN);
       if (statementNode.getReturnValue() != null) {
         node.addChildToBack(transform(statementNode.getReturnValue()));
       }
@@ -710,7 +728,7 @@ public class IRFactory {
 
     @Override
     Node processStringLiteral(StringLiteral literalNode) {
-      Node n = Node.newString(literalNode.getValue());
+      Node n = newStringNode(literalNode.getValue());
       return n;
     }
 
@@ -718,12 +736,12 @@ public class IRFactory {
     Node processSwitchCase(SwitchCase caseNode) {
       Node node;
       if (caseNode.isDefault()) {
-        node = new Node(Token.DEFAULT);
+        node = newNode(Token.DEFAULT);
       } else {
         AstNode expr = caseNode.getExpression();
-        node = new Node(Token.CASE, transform(expr));
+        node = newNode(Token.CASE, transform(expr));
       }
-      Node block = new Node(Token.BLOCK);
+      Node block = newNode(Token.BLOCK);
       block.putBooleanProp(Node.SYNTHETIC_BLOCK_PROP, true);
       block.setLineno(caseNode.getLineno());
       block.setCharno(position2charno(caseNode.getAbsolutePosition()));
@@ -738,7 +756,7 @@ public class IRFactory {
 
     @Override
     Node processSwitchStatement(SwitchStatement statementNode) {
-      Node node = new Node(Token.SWITCH,
+      Node node = newNode(Token.SWITCH,
           transform(statementNode.getExpression()));
       for (AstNode child : statementNode.getCases()) {
         node.addChildToBack(transform(child));
@@ -748,15 +766,15 @@ public class IRFactory {
 
     @Override
     Node processThrowStatement(ThrowStatement statementNode) {
-      return new Node(Token.THROW,
+      return newNode(Token.THROW,
           transform(statementNode.getExpression()));
     }
 
     @Override
     Node processTryStatement(TryStatement statementNode) {
-      Node node = new Node(Token.TRY,
+      Node node = newNode(Token.TRY,
           transformBlock(statementNode.getTryBlock()));
-      Node block = new Node(Token.BLOCK);
+      Node block = newNode(Token.BLOCK);
       boolean lineSet = false;
 
       for (CatchClause cc : statementNode.getCatchClauses()) {
@@ -793,7 +811,7 @@ public class IRFactory {
         operand.setDouble(-operand.getDouble());
         return operand;
       } else {
-        Node node = new Node(type, operand);
+        Node node = newNode(type, operand);
         if (exprNode.isPostfix()) {
           node.putBooleanProp(Node.INCRDECR_PROP, true);
         }
@@ -803,7 +821,7 @@ public class IRFactory {
 
     @Override
     Node processVariableDeclaration(VariableDeclaration declarationNode) {
-      Node node = new Node(Token.VAR);
+      Node node = newNode(Token.VAR);
       for (VariableInitializer child : declarationNode.getVariables()) {
         node.addChildToBack(transform(child));
       }
@@ -822,7 +840,7 @@ public class IRFactory {
 
     @Override
     Node processWhileLoop(WhileLoop loopNode) {
-      return new Node(
+      return newNode(
           Token.WHILE,
           transform(loopNode.getCondition()),
           transformBlock(loopNode.getBody()));
@@ -830,7 +848,7 @@ public class IRFactory {
 
     @Override
     Node processWithStatement(WithStatement statementNode) {
-      return new Node(
+      return newNode(
           Token.WITH,
           transform(statementNode.getExpression()),
           transformBlock(statementNode.getStatement()));
@@ -844,7 +862,7 @@ public class IRFactory {
               node.getType()),
           sourceName,
           node.getLineno(), "", 0);
-      return new Node(Token.EMPTY);
+      return newNode(Token.EMPTY);
     }
 
     void reportDestructuringAssign(AstNode node) {
@@ -1180,6 +1198,35 @@ public class IRFactory {
 
     // Token without name
     throw new IllegalStateException(String.valueOf(token));
+  }
+
+  // Simple helper to create nodes and set the initial node properties.
+  private Node newNode(int type) {
+    return new Node(type).clonePropsFrom(templateNode);
+  }
+
+  private Node newNode(int type, Node child1) {
+    return new Node(type, child1).clonePropsFrom(templateNode);
+  }
+
+  private Node newNode(int type, Node child1, Node child2) {
+    return new Node(type, child1, child2).clonePropsFrom(templateNode);
+  }
+
+  private Node newNode(int type, Node child1, Node child2, Node child3) {
+    return new Node(type, child1, child2, child3).clonePropsFrom(templateNode);
+  }
+
+  private Node newStringNode(String value) {
+    return Node.newString(value).clonePropsFrom(templateNode);
+  }
+
+  private Node newStringNode(int type, String value) {
+    return Node.newString(type, value).clonePropsFrom(templateNode);
+  }
+
+  private Node newNumberNode(Double value) {
+    return Node.newNumber(value).clonePropsFrom(templateNode);
   }
 
   /**

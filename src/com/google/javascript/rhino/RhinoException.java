@@ -66,7 +66,7 @@ public class RhinoException extends RuntimeException
         if (sourceName == null || lineNumber <= 0) {
             return details;
         }
-        StringBuffer buf = new StringBuffer(details);
+        StringBuilder buf = new StringBuilder(details);
         buf.append(" (");
         if (sourceName != null) {
             buf.append(sourceName);

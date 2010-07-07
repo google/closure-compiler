@@ -66,11 +66,11 @@ class ExportTestFunctions implements CompilerPass {
           String functionName = NodeUtil.getFunctionName(functionNode);
           if (isTestFunction(functionNode, functionName)) {
             exportTestFunction(functionName, n, parent);
-          }          
+          }
         }
       }
     }
-    
+
     /**
      * Whether node corresponds to a function expression declared with var,
      * which is of the form:

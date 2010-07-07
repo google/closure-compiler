@@ -16,14 +16,12 @@
 
 package com.google.javascript.jscomp.deps;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
 
 import junit.framework.TestCase;
 
 import java.io.StringReader;
-import java.util.Collections;
 
 /**
  * Tests for {@link JsFileLineParser}.
@@ -87,7 +85,7 @@ public class JsFileLineParserTest extends TestCase {
   }
 
   private static class TestParser extends JsFileLineParser {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
 
     TestParser(ErrorManager errorManager) {
       super(errorManager);

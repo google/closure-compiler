@@ -333,6 +333,24 @@ public class SemanticReverseAbstractInterpreterTest
   }
 
   /**
+   * Tests reverse interpretation of two undefineds.
+   */
+  @SuppressWarnings("unchecked")
+  public void testEqCondition4() throws Exception {
+    FlowScope blind = newScope();
+    testBinop(blind,
+        Token.EQ,
+        createVar(blind, "a", VOID_TYPE),
+        createVar(blind, "b", VOID_TYPE),
+        Sets.newHashSet(
+            new TypedName("a", VOID_TYPE),
+            new TypedName("b", VOID_TYPE)),
+        Sets.newHashSet(
+            new TypedName("a", NO_TYPE),
+            new TypedName("b", NO_TYPE)));
+  }
+
+  /**
    * Tests reverse interpretation of a COMPARE(NAME, NUMBER) expression,
    * where COMPARE can be LE, LT, GE or GT.
    */

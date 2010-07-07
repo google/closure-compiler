@@ -83,7 +83,5 @@ public final class FunctionInfo {
         }, assigner);
   }
   
-  public static void internalForceInit() {}
-  
   // @@protoc_insertion_point(outer_class_scope)
 }

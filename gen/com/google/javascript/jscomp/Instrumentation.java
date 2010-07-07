@@ -261,6 +261,12 @@ public  final class Instrumentation extends
   }
   public Builder toBuilder() { return newBuilder(this); }
   
+  @java.lang.Override
+  protected Builder newBuilderForType(
+      com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+    Builder builder = new Builder(parent);
+    return builder;
+  }
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> {
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -275,8 +281,17 @@ public  final class Instrumentation extends
     
     // Construct using com.google.javascript.jscomp.Instrumentation.newBuilder()
     private Builder() {
+      maybeForceBuilderInitialization();
     }
     
+    private Builder(BuilderParent parent) {
+      super(parent);
+      maybeForceBuilderInitialization();
+    }
+    private void maybeForceBuilderInitialization() {
+      if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+      }
+    }
     private static Builder create() {
       return new Builder();
     }
@@ -349,6 +364,7 @@ public  final class Instrumentation extends
       result.init_ = init_;
       result.hasAppNameSetter = hasAppNameSetter;
       result.appNameSetter_ = appNameSetter_;
+      onBuilt();
       return result;
     }
     
@@ -380,6 +396,7 @@ public  final class Instrumentation extends
           ensureDeclarationToRemoveIsMutable();
           declarationToRemove_.addAll(other.declarationToRemove_);
         }
+        onChanged();
       }
       if (!other.init_.isEmpty()) {
         if (init_.isEmpty()) {
@@ -389,6 +406,7 @@ public  final class Instrumentation extends
           ensureInitIsMutable();
           init_.addAll(other.init_);
         }
+        onChanged();
       }
       if (other.hasAppNameSetter()) {
         setAppNameSetter(other.getAppNameSetter());
@@ -466,11 +484,13 @@ public  final class Instrumentation extends
   }
   hasReportDefined = true;
       reportDefined_ = value;
+      onChanged();
       return this;
     }
     public Builder clearReportDefined() {
       hasReportDefined = false;
       reportDefined_ = getDefaultInstance().getReportDefined();
+      onChanged();
       return this;
     }
     
@@ -489,11 +509,13 @@ public  final class Instrumentation extends
   }
   hasReportCall = true;
       reportCall_ = value;
+      onChanged();
       return this;
     }
     public Builder clearReportCall() {
       hasReportCall = false;
       reportCall_ = getDefaultInstance().getReportCall();
+      onChanged();
       return this;
     }
     
@@ -512,11 +534,13 @@ public  final class Instrumentation extends
   }
   hasReportExit = true;
       reportExit_ = value;
+      onChanged();
       return this;
     }
     public Builder clearReportExit() {
       hasReportExit = false;
       reportExit_ = getDefaultInstance().getReportExit();
+      onChanged();
       return this;
     }
     
@@ -547,6 +571,7 @@ public  final class Instrumentation extends
   }
   ensureDeclarationToRemoveIsMutable();
       declarationToRemove_.set(index, value);
+      onChanged();
       return this;
     }
     public Builder addDeclarationToRemove(java.lang.String value) {
@@ -555,17 +580,20 @@ public  final class Instrumentation extends
   }
   ensureDeclarationToRemoveIsMutable();
       declarationToRemove_.add(value);
+      onChanged();
       return this;
     }
     public Builder addAllDeclarationToRemove(
         java.lang.Iterable<? extends java.lang.String> values) {
       ensureDeclarationToRemoveIsMutable();
       super.addAll(values, declarationToRemove_);
+      onChanged();
       return this;
     }
     public Builder clearDeclarationToRemove() {
       declarationToRemove_ = java.util.Collections.emptyList();
       isDeclarationToRemoveMutable = false;
+      onChanged();
       return this;
     }
     
@@ -596,6 +624,7 @@ public  final class Instrumentation extends
   }
   ensureInitIsMutable();
       init_.set(index, value);
+      onChanged();
       return this;
     }
     public Builder addInit(java.lang.String value) {
@@ -604,17 +633,20 @@ public  final class Instrumentation extends
   }
   ensureInitIsMutable();
       init_.add(value);
+      onChanged();
       return this;
     }
     public Builder addAllInit(
         java.lang.Iterable<? extends java.lang.String> values) {
       ensureInitIsMutable();
       super.addAll(values, init_);
+      onChanged();
       return this;
     }
     public Builder clearInit() {
       init_ = java.util.Collections.emptyList();
       isInitMutable = false;
+      onChanged();
       return this;
     }
     
@@ -633,11 +665,13 @@ public  final class Instrumentation extends
   }
   hasAppNameSetter = true;
       appNameSetter_ = value;
+      onChanged();
       return this;
     }
     public Builder clearAppNameSetter() {
       hasAppNameSetter = false;
       appNameSetter_ = getDefaultInstance().getAppNameSetter();
+      onChanged();
       return this;
     }
     
@@ -646,7 +680,6 @@ public  final class Instrumentation extends
   
   static {
     defaultInstance = new Instrumentation(true);
-    com.google.javascript.jscomp.InstrumentationTemplate.internalForceInit();
     defaultInstance.initFields();
   }
   

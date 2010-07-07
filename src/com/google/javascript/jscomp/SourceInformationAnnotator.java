@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -41,17 +42,21 @@ import com.google.javascript.rhino.Token;
  */
 class SourceInformationAnnotator extends
   NodeTraversal.AbstractPostOrderCallback {
-  private String sourceFile = null;
+  private final String sourceFile;
+  private final boolean doSanityChecks;
 
-  public SourceInformationAnnotator(String sourceFile) {
+  public SourceInformationAnnotator(
+      String sourceFile, boolean doSanityChecks) {
     this.sourceFile = sourceFile;
+    this.doSanityChecks = doSanityChecks;
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    // Annotate with the source file.
-    if (sourceFile != null) {
-      n.putProp(Node.SOURCEFILE_PROP, sourceFile);
+    // Verify the source file is annotated.
+    if (doSanityChecks && sourceFile != null) {
+      Preconditions.checkState(sourceFile.equals(
+          n.getProp(Node.SOURCEFILE_PROP)));
     }
 
     // Annotate the original name.

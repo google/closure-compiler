@@ -297,7 +297,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
       for (DefinitionSite defSite : passUnderTest.getDefinitionSites()) {
         Node node = defSite.node;
         Definition definition = defSite.definition;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("DEF ");
         sb.append(Token.name(node.getType()));
         sb.append(" ");
@@ -320,7 +320,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
       Collection<Definition> defs =
           passUnderTest.getDefinitionsReferencedAt(node);
       if (defs != null) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("USE ");
         sb.append(Token.name(node.getType()));
         sb.append(" ");

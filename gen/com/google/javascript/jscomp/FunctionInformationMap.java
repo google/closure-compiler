@@ -143,13 +143,13 @@ public  final class FunctionInformationMap extends
       compiledSource_ = "";
     }
     public final boolean isInitialized() {
-      if (!hasId) return false;
-      if (!hasSourceName) return false;
-      if (!hasLineNumber) return false;
-      if (!hasModuleName) return false;
-      if (!hasSize) return false;
-      if (!hasName) return false;
-      if (!hasCompiledSource) return false;
+      if (!hasId()) return false;
+      if (!hasSourceName()) return false;
+      if (!hasLineNumber()) return false;
+      if (!hasModuleName()) return false;
+      if (!hasSize()) return false;
+      if (!hasName()) return false;
+      if (!hasCompiledSource()) return false;
       return true;
     }
     
@@ -298,6 +298,12 @@ public  final class FunctionInformationMap extends
     }
     public Builder toBuilder() { return newBuilder(this); }
     
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder> {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -312,8 +318,17 @@ public  final class FunctionInformationMap extends
       
       // Construct using com.google.javascript.jscomp.FunctionInformationMap.Entry.newBuilder()
       private Builder() {
+        maybeForceBuilderInitialization();
       }
       
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
       private static Builder create() {
         return new Builder();
       }
@@ -384,6 +399,7 @@ public  final class FunctionInformationMap extends
         result.name_ = name_;
         result.hasCompiledSource = hasCompiledSource;
         result.compiledSource_ = compiledSource_;
+        onBuilt();
         return result;
       }
       
@@ -424,13 +440,13 @@ public  final class FunctionInformationMap extends
       }
       
       public final boolean isInitialized() {
-        if (!hasId) return false;
-        if (!hasSourceName) return false;
-        if (!hasLineNumber) return false;
-        if (!hasModuleName) return false;
-        if (!hasSize) return false;
-        if (!hasName) return false;
-        if (!hasCompiledSource) return false;
+        if (!hasId()) return false;
+        if (!hasSourceName()) return false;
+        if (!hasLineNumber()) return false;
+        if (!hasModuleName()) return false;
+        if (!hasSize()) return false;
+        if (!hasName()) return false;
+        if (!hasCompiledSource()) return false;
         return true;
       }
       
@@ -500,11 +516,13 @@ public  final class FunctionInformationMap extends
       public Builder setId(int value) {
         hasId = true;
         id_ = value;
+        onChanged();
         return this;
       }
       public Builder clearId() {
         hasId = false;
         id_ = 0;
+        onChanged();
         return this;
       }
       
@@ -523,11 +541,13 @@ public  final class FunctionInformationMap extends
   }
   hasSourceName = true;
         sourceName_ = value;
+        onChanged();
         return this;
       }
       public Builder clearSourceName() {
         hasSourceName = false;
         sourceName_ = getDefaultInstance().getSourceName();
+        onChanged();
         return this;
       }
       
@@ -543,11 +563,13 @@ public  final class FunctionInformationMap extends
       public Builder setLineNumber(int value) {
         hasLineNumber = true;
         lineNumber_ = value;
+        onChanged();
         return this;
       }
       public Builder clearLineNumber() {
         hasLineNumber = false;
         lineNumber_ = 0;
+        onChanged();
         return this;
       }
       
@@ -566,11 +588,13 @@ public  final class FunctionInformationMap extends
   }
   hasModuleName = true;
         moduleName_ = value;
+        onChanged();
         return this;
       }
       public Builder clearModuleName() {
         hasModuleName = false;
         moduleName_ = getDefaultInstance().getModuleName();
+        onChanged();
         return this;
       }
       
@@ -586,11 +610,13 @@ public  final class FunctionInformationMap extends
       public Builder setSize(int value) {
         hasSize = true;
         size_ = value;
+        onChanged();
         return this;
       }
       public Builder clearSize() {
         hasSize = false;
         size_ = 0;
+        onChanged();
         return this;
       }
       
@@ -609,11 +635,13 @@ public  final class FunctionInformationMap extends
   }
   hasName = true;
         name_ = value;
+        onChanged();
         return this;
       }
       public Builder clearName() {
         hasName = false;
         name_ = getDefaultInstance().getName();
+        onChanged();
         return this;
       }
       
@@ -632,11 +660,13 @@ public  final class FunctionInformationMap extends
   }
   hasCompiledSource = true;
         compiledSource_ = value;
+        onChanged();
         return this;
       }
       public Builder clearCompiledSource() {
         hasCompiledSource = false;
         compiledSource_ = getDefaultInstance().getCompiledSource();
+        onChanged();
         return this;
       }
       
@@ -645,7 +675,6 @@ public  final class FunctionInformationMap extends
     
     static {
       defaultInstance = new Entry(true);
-      com.google.javascript.jscomp.FunctionInfo.internalForceInit();
       defaultInstance.initFields();
     }
     
@@ -706,8 +735,8 @@ public  final class FunctionInformationMap extends
       compiledSource_ = "";
     }
     public final boolean isInitialized() {
-      if (!hasName) return false;
-      if (!hasCompiledSource) return false;
+      if (!hasName()) return false;
+      if (!hasCompiledSource()) return false;
       return true;
     }
     
@@ -821,6 +850,12 @@ public  final class FunctionInformationMap extends
     }
     public Builder toBuilder() { return newBuilder(this); }
     
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder> {
       public static final com.google.protobuf.Descriptors.Descriptor
@@ -835,8 +870,17 @@ public  final class FunctionInformationMap extends
       
       // Construct using com.google.javascript.jscomp.FunctionInformationMap.Module.newBuilder()
       private Builder() {
+        maybeForceBuilderInitialization();
       }
       
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
       private static Builder create() {
         return new Builder();
       }
@@ -887,6 +931,7 @@ public  final class FunctionInformationMap extends
         result.name_ = name_;
         result.hasCompiledSource = hasCompiledSource;
         result.compiledSource_ = compiledSource_;
+        onBuilt();
         return result;
       }
       
@@ -912,8 +957,8 @@ public  final class FunctionInformationMap extends
       }
       
       public final boolean isInitialized() {
-        if (!hasName) return false;
-        if (!hasCompiledSource) return false;
+        if (!hasName()) return false;
+        if (!hasCompiledSource()) return false;
         return true;
       }
       
@@ -966,11 +1011,13 @@ public  final class FunctionInformationMap extends
   }
   hasName = true;
         name_ = value;
+        onChanged();
         return this;
       }
       public Builder clearName() {
         hasName = false;
         name_ = getDefaultInstance().getName();
+        onChanged();
         return this;
       }
       
@@ -989,11 +1036,13 @@ public  final class FunctionInformationMap extends
   }
   hasCompiledSource = true;
         compiledSource_ = value;
+        onChanged();
         return this;
       }
       public Builder clearCompiledSource() {
         hasCompiledSource = false;
         compiledSource_ = getDefaultInstance().getCompiledSource();
+        onChanged();
         return this;
       }
       
@@ -1002,7 +1051,6 @@ public  final class FunctionInformationMap extends
     
     static {
       defaultInstance = new Module(true);
-      com.google.javascript.jscomp.FunctionInfo.internalForceInit();
       defaultInstance.initFields();
     }
     
@@ -1159,6 +1207,12 @@ public  final class FunctionInformationMap extends
   }
   public Builder toBuilder() { return newBuilder(this); }
   
+  @java.lang.Override
+  protected Builder newBuilderForType(
+      com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+    Builder builder = new Builder(parent);
+    return builder;
+  }
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> {
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -1173,18 +1227,37 @@ public  final class FunctionInformationMap extends
     
     // Construct using com.google.javascript.jscomp.FunctionInformationMap.newBuilder()
     private Builder() {
+      maybeForceBuilderInitialization();
     }
     
+    private Builder(BuilderParent parent) {
+      super(parent);
+      maybeForceBuilderInitialization();
+    }
+    private void maybeForceBuilderInitialization() {
+      if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        getEntryFieldBuilder();
+        getModuleFieldBuilder();
+      }
+    }
     private static Builder create() {
       return new Builder();
     }
     
     public Builder clear() {
       super.clear();
-      entry_ = java.util.Collections.emptyList();
-      isEntryMutable = false;
-      module_ = java.util.Collections.emptyList();
-      isModuleMutable = false;
+      if (entryBuilder_ == null) {
+        entry_ = java.util.Collections.emptyList();
+        isEntryMutable = false;
+      } else {
+        entryBuilder_.clear();
+      }
+      if (moduleBuilder_ == null) {
+        module_ = java.util.Collections.emptyList();
+        isModuleMutable = false;
+      } else {
+        moduleBuilder_.clear();
+      }
       return this;
     }
     
@@ -1221,16 +1294,25 @@ public  final class FunctionInformationMap extends
     
     public com.google.javascript.jscomp.FunctionInformationMap buildPartial() {
       com.google.javascript.jscomp.FunctionInformationMap result = new com.google.javascript.jscomp.FunctionInformationMap(this);
-      if (isEntryMutable) {
-        entry_ = java.util.Collections.unmodifiableList(entry_);
-        isEntryMutable = false;
+      if (entryBuilder_ == null) {
+        if (isEntryMutable) {
+          entry_ = java.util.Collections.unmodifiableList(entry_);
+          isEntryMutable = false;
+        }
+        result.entry_ = entry_;
+      } else {
+        result.entry_ = entryBuilder_.build();
       }
-      result.entry_ = entry_;
-      if (isModuleMutable) {
-        module_ = java.util.Collections.unmodifiableList(module_);
-        isModuleMutable = false;
+      if (moduleBuilder_ == null) {
+        if (isModuleMutable) {
+          module_ = java.util.Collections.unmodifiableList(module_);
+          isModuleMutable = false;
+        }
+        result.module_ = module_;
+      } else {
+        result.module_ = moduleBuilder_.build();
       }
-      result.module_ = module_;
+      onBuilt();
       return result;
     }
     
@@ -1245,22 +1327,56 @@ public  final class FunctionInformationMap extends
     
     public Builder mergeFrom(com.google.javascript.jscomp.FunctionInformationMap other) {
       if (other == com.google.javascript.jscomp.FunctionInformationMap.getDefaultInstance()) return this;
-      if (!other.entry_.isEmpty()) {
-        if (entry_.isEmpty()) {
-          entry_ = other.entry_;
-          isEntryMutable = false;
-        } else {
-          ensureEntryIsMutable();
-          entry_.addAll(other.entry_);
+      if (entryBuilder_ == null) {
+        if (!other.entry_.isEmpty()) {
+          if (entry_.isEmpty()) {
+            entry_ = other.entry_;
+            isEntryMutable = false;
+          } else {
+            ensureEntryIsMutable();
+            entry_.addAll(other.entry_);
+          }
+          onChanged();
+        }
+      } else {
+        if (!other.entry_.isEmpty()) {
+          if (entryBuilder_.isEmpty()) {
+            entryBuilder_.dispose();
+            entryBuilder_ = null;
+            entry_ = other.entry_;
+            isEntryMutable = false;
+            entryBuilder_ = 
+              com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                 getEntryFieldBuilder() : null;
+          } else {
+            entryBuilder_.addAllMessages(other.entry_);
+          }
         }
       }
-      if (!other.module_.isEmpty()) {
-        if (module_.isEmpty()) {
-          module_ = other.module_;
-          isModuleMutable = false;
-        } else {
-          ensureModuleIsMutable();
-          module_.addAll(other.module_);
+      if (moduleBuilder_ == null) {
+        if (!other.module_.isEmpty()) {
+          if (module_.isEmpty()) {
+            module_ = other.module_;
+            isModuleMutable = false;
+          } else {
+            ensureModuleIsMutable();
+            module_.addAll(other.module_);
+          }
+          onChanged();
+        }
+      } else {
+        if (!other.module_.isEmpty()) {
+          if (moduleBuilder_.isEmpty()) {
+            moduleBuilder_.dispose();
+            moduleBuilder_ = null;
+            module_ = other.module_;
+            isModuleMutable = false;
+            moduleBuilder_ = 
+              com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                 getModuleFieldBuilder() : null;
+          } else {
+            moduleBuilder_.addAllMessages(other.module_);
+          }
         }
       }
       this.mergeUnknownFields(other.getUnknownFields());
@@ -1325,54 +1441,165 @@ public  final class FunctionInformationMap extends
         isEntryMutable = true;
        }
     }
+    
+    private com.google.protobuf.RepeatedFieldBuilder<
+        com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder> entryBuilder_;
+    
     public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> getEntryList() {
-      return java.util.Collections.unmodifiableList(entry_);
+      if (entryBuilder_ == null) {
+        return java.util.Collections.unmodifiableList(entry_);
+      } else {
+        return entryBuilder_.getMessageList();
+      }
     }
     public int getEntryCount() {
-      return entry_.size();
+      if (entryBuilder_ == null) {
+        return entry_.size();
+      } else {
+        return entryBuilder_.getCount();
+      }
     }
     public com.google.javascript.jscomp.FunctionInformationMap.Entry getEntry(int index) {
-      return entry_.get(index);
+      if (entryBuilder_ == null) {
+        return entry_.get(index);
+      } else {
+        return entryBuilder_.getMessage(index);
+      }
     }
     public Builder setEntry(
         int index, com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
-      if (value == null) {
-        throw new NullPointerException();
+      if (entryBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureEntryIsMutable();
+        entry_.set(index, value);
+        onChanged();
+      } else {
+        entryBuilder_.setMessage(index, value);
       }
-      ensureEntryIsMutable();
-      entry_.set(index, value);
       return this;
     }
     public Builder setEntry(
         int index, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
-      ensureEntryIsMutable();
-      entry_.set(index, builderForValue.build());
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        entry_.set(index, builderForValue.build());
+        onChanged();
+      } else {
+        entryBuilder_.setMessage(index, builderForValue.build());
+      }
       return this;
     }
     public Builder addEntry(com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
-      if (value == null) {
-        throw new NullPointerException();
+      if (entryBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureEntryIsMutable();
+        entry_.add(value);
+        onChanged();
+      } else {
+        entryBuilder_.addMessage(value);
       }
-      ensureEntryIsMutable();
-      entry_.add(value);
+      return this;
+    }
+    public Builder addEntry(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
+      if (entryBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureEntryIsMutable();
+        entry_.add(index, value);
+        onChanged();
+      } else {
+        entryBuilder_.addMessage(index, value);
+      }
       return this;
     }
     public Builder addEntry(
         com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
-      ensureEntryIsMutable();
-      entry_.add(builderForValue.build());
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        entry_.add(builderForValue.build());
+        onChanged();
+      } else {
+        entryBuilder_.addMessage(builderForValue.build());
+      }
+      return this;
+    }
+    public Builder addEntry(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        entry_.add(index, builderForValue.build());
+        onChanged();
+      } else {
+        entryBuilder_.addMessage(index, builderForValue.build());
+      }
       return this;
     }
     public Builder addAllEntry(
         java.lang.Iterable<? extends com.google.javascript.jscomp.FunctionInformationMap.Entry> values) {
-      ensureEntryIsMutable();
-      super.addAll(values, entry_);
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        super.addAll(values, entry_);
+        onChanged();
+      } else {
+        entryBuilder_.addAllMessages(values);
+      }
       return this;
     }
     public Builder clearEntry() {
-      entry_ = java.util.Collections.emptyList();
-      isEntryMutable = false;
+      if (entryBuilder_ == null) {
+        entry_ = java.util.Collections.emptyList();
+        isEntryMutable = false;
+        onChanged();
+      } else {
+        entryBuilder_.clear();
+      }
       return this;
+    }
+    public Builder removeEntry(int index) {
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        entry_.remove(index);
+        onChanged();
+      } else {
+        entryBuilder_.remove(index);
+      }
+      return this;
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder getEntryBuilder(
+        int index) {
+      return getEntryFieldBuilder().getBuilder(index);
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder addEntryBuilder() {
+      return getEntryFieldBuilder().addBuilder(
+          com.google.javascript.jscomp.FunctionInformationMap.Entry.getDefaultInstance());
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder addEntryBuilder(
+        int index) {
+      return getEntryFieldBuilder().addBuilder(
+          index, com.google.javascript.jscomp.FunctionInformationMap.Entry.getDefaultInstance());
+    }
+    public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder> 
+         getEntryBuilderList() {
+      return getEntryFieldBuilder().getBuilderList();
+    }
+    private com.google.protobuf.RepeatedFieldBuilder<
+        com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder> getEntryFieldBuilder() {
+      if (entryBuilder_ == null) {
+        entryBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+            com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder>(
+                entry_,
+                isEntryMutable,
+                getParentForChildren(),
+                isClean());
+        entry_ = null;
+      }
+      return entryBuilder_;
     }
     
     // repeated group Module = 101 {
@@ -1385,54 +1612,165 @@ public  final class FunctionInformationMap extends
         isModuleMutable = true;
        }
     }
+    
+    private com.google.protobuf.RepeatedFieldBuilder<
+        com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder> moduleBuilder_;
+    
     public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> getModuleList() {
-      return java.util.Collections.unmodifiableList(module_);
+      if (moduleBuilder_ == null) {
+        return java.util.Collections.unmodifiableList(module_);
+      } else {
+        return moduleBuilder_.getMessageList();
+      }
     }
     public int getModuleCount() {
-      return module_.size();
+      if (moduleBuilder_ == null) {
+        return module_.size();
+      } else {
+        return moduleBuilder_.getCount();
+      }
     }
     public com.google.javascript.jscomp.FunctionInformationMap.Module getModule(int index) {
-      return module_.get(index);
+      if (moduleBuilder_ == null) {
+        return module_.get(index);
+      } else {
+        return moduleBuilder_.getMessage(index);
+      }
     }
     public Builder setModule(
         int index, com.google.javascript.jscomp.FunctionInformationMap.Module value) {
-      if (value == null) {
-        throw new NullPointerException();
+      if (moduleBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureModuleIsMutable();
+        module_.set(index, value);
+        onChanged();
+      } else {
+        moduleBuilder_.setMessage(index, value);
       }
-      ensureModuleIsMutable();
-      module_.set(index, value);
       return this;
     }
     public Builder setModule(
         int index, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
-      ensureModuleIsMutable();
-      module_.set(index, builderForValue.build());
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        module_.set(index, builderForValue.build());
+        onChanged();
+      } else {
+        moduleBuilder_.setMessage(index, builderForValue.build());
+      }
       return this;
     }
     public Builder addModule(com.google.javascript.jscomp.FunctionInformationMap.Module value) {
-      if (value == null) {
-        throw new NullPointerException();
+      if (moduleBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureModuleIsMutable();
+        module_.add(value);
+        onChanged();
+      } else {
+        moduleBuilder_.addMessage(value);
       }
-      ensureModuleIsMutable();
-      module_.add(value);
+      return this;
+    }
+    public Builder addModule(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Module value) {
+      if (moduleBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureModuleIsMutable();
+        module_.add(index, value);
+        onChanged();
+      } else {
+        moduleBuilder_.addMessage(index, value);
+      }
       return this;
     }
     public Builder addModule(
         com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
-      ensureModuleIsMutable();
-      module_.add(builderForValue.build());
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        module_.add(builderForValue.build());
+        onChanged();
+      } else {
+        moduleBuilder_.addMessage(builderForValue.build());
+      }
+      return this;
+    }
+    public Builder addModule(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        module_.add(index, builderForValue.build());
+        onChanged();
+      } else {
+        moduleBuilder_.addMessage(index, builderForValue.build());
+      }
       return this;
     }
     public Builder addAllModule(
         java.lang.Iterable<? extends com.google.javascript.jscomp.FunctionInformationMap.Module> values) {
-      ensureModuleIsMutable();
-      super.addAll(values, module_);
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        super.addAll(values, module_);
+        onChanged();
+      } else {
+        moduleBuilder_.addAllMessages(values);
+      }
       return this;
     }
     public Builder clearModule() {
-      module_ = java.util.Collections.emptyList();
-      isModuleMutable = false;
+      if (moduleBuilder_ == null) {
+        module_ = java.util.Collections.emptyList();
+        isModuleMutable = false;
+        onChanged();
+      } else {
+        moduleBuilder_.clear();
+      }
       return this;
+    }
+    public Builder removeModule(int index) {
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        module_.remove(index);
+        onChanged();
+      } else {
+        moduleBuilder_.remove(index);
+      }
+      return this;
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Module.Builder getModuleBuilder(
+        int index) {
+      return getModuleFieldBuilder().getBuilder(index);
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Module.Builder addModuleBuilder() {
+      return getModuleFieldBuilder().addBuilder(
+          com.google.javascript.jscomp.FunctionInformationMap.Module.getDefaultInstance());
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Module.Builder addModuleBuilder(
+        int index) {
+      return getModuleFieldBuilder().addBuilder(
+          index, com.google.javascript.jscomp.FunctionInformationMap.Module.getDefaultInstance());
+    }
+    public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module.Builder> 
+         getModuleBuilderList() {
+      return getModuleFieldBuilder().getBuilderList();
+    }
+    private com.google.protobuf.RepeatedFieldBuilder<
+        com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder> getModuleFieldBuilder() {
+      if (moduleBuilder_ == null) {
+        moduleBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+            com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder>(
+                module_,
+                isModuleMutable,
+                getParentForChildren(),
+                isClean());
+        module_ = null;
+      }
+      return moduleBuilder_;
     }
     
     // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap)
@@ -1440,7 +1778,6 @@ public  final class FunctionInformationMap extends
   
   static {
     defaultInstance = new FunctionInformationMap(true);
-    com.google.javascript.jscomp.FunctionInfo.internalForceInit();
     defaultInstance.initFields();
   }
   

@@ -750,6 +750,20 @@ public class Node implements Cloneable, Serializable {
     return x;
   }
 
+  /**
+   * Clone the properties from the provided node without copying
+   * the property object.  The recieving node may not have any
+   * existing properties.
+   * @param other The node to clone properties from.
+   * @return this node.
+   */
+  public Node clonePropsFrom(Node other) {
+    Preconditions.checkState(this.propListHead == null,
+        "Node has existing properties.");
+    this.propListHead = other.propListHead;
+    return this;
+  }
+
   public void removeProp(int propType) {
     PropListItem result = removeProp(propListHead, propType);
     if (result != propListHead) {
@@ -1036,7 +1050,7 @@ public class Node implements Cloneable, Serializable {
 
   private String toStringTreeImpl() {
     try {
-      StringBuffer s = new StringBuffer();
+      StringBuilder s = new StringBuilder();
       appendStringTree(s);
       return s.toString();
     } catch (IOException e) {

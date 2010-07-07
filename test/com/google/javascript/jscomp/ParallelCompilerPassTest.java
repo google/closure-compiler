@@ -53,7 +53,7 @@ public class ParallelCompilerPassTest extends TestCase {
   }
 
   public void testManyFunctions() {
-    StringBuffer sb = new StringBuffer("\"foo\";");
+    StringBuilder sb = new StringBuilder("\"foo\";");
     for (int i = 0; i < 20; i++) {
       sb.append("function f");
       sb.append(i);

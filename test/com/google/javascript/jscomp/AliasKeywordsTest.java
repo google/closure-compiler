@@ -57,7 +57,7 @@ public class AliasKeywordsTest extends CompilerTestCase {
    */
   private static String generateCode(
       String keyword, int numReps, String prepend) {
-    StringBuffer sb = new StringBuffer(prepend);
+    StringBuilder sb = new StringBuilder(prepend);
     for (int i = 0; i < numReps; i++) {
       sb.append("if (");
       sb.append(keyword);
@@ -72,7 +72,7 @@ public class AliasKeywordsTest extends CompilerTestCase {
 
   private static String generatePreProcessThrowCode(int repititions,
                                                     String whatToThrow) {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     for (int i = 0; i < repititions; i++) {
       sb.append("throw ");
       sb.append(whatToThrow);
@@ -128,12 +128,12 @@ public class AliasKeywordsTest extends CompilerTestCase {
   }
 
   public void testAliasTrueFalseNull() {
-    StringBuffer actual = new StringBuffer();
+    StringBuilder actual = new StringBuilder();
     actual.append(generateCode("true", ENOUGH_TO_ALIAS_LITERAL));
     actual.append(generateCode("false", ENOUGH_TO_ALIAS_LITERAL));
     actual.append(generateCode("null", ENOUGH_TO_ALIAS_LITERAL));
 
-    StringBuffer expected = new StringBuffer();
+    StringBuilder expected = new StringBuilder();
     expected.append(
         "var JSCompiler_alias_TRUE=true;" +
         "var JSCompiler_alias_NULL=null;" +
