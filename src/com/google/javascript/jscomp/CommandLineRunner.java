@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.LimitInputStream;
 
@@ -32,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -484,6 +488,54 @@ public class CommandLineRunner extends
     }
   }
 
+  // The externs expected in externs.zip, in sorted order.
+  private static final List<String> DEFAULT_EXTERNS_NAMES = ImmutableList.of(
+    // JS externs
+    "es3.js",
+    "es5.js",
+
+    // Event APIs
+    "w3c_event.js",
+    "w3c_event3.js",
+    "gecko_event.js",
+    "ie_event.js",
+    "webkit_event.js",
+
+    // DOM apis
+    "w3c_dom1.js",
+    "w3c_dom2.js",
+    "w3c_dom3.js",
+    "gecko_dom.js",
+    "ie_dom.js",
+    "webkit_dom.js",
+
+    // CSS apis
+    "w3c_css.js",
+    "gecko_css.js",
+    "ie_css.js",
+    "webkit_css.js",
+
+    // Top-level namespaces
+    "google.js",
+
+    "deprecated.js",
+    "fileapi.js",
+    "flash.js",
+    "gears_symbols.js",
+    "gears_types.js",
+    "gecko_xml.js",
+    "html5.js",
+    "ie_vml.js",
+    "iphone.js",
+    "webstorage.js",
+    "w3c_elementtraversal.js",
+    "w3c_geolocation.js",
+    "w3c_range.js",
+    "w3c_selectors.js",
+    "w3c_xml.js",
+    "window.js",
+    "webkit_notifications.js");
+
   /**
    * @return a mutable list
    * @throws IOException
@@ -492,11 +544,28 @@ public class CommandLineRunner extends
     InputStream input = CommandLineRunner.class.getResourceAsStream(
         "/externs.zip");
     ZipInputStream zip = new ZipInputStream(input);
-    List<JSSourceFile> externs = Lists.newLinkedList();
+    Map<String, JSSourceFile> externsMap = Maps.newHashMap();
     for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
       LimitInputStream entryStream = new LimitInputStream(zip, entry.getSize());
-      externs.add(JSSourceFile.fromInputStream(entry.getName(), entryStream));
+      externsMap.put(entry.getName(),
+          JSSourceFile.fromInputStream(
+              // Give the files an odd prefix, so that they do not conflict
+              // with the user's files.
+              "externs.zip//" + entry.getName(),
+              entryStream));
     }
+
+    Preconditions.checkState(
+        externsMap.keySet().equals(Sets.newHashSet(DEFAULT_EXTERNS_NAMES)),
+        "Externs zip must match our hard-coded list of externs.");
+
+    // Order matters, so the resources must be added to the result list
+    // in the expected order.
+    List<JSSourceFile> externs = Lists.newArrayList();
+    for (String key : DEFAULT_EXTERNS_NAMES) {
+      externs.add(externsMap.get(key));
+    }
+
     return externs;
   }
 

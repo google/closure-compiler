@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.ant;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.LimitInputStream;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
@@ -35,13 +34,10 @@ import org.apache.tools.ant.types.FileList;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * This class implements a simple Ant task to do almost the same as
@@ -255,19 +251,7 @@ public final class CompileTask
    */
   private List<JSSourceFile> getDefaultExterns() {
     try {
-      InputStream input = Compiler.class.getResourceAsStream(
-          "/externs.zip");
-      ZipInputStream zip = new ZipInputStream(input);
-      List<JSSourceFile> externs = Lists.newLinkedList();
-
-      for (ZipEntry entry; (entry = zip.getNextEntry()) != null; ) {
-        LimitInputStream entryStream =
-            new LimitInputStream(zip, entry.getSize());
-        externs.add(
-            JSSourceFile.fromInputStream(entry.getName(), entryStream));
-      }
-
-      return externs;
+      return CommandLineRunner.getDefaultExterns();
     } catch (IOException e) {
       throw new BuildException(e);
     }

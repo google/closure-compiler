@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -498,8 +499,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       options.outputCharset = inputCharset;
     }
 
-    if (!options.jsOutputFile.isEmpty()) {
-      out = new PrintStream(options.jsOutputFile, inputCharset.name());
+    boolean writeOutputToFile = !options.jsOutputFile.isEmpty();
+    if (writeOutputToFile) {
+      out = toPrintStream(options.jsOutputFile, inputCharset.name());
     }
 
     List<String> jsFiles = config.js;
@@ -514,7 +516,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       result = compiler.compile(externs, inputs, options);
     }
 
-    return processResults(result, modules, options);
+    int errCode = processResults(result, modules, options);
+    // Close the output if we are writing to a file.
+    if (writeOutputToFile) {
+      out.close();
+    }
+    return errCode;
   }
 
   /**
@@ -585,9 +592,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
             mapOut = toPrintStream(expandSourceMapPath(options, m));
           }
 
-          PrintStream ps =
-              new PrintStream(new FileOutputStream(moduleFilePrefix
-                  + m.getName() + ".js"));
+          PrintStream ps = toPrintStream(
+              moduleFilePrefix + m.getName() + ".js");
 
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().reset();
@@ -686,7 +692,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       exPath = outputFile.getParent() + File.separatorChar + exPath;
     }
 
-    return new PrintStream(new FileOutputStream(exPath));
+    return toPrintStream(exPath);
   }
 
   /**
@@ -735,14 +741,30 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Coverts a file name into a print stream.
+   * Converts a file name into a print stream.
    * Returns null if the file name is null.
    */
   private PrintStream toPrintStream(String fileName) throws IOException {
     if (fileName == null) {
       return null;
     }
-    return new PrintStream(new FileOutputStream(fileName));
+    return new PrintStream(
+        new BufferedOutputStream(
+            new FileOutputStream(fileName)), false);
+  }
+
+  /**
+   * Coverts a file name into a print stream.
+   * Returns null if the file name is null.
+   */
+  private PrintStream toPrintStream(String fileName, String charSet)
+      throws IOException {
+    if (fileName == null) {
+      return null;
+    }
+    return new PrintStream(
+        new BufferedOutputStream(
+            new FileOutputStream(fileName)), false, charSet);
   }
 
   /**
