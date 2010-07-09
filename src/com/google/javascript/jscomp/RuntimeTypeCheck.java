@@ -240,7 +240,16 @@ class RuntimeTypeCheck implements CompilerPass {
       FunctionType funType = (FunctionType) n.getJSType();
       Node block = n.getLastChild();
       Node paramName = NodeUtil.getFnParameters(n).getFirstChild();
-      Node prev = null;
+      Node insertionPoint = null;
+
+      // To satisfy normalization constraints, the type checking must be
+      // added after any inner function declarations.
+      for (Node next = block.getFirstChild();
+           next != null && NodeUtil.isFunctionDeclaration(next);
+           next = next.getNext()) {
+        insertionPoint = next;
+      }
+
       for (Node paramType : funType.getParameters()) {
         // Can this ever happen?
         if (paramName == null) {
@@ -257,15 +266,15 @@ class RuntimeTypeCheck implements CompilerPass {
         }
 
         checkNode = new Node(Token.EXPR_RESULT, checkNode);
-        if (prev == null) {
+        if (insertionPoint == null) {
           block.addChildToFront(checkNode);
         } else {
-          block.addChildAfter(checkNode, prev);
+          block.addChildAfter(checkNode, insertionPoint);
         }
 
         compiler.reportCodeChange();
         paramName = paramName.getNext();
-        prev = checkNode;
+        insertionPoint = checkNode;
       }
     }
 

@@ -862,7 +862,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Various peephole optimizations. */
-  static final PassFactory peepholeOptimizations =
+  private final PassFactory peepholeOptimizations =
       new PassFactory("peepholeOptimizations", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {

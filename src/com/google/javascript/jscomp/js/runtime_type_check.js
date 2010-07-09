@@ -97,13 +97,13 @@ jscomp.typecheck.prettify_ = function(expr) {
  * @private
  */
 jscomp.typecheck.getClassName_ = function(expr) {
-  var className = undefined;
+  var className = void 0;
   if (typeof expr == 'object' && expr && expr.constructor) {
     className = expr.constructor.name;
     if (!className) {
       var funNameRe = /function (.{1,})\(/;
       var m = (funNameRe).exec(expr.constructor.toString());
-      className = m && m.length > 1 ? m[1] : undefined;
+      className = m && m.length > 1 ? m[1] : void 0;
     }
   }
   return className;

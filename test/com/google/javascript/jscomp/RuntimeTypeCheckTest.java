@@ -30,6 +30,7 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
   private Node runtimeTypeCheckCode = null;
 
   public RuntimeTypeCheckTest() {
+    super("/** @const */ var undefined;");
     enableTypeCheck(CheckLevel.WARNING);
   }
 
@@ -53,6 +54,15 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
     testChecks("/** @param {number} CONST */ function f(CONST) {}",
         "function f(CONST) {" +
         "  jscomp.typecheck.checkType(CONST, " +
+        "      [jscomp.typecheck.valueChecker('number')]);" +
+        "}");
+  }
+
+  public void testValueWithInnerFn() {
+    testChecks("/** @param {number} i */ function f(i) { function g() {} }",
+        "function f(i) {" +
+        "  function g() {}" +
+        "  jscomp.typecheck.checkType(i, " +
         "      [jscomp.typecheck.valueChecker('number')]);" +
         "}");
   }

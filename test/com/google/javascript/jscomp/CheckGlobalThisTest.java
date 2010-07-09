@@ -203,4 +203,21 @@ public class CheckGlobalThisTest extends CompilerTestCase {
     testSame(
         "function f() { var x = {}; x.y(function() { return this.x; }); }");
   }
+
+  public void testIssue182a() {
+    testFailure("var NS = {read: function() { return this.foo; }};");
+  }
+
+  public void testIssue182b() {
+    testFailure("var NS = {write: function() { this.foo = 3; }};");
+  }
+
+  public void testIssue182c() {
+    testFailure("var NS = {}; NS.write2 = function() { this.foo = 3; };");
+  }
+
+  public void testIssue182d() {
+    testSame("function Foo() {} " +
+        "Foo.prototype = {write: function() { this.foo = 3; }};");
+  }
 }

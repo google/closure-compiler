@@ -99,12 +99,14 @@ final class CheckGlobalThis implements Callback {
       // be able to have a @this annotation associated with them. e.g.,
       // var a = function() { }; // or
       // function a() {} // or
-      // a.x = function() {};
+      // a.x = function() {}; // or
+      // var a = {x: function() {}};
       int pType = parent.getType();
       if (!(pType == Token.BLOCK ||
             pType == Token.SCRIPT ||
             pType == Token.NAME ||
-            pType == Token.ASSIGN)) {
+            pType == Token.ASSIGN ||
+            pType == Token.OBJECTLIT)) {
         return false;
       }
     }

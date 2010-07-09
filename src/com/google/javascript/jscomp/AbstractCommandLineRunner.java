@@ -27,11 +27,14 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
 
-import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,7 +83,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private final CommandLineConfig config;
 
-  private PrintStream out;
+  private Appendable out;
   private final PrintStream err;
   private A compiler;
 
@@ -420,27 +423,26 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Writes code to an output stream, optionally wrapping it in an arbitrary
    * wrapper that contains a placeholder where the code should be inserted.
    */
-  static void writeOutput(PrintStream out, Compiler compiler, String code,
-      String wrapper, String codePlaceholder) {
+  static void writeOutput(Appendable out, Compiler compiler, String code,
+      String wrapper, String codePlaceholder) throws IOException {
     int pos = wrapper.indexOf(codePlaceholder);
     if (pos != -1) {
       String prefix = "";
 
       if (pos > 0) {
         prefix = wrapper.substring(0, pos);
-        out.print(prefix);
+        out.append(prefix);
       }
 
-      out.print(code);
+      out.append(code);
 
       int suffixStart = pos + codePlaceholder.length();
-      if (suffixStart == wrapper.length()) {
-        // Nothing after placeholder?
-        // Make sure we always end output with a line feed.
-        out.println();
-      } else {
-        out.println(wrapper.substring(suffixStart));
+      if (suffixStart != wrapper.length()) {
+        // Something after placeholder?
+        out.append(wrapper.substring(suffixStart));
       }
+      // Make sure we always end output with a line feed.
+      out.append('\n');
 
       // If we have a source map, adjust its offsets to match
       // the code WITHIN the wrapper.
@@ -449,7 +451,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
 
     } else {
-      out.println(code);
+      out.append(code);
+      out.append('\n');
     }
   }
 
@@ -501,7 +504,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     boolean writeOutputToFile = !options.jsOutputFile.isEmpty();
     if (writeOutputToFile) {
-      out = toPrintStream(options.jsOutputFile, inputCharset.name());
+      out = toWriter(options.jsOutputFile, inputCharset.name());
     }
 
     List<String> jsFiles = config.js;
@@ -519,7 +522,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     int errCode = processResults(result, modules, options);
     // Close the output if we are writing to a file.
     if (writeOutputToFile) {
-      out.close();
+      ((Writer)out).close();
     }
     return errCode;
   }
@@ -538,7 +541,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         return 1;
       } else {
         out.append(DotFormatter.toDot(compiler.getPassConfig().getPassGraph()));
-        out.println();
+        out.append('\n');
         return 0;
       }
     }
@@ -549,18 +552,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         ControlFlowGraph<Node> cfg = compiler.computeCFG();
         DotFormatter.appendDot(compiler.getRoot(), cfg, out);
-        out.println();
+        out.append('\n');
         return 0;
       }
     }
 
     if (config.printTree) {
       if (compiler.getRoot() == null) {
-        out.println("Code contains errors; no tree was generated.");
+        out.append("Code contains errors; no tree was generated.\n");
         return 1;
       } else {
         compiler.getRoot().appendStringTree(out);
-        out.println("");
+        out.append("\n");
         return 0;
       }
     }
@@ -581,32 +584,32 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         // If the source map path is in fact a pattern for each
         // module, create a stream per-module. Otherwise, create
         // a single source map.
-        PrintStream mapOut = null;
+        Writer mapOut = null;
 
         if (!shouldGenerateMapPerModule(options)) {
-          mapOut = toPrintStream(expandSourceMapPath(options, null));
+          mapOut = toWriter(expandSourceMapPath(options, null));
         }
 
         for (JSModule m : modules) {
           if (shouldGenerateMapPerModule(options)) {
-            mapOut = toPrintStream(expandSourceMapPath(options, m));
+            mapOut = toWriter(expandSourceMapPath(options, m));
           }
 
-          PrintStream ps = toPrintStream(
+          Writer writer = toWriter(
               moduleFilePrefix + m.getName() + ".js");
 
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().reset();
           }
 
-          writeOutput(ps, compiler, compiler.toSource(m), moduleWrappers.get(
+          writeOutput(writer, compiler, compiler.toSource(m), moduleWrappers.get(
               m.getName()), "%s");
 
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().appendTo(mapOut, m.getName());
           }
 
-          ps.close();
+          writer.close();
 
           if (shouldGenerateMapPerModule(options) && mapOut != null) {
             mapOut.close();
@@ -621,7 +624,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
       // Output the externs if required.
       if (options.externExportsPath != null) {
-        PrintStream eeOut =
+        Writer eeOut =
             openExternExportsStream(options, options.jsOutputFile);
         eeOut.append(result.externExport);
         eeOut.close();
@@ -679,7 +682,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *
    * @return The stream or null if no extern-ed exports are being generated.
    */
-  private PrintStream openExternExportsStream(B options,
+  private Writer openExternExportsStream(B options,
       String path) throws IOException {
     if (options.externExportsPath == null) {
       return null;
@@ -692,7 +695,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       exPath = outputFile.getParent() + File.separatorChar + exPath;
     }
 
-    return toPrintStream(exPath);
+    return toWriter(exPath);
   }
 
   /**
@@ -741,30 +744,29 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Converts a file name into a print stream.
+   * Converts a file name into a Writer.
    * Returns null if the file name is null.
    */
-  private PrintStream toPrintStream(String fileName) throws IOException {
+  private Writer toWriter(String fileName) throws IOException {
     if (fileName == null) {
       return null;
     }
-    return new PrintStream(
-        new BufferedOutputStream(
-            new FileOutputStream(fileName)), false);
+    // Use a FileWriter if the charset translation isn't required.
+    return new BufferedWriter(new FileWriter(fileName));
   }
 
   /**
-   * Coverts a file name into a print stream.
+   * Converts a file name into a Writer.
    * Returns null if the file name is null.
    */
-  private PrintStream toPrintStream(String fileName, String charSet)
+  private Writer toWriter(String fileName, String charSet)
       throws IOException {
     if (fileName == null) {
       return null;
     }
-    return new PrintStream(
-        new BufferedOutputStream(
-            new FileOutputStream(fileName)), false, charSet);
+    // Use a FileOutputStream for a non-default charset.
+    return new BufferedWriter(
+        new OutputStreamWriter(new FileOutputStream(fileName), charSet));
   }
 
   /**
@@ -780,7 +782,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     String outName = expandSourceMapPath(options, null);
-    PrintStream out = toPrintStream(outName);
+    Writer out = toWriter(outName);
     compiler.getSourceMap().appendTo(out, outName);
     out.close();
   }
@@ -969,13 +971,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       // Generate per-module manifests.
       Iterable<JSModule> modules = graph.getAllModules();
       for (JSModule module : modules) {
-        PrintStream out = toPrintStream(expandManifest(module));
+        Writer out = toWriter(expandManifest(module));
         printManifestTo(module.getInputs(), out);
         out.close();
       }
     } else {
       // Generate a single file manifest.
-      PrintStream out = toPrintStream(expandManifest(null));
+      Writer out = toWriter(expandManifest(null));
       if (graph == null) {
         printManifestTo(compiler.getInputsInOrder(), out);
       } else {
@@ -1055,13 +1057,17 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      * Print the best phase loop to stderr.
      */
     private void outputBestPhaseOrdering() {
-      out.println("Best time: " + bestRunTime);
-      out.println("Worst time: " + worstRunTime);
+      try {
+        out.append("Best time: " + bestRunTime + "\n");
+        out.append("Worst time: " + worstRunTime + "\n");
 
-      int i = 1;
-      for (List<String> loop : loopedPassesInBestRun) {
-        out.println("\nLoop " + i + ":\n" + Joiner.on("\n").join(loop));
-        i++;
+        int i = 1;
+        for (List<String> loop : loopedPassesInBestRun) {
+          out.append("\nLoop " + i + ":\n" + Joiner.on("\n").join(loop)+ "\n");
+          i++;
+        }
+      } catch (IOException e) {
+        throw new RuntimeException("unexpected exception", e);
       }
     }
   }
