@@ -16,16 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.base.Hash;
-import com.google.common.base.Preconditions;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
 
 /**
  * A representation of a translatable message in JavaScript source code.
@@ -423,6 +424,224 @@ public class JsMessage {
       return Long.toString(nonnegativeHash, 36).toUpperCase();
     }
   }
+
+  /**
+   * This class contains routines for hashing.
+   *
+   * <p>The hash takes a byte array representing arbitrary data (a
+   * number, String, or Object) and turns it into a small, hopefully
+   * unique, number. There are additional convenience functions which
+   * hash int, long, and String types.
+   *
+   * <p><b>Note</b>: this hash has weaknesses in the two
+   * most-significant key bits and in the three least-significant seed
+   * bits. The weaknesses are small and practically speaking, will not
+   * affect the distribution of hash values. Still, it would be good
+   * practice not to choose seeds 0, 1, 2, 3, ..., n to yield n,
+   * independent hash functions. Use pseudo-random seeds instead.
+   *
+   * <p>This code is based on the work of Craig Silverstein and Sanjay
+   * Ghemawat in, then forked from com.google.common.
+   *
+   * <p>The original code for the hash function is courtesy
+   * <a href="http://burtleburtle.net/bob/hash/evahash.html">Bob Jenkins</a>.
+   *
+   * <p>TODO: Add stream hashing functionality.
+   */
+  final static class Hash {
+    private Hash() {}
+
+    /** Default hash seed (64 bit) */
+    private static final long SEED64 =
+        0x2b992ddfa23249d6L; // part of pi, arbitrary
+
+    /** Hash constant (64 bit) */
+    private  static final long CONSTANT64 =
+        0xe08c1d668b756f82L; // part of golden ratio, arbitrary
+
+
+    /******************
+     * STRING HASHING *
+     ******************/
+
+    /**
+     * Hash a string to a 64 bit value. The digits of pi are used for
+     * the hash seed.
+     *
+     * @param value the string to hash
+     * @return 64 bit hash value
+     */
+    static long hash64(@Nullable String value) {
+      return hash64(value, SEED64);
+    }
+
+    /**
+     * Hash a string to a 64 bit value using the supplied seed.
+     *
+     * @param value the string to hash
+     * @param seed the seed
+     * @return 64 bit hash value
+     */
+    private static long hash64(@Nullable String value, long seed) {
+      if (value == null) {
+        return hash64(null, 0, 0, seed);
+      }
+      return hash64(value.getBytes(), seed);
+    }
+
+    /**
+     * Hash byte array to a 64 bit value. The digits of pi are used
+     * for the hash seed.
+     *
+     * @param value the bytes to hash
+     * @param offset the starting position of value where bytes are
+     * used for the hash computation
+     * @param length number of bytes of value that are used for the
+     * hash computation
+     * @return 64 bit hash value
+     */
+    private static long hash64(byte[] value, int offset, int length) {
+      return hash64(value, offset, length, SEED64);
+    }
+
+    /**
+     * Hash byte array to a 64 bit value using the supplied seed.
+     *
+     * @param value the bytes to hash
+     * @param seed the seed
+     * @return 64 bit hash value
+     */
+    private static long hash64(byte[] value, long seed) {
+      return hash64(value, 0, value == null ? 0 : value.length, seed);
+    }
+
+    /**
+     * Hash byte array to a 64 bit value using the supplied seed.
+     *
+     * @param value the bytes to hash
+     * @param offset the starting position of value where bytes are
+     * used for the hash computation
+     * @param length number of bytes of value that are used for the
+     * hash computation
+     * @param seed the seed
+     * @return 64 bit hash value
+     */
+    @SuppressWarnings("fallthrough")
+    private static long hash64(
+        byte[] value, int offset, int length, long seed) {
+      long a = CONSTANT64;
+      long b = a;
+      long c = seed;
+      int keylen;
+
+      for (keylen = length; keylen >= 24; keylen -= 24, offset += 24) {
+        a += word64At(value, offset);
+        b += word64At(value, offset + 8);
+        c += word64At(value, offset + 16);
+
+        // Mix
+        a -= b; a -= c; a ^= c >>> 43;
+        b -= c; b -= a; b ^= a << 9;
+        c -= a; c -= b; c ^= b >>> 8;
+        a -= b; a -= c; a ^= c >>> 38;
+        b -= c; b -= a; b ^= a << 23;
+        c -= a; c -= b; c ^= b >>> 5;
+        a -= b; a -= c; a ^= c >>> 35;
+        b -= c; b -= a; b ^= a << 49;
+        c -= a; c -= b; c ^= b >>> 11;
+        a -= b; a -= c; a ^= c >>> 12;
+        b -= c; b -= a; b ^= a << 18;
+        c -= a; c -= b; c ^= b >>> 22;
+      }
+
+      c += length;
+      switch (keylen) { // deal with rest. Cases fall through
+        case 23:
+          c += ((long) value[offset + 22]) << 56;
+        case 22:
+          c += (value[offset + 21] & 0xffL) << 48;
+        case 21:
+          c += (value[offset + 20] & 0xffL) << 40;
+        case 20:
+          c += (value[offset + 19] & 0xffL) << 32;
+        case 19:
+          c += (value[offset + 18] & 0xffL) << 24;
+        case 18:
+          c += (value[offset + 17] & 0xffL) << 16;
+        case 17:
+          c += (value[offset + 16] & 0xffL) << 8;
+          // the first byte of c is reserved for the length
+        case 16:
+          b += word64At(value, offset + 8);
+          a += word64At(value, offset);
+          break;
+        case 15:
+          b += (value[offset + 14] & 0xffL) << 48;
+        case 14:
+          b += (value[offset + 13] & 0xffL) << 40;
+        case 13:
+          b += (value[offset + 12] & 0xffL) << 32;
+        case 12:
+          b += (value[offset + 11] & 0xffL) << 24;
+        case 11:
+          b += (value[offset + 10] & 0xffL) << 16;
+        case 10:
+          b += (value[offset + 9] & 0xffL) << 8;
+        case 9:
+          b += (value[offset + 8] & 0xffL);
+        case 8:
+          a += word64At(value, offset);
+          break;
+        case 7:
+          a += (value[offset + 6] & 0xffL) << 48;
+        case 6:
+          a += (value[offset + 5] & 0xffL) << 40;
+        case 5:
+          a += (value[offset + 4] & 0xffL) << 32;
+        case 4:
+          a += (value[offset + 3] & 0xffL) << 24;
+        case 3:
+          a += (value[offset + 2] & 0xffL) << 16;
+        case 2:
+          a += (value[offset + 1] & 0xffL) << 8;
+        case 1:
+          a += (value[offset + 0] & 0xffL);
+          // case 0: nothing left to add
+      }
+      return mix64(a, b, c);
+    }
+
+    private static long word64At(byte[] bytes, int offset) {
+      return (bytes[offset + 0] & 0xffL)
+          + ((bytes[offset + 1] & 0xffL) << 8)
+          + ((bytes[offset + 2] & 0xffL) << 16)
+          + ((bytes[offset + 3] & 0xffL) << 24)
+          + ((bytes[offset + 4] & 0xffL) << 32)
+          + ((bytes[offset + 5] & 0xffL) << 40)
+          + ((bytes[offset + 6] & 0xffL) << 48)
+          + ((bytes[offset + 7] & 0xffL) << 56);
+    }
+
+    /**
+     * Mixes longs a, b, and c, and returns the final value of c.
+     */
+    private static long mix64(long a, long b, long c) {
+      a -= b; a -= c; a ^= c >>> 43;
+      b -= c; b -= a; b ^= a << 9;
+      c -= a; c -= b; c ^= b >>> 8;
+      a -= b; a -= c; a ^= c >>> 38;
+      b -= c; b -= a; b ^= a << 23;
+      c -= a; c -= b; c ^= b >>> 5;
+      a -= b; a -= c; a ^= c >>> 35;
+      b -= c; b -= a; b ^= a << 49;
+      c -= a; c -= b; c ^= b >>> 11;
+      a -= b; a -= c; a ^= c >>> 12;
+      b -= c; b -= a; b ^= a << 18;
+      c -= a; c -= b; c ^= b >>> 22;
+      return c;
+    }
+  }
+
   public interface IdGenerator {
 
     String generateId(String key, List<CharSequence> messageParts);

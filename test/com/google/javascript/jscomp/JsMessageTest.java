@@ -33,4 +33,14 @@ public class JsMessageTest extends TestCase {
     assertFalse(new JsMessage.Builder().appendPlaceholderReference("3")
         .build().isEmpty());
   }
+
+  public void testHashValues() {
+    final String EMPTY = "";
+    final String VAL = "Hello, world";
+    final long   ANSWER_STRING_64 = 0x43ec5d9731515874L;
+    final long   ANSWER_EMPTY_64 = 0x468d9ea2c42361aaL;
+
+    assertEquals(ANSWER_STRING_64, JsMessage.Hash.hash64(VAL));
+    assertEquals(ANSWER_EMPTY_64, JsMessage.Hash.hash64(EMPTY));
+  }
 }
