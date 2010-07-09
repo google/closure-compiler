@@ -115,9 +115,10 @@ public class JSModuleGraph {
   }
 
   /**
-   * Gets all the modules in dependency order.
+   * Gets all the modules in dependency order. Modules with the same depth
+   * will be ordered deterministically.
    */
-  private Iterable<JSModule> getAllModulesInDependencyOrder() {
+  Iterable<JSModule> getAllModulesInDependencyOrder() {
     List<JSModule> modules = Lists.newArrayList(getAllModules());
     Collections.sort(modules, new DepthComparator());
     return modules;

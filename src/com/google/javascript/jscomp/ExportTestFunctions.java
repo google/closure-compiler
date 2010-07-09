@@ -52,8 +52,7 @@ class ExportTestFunctions implements CompilerPass {
       NodeTraversal.AbstractPostOrderCallback {
 
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (parent != null && parent.getType() == Token.SCRIPT
-          && t.inGlobalScope()) {
+      if (parent != null && parent.getType() == Token.SCRIPT) {
         if (NodeUtil.isFunctionDeclaration(n)) {
           // Check for a test function statement.
           String functionName = NodeUtil.getFunctionName(n);

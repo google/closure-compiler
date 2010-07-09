@@ -38,7 +38,13 @@ public class CommandLineRunnerTest extends TestCase {
   // If set to true, uses comparison by string instead of by AST.
   private boolean useStringComparison = false;
 
-  private boolean useModules = false;
+  private ModulePattern useModules = ModulePattern.NONE;
+
+  private enum ModulePattern {
+    NONE,
+    CHAIN,
+    STAR
+  }
 
   private List<String> args = Lists.newArrayList();
 
@@ -60,7 +66,7 @@ public class CommandLineRunnerTest extends TestCase {
     super.setUp();
     lastCompiler = null;
     useStringComparison = false;
-    useModules = false;
+    useModules = ModulePattern.NONE;
     args.clear();
   }
 
@@ -354,7 +360,7 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceMapExpansion2() {
-    useModules = true;
+    useModules = ModulePattern.CHAIN;
     args.add("--create_source_map=%outname%.map");
     args.add("--module_output_path_prefix=foo");
     testSame(new String[] {"var x = 3;", "var y = 5;"});
@@ -364,7 +370,7 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceMapExpansion3() {
-    useModules = true;
+    useModules = ModulePattern.CHAIN;
     args.add("--create_source_map=%outname%.map");
     args.add("--module_output_path_prefix=foo_");
     testSame(new String[] {"var x = 3;", "var y = 5;"});
@@ -372,6 +378,52 @@ public class CommandLineRunnerTest extends TestCase {
         lastCommandLineRunner.expandSourceMapPath(
             lastCompiler.getOptions(),
             lastCompiler.getModuleGraph().getRootModule()));
+  }
+
+  public void testChainModuleManifest() throws Exception {
+    useModules = ModulePattern.CHAIN;
+    testSame(new String[] {
+          "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
+
+    StringBuilder builder = new StringBuilder();
+    lastCommandLineRunner.printModuleGraphManifestTo(
+        lastCompiler.getModuleGraph(), builder);
+    assertEquals(
+        "{m0}\n" +
+        "i0\n" +
+        "\n" +
+        "{m1:m0}\n" +
+        "i1\n" +
+        "\n" +
+        "{m2:m1}\n" +
+        "i2\n" +
+        "\n" +
+        "{m3:m2}\n" +
+        "i3\n",
+        builder.toString());
+  }
+
+  public void testStarModuleManifest() throws Exception {
+    useModules = ModulePattern.STAR;
+    testSame(new String[] {
+          "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
+
+    StringBuilder builder = new StringBuilder();
+    lastCommandLineRunner.printModuleGraphManifestTo(
+        lastCompiler.getModuleGraph(), builder);
+    assertEquals(
+        "{m0}\n" +
+        "i0\n" +
+        "\n" +
+        "{m1:m0}\n" +
+        "i1\n" +
+        "\n" +
+        "{m2:m0}\n" +
+        "i2\n" +
+        "\n" +
+        "{m3:m0}\n" +
+        "i3\n",
+        builder.toString());
   }
 
   /* Helper functions */
@@ -460,9 +512,12 @@ public class CommandLineRunnerTest extends TestCase {
     for (int i = 0; i < original.length; i++) {
       args.add("--js");
       args.add("/path/to/input" + i + ".js");
-      if (useModules) {
+      if (useModules == ModulePattern.CHAIN) {
         args.add("--module");
         args.add("mod" + i + ":1" + (i > 0 ? (":mod" + (i - 1)) : ""));
+      } else if (useModules == ModulePattern.STAR) {
+        args.add("--module");
+        args.add("mod" + i + ":1" + (i > 0 ? ":mod0" : ""));
       }
     }
 
@@ -479,10 +534,12 @@ public class CommandLineRunnerTest extends TestCase {
     } catch (IOException e) {
       assert(false);
     }
-    if (useModules) {
+    if (useModules != ModulePattern.NONE) {
       compiler.compile(
           externs,
-          CompilerTestCase.createModuleChain(original),
+          useModules == ModulePattern.STAR ?
+              CompilerTestCase.createModuleStar(original) :
+              CompilerTestCase.createModuleChain(original),
           options);
     } else {
       JSSourceFile[] inputs = new JSSourceFile[original.length];

@@ -964,31 +964,64 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return;
     }
 
+    JSModuleGraph graph = compiler.getModuleGraph();
     if (shouldGenerateManifestPerModule()) {
       // Generate per-module manifests.
-      Iterable<JSModule> modules = compiler.getModuleGraph().getAllModules();
+      Iterable<JSModule> modules = graph.getAllModules();
       for (JSModule module : modules) {
-        printManifestTo(module.getInputs(), expandManifest(module));
+        PrintStream out = toPrintStream(expandManifest(module));
+        printManifestTo(module.getInputs(), out);
+        out.close();
       }
     } else {
       // Generate a single file manifest.
-      printManifestTo(compiler.getInputsInOrder(), expandManifest(null));
+      PrintStream out = toPrintStream(expandManifest(null));
+      if (graph == null) {
+        printManifestTo(compiler.getInputsInOrder(), out);
+      } else {
+        printModuleGraphManifestTo(graph, out);
+      }
+      out.close();
+    }
+  }
+
+  /**
+   * Prints a set of modules to the manifest file.
+   */
+  @VisibleForTesting
+  void printModuleGraphManifestTo(
+      JSModuleGraph graph, Appendable out) throws IOException {
+    Joiner commas = Joiner.on(",");
+    boolean requiresNewline = false;
+    for (JSModule module : graph.getAllModulesInDependencyOrder()) {
+      if (requiresNewline) {
+        out.append("\n");
+      }
+
+      // See CommandLineRunnerTest to see what the format of this
+      // manifest looks like.
+      String dependencies = commas.join(module.getSortedDependencyNames());
+      out.append(
+          String.format("{%s%s}\n",
+              module.getName(),
+              dependencies.isEmpty() ? "" : ":" + dependencies));
+      printManifestTo(module.getInputs(), out);
+      requiresNewline = true;
     }
   }
 
   /**
    * Prints a list of input names, delimited by newlines, to the manifest file.
    */
-  private void printManifestTo(Iterable<CompilerInput> inputs, String path)
+  private void printManifestTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
     List<String> names = Lists.newArrayList();
     for (CompilerInput input : inputs) {
       names.add(input.getName());
     }
     String result = Joiner.on("\n").join(names);
-    PrintStream out = toPrintStream(path);
     out.append(result);
-    out.close();
+    out.append("\n");
   }
 
   private class RunTimeStats {

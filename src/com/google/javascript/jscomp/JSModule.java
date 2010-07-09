@@ -147,6 +147,19 @@ public class JSModule implements DependencyInfo, Serializable {
   }
 
   /**
+   * Gets the names of the modules that this module depends on,
+   * sorted alphabetically.
+   */
+  List<String> getSortedDependencyNames() {
+    List<String> names = Lists.newArrayList();
+    for (JSModule module : getDependencies()) {
+      names.add(module.getName());
+    }
+    Collections.sort(names);
+    return names;
+  }
+
+  /**
    * Returns the transitive closure of dependencies starting from the
    * dependencies of this module.
    */

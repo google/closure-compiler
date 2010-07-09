@@ -31,7 +31,7 @@ public class StripCodeTest extends CompilerTestCase {
   private static final String EXTERNS = "";
 
   public StripCodeTest() {
-    super(EXTERNS, false);
+    super(EXTERNS);
   }
 
   /**
@@ -50,7 +50,8 @@ public class StripCodeTest extends CompilerTestCase {
         "goog.debug.Logger",
         "goog.debug.LogManager",
         "goog.debug.LogRecord",
-        "goog.net.BrowserChannel.LogSaver");
+        "goog.net.BrowserChannel.LogSaver",
+        "TypeWithoutNamespace");
 
     Set<String> stripNames = Sets.newHashSet(
         "logger",
@@ -301,5 +302,48 @@ public class StripCodeTest extends CompilerTestCase {
          "a.prototype.b = function() { " +
          "  var one = this.logger_(); if (one) foo() }",
           "a=function(){};a.prototype.b=function(){if(null)foo()}");
+  }
+
+  public void testReplaceDirectStrippedTypeReferences() {
+
+    // Replace direct references with undefined
+    test("if (goog.debug.Logger != null){foo()}",
+         "if (void 0 != null){foo()}");
+
+    // Test replacement with non-namespaced type
+    test("if (TypeWithoutNamespace != null){foo()}",
+         "if (void 0 != null){foo()}");
+
+    // Replace is fine in RHS of assignment
+    test("if ((x = goog.debug.Logger) != null) {foo()}",
+         "if ((x = void 0) != null) {foo()}");
+    test("if ((x += goog.debug.Logger) != null) {foo()}",
+         "if ((x += void 0) != null) {foo()}");
+  }
+
+  public void testReportErrorOnStripTypeInNestedAssignment() {
+    // Don't replace if stripped type is LHS of assignment
+    test("if ((goog.debug.Logger = bar()) != null) {foo()}",
+         "if ((goog.debug.Logger = bar()) != null) {foo()}",
+         StripCode.STRIP_ASSIGNMENT_ERROR);
+
+    test("if ((goog.debug.Logger += bar()) != null) {foo()}",
+         "if ((goog.debug.Logger += bar()) != null) {foo()}",
+         StripCode.STRIP_ASSIGNMENT_ERROR);
+
+    // Don't replace if stripped type is in increment/decrement
+    test("if ((goog.debug.Logger++) != null) {foo()}",
+         "if ((goog.debug.Logger++) != null) {foo()}",
+         StripCode.STRIP_ASSIGNMENT_ERROR);
+
+    test("if ((goog.debug.Logger--) != null) {foo()}",
+         "if ((goog.debug.Logger--) != null) {foo()}",
+         StripCode.STRIP_ASSIGNMENT_ERROR);
+  }
+
+  public void testReportErrorOnStripNameInNestedAssignment() {
+    test("(foo.logger_ = 7) + 8",
+         "(foo.logger_ = 7) + 8",
+         StripCode.STRIP_ASSIGNMENT_ERROR);
   }
 }

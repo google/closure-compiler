@@ -57,6 +57,9 @@ class StripCode implements CompilerPass {
       "JSC_STRIP_TYPE_INHERIT_ERROR",
       "Non-strip type {0} cannot inherit from strip type {1}");
 
+  static final DiagnosticType STRIP_ASSIGNMENT_ERROR = DiagnosticType.error(
+      "JSC_STRIP_ASSIGNMENT_ERROR",
+      "Unable to strip assignment to {0}");
   /**
    * Creates an instance.
    *
@@ -90,13 +93,26 @@ class StripCode implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      // Any additional types added to this switch statement should
+      // also be added to the guard in
+      // maybeReplaceDirectReferenceToStrippedType() to prevent
+      // interference.
+
       switch (n.getType()) {
         case Token.VAR:
           removeVarDeclarationsByNameOrRvalue(t, n, parent);
           break;
 
         case Token.NAME:
-          maybeRemoveReferenceToRemovedVariable(t, n, parent);
+          if (qualifiedNameBeginsWithStripType(n)) {
+            maybeReplaceDirectReferenceToStrippedType(t, n);
+          } else {
+            maybeRemoveReferenceToRemovedVariable(t, n, parent);
+          }
+          break;
+
+        case Token.GETPROP:
+          maybeReplaceDirectReferenceToStrippedType(t, n);
           break;
 
         case Token.ASSIGN:
@@ -270,13 +286,17 @@ class StripCode implements CompilerPass {
       Node lvalue = n.getFirstChild();
       if (nameEndsWithFieldNameToStrip(lvalue) ||
           qualifiedNameBeginsWithStripType(lvalue)) {
+
+        // Limit to EXPR_RESULT because it is not
+        // safe to eliminate assignment in complex expressions,
+        // e.g. in ((x = 7) + 8)
         if (NodeUtil.isExpressionNode(parent)) {
           Node gramps = parent.getParent();
           replaceWithEmpty(parent, gramps);
-        } else {
-          replaceWithEmpty(n, parent);
+          compiler.reportCodeChange();
+        }  else {
+          t.report(n, STRIP_ASSIGNMENT_ERROR, lvalue.getQualifiedName());
         }
-        compiler.reportCodeChange();
       }
     }
 
@@ -351,6 +371,42 @@ class StripCode implements CompilerPass {
           ancestor = ancestor.getParent();
         }
         compiler.reportCodeChange();
+      }
+    }
+
+    /**
+     * Replaces a reference to a stripped type with 'void 0' when it is safe
+     * to do so. In particular, we want to avoid stepping on the toes of other
+     * StripCode methods.
+     *
+     * @param t The traversal
+     * @param n A GETPROP node or NAME node
+     */
+    void maybeReplaceDirectReferenceToStrippedType(NodeTraversal t, Node n) {
+      if (stripTypes.contains(n.getQualifiedName())) {
+        Node parent = n.getParent();
+
+        // Other methods already handle these cases
+        // and we don't want to interfere with them.
+        // This guard may need to be updated if additional
+        // functionality is added to StripCode.
+        if (NodeUtil.isGet(parent)
+            || NodeUtil.isCall(parent)
+            || NodeUtil.isNew(parent)
+            || NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
+          return;
+        }
+
+        int parentType = parent.getType();
+
+        // Report error if stripping type would result in (void 0)++.
+        if (parentType == Token.INC || parentType == Token.DEC) {
+          t.report(n, STRIP_ASSIGNMENT_ERROR, n.getQualifiedName());
+          return;
+        }
+
+        n.getParent().replaceChild(n, NodeUtil.newUndefinedNode(n));
+        t.getCompiler().reportCodeChange();
       }
     }
 
