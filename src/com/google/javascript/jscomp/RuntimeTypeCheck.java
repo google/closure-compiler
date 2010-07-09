@@ -248,7 +248,7 @@ class RuntimeTypeCheck implements CompilerPass {
         }
 
         Node checkNode = createCheckTypeCallNode(
-            paramType.getJSType(), paramName.getString());
+            paramType.getJSType(), paramName.cloneTree());
 
         if (checkNode == null) {
           // We don't know how to check this parameter type.
@@ -287,10 +287,6 @@ class RuntimeTypeCheck implements CompilerPass {
 
       n.replaceChild(retValue, checkNode);
       compiler.reportCodeChange();
-    }
-
-    private Node createCheckTypeCallNode(JSType type, String varName) {
-      return createCheckTypeCallNode(type, Node.newString(Token.NAME, varName));
     }
 
     /**

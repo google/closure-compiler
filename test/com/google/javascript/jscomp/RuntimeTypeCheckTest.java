@@ -47,6 +47,16 @@ public class RuntimeTypeCheckTest extends CompilerTestCase {
         "}");
   }
 
+  public void testConstValue() {
+    // User a variable that's immutable by the google coding convention,
+    // to ensure the immutable annotations are preserved.
+    testChecks("/** @param {number} CONST */ function f(CONST) {}",
+        "function f(CONST) {" +
+        "  jscomp.typecheck.checkType(CONST, " +
+        "      [jscomp.typecheck.valueChecker('number')]);" +
+        "}");
+  }
+
   public void testNullValue() {
     testChecks("/** @param {null} i */ function f(i) {}",
         "function f(i) {" +
