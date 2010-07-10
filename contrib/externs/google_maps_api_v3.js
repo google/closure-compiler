@@ -18,6 +18,8 @@
  * @fileoverview Externs for the Google Maps V3 API.
  * @see http://code.google.com/apis/maps/documentation/v3/reference.html
 *
+ * @deprecated We should eventually delete these in favor of the auto-generated
+ *     externs under maps/
  */
 
 google.maps = {};

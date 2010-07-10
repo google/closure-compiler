@@ -120,4 +120,14 @@ public class CollapseAnonymousFunctionsTest extends CompilerTestCase {
     test("var FOO = function(){};FOO()",
          "function FOO(){}FOO()");
   }
+
+  public void testInnerFunction1() {
+    test(
+        "function f() { " +
+        "  var x = 3; var y = function() { return 4; }; return x + y();" +
+        "}",
+        "function f() { " +
+        "  function y() { return 4; } var x = 3; return x + y();" +
+        "}");
+  }
 }
