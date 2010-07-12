@@ -267,6 +267,13 @@ public class ScopedAliasesTest extends CompilerTestCase {
     }
   }
 
+  public void testNullType() {
+    testTypes(
+        "var x = goog.Timer;",
+        "/** @param draggable */ types.actual;"
+        + "/** @param draggable */ types.expected;");
+  }
+
   // TODO(robbyw): What if it's recursive?  var goog = goog.dom;
 
   // FAILURE CASES

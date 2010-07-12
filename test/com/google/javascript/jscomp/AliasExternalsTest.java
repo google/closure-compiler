@@ -25,7 +25,9 @@ public class AliasExternalsTest extends CompilerTestCase {
 
   private static String EXTERNS =
     // Globals
-    "var window;var document;var arguments;var _USER_ID;var ActiveXObject;" +
+    "/** @const */ var window;" +
+    "/** @const */ var document;" +
+    "var arguments;var _USER_ID;var ActiveXObject;" +
     "function eval(x) {}" +
     // Properties
     "window.setTimeout;" +
@@ -54,6 +56,7 @@ public class AliasExternalsTest extends CompilerTestCase {
   @Override
   public void setUp() {
     super.enableLineNumberCheck(false);
+    super.enableNormalize();
     unaliasableGlobals = null;
     aliasableGlobals = null;
   }

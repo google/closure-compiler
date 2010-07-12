@@ -30,6 +30,11 @@ Event.prototype.button;
 Event.prototype.cancelBubble;
 Event.prototype.clientX;
 Event.prototype.clientY;
+/**
+ * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
+ * @type {ClipboardData|undefined}
+ */
+Event.prototype.clipboardData;
 Event.prototype.contentOverflow;
 Event.prototype.ctrlKey;
 Event.prototype.ctrlLeft;

@@ -61,6 +61,22 @@ public class SourceMapTest extends TestCase {
                     "}\n\n");
   }
 
+  public void testGoldenOutput0() throws Exception {
+    // Empty source map test
+    checkSourceMap("",
+
+                   "/** Begin line maps. **/{ \"file\" : \"testMap\"," +
+                   " \"count\": 1 }\n" +
+
+                   "[0]\n" +
+
+                   "/** Begin file information. **/\n" +
+                   "[]\n" +
+
+                   "/** Begin mapping definitions. **/\n" +
+                   "[\"testcode\",1,0]\n");
+  }
+
   public void testGoldenOutput1() throws Exception {
     checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
 
@@ -71,7 +87,7 @@ public class SourceMapTest extends TestCase {
                    "10,10,10,10,11,11,12,12,12,12,12,12,13,13,13,13,13,6]\n" +
 
                    "/** Begin file information. **/\n" +
-                   "[\"testcode\"]\n" +
+                   "[]\n" +
                    "/** Begin mapping definitions. **/\n" +
                    "[\"testcode\",1,0]\n" +
                    "[\"testcode\",1,9]\n" +
@@ -101,7 +117,7 @@ public class SourceMapTest extends TestCase {
                    "13,13,6]\n" +
 
                    "/** Begin file information. **/\n" +
-                   "[\"testcode\"]\n" +
+                   "[]\n" +
                    "/** Begin mapping definitions. **/\n" +
                    "[\"testcode\",1,0]\n" +
                    "[\"testcode\",1,9]\n" +
@@ -129,7 +145,7 @@ public class SourceMapTest extends TestCase {
                    "[2,2,2,2]\n" +
 
                    "/** Begin file information. **/\n" +
-                   "[\"c:\\\\myfile.js\"]\n" +
+                   "[]\n" +
                    "/** Begin mapping definitions. **/\n" +
                    "[\"c:\\\\myfile.js\",1,0]\n" +
                    "[\"c:\\\\myfile.js\",1,0]\n" +

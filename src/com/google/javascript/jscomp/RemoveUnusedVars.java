@@ -44,23 +44,17 @@ import java.util.logging.Logger;
 *
  */
 class RemoveUnusedVars implements CompilerPass {
-  private static final Logger logger_ =
+  private static final Logger logger =
     Logger.getLogger(RemoveUnusedVars.class.getName());
 
-  private final AbstractCompiler compiler_;
+  private final AbstractCompiler compiler;
 
   /** Keeps track of the number of variables removed per instance. */
-  private int numRemoved_ = 0;
+  private int numRemoved = 0;
 
   private final boolean removeGlobals;
 
   private boolean preserveFunctionExpressionNames;
-
-  /**
-   * Keeps track of what variables we've warned about, so that we don't do it
-   * on subsequent traversals.
-   */
-  private final Set<Var> warnedVars_ = Sets.newHashSet();
 
   /**
    * Keep track of variables that we've referenced.
@@ -71,7 +65,7 @@ class RemoveUnusedVars implements CompilerPass {
       AbstractCompiler compiler,
       boolean removeGlobals,
       boolean preserveFunctionExpressionNames) {
-    compiler_ = compiler;
+    this.compiler = compiler;
     this.removeGlobals = removeGlobals;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
   }
@@ -81,14 +75,13 @@ class RemoveUnusedVars implements CompilerPass {
    * may occur to ensure all unused variables are removed.
    */
   public void process(Node externs, Node root) {
-    warnedVars_.clear();
-    numRemoved_ = 0;
+    numRemoved = 0;
     referenced.clear();
 
     traverseAndRemoveUnusedReferences(root);
 
-    if (numRemoved_ > 0) {
-      compiler_.reportCodeChange();
+    if (numRemoved > 0) {
+      compiler.reportCodeChange();
     }
   }
 
@@ -96,7 +89,7 @@ class RemoveUnusedVars implements CompilerPass {
    * Traverses a node recursively. Call this once per pass.
    */
   private void traverseAndRemoveUnusedReferences(Node root) {
-    Scope scope = new SyntacticScopeCreator(compiler_).createScope(root, null);
+    Scope scope = new SyntacticScopeCreator(compiler).createScope(root, null);
     traverseNode(root, null, scope);
 
     if (removeGlobals) {
@@ -161,7 +154,7 @@ class RemoveUnusedVars implements CompilerPass {
     // If we aren't removing global names, assume that all global functions
     // are exported.
     return (!removeGlobals && scope.isGlobal()) ||
-        compiler_.getCodingConvention().isExported(
+        compiler.getCodingConvention().isExported(
            n.getFirstChild().getString());
   }
 
@@ -181,7 +174,7 @@ class RemoveUnusedVars implements CompilerPass {
     Preconditions.checkState(body.getNext() == null &&
             body.getType() == Token.BLOCK);
 
-    Scope fnScope = new SyntacticScopeCreator(compiler_).createScope(n, scope);
+    Scope fnScope = new SyntacticScopeCreator(compiler).createScope(n, scope);
     traverseNode(body, n, fnScope);
 
     removeUnreferencedFunctionArgs(n, fnScope);
@@ -208,7 +201,7 @@ class RemoveUnusedVars implements CompilerPass {
         }
         argList.removeChild(lastArg);
         fnScope.undeclare(var);
-        numRemoved_++;
+        numRemoved++;
       } else {
         break;
       }
@@ -239,7 +232,7 @@ class RemoveUnusedVars implements CompilerPass {
    * Removes any vars in the scope that were not referenced.
    */
   private void removeUnreferencedVars(Scope scope) {
-    CodingConvention convention = compiler_.getCodingConvention();
+    CodingConvention convention = compiler.getCodingConvention();
 
     for (Iterator<Var> it = scope.getVars(); it.hasNext(); ) {
       Var var = it.next();
@@ -247,7 +240,7 @@ class RemoveUnusedVars implements CompilerPass {
       if (!referenced.contains(var) &&
           (var.isLocal() || !convention.isExported(var.name))) {
 
-        compiler_.addToDebugLog("Unreferenced var: " + var.name);
+        compiler.addToDebugLog("Unreferenced var: " + var.name);
         Node nameNode = var.nameNode;
         Node toRemove = nameNode.getParent();
         Node parent = toRemove.getParent();
@@ -266,7 +259,7 @@ class RemoveUnusedVars implements CompilerPass {
         } else if (NodeUtil.isFunctionExpression(toRemove)) {
           if (!preserveFunctionExpressionNames) {
             toRemove.getFirstChild().setString("");
-            compiler_.reportCodeChange();
+            compiler.reportCodeChange();
           }
           // Don't remove bleeding functions.
         } else if (parent != null &&
@@ -276,34 +269,23 @@ class RemoveUnusedVars implements CompilerPass {
         } else if (toRemove.getType() == Token.VAR &&
                    nameNode.hasChildren() &&
                    NodeUtil.mayHaveSideEffects(nameNode.getFirstChild())) {
-          if (!warnedVars_.contains(var)) {
-            warnedVars_.add(var);
-            String inputName = var.input != null
-                               ? var.input.getName()
-                               : "<unknown>";
-            logger_.info("Unused var " + var.name +
-                         " declared in " + inputName +
-                         " at line " + toRemove.getLineno() +
-                         " may have side effects and can't be removed");
-          }
-
           // If this is a single var declaration, we can at least remove the
           // declaration itself and just leave the value, e.g.,
           // var a = foo(); => foo();
           if (toRemove.getChildCount() == 1) {
             parent.replaceChild(toRemove,
                 new Node(Token.EXPR_RESULT, nameNode.removeFirstChild()));
-            numRemoved_++;
+            numRemoved++;
           }
         } else if (toRemove.getType() == Token.VAR &&
                    toRemove.getChildCount() > 1) {
           // For var declarations with multiple names (i.e. var a, b, c),
           // only remove the unreferenced name
           toRemove.removeChild(nameNode);
-          numRemoved_++;
+          numRemoved++;
         } else if (parent != null) {
           NodeUtil.removeChild(parent, toRemove);
-          numRemoved_++;
+          numRemoved++;
         }
       }
     }

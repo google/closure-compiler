@@ -109,11 +109,6 @@ public class SourceMap {
    */
   private static class LineMapping {
     /**
-     * The list of input files which created the code on this line.
-     */
-    List<String> files = Lists.newArrayList();
-
-    /**
      * The line number of this line (indexed by 0).
      */
     int lineNumber;
@@ -158,29 +153,8 @@ public class SourceMap {
         if (current == null) {
           out.append("-1");
         } else {
-          out.append(current.basisMapping.id + "");
+          out.append(String.valueOf(current.basisMapping.id));
         }
-      }
-
-      out.append("]");
-    }
-
-    /**
-     * Appends the line mapping's file map to the given
-     * buffer.
-     */
-    void appendFileMapTo(Appendable out) throws IOException {
-      // Sort the files list for deterministic consistency.
-      Collections.sort(files);
-
-      out.append("[");
-
-      for (int j = 0; j < files.size(); ++j) {
-        if (j > 0) {
-          out.append(",");
-        }
-
-        out.append(escapeString(files.get(j)));
       }
 
       out.append("]");
@@ -420,10 +394,6 @@ public class SourceMap {
         lcm.endCharacter = endCharacter;
         lcm.basisMapping = mapping;
 
-        if (!lineMapping.files.contains(mapping.sourceFile)) {
-          lineMapping.files.add(mapping.sourceFile);
-        }
-
         lineMapping.characterMappings.add(lcm);
       }
     }
@@ -542,10 +512,7 @@ public class SourceMap {
     // best represents the index-th character found on that line of the
     // generated source code.
     //
-    // The second section contains an array per generated line that contains
-    // all the paths of the input source files that caused the code on the given
-    // generated line to be generated. This is a simple array of Javascript
-    // strings.
+    // The second section contains an array per generated line. Unused.
     //
     // The third and final section contains an array per line, each of which
     // represents a mapping with a unique ID. The mappings are added in order.
@@ -559,8 +526,8 @@ public class SourceMap {
     // 2)  [0,0,0,0,0,0,1,1,1,1,2]
     // 3)  [2,2,2,2,2,2,3,4,4,4,4,4]
     // 4)  /** Begin file information. **/
-    // 5)  ["a.js", "b.js"]
-    // 6)  ["b.js", "c.js", "d.js"]
+    // 5)  []
+    // 6)  []
     // 7)  /** Begin mapping definitions. **/
     // 8)  ["a.js", 1, 34]
     // 9)  ["a.js", 5, 2]
@@ -590,16 +557,10 @@ public class SourceMap {
     // Add the source file maps.
     out.append("/** Begin file information. **/\n");
 
+    // Add legacy file mapping section.  This data is never used but it is
+    // need for the current file format.
     for (int i = 0; i <= maxLine; ++i) {
-      LineMapping lineMapping = lineMappings.get(i);
-
-      if (lineMapping == null) {
-        out.append("[]");
-      } else {
-        lineMapping.appendFileMapTo(out);
-      }
-
-      out.append("\n");
+      out.append("[]\n");
     }
 
     // Add the mappings themselves.

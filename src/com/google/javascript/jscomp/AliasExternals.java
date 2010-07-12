@@ -95,7 +95,7 @@ class AliasExternals implements CompilerPass {
       getArrayNotationNameFor("prototype");
 
   /** Map of all properties that we may be renaming */
-  private final Map<String, Property> props = Maps.newHashMap();
+  private final Map<String, Symbol> props = Maps.newHashMap();
 
   /** Holds the properties that can be renamed to GETPROP_ */
   private final List<Node> accessors = Lists.newArrayList();
@@ -111,7 +111,7 @@ class AliasExternals implements CompilerPass {
     new IdentityHashMap<Node, Node>();
 
   /** Map of all globals that we may aliasing */
-  private final Map<String, Property> globals = Maps.newHashMap();
+  private final Map<String, Symbol> globals = Maps.newHashMap();
 
   /** Holds all of the globals that can be aliased to GLOBAL_ */
   private final List<Node> globalUses = Lists.newArrayList();
@@ -223,7 +223,7 @@ class AliasExternals implements CompilerPass {
     // Get the reserved names, filtered by the whitelist.
     NodeTraversal.traverse(compiler, externs,
                            new GetAliasableNames(aliasableGlobals));
-    props.put("prototype", new Property("prototype"));
+    props.put("prototype", newSymbolForProperty("prototype"));
 
     // Find the props that can be changed
     NodeTraversal.traverse(compiler, root, new PropertyGatherer());
@@ -231,7 +231,7 @@ class AliasExternals implements CompilerPass {
     // Iterate through the reserved names, decide what to change
     // This could have been done during property traversal, but
     // This gives opportunity for review & modification if needed
-    for (Property prop : props.values()) {
+    for (Symbol prop : props.values()) {
       if (prop.name.length() >= MIN_PROP_SIZE) {
         if (prop.accessorCount >= requiredUsage) {
           prop.aliasAccessor = true;
@@ -254,13 +254,13 @@ class AliasExternals implements CompilerPass {
     // And add the accessor and mutator functions, if needed. Property names are
     // grouped together so that the CollapseVariableDeclarations pass can put
     // them in a single variable declaration statement.
-    for (Property prop : props.values()) {
+    for (Symbol prop : props.values()) {
       if (prop.aliasAccessor) {
         addAccessorPropName(prop.name, getAddingRoot(prop.deepestModuleAccess));
       }
     }
 
-    for (Property prop : props.values()) {
+    for (Symbol prop : props.values()) {
       if (prop.aliasMutator) {
         addMutatorFunction(prop.name, getAddingRoot(prop.deepestModuleMutate));
       }
@@ -322,7 +322,7 @@ class AliasExternals implements CompilerPass {
     Node propNameNode = getPropNode.getLastChild();
     Node parentNode = getPropNode.getParent();
 
-    Property prop = props.get(propNameNode.getString());
+    Symbol prop = props.get(propNameNode.getString());
     if (prop.aliasMutator) {
       Node propSrc = getPropNode.getFirstChild();
       Node propDest = parentNode.getLastChild();
@@ -480,7 +480,7 @@ class AliasExternals implements CompilerPass {
           Node dest = n.getFirstChild().getNext();
           if (dest.getType() == Token.STRING &&
               (whitelist.isEmpty() || whitelist.contains(dest.getString()))) {
-            props.put(dest.getString(), new Property(dest.getString()));
+            props.put(dest.getString(), newSymbolForProperty(dest.getString()));
           }
       }
     }
@@ -575,7 +575,7 @@ class AliasExternals implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new GlobalGatherer());
 
     // Iterate through the used globals, decide what to change.
-    for (Property global : globals.values()) {
+    for (Symbol global : globals.values()) {
       if (global.mutatorCount > 0) {
         continue;
       }
@@ -595,9 +595,9 @@ class AliasExternals implements CompilerPass {
       replaceGlobalUse(globalUse);
     }
 
-    for (Property global : globals.values()) {
+    for (Symbol global : globals.values()) {
       if (global.aliasAccessor) {
-        addGlobalAliasNode(global.name,
+        addGlobalAliasNode(global,
                            getAddingRoot(global.deepestModuleAccess));
       }
     }
@@ -620,7 +620,7 @@ class AliasExternals implements CompilerPass {
           Scope.Var var = t.getScope().getVar(name);
 
           if (var != null && !var.isLocal()) {
-            globals.put(name, new Property(name));
+            globals.put(name, newSymbolForGlobalVar(dest));
           }
         }
       }
@@ -658,7 +658,7 @@ class AliasExternals implements CompilerPass {
           return;
         }
 
-        Property global = globals.get(name);
+        Symbol global = globals.get(name);
         if (global != null) {
           boolean isFirst = parent.getFirstChild() == n;
           // If a global is being assigned to or otherwise modified, then we
@@ -688,6 +688,12 @@ class AliasExternals implements CompilerPass {
     String globalName = globalUse.getString();
     if (globals.get(globalName).aliasAccessor) {
       globalUse.setString("GLOBAL_" + globalName);
+
+      // None of the aliases are marked as @const.
+      // Because we're reusing the original ref node,
+      // we need to update it to reflect this.
+      globalUse.putBooleanProp(Node.IS_CONSTANT_NAME, false);
+
       compiler.reportCodeChange();
     }
   }
@@ -700,7 +706,7 @@ class AliasExternals implements CompilerPass {
    * @param globalName Name of global
    * @param root Root of output tree that function can be added to
    */
-  private void addGlobalAliasNode(String globalName, Node root) {
+  private void addGlobalAliasNode(Symbol global, Node root) {
     /*
      *  Target:
 
@@ -708,7 +714,11 @@ class AliasExternals implements CompilerPass {
         name GLOBAL_window
             name window
      */
-    Node globalValue = Node.newString(Token.NAME, globalName);
+
+    String globalName = global.name;
+    Node globalValue = Node.newString(Token.NAME, global.name);
+    globalValue.putBooleanProp(Node.IS_CONSTANT_NAME, global.isConstant);
+
     Node globalNameNode =
       Node.newString(Token.NAME, "GLOBAL_" + globalName);
     globalNameNode.addChildToFront(globalValue);
@@ -718,19 +728,30 @@ class AliasExternals implements CompilerPass {
     compiler.reportCodeChange();
   }
 
+  private Symbol newSymbolForGlobalVar(Node name) {
+    return new Symbol(
+        name.getString(), name.getBooleanProp(Node.IS_CONSTANT_NAME));
+  }
+
+  private Symbol newSymbolForProperty(String name) {
+    return new Symbol(name, false);
+  }
+
   /** Struct to hold information about properties & usage */
-  private class Property {
-    public String name;
+  private class Symbol {
+    public final String name;
     public int accessorCount = 0;
     public int mutatorCount = 0;
     public boolean aliasMutator = false;
     public boolean aliasAccessor = false;
+    public final boolean isConstant;
 
     JSModule deepestModuleAccess = null;
     JSModule deepestModuleMutate = null;
 
-    public Property(String name) {
+    private Symbol(String name, boolean isConstant) {
       this.name = name;
+      this.isConstant = isConstant;
     }
 
     void recordAccessor(NodeTraversal t) {

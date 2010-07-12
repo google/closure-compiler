@@ -1168,13 +1168,17 @@ public final class JSDocInfo implements Serializable {
 
       if (info.parameters != null) {
         for (JSTypeExpression parameterType : info.parameters.values()) {
-          nodes.add(parameterType.getRoot());
+          if (parameterType != null) {
+            nodes.add(parameterType.getRoot());
+          }
         }
       }
 
       if (info.thrownTypes != null) {
         for (JSTypeExpression thrownType : info.thrownTypes) {
-          nodes.add(thrownType.getRoot());
+          if (thrownType != null) {
+            nodes.add(thrownType.getRoot());
+          }
         }
       }
     }
