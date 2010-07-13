@@ -134,6 +134,17 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
           // Create a new variable in a synthetic script. This will prevent
           // subsequent compiler passes from crashing.
           Node nameNode = Node.newString(Token.NAME, varName);
+
+          // Mark the variable as constant if it matches the coding convention
+          // for constant vars.
+          // NOTE(nicksantos): honestly, i'm not sure how much this matters.
+          // AFAIK, all people who use the CONST coding convention also
+          // compile with undeclaredVars as errors. We have some test
+          // cases for this configuration though, and it makes them happier.
+          if (compiler.getCodingConvention().isConstant(varName)) {
+            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+          }
+
           getSynthesizedExternsRoot().addChildToBack(
               new Node(Token.VAR, nameNode));
           scope.getGlobalScope().declare(varName, nameNode,

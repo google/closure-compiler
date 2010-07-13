@@ -101,6 +101,31 @@ public class ScopedAliasesTest extends CompilerTestCase {
         "goog.method();g.method();");
   }
 
+  public void testTwoSymbolsInTwoScopes() {
+    test(
+        "var goog = {};" +
+        "goog.scope(function() { var g = goog; g.Foo = function() {}; });" +
+        "goog.scope(function() { " +
+        "  var Foo = goog.Foo; goog.bar = function() { return new Foo(); };" +
+        "});",
+        "var goog = {};" +
+        "goog.Foo = function() {};" +
+        "goog.bar = function() { return new goog.Foo(); };");
+  }
+
+  public void testAliasOfSymbolInGoogScope() {
+    test(
+        "var goog = {};" +
+        "goog.scope(function() {" +
+        "  var g = goog;" +
+        "  g.Foo = function() {};" +
+        "  var Foo = g.Foo;" +
+        "  Foo.prototype.bar = function() {};" +
+        "});",
+        "var goog = {}; goog.Foo = function() {};" +
+        "goog.Foo.prototype.bar = function() {};");
+  }
+
   public void testScopedFunctionReturnThis() {
     test("goog.scope(function() { " +
          "  var g = goog; g.f = function() { return this; };" +

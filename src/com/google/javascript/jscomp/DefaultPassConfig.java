@@ -76,6 +76,14 @@ public class DefaultPassConfig extends PassConfig {
       DiagnosticType.error("JSC_INPUT_MAP_VAR_PARSE",
           "Input variable map parse error: {0}");
 
+  private static final DiagnosticType NAME_REF_GRAPH_FILE_ERROR =
+      DiagnosticType.error("JSC_NAME_REF_GRAPH_FILE_ERROR",
+          "Error \"{1}\" writing name reference graph to \"{0}\".");
+
+  private static final DiagnosticType NAME_REF_REPORT_FILE_ERROR =
+      DiagnosticType.error("JSC_NAME_REF_REPORT_FILE_ERROR",
+          "Error \"{1}\" writing name reference report to \"{0}\".");
+
   /**
    * A global namespace to share across checking passes.
    * TODO(nicksantos): This is a hack until I can get the namespace into
@@ -294,6 +302,16 @@ public class DefaultPassConfig extends PassConfig {
     if (options.instrumentationTemplate != null ||
         options.recordFunctionInformation) {
       checks.add(computeFunctionNames);
+    }
+
+    if (options.nameReferenceGraphPath != null &&
+        !options.nameReferenceGraphPath.isEmpty()) {
+      checks.add(printNameReferenceGraph);
+    }
+
+    if (options.nameReferenceReportPath != null &&
+        !options.nameReferenceReportPath.isEmpty()) {
+      checks.add(printNameReferenceReport);
     }
 
     assertAllOneTimePasses(checks);
@@ -1933,4 +1951,55 @@ public class DefaultPassConfig extends PassConfig {
       }
     }
   }
+
+  private final PassFactory printNameReferenceGraph =
+    new PassFactory("printNameReferenceGraph", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node jsRoot) {
+          NameReferenceGraphConstruction gc =
+              new NameReferenceGraphConstruction(compiler);
+          gc.process(externs, jsRoot);
+          String graphFileName = options.nameReferenceGraphPath;
+          try {
+            Files.write(DotFormatter.toDot(gc.getNameReferenceGraph()),
+                new File(graphFileName),
+                Charsets.UTF_8);
+          } catch (IOException e) {
+            compiler.report(
+                JSError.make(
+                    NAME_REF_GRAPH_FILE_ERROR, e.getMessage(), graphFileName));
+          }
+        }
+      };
+    }
+  };
+
+  private final PassFactory printNameReferenceReport =
+      new PassFactory("printNameReferenceReport", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node jsRoot) {
+          NameReferenceGraphConstruction gc =
+              new NameReferenceGraphConstruction(compiler);
+          String reportFileName = options.nameReferenceReportPath;
+          try {
+            NameReferenceGraphReport report =
+                new NameReferenceGraphReport(gc.getNameReferenceGraph());
+            Files.write(report.getHtmlReport(),
+                new File(reportFileName),
+                Charsets.UTF_8);
+          } catch (IOException e) {
+            compiler.report(
+                JSError.make(
+                    NAME_REF_REPORT_FILE_ERROR, e.getMessage(), reportFileName));
+          }
+        }
+      };
+    }
+  };
 }
