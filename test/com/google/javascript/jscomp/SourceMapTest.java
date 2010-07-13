@@ -16,11 +16,21 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 import junit.framework.TestCase;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -68,7 +78,7 @@ public class SourceMapTest extends TestCase {
                    "/** Begin line maps. **/{ \"file\" : \"testMap\"," +
                    " \"count\": 1 }\n" +
 
-                   "[0]\n" +
+                   "[]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
@@ -83,11 +93,12 @@ public class SourceMapTest extends TestCase {
                    "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
                    "\"count\": 1 }\n" +
 
-                   "[0,0,0,0,0,0,0,0,2,2,2,4,4,4,4,5,5,5,5,3,8,8,8,8,9,9,9,9," +
-                   "10,10,10,10,11,11,12,12,12,12,12,12,13,13,13,13,13,6]\n" +
+                   "[1,1,1,1,1,1,1,1,2,2,3,4,4,4,3,5,5,5,3,6,8,8,8,7,9,9,9,7," +
+                   "10,10,10,7,11,12,12,12,12,12,12,12,13,13,13,13,6]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
+
                    "/** Begin mapping definitions. **/\n" +
                    "[\"testcode\",1,0]\n" +
                    "[\"testcode\",1,9]\n" +
@@ -112,9 +123,9 @@ public class SourceMapTest extends TestCase {
                    "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
                    "\"count\": 1 }\n" +
 
-                   "[0,0,0,0,0,0,0,0,2,2,2,4,4,4,4,5,5,5,5,3,8,8,8,8,9,9,9," +
-                   "9,10,10,10,10,11,11,11,11,12,12,12,12,12,12,13,13,13," +
-                   "13,13,6]\n" +
+                   "[1,1,1,1,1,1,1,1,2,2,3,4,4,4,3,5,5,5,3,6,8,8,8,7,9,9,9," +
+                   "7,10,10,10,7,11,11,11,12,12,12,12,12,12,12,13,13,13," +
+                   "13,6]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
@@ -142,7 +153,7 @@ public class SourceMapTest extends TestCase {
                    "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
                    "\"count\": 1 }\n" +
 
-                   "[2,2,2,2]\n" +
+                   "[2,2,2]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
@@ -150,6 +161,27 @@ public class SourceMapTest extends TestCase {
                    "[\"c:\\\\myfile.js\",1,0]\n" +
                    "[\"c:\\\\myfile.js\",1,0]\n" +
                    "[\"c:\\\\myfile.js\",1,0,\"foo\"]\n");
+  }
+
+  public void testGoldenOutput4() throws Exception {
+    checkSourceMap("c:\\myfile.js",
+                   "foo;   boo;   goo;",
+
+                   "/** Begin line maps. **/" +
+                   "{ \"file\" : \"testMap\", \"count\": 1 }\n" +
+                   "[2,2,2,4,4,4,4,6,6,6,6]\n" +
+
+                   "/** Begin file information. **/\n" +
+                   "[]\n" +
+
+                   "/** Begin mapping definitions. **/\n" +
+                   "[\"c:\\\\myfile.js\",1,0]\n" +
+                   "[\"c:\\\\myfile.js\",1,0]\n" +
+                   "[\"c:\\\\myfile.js\",1,0,\"foo\"]\n" +
+                   "[\"c:\\\\myfile.js\",1,7]\n" +
+                   "[\"c:\\\\myfile.js\",1,7,\"boo\"]\n" +
+                   "[\"c:\\\\myfile.js\",1,14]\n" +
+                   "[\"c:\\\\myfile.js\",1,14,\"goo\"]\n");
   }
 
   public void testBasicDeterminism() throws Exception {
@@ -193,6 +225,7 @@ public class SourceMapTest extends TestCase {
   private static class RunResult {
     String generatedSource;
     SourceMap sourceMap;
+    public String sourceMapFileContent;
   }
 
   private static class Token {
@@ -205,7 +238,7 @@ public class SourceMapTest extends TestCase {
    * string.
    */
   private Map<String, Token> findTokens(String js) {
-    Map<String, Token> tokens = Maps.newHashMap();
+    Map<String, Token> tokens = Maps.newLinkedHashMap();
 
     int currentLine = 0;
     int positionOffset = 0;
@@ -255,22 +288,33 @@ public class SourceMapTest extends TestCase {
   private void compileAndCheck(String js) {
     RunResult result = compile(js);
 
-    // Find all instances of the __XXX__ pattern in the generated
+    // Find all instances of the __XXX__ pattern in the original
     // source code.
     Map<String, Token> originalTokens = findTokens(js);
 
+    // Find all instances of the __XXX__ pattern in the generated
+    // source code.
+    Map<String, Token> resultTokens = findTokens(result.generatedSource);
+
     // Ensure that the generated instances match via the source map
     // to the original source code.
-    Map<String, Token> resultTokens = findTokens(result.generatedSource);
 
     // Ensure the token counts match.
     assertEquals(originalTokens.size(), resultTokens.size());
 
+    SourceMapReader reader = new SourceMapReader();
+    try {
+      reader.parse(result.sourceMapFileContent);
+    } catch (SourceMapParseException e) {
+      throw new RuntimeException("unexpected exception", e);
+    }
+
     // Map the tokens from the generated source back to the
     // input source and ensure that the map is correct.
     for (Token token : resultTokens.values()) {
-      SourceMap.Mapping mapping =
-          result.sourceMap.getMappingFor(token.position);
+      OriginalMapping mapping = reader.getMappingForLine(
+          token.position.getLineNumber() + 1,
+          token.position.getCharacterIndex() + 1);
 
       assertNotNull(mapping);
 
@@ -280,17 +324,17 @@ public class SourceMapTest extends TestCase {
 
       // Ensure that the map correctly points to the token (we add 1
       // to normalize versus the Rhino line number indexing scheme).
-      assertEquals(mapping.originalPosition.getLineNumber(),
+      assertEquals(mapping.position.getLineNumber(),
                    inputToken.position.getLineNumber() + 1);
 
       // Ensure that if the token name does not being with an 'STR' (meaning a
       // string) it has an original name.
       if (!inputToken.tokenName.startsWith("STR")) {
-        assertNotNull(mapping.originalName);
+        assertTrue(!mapping.originalName.isEmpty());
       }
 
       // Ensure that if the mapping has a name, it matches the token.
-      if (mapping.originalName != null) {
+      if (!mapping.originalName.isEmpty()) {
         assertEquals(mapping.originalName, "__" + inputToken.tokenName + "__");
       }
     }
@@ -326,9 +370,262 @@ public class SourceMapTest extends TestCase {
     assertTrue(result.success);
     String source = compiler.toSource();
 
+    StringBuilder sb = new StringBuilder();
+    try {
+      result.sourceMap.appendTo(sb, "testcode");
+    } catch (IOException e) {
+      throw new RuntimeException("unexpected exception", e);
+    }
+
     RunResult rr = new RunResult();
     rr.generatedSource = source;
     rr.sourceMap = result.sourceMap;
+    rr.sourceMapFileContent = sb.toString();
     return rr;
+  }
+
+  public static class SourceMapParseException extends IOException {
+    public SourceMapParseException(String message) {
+      super(message);
+    }
+  }
+
+  public static class OriginalMapping {
+    public final String srcfile;
+    public final Position position;
+    public final String originalName;
+
+    OriginalMapping(String srcfile, int line, int column, String name) {
+      this.srcfile = srcfile;
+      this.position = new Position(line, column);
+      this.originalName = name;
+    }
+  }
+
+  /**
+   * Class for parsing and representing a SourceMap
+   * TODO(johnlenz): This would be best as a seperate open-source component.
+   *     Remove this when it is.
+   */
+  public class SourceMapReader {
+    private static final String LINEMAP_HEADER = "/** Begin line maps. **/";
+    private static final String FILEINFO_HEADER =
+        "/** Begin file information. **/";
+
+    private static final String DEFINITION_HEADER =
+        "/** Begin mapping definitions. **/";
+
+    /**
+     * Internal class for parsing the SourceMap. Used to maintain parser
+     * state in an easy to use instance.
+     */
+    private class ParseState {
+      private Reader reader = null;
+      private int currentPosition = 0;
+
+      public ParseState(String contents) {
+        this.reader = new StringReader(contents);
+      }
+
+      /**
+       * Consumes a single character. If we have already reached the end
+       * of the string, returns  -1.
+       */
+      private int consumeCharacter() {
+        try {
+          currentPosition++;
+          return reader.read();
+        } catch (IOException iox) {
+          // Should never happen. Local reader.
+          throw new IllegalStateException("IOException raised by reader");
+        }
+      }
+
+      /**
+       * Consumes the specified value found in the contents string. If the value
+       * is not found, throws a parse exception.
+       */
+      public void consume(String value) throws SourceMapParseException {
+         for (int i = 0; i < value.length(); ++i) {
+          int ch = consumeCharacter();
+
+          if (ch == -1 || ch != value.charAt(i)) {
+            fail("At character " + currentPosition + " expected: " + value);
+          }
+        }
+      }
+
+      /**
+       * Consumes characters until the newline character is found or the string
+       * has been entirely consumed. Returns the string consumed (without the
+       * newline).
+       */
+      public String consumeUntilEOL() throws SourceMapParseException {
+        StringBuilder sb = new StringBuilder();
+
+        int ch = -1;
+
+        while ((ch = consumeCharacter()) != '\n') {
+          if (ch == -1) {
+            return sb.toString();
+          }
+
+          sb.append((char) ch);
+        }
+
+        return sb.toString();
+      }
+
+      /**
+       * Indicates that parsing has failed by throwing a parse exception.
+       */
+      public void fail(String message) throws SourceMapParseException {
+        throw new SourceMapParseException(message);
+      }
+    }
+
+    /**
+     * Mapping from a line number (0-indexed), to a list of mapping IDs, one for
+     * each character on the line. For example, if the array for line 2 is
+     * [4,,,,5,6,,,7], then there will be the entry:
+     *
+     * 1 => {4, 4, 4, 4, 5, 6, 6, 6, 7}
+     *
+     */
+    private Multimap<Integer, Integer> characterMap = null;
+
+    /**
+     * Map of Mapping IDs to the actual mapping object.
+     */
+    private Map<Integer, OriginalMapping> mappings = null;
+
+    public SourceMapReader() {
+    }
+
+    /**
+     * Parses the given contents containing a source map.
+     */
+    public void parse(String contents) throws SourceMapParseException {
+      ParseState parser = new ParseState(contents);
+
+      characterMap = LinkedListMultimap.create();
+      mappings = Maps.newHashMap();
+
+      try {
+        // /** Begin line maps. **/{ count: 2 }
+        parser.consume(LINEMAP_HEADER);
+        String countJSON = parser.consumeUntilEOL();
+
+        JSONObject countObject = new JSONObject(countJSON);
+
+        if (!countObject.has("count")) {
+          parser.fail("Missing 'count'");
+        }
+
+        int lineCount = countObject.getInt("count");
+
+        if (lineCount <= 0) {
+          parser.fail("Count must be >= 1");
+        }
+
+        // [0,,,,,,1,2]
+        for (int i = 0; i < lineCount; ++i) {
+          String currentLine = parser.consumeUntilEOL();
+
+          // Blank lines are allowed in the spec to indicate no mapping
+          // information for the line.
+          if (currentLine.isEmpty()) {
+            continue;
+          }
+
+          JSONArray charArray = new JSONArray(currentLine);
+
+          int lastID = -1;
+
+          for (int j = 0; j < charArray.length(); ++j) {
+            int mappingID = lastID;
+
+            if (!charArray.isNull(j)) {
+              mappingID = charArray.optInt(j);
+            }
+
+            // Save the current character's mapping.
+            characterMap.put(i, mappingID);
+
+            lastID = mappingID;
+          }
+        }
+
+        // /** Begin file information. **/
+        parser.consume(FILEINFO_HEADER);
+
+        if (parser.consumeUntilEOL().length() > 0) {
+          parser.fail("Unexpected token after file information header");
+        }
+
+        // File information. Not used, so we just consume it.
+        for (int i = 0; i < lineCount; ++i) {
+          parser.consumeUntilEOL();
+        }
+
+        // /** Begin mapping definitions. **/
+        parser.consume(DEFINITION_HEADER);
+
+        if (parser.consumeUntilEOL().length() > 0) {
+          parser.fail("Unexpected token after definition header");
+        }
+
+        String currentLine = null;
+
+        // ['d.js', 3, 78, 'foo']
+        for (int mappingID = 0;
+             (currentLine = parser.consumeUntilEOL()).length() > 0;
+             ++mappingID) {
+
+          JSONArray mapArray = new JSONArray(currentLine);
+
+          if (mapArray.length() < 3) {
+            parser.fail("Invalid mapping array");
+          }
+
+          OriginalMapping mapping = new OriginalMapping(
+              mapArray.getString(0), // srcfile
+              mapArray.getInt(1),    // line
+              mapArray.getInt(2),    // column
+              mapArray.optString(3, "")); // identifier
+
+          mappings.put(mappingID, mapping);
+        }
+      } catch (JSONException ex) {
+        parser.fail("JSON parse exception: " + ex);
+      }
+    }
+
+    public OriginalMapping getMappingForLine(int lineNumber, int columnIndex) {
+      Preconditions.checkNotNull(characterMap, "parse() must be called first");
+
+      if (!characterMap.containsKey(lineNumber - 1)) {
+        return null;
+      }
+
+      Collection<Integer> mapIds = characterMap.get(lineNumber - 1);
+
+      int columnPosition = columnIndex - 1;
+      if (columnPosition >= mapIds.size() || columnPosition < 0) {
+        return null;
+      }
+
+      // TODO(user): Find a way to make this faster.
+      Integer[] mapIdsAsArray = new Integer[mapIds.size()];
+      mapIds.<Integer>toArray(mapIdsAsArray);
+
+      int mapId = mapIdsAsArray[columnPosition];
+
+      if (mapId < 0) {
+        return null;
+      }
+
+      return mappings.get(mapId);
+    }
   }
 }

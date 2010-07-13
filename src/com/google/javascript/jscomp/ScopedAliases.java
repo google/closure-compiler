@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -167,7 +168,7 @@ class ScopedAliases implements CompilerPass {
     private List<AliasUsage> aliasUsages = Lists.newArrayList();
 
     // This map is temporary and cleared for each scope.
-    private Map<String, Node> aliases = Maps.newHashMap();
+    private Map<String, Var> aliases = Maps.newHashMap();
 
     private boolean hasErrors = false;
 
@@ -246,11 +247,8 @@ class ScopedAliases implements CompilerPass {
         int type = n.getType();
         if (type == Token.NAME && parent.getType() == Token.VAR) {
           if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
-            aliases.put(n.getString(), n.getFirstChild());
+            aliases.put(n.getString(), t.getScope().getVar(n.getString()));
             aliasDefinitions.add(n);
-
-            // Undeclare the variable.
-            t.getScope().undeclare(t.getScope().getVar(n.getString()));
 
             // If we found an alias, we are done.
             return;
@@ -260,7 +258,8 @@ class ScopedAliases implements CompilerPass {
           }
         }
 
-        if (type == Token.NAME && NodeUtil.isAssignmentOp(parent)) {
+        if (type == Token.NAME && NodeUtil.isAssignmentOp(parent) &&
+            n == parent.getFirstChild()) {
           report(t, n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());
         }
 
@@ -275,17 +274,19 @@ class ScopedAliases implements CompilerPass {
 
       if (t.getScopeDepth() >= 2) {
         if (n.getType() == Token.NAME) {
-          Node aliasedNode = aliases.get(n.getString());
-          // The variable should not exist since we undeclared it when we found
-          // it.  If it does exist, it's because it's been overridden.
-          if (t.getScope().getVar(n.getString()) == null &&
-              aliasedNode != null) {
+          String name = n.getString();
+          Var aliasVar = aliases.get(name);
+
+          // Check if this name points to an alias.
+          if (aliasVar != null &&
+              t.getScope().getVar(name) == aliasVar) {
             // Note, to support the transitive case, it's important we don't
             // clone aliasedNode here.  For example,
             // var g = goog; var d = g.dom; d.createElement('DIV');
             // The node in aliasedNode (which is "g") will be replaced in the
             // changes pass above with "goog".  If we cloned here, we'd end up
             // with <code>g.dom.createElement('DIV')</code>.
+            Node aliasedNode = aliasVar.getInitialValue();
             aliasUsages.add(new AliasedNode(n, aliasedNode));
           }
         }
@@ -309,8 +310,9 @@ class ScopedAliases implements CompilerPass {
           endIndex = name.length();
         }
         String baseName = name.substring(0, endIndex);
-        Node aliasedNode = aliases.get(baseName);
-        if (aliasedNode != null) {
+        Var aliasVar = aliases.get(baseName);
+        if (aliasVar != null) {
+          Node aliasedNode = aliasVar.getInitialValue();
           aliasUsages.add(new AliasedTypeNode(typeNode,
               aliasedNode.getQualifiedName() + name.substring(endIndex)));
         }

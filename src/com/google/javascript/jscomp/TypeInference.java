@@ -808,33 +808,31 @@ class TypeInference
       return scope;
     }
     JSTypeNative assertedType = assertionFunctionSpec.getAssertedType();
+    String assertedNodeName = assertedNode.getQualifiedName();
     // Handle assertions that enforce expressions evaluate to true.
     if (assertedType == null) {
-      switch (assertedNode.getType()) {
-        case Token.NAME:
-          JSType type = getJSType(assertedNode);
-          JSType narrowed = type.restrictByNotNullOrUndefined();
-          if (type != narrowed) {
-            scope = scope.createChildFlowScope();
-            redeclare(scope, assertedNode.getString(), narrowed);
-          }
-          break;
-        case Token.AND:
-        case Token.OR:
-          BooleanOutcomePair conditionOutcomes =
-              traverseWithinShortCircuitingBinOp(assertedNode, scope);
-          scope = reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
-              assertedNode, conditionOutcomes.getOutcomeFlowScope(
-                  assertedNode.getType(), true), true);
-          break;
+      if (assertedNodeName != null) {
+        JSType type = getJSType(assertedNode);
+        JSType narrowed = type.restrictByNotNullOrUndefined();
+        if (type != narrowed) {
+          scope = scope.createChildFlowScope();
+          redeclare(scope, assertedNodeName, narrowed);
+        }
+      } else if (assertedNode.getType() == Token.AND ||
+                 assertedNode.getType() == Token.OR) {
+        BooleanOutcomePair conditionOutcomes =
+            traverseWithinShortCircuitingBinOp(assertedNode, scope);
+        scope = reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
+            assertedNode, conditionOutcomes.getOutcomeFlowScope(
+                assertedNode.getType(), true), true);
       }
-    } else if (assertedNode.getType() == Token.NAME) {
+    } else if (assertedNodeName != null) {
       // Handle assertions that enforce expressions are of a certain type.
       JSType type = getJSType(assertedNode);
       JSType narrowed = type.getGreatestSubtype(getNativeType(assertedType));
       if (type != narrowed) {
         scope = scope.createChildFlowScope();
-        redeclare(scope, assertedNode.getString(), narrowed);
+        redeclare(scope, assertedNodeName, narrowed);
       }
     }
     return scope;

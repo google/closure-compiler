@@ -16,17 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Collects information mapping the generated (compiled) source back to
@@ -37,6 +34,7 @@ import java.util.Map;
  * @see CodePrinter
  *
 *
+ * @author johnlenz@google.com (John Lenz)
  */
 public class SourceMap {
 
@@ -51,7 +49,7 @@ public class SourceMap {
     int id;
 
     /**
-     * The input source file.
+     * The JSON escaped input source file.
      */
     String sourceFile;
 
@@ -75,7 +73,7 @@ public class SourceMap {
     Position endPosition;
 
     /**
-     * The original name of the token found at the position
+     * The JSON escaped original name of the token found at the position
      * represented by this mapping (if any).
      */
     String originalName;
@@ -86,75 +84,17 @@ public class SourceMap {
     void appendTo(Appendable out) throws IOException {
       out.append("[");
 
-      out.append(escapeString(sourceFile));
+      out.append(sourceFile);
 
       out.append(",");
-      out.append(originalPosition.getLineNumber() + "");
+      out.append(String.valueOf(originalPosition.getLineNumber()));
 
       out.append(",");
-      out.append(originalPosition.getCharacterIndex() + "");
+      out.append(String.valueOf(originalPosition.getCharacterIndex()));
 
       if (originalName != null) {
         out.append(",");
-        out.append(escapeString(originalName));
-      }
-
-      out.append("]");
-    }
-  }
-
-
-  /**
-   * Information about a particular line in the compiled (generated) source.
-   */
-  private static class LineMapping {
-    /**
-     * The line number of this line (indexed by 0).
-     */
-    int lineNumber;
-
-    /**
-     * The number of characters on this line.
-     * Note: This is not guarenteed to be accurate, but
-     * rather merely reflects the number of characters as
-     * known by the source map, which is good enough for
-     * our purposes (because we do not have any information
-     * for the missing characters anyway).
-     */
-    int length;
-
-    /**
-     * The list of all character mappings. Equivalent
-     * to the values found in the charToMap.
-     */
-    List<LineCharMapping> characterMappings = Lists.newArrayList();
-
-    /**
-     * A mapping of each character index on the line to
-     * its equivalent LineCharMapping describing that character's
-     * original source file and location.
-     */
-    Map<Integer, LineCharMapping> charToMap = Maps.newHashMap();
-
-    /**
-     * Appends the line mapping's character map to the given
-     * buffer.
-     */
-    void appendCharMapTo(Appendable out) throws IOException {
-      out.append("[");
-
-      for (int j = 0; j <= length; ++j) {
-        if (j > 0) {
-          out.append(",");
-        }
-
-        LineCharMapping current = charToMap.get(j);
-
-        if (current == null) {
-          out.append("-1");
-        } else {
-          out.append(String.valueOf(current.basisMapping.id));
-        }
+        out.append(originalName);
       }
 
       out.append("]");
@@ -162,29 +102,7 @@ public class SourceMap {
   }
 
   /**
-   * Maps a range of characters in the compiled source file
-   * back to a given Mapping.
-   */
-  private static class LineCharMapping {
-    /**
-     * The starting character in the compiled code.
-     */
-    int startCharacter;
-
-    /**
-     * The ending character in the compiled code.
-     */
-    int endCharacter;
-
-    /**
-     * The mapping associated with this character range
-     * on the line(s) in the compiled code.
-     */
-    Mapping basisMapping;
-  }
-
-  /**
-   * The list of mappings stored in this map.
+   * A pre-order traversal ordered list of mappings stored in this map.
    */
   private List<Mapping> mappings = Lists.newArrayList();
 
@@ -209,14 +127,20 @@ public class SourceMap {
   }
 
   /**
-   * Adds a mapping for the given node.
+   * Cache of escaped source file name.
+   */
+  private String lastSourceFile = null;
+  private String lastSourceFileEscaped = null;
+
+  /**
+   * Adds a mapping for the given node.  Mappings must be added in order.
    *
    * @param node The node that the new mapping represents.
    * @param startPosition The position on the starting line
    * @param endPosition The position on the ending line.
    */
   void addMapping(Node node, Position startPosition, Position endPosition) {
-    Object sourceFile = node.getProp(Node.SOURCEFILE_PROP);
+    String sourceFile = (String)node.getProp(Node.SOURCEFILE_PROP);
 
     // If the node does not have an associated source file or
     // its line number is -1, then the node does not have sufficient
@@ -225,17 +149,24 @@ public class SourceMap {
       return;
     }
 
+    // The source file rarely changes, so cache the escaped string.
+    String escapedSourceFile;
+    if (lastSourceFile != sourceFile) {  // yes, "s1 != s2" not "!s1.equals(s2)"
+      lastSourceFile = sourceFile;
+      lastSourceFileEscaped = escapeString(sourceFile);
+    }
+    escapedSourceFile = lastSourceFileEscaped;
+
     // Create the new mapping.
     Mapping mapping = new Mapping();
     mapping.id = mappings.size();
-    mapping.sourceFile = sourceFile.toString();
+    mapping.sourceFile = escapedSourceFile;
     mapping.originalPosition = new Position(node.getLineno(), node.getCharno());
 
-    Object originalName = node.getProp(Node.ORIGINALNAME_PROP);
+    String originalName = (String)node.getProp(Node.ORIGINALNAME_PROP);
     if (originalName != null) {
-      mapping.originalName = originalName.toString();
+      mapping.originalName = escapeString(originalName);
     }
-
 
     // If the mapping is found on the first line, we need to offset
     // its character position by the number of characters found on
@@ -299,6 +230,9 @@ public class SourceMap {
    * @param offsetIndex The column index of the current character being printed.
    */
   void setStartingPosition(int offsetLine, int offsetIndex) {
+    // TODO(johnlenz): correct this.
+    // Preconditions.checkState(mappings.isEmpty(),
+    //     "Must be set prior to adding mappings");
     offsetPosition = new Position(offsetLine, offsetIndex);
   }
 
@@ -312,179 +246,16 @@ public class SourceMap {
   }
 
   /**
-   * Return structure from a determineLineMappings() call.
+   * Scan the mappings and return the last line mapped.
    */
-  private static class LineMappingInformation {
-    Map<Integer, LineMapping> mappings;
-    int maxLine;
-
-    public LineMappingInformation(Map<Integer, LineMapping> mappings,
-                                  int maxLine) {
-      this.maxLine = maxLine;
-      this.mappings = mappings;
-    }
-  }
-
-  /**
-   * Build the list of mappings per line and per each character on
-   * that line. This will allow consumers of this source map to ask:
-   * "Which mapping best describes this character on this line in the
-   * generated source code?".
-   */
-  private LineMappingInformation determineLineMappings() {
+  private int findLastLine() {
     int maxLine = 0;
-    Map<Integer, LineMapping> lineMappings = Maps.newHashMap();
-
     for (Mapping mapping : mappings) {
-      int prefixLine = prefixPosition.getLineNumber();
-
-      int startPositionLine =
-          prefixLine + mapping.startPosition.getLineNumber();
-
-      int endPositionLine = prefixLine + mapping.endPosition.getLineNumber();
-
-      // Determine the size of the line.
+      int endPositionLine = mapping.endPosition.getLineNumber();
       maxLine = Math.max(maxLine, endPositionLine);
-
-      // Iterate over each (possibly partial) line in the generated file that
-      // this mapping represents.
-      for (int i = startPositionLine; i <= endPositionLine; ++i) {
-        LineMapping lineMapping = lineMappings.get(i);
-
-        // If there is no line mapping for the current line, create it.
-        if (lineMapping == null) {
-          lineMapping = new LineMapping();
-          lineMapping.lineNumber = i;
-          lineMappings.put(i, lineMapping);
-        }
-
-        int startCharacter = mapping.startPosition.getCharacterIndex();
-
-        // If this is the first line of the generated source file
-        // (before we consider the prefix added), then add the
-        // offset on the line caused by the inclusion of the prefix.
-        if (mapping.startPosition.getLineNumber() == 0) {
-          startCharacter += prefixPosition.getCharacterIndex();
-        }
-
-        int endCharacter = mapping.endPosition.getCharacterIndex();
-
-        if (mapping.endPosition.getLineNumber() == 0) {
-          endCharacter += prefixPosition.getCharacterIndex();
-        }
-
-        // Set the length of the current line's mapping.
-        lineMapping.length = Math.max(lineMapping.length, endCharacter);
-
-        // If we are not on the starting line, then it means the current
-        // mapping is multiline and must start on the 0th character.
-        if (i > startPositionLine) {
-          startCharacter = 0;
-        }
-
-        // If we are not on the ending line, then it means the current
-        // mapping is multiline and must start on the last character.
-        if (i < endPositionLine) {
-          endCharacter = Integer.MAX_VALUE;
-        }
-
-        // Create the line character mapping for this character.
-        LineCharMapping lcm = new LineCharMapping();
-        lcm.startCharacter = startCharacter;
-        lcm.endCharacter = endCharacter;
-        lcm.basisMapping = mapping;
-
-        lineMapping.characterMappings.add(lcm);
-      }
     }
-
-    return new LineMappingInformation(lineMappings, maxLine);
-  }
-
-
-  /**
-   * For each character on each of the lines, find the LineCharMapping which
-   * best represents the generation of that character. This is done by finding
-   * ALL the LineCharMappings which span that character and then taking the one
-   * with the *smallest* span. For example, this means that if you have an LCM
-   * representing a block and an LCM inside of it representing a string literal,
-   * the string literal will (correctly) be chosen, because its span is smaller
-   * than that of the block for the characters representing the string literal.
-   */
-  private void buildCharacterMappings(Collection<LineMapping> lineMappings) {
-    for (LineMapping lineMapping : lineMappings) {
-      for (int i = 0; i <= lineMapping.length; ++i) {
-        int minLength = Integer.MAX_VALUE;
-        LineCharMapping current = null;
-
-        Collections.sort(lineMapping.characterMappings,
-            new Comparator<LineCharMapping>() {
-            @Override
-            public int compare(LineCharMapping first, LineCharMapping second) {
-              Mapping firstBasis = first.basisMapping;
-              Mapping secondBasis = second.basisMapping;
-
-              String firstName = firstBasis.originalName;
-              String secondName = secondBasis.originalName;
-
-              firstName = firstName == null ? "" : firstName;
-              secondName = secondName == null ? "" : secondName;
-
-              return firstName.compareTo(secondName);
-            }
-          });
-
-        for (LineCharMapping lcm : lineMapping.characterMappings) {
-          // Ignore LCMs that do not include the current character.
-          if (i < lcm.startCharacter || i > lcm.endCharacter) {
-            continue;
-          }
-
-          int lcmLength = lcm.endCharacter - lcm.startCharacter;
-
-          // Give precedence to items with names.
-          if (lcmLength == minLength && lcm.basisMapping.originalName != null) {
-            current = lcm;
-            continue;
-          }
-
-          if (lcmLength < minLength) {
-            minLength = lcmLength;
-            current = lcm;
-          }
-        }
-
-        lineMapping.charToMap.put(i, current);
-      }
-    }
-  }
-
-  /**
-   * Retrieves the mapping for the given position in the generated source file.
-   */
-  Mapping getMappingFor(Position position) {
-    // Build the map for each line.
-    LineMappingInformation info = determineLineMappings();
-    Map<Integer, LineMapping> lineMappings = info.mappings;
-
-    // Build the character maps for each line.
-    buildCharacterMappings(lineMappings.values());
-
-    LineMapping lineMapping = lineMappings.get(position.getLineNumber());
-
-    if (lineMapping == null) {
-      return null;
-    }
-
-    LineCharMapping lcm =
-        lineMapping.charToMap.get(position.getCharacterIndex());
-
-
-    if (lcm == null) {
-      return null;
-    }
-
-    return lcm.basisMapping;
+    // Adjust for the prefix.
+    return maxLine + prefixPosition.getLineNumber();
   }
 
   /**
@@ -495,15 +266,6 @@ public class SourceMap {
    *   represents.
    */
   public void appendTo(Appendable out, String name) throws IOException {
-    // Build the map for each line.
-    LineMappingInformation info = determineLineMappings();
-
-    Map<Integer, LineMapping> lineMappings = info.mappings;
-    int maxLine = info.maxLine;
-
-    // Build the character maps for each line.
-    buildCharacterMappings(lineMappings.values());
-
     // Write the mappings out to the file. The format of the generated
     // source map is three sections, each deliminated by a magic comment.
     //
@@ -535,30 +297,21 @@ public class SourceMap {
     // 11) ["c.js", 1, 4]
     // 12) ["d.js", 3, 78, "foo"]
 
+    int maxLine = findLastLine();
+
     // Add the line character maps.
     out.append("/** Begin line maps. **/{ \"file\" : ");
     out.append(escapeString(name));
     out.append(", \"count\": ");
-    out.append((maxLine + 1) + "");
+    out.append(String.valueOf(maxLine + 1));
     out.append(" }\n");
-
-    for (int i = 0; i <= maxLine; ++i) {
-      LineMapping lineMapping = lineMappings.get(i);
-
-      if (lineMapping == null) {
-        out.append("[]");
-      } else {
-        lineMapping.appendCharMapTo(out);
-      }
-
-      out.append("\n");
-    }
+    (new LineMapper(out)).appendLineMappings();
 
     // Add the source file maps.
     out.append("/** Begin file information. **/\n");
 
-    // Add legacy file mapping section.  This data is never used but it is
-    // need for the current file format.
+    // This section is unused but we need one entry per line to
+    // prevent changing the format.
     for (int i = 0; i <= maxLine; ++i) {
       out.append("[]\n");
     }
@@ -566,10 +319,188 @@ public class SourceMap {
     // Add the mappings themselves.
     out.append("/** Begin mapping definitions. **/\n");
 
-    for (int i = 0; i < mappings.size(); ++i) {
-      Mapping mapping = mappings.get(i);
+    for (Mapping mapping : mappings) {
       mapping.appendTo(out);
       out.append("\n");
+    }
+  }
+
+  /**
+   * A class to build the line/character to mappings section
+   * of the source map.
+   */
+  private class LineMapper {
+    // The destination.
+    private final Appendable out;
+    // The last line and column written
+    private int line;
+    private int col;
+    // Whether the current line has had a value written yet.
+    private boolean firstChar = true;
+
+    private final static int UNMAPPED = -1;
+    private final static String UNMAPPED_STRING = "-1";
+
+    LineMapper(Appendable out) {
+      this.out = out;
+    }
+
+    // Append the line mapping entries.
+    void appendLineMappings() throws IOException {
+      Preconditions.checkState(!mappings.isEmpty());
+
+      // Start the first line.
+      openLine();
+
+      // The mapping list is ordered as a pre-order traversal.  The mapping
+      // positions give us enough information to rebuild the stack and this
+      // allows the building of the source map in O(n) time.
+      Deque<Mapping> stack = new ArrayDeque<Mapping>();
+      for (Mapping m : mappings) {
+        // Find the closest ancestor of the current mapping:
+        // An overlapping mapping is an ancestor of the current mapping, any
+        // non-overlapping mappings are siblings (or cousins) and must be
+        // closed in the reverse order of when they encountered.
+        while (!stack.isEmpty() && !isOverlapped(stack.peek(), m)) {
+          Mapping previous = stack.pop();
+          writeClosedMapping(previous);
+        }
+
+        // Any gaps between the current line position and the start of the
+        // current mapping belong to the parent.
+        Mapping parent = stack.peek();
+        writeCharsBetween(parent, m);
+
+        stack.push(m);
+      }
+
+      // There are no more children to be had, simply close the remaining
+      // mappings in the reverse order of when they encountered.
+      while (!stack.isEmpty()) {
+        Mapping m = stack.pop();
+        writeClosedMapping(m);
+      }
+
+      // And close the final line.
+      closeLine();
+    }
+
+    /**
+     * Begin the entry for a new line.
+     */
+    private void openLine() throws IOException {
+      out.append("[");
+      this.firstChar = true;
+    }
+
+    /**
+     * End the entry for a line.
+     */
+    private void closeLine() throws IOException {
+      out.append("]\n");
+    }
+
+    /**
+     * Add a new char position entry.
+     * @param id The mapping id to record.
+     */
+    private void addCharEntry(String id) throws IOException {
+      if (firstChar) {
+        firstChar = false;
+      } else {
+        out.append(",");
+      }
+      out.append(id);
+    }
+
+    /**
+     * @return The line adjusted for the prefix position.
+     */
+    private int getAdjustedLine(Position p) {
+      return p.getLineNumber() + prefixPosition.getLineNumber();
+    }
+
+    /**
+     * @return The column adjusted for the prefix position.
+     */
+    private int getAdjustedCol(Position p) {
+      int rawLine = p.getLineNumber();
+      int rawCol = p.getCharacterIndex();
+      // Only the first line needs the character position adjusted.
+      return (rawLine != 0)
+          ? rawCol : rawCol + prefixPosition.getCharacterIndex();
+    }
+
+    /**
+     * @return Whether m1 ends before m2 starts.
+     */
+    private boolean isOverlapped(Mapping m1, Mapping m2) {
+      // No need to use adjusted values here, relative positions are sufficient.
+      int l1 = m1.endPosition.getLineNumber();
+      int l2 = m2.startPosition.getLineNumber();
+      int c1 = m1.endPosition.getCharacterIndex();
+      int c2 = m2.startPosition.getCharacterIndex();
+
+      return (l1 == l2 && c1 >= c2) || l1 > l2;
+    }
+
+    /**
+     * Write any needed entries from the current position to the end of the
+     * provided mapping.
+     */
+    private void writeClosedMapping(Mapping m) throws IOException {
+      int nextLine = getAdjustedLine(m.endPosition);
+      int nextCol = getAdjustedCol(m.endPosition);
+      // If this anything remaining in this mapping beyond the
+      // current line and column position, write it out now.
+      if (line < nextLine || (line == nextLine && col < nextCol)) {
+        writeCharsUpTo(nextLine, nextCol, m.id);
+      }
+    }
+
+    /**
+     * Write any needed entries to complete the provided mapping.
+     */
+    private void writeCharsBetween(Mapping prev, Mapping next)
+        throws IOException {
+      int nextLine = getAdjustedLine(next.startPosition);
+      int nextCol = getAdjustedCol(next.startPosition);
+      // If the previous value is null, no mapping exists use the special
+      // "unmapped value"(-1).
+      int id = (prev != null) ? prev.id : UNMAPPED;
+      writeCharsUpTo(nextLine, nextCol, id);
+    }
+
+    /**
+     * Write any entries needed between the current position the next position
+     * and update the current position.
+     */
+    private void writeCharsUpTo(
+        int nextLine, int nextCol, int id)
+        throws IOException {
+      Preconditions.checkState(line <= nextLine, "");
+      Preconditions.checkState(line < nextLine || col <= nextCol);
+
+      if (line == nextLine && col == nextCol) {
+        // Nothing to do.
+        return;
+      }
+
+      String idString = (id == UNMAPPED) ? UNMAPPED_STRING : String.valueOf(id);
+      for (int i = line; i <= nextLine; i++) {
+        if (i == nextLine) {
+          for (int j = col; j < nextCol; j++) {
+            addCharEntry(idString);
+          }
+          break;
+        }
+
+        closeLine();
+        openLine();
+      }
+
+      line = nextLine;
+      col = nextCol;
     }
   }
 }

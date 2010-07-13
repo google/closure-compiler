@@ -151,6 +151,18 @@ public class ScopedAliasesTest extends CompilerTestCase {
     testScopedNoChanges("var x = goog.dom;", "y.x();");
   }
 
+  public void testShadowedVar() {
+    test("var Popup = {};" +
+         "var OtherPopup = {};" +
+         "goog.scope(function() {" +
+         "  var Popup = OtherPopup;" +
+         "  Popup.newMethod = function() { return new Popup(); };" +
+         "});",
+         "var Popup = {};" +
+         "var OtherPopup = {};" +
+         "OtherPopup.newMethod = function() { return new OtherPopup(); };");
+  }
+
   private void testTypes(String aliases, String code) {
     testScopedNoChanges(aliases, code);
     Compiler lastCompiler = getLastCompiler();
@@ -321,6 +333,11 @@ public class ScopedAliasesTest extends CompilerTestCase {
   public void testAliasRedefinition() {
     testScopedFailure("var x = goog.dom; x = goog.events;",
         ScopedAliases.GOOG_SCOPE_ALIAS_REDEFINED);
+  }
+
+  public void testAliasNonRedefinition() {
+    test("var y = {}; goog.scope(function() { goog.dom = y; });",
+         "var y = {}; goog.dom = y;");
   }
 
   public void testScopedReturn() {

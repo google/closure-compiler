@@ -107,6 +107,7 @@
     <jar destfile="${jarfile}" update="true">
       <zipfileset src="${lib.dir}/ant_deploy.jar" />
       <zipfileset src="${lib.dir}/args4j_deploy.jar" />
+      <zipfileset src="${lib.dir}/json.jar" />
       <zipfileset src="${lib.dir}/junit.jar" />
       <zipfileset src="${lib.dir}/hamcrest-core-1.1.jar" />
       <zipfileset src="${lib.dir}/google_common_deploy.jar" />
