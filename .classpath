@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-        <classpathentry kind="src" path="gen"/>
-        <classpathentry kind="src" path="src"/>
-        <classpathentry kind="src" path="test"/>
-        <classpathentry kind="lib" path="lib/google_common_deploy.jar"/>
-        <classpathentry kind="lib" path="lib/protobuf_deploy.jar"/>
-        <classpathentry kind="lib" path="lib/libtrunk_rhino_parser_jarjared.jar"/>
-        <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-        <classpathentry kind="lib" path="lib/ant_deploy.jar"/>
-        <classpathentry kind="lib" path="lib/args4j_deploy.jar"/>
-        <classpathentry kind="lib" path="lib/hamcrest-core-1.1.jar"/>
-        <classpathentry kind="lib" path="lib/junit.jar"/>
-        <classpathentry kind="output" path="build/classes"/>
+	<classpathentry kind="src" path="gen"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="lib" path="lib/google_common_deploy.jar"/>
+	<classpathentry kind="lib" path="lib/protobuf_deploy.jar"/>
+	<classpathentry kind="lib" path="lib/libtrunk_rhino_parser_jarjared.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/ant_deploy.jar"/>
+	<classpathentry kind="lib" path="lib/args4j_deploy.jar"/>
+	<classpathentry kind="lib" path="lib/hamcrest-core-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/junit.jar"/>
+	<classpathentry kind="lib" path="lib/json.jar"/>
+	<classpathentry kind="output" path="build/classes"/>
 </classpath>

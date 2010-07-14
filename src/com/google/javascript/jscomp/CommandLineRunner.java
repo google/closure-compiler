@@ -54,7 +54,7 @@ import java.util.zip.ZipInputStream;
  * Example:
  * <pre>
  * class MyCommandLineRunner extends CommandLineRunner {
- *   MyCommandLineRunner(String[] args) throws CmdLineException {
+ *   MyCommandLineRunner(String[] args) {
  *     super(args);
  *   }
  *
@@ -65,9 +65,10 @@ import java.util.zip.ZipInputStream;
  *   }
  *
  *   public static void main(String[] args) {
- *     try {
- *       (new MyCommandLineRunner(args)).run();
- *     } catch (CmdLineException e) {
+ *     MyCommandLineRunner runner = new MyCommandLineRunner(args);
+ *     if (runner.shouldRunCompiler()) {
+ *       runner.run();
+ *     } else {
  *       System.exit(-1);
  *     }
  *   }
