@@ -181,6 +181,8 @@ public class GraphColoringTest extends TestCase {
       public int compare(String o1, String o2) {
         if (o1.equals("D")) {
           return -1;
+        } else if (o2.equals("D")) {
+          return 1;
         } else {
           return o1.toString().compareTo(o2.toString());
         }

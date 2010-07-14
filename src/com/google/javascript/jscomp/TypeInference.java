@@ -545,14 +545,17 @@ class TypeInference
    * Defines a property if the property has not been defined yet.
    */
   private void ensurePropertyDefined(Node getprop, JSType rightType) {
+    String propName = getprop.getLastChild().getString();
+    JSType nodeType = getJSType(getprop.getFirstChild());
     ObjectType objectType = ObjectType.cast(
-        getJSType(getprop.getFirstChild()).restrictByNotNullOrUndefined());
-    if (objectType != null) {
+        nodeType.restrictByNotNullOrUndefined());
+    if (objectType == null) {
+      registry.registerPropertyOnType(propName, nodeType);
+    } else {
       if (ensurePropertyDeclaredHelper(getprop, objectType)) {
         return;
       }
 
-      String propName = getprop.getLastChild().getString();
       if (!objectType.isPropertyTypeDeclared(propName)) {
         // We do not want a "stray" assign to define an inferred property
         // for every object of this type in the program. So we use a heuristic

@@ -6939,6 +6939,37 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         false);
   }
 
+  public void testMissingProperty30() throws Exception {
+    testTypes(
+        "/** @return {*} */" +
+        "function f() {" +
+        " return {};" +
+        "}" +
+        "f().a = 3;" +
+        "/** @param {Object} y */ function g(y) { return y.a; }");
+  }
+
+  public void testMissingProperty31() throws Exception {
+    testTypes(
+        "/** @return {Array|number} */" +
+        "function f() {" +
+        " return [];" +
+        "}" +
+        "f().a = 3;" +
+        "/** @param {Array} y */ function g(y) { return y.a; }");
+  }
+
+  public void testMissingProperty32() throws Exception {
+    testTypes(
+        "/** @return {Array|number} */" +
+        "function f() {" +
+        " return [];" +
+        "}" +
+        "f().a = 3;" +
+        "/** @param {Date} y */ function g(y) { return y.a; }",
+        "Property a never defined on Date");
+  }
+
   public void testDeclaredNativeTypeEquality() throws Exception {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
     assertEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),

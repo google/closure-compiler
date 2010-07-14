@@ -584,7 +584,25 @@ public class JSTypeRegistry implements Serializable {
    * ("if this property is assigned anywhere in the program, it must
    * show up in the type registry").
    */
-  public void registerPropertyOnType(String propertyName, ObjectType owner) {
+  public void registerPropertyOnType(String propertyName, JSType type) {
+    ObjectType owner = null;
+
+    // Properties can only be defined on object types, so normalize everything
+    // to discrete object types.
+    if (type instanceof ObjectType) {
+      owner = (ObjectType) type;
+    } else if (getNativeType(ALL_TYPE).isSubtype(type)) {
+      owner = getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+    } else if (type instanceof UnionType) {
+      for (JSType alternate : ((UnionType) type).getAlternates()) {
+        registerPropertyOnType(propertyName, alternate);
+      }
+    }
+
+    if (owner == null) {
+      return;
+    }
+
     Set<ObjectType> typeSet = typesIndexedByProperty.get(propertyName);
     if (typeSet == null) {
       typesIndexedByProperty.put(propertyName, typeSet = Sets.newHashSet());
