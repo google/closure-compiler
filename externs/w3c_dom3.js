@@ -86,6 +86,7 @@ NameList.prototype.length;
  * @param {string} str
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-contains
+ * @nosideeffects
  */
 NameList.prototype.contains = function(str) {};
 
@@ -94,6 +95,7 @@ NameList.prototype.contains = function(str) {};
  * @param {string} name
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-containsNS
+ * @nosideeffects
  */
 NameList.prototype.containsNS = function(namespaceURI, name) {};
 
@@ -101,6 +103,7 @@ NameList.prototype.containsNS = function(namespaceURI, name) {};
  * @param {number} index
  * @return {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-getName
+ * @nosideeffects
  */
 NameList.prototype.getName = function(index) {};
 
@@ -108,6 +111,7 @@ NameList.prototype.getName = function(index) {};
  * @param {number} index
  * @return {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#NameList-getNamespaceURI
+ * @nosideeffects
  */
 NameList.prototype.getNamespaceURI = function(index) {};
 
@@ -127,6 +131,7 @@ DOMImplementationList.prototype.length;
  * @param {number} index
  * @return {DOMImplementation}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMImplementationList-item
+ * @nosideeffects
  */
 DOMImplementationList.prototype.item = function(index) {};
 
@@ -142,6 +147,7 @@ function DOMImplementationSource() {}
  * @param {DocumentType} doctype
  * @return {Document}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-2-Core-DOM-createDocument
+ * @nosideeffects
  */
 DOMImplementation.prototype.createDocument = function(namespaceURI, publicId, doctype) {};
 
@@ -151,6 +157,7 @@ DOMImplementation.prototype.createDocument = function(namespaceURI, publicId, do
  * @param {string} systemId
  * @return {DocumentType}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-2-Core-DOM-createDocType
+ * @nosideeffects
  */
 DOMImplementation.prototype.createDocumentType = function(qualifiedName, publicId, systemId) {};
 
@@ -158,6 +165,7 @@ DOMImplementation.prototype.createDocumentType = function(qualifiedName, publicI
  * @param {string} features
  * @return {DOMImplementation}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-getDOMImpl
+ * @nosideeffects
  */
 DOMImplementationSource.prototype.getDOMImplementation = function(features) {};
 
@@ -165,6 +173,7 @@ DOMImplementationSource.prototype.getDOMImplementation = function(features) {};
  * @param {string} features
  * @return {DOMImplementationList}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-getDOMImpls
+ * @nosideeffects
  */
 DOMImplementationSource.prototype.getDOMImplementationList = function(features) {};
 
@@ -173,6 +182,7 @@ DOMImplementationSource.prototype.getDOMImplementationList = function(features) 
  * @param {string} version
  * @return {Object}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMImplementation3-getFeature
+ * @nosideeffects
  */
 DOMImplementation.prototype.getFeature = function(feature, version) {};
 
@@ -260,6 +270,7 @@ Node.prototype.textContent;
  * @param {Node} other
  * @return {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-compareDocumentPosition
+ * @nosideeffects
  */
 Node.prototype.compareDocumentPosition = function(other) {};
 
@@ -268,6 +279,7 @@ Node.prototype.compareDocumentPosition = function(other) {};
  * @param {string} version
  * @return {Object}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-getFeature
+ * @nosideeffects
  */
 Node.prototype.getFeature = function(feature, version) {};
 
@@ -275,12 +287,14 @@ Node.prototype.getFeature = function(feature, version) {};
  * @param {string} key
  * @return {Object}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-getUserData
+ * @nosideeffects
  */
 Node.prototype.getUserData = function(key) {};
 
 /**
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-NodeHasAttrs
+ * @nosideeffects
  */
 Node.prototype.hasAttributes = function() {};
 
@@ -288,6 +302,7 @@ Node.prototype.hasAttributes = function() {};
  * @param {string} namespaceURI
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isDefaultNamespace
+ * @nosideeffects
  */
 Node.prototype.isDefaultNamespace = function(namespaceURI) {};
 
@@ -295,6 +310,7 @@ Node.prototype.isDefaultNamespace = function(namespaceURI) {};
  * @param {Node} arg
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isEqualNode
+ * @nosideeffects
  */
 Node.prototype.isEqualNode = function(arg) {};
 
@@ -302,6 +318,7 @@ Node.prototype.isEqualNode = function(arg) {};
  * @param {Node} other
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isSameNode
+ * @nosideeffects
  */
 Node.prototype.isSameNode = function(other) {};
 
@@ -310,6 +327,7 @@ Node.prototype.isSameNode = function(other) {};
  * @param {string} version
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-2-Core-Node-supports
+ * @nosideeffects
  */
 Node.prototype.isSupported = function(feature, version) {};
 
@@ -317,6 +335,7 @@ Node.prototype.isSupported = function(feature, version) {};
  * @param {string} prefix
  * @return {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-lookupNamespaceURI
+ * @nosideeffects
  */
 Node.prototype.lookupNamespaceURI = function(prefix) {};
 
@@ -324,6 +343,7 @@ Node.prototype.lookupNamespaceURI = function(prefix) {};
  * @param {string} namespaceURI
  * @return {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-lookupNamespacePrefix
+ * @nosideeffects
  */
 Node.prototype.lookupPrefix = function(namespaceURI) {};
 
@@ -346,6 +366,7 @@ Node.prototype.setUserData = function(key, data, handler) {};
  * @param {string} query
  * @return {Node}
  * @see http://www.w3.org/TR/selectors-api/#queryselector
+ * @nosideeffects
  */
 Node.prototype.querySelector = function(query) {};
 
@@ -353,6 +374,7 @@ Node.prototype.querySelector = function(query) {};
  * @param {string} query
  * @return {!NodeList}
  * @see http://www.w3.org/TR/selectors-api/#queryselectorall
+ * @nosideeffects
  */
 Node.prototype.querySelectorAll = function(query) {};
 
@@ -385,6 +407,7 @@ Element.prototype.schemaTypeInfo;
  * @param {string} localName
  * @return {Attr}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElGetAtNodeNS
+ * @nosideeffects
  */
 Element.prototype.getAttributeNodeNS = function(namespaceURI, localName) {};
 
@@ -393,6 +416,7 @@ Element.prototype.getAttributeNodeNS = function(namespaceURI, localName) {};
  * @param {string} localName
  * @return {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElGetAttrNS
+ * @nosideeffects
  */
 Element.prototype.getAttributeNS = function(namespaceURI, localName) {};
 
@@ -401,6 +425,7 @@ Element.prototype.getAttributeNS = function(namespaceURI, localName) {};
  * @param {string} localName
  * @return {!NodeList}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-A6C90942
+ * @nosideeffects
  */
 Element.prototype.getElementsByTagNameNS = function(namespaceURI, localName) {};
 
@@ -408,6 +433,7 @@ Element.prototype.getElementsByTagNameNS = function(namespaceURI, localName) {};
  * @param {string} name
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElHasAttr
+ * @nosideeffects
  */
 Element.prototype.hasAttribute = function(name) {};
 
@@ -416,6 +442,7 @@ Element.prototype.hasAttribute = function(name) {};
  * @param {string} localName
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElHasAttrNS
+ * @nosideeffects
  */
 Element.prototype.hasAttributeNS = function(namespaceURI, localName) {};
 
@@ -473,6 +500,7 @@ Element.prototype.setIdAttributeNS = function(namespaceURI, localName, isId) {};
 /**
  * @type {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Text3-isElementContentWhitespace
+ * @nosideeffects
  */
 Text.prototype.isElementContentWhitespace;
 
@@ -537,6 +565,7 @@ TypeInfo.prototype.typeNamespace;
  * @param {number} derivationMethod
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo-isDerivedFrom
+ * @nosideeffects
  */
 TypeInfo.prototype.isDerivedFrom = function(typeNamespaceArg, typeNameArg, derivationMethod) {};
 
@@ -701,6 +730,7 @@ DOMConfiguration.prototype.parameterNames;
  * @param {string} name
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMConfiguration-canSetParameter
+ * @nosideeffects
  */
 DOMConfiguration.prototype.canSetParameter = function(name) {};
 
@@ -708,6 +738,7 @@ DOMConfiguration.prototype.canSetParameter = function(name) {};
  * @param {string} name
  * @return {*}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMConfiguration-getParameter
+ * @nosideeffects
  */
 DOMConfiguration.prototype.getParameter = function(name) {};
 

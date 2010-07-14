@@ -844,12 +844,13 @@ class TypeInference
    */
   private void updateTypeOfParametersOnClosure(Node n, FunctionType fnType) {
     int i = 0;
+    int childCount = n.getChildCount();
     for (Node iParameter : fnType.getParameters()) {
       JSType iParameterType = iParameter.getJSType();
       if (iParameterType instanceof FunctionType) {
         FunctionType iParameterFnType = (FunctionType) iParameterType;
 
-        if (i + 1 >= n.getChildCount()) {
+        if (i + 1 >= childCount) {
           // TypeCheck#visitParametersList will warn so we bail.
           return;
         }
@@ -878,13 +879,14 @@ class TypeInference
     }
 
     int i = 0;
+    int childCount = n.getChildCount();
     // Find the parameter whose type is the template type.
     for (Node iParameter : fnType.getParameters()) {
       JSType iParameterType = getJSType(iParameter);
       iParameterType = iParameterType.restrictByNotNullOrUndefined();
       if (iParameterType.isTemplateType()) {
         // Find the actual type of this argument.
-        if (i + 1 >= n.getChildCount()) {
+        if (i + 1 >= childCount) {
           // TypeCheck#visitParameterList will warn so we bail.
           return;
         }
@@ -909,7 +911,7 @@ class TypeInference
               if (jParameterFnType.getTypeOfThis().equals(iParameterType)) {
                 foundTemplateTypeOfThisParameter = true;
                 // Find the actual type of this argument.
-                if (j + 1 >= n.getChildCount()) {
+                if (j + 1 >= childCount) {
                   // TypeCheck#visitParameterList will warn so we bail.
                   return;
                 }

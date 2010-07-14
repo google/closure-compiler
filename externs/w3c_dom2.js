@@ -43,6 +43,7 @@ HTMLCollection.prototype.length;
  * @param {number} index
  * @return {Node}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-33262535
+ * @nosideeffects
  */
 HTMLCollection.prototype.item = function(index) {};
 
@@ -62,6 +63,7 @@ HTMLOptionsCollection.prototype.length;
  * @param {number} index
  * @return {Node}
  * @see http://www.w3.org/TR/DOM-Level-2-HTML/html.html#HTMLOptionsCollection-item
+ * @nosideeffects
  */
 HTMLOptionsCollection.prototype.item = function(index) {};
 
@@ -173,6 +175,7 @@ HTMLDocument.prototype.writeln = function(text) {};
  * @return {!NodeList}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-71555259
  * @override
+ * @nosideeffects
  */
 HTMLDocument.prototype.getElementsByName = function(elementName) {};
 

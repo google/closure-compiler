@@ -97,7 +97,7 @@ class ScopedAliases implements CompilerPass {
       // Remove the alias definitions.
       for (Node aliasDefinition : traversal.getAliasDefinitions()) {
         if (aliasDefinition.getParent().getType() == Token.VAR &&
-            aliasDefinition.getParent().getChildCount() == 1) {
+            aliasDefinition.getParent().hasOneChild()) {
           aliasDefinition.getParent().detachFromParent();
         } else {
           aliasDefinition.detachFromParent();

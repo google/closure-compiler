@@ -107,6 +107,7 @@ function DOMImplementation() {}
  * @param {string} version
  * @return {boolean}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-5CED94D7
+ * @nosideeffects
  */
 DOMImplementation.prototype.hasFeature = function(feature, version) {};
 
@@ -203,12 +204,14 @@ Node.prototype.appendChild = function(newChild) {};
  * @param {boolean} deep
  * @return {Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-cloneNode
+ * @nosideeffects
  */
 Node.prototype.cloneNode = function(deep) {};
 
 /**
  * @return {boolean}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-hasChildNodes
+ * @nosideeffects
  */
 Node.prototype.hasChildNodes = function() {};
 
@@ -349,6 +352,7 @@ Document.prototype.implementation;
  * @param {string} name
  * @return {!Attr}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createAttribute
+ * @nosideeffects
  */
 Document.prototype.createAttribute = function(name) {};
 
@@ -356,6 +360,7 @@ Document.prototype.createAttribute = function(name) {};
  * @param {string} data
  * @return {!Comment}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createComment
+ * @nosideeffects
  */
 Document.prototype.createComment = function(data) {};
 
@@ -363,12 +368,14 @@ Document.prototype.createComment = function(data) {};
  * @param {string} data
  * @return {!CDATASection}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createCDATASection
+ * @nosideeffects
  */
 Document.prototype.createCDATASection = function(data) {};
 
 /**
  * @return {!DocumentFragment}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createDocumentFragment
+ * @nosideeffects
  */
 Document.prototype.createDocumentFragment = function() {};
 
@@ -376,6 +383,7 @@ Document.prototype.createDocumentFragment = function() {};
  * @param {string} tagName
  * @return {!Element}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createElement
+ * @nosideeffects
  */
 Document.prototype.createElement = function(tagName) {};
 
@@ -383,6 +391,7 @@ Document.prototype.createElement = function(tagName) {};
  * @param {string} name
  * @return {!EntityReference}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createEntityReference
+ * @nosideeffects
  */
 Document.prototype.createEntityReference = function(name) {};
 
@@ -391,6 +400,7 @@ Document.prototype.createEntityReference = function(name) {};
  * @param {string} data
  * @return {!ProcessingInstruction}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createProcessingInstruction
+ * @nosideeffects
  */
 Document.prototype.createProcessingInstruction = function(target, data) {};
 
@@ -398,6 +408,7 @@ Document.prototype.createProcessingInstruction = function(target, data) {};
  * @param {string} data
  * @return {!Text}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createTextNode
+ * @nosideeffects
  */
 Document.prototype.createTextNode = function(data) {};
 
@@ -405,6 +416,7 @@ Document.prototype.createTextNode = function(data) {};
  * @param {string} tagname
  * @return {!NodeList}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-A6C9094
+ * @nosideeffects
  */
 Document.prototype.getElementsByTagName = function(tagname) {};
 
@@ -443,6 +455,7 @@ NamedNodeMap.prototype.length;
  * @param {string} name
  * @return {Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1074577549
+ * @nosideeffects
  */
 NamedNodeMap.prototype.getNamedItem = function(name) {};
 
@@ -450,6 +463,7 @@ NamedNodeMap.prototype.getNamedItem = function(name) {};
  * @param {number} index
  * @return {Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-349467F9
+ * @nosideeffects
  */
 NamedNodeMap.prototype.item = function(index) {};
 
@@ -523,6 +537,7 @@ CharacterData.prototype.replaceData = function(offset, count, arg) {};
  * @param {number} count
  * @return {string}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-6531BCCF
+ * @nosideeffects
  */
 CharacterData.prototype.substringData = function(offset, count) {};
 
@@ -570,6 +585,7 @@ Element.prototype.tagName;
  * @return {string}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-getAttribute
  * @see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
+ * @nosideeffects
  */
 Element.prototype.getAttribute = function(name, opt_flags) {};
 
@@ -577,6 +593,7 @@ Element.prototype.getAttribute = function(name, opt_flags) {};
  * @param {string} name
  * @return {Attr}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-getAttributeNode
+ * @nosideeffects
  */
 Element.prototype.getAttributeNode = function(name) {};
 
@@ -584,6 +601,7 @@ Element.prototype.getAttributeNode = function(name) {};
  * @param {string} tagname
  * @return {!NodeList}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1938918D
+ * @nosideeffects
  */
 Element.prototype.getElementsByTagName = function(tagname) {};
 

@@ -352,6 +352,7 @@ Window.prototype.alert = function(message) {};
  *
  * @param {string} encodedData
  * @see https://developer.mozilla.org/en/DOM/window.atob
+ * @nosideeffects
  */
 Window.prototype.atob = function(encodedData) {};
 
@@ -365,6 +366,7 @@ Window.prototype.blur = function() {};
  * @param {string} stringToEncode
  * @return {string}
  * @see https://developer.mozilla.org/en/DOM/window.btoa
+ * @nosideeffects
  */
 Window.prototype.btoa = function(stringToEncode) {};
 
@@ -396,6 +398,7 @@ Window.prototype.confirm = function(message) {};
  * @param {string} regular
  * @return {string}
  * @see https://developer.mozilla.org/en/DOM/window.escape
+ * @nosideeffects
  */
 Window.prototype.escape = function(regular) {};
 
@@ -415,12 +418,14 @@ Window.prototype.getAttention = function() {};
  * @param {Element} element
  * @param {string?} pseudoElt
  * @return {CSSStyleDeclaration}
+ * @nosideeffects
  */
 Window.prototype.getComputedStyle = function(element, pseudoElt) {};
 
 /**
  * @return {Selection}
  * @see https://developer.mozilla.org/en/DOM/window.getSelection
+ * @nosideeffects
  */
 Window.prototype.getSelection = function() {};
 
@@ -456,7 +461,14 @@ Window.prototype.sizeToContent;
  */
 Window.prototype.stop = function() {};
 
-Window.prototype.unescape;
+/**
+ * @param {string} escaped
+ * @return {string}
+ * @see https://developer.mozilla.org/en/DOM/window.unescape
+ * @nosideeffects
+ */
+Window.prototype.unescape = function(escaped) {};
+
 Window.prototype.updateCommands;
 /** @type {?function (Event)} */ Window.prototype.onabort;
 /** @type {?function (Event)} */ Window.prototype.onbeforeunload;
@@ -567,6 +579,7 @@ Document.prototype.createTreeWalker;
  * @param {number} x
  * @param {number} y
  * @return {Element}
+ * @nosideeffects
  */
 Document.prototype.elementFromPoint = function(x, y) {};
 Document.prototype.evaluate;
@@ -575,18 +588,21 @@ Document.prototype.execCommand;
 /**
  * @param {string} s id.
  * @return {HTMLElement}
+ * @nosideeffects
  */
 Document.prototype.getElementById = function(s) {};
 
 /**
  * @param {string} name
  * @return {!NodeList}
+ * @nosideeffects
  */
 Document.prototype.getElementsByClassName = function(name) {};
 
 /**
  * @param {string} name
  * @return {!NodeList}
+ * @nosideeffects
  */
 Document.prototype.getElementsByName = function(name) {};
 
@@ -594,6 +610,7 @@ Document.prototype.getElementsByName = function(name) {};
  * @param {string} namespace
  * @param {string} name
  * @return {!NodeList}
+ * @nosideeffects
  */
 Document.prototype.getElementsByTagNameNS = function(namespace, name) {};
 
@@ -618,7 +635,11 @@ Document.prototype.ononline;
 Document.prototype.onoffline;
 
 // XUL
-/** @return {BoxObject} */
+/**
+ * @see http://developer.mozilla.org/en/DOM/document.getBoxObjectFor
+ * @return {BoxObject}
+ * @nosideeffects
+ */
 Document.prototype.getBoxObjectFor = function(element) {};
 
 // From:
@@ -634,6 +655,7 @@ Range.prototype.createContextualFragment;
  * @param {Node} parent
  * @param {number} offset
  * @return {boolean}
+ * @nosideeffects
  */
 Range.prototype.isPointInRange;
 
@@ -641,18 +663,21 @@ Range.prototype.isPointInRange;
  * @param {Node} parent
  * @param {number} offset
  * @return {number}
+ * @nosideeffects
  */
 Range.prototype.comparePoint;
 
 /**
  * @param {Node} n
  * @return {boolean}
+ * @nosideeffects
  */
 Range.prototype.intersectsNode;
 
 /**
  * @param {Node} n
  * @return {number}
+ * @nosideeffects
  */
 Range.prototype.compareNode;
 
@@ -707,6 +732,7 @@ Selection.prototype.addRange = function(range) {};
  * @param {number} index
  * @return {Range}
  * @see https://developer.mozilla.org/en/DOM/Selection/getRangeAt
+ * @nosideeffects
  */
 Selection.prototype.getRangeAt = function(index) {};
 
@@ -735,6 +761,7 @@ Selection.prototype.collapseToStart = function() {};
  * @param {boolean} partlyContained
  * @return {boolean}
  * @see https://developer.mozilla.org/en/DOM/Selection/containsNode
+ * @nosideeffects
  */
 Selection.prototype.containsNode = function(node, partlyContained) {};
 
@@ -862,6 +889,7 @@ Element.prototype.click = function() {};
 /**
  * @return { {top: number, left: number, right: number, bottom: number} }
  * @see https://developer.mozilla.org/En/DOM:element.getBoundingClientRect
+ * @nosideeffects
  */
 Element.prototype.getBoundingClientRect = function() {};
 
@@ -871,12 +899,14 @@ Element.prototype.focus = function() {};
 /**
  * @return {boolean}
  * @override
+ * @nosideeffects
  */
 Element.prototype.hasAttributes = function() {};
 
 /**
  * @return {boolean}
  * @override
+ * @nosideeffects
  */
 Element.prototype.hasChildNodes = function() {};
 
@@ -1066,6 +1096,7 @@ Navigator.prototype.vendorSub;
 /**
  * @type {function(): boolean}
  * @see https://developer.mozilla.org/en/Navigator.javaEnabled
+ * @nosideeffects
  */
 Navigator.prototype.javaEnabled = function() {};
 

@@ -118,7 +118,7 @@ class CodeGenerator {
     switch (type) {
       case Token.TRY: {
         Preconditions.checkState(first.getNext().getType() == Token.BLOCK &&
-                first.getNext().getChildCount() <= 1);
+                !first.getNext().hasMoreThanOneChild());
         Preconditions.checkState(childCount >= 2 && childCount <= 3);
 
         add("try");

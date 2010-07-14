@@ -105,6 +105,7 @@ XMLDOMDocument.prototype.abort = function() {};
  * @param {string} namespaceURI
  * @return {Node}
  * @see http://msdn.microsoft.com/en-us/library/ms757901(VS.85).aspx
+ * @nosideeffects
  */
 XMLDOMDocument.prototype.createNode = function(type, name, namespaceURI) {};
 
@@ -219,6 +220,7 @@ Node.prototype.xml;
  * @param {string} expression An XPath expression.
  * @return {NodeList}
  * @see http://msdn.microsoft.com/en-us/library/ms754523(VS.85).aspx
+ * @nosideeffects
  */
 Node.prototype.selectNodes = function(expression) {};
 
@@ -226,6 +228,7 @@ Node.prototype.selectNodes = function(expression) {};
  * @param {string} expression An XPath expression.
  * @return {Node}
  * @see http://msdn.microsoft.com/en-us/library/ms757846(VS.85).aspx
+ * @nosideeffects
  */
 Node.prototype.selectSingleNode = function(expression) {};
 
@@ -233,6 +236,7 @@ Node.prototype.selectSingleNode = function(expression) {};
  * @param {Node} stylesheet XSLT stylesheet.
  * @return {string}
  * @see http://msdn.microsoft.com/en-us/library/ms761399(VS.85).aspx
+ * @nosideeffects
  */
 Node.prototype.transformNode = function(stylesheet) {};
 
@@ -1311,6 +1315,7 @@ Element.prototype.canHaveChildren;
  * @return {string} The component of an element located at the specified
  *     coordinates.
  * @see http://msdn.microsoft.com/en-us/library/ms536375(VS.85).aspx
+ * @nosideeffects
  */
 Element.prototype.componentFromPoint = function(iCoordX, iCoordY) {};
 
@@ -1318,6 +1323,7 @@ Element.prototype.componentFromPoint = function(iCoordX, iCoordY) {};
  * @param {Element} el The element to check
  * @return {boolean} If the element is contained within this one.
  * @see http://msdn.microsoft.com/en-us/library/ms536377(VS.85).aspx
+ * @nosideeffects
  */
 Element.prototype.contains = function(el) {};
 

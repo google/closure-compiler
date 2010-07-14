@@ -259,3 +259,16 @@ Description:
 
 Local Modifications:
   Modified apache-ant-1.6.5/bin/ant to look in the ant.runfiles directory
+
+
+---
+Code in:
+lib/json.jar
+URL: http://json.org/java/index.html
+Version: JSON version 2
+License: MIT license
+Description:
+JSON is a set of java files for use in transmitting data in JSON format.
+
+Local Modifications: None
+

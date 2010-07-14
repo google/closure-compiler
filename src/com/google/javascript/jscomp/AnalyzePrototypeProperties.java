@@ -479,7 +479,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public void remove() {
       Node parent = nameNode.getParent();
-      if (parent.getType() == Token.FUNCTION || parent.getChildCount() == 1) {
+      if (parent.getType() == Token.FUNCTION || parent.hasOneChild()) {
         NodeUtil.removeChild(parent.getParent(), parent);
       } else {
         Preconditions.checkState(parent.getType() == Token.VAR);

@@ -430,7 +430,7 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
 
         case Token.VAR:
-          if (n.getChildCount() > 1) {
+          if (n.hasMoreThanOneChild()) {
             if (info != null) {
               // multiple children
               compiler.report(JSError.make(sourceName, n, MULTIPLE_VAR_DEF));

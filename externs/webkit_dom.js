@@ -88,6 +88,7 @@ Selection.prototype.modify = function(alter, direction, granularity) {};
  * @param {string} pseudoElement
  * @param {boolean=} opt_authorOnly
  * @return {CSSRuleList}
+ * @nosideeffects
  */
 ViewCSS.prototype.getMatchedCSSRules =
     function(element, pseudoElement, opt_authorOnly) {};
@@ -97,6 +98,7 @@ ViewCSS.prototype.getMatchedCSSRules =
  * @param {string} name
  * @param {number} width
  * @param {number} height
+ * @nosideeffects
  */
 Document.prototype.getCSSCanvasContext =
     function(contextId, name, width, height) {};

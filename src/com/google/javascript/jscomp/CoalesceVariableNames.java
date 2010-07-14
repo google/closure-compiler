@@ -369,7 +369,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     if (NodeUtil.isForIn(parent)) {
       var.removeChild(name);
       parent.replaceChild(var, name);
-    } else if (var.getChildCount() == 1) {
+    } else if (var.hasOneChild()) {
       // The removal is easy when there is only one variable in the VAR node.
       if (name.hasChildren()) {
         Node value = name.removeFirstChild();
