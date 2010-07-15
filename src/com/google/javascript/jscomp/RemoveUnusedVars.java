@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
@@ -24,7 +26,6 @@ import com.google.javascript.rhino.Token;
 
 import java.util.*;
 import java.util.logging.Logger;
-
 
 /**
  * Garbage collection for variable and function definitions. Basically performs
@@ -49,9 +50,6 @@ class RemoveUnusedVars implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  /** Keeps track of the number of variables removed per instance. */
-  private int numRemoved = 0;
-
   private final boolean removeGlobals;
 
   private boolean preserveFunctionExpressionNames;
@@ -60,6 +58,11 @@ class RemoveUnusedVars implements CompilerPass {
    * Keep track of variables that we've referenced.
    */
   private final Set<Var> referenced = Sets.newHashSet();
+
+  /**
+   * Keep track of assigns to variables that we haven't referenced.
+   */
+  private final Multimap<Var, Assign> assigns = ArrayListMultimap.create();
 
   RemoveUnusedVars(
       AbstractCompiler compiler,
@@ -75,14 +78,7 @@ class RemoveUnusedVars implements CompilerPass {
    * may occur to ensure all unused variables are removed.
    */
   public void process(Node externs, Node root) {
-    numRemoved = 0;
-    referenced.clear();
-
     traverseAndRemoveUnusedReferences(root);
-
-    if (numRemoved > 0) {
-      compiler.reportCodeChange();
-    }
   }
 
   /**
@@ -93,6 +89,7 @@ class RemoveUnusedVars implements CompilerPass {
     traverseNode(root, null, scope);
 
     if (removeGlobals) {
+      interpretAssigns(scope);
       removeUnreferencedVars(scope);
     }
   }
@@ -123,10 +120,19 @@ class RemoveUnusedVars implements CompilerPass {
 
       case Token.NAME:
         if (parent.getType() != Token.VAR) {
-          // All non-var declarations are references to other vars
+          // All name references that aren't declarations or assigns
+          // are references to other vars. If that var hasn't already been
+          // marked referenced, then start tracking it.
           Var var = scope.getVar(n.getString());
-          if (var != null) {
-            markReferencedVar(var);
+          if (var != null && !referenced.contains(var)) {
+            Assign maybeAssign = Assign.maybeCreateAssign(n);
+            if (maybeAssign == null) {
+              markReferencedVar(var);
+            } else {
+              // Put this in the assign map. It might count as a reference,
+              // but we won't know that until we have an index of all assigns.
+              assigns.put(var, maybeAssign);
+            }
           }
         }
         break;
@@ -177,6 +183,7 @@ class RemoveUnusedVars implements CompilerPass {
     Scope fnScope = new SyntacticScopeCreator(compiler).createScope(n, scope);
     traverseNode(body, n, fnScope);
 
+    interpretAssigns(fnScope);
     removeUnreferencedFunctionArgs(n, fnScope);
     removeUnreferencedVars(fnScope);
   }
@@ -201,7 +208,7 @@ class RemoveUnusedVars implements CompilerPass {
         }
         argList.removeChild(lastArg);
         fnScope.undeclare(var);
-        numRemoved++;
+        finishRemove(var);
       } else {
         break;
       }
@@ -209,13 +216,64 @@ class RemoveUnusedVars implements CompilerPass {
   }
 
   /**
+   * Look at all the property assigns to all variables in the given
+   * scope. These may or may not count as references. For example,
+   *
+   * <code>
+   * var x = {};
+   * x.foo = 3; // not a reference.
+   * var y = foo();
+   * y.foo = 3; // is a reference.
+   * </code>
+   */
+  private void interpretAssigns(Scope scope) {
+    for (Iterator<Var> it = scope.getVars(); it.hasNext(); ) {
+      Var var = it.next();
+      if (!referenced.contains(var)) {
+        boolean assignedToUnknownValue = false;
+        boolean hasPropertyAssign = false;
+
+        if (var.getParentNode().getType() == Token.VAR) {
+          Node value = var.getInitialValue();
+          assignedToUnknownValue = value != null &&
+              !NodeUtil.isLiteralValue(value);
+        } else {
+          // This was initialized to a function arg or a catch param.
+          assignedToUnknownValue = true;
+        }
+
+        for (Assign assign : assigns.get(var)) {
+          if (assign.isPropertyAssign) {
+            hasPropertyAssign = true;
+          } else if (!NodeUtil.isLiteralValue(
+              assign.assignNode.getLastChild())) {
+            assignedToUnknownValue = true;
+          }
+        }
+
+        if (assignedToUnknownValue && hasPropertyAssign) {
+          markReferencedVar(var);
+        }
+      }
+    }
+  }
+
+
+  /**
+   * Finishes removal of a var by removing all assigns to it and reporting
+   * a code change.
+   */
+  private void finishRemove(Var var) {
+    for (Assign assign : assigns.get(var)) {
+      assign.remove();
+    }
+    compiler.reportCodeChange();
+  }
+
+  /**
    * Marks a var as referenced, recursing into any functions.
    */
   private void markReferencedVar(Var var) {
-    if (referenced.contains(var)) {
-      // Already marked
-      return;
-    }
     referenced.add(var);
 
     Node parent = var.getParentNode();
@@ -259,7 +317,7 @@ class RemoveUnusedVars implements CompilerPass {
         } else if (NodeUtil.isFunctionExpression(toRemove)) {
           if (!preserveFunctionExpressionNames) {
             toRemove.getFirstChild().setString("");
-            compiler.reportCodeChange();
+            finishRemove(var);
           }
           // Don't remove bleeding functions.
         } else if (parent != null &&
@@ -275,19 +333,80 @@ class RemoveUnusedVars implements CompilerPass {
           if (toRemove.getChildCount() == 1) {
             parent.replaceChild(toRemove,
                 new Node(Token.EXPR_RESULT, nameNode.removeFirstChild()));
-            numRemoved++;
+            finishRemove(var);
           }
         } else if (toRemove.getType() == Token.VAR &&
                    toRemove.getChildCount() > 1) {
           // For var declarations with multiple names (i.e. var a, b, c),
           // only remove the unreferenced name
           toRemove.removeChild(nameNode);
-          numRemoved++;
+          finishRemove(var);
         } else if (parent != null) {
           NodeUtil.removeChild(parent, toRemove);
-          numRemoved++;
+          finishRemove(var);
         }
       }
+    }
+  }
+
+  private static class Assign {
+
+    final Node assignNode;
+
+    // If false, then this is an assign to the normal variable. Otherwise,
+    // this is an assign to a property of that variable.
+    final boolean isPropertyAssign;
+
+    Assign(Node assignNode, boolean isPropertyAssign) {
+      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
+      this.assignNode = assignNode;
+      this.isPropertyAssign = isPropertyAssign;
+    }
+
+    /**
+     * If this is an assign to the given name, return that name.
+     * Otherwise, return null.
+     */
+    static Assign maybeCreateAssign(Node name) {
+      Preconditions.checkState(name.getType() == Token.NAME);
+
+      // Skip any GETPROPs or GETELEMs
+      boolean isPropAssign = false;
+      Node previous = name;
+      Node current = name.getParent();
+      while (previous == current.getFirstChild() &&
+          NodeUtil.isGet(current)) {
+        previous = current;
+        current = current.getParent();
+        isPropAssign = true;
+      }
+
+      if (previous == current.getFirstChild() &&
+          NodeUtil.isAssignmentOp(current)) {
+        return new Assign(current, isPropAssign);
+      }
+      return null;
+    }
+
+    /**
+     * Replace the current assign with its right hand side.
+     */
+    void remove() {
+      Node replacement = assignNode.getLastChild().detachFromParent();
+
+      // Aggregate any expressions in GETELEMs.
+      for (Node current = assignNode.getFirstChild();
+           current.getType() != Token.NAME;
+           current = current.getFirstChild()) {
+        if (current.getType() == Token.GETELEM) {
+          replacement = new Node(Token.COMMA,
+              current.getLastChild().detachFromParent(), replacement);
+          replacement.copyInformationFrom(current);
+        }
+      }
+
+      assignNode.getParent().replaceChild(
+          assignNode, replacement);
     }
   }
 }

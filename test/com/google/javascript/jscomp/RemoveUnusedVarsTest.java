@@ -129,8 +129,8 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "return function(){print(f)}}B()");
 
     // Test exported names
-    test("var a,b=1; function _A1() {a=1}",
-         "var a;function _A1(){a=1}");
+    test("var a,b=1; function _A1() {this.foo(a)}",
+         "var a;function _A1(){this.foo(a)}");
 
     // Test undefined (i.e. externally defined) names
     test("undefinedVar = 1", "undefinedVar=1");
@@ -181,10 +181,10 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     test(createModules(
              "var unreferenced=1; function x() { foo(); }" +
              "function uncalled() { var x; return 2; }",
-             "var a,b; function foo() { a=1; } x()"),
+             "var a,b; function foo() { this.foo(a); } x()"),
          new String[] {
            "function x(){foo()}",
-           "var a;function foo(){a=1}x()"
+           "var a;function foo(){this.foo(a)}x()"
          });
   }
 
@@ -262,4 +262,90 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "function b(){a()}");
   }
 
+  public void testUnusedAssign1() {
+    test("var x = 3; x = 5;", "5");
+  }
+
+  public void testUnusedAssign2() {
+    test("function f(a) { a = 3; } this.x = f;",
+        "function f(){3}this.x=f");
+  }
+
+  public void testUnusedAssign3() {
+    // e can't be removed, so we don't try to remove the dead assign.
+    // We might be able to improve on this case.
+    test("try { throw ''; } catch (e) { e = 3; }",
+        "try{throw\"\";}catch(e){e=3}");
+  }
+
+  public void testUnusedAssign4() {
+    // b can't be removed, so a can't be removed either. We might be able
+    // to improve on this case.
+    test("function f(a, b) { this.foo(b); a = 3; } this.x = f;",
+        "function f(a,b){this.foo(b);a=3}this.x=f");
+  }
+
+  public void testUnusedAssign5() {
+    test("var z = function f() { f = 3; }; z();",
+         "var z=function(){3};z()");
+  }
+
+  public void testUnusedAssign6() {
+    test("var z; z = 3;", "3");
+  }
+
+  public void testUnusedPropAssign1() {
+    test("var x = {}; x.foo = 3;", "3");
+  }
+
+  public void testUnusedPropAssign2() {
+    test("var x = {}; x['foo'] = 3;", "\"foo\",3");
+  }
+
+  public void testUnusedPropAssign3() {
+    test("var x = {}; x['foo'] = {}; x['foo'].baz['bar'] = 3",
+        "\"foo\",{};\"foo\",\"bar\",3");
+  }
+
+  public void testUnusedPropAssign4() {
+    test("var x = {foo: 3}; x['foo'] = 5;", "\"foo\",5");
+  }
+
+  public void testUnusedPropAssign5() {
+    // Because bar() has a side-effect, the whole variable stays in. We might
+    // be able to improve on this case.
+    test("var x = {foo: bar()}; x['foo'] = 5;",
+         "var x={foo:bar()};x[\"foo\"]=5");
+  }
+
+  public void testUsedPropAssign1() {
+    test("function f(x) { x.bar = 3; } f({});",
+         "function f(x){x.bar=3}f({})");
+  }
+
+  public void testUsedPropAssign2() {
+    test("try { throw z; } catch (e) { e.bar = 3; }",
+         "try{throw z;}catch(e){e.bar=3}");
+  }
+
+  public void testUsedPropAssign3() {
+    // This pass does not do flow analysis.
+    test("var x = {}; x.foo = 3; x = bar();",
+         "var x={};x.foo=3;x=bar()");
+  }
+
+  public void testUsedPropAssign4() {
+    test("var y = foo(); var x = {}; x.foo = 3; y[x.foo] = 5;",
+         "var y=foo();var x={};x.foo=3;y[x.foo]=5");
+  }
+
+  public void testUsedPropAssign5() {
+    test("var y = foo(); var x = 3; y[x] = 5;",
+         "var y=foo();var x=3;y[x]=5");
+  }
+
+  public void testUsedPropAssign6() {
+    test("var x = newNodeInDom(doc); x.innerHTML = 'new text';",
+         "var x=newNodeInDom(doc);x.innerHTML=\"new text\"");
+  }
 }
