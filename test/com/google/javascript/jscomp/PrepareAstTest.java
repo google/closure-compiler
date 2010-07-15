@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -52,5 +53,27 @@ public class PrepareAstTest extends CompilerTestCase {
     assertNotNull(firstVal.getJSDocInfo());
     assertNull(secondKey.getJSDocInfo());
     assertNotNull(secondVal.getJSDocInfo());
+  }
+
+  public void testFreeCall1() throws Exception {
+    Node root = parseExpectedJs("foo();");
+    Node script = root.getFirstChild();
+    Preconditions.checkState(script.getType() == Token.SCRIPT);
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    Preconditions.checkState(call.getType() == Token.CALL);
+
+    assertTrue(call.getBooleanProp(Node.FREE_CALL));
+  }
+
+  public void testFreeCall2() throws Exception {
+    Node root = parseExpectedJs("x.foo();");
+    Node script = root.getFirstChild();
+    Preconditions.checkState(script.getType() == Token.SCRIPT);
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    Preconditions.checkState(call.getType() == Token.CALL);
+
+    assertFalse(call.getBooleanProp(Node.FREE_CALL));
   }
 }

@@ -437,14 +437,20 @@ class CodeGenerator {
       }
 
       case Token.CALL:
-        // If the left hand side of the call is a direct reference to eval,
+        // We have two special cases here:
+        // 1) If the left hand side of the call is a direct reference to eval,
         // then it must have a DIRECT_EVAL annotation. If it does not, then
         // that means it was originally an indirect call to eval, and that
         // indirectness must be preserved.
-        if (first.getType() == Token.NAME &&
-            "eval".equals(first.getString()) &&
-            !first.getBooleanProp(Node.DIRECT_EVAL)) {
-          add("(0,eval)");
+        // 2) If the left hand side of the call is a property reference,
+        // then the call must not a FREE_CALL annotation. If it does, then
+        // that means it was originally an call without an explicit this and
+        // that must be preserved.
+        if (isIndirectEval(first)
+            || n.getBooleanProp(Node.FREE_CALL) && NodeUtil.isGet(first)) {
+          add("(0,");
+          addExpr(first, NodeUtil.precedence(Token.COMMA));
+          add(")");
         } else {
           addLeftExpr(first, NodeUtil.precedence(type), context);
         }
@@ -639,6 +645,14 @@ class CodeGenerator {
     }
 
     cc.endSourceMapping(n);
+  }
+
+  /**
+   * @return Whether the name is an indirect eval.
+   */
+  private boolean isIndirectEval(Node n) {
+    return n.getType() == Token.NAME && "eval".equals(n.getString()) &&
+        !n.getBooleanProp(Node.DIRECT_EVAL);
   }
 
   /**

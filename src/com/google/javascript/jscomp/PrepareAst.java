@@ -137,8 +137,65 @@ class PrepareAst implements CompilerPass {
       this.convention = compiler.getCodingConvention();
     }
 
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.CALL:
+          annotateCalls(n);
+          break;
+
+        case Token.FUNCTION:
+          annotateFunctions(n, parent);
+          annotateDispatchers(n, parent);
+          break;
+
+        case Token.NAME:
+        case Token.STRING:
+          annotateConstants(n, parent);
+          break;
+
+        case Token.OBJECTLIT:
+          normalizeObjectLitJsDocs(n);
+          break;
+      }
+    }
+
     /**
-     *
+     * There are two types of calls we are interested in calls without explicit
+     * "this" values (what we are call "free" calls) and direct call to eval.
+     */
+    private void annotateCalls(Node n) {
+      Preconditions.checkState(n.getType() == Token.CALL);
+
+      // Keep track of of the "this" context of a call.  A call without an
+      // explicit "this" is a free call.
+      Node first = n.getFirstChild();
+      if (!NodeUtil.isGet(first)) {
+        n.putBooleanProp(Node.FREE_CALL, true);
+      }
+
+      // Keep track of the context in which eval is called. It is important
+      // to distinguish between "(0, eval)()" and "eval()".
+      if (first.getType() == Token.NAME &&
+          "eval".equals(first.getString())) {
+        first.putBooleanProp(Node.DIRECT_EVAL, true);
+      }
+    }
+
+    /**
+     * Translate dispatcher info into the property expected node.
+     */
+    private void annotateDispatchers(Node n, Node parent) {
+      Preconditions.checkState(n.getType() == Token.FUNCTION);
+      if (parent.getJSDocInfo() != null
+          && parent.getJSDocInfo().isJavaDispatch()) {
+        if (parent.getType() == Token.ASSIGN) {
+          Preconditions.checkState(parent.getLastChild() == n);
+          n.putBooleanProp(Node.IS_DISPATCHER, true);
+        }
+      }
+    }
+
+    /**
      * In the AST that Rhino gives us, it needs to make a distinction
      * between jsdoc on the object literal node and jsdoc on the object literal
      * value. For example,
@@ -153,92 +210,74 @@ class PrepareAst implements CompilerPass {
      * But in few narrow cases (in particular, function literals), it's
      * a lot easier for us if the doc is attached to the value.
      */
-    @SuppressWarnings("fallthrough")
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      int nType = n.getType();
-      switch (nType) {
-        case Token.STRING:
-          // There are only two cases where a string token
-          // may be a variable reference: The right side of a GETPROP
-          // or an OBJECTLIT key.
-          if (parent.getType() != Token.OBJECTLIT &&
-              parent.getType() != Token.GETPROP) {
-            break;
-          }
-          // fall-through
-
-        case Token.NAME:
-          String nString = n.getString();
-          if (nType == Token.NAME &&
-              n.getParent().getType() == Token.CALL &&
-              "eval".equals(nString)) {
-            n.putBooleanProp(Node.DIRECT_EVAL, true);
-          }
-          if (NodeUtil.isConstantByConvention(convention, n, parent)) {
-            n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-          }
-          break;
-
-        case Token.FUNCTION:
-          JSDocInfo fnInfo = n.getJSDocInfo();
-          if (fnInfo == null) {
-            // Look for the info on other nodes.
-            if (parent.getType() == Token.ASSIGN) {
-              // on ASSIGNs
-              fnInfo = parent.getJSDocInfo();
-            } else if (parent.getType() == Token.NAME) {
-              // on var NAME = function() { ... };
-              fnInfo = parent.getParent().getJSDocInfo();
-            }
-          }
-
-          // Compute which function parameters are optional and
-          // which are var_args.
-          Node args = n.getFirstChild().getNext();
-          for (Node arg = args.getFirstChild();
-               arg != null;
-               arg = arg.getNext()) {
-            String argName = arg.getString();
-            JSTypeExpression typeExpr = fnInfo == null ?
-                null : fnInfo.getParameterType(argName);
-
-            if (convention.isOptionalParameter(arg) ||
-                typeExpr != null && typeExpr.isOptionalArg()) {
-              arg.putBooleanProp(Node.IS_OPTIONAL_PARAM, true);
-            }
-            if (convention.isVarArgsParameter(arg) ||
-                typeExpr != null && typeExpr.isVarArgs()) {
-              arg.putBooleanProp(Node.IS_VAR_ARGS_PARAM, true);
-            }
-          }
-          break;
-
-        case Token.OBJECTLIT:
-          if (n.getType() == Token.OBJECTLIT) {
-            for (Node key = n.getFirstChild();
-                 key != null; key = key.getNext().getNext()) {
-              Node value = key.getNext();
-              if (key.getJSDocInfo() != null &&
-                  key.getNext().getType() == Token.FUNCTION) {
-                value.setJSDocInfo(key.getJSDocInfo());
-              }
-            }
-          }
-          break;
-      }
-
-      // TODO(johnlenz): Determine if it is possible to simply use the javadoc
-      // everywhere rather than use IS_DISPATCHER.
-      /*
-       * Translate dispatcher info into the property expected node.
-       */
-      if (n.getJSDocInfo() != null && n.getJSDocInfo().isJavaDispatch()) {
-        if (n.getType() == Token.ASSIGN) {
-          Node fnNode = n.getLastChild();
-          Preconditions.checkState(fnNode.getType() == Token.FUNCTION);
-          fnNode.putBooleanProp(Node.IS_DISPATCHER, true);
+    private void normalizeObjectLitJsDocs(Node n) {
+      Preconditions.checkState(n.getType() == Token.OBJECTLIT);
+      for (Node key = n.getFirstChild();
+           key != null; key = key.getNext().getNext()) {
+        Node value = key.getNext();
+        if (key.getJSDocInfo() != null &&
+            key.getNext().getType() == Token.FUNCTION) {
+          value.setJSDocInfo(key.getJSDocInfo());
         }
       }
     }
+
+    /**
+     * Mark names that are constants by convention.
+     */
+    private void annotateConstants(Node n, Node parent) {
+      Preconditions.checkState(
+          n.getType() == Token.NAME || n.getType() == Token.STRING);
+
+      // There are only two cases where a string token
+      // may be a variable reference: The right side of a GETPROP
+      // or an OBJECTLIT key.
+      if (n.getType() != Token.STRING
+          || parent.getType() == Token.OBJECTLIT
+          || parent.getType() == Token.GETPROP) {
+        if (NodeUtil.isConstantByConvention(convention, n, parent)) {
+          n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        }
+      }
+    }
+
+    /**
+     * Annotate optional and var_arg function parameters.
+     */
+    private void annotateFunctions(Node n, Node parent) {
+      Preconditions.checkState(n.getType() == Token.FUNCTION);
+      JSDocInfo fnInfo = n.getJSDocInfo();
+      if (fnInfo == null) {
+        // Look for the info on other nodes.
+        if (parent.getType() == Token.ASSIGN) {
+          // on ASSIGNs
+          fnInfo = parent.getJSDocInfo();
+        } else if (parent.getType() == Token.NAME) {
+          // on var NAME = function() { ... };
+          fnInfo = parent.getParent().getJSDocInfo();
+        }
+      }
+
+      // Compute which function parameters are optional and
+      // which are var_args.
+      Node args = n.getFirstChild().getNext();
+      for (Node arg = args.getFirstChild();
+           arg != null;
+           arg = arg.getNext()) {
+        String argName = arg.getString();
+        JSTypeExpression typeExpr = fnInfo == null ?
+            null : fnInfo.getParameterType(argName);
+
+        if (convention.isOptionalParameter(arg) ||
+            typeExpr != null && typeExpr.isOptionalArg()) {
+          arg.putBooleanProp(Node.IS_OPTIONAL_PARAM, true);
+        }
+        if (convention.isVarArgsParameter(arg) ||
+            typeExpr != null && typeExpr.isVarArgs()) {
+          arg.putBooleanProp(Node.IS_VAR_ARGS_PARAM, true);
+        }
+      }
+    }
+
   }
 }

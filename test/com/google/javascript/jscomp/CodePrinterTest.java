@@ -930,7 +930,7 @@ public class CodePrinterTest extends TestCase {
 
     assertPrint("if(x)A:do{foo()}while(y);",
         "if(x){A:do foo();while(y)}");
-    
+
     assertPrint("var i = 0;a: do{b: do{i++;break b;} while(0);} while(0);",
         "var i=0;a:do{b:do{i++;break b}while(0)}while(0)");
   }
@@ -994,5 +994,28 @@ public class CodePrinterTest extends TestCase {
     n.getFirstChild().getFirstChild().getFirstChild().putBooleanProp(
         Node.DIRECT_EVAL, false);
     assertPrintNode("(0,eval)(\"1\")", n);
+  }
+
+  public void testFreeCall1() {
+    assertPrint("foo(a);", "foo(a)");
+    assertPrint("x.foo(a);", "x.foo(a)");
+  }
+
+  public void testFreeCall2() {
+    Node n = parse("foo(a);");
+    assertPrintNode("foo(a)", n);
+    Node call =  n.getFirstChild().getFirstChild();
+    assertTrue(call.getType() == Token.CALL);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    assertPrintNode("foo(a)", n);
+  }
+
+  public void testFreeCall3() {
+    Node n = parse("x.foo(a);");
+    assertPrintNode("x.foo(a)", n);
+    Node call =  n.getFirstChild().getFirstChild();
+    assertTrue(call.getType() == Token.CALL);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    assertPrintNode("(0,x.foo)(a)", n);
   }
 }

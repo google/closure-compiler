@@ -153,7 +153,9 @@ public class Node implements Cloneable, Serializable {
       SUPPRESSIONS       = 50,    // Used by the compiler to associate
                                   // @suppress directly with functions
                                   // and scripts.
-      LAST_PROP          = 50;
+      FREE_CALL          = 51,    // A CALL without an explicit "this" value.
+                                  //
+      LAST_PROP          = 51;
 
   // values of ISNUMBER_PROP to specify
   // which of the children are Number types
@@ -235,6 +237,7 @@ public class Node implements Cloneable, Serializable {
         case IS_DISPATCHER:      return "is_dispatcher";
         case DIRECTIVES:         return "directives";
         case DIRECT_EVAL:        return "direct_eval";
+        case FREE_CALL:          return "free_call";
         default:
           Kit.codeBug();
       }
