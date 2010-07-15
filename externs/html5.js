@@ -1200,3 +1200,10 @@ XMLHttpRequestEventTarget.prototype.dispatchEvent = function(evt) {};
  */
 function XMLHttpRequestUpload() {}
 
+/**
+ * @param {number=} opt_width
+ * @param {number=} opt_height
+ * @constructor
+ * @extends {HTMLImageElement}
+ */
+function Image(opt_width, opt_height) {}

@@ -1481,6 +1481,7 @@ HTMLImageElement.prototype.name;
 
 /**
  * @type {string}
+ * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-87762984
  */
 HTMLImageElement.prototype.src;

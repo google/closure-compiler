@@ -28,24 +28,6 @@ var opera;
 Window.prototype.opera;
 Window.prototype.opera.postError;
 
-// Image can't be used as a function
-/**
- * @param {number=} opt_width
- * @param {number=} opt_height
- * @constructor
- * @implements {EventTarget}
- */
-function Image(opt_width, opt_height) {}
-
-/** @inheritDoc */
-Image.prototype.addEventListener = function(type, listener, useCapture) {};
-
-/** @inheritDoc */
-Image.prototype.removeEventListener = function(type, listener, useCapture) {};
-
-/** @inheritDoc */
-Image.prototype.dispatchEvent = function(evt) {};
-
 /** @constructor */ function XSLTProcessor() {}
 /** @constructor */ function NodeFilter() {}
 /**
