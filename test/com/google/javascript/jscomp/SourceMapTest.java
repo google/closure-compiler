@@ -75,7 +75,7 @@ public class SourceMapTest extends TestCase {
     // Empty source map test
     checkSourceMap("",
 
-                   "/** Begin line maps. **/{ \"file\" : \"testMap\"," +
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\"," +
                    " \"count\": 1 }\n" +
 
                    "[]\n" +
@@ -83,24 +83,22 @@ public class SourceMapTest extends TestCase {
                    "/** Begin file information. **/\n" +
                    "[]\n" +
 
-                   "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,0]\n");
+                   "/** Begin mapping definitions. **/\n");
   }
 
   public void testGoldenOutput1() throws Exception {
     checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
 
-                   "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
                    "\"count\": 1 }\n" +
 
-                   "[1,1,1,1,1,1,1,1,2,2,3,4,4,4,3,5,5,5,3,6,8,8,8,7,9,9,9,7," +
-                   "10,10,10,7,11,12,12,12,12,12,12,12,13,13,13,13,6]\n" +
+                   "[0,0,0,0,0,0,0,0,1,1,2,3,3,3,2,4,4,4,2,5,7,7,7,6,8,8,8,6," +
+                   "9,9,9,6,10,11,11,11,11,11,11,11,12,12,12,12,5]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
 
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,0]\n" +
                    "[\"testcode\",1,9]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,10]\n" +
@@ -120,17 +118,16 @@ public class SourceMapTest extends TestCase {
     checkSourceMap("function f(foo, bar) {\r\n\n\n\nfoo = foo + bar + foo;" +
                    "\nreturn foo;\n}",
 
-                   "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
                    "\"count\": 1 }\n" +
 
-                   "[1,1,1,1,1,1,1,1,2,2,3,4,4,4,3,5,5,5,3,6,8,8,8,7,9,9,9," +
-                   "7,10,10,10,7,11,11,11,12,12,12,12,12,12,12,13,13,13," +
-                   "13,6]\n" +
+                   "[0,0,0,0,0,0,0,0,1,1,2,3,3,3,2,4,4,4,2,5,7,7,7,6,8,8,8," +
+                   "6,9,9,9,6,10,10,10,11,11,11,11,11,11,11,12,12,12," +
+                   "12,5]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,0]\n" +
                    "[\"testcode\",1,9]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,10]\n" +
@@ -150,16 +147,14 @@ public class SourceMapTest extends TestCase {
     checkSourceMap("c:\\myfile.js",
                    "foo;",
 
-                   "/** Begin line maps. **/{ \"file\" : \"testMap\", " +
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
                    "\"count\": 1 }\n" +
 
-                   "[2,2,2]\n" +
+                   "[0,0,0]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"c:\\\\myfile.js\",1,0]\n" +
-                   "[\"c:\\\\myfile.js\",1,0]\n" +
                    "[\"c:\\\\myfile.js\",1,0,\"foo\"]\n");
   }
 
@@ -168,19 +163,15 @@ public class SourceMapTest extends TestCase {
                    "foo;   boo;   goo;",
 
                    "/** Begin line maps. **/" +
-                   "{ \"file\" : \"testMap\", \"count\": 1 }\n" +
-                   "[2,2,2,4,4,4,4,6,6,6,6]\n" +
+                   "{ \"file\" : \"testcode\", \"count\": 1 }\n" +
+                   "[0,0,0,1,1,1,1,2,2,2,2]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
 
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"c:\\\\myfile.js\",1,0]\n" +
-                   "[\"c:\\\\myfile.js\",1,0]\n" +
                    "[\"c:\\\\myfile.js\",1,0,\"foo\"]\n" +
-                   "[\"c:\\\\myfile.js\",1,7]\n" +
                    "[\"c:\\\\myfile.js\",1,7,\"boo\"]\n" +
-                   "[\"c:\\\\myfile.js\",1,14]\n" +
                    "[\"c:\\\\myfile.js\",1,14,\"goo\"]\n");
   }
 
@@ -212,14 +203,15 @@ public class SourceMapTest extends TestCase {
 
   private String getSourceMap(RunResult result) throws IOException {
     StringBuilder sb = new StringBuilder();
-    result.sourceMap.appendTo(sb, "testMap");
+    result.sourceMap.appendTo(sb, "testcode");
     return sb.toString();
   }
 
   private void checkSourceMap(String fileName, String js, String expectedMap)
       throws IOException {
     RunResult result = compile(js, fileName);
-    assertEquals(expectedMap, getSourceMap(result));
+    assertEquals(expectedMap, result.sourceMapFileContent);
+    assertEquals(result.sourceMapFileContent, getSourceMap(result));
   }
 
   private static class RunResult {

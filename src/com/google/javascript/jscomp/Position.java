@@ -22,8 +22,8 @@ package com.google.javascript.jscomp;
 *
  */
 class Position {
-  private int lineNumber;
-  private int characterIndex;
+  private final int lineNumber;
+  private final int characterIndex;
 
   public Position(int lineNumber, int characterIndex) {
     this.lineNumber = lineNumber;

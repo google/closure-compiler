@@ -179,6 +179,9 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.ARRAYLIT:
         typeNameString = "object";
         break;
+      case Token.VOID:
+        typeNameString = "undefined";
+        break;
       case Token.NAME:
         // We assume here that programs don't change the value of the
         // keyword undefined to something other than the value undefined.

@@ -104,7 +104,11 @@ StyleSheet.prototype.removeExpression;
  */
 CSSProperties.prototype.imeMode;
 
-/** @type {string} */ CSSProperties.prototype.msInterpolationMode;
+/**
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/ms534176(VS.85).aspx
+ */
+CSSProperties.prototype.msInterpolationMode;
 
 /** @type {string} */ CSSProperties.prototype.overflowX;
 
@@ -120,4 +124,14 @@ CSSProperties.prototype.imeMode;
 
 /** @type {string} */ CSSProperties.prototype.styleFloat;
 
-/** @type {string|number} */ CSSProperties.prototype.zoom;
+/**
+ * @type {string|number}
+ * @see http://msdn.microsoft.com/en-us/library/ms535169(VS.85).aspx
+ */
+CSSProperties.prototype.zoom;
+
+/**
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/ms535153(VS.85).aspx
+ */
+CSSProperties.prototype.writingMode;

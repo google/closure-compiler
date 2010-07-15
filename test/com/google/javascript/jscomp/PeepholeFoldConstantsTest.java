@@ -549,6 +549,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = typeof false", "x = \"boolean\"");
     fold("x = typeof null", "x = \"object\"");
     fold("x = typeof undefined", "x = \"undefined\"");
+    fold("x = typeof void 0", "x = \"undefined\"");
     fold("x = typeof []", "x = \"object\"");
     fold("x = typeof [1]", "x = \"object\"");
     fold("x = typeof [1,[]]", "x = \"object\"");

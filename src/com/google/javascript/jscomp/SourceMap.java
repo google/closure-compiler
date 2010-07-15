@@ -38,6 +38,8 @@ import java.util.List;
  */
 public class SourceMap {
 
+  private final static int UNMAPPED = -1;
+
   /**
    * A mapping from a given position in an input source file to a given position
    * in the generated code.
@@ -46,10 +48,10 @@ public class SourceMap {
     /**
      * A unique ID for this mapping for record keeping purposes.
      */
-    int id;
+    int id = UNMAPPED;
 
     /**
-     * The JSON escaped input source file.
+     * The input source file.
      */
     String sourceFile;
 
@@ -73,31 +75,74 @@ public class SourceMap {
     Position endPosition;
 
     /**
-     * The JSON escaped original name of the token found at the position
+     * The original name of the token found at the position
      * represented by this mapping (if any).
      */
     String originalName;
 
     /**
+     * Whether the mapping is actually used by the source map.
+     */
+    boolean used = false;
+  }
+
+  private class MappingWriter {
+    /**
+     * Cache of escaped source file name.
+     */
+    private String lastSourceFile = null;
+    private String lastSourceFileEscaped = null;
+    private int lastLine = 0;
+    private String lastLineString = String.valueOf(0);
+
+    /**
      * Appends the mapping to the given buffer.
      */
-    void appendTo(Appendable out) throws IOException {
+    private void appendMappingTo(
+        Mapping m, Appendable out) throws IOException {
       out.append("[");
 
-      out.append(sourceFile);
+      String sourceFile = m.sourceFile;
+      // The source file rarely changes, so cache the escaped string.
+      String escapedSourceFile;
+      if (lastSourceFile != sourceFile) { // yes, s1 != s2, not !s1.equals(s2)
+        lastSourceFile = sourceFile;
+        lastSourceFileEscaped = escapeString(sourceFile);
+      }
+      escapedSourceFile = lastSourceFileEscaped;
+
+      out.append(escapedSourceFile);
+      out.append(",");
+
+      int line = m.originalPosition.getLineNumber();
+      if (line != lastLine) {
+        lastLineString = String.valueOf(line);
+      }
+      String lineValue = lastLineString;
+
+      out.append(lineValue);
 
       out.append(",");
-      out.append(String.valueOf(originalPosition.getLineNumber()));
+      out.append(String.valueOf(
+          m.originalPosition.getCharacterIndex()));
 
-      out.append(",");
-      out.append(String.valueOf(originalPosition.getCharacterIndex()));
-
-      if (originalName != null) {
+      if (m.originalName != null) {
         out.append(",");
-        out.append(originalName);
+        out.append(escapeString(m.originalName));
       }
 
-      out.append("]");
+      out.append("]\n");
+    }
+
+    /**
+     * Add used mappings to the supplied Appendable.
+     */
+    void appendMappings(Appendable out) throws IOException {
+      for (Mapping m : mappings) {
+        if (m.used) {
+          appendMappingTo(m, out);
+        }
+      }
     }
   }
 
@@ -127,12 +172,6 @@ public class SourceMap {
   }
 
   /**
-   * Cache of escaped source file name.
-   */
-  private String lastSourceFile = null;
-  private String lastSourceFileEscaped = null;
-
-  /**
    * Adds a mapping for the given node.  Mappings must be added in order.
    *
    * @param node The node that the new mapping represents.
@@ -149,48 +188,45 @@ public class SourceMap {
       return;
     }
 
-    // The source file rarely changes, so cache the escaped string.
-    String escapedSourceFile;
-    if (lastSourceFile != sourceFile) {  // yes, "s1 != s2" not "!s1.equals(s2)"
-      lastSourceFile = sourceFile;
-      lastSourceFileEscaped = escapeString(sourceFile);
-    }
-    escapedSourceFile = lastSourceFileEscaped;
-
     // Create the new mapping.
     Mapping mapping = new Mapping();
-    mapping.id = mappings.size();
-    mapping.sourceFile = escapedSourceFile;
+    mapping.sourceFile = sourceFile;
     mapping.originalPosition = new Position(node.getLineno(), node.getCharno());
 
     String originalName = (String)node.getProp(Node.ORIGINALNAME_PROP);
     if (originalName != null) {
-      mapping.originalName = escapeString(originalName);
+      mapping.originalName = originalName;
     }
 
-    // If the mapping is found on the first line, we need to offset
-    // its character position by the number of characters found on
-    // the *last* line of the source file to which the code is
-    // being generated.
-    int offsetLine = offsetPosition.getLineNumber();
-    int startOffsetPosition = offsetPosition.getCharacterIndex();
-    int endOffsetPosition = offsetPosition.getCharacterIndex();
+    if (offsetPosition.getLineNumber() == 0
+        && offsetPosition.getCharacterIndex() == 0) {
+      mapping.startPosition = startPosition;
+      mapping.endPosition = endPosition;
+    } else {
+      // If the mapping is found on the first line, we need to offset
+      // its character position by the number of characters found on
+      // the *last* line of the source file to which the code is
+      // being generated.
+      int offsetLine = offsetPosition.getLineNumber();
+      int startOffsetPosition = offsetPosition.getCharacterIndex();
+      int endOffsetPosition = offsetPosition.getCharacterIndex();
 
-    if (startPosition.getLineNumber() > 0) {
-      startOffsetPosition = 0;
+      if (startPosition.getLineNumber() > 0) {
+        startOffsetPosition = 0;
+      }
+
+      if (endPosition.getLineNumber() > 0) {
+        endOffsetPosition = 0;
+      }
+
+      mapping.startPosition =
+          new Position(startPosition.getLineNumber() + offsetLine,
+                       startPosition.getCharacterIndex() + startOffsetPosition);
+
+      mapping.endPosition =
+          new Position(endPosition.getLineNumber() + offsetLine,
+                       endPosition.getCharacterIndex() + endOffsetPosition);
     }
-
-    if (endPosition.getLineNumber() > 0) {
-      endOffsetPosition = 0;
-    }
-
-    mapping.startPosition =
-        new Position(startPosition.getLineNumber() + offsetLine,
-                     startPosition.getCharacterIndex() + startOffsetPosition);
-
-    mapping.endPosition =
-        new Position(endPosition.getLineNumber() + offsetLine,
-                     endPosition.getCharacterIndex() + endOffsetPosition);
 
     mappings.add(mapping);
   }
@@ -246,19 +282,6 @@ public class SourceMap {
   }
 
   /**
-   * Scan the mappings and return the last line mapped.
-   */
-  private int findLastLine() {
-    int maxLine = 0;
-    for (Mapping mapping : mappings) {
-      int endPositionLine = mapping.endPosition.getLineNumber();
-      maxLine = Math.max(maxLine, endPositionLine);
-    }
-    // Adjust for the prefix.
-    return maxLine + prefixPosition.getLineNumber();
-  }
-
-  /**
    * Appends the source map in LavaBug format to the given buffer.
    *
    * @param out The stream to which the map will be appended.
@@ -297,7 +320,7 @@ public class SourceMap {
     // 11) ["c.js", 1, 4]
     // 12) ["d.js", 3, 78, "foo"]
 
-    int maxLine = findLastLine();
+    int maxLine = prepMappings();
 
     // Add the line character maps.
     out.append("/** Begin line maps. **/{ \"file\" : ");
@@ -319,30 +342,73 @@ public class SourceMap {
     // Add the mappings themselves.
     out.append("/** Begin mapping definitions. **/\n");
 
-    for (Mapping mapping : mappings) {
-      mapping.appendTo(out);
-      out.append("\n");
-    }
+    (new MappingWriter()).appendMappings(out);
   }
 
   /**
-   * A class to build the line/character to mappings section
-   * of the source map.
+   * Assigns sequential ids to used mappings, and returns the last line mapped.
    */
-  private class LineMapper {
+  private int prepMappings() throws IOException {
+    // Mark any unused mappings.
+    (new MappingTraversal()).traverse(new UsedMappingCheck());
+
+    // Renumber used mappings and keep track of the last line.
+    int id = 0;
+    int maxLine = 0;
+    for (Mapping m : mappings) {
+      if (m.used) {
+        m.id = id++;
+        int endPositionLine = m.endPosition.getLineNumber();
+        maxLine = Math.max(maxLine, endPositionLine);
+      }
+    }
+
+    // Adjust for the prefix.
+    return maxLine + prefixPosition.getLineNumber();
+  }
+
+  private class LineMapper implements MappingVisitor {
     // The destination.
     private final Appendable out;
-    // The last line and column written
-    private int line;
-    private int col;
+
     // Whether the current line has had a value written yet.
     private boolean firstChar = true;
 
-    private final static int UNMAPPED = -1;
     private final static String UNMAPPED_STRING = "-1";
+
+    private int lastId = UNMAPPED;
+    private String lastIdString = UNMAPPED_STRING;
 
     LineMapper(Appendable out) {
       this.out = out;
+    }
+
+    /**
+     * As each segment is visited write out the appropriate line mapping.
+     */
+    public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
+      throws IOException {
+
+      int id = (m != null) ? m.id : UNMAPPED;
+      if (lastId != id) {
+        // Prevent the creation of unnecessary temporary stings for often
+        // repeated values.
+        lastIdString = (id == UNMAPPED) ? UNMAPPED_STRING : String.valueOf(id);
+        lastId = id;
+      }
+      String idString = lastIdString;
+
+      for (int i = line; i <= nextLine; i++) {
+        if (i == nextLine) {
+          for (int j = col; j < nextCol; j++) {
+            addCharEntry(idString);
+          }
+          break;
+        }
+
+        closeLine();
+        openLine();
+      }
     }
 
     // Append the line mapping entries.
@@ -351,6 +417,93 @@ public class SourceMap {
 
       // Start the first line.
       openLine();
+
+      (new MappingTraversal()).traverse(this);
+
+      // And close the final line.
+      closeLine();
+    }
+
+    /**
+     * Begin the entry for a new line.
+     */
+    private void openLine() throws IOException {
+      if (out != null) {
+        out.append("[");
+        this.firstChar = true;
+      }
+    }
+
+    /**
+     * End the entry for a line.
+     */
+    private void closeLine() throws IOException {
+      if (out != null) {
+        out.append("]\n");
+      }
+    }
+
+    /**
+     * Add a new char position entry.
+     * @param id The mapping id to record.
+     */
+    private void addCharEntry(String id) throws IOException {
+      if (out != null) {
+        if (firstChar) {
+          firstChar = false;
+        } else {
+          out.append(",");
+        }
+        out.append(id);
+      }
+    }
+  }
+
+  /**
+   * Mark any visited mapping as "used".
+   */
+  private class UsedMappingCheck implements MappingVisitor {
+    /**
+     * @throws IOException
+     */
+    @Override
+    public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
+        throws IOException {
+      if (m != null) {
+        m.used = true;
+      }
+    }
+  }
+
+  private interface MappingVisitor {
+    /**
+     * @param m The mapping for the current code segment. null if the segment
+     *     is unmapped.
+     * @param line The starting line for this code segment.
+     * @param col The starting column for this code segment.
+     * @param endLine The ending line
+     * @param endCol The ending column
+     * @throws IOException
+     */
+    void visit(Mapping m, int line, int col, int endLine, int endCol)
+        throws IOException;
+  }
+
+  /**
+   * Walk the mappings and visit each segment of the mappings, unmapped
+   * segments are visited with a null mapping, unused mapping are not visited.
+   */
+  private class MappingTraversal {
+    // The last line and column written
+    private int line;
+    private int col;
+
+    MappingTraversal() {
+    }
+
+    // Append the line mapping entries.
+    void traverse(MappingVisitor v) throws IOException {
+      Preconditions.checkState(!mappings.isEmpty());
 
       // The mapping list is ordered as a pre-order traversal.  The mapping
       // positions give us enough information to rebuild the stack and this
@@ -363,13 +516,13 @@ public class SourceMap {
         // closed in the reverse order of when they encountered.
         while (!stack.isEmpty() && !isOverlapped(stack.peek(), m)) {
           Mapping previous = stack.pop();
-          writeClosedMapping(previous);
+          maybeVisit(v, previous);
         }
 
         // Any gaps between the current line position and the start of the
         // current mapping belong to the parent.
         Mapping parent = stack.peek();
-        writeCharsBetween(parent, m);
+        maybeVisitParent(v, parent, m);
 
         stack.push(m);
       }
@@ -378,39 +531,8 @@ public class SourceMap {
       // mappings in the reverse order of when they encountered.
       while (!stack.isEmpty()) {
         Mapping m = stack.pop();
-        writeClosedMapping(m);
+        maybeVisit(v, m);
       }
-
-      // And close the final line.
-      closeLine();
-    }
-
-    /**
-     * Begin the entry for a new line.
-     */
-    private void openLine() throws IOException {
-      out.append("[");
-      this.firstChar = true;
-    }
-
-    /**
-     * End the entry for a line.
-     */
-    private void closeLine() throws IOException {
-      out.append("]\n");
-    }
-
-    /**
-     * Add a new char position entry.
-     * @param id The mapping id to record.
-     */
-    private void addCharEntry(String id) throws IOException {
-      if (firstChar) {
-        firstChar = false;
-      } else {
-        out.append(",");
-      }
-      out.append(id);
     }
 
     /**
@@ -448,56 +570,47 @@ public class SourceMap {
      * Write any needed entries from the current position to the end of the
      * provided mapping.
      */
-    private void writeClosedMapping(Mapping m) throws IOException {
+    private void maybeVisit(MappingVisitor v, Mapping m) throws IOException {
       int nextLine = getAdjustedLine(m.endPosition);
       int nextCol = getAdjustedCol(m.endPosition);
       // If this anything remaining in this mapping beyond the
       // current line and column position, write it out now.
       if (line < nextLine || (line == nextLine && col < nextCol)) {
-        writeCharsUpTo(nextLine, nextCol, m.id);
+        visit(v, m, nextLine, nextCol);
       }
     }
 
     /**
      * Write any needed entries to complete the provided mapping.
      */
-    private void writeCharsBetween(Mapping prev, Mapping next)
+    private void maybeVisitParent(MappingVisitor v, Mapping parent, Mapping m)
         throws IOException {
-      int nextLine = getAdjustedLine(next.startPosition);
-      int nextCol = getAdjustedCol(next.startPosition);
-      // If the previous value is null, no mapping exists use the special
-      // "unmapped value"(-1).
-      int id = (prev != null) ? prev.id : UNMAPPED;
-      writeCharsUpTo(nextLine, nextCol, id);
+      int nextLine = getAdjustedLine(m.startPosition);
+      int nextCol = getAdjustedCol(m.startPosition);
+      // If the previous value is null, no mapping exists.
+      Preconditions.checkState(line < nextLine || col <= nextCol);
+      if (line < nextLine || (line == nextLine && col < nextCol)) {
+        visit(v, parent, nextLine, nextCol);
+      }
     }
 
     /**
      * Write any entries needed between the current position the next position
      * and update the current position.
      */
-    private void writeCharsUpTo(
-        int nextLine, int nextCol, int id)
+    private void visit(MappingVisitor v, Mapping m,
+        int nextLine, int nextCol)
         throws IOException {
-      Preconditions.checkState(line <= nextLine, "");
-      Preconditions.checkState(line < nextLine || col <= nextCol);
+      Preconditions.checkState(line <= nextLine);
+      Preconditions.checkState(line < nextLine || col < nextCol);
 
       if (line == nextLine && col == nextCol) {
         // Nothing to do.
+        Preconditions.checkState(false);
         return;
       }
 
-      String idString = (id == UNMAPPED) ? UNMAPPED_STRING : String.valueOf(id);
-      for (int i = line; i <= nextLine; i++) {
-        if (i == nextLine) {
-          for (int j = col; j < nextCol; j++) {
-            addCharEntry(idString);
-          }
-          break;
-        }
-
-        closeLine();
-        openLine();
-      }
+      v.visit(m, line, col, nextLine, nextCol);
 
       line = nextLine;
       col = nextCol;
