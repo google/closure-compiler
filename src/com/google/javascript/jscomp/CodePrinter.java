@@ -21,9 +21,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.nio.charset.Charset;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 
 /**
  * CodePrinter prints out js code in either pretty format or compact format.
@@ -38,26 +39,25 @@ class CodePrinter {
 
 
   // There are two separate CodeConsumers, one for pretty-printing and
-  // another for compact printing.  Both implement the interface
-  // HasGetCode as CodeConsumer does not have a method for getting the
-  // formatted string.
+  // another for compact printing.
 
   // There are two implementations because the CompactCodePrinter
   // potentially has a very different implementation to the pretty
   // version.
 
-  private interface HasGetCode {
-    String getCode();
-  }
-
   private abstract static class MappedCodePrinter extends CodeConsumer {
-    final private Stack<Mapping> mappings;
+    final private Deque<Mapping> mappings;
     final private List<Mapping> allMappings;
     final private boolean createSrcMap;
+    protected final StringBuilder code = new StringBuilder(1024);
+    protected final int lineLengthThreshold;
+    protected int lineLength = 0;
+    protected int lineIndex = 0;
 
-    MappedCodePrinter(boolean createSrcMap) {
+    MappedCodePrinter(int lineLengthThreshold, boolean createSrcMap) {
+      this.lineLengthThreshold = lineLengthThreshold;
       this.createSrcMap = createSrcMap;
-      this.mappings = createSrcMap ? new Stack<Mapping>() : null;
+      this.mappings = createSrcMap ? new ArrayDeque<Mapping>() : null;
       this.allMappings = createSrcMap ? new ArrayList<Mapping>() : null;
     }
 
@@ -114,7 +114,7 @@ class CodePrinter {
         // If the index is -1, we are not performing any mapping.
         if (index >= 0) {
           Preconditions.checkState(
-              !mappings.empty(), "Mismatch in start and end of mapping");
+              !mappings.isEmpty(), "Mismatch in start and end of mapping");
 
           Mapping mapping = mappings.pop();
           mapping.end = new Position(line, index);
@@ -127,7 +127,6 @@ class CodePrinter {
      * appending the information it saved to the SourceMap
      * object given.
      */
-    @Override
     void generateSourceMap(SourceMap map){
       if (createSrcMap) {
         for (Mapping mapping : allMappings) {
@@ -141,15 +140,13 @@ class CodePrinter {
      * given position (i.e. a \n has been inserted there). All mappings in
      * the source maps after that position will be renormalized as needed.
      */
-    void reportLineCut(int lineIndex, int characterPosition) {
+    void reportLineCut(int lineIndex, int charIndex) {
       if (createSrcMap) {
         for (Mapping mapping : allMappings) {
-          mapping.start = convertPosition(mapping.start, lineIndex,
-                                          characterPosition);
+          mapping.start = convertPosition(mapping.start, lineIndex, charIndex);
 
           if (mapping.end != null) {
-            mapping.end = convertPosition(mapping.end, lineIndex,
-                                          characterPosition);
+            mapping.end = convertPosition(mapping.end, lineIndex, charIndex);
           }
         }
       }
@@ -168,48 +165,15 @@ class CodePrinter {
      */
     private Position convertPosition(Position position, int lineIndex,
                                      int characterPosition) {
-      int pLine = position.getLineNumber();
-      int pChar = position.getCharacterIndex();
-
-      // If the position falls on the line itself, then normalize it
-      // if it falls at or after the place the newline was inserted.
-      if (position.getLineNumber() == lineIndex) {
-        if (position.getCharacterIndex() >= characterPosition) {
-          pLine++;
-          pChar -= characterPosition;
-        }
+      int originalLine = position.getLineNumber();
+      int originalChar = position.getCharacterIndex();
+      if (originalLine == lineIndex && originalChar >= characterPosition) {
+        // If the position falls on the line itself, then normalize it
+        // if it falls at or after the place the newline was inserted.
+        return new Position(originalLine + 1, originalChar - characterPosition);
+      } else {
+        return position;
       }
-
-      // If the position falls on a line after the newline, increment its
-      // line index.
-      if (position.getLineNumber() > lineIndex) {
-        pLine++;
-      }
-
-      return new Position(pLine, pChar);
-    }
-  }
-
-  private static class PrettyCodePrinter
-      extends MappedCodePrinter
-      implements HasGetCode {
-    // The number of characters after which we insert a line break in the code
-    static final String INDENT = "  ";
-
-    private final StringBuilder code = new StringBuilder(1024);
-    private final int lineLengthThreshold;
-    private int indent = 0;
-    private int lineLength = 0;
-    private int lineIndex = 0;
-
-    /**
-     * @param lineLengthThreshold The length of a line after which we force
-     *                            a newline when possible.
-     */
-    private PrettyCodePrinter(
-        int lineLengthThreshold, boolean createSourceMap) {
-      super(createSourceMap);
-      this.lineLengthThreshold = lineLengthThreshold;
     }
 
     public String getCode() {
@@ -221,19 +185,29 @@ class CodePrinter {
       return (code.length() > 0) ? code.charAt(code.length() - 1) : '\0';
     }
 
-    @Override
-    int getCurrentBufferLength() {
-      return code.length();
-    }
-
-    @Override
-    int getCurrentCharIndex() {
+    protected final int getCurrentCharIndex() {
       return lineLength;
     }
 
-    @Override
-    int getCurrentLineIndex() {
+    protected final int getCurrentLineIndex() {
       return lineIndex;
+    }
+  }
+
+  static class PrettyCodePrinter
+      extends MappedCodePrinter {
+    // The number of characters after which we insert a line break in the code
+    static final String INDENT = "  ";
+
+    private int indent = 0;
+
+    /**
+     * @param lineLengthThreshold The length of a line after which we force
+     *                            a newline when possible.
+     */
+    private PrettyCodePrinter(
+        int lineLengthThreshold, boolean createSourceMap) {
+      super(lineLengthThreshold, createSourceMap);
     }
 
     /**
@@ -394,8 +368,7 @@ class CodePrinter {
 
 
   static class CompactCodePrinter
-      extends MappedCodePrinter
-      implements HasGetCode {
+      extends MappedCodePrinter {
 
     // The CompactCodePrinter tries to emit just enough newlines to stop there
     // being lines longer than the threshold.  Since the output is going to be
@@ -407,13 +380,7 @@ class CodePrinter {
     // be more uniform than arbitary legal contexts.  Better compression would
     // probably require explicit modelling of the gzip algorithm.
 
-    private final StringBuilder code = new StringBuilder(1024);
-
     private final boolean lineBreak;
-    private final int lineLengthThreshold;
-
-    private int lineIndex = 0;
-    private int lineLength = 0;
     private int lineStartPosition = 0;
     private int preferredBreakPosition = 0;
 
@@ -426,33 +393,8 @@ class CodePrinter {
    */
     private CompactCodePrinter(boolean lineBreak, int lineLengthThreshold,
         boolean createSrcMap) {
-      super(createSrcMap);
+      super(lineLengthThreshold, createSrcMap);
       this.lineBreak = lineBreak;
-      this.lineLengthThreshold = lineLengthThreshold;
-    }
-
-    public String getCode() {
-      return code.toString();
-    }
-
-    @Override
-    char getLastChar() {
-      return (code.length() > 0) ? code.charAt(code.length() - 1) : '\0';
-    }
-
-    @Override
-    int getCurrentBufferLength() {
-      return code.length();
-    }
-
-    @Override
-    int getCurrentCharIndex() {
-      return lineLength;
-    }
-
-    @Override
-    int getCurrentLineIndex() {
-      return lineIndex;
     }
 
     /**
@@ -638,21 +580,21 @@ class CodePrinter {
                                  SourceMap sourceMap,
                                  Charset outputCharset) {
     boolean createSourceMap = (sourceMap != null);
-    CodeConsumer cp =
+    MappedCodePrinter mcp =
         outputFormat == Format.COMPACT
         ? new CompactCodePrinter(
             lineBreak, lineLengthThreshold, createSourceMap)
         : new PrettyCodePrinter(lineLengthThreshold, createSourceMap);
     CodeGenerator cg =
         outputFormat == Format.TYPED
-        ? new TypedCodeGenerator(cp, outputCharset)
-        : new CodeGenerator(cp, outputCharset);
+        ? new TypedCodeGenerator(mcp, outputCharset)
+        : new CodeGenerator(mcp, outputCharset);
     cg.add(root);
 
-    String code = ((HasGetCode) cp).getCode();
+    String code = mcp.getCode();
 
     if (createSourceMap) {
-      cp.generateSourceMap(sourceMap);
+      mcp.generateSourceMap(sourceMap);
     }
 
     return code;

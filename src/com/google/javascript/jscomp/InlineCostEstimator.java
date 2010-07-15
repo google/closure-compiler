@@ -95,20 +95,5 @@ class InlineCostEstimator {
     void addIdentifier(String identifier) {
       add(ESTIMATED_IDENTIFIER);
     }
-
-    @Override
-    int getCurrentBufferLength() {
-      return -1;
-    }
-
-    @Override
-    int getCurrentCharIndex() {
-      return -1;
-    }
-
-    @Override
-    int getCurrentLineIndex() {
-      return -1;
-    }
   }
 }

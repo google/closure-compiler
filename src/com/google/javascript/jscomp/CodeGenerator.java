@@ -876,7 +876,7 @@ class CodeGenerator {
                           String singlequoteEscape,
                           String backslashEscape,
                           CharsetEncoder outputCharsetEncoder) {
-    StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder(s.length() + 2);
     sb.append(quote);
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);

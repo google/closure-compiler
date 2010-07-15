@@ -48,32 +48,6 @@ abstract class CodeConsumer {
   void endSourceMapping(Node node) {
   }
 
-
-  /**
-   * Generates the source map from the given code consumer,
-   * appending the information it saved to the SourceMap
-   * object given.
-   */
-  void generateSourceMap(SourceMap map){
-  }
-
-  /**
-   * Returns the current length of the buffer in which
-   * the generated code is being placed.
-   */
-  abstract int getCurrentBufferLength();
-
-  /**
-   * Returns the current character position on the current
-   * line in the generated code.
-   */
-  abstract int getCurrentCharIndex();
-
-  /**
-   * Returns the current line in the generated code.
-   */
-  abstract int getCurrentLineIndex();
-
   /**
    * Provides a means of interrupting the CodeGenerator. Derived classes should
    * return false to stop further processing.

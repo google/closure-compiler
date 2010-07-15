@@ -196,20 +196,5 @@ public class PerformanceTracker {
         return -1;
       }
     }
-
-    @Override
-    int getCurrentBufferLength() {
-      return -1;
-    }
-
-    @Override
-    int getCurrentCharIndex() {
-      return -1;
-    }
-
-    @Override
-    int getCurrentLineIndex() {
-      return -1;
-    }
   }
 }
