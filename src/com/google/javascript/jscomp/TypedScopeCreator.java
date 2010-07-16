@@ -81,6 +81,10 @@ import javax.annotation.Nullable;
  * about types in the type registry.
  */
 final class TypedScopeCreator implements ScopeCreator {
+  /**
+   * A suffix for naming delegate proxies differently from their base.
+   */
+  static final String DELEGATE_PROXY_SUFFIX = "(Proxy)";
 
   static final DiagnosticType MALFORMED_TYPEDEF =
       DiagnosticType.warning(
@@ -974,10 +978,8 @@ final class TypedScopeCreator implements ScopeCreator {
               typeRegistry.createDefaultObjectUnion(delegateBaseObject),
               functionParamBuilder.build());
 
-          // The suffix is necessary for the proxy to be distinguished from
-          // the base.
           FunctionType delegateProxy = typeRegistry.createConstructorType(
-              delegateBaseObject.getReferenceName() + "(Proxy)",
+              delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX,
               null, null, null);
           delegateProxy.setPrototypeBasedOn(delegateBaseObject);
 

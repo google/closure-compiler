@@ -243,26 +243,12 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (!NodeUtil.isFunctionExpression(node)) {
-        return node;
-      }
-
-      if (isEmptyFunction(node)) {
+      if (NodeUtil.isEmptyFunctionExpression(node)) {
         return buildCallNode(FACTORY_METHOD_NAME, null,
                              node.getLineno(), node.getCharno());
       } else {
         return node;
       }
-    }
-
-    /**
-     * Checks if the function matches the pattern:
-     *   function() {}
-     * @return Whether the function matches.
-     */
-    private boolean isEmptyFunction(Node functionNode) {
-      Node body = functionNode.getLastChild();
-      return !body.hasChildren();
     }
   }
 

@@ -1233,6 +1233,16 @@ public final class NodeUtil {
   }
 
   /**
+   * Determines if a node is a function expression that has an empty body.
+   *
+   * @param n a node
+   * @return whether the given node is a function expression that is empty
+   */
+  static boolean isEmptyFunctionExpression(Node node) {
+    return isFunctionExpression(node) && isEmptyBlock(node.getLastChild());
+  }
+
+  /**
    * Determines if a function takes a variable number of arguments by
    * looking for references to the "arguments" var_args object.
    */
