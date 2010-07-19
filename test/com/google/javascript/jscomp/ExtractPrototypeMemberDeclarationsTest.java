@@ -22,12 +22,11 @@ package com.google.javascript.jscomp;
 *
  */
 public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
-  private static final String TMP = "JSCompiler_prototypeAlias";
+  private static final String TMP = "a";
 
   @Override
   protected void setUp() {
     super.enableLineNumberCheck(true);
-    enableNormalize();
   }
 
   @Override
@@ -113,6 +112,28 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         TMP + ".y.e = 1;" +
         TMP + ".y.f = 1;" +
         TMP + ".y.g = 1;");
+  }
+
+  public void testUsedNameInScope() {
+    test(
+        "var a = 0;" +
+        "x.prototype.y.a = 1;" +
+        "x.prototype.y.b = 1;" +
+        "x.prototype.y.c = 1;" +
+        "x.prototype.y.d = 1;" +
+        "x.prototype.y.e = 1;" +
+        "x.prototype.y.f = 1;" +
+        "x.prototype.y.g = 1;",
+        "var b;" +
+        "var a = 0;" +
+        "b = x.prototype;" +
+        "b.y.a = 1;" +
+        "b.y.b = 1;" +
+        "b.y.c = 1;" +
+        "b.y.d = 1;" +
+        "b.y.e = 1;" +
+        "b.y.f = 1;" +
+        "b.y.g = 1;");
   }
 
   public void testWithDevirtualization() {

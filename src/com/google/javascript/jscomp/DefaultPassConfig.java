@@ -494,13 +494,7 @@ public class DefaultPassConfig extends PassConfig {
     //
     // Extracting prototype properties screws up the heuristic renaming
     // policies, so never run it when those policies are requested.
-    //
-    // It also introduces new variables in the global scope, so we should
-    // only run it when variable renaming is on.
-    //
-    // TODO(nicksantos): make prototype extraction a tri-state flag.
     if (options.extractPrototypeMemberDeclarations &&
-        options.variableRenaming == VariableRenamingPolicy.ALL &&
         (options.propertyRenaming != PropertyRenamingPolicy.HEURISTIC &&
          options.propertyRenaming !=
             PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC)) {

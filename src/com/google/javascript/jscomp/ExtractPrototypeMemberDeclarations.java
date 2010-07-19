@@ -89,7 +89,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   // The name of variable that will temporary hold the pointer to the prototype
   // object. Of cause, we assume that it'll be renamed by RenameVars.
-  private String prototypeAlias = "JSCompiler_prototypeAlias";
+  private String prototypeAlias = null;
 
   private final AbstractCompiler compiler;
 
@@ -196,6 +196,12 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
       if (n.getType() != Token.SCRIPT && n.getType() != Token.BLOCK) {
         return;
+      }
+
+      if (prototypeAlias == null) {
+        // Always in global scope
+        prototypeAlias =
+          new VariableNameGenerator(t.getScope()).getNameNewName();
       }
 
       for (Node cur = n.getFirstChild(); cur != null; cur = cur.getNext()) {
