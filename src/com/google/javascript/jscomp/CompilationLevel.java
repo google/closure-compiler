@@ -136,6 +136,7 @@ public enum CompilationLevel {
     options.optimizeArgumentsArray = true;
 
     // All the advance optimizations.
+    options.aliasKeywords = true;
     options.reserveRawExports = true;
     options.variableRenaming = VariableRenamingPolicy.ALL;
     options.propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
