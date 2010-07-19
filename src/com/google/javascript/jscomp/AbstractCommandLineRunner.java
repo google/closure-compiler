@@ -141,6 +141,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     createDefineReplacements(config.define, options);
 
     options.manageClosureDependencies = config.manageClosureDependencies;
+    options.devMode = config.jscompDevMode;
   }
 
   final protected A getCompiler() {
