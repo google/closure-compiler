@@ -56,12 +56,12 @@ public  final class FunctionInformationMap extends
       return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Entry_fieldAccessorTable;
     }
     
+    private int bitField0_;
     // required int32 id = 2;
     public static final int ID_FIELD_NUMBER = 2;
-    private boolean hasId;
     private int id_;
     public boolean hasId() {
-      return hasId;
+      return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     public int getId() {
       return id_;
@@ -69,10 +69,9 @@ public  final class FunctionInformationMap extends
     
     // required string source_name = 3;
     public static final int SOURCE_NAME_FIELD_NUMBER = 3;
-    private boolean hasSourceName;
     private java.lang.String sourceName_;
     public boolean hasSourceName() {
-      return hasSourceName;
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     public java.lang.String getSourceName() {
       return sourceName_;
@@ -80,10 +79,9 @@ public  final class FunctionInformationMap extends
     
     // required int32 line_number = 4;
     public static final int LINE_NUMBER_FIELD_NUMBER = 4;
-    private boolean hasLineNumber;
     private int lineNumber_;
     public boolean hasLineNumber() {
-      return hasLineNumber;
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     public int getLineNumber() {
       return lineNumber_;
@@ -91,10 +89,9 @@ public  final class FunctionInformationMap extends
     
     // required string module_name = 5;
     public static final int MODULE_NAME_FIELD_NUMBER = 5;
-    private boolean hasModuleName;
     private java.lang.String moduleName_;
     public boolean hasModuleName() {
-      return hasModuleName;
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     public java.lang.String getModuleName() {
       return moduleName_;
@@ -102,10 +99,9 @@ public  final class FunctionInformationMap extends
     
     // required int32 size = 6;
     public static final int SIZE_FIELD_NUMBER = 6;
-    private boolean hasSize;
     private int size_;
     public boolean hasSize() {
-      return hasSize;
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     public int getSize() {
       return size_;
@@ -113,10 +109,9 @@ public  final class FunctionInformationMap extends
     
     // required string name = 7;
     public static final int NAME_FIELD_NUMBER = 7;
-    private boolean hasName;
     private java.lang.String name_;
     public boolean hasName() {
-      return hasName;
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     public java.lang.String getName() {
       return name_;
@@ -124,10 +119,9 @@ public  final class FunctionInformationMap extends
     
     // required string compiled_source = 8;
     public static final int COMPILED_SOURCE_FIELD_NUMBER = 8;
-    private boolean hasCompiledSource;
     private java.lang.String compiledSource_;
     public boolean hasCompiledSource() {
-      return hasCompiledSource;
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     public java.lang.String getCompiledSource() {
       return compiledSource_;
@@ -336,19 +330,19 @@ public  final class FunctionInformationMap extends
       public Builder clear() {
         super.clear();
         id_ = 0;
-        hasId = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
         sourceName_ = "";
-        hasSourceName = false;
+        bitField0_ = (bitField0_ & ~0x00000002);
         lineNumber_ = 0;
-        hasLineNumber = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
         moduleName_ = "";
-        hasModuleName = false;
+        bitField0_ = (bitField0_ & ~0x00000008);
         size_ = 0;
-        hasSize = false;
+        bitField0_ = (bitField0_ & ~0x00000010);
         name_ = "";
-        hasName = false;
+        bitField0_ = (bitField0_ & ~0x00000020);
         compiledSource_ = "";
-        hasCompiledSource = false;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
       
@@ -385,19 +379,33 @@ public  final class FunctionInformationMap extends
       
       public com.google.javascript.jscomp.FunctionInformationMap.Entry buildPartial() {
         com.google.javascript.jscomp.FunctionInformationMap.Entry result = new com.google.javascript.jscomp.FunctionInformationMap.Entry(this);
-        result.hasId = hasId;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000001);
+        }
         result.id_ = id_;
-        result.hasSourceName = hasSourceName;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000002);
+        }
         result.sourceName_ = sourceName_;
-        result.hasLineNumber = hasLineNumber;
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000004);
+        }
         result.lineNumber_ = lineNumber_;
-        result.hasModuleName = hasModuleName;
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000008);
+        }
         result.moduleName_ = moduleName_;
-        result.hasSize = hasSize;
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000010);
+        }
         result.size_ = size_;
-        result.hasName = hasName;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000020);
+        }
         result.name_ = name_;
-        result.hasCompiledSource = hasCompiledSource;
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000040);
+        }
         result.compiledSource_ = compiledSource_;
         onBuilt();
         return result;
@@ -503,34 +511,33 @@ public  final class FunctionInformationMap extends
         }
       }
       
+      private int bitField0_;
       
       // required int32 id = 2;
-      private boolean hasId;
       private int id_ ;
       public boolean hasId() {
-        return hasId;
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       public int getId() {
         return id_;
       }
       public Builder setId(int value) {
-        hasId = true;
+        bitField0_ = (bitField0_ | 0x00000001);
         id_ = value;
         onChanged();
         return this;
       }
       public Builder clearId() {
-        hasId = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
         id_ = 0;
         onChanged();
         return this;
       }
       
       // required string source_name = 3;
-      private boolean hasSourceName;
       private java.lang.String sourceName_ = "";
       public boolean hasSourceName() {
-        return hasSourceName;
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       public java.lang.String getSourceName() {
         return sourceName_;
@@ -539,45 +546,43 @@ public  final class FunctionInformationMap extends
         if (value == null) {
     throw new NullPointerException();
   }
-  hasSourceName = true;
+  bitField0_ = (bitField0_ | 0x00000002);
         sourceName_ = value;
         onChanged();
         return this;
       }
       public Builder clearSourceName() {
-        hasSourceName = false;
+        bitField0_ = (bitField0_ & ~0x00000002);
         sourceName_ = getDefaultInstance().getSourceName();
         onChanged();
         return this;
       }
       
       // required int32 line_number = 4;
-      private boolean hasLineNumber;
       private int lineNumber_ ;
       public boolean hasLineNumber() {
-        return hasLineNumber;
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       public int getLineNumber() {
         return lineNumber_;
       }
       public Builder setLineNumber(int value) {
-        hasLineNumber = true;
+        bitField0_ = (bitField0_ | 0x00000004);
         lineNumber_ = value;
         onChanged();
         return this;
       }
       public Builder clearLineNumber() {
-        hasLineNumber = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
         lineNumber_ = 0;
         onChanged();
         return this;
       }
       
       // required string module_name = 5;
-      private boolean hasModuleName;
       private java.lang.String moduleName_ = "";
       public boolean hasModuleName() {
-        return hasModuleName;
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       public java.lang.String getModuleName() {
         return moduleName_;
@@ -586,45 +591,43 @@ public  final class FunctionInformationMap extends
         if (value == null) {
     throw new NullPointerException();
   }
-  hasModuleName = true;
+  bitField0_ = (bitField0_ | 0x00000008);
         moduleName_ = value;
         onChanged();
         return this;
       }
       public Builder clearModuleName() {
-        hasModuleName = false;
+        bitField0_ = (bitField0_ & ~0x00000008);
         moduleName_ = getDefaultInstance().getModuleName();
         onChanged();
         return this;
       }
       
       // required int32 size = 6;
-      private boolean hasSize;
       private int size_ ;
       public boolean hasSize() {
-        return hasSize;
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       public int getSize() {
         return size_;
       }
       public Builder setSize(int value) {
-        hasSize = true;
+        bitField0_ = (bitField0_ | 0x00000010);
         size_ = value;
         onChanged();
         return this;
       }
       public Builder clearSize() {
-        hasSize = false;
+        bitField0_ = (bitField0_ & ~0x00000010);
         size_ = 0;
         onChanged();
         return this;
       }
       
       // required string name = 7;
-      private boolean hasName;
       private java.lang.String name_ = "";
       public boolean hasName() {
-        return hasName;
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       public java.lang.String getName() {
         return name_;
@@ -633,23 +636,22 @@ public  final class FunctionInformationMap extends
         if (value == null) {
     throw new NullPointerException();
   }
-  hasName = true;
+  bitField0_ = (bitField0_ | 0x00000020);
         name_ = value;
         onChanged();
         return this;
       }
       public Builder clearName() {
-        hasName = false;
+        bitField0_ = (bitField0_ & ~0x00000020);
         name_ = getDefaultInstance().getName();
         onChanged();
         return this;
       }
       
       // required string compiled_source = 8;
-      private boolean hasCompiledSource;
       private java.lang.String compiledSource_ = "";
       public boolean hasCompiledSource() {
-        return hasCompiledSource;
+        return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       public java.lang.String getCompiledSource() {
         return compiledSource_;
@@ -658,13 +660,13 @@ public  final class FunctionInformationMap extends
         if (value == null) {
     throw new NullPointerException();
   }
-  hasCompiledSource = true;
+  bitField0_ = (bitField0_ | 0x00000040);
         compiledSource_ = value;
         onChanged();
         return this;
       }
       public Builder clearCompiledSource() {
-        hasCompiledSource = false;
+        bitField0_ = (bitField0_ & ~0x00000040);
         compiledSource_ = getDefaultInstance().getCompiledSource();
         onChanged();
         return this;
@@ -708,12 +710,12 @@ public  final class FunctionInformationMap extends
       return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Module_fieldAccessorTable;
     }
     
+    private int bitField0_;
     // required string name = 102;
     public static final int NAME_FIELD_NUMBER = 102;
-    private boolean hasName;
     private java.lang.String name_;
     public boolean hasName() {
-      return hasName;
+      return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     public java.lang.String getName() {
       return name_;
@@ -721,10 +723,9 @@ public  final class FunctionInformationMap extends
     
     // required string compiled_source = 103;
     public static final int COMPILED_SOURCE_FIELD_NUMBER = 103;
-    private boolean hasCompiledSource;
     private java.lang.String compiledSource_;
     public boolean hasCompiledSource() {
-      return hasCompiledSource;
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     public java.lang.String getCompiledSource() {
       return compiledSource_;
@@ -888,9 +889,9 @@ public  final class FunctionInformationMap extends
       public Builder clear() {
         super.clear();
         name_ = "";
-        hasName = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
         compiledSource_ = "";
-        hasCompiledSource = false;
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
       
@@ -927,9 +928,13 @@ public  final class FunctionInformationMap extends
       
       public com.google.javascript.jscomp.FunctionInformationMap.Module buildPartial() {
         com.google.javascript.jscomp.FunctionInformationMap.Module result = new com.google.javascript.jscomp.FunctionInformationMap.Module(this);
-        result.hasName = hasName;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000001);
+        }
         result.name_ = name_;
-        result.hasCompiledSource = hasCompiledSource;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          result.bitField0_ = (result.bitField0_ | 0x00000002);
+        }
         result.compiledSource_ = compiledSource_;
         onBuilt();
         return result;
@@ -995,12 +1000,12 @@ public  final class FunctionInformationMap extends
         }
       }
       
+      private int bitField0_;
       
       // required string name = 102;
-      private boolean hasName;
       private java.lang.String name_ = "";
       public boolean hasName() {
-        return hasName;
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       public java.lang.String getName() {
         return name_;
@@ -1009,23 +1014,22 @@ public  final class FunctionInformationMap extends
         if (value == null) {
     throw new NullPointerException();
   }
-  hasName = true;
+  bitField0_ = (bitField0_ | 0x00000001);
         name_ = value;
         onChanged();
         return this;
       }
       public Builder clearName() {
-        hasName = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
         name_ = getDefaultInstance().getName();
         onChanged();
         return this;
       }
       
       // required string compiled_source = 103;
-      private boolean hasCompiledSource;
       private java.lang.String compiledSource_ = "";
       public boolean hasCompiledSource() {
-        return hasCompiledSource;
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       public java.lang.String getCompiledSource() {
         return compiledSource_;
@@ -1034,13 +1038,13 @@ public  final class FunctionInformationMap extends
         if (value == null) {
     throw new NullPointerException();
   }
-  hasCompiledSource = true;
+  bitField0_ = (bitField0_ | 0x00000002);
         compiledSource_ = value;
         onChanged();
         return this;
       }
       public Builder clearCompiledSource() {
-        hasCompiledSource = false;
+        bitField0_ = (bitField0_ & ~0x00000002);
         compiledSource_ = getDefaultInstance().getCompiledSource();
         onChanged();
         return this;
@@ -1088,11 +1092,11 @@ public  final class FunctionInformationMap extends
     module_ = java.util.Collections.emptyList();
   }
   public final boolean isInitialized() {
-    for (com.google.javascript.jscomp.FunctionInformationMap.Entry element : getEntryList()) {
-      if (!element.isInitialized()) return false;
+    for (int i = 0; i < getEntryCount(); i++) {
+      if (!getEntry(i).isInitialized()) return false;
     }
-    for (com.google.javascript.jscomp.FunctionInformationMap.Module element : getModuleList()) {
-      if (!element.isInitialized()) return false;
+    for (int i = 0; i < getModuleCount(); i++) {
+      if (!getModule(i).isInitialized()) return false;
     }
     return true;
   }
@@ -1248,13 +1252,13 @@ public  final class FunctionInformationMap extends
       super.clear();
       if (entryBuilder_ == null) {
         entry_ = java.util.Collections.emptyList();
-        isEntryMutable = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
       } else {
         entryBuilder_.clear();
       }
       if (moduleBuilder_ == null) {
         module_ = java.util.Collections.emptyList();
-        isModuleMutable = false;
+        bitField0_ = (bitField0_ & ~0x00000002);
       } else {
         moduleBuilder_.clear();
       }
@@ -1295,18 +1299,18 @@ public  final class FunctionInformationMap extends
     public com.google.javascript.jscomp.FunctionInformationMap buildPartial() {
       com.google.javascript.jscomp.FunctionInformationMap result = new com.google.javascript.jscomp.FunctionInformationMap(this);
       if (entryBuilder_ == null) {
-        if (isEntryMutable) {
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
           entry_ = java.util.Collections.unmodifiableList(entry_);
-          isEntryMutable = false;
+          bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.entry_ = entry_;
       } else {
         result.entry_ = entryBuilder_.build();
       }
       if (moduleBuilder_ == null) {
-        if (isModuleMutable) {
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
           module_ = java.util.Collections.unmodifiableList(module_);
-          isModuleMutable = false;
+          bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.module_ = module_;
       } else {
@@ -1331,7 +1335,7 @@ public  final class FunctionInformationMap extends
         if (!other.entry_.isEmpty()) {
           if (entry_.isEmpty()) {
             entry_ = other.entry_;
-            isEntryMutable = false;
+            bitField0_ = (bitField0_ & ~0x00000001);
           } else {
             ensureEntryIsMutable();
             entry_.addAll(other.entry_);
@@ -1344,7 +1348,7 @@ public  final class FunctionInformationMap extends
             entryBuilder_.dispose();
             entryBuilder_ = null;
             entry_ = other.entry_;
-            isEntryMutable = false;
+            bitField0_ = (bitField0_ & ~0x00000001);
             entryBuilder_ = 
               com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                  getEntryFieldBuilder() : null;
@@ -1357,7 +1361,7 @@ public  final class FunctionInformationMap extends
         if (!other.module_.isEmpty()) {
           if (module_.isEmpty()) {
             module_ = other.module_;
-            isModuleMutable = false;
+            bitField0_ = (bitField0_ & ~0x00000002);
           } else {
             ensureModuleIsMutable();
             module_.addAll(other.module_);
@@ -1370,7 +1374,7 @@ public  final class FunctionInformationMap extends
             moduleBuilder_.dispose();
             moduleBuilder_ = null;
             module_ = other.module_;
-            isModuleMutable = false;
+            bitField0_ = (bitField0_ & ~0x00000002);
             moduleBuilder_ = 
               com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                  getModuleFieldBuilder() : null;
@@ -1384,11 +1388,11 @@ public  final class FunctionInformationMap extends
     }
     
     public final boolean isInitialized() {
-      for (com.google.javascript.jscomp.FunctionInformationMap.Entry element : getEntryList()) {
-        if (!element.isInitialized()) return false;
+      for (int i = 0; i < getEntryCount(); i++) {
+        if (!getEntry(i).isInitialized()) return false;
       }
-      for (com.google.javascript.jscomp.FunctionInformationMap.Module element : getModuleList()) {
-        if (!element.isInitialized()) return false;
+      for (int i = 0; i < getModuleCount(); i++) {
+        if (!getModule(i).isInitialized()) return false;
       }
       return true;
     }
@@ -1430,15 +1434,15 @@ public  final class FunctionInformationMap extends
       }
     }
     
+    private int bitField0_;
     
     // repeated group Entry = 1 {
     private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> entry_ =
       java.util.Collections.emptyList();
-    private boolean isEntryMutable;
     private void ensureEntryIsMutable() {
-      if (!isEntryMutable) {
+      if (!((bitField0_ & 0x00000001) == 0x00000001)) {
         entry_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Entry>(entry_);
-        isEntryMutable = true;
+        bitField0_ = (bitField0_ | 0x00000001);
        }
     }
     
@@ -1554,7 +1558,7 @@ public  final class FunctionInformationMap extends
     public Builder clearEntry() {
       if (entryBuilder_ == null) {
         entry_ = java.util.Collections.emptyList();
-        isEntryMutable = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
         onChanged();
       } else {
         entryBuilder_.clear();
@@ -1594,7 +1598,7 @@ public  final class FunctionInformationMap extends
         entryBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
             com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder>(
                 entry_,
-                isEntryMutable,
+                ((bitField0_ & 0x00000001) == 0x00000001),
                 getParentForChildren(),
                 isClean());
         entry_ = null;
@@ -1605,11 +1609,10 @@ public  final class FunctionInformationMap extends
     // repeated group Module = 101 {
     private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> module_ =
       java.util.Collections.emptyList();
-    private boolean isModuleMutable;
     private void ensureModuleIsMutable() {
-      if (!isModuleMutable) {
+      if (!((bitField0_ & 0x00000002) == 0x00000002)) {
         module_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Module>(module_);
-        isModuleMutable = true;
+        bitField0_ = (bitField0_ | 0x00000002);
        }
     }
     
@@ -1725,7 +1728,7 @@ public  final class FunctionInformationMap extends
     public Builder clearModule() {
       if (moduleBuilder_ == null) {
         module_ = java.util.Collections.emptyList();
-        isModuleMutable = false;
+        bitField0_ = (bitField0_ & ~0x00000002);
         onChanged();
       } else {
         moduleBuilder_.clear();
@@ -1765,7 +1768,7 @@ public  final class FunctionInformationMap extends
         moduleBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
             com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder>(
                 module_,
-                isModuleMutable,
+                ((bitField0_ & 0x00000002) == 0x00000002),
                 getParentForChildren(),
                 isClean());
         module_ = null;

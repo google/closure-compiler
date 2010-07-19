@@ -76,7 +76,18 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
   static final String MSG_PREFIX = "MSG_";
 
-
+  /**
+   * Pattern for unnamed messages.
+   * <p>
+   * All jsmessages in js code should have unique name but messages in generated
+   * code (i.e. from soy template) could have duplicated message names. Later we
+   * replace the message names with ids constructed as a hash of the message
+   * content.
+   * <p>
+   * <link href="http://code.google.com/p/closure-templates/">
+   * Soy</link> generates messages with names MSG_UNNAMED_<NUMBER> . This
+   * pattern recognizes such messages.
+   */
   private static final Pattern MSG_UNNAMED_PATTERN =
       Pattern.compile("MSG_UNNAMED_\\d+");
 
@@ -136,7 +147,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
     // TODO(anatol): add flag that decides whether to process UNNAMED messages.
     // Some projects would not want such functionality (unnamed) as they dont
-
+    // use SOY templates.
   }
 
   @Override

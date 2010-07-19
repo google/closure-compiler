@@ -29,12 +29,12 @@ public  final class Instrumentation extends
     return com.google.javascript.jscomp.InstrumentationTemplate.internal_static_jscomp_Instrumentation_fieldAccessorTable;
   }
   
+  private int bitField0_;
   // optional string report_defined = 1;
   public static final int REPORT_DEFINED_FIELD_NUMBER = 1;
-  private boolean hasReportDefined;
   private java.lang.String reportDefined_;
   public boolean hasReportDefined() {
-    return hasReportDefined;
+    return ((bitField0_ & 0x00000001) == 0x00000001);
   }
   public java.lang.String getReportDefined() {
     return reportDefined_;
@@ -42,10 +42,9 @@ public  final class Instrumentation extends
   
   // optional string report_call = 2;
   public static final int REPORT_CALL_FIELD_NUMBER = 2;
-  private boolean hasReportCall;
   private java.lang.String reportCall_;
   public boolean hasReportCall() {
-    return hasReportCall;
+    return ((bitField0_ & 0x00000002) == 0x00000002);
   }
   public java.lang.String getReportCall() {
     return reportCall_;
@@ -53,10 +52,9 @@ public  final class Instrumentation extends
   
   // optional string report_exit = 6;
   public static final int REPORT_EXIT_FIELD_NUMBER = 6;
-  private boolean hasReportExit;
   private java.lang.String reportExit_;
   public boolean hasReportExit() {
-    return hasReportExit;
+    return ((bitField0_ & 0x00000004) == 0x00000004);
   }
   public java.lang.String getReportExit() {
     return reportExit_;
@@ -92,10 +90,9 @@ public  final class Instrumentation extends
   
   // optional string app_name_setter = 5;
   public static final int APP_NAME_SETTER_FIELD_NUMBER = 5;
-  private boolean hasAppNameSetter;
   private java.lang.String appNameSetter_;
   public boolean hasAppNameSetter() {
-    return hasAppNameSetter;
+    return ((bitField0_ & 0x00000008) == 0x00000008);
   }
   public java.lang.String getAppNameSetter() {
     return appNameSetter_;
@@ -299,17 +296,17 @@ public  final class Instrumentation extends
     public Builder clear() {
       super.clear();
       reportDefined_ = "";
-      hasReportDefined = false;
+      bitField0_ = (bitField0_ & ~0x00000001);
       reportCall_ = "";
-      hasReportCall = false;
+      bitField0_ = (bitField0_ & ~0x00000002);
       reportExit_ = "";
-      hasReportExit = false;
+      bitField0_ = (bitField0_ & ~0x00000004);
       declarationToRemove_ = java.util.Collections.emptyList();
-      isDeclarationToRemoveMutable = false;
+      bitField0_ = (bitField0_ & ~0x00000008);
       init_ = java.util.Collections.emptyList();
-      isInitMutable = false;
+      bitField0_ = (bitField0_ & ~0x00000010);
       appNameSetter_ = "";
-      hasAppNameSetter = false;
+      bitField0_ = (bitField0_ & ~0x00000020);
       return this;
     }
     
@@ -346,23 +343,31 @@ public  final class Instrumentation extends
     
     public com.google.javascript.jscomp.Instrumentation buildPartial() {
       com.google.javascript.jscomp.Instrumentation result = new com.google.javascript.jscomp.Instrumentation(this);
-      result.hasReportDefined = hasReportDefined;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        result.bitField0_ = (result.bitField0_ | 0x00000001);
+      }
       result.reportDefined_ = reportDefined_;
-      result.hasReportCall = hasReportCall;
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        result.bitField0_ = (result.bitField0_ | 0x00000002);
+      }
       result.reportCall_ = reportCall_;
-      result.hasReportExit = hasReportExit;
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        result.bitField0_ = (result.bitField0_ | 0x00000004);
+      }
       result.reportExit_ = reportExit_;
-      if (isDeclarationToRemoveMutable) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         declarationToRemove_ = java.util.Collections.unmodifiableList(declarationToRemove_);
-        isDeclarationToRemoveMutable = false;
+        bitField0_ = (bitField0_ & ~0x00000008);
       }
       result.declarationToRemove_ = declarationToRemove_;
-      if (isInitMutable) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         init_ = java.util.Collections.unmodifiableList(init_);
-        isInitMutable = false;
+        bitField0_ = (bitField0_ & ~0x00000010);
       }
       result.init_ = init_;
-      result.hasAppNameSetter = hasAppNameSetter;
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        result.bitField0_ = (result.bitField0_ | 0x00000008);
+      }
       result.appNameSetter_ = appNameSetter_;
       onBuilt();
       return result;
@@ -391,7 +396,7 @@ public  final class Instrumentation extends
       if (!other.declarationToRemove_.isEmpty()) {
         if (declarationToRemove_.isEmpty()) {
           declarationToRemove_ = other.declarationToRemove_;
-          isDeclarationToRemoveMutable = false;
+          bitField0_ = (bitField0_ & ~0x00000008);
         } else {
           ensureDeclarationToRemoveIsMutable();
           declarationToRemove_.addAll(other.declarationToRemove_);
@@ -401,7 +406,7 @@ public  final class Instrumentation extends
       if (!other.init_.isEmpty()) {
         if (init_.isEmpty()) {
           init_ = other.init_;
-          isInitMutable = false;
+          bitField0_ = (bitField0_ & ~0x00000010);
         } else {
           ensureInitIsMutable();
           init_.addAll(other.init_);
@@ -468,12 +473,12 @@ public  final class Instrumentation extends
       }
     }
     
+    private int bitField0_;
     
     // optional string report_defined = 1;
-    private boolean hasReportDefined;
     private java.lang.String reportDefined_ = "";
     public boolean hasReportDefined() {
-      return hasReportDefined;
+      return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     public java.lang.String getReportDefined() {
       return reportDefined_;
@@ -482,23 +487,22 @@ public  final class Instrumentation extends
       if (value == null) {
     throw new NullPointerException();
   }
-  hasReportDefined = true;
+  bitField0_ = (bitField0_ | 0x00000001);
       reportDefined_ = value;
       onChanged();
       return this;
     }
     public Builder clearReportDefined() {
-      hasReportDefined = false;
+      bitField0_ = (bitField0_ & ~0x00000001);
       reportDefined_ = getDefaultInstance().getReportDefined();
       onChanged();
       return this;
     }
     
     // optional string report_call = 2;
-    private boolean hasReportCall;
     private java.lang.String reportCall_ = "";
     public boolean hasReportCall() {
-      return hasReportCall;
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     public java.lang.String getReportCall() {
       return reportCall_;
@@ -507,23 +511,22 @@ public  final class Instrumentation extends
       if (value == null) {
     throw new NullPointerException();
   }
-  hasReportCall = true;
+  bitField0_ = (bitField0_ | 0x00000002);
       reportCall_ = value;
       onChanged();
       return this;
     }
     public Builder clearReportCall() {
-      hasReportCall = false;
+      bitField0_ = (bitField0_ & ~0x00000002);
       reportCall_ = getDefaultInstance().getReportCall();
       onChanged();
       return this;
     }
     
     // optional string report_exit = 6;
-    private boolean hasReportExit;
     private java.lang.String reportExit_ = "";
     public boolean hasReportExit() {
-      return hasReportExit;
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     public java.lang.String getReportExit() {
       return reportExit_;
@@ -532,13 +535,13 @@ public  final class Instrumentation extends
       if (value == null) {
     throw new NullPointerException();
   }
-  hasReportExit = true;
+  bitField0_ = (bitField0_ | 0x00000004);
       reportExit_ = value;
       onChanged();
       return this;
     }
     public Builder clearReportExit() {
-      hasReportExit = false;
+      bitField0_ = (bitField0_ & ~0x00000004);
       reportExit_ = getDefaultInstance().getReportExit();
       onChanged();
       return this;
@@ -547,11 +550,10 @@ public  final class Instrumentation extends
     // repeated string declaration_to_remove = 3;
     private java.util.List<java.lang.String> declarationToRemove_ =
       java.util.Collections.emptyList();
-    private boolean isDeclarationToRemoveMutable;
     private void ensureDeclarationToRemoveIsMutable() {
-      if (!isDeclarationToRemoveMutable) {
+      if (!((bitField0_ & 0x00000008) == 0x00000008)) {
         declarationToRemove_ = new java.util.ArrayList<java.lang.String>(declarationToRemove_);
-        isDeclarationToRemoveMutable = true;
+        bitField0_ = (bitField0_ | 0x00000008);
        }
     }
     public java.util.List<java.lang.String>
@@ -592,7 +594,7 @@ public  final class Instrumentation extends
     }
     public Builder clearDeclarationToRemove() {
       declarationToRemove_ = java.util.Collections.emptyList();
-      isDeclarationToRemoveMutable = false;
+      bitField0_ = (bitField0_ & ~0x00000008);
       onChanged();
       return this;
     }
@@ -600,11 +602,10 @@ public  final class Instrumentation extends
     // repeated string init = 4;
     private java.util.List<java.lang.String> init_ =
       java.util.Collections.emptyList();
-    private boolean isInitMutable;
     private void ensureInitIsMutable() {
-      if (!isInitMutable) {
+      if (!((bitField0_ & 0x00000010) == 0x00000010)) {
         init_ = new java.util.ArrayList<java.lang.String>(init_);
-        isInitMutable = true;
+        bitField0_ = (bitField0_ | 0x00000010);
        }
     }
     public java.util.List<java.lang.String>
@@ -645,16 +646,15 @@ public  final class Instrumentation extends
     }
     public Builder clearInit() {
       init_ = java.util.Collections.emptyList();
-      isInitMutable = false;
+      bitField0_ = (bitField0_ & ~0x00000010);
       onChanged();
       return this;
     }
     
     // optional string app_name_setter = 5;
-    private boolean hasAppNameSetter;
     private java.lang.String appNameSetter_ = "";
     public boolean hasAppNameSetter() {
-      return hasAppNameSetter;
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     public java.lang.String getAppNameSetter() {
       return appNameSetter_;
@@ -663,13 +663,13 @@ public  final class Instrumentation extends
       if (value == null) {
     throw new NullPointerException();
   }
-  hasAppNameSetter = true;
+  bitField0_ = (bitField0_ | 0x00000020);
       appNameSetter_ = value;
       onChanged();
       return this;
     }
     public Builder clearAppNameSetter() {
-      hasAppNameSetter = false;
+      bitField0_ = (bitField0_ & ~0x00000020);
       appNameSetter_ = getDefaultInstance().getAppNameSetter();
       onChanged();
       return this;
