@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -28,6 +29,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -168,6 +170,30 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
             def = unknownDef;
           }
 
+          // TODO(johnlenz) : remove this stub dropping code if it becomes
+          // illegal to have untyped stubs in the externs definitions.
+          if (inExterns) {
+            // We need special handling of untyped externs stubs here:
+            //    the stub should be dropped if the name is provided elsewhere.
+
+            List<Definition> stubsToRemove = Lists.newArrayList();
+            String qualifiedName = node.getQualifiedName();
+            for (Definition prevDef : nameDefinitionMultimap.get(name)) {
+              if (prevDef instanceof ExternalNameOnlyDefinition
+                  && node.getJSDocInfo() == null) {
+                String prevName = prevDef.getLValue().getQualifiedName();
+                if (qualifiedName.equals(prevName)) {
+                  // Drop this stub, there is a real definition.
+                  stubsToRemove.add(prevDef);
+                }
+              }
+            }
+
+            for (Definition prevDef : stubsToRemove) {
+              nameDefinitionMultimap.remove(name, prevDef);
+            }
+          }
+
           nameDefinitionMultimap.put(name, def);
           definitionSiteMap.put(node,
                                 new DefinitionSite(node,
@@ -182,15 +208,37 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
         String name = getSimplifiedName(node);
         if (name != null) {
 
-          // Incomplete definition
-          Definition definition = new ExternalNameOnlyDefinition(node);
-          nameDefinitionMultimap.put(name, definition);
-          definitionSiteMap.put(node,
-                                new DefinitionSite(node,
-                                                   definition,
-                                                   traversal.getModule(),
-                                                   traversal.inGlobalScope(),
-                                                   inExterns));
+          // TODO(johnlenz) : remove this code if it becomes illegal to have
+          // stubs in the externs definitions.
+
+          // We need special handling of untyped externs stubs here:
+          //    the stub should be dropped if the name is provided elsewhere.
+          // We can't just drop the stub now as it needs to be used as the
+          //    externs definition if no other definition is provided.
+
+          boolean dropStub = false;
+          if (node.getJSDocInfo() == null) {
+            String qualifiedName = node.getQualifiedName();
+            for (Definition prevDef : nameDefinitionMultimap.get(name)) {
+              String prevName = prevDef.getLValue().getQualifiedName();
+              if (qualifiedName.equals(prevName)) {
+                dropStub = true;
+                break;
+              }
+            }
+          }
+
+          if (!dropStub) {
+            // Incomplete definition
+            Definition definition = new ExternalNameOnlyDefinition(node);
+            nameDefinitionMultimap.put(name, definition);
+            definitionSiteMap.put(node,
+                                  new DefinitionSite(node,
+                                                     definition,
+                                                     traversal.getModule(),
+                                                     traversal.inGlobalScope(),
+                                                     inExterns));
+          }
         }
       }
     }

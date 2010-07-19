@@ -39,33 +39,49 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   private static String kExterns =
       CompilerTypeTestCase.DEFAULT_EXTERNS +
       "/**@nosideeffects*/function Error(){}" +
+
       "function externSef1(){}" +
+
       "/**@nosideeffects*/function externNsef1(){}" +
+
       "var externSef2 = function(){};" +
+
       "/**@nosideeffects*/var externNsef2 = function(){};" +
+
       "var externNsef3 = /**@nosideeffects*/function(){};" +
 
       "var externObj;" +
+
       "externObj.sef1 = function(){};" +
+
       "/**@nosideeffects*/externObj.nsef1 = function(){};" +
+
       "externObj.nsef2 = /**@nosideeffects*/function(){};" +
 
       "externObj.partialFn;" +
+
       "externObj.partialSharedFn;" +
 
       "var externObj2;" +
+
       "externObj2.partialSharedFn = /**@nosideeffects*/function(){};" +
 
       "/**@constructor*/function externSefConstructor(){}" +
+
       "externSefConstructor.prototype.sefFnOfSefObj = function(){};" +
+
       "externSefConstructor.prototype.nsefFnOfSefObj = " +
       "  /**@nosideeffects*/function(){};" +
+
       "externSefConstructor.prototype.externShared = function(){};" +
 
       "/**@constructor\n@nosideeffects*/function externNsefConstructor(){}" +
+
       "externNsefConstructor.prototype.sefFnOfNsefObj = function(){};" +
+
       "externNsefConstructor.prototype.nsefFnOfNsefObj = " +
       "  /**@nosideeffects*/function(){};" +
+
       "externNsefConstructor.prototype.externShared = " +
       "  /**@nosideeffects*/function(){};" +
 
@@ -74,7 +90,33 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       "  /**@nosideeffects*/function(){};" +
 
       "externNsefConstructor.prototype.sharedPartialSef;" +
-      "/**@nosideeffects*/externNsefConstructor.prototype.sharedPartialNsef";
+      "/**@nosideeffects*/externNsefConstructor.prototype.sharedPartialNsef;" +
+
+      // An externs definition with a stub before.
+
+      "/**@constructor*/function externObj3(){}" +
+
+      "externObj3.prototype.propWithStubBefore;" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " * @nosideeffects\n" +
+      " */\n" +
+      "externObj3.prototype.propWithStubBefore = function(s) {};" +
+
+      // An externs definition with a stub after.
+
+      "/**@constructor*/function externObj4(){}" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " * @nosideeffects\n" +
+      " */\n" +
+      "externObj4.prototype.propWithStubAfter = function(s) {};" +
+
+      "externObj4.prototype.propWithStubAfter;";
 
   public PureFunctionIdentifierTest() {
     super(kExterns);
@@ -234,6 +276,71 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                                         "externNsefConstructor2",
                                         "a.externShared"));
     }
+  }
+
+  public void testAnnotationInExternStubs1() throws Exception {
+    checkMarkedCalls("o.propWithStubBefore('a');",
+        ImmutableList.<String>of("o.propWithStubBefore"));
+  }
+
+  public void testAnnotationInExternStubs2() throws Exception {
+    checkMarkedCalls("o.propWithStubAfter('a');",
+        ImmutableList.<String>of("o.propWithStubAfter"));
+  }
+
+  public void testAnnotationInExternStubs3() throws Exception {
+    checkMarkedCalls("propWithAnnotatedStubAfter('a');",
+        ImmutableList.<String>of());
+  }
+
+  public void testAnnotationInExternStubs4() throws Exception {
+    // An externs definition with a stub that differs from the declaration.
+    // Verify our assumption is valid about this.
+    String externs =
+      "/**@constructor*/function externObj5(){}\n" +
+
+      "externObj5.prototype.propWithAnnotatedStubAfter = function(s) {};\n" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " * @nosideeffects\n" +
+      " */\n" +
+      "externObj5.prototype.propWithAnnotatedStubAfter;\n";
+
+    List<String> expected = ImmutableList.<String>of();
+    testSame(externs,
+        "o.prototype.propWithAnnotatedStubAfter",
+        TypeValidator.DUP_VAR_DECLARATION, false);
+    assertEquals(expected, noSideEffectCalls);
+    noSideEffectCalls.clear();
+  }
+
+  public void testAnnotationInExternStubs5() throws Exception {
+    // An externs definition with a stub that differs from the declaration.
+    // Verify our assumption is valid about this.
+    String externs =
+      "/**@constructor*/function externObj5(){}\n" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " * @nosideeffects\n" +
+      " */\n" +
+      "externObj5.prototype.propWithAnnotatedStubAfter = function(s) {};\n" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " */\n" +
+      "externObj5.prototype.propWithAnnotatedStubAfter;\n";
+
+    List<String> expected = ImmutableList.<String>of();
+    testSame(externs,
+        "o.prototype.propWithAnnotatedStubAfter",
+        TypeValidator.DUP_VAR_DECLARATION, false);
+    assertEquals(expected, noSideEffectCalls);
+    noSideEffectCalls.clear();
   }
 
   public void testNoSideEffectsSimple() throws Exception {
