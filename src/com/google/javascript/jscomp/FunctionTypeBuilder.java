@@ -180,19 +180,22 @@ final class FunctionTypeBuilder {
           new FunctionParamBuilder(typeRegistry);
       Iterator<Node> oldParams = oldType.getParameters().iterator();
       boolean warnedAboutArgList = false;
-      boolean oldParamsNodeHasVarArgs = false;
+      boolean oldParamsListHitOptArgs = false;
       for (Node currentParam = paramsParent.getFirstChild();
            currentParam != null; currentParam = currentParam.getNext()) {
         if (oldParams.hasNext()) {
           Node oldParam = oldParams.next();
           Node newParam = paramBuilder.newParameterFromNode(oldParam);
 
+          oldParamsListHitOptArgs = oldParamsListHitOptArgs ||
+              oldParam.isVarArgs() ||
+              oldParam.isOptionalArg();
+
           // The subclass method might right its var_args as individual
           // arguments.
           if (currentParam.getNext() != null && newParam.isVarArgs()) {
             newParam.setVarArgs(false);
             newParam.setOptionalArg(true);
-            oldParamsNodeHasVarArgs = true;
           }
         } else {
           warnedAboutArgList |= addParameter(
@@ -200,7 +203,7 @@ final class FunctionTypeBuilder {
               typeRegistry.getNativeType(UNKNOWN_TYPE),
               warnedAboutArgList,
               codingConvention.isOptionalParameter(currentParam) ||
-                  oldParamsNodeHasVarArgs,
+                  oldParamsListHitOptArgs,
               codingConvention.isVarArgsParameter(currentParam));
         }
       }

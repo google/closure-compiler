@@ -3864,6 +3864,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testInferredParam6() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
+    testTypes(
+        "/** @param {string} x */ function f(x) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "/** @param {number=} x */ Foo.prototype.bar = function(x) {};" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "/** @param {number=} x \n * @param {number=} y */ " +
+        "SubFoo.prototype.bar = " +
+        "    function(x, y) { f(y); };",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : (number|undefined)\n" +
+        "required: string");
+  }
+
   public void testOverriddenReturn1() throws Exception {
     testTypes(
         "/** @constructor */ function Foo() {}" +
