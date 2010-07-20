@@ -986,11 +986,58 @@ MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
     canBubbleArg, cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg,
     portsArg) {};
 
+/**
+ * HTML5 DataTransfer class
+ * @see http://dev.w3.org/html5/spec/dnd.html#the-dragevent-and-datatransfer-interfaces
+ * @constructor
+ */
+function DataTransfer() {}
+
+/** @type {string} */
+DataTransfer.prototype.dropEffect;
+
+/** @type {string} */
+DataTransfer.prototype.effectAllowed;
+
+/** @type {Array.<string>} */
+DataTransfer.prototype.types;
+
+/** @type {FileList} */
+DataTransfer.prototype.files;
+
+/**
+ * @param {string=} opt_format Format for which to remove data.
+ */
+DataTransfer.prototype.clearData = function(opt_format) {};
+
+/**
+ * @param {string} format Format for which to set data.
+ * @param {string} data Data to add.
+ */
+DataTransfer.prototype.setData = function(format, data) {};
+
+/**
+ * @param {string} format Format for which to set data.
+ * @return {string} Data for the given format.
+ */
+DataTransfer.prototype.getData = function(format) { return ''; };
+
+/**
+ * @param {HTMLElement} img The image to use when dragging.
+ * @param {number} x Horizontal position of the cursor.
+ * @param {number} y Vertical position of the cursor.
+ */
+DataTransfer.prototype.setDragImage = function(img, x, y) {};
+
+/**
+ * @param {HTMLElement} elem Element to receive drag result events.
+ */
+DataTransfer.prototype.addElement = function(elem) {};
 
 /**
  * Addition for accessing clipboard file data that are part of the proposed
  * HTML5 spec.
- * @type {ClipboardData}
+ * @type {DataTransfer}
  */
 MouseEvent.prototype.dataTransfer;
 
