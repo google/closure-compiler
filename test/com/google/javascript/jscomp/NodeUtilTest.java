@@ -62,6 +62,7 @@ public class NodeUtilTest extends TestCase {
     assertNotLiteral(getNode("foo()"));
     assertNotLiteral(getNode("c + d"));
     assertNotLiteral(getNode("{'a': foo()}"));
+    assertNotLiteral(getNode("void foo()"));
   }
 
   public void assertLiteralAndImmutable(Node n) {
@@ -92,6 +93,7 @@ public class NodeUtilTest extends TestCase {
     assertBooleanFalse("''");
     assertBooleanFalse("undefined");
     assertBooleanFalse("void 0");
+    assertBooleanFalse("void foo()");
     assertBooleanUnknown("b");
     assertBooleanUnknown("-'0.0'");
   }
@@ -122,6 +124,7 @@ public class NodeUtilTest extends TestCase {
     assertEquals("", NodeUtil.getStringValue(getNode("''")));
     assertEquals("undefined", NodeUtil.getStringValue(getNode("undefined")));
     assertEquals("undefined", NodeUtil.getStringValue(getNode("void 0")));
+    assertEquals("undefined", NodeUtil.getStringValue(getNode("void foo()")));
   }
 
   public void testGetFunctionName1() throws Exception {
@@ -253,6 +256,13 @@ public class NodeUtilTest extends TestCase {
     assertSideEffect(true, "a.foo = 4");
     assertSideEffect(true, "(function() { return n; })().foo = 4");
     assertSideEffect(true, "([]).foo = bar()");
+
+    assertSideEffect(false, "undefined");
+    assertSideEffect(false, "void 0");
+    assertSideEffect(true, "void foo()");
+    assertSideEffect(false, "-Infinity");
+    assertSideEffect(false, "Infinity");
+    assertSideEffect(false, "NaN");
   }
 
   public void testRegExpSideEffect() {
@@ -294,7 +304,7 @@ public class NodeUtilTest extends TestCase {
     assertSideEffect(true, "''.foo('a')", true);
     assertSideEffect(true, "''.foo('a')", false);
 
-    // 'a' might be a RegExp object with the 'g' flag, in which case 
+    // 'a' might be a RegExp object with the 'g' flag, in which case
     // the state might change by running any of the string ops.
     // Specifically, using these methods resets the "lastIndex" if used
     // in combination with a RegExp instance "exec" method.
@@ -313,6 +323,7 @@ public class NodeUtilTest extends TestCase {
     assertMutableState(true, "i=3");
     assertMutableState(true, "[0, i=3]");
     assertMutableState(true, "b()");
+    assertMutableState(true, "void b()");
     assertMutableState(true, "[1, b()]");
     assertMutableState(true, "b.b=4");
     assertMutableState(true, "b.b--");
@@ -468,10 +479,10 @@ public class NodeUtilTest extends TestCase {
 
   public void testGetNodeTypeReferenceCount() {
     assertEquals(0, NodeUtil.getNodeTypeReferenceCount(
-        parse("function foo(){}"), Token.THIS, 
+        parse("function foo(){}"), Token.THIS,
             Predicates.<Node>alwaysTrue()));
     assertEquals(1, NodeUtil.getNodeTypeReferenceCount(
-        parse("this"), Token.THIS, 
+        parse("this"), Token.THIS,
             Predicates.<Node>alwaysTrue()));
     assertEquals(2, NodeUtil.getNodeTypeReferenceCount(
         parse("this;function foo(){}(this)"), Token.THIS,

@@ -182,8 +182,8 @@ public final class NodeUtil {
       case Token.NULL:
       case Token.TRUE:
       case Token.FALSE:
-      case Token.VOID:
         return true;
+      case Token.VOID:
       case Token.NEG:
         return isImmutableValue(n.getFirstChild());
       case Token.NAME:
@@ -400,9 +400,9 @@ public final class NodeUtil {
 
       case Token.VAR:    // empty var statement (no declaration)
       case Token.NAME:   // variable by itself
-        if (n.getFirstChild() != null)
+        if (n.getFirstChild() != null) {
           return true;
-
+        }
         break;
 
       case Token.FUNCTION:
@@ -434,8 +434,9 @@ public final class NodeUtil {
         return true;
 
       default:
-        if (isSimpleOperatorType(n.getType()))
+        if (isSimpleOperatorType(n.getType())) {
           break;
+        }
 
         if (isAssignmentOp(n)) {
           // Assignments will have side effects if
