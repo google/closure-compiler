@@ -408,6 +408,9 @@ public class SourceMap {
 
         closeLine();
         openLine();
+
+        // Set the starting location for the next line.
+        col = 0;
       }
     }
 
