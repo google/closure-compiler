@@ -144,8 +144,8 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
     // function arguments are NOT definitions when they appear in externs.
     checkDefinitions(
         DEF, USE,
-        ImmutableSet.of("DEF NAME f -> FUNCTION",
-                        "USE NAME f -> [FUNCTION]"));
+        ImmutableSet.of("DEF NAME f -> EXTERN FUNCTION",
+                        "USE NAME f -> [EXTERN FUNCTION]"));
   }
 
   public void testMultipleDefinition() throws Exception {
@@ -212,48 +212,48 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
 
     checkDefinitionsInExterns(
         externs,
-        ImmutableSet.of("DEF NAME a -> NUMBER"));
+        ImmutableSet.of("DEF NAME a -> EXTERN NUMBER"));
 
     checkDefinitions(
         externs,
         "var b = 1",
-        ImmutableSet.of("DEF NAME a -> NUMBER", "DEF NAME b -> NUMBER"));
+        ImmutableSet.of("DEF NAME a -> EXTERN NUMBER", "DEF NAME b -> NUMBER"));
 
     checkDefinitions(
         externs,
         "a = \"foo\"; a",
-        ImmutableSet.of("DEF NAME a -> NUMBER",
+        ImmutableSet.of("DEF NAME a -> EXTERN NUMBER",
                         "DEF NAME a -> STRING",
-                        "USE NAME a -> [NUMBER, STRING]"));
+                        "USE NAME a -> [EXTERN NUMBER, STRING]"));
 
     checkDefinitionsInExterns(
         "var a = {}; a.b = 10",
-        ImmutableSet.of("DEF GETPROP a.b -> NUMBER",
-                        "DEF NAME a -> <null>",
-                        "USE NAME a -> [<null>]"));
+        ImmutableSet.of("DEF GETPROP a.b -> EXTERN NUMBER",
+                        "DEF NAME a -> EXTERN <null>",
+                        "USE NAME a -> [EXTERN <null>]"));
 
     checkDefinitionsInExterns(
         "var a = {}; a.b",
-        ImmutableSet.of("DEF GETPROP a.b -> <null>",
-                        "DEF NAME a -> <null>",
-                        "USE NAME a -> [<null>]"));
+        ImmutableSet.of("DEF GETPROP a.b -> EXTERN <null>",
+                        "DEF NAME a -> EXTERN <null>",
+                        "USE NAME a -> [EXTERN <null>]"));
 
     checkDefinitions(
         "var a = {}",
         "a.b = 1",
         ImmutableSet.of("DEF GETPROP a.b -> NUMBER",
-                        "DEF NAME a -> <null>",
-                        "USE NAME a -> [<null>]"));
+                        "DEF NAME a -> EXTERN <null>",
+                        "USE NAME a -> [EXTERN <null>]"));
 
     checkDefinitions(
         "var a = {}",
         "a.b",
-        ImmutableSet.of("DEF NAME a -> <null>",
-                        "USE NAME a -> [<null>]"));
+        ImmutableSet.of("DEF NAME a -> EXTERN <null>",
+                        "USE NAME a -> [EXTERN <null>]"));
 
     checkDefinitionsInExterns(
         externs,
-        ImmutableSet.of("DEF NAME a -> NUMBER"));
+        ImmutableSet.of("DEF NAME a -> EXTERN NUMBER"));
   }
 
   void checkDefinitionsInExterns(String externs, Set<String> expected) {
@@ -304,6 +304,10 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
         sb.append(node.getQualifiedName());
         sb.append(" -> ");
 
+        if (definition.isExtern()) {
+          sb.append("EXTERN ");
+        }
+
         Node rValue = definition.getRValue();
         if (rValue != null) {
           sb.append(Token.name(rValue.getType()));
@@ -328,12 +332,20 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
         sb.append(" -> ");
         Multiset<String> defstrs = TreeMultiset.create();
         for (Definition def : defs) {
+          String defstr;
+
           Node rValue = def.getRValue();
           if (rValue != null) {
-            defstrs.add(Token.name(rValue.getType()));
+            defstr = Token.name(rValue.getType());
           } else {
-            defstrs.add("<null>");
+            defstr = "<null>";
           }
+
+          if (def.isExtern()) {
+            defstr = "EXTERN " + defstr;
+          }
+
+          defstrs.add(defstr);
         }
 
         sb.append(defstrs.toString());

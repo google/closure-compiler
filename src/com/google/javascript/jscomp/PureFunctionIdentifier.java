@@ -213,9 +213,17 @@ class PureFunctionIdentifier implements CompilerPass {
       }
     } else if (NodeUtil.isFunctionExpression(name)) {
       // The anonymous function reference is also the definition.
+      // TODO(user) Change SimpleDefinitionFinder so it is possible to query for
+      // function expressions by function node.
+
+      // isExtern is false in the call to the constructor for the
+      // FunctionExpressionDefinition below because we know that
+      // getCallableDefinitions() will only be called on the first
+      // child of a call and thus the function expression
+      // definition will never be an extern.
       return Lists.newArrayList(
           (Definition)
-              new DefinitionsRemover.FunctionExpressionDefinition(name));
+              new DefinitionsRemover.FunctionExpressionDefinition(name, false));
     } else {
       return null;
     }

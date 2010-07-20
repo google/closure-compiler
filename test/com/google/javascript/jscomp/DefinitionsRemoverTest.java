@@ -84,7 +84,7 @@ public class DefinitionsRemoverTest extends CompilerTestCase {
     final List<Definition> definitions = Lists.newArrayList();
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      Definition def = DefinitionsRemover.getDefinition(n, parent);
+      Definition def = DefinitionsRemover.getDefinition(n, false);
       if (def != null) {
         definitions.add(def);
       }

@@ -34,34 +34,62 @@ class DefinitionsRemover {
    * @return an {@link Definition} object if the node contains a definition or
    *     {@code null} otherwise.
    */
-  static Definition getDefinition(Node n, Node parent) {
+  static Definition getDefinition(Node n, boolean isExtern) {
     // TODO(user): Since we have parent pointers handy. A lot of constructors
     // can be simplied.
+
+    Node parent = n.getParent();
     if (parent == null) {
       return null;
     }
 
     if (NodeUtil.isVarDeclaration(n) && n.hasChildren()) {
-      return new VarDefinition(n);
+      return new VarDefinition(n, isExtern);
     } else if (NodeUtil.isFunction(parent) && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
-        return new NamedFunctionDefinition(parent);
+        return new NamedFunctionDefinition(parent, isExtern);
       } else if (!n.getString().equals("")) {
-        return new FunctionExpressionDefinition(parent);
+        return new FunctionExpressionDefinition(parent, isExtern);
       }
     } else if (NodeUtil.isAssign(parent) && parent.getFirstChild() == n) {
-      return new AssignmentDefinition(parent);
+      return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n, parent)) {
-      return new ObjectLiteralPropertyDefinition(parent, n, n.getNext());
+      return new ObjectLiteralPropertyDefinition(parent, n, n.getNext(),
+          isExtern);
     } else if (parent.getType() == Token.LP) {
       Node function = parent.getParent();
-      return new FunctionArgumentDefinition(function, n);
+      return new FunctionArgumentDefinition(function, n, isExtern);
     }
     return null;
   }
 
-  static interface Definition {
-    void remove();
+  static abstract class Definition {
+
+    private final boolean isExtern;
+
+    Definition(boolean isExtern) {
+      this.isExtern = isExtern;
+    }
+
+    /**
+     * Removes this definition from the AST if it is not an extern.
+     *
+     * This method should not be called on a definition for which isExtern()
+     * is true.
+     */
+    public void remove() {
+      if (!isExtern) {
+        performRemove();
+      } else {
+        throw new IllegalStateException("Attempt to remove() an extern" +
+            " definition.");
+      }
+    }
+
+    /**
+     * Subclasses should override to remove the definition from the AST.
+     */
+    protected abstract void performRemove();
 
     /**
      * Variable or property name represented by this definition.
@@ -72,25 +100,33 @@ class DefinitionsRemover {
      * @return the L-Value associated with this definition.
      *         The node's type is always NAME, GETPROP or GETELEM.
      */
-    Node getLValue();
+    public abstract Node getLValue();
 
     /**
      * Value expression that acts as the right hand side of the
      * definition statement.
      */
-    Node getRValue();
+    public abstract Node getRValue();
+
+    /**
+     * Returns true if the definition is an extern.
+     */
+    public boolean isExtern() {
+      return isExtern;
+    }
   }
 
   /**
    * Represents an name-only external definition.  The definition's
    * rhs is missing.
    */
-  abstract static class IncompleteDefinition implements Definition {
+  abstract static class IncompleteDefinition extends Definition {
     private static final Set<Integer> ALLOWED_TYPES =
         ImmutableSet.of(Token.NAME, Token.GETPROP, Token.GETELEM);
     private final Node lValue;
 
-    IncompleteDefinition(Node lValue) {
+    IncompleteDefinition(Node lValue, boolean inExterns) {
+      super(inExterns);
       Preconditions.checkNotNull(lValue);
       Preconditions.checkArgument(
           ALLOWED_TYPES.contains(lValue.getType()),
@@ -109,17 +145,16 @@ class DefinitionsRemover {
     }
   }
 
-
   /**
    * Represents an unknown definition.
    */
   static final class UnknownDefinition extends IncompleteDefinition {
-    UnknownDefinition(Node lValue) {
-      super(lValue);
+    UnknownDefinition(Node lValue, boolean inExterns) {
+      super(lValue, inExterns);
     }
 
     @Override
-    public void remove() {
+    public void performRemove() {
       throw new IllegalArgumentException("Can't remove an UnknownDefinition");
     }
   }
@@ -131,29 +166,30 @@ class DefinitionsRemover {
   static final class ExternalNameOnlyDefinition extends IncompleteDefinition {
 
     ExternalNameOnlyDefinition(Node lValue) {
-      super(lValue);
+      super(lValue, true);
     }
 
     @Override
-    public void remove() {
+    public void performRemove() {
       throw new IllegalArgumentException(
           "Can't remove external name-only definition");
     }
   }
 
   /**
-   * Represents an name-only external definition.  The definition's
-   * rhs is missing.
+   * Represents a function formal parameter. The definition's rhs is missing.
    */
   static final class FunctionArgumentDefinition extends IncompleteDefinition {
-    FunctionArgumentDefinition(Node function, Node argumentName) {
-      super(argumentName);
+    FunctionArgumentDefinition(Node function,
+        Node argumentName,
+        boolean inExterns) {
+      super(argumentName, inExterns);
       Preconditions.checkArgument(NodeUtil.isFunction(function));
       Preconditions.checkArgument(NodeUtil.isName(argumentName));
     }
 
     @Override
-    public void remove() {
+    public void performRemove() {
       throw new IllegalArgumentException(
           "Can't remove a FunctionArgumentDefinition");
     }
@@ -162,11 +198,12 @@ class DefinitionsRemover {
   /**
    * Represents a function declaration or function expression.
    */
-  static abstract class FunctionDefinition implements Definition {
+  abstract static class FunctionDefinition extends Definition {
 
     protected final Node function;
 
-    FunctionDefinition(Node node) {
+    FunctionDefinition(Node node, boolean inExterns) {
+      super(inExterns);
       Preconditions.checkArgument(NodeUtil.isFunction(node));
       function = node;
     }
@@ -187,12 +224,12 @@ class DefinitionsRemover {
    * {@code function foo()}.
    */
   static final class NamedFunctionDefinition extends FunctionDefinition {
-    NamedFunctionDefinition(Node node) {
-      super(node);
+    NamedFunctionDefinition(Node node, boolean inExterns) {
+      super(node, inExterns);
     }
 
     @Override
-    public void remove() {
+    public void performRemove() {
       function.detachFromParent();
     }
   }
@@ -202,14 +239,14 @@ class DefinitionsRemover {
    * name is only reachable from within the function.
    */
   static final class FunctionExpressionDefinition extends FunctionDefinition {
-    FunctionExpressionDefinition(Node node) {
-      super(node);
+    FunctionExpressionDefinition(Node node, boolean inExterns) {
+      super(node, inExterns);
       Preconditions.checkArgument(
           NodeUtil.isFunctionExpression(node));
     }
 
     @Override
-    public void remove() {
+    public void performRemove() {
       // replace internal name with ""
       function.replaceChild(function.getFirstChild(),
                             Node.newString(Token.NAME, ""));
@@ -219,16 +256,17 @@ class DefinitionsRemover {
   /**
    * Represents a declaration within an assignment.
    */
-  static final class AssignmentDefinition implements Definition {
+  static final class AssignmentDefinition extends Definition {
     private final Node assignment;
 
-    AssignmentDefinition(Node node) {
+    AssignmentDefinition(Node node, boolean inExterns) {
+      super(inExterns);
       Preconditions.checkArgument(NodeUtil.isAssign(node));
       assignment = node;
     }
 
     @Override
-    public void remove() {
+    public void performRemove() {
       // A simple assignment. foo = bar() -> bar();
       Node parent = assignment.getParent();
       Node last = assignment.getLastChild();
@@ -251,21 +289,23 @@ class DefinitionsRemover {
    * Represents member declarations using a object literal.
    * Example: var x = { e : function() { } };
    */
-  static final class ObjectLiteralPropertyDefinition implements Definition {
+  static final class ObjectLiteralPropertyDefinition extends Definition {
 
     private final Node literal;
     private final Node name;
     private final Node value;
 
+    ObjectLiteralPropertyDefinition(Node lit, Node name, Node value,
+          boolean isExtern) {
+      super(isExtern);
 
-    ObjectLiteralPropertyDefinition(Node lit, Node name, Node value) {
       this.literal = lit;
       this.name = name;
       this.value = value;
     }
 
     @Override
-    public void remove() {
+    public void performRemove() {
       literal.removeChild(name);
       literal.removeChild(value);
     }
@@ -291,9 +331,10 @@ class DefinitionsRemover {
   /**
    * Represents a VAR declaration with an assignment.
    */
-  static final class VarDefinition implements Definition {
+  static final class VarDefinition extends Definition {
     private final Node name;
-    VarDefinition(Node node) {
+    VarDefinition(Node node, boolean inExterns) {
+      super(inExterns);
       Preconditions.checkArgument(NodeUtil.isVarDeclaration(node));
       Preconditions.checkArgument(node.hasChildren(),
           "VAR Declaration of " + node.getString() +
@@ -302,7 +343,7 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void remove() {
+    public void performRemove() {
       Node var = name.getParent();
       Preconditions.checkState(var.getFirstChild() == var.getLastChild(),
           "AST should be normalized first");

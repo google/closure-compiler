@@ -36,6 +36,8 @@ class RemoveUnusedNames implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
+  private final boolean canModifyExterns;
+
   /**
    * Creates a new pass for removing unused prototype properties, based
    * on the uniqueness of property names.
@@ -44,6 +46,7 @@ class RemoveUnusedNames implements CompilerPass {
   RemoveUnusedNames(AbstractCompiler compiler,
       boolean canModifyExterns) {
     this.compiler = compiler;
+    this.canModifyExterns = canModifyExterns;
   }
 
   public void process(Node externRoot, Node root) {
@@ -62,9 +65,11 @@ class RemoveUnusedNames implements CompilerPass {
       Name name = node.getValue();
       NameInfo nameInfo = node.getAnnotation();
       if (nameInfo == null || !nameInfo.isReferenced()) {
-        name.remove();
-        compiler.reportCodeChange();
-        logger.fine("Removed unused name" + name);
+        if (canModifyExterns || !name.isExtern()) {
+          name.remove();
+          compiler.reportCodeChange();
+          logger.fine("Removed unused name" + name);
+        }
       }
     }
   }

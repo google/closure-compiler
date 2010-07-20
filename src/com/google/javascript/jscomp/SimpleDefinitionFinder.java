@@ -156,7 +156,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       }
 
       Definition def =
-          DefinitionsRemover.getDefinition(node, parent);
+          DefinitionsRemover.getDefinition(node, inExterns);
       if (def != null) {
         String name = getSimplifiedName(def.getLValue());
         if (name != null) {
@@ -166,7 +166,8 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
               !NodeUtil.isFunction(rValue)) {
 
             // Unhandled complex expression
-            Definition unknownDef = new UnknownDefinition(def.getLValue());
+            Definition unknownDef =
+                new UnknownDefinition(def.getLValue(), inExterns);
             def = unknownDef;
           }
 

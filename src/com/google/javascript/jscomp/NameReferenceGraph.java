@@ -141,7 +141,7 @@ class NameReferenceGraph extends
       if (!decls.isEmpty()) {
         result.addAll(decls);
       } else {
-        result.add(new UnknownDefinition(useSite));
+        result.add(new UnknownDefinition(useSite, false));
       }
     }
 
@@ -219,11 +219,11 @@ class NameReferenceGraph extends
     }
 
     public void addAssignmentDeclaration(Node node) {
-      declarations.add(new AssignmentDefinition(node));
+      declarations.add(new AssignmentDefinition(node, isExtern));
     }
 
     public void addFunctionDeclaration(Node node) {
-      declarations.add(new NamedFunctionDefinition(node));
+      declarations.add(new NamedFunctionDefinition(node, isExtern));
     }
 
     public boolean isExtern() {
@@ -239,7 +239,7 @@ class NameReferenceGraph extends
     }
 
     /** Removes all of the declarations of this name. */
-    public void remove() {
+    public final void remove() {
       for (Definition declaration : getDeclarations()) {
         declaration.remove();
       }
