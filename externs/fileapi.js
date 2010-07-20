@@ -78,3 +78,118 @@ File.prototype.type;
  * @type {string}
  */
 File.prototype.urn;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
+ * @constructor
+ */
+function FileError() {}
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
+ * @type {number}
+ */
+FileError.prototype.NOT_FOUND_ERR = 8;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
+ * @type {number}
+ */
+FileError.prototype.SECURITY_ERR = 18;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
+ * @type {number}
+ */
+FileError.prototype.ABORT_ERR = 20;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
+ * @type {number}
+ */
+FileError.prototype.NOT_READABLE_ERR = 24;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
+ * @type {number}
+ */
+FileError.prototype.ENCODING_ERR = 26;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
+ * @type {number}
+ */
+FileError.prototype.code;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#filereader-interface
+ * @constructor
+ */
+function FileReader() {}
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-readAsBinary
+ * @param {File} file
+ */
+FileReader.prototype.readAsBinaryString = function(file) {};
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-readAsText
+ * @param {File} file
+ * @param {string=} opt_encoding
+ */
+FileReader.prototype.readAsText = function(file, opt_encoding) {};
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-readAsDataURL
+ * @param {File} file
+ */
+FileReader.prototype.readAsDataURL = function(file) {};
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-abort
+ */
+FileReader.prototype.abort = function() {};
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-empty
+ * @type {number}
+ */
+FileReader.prototype.EMPTY = 0;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-loading
+ * @type {number}
+ */
+FileReader.prototype.LOADING = 1;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-done
+ * @type {number}
+ */
+FileReader.prototype.DONE = 2;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-done
+ * @type {number}
+ */
+FileReader.prototype.readyState;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-result
+ * @type {string}
+ */
+FileReader.prototype.result;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-error
+ * @type {FileError}
+ */
+FileReader.prototype.error;
+
+/** @type {?function (Event)} */ FileReader.prototype.onloadstart;
+/** @type {?function (Event)} */ FileReader.prototype.onprogress;
+/** @type {?function (Event)} */ FileReader.prototype.onload;
+/** @type {?function (Event)} */ FileReader.prototype.onabort;
+/** @type {?function (Event)} */ FileReader.prototype.onerror;
+/** @type {?function (Event)} */ FileReader.prototype.onloadend;
