@@ -414,84 +414,94 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     /**
-     * Defines variable(s) or modifies types based on the content of the node
-     * {@code n}. A variable definition creates variables in the current scope,
-     * a function definition creates a binding, and an assignment updates the
-     * type of the namespaces on which the definition is made (e.g.
-     * {@code goog.FOO = 6}).
-     * @param n a {@link Token#VAR}, {@link Token#FUNCTION} or
-     *     {@link Token#ASSIGN} node
-     * @param parent {@code n}'s parent
+     * Asserts that it's ok to define this node's name.
+     * The node should have a source name and be of the specified type.
      */
-    void define(Node n, Node parent) {
+    void assertDefinitionNode(Node n, int type) {
       Preconditions.checkState(sourceName != null);
+      Preconditions.checkState(n.getType() == type);
+    }
+
+    /**
+     * Defines a catch parameter.
+     */
+    void defineCatch(Node n, Node parent) {
+      assertDefinitionNode(n, Token.CATCH);
+      Node catchName = n.getFirstChild();
+      defineSlot(catchName, n, null);
+    }
+
+    /**
+     * Defines a VAR initialization.
+     */
+    void defineVar(Node n, Node parent) {
+      assertDefinitionNode(n, Token.VAR);
+      JSDocInfo info = n.getJSDocInfo();
+      if (n.hasMoreThanOneChild()) {
+        if (info != null) {
+          // multiple children
+          compiler.report(JSError.make(sourceName, n, MULTIPLE_VAR_DEF));
+        }
+        for (Node name : n.children()) {
+          defineName(name, n, parent, name.getJSDocInfo());
+        }
+      } else {
+        Node name = n.getFirstChild();
+        defineName(name, n, parent,
+            (info != null) ? info : name.getJSDocInfo());
+      }
+    }
+
+    /**
+     * Defines a declared function.
+     */
+    void defineDeclaredFunction(Node n, Node parent) {
+      assertDefinitionNode(n, Token.FUNCTION);
 
       JSDocInfo info = n.getJSDocInfo();
-      switch (n.getType()) {
-        case Token.CATCH:
-          Node catchName = n.getFirstChild();
-          defineSlot(catchName, n, null);
-          break;
+      int parentType = parent.getType();
+      Preconditions.checkState(
+          (scope.isLocal() || parentType != Token.ASSIGN) &&
+          parentType != Token.NAME,
+          "function defined as standalone function when it is being " +
+          "assigned");
+      String functionName = n.getFirstChild().getString();
+      FunctionType functionType = getFunctionType(functionName, n, info,
+          null);
+      if (NodeUtil.isFunctionDeclaration(n)) {
+        defineSlot(n.getFirstChild(), n, functionType);
+      }
+    }
 
-        case Token.VAR:
-          if (n.hasMoreThanOneChild()) {
-            if (info != null) {
-              // multiple children
-              compiler.report(JSError.make(sourceName, n, MULTIPLE_VAR_DEF));
-            }
-            for (Node name : n.children()) {
-              defineName(name, n, parent, name.getJSDocInfo());
-            }
-          } else {
-            Node name = n.getFirstChild();
-            defineName(name, n, parent,
-                (info != null) ? info : name.getJSDocInfo());
-          }
-          break;
+    /**
+     * Defines a qualified name assign to an enum or constructor.
+     */
+    void defineNamedTypeAssign(Node n, Node parent) {
+      assertDefinitionNode(n, Token.ASSIGN);
+      JSDocInfo info = n.getJSDocInfo();
 
-        case Token.FUNCTION:
-          int parentType = parent.getType();
-          Preconditions.checkState(
-              (scope.isLocal() || parentType != Token.ASSIGN) &&
-              parentType != Token.NAME,
-              "function defined as standalone function when it is being " +
-              "assigned");
-          String functionName = n.getFirstChild().getString();
-          FunctionType functionType = getFunctionType(functionName, n, info,
-              null);
-          if (NodeUtil.isFunctionDeclaration(n)) {
-            defineSlot(n.getFirstChild(), n, functionType);
-          }
-          break;
+      // TODO(nicksantos): We should support direct assignment to a
+      // prototype, as in:
+      // Foo.prototype = {
+      //   a: function() { ... },
+      //   b: function() { ... }
+      // };
+      // Right now (6/23/08), we understand most of this syntax, but we
+      // don't tie the "a" and "b" methods to the context of Foo.
 
-        case Token.ASSIGN:
-          // TODO(nicksantos): We should support direct assignment to a
-          // prototype, as in:
-          // Foo.prototype = {
-          //   a: function() { ... },
-          //   b: function() { ... }
-          // };
-          // Right now (6/23/08), we understand most of this syntax, but we
-          // don't tie the "a" and "b" methods to the context of Foo.
-
-          Node rvalue = n.getLastChild();
-          Node lvalue = n.getFirstChild();
-          info = (info != null) ? info : rvalue.getJSDocInfo();
-          if (rvalue.getType() == Token.FUNCTION ||
-              info != null && info.isConstructor()) {
-            getFunctionType(lvalue.getQualifiedName(), rvalue, info,
-                lvalue);
-          } else if (info != null && info.hasEnumParameterType()) {
-            JSType type = getEnumType(lvalue.getQualifiedName(), n, rvalue,
-                info.getEnumParameterType().evaluate(scope, typeRegistry));
-            if (type != null) {
-              setDeferredType(lvalue, type);
-            }
-          }
-          break;
-
-        default:
-          throw new IllegalStateException(Integer.toString(n.getType()));
+      Node rvalue = n.getLastChild();
+      Node lvalue = n.getFirstChild();
+      info = (info != null) ? info : rvalue.getJSDocInfo();
+      if (rvalue.getType() == Token.FUNCTION ||
+          info != null && info.isConstructor()) {
+        getFunctionType(lvalue.getQualifiedName(), rvalue, info,
+            lvalue);
+      } else if (info != null && info.hasEnumParameterType()) {
+        JSType type = getEnumType(lvalue.getQualifiedName(), n, rvalue,
+            info.getEnumParameterType().evaluate(scope, typeRegistry));
+        if (type != null) {
+          setDeferredType(lvalue, type);
+        }
       }
     }
 
@@ -840,63 +850,7 @@ final class TypedScopeCreator implements ScopeCreator {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.CALL:
-          SubclassRelationship relationship =
-              codingConvention.getClassesDefinedByCall(n);
-          if (relationship != null) {
-            ObjectType superClass = ObjectType.cast(
-                typeRegistry.getType(relationship.superclassName));
-            ObjectType subClass = ObjectType.cast(
-                typeRegistry.getType(relationship.subclassName));
-            if (superClass != null && subClass != null) {
-              FunctionType superCtor = superClass.getConstructor();
-              FunctionType subCtor = subClass.getConstructor();
-
-              if (relationship.type == SubclassType.INHERITS) {
-                validator.expectSuperType(t, n, superClass, subClass);
-              }
-
-              if (superCtor != null && subCtor != null) {
-                codingConvention.applySubclassRelationship(
-                    superCtor, subCtor, relationship.type);
-              }
-            }
-          }
-
-          String singletonGetterClassName =
-              codingConvention.getSingletonGetterClassName(n);
-          if (singletonGetterClassName != null) {
-            ObjectType objectType = ObjectType.cast(
-                typeRegistry.getType(singletonGetterClassName));
-            if (objectType != null) {
-              FunctionType functionType = objectType.getConstructor();
-
-              if (functionType != null) {
-                FunctionType getterType =
-                    typeRegistry.createFunctionType(objectType);
-                codingConvention.applySingletonGetter(functionType, getterType,
-                                                      objectType);
-              }
-            }
-          }
-
-          DelegateRelationship delegateRelationship =
-              codingConvention.getDelegateRelationship(n);
-          if (delegateRelationship != null) {
-            applyDelegateRelationship(delegateRelationship);
-          }
-
-          ObjectLiteralCast objectLiteralCast =
-              codingConvention.getObjectLiteralCast(t, n);
-          if (objectLiteralCast != null) {
-            ObjectType type = ObjectType.cast(
-                typeRegistry.getType(objectLiteralCast.typeName));
-            if (type != null && type.getConstructor() != null) {
-              setDeferredType(objectLiteralCast.objectNode, type);
-            } else {
-              compiler.report(JSError.make(t.getSourceName(), n,
-                                           CONSTRUCTOR_EXPECTED));
-            }
-          }
+          checkForClassDefiningCalls(t, n, parent);
           break;
 
         case Token.FUNCTION:
@@ -909,12 +863,13 @@ final class TypedScopeCreator implements ScopeCreator {
               parent.getType() == Token.NAME) {
             return;
           }
-          define(n, parent);
+
+          defineDeclaredFunction(n, parent);
           break;
 
         case Token.ASSIGN:
           // Handle constructor and enum definitions.
-          define(n, parent);
+          defineNamedTypeAssign(n, parent);
 
           // Handle typedefs.
           checkForOldStyleTypedef(t, n);
@@ -929,11 +884,11 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
 
         case Token.CATCH:
-          define(n, parent);
+          defineCatch(n, parent);
           break;
 
         case Token.VAR:
-          define(n, parent);
+          defineVar(n, parent);
 
           // Handle typedefs.
           if (n.hasOneChild()) {
@@ -953,6 +908,75 @@ final class TypedScopeCreator implements ScopeCreator {
       }
     }
 
+    /**
+     * Look for class-defining calls.
+     * Because JS has no 'native' syntax for defining classes,
+     * this is often very coding-convention dependent and business-logic heavy.
+     */
+    private void checkForClassDefiningCalls(
+        NodeTraversal t, Node n, Node parent) {
+      SubclassRelationship relationship =
+          codingConvention.getClassesDefinedByCall(n);
+      if (relationship != null) {
+        ObjectType superClass = ObjectType.cast(
+            typeRegistry.getType(relationship.superclassName));
+        ObjectType subClass = ObjectType.cast(
+            typeRegistry.getType(relationship.subclassName));
+        if (superClass != null && subClass != null) {
+          FunctionType superCtor = superClass.getConstructor();
+          FunctionType subCtor = subClass.getConstructor();
+
+          if (relationship.type == SubclassType.INHERITS) {
+            validator.expectSuperType(t, n, superClass, subClass);
+          }
+
+          if (superCtor != null && subCtor != null) {
+            codingConvention.applySubclassRelationship(
+                superCtor, subCtor, relationship.type);
+          }
+        }
+      }
+
+      String singletonGetterClassName =
+          codingConvention.getSingletonGetterClassName(n);
+      if (singletonGetterClassName != null) {
+        ObjectType objectType = ObjectType.cast(
+            typeRegistry.getType(singletonGetterClassName));
+        if (objectType != null) {
+          FunctionType functionType = objectType.getConstructor();
+
+          if (functionType != null) {
+            FunctionType getterType =
+                typeRegistry.createFunctionType(objectType);
+            codingConvention.applySingletonGetter(functionType, getterType,
+                objectType);
+          }
+        }
+      }
+
+      DelegateRelationship delegateRelationship =
+          codingConvention.getDelegateRelationship(n);
+      if (delegateRelationship != null) {
+        applyDelegateRelationship(delegateRelationship);
+      }
+
+      ObjectLiteralCast objectLiteralCast =
+          codingConvention.getObjectLiteralCast(t, n);
+      if (objectLiteralCast != null) {
+        ObjectType type = ObjectType.cast(
+            typeRegistry.getType(objectLiteralCast.typeName));
+        if (type != null && type.getConstructor() != null) {
+          setDeferredType(objectLiteralCast.objectNode, type);
+        } else {
+          compiler.report(JSError.make(t.getSourceName(), n,
+                  CONSTRUCTOR_EXPECTED));
+        }
+      }
+    }
+
+    /**
+     * Apply special properties that only apply to delegates.
+     */
     private void applyDelegateRelationship(
         DelegateRelationship delegateRelationship) {
       ObjectType delegatorObject = ObjectType.cast(
@@ -1355,12 +1379,15 @@ final class TypedScopeCreator implements ScopeCreator {
           if (parent.getType() == Token.NAME) {
             return;
           }
-          define(n, parent);
+          defineDeclaredFunction(n, parent);
           break;
 
         case Token.CATCH:
+          defineCatch(n, parent);
+          break;
+
         case Token.VAR:
-          define(n, parent);
+          defineVar(n, parent);
           break;
       }
     }
