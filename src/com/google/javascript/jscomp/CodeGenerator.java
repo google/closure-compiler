@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.NodeUtil.MatchNotFunction;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -541,9 +542,9 @@ class CodeGenerator {
         int precedence = NodeUtil.precedence(type);
 
         // If the first child contains a CALL, then claim higher precedence
-        // to force parens. Otherwise, when parsed, NEW will bind to the
-        // first viable parens
-        if (NodeUtil.containsCall(first)) {
+        // to force parentheses. Otherwise, when parsed, NEW will bind to the
+        // first viable parentheses (don't traverse into functions).
+        if (NodeUtil.containsType(first, Token.CALL, new MatchNotFunction())) {
           precedence = NodeUtil.precedence(first.getType()) + 1;
         }
         addExpr(first, precedence);

@@ -812,6 +812,21 @@ public class CodePrinterTest extends TestCase {
             CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD).build());
   }
 
+  public void testFunctionWithCall() {
+    assertPrint(
+        "var user = new function() {"
+        + "alert(\"foo\")}",
+        "var user=new function(){"
+        + "alert(\"foo\")}");
+    assertPrint(
+        "var user = new function() {"
+        + "this.name = \"foo\";"
+        + "this.local = function(){alert(this.name)};}", 
+        "var user=new function(){"
+        + "this.name=\"foo\";"
+        + "this.local=function(){alert(this.name)}}");
+  }  
+
   public void testLineLength() {
     // list
     assertLineLength("var aba,bcb,cdc",
