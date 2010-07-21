@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import static com.google.javascript.jscomp.JsMessage.Style;
 import static com.google.javascript.jscomp.JsMessage.Style.CLOSURE;
@@ -507,12 +508,34 @@ public class JsMessageVisitorTest extends TestCase {
         toLowerCamelCaseWithNumericSuffixes("START_SPAN_1_23"));
   }
 
+  public void testDuplicateMessageError() {
+    extractMessages(
+        "(function () {/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')})" +
+        "(function () {/** @desc Hello2 */ var MSG_HELLO = goog.getMsg('a')})");
+
+    assertEquals(0, compiler.getWarningCount());
+
+    String errors = Joiner.on("\n").join(compiler.getErrors());
+    assertEquals("There should be one error. " + errors,
+        1, compiler.getErrorCount());
+    assertEquals(errors, JsMessageVisitor.MESSAGE_DUPLICATE_KEY,
+        compiler.getErrors()[0].getType());
+  }
+
+  public void testNoDuplicateErrorOnExternMessage() {
+    extractMessagesSafely(
+        "(function () {/** @desc Hello */ " +
+        "var MSG_EXTERNAL_2 = goog.getMsg('a')})" +
+        "(function () {/** @desc Hello2 */ " +
+        "var MSG_EXTERNAL_2 = goog.getMsg('a')})");
+  }  
+  
   private void extractMessagesSafely(String input) {
     extractMessages(input);
     JSError[] errors = compiler.getErrors();
-    if (errors.length > 0) {
-      fail(errors[0].description);
-    }
+    assertEquals(
+        "Unexpected error(s): " + Joiner.on("\n").join(compiler.getErrors()),
+        0, compiler.getErrorCount());
   }
 
   private void extractMessages(String input) {
