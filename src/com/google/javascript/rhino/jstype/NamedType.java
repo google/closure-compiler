@@ -223,57 +223,65 @@ class NamedType extends ProxyObjectType {
    */
   private void resolveViaProperties(ErrorReporter t,
                                     StaticScope<JSType> enclosing) {
+    JSType value = lookupViaProperties(t, enclosing);
+    // last component of the chain
+    if ((value instanceof FunctionType) &&
+        (value.isConstructor() || value.isInterface())) {
+      FunctionType functionType = (FunctionType) value;
+      setReferencedType(functionType.getInstanceType(), t, enclosing);
+    } else if (value instanceof EnumType) {
+      setReferencedType(((EnumType) value).getElementsType(), t, enclosing);
+    } else {
+      // We've been running into issues where people forward-declare
+      // non-named types. (This is legitimate...our dependency management
+      // code doubles as our forward-declaration code.)
+      //
+      // So if the type does resolve to an actual value, but it's not named,
+      // then don't respect the forward declaration.
+      handleUnresolvedType(t, value == null || value.isUnknownType());
+    }
+  }
+
+  /**
+   * Resolves a type by looking up its first component in the scope, and
+   * subsequent components as properties. The scope must have been fully
+   * parsed and a symbol table constructed.
+   * @return The type of the symbol, or null if the type could not be found.
+   */
+  private JSType lookupViaProperties( ErrorReporter t,
+      StaticScope<JSType> enclosing) {
     String[] componentNames = reference.split("\\.", -1);
     if (componentNames[0].length() == 0) {
-      handleUnresolvedType(t);
-      return;
+      return null;
     }
     StaticSlot<JSType> slot = enclosing.getSlot(componentNames[0]);
     if (slot == null) {
-      handleUnresolvedType(t);
-      return;
+      return null;
     }
     // If the first component has a type of 'Unknown', then any type
     // names using it should be regarded as silently 'Unknown' rather than be
     // noisy about it.
     JSType slotType = slot.getType();
     if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
-      handleUnresolvedType(t);
-      return;
+      return null;
     }
     JSType value = getTypedefType(t, slot, componentNames[0]);
     if (value == null) {
-      handleUnresolvedType(t);
-      return;
+      return null;
     }
 
     // resolving component by component
     for (int i = 1; i < componentNames.length; i++) {
       ObjectType parentClass = ObjectType.cast(value);
       if (parentClass == null) {
-        handleUnresolvedType(t);
-        return;
+        return null;
       }
       if (componentNames[i].length() == 0) {
-        handleUnresolvedType(t);
-        return;
+        return null;
       }
       value = parentClass.getPropertyType(componentNames[i]);
     }
-
-    // last component of the chain
-    if (value instanceof FunctionType) {
-      FunctionType functionType = (FunctionType)value;
-      if (functionType.isConstructor() || functionType.isInterface()) {
-        setReferencedType(functionType.getInstanceType(), t, enclosing);
-      } else {
-        handleUnresolvedType(t);
-      }
-    } else if (value instanceof EnumType) {
-      setReferencedType(((EnumType) value).getElementsType(), t, enclosing);
-    } else {
-      handleUnresolvedType(t);
-    }
+    return value;
   }
 
   private void setReferencedType(ObjectType type, ErrorReporter t,
@@ -299,9 +307,12 @@ class NamedType extends ProxyObjectType {
 
   // Warns about this type being unresolved iff it's not a forward-declared
   // type name.
-  private void handleUnresolvedType(ErrorReporter t) {
-    if (!registry.isForwardDeclaredType(reference) && !forgiving &&
-        registry.isLastGeneration()) {
+  private void handleUnresolvedType(
+      ErrorReporter t, boolean ignoreForwardReferencedTypes) {
+    boolean beForgiving = forgiving ||
+        (ignoreForwardReferencedTypes &&
+         registry.isForwardDeclaredType(reference));
+    if (!beForgiving && registry.isLastGeneration()) {
       t.warning("Unknown type " + reference, sourceName, lineno, null,
           charno);
     } else {
@@ -317,7 +328,7 @@ class NamedType extends ProxyObjectType {
     if (type != null) {
       return type;
     }
-    handleUnresolvedType(t);
+    handleUnresolvedType(t, true);
     return null;
   }
 }
