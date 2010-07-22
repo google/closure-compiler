@@ -114,13 +114,11 @@ public class VarCheckTest extends CompilerTestCase {
   }
 
   public void testPropReferenceInExterns1() {
-    externValidationpErrorLevel = CheckLevel.ERROR;
     testSame("asdf.foo;", "var asdf;",
         VarCheck.UNDEFINED_EXTERN_VAR_ERROR, true);
   }
 
   public void testPropReferenceInExterns2() {
-    externValidationpErrorLevel = CheckLevel.ERROR;
     testSame("asdf.foo;", "",
         VarCheck.UNDEFINED_EXTERN_VAR_ERROR, true);
   }

@@ -53,12 +53,12 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
       "module {1}");
 
   static final DiagnosticType NAME_REFERENCE_IN_EXTERNS_ERROR =
-    DiagnosticType.warning(
+    DiagnosticType.error(
       "JSC_NAME_REFERENCE_IN_EXTERNS",
       "accessing name {0} in externs has no effect");
 
   static final DiagnosticType UNDEFINED_EXTERN_VAR_ERROR =
-    DiagnosticType.disabled(
+    DiagnosticType.error(
       "JSC_UNDEFINED_EXTERN_VAR_ERROR",
       "name {0} is not undefined in the externs.");
 
