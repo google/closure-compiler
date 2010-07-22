@@ -609,6 +609,22 @@ public class CodePrinterTest extends TestCase {
         + "function Foo() {\n}\n");
   }
 
+  public void testTypeAnnotationsTypeDef() {
+    // TODO(johnlenz): It would be nice if there were some way to preserve
+    // typedefs but currently they are resolved into the basic types in the
+    // type registry.
+    assertTypeAnnotations(
+        "/** @typedef {Array.<number>} */ goog.java.Long;\n"
+        + "/** @param {!goog.java.Long} a*/\n"
+        + "function f(a){};\n",
+        "goog.java.Long;\n"
+        + "/**\n"
+        + " * @param {Array} a\n"
+        + " * @return {undefined}\n"
+        + " */\n"
+        + "function f(a) {\n}\n");
+  }
+
   public void testTypeAnnotationsAssign() {
     assertTypeAnnotations("/** @constructor */ var Foo = function(){}",
         "/**\n * @return {undefined}\n * @constructor\n */\n"
