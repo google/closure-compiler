@@ -405,6 +405,40 @@ chrome.bookmarks.onMoved;
 chrome.bookmarks.onRemoved;
 
 
+/** @see http://code.google.com/chrome/extensions/dev/cookies.html */
+chrome.cookies = {};
+
+/**
+ * @param {Object} details
+ * @param {function(Cookie=) : void} callback
+ */
+chrome.cookies.get = function(details, callback) {};
+
+/**
+ * @param {Object} details
+ * @param {function(Array.<Cookie>) : void} callback
+ */
+chrome.cookies.getAll = function(details, callback) {};
+
+/**
+ * @param {function(Array.<CookieStore>) : void} callback
+ */
+chrome.cookies.getAllCookieStores = function(callback) {};
+
+/**
+ * @param {Object} details
+ */
+chrome.cookies.remove = function(details) {};
+
+/**
+ * @param {Object} details
+ */
+chrome.cookies.set = function(details) {};
+
+/** @type {ChromeEvent} */
+chrome.cookies.onChanged;
+
+
 /** @see http://code.google.com/chrome/extensions/experimental.html */
 chrome.experimental = {};
 
@@ -484,40 +518,6 @@ chrome.experimental.popup = {};
  * @param {function() : void=} opt_callback
  */
 chrome.experimental.popup.show = function(url, showDetails, opt_callback) {};
-
-
-/** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
-chrome.experimental.cookies = {};
-
-/**
- * @param {Object} details
- * @param {function(Cookie=) : void} callback
- */
-chrome.experimental.cookies.get = function(details, callback) {};
-
-/**
- * @param {Object} details
- * @param {function(Array.<Cookie>) : void} callback
- */
-chrome.experimental.cookies.getAll = function(details, callback) {};
-
-/**
- * @param {function(Array.<CookieStore>) : void} callback
- */
-chrome.experimental.cookies.getAllCookieStores = function(callback) {};
-
-/**
- * @param {Object} details
- */
-chrome.experimental.cookies.remove = function(details) {};
-
-/**
- * @param {Object} details
- */
-chrome.experimental.cookies.set = function(details) {};
-
-/** @type {ChromeEvent} */
-chrome.experimental.cookies.onChanged;
 
 
 chrome.experimental.rlz = {};
@@ -659,23 +659,7 @@ BookmarkTreeNode.prototype.dateGroupModified;
 BookmarkTreeNode.prototype.children;
 
 /**
- * Experimental MetricType
- * @constructor
- */
-function MetricType() {}
-/** @type {string} */
-MetricType.prototype.metricName;
-/** @type {string} */
-MetricType.prototype.type;
-/** @type {number} */
-MetricType.prototype.min;
-/** @type {number} */
-MetricType.prototype.max;
-/** @type {number} */
-MetricType.prototype.buckets;
-
-/**
- * Experimental Cookie
+ * @see http://code.google.com/chrome/extensions/dev/cookies.html#type-Cookie
  * @constructor
  */
 function Cookie() {}
@@ -701,7 +685,7 @@ Cookie.prototype.expirationDate;
 Cookie.prototype.storeId;
 
 /**
- * Experimental CookieStore
+ * @see http://code.google.com/chrome/extensions/dev/cookies.html#type-CookieStore
  * @constructor
  */
 function CookieStore() {}
@@ -709,3 +693,19 @@ function CookieStore() {}
 CookieStore.prototype.id;
 /** @type {Array.<number>} */
 CookieStore.prototype.tabIds;
+
+/**
+ * Experimental MetricType
+ * @constructor
+ */
+function MetricType() {}
+/** @type {string} */
+MetricType.prototype.metricName;
+/** @type {string} */
+MetricType.prototype.type;
+/** @type {number} */
+MetricType.prototype.min;
+/** @type {number} */
+MetricType.prototype.max;
+/** @type {number} */
+MetricType.prototype.buckets;
