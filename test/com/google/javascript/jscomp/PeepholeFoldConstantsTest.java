@@ -558,6 +558,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = typeof [1]", "x = \"object\"");
     fold("x = typeof [1,[]]", "x = \"object\"");
     fold("x = typeof {}", "x = \"object\"");
+    fold("x = typeof function() {}", "x = 'function'");
 
     foldSame("x = typeof[1,[foo()]]");
     foldSame("x = typeof{bathwater:baby()}");
@@ -586,6 +587,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     // These would require type information to fold.
     foldSame("[] instanceof Foo");
     foldSame("({}) instanceof Foo");
+
+    fold("(function() {}) instanceof Object", "true");
   }
 
   public void testDivision() {

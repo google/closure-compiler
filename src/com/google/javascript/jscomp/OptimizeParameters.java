@@ -177,7 +177,7 @@ class OptimizeParameters implements CompilerPass {
 
   private void buildParameterList(List<Parameter> parameters, Node cur) {
     while ((cur = cur.getNext()) != null) {
-      parameters.add(new Parameter(cur, NodeUtil.isLiteralValue(cur)));
+      parameters.add(new Parameter(cur, NodeUtil.isLiteralValue(cur, false)));
     }
   }
 

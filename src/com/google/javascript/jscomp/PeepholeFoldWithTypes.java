@@ -78,7 +78,7 @@ public class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
     
     // We'll let PeepholeFoldConstants handle folding literals
     // and we can't remove arguments with possible side effects.
-    if (!NodeUtil.isLiteralValue(argumentNode) &&
+    if (!NodeUtil.isLiteralValue(argumentNode, true) &&
         !NodeUtil.mayHaveSideEffects(argumentNode)) {
       JSType argumentType = argumentNode.getJSType();
             

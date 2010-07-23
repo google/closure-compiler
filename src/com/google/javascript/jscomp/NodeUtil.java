@@ -202,10 +202,25 @@ public final class NodeUtil {
    * Returns true if this is a literal value. We define a literal value
    * as any node that evaluates to the same thing regardless of when or
    * where it is evaluated. So /xyz/ and [3, 5] are literals, but
-   * function() { return a; } is not.
+   * the name a is not.
+   *
+   * Function literals do not meet this definition, because they
+   * lexically capture variables. For example, if you have
+   * <code>
+   * function() { return a; }
+   * </code>
+   * If it is evaluated in a different scope, then it
+   * captures a different variable. Even if the function did not read
+   * any captured vairables directly, it would still fail this definition,
+   * because it affects the lifecycle of variables in the enclosing scope.
+   *
+   * However, a function literal with respect to a particular scope is
+   * a literal.
+   *
+   * @param includeFunctions If true, all function expressions will be
+   *     treated as literals.
    */
-  static boolean isLiteralValue(Node n) {
-    // TODO(nicksantos): Refine this function to catch more literals.
+  static boolean isLiteralValue(Node n, boolean includeFunctions) {
     switch (n.getType()) {
       case Token.ARRAYLIT:
       case Token.OBJECTLIT:
@@ -213,11 +228,14 @@ public final class NodeUtil {
         // Return true only if all children are const.
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
-          if (!isLiteralValue(child)) {
+          if (!isLiteralValue(child, includeFunctions)) {
             return false;
           }
         }
         return true;
+
+      case Token.FUNCTION:
+        return includeFunctions && !NodeUtil.isFunctionDeclaration(n);
 
       default:
         return isImmutableValue(n);
@@ -409,7 +427,7 @@ public final class NodeUtil {
         // Function expressions don't have side-effects, but function
         // declarations change the namespace. Either way, we don't need to
         // check the children, since they aren't executed at declaration time.
-        return !isFunctionExpression(n);
+        return checkForNewObjects || !isFunctionExpression(n);
 
       case Token.NEW:
         if (checkForNewObjects) {
@@ -456,8 +474,7 @@ public final class NodeUtil {
                current.getType() == Token.GETELEM;
                current = current.getFirstChild()) { }
 
-          return !(isLiteralValue(current) ||
-              current.getType() == Token.FUNCTION);
+          return !isLiteralValue(current, true);
         }
 
         return true;

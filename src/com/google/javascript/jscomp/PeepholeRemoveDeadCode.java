@@ -226,7 +226,7 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     // Try transforms that apply to both IF and HOOK.
-    if (!NodeUtil.isLiteralValue(cond)) {
+    if (!NodeUtil.isLiteralValue(cond, true)) {
       return n;  // We can't remove branches otherwise!
     }
 

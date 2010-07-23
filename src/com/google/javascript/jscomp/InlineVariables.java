@@ -549,7 +549,7 @@ class InlineVariables implements CompilerPass {
     private boolean canMoveAggressively(Node value) {
       // Function expressions and other mutable objects can move within
       // the same basic block.
-      return NodeUtil.isLiteralValue(value)
+      return NodeUtil.isLiteralValue(value, true)
           || value.getType() == Token.FUNCTION;
     }
 
@@ -578,7 +578,8 @@ class InlineVariables implements CompilerPass {
             initialization.getGrandparent(),  // EXPR_RESULT
             initialization.getGrandparent().getParent()); // EXPR container
       } else {
-        throw new IllegalStateException("Unexpected initialiation parent");
+        throw new IllegalStateException("Unexpected initialization parent " +
+            initialization.getParent().toStringTree());
       }
       Node targetName = reference.getNameNode();
       while (it.hasNext()) {

@@ -92,7 +92,7 @@ class InlineGetters extends MethodCompilerPass {
             if (isPropertyTree(returned)) {
               logger.fine("Inlining property accessor: " + callName);
               inlinePropertyReturn(parent, callNode, returned);
-            } else if (NodeUtil.isLiteralValue(returned) &&
+            } else if (NodeUtil.isLiteralValue(returned, false) &&
               !NodeUtil.mayHaveSideEffects(callNode.getFirstChild())) {
               logger.fine("Inlining constant accessor: " + callName);
               inlineConstReturn(parent, callNode, returned);

@@ -66,17 +66,20 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void assertLiteralAndImmutable(Node n) {
-    assertTrue(NodeUtil.isLiteralValue(n));
+    assertTrue(NodeUtil.isLiteralValue(n, true));
+    assertTrue(NodeUtil.isLiteralValue(n, false));
     assertTrue(NodeUtil.isImmutableValue(n));
   }
 
   public void assertLiteralButNotImmutable(Node n) {
-    assertTrue(NodeUtil.isLiteralValue(n));
+    assertTrue(NodeUtil.isLiteralValue(n, true));
+    assertTrue(NodeUtil.isLiteralValue(n, false));
     assertFalse(NodeUtil.isImmutableValue(n));
   }
 
   public void assertNotLiteral(Node n) {
-    assertFalse(NodeUtil.isLiteralValue(n));
+    assertFalse(NodeUtil.isLiteralValue(n, true));
+    assertFalse(NodeUtil.isLiteralValue(n, false));
     assertFalse(NodeUtil.isImmutableValue(n));
   }
 
@@ -341,8 +344,8 @@ public class NodeUtilTest extends TestCase {
     assertMutableState(true, "if(true){a()}");
 
     assertMutableState(false, "if(true){a}");
-    assertMutableState(false, "(function() { })");
-    assertMutableState(false, "(function() { i++ })");
+    assertMutableState(true, "(function() { })");
+    assertMutableState(true, "(function() { i++ })");
     assertMutableState(true, "[function a(){}]");
 
     assertMutableState(false, "a");
@@ -360,7 +363,7 @@ public class NodeUtilTest extends TestCase {
     assertMutableState(false, "'a' + a.name");
     assertMutableState(false, "1, 2, 3");
     assertMutableState(false, "a, b, 3");
-    assertMutableState(false, "(function(a, b) {  })");
+    assertMutableState(true, "(function(a, b) {  })");
     assertMutableState(false, "a ? c : d");
     assertMutableState(false, "'1' + navigator.userAgent");
 

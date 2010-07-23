@@ -157,13 +157,16 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Preconditions.checkArgument(originalTypeofNode.getType() == Token.TYPEOF);
 
     Node argumentNode = originalTypeofNode.getFirstChild();
-    if (argumentNode == null || !NodeUtil.isLiteralValue(argumentNode)) {
+    if (argumentNode == null || !NodeUtil.isLiteralValue(argumentNode, true)) {
       return originalTypeofNode;
     }
 
     String typeNameString = null;
 
     switch (argumentNode.getType()) {
+      case Token.FUNCTION:
+        typeNameString = "function";
+        break;
       case Token.STRING:
         typeNameString = "string";
         break;
@@ -302,7 +305,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // TODO(johnlenz) Use type information if available to fold
     // instanceof.
-    if (NodeUtil.isLiteralValue(left)
+    if (NodeUtil.isLiteralValue(left, true)
         && !NodeUtil.mayHaveSideEffects(right)) {
 
       Node replacementNode = null;
@@ -483,7 +486,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private Node tryFoldLeftChildAdd(Node n, Node left, Node right) {
 
-    if (NodeUtil.isLiteralValue(right) &&
+    if (NodeUtil.isLiteralValue(right, false) &&
         left.getType() == Token.ADD &&
         left.getChildCount() == 2) {
 
@@ -585,7 +588,8 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldAdd(Node node, Node left, Node right) {
     Preconditions.checkArgument(node.getType() == Token.ADD);
 
-    if (NodeUtil.isLiteralValue(left) && NodeUtil.isLiteralValue(right)) {
+    if (NodeUtil.isLiteralValue(left, false) &&
+        NodeUtil.isLiteralValue(right, false)) {
       // 6 + 7
       return tryFoldAddConstant(node, left, right);
     } else {
@@ -718,7 +722,8 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   @SuppressWarnings("fallthrough")
   private Node tryFoldComparison(Node n, Node left, Node right) {
-    if (!NodeUtil.isLiteralValue(left) || !NodeUtil.isLiteralValue(right)) {
+    if (!NodeUtil.isLiteralValue(left, false) ||
+        !NodeUtil.isLiteralValue(right, false)) {
       // We only handle non-literal operands for LT and GT.
       if (n.getType() != Token.GT && n.getType() != Token.LT) {
         return n;
@@ -730,15 +735,15 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // TODO(johnlenz): Use the JSType to compare nodes of different types.
 
-    boolean rightLiteral = NodeUtil.isLiteralValue(right);
+    boolean rightLiteral = NodeUtil.isLiteralValue(right, false);
     boolean undefinedRight = ((Token.NAME == right.getType()
           && right.getString().equals("undefined"))
           || (Token.VOID == right.getType()
-              && NodeUtil.isLiteralValue(right.getFirstChild())));
+              && NodeUtil.isLiteralValue(right.getFirstChild(), false)));
 
     switch (left.getType()) {
       case Token.VOID:
-        if (!NodeUtil.isLiteralValue(left.getFirstChild())) {
+        if (!NodeUtil.isLiteralValue(left.getFirstChild(), false)) {
           return n;
         } else if (!rightLiteral) {
           return n;

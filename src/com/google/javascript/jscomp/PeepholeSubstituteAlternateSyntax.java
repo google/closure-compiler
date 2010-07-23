@@ -182,7 +182,7 @@ public class PeepholeSubstituteAlternateSyntax
     /* If the condition is a literal, we'll let other
      * optimizations try to remove useless code.
      */
-    if (NodeUtil.isLiteralValue(cond)) {
+    if (NodeUtil.isLiteralValue(cond, true)) {
       return n;
     }
 

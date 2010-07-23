@@ -236,7 +236,7 @@ class RemoveUnusedVars implements CompilerPass {
         if (var.getParentNode().getType() == Token.VAR) {
           Node value = var.getInitialValue();
           assignedToUnknownValue = value != null &&
-              !NodeUtil.isLiteralValue(value);
+              !NodeUtil.isLiteralValue(value, true);
         } else {
           // This was initialized to a function arg or a catch param.
           assignedToUnknownValue = true;
@@ -246,7 +246,7 @@ class RemoveUnusedVars implements CompilerPass {
           if (assign.isPropertyAssign) {
             hasPropertyAssign = true;
           } else if (!NodeUtil.isLiteralValue(
-              assign.assignNode.getLastChild())) {
+              assign.assignNode.getLastChild(), true)) {
             assignedToUnknownValue = true;
           }
         }
