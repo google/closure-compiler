@@ -820,6 +820,7 @@ class TypeInference
         if (type != narrowed) {
           scope = scope.createChildFlowScope();
           redeclare(scope, assertedNodeName, narrowed);
+          callNode.setJSType(narrowed);
         }
       } else if (assertedNode.getType() == Token.AND ||
                  assertedNode.getType() == Token.OR) {
@@ -836,6 +837,7 @@ class TypeInference
       if (type != narrowed) {
         scope = scope.createChildFlowScope();
         redeclare(scope, assertedNodeName, narrowed);
+        callNode.setJSType(narrowed);
       }
     }
     return scope;

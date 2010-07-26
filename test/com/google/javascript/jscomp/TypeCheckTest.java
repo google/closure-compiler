@@ -3639,6 +3639,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         null);
   }
 
+  public void testClosure7() throws Exception {
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "goog.asserts = {};" +
+        "/** @return {*} */ goog.asserts.assert = function(x) { return x; };" +
+        "/** @type {string|null|undefined} */ var a = foo();" +
+        "/** @type {number} */" +
+        "var b = goog.asserts.assert(a);",
+        "initializing variable\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
   public void testReturn1() throws Exception {
     testTypes("/**@return {void}*/function foo(){ return 3; }",
         "inconsistent return type\n" +
