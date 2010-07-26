@@ -201,8 +201,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if ((n.getType() == Token.NAME) && isDeclaration(n)) {
         checkDeclaration(t, n);
-      } else if ((n.getType() == Token.GETPROP)
-                 || (n.getType() == Token.SETPROP)) {
+      } else if (n.getType() == Token.GETPROP) {
         checkProperty(t, n);
       }
     }
