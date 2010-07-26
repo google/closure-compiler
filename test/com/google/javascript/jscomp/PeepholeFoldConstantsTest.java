@@ -199,7 +199,6 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     // identical, to true. Cf. FoldConstants.tryFoldAndOr().
     foldSame("x = foo() && true || bar()");
     foldSame("foo() && true || bar()");
-
   }
 
   public void testFoldBitwiseOp() {
@@ -589,6 +588,9 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("({}) instanceof Foo");
 
     fold("(function() {}) instanceof Object", "true");
+
+    // An unknown value should never be folded.
+    foldSame("x instanceof Foo");
   }
 
   public void testDivision() {
