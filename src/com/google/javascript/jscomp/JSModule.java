@@ -55,6 +55,7 @@ public class JSModule implements DependencyInfo, Serializable {
   /** Modules that this module depends on */
   private final List<JSModule> deps = new ArrayList<JSModule>();
 
+  private int depth;
   /**
    * Creates an instance.
    *
@@ -62,6 +63,7 @@ public class JSModule implements DependencyInfo, Serializable {
    */
   public JSModule(String name) {
     this.name = name;
+    this.depth = -1;
   }
 
   /** Gets the module name. */
@@ -274,5 +276,19 @@ public class JSModule implements DependencyInfo, Serializable {
     List<JSModule> sortedList = (new SortedDependencies<JSModule>(
             Lists.newArrayList(modules))).getSortedList();
     return sortedList.toArray(new JSModule[sortedList.size()]);
+  }
+
+  /**
+   * @param dep the depth to set
+   */
+  public void setDepth(int dep) {
+    this.depth = dep;
+  }
+
+  /**
+   * @return the depth
+   */
+  public int getDepth() {
+    return depth;
   }
 }

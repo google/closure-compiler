@@ -57,12 +57,12 @@ public class JSModuleGraphTest extends TestCase {
   }
 
   public void testModuleDepth() {
-    assertEquals("A should have depth 0", 0, graph.getDepth(A));
-    assertEquals("B should have depth 1", 1, graph.getDepth(B));
-    assertEquals("C should have depth 1", 1, graph.getDepth(C));
-    assertEquals("D should have depth 2", 2, graph.getDepth(D));
-    assertEquals("E should have depth 2", 2, graph.getDepth(E));
-    assertEquals("F should have depth 3", 3, graph.getDepth(F));
+    assertEquals("A should have depth 0", 0, A.getDepth());
+    assertEquals("B should have depth 1", 1, B.getDepth());
+    assertEquals("C should have depth 1", 1, C.getDepth());
+    assertEquals("D should have depth 2", 2, D.getDepth());
+    assertEquals("E should have depth 2", 2, E.getDepth());
+    assertEquals("F should have depth 3", 3, F.getDepth());
   }
 
   public void testDeepestCommonDep() {

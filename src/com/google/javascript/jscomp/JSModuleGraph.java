@@ -24,6 +24,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 
@@ -47,10 +48,7 @@ import java.util.TreeSet;
  */
 public class JSModuleGraph {
 
-  /**
-   * Map from a module to its depth.
-   */
-  private Map<JSModule, Integer> moduleDepths;
+  private Set<JSModule> modules;
 
   /**
    * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a
@@ -83,14 +81,14 @@ public class JSModuleGraph {
    * Creates a module graph from a list of modules in dependency order.
    */
   public JSModuleGraph(List<JSModule> modulesInDepOrder) {
-    moduleDepths = Maps.newHashMapWithExpectedSize(modulesInDepOrder.size());
+    modules = Sets.newHashSetWithExpectedSize(modulesInDepOrder.size());
     modulesByDepth = Lists.newArrayList();
 
     for (JSModule module : modulesInDepOrder) {
       int depth = 0;
       for (JSModule dep : module.getDependencies()) {
-        Integer depDepth = moduleDepths.get(dep);
-        if (depDepth == null) {
+        int depDepth = dep.getDepth();
+        if (depDepth < 0) {
           throw new ModuleDependenceException(String.format(
               "Modules not in dependency order: %s preceded %s",
               module.getName(), dep.getName()),
@@ -99,7 +97,8 @@ public class JSModuleGraph {
         depth = Math.max(depth, depDepth + 1);
       }
 
-      moduleDepths.put(module, depth);
+      module.setDepth(depth);
+      modules.add(module);
       if (depth == modulesByDepth.size()) {
         modulesByDepth.add(new ArrayList<JSModule>());
       }
@@ -111,7 +110,7 @@ public class JSModuleGraph {
    * Gets an iterable over all modules.
    */
   Iterable<JSModule> getAllModules() {
-    return moduleDepths.keySet();
+    return modules;
   }
 
   /**
@@ -128,7 +127,7 @@ public class JSModuleGraph {
    * Gets the total number of modules.
    */
   int getModuleCount() {
-    return moduleDepths.size();
+    return modules.size();
   }
 
   /**
@@ -136,16 +135,6 @@ public class JSModuleGraph {
    */
   JSModule getRootModule() {
     return Iterables.getOnlyElement(modulesByDepth.get(0));
-  }
-
-  /**
-   * Gets the depth of a module.
-   *
-   * @param module A module in this graph
-   * @return The depth of the module
-   */
-  int getDepth(JSModule module) {
-    return moduleDepths.get(module);
   }
 
   /**
@@ -172,8 +161,8 @@ public class JSModuleGraph {
    *     they have no common dependencies
    */
   JSModule getDeepestCommonDependency(JSModule m1, JSModule m2) {
-    int m1Depth = getDepth(m1);
-    int m2Depth = getDepth(m2);
+    int m1Depth = m1.getDepth();
+    int m2Depth = m2.getDepth();
     // According our definition of depth, the result must have a strictly
     // smaller depth than either m1 or m2.
     for (int depth = Math.min(m1Depth, m2Depth) - 1; depth >= 0; depth--) {
@@ -260,7 +249,7 @@ public class JSModuleGraph {
    */
   public void coalesceDuplicateFiles() {
     Multimap<String, JSModule> fileRefs = LinkedHashMultimap.create();
-    for (JSModule module : moduleDepths.keySet()) {
+    for (JSModule module : modules) {
       for (CompilerInput jsFile : module.getInputs()) {
         fileRefs.put(jsFile.getName(), module);
       }
@@ -378,8 +367,8 @@ public class JSModuleGraph {
     if (m1 == m2) {
       return 0;
     }
-    int d1 = getDepth(m1);
-    int d2 = getDepth(m2);
+    int d1 = m1.getDepth();
+    int d2 = m2.getDepth();
     return d1 < d2 ? -1 : d2 == d1 ? m1.getName().compareTo(m2.getName()) : 1;
   }
 
