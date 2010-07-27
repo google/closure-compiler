@@ -97,6 +97,10 @@ public class DiagnosticGroups {
           new DiagnosticGroup(VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
                               VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
 
+  public static DiagnosticGroup AMBIGUOUS_FUNCTION_DECL =
+    DiagnosticGroups.registerGroup("ambiguousFunctionDecl",
+          new DiagnosticGroup(VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL));  
+
   public static DiagnosticGroup UNKNOWN_DEFINES =
     DiagnosticGroups.registerGroup("unknownDefines",
           new DiagnosticGroup(ProcessDefines.UNKNOWN_DEFINE_WARNING));

@@ -30,10 +30,23 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   private static final String VARIABLE_RUN =
       "var a = 1; var b = 2; var c = a + b, d = c;";
 
+  private boolean enableAmbiguousFunctionCheck = false;
+
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
+    if (enableAmbiguousFunctionCheck) {
+      compiler.getOptions().setWarningLevel(
+          DiagnosticGroups.AMBIGUOUS_FUNCTION_DECL, CheckLevel.WARNING);
+    }
+
     // Treats bad reads as errors, and reports bad write warnings.
     return new VariableReferenceCheck(compiler, CheckLevel.WARNING);
+  }
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    enableAmbiguousFunctionCheck = false;
   }
 
   public void testCorrectCode() {
@@ -93,55 +106,62 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testHoistedFunction1() {
+    enableAmbiguousFunctionCheck = true;
     assertNoWarning("f(); function f() {}");
   }
 
   public void testHoistedFunction2() {
+    enableAmbiguousFunctionCheck = true;
     assertNoWarning("function g() { f(); function f() {} }");
   }
 
   public void testNonHoistedFunction() {
+    enableAmbiguousFunctionCheck = true;
     assertUndeclared("if (true) { f(); function f() {} }");
   }
 
   public void testNonHoistedFunction2() {
+    enableAmbiguousFunctionCheck = true;
     assertNoWarning("if (false) { function f() {} f(); }");
   }
 
   public void testNonHoistedFunction3() {
+    enableAmbiguousFunctionCheck = true;
     assertNoWarning("function g() { if (false) { function f() {} f(); }}");
   }
 
   public void testNonHoistedFunction4() {
-    if (VariableReferenceCheck.CHECK_UNHOISTED_NAMED_FUNCTIONS) {
-      assertAmbiguous("if (false) { function f() {} }  f();");
-    }
+    enableAmbiguousFunctionCheck = true;
+    assertAmbiguous("if (false) { function f() {} }  f();");
   }
 
   public void testNonHoistedFunction5() {
-    if (VariableReferenceCheck.CHECK_UNHOISTED_NAMED_FUNCTIONS) {
-      assertAmbiguous("function g() { if (false) { function f() {} }  f(); }");
-    }
+    enableAmbiguousFunctionCheck = true;
+    assertAmbiguous("function g() { if (false) { function f() {} }  f(); }");
   }
 
   public void testNonHoistedFunction6() {
+    enableAmbiguousFunctionCheck = true;
     assertUndeclared("if (false) { f(); function f() {} }");
   }
 
   public void testNonHoistedFunction7() {
+    enableAmbiguousFunctionCheck = true;
     assertUndeclared("function g() { if (false) { f(); function f() {} }}");
   }
 
-
   public void testNonHoistedRecursiveFunction1() {
+    enableAmbiguousFunctionCheck = true;
     assertNoWarning("if (false) { function f() { f(); }}");
   }
 
   public void testNonHoistedRecursiveFunction2() {
+    enableAmbiguousFunctionCheck = true;
     assertNoWarning("function g() { if (false) { function f() { f(); }}}");
   }
 
   public void testNonHoistedRecursiveFunction3() {
+    enableAmbiguousFunctionCheck = true;
     assertNoWarning("function g() { if (false) { function f() { f(); g(); }}}");
   }
 

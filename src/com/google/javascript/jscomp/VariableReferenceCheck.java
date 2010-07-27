@@ -49,11 +49,9 @@ class VariableReferenceCheck implements CompilerPass {
       "JSC_REDECLARED_VARIABLE",
       "Redeclared variable: {0}");
 
-  static final boolean CHECK_UNHOISTED_NAMED_FUNCTIONS = false;
-
   static final DiagnosticType AMBIGUOUS_FUNCTION_DECL =
-    DiagnosticType.warning("AMBIGUIOUS_FUNCTION_DECL",
-        "Ambiguious use of a named function: {0}.");
+    DiagnosticType.disabled("AMBIGUOUS_FUNCTION_DECL",
+        "Ambiguous use of a named function: {0}.");
 
   private AbstractCompiler compiler;
   private CheckLevel checkLevel;
@@ -140,8 +138,7 @@ class VariableReferenceCheck implements CompilerPass {
           }
         }
 
-        if (CHECK_UNHOISTED_NAMED_FUNCTIONS && isUnhoistedNamedFunction
-            && !isDeclaration && isDeclaredInScope) {
+        if (isUnhoistedNamedFunction && !isDeclaration && isDeclaredInScope) {
           // Only allow an unhoisted named function to be used within the
           // block it is declared.
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
