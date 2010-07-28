@@ -623,6 +623,66 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
       "function g(){};"));
   }
 
+  public void testVarMovement8() {
+    JSModule[] modules = createModuleBush(
+      // m1
+      "var a = 0;",
+      // m2 -> m1
+      "",
+      // m3 -> m2
+      "var x = a;",
+      // m4 -> m2
+      "var y = a;"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      "var a = 0;",
+      // m3
+      "var x = a;",
+      // m4
+      "var y = a;"
+    });
+  }
+
+  public void testVarMovement9() {
+    JSModule[] modules = createModuleTree(
+      // m1
+      "var a = 0; var b = 1; var c = 3;",
+      // m2 -> m1
+      "",
+      // m3 -> m1
+      "",
+      // m4 -> m2
+      "a;",
+      // m5 -> m2
+      "a;c;",
+      // m6 -> m3
+      "b;",
+      // m7 -> m4
+      "b;c;"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "var c = 3;",
+      // m2
+      "var a = 0;",
+      // m3
+      "var b = 1;",
+      // m4
+      "a;",
+      // m5
+      "a;c;",
+      // m6
+      "b;",
+      // m7
+      "b;c;"
+    });
+  }
+
   public void testClone1() {
     test(createModuleChain(
              // m1

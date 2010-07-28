@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
 import com.google.javascript.rhino.Node;
@@ -898,6 +899,33 @@ public abstract class CompilerTestCase extends TestCase  {
     JSModule[] modules = createModules(inputs);
     for (int i = 1; i < modules.length; i++) {
       modules[i].addDependency(modules[0]);
+    }
+    return modules;
+  }
+
+  /**
+   * Generates a list of modules from a list of inputs, such that modules
+   * form a bush formation. In a bush formation, module 2 depends
+   * on module 1, and all other modules depend on module 2.
+   */
+  static JSModule[] createModuleBush(String ... inputs) {
+    Preconditions.checkState(inputs.length > 2);
+    JSModule[] modules = createModules(inputs);
+    for (int i = 1; i < modules.length; i++) {
+      modules[i].addDependency(modules[i == 1 ? 0 : 1]);
+    }
+    return modules;
+  }
+
+  /**
+   * Generates a list of modules from a list of inputs, such that modules
+   * form a tree formation. In a tree formation, module N depends on
+   * module `floor(N/2)`, So the modules form a balanced binary tree.
+   */
+  static JSModule[] createModuleTree(String ... inputs) {
+    JSModule[] modules = createModules(inputs);
+    for (int i = 1; i < modules.length; i++) {
+      modules[i].addDependency(modules[(i - 1) / 2]);
     }
     return modules;
   }
