@@ -38,6 +38,13 @@ Notification.prototype.removeEventListener =
 Notification.prototype.dispatchEvent = function(evt) {};
 
 /**
+ * The ID used by clients to uniquely identify notifications to eliminate
+ * duplicate notifications.
+ * @type {string}
+ */
+Notification.prototype.replaceId;
+
+/**
  * Displays the notification.
  */
 Notification.prototype.show = function() {};
