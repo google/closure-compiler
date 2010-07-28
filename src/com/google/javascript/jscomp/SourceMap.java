@@ -275,7 +275,7 @@ public class SourceMap {
   /**
    * Resets the source map for reuse for the generation of a new source file.
    */
-  void reset() {
+  public void reset() {
     mappings = Lists.newArrayList();
     offsetPosition = new Position(0, 0);
     prefixPosition = new Position(0, 0);

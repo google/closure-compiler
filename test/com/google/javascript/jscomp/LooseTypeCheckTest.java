@@ -5909,15 +5909,15 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testWarnDataPropertyOnInterface3() throws Exception {
     testTypes("/** @interface */ u.T = function () {};\n" +
         "/** @type {number} */u.T.prototype.x = 1;",
-        "interface members can only be plain functions" +
-        " or goog.abstractMethod");
+        "interface members can only be empty property declarations, "
+        + "empty functions, or goog.abstractMethod");
   }
 
   public void testWarnDataPropertyOnInterface4() throws Exception {
     testTypes("/** @interface */ function T() {};\n" +
         "/** @type {number} */T.prototype.x = 1;",
-        "interface members can only be plain functions" +
-        " or goog.abstractMethod");
+        "interface members can only be empty property declarations, "
+        + "empty functions, or goog.abstractMethod");
   }
 
   // TODO(user): If we want to support this syntax we should warn about the
@@ -5967,7 +5967,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testErrorMismatchingPropertyOnInterface6() throws Exception {
     testTypes("/** @interface */ function T() {};\n" +
         "/** @return {number} */T.prototype.x = 1",
-        "interface members can only be plain functions or goog.abstractMethod"
+        "interface members can only be empty property declarations, "
+        + "empty functions, or goog.abstractMethod"
         );
   }
 

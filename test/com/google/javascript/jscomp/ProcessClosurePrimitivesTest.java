@@ -731,6 +731,48 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
         });
   }
 
+  public void testProvideInIndependentModules2b() {
+    // TODO(nicksantos): Make this an error.
+    test(
+        createModuleStar(
+            "goog.provide('apps');",
+            "goog.provide('apps.foo'); apps.foo = function() {};",
+            "goog.provide('apps.foo.B');"),
+        new String[] {
+            "var apps = {};",
+            "apps.foo = function() {};",
+            "apps.foo.B = {};",
+        });
+  }
+
+  public void testProvideInIndependentModules3() {
+    test(
+        createModuleStar(
+            "goog.provide('apps');",
+            "goog.provide('apps.foo.B');",
+            "goog.provide('apps.foo'); goog.require('apps.foo');"),
+        new String[] {
+            "var apps = {}; apps.foo = {};",
+            "apps.foo.B = {};",
+            "",
+        });
+  }
+
+  public void testProvideInIndependentModules3b() {
+    // TODO(nicksantos): Make this an error.
+    test(
+        createModuleStar(
+            "goog.provide('apps');",
+            "goog.provide('apps.foo.B');",
+            "goog.provide('apps.foo'); apps.foo = function() {}; " +
+            "goog.require('apps.foo');"),
+        new String[] {
+            "var apps = {};",
+            "apps.foo.B = {};",
+            "apps.foo = function() {};",
+        });
+  }
+
   public void testRequireOfBaseGoog() {
     test("goog.require('goog');",
          "", MISSING_PROVIDE_ERROR);

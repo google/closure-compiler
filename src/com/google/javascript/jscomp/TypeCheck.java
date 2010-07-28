@@ -143,10 +143,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning("JSC_ENUM_NOT_CONSTANT",
           "enum key {0} must be a syntactic constant");
 
-  static final DiagnosticType INTERFACE_FUNCTION_MEMBERS_ONLY =
+  static final DiagnosticType INVALID_INTERFACE_MEMBER_DECLARATION =
       DiagnosticType.warning(
-          "JSC_INTERFACE_FUNCTION_MEMBERS_ONLY",
-          "interface members can only be plain functions or {0}");
+          "JSC_INVALID_INTERFACE_MEMBER_DECLARATION",
+          "interface members can only be empty property declarations,"
+          + " empty functions{0}");
 
   static final DiagnosticType INTERFACE_FUNCTION_NOT_EMPTY =
       DiagnosticType.warning(
@@ -235,7 +236,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       MULTIPLE_VAR_DEF,
       ENUM_DUP,
       ENUM_NOT_CONSTANT,
-      INTERFACE_FUNCTION_MEMBERS_ONLY,
+      INVALID_INTERFACE_MEMBER_DECLARATION,
       INTERFACE_FUNCTION_NOT_EMPTY,
       CONFLICTING_EXTENDED_TYPE,
       BAD_IMPLEMENTED_TYPE,
@@ -1044,14 +1045,25 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       String property, Node lvalue, Node rvalue) {
 
     JSType rvalueType = getJSType(rvalue);
+
+    // Only 2 values are allowed for methods:
+    //    goog.abstractMethod
+    //    function () {};
+    // or for properties, no assignment such as:
+    //    InterfaceFoo.prototype.foobar;
+
     String abstractMethodName =
         compiler.getCodingConvention().getAbstractMethodName();
     if (!rvalueType.isOrdinaryFunction() &&
         !(rvalue.isQualifiedName() &&
           rvalue.getQualifiedName().equals(abstractMethodName))) {
+      // This is bad i18n style but we don't localize our compiler errors.
+      String abstractMethodMessage = (abstractMethodName != null)
+         ? ", or " + abstractMethodName
+         : "";
       compiler.report(
-          t.makeError(object, INTERFACE_FUNCTION_MEMBERS_ONLY,
-              abstractMethodName));
+          t.makeError(object, INVALID_INTERFACE_MEMBER_DECLARATION,
+              abstractMethodMessage));
     }
 
     if (assign.getLastChild().getType() == Token.FUNCTION

@@ -244,14 +244,18 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         unrecognizedRequires.add(
             new UnrecognizedRequire(n, ns, t.getSourceName()));
       } else {
+        JSModule providedModule = provided.explicitModule;
+
+        // This must be non-null, because there was an explicit provide.
+        Preconditions.checkNotNull(providedModule);
+
         JSModule module = t.getModule();
         if (moduleGraph != null &&
-            module != provided.firstModule /* covers null case */ &&
-            !moduleGraph.dependsOn(module,
-                provided.firstModule)) {
+            module != providedModule &&
+            !moduleGraph.dependsOn(module, providedModule)) {
           compiler.report(
               t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
-                  provided.firstModule.getName(),
+                  providedModule.getName(),
                   module.getName()));
         }
       }
@@ -665,6 +669,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     // The node where the call was explicitly goog.provided. May be null
     // if the namespace is always provided implicitly.
     private Node explicitNode = null;
+    private JSModule explicitModule = null;
 
     // The candidate definition.
     private Node candidateDefinition = null;
@@ -695,6 +700,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         Preconditions.checkState(explicitNode == null);
         Preconditions.checkArgument(NodeUtil.isExpressionNode(node));
         explicitNode = node;
+        explicitModule = module;
       }
       updateMinimumModule(module);
     }

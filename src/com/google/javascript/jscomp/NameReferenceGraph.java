@@ -24,7 +24,6 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.DefinitionsRemover.AssignmentDefinition;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.DefinitionsRemover.NamedFunctionDefinition;
-import com.google.javascript.jscomp.DefinitionsRemover.UnknownDefinition;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
@@ -140,8 +139,6 @@ class NameReferenceGraph extends
       List<Definition> decls = nameRef.getDeclarations();
       if (!decls.isEmpty()) {
         result.addAll(decls);
-      } else {
-        result.add(new UnknownDefinition(useSite, false));
       }
     }
 

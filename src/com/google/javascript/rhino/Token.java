@@ -170,7 +170,7 @@ public class Token
         ASSIGN         = 86,  // simple assignment  (=)
         ASSIGN_BITOR   = 87,  // |=
         ASSIGN_BITXOR  = 88,  // ^=
-        ASSIGN_BITAND  = 89,  // |=
+        ASSIGN_BITAND  = 89,  // &=
         ASSIGN_LSH     = 90,  // <<=
         ASSIGN_RSH     = 91,  // >>=
         ASSIGN_URSH    = 92,  // >>>=
