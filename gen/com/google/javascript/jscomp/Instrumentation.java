@@ -3,7 +3,8 @@
 package com.google.javascript.jscomp;
 
 public  final class Instrumentation extends
-    com.google.protobuf.GeneratedMessage {
+    com.google.protobuf.GeneratedMessage
+    implements InstrumentationOrBuilder {
   // Use Instrumentation.newBuilder() to construct.
   private Instrumentation(Builder builder) {
     super(builder);
@@ -32,37 +33,103 @@ public  final class Instrumentation extends
   private int bitField0_;
   // optional string report_defined = 1;
   public static final int REPORT_DEFINED_FIELD_NUMBER = 1;
-  private java.lang.String reportDefined_;
+  private Object reportDefined_;
   public boolean hasReportDefined() {
     return ((bitField0_ & 0x00000001) == 0x00000001);
   }
   public java.lang.String getReportDefined() {
-    return reportDefined_;
+    Object ref = reportDefined_;
+    if (ref instanceof String) {
+      return (String) reportDefined_;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      String s = bs.toStringUtf8();
+      if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+        reportDefined_ = s;
+      }
+      return s;
+    }
+  }
+  private com.google.protobuf.ByteString getReportDefinedBytes() {
+    Object ref = reportDefined_;
+    if (ref instanceof String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+      reportDefined_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) reportDefined_;
+    }
   }
   
   // optional string report_call = 2;
   public static final int REPORT_CALL_FIELD_NUMBER = 2;
-  private java.lang.String reportCall_;
+  private Object reportCall_;
   public boolean hasReportCall() {
     return ((bitField0_ & 0x00000002) == 0x00000002);
   }
   public java.lang.String getReportCall() {
-    return reportCall_;
+    Object ref = reportCall_;
+    if (ref instanceof String) {
+      return (String) reportCall_;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      String s = bs.toStringUtf8();
+      if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+        reportCall_ = s;
+      }
+      return s;
+    }
+  }
+  private com.google.protobuf.ByteString getReportCallBytes() {
+    Object ref = reportCall_;
+    if (ref instanceof String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+      reportCall_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) reportCall_;
+    }
   }
   
   // optional string report_exit = 6;
   public static final int REPORT_EXIT_FIELD_NUMBER = 6;
-  private java.lang.String reportExit_;
+  private Object reportExit_;
   public boolean hasReportExit() {
     return ((bitField0_ & 0x00000004) == 0x00000004);
   }
   public java.lang.String getReportExit() {
-    return reportExit_;
+    Object ref = reportExit_;
+    if (ref instanceof String) {
+      return (String) reportExit_;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      String s = bs.toStringUtf8();
+      if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+        reportExit_ = s;
+      }
+      return s;
+    }
+  }
+  private com.google.protobuf.ByteString getReportExitBytes() {
+    Object ref = reportExit_;
+    if (ref instanceof String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+      reportExit_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) reportExit_;
+    }
   }
   
   // repeated string declaration_to_remove = 3;
   public static final int DECLARATION_TO_REMOVE_FIELD_NUMBER = 3;
-  private java.util.List<java.lang.String> declarationToRemove_;
+  private com.google.protobuf.LazyStringList declarationToRemove_;
   public java.util.List<java.lang.String>
       getDeclarationToRemoveList() {
     return declarationToRemove_;
@@ -76,7 +143,7 @@ public  final class Instrumentation extends
   
   // repeated string init = 4;
   public static final int INIT_FIELD_NUMBER = 4;
-  private java.util.List<java.lang.String> init_;
+  private com.google.protobuf.LazyStringList init_;
   public java.util.List<java.lang.String>
       getInitList() {
     return init_;
@@ -90,20 +157,42 @@ public  final class Instrumentation extends
   
   // optional string app_name_setter = 5;
   public static final int APP_NAME_SETTER_FIELD_NUMBER = 5;
-  private java.lang.String appNameSetter_;
+  private Object appNameSetter_;
   public boolean hasAppNameSetter() {
     return ((bitField0_ & 0x00000008) == 0x00000008);
   }
   public java.lang.String getAppNameSetter() {
-    return appNameSetter_;
+    Object ref = appNameSetter_;
+    if (ref instanceof String) {
+      return (String) appNameSetter_;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      String s = bs.toStringUtf8();
+      if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+        appNameSetter_ = s;
+      }
+      return s;
+    }
+  }
+  private com.google.protobuf.ByteString getAppNameSetterBytes() {
+    Object ref = appNameSetter_;
+    if (ref instanceof String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+      appNameSetter_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) appNameSetter_;
+    }
   }
   
   private void initFields() {
     reportDefined_ = "";
     reportCall_ = "";
     reportExit_ = "";
-    declarationToRemove_ = java.util.Collections.emptyList();
-    init_ = java.util.Collections.emptyList();
+    declarationToRemove_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    init_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     appNameSetter_ = "";
   }
   public final boolean isInitialized() {
@@ -114,22 +203,22 @@ public  final class Instrumentation extends
                       throws java.io.IOException {
     getSerializedSize();
     if (hasReportDefined()) {
-      output.writeString(1, getReportDefined());
+      output.writeBytes(1, getReportDefinedBytes());
     }
     if (hasReportCall()) {
-      output.writeString(2, getReportCall());
+      output.writeBytes(2, getReportCallBytes());
     }
-    for (java.lang.String element : getDeclarationToRemoveList()) {
-      output.writeString(3, element);
+    for (int i = 0; i < declarationToRemove_.size(); i++) {
+      output.writeBytes(3, declarationToRemove_.getByteString(i));
     }
-    for (java.lang.String element : getInitList()) {
-      output.writeString(4, element);
+    for (int i = 0; i < init_.size(); i++) {
+      output.writeBytes(4, init_.getByteString(i));
     }
     if (hasAppNameSetter()) {
-      output.writeString(5, getAppNameSetter());
+      output.writeBytes(5, getAppNameSetterBytes());
     }
     if (hasReportExit()) {
-      output.writeString(6, getReportExit());
+      output.writeBytes(6, getReportExitBytes());
     }
     getUnknownFields().writeTo(output);
   }
@@ -142,37 +231,37 @@ public  final class Instrumentation extends
     size = 0;
     if (hasReportDefined()) {
       size += com.google.protobuf.CodedOutputStream
-        .computeStringSize(1, getReportDefined());
+        .computeBytesSize(1, getReportDefinedBytes());
     }
     if (hasReportCall()) {
       size += com.google.protobuf.CodedOutputStream
-        .computeStringSize(2, getReportCall());
+        .computeBytesSize(2, getReportCallBytes());
     }
     {
       int dataSize = 0;
-      for (java.lang.String element : getDeclarationToRemoveList()) {
+      for (int i = 0; i < declarationToRemove_.size(); i++) {
         dataSize += com.google.protobuf.CodedOutputStream
-          .computeStringSizeNoTag(element);
+          .computeBytesSizeNoTag(declarationToRemove_.getByteString(i));
       }
       size += dataSize;
       size += 1 * getDeclarationToRemoveList().size();
     }
     {
       int dataSize = 0;
-      for (java.lang.String element : getInitList()) {
+      for (int i = 0; i < init_.size(); i++) {
         dataSize += com.google.protobuf.CodedOutputStream
-          .computeStringSizeNoTag(element);
+          .computeBytesSizeNoTag(init_.getByteString(i));
       }
       size += dataSize;
       size += 1 * getInitList().size();
     }
     if (hasAppNameSetter()) {
       size += com.google.protobuf.CodedOutputStream
-        .computeStringSize(5, getAppNameSetter());
+        .computeBytesSize(5, getAppNameSetterBytes());
     }
     if (hasReportExit()) {
       size += com.google.protobuf.CodedOutputStream
-        .computeStringSize(6, getReportExit());
+        .computeBytesSize(6, getReportExitBytes());
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSerializedSize = size;
@@ -265,7 +354,8 @@ public  final class Instrumentation extends
     return builder;
   }
   public static final class Builder extends
-      com.google.protobuf.GeneratedMessage.Builder<Builder> {
+      com.google.protobuf.GeneratedMessage.Builder<Builder>
+     implements com.google.javascript.jscomp.InstrumentationOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.google.javascript.jscomp.InstrumentationTemplate.internal_static_jscomp_Instrumentation_descriptor;
@@ -301,9 +391,9 @@ public  final class Instrumentation extends
       bitField0_ = (bitField0_ & ~0x00000002);
       reportExit_ = "";
       bitField0_ = (bitField0_ & ~0x00000004);
-      declarationToRemove_ = java.util.Collections.emptyList();
+      declarationToRemove_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000008);
-      init_ = java.util.Collections.emptyList();
+      init_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000010);
       appNameSetter_ = "";
       bitField0_ = (bitField0_ & ~0x00000020);
@@ -343,32 +433,37 @@ public  final class Instrumentation extends
     
     public com.google.javascript.jscomp.Instrumentation buildPartial() {
       com.google.javascript.jscomp.Instrumentation result = new com.google.javascript.jscomp.Instrumentation(this);
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        result.bitField0_ = (result.bitField0_ | 0x00000001);
+      int from_bitField0_ = bitField0_;
+      int to_bitField0_ = 0;
+      if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        to_bitField0_ |= 0x00000001;
       }
       result.reportDefined_ = reportDefined_;
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        result.bitField0_ = (result.bitField0_ | 0x00000002);
+      if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        to_bitField0_ |= 0x00000002;
       }
       result.reportCall_ = reportCall_;
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        result.bitField0_ = (result.bitField0_ | 0x00000004);
+      if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        to_bitField0_ |= 0x00000004;
       }
       result.reportExit_ = reportExit_;
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        declarationToRemove_ = java.util.Collections.unmodifiableList(declarationToRemove_);
+        declarationToRemove_ = new com.google.protobuf.UnmodifiableLazyStringList(
+            declarationToRemove_);
         bitField0_ = (bitField0_ & ~0x00000008);
       }
       result.declarationToRemove_ = declarationToRemove_;
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        init_ = java.util.Collections.unmodifiableList(init_);
+        init_ = new com.google.protobuf.UnmodifiableLazyStringList(
+            init_);
         bitField0_ = (bitField0_ & ~0x00000010);
       }
       result.init_ = init_;
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        result.bitField0_ = (result.bitField0_ | 0x00000008);
+      if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        to_bitField0_ |= 0x00000008;
       }
       result.appNameSetter_ = appNameSetter_;
+      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -436,37 +531,45 @@ public  final class Instrumentation extends
         switch (tag) {
           case 0:
             this.setUnknownFields(unknownFields.build());
+            onChanged();
             return this;
           default: {
             if (!parseUnknownField(input, unknownFields,
                                    extensionRegistry, tag)) {
               this.setUnknownFields(unknownFields.build());
+              onChanged();
               return this;
             }
             break;
           }
           case 10: {
-            setReportDefined(input.readString());
+            bitField0_ |= 0x00000001;
+            reportDefined_ = input.readBytes();
             break;
           }
           case 18: {
-            setReportCall(input.readString());
+            bitField0_ |= 0x00000002;
+            reportCall_ = input.readBytes();
             break;
           }
           case 26: {
-            addDeclarationToRemove(input.readString());
+            ensureDeclarationToRemoveIsMutable();
+            declarationToRemove_.add(input.readBytes());
             break;
           }
           case 34: {
-            addInit(input.readString());
+            ensureInitIsMutable();
+            init_.add(input.readBytes());
             break;
           }
           case 42: {
-            setAppNameSetter(input.readString());
+            bitField0_ |= 0x00000020;
+            appNameSetter_ = input.readBytes();
             break;
           }
           case 50: {
-            setReportExit(input.readString());
+            bitField0_ |= 0x00000004;
+            reportExit_ = input.readBytes();
             break;
           }
         }
@@ -476,18 +579,25 @@ public  final class Instrumentation extends
     private int bitField0_;
     
     // optional string report_defined = 1;
-    private java.lang.String reportDefined_ = "";
+    private Object reportDefined_ = "";
     public boolean hasReportDefined() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
-    public java.lang.String getReportDefined() {
-      return reportDefined_;
+    public String getReportDefined() {
+      Object ref = reportDefined_;
+      if (!(ref instanceof String)) {
+        String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+        reportDefined_ = s;
+        return s;
+      } else {
+        return (String) reportDefined_;
+      }
     }
     public Builder setReportDefined(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ = (bitField0_ | 0x00000001);
+  bitField0_ |= 0x00000001;
       reportDefined_ = value;
       onChanged();
       return this;
@@ -498,20 +608,32 @@ public  final class Instrumentation extends
       onChanged();
       return this;
     }
+    void setReportDefined(com.google.protobuf.ByteString value) {
+      bitField0_ |= 0x00000001;
+      reportDefined_ = value;
+      onChanged();
+    }
     
     // optional string report_call = 2;
-    private java.lang.String reportCall_ = "";
+    private Object reportCall_ = "";
     public boolean hasReportCall() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
-    public java.lang.String getReportCall() {
-      return reportCall_;
+    public String getReportCall() {
+      Object ref = reportCall_;
+      if (!(ref instanceof String)) {
+        String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+        reportCall_ = s;
+        return s;
+      } else {
+        return (String) reportCall_;
+      }
     }
     public Builder setReportCall(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ = (bitField0_ | 0x00000002);
+  bitField0_ |= 0x00000002;
       reportCall_ = value;
       onChanged();
       return this;
@@ -522,20 +644,32 @@ public  final class Instrumentation extends
       onChanged();
       return this;
     }
+    void setReportCall(com.google.protobuf.ByteString value) {
+      bitField0_ |= 0x00000002;
+      reportCall_ = value;
+      onChanged();
+    }
     
     // optional string report_exit = 6;
-    private java.lang.String reportExit_ = "";
+    private Object reportExit_ = "";
     public boolean hasReportExit() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
-    public java.lang.String getReportExit() {
-      return reportExit_;
+    public String getReportExit() {
+      Object ref = reportExit_;
+      if (!(ref instanceof String)) {
+        String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+        reportExit_ = s;
+        return s;
+      } else {
+        return (String) reportExit_;
+      }
     }
     public Builder setReportExit(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ = (bitField0_ | 0x00000004);
+  bitField0_ |= 0x00000004;
       reportExit_ = value;
       onChanged();
       return this;
@@ -546,14 +680,18 @@ public  final class Instrumentation extends
       onChanged();
       return this;
     }
+    void setReportExit(com.google.protobuf.ByteString value) {
+      bitField0_ |= 0x00000004;
+      reportExit_ = value;
+      onChanged();
+    }
     
     // repeated string declaration_to_remove = 3;
-    private java.util.List<java.lang.String> declarationToRemove_ =
-      java.util.Collections.emptyList();
+    private com.google.protobuf.LazyStringList declarationToRemove_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     private void ensureDeclarationToRemoveIsMutable() {
       if (!((bitField0_ & 0x00000008) == 0x00000008)) {
-        declarationToRemove_ = new java.util.ArrayList<java.lang.String>(declarationToRemove_);
-        bitField0_ = (bitField0_ | 0x00000008);
+        declarationToRemove_ = new com.google.protobuf.LazyStringArrayList(declarationToRemove_);
+        bitField0_ |= 0x00000008;
        }
     }
     public java.util.List<java.lang.String>
@@ -593,19 +731,23 @@ public  final class Instrumentation extends
       return this;
     }
     public Builder clearDeclarationToRemove() {
-      declarationToRemove_ = java.util.Collections.emptyList();
+      declarationToRemove_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000008);
       onChanged();
       return this;
     }
+    void addDeclarationToRemove(com.google.protobuf.ByteString value) {
+      ensureDeclarationToRemoveIsMutable();
+      declarationToRemove_.add(value);
+      onChanged();
+    }
     
     // repeated string init = 4;
-    private java.util.List<java.lang.String> init_ =
-      java.util.Collections.emptyList();
+    private com.google.protobuf.LazyStringList init_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     private void ensureInitIsMutable() {
       if (!((bitField0_ & 0x00000010) == 0x00000010)) {
-        init_ = new java.util.ArrayList<java.lang.String>(init_);
-        bitField0_ = (bitField0_ | 0x00000010);
+        init_ = new com.google.protobuf.LazyStringArrayList(init_);
+        bitField0_ |= 0x00000010;
        }
     }
     public java.util.List<java.lang.String>
@@ -645,25 +787,37 @@ public  final class Instrumentation extends
       return this;
     }
     public Builder clearInit() {
-      init_ = java.util.Collections.emptyList();
+      init_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000010);
       onChanged();
       return this;
     }
+    void addInit(com.google.protobuf.ByteString value) {
+      ensureInitIsMutable();
+      init_.add(value);
+      onChanged();
+    }
     
     // optional string app_name_setter = 5;
-    private java.lang.String appNameSetter_ = "";
+    private Object appNameSetter_ = "";
     public boolean hasAppNameSetter() {
       return ((bitField0_ & 0x00000020) == 0x00000020);
     }
-    public java.lang.String getAppNameSetter() {
-      return appNameSetter_;
+    public String getAppNameSetter() {
+      Object ref = appNameSetter_;
+      if (!(ref instanceof String)) {
+        String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+        appNameSetter_ = s;
+        return s;
+      } else {
+        return (String) appNameSetter_;
+      }
     }
     public Builder setAppNameSetter(java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ = (bitField0_ | 0x00000020);
+  bitField0_ |= 0x00000020;
       appNameSetter_ = value;
       onChanged();
       return this;
@@ -673,6 +827,11 @@ public  final class Instrumentation extends
       appNameSetter_ = getDefaultInstance().getAppNameSetter();
       onChanged();
       return this;
+    }
+    void setAppNameSetter(com.google.protobuf.ByteString value) {
+      bitField0_ |= 0x00000020;
+      appNameSetter_ = value;
+      onChanged();
     }
     
     // @@protoc_insertion_point(builder_scope:jscomp.Instrumentation)
