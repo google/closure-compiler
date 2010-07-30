@@ -23,7 +23,8 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   private boolean preserveFunctionExpressionNames = false;
 
   public RemoveUnusedVarsTest() {
-    super("", false);
+    super("");
+    enableNormalize();
   }
 
   @Override
@@ -41,9 +42,9 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   public void testRemoveUnusedVars() {
     // Test lots of stuff
     test("var a;var b=3;var c=function(){};var x=A();var y; var z;" +
-         "function A(){B()}; function B(){C(b)}; function C(){};" +
-         "function X(){Y()}; function Y(z){Z(x)}; function Z(){y};" +
-         "P=function(){A()};" +
+         "function A(){B()} function B(){C(b)} function C(){} " +
+         "function X(){Y()} function Y(z){Z(x)} function Z(){y} " +
+         "P=function(){A()}; " +
          "try{0}catch(e){a}",
 
          "var a;var b=3;A();function A(){B()}" +
@@ -137,11 +138,11 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
     // Test unused vars with side effects
     test("var a,b=foo(),c=i++,d;var e=boo();var f;print(d);",
-         "var b=foo(),c=i++,d;boo();print(d)");
+         "foo(); i++; var d; boo(); print(d)");
 
     test("var a,b=foo()", "foo()");
     test("var b=foo(),a", "foo()");
-    test("var a,b=foo(a)", "var a,b=foo(a)");
+    test("var a,b=foo(a)", "var a; foo(a);");
   }
 
   public void testFunctionArgRemoval() {
@@ -167,7 +168,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     test("for (;;) var b = 3;", "for(;;);");
     test("do var b = 3; while(true)", "do;while(true)");
     test("with (true) var b = 3;", "with(true);");
-    test("f: var b = 3;","");
+    test("f: var b = 3;","f:{}");
   }
 
   public void testRValueHoisting() {
@@ -194,7 +195,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRecursiveFunction2() {
     test("var x = 3; (function x() { return x(); })();",
-         "(function x(){return x()})()");
+         "(function x$$1(){return x$$1()})()");
   }
 
   public void testFunctionWithName1() {
@@ -304,7 +305,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testUnusedPropAssign3() {
     test("var x = {}; x['foo'] = {}; x['foo'].baz['bar'] = 3",
-        "\"foo\",{};\"foo\",\"bar\",3");
+        "\"foo\",{};\"foo\",(\"bar\",3)");
   }
 
   public void testUnusedPropAssign4() {

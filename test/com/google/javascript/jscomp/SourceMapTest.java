@@ -481,6 +481,8 @@ public class SourceMapTest extends TestCase {
   }
 
   public static class SourceMapParseException extends IOException {
+    private static final long serialVersionUID = 1L;
+
     public SourceMapParseException(String message) {
       super(message);
     }
