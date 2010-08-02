@@ -57,6 +57,10 @@ class StripCode implements CompilerPass {
       "JSC_STRIP_TYPE_INHERIT_ERROR",
       "Non-strip type {0} cannot inherit from strip type {1}");
 
+  static final DiagnosticType STRIP_ASSIGNMENT_ERROR = DiagnosticType.error(
+      "JSC_STRIP_ASSIGNMENT_ERROR",
+      "Unable to strip assignment to {0}");
+
   /**
    * Creates an instance.
    *
@@ -270,13 +274,17 @@ class StripCode implements CompilerPass {
       Node lvalue = n.getFirstChild();
       if (nameEndsWithFieldNameToStrip(lvalue) ||
           qualifiedNameBeginsWithStripType(lvalue)) {
+
+        // Limit to EXPR_RESULT because it is not
+        // safe to eliminate assignment in complex expressions,
+        // e.g. in ((x = 7) + 8)
         if (NodeUtil.isExpressionNode(parent)) {
           Node gramps = parent.getParent();
           replaceWithEmpty(parent, gramps);
+          compiler.reportCodeChange();
         } else {
-          replaceWithEmpty(n, parent);
+          t.report(n, STRIP_ASSIGNMENT_ERROR, lvalue.getQualifiedName());
         }
-        compiler.reportCodeChange();
       }
     }
 

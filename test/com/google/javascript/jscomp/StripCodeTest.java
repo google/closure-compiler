@@ -50,7 +50,8 @@ public class StripCodeTest extends CompilerTestCase {
         "goog.debug.Logger",
         "goog.debug.LogManager",
         "goog.debug.LogRecord",
-        "goog.net.BrowserChannel.LogSaver");
+        "goog.net.BrowserChannel.LogSaver",
+        "GA_GoogleDebugger");
 
     Set<String> stripNames = Sets.newHashSet(
         "logger",
@@ -301,5 +302,22 @@ public class StripCodeTest extends CompilerTestCase {
          "a.prototype.b = function() { " +
          "  var one = this.logger_(); if (one) foo() }",
           "a=function(){};a.prototype.b=function(){if(null)foo()}");
+  }
+
+  public void testReportErrorOnStripInNestedAssignment() {
+    // Strip name
+    test("(foo.logger_ = 7) + 8",
+         "(foo.logger_ = 7) + 8",
+         StripCode.STRIP_ASSIGNMENT_ERROR);
+
+    // Strip namespaced type
+    test("(goog.debug.Logger.foo = 7) + 8",
+         "(goog.debug.Logger.foo = 7) + 8",
+         StripCode.STRIP_ASSIGNMENT_ERROR);
+
+    // Strip non-namespaced type
+    test("(GA_GoogleDebugger.foo = 7) + 8",
+         "(GA_GoogleDebugger.foo = 7) + 8",
+         StripCode.STRIP_ASSIGNMENT_ERROR);
   }
 }
