@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -71,8 +73,8 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     cfgStack.push(curCfg);
     curCfg = cfa.getCfg();
 
-    new GraphReachability<Node, ControlFlowGraph.Branch>(curCfg)
-        .compute(curCfg.getEntry().getValue());
+    new GraphReachability<Node, ControlFlowGraph.Branch>(
+        curCfg, new ReachablePredicate()).compute(curCfg.getEntry().getValue());
   }
 
   @Override
@@ -142,5 +144,27 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       logger.fine("Removing " + n.toString());
     }
     NodeUtil.removeChild(parent, n);
+  }
+  
+  private final class ReachablePredicate implements
+      Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> {
+
+    @Override
+    public boolean apply(EdgeTuple<Node, Branch> input) {
+      Branch branch = input.edge;
+      if (!branch.isConditional()) {
+        return true;
+      }
+      Node predecessor = input.sourceNode;
+      Node condition = NodeUtil.getConditionExpression(predecessor);
+  
+      // TODO(user): Handle more complicated expression like true == true,
+      // etc....
+      if (condition != null && NodeUtil.isImmutableValue(condition)) {
+        return NodeUtil.getBooleanValue(condition).toBoolean(true) ==
+            (branch == Branch.ON_TRUE);
+      }
+      return true;
+    }
   }
 }

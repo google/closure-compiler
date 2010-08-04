@@ -133,8 +133,19 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   public void testConditionalDeadCode() {
-    test("function f() { if (1) return; else return; x = 1}",
-        "function f() { if (1) return; else return; }");
+    test("function f() { if (x) return; else return; x = 1}",
+        "function f() { if (x) return; else return; }");
+  }
+
+  public void testKnownIf() {
+    test("if(0) {alert(1)}", "");
+    test("if(0) if(0) {{alert(1)}}", "");
+  }
+
+  public void testKnownWhile() {
+    // TODO(user): Improve elimination method to clean these up.
+    test("while(0) {alert(1)}", "while(0);");
+    test("while(0) while(0) {{alert(1)}}", "while(0);");
   }
 
   public void testSwitchCase() {
