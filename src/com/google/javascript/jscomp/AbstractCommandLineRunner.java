@@ -175,12 +175,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Runs the Compiler and calls System.exit() with the exit status of the
-   * compiler.
+   * Runs the Compiler and calls exit() with the exit status of the
+   * compiler. By default, exit() is just System.exit().
    */
   final public void run() {
     int result = 0;
     int runs = 1;
+    Throwable error = null;
     if (config.computePhaseOrdering) {
       runs = NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER;
       PhaseOptimizer.randomizeLoops();
@@ -191,16 +192,30 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         result = doRun();
         runTimeStats.recordEndRun();
       }
-    } catch (AbstractCommandLineRunner.FlagUsageException e) {
-      System.err.println(e.getMessage());
-      result = -1;
     } catch (Throwable t) {
-      t.printStackTrace();
+      error = t;
+    }
+    exit(runTimeStats, error);
+  }
+
+  /**
+   * Exits the current process. Prints out any "process" statistics
+   * that the user might need to know about.
+   */
+  void exit(RunTimeStats runTimeStats, Throwable error) {
+    int result = 0;
+    if (error instanceof AbstractCommandLineRunner.FlagUsageException) {
+      System.err.println(error.getMessage());
+      result = -1;
+    } else if (error != null) {
+      error.printStackTrace();
       result = -2;
     }
+
     if (config.computePhaseOrdering) {
       runTimeStats.outputBestPhaseOrdering();
     }
+
     System.exit(result);
   }
 
@@ -1027,10 +1042,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     out.append("\n");
   }
 
-  private class RunTimeStats {
+  class RunTimeStats {
     private long bestRunTime = Long.MAX_VALUE;
     private long worstRunTime = Long.MIN_VALUE;
-    private long lastStartTime = 0;
+    long lastStartTime = 0;
     private List<List<String>> loopedPassesInBestRun = null;
 
     /**
