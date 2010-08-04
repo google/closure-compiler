@@ -7041,6 +7041,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Property a never defined on Date");
   }
 
+  public void testMissingProperty33() throws Exception {
+    testTypes(
+      "/** @param {Object} x */" +
+      "function f(x) { !x.foo || x.foo(); }");
+  }
+
   public void testDeclaredNativeTypeEquality() throws Exception {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
     assertEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),

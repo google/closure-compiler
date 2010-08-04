@@ -1217,6 +1217,10 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.AND:
       case Token.HOOK:
         return parent.getFirstChild() == getProp;
+
+      case Token.NOT:
+        return parent.getParent().getType() == Token.OR &&
+            parent.getParent().getFirstChild() == parent;
     }
     return false;
   }
