@@ -1367,6 +1367,7 @@ public class Compiler extends AbstractCompiler {
   public static class CodeBuilder {
     private final StringBuilder sb = new StringBuilder();
     private int lineCount = 0;
+    private int colCount = 0;
 
     /** Removes all text, but leaves the line count unchanged. */
     void reset() {
@@ -1377,10 +1378,19 @@ public class Compiler extends AbstractCompiler {
     CodeBuilder append(String str) {
       sb.append(str);
 
-      // Move the line count to the end of the new text.
+      // Adjust the line and column information for the new text.
       int index = -1;
+      int lastIndex = index;
       while ((index = str.indexOf('\n', index + 1)) >= 0) {
         ++lineCount;
+        lastIndex = index;
+      }
+
+      if (lastIndex == -1) {
+        // No new lines, append the new characters added.
+        colCount += str.length();
+      } else {
+        colCount = str.length() - (lastIndex + 1);
       }
 
       return this;
@@ -1404,8 +1414,7 @@ public class Compiler extends AbstractCompiler {
 
     /** Returns the (zero-based) index of the last column in the text buffer. */
     int getColumnIndex() {
-      int index = sb.lastIndexOf("\n");
-      return (index >= 0) ? sb.length() - (index + 1) : sb.length();
+      return colCount;
     }
 
     /** Determines whether the text ends with the given suffix. */

@@ -152,6 +152,11 @@ public class SourceMap {
   private List<Mapping> mappings = Lists.newArrayList();
 
   /**
+   * For validation store the start of the last mapping added.
+   */
+  private Mapping lastMapping;
+
+  /**
    * The position that the current source map is offset in the
    * buffer being used to generated the compiled source file.
    */
@@ -228,6 +233,20 @@ public class SourceMap {
                        endPosition.getCharacterIndex() + endOffsetPosition);
     }
 
+    // Validate the mappings are in a proper order.
+    if (lastMapping != null) {
+      int lastLine = lastMapping.startPosition.getLineNumber();
+      int lastColumn = lastMapping.startPosition.getCharacterIndex();
+      int nextLine = mapping.startPosition.getLineNumber();
+      int nextColumn = mapping.startPosition.getCharacterIndex();
+      Preconditions.checkState(nextLine > lastLine
+          || (nextLine == lastLine && nextColumn >= lastColumn),
+          "Incorrect source mappings order, previous : (%s,%s)\n"
+          + "new : (%s,%s)\nnode : %s",
+          lastLine, lastColumn, nextLine, nextColumn, node);
+    }
+
+    lastMapping = mapping;
     mappings.add(mapping);
   }
 
@@ -266,9 +285,8 @@ public class SourceMap {
    * @param offsetIndex The column index of the current character being printed.
    */
   void setStartingPosition(int offsetLine, int offsetIndex) {
-    // TODO(johnlenz): correct this.
-    // Preconditions.checkState(mappings.isEmpty(),
-    //     "Must be set prior to adding mappings");
+    Preconditions.checkState(offsetLine >= 0);
+    Preconditions.checkState(offsetIndex >= 0);
     offsetPosition = new Position(offsetLine, offsetIndex);
   }
 
@@ -277,6 +295,7 @@ public class SourceMap {
    */
   public void reset() {
     mappings = Lists.newArrayList();
+    lastMapping = null;
     offsetPosition = new Position(0, 0);
     prefixPosition = new Position(0, 0);
   }
@@ -416,8 +435,6 @@ public class SourceMap {
 
     // Append the line mapping entries.
     void appendLineMappings() throws IOException {
-      Preconditions.checkState(!mappings.isEmpty());
-
       // Start the first line.
       openLine();
 
@@ -506,8 +523,6 @@ public class SourceMap {
 
     // Append the line mapping entries.
     void traverse(MappingVisitor v) throws IOException {
-      Preconditions.checkState(!mappings.isEmpty());
-
       // The mapping list is ordered as a pre-order traversal.  The mapping
       // positions give us enough information to rebuild the stack and this
       // allows the building of the source map in O(n) time.
