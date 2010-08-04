@@ -111,7 +111,7 @@ public class PeepholeSubstituteAlternateSyntax
       switch (result.getType()) {
         case Token.VOID:
           Node operand = result.getFirstChild();
-          if (!NodeUtil.mayHaveSideEffects(operand)) {
+          if (!mayHaveSideEffects(operand)) {
             n.removeFirstChild();
             reportCodeChange();
           }
@@ -286,7 +286,7 @@ public class PeepholeSubstituteAlternateSyntax
               // evaluates LHS before cond]
               // NOTE - there are some circumstances where we can
               // proceed even if there are side effects...
-              !NodeUtil.mayEffectMutableState(lhs)) {
+              !mayEffectMutableState(lhs)) {
 
             n.removeChild(cond);
             Node assignName = thenOp.removeFirstChild();

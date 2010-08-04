@@ -306,7 +306,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // TODO(johnlenz) Use type information if available to fold
     // instanceof.
     if (NodeUtil.isLiteralValue(left, true)
-        && !NodeUtil.mayHaveSideEffects(right)) {
+        && !mayHaveSideEffects(right)) {
 
       Node replacementNode = null;
 
@@ -338,7 +338,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (NodeUtil.mayHaveSideEffects(left)) {
+    if (mayHaveSideEffects(left)) {
       return n;
     }
 
@@ -448,7 +448,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           // If x has no side-effects:
           //   (x || TRUE) => TRUE
           //   (x && FALSE) => FALSE
-          if (!NodeUtil.mayHaveSideEffects(left)) {
+          if (!mayHaveSideEffects(left)) {
             result = right;
           }
         }
@@ -1173,7 +1173,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       int knownLength = -1;
       switch (left.getType()) {
         case Token.ARRAYLIT:
-          if (NodeUtil.mayHaveSideEffects(left)) {
+          if (mayHaveSideEffects(left)) {
             // Nope, can't fold this, without handling the side-effects.
             return n;
           }
