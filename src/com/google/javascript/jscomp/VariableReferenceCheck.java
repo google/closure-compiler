@@ -146,7 +146,6 @@ class VariableReferenceCheck implements CompilerPass {
               compiler.report(
                   JSError.make(reference.getSourceName(),
                       reference.getNameNode(),
-                      checkLevel,
                       AMBIGUOUS_FUNCTION_DECL, v.name));
               break;
             }
