@@ -98,4 +98,22 @@ abstract class AbstractPeepholeOptimization {
   void endTraversal(NodeTraversal traversal) {
     currentTraversal = null;
   }
+
+  // NodeUtil's mayEffectMutableState and mayHaveSideEffects need access to the
+  // compiler object, route them through here to give them access.
+
+  /**
+   * @return Whether the node may create new mutable state, or change existing
+   * state.
+   */
+  boolean mayEffectMutableState(Node n) {
+    return NodeUtil.mayEffectMutableState(n, currentTraversal.getCompiler());
+  }
+
+  /**
+   * @return Whether the node may have side effects when executed.
+   */
+  boolean mayHaveSideEffects(Node n) {
+    return NodeUtil.mayHaveSideEffects(n, currentTraversal.getCompiler());
+  }
 }

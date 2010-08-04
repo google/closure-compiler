@@ -62,10 +62,48 @@ public final class NodeUtil {
   private NodeUtil() {}
 
   /**
+   * Gets the boolean value of a node that represents a expression. This method
+   * effectively emulates the <code>Boolean()</code> JavaScript cast function.
+   * Note: unlike getBooleanValue this function does not return UNKNOWN
+   * for expressions with side-effects.
+   */
+  static TernaryValue getExpressionBooleanValue(Node n) {
+    switch (n.getType()) {
+      case Token.ASSIGN:
+      case Token.COMMA:
+        // For ASSIGN and COMMA the value is the value of the RHS.
+        return getExpressionBooleanValue(n.getLastChild());
+      case Token.NOT:
+        TernaryValue value = getExpressionBooleanValue(n.getLastChild());
+        return value.not();
+      case Token.AND: {
+        TernaryValue lhs = getExpressionBooleanValue(n.getFirstChild());
+        TernaryValue rhs = getExpressionBooleanValue(n.getLastChild());
+        return lhs.and(rhs);
+      }
+      case Token.OR:  {
+        TernaryValue lhs = getExpressionBooleanValue(n.getFirstChild());
+        TernaryValue rhs = getExpressionBooleanValue(n.getLastChild());
+        return lhs.or(rhs);
+      }
+      case Token.HOOK:  {
+        TernaryValue trueValue = getExpressionBooleanValue(
+            n.getFirstChild().getNext());
+        TernaryValue falseValue = getExpressionBooleanValue(n.getLastChild());
+        if (trueValue.equals(falseValue)) {
+          return trueValue;
+        } else {
+          return TernaryValue.UNKNOWN;
+        }
+      }
+      default:
+        return getBooleanValue(n);
+    }
+  }
+
+  /**
    * Gets the boolean value of a node that represents a literal. This method
    * effectively emulates the <code>Boolean()</code> JavaScript cast function.
-   *
-   * @throws IllegalArgumentException If {@code n} is not a literal value
    */
   static TernaryValue getBooleanValue(Node n) {
     switch (n.getType()) {
@@ -1253,7 +1291,7 @@ public final class NodeUtil {
   /**
    * Determines if a node is a function expression that has an empty body.
    *
-   * @param n a node
+   * @param node a node
    * @return whether the given node is a function expression that is empty
    */
   static boolean isEmptyFunctionExpression(Node node) {
@@ -2050,5 +2088,18 @@ public final class NodeUtil {
       n = n.getParent();
     }
     return sourceName;
+  }
+
+  /**
+   * A new CALL node with the "FREE_CALL" set based on call target.
+   */
+  static Node newCallNode(Node callTarget, Node... parameters) {
+    boolean isFreeCall = isName(callTarget);
+    Node call = new Node(Token.CALL, callTarget);
+    call.putBooleanProp(Node.FREE_CALL, isFreeCall);
+    for (Node parameter : parameters) {
+      call.addChildToBack(parameter);
+    }
+    return call;
   }
 }

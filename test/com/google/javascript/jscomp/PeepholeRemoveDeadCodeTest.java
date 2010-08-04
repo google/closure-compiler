@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * of multiple peephole passes are in PeepholeIntegrationTest.
  */
 public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
-  
+
   public PeepholeRemoveDeadCodeTest() {
     super("");
   }
@@ -36,7 +36,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
       new PeepholeOptimizationsPass(compiler, new PeepholeRemoveDeadCode());
-    
+
     return peepholePass;
   }
 
@@ -46,14 +46,14 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     return 2;
   }
 
-  private void foldSame(String js) {  
+  private void foldSame(String js) {
     testSame(js);
   }
 
   private void fold(String js, String expected) {
     test(js, expected);
   }
-  
+
   public void testFoldBlock() {
     fold("{{foo()}}", "foo()");
     fold("{foo();{}}", "foo()");
@@ -86,7 +86,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("{var x; var y; var z; function f() { { var a; { var b; } } } }",
          "var x;var y;var z;function f(){var a;var b}");
   }
-  
+
   public void testHookIf() {
     fold("if (1){ x=1; } else { x = 2;}", "x=1");
     fold("if (false){ x = 1; } else { x = 2; }", "x=2");
@@ -96,41 +96,65 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // foldSame("if (void foo()){ x = 1; } else { x = 2; }");
     fold("if (false){ x = 1; } else if (true) { x = 3; } else { x = 2; }",
          "x=3");
-    
+
     fold("var x = (true) ? 1 : 0", "var x=1");
     fold("var y = (true) ? ((false) ? 12 : (cond ? 1 : 2)) : 13",
          "var y=cond?1:2");
     fold("if (x){ x = 1; } else if (false) { x = 3; }", "if(x)x=1");
-    
+
     foldSame("var z=x?void 0:y()");
     foldSame("z=x?void 0:y()");
     foldSame("z*=x?void 0:y()");
-    
+
     foldSame("var z=x?y():void 0");
     foldSame("(w?x:void 0).y=z");
     foldSame("(w?x:void 0).y+=z");
   }
-  
+
+  public void testConstantConditionWithSideEffect1() {
+    fold("if (b=true) x=1;", "b=true;x=1");
+    fold("if (b=/ab/) x=1;", "b=/ab/;x=1");
+    fold("if (b=/ab/){ x=1; } else { x=2; }", "b=/ab/;x=1");
+    fold("var b;b=/ab/;if(b)x=1;", "var b;b=/ab/;x=1");
+    foldSame("var b;b=f();if(b)x=1;");
+    fold("var b=/ab/;if(b)x=1;", "var b=/ab/;x=1");
+    foldSame("var b=f();if(b)x=1;");
+    foldSame("b=b++;if(b)x=b;");
+    fold("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
+    fold("b=1;if(foo,b)x=b;","b=1;x=b;");
+    foldSame("b=1;if(foo=1,b)x=b;");
+  }
+
+  public void testConstantConditionWithSideEffect2() {
+    fold("(b=true)?x=1:x=2;", "b=true;x=1");
+    fold("(b=false)?x=1:x=2;", "b=false;x=2");
+    fold("if (b=/ab/) x=1;", "b=/ab/;x=1");
+    fold("var b;b=/ab/;(b)?x=1:x=2;", "var b;b=/ab/;x=1");
+    foldSame("var b;b=f();(b)?x=1:x=2;");
+    fold("var b=/ab/;(b)?x=1:x=2;", "var b=/ab/;x=1");
+    foldSame("var b=f();(b)?x=1:x=2;");
+  }
+
   public void testVarLifting() {
     fold("if(true)var a", "var a");
     fold("if(false)var a", "var a");
-   
+
     // More var lifting tests in PeepholeIntegrationTests
   }
-  
+
   public void testFoldUselessWhile() {
     fold("while(false) { foo() }", "");
-    
+
     fold("while(void 0) { foo() }", "");
     fold("while(undefined) { foo() }", "");
-    
+
     foldSame("while(true) foo()");
-    
+
     fold("while(false) { var a = 0; }", "var a");
-    
+
     // Make sure it plays nice with minimizing
     fold("while(false) { foo(); continue }", "");
-      
+
     fold("while(0) { foo() }", "");
   }
 
@@ -141,11 +165,11 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("for(;true;) foo() ", "for(;;) foo() ");
     foldSame("for(;;) foo()");
     fold("for(;false;) { var a = 0; }", "var a");
-    
+
     // Make sure it plays nice with minimizing
     fold("for(;false;) { foo(); continue }", "");
   }
-  
+
   public void testFoldUselessDo() {
     fold("do { foo() } while(false);", "foo()");
     fold("do { foo() } while(void 0);", "foo()");
@@ -157,7 +181,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("do { foo(); continue; } while(0)");
     foldSame("do { foo(); break; } while(0)");
     }
-  
+
   public void testMinimizeWhileConstantCondition() {
     fold("while(true) foo()", "while(true) foo()");
     fold("while(0) foo()", "");
@@ -167,27 +191,24 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("while(undefined) foo()", "");
     fold("while('') foo()", "");
   }
-  
+
   public void testFoldConstantCommaExpressions() {
     fold("if (true, false) {foo()}", "");
     fold("if (false, true) {foo()}", "foo()");
     fold("true, foo()", "foo()");
     fold("(1 + 2 + ''), foo()", "foo()");
   }
-  
+
   public void testSplitCommaExpressions() {
     // Don't try to split in expressions.
-    foldSame("if (foo(), true) boo()");
+    foldSame("while (foo(), true) boo()");
     foldSame("var a = (foo(), true);");
     foldSame("a = (foo(), true);");
 
     fold("(x=2), foo()", "x=2; foo()");
     fold("foo(), boo();", "foo(); boo()");
     fold("(a(), b()), (c(), d());", "a(); b(); c(); d();");
-    // TODO(johnlenz): interestingly we don't remove side-effect free expression
-    // in a script block (as it is currently part of block folding), so "1;"
-    // is left.
-    fold("foo(), true", "foo();true");
+    fold("foo(), true", "foo();");
     fold("function x(){foo(), true}", "function x(){foo();}");
   }
 }

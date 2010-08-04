@@ -180,11 +180,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
     // This would be foldable, but it isn't detected, because 'if' isn't
     // the parent of 'x || 3'. Cf. FoldConstants.tryFoldAndOr().
-    fold("if(y() || x || 3) z()", "if(y()||x||1)z()");
+    fold("if(y() || x || 3) z()", "y()||x||1;z()");
   }
 
   public void testFoldBitwiseOpStringCompareIntegration() {
-    assertResultString("-1 | 0", "1");
+    assertResultString("while(-1 | 0){}", "while(1);");
   }
 
   public void testVarLiftingIntegration() {
@@ -243,24 +243,14 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testMinimizeExpr() {
-    /* This test is surprising.
-     *
-     * What is happening is this:
-     * First PeepholeFoldConstants.tryFoldUnaryOperator is folding
-     * the inner "!true" to "false", so the whole expression  becomes
-     * !false.
-     * Then, on the next iteration, tryFoldUnaryOperator sees the parent of
-     * !false is a Token.EXPR_RESULT and is therefore not used,
-     * so it drops the NOT, leaving false, which is then converted to 0.
-     */
-    test("!!true", "0");
+    test("!!true", "");
 
-    fold("!!x", "x");
-    test("!(!x&&!y)", "!x&&!y");
-    fold("x||!!y", "x||y");
+    fold("!!x()", "x()");
+    test("!(!x()&&!y())", "!x()&&!y()");
+    fold("x()||!!y()", "x()||y()");
 
     /* This is similar to the !!true case */
-    fold("!(!!x&&y)", "x&&y");
+    fold("!(!!x()&&y())", "x()&&y()");
   }
 
   public void testBug1509085() {
@@ -289,7 +279,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testFoldNegativeBug() {
-    fold("(-3);", "1;");
+    fold("while(-3){};", "while(1);");
   }
 
   public void testNoNormalizeLabeledExpr() {

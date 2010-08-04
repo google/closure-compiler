@@ -113,6 +113,80 @@ public class NodeUtilTest extends TestCase {
     assertEquals(TernaryValue.UNKNOWN, NodeUtil.getBooleanValue(getNode(val)));
   }
 
+  public void testGetExpressionBooleanValue() {
+    assertExpressionBooleanTrue("a=true");
+    assertExpressionBooleanFalse("a=false");
+
+    assertExpressionBooleanTrue("a=(false,true)");
+    assertExpressionBooleanFalse("a=(true,false)");
+
+    assertExpressionBooleanTrue("a=(false || true)");
+    assertExpressionBooleanFalse("a=(true && false)");
+
+    assertExpressionBooleanTrue("a=!(true && false)");
+
+    assertExpressionBooleanTrue("a,true");
+    assertExpressionBooleanFalse("a,false");
+
+    assertExpressionBooleanTrue("true||false");
+    assertExpressionBooleanFalse("false||false");
+
+    assertExpressionBooleanTrue("true&&true");
+    assertExpressionBooleanFalse("true&&false");
+
+    assertExpressionBooleanFalse("!true");
+    assertExpressionBooleanTrue("!false");
+    assertExpressionBooleanTrue("!''");
+
+    // Assignment ops other than ASSIGN are unknown.
+    assertExpressionBooleanUnknown("a *= 2");
+
+    // Complex expressions that contain anything other then "=", ",", or "!" are
+    // unknown.
+    assertExpressionBooleanUnknown("2 + 2");
+
+    assertExpressionBooleanTrue("a=1");
+    assertExpressionBooleanTrue("a=/a/");
+    assertExpressionBooleanTrue("a={}");
+
+    assertExpressionBooleanTrue("true");
+    assertExpressionBooleanTrue("10");
+    assertExpressionBooleanTrue("'0'");
+    assertExpressionBooleanTrue("/a/");
+    assertExpressionBooleanTrue("{}");
+    assertExpressionBooleanTrue("[]");
+    assertExpressionBooleanFalse("false");
+    assertExpressionBooleanFalse("null");
+    assertExpressionBooleanFalse("0");
+    assertExpressionBooleanFalse("''");
+    assertExpressionBooleanFalse("undefined");
+    assertExpressionBooleanFalse("void 0");
+    assertExpressionBooleanFalse("void foo()");
+
+    assertExpressionBooleanTrue("a?true:true");
+    assertExpressionBooleanFalse("a?false:false");
+    assertExpressionBooleanUnknown("a?true:false");
+    assertExpressionBooleanUnknown("a?true:foo()");
+    
+    assertExpressionBooleanUnknown("b");
+    assertExpressionBooleanUnknown("-'0.0'");
+  }
+
+  private void assertExpressionBooleanTrue(String val) {
+    assertEquals(TernaryValue.TRUE,
+        NodeUtil.getExpressionBooleanValue(getNode(val)));
+  }
+
+  private void assertExpressionBooleanFalse(String val) {
+    assertEquals(TernaryValue.FALSE,
+        NodeUtil.getExpressionBooleanValue(getNode(val)));
+  }
+
+  private void assertExpressionBooleanUnknown(String val) {
+    assertEquals(TernaryValue.UNKNOWN,
+        NodeUtil.getExpressionBooleanValue(getNode(val)));
+  }
+
   public void testGetStringValue() {
     assertEquals("true", NodeUtil.getStringValue(getNode("true")));
     assertEquals("10", NodeUtil.getStringValue(getNode("10")));
