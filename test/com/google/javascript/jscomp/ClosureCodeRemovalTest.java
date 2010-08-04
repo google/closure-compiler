@@ -17,15 +17,15 @@
 package com.google.javascript.jscomp;
 
 /**
- * Tests for {@link GoogleCodeRemoval}
+ * Tests for {@link ClosureCodeRemoval}
  *
  * @author robbyw@google.com (Robby Walker)
  */
-public class GoogleCodeRemovalTest extends CompilerTestCase {
+public class ClosureCodeRemovalTest extends CompilerTestCase {
 
   private static String EXTERNS = "var window;";
 
-  public GoogleCodeRemovalTest() {
+  public ClosureCodeRemovalTest() {
     super(EXTERNS);
   }
 
@@ -67,7 +67,7 @@ public class GoogleCodeRemovalTest extends CompilerTestCase {
   }
 
   @Override
-  protected GoogleCodeRemoval getProcessor(Compiler compiler) {
-    return new GoogleCodeRemoval(compiler);
+  protected ClosureCodeRemoval getProcessor(Compiler compiler) {
+    return new ClosureCodeRemoval(compiler);
   }
 }

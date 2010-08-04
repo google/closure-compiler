@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Token;
 import java.util.List;
 
 /**
- * <p>Compiler pass that removes Google specific code patterns.</p>
+ * <p>Compiler pass that removes Closure-specific code patterns.</p>
  *
  * <p>Currently does the following:</p>
  *
@@ -36,7 +36,7 @@ import java.util.List;
  *
  * @author robbyw@google.com (Robby Walker)
  */
-final class GoogleCodeRemoval implements CompilerPass {
+final class ClosureCodeRemoval implements CompilerPass {
 
   /** Reference to the JS compiler */
   private final AbstractCompiler compiler;
@@ -139,13 +139,12 @@ final class GoogleCodeRemoval implements CompilerPass {
   }
 
 
-
   /**
-   * Creates an google code remover.
+   * Creates a Closure code remover.
    *
    * @param compiler The AbstractCompiler
    */
-  GoogleCodeRemoval(AbstractCompiler compiler) {
+  ClosureCodeRemoval(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 

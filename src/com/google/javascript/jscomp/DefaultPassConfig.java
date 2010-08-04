@@ -348,7 +348,7 @@ public class DefaultPassConfig extends PassConfig {
     // Abstract method removal works best on minimally modified code, and also
     // only needs to run once.
     if (options.closurePass && options.removeAbstractMethods) {
-      passes.add(removeAbstractMethods);
+      passes.add(closureCodeRemoval);
     }
 
     // Collapsing properties can undo constant inlining, so we do this before
@@ -1209,11 +1209,11 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Remove variables set to goog.abstractMethod. */
-  private final PassFactory removeAbstractMethods =
-      new PassFactory("removeAbstractMethods", true) {
+  private final PassFactory closureCodeRemoval =
+      new PassFactory("closureCodeRemoval", true) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      return new GoogleCodeRemoval(compiler);
+      return new ClosureCodeRemoval(compiler);
     }
   };
 
