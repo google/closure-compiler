@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
+import com.google.javascript.jscomp.NameReferenceGraph.Name;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.graph.DiGraph;
@@ -183,6 +184,8 @@ public class CallGraph implements CompilerPass {
     // Depends on createCallsites already being called
     connectCallsitesToTargets(definitionProvider);
     
+    fillInFunctionInformation(definitionProvider);
+    
     alreadyRun = true;
   }
 
@@ -310,7 +313,7 @@ public class CallGraph implements CompilerPass {
    * If the definitionProvider cannot determine the target of a Callsite,
    * the Callsite's hasUnknownTarget field is set to true.
    * 
-   * If the definitionProvider determins that the target of a Callsite
+   * If the definitionProvider determines that the target of a Callsite
    * could be an extern-defined function, then the Callsite's hasExternTarget
    * field is set to true.
    * 
@@ -343,7 +346,7 @@ public class CallGraph implements CompilerPass {
                 
                 if (computeBackwardGraph) {
                   callsitesByTargetingFunction.put(targetFunction, callsite);
-                }             
+                }
               } else {
                   callsite.hasUnknownTarget = true;                 
               }
@@ -352,6 +355,112 @@ public class CallGraph implements CompilerPass {
         }
       }
     }
+  }
+  
+  /**
+   * Fills in function information (such as whether the function is ever
+   * aliased or whether it is exposed to .call or .apply) using the
+   * definition provider.
+   * 
+   * We do this here, rather than when connecting the callgraph, to make sure
+   * that we have correct information for all functions, rather than just
+   * functions that are actually called.
+   */
+  private void fillInFunctionInformation(DefinitionProvider provider) {
+    if (useNameReferenceGraph) {
+      NameReferenceGraph referenceGraph = (NameReferenceGraph) provider;
+      
+      for (Function function : getAllFunctions()) {
+        if (!function.isMain()) {
+          String functionName = function.getName();
+          
+          if (functionName != null) {
+            Name symbol = referenceGraph.getSymbol(functionName);
+            updateFunctionForName(function, symbol);
+          }
+        }  
+      }
+    } else {
+      SimpleDefinitionFinder finder = (SimpleDefinitionFinder) provider;
+      
+      for (DefinitionSite definitionSite : finder.getDefinitionSites()) {
+        Definition definition = definitionSite.definition;
+        
+        Function function = lookupFunctionForDefinition(definition);
+        
+        if (function != null) {              
+          for (UseSite useSite : finder.getUseSites(definition)) {
+            updateFunctionForUse(function, useSite.node);
+          }
+        }                      
+      }
+    }
+  }
+  
+  /**
+   * Updates {@link Function} information (such as whether is is aliased
+   * or exposed to .apply or .call from a {@link NameReferenceGraph.Name}.
+   * 
+   * Note: this method may be called multiple times per Function, each time
+   * with a different name.
+   */
+  private void updateFunctionForName(Function function, Name name) {
+    if (name.isAliased()) {
+      function.isAliased = true; 
+    }   
+     
+    if (name.exposedToCallOrApply()) {
+      function.isExposedToCallOrApply = true;
+    }
+  }
+  
+  /**
+   * Updates {@link Function} information (such as whether is is aliased
+   * or exposed to .apply or .call based a site where the function is used.
+   * 
+   * Note: this method may be called multiple times per Function, each time
+   * with a different useNode.
+   */
+  private void updateFunctionForUse(Function function, Node useNode) {
+    Node useParent = useNode.getParent();
+    int parentType = useParent.getType();
+    
+    if ((parentType == Token.CALL || parentType == Token.NEW)
+        && useParent.getFirstChild() == useNode) {
+      // Regular call sites don't count as aliases
+    } else if (NodeUtil.isGet(useParent)) {
+      // GET{PROP,ELEM} don't count as aliases
+      // but we have to check for using them in .call and .apply.
+      
+      if (NodeUtil.isGetProp(useParent)) {
+        Node gramps = useParent.getParent();
+        if (NodeUtil.isFunctionObjectApply(gramps) ||
+            NodeUtil.isFunctionObjectCall(gramps)) {
+          function.isExposedToCallOrApply = true;
+        }
+      }
+    } else {
+      function.isAliased = true;
+    }
+  }
+  
+  /**
+   * Returns a {@link CallGraph.Function} for the passed in {@link Definition}
+   * or null if the definition isn't for a function.
+   */
+  private Function lookupFunctionForDefinition(Definition definition) {
+    if (definition != null && !definition.isExtern()) {
+      Node rValue = definition.getRValue();
+      
+      if (rValue != null && NodeUtil.isFunction(rValue)) {
+        Function function = functionsByNode.get(rValue);
+        Preconditions.checkNotNull(function);
+        
+        return function;
+      }
+    }
+    
+    return null;
   }
   
   /**
@@ -544,6 +653,10 @@ public class CallGraph implements CompilerPass {
     
     private Node astNode;
     
+    private boolean isAliased = false;
+    
+    private boolean isExposedToCallOrApply = false;
+    
     private Function(Node functionAstNode) {
       astNode = functionAstNode;
     }
@@ -616,10 +729,19 @@ public class CallGraph implements CompilerPass {
       }
     }
   
-    // TODO(dcc): Add supported for querying whether a function is aliased
-    // or exported. (If a function is not aliased or exported, then
-    // getCallsitesPossiblyTargetingFunction() truly contains all possible
-    // targets that could call the function).
+    /**
+     * Returns true if the function is aliased.
+     */
+    public boolean isAliased() {
+      return isAliased;
+    }
+    
+    /**
+     * Returns true if the function is ever exposed to ".call" or ".apply".
+     */
+    public boolean isExposedToCallOrApply() {
+      return isExposedToCallOrApply;
+    }
   }
   
   /**

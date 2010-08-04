@@ -829,6 +829,123 @@ public class CallGraphTest extends CompilerTestCase {
     assertEquals(1, functionC.getCallsitesInFunction().size());
   }
   
+  public void testFunctionGetIsAliased() { 
+    // Aliased by VAR assignment   
+    String source =
+        "function A(){};\n" +
+        "var ns = {};\n" +
+        "ns.B = function() {};\n" +
+        "var C = function() {}\n" +
+        "var D = function() {}\n" +
+        "var aliasA = A;\n" +
+        "var aliasB = ns.B;\n" +
+        "var aliasC = C;\n" +
+        "D();";
+      
+    compileAndRunForward(source);
+  
+    assertFunctionAliased(true, "A");
+    assertFunctionAliased(true, "ns.B");
+    assertFunctionAliased(true, "C");
+    assertFunctionAliased(false, "D");
+    
+    // Aliased by normal assignment   
+    source =
+        "function A(){};\n" +
+        "var ns = {};\n" +
+        "ns.B = function() {};\n" +
+        "var C = function() {}\n" +
+        "ns.D = function() {}\n" +
+        "var aliasA;\n" +
+        "aliasA = A;\n" +
+        "var aliasB = {};\n" +
+        "aliasB.foo = ns.B;\n" +
+        "var aliasC;\n" +
+        "aliasC = C;\n" +
+        "ns.D();";
+      
+    compileAndRunForward(source);
+  
+    assertFunctionAliased(true, "A");
+    assertFunctionAliased(true, "ns.B");
+    assertFunctionAliased(true, "C");
+    assertFunctionAliased(false, "ns.D");
+    
+    // Aliased by passing as parameter  
+    source =
+        "function A(){};\n" +
+        "var ns = {};\n" +
+        "ns.B = function() {};\n" +
+        "var C = function() {}\n" +
+        "function D() {}\n" +
+        "var foo = function(a) {}\n" +
+        "foo(A);\n" +
+        "foo(ns.B)\n" +
+        "foo(C);\n" +
+        "D();";
+      
+    compileAndRunForward(source);
+  
+    assertFunctionAliased(true, "A");
+    assertFunctionAliased(true, "ns.B");
+    assertFunctionAliased(true, "C");
+    assertFunctionAliased(false, "D");
+    
+    // Not aliased by being target of call
+    source =
+        "function A(){};\n" +
+        "var ns = {};\n" +
+        "ns.B = function() {};\n" +
+        "var C = function() {}\n" +
+        "A();\n" +
+        "ns.B();\n" +
+        "C();\n";
+        
+    compileAndRunForward(source);
+    
+    assertFunctionAliased(false, "A");
+    assertFunctionAliased(false, "ns.B");
+    assertFunctionAliased(false, "C");
+    
+    // Not aliased by GET{PROP,ELEM}
+    source =
+        "function A(){};\n" +
+        "var ns = {};\n" +
+        "ns.B = function() {};\n" +
+        "var C = function() {}\n" +
+        "A.foo;\n" +
+        "ns.B.prototype;\n" +
+        "C[0];\n";
+        
+    compileAndRunForward(source);
+    
+    assertFunctionAliased(false, "A");
+    assertFunctionAliased(false, "ns.B");
+    assertFunctionAliased(false, "C");
+  }
+   
+  public void testFunctionGetIsExposedToCallOrApply() { 
+    // Exposed to call
+    String source =
+        "function A(){};\n" +
+        "function B(){};\n" +
+        "function C(){};\n" +
+        "var x;\n" +
+        "A.call(x);\n" +
+        "B.apply(x);\n" +
+        "C();\n";
+    
+    CallGraph callGraph = compileAndRunForward(source);
+  
+    Function functionA = callGraph.getUniqueFunctionWithName("A");
+    Function functionB = callGraph.getUniqueFunctionWithName("B");
+    Function functionC = callGraph.getUniqueFunctionWithName("C");
+    
+    assertTrue(functionA.isExposedToCallOrApply());
+    assertTrue(functionB.isExposedToCallOrApply());
+    assertFalse(functionC.isExposedToCallOrApply());
+  }
+  
   public void testCallsiteGetAstNode() {
     String source =
       "function A(){B()};\n" +
@@ -1011,6 +1128,12 @@ public class CallGraphTest extends CompilerTestCase {
     return result;
   }
  
+  private void assertFunctionAliased(boolean aliased, String name) {
+    Function function = currentProcessor.getUniqueFunctionWithName(name);
+    
+    assertEquals(aliased, function.isAliased());
+  }
+  
   private CallGraph compileAndRunBackward(String js) {
     return compileAndRun(SHARED_EXTERNS, js, false, true);
   }
