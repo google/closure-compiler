@@ -34,7 +34,7 @@ Storage.prototype.length;
 
 /**
  * @param {number} index
- * @return {*}
+ * @return {string}
  */
 Storage.prototype.key = function(index) {};
 
