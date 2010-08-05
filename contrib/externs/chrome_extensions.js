@@ -537,6 +537,19 @@ chrome.experimental.rlz.recordProductEvent = function(product, accessPoint,
 chrome.experimental.rlz.clearProductState = function(product, accessPoints) {};
 
 /**
+ * @param {string} product
+ * @param {Array.<string>} accessPoints
+ * @param {string} signature
+ * @param {string} brand
+ * @param {string} id
+ * @param {string} lang
+ * @param {boolean} excludeMachineId
+ */
+chrome.experimental.rlz.sendFinancialPing = function(product, accessPoints,
+                                                     signature, brand, id, lang,
+                                                     excludeMachineId) {};
+
+/**
  * @param {string} accessPoint
  * @param {function(string): void} callback
  */
