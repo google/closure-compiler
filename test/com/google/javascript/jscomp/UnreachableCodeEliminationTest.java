@@ -43,9 +43,9 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
 
     // if/else statements with returns
     test("function bar(){if(foo)x=1;else if(bar){return;x=2}" +
-         "else{x=3;return;x=4}return;x=5}",
+         "else{x=3;return;x=4}return 5;x=5}",
          "function bar(){if(foo)x=1;else if(bar){return}" +
-         "else{x=3;return}return}");
+         "else{x=3;return}return 5}");
 
     // if statements without blocks
     test("function foo(){if(x==3)return;x=4;y++;while(y==4){return;x=3}}",
@@ -60,31 +60,31 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
          "while(i<4){x=3;return}}");
 
     // return statements on the same level as conditionals
-    test("function foo(){if(x==3){return}return;while(y==4){x++;return;x=4}}",
-         "function foo(){if(x==3){return}return}");
+    test("function foo(){if(x==3){return}return 5;while(y==4){x++;return;x=4}}",
+         "function foo(){if(x==3){return}return 5}");
 
     // return statements on the same level as conditionals
     test("function foo(){return 3;for(;y==4;){x++;return;x=4}}",
          "function foo(){return 3}");
 
     // try/catch statements
-    test("function foo(){try{x=3;return x+1;x=5}catch(e){x=4;return;x=5}}",
-         "function foo(){try{x=3;return x+1}catch(e){x=4;return}}");
+    test("function foo(){try{x=3;return x+1;x=5}catch(e){x=4;return 5;x=5}}",
+         "function foo(){try{x=3;return x+1}catch(e){x=4;return 5}}");
 
     // try/finally statements
-    test("function foo(){try{x=3;return x+1;x=5}finally{x=4;return;x=5}}",
-         "function foo(){try{x=3;return x+1}finally{x=4;return}}");
+    test("function foo(){try{x=3;return x+1;x=5}finally{x=4;return 5;x=5}}",
+         "function foo(){try{x=3;return x+1}finally{x=4;return 5}}");
 
     // try/catch/finally statements
     test("function foo(){try{x=3;return x+1;x=5}catch(e){x=3;return;x=2}" +
-         "finally{x=4;return;x=5}}",
+         "finally{x=4;return 5;x=5}}",
 
          "function foo(){try{x=3;return x+1}catch(e){x=3;return}" +
-         "finally{x=4;return}}");
+         "finally{x=4;return 5}}");
 
     // test a combination of blocks
-    test("function foo(){x=3;if(x==4){x=5;return;x=6}else{x=7}return;x=3}",
-         "function foo(){x=3;if(x==4){x=5;return}else{x=7}return}");
+    test("function foo(){x=3;if(x==4){x=5;return;x=6}else{x=7}return 5;x=3}",
+         "function foo(){x=3;if(x==4){x=5;return}else{x=7}return 5}");
 
     // test removing multiple statements
     test("function foo() { return 1; var x = 2; var y = 10; return 2;}",
@@ -133,28 +133,17 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   public void testConditionalDeadCode() {
-    test("function f() { if (x) return; else return; x = 1}",
-        "function f() { if (x) return; else return; }");
-  }
-
-  public void testKnownIf() {
-    test("if(0) {alert(1)}", "");
-    test("if(0) if(0) {{alert(1)}}", "");
-  }
-
-  public void testKnownWhile() {
-    // TODO(user): Improve elimination method to clean these up.
-    test("while(0) {alert(1)}", "while(0);");
-    test("while(0) while(0) {{alert(1)}}", "while(0);");
+    test("function f() { if (1) return 5; else return 5; x = 1}",
+        "function f() { if (1) return 5; else return 5; }");
   }
 
   public void testSwitchCase() {
-    test("function f() { switch(x) { default: return; foo()}}",
-         "function f() { switch(x) { default: return;}}");
+    test("function f() { switch(x) { default: return 5; foo()}}",
+         "function f() { switch(x) { default: return 5;}}");
     test("function f() { switch(x) { default: return; case 1: foo(); bar()}}",
          "function f() { switch(x) { default: return; case 1: foo(); bar()}}");
-    test("function f() { switch(x) { default: return; case 1: return; bar()}}",
-         "function f() { switch(x) { default: return; case 1: return;}}");
+    test("function f() { switch(x) { default: return; case 1: return 5;bar()}}",
+         "function f() { switch(x) { default: return; case 1: return 5;}}");
   }
 
   public void testTryCatchFinally() {
@@ -188,5 +177,57 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("(function() {}).prototype.toString = function(){};", "");
     test("(function() {}).prototype['toString'] = function(){};", "");
     test("(function() {}).prototype[f] = function(){};", "");
+  }
+
+  public void testUnlessUnconditionalReturn() {
+    test("function foo() { return }", " function foo() { }");
+    test("function foo() { return; return; x=1 }", "function foo() { }");
+    test("function foo() { return; return; var x=1}", "function foo() {var x}");
+    test("function foo() { return; function bar() {} }",
+         "function foo() {         function bar() {} }" );
+    testSame("function foo() { return 5 }");
+
+
+    test("function() {switch (a) { case 'a': return}}",
+         "function() {switch (a) { case 'a': }}");
+    testSame("function() {switch (a) { case 'a': return; case foo(): }}");
+    testSame("function() {switch (a) { default: return; case 'a': alert(1)}}");
+    testSame("function() {switch (a) { case 'a': return; default: alert(1)}}");
+  }
+
+  public void testUnlessUnconditionalContinue() {
+    test("for(;1;) {continue}", " for(;1;) {}");
+    test("for(;0;) {continue}", " for(;0;) {}");
+
+    testSame("X: for(;1;) { for(;1;) { if (x()) {continue X} x = 1}}");
+    test("for(;1;) { X: for(;1;) { if (x()) {continue X} }}",
+         "for(;1;) { X: for(;1;) { if (x()) {}}}");
+
+    test("do { continue } while(1);", "do {  } while(1);");
+  }
+
+  public void testUnlessUnconditonalBreak() {
+    test("switch (a) { case 'a': break }", "switch (a) { case 'a': }");
+    testSame("switch (a) { case 'a': break; case foo(): }");
+    testSame("switch (a) { default: break; case 'a': }");
+    testSame("switch (a) { case 'a': break; default: }");
+
+
+    test("X: {switch (a) { case 'a': break X}}",
+         "X: {switch (a) { case 'a': }}");
+
+    testSame("X: {switch (a) { case 'a': if (a()) {break X}  a = 1}}");
+    test("X: {switch (a) { case 'a': if (a()) {break X}}}",
+         "X: {switch (a) { case 'a': if (a()) {}}}");
+
+    test("X: {switch (a) { case 'a': if (a()) {break X}}}",
+         "X: {switch (a) { case 'a': if (a()) {}}}");
+
+    // TODO(user): Optimize these better.
+    test("switch (a) { case 'a': break; case 'b': break; case 'c': break }",
+         "switch (a) { case 'a': break; case 'b': break; case 'c': }");
+
+    testSame("do { break } while(1);");
+    testSame("for(;1;) { break }");
   }
 }

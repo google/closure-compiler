@@ -16,18 +16,19 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Predicate;
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.GraphReachability;
-import com.google.javascript.jscomp.graph.GraphNode;
-import com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,8 +74,8 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     cfgStack.push(curCfg);
     curCfg = cfa.getCfg();
 
-    new GraphReachability<Node, ControlFlowGraph.Branch>(
-        curCfg, new ReachablePredicate()).compute(curCfg.getEntry().getValue());
+    new GraphReachability<Node, ControlFlowGraph.Branch>(curCfg)
+        .compute(curCfg.getEntry().getValue());
   }
 
   @Override
@@ -87,6 +88,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, root, this);
   }
 
+  @SuppressWarnings("fallthrough")
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (parent == null) {
@@ -111,13 +113,47 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
         n = body;
       }
     }
-    GraphNode<Node, Branch> gNode = curCfg.getNode(n);
+    DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
     if (gNode == null) { // Not in CFG.
       return;
     }
     if (gNode.getAnnotation() != GraphReachability.REACHABLE ||
         (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n))) {
       removeDeadExprStatementSafely(n, parent);
+      return;
+    }
+
+    /*
+     * For each of the unconditional branching control flow node, check to see
+     * if the ControlFlowAnalysis.computeFollowNode of that node is same as
+     * the branching target. If it is, the branch node is safe to be removed.
+     *
+     * This is not as clever as MinimizeExitPoints because it doesn't do any
+     * if-else conversion but it handles more complicated switch statements
+     * much nicer.
+     */
+    switch (n.getType()) {
+      case Token.RETURN:
+        if (n.hasChildren()) {
+          break;
+        }
+      case Token.BREAK:
+      case Token.CONTINUE:
+
+        // We are looking for a control flow changing statement that always
+        // branches to the same node. If removing it the control flow still
+        // branches to that same node. It is safe to remove it.
+        List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
+        if (outEdges.size() == 1 &&
+
+            // If there is a next node, there is no chance this jump is useless.
+            (n.getNext() == null || n.getNext().getType() == Token.FUNCTION)) {
+          Preconditions.checkState(outEdges.get(0).getValue() == Branch.UNCOND);
+          Node fallThrough = ControlFlowAnalysis.computeFollowNode(n);
+          if (outEdges.get(0).getDestination().getValue() == fallThrough) {
+            removeDeadExprStatementSafely(n, parent);
+          }
+        }
     }
   }
 
@@ -144,27 +180,5 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       logger.fine("Removing " + n.toString());
     }
     NodeUtil.removeChild(parent, n);
-  }
-  
-  private final class ReachablePredicate implements
-      Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> {
-
-    @Override
-    public boolean apply(EdgeTuple<Node, Branch> input) {
-      Branch branch = input.edge;
-      if (!branch.isConditional()) {
-        return true;
-      }
-      Node predecessor = input.sourceNode;
-      Node condition = NodeUtil.getConditionExpression(predecessor);
-  
-      // TODO(user): Handle more complicated expression like true == true,
-      // etc....
-      if (condition != null && NodeUtil.isImmutableValue(condition)) {
-        return NodeUtil.getBooleanValue(condition).toBoolean(true) ==
-            (branch == Branch.ON_TRUE);
-      }
-      return true;
-    }
   }
 }

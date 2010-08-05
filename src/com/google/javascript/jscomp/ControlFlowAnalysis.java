@@ -357,7 +357,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
     if (elseBlock == null) {
       createEdge(node, Branch.ON_FALSE,
-          computeFollowNode(node)); // not taken branch
+          computeFollowNode(node, this)); // not taken branch
     } else {
       createEdge(node, Branch.ON_FALSE, computeFallThrough(elseBlock));
     }
@@ -372,7 +372,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
     // Control goes to the follow() if the condition evaluates to false.
     createEdge(node, Branch.ON_FALSE,
-        computeFollowNode(node));
+        computeFollowNode(node, this));
     connectToPossibleExceptionHandler(
         node, NodeUtil.getConditionExpression(node));
   }
@@ -383,7 +383,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     createEdge(node, Branch.ON_TRUE, computeFallThrough(node.getFirstChild()));
     // The edge that leaves the do loop if the condition fails.
     createEdge(node, Branch.ON_FALSE,
-        computeFollowNode(node));
+        computeFollowNode(node, this));
     connectToPossibleExceptionHandler(
         node, NodeUtil.getConditionExpression(node));
   }
@@ -402,7 +402,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
       // The edge to end of the loop.
       createEdge(forNode, Branch.ON_FALSE,
-          computeFollowNode(forNode));
+          computeFollowNode(forNode, this));
       // The end of the body will have a unconditional branch to our iter
       // (handled by calling computeFollowNode of the last instruction of the
       // body. Our iter will jump to the forNode again to another condition
@@ -420,7 +420,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
       // The edge to end of the loop.
       createEdge(forNode, Branch.ON_FALSE,
-          computeFollowNode(forNode));
+          computeFollowNode(forNode, this));
       connectToPossibleExceptionHandler(forNode, collection);
     }
   }
@@ -436,7 +436,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       if (node.getFirstChild().getNext() != null) {
         createEdge(node, Branch.UNCOND, node.getFirstChild().getNext());
       } else { // No CASE, no DEFAULT
-        createEdge(node, Branch.UNCOND, computeFollowNode(node));
+        createEdge(node, Branch.UNCOND, computeFollowNode(node, this));
       }
     }
     connectToPossibleExceptionHandler(node, node.getFirstChild());
@@ -458,7 +458,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       if (deflt != null) { // Has a DEFAULT
         createEdge(node, Branch.ON_FALSE, deflt);
       } else { // No DEFAULT found, go to the follow of the SWITCH.
-        createEdge(node, Branch.ON_FALSE, computeFollowNode(node));
+        createEdge(node, Branch.ON_FALSE, computeFollowNode(node, this));
       }
     }
     connectToPossibleExceptionHandler(node, node.getFirstChild());
@@ -497,7 +497,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     if (child != null) {
       createEdge(node, Branch.UNCOND, computeFallThrough(child));
     } else {
-      createEdge(node, Branch.UNCOND, computeFollowNode(node));
+      createEdge(node, Branch.UNCOND, computeFollowNode(node, this));
     }
 
     // Synthetic blocks
@@ -529,7 +529,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   }
 
   private void handleExpr(Node node) {
-    createEdge(node, Branch.UNCOND, computeFollowNode(node));
+    createEdge(node, Branch.UNCOND, computeFollowNode(node, this));
     connectToPossibleExceptionHandler(node, node);
   }
 
@@ -578,9 +578,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       Preconditions.checkState(parent != null, "Cannot find break target.");
     }
     if (lastJump == node) {
-      createEdge(lastJump, Branch.UNCOND, computeFollowNode(cur));
+      createEdge(lastJump, Branch.UNCOND, computeFollowNode(cur, this));
     } else {
-      finallyMap.put(lastJump, computeFollowNode(cur));
+      finallyMap.put(lastJump, computeFollowNode(cur, this));
     }
   }
 
@@ -649,12 +649,16 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
   private void handleStmt(Node node) {
     // Simply transfer to the next line.
-    createEdge(node, Branch.UNCOND, computeFollowNode(node));
+    createEdge(node, Branch.UNCOND, computeFollowNode(node, this));
     connectToPossibleExceptionHandler(node, node);
   }
 
-  private Node computeFollowNode(Node node) {
-    return computeFollowNode(node, node);
+  static Node computeFollowNode(Node node, ControlFlowAnalysis cfa) {
+    return computeFollowNode(node, node, cfa);
+  }
+
+  static Node computeFollowNode(Node node) {
+    return computeFollowNode(node, node, null);
   }
 
   /**
@@ -667,7 +671,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    *        during recursion.
    * @param node The node that follow() should compute.
    */
-  private Node computeFollowNode(Node fromNode, Node node) {
+  private static Node computeFollowNode(
+      Node fromNode, Node node, ControlFlowAnalysis cfa) {
     /*
      * This is the case where:
      *
@@ -687,7 +692,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
      * This will make life easier for DFAs.
      */
     Node parent = node.getParent();
-    if (parent == null || parent.getType() == Token.FUNCTION || node == root) {
+    if (parent == null || parent.getType() == Token.FUNCTION ||
+        (cfa != null && node == cfa.root)) {
       return null;
     }
 
@@ -695,7 +701,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     switch (parent.getType()) {
       // The follow() of any of the path from IF would be what follows IF.
       case Token.IF:
-        return computeFollowNode(fromNode, parent);
+        return computeFollowNode(fromNode, parent, cfa);
       case Token.CASE:
       case Token.DEFAULT:
         // After the body of a CASE, the control goes to the body of the next
@@ -709,7 +715,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
             Preconditions.checkState(false, "Not reachable");
           }
         } else {
-          return computeFollowNode(fromNode, parent);
+          return computeFollowNode(fromNode, parent, cfa);
         }
         break;
       case Token.FOR:
@@ -727,21 +733,23 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
           if (NodeUtil.hasFinally(parent)) { // and have FINALLY block.
             return computeFallThrough(parent.getLastChild());
           } else { // and have no FINALLY.
-            return computeFollowNode(fromNode, parent);
+            return computeFollowNode(fromNode, parent, cfa);
           }
         // CATCH block.
         } else if (NodeUtil.getCatchBlock(parent) == node){
           if (NodeUtil.hasFinally(parent)) { // and have FINALLY block.
             return computeFallThrough(node.getNext());
           } else {
-            return computeFollowNode(fromNode, parent);
+            return computeFollowNode(fromNode, parent, cfa);
           }
         // If we are coming out of the FINALLY block...
         } else if (parent.getLastChild() == node){
-          for (Node finallyNode : finallyMap.get(parent)) {
-            createEdge(fromNode, Branch.UNCOND, finallyNode);
+          if (cfa != null) {
+            for (Node finallyNode : cfa.finallyMap.get(parent)) {
+              cfa.createEdge(fromNode, Branch.UNCOND, finallyNode);
+            }
           }
-          return computeFollowNode(fromNode, parent);
+          return computeFollowNode(fromNode, parent, cfa);
         }
     }
 
@@ -758,7 +766,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       return computeFallThrough(nextSibling);
     } else {
       // If there are no more siblings, control is transfered up the AST.
-      return computeFollowNode(fromNode, parent);
+      return computeFollowNode(fromNode, parent, cfa);
     }
   }
 
@@ -767,7 +775,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * subtree of n. We don't always create a CFG edge into n itself because of
    * DOs and FORs.
    */
-  private static Node computeFallThrough(Node n) {
+  static Node computeFallThrough(Node n) {
     switch (n.getType()) {
       case Token.DO:
         return computeFallThrough(n.getFirstChild());
