@@ -23,7 +23,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   private boolean preserveFunctionExpressionNames = false;
 
   public RemoveUnusedVarsTest() {
-    super("");
+    super("function alert() {}");
     enableNormalize();
   }
 
@@ -101,7 +101,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
     // Test multiple passes required
     test("var a,b,c,d;var e=[b,c];var x=e[3];var f=[d];print(f[0])",
-         "var b,c,d;var f=[d];print(f[0])");
+         "var d;var f=[d];print(f[0])");
 
     // Test proper scoping (static vs dynamic)
     test("var x;function A(){var x;B()}function B(){print(x)}A()",
@@ -123,8 +123,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "return function(){print(f)}}B()",
 
          "function B(){" +
-         "var d,e,f,h;" +
-         "e=function(){print(e)};" +
+         "var f,h;" +
          "if(1);" +
          "arr=[function(){print(h)}];" +
          "return function(){print(f)}}B()");
@@ -264,12 +263,12 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testUnusedAssign1() {
-    test("var x = 3; x = 5;", "5");
+    test("var x = 3; x = 5;", "");
   }
 
   public void testUnusedAssign2() {
     test("function f(a) { a = 3; } this.x = f;",
-        "function f(){3}this.x=f");
+        "function f(){}this.x=f");
   }
 
   public void testUnusedAssign3() {
@@ -280,48 +279,87 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testUnusedAssign4() {
-    // b can't be removed, so a can't be removed either. We might be able
-    // to improve on this case.
     test("function f(a, b) { this.foo(b); a = 3; } this.x = f;",
-        "function f(a,b){this.foo(b);a=3}this.x=f");
+        "function f(a,b){this.foo(b);}this.x=f");
   }
 
   public void testUnusedAssign5() {
     test("var z = function f() { f = 3; }; z();",
-         "var z=function(){3};z()");
+         "var z=function(){};z()");
+  }
+
+  public void testUnusedAssign5b() {
+    test("var z = function f() { f = alert(); }; z();",
+         "var z=function(){alert()};z()");
   }
 
   public void testUnusedAssign6() {
-    test("var z; z = 3;", "3");
+    test("var z; z = 3;", "");
+  }
+
+  public void testUnusedAssign6b() {
+    test("var z; z = alert();", "alert()");
+  }
+
+  public void testUnusedAssign7() {
+    test("var a = 3; for (var i in {}) { i = a; }",
+         "for (var i in {}) {}");
+  }
+
+  public void testUnusedAssign8() {
+    test("var a = 3; for (var i in {}) { i = a; } alert(a);",
+         "var a = 3; for (var i in {}) {} alert(a);");
   }
 
   public void testUnusedPropAssign1() {
-    test("var x = {}; x.foo = 3;", "3");
+    test("var x = {}; x.foo = 3;", "");
+  }
+
+  public void testUnusedPropAssign1b() {
+    test("var x = {}; x.foo = alert();", "alert()");
   }
 
   public void testUnusedPropAssign2() {
-    test("var x = {}; x['foo'] = 3;", "\"foo\",3");
+    test("var x = {}; x['foo'] = 3;", "");
+  }
+
+  public void testUnusedPropAssign2b() {
+    test("var x = {}; x[alert()] = alert();", "alert(),alert()");
   }
 
   public void testUnusedPropAssign3() {
-    test("var x = {}; x['foo'] = {}; x['foo'].baz['bar'] = 3",
-        "\"foo\",{};\"foo\",(\"bar\",3)");
+    test("var x = {}; x['foo'] = {}; x['foo'].baz['bar'] = 3", "");
+  }
+
+  public void testUnusedPropAssign3b() {
+    test("var x = {}; x[alert()] = alert(); x[alert()].baz[alert()] = alert()",
+         "alert(),alert();alert(),(alert(),alert())");
   }
 
   public void testUnusedPropAssign4() {
-    test("var x = {foo: 3}; x['foo'] = 5;", "\"foo\",5");
+    test("var x = {foo: 3}; x['foo'] = 5;", "");
   }
 
   public void testUnusedPropAssign5() {
-    // Because bar() has a side-effect, the whole variable stays in. We might
-    // be able to improve on this case.
     test("var x = {foo: bar()}; x['foo'] = 5;",
          "var x={foo:bar()};x[\"foo\"]=5");
   }
 
   public void testUnusedPropAssign6() {
-    test("var x = function() {}; x.prototype.bar = function() {};",
-         "(function(){})");
+    test("var x = function() {}; x.prototype.bar = function() {};", "");
+  }
+
+  public void testUnusedPropAssign7() {
+    test("var x = {}; x[x.foo] = x.bar;", "");
+  }
+
+  public void testUnusedPropAssign7b() {
+    testSame("var x = {}; x[x.foo] = alert(x.bar);");
+  }
+
+  public void testUnusedPropAssign7c() {
+    test("var x = {}; x[alert(x.foo)] = x.bar;",
+         "var x={};x[alert(x.foo)]=x.bar");
   }
 
   public void testUsedPropAssign1() {
@@ -353,5 +391,60 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   public void testUsedPropAssign6() {
     test("var x = newNodeInDom(doc); x.innerHTML = 'new text';",
          "var x=newNodeInDom(doc);x.innerHTML=\"new text\"");
+  }
+
+  public void testDependencies1() {
+    test("var a = 3; var b = function() { alert(a); };", "");
+  }
+
+  public void testDependencies1b() {
+    test("var a = 3; var b = alert(function() { alert(a); });",
+         "var a=3;alert(function(){alert(a)})");
+  }
+
+  public void testDependencies1c() {
+    test("var a = 3; var _b = function() { alert(a); };",
+         "var a=3;var _b=function(){alert(a)}");
+  }
+
+  public void testDependencies2() {
+    test("var a = 3; var b = 3; b = function() { alert(a); };", "");
+  }
+
+  public void testDependencies2b() {
+    test("var a = 3; var b = 3; b = alert(function() { alert(a); });",
+         "var a=3;alert(function(){alert(a)})");
+  }
+
+  public void testDependencies2c() {
+    testSame("var a=3;var _b=3;_b=function(){alert(a)}");
+  }
+
+  public void testGlobalVarReferencesLocalVar() {
+    testSame("var a=3;function f(){var b=4;a=b}alert(a + f())");
+  }
+
+  public void testLocalVarReferencesGlobalVar1() {
+    testSame("var a=3;function f(b, c){b=a; alert(b + c);} f();");
+  }
+
+  public void testLocalVarReferencesGlobalVar2() {
+    test("var a=3;function f(b, c){b=a; alert(c);} f();",
+         "function f(b, c) { alert(c); } f();");
+  }
+
+  public void testNestedAssign1() {
+    test("var b = null; var a = (b = 3); alert(a);",
+         "var a = 3; alert(a);");
+  }
+
+  public void testNestedAssign2() {
+    test("var a = 1; var b = 2; var c = (b = a); alert(c);",
+         "var a = 1; var c = a; alert(c);");
+  }
+
+  public void testNestedAssign3() {
+    test("var b = 0; var z; z = z = b = 1; alert(b);",
+         "var b = 0; b = 1; alert(b);");
   }
 }
