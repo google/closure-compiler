@@ -6,14 +6,22 @@ public interface FunctionInformationMapOrBuilder
     extends com.google.protobuf.MessageOrBuilder {
   
   // repeated group Entry = 1 {
-  java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder> 
+  java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> 
       getEntryList();
+  com.google.javascript.jscomp.FunctionInformationMap.Entry getEntry(int index);
   int getEntryCount();
-  com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder getEntry(int index);
+  java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder> 
+      getEntryOrBuilderList();
+  com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder getEntryOrBuilder(
+      int index);
   
   // repeated group Module = 101 {
-  java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder> 
+  java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> 
       getModuleList();
+  com.google.javascript.jscomp.FunctionInformationMap.Module getModule(int index);
   int getModuleCount();
-  com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder getModule(int index);
+  java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder> 
+      getModuleOrBuilderList();
+  com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder getModuleOrBuilder(
+      int index);
 }

@@ -1337,10 +1337,18 @@ public  final class FunctionInformationMap extends
   public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> getEntryList() {
     return entry_;
   }
+  public java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder> 
+      getEntryOrBuilderList() {
+    return entry_;
+  }
   public int getEntryCount() {
     return entry_.size();
   }
   public com.google.javascript.jscomp.FunctionInformationMap.Entry getEntry(int index) {
+    return entry_.get(index);
+  }
+  public com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder getEntryOrBuilder(
+      int index) {
     return entry_.get(index);
   }
   
@@ -1350,10 +1358,18 @@ public  final class FunctionInformationMap extends
   public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> getModuleList() {
     return module_;
   }
+  public java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder> 
+      getModuleOrBuilderList() {
+    return module_;
+  }
   public int getModuleCount() {
     return module_.size();
   }
   public com.google.javascript.jscomp.FunctionInformationMap.Module getModule(int index) {
+    return module_.get(index);
+  }
+  public com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder getModuleOrBuilder(
+      int index) {
     return module_.get(index);
   }
   
@@ -1721,7 +1737,7 @@ public  final class FunctionInformationMap extends
     }
     
     private com.google.protobuf.RepeatedFieldBuilder<
-        com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder> entryBuilder_;
+        com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder, com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder> entryBuilder_;
     
     public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> getEntryList() {
       if (entryBuilder_ == null) {
@@ -1853,6 +1869,21 @@ public  final class FunctionInformationMap extends
         int index) {
       return getEntryFieldBuilder().getBuilder(index);
     }
+    public com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder getEntryOrBuilder(
+        int index) {
+      if (entryBuilder_ == null) {
+        return entry_.get(index);  } else {
+        return entryBuilder_.getMessageOrBuilder(index);
+      }
+    }
+    public java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder> 
+         getEntryOrBuilderList() {
+      if (entryBuilder_ != null) {
+        return entryBuilder_.getMessageOrBuilderList();
+      } else {
+        return java.util.Collections.unmodifiableList(entry_);
+      }
+    }
     public com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder addEntryBuilder() {
       return getEntryFieldBuilder().addBuilder(
           com.google.javascript.jscomp.FunctionInformationMap.Entry.getDefaultInstance());
@@ -1867,10 +1898,11 @@ public  final class FunctionInformationMap extends
       return getEntryFieldBuilder().getBuilderList();
     }
     private com.google.protobuf.RepeatedFieldBuilder<
-        com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder> getEntryFieldBuilder() {
+        com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder, com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder> 
+        getEntryFieldBuilder() {
       if (entryBuilder_ == null) {
         entryBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-            com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder>(
+            com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder, com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder>(
                 entry_,
                 ((bitField0_ & 0x00000001) == 0x00000001),
                 getParentForChildren(),
@@ -1891,7 +1923,7 @@ public  final class FunctionInformationMap extends
     }
     
     private com.google.protobuf.RepeatedFieldBuilder<
-        com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder> moduleBuilder_;
+        com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder, com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder> moduleBuilder_;
     
     public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> getModuleList() {
       if (moduleBuilder_ == null) {
@@ -2023,6 +2055,21 @@ public  final class FunctionInformationMap extends
         int index) {
       return getModuleFieldBuilder().getBuilder(index);
     }
+    public com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder getModuleOrBuilder(
+        int index) {
+      if (moduleBuilder_ == null) {
+        return module_.get(index);  } else {
+        return moduleBuilder_.getMessageOrBuilder(index);
+      }
+    }
+    public java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder> 
+         getModuleOrBuilderList() {
+      if (moduleBuilder_ != null) {
+        return moduleBuilder_.getMessageOrBuilderList();
+      } else {
+        return java.util.Collections.unmodifiableList(module_);
+      }
+    }
     public com.google.javascript.jscomp.FunctionInformationMap.Module.Builder addModuleBuilder() {
       return getModuleFieldBuilder().addBuilder(
           com.google.javascript.jscomp.FunctionInformationMap.Module.getDefaultInstance());
@@ -2037,10 +2084,11 @@ public  final class FunctionInformationMap extends
       return getModuleFieldBuilder().getBuilderList();
     }
     private com.google.protobuf.RepeatedFieldBuilder<
-        com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder> getModuleFieldBuilder() {
+        com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder, com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder> 
+        getModuleFieldBuilder() {
       if (moduleBuilder_ == null) {
         moduleBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-            com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder>(
+            com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder, com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder>(
                 module_,
                 ((bitField0_ & 0x00000002) == 0x00000002),
                 getParentForChildren(),
