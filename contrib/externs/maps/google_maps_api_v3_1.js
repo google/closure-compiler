@@ -2836,9 +2836,10 @@ google.maps.event.prototype.addDomListener = function(instance, eventName, handl
  * @param {Object} instance
  * @param {string} eventName
  * @param {function(...[*])} handler
+ * @param {boolean=} capture
  * @return {google.maps.MapsEventListener}
  */
-google.maps.event.prototype.addDomListenerOnce = function(instance, eventName, handler) {};
+google.maps.event.prototype.addDomListenerOnce = function(instance, eventName, handler, capture) {};
 
 /**
  * @param {Object} instance
