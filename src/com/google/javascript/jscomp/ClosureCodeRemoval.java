@@ -17,11 +17,15 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>Compiler pass that removes Closure-specific code patterns.</p>
@@ -32,6 +36,12 @@ import java.util.List;
  *   <li> Instead  of setting abstract methods to a function that throws an
  *        informative error, this pass allows some binary size reduction by
  *        removing these methods altogether for production builds.</li>
+ *   <li> Remove calls to assertion functions (like goog.asserts.assert).
+ *        If the return value of the assertion function is used, then
+ *        the first argument (the asserted value) will be directly inlined.
+ *        Otherwise, the entire call will be removed. It is well-known that
+ *        this is not provably safe, much like the equivalent assert
+ *        statement in Java.</li>
  * </ul>
  *
  * @author robbyw@google.com (Robby Walker)
@@ -44,12 +54,20 @@ final class ClosureCodeRemoval implements CompilerPass {
   /** Name used to denote an abstract function */
   static final String ABSTRACT_METHOD_NAME = "goog.abstractMethod";
 
+  private final boolean removeAbstractMethods;
+  private final boolean removeAssertionCalls;
+
   /**
    * List of names referenced in successive generations of finding referenced
-   * nodes
+   * nodes.
    */
   private final List<RemovableAssignment> abstractMethodAssignmentNodes =
       Lists.newArrayList();
+
+  /**
+   * List of assertion functions.
+   */
+  private final List<Node> assertionCalls = Lists.newArrayList();
 
 
   /**
@@ -116,13 +134,11 @@ final class ClosureCodeRemoval implements CompilerPass {
     }
   }
 
-
-
   /**
    * Identifies all assignments of the abstract method to a variable.
    */
   private class FindAbstractMethods extends AbstractPostOrderCallback {
-
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.ASSIGN) {
         Node nameNode = n.getFirstChild();
@@ -140,20 +156,72 @@ final class ClosureCodeRemoval implements CompilerPass {
 
 
   /**
+   * Identifies all assertion calls.
+   */
+  private class FindAssertionCalls extends AbstractPostOrderCallback {
+    Set<String> assertionNames = Sets.newHashSet();
+
+    FindAssertionCalls() {
+      for (AssertionFunctionSpec spec :
+               compiler.getCodingConvention().getAssertionFunctions()) {
+        assertionNames.add(spec.getFunctionName());
+      }
+    }
+
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.getType() == Token.CALL) {
+        String fnName = n.getFirstChild().getQualifiedName();
+        if (assertionNames.contains(fnName)) {
+          assertionCalls.add(n);
+        }
+      }
+    }
+  }
+
+
+  /**
    * Creates a Closure code remover.
    *
    * @param compiler The AbstractCompiler
+   * @param removeAbstractMethods Remove declarations of abstract methods.
+   * @param removeAssertionCalls Remove calls to goog.assert functions.
    */
-  ClosureCodeRemoval(AbstractCompiler compiler) {
+  ClosureCodeRemoval(AbstractCompiler compiler, boolean removeAbstractMethods,
+                     boolean removeAssertionCalls) {
     this.compiler = compiler;
+    this.removeAbstractMethods = removeAbstractMethods;
+    this.removeAssertionCalls = removeAssertionCalls;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new FindAbstractMethods());
+    List<Callback> passes = Lists.newArrayList();
+    if (removeAbstractMethods) {
+      passes.add(new FindAbstractMethods());
+    }
+    if (removeAssertionCalls) {
+      passes.add(new FindAssertionCalls());
+    }
+    CombinedCompilerPass.traverse(compiler, root, passes);
 
     for (RemovableAssignment assignment : abstractMethodAssignmentNodes) {
       assignment.remove();
+    }
+
+    for (Node call : assertionCalls) {
+      // If the assertion is an expression, just strip the whole thing.
+      Node parent = call.getParent();
+      if (NodeUtil.isExpressionNode(parent)) {
+        parent.getParent().removeChild(parent);
+      } else {
+        // Otherwise, replace the assertion with its first argument,
+        // which is the return value of the assertion.
+        parent.replaceChild(
+            call, call.getFirstChild().getNext().detachFromParent());
+      }
+      compiler.reportCodeChange();
     }
   }
 }

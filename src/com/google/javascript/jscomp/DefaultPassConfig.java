@@ -1213,7 +1213,8 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("closureCodeRemoval", true) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      return new ClosureCodeRemoval(compiler);
+      // TODO(nicksantos): add flags.
+      return new ClosureCodeRemoval(compiler, true, false);
     }
   };
 

@@ -16,9 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
+
+import java.util.List;
 
 /**
  * <p>A compiler pass combining multiple {@link Callback}
@@ -55,10 +58,24 @@ final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
    */
   CombinedCompilerPass(
       AbstractCompiler compiler, Callback... callbacks) {
+    this(compiler, Lists.<Callback>newArrayList(callbacks));
+  }
+
+  CombinedCompilerPass(
+      AbstractCompiler compiler, List<Callback> callbacks) {
     this.compiler = compiler;
-    this.callbacks = new CallbackWrapper[callbacks.length];
-    for (int i = 0; i < callbacks.length; i++) {
-      this.callbacks[i] = new CallbackWrapper(callbacks[i]);
+    this.callbacks = new CallbackWrapper[callbacks.size()];
+    for (int i = 0; i < callbacks.size(); i++) {
+      this.callbacks[i] = new CallbackWrapper(callbacks.get(i));
+    }
+  }
+
+  static void traverse(AbstractCompiler compiler, Node root,
+      List<Callback> callbacks) {
+    if (callbacks.size() == 1) {
+      NodeTraversal.traverse(compiler, root, callbacks.get(0));
+    } else {
+      (new CombinedCompilerPass(compiler, callbacks)).process(null, root);
     }
   }
 
