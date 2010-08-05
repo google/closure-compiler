@@ -1356,6 +1356,7 @@ public class Compiler extends AbstractCompiler {
     builder.setPrettyPrint(options.prettyPrint);
     builder.setLineBreak(options.lineBreak);
     builder.setSourceMap(sourceMap);
+    builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
     builder.setOutputCharset(options.outputCharset);
     return builder.build();
   }

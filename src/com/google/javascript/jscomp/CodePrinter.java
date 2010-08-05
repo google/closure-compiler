@@ -49,14 +49,20 @@ class CodePrinter {
     final private Deque<Mapping> mappings;
     final private List<Mapping> allMappings;
     final private boolean createSrcMap;
+    final private SourceMap.DetailLevel sourceMapDetailLevel;
     protected final StringBuilder code = new StringBuilder(1024);
     protected final int lineLengthThreshold;
     protected int lineLength = 0;
     protected int lineIndex = 0;
 
-    MappedCodePrinter(int lineLengthThreshold, boolean createSrcMap) {
+    MappedCodePrinter(
+        int lineLengthThreshold,
+        boolean createSrcMap,
+        SourceMap.DetailLevel sourceMapDetailLevel) {
+      Preconditions.checkState(sourceMapDetailLevel != null);
       this.lineLengthThreshold = lineLengthThreshold;
       this.createSrcMap = createSrcMap;
+      this.sourceMapDetailLevel = sourceMapDetailLevel;
       this.mappings = createSrcMap ? new ArrayDeque<Mapping>() : null;
       this.allMappings = createSrcMap ? new ArrayList<Mapping>() : null;
     }
@@ -82,20 +88,20 @@ class CodePrinter {
      */
     @Override
     void startSourceMapping(Node node) {
+      Preconditions.checkState(sourceMapDetailLevel != null);
+      Preconditions.checkState(node != null);
       if (createSrcMap
           && node.getProp(Node.SOURCEFILE_PROP) != null
-          && node.getLineno() > 0) {
+          && node.getLineno() > 0
+          && sourceMapDetailLevel.apply(node)) {
         int line = getCurrentLineIndex();
         int index = getCurrentCharIndex();
-
-        // If the index is -1, we are not performing any mapping.
-        if (index >= 0) {
-          Mapping mapping = new Mapping();
-          mapping.node = node;
-          mapping.start = new Position(line, index);
-          mappings.push(mapping);
-          allMappings.add(mapping);
-        }
+        Preconditions.checkState(line >= 0);
+        Mapping mapping = new Mapping();
+        mapping.node = node;
+        mapping.start = new Position(line, index);
+        mappings.push(mapping);
+        allMappings.add(mapping);
       }
     }
 
@@ -105,20 +111,12 @@ class CodePrinter {
      */
     @Override
     void endSourceMapping(Node node) {
-      if (createSrcMap
-          && node.getProp(Node.SOURCEFILE_PROP) != null
-          && node.getLineno() > 0) {
+      if (createSrcMap && !mappings.isEmpty() && mappings.peek().node == node) {
+        Mapping mapping = mappings.pop();
         int line = getCurrentLineIndex();
         int index = getCurrentCharIndex();
-
-        // If the index is -1, we are not performing any mapping.
-        if (index >= 0) {
-          Preconditions.checkState(
-              !mappings.isEmpty(), "Mismatch in start and end of mapping");
-
-          Mapping mapping = mappings.pop();
-          mapping.end = new Position(line, index);
-        }
+        Preconditions.checkState(line >= 0);
+        mapping.end = new Position(line, index);
       }
     }
 
@@ -204,10 +202,15 @@ class CodePrinter {
     /**
      * @param lineLengthThreshold The length of a line after which we force
      *                            a newline when possible.
+     * @param createSourceMap Whether to generate source map data.
+     * @param sourceMapDetailLevel A filter to control which nodes get mapped
+     *     into the source map.
      */
     private PrettyCodePrinter(
-        int lineLengthThreshold, boolean createSourceMap) {
-      super(lineLengthThreshold, createSourceMap);
+        int lineLengthThreshold,
+        boolean createSourceMap,
+        SourceMap.DetailLevel sourceMapDetailLevel) {
+      super(lineLengthThreshold, createSourceMap, sourceMapDetailLevel);
     }
 
     /**
@@ -390,10 +393,12 @@ class CodePrinter {
    *                            a newline when possible.
    * @param createSrcMap Whether to gather source position
    *                            mapping information when printing.
+   * @param sourceMapDetailLevel A filter to control which nodes get mapped into
+   *     the source map.
    */
     private CompactCodePrinter(boolean lineBreak, int lineLengthThreshold,
-        boolean createSrcMap) {
-      super(lineLengthThreshold, createSrcMap);
+        boolean createSrcMap, SourceMap.DetailLevel sourceMapDetailLevel) {
+      super(lineLengthThreshold, createSrcMap, sourceMapDetailLevel);
       this.lineBreak = lineBreak;
     }
 
@@ -476,6 +481,7 @@ class CodePrinter {
     private boolean outputTypes = false;
     private int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
     private SourceMap sourceMap = null;
+    private SourceMap.DetailLevel sourceMapDetailLevel = SourceMap.DetailLevel.ALL;
     // Specify a charset to use when outputting source code.  If null,
     // then just output ASCII.
     private Charset outputCharset = null;
@@ -538,6 +544,15 @@ class CodePrinter {
     }
 
     /**
+     * @param level The detail level to use.
+     */
+    Builder setSourceMapDetailLevel(SourceMap.DetailLevel level) {
+      Preconditions.checkState(level != null);
+      this.sourceMapDetailLevel = level;
+      return this;
+    }
+
+    /**
      * Set the charset to use when determining what characters need to be
      * escaped in the output.
      */
@@ -562,7 +577,7 @@ class CodePrinter {
               : Format.COMPACT;
 
       return toSource(root, outputFormat, lineBreak, lineLengthThreshold,
-          sourceMap, outputCharset);
+          sourceMap, sourceMapDetailLevel, outputCharset);
     }
   }
 
@@ -578,13 +593,18 @@ class CodePrinter {
   private static String toSource(Node root, Format outputFormat,
                                  boolean lineBreak,  int lineLengthThreshold,
                                  SourceMap sourceMap,
+                                 SourceMap.DetailLevel sourceMapDetailLevel,
                                  Charset outputCharset) {
+    Preconditions.checkState(sourceMapDetailLevel != null);
+
     boolean createSourceMap = (sourceMap != null);
     MappedCodePrinter mcp =
         outputFormat == Format.COMPACT
         ? new CompactCodePrinter(
-            lineBreak, lineLengthThreshold, createSourceMap)
-        : new PrettyCodePrinter(lineLengthThreshold, createSourceMap);
+            lineBreak, lineLengthThreshold,
+            createSourceMap, sourceMapDetailLevel)
+        : new PrettyCodePrinter(
+            lineLengthThreshold, createSourceMap, sourceMapDetailLevel);
     CodeGenerator cg =
         outputFormat == Format.TYPED
         ? new TypedCodeGenerator(mcp, outputCharset)

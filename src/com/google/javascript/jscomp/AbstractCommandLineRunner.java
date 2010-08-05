@@ -157,6 +157,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (config.createSourceMap.length() > 0) {
       options.sourceMapOutputPath = config.createSourceMap;
     }
+    options.sourceMapDetailLevel = config.sourceMapDetailLevel;
 
     if (!config.variableMapInputFile.equals("")) {
       options.inputVariableMapSerialized =
@@ -1344,6 +1345,17 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setCreateSourceMap(String createSourceMap) {
       this.createSourceMap = createSourceMap;
+      return this;
+    }
+
+    private SourceMap.DetailLevel sourceMapDetailLevel =
+        SourceMap.DetailLevel.ALL;
+
+    /**
+     * The detail supplied in the source map file, if generated.
+     */
+    CommandLineConfig setSourceMapDetailLevel(SourceMap.DetailLevel level) {
+      this.sourceMapDetailLevel = level;
       return this;
     }
 

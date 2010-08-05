@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.SourceMap.DetailLevel;
 
 import junit.framework.TestCase;
 
@@ -42,6 +43,13 @@ public class SourceMapTest extends TestCase {
   private static final JSSourceFile[] EXTERNS = {
       JSSourceFile.fromCode("externs", "")
   };
+
+  private DetailLevel detailLevel = SourceMap.DetailLevel.ALL;
+
+  @Override
+  public void setUp() {
+    detailLevel = SourceMap.DetailLevel.ALL;
+  }
 
   public void testBasicMapping() throws Exception {
     compileAndCheck("function __BASIC__() { }");
@@ -87,6 +95,8 @@ public class SourceMapTest extends TestCase {
   }
 
   public void testGoldenOutput1() throws Exception {
+    detailLevel = SourceMap.DetailLevel.ALL;
+
     checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
 
                    "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
@@ -111,6 +121,29 @@ public class SourceMapTest extends TestCase {
                    "[\"testcode\",1,35,\"bar\"]\n" +
                    "[\"testcode\",1,41]\n" +
                    "[\"testcode\",1,44]\n" +
+                   "[\"testcode\",1,51,\"foo\"]\n");
+
+    detailLevel = SourceMap.DetailLevel.SYMBOLS;
+
+    checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
+
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
+                   "\"count\": 1 }\n" +
+
+                   "[0,0,0,0,0,0,0,0,1,1,0,2,2,2,0,3,3,3,0,0,4,4,4,0,5,5,5,0," +
+                   "6,6,6,0,0,0,0,0,0,0,0,0,7,7,7,7,0]\n" +
+
+                   "/** Begin file information. **/\n" +
+                   "[]\n" +
+
+                   "/** Begin mapping definitions. **/\n" +
+                   "[\"testcode\",1,9]\n" +
+                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,11,\"foo\"]\n" +
+                   "[\"testcode\",1,16,\"bar\"]\n" +
+                   "[\"testcode\",1,23,\"foo\"]\n" +
+                   "[\"testcode\",1,29,\"foo\"]\n" +
+                   "[\"testcode\",1,35,\"bar\"]\n" +
                    "[\"testcode\",1,51,\"foo\"]\n");
   }
 
@@ -176,6 +209,8 @@ public class SourceMapTest extends TestCase {
   }
 
   public void testGoldenOutput5() throws Exception {
+    detailLevel = SourceMap.DetailLevel.ALL;
+
     checkSourceMap("c:\\myfile.js",
                    "/** @preserve\n" +
                    " * this is a test.\n" +
@@ -277,6 +312,62 @@ public class SourceMapTest extends TestCase {
                    "[\"c:\\\\myfile.js\",4,1314,\"c\"]\n" +
                    "[\"c:\\\\myfile.js\",4,1318,\"d\"]\n" +
                    "[\"c:\\\\myfile.js\",4,1322,\"e\"]\n");
+
+    detailLevel = SourceMap.DetailLevel.SYMBOLS;
+
+    checkSourceMap("c:\\myfile.js",
+        "/** @preserve\n" +
+        " * this is a test.\n" +
+        " */\n" +
+        "var foo=a + 'this is a really long line that will force the"
+        + " mapping to span multiple lines 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + " 123456789 123456789 123456789 123456789 123456789"
+        + "' + c + d + e;",
+
+        "/** Begin line maps. **/" +
+        "{ \"file\" : \"testcode\", \"count\": 6 }\n" +
+        "[]\n" +
+        "[]\n" +
+        "[]\n" +
+        "[]\n" +
+        "[-1,-1,-1,-1,0,0,0,0,1]\n" +
+        "[2,0,3,0,4]\n" +
+        "/** Begin file information. **/\n" +
+        "[]\n" +
+        "[]\n" +
+        "[]\n" +
+        "[]\n" +
+        "[]\n" +
+        "[]\n" +
+        "/** Begin mapping definitions. **/\n" +
+        "[\"c:\\\\myfile.js\",4,4,\"foo\"]\n" +
+        "[\"c:\\\\myfile.js\",4,8,\"a\"]\n" +
+        "[\"c:\\\\myfile.js\",4,1314,\"c\"]\n" +
+        "[\"c:\\\\myfile.js\",4,1318,\"d\"]\n" +
+        "[\"c:\\\\myfile.js\",4,1322,\"e\"]\n");
   }
 
   public void testBasicDeterminism() throws Exception {
@@ -449,6 +540,7 @@ public class SourceMapTest extends TestCase {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.sourceMapOutputPath = "testcode_source_map.out";
+    options.sourceMapDetailLevel = detailLevel;
 
     // Turn on IDE mode to get rid of optimizations.
     options.ideMode = true;

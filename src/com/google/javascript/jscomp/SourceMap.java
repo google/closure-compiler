@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
@@ -39,6 +40,30 @@ import java.util.List;
 public class SourceMap {
 
   private final static int UNMAPPED = -1;
+
+  /**
+   * Source maps can be very large different levels of detail can be specified.
+   */
+  public enum DetailLevel implements Predicate<Node> {
+    // ALL is best when the fullest details are needed for debugging or for
+    // code-origin analysis.
+    ALL {
+      @Override public boolean apply(Node node) {
+        return true;
+      }
+    },
+    // SYMBOLS is intended to be used for stack trace deobfuscation when full
+    // detail is not needed.
+    SYMBOLS {
+      @Override public boolean apply(Node node) {
+        return NodeUtil.isCall(node)
+            || NodeUtil.isNew(node)
+            || NodeUtil.isFunction(node)
+            || NodeUtil.isName(node)
+            || (NodeUtil.isString(node) && NodeUtil.isGet(node.getParent()));
+      }
+    };
+  }
 
   /**
    * A mapping from a given position in an input source file to a given position
