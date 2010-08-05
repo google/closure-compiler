@@ -529,6 +529,7 @@ public class CommandLineRunner extends
     "ie_vml.js",
     "iphone.js",
     "webstorage.js",
+    "w3c_css3d.js",
     "w3c_elementtraversal.js",
     "w3c_geolocation.js",
     "w3c_range.js",
