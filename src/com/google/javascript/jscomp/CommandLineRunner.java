@@ -242,7 +242,8 @@ public class CommandLineRunner extends
     private List<String> define = Lists.newArrayList();
 
     @Option(name = "--charset",
-        usage = "Input charset for all files.")
+        usage = "Input and output charset for all files. By default, we " +
+                "accept UTF-8 as input and output US_ASCII")
     private String charset = "";
 
     @Option(name = "--compilation_level",
@@ -467,7 +468,6 @@ public class CommandLineRunner extends
     }
 
     options.closurePass = flags.process_closure_primitives;
-    initOptionsFromFlags(options);
     return options;
   }
 

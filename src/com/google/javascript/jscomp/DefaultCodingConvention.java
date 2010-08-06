@@ -33,6 +33,8 @@ import java.util.List;
  */
 public class DefaultCodingConvention implements CodingConvention {
 
+  private static final long serialVersionUID = 1L;
+
   @Override
   public boolean isConstant(String variableName) {
     return false;

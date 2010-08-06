@@ -21,6 +21,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -33,7 +34,7 @@ import java.util.List;
 *
 *
  */
-public interface CodingConvention {
+public interface CodingConvention extends Serializable {
 
   /**
    * This checks whether a given variable name, such as a name in all-caps

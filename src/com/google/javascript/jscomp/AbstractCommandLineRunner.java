@@ -128,7 +128,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     return new DiagnosticGroups();
   }
 
-  protected void initOptionsFromFlags(CompilerOptions options) {
+  /** No longer does anything. */
+  @Deprecated
+  protected void initOptionsFromFlags(CompilerOptions options) {}
+
+  /**
+   * Sets options based on the configurations set flags API.
+   * Called during the run() run() method.
+   * If you want to ignore the flags API, or intepret flags your own way,
+   * then you should override this method.
+   */
+  final protected void setRunOptions(CompilerOptions options)
+      throws FlagUsageException, IOException {
     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 
     diagnosticGroups.setWarningLevels(
@@ -142,14 +153,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     options.manageClosureDependencies = config.manageClosureDependencies;
     options.devMode = config.jscompDevMode;
-  }
+    options.setCodingConvention(config.codingConvention);
+    options.setSummaryDetailLevel(config.summaryDetailLevel);
 
-  final protected A getCompiler() {
-    return compiler;
-  }
+    options.outputCharset = getOutputCharset();
+    inputCharset = getInputCharset();
 
-  final protected void setRunOptions(B options)
-      throws IOException, FlagUsageException {
     if (config.jsOutputFile.length() > 0) {
       options.jsOutputFile = config.jsOutputFile;
     }
@@ -168,11 +177,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       options.inputPropertyMapSerialized =
           VariableMap.load(config.propertyMapInputFile).toBytes();
     }
+  }
 
-    options.setCodingConvention(config.codingConvention);
-    options.setSummaryDetailLevel(config.summaryDetailLevel);
-
-    inputCharset = getInputCharset();
+  final protected A getCompiler() {
+    return compiler;
   }
 
   /**
@@ -509,16 +517,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     setRunOptions(options);
 
-    // Let the outputCharset be the same as the input charset... except if
-    // we're reading in UTF-8 by default.  By tradition, we've always
-    // output ASCII to avoid various hiccups with different browsers,
-    // proxies and firewalls.
-    if (inputCharset == Charsets.UTF_8) {
-      options.outputCharset = Charsets.US_ASCII;
-    } else {
-      options.outputCharset = inputCharset;
-    }
-
     boolean writeOutputToFile = !options.jsOutputFile.isEmpty();
     if (writeOutputToFile) {
       out = toWriter(options.jsOutputFile, inputCharset.name());
@@ -659,8 +657,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Query the flag for the charset, and return a Charset object representing
-   * the selection.
+   * Query the flag for the input charset, and return a Charset object
+   * representing the selection.
    *
    * @return Charset to use when reading inputs
    * @throws FlagUsageException if flag is not a valid Charset name.
@@ -674,6 +672,29 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return Charset.forName(config.charset);
     }
     return Charsets.UTF_8;
+  }
+
+  /**
+   * Query the flag for the output charset.
+   *
+   * Let the outputCharset be the same as the input charset... except if
+   * we're reading in UTF-8 by default.  By tradition, we've always
+   * output ASCII to avoid various hiccups with different browsers,
+   * proxies and firewalls.
+   *
+   * @return Name of the charset to use when writing outputs. Guaranteed to
+   *    be a supported charset.
+   * @throws FlagUsageException if flag is not a valid Charset name.
+   */
+  private String getOutputCharset() throws FlagUsageException {
+    if (!config.charset.isEmpty()) {
+      if (!Charset.isSupported(config.charset)) {
+        throw new FlagUsageException(config.charset +
+            " is not a valid charset name.");
+      }
+      return config.charset;
+    }
+    return "US-ASCII";
   }
 
   protected List<JSSourceFile> createExterns() throws FlagUsageException,

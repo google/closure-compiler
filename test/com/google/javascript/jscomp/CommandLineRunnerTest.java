@@ -380,6 +380,14 @@ public class CommandLineRunnerTest extends TestCase {
             lastCompiler.getModuleGraph().getRootModule()));
   }
 
+  public void testCharSetExpansion() {
+    testSame("");
+    assertEquals("US-ASCII", lastCompiler.getOptions().outputCharset);
+    args.add("--charset=UTF-8");
+    testSame("");
+    assertEquals("UTF-8", lastCompiler.getOptions().outputCharset);
+  }
+
   public void testChainModuleManifest() throws Exception {
     useModules = ModulePattern.CHAIN;
     testSame(new String[] {

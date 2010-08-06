@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
  */
 public class GoogleCodingConvention extends ClosureCodingConvention {
 
+  private static final long serialVersionUID = 1L;
+
   private static final String OPTIONAL_ARG_PREFIX = "opt_";
 
   private static final String VAR_ARGS_NAME = "var_args";

@@ -39,6 +39,8 @@ import java.util.Set;
  */
 public class ClosureCodingConvention extends DefaultCodingConvention {
 
+  private static final long serialVersionUID = 1L;
+
   private static final String TYPEDEF_NAME = "goog.typedef";
 
   static final DiagnosticType OBJECTLIT_EXPECTED = DiagnosticType.warning(

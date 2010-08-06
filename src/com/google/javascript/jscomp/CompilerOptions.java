@@ -583,8 +583,9 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /**
    * Charset to use when generating code.  If null, then output ASCII.
+   * This needs to be a string because CompilerOptions is serializable.
    */
-  public Charset outputCharset;
+  String outputCharset;
 
   /**
    * Whether the named objects types included 'undefined' by default.
@@ -951,6 +952,13 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public boolean isExternExportsEnabled() {
     return externExports;
+  }
+
+  /**
+   * Sets the output charset by name.
+   */
+  public void setOutputCharset(String charsetName) {
+    this.outputCharset = charsetName;
   }
 
   /**

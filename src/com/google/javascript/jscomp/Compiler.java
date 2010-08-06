@@ -35,6 +35,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -1357,7 +1358,11 @@ public class Compiler extends AbstractCompiler {
     builder.setLineBreak(options.lineBreak);
     builder.setSourceMap(sourceMap);
     builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
-    builder.setOutputCharset(options.outputCharset);
+
+    Charset charset = options.outputCharset != null ?
+        Charset.forName(options.outputCharset) : null;
+    builder.setOutputCharset(charset);
+
     return builder.build();
   }
 
