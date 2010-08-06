@@ -42,6 +42,21 @@ import com.google.javascript.jscomp.CheckLevel;
  */
 public abstract class WarningsGuard {
 
+  public static enum Priority {
+    MAX(1),
+    MIN(100),
+    STRICT(100),
+    DEFAULT(50),
+    SUPPRESS_DOC(20),
+    FILTER_BY_PATH(1);
+
+    final int value;
+
+    Priority(int value) {
+      this.value = value;
+    }
+  }
+
   /**
    * Returns a new check level for a given error. OFF - suppress it, ERROR -
    * report as error. null means that this guard does not know what to do
@@ -59,7 +74,7 @@ public abstract class WarningsGuard {
    * guard will be applied sooner. Expressed on a scale of 1 to 100.
    */
   protected int getPriority() {
-    return 50;
+    return Priority.DEFAULT.value;
   }
 
   /**

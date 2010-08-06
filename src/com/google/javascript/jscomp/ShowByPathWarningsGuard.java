@@ -73,6 +73,6 @@ public class ShowByPathWarningsGuard extends WarningsGuard {
 
   @Override
   protected int getPriority() {
-    return 1; // applied first
+    return WarningsGuard.Priority.FILTER_BY_PATH.value; // applied first
   }
 }

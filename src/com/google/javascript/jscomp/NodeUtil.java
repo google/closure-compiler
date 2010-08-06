@@ -2078,6 +2078,26 @@ public final class NodeUtil {
   }
 
   /**
+   * Get the JSDocInfo for a function.
+   */
+  static JSDocInfo getFunctionInfo(Node n) {
+    Preconditions.checkState(n.getType() == Token.FUNCTION);
+    JSDocInfo fnInfo = n.getJSDocInfo();
+    if (fnInfo == null && NodeUtil.isFunctionExpression(n)) {
+      // Look for the info on other nodes.
+      Node parent = n.getParent();
+      if (parent.getType() == Token.ASSIGN) {
+        // on ASSIGNs
+        fnInfo = parent.getJSDocInfo();
+      } else if (parent.getType() == Token.NAME) {
+        // on var NAME = function() { ... };
+        fnInfo = parent.getParent().getJSDocInfo();
+      }
+    }
+    return fnInfo;
+  }
+
+  /**
    * @param n The node.
    * @return The source name property on the node or its ancestors.
    */

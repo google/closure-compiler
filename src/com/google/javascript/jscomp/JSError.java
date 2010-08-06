@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.rhino.Node;
 
+import javax.annotation.Nullable;
+
 /**
  * Compile error description
  *
@@ -34,6 +36,9 @@ public class JSError {
 
   /** Name of the source */
   public final String sourceName;
+
+  /** Node where the warning occurred. */
+  final Node node;
 
   /** Line number of the source */
   public final int lineNumber;
@@ -66,7 +71,7 @@ public class JSError {
    * @param arguments Arguments to be incorporated into the message
    */
   public static JSError make(DiagnosticType type, String... arguments) {
-    return new JSError(null, -1, -1, type, null, arguments);
+    return new JSError(null, null, -1, -1, type, null, arguments);
   }
 
   /**
@@ -80,7 +85,7 @@ public class JSError {
    */
   public static JSError make(String sourceName, int lineno, int charno,
                              DiagnosticType type, String... arguments) {
-    return new JSError(sourceName, lineno, charno, type, null, arguments);
+    return new JSError(sourceName, null, lineno, charno, type, null, arguments);
   }
 
   /**
@@ -94,7 +99,8 @@ public class JSError {
    */
   public static JSError make(String sourceName, int lineno, int charno,
       CheckLevel level, DiagnosticType type, String... arguments) {
-    return new JSError(sourceName, lineno, charno, type, level, arguments);
+    return new JSError(
+        sourceName, null, lineno, charno, type, level, arguments);
   }
 
   /**
@@ -121,7 +127,7 @@ public class JSError {
   public static JSError make(String sourceName, Node n, CheckLevel level,
       DiagnosticType type, String... arguments) {
 
-    return new JSError(sourceName, n.getLineno(), n.getCharno(), type, level,
+    return new JSError(sourceName, n, n.getLineno(), n.getCharno(), type, level,
         arguments);
   }
 
@@ -130,14 +136,14 @@ public class JSError {
   //
 
   /**
-   * Creates a JSError at a CheckLevel for a source file location.  Package
-   * private to avoid any entanglement with code outside of the compiler.
-   *
-   * This is a preferred internal constructor.
+   * Creates a JSError at a CheckLevel for a source file location.
+   * Private to avoid any entanglement with code outside of the compiler.
    */
-  private JSError(String sourceName, int lineno, int charno,
+  private JSError(
+      String sourceName, @Nullable Node node, int lineno, int charno,
       DiagnosticType type, CheckLevel level, String... arguments) {
     this.type = type;
+    this.node = node;
     this.description = type.format.format(arguments);
     this.lineNumber = lineno;
     this.charno = charno;
@@ -146,14 +152,13 @@ public class JSError {
   }
 
   /**
-   * Creates a JSError for a source file location.  Package private to avoid
+   * Creates a JSError for a source file location.  Private to avoid
    * any entanglement with code outside of the compiler.
-   *
-   * This is a preferred internal constructor.
    */
-  private JSError(String sourceName, Node node,
+  private JSError(String sourceName, @Nullable Node node,
                   DiagnosticType type, String... arguments) {
     this(sourceName,
+         node,
          (node != null) ? node.getLineno() : -1,
          (node != null) ? node.getCharno() : -1,
          type, null, arguments);

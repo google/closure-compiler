@@ -30,6 +30,6 @@ public class StrictWarningsGuard extends WarningsGuard {
 
   @Override
   protected int getPriority() {
-    return 100; // applied last
+    return WarningsGuard.Priority.STRICT.value; // applied last
   }
 }

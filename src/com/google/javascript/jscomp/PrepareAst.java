@@ -57,7 +57,7 @@ class PrepareAst implements CompilerPass {
     if (checkOnly) {
       normalizeNodeTypes(root);
     } else {
-      // Don't perform "PrepareAnnoations" when doing checks as
+      // Don't perform "PrepareAnnotations" when doing checks as
       // they currently aren't valid during sanity checks.  In particular,
       // they DIRECT_EVAL shouldn't be applied after inlining has been
       // performed.
@@ -245,18 +245,7 @@ class PrepareAst implements CompilerPass {
      * Annotate optional and var_arg function parameters.
      */
     private void annotateFunctions(Node n, Node parent) {
-      Preconditions.checkState(n.getType() == Token.FUNCTION);
-      JSDocInfo fnInfo = n.getJSDocInfo();
-      if (fnInfo == null) {
-        // Look for the info on other nodes.
-        if (parent.getType() == Token.ASSIGN) {
-          // on ASSIGNs
-          fnInfo = parent.getJSDocInfo();
-        } else if (parent.getType() == Token.NAME) {
-          // on var NAME = function() { ... };
-          fnInfo = parent.getParent().getJSDocInfo();
-        }
-      }
+      JSDocInfo fnInfo = NodeUtil.getFunctionInfo(n);
 
       // Compute which function parameters are optional and
       // which are var_args.
@@ -278,6 +267,5 @@ class PrepareAst implements CompilerPass {
         }
       }
     }
-
   }
 }
