@@ -34,7 +34,7 @@ import java.util.Set;
  * simplifications.
  *
 *
-*
+ * @author chrisn@google.com (Chris Nokleberg)
 *
  */
 class ProcessClosurePrimitives extends AbstractPostOrderCallback
