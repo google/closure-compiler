@@ -88,7 +88,6 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, root, this);
   }
 
-  @SuppressWarnings("fallthrough")
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (parent == null) {
@@ -119,10 +118,33 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     }
     if (gNode.getAnnotation() != GraphReachability.REACHABLE ||
         (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n))) {
-      removeDeadExprStatementSafely(n, parent);
+      removeDeadExprStatementSafely(n);
       return;
     }
 
+    tryRemoveUnconditionalBranching(n);
+  }
+
+  /**
+   * Tries to remove n if an unconditional branch node (break, continue or
+   * return) if the target of n is the same as the the follow of n. That is, if
+   * we remove n, the control flow remains the same. Also if n targets to
+   * another unconditional branch, this function will recursively try to remove
+   * the target branch as well. The reason why we want to cascade this removal
+   * is because we only run this pass once. If we have code such as
+   *
+   * break -> break -> break
+   *
+   * where all 3 break's are useless. The order of removal matters. When we
+   * first look at the first break, we see that it branches to the 2nd break.
+   * However, if we remove the last break, the 2nd break becomes useless and
+   * finally the first break becomes useless as well.
+   *
+   * @return The target of this jump. If the target is also useless jump,
+   *     the target of that useless jump recursively.
+   */
+  @SuppressWarnings("fallthrough")
+  private Node tryRemoveUnconditionalBranching(Node n) {
     /*
      * For each of the unconditional branching control flow node, check to see
      * if the ControlFlowAnalysis.computeFollowNode of that node is same as
@@ -132,7 +154,39 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
      * if-else conversion but it handles more complicated switch statements
      * much nicer.
      */
+
+    // If n is null the target is the end of the function, nothing to do.
+    if (n == null) {
+       return n;
+    }
+
+    DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
+
+    if (gNode == null) {
+      return n;
+    }
+
+    // If the parent is null, this mean whatever node it was there is now
+    // useless and it has been removed by other logics in this pass. That node
+    // while no longer exists in the AST, is still in the CFG because we
+    // never update the graph as nodes are removed.
+    if (n.getParent() == null) {
+      List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
+      if (outEdges.size() == 1) {
+        return tryRemoveUnconditionalBranching(
+          outEdges.get(0).getDestination().getValue());
+      }
+    }
+
     switch (n.getType()) {
+      case Token.BLOCK:
+        if (n.hasChildren()) {
+          Node first = n.getFirstChild();
+          return tryRemoveUnconditionalBranching(first);
+        } else {
+          return tryRemoveUnconditionalBranching(
+            ControlFlowAnalysis.computeFollowNode(n));
+        }
       case Token.RETURN:
         if (n.hasChildren()) {
           break;
@@ -149,15 +203,20 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
             // If there is a next node, there is no chance this jump is useless.
             (n.getNext() == null || n.getNext().getType() == Token.FUNCTION)) {
           Preconditions.checkState(outEdges.get(0).getValue() == Branch.UNCOND);
-          Node fallThrough = ControlFlowAnalysis.computeFollowNode(n);
-          if (outEdges.get(0).getDestination().getValue() == fallThrough) {
-            removeDeadExprStatementSafely(n, parent);
+          Node fallThrough = tryRemoveUnconditionalBranching(
+            ControlFlowAnalysis.computeFollowNode(n));
+          Node nextCfgNode = outEdges.get(0).getDestination().getValue();
+          if (nextCfgNode == fallThrough) {
+            removeDeadExprStatementSafely(n);
+            return fallThrough;
           }
+
         }
     }
+    return n;
   }
 
-  private void removeDeadExprStatementSafely(Node n, Node parent) {
+  private void removeDeadExprStatementSafely(Node n) {
     if (n.getType() == Token.EMPTY ||
         (n.getType() == Token.BLOCK && !n.hasChildren())) {
       // Not always trivial to remove, let FoldContants work its magic later.
@@ -179,6 +238,6 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("Removing " + n.toString());
     }
-    NodeUtil.removeChild(parent, n);
+    NodeUtil.removeChild(n.getParent(), n);
   }
 }

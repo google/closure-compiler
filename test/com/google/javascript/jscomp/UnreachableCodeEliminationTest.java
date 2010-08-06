@@ -39,7 +39,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("function foo(){switch(foo){case 1:x=1;return;break;" +
          "case 2:{x=2;return;break}default:}}",
          "function foo(){switch(foo){case 1:x=1;return;" +
-         "case 2:{x=2;return}default:}}");
+         "case 2:{x=2}default:}}");
 
     // if/else statements with returns
     test("function bar(){if(foo)x=1;else if(bar){return;x=2}" +
@@ -190,7 +190,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
 
     test("function() {switch (a) { case 'a': return}}",
          "function() {switch (a) { case 'a': }}");
-    testSame("function() {switch (a) { case 'a': return; case foo(): }}");
+    testSame("function() {switch (a) { case 'a': case foo(): }}");
     testSame("function() {switch (a) { default: return; case 'a': alert(1)}}");
     testSame("function() {switch (a) { case 'a': return; default: alert(1)}}");
   }
@@ -208,9 +208,13 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   public void testUnlessUnconditonalBreak() {
     test("switch (a) { case 'a': break }", "switch (a) { case 'a': }");
-    testSame("switch (a) { case 'a': break; case foo(): }");
-    testSame("switch (a) { default: break; case 'a': }");
-    testSame("switch (a) { case 'a': break; default: }");
+    test("switch (a) { case 'a': break; case foo(): }",
+         "switch (a) { case 'a':        case foo(): }");
+    test("switch (a) { default: break; case 'a': }",
+         "switch (a) { default:        case 'a': }");
+
+    testSame("switch (a) { case 'a': alert(a); break; default: alert(a); }");
+    testSame("switch (a) { default: alert(a); break; case 'a': alert(a); }");
 
 
     test("X: {switch (a) { case 'a': break X}}",
@@ -223,11 +227,18 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("X: {switch (a) { case 'a': if (a()) {break X}}}",
          "X: {switch (a) { case 'a': if (a()) {}}}");
 
-    // TODO(user): Optimize these better.
-    test("switch (a) { case 'a': break; case 'b': break; case 'c': break }",
-         "switch (a) { case 'a': break; case 'b': break; case 'c': }");
 
     testSame("do { break } while(1);");
     testSame("for(;1;) { break }");
+  }
+
+  public void testCascadedRemovalOfUnlessUnconditonalJumps() {
+    test("switch (a) { case 'a': break; case 'b': break; case 'c': break }",
+         "switch (a) { case 'a': case 'b': case 'c': }");
+    test("function foo() {" +
+         "  switch (a) { case 'a':return; case 'b':return; case 'c':return }}",
+         "function foo() { switch (a) { case 'a': case 'b': case 'c': }}");
+    testSame("function foo() {" +
+             "switch (a) { case 'a':return 2; case 'b':return 1}}");
   }
 }
