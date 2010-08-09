@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
  * from the specified entry node.
  *
  * @see GraphNode#getAnnotation()
-*
+ *
  */
 public class GraphReachability<N, E> implements EdgeCallback<N, E> {
 

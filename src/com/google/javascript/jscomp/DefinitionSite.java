@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
  * Includes the definition node, and context in which the definition
  * occurs - including the definition module.
  *
-*
+ *
  */
 
 class DefinitionSite {

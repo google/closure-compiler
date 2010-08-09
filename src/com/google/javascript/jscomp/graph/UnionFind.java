@@ -32,7 +32,7 @@ import java.util.Set;
  * algorithmist</a> for more detail.
  *
  * @param <E> element type
-*
+ *
  */
 public interface UnionFind<E> {
 

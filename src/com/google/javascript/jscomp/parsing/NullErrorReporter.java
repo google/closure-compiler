@@ -22,7 +22,7 @@ import com.google.javascript.rhino.EvaluatorException;
 /**
  * An error reporter which consumes all calls and performs no actions.
  *
-*
+ *
  */
 public abstract class NullErrorReporter  {
   private NullErrorReporter() {

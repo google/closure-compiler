@@ -37,8 +37,8 @@ import java.util.Arrays;
  * "looseTypes" option.  These tests should be be folded into TypeCheckTest
  * or removed along with the looseTypes option.
  *
-*
-*
+ *
+ *
  * @author johnlenz@google.com (John Lenz)
  */
 public class LooseTypeCheckTest extends CompilerTypeTestCase {

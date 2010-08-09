@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Token;
 /**
  * Check for invalid breaks and continues in the program.
  *
-*
+ *
  */
 class ControlStructureCheck implements CompilerPass {
 

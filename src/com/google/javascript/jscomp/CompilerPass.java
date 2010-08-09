@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
  *
  * <p>Use this class to support testing with BaseCompilerTest</p>
  *
-*
+ *
  */
 public interface CompilerPass {
 

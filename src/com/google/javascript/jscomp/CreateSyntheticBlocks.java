@@ -27,7 +27,7 @@ import java.util.Deque;
  * Creates synthetic blocks to prevent {@link FoldConstants} from moving code
  * past markers in the source.
  *
-*
+ *
  */
 class CreateSyntheticBlocks implements CompilerPass {
   static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.warning(

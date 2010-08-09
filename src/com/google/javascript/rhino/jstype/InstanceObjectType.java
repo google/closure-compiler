@@ -44,8 +44,8 @@ import com.google.common.base.Preconditions;
 
 /**
  * An object type that is an instance of some function constructor.
-*
-*
+ *
+ *
  */
 public final class InstanceObjectType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;

@@ -31,8 +31,8 @@ import java.util.List;
  *
  * // TODO(bolinfest): Tighten up this interface -- it is far too big.
  *
-*
-*
+ *
+ *
  */
 public interface CodingConvention extends Serializable {
 

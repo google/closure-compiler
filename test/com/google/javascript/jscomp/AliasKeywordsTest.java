@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link AliasKeywords}.
  *
-*
+ *
  */
 public class AliasKeywordsTest extends CompilerTestCase {
   private static final int ENOUGH_TO_ALIAS_LITERAL

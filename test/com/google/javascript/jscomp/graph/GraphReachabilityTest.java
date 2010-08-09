@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link GraphReachability}.
  *
-*
+ *
  */
 public class GraphReachabilityTest extends TestCase {
   GraphReachability<String, String> reachability = null;

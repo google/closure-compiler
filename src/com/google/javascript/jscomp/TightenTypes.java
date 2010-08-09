@@ -72,8 +72,8 @@ import java.util.Set;
  * of the target slots.  Once we complete a pass through all scopes with no
  * changes, we are done.
  *
-*
-*
+ *
+ *
  */
 class TightenTypes implements CompilerPass, ConcreteType.Factory {
   public static final String NON_HALTING_ERROR_MSG =

@@ -43,7 +43,7 @@ import java.util.Set;
  * variables can escape the function. These variables will be considered as
  * global and they can be retrieved with {@link #getEscapedLocals()}.
  *
-*
+ *
  */
 class LiveVariablesAnalysis extends
     DataFlowAnalysis<Node, LiveVariablesAnalysis.LiveVariableLattice> {

@@ -21,8 +21,8 @@ import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
 /**
  * Tests for {@link CollapseProperties}.
  *
-*
-*
+ *
+ *
  */
 public class CollapsePropertiesTest extends CompilerTestCase {
 

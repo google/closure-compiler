@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  *
  * @see CodeGenerator
  * @see CodePrinter
-*
+ *
  */
 class InlineCostEstimator {
   // For now simply assume identifiers are 2 characters.

@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.CheckLevel;
 /**
  * Tests for {@link CheckUnreachableCode}.
  *
-*
+ *
  */
 public class CheckUnreachableCodeTest extends CompilerTestCase {
   @Override

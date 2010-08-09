@@ -28,8 +28,8 @@ import java.util.List;
  * CodingConvention defines a set of hooks to customize the behavior of the
  * Compiler for a specific team/company.
  *
-*
-*
+ *
+ *
  */
 public class DefaultCodingConvention implements CodingConvention {
 

@@ -28,8 +28,8 @@ import java.io.PrintStream;
  * <p>It collaborates with a {@link SourceExcerptProvider} via a
  * {@link MessageFormatter} to display error messages with source context.</p>
  *
-*
-*
+ *
+ *
  */
 public class PrintStreamErrorManager extends BasicErrorManager {
   private final MessageFormatter formatter;

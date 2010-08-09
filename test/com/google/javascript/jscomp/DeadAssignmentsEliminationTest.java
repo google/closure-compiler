@@ -21,7 +21,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Tests for {@link DeadAssignmentsElimination}.
  *
-*
+ *
  */
 public class DeadAssignmentsEliminationTest extends CompilerTestCase {
 

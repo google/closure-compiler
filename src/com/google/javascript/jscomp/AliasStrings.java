@@ -39,7 +39,7 @@ import java.util.zip.CRC32;
  * applications. Strings that should be aliased occur many times in the code,
  * or occur on codepaths that get executed frequently.
  *
-*
+ *
  */
 class AliasStrings extends AbstractPostOrderCallback
     implements CompilerPass {

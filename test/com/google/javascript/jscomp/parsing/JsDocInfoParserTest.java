@@ -1129,7 +1129,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseLicenseWithAnnotation() throws Exception {
     Node node = new Node(1);
     this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
-    String comment = "@license Foo \n * @author Charlie Brown */";
+    String comment = "@license Foo \n *
     parse(comment);
     assertEquals(" Foo \n @author Charlie Brown ",
         node.getJSDocInfo().getLicense());
@@ -1730,9 +1730,9 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo jsdoc
         = parse("@param {Number} number42 This is a description."
                 + "\n* @param {Integer} number87 This is another description."
-                + "\n* @author a@google.com (A Person)"
-                + "\n* @author b@google.com (B Person)"
-                + "\n* @author c@google.com (C Person)*/"
+                + "\n*
+                + "\n*
+                + "\n*
                 , true);
 
     Collection<String> authors = jsdoc.getAuthors();
@@ -1863,7 +1863,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testAuthorMissing() throws Exception {
-    parse("* @author */", true,
+    parse("*
           "@author tag missing author");
   }
 
@@ -1880,7 +1880,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseBlockComment() throws Exception {
     JSDocInfo jsdoc = parse("this is a nice comment\n "
                             + "* that is multiline \n"
-                            + "* @author abc@google.com */", true);
+                            + "*
 
     assertEquals("this is a nice comment\nthat is multiline",
                  jsdoc.getBlockDescription());
@@ -1893,7 +1893,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseBlockComment2() throws Exception {
     JSDocInfo jsdoc = parse("this is a nice comment\n "
                             + "* that is *** multiline \n"
-                            + "* @author abc@google.com */", true);
+                            + "*
 
     assertEquals("this is a nice comment\nthat is *** multiline",
                  jsdoc.getBlockDescription());
@@ -1906,7 +1906,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseBlockComment3() throws Exception {
     JSDocInfo jsdoc = parse("\n "
                             + "* hello world \n"
-                            + "* @author abc@google.com */", true);
+                            + "*
 
     assertEquals("hello world", jsdoc.getBlockDescription());
 

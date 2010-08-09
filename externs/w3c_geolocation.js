@@ -18,7 +18,7 @@
  * @fileoverview Definitions for 's Geolocation specification
  *     http://www.w3.org/TR/geolocation-API/
  * @externs
-*
+ *
  */
 
 /**

@@ -34,7 +34,7 @@ import com.google.javascript.rhino.Token;
  * {@code x} and {@code x} is dead after this assignment, we know that the
  * current content of {@code x} will not be read and this assignment is useless.
  *
-*
+ *
  */
 class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
     CompilerPass, ScopedCallback {

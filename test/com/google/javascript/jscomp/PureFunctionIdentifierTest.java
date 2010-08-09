@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * Tests for {@link PureFunctionIdentifier}
  *
-*
+ *
  */
 public class PureFunctionIdentifierTest extends CompilerTestCase {
   List<String> noSideEffectCalls = Lists.newArrayList();

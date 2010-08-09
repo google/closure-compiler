@@ -44,8 +44,8 @@ import java.util.*;
  *   var x = {'myprop': 0}, y = x.myprop;     // incorrect
  * </pre>
  *
-*
-*
+ *
+ *
  */
 class RenameProperties implements CompilerPass {
 

@@ -29,7 +29,7 @@ import java.util.List;
  * spread the work so multiple {@link Task}s can execute in parallel without
  * running into race-conditions.
  *
-*
+ *
  */
 final class ParallelCompilerPass implements CompilerPass {
 

@@ -76,7 +76,7 @@ import java.util.Set;
 /**
  * IRFactory transforms the new AST to the old AST.
  *
-*
+ *
  */
 public class IRFactory {
 

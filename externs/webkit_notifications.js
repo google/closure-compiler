@@ -16,7 +16,7 @@
 /**
  * @fileoverview Definitions for W3C's Notifications specification.
  * @externs
-*
+ *
  */
 
 /**

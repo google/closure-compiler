@@ -33,7 +33,7 @@ import junit.framework.Assert;
  * assertTrue(e.hasEncounteredAllWarnings());
  * </pre>
  *
-*
+ *
  */
 public final class TestErrorReporter extends Assert implements ErrorReporter {
   private final String[] errors;

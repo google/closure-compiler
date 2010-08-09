@@ -24,7 +24,7 @@ import java.util.Collection;
 /**
  * Maps variable uses sites to variable definition sites.
  *
-*
+ *
  */
 interface DefinitionProvider {
   /**

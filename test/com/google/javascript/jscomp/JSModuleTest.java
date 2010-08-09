@@ -27,7 +27,7 @@ import java.util.ArrayList;
 /**
  * Tests for {@link JSModule}
  *
-*
+ *
  */
 public class JSModuleTest extends TestCase {
   private JSModule mod1;

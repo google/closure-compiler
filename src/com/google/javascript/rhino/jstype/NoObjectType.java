@@ -59,8 +59,8 @@ import java.io.Serializable;
  * call. It has no possible type, but {@code x} would not be legal if f
  * expected a string. So we assign it the {@code NoObjectType}.
  *
-*
-*
+ *
+ *
  * @see <a href="http://en.wikipedia.org/wiki/Bottom_type">Bottom types</a>
  */
 public class NoObjectType extends FunctionType {

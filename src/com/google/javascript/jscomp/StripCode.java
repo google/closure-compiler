@@ -39,8 +39,8 @@ import java.util.Set;
  *     2) qualified names that begin with strip types.
  *   - Remove all statements containing calls to static methods of strip types.
  *
-*
-*
+ *
+ *
  */
 class StripCode implements CompilerPass {
 

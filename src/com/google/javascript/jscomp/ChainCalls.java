@@ -32,7 +32,7 @@ import java.util.Set;
 /**
  * Chain calls to functions that return this.
  *
-*
+ *
  */
 class ChainCalls implements CompilerPass {
   private final AbstractCompiler compiler;

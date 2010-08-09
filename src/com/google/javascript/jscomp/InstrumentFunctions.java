@@ -52,8 +52,8 @@ import java.util.List;
  * pass up, list inlined functions or give clients the option to
  * instrument before or after optimization.
  *
-*
-*
+ *
+ *
  */
 class InstrumentFunctions implements CompilerPass {
 

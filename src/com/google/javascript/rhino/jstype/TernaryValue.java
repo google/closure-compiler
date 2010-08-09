@@ -52,7 +52,7 @@ package com.google.javascript.rhino.jstype;
  * present in an expression.</p>
  *
  * @see <a href="http://en.wikipedia.org/wiki/Ternary_logic">Ternary Logic</a>
-*
+ *
  */
 public enum TernaryValue {
   /**

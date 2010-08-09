@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 /**
  * Removes unused properties from prototypes.
  *
-*
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
 class RemoveUnusedPrototypeProperties implements CompilerPass {

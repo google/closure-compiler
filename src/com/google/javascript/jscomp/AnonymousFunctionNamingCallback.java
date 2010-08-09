@@ -31,7 +31,7 @@ import com.google.javascript.rhino.Token;
  * goog.string.htmlEscape = function(str) {
  * }
  *
-*
+ *
  */
 class AnonymousFunctionNamingCallback
     extends AbstractPostOrderCallback {

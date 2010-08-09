@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * Models an assignment that defines a variable and the removal of it.
  *
-*
+ *
  */
 class DefinitionsRemover {
 

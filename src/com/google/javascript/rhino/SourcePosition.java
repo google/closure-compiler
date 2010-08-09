@@ -43,7 +43,7 @@ package com.google.javascript.rhino;
  * Represents a position in some piece of source code, with an associated
  * item of type T found at that position.
  *
-*
+ *
  */
 public abstract class SourcePosition<T> {
   /**

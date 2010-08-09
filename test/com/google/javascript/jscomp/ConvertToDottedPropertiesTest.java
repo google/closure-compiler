@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link ConvertToDottedProperties}.
  *
-*
+ *
  */
 public class ConvertToDottedPropertiesTest extends CompilerTestCase {
   @Override public CompilerPass getProcessor(Compiler compiler) {

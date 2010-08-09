@@ -31,7 +31,7 @@ import java.nio.charset.Charset;
  * JSCompiler.
  *
  * @author nicksantos@google.com (Nick Santos)
-*
+ *
  */
 public class JSSourceFile extends SourceFile {
 
