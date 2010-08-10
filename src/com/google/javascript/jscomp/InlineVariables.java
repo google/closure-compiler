@@ -203,8 +203,7 @@ class InlineVariables implements CompilerPass {
 
         // referenceInfo will be null if we're in constants-only mode
         // and the variable is not a constant.
-        if (referenceInfo == null || isVarInlineForbidden(v) ||
-            staleVars.contains(v)) {
+        if (referenceInfo == null || isVarInlineForbidden(v)) {
           // Never try to inline exported variables or variables that
           // were not collected or variables that have already been inlined.
           continue;

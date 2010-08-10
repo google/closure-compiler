@@ -40,7 +40,7 @@ public  final class Instrumentation extends
   public java.lang.String getReportDefined() {
     Object ref = reportDefined_;
     if (ref instanceof String) {
-      return (String) reportDefined_;
+      return (String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
@@ -59,7 +59,7 @@ public  final class Instrumentation extends
       reportDefined_ = b;
       return b;
     } else {
-      return (com.google.protobuf.ByteString) reportDefined_;
+      return (com.google.protobuf.ByteString) ref;
     }
   }
   
@@ -72,7 +72,7 @@ public  final class Instrumentation extends
   public java.lang.String getReportCall() {
     Object ref = reportCall_;
     if (ref instanceof String) {
-      return (String) reportCall_;
+      return (String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
@@ -91,7 +91,7 @@ public  final class Instrumentation extends
       reportCall_ = b;
       return b;
     } else {
-      return (com.google.protobuf.ByteString) reportCall_;
+      return (com.google.protobuf.ByteString) ref;
     }
   }
   
@@ -104,7 +104,7 @@ public  final class Instrumentation extends
   public java.lang.String getReportExit() {
     Object ref = reportExit_;
     if (ref instanceof String) {
-      return (String) reportExit_;
+      return (String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
@@ -123,7 +123,7 @@ public  final class Instrumentation extends
       reportExit_ = b;
       return b;
     } else {
-      return (com.google.protobuf.ByteString) reportExit_;
+      return (com.google.protobuf.ByteString) ref;
     }
   }
   
@@ -164,7 +164,7 @@ public  final class Instrumentation extends
   public java.lang.String getAppNameSetter() {
     Object ref = appNameSetter_;
     if (ref instanceof String) {
-      return (String) appNameSetter_;
+      return (String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
@@ -183,7 +183,7 @@ public  final class Instrumentation extends
       appNameSetter_ = b;
       return b;
     } else {
-      return (com.google.protobuf.ByteString) appNameSetter_;
+      return (com.google.protobuf.ByteString) ref;
     }
   }
   
@@ -590,7 +590,7 @@ public  final class Instrumentation extends
         reportDefined_ = s;
         return s;
       } else {
-        return (String) reportDefined_;
+        return (String) ref;
       }
     }
     public Builder setReportDefined(java.lang.String value) {
@@ -626,7 +626,7 @@ public  final class Instrumentation extends
         reportCall_ = s;
         return s;
       } else {
-        return (String) reportCall_;
+        return (String) ref;
       }
     }
     public Builder setReportCall(java.lang.String value) {
@@ -662,7 +662,7 @@ public  final class Instrumentation extends
         reportExit_ = s;
         return s;
       } else {
-        return (String) reportExit_;
+        return (String) ref;
       }
     }
     public Builder setReportExit(java.lang.String value) {
@@ -810,7 +810,7 @@ public  final class Instrumentation extends
         appNameSetter_ = s;
         return s;
       } else {
-        return (String) appNameSetter_;
+        return (String) ref;
       }
     }
     public Builder setAppNameSetter(java.lang.String value) {

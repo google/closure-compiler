@@ -109,7 +109,7 @@ public  final class FunctionInformationMap extends
     public java.lang.String getSourceName() {
       Object ref = sourceName_;
       if (ref instanceof String) {
-        return (String) sourceName_;
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
@@ -128,7 +128,7 @@ public  final class FunctionInformationMap extends
         sourceName_ = b;
         return b;
       } else {
-        return (com.google.protobuf.ByteString) sourceName_;
+        return (com.google.protobuf.ByteString) ref;
       }
     }
     
@@ -151,7 +151,7 @@ public  final class FunctionInformationMap extends
     public java.lang.String getModuleName() {
       Object ref = moduleName_;
       if (ref instanceof String) {
-        return (String) moduleName_;
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
@@ -170,7 +170,7 @@ public  final class FunctionInformationMap extends
         moduleName_ = b;
         return b;
       } else {
-        return (com.google.protobuf.ByteString) moduleName_;
+        return (com.google.protobuf.ByteString) ref;
       }
     }
     
@@ -193,7 +193,7 @@ public  final class FunctionInformationMap extends
     public java.lang.String getName() {
       Object ref = name_;
       if (ref instanceof String) {
-        return (String) name_;
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
@@ -212,7 +212,7 @@ public  final class FunctionInformationMap extends
         name_ = b;
         return b;
       } else {
-        return (com.google.protobuf.ByteString) name_;
+        return (com.google.protobuf.ByteString) ref;
       }
     }
     
@@ -225,7 +225,7 @@ public  final class FunctionInformationMap extends
     public java.lang.String getCompiledSource() {
       Object ref = compiledSource_;
       if (ref instanceof String) {
-        return (String) compiledSource_;
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
@@ -244,7 +244,7 @@ public  final class FunctionInformationMap extends
         compiledSource_ = b;
         return b;
       } else {
-        return (com.google.protobuf.ByteString) compiledSource_;
+        return (com.google.protobuf.ByteString) ref;
       }
     }
     
@@ -680,7 +680,7 @@ public  final class FunctionInformationMap extends
           sourceName_ = s;
           return s;
         } else {
-          return (String) sourceName_;
+          return (String) ref;
         }
       }
       public Builder setSourceName(java.lang.String value) {
@@ -737,7 +737,7 @@ public  final class FunctionInformationMap extends
           moduleName_ = s;
           return s;
         } else {
-          return (String) moduleName_;
+          return (String) ref;
         }
       }
       public Builder setModuleName(java.lang.String value) {
@@ -794,7 +794,7 @@ public  final class FunctionInformationMap extends
           name_ = s;
           return s;
         } else {
-          return (String) name_;
+          return (String) ref;
         }
       }
       public Builder setName(java.lang.String value) {
@@ -830,7 +830,7 @@ public  final class FunctionInformationMap extends
           compiledSource_ = s;
           return s;
         } else {
-          return (String) compiledSource_;
+          return (String) ref;
         }
       }
       public Builder setCompiledSource(java.lang.String value) {
@@ -914,7 +914,7 @@ public  final class FunctionInformationMap extends
     public java.lang.String getName() {
       Object ref = name_;
       if (ref instanceof String) {
-        return (String) name_;
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
@@ -933,7 +933,7 @@ public  final class FunctionInformationMap extends
         name_ = b;
         return b;
       } else {
-        return (com.google.protobuf.ByteString) name_;
+        return (com.google.protobuf.ByteString) ref;
       }
     }
     
@@ -946,7 +946,7 @@ public  final class FunctionInformationMap extends
     public java.lang.String getCompiledSource() {
       Object ref = compiledSource_;
       if (ref instanceof String) {
-        return (String) compiledSource_;
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
@@ -965,7 +965,7 @@ public  final class FunctionInformationMap extends
         compiledSource_ = b;
         return b;
       } else {
-        return (com.google.protobuf.ByteString) compiledSource_;
+        return (com.google.protobuf.ByteString) ref;
       }
     }
     
@@ -1260,7 +1260,7 @@ public  final class FunctionInformationMap extends
           name_ = s;
           return s;
         } else {
-          return (String) name_;
+          return (String) ref;
         }
       }
       public Builder setName(java.lang.String value) {
@@ -1296,7 +1296,7 @@ public  final class FunctionInformationMap extends
           compiledSource_ = s;
           return s;
         } else {
-          return (String) compiledSource_;
+          return (String) ref;
         }
       }
       public Builder setCompiledSource(java.lang.String value) {
