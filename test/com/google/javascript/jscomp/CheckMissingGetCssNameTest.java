@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /**
- *
+*
  */
 public class CheckMissingGetCssNameTest extends CompilerTestCase {
   @Override

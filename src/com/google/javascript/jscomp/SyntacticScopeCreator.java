@@ -29,7 +29,7 @@ import com.google.javascript.rhino.jstype.JSType;
  *
  * <p>This implementation is not thread-safe.</p>
  *
- *
+*
  */
 class SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;

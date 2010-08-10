@@ -20,7 +20,7 @@
  *  All the provided definitions has been type annotated
  *
  * @externs
- *
+*
  */
 
 Window.prototype.console = {};

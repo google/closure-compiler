@@ -63,7 +63,7 @@ import java.util.Set;
  * <p>Constructing {@link JSDocInfo} objects is simplified by
  * {@link JSDocInfoBuilder} which provides early incompatibility detection.</p>
  *
- *
+*
  */
 public final class JSDocInfo implements Serializable {
   private static final long serialVersionUID = 1L;

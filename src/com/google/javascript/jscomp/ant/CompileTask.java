@@ -46,7 +46,7 @@ import java.util.logging.Level;
  * Most of the public methods of this class are entry points for the
  * Ant code to hook into.
  *
- *
+*
  */
 public final class CompileTask
     extends Task {

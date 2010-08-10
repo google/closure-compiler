@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime;
  *
  * It is heavily based on Rhino's TokenStream.
  *
- *
+*
  */
 class JsDocTokenStream {
   /*

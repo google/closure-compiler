@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
  * <p>This check should produce no false positives, but it will certainly miss
  * a lot of real problems.
  *
- *
+*
  */
 class SuspiciousPropertiesCheck implements CompilerPass {
 

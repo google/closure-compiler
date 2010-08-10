@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * the correctness of {@link RemoveConstantExpressions} since that's the job
  * of {@link RemoveConstantExpressionsTest}.
  *
- *
+*
  */
 public class RemoveConstantExpressionsParallelTest extends CompilerTestCase {
 

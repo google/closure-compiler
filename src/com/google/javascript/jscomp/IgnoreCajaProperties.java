@@ -31,7 +31,7 @@ import com.google.javascript.rhino.Token;
  * This pass adds a conditional to for..in loops that filters out these
  * properties.
  *
- *
+*
  */
 
 class IgnoreCajaProperties implements CompilerPass {

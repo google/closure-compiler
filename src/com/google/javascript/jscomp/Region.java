@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Source code region.
  *
- *
+*
  */
 public interface Region {
   /**

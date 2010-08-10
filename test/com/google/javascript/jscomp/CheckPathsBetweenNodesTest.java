@@ -28,8 +28,8 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link CheckPathsBetweenNodes}.
  *
- *
- *
+*
+*
  */
 public class CheckPathsBetweenNodesTest extends TestCase {
 

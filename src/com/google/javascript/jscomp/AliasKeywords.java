@@ -34,7 +34,7 @@ import java.util.Set;
  * number of bytes taken up by references to these keywords by replacing them
  * with references to variables and functions with shorter names.</p>
  *
- *
+*
  */
 class AliasKeywords implements CompilerPass {
   /** Callback that finds the nodes that we will alias. */

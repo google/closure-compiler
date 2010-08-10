@@ -26,7 +26,7 @@ import java.util.Set;
  * Generates new variables names that would not collide with existing names in
  * a scope.
  *
- *
+*
  *
  */
 class VariableNameGenerator {

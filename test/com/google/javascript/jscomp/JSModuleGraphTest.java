@@ -26,7 +26,7 @@ import java.util.*;
 /**
  * Tests for {@link JSModuleGraph}
  *
- *
+*
  */
 public class JSModuleGraphTest extends TestCase {
 

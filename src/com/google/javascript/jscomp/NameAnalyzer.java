@@ -70,8 +70,8 @@ import java.util.Set;
  * effectively the same name. When someone has the time, we should completely
  * rip out all the logic that understands namespaces.
  *
- *
- *
+*
+*
  */
 final class NameAnalyzer implements CompilerPass {
 

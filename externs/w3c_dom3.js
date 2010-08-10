@@ -22,8 +22,8 @@
  *   http://www.w3.org/TR/DOM-Level-3-Core/ecma-script-binding.html
  *
  * @externs
- *
- *
+*
+*
  */
 
 /**

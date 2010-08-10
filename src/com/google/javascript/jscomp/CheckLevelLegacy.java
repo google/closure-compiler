@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * must be converted to CheckLevel enums before being used to control
  * options.  Only use this for legacy flags.  For new flags, simply use
  * {@link CheckLevel}.
- *
+*
  */
 public enum CheckLevelLegacy {
   LEGACY,

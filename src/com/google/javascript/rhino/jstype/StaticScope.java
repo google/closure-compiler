@@ -45,8 +45,8 @@ package com.google.javascript.rhino.jstype;
  * from the {@code Scriptable} class that Rhino normally uses to represent a
  * runtime scope.
  *
- *
- *
+*
+*
  * @param <T> The type of information stored about the slot
  */
 public interface StaticScope<T> {

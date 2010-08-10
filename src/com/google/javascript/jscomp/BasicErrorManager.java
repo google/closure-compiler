@@ -33,8 +33,8 @@ import java.util.SortedSet;
  * override the {@link #println(CheckLevel, JSError)} method to generate custom
  * output.</p>
  *
- *
- *
+*
+*
  */
 public abstract class BasicErrorManager implements ErrorManager {
   private final SortedSet<ErrorWithLevel> messages =

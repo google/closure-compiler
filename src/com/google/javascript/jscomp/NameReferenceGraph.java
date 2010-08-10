@@ -55,7 +55,7 @@ import java.util.Map;
  * module) if A is needed (in this module). The converse of the this result is
  * more useful. B is not needed if A is not needed.
  *
- *
+*
  */
 class NameReferenceGraph extends
     LinkedDirectedGraph<NameReferenceGraph.Name, NameReferenceGraph.Reference>

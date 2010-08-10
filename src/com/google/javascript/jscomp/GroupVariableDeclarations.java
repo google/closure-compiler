@@ -60,7 +60,7 @@ import java.util.Set;
  * with more than one variable initialization are not collapsed. This is
  * because doing so would increase uncompressed code size.
  *
- *
+*
  */
 class GroupVariableDeclarations implements CompilerPass, ScopedCallback {
   private final AbstractCompiler compiler;

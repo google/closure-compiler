@@ -36,8 +36,8 @@ import java.util.Set;
  * A JavaScript module has a unique name, consists of a list of compiler inputs,
  * and can depend on other modules.
  *
- *
- *
+*
+*
  */
 public class JSModule implements DependencyInfo, Serializable {
   private static final long serialVersionUID = 1;

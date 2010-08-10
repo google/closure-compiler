@@ -33,8 +33,8 @@ import java.util.Set;
  * Nodetraversal allows an iteration through the nodes in the parse tree,
  * and facilitates the optimizations on the parse tree.
  *
- *
- *
+*
+*
  */
 public class NodeTraversal {
   // Package protected for tests
@@ -123,7 +123,7 @@ public class NodeTraversal {
 
   /**
    * Abstract callback to visit all nodes in post order.
-   *
+*
    */
   public abstract static class AbstractPostOrderCallback implements Callback {
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
@@ -161,7 +161,7 @@ public class NodeTraversal {
 
   /**
    * Abstract callback to visit a pruned set of nodes.
-   *
+*
    */
   public abstract static class AbstractNodeTypePruningCallback
         implements Callback {

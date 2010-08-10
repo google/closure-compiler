@@ -23,7 +23,7 @@
  *  This relies on w3c_event.js being included first.
  *
  * @externs
- *
+*
  */
 
 /**

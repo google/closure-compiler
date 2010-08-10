@@ -51,8 +51,8 @@ import java.util.Set;
 /**
  * An enum type representing a branded collection of elements. Each element
  * is referenced by its name, and has an {@link EnumElementType} type.
- *
- *
+*
+*
  */
 public class EnumType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;

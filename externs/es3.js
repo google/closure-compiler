@@ -18,10 +18,10 @@
  * @fileoverview ECMAScript 3 Builtins. This include common extensions so this
  * is actually ES3+Reality.
  * @externs
- *
- *
+*
+*
  * @author nicksantos@google.com (Nick Santos)
- *
+*
  */
 
 

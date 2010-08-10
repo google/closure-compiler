@@ -30,7 +30,7 @@ import java.util.Set;
  *
  * Use this to get unique and short ids.
  *
- *
+*
  */
 class ReplaceIdGenerators implements CompilerPass {
   static final DiagnosticType NON_GLOBAL_ID_GENERATOR_CALL =

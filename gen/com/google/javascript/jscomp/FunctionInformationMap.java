@@ -257,14 +257,40 @@ public  final class FunctionInformationMap extends
       name_ = "";
       compiledSource_ = "";
     }
+    private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
-      if (!hasId()) return false;
-      if (!hasSourceName()) return false;
-      if (!hasLineNumber()) return false;
-      if (!hasModuleName()) return false;
-      if (!hasSize()) return false;
-      if (!hasName()) return false;
-      if (!hasCompiledSource()) return false;
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSourceName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasLineNumber()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasModuleName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSize()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasCompiledSource()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
       return true;
     }
     
@@ -573,13 +599,34 @@ public  final class FunctionInformationMap extends
       }
       
       public final boolean isInitialized() {
-        if (!hasId()) return false;
-        if (!hasSourceName()) return false;
-        if (!hasLineNumber()) return false;
-        if (!hasModuleName()) return false;
-        if (!hasSize()) return false;
-        if (!hasName()) return false;
-        if (!hasCompiledSource()) return false;
+        if (!hasId()) {
+          
+          return false;
+        }
+        if (!hasSourceName()) {
+          
+          return false;
+        }
+        if (!hasLineNumber()) {
+          
+          return false;
+        }
+        if (!hasModuleName()) {
+          
+          return false;
+        }
+        if (!hasSize()) {
+          
+          return false;
+        }
+        if (!hasName()) {
+          
+          return false;
+        }
+        if (!hasCompiledSource()) {
+          
+          return false;
+        }
         return true;
       }
       
@@ -973,9 +1020,20 @@ public  final class FunctionInformationMap extends
       name_ = "";
       compiledSource_ = "";
     }
+    private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
-      if (!hasName()) return false;
-      if (!hasCompiledSource()) return false;
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      if (!hasName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasCompiledSource()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
       return true;
     }
     
@@ -1204,8 +1262,14 @@ public  final class FunctionInformationMap extends
       }
       
       public final boolean isInitialized() {
-        if (!hasName()) return false;
-        if (!hasCompiledSource()) return false;
+        if (!hasName()) {
+          
+          return false;
+        }
+        if (!hasCompiledSource()) {
+          
+          return false;
+        }
         return true;
       }
       
@@ -1377,13 +1441,24 @@ public  final class FunctionInformationMap extends
     entry_ = java.util.Collections.emptyList();
     module_ = java.util.Collections.emptyList();
   }
+  private byte memoizedIsInitialized = -1;
   public final boolean isInitialized() {
+    byte isInitialized = memoizedIsInitialized;
+    if (isInitialized != -1) return isInitialized == 1;
+    
     for (int i = 0; i < getEntryCount(); i++) {
-      if (!getEntry(i).isInitialized()) return false;
+      if (!getEntry(i).isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
     }
     for (int i = 0; i < getModuleCount(); i++) {
-      if (!getModule(i).isInitialized()) return false;
+      if (!getModule(i).isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
     }
+    memoizedIsInitialized = 1;
     return true;
   }
   
@@ -1677,10 +1752,16 @@ public  final class FunctionInformationMap extends
     
     public final boolean isInitialized() {
       for (int i = 0; i < getEntryCount(); i++) {
-        if (!getEntry(i).isInitialized()) return false;
+        if (!getEntry(i).isInitialized()) {
+          
+          return false;
+        }
       }
       for (int i = 0; i < getModuleCount(); i++) {
-        if (!getModule(i).isInitialized()) return false;
+        if (!getModule(i).isInitialized()) {
+          
+          return false;
+        }
       }
       return true;
     }

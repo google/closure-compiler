@@ -46,7 +46,7 @@ package com.google.javascript.rhino.jstype;
  * // TODO(user): Define the subtyping relation for parameterized types. Also,
  * take parameterized type into account for equality.
  *
- *
+*
  */
 final class ParameterizedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;

@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  * to a number of invariants. Because this can add a lot of overhead,
  * we only run this in development mode.
  *
- *
+*
  * @author nicksantos@google.com (Nick Santos)
  */
 class SanityCheck implements CompilerPass {

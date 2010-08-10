@@ -20,7 +20,7 @@ package com.google.javascript.jscomp.graph;
 /**
  * Information that can be annotated to a {@link GraphNode} or
  * {@link Graph.GraphEdge}.
- *
+*
  */
 public interface Annotation {
 }

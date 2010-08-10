@@ -26,7 +26,7 @@ import java.util.Comparator;
 /**
  * Control flow graph.
  *
- *
+*
  *
  * @param <N> The instruction type of the control flow graph.
  */

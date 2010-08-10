@@ -19,7 +19,7 @@
  *  w3c_event.js. The whole file has NOT been fully type annotated.
  *
  * @externs
- *
+*
  */
 
 Event.prototype.Abstract;

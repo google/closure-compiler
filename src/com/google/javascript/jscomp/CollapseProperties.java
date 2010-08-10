@@ -67,8 +67,8 @@ import java.util.Set;
  *
  * <p>For lots of examples, see the unit test.
  *
- *
- *
+*
+*
  */
 class CollapseProperties implements CompilerPass {
 

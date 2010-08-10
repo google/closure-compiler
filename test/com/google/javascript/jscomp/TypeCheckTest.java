@@ -32,8 +32,8 @@ import java.util.Arrays;
 /**
  * Tests {@link TypeCheck}.
  *
- *
- *
+*
+*
  */
 public class TypeCheckTest extends CompilerTypeTestCase {
 

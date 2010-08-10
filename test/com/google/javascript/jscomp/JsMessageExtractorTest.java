@@ -29,7 +29,7 @@ import java.util.Iterator;
 /**
  * Unit test for {@link JsMessageExtractor}.
  *
- *
+*
  */
 public class JsMessageExtractorTest extends TestCase {
 

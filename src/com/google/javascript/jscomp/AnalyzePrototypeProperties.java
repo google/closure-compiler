@@ -48,7 +48,7 @@ import java.util.Stack;
  * Global functions are also represented by nodes in this graph, with
  * similar semantics.
  *
- *
+*
  * @author nicksantos@google.com (Nick Santos)
  */
 class AnalyzePrototypeProperties implements CompilerPass {

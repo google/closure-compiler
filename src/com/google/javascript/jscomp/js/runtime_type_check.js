@@ -18,8 +18,8 @@
 /**
  * @fileoverview Provides the boilerplate code for runtime type checking.
  *
- *
- *
+*
+*
  */
 
 var jscomp = jscomp || {};

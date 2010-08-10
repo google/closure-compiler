@@ -59,8 +59,8 @@ import java.util.logging.Logger;
  * may include definitions for global javascript/browser objects such as
  * window, document.
  *
- *
- *
+*
+*
  */
 public class Compiler extends AbstractCompiler {
   CompilerOptions options = null;

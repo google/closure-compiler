@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  * Tests for {@link LiveVariablesAnalysis}. Test cases are snippets of a
  * function and assertions are made at the instruction labeled with {@code X}.
  *
- *
+*
  */
 public class LiveVariableAnalysisTest extends TestCase {
 

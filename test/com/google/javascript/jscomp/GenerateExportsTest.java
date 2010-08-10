@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Generate exports unit test.
  *
- *
+*
  */
 public class GenerateExportsTest extends CompilerTestCase {
 

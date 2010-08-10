@@ -21,7 +21,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Unit tests for {@link FlowSensitiveInlineVariables}.
  *
- *
+*
  */
 public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 

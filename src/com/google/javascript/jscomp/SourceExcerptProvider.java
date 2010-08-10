@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * of specific locations, such as a specific line or a region around a
  * given line number.
  *
- *
+*
  */
 public interface SourceExcerptProvider {
   /**

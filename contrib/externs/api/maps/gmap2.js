@@ -17,7 +17,7 @@
 /**
  * @fileoverview Externs for Maps API V2
  * @externs
- *
+*
  */
 
 /**

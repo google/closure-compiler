@@ -18,8 +18,8 @@
  * @fileoverview Definitions for the JSON specification.
  * @see http://www.json.org/json2.js.
  * @externs
- *
- *
+*
+*
  */
 
 var JSON = {};

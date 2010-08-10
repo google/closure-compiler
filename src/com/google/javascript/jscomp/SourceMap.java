@@ -34,7 +34,7 @@ import java.util.List;
  * @see CodeGenerator
  * @see CodePrinter
  *
- *
+*
  * @author johnlenz@google.com (John Lenz)
  */
 public class SourceMap {

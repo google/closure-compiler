@@ -49,7 +49,7 @@ import junit.framework.TestCase;
 /**
  * Tests {@link JSTypeRegistry}.
  *
- *
+*
  */
 public class JSTypeRegistryTest extends TestCase {
   // TODO(user): extend this class with more tests, as JSTypeRegistry is

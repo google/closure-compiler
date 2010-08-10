@@ -21,7 +21,7 @@ import com.google.javascript.rhino.Node;
 /**
  * A compiler pass that just reports an error.
  *
- *
+*
  */
 
 class ErrorPass implements CompilerPass {

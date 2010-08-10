@@ -38,7 +38,7 @@ import com.google.javascript.rhino.Node;
  * This is an analysis based on {@link AnalyzeNameReferences} using the more
  * accurate graph and will soon replace it.
  *
- *
+*
  */
 class AnalyzeNameReferences implements CompilerPass {
 

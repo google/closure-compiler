@@ -57,7 +57,7 @@ import java.util.Set;
  * graph coloring in {@link GraphColoring} to determine which two variables can
  * be merge together safely.
  *
- *
+*
  */
 class CoalesceVariableNames extends AbstractPostOrderCallback implements
     CompilerPass, ScopedCallback {

@@ -195,7 +195,12 @@ public  final class Instrumentation extends
     init_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     appNameSetter_ = "";
   }
+  private byte memoizedIsInitialized = -1;
   public final boolean isInitialized() {
+    byte isInitialized = memoizedIsInitialized;
+    if (isInitialized != -1) return isInitialized == 1;
+    
+    memoizedIsInitialized = 1;
     return true;
   }
   

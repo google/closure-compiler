@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * A lattice element.
  *
- *
+*
  */
 interface LatticeElement {
 

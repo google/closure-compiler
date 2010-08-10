@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * Generates goog.exportSymbol for test functions, so they can be recognized
  * by the test runner, even if the code is compiled.
  *
- *
+*
  */
 class ExportTestFunctions implements CompilerPass {
 

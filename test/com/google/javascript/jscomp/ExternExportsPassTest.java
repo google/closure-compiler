@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link ExternExportsPass}.
  *
- *
+*
  */
 public class ExternExportsPassTest extends TestCase {
 

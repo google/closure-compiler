@@ -75,7 +75,7 @@ import java.util.logging.Logger;
  *   Bar.a = 0;
  * </code>
  *
- *
+*
  */
 class AmbiguateProperties implements CompilerPass {
   private static final Logger logger = Logger.getLogger(

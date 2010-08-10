@@ -42,7 +42,7 @@
  * will set the type of this on a function literal argument to the actual type
  * of T.
  *
- *
+*
  */
 package com.google.javascript.rhino.jstype;
 

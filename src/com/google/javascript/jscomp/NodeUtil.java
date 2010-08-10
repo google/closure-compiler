@@ -40,8 +40,8 @@ import javax.annotation.Nullable;
 /**
  * NodeUtil contains utilities that get properties from the Node object.
  *
- *
- *
+*
+*
  */
 public final class NodeUtil {
 

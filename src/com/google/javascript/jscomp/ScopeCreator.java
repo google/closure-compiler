@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
  * This interface defines how objects capable of creating scopes from the parse
  * tree behave.
  *
- *
+*
  */
 interface ScopeCreator {
   /**

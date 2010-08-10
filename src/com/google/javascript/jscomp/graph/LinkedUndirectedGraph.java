@@ -32,7 +32,7 @@ import java.util.Map;
  * An undirected graph using linked list within nodes to store edge
  * information.
  *
- *
+*
  *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.

@@ -36,7 +36,7 @@ import java.util.Set;
  * Wraps a {@link SourceAst} and maintain state such as module for the input and
  * whether the input is an extern. Also calculates provided and required types.
  *
- *
+*
  */
 public class CompilerInput implements SourceAst, DependencyInfo {
   private static final long serialVersionUID = 1L;

@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * Insures '@constructor X' has a 'goog.provide("X")' .
  *
- *
+*
  */
 class CheckProvides implements CompilerPass {
   private final AbstractCompiler compiler;

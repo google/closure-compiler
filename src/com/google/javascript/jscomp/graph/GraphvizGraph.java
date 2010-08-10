@@ -25,7 +25,7 @@ import java.util.List;
  * The <code>DotFormatter.toDot</code> function can be used to get a
  * visualization of the object for debugging purpose.
  *
- *
+*
  */
 public interface GraphvizGraph {
 

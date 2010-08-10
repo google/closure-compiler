@@ -50,7 +50,7 @@ import java.util.List;
  * <p>
  * TODO(user): All functionality for removing nodes and edges.
  *
- *
+*
  *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.

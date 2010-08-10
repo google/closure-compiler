@@ -28,9 +28,9 @@ import java.util.*;
  * XX = 3;    // error!
  * XX++;      // error!
  *
- *
- *
- *
+*
+*
+*
  */
 class ConstCheck extends AbstractPostOrderCallback
     implements CompilerPass {

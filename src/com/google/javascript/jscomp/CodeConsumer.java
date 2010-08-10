@@ -25,9 +25,9 @@ import com.google.javascript.rhino.Node;
  * @see CodeGenerator
  * @see CodePrinter
  * @see InlineCostEstimator
- *
- *
- *
+*
+*
+*
  */
 abstract class CodeConsumer {
   boolean statementNeedsEnded = false;

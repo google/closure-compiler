@@ -498,7 +498,7 @@ public class ParserTest extends BaseJSTypeTestCase {
   public void testIncorrectJSDocDoesNotAlterJSParsing8() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parse("/**
+        parse("/** @author */" +
             "C.prototype.say=function(nums) {alert(nums.join(','));};",
               "@author tag missing author"));
   }

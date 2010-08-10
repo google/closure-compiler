@@ -42,8 +42,8 @@ import javax.annotation.Nullable;
  * RenameVars renames all the variables names into short names, to reduce
  * code size and also to obfuscate the code.
  *
- *
- *
+*
+*
  */
 final class RenameVars implements CompilerPass {
   private final AbstractCompiler compiler;

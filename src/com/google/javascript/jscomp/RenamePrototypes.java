@@ -51,8 +51,8 @@ import java.util.TreeSet;
  * When a property name is used both in a prototype definition and as an object
  * literal key, we rename it only if it satisifies both renaming policies.
  *
- *
- *
+*
+*
  */
 class RenamePrototypes implements CompilerPass {
 

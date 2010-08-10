@@ -43,7 +43,7 @@ package com.google.javascript.rhino.jstype;
  * A set in the domain {true,false}.
  * There are four possible sets: {}, {true}, {false}, {true,false}.
  *
- *
+*
  */
 public enum BooleanLiteralSet {
   EMPTY,

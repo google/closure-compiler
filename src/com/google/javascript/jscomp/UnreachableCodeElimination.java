@@ -43,7 +43,7 @@ import java.util.logging.Logger;
  *    prototype properties can be annotated using JSDoc without actually
  *    being initialized.
  *
- *
+*
  */
 class UnreachableCodeElimination extends AbstractPostOrderCallback
     implements CompilerPass, ScopedCallback  {

@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link MustBeReachingVariableDef}.
  *
- *
+*
  */
 public class MustBeReachingVariableDefTest extends TestCase {
 

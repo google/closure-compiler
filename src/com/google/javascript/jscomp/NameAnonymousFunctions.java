@@ -32,7 +32,7 @@ import java.util.logging.*;
  * goog.string.htmlEscape = function $goog$string$htmlEscape$(str) {
  * }
  *
- *
+*
  */
 class NameAnonymousFunctions implements CompilerPass {
   private static final Logger logger = Logger.getLogger(

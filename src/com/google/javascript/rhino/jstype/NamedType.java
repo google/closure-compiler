@@ -73,8 +73,8 @@ import com.google.javascript.rhino.ErrorReporter;
  * in a more consistent way, but with the Rhino merge coming, there will be
  * much that has to be changed.<p>
  *
- *
- *
+*
+*
  */
 class NamedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;

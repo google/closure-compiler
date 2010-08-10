@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
  * Lightweight message formatter. The format of messages this formatter
  * produces is very compact and to the point.
  *
- *
+*
  */
 public class LightweightMessageFormatter extends AbstractMessageFormatter {
   private SourceExcerpt excerpt;

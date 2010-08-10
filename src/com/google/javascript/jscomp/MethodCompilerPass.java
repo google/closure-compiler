@@ -32,8 +32,8 @@ import java.util.Set;
  * Finds all method declarations and pulls them into data structures
  * for use during cleanups such as arity checks or inlining.
  *
- *
- *
+*
+*
  */
 abstract class MethodCompilerPass implements CompilerPass {
   /** List of methods defined in externs */

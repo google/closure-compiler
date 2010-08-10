@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Unit tests for {@link AstParallelizer}.
  *
- *
+*
  */
 public class AstParallelizerTest extends TestCase {
 

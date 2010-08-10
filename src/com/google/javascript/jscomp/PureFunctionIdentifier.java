@@ -46,7 +46,7 @@ import java.util.Set;
  * Date.now is an example of a function that has no side effects but
  * is not pure.
  *
- *
+*
  *
  * We will prevail, in peace and freedom from fear, and in true
  * health, through the purity and essence of our natural... fluids.

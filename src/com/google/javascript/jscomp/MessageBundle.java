@@ -22,8 +22,8 @@ import java.util.Locale;
  * An interface for providing alterative values for user-visible messages in
  * javascript code.
  *
- *
- *
+*
+*
  */
 public interface MessageBundle {
 

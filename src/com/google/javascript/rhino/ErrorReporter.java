@@ -44,7 +44,7 @@ package com.google.javascript.rhino;
  * This is interface defines a protocol for the reporting of
  * errors during JavaScript translation or execution.
  *
- *
+*
  */
 
 public interface ErrorReporter {
