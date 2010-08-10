@@ -101,7 +101,7 @@ public class JSTypeRegistryTest extends TestCase {
     assertTrue(typeRegistry.hasNamespace("a.b.Foo"));
   }
 
-  public void testGenerationIncrementing() {
+  public void testGenerationIncrementing1() {
     SimpleErrorReporter reporter = new SimpleErrorReporter();
     final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
 
@@ -145,6 +145,53 @@ public class JSTypeRegistryTest extends TestCase {
     typeRegistry.setLastGeneration(true);
     typeRegistry.resolveTypesInScope(scope);
     assertFalse(subNamed.isUnknownType());
+  }
+
+  public void testGenerationIncrementing2() {
+    SimpleErrorReporter reporter = new SimpleErrorReporter();
+    final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
+
+    StaticScope<JSType> scope = new StaticScope<JSType>() {
+          public StaticSlot<JSType> getSlot(final String name) {
+            return new SimpleSlot(
+                name,
+                typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
+                false);
+          }
+          public StaticSlot<JSType> getOwnSlot(String name) {
+            return getSlot(name);
+          }
+          public StaticScope<JSType> getParentScope() { return null; }
+          public JSType getTypeOfThis() { return null; }
+        };
+
+    ObjectType namedType =
+        (ObjectType) typeRegistry.getType(scope, "Foo", null, 0, 0);
+    FunctionType functionType = typeRegistry.createFunctionType(namedType);
+
+    // Subclass of named type is initially unresolved.
+    typeRegistry.setLastGeneration(false);
+    typeRegistry.resolveTypesInScope(scope);
+    assertTrue(functionType.getReturnType().isUnknownType());
+    functionType.resolve(reporter, scope);
+    assertTrue(functionType.getReturnType().isUnknownType());
+
+    // Subclass of named type is still unresolved, even though the named type is
+    // now present in the registry.
+    typeRegistry.declareType("Foo", typeRegistry.createAnonymousObjectType());
+    typeRegistry.resolveTypesInScope(scope);
+    assertTrue(functionType.getReturnType().isUnknownType());
+
+    assertNull("Unexpected errors: " + reporter.errors(),
+        reporter.errors());
+    assertNull("Unexpected warnings: " + reporter.warnings(),
+        reporter.warnings());
+
+    // After incrementing the generation, resolve works again.
+    typeRegistry.incrementGeneration();
+    typeRegistry.setLastGeneration(true);
+    typeRegistry.resolveTypesInScope(scope);
+    assertFalse(functionType.getReturnType().isUnknownType());
   }
 
   public void testTypeResolutionModes() {

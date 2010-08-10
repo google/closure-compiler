@@ -190,7 +190,7 @@ class NamedType extends ProxyObjectType {
 
     if (resolved) {
       super.resolveInternal(t, enclosing);
-      return referencedType;
+      return registry.isLastGeneration() ? referencedType : this;
     }
 
     resolveViaProperties(t, enclosing);
@@ -199,7 +199,7 @@ class NamedType extends ProxyObjectType {
     }
 
     super.resolveInternal(t, enclosing);
-    return referencedType;
+    return registry.isLastGeneration() ? referencedType : this;
   }
 
   /**
@@ -309,18 +309,22 @@ class NamedType extends ProxyObjectType {
   // type name.
   private void handleUnresolvedType(
       ErrorReporter t, boolean ignoreForwardReferencedTypes) {
-    boolean beForgiving = forgiving ||
-        (ignoreForwardReferencedTypes &&
-         registry.isForwardDeclaredType(reference));
-    if (!beForgiving && registry.isLastGeneration()) {
-      t.warning("Unknown type " + reference, sourceName, lineno, null,
-          charno);
-    } else {
-      referencedType = registry.getNativeObjectType(
-          JSTypeNative.CHECKED_UNKNOWN_TYPE);
-    }
+    if (registry.isLastGeneration()) {
+      boolean beForgiving = forgiving ||
+          (ignoreForwardReferencedTypes &&
+           registry.isForwardDeclaredType(reference));
+      if (!beForgiving && registry.isLastGeneration()) {
+        t.warning("Unknown type " + reference, sourceName, lineno, null,
+            charno);
+      } else {
+        referencedType = registry.getNativeObjectType(
+            JSTypeNative.CHECKED_UNKNOWN_TYPE);
+      }
 
-    setResolvedTypeInternal(referencedType);
+      setResolvedTypeInternal(referencedType);
+    } else {
+      setResolvedTypeInternal(this);
+    }
   }
 
   JSType getTypedefType(ErrorReporter t, StaticSlot<JSType> slot, String name) {
