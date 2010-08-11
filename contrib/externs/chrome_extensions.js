@@ -280,6 +280,11 @@ chrome.pageAction.show = function(tabId) {};
 chrome.pageAction.setIcon = function(details) {};
 
 /**
+ * @param {Object} details An object which may have 'popup' or 'tabId' as keys.
+ */
+chrome.pageAction.setPopup = function(details) {};
+
+/**
  * @param {Object} details An object which has 'tabId' and 'title'.
  */
 chrome.pageAction.setTitle = function(details) {};
@@ -308,6 +313,11 @@ chrome.browserAction.setBadgeText = function(details) {};
  *     'path', or 'tabId' as keys.
  */
 chrome.browserAction.setIcon = function(details) {};
+
+/**
+ * @param {Object} details An object which may have 'popup' or 'tabId' as keys.
+ */
+chrome.browserAction.setPopup = function(details) {};
 
 /**
  * @param {Object} details An object which has 'title' and optionally

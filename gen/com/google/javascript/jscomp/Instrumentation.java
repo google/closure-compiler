@@ -207,10 +207,10 @@ public  final class Instrumentation extends
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
     getSerializedSize();
-    if (hasReportDefined()) {
+    if (((bitField0_ & 0x00000001) == 0x00000001)) {
       output.writeBytes(1, getReportDefinedBytes());
     }
-    if (hasReportCall()) {
+    if (((bitField0_ & 0x00000002) == 0x00000002)) {
       output.writeBytes(2, getReportCallBytes());
     }
     for (int i = 0; i < declarationToRemove_.size(); i++) {
@@ -219,10 +219,10 @@ public  final class Instrumentation extends
     for (int i = 0; i < init_.size(); i++) {
       output.writeBytes(4, init_.getByteString(i));
     }
-    if (hasAppNameSetter()) {
+    if (((bitField0_ & 0x00000008) == 0x00000008)) {
       output.writeBytes(5, getAppNameSetterBytes());
     }
-    if (hasReportExit()) {
+    if (((bitField0_ & 0x00000004) == 0x00000004)) {
       output.writeBytes(6, getReportExitBytes());
     }
     getUnknownFields().writeTo(output);
@@ -234,11 +234,11 @@ public  final class Instrumentation extends
     if (size != -1) return size;
   
     size = 0;
-    if (hasReportDefined()) {
+    if (((bitField0_ & 0x00000001) == 0x00000001)) {
       size += com.google.protobuf.CodedOutputStream
         .computeBytesSize(1, getReportDefinedBytes());
     }
-    if (hasReportCall()) {
+    if (((bitField0_ & 0x00000002) == 0x00000002)) {
       size += com.google.protobuf.CodedOutputStream
         .computeBytesSize(2, getReportCallBytes());
     }
@@ -260,11 +260,11 @@ public  final class Instrumentation extends
       size += dataSize;
       size += 1 * getInitList().size();
     }
-    if (hasAppNameSetter()) {
+    if (((bitField0_ & 0x00000008) == 0x00000008)) {
       size += com.google.protobuf.CodedOutputStream
         .computeBytesSize(5, getAppNameSetterBytes());
     }
-    if (hasReportExit()) {
+    if (((bitField0_ & 0x00000004) == 0x00000004)) {
       size += com.google.protobuf.CodedOutputStream
         .computeBytesSize(6, getReportExitBytes());
     }

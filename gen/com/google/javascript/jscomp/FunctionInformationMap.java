@@ -297,25 +297,25 @@ public  final class FunctionInformationMap extends
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
-      if (hasId()) {
-        output.writeInt32(2, getId());
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(2, id_);
       }
-      if (hasSourceName()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(3, getSourceNameBytes());
       }
-      if (hasLineNumber()) {
-        output.writeInt32(4, getLineNumber());
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(4, lineNumber_);
       }
-      if (hasModuleName()) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(5, getModuleNameBytes());
       }
-      if (hasSize()) {
-        output.writeInt32(6, getSize());
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(6, size_);
       }
-      if (hasName()) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBytes(7, getNameBytes());
       }
-      if (hasCompiledSource()) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeBytes(8, getCompiledSourceBytes());
       }
       getUnknownFields().writeTo(output);
@@ -327,31 +327,31 @@ public  final class FunctionInformationMap extends
       if (size != -1) return size;
     
       size = 0;
-      if (hasId()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, getId());
+          .computeInt32Size(2, id_);
       }
-      if (hasSourceName()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, getSourceNameBytes());
       }
-      if (hasLineNumber()) {
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, getLineNumber());
+          .computeInt32Size(4, lineNumber_);
       }
-      if (hasModuleName()) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, getModuleNameBytes());
       }
-      if (hasSize()) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(6, getSize());
+          .computeInt32Size(6, size_);
       }
-      if (hasName()) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(7, getNameBytes());
       }
-      if (hasCompiledSource()) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(8, getCompiledSourceBytes());
       }
@@ -1040,10 +1040,10 @@ public  final class FunctionInformationMap extends
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
-      if (hasName()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeBytes(102, getNameBytes());
       }
-      if (hasCompiledSource()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(103, getCompiledSourceBytes());
       }
       getUnknownFields().writeTo(output);
@@ -1055,11 +1055,11 @@ public  final class FunctionInformationMap extends
       if (size != -1) return size;
     
       size = 0;
-      if (hasName()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(102, getNameBytes());
       }
-      if (hasCompiledSource()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(103, getCompiledSourceBytes());
       }
@@ -1465,11 +1465,11 @@ public  final class FunctionInformationMap extends
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
     getSerializedSize();
-    for (com.google.javascript.jscomp.FunctionInformationMap.Entry element : getEntryList()) {
-      output.writeGroup(1, element);
+    for (int i = 0; i < entry_.size(); i++) {
+      output.writeGroup(1, entry_.get(i));
     }
-    for (com.google.javascript.jscomp.FunctionInformationMap.Module element : getModuleList()) {
-      output.writeGroup(101, element);
+    for (int i = 0; i < module_.size(); i++) {
+      output.writeGroup(101, module_.get(i));
     }
     getUnknownFields().writeTo(output);
   }
@@ -1480,13 +1480,13 @@ public  final class FunctionInformationMap extends
     if (size != -1) return size;
   
     size = 0;
-    for (com.google.javascript.jscomp.FunctionInformationMap.Entry element : getEntryList()) {
+    for (int i = 0; i < entry_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream
-        .computeGroupSize(1, element);
+        .computeGroupSize(1, entry_.get(i));
     }
-    for (com.google.javascript.jscomp.FunctionInformationMap.Module element : getModuleList()) {
+    for (int i = 0; i < module_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream
-        .computeGroupSize(101, element);
+        .computeGroupSize(101, module_.get(i));
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSerializedSize = size;
