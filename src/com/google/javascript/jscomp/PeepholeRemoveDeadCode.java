@@ -44,9 +44,12 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case Token.SCRIPT:
       case Token.BLOCK:
         return tryOptimizeBlock(subtree);
-      case Token.IF:
+      case Token.EXPR_RESULT:
+        return tryFoldHookExpr(subtree);
       case Token.HOOK:
-        return tryFoldHookIf(subtree);
+        return tryFoldHook(subtree);
+      case Token.IF:
+        return tryFoldIf(subtree);
       case Token.WHILE:
         return tryFoldWhile(subtree);
        case Token.FOR: {
@@ -101,8 +104,6 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Try removing unneeded block nodes and their useless children
    */
   Node tryOptimizeBlock(Node n) {
-    // TODO(dcc): Make sure this is also applied in the global scope
-    // (i.e. with Token.SCRIPT) parents
     // Remove any useless children
     for (Node c = n.getFirstChild(); c != null; ) {
       Node next = c.getNext();  // save c.next, since 'c' may be removed
@@ -252,102 +253,52 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Try folding :? (hook) and IF nodes by removing dead branches.
+   * Try folding IF nodes by removing dead branches.
    * @return the replacement node, if changed, or the original if not
    */
-  private Node tryFoldHookIf(Node n) {
+  private Node tryFoldIf(Node n) {
+    Preconditions.checkState(n.getType() == Token.IF);
     Node parent = n.getParent();
+    Preconditions.checkNotNull(parent);
     int type = n.getType();
     Node cond = n.getFirstChild();
     Node thenBody = cond.getNext();
     Node elseBody = thenBody.getNext();
 
-    boolean changes = false;
+    // if (x) { .. } else { } --> if (x) { ... }
+    if (elseBody != null && !mayHaveSideEffects(elseBody)) {
+      n.removeChild(elseBody);
+      elseBody = null;
+      reportCodeChange();
+    }
 
-    if (type == Token.IF) {
-      // if (x) { .. } else { } --> if (x) { ... }
-      if (elseBody != null && !mayHaveSideEffects(elseBody)) {
-        n.removeChild(elseBody);
-        elseBody = null;
+    // if (x) { } else { ... } --> if (!x) { ... }
+    if (!mayHaveSideEffects(thenBody) && elseBody != null) {
+      n.removeChild(elseBody);
+      n.replaceChild(thenBody, elseBody);
+      Node notCond = new Node(Token.NOT);
+      n.replaceChild(cond, notCond);
+      notCond.addChildToFront(cond);
+      cond = notCond;
+      thenBody = cond.getNext();
+      elseBody = null;
+      reportCodeChange();
+    }
+
+    // if (x()) { }
+    if (!mayHaveSideEffects(thenBody) && elseBody == null) {
+      if (mayHaveSideEffects(cond)) {
+        // x() has side effects, just leave the condition on its own.
+        n.removeChild(cond);
+        Node replacement = NodeUtil.newExpr(cond);
+        parent.replaceChild(n, replacement);
         reportCodeChange();
-        changes = true;
-      }
-
-      // if (x) { } else { ... } --> if (!x) { ... }
-      if (!mayHaveSideEffects(thenBody) && elseBody != null) {
-        n.removeChild(elseBody);
-        n.replaceChild(thenBody, elseBody);
-        Node notCond = new Node(Token.NOT);
-        n.replaceChild(cond, notCond);
-        notCond.addChildToFront(cond);
-        cond = notCond;
-        thenBody = cond.getNext();
-        elseBody = null;
+        return replacement;
+      } else {
+        // x() has no side effects, the whole tree is useless now.
+        NodeUtil.removeChild(parent, n);
         reportCodeChange();
-        changes = true;
-      }
-
-      // if (x()) { }
-      if (!mayHaveSideEffects(thenBody) && elseBody == null) {
-        if (mayHaveSideEffects(cond)) {
-          // x() has side effects, just leave the condition on its own.
-          n.removeChild(cond);
-          Node replacement = NodeUtil.newExpr(cond);
-          parent.replaceChild(n, replacement);
-          reportCodeChange();
-          return replacement;
-        } else {
-          // x() has no side effects, the whole tree is useless now.
-          NodeUtil.removeChild(parent, n);
-          reportCodeChange();
-          return null;
-        }
-      }
-    } else {
-      Preconditions.checkState(type == Token.HOOK);
-      if (NodeUtil.isExpressionNode(parent)) {
-        // Try to remove useless nodes.
-        if (!mayHaveSideEffects(thenBody)) {
-          // x?void 0:y --> if(!x)y
-          Node ifNode = new Node(Token.IF);
-          if (cond.getType() == Token.NOT) {
-            Node expr = cond.getFirstChild();
-            cond.removeChild(expr);
-            ifNode.addChildToBack(expr);
-          } else {
-            Node not = new Node(Token.NOT).copyInformationFrom(cond);
-            n.removeChild(cond);
-            not.addChildToBack(cond);
-            ifNode.addChildToBack(not);
-          }
-
-          n.removeChild(elseBody);
-          ifNode.addChildToBack(
-              new Node(Token.BLOCK, NodeUtil.newExpr(elseBody))
-                  .copyInformationFrom(elseBody));
-
-          //This modifies outside the subtree, which is not
-          //desirable in a peephole optimization.
-          parent.getParent().replaceChild(parent, ifNode);
-          reportCodeChange();
-          return ifNode;
-        } else if (!mayHaveSideEffects(elseBody)) {
-          // x?y:void 0 --> if(x)y
-          Node ifNode = new Node(Token.IF);
-          n.removeChild(cond);
-          ifNode.addChildToBack(cond);
-          n.removeChild(thenBody);
-
-          ifNode.addChildToBack(
-              new Node(Token.BLOCK, NodeUtil.newExpr(thenBody))
-                  .copyInformationFrom(thenBody));
-
-          //This modifies outside the subtree, which is not
-          //desirable in a peephole optimization.
-          parent.getParent().replaceChild(parent, ifNode);
-          reportCodeChange();
-          return ifNode;
-        }
+        return null;
       }
     }
 
@@ -357,26 +308,8 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return n;  // We can't remove branches otherwise!
     }
 
-    // Transform "if (a = 2) {x =2}" into "a=2;x=2"
     if (mayHaveSideEffects(cond)) {
-      if (n.getType() == Token.HOOK) {
-        // Transform HOOK to BLOCK with the condition
-        Node replacement = new Node(Token.BLOCK).copyInformationFrom(n);
-        n.detachChildren();
-        replacement.addChildToFront(
-            new Node(Token.EXPR_RESULT, cond).copyInformationFrom(cond));
-        Node branchToKeep = condValue.toBoolean(true) ? thenBody : elseBody;
-        replacement.addChildToBack(
-            NodeUtil.newExpr(branchToKeep)
-                .copyInformationFrom(branchToKeep));
-        // This modifies outside the subtree, which is not
-        // desirable in a peephole optimization.
-        parent.getParent().replaceChild(parent, replacement);
-        reportCodeChange();
-        return replacement;
-      }
-
-      Preconditions.checkState(n.getType() == Token.IF);
+      // Transform "if (a = 2) {x =2}" into "if (true) {a=2;x=2}"
       boolean newConditionValue = condValue == TernaryValue.TRUE;
       // Add an elseBody if it is needed.
       if (!newConditionValue && elseBody == null) {
@@ -413,16 +346,110 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     } else {
       // Replace "if (true) { X } else { Y }" with X, or
       // replace "if (false) { X } else { Y }" with Y.
-      Node firstBranch = n.getFirstChild().getNext();
-      Node secondBranch = firstBranch.getNext();
-      Node branch = condTrue ? firstBranch : secondBranch;
-      Node notBranch = condTrue ? secondBranch : firstBranch;
-      NodeUtil.redeclareVarsInsideBranch(notBranch);
-      n.removeChild(branch);
-      parent.replaceChild(n, branch);
+      Node trueBranch = n.getFirstChild().getNext();
+      Node falseBranch = trueBranch.getNext();
+      Node branchToKeep = condTrue ? trueBranch : falseBranch;
+      Node branchToRemove = condTrue ? falseBranch : trueBranch;
+      NodeUtil.redeclareVarsInsideBranch(branchToRemove);
+      n.removeChild(branchToKeep);
+      parent.replaceChild(n, branchToKeep);
       reportCodeChange();
-      return branch;
+      return branchToKeep;
     }
+  }
+
+  /**
+   * Transform HOOK (?:) to IF if this allows the removal of useless branches.
+   * @return the replacement node, if changed, or the original if not
+   */
+  private Node tryFoldHookExpr(Node n) {
+    Preconditions.checkState(NodeUtil.isExpressionNode(n));
+    Node hook = n.getFirstChild();
+    // Only looking at hooks here.
+    if (hook.getType() != Token.HOOK) {
+      return n;
+    }
+
+    Node parent = n.getParent();
+    Preconditions.checkNotNull(parent);
+    Node cond = hook.getFirstChild();
+    Node thenBody = cond.getNext();
+    Node elseBody = thenBody.getNext();
+
+    // Try to remove useless conditions and branches.
+    if (!mayHaveSideEffects(thenBody)) {
+      // x?void 0:y --> if(!x)y
+      Node ifNode = new Node(Token.IF);
+      if (cond.getType() == Token.NOT) {
+        Node expr = cond.getFirstChild();
+        cond.removeChild(expr);
+        ifNode.addChildToBack(expr);
+      } else {
+        Node not = new Node(Token.NOT).copyInformationFrom(cond);
+        hook.removeChild(cond);
+        not.addChildToBack(cond);
+        ifNode.addChildToBack(not);
+      }
+
+      hook.removeChild(elseBody);
+      ifNode.addChildToBack(
+          new Node(Token.BLOCK, NodeUtil.newExpr(elseBody))
+              .copyInformationFrom(elseBody));
+
+      parent.replaceChild(n, ifNode);
+      reportCodeChange();
+      return ifNode;
+    } else if (!mayHaveSideEffects(elseBody)) {
+      // x?y:void 0 --> if(x)y
+      Node ifNode = new Node(Token.IF);
+      hook.removeChild(cond);
+      ifNode.addChildToBack(cond);
+      hook.removeChild(thenBody);
+
+      ifNode.addChildToBack(
+          new Node(Token.BLOCK, NodeUtil.newExpr(thenBody))
+              .copyInformationFrom(thenBody));
+
+      parent.replaceChild(n, ifNode);
+      reportCodeChange();
+      return ifNode;
+    }
+
+    return n;
+  }
+
+  /**
+   * Try folding HOOK (?:) if the condition results of the condition is known.
+   * @return the replacement node, if changed, or the original if not
+   */
+  private Node tryFoldHook(Node n) {
+    Preconditions.checkState(n.getType() == Token.HOOK);
+    Node parent = n.getParent();
+    Preconditions.checkNotNull(parent);
+    Node cond = n.getFirstChild();
+    Node thenBody = cond.getNext();
+    Node elseBody = thenBody.getNext();
+
+    TernaryValue condValue = NodeUtil.getExpressionBooleanValue(cond);
+    if (condValue == TernaryValue.UNKNOWN) {
+      return n;  // We can't remove branches otherwise!
+    }
+
+    // Transform "(a = 2) ? x =2 : y" into "a=2,x=2"
+    n.detachChildren();
+    Node branchToKeep = condValue.toBoolean(true) ? thenBody : elseBody;
+    Node replacement;
+    if (mayHaveSideEffects(cond)) {
+      replacement = new Node(Token.COMMA).copyInformationFrom(n);
+      replacement.addChildToFront(cond);
+      replacement.addChildToBack(branchToKeep);
+    } else {
+      replacement = branchToKeep;
+    }
+
+    parent.replaceChild(n, replacement);
+    reportCodeChange();
+    return replacement;
   }
 
   /**

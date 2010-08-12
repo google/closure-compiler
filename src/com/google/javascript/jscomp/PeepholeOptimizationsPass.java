@@ -23,30 +23,30 @@ import com.google.javascript.rhino.Node;
 /**
  * A compiler pass to run various peephole optimizations (e.g. constant folding,
  * some useless code removal, some minimizations).
- * 
+ *
  * @author dcc@google.com (Devin Coughlin)
  */
-class PeepholeOptimizationsPass extends AbstractPostOrderCallback 
+class PeepholeOptimizationsPass extends AbstractPostOrderCallback
     implements CompilerPass {
   private AbstractCompiler compiler;
-  
+
   private ImmutableSet<AbstractPeepholeOptimization> peepholeOptimizations;
-                
-  PeepholeOptimizationsPass(AbstractCompiler compiler, 
+
+  PeepholeOptimizationsPass(AbstractCompiler compiler,
       ImmutableSet<AbstractPeepholeOptimization> optimizations) {
     this.compiler = compiler;
     this.peepholeOptimizations = optimizations;
   }
-  
+
   /**
    * Creates a peephole optimization pass that runs the given
    * optimizations.
    */
-  PeepholeOptimizationsPass(AbstractCompiler compiler, 
+  PeepholeOptimizationsPass(AbstractCompiler compiler,
       AbstractPeepholeOptimization... optimizations) {
-    this(compiler, ImmutableSet.copyOf(optimizations));     
+    this(compiler, ImmutableSet.copyOf(optimizations));
   }
-  
+
   public AbstractCompiler getCompiler() {
     return compiler;
   }
@@ -54,7 +54,7 @@ class PeepholeOptimizationsPass extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal t = new NodeTraversal(compiler, this);
-    
+
     beginTraversal(t);
     t.traverse(root);
     endTraversal(t);
@@ -63,41 +63,40 @@ class PeepholeOptimizationsPass extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     Node currentVersionOfNode = n;
-    
     boolean somethingChanged = false;
-    
+
     do {
       somethingChanged = false;
       for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
-        Node newVersionOfNode = 
+        Node newVersionOfNode =
             optimization.optimizeSubtree(currentVersionOfNode);
-        
+
         if (newVersionOfNode != currentVersionOfNode) {
           somethingChanged = true;
-          
+
           currentVersionOfNode = newVersionOfNode;
         }
-        
+
         if (currentVersionOfNode == null) {
           return;
         }
       }
     } while(somethingChanged);
   }
-  
+
   /**
    * Make sure that all the optimizations have the current traversal so they
    * can report errors.
-   */ 
+   */
   private void beginTraversal(NodeTraversal t) {
     for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
       optimization.beginTraversal(t);
-    } 
+    }
   }
-    
+
   private void endTraversal(NodeTraversal t) {
     for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
       optimization.endTraversal(t);
-    } 
+    }
   }
 }

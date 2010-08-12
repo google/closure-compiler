@@ -87,20 +87,37 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
          "var x;var y;var z;function f(){var a;var b}");
   }
 
-  public void testHookIf() {
+  public void testIf() {
     fold("if (1){ x=1; } else { x = 2;}", "x=1");
     fold("if (false){ x = 1; } else { x = 2; }", "x=2");
     fold("if (undefined){ x = 1; } else { x = 2; }", "x=2");
     fold("if (null){ x = 1; } else { x = 2; }", "x=2");
     fold("if (void 0){ x = 1; } else { x = 2; }", "x=2");
-    // foldSame("if (void foo()){ x = 1; } else { x = 2; }");
+    fold("if (void foo()){ x = 1; } else { x = 2; }",
+         "void foo();x=2");
     fold("if (false){ x = 1; } else if (true) { x = 3; } else { x = 2; }",
          "x=3");
+    fold("if (x){ x = 1; } else if (false) { x = 3; }",
+         "if(x)x=1");
+  }
+
+  public void testHook() {
+    fold("true ? a() : b()", "a()");
+    fold("false ? a() : b()", "b()");
+
+    fold("a() ? b() : true", "if (a()) b()");
+    fold("a() ? true : b()", "if (!a()) b()");
+
+    fold("(a = true) ? b() : c()", "a = true; b()");
+    fold("(a = false) ? b() : c()", "a = false; c()");
+    fold("do {f()} while((a = true) ? b() : c())",
+         "do {f()} while((a = true) , b())");
+    fold("do {f()} while((a = false) ? b() : c())",
+         "do {f()} while((a = false) , c())");
 
     fold("var x = (true) ? 1 : 0", "var x=1");
     fold("var y = (true) ? ((false) ? 12 : (cond ? 1 : 2)) : 13",
          "var y=cond?1:2");
-    fold("if (x){ x = 1; } else if (false) { x = 3; }", "if(x)x=1");
 
     foldSame("var z=x?void 0:y()");
     foldSame("z=x?void 0:y()");

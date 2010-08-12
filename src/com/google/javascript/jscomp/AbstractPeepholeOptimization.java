@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 /**
  * An abstract class whose implementations run peephole optimizations:
@@ -115,5 +117,24 @@ abstract class AbstractPeepholeOptimization {
    */
   boolean mayHaveSideEffects(Node n) {
     return NodeUtil.mayHaveSideEffects(n, currentTraversal.getCompiler());
+  }
+
+  /**
+   * Check if the specified node is null or is still in the AST.
+   */
+  @VisibleForTesting
+  static Node validateResult(Node n) {
+    done: {
+      if (n != null && n.getType() != Token.SCRIPT
+          && (n.getType() != Token.BLOCK || !n.isSyntheticBlock())) {
+        for (Node parent : n.getAncestors()) {
+          if (parent.getType() == Token.SCRIPT) {
+            break done;
+          }
+        }
+        Preconditions.checkState(false);
+      }
+    }
+    return n;
   }
 }

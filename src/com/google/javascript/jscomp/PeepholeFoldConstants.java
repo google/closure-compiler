@@ -223,9 +223,10 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (NodeUtil.isExpressionNode(parent)) {
       // If the value isn't used, then just throw
       // away the operator
-      parent.replaceChild(n, n.removeFirstChild());
+      Node replacement = n.removeFirstChild();
+      parent.replaceChild(n, replacement);
       reportCodeChange();
-      return null;
+      return replacement;
     }
 
     TernaryValue leftVal = NodeUtil.getBooleanValue(left);
@@ -605,49 +606,50 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Preconditions.checkArgument(n.getType() == Token.BITAND
         || n.getType() == Token.BITOR);
 
-    if (left.getType() == Token.NUMBER &&
-        right.getType() == Token.NUMBER) {
-      double resultDouble;
-      double lval = left.getDouble();
-      double rval = right.getDouble();
-
-      // For now, we are being extra conservative, and only folding ints in
-      // the range MIN_VALUE-MAX_VALUE
-      if (lval < Integer.MIN_VALUE || lval > Integer.MAX_VALUE ||
-          rval < Integer.MIN_VALUE || rval > Integer.MAX_VALUE) {
-
-        // Fall back through and let the javascript use the larger values
-        return n;
-      }
-
-      // Convert the numbers to ints
-      int lvalInt = (int) lval;
-      if (lvalInt != lval) {
-        return n;
-      }
-
-      int rvalInt = (int) rval;
-      if (rvalInt != rval) {
-        return n;
-      }
-
-      switch (n.getType()) {
-        case Token.BITAND:
-          resultDouble = lvalInt & rvalInt;
-          break;
-        case Token.BITOR:
-          resultDouble = lvalInt | rvalInt;
-          break;
-        default:
-          throw new Error("Unknown bitwise operator");
-      }
-
-      Node newNumber = Node.newNumber(resultDouble);
-      n.getParent().replaceChild(n, newNumber);
-      reportCodeChange();
+    if (left.getType() != Token.NUMBER ||
+        right.getType() != Token.NUMBER) {
+      return n;
     }
 
-    return n;
+    double resultDouble;
+    double lval = left.getDouble();
+    double rval = right.getDouble();
+
+    // For now, we are being extra conservative, and only folding ints in
+    // the range MIN_VALUE-MAX_VALUE
+    if (lval < Integer.MIN_VALUE || lval > Integer.MAX_VALUE ||
+        rval < Integer.MIN_VALUE || rval > Integer.MAX_VALUE) {
+
+      // Fall back through and let the javascript use the larger values
+      return n;
+    }
+
+    // Convert the numbers to ints
+    int lvalInt = (int) lval;
+    if (lvalInt != lval) {
+      return n;
+    }
+
+    int rvalInt = (int) rval;
+    if (rvalInt != rval) {
+      return n;
+    }
+
+    switch (n.getType()) {
+      case Token.BITAND:
+        resultDouble = lvalInt & rvalInt;
+        break;
+      case Token.BITOR:
+        resultDouble = lvalInt | rvalInt;
+        break;
+      default:
+        throw new Error("Unknown bitwise operator");
+    }
+
+    Node newNumber = Node.newNumber(resultDouble);
+    n.getParent().replaceChild(n, newNumber);
+    reportCodeChange();
+    return newNumber;
   }
 
   /**
@@ -1197,5 +1199,4 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     return n;
   }
-
 }
