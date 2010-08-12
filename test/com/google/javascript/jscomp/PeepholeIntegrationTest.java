@@ -79,8 +79,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   /** Check that removing blocks with 1 child works */
   public void testFoldOneChildBlocksIntegration() {
+     fold("function(){switch(foo()){default:{break}}}",
+          "function(){foo()}");
+
      fold("function(){switch(x){default:{break}}}",
-          "function(){switch(x){default:break}}");
+          "function(){}");
 
      fold("function(){switch(x){default:x;case 1:return 2}}",
           "function(){switch(x){default:case 1:return 2}}");

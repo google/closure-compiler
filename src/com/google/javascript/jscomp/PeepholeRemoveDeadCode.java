@@ -48,6 +48,8 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryFoldHookExpr(subtree);
       case Token.HOOK:
         return tryFoldHook(subtree);
+      case Token.SWITCH:
+        return tryOptimizeSwitch(subtree);
       case Token.IF:
         return tryFoldIf(subtree);
       case Token.WHILE:
@@ -64,6 +66,102 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         default:
           return subtree;
     }
+  }
+
+  /**
+   * Remove useless switches and cases.
+   */
+  private Node tryOptimizeSwitch(Node n) {
+    Preconditions.checkState(n.getType() == Token.SWITCH);
+
+    Node defaultCase = findDefaultCase(n);
+    if (defaultCase != null && isUselessCase(defaultCase)) {
+      NodeUtil.redeclareVarsInsideBranch(defaultCase);
+      n.removeChild(defaultCase);
+      reportCodeChange();
+      defaultCase = null;
+    }
+
+    // Removing cases when there exists a default case is not safe.
+    // TODO(johnlenz): Allow this if the same code is executed.
+    if (defaultCase == null) {
+      Node next = null;
+      // The first child is the switch conditions skip it.
+      for (Node c = n.getFirstChild().getNext(); c != null; c = next) {
+        next = c.getNext();
+        if (!mayHaveSideEffects(c.getFirstChild()) && isUselessCase(c)) {
+          NodeUtil.redeclareVarsInsideBranch(c);
+          n.removeChild(c);
+          reportCodeChange();
+        }
+      }
+    }
+
+    if (n.hasOneChild()) {
+      Node condition = n.removeFirstChild();
+      Node parent = n.getParent();
+      Node replacement = new Node(Token.EXPR_RESULT, condition)
+                            .copyInformationFrom(n);
+      parent.replaceChild(n, replacement);
+      reportCodeChange();
+      return replacement;
+    }
+
+    return null;
+  }
+
+  /**
+   * @return the default case node or null.
+   */
+  private Node findDefaultCase(Node n) {
+    for (Node c : n.children()) {
+      if (c.getType() == Token.DEFAULT) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * @return Whether the CASE or DEFAULT block does anything useful.
+   */
+  private boolean isUselessCase(Node caseNode) {
+    Node executingCase = caseNode;
+    while (executingCase != null) {
+      Preconditions.checkState(executingCase.getType() == Token.DEFAULT
+          || executingCase.getType() == Token.CASE);
+      // We only expect a DEFAULT case if the case we are checking is the
+      // DEFAULT case.  Otherwise we assume the DEFAULT case has already
+      // been removed.
+      Preconditions.checkState(caseNode == executingCase
+          || executingCase.getType() != Token.DEFAULT);
+      Node block = executingCase.getLastChild();
+      Preconditions.checkState(block.getType() == Token.BLOCK);
+      if (block.hasChildren()) {
+        for (Node blockChild : block.children()) {
+          int type = blockChild.getType();
+          // If this is a block with a labelless break, it is useless.
+          switch (blockChild.getType()) {
+            case Token.BREAK:
+              // A break to a different control structure isn't useless.
+              return blockChild.getFirstChild() == null;
+            case Token.VAR:
+              if (blockChild.hasOneChild()
+                  && blockChild.getFirstChild().getFirstChild() == null) {
+                // Variable declarations without initializations are ok.
+                continue;
+              }
+              return false;
+            default:
+              return false;
+          }
+        }
+      } else {
+        // Look at the fallthrough case
+        executingCase = executingCase.getNext();
+      }
+    }
+    return true;
   }
 
   private Node tryFoldComma(Node n) {
