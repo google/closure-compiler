@@ -54,7 +54,7 @@ import java.util.Set;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-class InlineFunctions implements CompilerPass {
+class InlineFunctions implements SpecializationAwareCompilerPass {
 
   // TODO(nicksantos): This needs to be completely rewritten to use scopes
   // to do variable lookups. Right now, it assumes that all functions are
@@ -71,6 +71,8 @@ class InlineFunctions implements CompilerPass {
   private final boolean blockFunctionInliningEnabled;
   private final boolean inlineGlobalFunctions;
   private final boolean inlineLocalFunctions;
+
+  private SpecializeModule.SpecializationState specializationState;
 
   InlineFunctions(AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
@@ -95,6 +97,11 @@ class InlineFunctions implements CompilerPass {
       fns.put(fnName, fs);
     }
     return fs;
+  }
+
+  public void enableSpecialization(SpecializeModule.SpecializationState
+      specializationState) {
+    this.specializationState = specializationState;
   }
 
   @Override
@@ -307,6 +314,14 @@ class InlineFunctions implements CompilerPass {
   }
 
   /**
+   * Returns the function the traversal is currently traversing, or null
+   * if in the global scope.
+   */
+  private Node getContainingFunction(NodeTraversal t) {
+    return (t.inGlobalScope()) ? null : t.getScopeRoot();
+  }
+
+  /**
    * Checks if the given function matches the criteria for an inlinable
    * function.
    */
@@ -325,6 +340,12 @@ class InlineFunctions implements CompilerPass {
 
     // Don't inline this special function
     if (RenameProperties.RENAME_PROPERTY_FUNCTION_NAME.equals(fnName)) {
+      return false;
+    }
+
+    // Don't inline if we are specializing and the function can't be fixed up
+    if (specializationState != null &&
+        !specializationState.canFixupFunction(fn.getFunctionNode())) {
       return false;
     }
 
@@ -448,6 +469,17 @@ class InlineFunctions implements CompilerPass {
     private boolean maybeAddReferenceUsingMode(
         NodeTraversal t, FunctionState fs, Node callNode,
         JSModule module, InliningMode mode) {
+
+      if (specializationState != null) {
+        // If we're specializing, make sure we can fixup
+        // the containing function before inlining
+        Node containingFunction = getContainingFunction(t);
+        if (containingFunction != null && !specializationState.canFixupFunction(
+            containingFunction)) {
+            return false;
+        }
+      }
+
       CanInlineResult result = injector.canInlineReferenceToFunction(
           t, callNode, fs.getFn().getFunctionNode(),
           fs.getNamesToAlias(), mode, fs.getReferencesThis(),
@@ -525,7 +557,7 @@ class InlineFunctions implements CompilerPass {
   /**
    * Inline functions at the call sites.
    */
-  private static class Inline implements CallVisitorCallback {
+  private class Inline implements CallVisitorCallback {
     private final FunctionInjector injector;
 
     Inline(FunctionInjector injector) {
@@ -542,6 +574,16 @@ class InlineFunctions implements CompilerPass {
         // or if the call site was trimmed from the list of references because
         // the function couldn't be inlined at this location.
         if (ref != null) {
+          if (specializationState != null) {
+            Node containingFunction = getContainingFunction(t);
+
+            if (containingFunction != null) {
+              // Report that the function was specialized so that
+              // {@link SpecializeModule} can fix it up.
+              specializationState.reportSpecializedFunction(containingFunction);
+            }
+          }
+
           inlineFunction(t, callNode, fs, ref.mode);
           // Keep track of references that have been inlined so that
           // we can verify that none have been missed.
@@ -747,6 +789,11 @@ class InlineFunctions implements CompilerPass {
         Preconditions.checkState(fs.canInline());
         Preconditions.checkState(fn != null);
         verifyAllReferencesInlined(fs);
+
+        if (specializationState != null) {
+          specializationState.reportRemovedFunction(fn.getFunctionNode());
+        }
+
         fn.remove();
         compiler.reportCodeChange();
       }

@@ -64,11 +64,16 @@ import java.util.List;
  *
  *
  */
-class DevirtualizePrototypeMethods implements CompilerPass {
+class DevirtualizePrototypeMethods implements SpecializationAwareCompilerPass {
   private final AbstractCompiler compiler;
+  private SpecializeModule.SpecializationState specializationState;
 
   DevirtualizePrototypeMethods(AbstractCompiler compiler) {
     this.compiler = compiler;
+  }
+
+  public void enableSpecialization(SpecializeModule.SpecializationState state) {
+    this.specializationState = state;
   }
 
   @Override
@@ -235,6 +240,15 @@ class DevirtualizePrototypeMethods implements CompilerPass {
 
       // Multiple definitions prevent rewrite.
       Node nameNode = site.node;
+
+      // Don't rewrite methods called in functions that can't be specialized
+      // if we are specializing
+      if (specializationState != null &&
+          !specializationState.canFixupSpecializedFunctionContainingNode(
+              nameNode)) {
+        return false;
+      }
+
       Collection<Definition> singleSiteDefinitions =
           defFinder.getDefinitionsReferencedAt(nameNode);
       if (singleSiteDefinitions.size() > 1) {
@@ -282,6 +296,10 @@ class DevirtualizePrototypeMethods implements CompilerPass {
           Node.newString(Token.NAME, newMethodName)
               .copyInformationFrom(node));
       compiler.reportCodeChange();
+
+      if (specializationState != null) {
+        specializationState.reportSpecializedFunctionContainingNode(parent);
+      }
     }
   }
 
@@ -303,6 +321,11 @@ class DevirtualizePrototypeMethods implements CompilerPass {
 
     Node newNameNode = Node.newString(Token.NAME, newMethodName)
         .copyInformationFrom(parent.getFirstChild());
+
+    if (specializationState != null) {
+      specializationState.reportRemovedFunction(functionNode);
+    }
+
     parent.removeChild(functionNode);
     newNameNode.addChildToFront(functionNode);
     block.replaceChild(expr, new Node(Token.VAR, newNameNode));

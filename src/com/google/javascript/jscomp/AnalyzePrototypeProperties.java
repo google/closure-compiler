@@ -464,7 +464,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   /**
    * A function initialized as a VAR statement or a function declaration.
    */
-  private class GlobalFunction implements Symbol {
+   class GlobalFunction implements Symbol {
     private final Node nameNode;
     private final JSModule module;
 
@@ -491,6 +491,17 @@ class AnalyzePrototypeProperties implements CompilerPass {
     public JSModule getModule() {
       return module;
     }
+
+    public Node getFunctionNode() {
+      Node parent = nameNode.getParent();
+
+      if (NodeUtil.isFunction(parent)) {
+        return parent;
+      } else {
+        // we are the name of a var node, so the function is name's second child
+        return nameNode.getChildAtIndex(1);
+      }
+    }
   }
 
   /**
@@ -515,7 +526,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * <pre>function Foo() { ... };
    * Foo.prototype.bar = function() { ... };</pre>
    */
-  private static class AssignmentProperty implements Property {
+  static class AssignmentProperty implements Property {
     private final Node node;
     private final JSModule module;
 
@@ -560,7 +571,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * <pre>function Foo() { ... };
    * Foo.prototype = {bar: function() { ... };</pre>
    */
-  private static class LiteralProperty implements Property {
+  static class LiteralProperty implements Property {
     private final Node key;
     private final Node value;
     private final Node map;

@@ -414,6 +414,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Whether to export test functions. */
   public boolean exportTestFunctions;
 
+  /** Specialize the initial module at the cost of later modules */
+  public boolean specializeInitialModule;
+
   //--------------------------------
   // Special-purpose alterations
   //--------------------------------

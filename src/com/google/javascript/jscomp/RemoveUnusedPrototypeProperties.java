@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.AnalyzePrototypeProperties.AssignmentProperty;
+import com.google.javascript.jscomp.AnalyzePrototypeProperties.GlobalFunction;
+import com.google.javascript.jscomp.AnalyzePrototypeProperties.LiteralProperty;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.NameInfo;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Symbol;
 import com.google.javascript.rhino.Node;
@@ -29,7 +33,8 @@ import java.util.logging.Logger;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class RemoveUnusedPrototypeProperties implements CompilerPass {
+class RemoveUnusedPrototypeProperties implements
+    SpecializationAwareCompilerPass {
 
   private static final Logger logger =
     Logger.getLogger(RemoveUnusedPrototypeProperties.class.getName());
@@ -37,6 +42,7 @@ class RemoveUnusedPrototypeProperties implements CompilerPass {
   private final AbstractCompiler compiler;
   private final boolean canModifyExterns;
   private final boolean anchorUnusedVars;
+  private SpecializeModule.SpecializationState specializationState;
 
   /**
    * Creates a new pass for removing unused prototype properties, based
@@ -49,12 +55,18 @@ class RemoveUnusedPrototypeProperties implements CompilerPass {
    *     never used.
    */
   RemoveUnusedPrototypeProperties(AbstractCompiler compiler,
-      boolean canModifyExterns, boolean anchorUnusedVars) {
+      boolean canModifyExterns,
+      boolean anchorUnusedVars) {
     this.compiler = compiler;
     this.canModifyExterns = canModifyExterns;
     this.anchorUnusedVars = anchorUnusedVars;
   }
 
+  public void enableSpecialization(SpecializeModule.SpecializationState state) {
+    this.specializationState = state;
+  }
+
+  @Override
   public void process(Node externRoot, Node root) {
     AnalyzePrototypeProperties analyzer =
         new AnalyzePrototypeProperties(compiler,
@@ -72,8 +84,24 @@ class RemoveUnusedPrototypeProperties implements CompilerPass {
     for (NameInfo nameInfo : allNameInfo) {
       if (!nameInfo.isReferenced()) {
         for (Symbol declaration : nameInfo.getDeclarations()) {
-          declaration.remove();
-          changed = true;
+          boolean canRemove = false;
+
+          if (specializationState == null) {
+            canRemove = true;
+          } else {
+            Node specializableFunction =
+              getSpecializableFunctionFromSymbol(declaration);
+
+            if (specializableFunction != null) {
+              specializationState.reportRemovedFunction(specializableFunction);
+              canRemove = true;
+            }
+          }
+
+          if (canRemove) {
+            declaration.remove();
+            changed = true;
+          }
         }
 
         logger.fine("Removed unused prototype property: " + nameInfo.name);
@@ -82,6 +110,39 @@ class RemoveUnusedPrototypeProperties implements CompilerPass {
 
     if (changed) {
       compiler.reportCodeChange();
+    }
+  }
+
+  /**
+   * Attempts to find a specializable function from the Symbol.
+   */
+  private Node getSpecializableFunctionFromSymbol(Symbol symbol) {
+    Preconditions.checkNotNull(specializationState);
+
+    Node specializableFunction = null;
+
+    if (symbol instanceof GlobalFunction) {
+      specializableFunction = ((GlobalFunction) symbol).getFunctionNode();
+    } else if (symbol instanceof AssignmentProperty) {
+      Node propertyValue = ((AssignmentProperty) symbol).getValue();
+      if (NodeUtil.isFunction(propertyValue)) {
+        specializableFunction = propertyValue;
+      }
+    } else if (symbol instanceof LiteralProperty) {
+      // Module specialization doesn't know how to handle these
+      // because the "name" of the function isn't the name
+      // it needs to add an unspecialized version of.
+
+      return null;
+    } else {
+      Preconditions.checkState(false, "Should be unreachable.");
+    }
+
+    if (specializableFunction != null &&
+        specializationState.canFixupFunction(specializableFunction)) {
+      return specializableFunction;
+    } else {
+      return null;
     }
   }
 }
