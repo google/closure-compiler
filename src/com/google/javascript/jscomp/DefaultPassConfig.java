@@ -334,7 +334,8 @@ public class DefaultPassConfig extends PassConfig {
 
     // Abstract method removal works best on minimally modified code, and also
     // only needs to run once.
-    if (options.closurePass && options.removeAbstractMethods) {
+    if (options.closurePass &&
+        (options.removeAbstractMethods || options.removeClosureAsserts)) {
       passes.add(closureCodeRemoval);
     }
 
@@ -1219,8 +1220,8 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("closureCodeRemoval", true) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      // TODO(nicksantos): add flags.
-      return new ClosureCodeRemoval(compiler, true, false);
+      return new ClosureCodeRemoval(compiler, options.removeAbstractMethods,
+          options.removeClosureAsserts);
     }
   };
 

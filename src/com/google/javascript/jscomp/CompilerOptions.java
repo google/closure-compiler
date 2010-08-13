@@ -468,6 +468,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Remove goog.abstractMethod assignments. */
   boolean removeAbstractMethods;
 
+  /** Remove goog.asserts calls. */
+  boolean removeClosureAsserts;
+
   /** Gather CSS names (requires closurePass) */
   public boolean gatherCssNames;
 
@@ -699,6 +702,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     closurePass = false;
     rewriteNewDateGoogNow = true;
     removeAbstractMethods = true;
+    removeClosureAsserts = false;
     stripTypes = Collections.emptySet();
     stripNameSuffixes = Collections.emptySet();
     stripNamePrefixes = Collections.emptySet();
@@ -883,6 +887,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setRemoveAbstractMethods(boolean remove) {
     this.removeAbstractMethods = remove;
+  }
+
+  public void setRemoveClosureAsserts(boolean remove) {
+    this.removeClosureAsserts = remove;
   }
 
   /**
