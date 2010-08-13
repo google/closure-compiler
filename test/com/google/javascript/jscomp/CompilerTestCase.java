@@ -139,6 +139,11 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
+
+    // This doesn't affect whether checkSymbols is run--it just affects
+    // whether variable warnings are filtered.
+    options.checkSymbols = true;
+
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setCodingConvention(getCodingConvention());

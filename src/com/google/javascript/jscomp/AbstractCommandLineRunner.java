@@ -124,8 +124,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   protected abstract B createOptions();
 
+  /**
+   * The warning classes that are available from the command-line.
+   */
   protected DiagnosticGroups getDiagnosticGroups() {
-    return new DiagnosticGroups();
+    if (compiler == null) {
+      return new DiagnosticGroups();
+    }
+    return compiler.getDiagnosticGroups();
   }
 
   /** No longer does anything. */

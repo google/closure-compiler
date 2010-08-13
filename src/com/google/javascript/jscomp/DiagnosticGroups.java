@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.util.List;
@@ -37,6 +38,11 @@ public class DiagnosticGroups {
       DiagnosticGroup group) {
     groupsByName.put(name, group);
     return group;
+  }
+
+  /** Get the registered diagnostic groups, indexed by name. */
+  protected Map<String, DiagnosticGroup> getRegisteredGroups() {
+    return ImmutableMap.copyOf(groupsByName);
   }
 
   /** Find the diagnostic group registered under the given name. */

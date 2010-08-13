@@ -215,19 +215,6 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(createSyntheticBlocks);
     }
 
-    // All passes must run the variable check. This synthesizes
-    // variables later so that the compiler doesn't crash. It also
-    // checks the externs file for validity. If you don't want to warn
-    // about missing variable declarations, we shut that specific
-    // error off.
-    WarningsGuard warningsGuard = options.getWarningsGuard();
-    if (!options.checkSymbols &&
-        (warningsGuard == null || !warningsGuard.disables(
-            DiagnosticGroups.CHECK_VARIABLES))) {
-      options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES,
-          CheckLevel.OFF);
-    }
-
     checks.add(checkVars);
     if (options.computeFunctionSideEffects) {
       checks.add(checkRegExp);

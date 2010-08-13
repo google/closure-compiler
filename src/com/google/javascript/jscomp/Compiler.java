@@ -83,6 +83,9 @@ public class Compiler extends AbstractCompiler {
   // error manager to which error management is delegated
   private ErrorManager errorManager;
 
+  // Warnings guard for filtering warnings.
+  private WarningsGuard warningsGuard;
+
   // Parse tree root nodes
   Node externsRoot;
   Node jsRoot;
@@ -224,6 +227,29 @@ public class Compiler extends AbstractCompiler {
         setErrorManager(printer);
       }
     }
+
+    // Initialize the warnings guard.
+    List<WarningsGuard> guards = Lists.newArrayList();
+    guards.add(
+        new SuppressDocWarningsGuard(
+            getDiagnosticGroups().getRegisteredGroups()));
+    WarningsGuard warningsGuard = options.getWarningsGuard();
+    if (warningsGuard != null) {
+      guards.add(options.getWarningsGuard());
+    }
+
+    // All passes must run the variable check. This synthesizes
+    // variables later so that the compiler doesn't crash. It also
+    // checks the externs file for validity. If you don't want to warn
+    // about missing variable declarations, we shut that specific
+    // error off.
+    if (!options.checkSymbols &&
+        (warningsGuard == null || !warningsGuard.disables(
+            DiagnosticGroups.CHECK_VARIABLES))) {
+      guards.add(new DiagnosticGroupWarningsGuard(
+          DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+    }
+    this.warningsGuard = new ComposeWarningsGuard(guards);
   }
 
   /**
@@ -1574,12 +1600,19 @@ public class Compiler extends AbstractCompiler {
   // Error reporting
   //------------------------------------------------------------------------
 
+  /**
+   * The warning classes that are available from the command-line, and
+   * are suppressable by the {@code @suppress} annotation.
+   */
+  protected DiagnosticGroups getDiagnosticGroups() {
+    return new DiagnosticGroups();
+  }
+
   @Override
   public void report(JSError error) {
     CheckLevel level = error.level;
-    WarningsGuard guard = options.getWarningsGuard();
-    if (guard != null) {
-      CheckLevel newLevel = guard.level(error);
+    if (warningsGuard != null) {
+      CheckLevel newLevel = warningsGuard.level(error);
       if (newLevel != null) {
         level = newLevel;
       }

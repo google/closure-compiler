@@ -33,12 +33,17 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   private boolean enableAmbiguousFunctionCheck = false;
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  public CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
     if (enableAmbiguousFunctionCheck) {
-      compiler.getOptions().setWarningLevel(
+      options.setWarningLevel(
           DiagnosticGroups.AMBIGUOUS_FUNCTION_DECL, CheckLevel.WARNING);
     }
+    return options;
+  }
 
+  @Override
+  public CompilerPass getProcessor(Compiler compiler) {
     // Treats bad reads as errors, and reports bad write warnings.
     return new VariableReferenceCheck(compiler, CheckLevel.WARNING);
   }

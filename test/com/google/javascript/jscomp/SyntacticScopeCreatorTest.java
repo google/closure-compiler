@@ -122,6 +122,10 @@ public class SyntacticScopeCreatorTest extends TestCase {
    */
   private int createGlobalScopeHelper(String js) {
     Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.checkSymbols = true;
+    compiler.initOptions(options);
+
     Node root = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
     Scope globalScope =

@@ -7047,6 +7047,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
       "function f(x) { !x.foo || x.foo(); }");
   }
 
+  public void testMissingProperty34() throws Exception {
+    testTypes(
+        "/** @fileoverview \n * @suppress {missingProperties} */" +
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.bar = function() { return this.a; };" +
+        "Foo.prototype.baz = function() { this.b = 3; };");
+  }
+
   public void testDeclaredNativeTypeEquality() throws Exception {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
     assertEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
