@@ -47,7 +47,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -124,7 +124,7 @@ public class JSTypeRegistry implements Serializable {
 
   // A map from interface name to types that implement it.
   private final Multimap<String, FunctionType> interfaceToImplementors =
-      HashMultimap.create();
+      LinkedHashMultimap.create();
 
   // All the unresolved named types.
   private final Multimap<StaticScope<JSType>, NamedType> unresolvedNamedTypes =
@@ -605,7 +605,8 @@ public class JSTypeRegistry implements Serializable {
 
     Set<ObjectType> typeSet = typesIndexedByProperty.get(propertyName);
     if (typeSet == null) {
-      typesIndexedByProperty.put(propertyName, typeSet = Sets.newHashSet());
+      typesIndexedByProperty.put(
+          propertyName, typeSet = Sets.newLinkedHashSet());
     }
     greatestSubtypeByProperty.remove(propertyName);
     typeSet.add(owner);
@@ -654,7 +655,7 @@ public class JSTypeRegistry implements Serializable {
   public Set<ObjectType> getTypesWithProperty(String propertyName) {
     Set<ObjectType> typeSet = typesIndexedByProperty.get(propertyName);
     if (typeSet == null) {
-      return Sets.newHashSet(getNativeObjectType(NO_TYPE));
+      return Sets.newLinkedHashSet(getNativeObjectType(NO_TYPE));
     }
     return typeSet;
   }

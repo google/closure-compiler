@@ -39,11 +39,12 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.Maps;
 import com.google.javascript.rhino.ErrorReporter;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 
 /**
  * A record (structural) type.
@@ -62,7 +63,7 @@ import java.util.Set;
 public class RecordType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
-  private Map<String, JSType> properties = new HashMap<String, JSType>();
+  private SortedMap<String, JSType> properties = Maps.newTreeMap();
   private boolean isFrozen = false;
 
   /**

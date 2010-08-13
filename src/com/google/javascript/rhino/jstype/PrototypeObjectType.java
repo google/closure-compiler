@@ -103,7 +103,7 @@ class PrototypeObjectType extends ObjectType {
   PrototypeObjectType(JSTypeRegistry registry, String className,
       ObjectType implicitPrototype, boolean nativeType) {
     super(registry);
-    this.properties = Maps.newHashMap();
+    this.properties = Maps.newTreeMap();
     this.className = className;
     this.nativeType = nativeType;
     if (nativeType) {

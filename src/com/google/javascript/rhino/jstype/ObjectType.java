@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -318,7 +317,7 @@ public abstract class ObjectType extends JSType {
 
   /** Returns the names of all the properties directly on this type. */
   public Set<String> getOwnPropertyNames() {
-    return new HashSet<String>();
+    return ImmutableSet.of();
   }
 
   /**
@@ -353,7 +352,7 @@ public abstract class ObjectType extends JSType {
    * its supertypes.
    */
   public Set<String> getPropertyNames() {
-    Set<String> props = Sets.newHashSet();
+    Set<String> props = Sets.newTreeSet();
     collectPropertyNames(props);
     return props;
   }

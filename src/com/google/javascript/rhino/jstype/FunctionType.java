@@ -311,7 +311,9 @@ public class FunctionType extends PrototypeObjectType {
    * types are resolved, it may return an incomplete set.
    */
   public Iterable<ObjectType> getAllImplementedInterfaces() {
-    Set<ObjectType> interfaces = Sets.newHashSet();
+    // Store them in a linked hash set, so that the compile job is
+    // deterministic.
+    Set<ObjectType> interfaces = Sets.newLinkedHashSet();
 
     for (ObjectType type : getImplementedInterfaces()) {
       addRelatedInterfaces(type, interfaces);
