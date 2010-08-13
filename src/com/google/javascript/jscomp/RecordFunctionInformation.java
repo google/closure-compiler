@@ -27,8 +27,8 @@ import java.util.TreeSet;
 /**
  * Records information about functions and modules.
  *
-*
-*
+ *
+ *
  */
 class RecordFunctionInformation extends AbstractPostOrderCallback
     implements CompilerPass {

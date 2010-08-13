@@ -40,7 +40,7 @@ import java.util.List;
  * <p>This class is <b>not</b> thread safe and should not be used without proper
  * external synchronization.</p>
  *
-*
+ *
  */
 public class DotFormatter {
   private static final String INDENT = "  ";

@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CheckLevel;
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
  *
-*
+ *
  */
 public class VariableReferenceCheckTest extends CompilerTestCase {
 

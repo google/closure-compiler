@@ -20,7 +20,7 @@
  *  w3c_dom2.js.
  *
  * @externs
-*
+ *
  */
 
 // TODO: Almost all of it has not been annotated with types.

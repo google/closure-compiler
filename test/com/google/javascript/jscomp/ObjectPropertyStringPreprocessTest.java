@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link ObjectPropertyStringPreprocess}
  *
-*
+ *
  */
 public class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
   @Override

@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
  *     .build();
  * </pre>
  *
-*
+ *
  * @author anatol@google.com (Anatol Pomazau)
  */
 public class JsMessage {

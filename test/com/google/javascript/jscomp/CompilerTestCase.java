@@ -37,7 +37,7 @@ import java.util.List;
  * which makes it easier to write tests b/c you don't have to get the syntax
  * exactly correct to the spacing.</p>
  *
-*
+ *
  */
 public abstract class CompilerTestCase extends TestCase  {
 

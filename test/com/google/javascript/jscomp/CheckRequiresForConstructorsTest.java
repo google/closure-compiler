@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.Result;
 /**
  * Tests for {@link CheckRequiresForConstructors}.
  *
-*
+ *
  */
 public class CheckRequiresForConstructorsTest extends CompilerTestCase {
   @Override

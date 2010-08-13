@@ -45,7 +45,7 @@ package com.google.javascript.rhino.jstype;
  * For example, <code>Object.<number, string></code> can take only numbers as
  * keys.
  *
-*
+ *
  */
 final class IndexedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;

@@ -49,7 +49,7 @@ import java.util.logging.Logger;
  * call sites. For examples, calls of the form foo["bar"] are not
  * detected.
  *
-*
+ *
  */
 class InlineGetters extends MethodCompilerPass {
 

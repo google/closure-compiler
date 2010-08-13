@@ -50,7 +50,7 @@ import java.util.Set;
  * @see NamedType
  * @see ParameterizedType
  *
-*
+ *
  */
 class ProxyObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;

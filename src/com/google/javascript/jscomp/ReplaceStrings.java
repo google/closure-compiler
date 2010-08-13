@@ -42,7 +42,7 @@ import java.util.Set;
  * leaking details about the source code.
  *
  * Based in concept on the work by Jared Jacobs.
-*
+ *
  */
 public class ReplaceStrings extends AbstractPostOrderCallback
     implements CompilerPass {

@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * A generic directed graph.
  *
-*
+ *
  *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.

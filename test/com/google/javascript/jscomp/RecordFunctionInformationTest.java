@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link RecordFunctionInformation}
  *
-*
+ *
  */
 public class RecordFunctionInformationTest extends TestCase {
   private void test(String js, FunctionInformationMap expected) {

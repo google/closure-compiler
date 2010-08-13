@@ -45,10 +45,10 @@ import java.util.Set;
  * algorithmist</a> for more detail.
  *
  * @param <E> element type
-*
-*
-*
-*
+ *
+ *
+ *
+ *
  */
 public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 

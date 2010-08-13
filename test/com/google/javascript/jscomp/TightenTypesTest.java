@@ -25,8 +25,8 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 /**
  * Unit test for the TightenTypes pass.
  *
-*
-*
+ *
+ *
  */
 public class TightenTypesTest extends CompilerTestCase {
   private TightenTypes tt;

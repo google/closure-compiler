@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Tests for {@link ReplaceStrings}.
  *
-*
+ *
  */
 public class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;

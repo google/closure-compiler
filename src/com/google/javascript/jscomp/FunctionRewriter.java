@@ -42,7 +42,7 @@ import java.util.List;
  * if by doing so we will save bytes, after the helper functions are
  * added and renaming is done.
  *
-*
+ *
  */
 class FunctionRewriter implements CompilerPass {
   private final AbstractCompiler compiler;

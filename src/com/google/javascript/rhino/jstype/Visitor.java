@@ -54,7 +54,7 @@ package com.google.javascript.rhino.jstype;
  * &nbsp;&nbsp;&hellip;
  * });</pre>
  *
-*
+ *
  */
 public interface Visitor<T> {
   /**

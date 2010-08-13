@@ -48,7 +48,7 @@ import junit.framework.TestCase;
 /**
  * Tests {@link BooleanLiteralSet}.
  *
-*
+ *
  */
 public class BooleanLiteralSetTest extends TestCase {
 

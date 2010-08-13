@@ -23,8 +23,8 @@ import java.util.Set;
 /**
  * Tests for {@link StripCode}.
  *
-*
-*
+ *
+ *
  */
 public class StripCodeTest extends CompilerTestCase {
 

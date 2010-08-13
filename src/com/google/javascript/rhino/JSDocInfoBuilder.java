@@ -50,7 +50,7 @@ import java.util.Set;
  * incompatibility detection among properties stored on the {@code JSDocInfo}
  * object being created.
  *
-*
+ *
  */
 final public class JSDocInfoBuilder {
   // the current JSDoc which is being populated

@@ -24,7 +24,7 @@ import java.util.Collection;
  *
  * <p>For a more extensive interface, see {@link Graph}.
  *
-*
+ *
  *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.

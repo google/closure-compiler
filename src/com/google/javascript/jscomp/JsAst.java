@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 /**
  * Generates an AST for a JavaScript source file.
  *
-*
+ *
  */
 public class JsAst implements SourceAst {
   private static final Logger logger_ = Logger.getLogger(JsAst.class.getName());

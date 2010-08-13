@@ -28,7 +28,7 @@ import java.util.List;
  * cases. More complicated cases will be tested by the clients of
  * {@link DefinitionsRemover}.
  *
-*
+ *
  */
 public class DefinitionsRemoverTest extends CompilerTestCase {
   public void testRemoveFunction() {

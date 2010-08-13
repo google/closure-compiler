@@ -36,8 +36,8 @@ import java.util.Set;
  * Builds a global namespace of all the objects and their properties in
  * the global scope. Also builds an index of all the references to those names.
  *
-*
-*
+ *
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
 class GlobalNamespace {

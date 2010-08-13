@@ -23,7 +23,7 @@ package com.google.javascript.jscomp.graph;
  *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.
-*
+ *
  */
 public interface SubGraph<N, E> {
   /** Returns true if the node is a neighbor of any node in this SubGraph. */

@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link ExtractPrototypeMemberDeclarations}.
  *
-*
+ *
  */
 public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
   private static final String TMP = "JSCompiler_prototypeAlias";

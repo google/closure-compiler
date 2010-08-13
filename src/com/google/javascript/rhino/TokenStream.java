@@ -56,8 +56,8 @@ import java.io.Reader;
  *
  * @see Parser
  *
-*
-*
+ *
+ *
  */
 
 public class TokenStream

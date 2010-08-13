@@ -44,7 +44,7 @@ import java.util.List;
  * back into this compiler pass to give it context about what combined
  * passes are doing.</p>
  *
-*
+ *
  */
 final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
 
@@ -88,7 +88,7 @@ final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
    * The callback becomes inactive (i.e., traversal messages are not sent to it)
    * until the main traversal revisits the node during the post-order visit.
    *
-*
+   *
    */
   private static class CallbackWrapper {
     /** The callback being wrapped. Never null. */

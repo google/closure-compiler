@@ -27,8 +27,8 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
  * DiGraphNode, DiGraphNode, Predicate, Predicate)}, for a
  * description of this algorithm.
  *
-*
-*
+ *
+ *
  *
  * @param <N> The node type.
  * @param <E> The edge type.

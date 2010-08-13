@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
  *
  * @see NameReferenceGraph
  *
-*
+ *
  */
 class NameReferenceGraphConstruction implements CompilerPass {
 

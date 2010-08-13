@@ -72,7 +72,7 @@ import java.util.logging.Logger;
  *   Bar.a$Bar;
  * </pre>
  *
-*
+ *
  */
 class DisambiguateProperties<T> implements CompilerPass {
   private static final Logger logger = Logger.getLogger(

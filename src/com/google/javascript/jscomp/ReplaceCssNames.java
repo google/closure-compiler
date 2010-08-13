@@ -56,7 +56,7 @@ import javax.annotation.Nullable;
  *
  * In addition, the CSS names before replacement can optionally be gathered.
  *
-*
+ *
  */
 class ReplaceCssNames implements CompilerPass {
 

@@ -27,7 +27,7 @@ import org.apache.tools.ant.Task;
 /**
  * An error manager that pipes warnings and errors properly into the Ant
  * task infrastructure.
-*
+ *
  */
 public final class AntErrorManager
     extends BasicErrorManager {

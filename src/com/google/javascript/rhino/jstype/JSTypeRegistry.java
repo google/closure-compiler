@@ -69,7 +69,7 @@ import java.util.Set;
  *
  * <p>This class is not thread-safe.
  *
-*
+ *
  */
 public class JSTypeRegistry implements Serializable {
   private static final long serialVersionUID = 1L;

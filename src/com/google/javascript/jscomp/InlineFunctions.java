@@ -51,7 +51,7 @@ import java.util.Set;
  * "directly" inlined functions must meet these additional requirements:
  * - consists of a single return statement
  *
-*
+ *
  * @author johnlenz@google.com (John Lenz)
  */
 class InlineFunctions implements CompilerPass {

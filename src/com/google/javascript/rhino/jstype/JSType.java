@@ -62,8 +62,8 @@ import java.util.Comparator;
  * order of types. All types are united at the top of the lattice by the
  * {@link AllType} and at the bottom by the {@link NoType}.<p>
  *
-*
-*
+ *
+ *
  */
 public abstract class JSType implements Serializable {
   private static final long serialVersionUID = 1L;

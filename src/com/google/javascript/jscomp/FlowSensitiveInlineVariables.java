@@ -52,7 +52,7 @@ import java.util.List;
  * <p>Other requirements can be found in {@link Candidate#canInline}. Currently
  * this pass does not operate on the global scope due to compilation time.
  *
-*
+ *
  */
 class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     implements CompilerPass, ScopedCallback {

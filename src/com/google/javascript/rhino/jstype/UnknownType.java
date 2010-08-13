@@ -47,8 +47,8 @@ import java.util.Set;
 
 /**
  * The {@code Unknown} type.
-*
-*
+ *
+ *
  */
 public class UnknownType extends ObjectType {
   private static final long serialVersionUID = 1L;

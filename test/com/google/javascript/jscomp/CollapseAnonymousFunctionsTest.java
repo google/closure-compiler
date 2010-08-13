@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link CollapseAnonymousFunctions}
  *
-*
+ *
  */
 public class CollapseAnonymousFunctionsTest extends CompilerTestCase {
   public CollapseAnonymousFunctionsTest() {

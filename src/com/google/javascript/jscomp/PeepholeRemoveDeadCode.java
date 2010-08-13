@@ -26,8 +26,8 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  * Peephole optimization to remove useless code such as IF's with false
  * guard conditions, comma operator left hand sides with no side effects, etc.
  *
-*
-*
+ *
+ *
  */
 public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 

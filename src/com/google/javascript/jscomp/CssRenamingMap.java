@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 /**
  * Interface used by {@link ReplaceCssNames} to substitute CSS class names.
-*
+ *
  */
 public interface CssRenamingMap {
   String get(String value);

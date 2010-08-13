@@ -33,7 +33,7 @@ import com.google.javascript.rhino.Token;
  *
  * and invokes a method defined by subclasses for processing these invocations.
  *
-*
+ *
  */
 abstract class InvocationsCallback extends AbstractPostOrderCallback {
 

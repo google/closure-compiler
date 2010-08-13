@@ -31,8 +31,8 @@ import java.nio.charset.CharsetEncoder;
  * CodeGenerator generates codes from a parse tree, sending it to the specified
  * CodeConsumer.
  *
-*
-*
+ *
+ *
  */
 class CodeGenerator {
 

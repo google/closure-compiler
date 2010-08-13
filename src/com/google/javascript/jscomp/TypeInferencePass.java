@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  * A compiler pass to run the type inference analysis.
  *
-*
+ *
  */
 class TypeInferencePass implements CompilerPass {
 

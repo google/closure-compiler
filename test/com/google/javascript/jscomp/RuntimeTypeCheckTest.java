@@ -22,8 +22,8 @@ import com.google.javascript.rhino.Node;
 /**
  * Tests for {@link RuntimeTypeCheck}.
  *
-*
-*
+ *
+ *
  */
 public class RuntimeTypeCheckTest extends CompilerTestCase {
 
