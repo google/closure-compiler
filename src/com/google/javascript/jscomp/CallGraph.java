@@ -19,14 +19,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NameReferenceGraph.Name;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
@@ -34,7 +32,6 @@ import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A pass the uses a {@link DefinitionProvider} to compute a call graph for an
@@ -64,10 +61,6 @@ import java.util.Set;
 public class CallGraph implements CompilerPass { 
   private AbstractCompiler compiler;
   
-  /** Maps a function to the callsites contained in that function. */
-  private Multimap<Function, Callsite> callsitesByContainingFunction =
-      LinkedHashMultimap.create();
-  
   /** 
    * Maps an AST node (with type Token.CALL or Token.NEW) to a Callsite object.
    */
@@ -82,26 +75,12 @@ public class CallGraph implements CompilerPass {
    */
   private boolean computeBackwardGraph;
   
-  /** 
-   * Maps a function to the callsites targeting that function. 
-   *
-   * This data structure is only filled in if computeBackwardGraph is true.
-   */
-  private Multimap<Function, Callsite> callsitesByTargetingFunction;
-  
   /**
    * Will the call graph support looking up the functions that a given callsite
    * can call?
    */
   private boolean computeForwardGraph;
  
-  /**
-   * Maps a callsite to the functions known to be targeted by that callsite. 
-   * 
-   * This data structure is only filled in if computeBackwardGraph if false.
-   */
-  private Multimap<Callsite, Function> targetFunctionsByCallsite;
-  
   /**
    * If true, then the callgraph will use NameReferenceGraph as a 
    * definition provider; otherwise, use the faster SimpleDefinitionProvider.
@@ -148,14 +127,6 @@ public class CallGraph implements CompilerPass {
     
     callsitesByNode = Maps.newLinkedHashMap();
     functionsByNode = Maps.newLinkedHashMap();
-    
-    if (computeForwardGraph) {
-      targetFunctionsByCallsite = LinkedHashMultimap.create();
-    }
-    
-    if (computeBackwardGraph) {
-      callsitesByTargetingFunction = LinkedHashMultimap.create();    
-    }
   }
   
   /**
@@ -172,17 +143,11 @@ public class CallGraph implements CompilerPass {
   @Override
   public void process(Node externsRoot, Node jsRoot) {
     Preconditions.checkState(alreadyRun == false);
- 
-    createFunctions(jsRoot);
     
-    // Depends on createFunctions already being called.
-    createCallsites();
-      
     DefinitionProvider definitionProvider =
         constructDefinitionProvider(externsRoot, jsRoot);
     
-    // Depends on createCallsites already being called
-    connectCallsitesToTargets(definitionProvider);
+    createFunctionsAndCallsites(jsRoot, definitionProvider);
     
     fillInFunctionInformation(definitionProvider);
     
@@ -260,7 +225,46 @@ public class CallGraph implements CompilerPass {
    * Returns a collection of all callsites in the call graph.
    */
   public Collection<Callsite> getAllCallsites() {
-   return callsitesByContainingFunction.values();
+   return callsitesByNode.values();
+  }
+  
+  /**
+   * Creates {@link Function}s and {@link Callsite}s in a single
+   * AST traversal.
+   */
+  private void createFunctionsAndCallsites(Node jsRoot,
+      final DefinitionProvider provider) {
+    // Create fake function representing global execution
+    mainFunction = createFunction(jsRoot);
+    
+    NodeTraversal.traverse(compiler, jsRoot, new AbstractPostOrderCallback() {    
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        int nodeType = n.getType();
+        
+        if (nodeType == Token.CALL || nodeType == Token.NEW) {
+          Callsite callsite = createCallsite(n);
+          
+          Node containingFunctionNode = t.getScopeRoot();
+          
+          Function containingFunction =
+              functionsByNode.get(containingFunctionNode);
+          
+          if (containingFunction == null) {
+            containingFunction = createFunction(containingFunctionNode);
+          }
+          callsite.containingFunction = containingFunction;
+          containingFunction.addCallsiteInFunction(callsite);
+          
+          connectCallsiteToTargets(callsite, provider);
+          
+        } else if (NodeUtil.isFunction(n)) {
+          if (!functionsByNode.containsKey(n)) {
+            createFunction(n);
+          }
+        }       
+      }
+    });
   }
   
   /**
@@ -276,15 +280,6 @@ public class CallGraph implements CompilerPass {
     return function;
   }
   
-  private void createFunctions(Node jsRoot) {
-    // Create fake function representing global execution
-    mainFunction = createFunction(jsRoot);
-    
-    for (Node n : collectAllFunctionNodesInSubtree(jsRoot)) {
-      createFunction(n);
-    }
-  }
-  
   private Callsite createCallsite(Node callsiteNode) {
     Callsite callsite = new Callsite(callsiteNode);   
     callsitesByNode.put(callsiteNode, callsite);
@@ -292,65 +287,52 @@ public class CallGraph implements CompilerPass {
     return callsite;
   }
   
-  private void createCallsites() {
-    for (Function function : getAllFunctions()) {
-      Collection<Node> callsitesInFunction =
-          collectCallsiteNodesInShallowSubtree(function.getBodyNode());
-          
-      for (Node callsiteNode : callsitesInFunction) {    
-        Callsite callsite = createCallsite(callsiteNode);
-      
-        callsitesByContainingFunction.put(function, callsite);       
-        callsite.containingFunction = function;
-      }
-    }
-  }
-  
   /**
-   * Maps each Callsite to the Function(s) it could call 
+   * Maps a Callsite to the Function(s) it could call 
    * and each Function to the Callsite(s) that could call it.
    * 
-   * If the definitionProvider cannot determine the target of a Callsite,
+   * If the definitionProvider cannot determine the target of the Callsite,
    * the Callsite's hasUnknownTarget field is set to true.
    * 
-   * If the definitionProvider determines that the target of a Callsite
+   * If the definitionProvider determines that the target of the Callsite
    * could be an extern-defined function, then the Callsite's hasExternTarget
    * field is set to true.
    * 
+   * @param callsite The callsite for which target functions should be found
    * @param definitionProvider The DefinitionProvider used to determine
    *    targets of callsites.
    */
-  private void connectCallsitesToTargets(DefinitionProvider definitionProvider)
-      {  
-    for (Function function : getAllFunctions()) {
-      for (Callsite callsite : callsitesByContainingFunction.get(function)) {
-        Collection<Definition> definitions =
-            lookupDefinitionsForTargetsOfCall(callsite.getAstNode(),
-                definitionProvider);
+  private void connectCallsiteToTargets(Callsite callsite,
+      DefinitionProvider definitionProvider) { 
+    Collection<Definition> definitions =
+      lookupDefinitionsForTargetsOfCall(callsite.getAstNode(),
+          definitionProvider);
 
-        if (definitions == null) {
-          callsite.hasUnknownTarget = true; 
+    if (definitions == null) {
+      callsite.hasUnknownTarget = true; 
+    } else {
+      for (Definition definition : definitions) {
+        if (definition.isExtern()) {
+          callsite.hasExternTarget = true;
         } else {
-          for (Definition definition : definitions) {
-            if (definition.isExtern()) {
-              callsite.hasExternTarget = true;
-            } else {
-              Node target = definition.getRValue();
+          Node target = definition.getRValue();
 
-              if (target != null && NodeUtil.isFunction(target)) {
-                Function targetFunction = functionsByNode.get(target);
-                
-                if (computeForwardGraph) {
-                  targetFunctionsByCallsite.put(callsite, targetFunction);
-                }
-                
-                if (computeBackwardGraph) {
-                  callsitesByTargetingFunction.put(targetFunction, callsite);
-                }
-              } else {
-                  callsite.hasUnknownTarget = true;                 
-              }
+          if (target != null && NodeUtil.isFunction(target)) {
+            Function targetFunction = functionsByNode.get(target);
+            
+            if (targetFunction == null) {
+              targetFunction = createFunction(target);
             }
+            
+            if (computeForwardGraph) {
+              callsite.addPossibleTarget(targetFunction);
+            }
+
+            if (computeBackwardGraph) {
+              targetFunction.addCallsitePossiblyTargetingFunction(callsite);
+            }
+          } else {
+            callsite.hasUnknownTarget = true;                 
           }
         }
       }
@@ -613,37 +595,6 @@ public class CallGraph implements CompilerPass {
     return null;
   }
   
-  private Set<Node> collectAllFunctionNodesInSubtree(Node subtree) {
-    final Set<Node> functionNodes = Sets.newLinkedHashSet();
-    
-    NodeTraversal.traverse(compiler, subtree, new AbstractPostOrderCallback() {  
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (NodeUtil.isFunction(n)) {
-          functionNodes.add(n);
-        }
-      }
-    });
-    
-    return functionNodes;
-  }
-  
-  private Collection<Node> collectCallsiteNodesInShallowSubtree(Node subtree) {  
-    final Collection<Node> callsites = Sets.newLinkedHashSet();
-    
-    NodeTraversal.traverse(compiler, subtree, new AbstractShallowCallback() {  
-      @Override
-      public void visit(NodeTraversal t, Node potentialCallsite, Node parent) {
-        int nodeType = potentialCallsite.getType();       
-        if (nodeType == Token.CALL || nodeType == Token.NEW) {
-          callsites.add(potentialCallsite);
-        }   
-      }
-    });
-    
-    return callsites;
-  }
-  
   /**
    * An inner class that represents functions in the call graph.
    * A Function knows how to get its AST node and what Callsites
@@ -656,6 +607,10 @@ public class CallGraph implements CompilerPass {
     private boolean isAliased = false;
     
     private boolean isExposedToCallOrApply = false;
+    
+    private Collection<Callsite> callsitesInFunction;
+    
+    private Collection<Callsite> callsitesPossiblyTargetingFunction;
     
     private Function(Node functionAstNode) {
       astNode = functionAstNode;
@@ -702,10 +657,22 @@ public class CallGraph implements CompilerPass {
     }
     
     /**
-     * Returns the callsites in this functon.
+     * Returns the callsites in this function.
      */
     public Collection<Callsite> getCallsitesInFunction() {
-      return CallGraph.this.callsitesByContainingFunction.get(this);
+      if (callsitesInFunction != null) {
+        return callsitesInFunction;
+      } else {
+        return ImmutableList.of();
+      }
+    }
+    
+    private void addCallsiteInFunction(Callsite callsite) {
+      if (callsitesInFunction == null) {
+        callsitesInFunction = Lists.newLinkedList(callsite);
+      } else {
+        callsitesInFunction.add(callsite);
+      }
     }
     
     /**
@@ -721,11 +688,24 @@ public class CallGraph implements CompilerPass {
      */
     public Collection<Callsite> getCallsitesPossiblyTargetingFunction() {
       if (computeBackwardGraph) {
-        return CallGraph.this.callsitesByTargetingFunction.get(this);
+        if (callsitesPossiblyTargetingFunction != null) {
+          return callsitesPossiblyTargetingFunction;
+        } else {
+          return ImmutableList.of();
+        }
       } else {
         throw new UnsupportedOperationException("Cannot call " +
             "getCallsitesPossiblyTargetingFunction() on a Function "
-            + "from a backward-forward CallGraph");
+            + "from a non-backward CallGraph");
+      }
+    }
+    
+    private void addCallsitePossiblyTargetingFunction(Callsite callsite) {
+      Preconditions.checkState(computeBackwardGraph);
+      if (callsitesPossiblyTargetingFunction == null) {
+        callsitesPossiblyTargetingFunction = Lists.newLinkedList(callsite);
+      } else {
+        callsitesPossiblyTargetingFunction.add(callsite);
       }
     }
   
@@ -757,6 +737,8 @@ public class CallGraph implements CompilerPass {
      
     private Function containingFunction = null;
     
+    private Collection<Function> possibleTargets;
+    
     private Callsite(Node callsiteAstNode) {
       astNode = callsiteAstNode;
     }
@@ -785,11 +767,25 @@ public class CallGraph implements CompilerPass {
      */
     public Collection<Function> getPossibleTargets() {
       if (computeForwardGraph) {
-        return CallGraph.this.targetFunctionsByCallsite.get(this);
+        if (possibleTargets != null) {
+          return possibleTargets;
+        } else {
+          return ImmutableList.of();
+        }
       } else {
         throw new UnsupportedOperationException("Cannot call " +
             "getPossibleTargets() on a Callsite from a non-forward " +
             "CallGraph");
+      }
+    }
+    
+    private void addPossibleTarget(Function target) {
+      Preconditions.checkState(computeForwardGraph);
+      
+      if (possibleTargets == null) {
+        possibleTargets = Lists.newLinkedList(target);
+      } else {
+        possibleTargets.add(target);
       }
     }
     
