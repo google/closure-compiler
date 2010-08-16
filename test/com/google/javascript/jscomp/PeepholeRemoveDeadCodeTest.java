@@ -240,13 +240,21 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("switch(a){default: break; case 1:break;}", "");
     fold("switch(a){default: var b; break; case 1: var c; break;}",
         "var c; var b;");
+
     // Can't remove cases if a default exists.
     foldSame("function f() {switch(a){default: return; case 1: break;}}");
     foldSame("function f() {switch(a){case 1: foo();}}");
     foldSame("function f() {switch(a){case 3: case 2: case 1: foo();}}");
-    // TODO(johnlenz): remove useless cases before "default"
-    foldSame("function f() {switch(a){case 2: case 1: default: foo();}}");
-    
+
+    fold("function f() {switch(a){case 2: case 1: default: foo();}}",
+         "function f() {switch(a){default: foo();}}");
+    fold("switch(a){case 1: default:break; case 2: foo()}",
+         "switch(a){case 2: foo()}");
+    foldSame("switch(a){case 1: goo(); default:break; case 2: foo()}");
+
+    // TODO(johnlenz): merge the useless "case 2"
+    foldSame("switch(a){case 1: goo(); case 2:break; case 3: foo()}");
+
     // Can't remove cases if something useful is done.
     foldSame("switch(a){case 1: var c =2; break;}");
     foldSame("function f() {switch(a){case 1: return;}}");

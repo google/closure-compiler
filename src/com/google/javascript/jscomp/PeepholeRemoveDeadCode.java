@@ -22,6 +22,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
+import javax.annotation.Nullable;
+
 /**
  * Peephole optimization to remove useless code such as IF's with false
  * guard conditions, comma operator left hand sides with no side effects, etc.
@@ -74,29 +76,24 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private Node tryOptimizeSwitch(Node n) {
     Preconditions.checkState(n.getType() == Token.SWITCH);
 
-    Node defaultCase = findDefaultCase(n);
-    if (defaultCase != null && isUselessCase(defaultCase)) {
-      NodeUtil.redeclareVarsInsideBranch(defaultCase);
-      n.removeChild(defaultCase);
-      reportCodeChange();
-      defaultCase = null;
-    }
+    Node defaultCase = tryOptimizeDefaultCase(n);
 
     // Removing cases when there exists a default case is not safe.
-    // TODO(johnlenz): Allow this if the same code is executed.
     if (defaultCase == null) {
       Node next = null;
+      Node prev = null;
       // The first child is the switch conditions skip it.
       for (Node c = n.getFirstChild().getNext(); c != null; c = next) {
         next = c.getNext();
-        if (!mayHaveSideEffects(c.getFirstChild()) && isUselessCase(c)) {
-          NodeUtil.redeclareVarsInsideBranch(c);
-          n.removeChild(c);
-          reportCodeChange();
+        if (!mayHaveSideEffects(c.getFirstChild()) && isUselessCase(c, prev)) {
+          removeCase(n, c);
+        } else {
+          prev = c;
         }
       }
     }
 
+    // Remove the switch if there are no remaining cases.
     if (n.hasOneChild()) {
       Node condition = n.removeFirstChild();
       Node parent = n.getParent();
@@ -111,21 +108,75 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * @return the default case node or null.
+   * @return the default case node or null if there is no default case or
+   *     if the default case is removed.
    */
-  private Node findDefaultCase(Node n) {
-    for (Node c : n.children()) {
+  private Node tryOptimizeDefaultCase(Node n) {
+    Preconditions.checkState(n.getType() == Token.SWITCH);
+
+    Node lastNonRemovable = n.getFirstChild();  // The switch condition
+
+    // The first child is the switch conditions skip it when looking for cases.
+    for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
       if (c.getType() == Token.DEFAULT) {
+        // Remove cases that fall-through to the default case
+        Node caseToRemove = lastNonRemovable.getNext();
+        for (Node next; caseToRemove != c; caseToRemove = next) {
+          next = caseToRemove.getNext();
+          removeCase(n, caseToRemove);
+        }
+
+        // Don't use the switch condition as the previous case.
+        Node prevCase = (lastNonRemovable == n.getFirstChild())
+            ? null : lastNonRemovable;
+
+        // Remove the default case if we can
+        if (isUselessCase(c, prevCase)) {
+          removeCase(n, c);
+          return null;
+        }
         return c;
+      } else {
+        Preconditions.checkState(c.getType() == Token.CASE);
+        if (c.getLastChild().hasChildren()
+            || mayHaveSideEffects(c.getFirstChild())) {
+          lastNonRemovable = c;
+        }
       }
     }
     return null;
   }
 
   /**
+   * Remove the case from the switch redeclaring any variables declared in it.
+   * @param caseNode The case to remove.
+   */
+  private void removeCase(Node switchNode, Node caseNode) {
+    NodeUtil.redeclareVarsInsideBranch(caseNode);
+    switchNode.removeChild(caseNode);
+    reportCodeChange();
+  }
+
+  /**
+   * The function assumes that when checking a CASE node there is no
+   * DEFAULT node in the SWITCH.
    * @return Whether the CASE or DEFAULT block does anything useful.
    */
-  private boolean isUselessCase(Node caseNode) {
+  private boolean isUselessCase(Node caseNode, @Nullable Node previousCase) {
+    Preconditions.checkState(
+        previousCase == null || previousCase.getNext() == caseNode);
+    // A case isn't useless can't be useless if a previous case falls
+    // through to it unless it happens to be the last case in the switch.
+    Node switchNode = caseNode.getParent();
+    if (switchNode.getLastChild() != caseNode
+        && previousCase != null) {
+      Node previousBlock = previousCase.getLastChild();
+      if (!previousBlock.hasChildren()
+          || !isExit(previousBlock.getLastChild())) {
+        return false;
+      }
+    }
+
     Node executingCase = caseNode;
     while (executingCase != null) {
       Preconditions.checkState(executingCase.getType() == Token.DEFAULT
@@ -162,6 +213,21 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       }
     }
     return true;
+  }
+
+  /**
+   * @return Whether the node is an obvious control flow exit.
+   */
+  private boolean isExit(Node n) {
+    switch (n.getType()) {
+      case Token.BREAK:
+      case Token.CONTINUE:
+      case Token.RETURN:
+      case Token.THROW:
+        return true;
+      default:
+        return false;
+    }
   }
 
   private Node tryFoldComma(Node n) {
