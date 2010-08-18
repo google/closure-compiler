@@ -7,27 +7,27 @@ public interface InstrumentationOrBuilder
   
   // optional string report_defined = 1;
   boolean hasReportDefined();
-  java.lang.String getReportDefined();
+  String getReportDefined();
   
   // optional string report_call = 2;
   boolean hasReportCall();
-  java.lang.String getReportCall();
+  String getReportCall();
   
   // optional string report_exit = 6;
   boolean hasReportExit();
-  java.lang.String getReportExit();
+  String getReportExit();
   
   // repeated string declaration_to_remove = 3;
-  java.util.List<java.lang.String> getDeclarationToRemoveList();
+  java.util.List<String> getDeclarationToRemoveList();
   int getDeclarationToRemoveCount();
-  java.lang.String getDeclarationToRemove(int index);
+  String getDeclarationToRemove(int index);
   
   // repeated string init = 4;
-  java.util.List<java.lang.String> getInitList();
+  java.util.List<String> getInitList();
   int getInitCount();
-  java.lang.String getInit(int index);
+  String getInit(int index);
   
   // optional string app_name_setter = 5;
   boolean hasAppNameSetter();
-  java.lang.String getAppNameSetter();
+  String getAppNameSetter();
 }

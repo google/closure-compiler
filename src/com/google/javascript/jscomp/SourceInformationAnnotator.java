@@ -27,9 +27,6 @@ import com.google.javascript.rhino.Token;
  *
  * Information saved:
  *
- * - Annotates all nodes with a SOURCEFILE_PROP indicating the input
- *   file from which it was generated.
- *
  * - Annotates all NAME nodes with an ORIGINALNAME_PROP indicating its original
  *   name.
  *
@@ -56,7 +53,7 @@ class SourceInformationAnnotator extends
     // Verify the source file is annotated.
     if (doSanityChecks && sourceFile != null) {
       Preconditions.checkState(sourceFile.equals(
-          n.getProp(Node.SOURCEFILE_PROP)));
+          n.getProp(Node.SOURCENAME_PROP)));
     }
 
     // Annotate the original name.

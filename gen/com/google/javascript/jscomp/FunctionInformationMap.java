@@ -39,7 +39,7 @@ public  final class FunctionInformationMap extends
     
     // required string source_name = 3;
     boolean hasSourceName();
-    java.lang.String getSourceName();
+    String getSourceName();
     
     // required int32 line_number = 4;
     boolean hasLineNumber();
@@ -47,7 +47,7 @@ public  final class FunctionInformationMap extends
     
     // required string module_name = 5;
     boolean hasModuleName();
-    java.lang.String getModuleName();
+    String getModuleName();
     
     // required int32 size = 6;
     boolean hasSize();
@@ -55,11 +55,11 @@ public  final class FunctionInformationMap extends
     
     // required string name = 7;
     boolean hasName();
-    java.lang.String getName();
+    String getName();
     
     // required string compiled_source = 8;
     boolean hasCompiledSource();
-    java.lang.String getCompiledSource();
+    String getCompiledSource();
   }
   public static final class Entry extends
       com.google.protobuf.GeneratedMessage
@@ -106,7 +106,7 @@ public  final class FunctionInformationMap extends
     public boolean hasSourceName() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
-    public java.lang.String getSourceName() {
+    public String getSourceName() {
       Object ref = sourceName_;
       if (ref instanceof String) {
         return (String) ref;
@@ -148,7 +148,7 @@ public  final class FunctionInformationMap extends
     public boolean hasModuleName() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
-    public java.lang.String getModuleName() {
+    public String getModuleName() {
       Object ref = moduleName_;
       if (ref instanceof String) {
         return (String) ref;
@@ -190,7 +190,7 @@ public  final class FunctionInformationMap extends
     public boolean hasName() {
       return ((bitField0_ & 0x00000020) == 0x00000020);
     }
-    public java.lang.String getName() {
+    public String getName() {
       Object ref = name_;
       if (ref instanceof String) {
         return (String) ref;
@@ -222,7 +222,7 @@ public  final class FunctionInformationMap extends
     public boolean hasCompiledSource() {
       return ((bitField0_ & 0x00000040) == 0x00000040);
     }
-    public java.lang.String getCompiledSource() {
+    public String getCompiledSource() {
       Object ref = compiledSource_;
       if (ref instanceof String) {
         return (String) ref;
@@ -730,7 +730,7 @@ public  final class FunctionInformationMap extends
           return (String) ref;
         }
       }
-      public Builder setSourceName(java.lang.String value) {
+      public Builder setSourceName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -787,7 +787,7 @@ public  final class FunctionInformationMap extends
           return (String) ref;
         }
       }
-      public Builder setModuleName(java.lang.String value) {
+      public Builder setModuleName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -844,7 +844,7 @@ public  final class FunctionInformationMap extends
           return (String) ref;
         }
       }
-      public Builder setName(java.lang.String value) {
+      public Builder setName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -880,7 +880,7 @@ public  final class FunctionInformationMap extends
           return (String) ref;
         }
       }
-      public Builder setCompiledSource(java.lang.String value) {
+      public Builder setCompiledSource(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -917,11 +917,11 @@ public  final class FunctionInformationMap extends
     
     // required string name = 102;
     boolean hasName();
-    java.lang.String getName();
+    String getName();
     
     // required string compiled_source = 103;
     boolean hasCompiledSource();
-    java.lang.String getCompiledSource();
+    String getCompiledSource();
   }
   public static final class Module extends
       com.google.protobuf.GeneratedMessage
@@ -958,7 +958,7 @@ public  final class FunctionInformationMap extends
     public boolean hasName() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
-    public java.lang.String getName() {
+    public String getName() {
       Object ref = name_;
       if (ref instanceof String) {
         return (String) ref;
@@ -990,7 +990,7 @@ public  final class FunctionInformationMap extends
     public boolean hasCompiledSource() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
-    public java.lang.String getCompiledSource() {
+    public String getCompiledSource() {
       Object ref = compiledSource_;
       if (ref instanceof String) {
         return (String) ref;
@@ -1327,7 +1327,7 @@ public  final class FunctionInformationMap extends
           return (String) ref;
         }
       }
-      public Builder setName(java.lang.String value) {
+      public Builder setName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -1363,7 +1363,7 @@ public  final class FunctionInformationMap extends
           return (String) ref;
         }
       }
-      public Builder setCompiledSource(java.lang.String value) {
+      public Builder setCompiledSource(String value) {
         if (value == null) {
     throw new NullPointerException();
   }

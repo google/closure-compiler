@@ -129,33 +129,31 @@ public class Node implements Cloneable, Serializable {
       SYNTHETIC_BLOCK_PROP = 37,  // A synthetic block. Used to make
                                   // processing simpler, and does not
                                   // represent a real block in the source.
-      SOURCEFILE_PROP    = 38,    // Contains the path of the source file
-                                  // from which the current node was parsed.
-      EMPTY_BLOCK        = 39,    // Used to indicate BLOCK that replaced
+      EMPTY_BLOCK        = 38,    // Used to indicate BLOCK that replaced
                                   // EMPTY nodes.
-      ORIGINALNAME_PROP  = 40,    // The original name of the node, before
+      ORIGINALNAME_PROP  = 39,    // The original name of the node, before
                                   // renaming.
-      BRACELESS_TYPE     = 41,    // The type syntax without curly braces.
-      NO_SIDE_EFFECTS_CALL = 42,  // Function or constructor call has no
+      BRACELESS_TYPE     = 40,    // The type syntax without curly braces.
+      NO_SIDE_EFFECTS_CALL = 41,  // Function or constructor call has no
                                   // side effects.
       // Coding convention props
-      IS_CONSTANT_NAME   = 43,    // The variable or property is constant.
-      IS_OPTIONAL_PARAM  = 44,    // The parameter is optional.
-      IS_VAR_ARGS_PARAM  = 45,    // The parameter is a var_args.
-      IS_NAMESPACE       = 46,    // The variable creates a namespace.
-      IS_DISPATCHER      = 47,    // The function is a dispatcher function,
+      IS_CONSTANT_NAME   = 42,    // The variable or property is constant.
+      IS_OPTIONAL_PARAM  = 43,    // The parameter is optional.
+      IS_VAR_ARGS_PARAM  = 44,    // The parameter is a var_args.
+      IS_NAMESPACE       = 45,    // The variable creates a namespace.
+      IS_DISPATCHER      = 46,    // The function is a dispatcher function,
                                   // probably generated from Java code, and
                                   // should be resolved to the proper
                                   // overload if possible.
-      DIRECTIVES         = 48,    // The ES5 directives on this node.
-      DIRECT_EVAL        = 49,    // ES5 distinguishes between direct and
+      DIRECTIVES         = 47,    // The ES5 directives on this node.
+      DIRECT_EVAL        = 48,    // ES5 distinguishes between direct and
                                   // indirect calls to eval.
-      SUPPRESSIONS       = 50,    // Used by the compiler to associate
+      SUPPRESSIONS       = 49,    // Used by the compiler to associate
                                   // @suppress directly with functions
                                   // and scripts.
-      FREE_CALL          = 51,    // A CALL without an explicit "this" value.
+      FREE_CALL          = 50,    // A CALL without an explicit "this" value.
                                   //
-      LAST_PROP          = 51;
+      LAST_PROP          = 50;
 
   // values of ISNUMBER_PROP to specify
   // which of the children are Number types
@@ -225,7 +223,6 @@ public class Node implements Cloneable, Serializable {
         case QUOTED_PROP:        return "quoted";
 
         case SYNTHETIC_BLOCK_PROP: return "synthetic";
-        case SOURCEFILE_PROP: return "sourcefile";
         case EMPTY_BLOCK: return "empty_block";
         case ORIGINALNAME_PROP: return "originalname";
         case NO_SIDE_EFFECTS_CALL: return "no_side_effects_call";
@@ -1897,8 +1894,8 @@ public class Node implements Cloneable, Serializable {
         putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
-    if (getProp(SOURCEFILE_PROP) == null) {
-        putProp(SOURCEFILE_PROP, other.getProp(SOURCEFILE_PROP));
+    if (getProp(SOURCENAME_PROP) == null) {
+        putProp(SOURCENAME_PROP, other.getProp(SOURCENAME_PROP));
         sourcePosition = other.sourcePosition;
     }
 

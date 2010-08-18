@@ -37,7 +37,7 @@ public  final class Instrumentation extends
   public boolean hasReportDefined() {
     return ((bitField0_ & 0x00000001) == 0x00000001);
   }
-  public java.lang.String getReportDefined() {
+  public String getReportDefined() {
     Object ref = reportDefined_;
     if (ref instanceof String) {
       return (String) ref;
@@ -69,7 +69,7 @@ public  final class Instrumentation extends
   public boolean hasReportCall() {
     return ((bitField0_ & 0x00000002) == 0x00000002);
   }
-  public java.lang.String getReportCall() {
+  public String getReportCall() {
     Object ref = reportCall_;
     if (ref instanceof String) {
       return (String) ref;
@@ -101,7 +101,7 @@ public  final class Instrumentation extends
   public boolean hasReportExit() {
     return ((bitField0_ & 0x00000004) == 0x00000004);
   }
-  public java.lang.String getReportExit() {
+  public String getReportExit() {
     Object ref = reportExit_;
     if (ref instanceof String) {
       return (String) ref;
@@ -130,28 +130,28 @@ public  final class Instrumentation extends
   // repeated string declaration_to_remove = 3;
   public static final int DECLARATION_TO_REMOVE_FIELD_NUMBER = 3;
   private com.google.protobuf.LazyStringList declarationToRemove_;
-  public java.util.List<java.lang.String>
+  public java.util.List<String>
       getDeclarationToRemoveList() {
     return declarationToRemove_;
   }
   public int getDeclarationToRemoveCount() {
     return declarationToRemove_.size();
   }
-  public java.lang.String getDeclarationToRemove(int index) {
+  public String getDeclarationToRemove(int index) {
     return declarationToRemove_.get(index);
   }
   
   // repeated string init = 4;
   public static final int INIT_FIELD_NUMBER = 4;
   private com.google.protobuf.LazyStringList init_;
-  public java.util.List<java.lang.String>
+  public java.util.List<String>
       getInitList() {
     return init_;
   }
   public int getInitCount() {
     return init_.size();
   }
-  public java.lang.String getInit(int index) {
+  public String getInit(int index) {
     return init_.get(index);
   }
   
@@ -161,7 +161,7 @@ public  final class Instrumentation extends
   public boolean hasAppNameSetter() {
     return ((bitField0_ & 0x00000008) == 0x00000008);
   }
-  public java.lang.String getAppNameSetter() {
+  public String getAppNameSetter() {
     Object ref = appNameSetter_;
     if (ref instanceof String) {
       return (String) ref;
@@ -598,7 +598,7 @@ public  final class Instrumentation extends
         return (String) ref;
       }
     }
-    public Builder setReportDefined(java.lang.String value) {
+    public Builder setReportDefined(String value) {
       if (value == null) {
     throw new NullPointerException();
   }
@@ -634,7 +634,7 @@ public  final class Instrumentation extends
         return (String) ref;
       }
     }
-    public Builder setReportCall(java.lang.String value) {
+    public Builder setReportCall(String value) {
       if (value == null) {
     throw new NullPointerException();
   }
@@ -670,7 +670,7 @@ public  final class Instrumentation extends
         return (String) ref;
       }
     }
-    public Builder setReportExit(java.lang.String value) {
+    public Builder setReportExit(String value) {
       if (value == null) {
     throw new NullPointerException();
   }
@@ -699,18 +699,18 @@ public  final class Instrumentation extends
         bitField0_ |= 0x00000008;
        }
     }
-    public java.util.List<java.lang.String>
+    public java.util.List<String>
         getDeclarationToRemoveList() {
       return java.util.Collections.unmodifiableList(declarationToRemove_);
     }
     public int getDeclarationToRemoveCount() {
       return declarationToRemove_.size();
     }
-    public java.lang.String getDeclarationToRemove(int index) {
+    public String getDeclarationToRemove(int index) {
       return declarationToRemove_.get(index);
     }
     public Builder setDeclarationToRemove(
-        int index, java.lang.String value) {
+        int index, String value) {
       if (value == null) {
     throw new NullPointerException();
   }
@@ -719,7 +719,7 @@ public  final class Instrumentation extends
       onChanged();
       return this;
     }
-    public Builder addDeclarationToRemove(java.lang.String value) {
+    public Builder addDeclarationToRemove(String value) {
       if (value == null) {
     throw new NullPointerException();
   }
@@ -729,7 +729,7 @@ public  final class Instrumentation extends
       return this;
     }
     public Builder addAllDeclarationToRemove(
-        java.lang.Iterable<? extends java.lang.String> values) {
+        java.lang.Iterable<String> values) {
       ensureDeclarationToRemoveIsMutable();
       super.addAll(values, declarationToRemove_);
       onChanged();
@@ -755,18 +755,18 @@ public  final class Instrumentation extends
         bitField0_ |= 0x00000010;
        }
     }
-    public java.util.List<java.lang.String>
+    public java.util.List<String>
         getInitList() {
       return java.util.Collections.unmodifiableList(init_);
     }
     public int getInitCount() {
       return init_.size();
     }
-    public java.lang.String getInit(int index) {
+    public String getInit(int index) {
       return init_.get(index);
     }
     public Builder setInit(
-        int index, java.lang.String value) {
+        int index, String value) {
       if (value == null) {
     throw new NullPointerException();
   }
@@ -775,7 +775,7 @@ public  final class Instrumentation extends
       onChanged();
       return this;
     }
-    public Builder addInit(java.lang.String value) {
+    public Builder addInit(String value) {
       if (value == null) {
     throw new NullPointerException();
   }
@@ -785,7 +785,7 @@ public  final class Instrumentation extends
       return this;
     }
     public Builder addAllInit(
-        java.lang.Iterable<? extends java.lang.String> values) {
+        java.lang.Iterable<String> values) {
       ensureInitIsMutable();
       super.addAll(values, init_);
       onChanged();
@@ -818,7 +818,7 @@ public  final class Instrumentation extends
         return (String) ref;
       }
     }
-    public Builder setAppNameSetter(java.lang.String value) {
+    public Builder setAppNameSetter(String value) {
       if (value == null) {
     throw new NullPointerException();
   }

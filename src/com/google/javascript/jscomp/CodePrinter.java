@@ -91,7 +91,7 @@ class CodePrinter {
       Preconditions.checkState(sourceMapDetailLevel != null);
       Preconditions.checkState(node != null);
       if (createSrcMap
-          && node.getProp(Node.SOURCEFILE_PROP) != null
+          && node.getProp(Node.SOURCENAME_PROP) != null
           && node.getLineno() > 0
           && sourceMapDetailLevel.apply(node)) {
         int line = getCurrentLineIndex();

@@ -209,7 +209,7 @@ public class SourceMap {
    * @param endPosition The position on the ending line.
    */
   void addMapping(Node node, Position startPosition, Position endPosition) {
-    String sourceFile = (String)node.getProp(Node.SOURCEFILE_PROP);
+    String sourceFile = (String)node.getProp(Node.SOURCENAME_PROP);
 
     // If the node does not have an associated source file or
     // its line number is -1, then the node does not have sufficient

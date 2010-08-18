@@ -132,7 +132,7 @@ public class IRFactory {
   private Node createTemplateNode() {
     // The Node type choice is arbitrary.
     Node templateNode = new Node(Token.SCRIPT);
-    templateNode.putProp(Node.SOURCEFILE_PROP, sourceName);
+    templateNode.putProp(Node.SOURCENAME_PROP, sourceName);
     return templateNode;
   }
 
@@ -537,7 +537,6 @@ public class IRFactory {
         isUnnamedFunction = true;
       }
       Node node = newNode(Token.FUNCTION);
-      node.putProp(Node.SOURCENAME_PROP, functionNode.getSourceName());
       Node newName = transform(name);
       if (isUnnamedFunction) {
         // Old Rhino tagged the empty name node with the line number of the

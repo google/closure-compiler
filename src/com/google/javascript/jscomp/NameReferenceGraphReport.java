@@ -137,7 +137,7 @@ final class NameReferenceGraphReport {
    *     cannot be identified.
    */
   private String getSourceFile(Node node) {
-    String filename = (String) node.getProp(Node.SOURCEFILE_PROP);
+    String filename = (String) node.getProp(Node.SOURCENAME_PROP);
     if (filename == null) {
       return "";
     }
