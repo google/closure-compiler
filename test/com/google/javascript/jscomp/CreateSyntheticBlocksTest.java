@@ -21,6 +21,7 @@ import com.google.javascript.rhino.Node;
  * Tests for {@link CreateSyntheticBlocks}
  *
  *
+ * @author johnlenz@google.com (John Lenz)
  */
 public class CreateSyntheticBlocksTest extends CompilerTestCase {
   private static final String START_MARKER = "startMarker";
@@ -44,8 +45,12 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
             externs, js);
         NodeTraversal.traverse(compiler, js, new MinimizeExitPoints(compiler));
 
-        new PeepholeOptimizationsPass(compiler, new
-            PeepholeRemoveDeadCode()).process(externs, js);
+        new PeepholeOptimizationsPass(compiler,
+            new PeepholeRemoveDeadCode(),
+            new PeepholeSubstituteAlternateSyntax(),
+            new PeepholeFoldConstants())
+            .process(externs, js);
+        new MinimizeExitPoints(compiler).process(externs, js);
 
         new Denormalize(compiler).process(externs, js);
       }
@@ -57,18 +62,24 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
     return 1;
   }
 
+  // TODO(johnlenz): Add tests to the IntegrationTest.
+
   public void testFold1() {
     test("function() { if (x) return; y(); }",
-         "function(){if(!x)y()}");
+         "function(){x||y()}");
   }
 
   public void testFoldWithMarkers1() {
     testSame("function(){startMarker();if(x)return;endMarker();y()}");
   }
 
+  public void testFoldWithMarkers1a() {
+    testSame("function(){startMarker();if(x)return;endMarker()}");
+  }
+
   public void testFold2() {
     test("function() { if (x) return; y(); if (a) return; b(); }",
-         "function(){if(!x){y();if(!a)b()}}");
+         "function(){if(!x){y();a||b()}}");
   }
 
   public void testFoldWithMarkers2() {
@@ -90,6 +101,19 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
         "if(y){startMarker();x()}endMarker()", null,
          CreateSyntheticBlocks.UNMATCHED_END_MARKER);
   }
+
+  public void testInvalid1() {
+    test("startMarker() && true",
+        "startMarker()&&1", null,
+         CreateSyntheticBlocks.INVALID_MARKER_USAGE);
+  }
+
+  public void testInvalid2() {
+    test("false && endMarker()",
+        "", null,
+         CreateSyntheticBlocks.INVALID_MARKER_USAGE);
+  }
+
 
   public void testDenormalize() {
     testSame("startMarker();for(;;);endMarker()");

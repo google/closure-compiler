@@ -179,8 +179,6 @@ public final class CompileTask
     Result result = compiler.compile(externs, sources, options);
     if (result.success) {
       writeResult(compiler.toSource());
-    } else {
-      throw new BuildException("Compilation failed.");
     }
   }
 

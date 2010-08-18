@@ -16,18 +16,23 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
- * Creates synthetic blocks to prevent {@link FoldConstants} from moving code
+ * Creates synthetic blocks to optimizations from moving code
  * past markers in the source.
  *
  *
+ * @author johnlenz@google.com (John Lenz)
  */
 class CreateSyntheticBlocks implements CompilerPass {
   static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.warning(
@@ -36,29 +41,9 @@ class CreateSyntheticBlocks implements CompilerPass {
   static final DiagnosticType UNMATCHED_END_MARKER = DiagnosticType.warning(
       "JSC_UNMATCHED_END_MARKER", "Unmatched {1} - {0} not in the same block");
 
-  private static class StartMarker {
-    /** Records the source name for errors about unmatched start markers. */
-    final String sourceName;
-
-    /** Records the node for errors about unmatched start markers. */
-    final Node node;
-
-    /**
-     * Records the ancestor block's child for insertion of a synthetic block.
-     */
-    final Node ancestorBlockChild;
-
-    /** Records the ancestor block for insertion of a synthetic block. */
-    final Node ancestorBlock;
-
-    private StartMarker(String sourceName, Node n, Node ancestorBlockChild,
-        Node ancestorBlock) {
-      this.sourceName = sourceName;
-      node = n;
-      this.ancestorBlockChild = ancestorBlockChild;
-      this.ancestorBlock = ancestorBlock;
-    }
-  }
+  static final DiagnosticType INVALID_MARKER_USAGE = DiagnosticType.warning(
+      "JSC_INVALID_MARKER_USAGE", "Marker {0} can only be used in a simple "
+           + "call expression");
 
   private final AbstractCompiler compiler;
 
@@ -71,90 +56,166 @@ class CreateSyntheticBlocks implements CompilerPass {
   /**
    * Markers can be nested.
    */
-  private Deque<StartMarker> startMarkerStack;
+  private final Deque<Node> markerStack = new ArrayDeque<Node>();
+
+  private final List<Marker> validMarkers = Lists.newArrayList();
+
+  private class Marker {
+    final Node startMarker;
+    final Node endMarker;
+    public Marker(Node startMarker, Node endMarker) {
+      this.startMarker = startMarker;
+      this.endMarker = endMarker;
+    }
+  }
 
   public CreateSyntheticBlocks(AbstractCompiler compiler,
       String startMarkerName, String endMarkerName) {
     this.compiler = compiler;
     this.startMarkerName = startMarkerName;
     this.endMarkerName = endMarkerName;
-    startMarkerStack = new ArrayDeque<StartMarker>();
   }
 
   @Override
   public void process(Node externs, Node root) {
+    // Find and validate the markers.
     NodeTraversal.traverse(compiler, root, new Callback());
 
-    for (StartMarker startMarker : startMarkerStack) {
-      compiler.report(JSError.make(startMarker.sourceName, startMarker.node,
+    // Complain about any unmatched markers.
+    for (Node node : markerStack) {
+      compiler.report(
+          JSError.make(NodeUtil.getSourceName(node),
+          node,
           UNMATCHED_START_MARKER, startMarkerName));
+    }
+
+    // Add the block for the valid marker sets.
+    for (Marker marker : validMarkers) {
+      addBlocks(marker);
+    }
+  }
+
+  /**
+   * @param marker The marker to add synthetic blocks for.
+   */
+  private void addBlocks(Marker marker) {
+    // Add block around the template section so that it looks like this:
+    //  BLOCK (synthetic)
+    //    START
+    //      BLOCK (synthetic)
+    //        BODY
+    //    END
+    // This prevents the start or end markers from mingling with the code
+    // in the block body.
+
+
+    Node originalParent = marker.endMarker.getParent();
+    Node outerBlock = new Node(Token.BLOCK);
+    outerBlock.setIsSyntheticBlock(true);
+    originalParent.addChildBefore(outerBlock, marker.startMarker);
+
+    Node innerBlock = new Node(Token.BLOCK);
+    innerBlock.setIsSyntheticBlock(true);
+    // Move everything after the start Node up to the end Node into the inner
+    // block.
+    moveSiblingExclusive(originalParent, innerBlock,
+        marker.startMarker,
+        marker.endMarker);
+
+    // Add the start node.
+    outerBlock.addChildToBack(originalParent.removeChildAfter(outerBlock));
+    // Add the inner block
+    outerBlock.addChildToBack(innerBlock);
+    // and finally the end node.
+    outerBlock.addChildToBack(originalParent.removeChildAfter(outerBlock));
+
+    compiler.reportCodeChange();
+  }
+
+  /**
+   * Move the Nodes between start and end from the source block to the
+   * destination block. If start is null, move the first child of the block.
+   * If end is null, move the last child of the block.
+   */
+  private void moveSiblingExclusive(
+      Node src, Node dest, @Nullable Node start, @Nullable Node end) {
+    while (childAfter(src, start) != end) {
+      Node child = removeChildAfter(src, start);
+      dest.addChildToBack(child);
+    }
+  }
+
+  /**
+   * Like Node.getNext, that null is used to signal the child before the
+   * block.
+   */
+  private Node childAfter(Node parent, @Nullable Node siblingBefore) {
+    if (siblingBefore == null) {
+      return parent.getFirstChild();
+    } else {
+      return siblingBefore.getNext();
+    }
+  }
+
+  /**
+   * Like removeChildAfter, the firstChild is removed
+   */
+  private Node removeChildAfter(Node parent, @Nullable Node siblingBefore) {
+    if (siblingBefore == null) {
+      return parent.removeFirstChild();
+    } else {
+      return parent.removeChildAfter(siblingBefore);
     }
   }
 
   private class Callback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.NAME || parent.getType() != Token.CALL) {
+      if (n.getType() != Token.CALL
+          || n.getFirstChild().getType() != Token.NAME) {
         return;
       }
 
-      if (startMarkerName.equals(n.getString())) {
-        // Record information needed for insertion of a synthetic block or
-        // warning about an unmatched start marker.
-        Node ancestorBlockChild = n;
-        Node ancestorBlock = null;
-        for (Node ancestor : n.getAncestors()) {
-          int type = ancestor.getType();
-          if (type == Token.SCRIPT || type == Token.BLOCK) {
-            ancestorBlock = ancestor;
-            break;
-          }
-          ancestorBlockChild = ancestor;
+      Node callTarget = n.getFirstChild();
+      String callName = callTarget.getString();
+
+      if (startMarkerName.equals(callName)) {
+        if (parent.getType() != Token.EXPR_RESULT) {
+          compiler.report(
+              t.makeError(n, INVALID_MARKER_USAGE, startMarkerName));
+          return;
         }
-
-        startMarkerStack.push(new StartMarker(t.getSourceName(), n,
-            ancestorBlockChild, ancestorBlock));
-      }
-
-      if (!endMarkerName.equals(n.getString())) {
+        markerStack.push(parent);
         return;
       }
 
-      if (startMarkerStack.isEmpty()) {
+      if (!endMarkerName.equals(callName)) {
+        return;
+      }
+
+      Node endMarkerNode = parent;
+      if (endMarkerNode.getType() != Token.EXPR_RESULT) {
+        compiler.report(
+            t.makeError(n, INVALID_MARKER_USAGE, endMarkerName));
+        return;
+      }
+
+      if (markerStack.isEmpty()) {
         compiler.report(t.makeError(n, UNMATCHED_END_MARKER,
             startMarkerName, endMarkerName));
         return;
       }
 
-      StartMarker startMarker = startMarkerStack.pop();
-
-      Node endMarkerAncestorBlockChild = n;
-      for (Node ancestor : n.getAncestors()) {
-        int type = ancestor.getType();
-        if (type == Token.SCRIPT || type == Token.BLOCK) {
-          if (ancestor != startMarker.ancestorBlock) {
-            // The end marker isn't in the same block as the start marker.
-            compiler.report(t.makeError(n, UNMATCHED_END_MARKER,
-                startMarkerName, endMarkerName));
-            return;
-          }
-          break;
-        }
-        endMarkerAncestorBlockChild = ancestor;
+      Node startMarkerNode = markerStack.pop();
+      if (endMarkerNode.getParent() != startMarkerNode.getParent()) {
+        // The end marker isn't in the same block as the start marker.
+        compiler.report(t.makeError(n, UNMATCHED_END_MARKER,
+            startMarkerName, endMarkerName));
+        return;
       }
 
-      Node block = new Node(Token.BLOCK);
-      block.setIsSyntheticBlock(true);
-      startMarker.ancestorBlock.addChildAfter(block,
-          startMarker.ancestorBlockChild);
-      Node removedNode = null;
-      do {
-        // Move the nodes into the synthetic block.
-        removedNode = startMarker.ancestorBlock.removeChildAfter(block);
-        block.addChildToBack(removedNode);
-      } while (removedNode != endMarkerAncestorBlockChild);
-
-      compiler.reportCodeChange();
+      // This is a valid marker set add it to the list of markers to process.
+      validMarkers.add(new Marker(startMarkerNode, endMarkerNode));
     }
   }
 }
