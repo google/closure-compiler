@@ -98,7 +98,7 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
     JSModule module = t.getModule();
     mapBuilder.addEntry(FunctionInformationMap.Entry.newBuilder()
       .setId(id)
-      .setSourceName(t.getSourceName())
+      .setSourceName(NodeUtil.getSourceName(n))
       .setLineNumber(n.getLineno())
       .setModuleName(moduleGraph == null ? "" : module.getName())
       .setSize(compiledSource.length())

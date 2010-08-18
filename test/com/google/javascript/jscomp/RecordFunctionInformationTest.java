@@ -27,37 +27,6 @@ import junit.framework.TestCase;
  *
  */
 public class RecordFunctionInformationTest extends TestCase {
-  private void test(String js, FunctionInformationMap expected) {
-    Compiler compiler = new Compiler();
-    compiler.init(new JSSourceFile[] { JSSourceFile.fromCode("externs", "") },
-                  new JSSourceFile[] { JSSourceFile.fromCode("testcode", js) },
-                  new CompilerOptions());
-    test(compiler, expected);
-  }
-
-  private void test(JSModule[] modules, FunctionInformationMap expected) {
-    Compiler compiler = new Compiler();
-    compiler.init(new JSSourceFile[] { JSSourceFile.fromCode("externs", "") },
-                  modules,
-                  new CompilerOptions());
-    test(compiler, expected);
-  }
-
-  private void test(Compiler compiler, FunctionInformationMap expected) {
-    Node root = compiler.parseInputs();
-    Node externsRoot = root.getFirstChild();
-    Node mainRoot = externsRoot.getNext();
-
-    FunctionNames functionNames = new FunctionNames(compiler);
-    functionNames.process(externsRoot, mainRoot);
-
-    RecordFunctionInformation processor =
-        new RecordFunctionInformation(compiler, functionNames);
-    processor.process(externsRoot, mainRoot);
-    FunctionInformationMap result = processor.getMap();
-    assertTrue("\nExpected: " + expected.toString() + "\nResult: " +
-               result.toString() + "\n", result.equals(expected));
-  }
 
   public void testFunction() {
     String g = "function g(){}";
@@ -138,5 +107,106 @@ public class RecordFunctionInformationTest extends TestCase {
         .setCompiledSource(m1_js + ";").build());
 
     test(CompilerTestCase.createModules(m0_js, m1_js), expected.build());
+  }
+
+  public void testMotionPreservesOriginalSourceName() {
+    String f = "function f(){}";
+    String g = "function g(){}";
+
+    String m0_before = f + g;
+    String m1_before = "";
+
+    JSModule[] modules = CompilerTestCase.createModules(m0_before, m1_before);
+    Compiler compiler = compilerFor(modules);
+    Node root = root(compiler);
+    Node externsRoot = externs(root);
+    Node mainRoot = main(root);
+
+    String m0_after = f;
+    String m1_after = g;
+    Node nodeG = mainRoot.getFirstChild().getLastChild();
+    mainRoot.getFirstChild().removeChild(nodeG);
+    mainRoot.getLastChild().addChildrenToBack(nodeG.cloneTree());
+
+    FunctionInformationMap.Builder expected =
+      FunctionInformationMap.newBuilder();
+    expected.addEntry(
+        FunctionInformationMap.Entry.newBuilder()
+        .setId(0)
+        .setSourceName("i0")
+        .setLineNumber(1)
+        .setModuleName("m0")
+        .setSize(g.length())
+        .setName("f")
+        .setCompiledSource(f).build());
+    expected.addEntry(
+        FunctionInformationMap.Entry.newBuilder()
+        .setId(1)
+        .setSourceName("i0")
+        .setLineNumber(1)
+        .setModuleName("m1")
+        .setSize(g.length())
+        .setName("g")
+        .setCompiledSource(g).build());
+    expected.addModule(
+        FunctionInformationMap.Module.newBuilder()
+        .setName("m0")
+        .setCompiledSource(m0_after + ";").build());
+    expected.addModule(
+        FunctionInformationMap.Module.newBuilder()
+        .setName("m1")
+        .setCompiledSource(m1_after + ";").build());
+
+    test(compiler, externsRoot, mainRoot, expected.build());
+  }
+
+
+  private void test(String js, FunctionInformationMap expected) {
+    Compiler compiler = new Compiler();
+    compiler.init(new JSSourceFile[] { JSSourceFile.fromCode("externs", "") },
+                  new JSSourceFile[] { JSSourceFile.fromCode("testcode", js) },
+                  new CompilerOptions());
+    test(compiler, expected);
+  }
+
+  private void test(JSModule[] modules, FunctionInformationMap expected) {
+    test(compilerFor(modules), expected);
+  }
+
+  private void test(Compiler compiler, FunctionInformationMap expected) {
+    Node root = root(compiler);
+    test(compiler, externs(root), main(root), expected);
+  }
+
+  private void test(Compiler compiler, Node externsRoot, Node mainRoot,
+      FunctionInformationMap expected) {
+    FunctionNames functionNames = new FunctionNames(compiler);
+    functionNames.process(externsRoot, mainRoot);
+
+    RecordFunctionInformation processor =
+        new RecordFunctionInformation(compiler, functionNames);
+    processor.process(externsRoot, mainRoot);
+    FunctionInformationMap result = processor.getMap();
+    assertEquals(expected, result);
+  }
+
+  private Compiler compilerFor(JSModule[] modules) {
+      Compiler compiler = new Compiler();
+      compiler.init(new JSSourceFile[] { JSSourceFile.fromCode("externs", "") },
+                    modules,
+                    new CompilerOptions());
+      return compiler;
+  }
+
+  private Node root(Compiler compiler) {
+    return compiler.parseInputs();
+  }
+
+  private Node externs(Node root) {
+    return root.getFirstChild();
+  }
+
+  private Node main(Node root) {
+    return root.getFirstChild().getNext();
   }
 }
