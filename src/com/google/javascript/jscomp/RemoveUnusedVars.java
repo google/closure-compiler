@@ -536,12 +536,23 @@ class RemoveUnusedVars implements CompilerPass {
     static Assign maybeCreateAssign(Node assignNode) {
       Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
 
-      // Skip any GETPROPs or GETELEMs
+      // Skip one level of GETPROPs or GETELEMs.
+      //
+      // Don't skip more than one level, because then we get into
+      // situations where assigns to properties of properties will always
+      // trigger side-effects, and the variable they're on cannot be removed.
       boolean isPropAssign = false;
       Node current = assignNode.getFirstChild();
-      while (NodeUtil.isGet(current)) {
+      if (NodeUtil.isGet(current)) {
         current = current.getFirstChild();
         isPropAssign = true;
+
+        if (current.getType() == Token.GETPROP &&
+            current.getLastChild().getString().equals("prototype")) {
+          // Prototype properties sets should be considered like normal
+          // property sets.
+          current = current.getFirstChild();
+        }
       }
 
       if (current.getType() == Token.NAME) {

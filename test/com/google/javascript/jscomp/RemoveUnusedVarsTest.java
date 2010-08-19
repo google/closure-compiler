@@ -328,12 +328,12 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testUnusedPropAssign3() {
-    test("var x = {}; x['foo'] = {}; x['foo'].baz['bar'] = 3", "");
+    test("var x = {}; x['foo'] = {}; x['bar'] = 3", "");
   }
 
   public void testUnusedPropAssign3b() {
-    test("var x = {}; x[alert()] = alert(); x[alert()].baz[alert()] = alert()",
-         "alert(),alert();alert(),(alert(),alert())");
+    test("var x = {}; x[alert()] = alert(); x[alert() + alert()] = alert()",
+         "alert(),alert();(alert() + alert()),alert()");
   }
 
   public void testUnusedPropAssign4() {
@@ -399,6 +399,11 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testUsedPropAssign8() {
     testSame("for (var x in alert()) { x.foo = 3; }");
+  }
+
+  public void testUsedPropAssign9() {
+    testSame(
+        "var x = {}; x.foo = newNodeInDom(doc); x.foo.innerHTML = 'new test';");
   }
 
   public void testDependencies1() {
