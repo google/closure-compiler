@@ -393,6 +393,14 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "var x=newNodeInDom(doc);x.innerHTML=\"new text\"");
   }
 
+  public void testUsedPropAssign7() {
+    testSame("var x = {}; for (x in alert()) { x.foo = 3; }");
+  }
+
+  public void testUsedPropAssign8() {
+    testSame("for (var x in alert()) { x.foo = 3; }");
+  }
+
   public void testDependencies1() {
     test("var a = 3; var b = function() { alert(a); };", "");
   }
