@@ -17,12 +17,14 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Receivers;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -34,6 +36,7 @@ public class CommandLineRunnerTest extends TestCase {
 
   private Compiler lastCompiler = null;
   private CommandLineRunner lastCommandLineRunner = null;
+  private List<Integer> exitCodes = null;
 
   // If set to true, uses comparison by string instead of by AST.
   private boolean useStringComparison = false;
@@ -49,17 +52,17 @@ public class CommandLineRunnerTest extends TestCase {
   private List<String> args = Lists.newArrayList();
 
   /** Externs for the test */
-  private final JSSourceFile[] externs = new JSSourceFile[] {
+  private final List<JSSourceFile> externs = Lists.newArrayList(
     JSSourceFile.fromCode("externs",
-        "var arguments;" +
-        "/** @constructor \n * @param {...*} var_args \n " +
-        "* @return {!Array} */ " +
-        "function Array(var_args) {}\n"
+        "var arguments;"
+        + "/** @constructor \n * @param {...*} var_args \n "
+        + "* @return {!Array} */ "
+        + "function Array(var_args) {}\n"
         + "/** @constructor */ function Window() {}\n"
         + "/** @type {string} */ Window.prototype.name;\n"
         + "/** @type {Window} */ var window;"
         + "/** @nosideeffects */ function noSideEffects() {}")
-  };
+  );
 
   @Override
   public void setUp() throws Exception {
@@ -68,6 +71,7 @@ public class CommandLineRunnerTest extends TestCase {
     useStringComparison = false;
     useModules = ModulePattern.NONE;
     args.clear();
+    exitCodes = Lists.newArrayList();
   }
 
   @Override
@@ -241,7 +245,9 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testHelpFlag() {
     args.add("--help");
-    testSame("function f() {}");
+    assertFalse(
+        createCommandLineRunner(
+            new String[] {"function f() {}"}).shouldRunCompiler());
   }
 
   public void testExternsLifting1() throws Exception{
@@ -504,16 +510,22 @@ public class CommandLineRunnerTest extends TestCase {
         "Errors: \n" + Joiner.on("\n").join(compiler.getErrors()) +
         "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         1, compiler.getErrors().length + compiler.getWarnings().length);
+
+    assertTrue(exitCodes.size() > 0);
+    int lastExitCode = exitCodes.get(exitCodes.size() - 1);
+
     if (compiler.getErrors().length > 0) {
       assertEquals(1, compiler.getErrors().length);
       assertEquals(warning, compiler.getErrors()[0].getType());
+      assertEquals(1, lastExitCode);
     } else {
       assertEquals(1, compiler.getWarnings().length);
       assertEquals(warning, compiler.getWarnings()[0].getType());
+      assertEquals(0, lastExitCode);
     }
   }
 
-  private Compiler compile(String[] original) {
+  private CommandLineRunner createCommandLineRunner(String[] original) {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
 
@@ -530,45 +542,51 @@ public class CommandLineRunnerTest extends TestCase {
     }
 
     String[] argStrings = args.toArray(new String[] {});
-    CommandLineRunner runner = new CommandLineRunner(argStrings);
-    Compiler compiler = runner.createCompiler();
-    lastCommandLineRunner = runner;
-    lastCompiler = compiler;
-    CompilerOptions options = runner.createOptions();
-    try {
-      runner.setRunOptions(options);
-    } catch (AbstractCommandLineRunner.FlagUsageException e) {
-      fail("Unexpected exception " + e);
-    } catch (IOException e) {
-      assert(false);
-    }
-    if (useModules != ModulePattern.NONE) {
-      compiler.compile(
-          externs,
-          useModules == ModulePattern.STAR ?
-              CompilerTestCase.createModuleStar(original) :
-              CompilerTestCase.createModuleChain(original),
-          options);
-    } else {
-      JSSourceFile[] inputs = new JSSourceFile[original.length];
+    return new CommandLineRunner(argStrings);
+  }
+
+  private Compiler compile(String[] original) {
+    CommandLineRunner runner = createCommandLineRunner(original);
+    assertTrue(runner.shouldRunCompiler());
+    Supplier<List<JSSourceFile>> inputsSupplier = null;
+    Supplier<List<JSModule>> modulesSupplier = null;
+
+    if (useModules == ModulePattern.NONE) {
+      List<JSSourceFile> inputs = Lists.newArrayList();
       for (int i = 0; i < original.length; i++) {
-        inputs[i] = JSSourceFile.fromCode("input" + i, original[i]);
+        inputs.add(JSSourceFile.fromCode("input" + i, original[i]));
       }
-      compiler.compile(
-          externs,
-          inputs,
-          options);
+      inputsSupplier = Suppliers.ofInstance(inputs);
+    } else if (useModules == ModulePattern.STAR) {
+      modulesSupplier = Suppliers.<List<JSModule>>ofInstance(
+          Lists.<JSModule>newArrayList(
+              CompilerTestCase.createModuleStar(original)));
+    } else if (useModules == ModulePattern.CHAIN) {
+      modulesSupplier = Suppliers.<List<JSModule>>ofInstance(
+          Lists.<JSModule>newArrayList(
+              CompilerTestCase.createModuleChain(original)));
+    } else {
+      throw new IllegalArgumentException("Unknown module type: " + useModules);
     }
-    return compiler;
+
+    runner.enableTestMode(
+        Suppliers.<List<JSSourceFile>>ofInstance(externs),
+        inputsSupplier,
+        modulesSupplier,
+        Receivers.<Integer>collect(exitCodes));
+    runner.run();
+    lastCompiler = runner.getCompiler();
+    lastCommandLineRunner = runner;
+    return lastCompiler;
   }
 
   private Node parse(String[] original) {
     String[] argStrings = args.toArray(new String[] {});
     CommandLineRunner runner = new CommandLineRunner(argStrings);
     Compiler compiler = runner.createCompiler();
-    JSSourceFile[] inputs = new JSSourceFile[original.length];
-    for (int i = 0; i < inputs.length; i++) {
-      inputs[i] = JSSourceFile.fromCode("input" + i, original[i]);
+    List<JSSourceFile> inputs = Lists.newArrayList();
+    for (int i = 0; i < original.length; i++) {
+      inputs.add(JSSourceFile.fromCode("input" + i, original[i]));
     }
     compiler.init(externs, inputs, new CompilerOptions());
     Node all = compiler.parseInputs();

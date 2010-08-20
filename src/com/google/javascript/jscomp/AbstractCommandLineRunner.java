@@ -20,6 +20,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Receiver;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -34,6 +36,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -89,6 +92,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private static Charset inputCharset;
 
+  private boolean testMode = false;
+  private Supplier<List<JSSourceFile>> externsSupplierForTesting = null;
+  private Supplier<List<JSSourceFile>> inputsSupplierForTesting = null;
+  private Supplier<List<JSModule>> modulesSupplierForTesting = null;
+  private Receiver<Integer> exitCodeReceiverForTesting = null;
+
   // Bookkeeping to measure optimal phase orderings.
   private static final int NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER = 100;
 
@@ -102,6 +111,38 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     this.config = new CommandLineConfig();
     this.out = out;
     this.err = err;
+  }
+
+  /**
+   * Put the command line runner into test mode. In test mode,
+   * all outputs will be blackholed.
+   * @param externsSupplier A provider for externs.
+   * @param inputsSupplier A provider for source inputs.
+   * @param modulesSupplier A provider for modules. Only one of inputsSupplier
+   *     and modulesSupplier may be non-null.
+   * @param exitCodeReceiver A receiver for the status code that would
+   *     have been passed to System.exit in non-test mode.
+   */
+  @VisibleForTesting
+  void enableTestMode(
+      Supplier<List<JSSourceFile>> externsSupplier,
+      Supplier<List<JSSourceFile>> inputsSupplier,
+      Supplier<List<JSModule>> modulesSupplier,
+      Receiver<Integer> exitCodeReceiver) {
+    Preconditions.checkArgument(
+        inputsSupplier == null ^ modulesSupplier == null);
+    testMode = true;
+    this.externsSupplierForTesting = externsSupplier;
+    this.inputsSupplierForTesting = inputsSupplier;
+    this.modulesSupplierForTesting = modulesSupplier;
+    this.exitCodeReceiverForTesting = exitCodeReceiver;
+  }
+
+  /**
+   * Returns whether we're in test mode.
+   */
+  protected boolean isInTestMode() {
+    return testMode;
   }
 
   /**
@@ -213,10 +254,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       t.printStackTrace();
       result = -2;
     }
+
     if (config.computePhaseOrdering) {
       runTimeStats.outputBestPhaseOrdering();
     }
-    System.exit(result);
+
+    if (testMode) {
+      exitCodeReceiverForTesting.accept(result);
+    } else {
+      System.exit(result);
+    }
   }
 
   /**
@@ -272,8 +319,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Creates js source code inputs from a list of files.
    */
-  private static List<JSSourceFile> createSourceInputs(List<String> files)
+  private List<JSSourceFile> createSourceInputs(List<String> files)
       throws FlagUsageException, IOException {
+    if (isInTestMode()) {
+      return inputsSupplierForTesting.get();
+    }
     if (files.isEmpty()) {
       files = Collections.singletonList("-");
     }
@@ -308,8 +358,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param jsFiles A list of js file paths, not null
    * @return An array of module objects
    */
-  static JSModule[] createJsModules(List<String> specs, List<String> jsFiles)
+  List<JSModule> createJsModules(
+      List<String> specs, List<String> jsFiles)
       throws FlagUsageException, IOException {
+    if (isInTestMode()) {
+      return modulesSupplierForTesting.get();
+    }
+
     Preconditions.checkState(specs != null);
     Preconditions.checkState(!specs.isEmpty());
     Preconditions.checkState(jsFiles != null);
@@ -387,7 +442,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           + nextJsFileIndex + " but found " + totalNumJsFiles);
     }
 
-    return modulesByName.values().toArray(new JSModule[modulesByName.size()]);
+    return Lists.newArrayList(modulesByName.values());
   }
 
   /**
@@ -400,11 +455,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *         will have the empty string as their value in this map.
    */
   static Map<String, String> parseModuleWrappers(List<String> specs,
-      JSModule[] modules) throws FlagUsageException {
+      List<JSModule> modules) throws FlagUsageException {
     Preconditions.checkState(specs != null);
 
     Map<String, String> wrappers =
-        Maps.newHashMapWithExpectedSize(modules.length);
+        Maps.newHashMapWithExpectedSize(modules.size());
 
     // Prepopulate the map with module names.
     for (JSModule m : modules) {
@@ -496,14 +551,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   protected int doRun() throws FlagUsageException, IOException {
     Compiler.setLoggingLevel(Level.parse(config.loggingLevel));
 
-    List<JSSourceFile> externsList = createExterns();
-    JSSourceFile[] externs = new JSSourceFile[externsList.size()];
-    externsList.toArray(externs);
+    List<JSSourceFile> externs = createExterns();
 
     compiler = createCompiler();
     B options = createOptions();
 
-    JSModule[] modules = null;
+    List<JSModule> modules = null;
     Result result;
 
     setRunOptions(options);
@@ -517,11 +570,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     List<String> moduleSpecs = config.module;
     if (!moduleSpecs.isEmpty()) {
       modules = createJsModules(moduleSpecs, jsFiles);
-      result = compiler.compile(externs, modules, options);
+      result = compiler.compileModules(externs, modules, options);
     } else {
-      List<JSSourceFile> inputList = createSourceInputs(jsFiles);
-      JSSourceFile[] inputs = new JSSourceFile[inputList.size()];
-      inputList.toArray(inputs);
+      List<JSSourceFile> inputs = createSourceInputs(jsFiles);
       result = compiler.compile(externs, inputs, options);
     }
 
@@ -536,7 +587,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Processes the results of the compile job, and returns an error code.
    */
-  int processResults(Result result, JSModule[] modules, B options)
+  int processResults(Result result, List<JSModule> modules, B options)
        throws FlagUsageException, IOException {
     if (config.computePhaseOrdering) {
       return 0;
@@ -690,7 +741,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   protected List<JSSourceFile> createExterns() throws FlagUsageException,
       IOException {
-    return createExternInputs(config.externs);
+    return isInTestMode() ? externsSupplierForTesting.get() :
+        createExternInputs(config.externs);
   }
 
   /**
@@ -780,6 +832,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (fileName == null) {
       return null;
     }
+    if (testMode) {
+      return new StringWriter();
+    }
     // Use a FileWriter if the charset translation isn't required.
     return new BufferedWriter(new FileWriter(fileName));
   }
@@ -792,6 +847,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       throws IOException {
     if (fileName == null) {
       return null;
+    }
+    if (testMode) {
+      return new StringWriter();
     }
     // Use a FileOutputStream for a non-default charset.
     return new BufferedWriter(

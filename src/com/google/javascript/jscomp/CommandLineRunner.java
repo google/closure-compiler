@@ -480,12 +480,12 @@ public class CommandLineRunner extends
   protected List<JSSourceFile> createExterns() throws FlagUsageException,
       IOException {
     List<JSSourceFile> externs = super.createExterns();
-    if (!flags.use_only_custom_externs) {
+    if (flags.use_only_custom_externs || isInTestMode()) {
+      return externs;
+    } else {
       List<JSSourceFile> defaultExterns = getDefaultExterns();
       defaultExterns.addAll(externs);
       return defaultExterns;
-    } else {
-      return externs;
     }
   }
 
