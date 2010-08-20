@@ -30,6 +30,8 @@
   <property name="jarfile" value="${build.dir}/${ant.project.name}.jar" />
   <property name="num-fuzz-tests" value="10000"/>
 
+  <property file="build.properties" />
+
   <!-- set the classpath for the project              -->
   <!-- this includes the generated source class files -->
   <!-- and every jar in the /lib directory            -->
@@ -48,12 +50,14 @@
     <mkdir dir="${classes.dir}" />
     <javac srcdir="${gen.dir}"
            destdir="${classes.dir}"
-           excludes=".svn">
+           excludes=".svn"
+           debug="${javac.debug}">
       <classpath refid="classpath.path" />
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
-           excludes=".svn">
+           excludes=".svn"
+           debug="${javac.debug}">
       <classpath refid="classpath.path" />
     </javac>
 
