@@ -30,6 +30,9 @@ import com.google.javascript.rhino.Token;
  * <p>
  * Notice the prefix '+' when unfolding ++. This is needed because the operand
  * is implicitly converted to a number.
+ * <p>
+ * These transformations can only be performed if the left-hand side of the
+ * assignment has no side-effects.
  *
  * @author elnatan@google.com (Elnatan Reisner)
  */
@@ -85,14 +88,14 @@ class UnfoldCompoundAssignments implements Callback, CompilerPass {
    *
    * @param node an increment or decrement node
    * @param isIncrement true if the operator is ++; false if it is --
-   * @throws RuntimeException if node is a postfix expression whose value is
-   *         used (that is, node is <em>not</em> used only for its side-effect)
    */
   private void unfoldIncrDecr(Node node, boolean isIncrement) {
     Preconditions.checkArgument(
         isPrefix(node) || valueIsDiscarded(node),
         "Unfolding postfix ++/-- requires that the result be ignored.");
     Node lhs = node.getFirstChild().cloneTree();
+    Preconditions.checkArgument(!NodeUtil.mayHaveSideEffects(lhs),
+        "Cannot unfold compound assignment if LHS can have side effects");
     // TODO(elnatan): We might want to use type information to only add this '+'
     // when lhs isn't already a number.
     if (isIncrement) {
@@ -152,9 +155,11 @@ class UnfoldCompoundAssignments implements Callback, CompilerPass {
    * @param node a compound assignment node
    */
   private void unfoldCompoundAssignment(Node node) {
+    Node lhs = node.getFirstChild();
+    Preconditions.checkArgument(!NodeUtil.mayHaveSideEffects(lhs),
+        "Cannot unfold compound assignment if LHS can have side effects");
     Node newRhs = node.cloneTree();
     newRhs.setType(NodeUtil.getOpFromAssignmentOp(node));
-    Node lhs = node.getFirstChild();
     node.replaceChildAfter(lhs, newRhs);
     node.setType(Token.ASSIGN);
     compiler.reportCodeChange();

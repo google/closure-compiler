@@ -91,4 +91,22 @@ public class UnfoldCompoundAssignmentsTest extends CompilerTestCase {
     test("x++, 5; for (a.x++;0;x++) {}; x++;",
         "x = +x + 1, 5; for (a.x = +a.x + 1; 0; x = +x + 1) {}; x = +x + 1;");
   }
+
+  public void testIncrementSideEffects() {
+    try {
+      // Expanding '++' causes f to be called twice.
+      testSame("++a[f()];");
+      fail("Should raise an exception");
+    } catch (RuntimeException e) {
+    }
+  }
+
+  public void testCompoundAssignmentSideEffects() {
+    try {
+      // Expanding causes f to be called twice.
+      testSame("a[f()] *= 2;");
+      fail("Should raise an exception");
+    } catch (RuntimeException e) {
+    }
+  }
 }
