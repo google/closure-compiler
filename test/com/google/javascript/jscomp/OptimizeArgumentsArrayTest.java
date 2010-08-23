@@ -24,7 +24,6 @@ package com.google.javascript.jscomp;
 public class OptimizeArgumentsArrayTest extends CompilerTestCase {
 
   public OptimizeArgumentsArrayTest() {
-
     super("var arguments, alert" /* Externs */);
   }
 

@@ -1250,7 +1250,6 @@ public class FunctionInjectorTest extends TestCase {
         "foo", INLINE_BLOCK);
   }
 
-
   public void testBug1897706() {
     helperInlineReferenceToFunction(
         "function foo(a){}; foo(x())",

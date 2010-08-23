@@ -243,7 +243,6 @@ final class NameReferenceGraphReport {
     generateType(builder, defType);
   }
 
-
   private void generateSourceReferenceLink(StringBuilder builder,
     String sourceFile, int lineNumber, int columnNumber) {
     assert(sourceFile != null);
@@ -251,11 +250,9 @@ final class NameReferenceGraphReport {
     builder.append("(");
 
 
-
     // Print out the text path so the user knows where things come from.
     builder.append(sourceFile + ":" +
         lineNumber + "," + columnNumber);
-
 
 
     builder.append(")");
