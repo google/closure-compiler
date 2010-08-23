@@ -256,6 +256,23 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
         ImmutableSet.of("DEF NAME a -> EXTERN NUMBER"));
   }
 
+  public void testObjectLitInExterns() {
+    checkDefinitions(
+        "var goog = {};" +
+        "/** @type {number} */ goog.HYBRID;" +
+        "/** @enum */ goog.Enum = {HYBRID: 0, ROADMAP: 1};",
+        "goog.HYBRID; goog.Enum.ROADMAP;",
+        ImmutableSet.<String>of(
+            "DEF GETPROP goog.Enum -> EXTERN <null>",
+            "DEF GETPROP goog.HYBRID -> EXTERN <null>",
+            "DEF NAME goog -> EXTERN <null>",
+            "DEF STRING null -> EXTERN NUMBER",
+            "USE GETPROP goog.Enum -> [EXTERN <null>]",
+            "USE GETPROP goog.Enum.ROADMAP -> [EXTERN NUMBER]",
+            "USE GETPROP goog.HYBRID -> [EXTERN <null>, EXTERN NUMBER]",
+            "USE NAME goog -> [EXTERN <null>]"));
+  }
+
   void checkDefinitionsInExterns(String externs, Set<String> expected) {
     checkDefinitions(externs, "", expected);
   }

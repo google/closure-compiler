@@ -179,19 +179,25 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
 
             List<Definition> stubsToRemove = Lists.newArrayList();
             String qualifiedName = node.getQualifiedName();
-            for (Definition prevDef : nameDefinitionMultimap.get(name)) {
-              if (prevDef instanceof ExternalNameOnlyDefinition
-                  && node.getJSDocInfo() == null) {
-                String prevName = prevDef.getLValue().getQualifiedName();
-                if (qualifiedName.equals(prevName)) {
-                  // Drop this stub, there is a real definition.
-                  stubsToRemove.add(prevDef);
+
+            // If there is no qualified name for this, then there will be
+            // no stubs to remove. This will happen if node is an object
+            // literal key.
+            if (qualifiedName != null) {
+              for (Definition prevDef : nameDefinitionMultimap.get(name)) {
+                if (prevDef instanceof ExternalNameOnlyDefinition
+                    && node.getJSDocInfo() == null) {
+                  String prevName = prevDef.getLValue().getQualifiedName();
+                  if (qualifiedName.equals(prevName)) {
+                    // Drop this stub, there is a real definition.
+                    stubsToRemove.add(prevDef);
+                  }
                 }
               }
-            }
 
-            for (Definition prevDef : stubsToRemove) {
-              nameDefinitionMultimap.remove(name, prevDef);
+              for (Definition prevDef : stubsToRemove) {
+                nameDefinitionMultimap.remove(name, prevDef);
+              }
             }
           }
 
