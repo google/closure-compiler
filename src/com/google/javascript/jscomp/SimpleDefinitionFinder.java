@@ -226,11 +226,13 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
           boolean dropStub = false;
           if (node.getJSDocInfo() == null) {
             String qualifiedName = node.getQualifiedName();
-            for (Definition prevDef : nameDefinitionMultimap.get(name)) {
-              String prevName = prevDef.getLValue().getQualifiedName();
-              if (qualifiedName.equals(prevName)) {
-                dropStub = true;
-                break;
+            if (qualifiedName != null) {
+              for (Definition prevDef : nameDefinitionMultimap.get(name)) {
+                String prevName = prevDef.getLValue().getQualifiedName();
+                if (qualifiedName.equals(prevName)) {
+                  dropStub = true;
+                  break;
+                }
               }
             }
           }

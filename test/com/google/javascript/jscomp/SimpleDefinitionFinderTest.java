@@ -262,7 +262,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
         "/** @type {number} */ goog.HYBRID;" +
         "/** @enum */ goog.Enum = {HYBRID: 0, ROADMAP: 1};",
         "goog.HYBRID; goog.Enum.ROADMAP;",
-        ImmutableSet.<String>of(
+        ImmutableSet.of(
             "DEF GETPROP goog.Enum -> EXTERN <null>",
             "DEF GETPROP goog.HYBRID -> EXTERN <null>",
             "DEF NAME goog -> EXTERN <null>",
@@ -270,6 +270,22 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
             "USE GETPROP goog.Enum -> [EXTERN <null>]",
             "USE GETPROP goog.Enum.ROADMAP -> [EXTERN NUMBER]",
             "USE GETPROP goog.HYBRID -> [EXTERN <null>, EXTERN NUMBER]",
+            "USE NAME goog -> [EXTERN <null>]"));
+  }
+
+  public void testCallInExterns() {
+    checkDefinitionsInExterns(
+        "var goog = {};" +
+        "/** @constructor */ goog.Response = function() {};" +
+        "goog.Response.prototype.get;" +
+        "goog.Response.prototype.get().get;",
+        ImmutableSet.of(
+            "DEF GETPROP goog.Response -> EXTERN FUNCTION",
+            "DEF GETPROP goog.Response.prototype.get -> EXTERN <null>",
+            "DEF GETPROP null -> EXTERN <null>",
+            "DEF NAME goog -> EXTERN <null>",
+            "USE GETPROP goog.Response -> [EXTERN FUNCTION]",
+            "USE GETPROP goog.Response.prototype.get -> [EXTERN <null> x 2]",
             "USE NAME goog -> [EXTERN <null>]"));
   }
 
