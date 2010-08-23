@@ -60,6 +60,7 @@ public class SourceMap {
             || NodeUtil.isNew(node)
             || NodeUtil.isFunction(node)
             || NodeUtil.isName(node)
+            || NodeUtil.isGet(node)
             || (NodeUtil.isString(node) && NodeUtil.isGet(node.getParent()));
       }
     };
