@@ -1247,9 +1247,9 @@ public class ControlFlowAnalysisTest extends TestCase {
   }
 
   public void testSynBlock() {
-    String src = "START(); var x; END()";
+    String src = "START(); var x; END(); var y;";
     ControlFlowGraph<Node> cfg = createCfg(src, true);
-    assertDownEdge(cfg, Token.BLOCK, Token.EXPR_RESULT, Branch.SYN_BLOCK);
+    assertCrossEdge(cfg, Token.BLOCK, Token.EXPR_RESULT, Branch.SYN_BLOCK);
   }
 
   public void testPartialTraversalOfScope() {

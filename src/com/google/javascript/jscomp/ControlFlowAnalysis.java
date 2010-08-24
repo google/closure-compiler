@@ -509,10 +509,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
           break;
         default:
           if (node.getType() == Token.BLOCK && node.isSyntheticBlock()) {
-            Node next = node.getLastChild();
-            if (next != null) {
-              createEdge(node, Branch.SYN_BLOCK, computeFallThrough(next));
-            }
+            createEdge(node, Branch.SYN_BLOCK, computeFollowNode(node, this));
           }
           break;
       }
