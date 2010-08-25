@@ -47,6 +47,7 @@ public abstract class WarningsGuard {
     MIN(100),
     STRICT(100),
     DEFAULT(50),
+    SUPPRESS_BY_WHITELIST(40),
     SUPPRESS_DOC(20),
     FILTER_BY_PATH(1);
 
@@ -54,6 +55,10 @@ public abstract class WarningsGuard {
 
     Priority(int value) {
       this.value = value;
+    }
+
+    public int getValue() {
+      return value;
     }
   }
 
