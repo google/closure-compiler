@@ -332,7 +332,7 @@ public class Compiler extends AbstractCompiler {
   private void initBasedOnOptions() {
     // Create the source map if necessary.
     if (options.sourceMapOutputPath != null) {
-      sourceMap = new SourceMap();
+      sourceMap = options.sourceMapFormat.getInstance();
     }
   }
 

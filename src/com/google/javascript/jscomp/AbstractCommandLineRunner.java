@@ -1429,6 +1429,17 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    private SourceMap.Format sourceMapFormat =
+      SourceMap.Format.LEGACY;
+
+    /**
+     * The detail supplied in the source map file, if generated.
+     */
+    CommandLineConfig setSourceMapFormat(SourceMap.Format format) {
+      this.sourceMapFormat = format;
+      return this;
+    }
+
     private final List<String> jscompError = Lists.newArrayList();
 
     /**
