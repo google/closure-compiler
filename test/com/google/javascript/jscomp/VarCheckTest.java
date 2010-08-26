@@ -28,7 +28,7 @@ public class VarCheckTest extends CompilerTestCase {
   private CheckLevel strictModuleDepErrorLevel;
   private boolean sanityCheck = false;
 
-  private CheckLevel externValidationpErrorLevel;
+  private CheckLevel externValidationErrorLevel;
 
   public VarCheckTest() {
     super(EXTERNS);
@@ -38,7 +38,7 @@ public class VarCheckTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     strictModuleDepErrorLevel = CheckLevel.OFF;
-    externValidationpErrorLevel = CheckLevel.ERROR;
+    externValidationErrorLevel = null;
     sanityCheck = false;
   }
 
@@ -47,8 +47,10 @@ public class VarCheckTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
         strictModuleDepErrorLevel);
-    options.setWarningLevel(DiagnosticGroups.EXTERNS_VALIDATION,
-        externValidationpErrorLevel);
+    if (externValidationErrorLevel != null) {
+     options.setWarningLevel(DiagnosticGroups.EXTERNS_VALIDATION,
+         externValidationErrorLevel);
+    }
     return options;
   }
 
@@ -115,22 +117,25 @@ public class VarCheckTest extends CompilerTestCase {
 
   public void testPropReferenceInExterns1() {
     testSame("asdf.foo;", "var asdf;",
-        VarCheck.UNDEFINED_EXTERN_VAR_ERROR, true);
+        VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
   }
 
   public void testPropReferenceInExterns2() {
     testSame("asdf.foo;", "",
-        VarCheck.UNDEFINED_EXTERN_VAR_ERROR, true);
+        VarCheck.UNDEFINED_VAR_ERROR, true);
   }
 
   public void testPropReferenceInExterns3() {
-    externValidationpErrorLevel = CheckLevel.WARNING;
-    test("asdf.foo;", "", "",
-        VarCheck.UNDEFINED_VAR_ERROR, VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
+    testSame("asdf.foo;", "var asdf;",
+        VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
-    externValidationpErrorLevel = CheckLevel.OFF;
-    test("asdf.foo;", "", "",
-        VarCheck.UNDEFINED_VAR_ERROR, null);
+    externValidationErrorLevel = CheckLevel.ERROR;
+    test(
+        "asdf.foo;", "var asdf;", "",
+         VarCheck.UNDEFINED_EXTERN_VAR_ERROR, null);
+
+    externValidationErrorLevel = CheckLevel.OFF;
+    test("asdf.foo;", "var asdf;", "var asdf;", null, null);
   }
 
   public void testVarInWithBlock() {
