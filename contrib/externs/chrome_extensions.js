@@ -453,6 +453,45 @@ chrome.cookies.onChanged;
 chrome.experimental = {};
 
 
+/** @see http://code.google.com/chrome/extensions/experimental.clipboard.html */
+chrome.experimental.clipboard = {};
+
+/**
+ * @param {number} tabId
+ * @param {function()=} opt_callback
+ */
+chrome.experimental.clipboard.executeCopy = function(tabId, opt_callback) {};
+
+/**
+ * @param {number} tabId
+ * @param {function()=} opt_callback
+ */
+chrome.experimental.clipboard.executeCut = function(tabId, opt_callback) {};
+
+/**
+ * @param {number} tabId
+ * @param {function()=} opt_callback
+ */
+chrome.experimental.clipboard.executePaste = function(tabId, opt_callback) {};
+
+
+/** @see http://code.google.com/chrome/extensions/experimental.contextMenu.html */
+chrome.experimental.contextMenu = {};
+
+/**
+ * @param {!Object} createProperties
+ * @param {function(number)=} opt_callback
+ */
+chrome.experimental.contextMenu.create =
+    function(createProperties, opt_callback) {};
+
+/**
+ * @param {number} menuItemId
+ * @param {function()=} opt_callback
+ */
+chrome.experimental.contextMenu.remove = function(menuItemId, opt_callback) {};
+
+
 /** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
 chrome.experimental.extension = {};
 
@@ -460,6 +499,15 @@ chrome.experimental.extension = {};
  * @return {Window}
  */
 chrome.experimental.extension.getPopupView = function() {};
+
+/** @see http://code.google.com/chrome/extensions/experimental.infobars.html */
+chrome.experimental.infobars = {};
+
+/**
+ * @param {!Object} details
+ * @param {function(Window)=} opt_callback
+ */
+chrome.experimental.infobars.show = function(details, opt_callback) {};
 
 
 /** @see http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/extensions/api/extension_api.json */
@@ -528,6 +576,16 @@ chrome.experimental.popup = {};
  * @param {function() : void=} opt_callback
  */
 chrome.experimental.popup.show = function(url, showDetails, opt_callback) {};
+
+
+/** @see http://code.google.com/chrome/extensions/experimental.processes.html */
+chrome.experimental.processes = {};
+
+/**
+ * @param {number} tabId
+ * @param {function(Process)} callback
+ */
+chrome.experimental.processes.getProcessForTab = function(tabId, callback) {}
 
 
 chrome.experimental.rlz = {};
@@ -732,3 +790,12 @@ MetricType.prototype.min;
 MetricType.prototype.max;
 /** @type {number} */
 MetricType.prototype.buckets;
+
+/**
+ * Experimental Process type.
+ * @see http://code.google.com/chrome/extensions/experimental.processes.html#type-Process
+ * @constructor
+ */
+function Process() {}
+/** @type {number} */
+Process.prototype.id;
