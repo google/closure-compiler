@@ -107,12 +107,12 @@ public class VarCheckTest extends CompilerTestCase {
 
   public void testVarReferenceInExterns() {
     testSame("asdf;", "var asdf;",
-        VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR, true);
+        VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
 
   public void testCallInExterns() {
     testSame("yz();", "function yz() {}",
-        VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR, true);
+        VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
 
   public void testPropReferenceInExterns1() {
