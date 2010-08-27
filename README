@@ -184,11 +184,11 @@ Local Modifications: None.
 
 -----
 Code in:
-lib/google_common_deploy.jar
+lib/guava-r06.jar
 
 Guava Libraries
 URL: http://code.google.com/p/guava-libraries/
-Version:  Trunk
+Version:  R6
 License: Apache License 2.0
 
 Description: Google's core Java libraries.
@@ -215,6 +215,21 @@ Local modifications:
 The original jars contained both source code and compiled classes.
 
 hamcrest-core-1.1.jar just contains the compiled classes.
+
+
+
+-----
+Code in:
+lib/jsr305.jar
+
+Annotations for software defect detection
+URL: http://code.google.com/p/jsr-305/
+Version: svn revision 47
+License: BSD License
+
+Description: Annotations for software defect detection.
+
+Local Modifications: None.
 
 
 ----

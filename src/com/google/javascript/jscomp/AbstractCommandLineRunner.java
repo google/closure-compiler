@@ -18,9 +18,9 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Receiver;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -96,7 +96,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private Supplier<List<JSSourceFile>> externsSupplierForTesting = null;
   private Supplier<List<JSSourceFile>> inputsSupplierForTesting = null;
   private Supplier<List<JSModule>> modulesSupplierForTesting = null;
-  private Receiver<Integer> exitCodeReceiverForTesting = null;
+  private Function<Integer, Boolean> exitCodeReceiverForTesting = null;
 
   // Bookkeeping to measure optimal phase orderings.
   private static final int NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER = 100;
@@ -128,7 +128,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       Supplier<List<JSSourceFile>> externsSupplier,
       Supplier<List<JSSourceFile>> inputsSupplier,
       Supplier<List<JSModule>> modulesSupplier,
-      Receiver<Integer> exitCodeReceiver) {
+      Function<Integer, Boolean> exitCodeReceiver) {
     Preconditions.checkArgument(
         inputsSupplier == null ^ modulesSupplier == null);
     testMode = true;
@@ -260,7 +260,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (testMode) {
-      exitCodeReceiverForTesting.accept(result);
+      exitCodeReceiverForTesting.apply(result);
     } else {
       System.exit(result);
     }

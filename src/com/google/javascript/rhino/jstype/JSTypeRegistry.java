@@ -60,6 +60,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -606,7 +607,7 @@ public class JSTypeRegistry implements Serializable {
     Set<ObjectType> typeSet = typesIndexedByProperty.get(propertyName);
     if (typeSet == null) {
       typesIndexedByProperty.put(
-          propertyName, typeSet = Sets.newLinkedHashSet());
+          propertyName, typeSet = new LinkedHashSet<ObjectType>());
     }
     greatestSubtypeByProperty.remove(propertyName);
     typeSet.add(owner);
@@ -655,7 +656,9 @@ public class JSTypeRegistry implements Serializable {
   public Set<ObjectType> getTypesWithProperty(String propertyName) {
     Set<ObjectType> typeSet = typesIndexedByProperty.get(propertyName);
     if (typeSet == null) {
-      return Sets.newLinkedHashSet(getNativeObjectType(NO_TYPE));
+      Set<ObjectType> set = new LinkedHashSet<ObjectType>();
+      set.add(getNativeObjectType(NO_TYPE));
+      return set;
     }
     return typeSet;
   }

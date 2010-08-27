@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NameReferenceGraph.Name;
@@ -31,6 +30,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -669,10 +669,9 @@ public class CallGraph implements CompilerPass {
     
     private void addCallsiteInFunction(Callsite callsite) {
       if (callsitesInFunction == null) {
-        callsitesInFunction = Lists.newLinkedList(callsite);
-      } else {
-        callsitesInFunction.add(callsite);
-      }
+        callsitesInFunction = new LinkedList<Callsite>();
+      } 
+      callsitesInFunction.add(callsite);
     }
     
     /**
@@ -703,10 +702,10 @@ public class CallGraph implements CompilerPass {
     private void addCallsitePossiblyTargetingFunction(Callsite callsite) {
       Preconditions.checkState(computeBackwardGraph);
       if (callsitesPossiblyTargetingFunction == null) {
-        callsitesPossiblyTargetingFunction = Lists.newLinkedList(callsite);
-      } else {
-        callsitesPossiblyTargetingFunction.add(callsite);
-      }
+        callsitesPossiblyTargetingFunction =
+            new LinkedList<Callsite>();
+      } 
+      callsitesPossiblyTargetingFunction.add(callsite);
     }
   
     /**
@@ -783,10 +782,9 @@ public class CallGraph implements CompilerPass {
       Preconditions.checkState(computeForwardGraph);
       
       if (possibleTargets == null) {
-        possibleTargets = Lists.newLinkedList(target);
-      } else {
-        possibleTargets.add(target);
-      }
+        possibleTargets = new LinkedList<Function>();
+      } 
+      possibleTargets.add(target);
     }
     
     /**

@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Receivers;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
@@ -573,7 +573,12 @@ public class CommandLineRunnerTest extends TestCase {
         Suppliers.<List<JSSourceFile>>ofInstance(externs),
         inputsSupplier,
         modulesSupplier,
-        Receivers.<Integer>collect(exitCodes));
+        new Function<Integer, Boolean>() {
+          @Override
+          public Boolean apply(Integer code) {
+            return exitCodes.add(code);
+          }
+        });
     runner.run();
     lastCompiler = runner.getCompiler();
     lastCommandLineRunner = runner;
