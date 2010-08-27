@@ -144,6 +144,7 @@ class AmbiguateProperties implements CompilerPass {
         r.getNativeType(JSTypeNative.NULL_TYPE),
         r.getNativeType(JSTypeNative.VOID_TYPE),
         r.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
+        r.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
         r.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
         r.getNativeType(JSTypeNative.GLOBAL_THIS),
         r.getNativeType(JSTypeNative.OBJECT_TYPE),

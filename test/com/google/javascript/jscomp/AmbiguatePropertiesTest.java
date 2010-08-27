@@ -360,6 +360,41 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     test(js, output);
   }
 
+  public void testStaticWithFunctions() {
+    String js = ""
+      + "/** @constructor */ var Foo = function() {};\n"
+      + "Foo.x = 0;"
+      + "/** @param {!Function} x */ function f(x) { x.y = 1 }"
+      + "f(Foo)";
+    String output = ""
+      + "/** @constructor */ var Foo = function() {};\n"
+      + "Foo.a = 0;"
+      + "/** @param {!Function} x */ function f(x) { x.y = 1 }"
+      + "f(Foo)";
+    test(js, output);
+
+    js = ""
+      + "/** @constructor */ var Foo = function() {};\n"
+      + "Foo.x = 0;"
+      + "/** @param {!Function} x */ function f(x) { x.y = 1; x.x = 2;}"
+      + "f(Foo)";
+    test(js, js);
+
+    js = ""
+      + "/** @constructor */ var Foo = function() {};\n"
+      + "Foo.x = 0;"
+      + "/** @constructor */ var Bar = function() {};\n"
+      + "Bar.y = 0;";
+
+    output = ""
+      + "/** @constructor */ var Foo = function() {};\n"
+      + "Foo.a = 0;"
+      + "/** @constructor */ var Bar = function() {};\n"
+      + "Bar.a = 0;";
+    test(js, output);
+
+  }
+
   public void testTypeMismatch() {
     testSame(EXTERNS, "/** @constructor */var Foo = function(){};\n"
              + "/** @constructor */var Bar = function(){};\n"
