@@ -331,6 +331,10 @@ public final class NodeUtil {
     return true;
   }
 
+  static boolean isSimpleOperator(Node n) {
+    return isSimpleOperatorType(n.getType());
+  }
+
   /**
    * A "simple" operator is one whose children are expressions,
    * has no direct side-effects (unlike '+='), and has no
@@ -533,6 +537,11 @@ public final class NodeUtil {
    * @param callNode - construtor call node
    */
   static boolean constructorCallHasSideEffects(Node callNode) {
+    return constructorCallHasSideEffects(callNode, null);
+  }
+
+  static boolean constructorCallHasSideEffects(
+      Node callNode, AbstractCompiler compiler) {
     Preconditions.checkArgument(
         callNode.getType() == Token.NEW,
         "Expected NEW node, got " + Token.name(callNode.getType()));
@@ -626,18 +635,24 @@ public final class NodeUtil {
    * the reason's why a subtree has side effects.
    */
   static boolean nodeTypeMayHaveSideEffects(Node n) {
+    return nodeTypeMayHaveSideEffects(n, null);
+  }
+
+  static boolean nodeTypeMayHaveSideEffects(Node n, AbstractCompiler compiler) {
     if (isAssignmentOp(n)) {
       return true;
     }
 
     switch(n.getType()) {
-      case Token.CALL:
       case Token.DELPROP:
-      case Token.NEW:
       case Token.DEC:
       case Token.INC:
       case Token.THROW:
         return true;
+      case Token.CALL:
+        return NodeUtil.functionCallHasSideEffects(n, compiler);
+      case Token.NEW:
+        return NodeUtil.constructorCallHasSideEffects(n, compiler);
       case Token.NAME:
         // A variable definition.
         return n.hasChildren();

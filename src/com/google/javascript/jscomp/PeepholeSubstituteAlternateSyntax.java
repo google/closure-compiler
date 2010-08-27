@@ -79,8 +79,11 @@ public class PeepholeSubstituteAlternateSyntax
 
       case Token.WHILE:
       case Token.DO:
+        tryMinimizeCondition(NodeUtil.getConditionExpression(node));
+        return node;
+
       case Token.FOR:
-        if (NodeUtil.getConditionExpression(node) != null) {
+        if (!NodeUtil.isForIn(node)) {
           tryMinimizeCondition(NodeUtil.getConditionExpression(node));
         }
         return node;
@@ -96,7 +99,7 @@ public class PeepholeSubstituteAlternateSyntax
         return tryFoldLiteralConstructor(node);
 
       default:
-          return node; //Nothing changed
+        return node; //Nothing changed
     }
   }
 

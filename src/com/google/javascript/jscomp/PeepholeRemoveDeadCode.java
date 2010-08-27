@@ -47,7 +47,8 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case Token.BLOCK:
         return tryOptimizeBlock(subtree);
       case Token.EXPR_RESULT:
-        return tryFoldHookExpr(subtree);
+        subtree = tryFoldExpr(subtree);
+        return subtree;
       case Token.HOOK:
         return tryFoldHook(subtree);
       case Token.SWITCH:
@@ -68,6 +69,150 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         default:
           return subtree;
     }
+  }
+
+  /**
+   * Try folding EXPR_RESULT nodes by removing useless Ops and expressions.
+   * @return the replacement node, if changed, or the original if not
+   */
+  private Node tryFoldExpr(Node subtree) {
+    if (subtree.getParent().getType() != Token.LABEL) {
+      Node result = trySimpilifyUnusedResult(subtree.getFirstChild());
+      if (result == null) {
+        // If the EXPR_RESULT no longer has any children, remove it as well.
+        subtree.detachFromParent();
+        subtree = null;
+      }
+    }
+    return subtree;
+  }
+
+  /**
+   * General cascading unused operation node removal.
+   * @param n The root of the expression to simplify.
+   * @return The replacement node, or null if the node was is not useful.
+   */
+  private Node trySimpilifyUnusedResult(Node n) {
+    return trySimpilifyUnusedResult(n, true);
+  }
+
+  /**
+   * General cascading unused operation node removal.
+   * @param n The root of the expression to simplify.
+   * @param removeUnused If true, the node is removed from the AST if
+   *     it is not useful, otherwise it replaced with an EMPTY node.
+   * @return The replacement node, or null if the node was is not useful.
+   */
+  private Node trySimpilifyUnusedResult(Node n, boolean removeUnused) {
+    Node result = n;
+
+    // Simplify the results of conditional expressions
+    switch (n.getType()) {
+      case Token.HOOK:
+        Node trueNode = trySimpilifyUnusedResult(n.getFirstChild().getNext());
+        Node falseNode = trySimpilifyUnusedResult(n.getLastChild());
+        // If one or more of the conditional children were removed,
+        // transform the HOOK to an equivalent operation:
+        //    x() ? foo() : 1 --> x() && foo()
+        //    x() ? 1 : foo() --> x() || foo()
+        //    x() ? 1 : 1 --> x()
+        //    x ? 1 : 1 --> null
+        if (trueNode == null && falseNode != null) {
+          n.setType(Token.OR);
+          Preconditions.checkState(n.getChildCount() == 2);
+        } else if (trueNode != null && falseNode == null) {
+          n.setType(Token.AND);
+          Preconditions.checkState(n.getChildCount() == 2);
+        } else if (trueNode == null && falseNode == null) {
+          result = trySimpilifyUnusedResult(n.getFirstChild());
+        } else {
+          // The structure didn't change.
+          result = n;
+        }
+        break;
+      case Token.AND:
+      case Token.OR:
+        // Try to remove the second operand from a AND or OR operations:
+        //    x() || f --> x()
+        //    x() && f --> x()
+        Node conditionalResultNode = trySimpilifyUnusedResult(
+            n.getLastChild());
+        if (conditionalResultNode == null) {
+          Preconditions.checkState(n.hasOneChild());
+          // The conditionally executed code was removed, so
+          // replace the AND/OR with its LHS or remove it if it isn't useful.
+          result = trySimpilifyUnusedResult(n.getFirstChild());
+        }
+        break;
+      case Token.FUNCTION:
+        // A function expression isn't useful if it isn't used, remove it and
+        // don't bother to look at its children.
+        result = null;
+        break;
+      case Token.COMMA:
+        // We rewrite other operations as COMMA expressions (which will later
+        // get split into individual EXPR_RESULT statement, if possible), so
+        // we special case COMMA (we don't want to rewrite COMMAs as new COMMAs
+        // nodes.
+        Node left = trySimpilifyUnusedResult(n.getFirstChild());
+        Node right = trySimpilifyUnusedResult(n.getLastChild());
+        if (left == null && right == null) {
+          result = null;
+        } else if (left == null) {
+          result = right;
+        } else if (right == null){
+          result = left;
+        } else {
+          // The structure didn't change.
+          result = n;
+        }
+        break;
+      default:
+        if (!NodeUtil.nodeTypeMayHaveSideEffects(n)) {
+          // This is the meat of this function. The node itself doesn't generate
+          // any side-effects but preserve any side-effects in the children.
+          Node resultList = null;
+          for (Node next, c = n.getFirstChild(); c != null; c = next) {
+            next = c.getNext();
+            c = trySimpilifyUnusedResult(c);
+            if (c != null) {
+              c.detachFromParent();
+              if (resultList == null)  {
+                // The first side-effect can be used stand-alone.
+                resultList = c;
+              } else {
+                // Leave the side-effects in-place, simplifying it to a COMMA
+                // expression.
+                resultList = new Node(Token.COMMA, resultList, c)
+                    .copyInformationFrom(c);
+              }
+            }
+          }
+          result = resultList;
+        }
+    }
+
+    // Fix up the AST, replace or remove the an unused node (if requested).
+    if (n != result) {
+      Node parent = n.getParent();
+      if (result == null) {
+        if (removeUnused) {
+          parent.removeChild(n);
+        } else {
+          result = new Node(Token.EMPTY).copyInformationFrom(n);
+          parent.replaceChild(n, result);
+        }
+      } else {
+        // A new COMMA expression may not have an existing parent.
+        if (result.getParent() != null) {
+          result.detachFromParent();
+        }
+        n.getParent().replaceChild(n, result);
+      }
+      reportCodeChange();
+    }
+
+    return result;
   }
 
   /**
@@ -237,7 +382,8 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node left = n.getFirstChild();
     Node right = left.getNext();
 
-    if (!mayHaveSideEffects(left)) {
+    left = trySimpilifyUnusedResult(left, false);
+    if (left == null || !mayHaveSideEffects(left)) {
       // Fold it!
       n.removeChild(right);
       parent.replaceChild(n, right);
@@ -272,6 +418,9 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     for (Node c = n.getFirstChild(); c != null; ) {
       Node next = c.getNext();  // save c.next, since 'c' may be removed
       if (!mayHaveSideEffects(c)) {
+        // TODO(johnlenz): determine what this is actually removing. Candidates
+        //    include: EMPTY nodes, control structures without children
+        //    (removing infinite loops), empty try blocks.  What else?
         n.removeChild(c);  // lazy kids
         reportCodeChange();
       } else {
@@ -523,66 +672,6 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Transform HOOK (?:) to IF if this allows the removal of useless branches.
-   * @return the replacement node, if changed, or the original if not
-   */
-  private Node tryFoldHookExpr(Node n) {
-    Preconditions.checkState(NodeUtil.isExpressionNode(n));
-    Node hook = n.getFirstChild();
-    // Only looking at hooks here.
-    if (hook.getType() != Token.HOOK) {
-      return n;
-    }
-
-    Node parent = n.getParent();
-    Preconditions.checkNotNull(parent);
-    Node cond = hook.getFirstChild();
-    Node thenBody = cond.getNext();
-    Node elseBody = thenBody.getNext();
-
-    // Try to remove useless conditions and branches.
-    if (!mayHaveSideEffects(thenBody)) {
-      // x?void 0:y --> if(!x)y
-      Node ifNode = new Node(Token.IF);
-      if (cond.getType() == Token.NOT) {
-        Node expr = cond.getFirstChild();
-        cond.removeChild(expr);
-        ifNode.addChildToBack(expr);
-      } else {
-        Node not = new Node(Token.NOT).copyInformationFrom(cond);
-        hook.removeChild(cond);
-        not.addChildToBack(cond);
-        ifNode.addChildToBack(not);
-      }
-
-      hook.removeChild(elseBody);
-      ifNode.addChildToBack(
-          new Node(Token.BLOCK, NodeUtil.newExpr(elseBody))
-              .copyInformationFrom(elseBody));
-
-      parent.replaceChild(n, ifNode);
-      reportCodeChange();
-      return ifNode;
-    } else if (!mayHaveSideEffects(elseBody)) {
-      // x?y:void 0 --> if(x)y
-      Node ifNode = new Node(Token.IF);
-      hook.removeChild(cond);
-      ifNode.addChildToBack(cond);
-      hook.removeChild(thenBody);
-
-      ifNode.addChildToBack(
-          new Node(Token.BLOCK, NodeUtil.newExpr(thenBody))
-              .copyInformationFrom(thenBody));
-
-      parent.replaceChild(n, ifNode);
-      reportCodeChange();
-      return ifNode;
-    }
-
-    return n;
-  }
-
-  /**
    * Try folding HOOK (?:) if the condition results of the condition is known.
    * @return the replacement node, if changed, or the original if not
    */
@@ -637,16 +726,28 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    */
   Node tryFoldFor(Node n) {
     Preconditions.checkArgument(n.getType() == Token.FOR);
-    // This is not a FOR-IN loop
-    if (n.getChildCount() != 4) {
+    // If this is a FOR-IN loop skip it.
+    if (NodeUtil.isForIn(n)) {
       return n;
     }
-    // There isn't an initializer
+
+    Node init = n.getFirstChild();
+    Node cond = init.getNext();
+    Node increment = cond.getNext();
+
+    if (init.getType() != Token.EMPTY && init.getType() != Token.VAR) {
+      init = trySimpilifyUnusedResult(init, false);
+    }
+
+    if (increment.getType() != Token.EMPTY) {
+      increment = trySimpilifyUnusedResult(increment, false);
+    }
+
+    // There is an initializer skip it
     if (n.getFirstChild().getType() != Token.EMPTY) {
       return n;
     }
 
-    Node cond = NodeUtil.getConditionExpression(n);
     if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
       return n;
     }

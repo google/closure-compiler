@@ -17,16 +17,16 @@
 package com.google.javascript.jscomp;
 
 /**
- * Tests for PeepholeSubstituteAlternateSyntaxTest in isolation. 
- * Tests for the interaction of multiple peephole passes are in 
+ * Tests for PeepholeSubstituteAlternateSyntaxTest in isolation.
+ * Tests for the interaction of multiple peephole passes are in
  * PeepholeIntegrationTest.
  */
 public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
-  
+
   // Externs for builtin constructors
   // Needed for testFoldLiteralObjectConstructors(),
   // testFoldLiteralArrayConstructors() and testFoldRegExp...()
-  private static final String FOLD_CONSTANTS_TEST_EXTERNS = 
+  private static final String FOLD_CONSTANTS_TEST_EXTERNS =
       "var Object = function(){};\n" +
       "var RegExp = function(a){};\n" +
       "var Array = function(a){};\n";
@@ -43,7 +43,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    
+
     enableLineNumberCheck(true);
   }
 
@@ -52,7 +52,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     CompilerPass peepholePass =
       new PeepholeOptimizationsPass(compiler,
           new PeepholeSubstituteAlternateSyntax());
-    
+
     return peepholePass;
   }
 
@@ -77,22 +77,22 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   void assertResultString(String js, String expected) {
     assertResultString(js, expected, false);
   }
-  
+
   // TODO(user): This is same as fold() except it uses string comparison. Any
   // test that needs tell us where a folding is constructing an invalid AST.
   void assertResultString(String js, String expected, boolean normalize) {
-    PeepholeSubstituteAlternateSyntaxTest scTest 
+    PeepholeSubstituteAlternateSyntaxTest scTest
         = new PeepholeSubstituteAlternateSyntaxTest(false);
-    
+
     if (normalize) {
       scTest.enableNormalize();
     } else {
       scTest.disableNormalize();
     }
-    
+
     scTest.test(js, expected);
   }
-  
+
   /** Check that removing blocks with 1 child works */
   public void testFoldOneChildBlocks() {
     fold("function(){if(x)a();x=3}",
@@ -124,7 +124,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     // Try it out with switch statements
     fold("function(){switch(x){case 1:break}}",
          "function(){switch(x){case 1:break}}");
-    
+
     // Do while loops stay in a block if that's where they started
     fold("function(){if(e1){do foo();while(e2)}else foo2()}",
          "function(){if(e1){do foo();while(e2)}else foo2()}");
@@ -218,7 +218,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("function z() {if (a) { foo(); x = true; return true " +
          "} else { goo(); x = true; return true }}",
          "function z() {(a) ? foo() : goo(); x = true; return true}");
-    
+
     fold("function z() {" +
          "  if (a) { bar(); foo(); return true }" +
          "    else { bar(); goo(); return true }" +
@@ -260,9 +260,9 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("while(!(x<=NaN)){a=b;}");
   }
 
-  public void testFoldRegExpConstructor() {    
+  public void testFoldRegExpConstructor() {
     enableNormalize();
-    
+
     // Cannot fold all the way to a literal because there are too few arguments.
     fold("x = new RegExp",                    "x = RegExp()");
     // Empty regexp should not fold to // since that is a line comment in js
@@ -297,11 +297,11 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     String longRegexp = "";
     for (int i = 0; i < 200; i++) longRegexp += "x";
     foldSame("x = RegExp(\"" + longRegexp + "\")");
-    
+
     // Shouldn't fold RegExp unnormalized because
-    // we can't be sure that RegExp hasn't been redefined     
+    // we can't be sure that RegExp hasn't been redefined
     disableNormalize();
-       
+
     foldSame("x = new RegExp(\"foobar\")");
   }
 
@@ -310,7 +310,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     // it is used in node comparison.
     assertResultString("x=new RegExp(\"\\n\", \"i\")", "x=/\\n/i", true);
   }
-  
+
   public void testContainsUnicodeEscape() throws Exception {
     assertTrue(!PeepholeSubstituteAlternateSyntax.containsUnicodeEscape(""));
     assertTrue(!PeepholeSubstituteAlternateSyntax.containsUnicodeEscape("foo"));
@@ -328,7 +328,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   public void testFoldLiteralObjectConstructors() {
     enableNormalize();
-    
+
     // Can fold when normalized
     fold("x = new Object", "x = ({})");
     fold("x = new Object()", "x = ({})");
@@ -382,7 +382,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
          "x = [{}, [\"abc\", {}, [[]]]");
     fold("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
          "x = [{}, [\"abc\", {}, [[]]]");
-    
+
     disableNormalize();
     // Cannot fold above when not normalized
     foldSame("x = new Array");
@@ -408,7 +408,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))");
   }
 
-  public void testMinimizeCondition() {
+  public void testMinimizeWhileCondition() {
     // This test uses constant folding logic, so is only here for completeness.
     fold("while(!!true) foo()", "while(1) foo()");
     // These test tryMinimizeCondition
@@ -416,6 +416,23 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("while(!(!x&&!y)) foo()", "while(x||y) foo()");
     fold("while(x||!!y) foo()", "while(x||y) foo()");
     fold("while(!(!!x&&y)) foo()", "while(!(x&&y)) foo()");
+  }
+
+  public void testMinimizeForCondition() {
+    // This test uses constant folding logic, so is only here for completeness.
+    // These could be simplified to "for(;;) ..."
+    fold("for(;!!true;) foo()", "for(;1;) foo()");
+    // Don't bother with FOR inits as there are normalized out.
+    foldSame("for(!!true;;) foo()");
+
+    // These test tryMinimizeCondition
+    fold("for(;!!x;) foo()", "for(;x;) foo()");
+
+    // sanity check
+    foldSame("for(a in b) foo()");
+    foldSame("for(a in {}) foo()");
+    foldSame("for(a in []) foo()");
+    foldSame("for(a in !!true) foo()");
   }
 
   public void testMinimizeCondition_example1() {
@@ -452,9 +469,9 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("var x = new String(1)");
     foldSame("var x = new Number(1)");
     foldSame("var x = new Boolean(1)");
-    
+
     enableNormalize();
-    
+
     fold("var x = new Object('a')", "var x = Object('a')");
     fold("var x = new RegExp('')", "var x = RegExp('')");
     fold("var x = new Error('20')", "var x = Error(\"20\")");

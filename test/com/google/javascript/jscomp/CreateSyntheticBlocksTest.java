@@ -104,7 +104,7 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
 
   public void testInvalid1() {
     test("startMarker() && true",
-        "startMarker()&&1", null,
+        "startMarker()", null,
          CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }
 

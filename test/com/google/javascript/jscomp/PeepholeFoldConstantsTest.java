@@ -134,9 +134,12 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testUnaryOps() {
-    fold("!foo()", "foo()");
-    fold("~foo()", "foo()");
-    fold("-foo()", "foo()");
+    // These cases are handled by PeepholeRemoveDeadCode.
+    foldSame("!foo()");
+    foldSame("~foo()");
+    foldSame("-foo()");
+
+    // These cases are handled here.
     fold("a=!true", "a=false");
     fold("a=!10", "a=false");
     fold("a=!false", "a=true");

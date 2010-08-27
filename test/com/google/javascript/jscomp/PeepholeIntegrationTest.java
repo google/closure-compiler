@@ -158,7 +158,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
          "x=cond?2:3");
 
     fold("x?void 0:y()", "x||y()");
-    fold("!x?void 0:y()", "x&&y()");
+    fold("!x?void 0:y()", "(!x)||y()");
     fold("x?y():void 0", "x&&y()");
   }
 
@@ -180,10 +180,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("if(x || 3) z()", "z()");
     fold("if(x || false) z()", "x&&z()");
     test("if(x==y && false) z()", "");
-
-    // This would be foldable, but it isn't detected, because 'if' isn't
-    // the parent of 'x || 3'. Cf. FoldConstants.tryFoldAndOr().
-    fold("if(y() || x || 3) z()", "y()||x||1;z()");
+    fold("if(y() || x || 3) z()", "y();z()");
   }
 
   public void testFoldBitwiseOpStringCompareIntegration() {
@@ -249,7 +246,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("!!true", "");
 
     fold("!!x()", "x()");
-    test("!(!x()&&!y())", "!x()&&!y()");
+    test("!(!x()&&!y())", "x()||y()");
     fold("x()||!!y()", "x()||y()");
 
     /* This is similar to the !!true case */
