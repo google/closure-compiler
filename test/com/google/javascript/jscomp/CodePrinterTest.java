@@ -1049,4 +1049,14 @@ public class CodePrinterTest extends TestCase {
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("(0,x.foo)(a)", n);
   }
+
+  public void testPrintScript() {
+    // Verify that SCRIPT nodes not marked as synthetic are printed as
+    // blocks.
+    Node ast = new Node(Token.SCRIPT, 
+        new Node(Token.EXPR_RESULT, Node.newString("f")), 
+        new Node(Token.EXPR_RESULT, Node.newString("g"))); 
+    String result = new CodePrinter.Builder(ast).setPrettyPrint(true).build();    
+    assertEquals("\"f\";\n\"g\"", result);
+  }
 }

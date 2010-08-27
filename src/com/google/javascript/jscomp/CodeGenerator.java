@@ -303,6 +303,7 @@ class CodeGenerator {
           throw new Error("Unexpected Node subclass.");
         }
         boolean stripBlock = n.isSyntheticBlock() ||
+            n.getType() == Token.SCRIPT ||
             ((context != Context.PRESERVE_BLOCK) && (n.getChildCount() < 2));
         if (!stripBlock) {
           cc.beginBlock();
