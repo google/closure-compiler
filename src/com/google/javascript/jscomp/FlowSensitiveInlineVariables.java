@@ -309,6 +309,11 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         return false;
       }
 
+      // Make sure that the name is not within a loop
+      if (NodeUtil.isWithinLoop(use)) {
+        return false;
+      }
+
       // We give up inling stuff with R-Value that has GETPROP, GETELEM,
       // or anything that creates a new object.
       // Example:

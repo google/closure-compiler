@@ -1031,6 +1031,23 @@ public final class NodeUtil {
   }
 
   /**
+   * @return Whether the specified node has a loop parent that
+   * is within the current scope.
+   */
+  static boolean isWithinLoop(Node n) {
+    for (Node parent : n.getAncestors()) {
+      if (NodeUtil.isLoopStructure(parent)) {
+        return true;
+      }
+
+      if (NodeUtil.isFunction(parent)) {
+        break;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Determines whether the given node is a FOR, DO, WHILE, WITH, or IF node.
    */
   static boolean isControlStructure(Node n) {

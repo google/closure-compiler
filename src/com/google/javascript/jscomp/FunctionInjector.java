@@ -411,7 +411,7 @@ class FunctionInjector {
         throw new IllegalStateException("Unexpected call site type.");
     }
 
-    boolean isCallInLoop = isCallWithinLoop(callNode);
+    boolean isCallInLoop = NodeUtil.isWithinLoop(callNode);
 
     FunctionToBlockMutator mutator = new FunctionToBlockMutator(
         compiler, this.safeNameIdSupplier);
@@ -476,24 +476,6 @@ class FunctionInjector {
 
     return newBlock;
   }
-
-  /**
-   * @return Whether the specified callNode has a loop parent that
-   * is within the current scope.
-   */
-  private boolean isCallWithinLoop(Node callNode) {
-    for (Node parent : callNode.getAncestors()) {
-      if (NodeUtil.isLoopStructure(parent)) {
-        return true;
-      }
-
-      if (NodeUtil.isFunction(parent)) {
-        break;
-      }
-    }
-    return false;
-  }
-
 
   /**
    * Checks if the given function matches the criteria for an inlinable

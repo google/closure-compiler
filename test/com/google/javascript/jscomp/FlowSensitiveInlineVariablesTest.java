@@ -123,6 +123,10 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("while (z) { var x = 3; } var y = x;");
   }
 
+  public void testDoNotInlineWithinLoop() {
+    noInline("var y = noSFX(); do { var z = y.foo(); } while (true);");
+  }
+
   public void testDefinitionAfterUse() {
     inline("var x = 0; print(x); x = 1", "var x; print(0); x = 1");
   }
