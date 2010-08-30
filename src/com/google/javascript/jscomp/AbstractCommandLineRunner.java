@@ -30,10 +30,11 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
 
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.StringWriter;
@@ -90,7 +91,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private final PrintStream err;
   private A compiler;
 
-  private static Charset inputCharset;
+  private Charset inputCharset;
+  private String outputCharset;
 
   private boolean testMode = false;
   private Supplier<List<JSSourceFile>> externsSupplierForTesting = null;
@@ -203,7 +205,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.setCodingConvention(config.codingConvention);
     options.setSummaryDetailLevel(config.summaryDetailLevel);
 
-    options.outputCharset = getOutputCharset();
+    outputCharset = options.outputCharset = getOutputCharset();
     inputCharset = getInputCharset();
 
     if (config.jsOutputFile.length() > 0) {
@@ -293,7 +295,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *        stdin. If true, '-' is only allowed to appear once.
    * @return An array of inputs
    */
-  private static List<JSSourceFile> createInputs(List<String> files,
+  private List<JSSourceFile> createInputs(List<String> files,
       boolean allowStdIn) throws FlagUsageException, IOException {
     List<JSSourceFile> inputs = new ArrayList<JSSourceFile>(files.size());
     boolean usingStdin = false;
@@ -337,7 +339,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Creates js extern inputs from a list of files.
    */
-  private static List<JSSourceFile> createExternInputs(List<String> files)
+  private List<JSSourceFile> createExternInputs(List<String> files)
       throws FlagUsageException, IOException {
     if (files.isEmpty()) {
       return ImmutableList.of(JSSourceFile.fromCode("/dev/null", ""));
@@ -563,7 +565,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     boolean writeOutputToFile = !options.jsOutputFile.isEmpty();
     if (writeOutputToFile) {
-      out = toWriter(options.jsOutputFile, inputCharset.name());
+      out = fileNameToOutputWriter(options.jsOutputFile);
+    } else if (out instanceof OutputStream) {
+      out = streamToOutputWriter((OutputStream) out);
     }
 
     List<String> jsFiles = config.js;
@@ -578,8 +582,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     int errCode = processResults(result, modules, options);
     // Close the output if we are writing to a file.
-    if (writeOutputToFile) {
-      ((Writer)out).close();
+    if (out instanceof Closeable) {
+      ((Closeable)out).close();
     }
     return errCode;
   }
@@ -644,15 +648,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         Writer mapOut = null;
 
         if (!shouldGenerateMapPerModule(options)) {
-          mapOut = toWriter(expandSourceMapPath(options, null));
+          mapOut = fileNameToOutputWriter(expandSourceMapPath(options, null));
         }
 
         for (JSModule m : modules) {
           if (shouldGenerateMapPerModule(options)) {
-            mapOut = toWriter(expandSourceMapPath(options, m));
+            mapOut = fileNameToOutputWriter(expandSourceMapPath(options, m));
           }
 
-          Writer writer = toWriter(
+          Writer writer = fileNameToOutputWriter(
               moduleFilePrefix + m.getName() + ".js");
 
           if (options.sourceMapOutputPath != null) {
@@ -776,7 +780,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       exPath = outputFile.getParent() + File.separatorChar + exPath;
     }
 
-    return toWriter(exPath);
+    return fileNameToOutputWriter(exPath);
   }
 
   /**
@@ -828,32 +832,28 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Converts a file name into a Writer.
    * Returns null if the file name is null.
    */
-  private Writer toWriter(String fileName) throws IOException {
+  private Writer fileNameToOutputWriter(String fileName) throws IOException {
     if (fileName == null) {
       return null;
     }
     if (testMode) {
       return new StringWriter();
     }
-    // Use a FileWriter if the charset translation isn't required.
-    return new BufferedWriter(new FileWriter(fileName));
+    return streamToOutputWriter(new FileOutputStream(fileName));
   }
 
   /**
-   * Converts a file name into a Writer.
-   * Returns null if the file name is null.
+   * Create a writer.
    */
-  private Writer toWriter(String fileName, String charSet)
+  private Writer streamToOutputWriter(OutputStream stream)
       throws IOException {
-    if (fileName == null) {
-      return null;
+    if (outputCharset == null) {
+      return new BufferedWriter(
+          new OutputStreamWriter(stream));
+    } else {
+      return new BufferedWriter(
+          new OutputStreamWriter(stream, outputCharset));
     }
-    if (testMode) {
-      return new StringWriter();
-    }
-    // Use a FileOutputStream for a non-default charset.
-    return new BufferedWriter(
-        new OutputStreamWriter(new FileOutputStream(fileName), charSet));
   }
 
   /**
@@ -869,7 +869,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     String outName = expandSourceMapPath(options, null);
-    Writer out = toWriter(outName);
+    Writer out = fileNameToOutputWriter(outName);
     compiler.getSourceMap().appendTo(out, outName);
     out.close();
   }
@@ -1058,13 +1058,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       // Generate per-module manifests.
       Iterable<JSModule> modules = graph.getAllModules();
       for (JSModule module : modules) {
-        Writer out = toWriter(expandManifest(module));
+        Writer out = fileNameToOutputWriter(expandManifest(module));
         printManifestTo(module.getInputs(), out);
         out.close();
       }
     } else {
       // Generate a single file manifest.
-      Writer out = toWriter(expandManifest(null));
+      Writer out = fileNameToOutputWriter(expandManifest(null));
       if (graph == null) {
         printManifestTo(compiler.getInputsInOrder(), out);
       } else {
