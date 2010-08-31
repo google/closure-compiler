@@ -148,12 +148,9 @@ public class Node implements Cloneable, Serializable {
       DIRECTIVES         = 47,    // The ES5 directives on this node.
       DIRECT_EVAL        = 48,    // ES5 distinguishes between direct and
                                   // indirect calls to eval.
-      SUPPRESSIONS       = 49,    // Used by the compiler to associate
-                                  // @suppress directly with functions
-                                  // and scripts.
-      FREE_CALL          = 50,    // A CALL without an explicit "this" value.
+      FREE_CALL          = 49,    // A CALL without an explicit "this" value.
                                   //
-      LAST_PROP          = 50;
+      LAST_PROP          = 49;
 
   // values of ISNUMBER_PROP to specify
   // which of the children are Number types
@@ -2041,19 +2038,14 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * Sets the warning suppressions on this node.
+   * Adds a warning to be suppressed. This is indistinguishable
+   * from having a {@code @suppress} tag in the code.
    */
-  public void setSuppressions(Set<String> val) {
-    Preconditions.checkState(type == Token.FUNCTION || type == Token.SCRIPT);
-    putProp(SUPPRESSIONS, val);
-  }
-
-  /**
-   * Returns the set of supressions for this node.
-   */
-  @SuppressWarnings("unchecked")
-  public Set<String> getSuppressions() {
-    return (Set<String>) getProp(SUPPRESSIONS);
+  public void addSuppression(String warning) {
+    if (getJSDocInfo() == null) {
+      setJSDocInfo(new JSDocInfo(false));
+    }
+    getJSDocInfo().addSuppression(warning);
   }
 
   /**

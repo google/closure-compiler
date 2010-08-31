@@ -18,10 +18,12 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Set;
 
 /**
  * Checks that all variables are declared, that file-private variables are
@@ -69,6 +71,11 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
   private CompilerInput synthesizedExternsInput = null;
   private Node synthesizedExternsRoot = null;
 
+  // Vars that still need to be declared in externs. These will be declared
+  // at the end of the pass, or when we see the equivalent var declared
+  // in the normal code.
+  private Set<String> varsToDeclareInExterns = Sets.newHashSet();
+
   private final AbstractCompiler compiler;
 
   // Whether this is the post-processing sanity check.
@@ -93,6 +100,9 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
     NodeTraversal.traverse(compiler, externs, new NameRefInExternsCheck());
     NodeTraversal.traverseRoots(
         compiler, Lists.newArrayList(externs, root), this);
+    for (String varName : varsToDeclareInExterns) {
+      createSynthesizedExternVar(varName);
+    }
   }
 
   @Override
@@ -115,6 +125,16 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
       return;
     }
 
+    // Check if this is a declaration for a var that has been declared
+    // elsewhere. If so, mark it as a duplicate.
+    if ((parent.getType() == Token.VAR ||
+         NodeUtil.isFunctionDeclaration(parent)) &&
+        varsToDeclareInExterns.contains(varName)) {
+      createSynthesizedExternVar(varName);
+
+      parent.addSuppression("duplicate");
+    }
+
     // Check that the var has been declared.
     Scope scope = t.getScope();
     Scope.Var var = scope.getVar(varName);
@@ -131,23 +151,8 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
         if (sanityCheck) {
           throw new IllegalStateException("Unexpected variable " + varName);
         } else {
-          // Create a new variable in a synthetic script. This will prevent
-          // subsequent compiler passes from crashing.
-          Node nameNode = Node.newString(Token.NAME, varName);
-
-          // Mark the variable as constant if it matches the coding convention
-          // for constant vars.
-          // NOTE(nicksantos): honestly, i'm not sure how much this matters.
-          // AFAIK, all people who use the CONST coding convention also
-          // compile with undeclaredVars as errors. We have some test
-          // cases for this configuration though, and it makes them happier.
-          if (compiler.getCodingConvention().isConstant(varName)) {
-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-          }
-
-          getSynthesizedExternsRoot().addChildToBack(
-              new Node(Token.VAR, nameNode));
-          scope.getGlobalScope().declare(varName, nameNode,
+          createSynthesizedExternVar(varName);
+          scope.getGlobalScope().declare(varName, n,
               null, getSynthesizedExternsInput());
         }
       }
@@ -190,6 +195,28 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
   }
 
   /**
+   * Create a new variable in a synthetic script. This will prevent
+   * subsequent compiler passes from crashing.
+   */
+  private void createSynthesizedExternVar(String varName) {
+    Node nameNode = Node.newString(Token.NAME, varName);
+
+    // Mark the variable as constant if it matches the coding convention
+    // for constant vars.
+    // NOTE(nicksantos): honestly, i'm not sure how much this matters.
+    // AFAIK, all people who use the CONST coding convention also
+    // compile with undeclaredVars as errors. We have some test
+    // cases for this configuration though, and it makes them happier.
+    if (compiler.getCodingConvention().isConstant(varName)) {
+      nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
+
+    getSynthesizedExternsRoot().addChildToBack(
+        new Node(Token.VAR, nameNode));
+    varsToDeclareInExterns.remove(varName);
+  }
+
+  /**
    * A check for name references in the externs inputs. These used to prevent
    * a variable from getting renamed, but no longer have any effect.
    */
@@ -208,11 +235,18 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
               Scope.Var var = scope.getVar(n.getString());
               if (var == null) {
                 t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
+                varsToDeclareInExterns.add(n.getString());
               }
             }
             break;
           default:
             t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
+
+            Scope scope = t.getScope();
+            Scope.Var var = scope.getVar(n.getString());
+            if (var == null) {
+              varsToDeclareInExterns.add(n.getString());
+            }
             break;
         }
       }

@@ -42,6 +42,7 @@ package com.google.javascript.rhino;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -50,7 +51,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 
 /**
  * <p>JSDoc information describing JavaScript code. JSDoc is represented as a
@@ -513,6 +513,18 @@ public final class JSDocInfo implements Serializable {
 
     info.deprecated = reason;
     return true;
+  }
+
+  /**
+   * Add a suppressed warning.
+   */
+  void addSuppression(String suppression) {
+    lazyInitInfo();
+
+    if (info.suppressions == null) {
+      info.suppressions = Sets.newHashSet();
+    }
+    info.suppressions.add(suppression);
   }
 
   /**

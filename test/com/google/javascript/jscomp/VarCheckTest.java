@@ -55,7 +55,17 @@ public class VarCheckTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    if (!sanityCheck) {
+      return new CompilerPass() {
+        @Override public void process(Node externs, Node root) {
+          new VarCheck(compiler, false).process(externs, root);
+          if (!compiler.hasErrors()) {
+            new VarCheck(compiler, true).process(externs, root);
+          }
+        }
+      };
+    }
     return new VarCheck(compiler, sanityCheck);
   }
 
@@ -103,6 +113,11 @@ public class VarCheckTest extends CompilerTestCase {
   public void testMultiplyDeclaredVars3() {
     test("try { var x = 1; x *=2; } catch (x) {}", null,
          SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testMultiplyDeclaredVars4() {
+    testSame("x;", "var x = 1; var x = 2;",
+         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR, true);
   }
 
   public void testVarReferenceInExterns() {
@@ -269,7 +284,7 @@ public class VarCheckTest extends CompilerTestCase {
   // Test synthesis of externs
 
   public void testSimple() {
-    checkSynthesizedExtern("x", "var x");
+    checkSynthesizedExtern("x", "var x;");
     checkSynthesizedExtern("var x", "");
   }
 
@@ -302,6 +317,26 @@ public class VarCheckTest extends CompilerTestCase {
     checkSynthesizedExtern("x:var y", "");
   }
 
+  public void testVariableInNormalCodeUsedInExterns1() {
+    checkSynthesizedExtern(
+        "x.foo;", "var x;", "var x; x.foo;");
+  }
+
+  public void testVariableInNormalCodeUsedInExterns2() {
+    checkSynthesizedExtern(
+        "x;", "var x;", "var x; x;");
+  }
+
+  public void testVariableInNormalCodeUsedInExterns3() {
+    checkSynthesizedExtern(
+        "x.foo;", "function x() {}", "var x; x.foo; ");
+  }
+
+  public void testVariableInNormalCodeUsedInExterns4() {
+    checkSynthesizedExtern(
+        "x;", "function x() {}", "var x; x; ");
+  }
+
   private final static class VariableTestCheck implements CompilerPass {
 
     final AbstractCompiler compiler;
@@ -325,14 +360,20 @@ public class VarCheckTest extends CompilerTestCase {
     }
   }
 
-  public void checkSynthesizedExtern(String input, String expectedExtern) {
+  public void checkSynthesizedExtern(
+      String input, String expectedExtern) {
+    checkSynthesizedExtern("", input, expectedExtern);
+  }
+
+  public void checkSynthesizedExtern(
+      String extern, String input, String expectedExtern) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setWarningLevel(
         DiagnosticGroup.forType(VarCheck.UNDEFINED_VAR_ERROR),
         CheckLevel.OFF);
     compiler.init(
-        new JSSourceFile[] {},
+        new JSSourceFile[] { JSSourceFile.fromCode("extern", extern) },
         new JSSourceFile[] { JSSourceFile.fromCode("input", input) },
         options);
     compiler.parseInputs();
