@@ -190,3 +190,17 @@ Element.prototype.ontouchmove = function(e) {};
  */
 Element.prototype.ontouchstart = function(e) {};
 
+/**
+ * Specifies the JavaScript method to invoke when the browser device's
+ * orientation changes, i.e.the device is rotated.
+ * @param {Event} e
+ * @see http://developer.apple.com/safari/library/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html#//apple_ref/doc/uid/TP40006511-SW16
+ */
+Window.prototype.onorientationchange = function(e) {};
+
+/**
+ * Returns the orientation of the browser's device, one of [-90, 0, 90, 180].
+ * @type {number}
+ * @see http://developer.apple.com/safari/library/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html#//apple_ref/doc/uid/TP40006511-SW16
+ */
+Window.prototype.orientation;
