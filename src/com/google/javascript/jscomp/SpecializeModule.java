@@ -159,8 +159,9 @@ public class SpecializeModule implements CompilerPass {
       }
     } while(specializationState.hasChanged()); 
     
+    // We must always add dummy variables before replacing the orginal module.
+    addDummyVarDeclarationsToInitialModule(module);
     replaceOriginalModuleInputsWithSpecialized();    
-    addDummyVarDeclarationsToInitialModule(module);  
     addOriginalFunctionVersionsToDependentModules(module);   
   }
   
@@ -286,20 +287,25 @@ public class SpecializeModule implements CompilerPass {
    * 
    * TODO(dcc): Be smarter about whether we need a VAR here or not.
    */
-  private void addDummyVarDeclarationsToInitialModule(JSModule module) {    
-    CompilerInput lastInputInFirstModule =
-        module.getInputs().get(module.getInputs().size() - 1);
-    
-    Node dummyVarParent = lastInputInFirstModule.getAstRoot(compiler);
-       
-    for (Node modifiedFunction : functionInfoBySpecializedFunctionNode.keySet())
-        {      
+  private void addDummyVarDeclarationsToInitialModule(JSModule module) {
+    for (Node modifiedFunction :
+      functionInfoBySpecializedFunctionNode.keySet()) {      
      if (specializationState.getRemovedFunctions().contains(modifiedFunction)) {
        OriginalFunctionInformation originalInfo =
          functionInfoBySpecializedFunctionNode.get(modifiedFunction);
        
        if (originalInfo.name != null && originalInfo.originalWasDeclaration()) {
-         dummyVarParent.addChildToBack(originalInfo.generateDummyDeclaration());
+         Node block = specializationState.removedFunctionToBlock.get(
+             modifiedFunction);
+
+         // Declaring block might be null if no fix-up declarations is needed.
+         // For example, InlineFunction can inline an anonymous function call or
+         // anything with prototype property requires no dummy declaration
+         // fix-ups afterward.
+         if (block != null) {
+           Node originalRoot = specializedInputRootsByOriginal.get(block);
+           block.addChildrenToBack(originalInfo.generateDummyDeclaration());
+         }
        }     
      }
     }
@@ -570,6 +576,8 @@ public class SpecializeModule implements CompilerPass {
      */
     private Set<Node> removedFunctions;
     
+    private Map<Node, Node> removedFunctionToBlock;
+    
     private SimpleFunctionAliasAnalysis initialModuleAliasAnalysis;
     
     /** Will be true if any new functions have been removed or specialized since
@@ -584,6 +592,7 @@ public class SpecializeModule implements CompilerPass {
       
       specializedFunctions = Sets.newLinkedHashSet();
       removedFunctions = Sets.newLinkedHashSet();
+      removedFunctionToBlock = Maps.newLinkedHashMap();
     }
     
     /**
@@ -611,7 +620,9 @@ public class SpecializeModule implements CompilerPass {
      * @param functionNode A specialized AST node with type Token.FUNCTION
      */
     public void reportSpecializedFunction(Node functionNode) {
-      hasChanged = specializedFunctions.add(functionNode);
+      if (specializedFunctions.add(functionNode)) {
+        hasChanged = true;
+      }
     }
     
     /**
@@ -636,9 +647,19 @@ public class SpecializeModule implements CompilerPass {
      * Reports that a function has been removed.
      * 
      * @param functionNode A removed AST node with type Token.FUNCTION
+     * @param declaringBlock If the function declaration puts a variable in the
+     *    scope, we need to have a VAR statement in the scope where the
+     *    function is declared. Null if the function does not put a name
+     *    in the scope.
      */
-    public void reportRemovedFunction(Node functionNode) {
-      hasChanged = removedFunctions.add(functionNode);
+    public void reportRemovedFunction(Node functionNode, Node declaringBlock) {
+      // Depends when we were notified, functionNode.getParent might or might
+      // not be null. We are going to force the user to tell us the parent
+      // instead.
+      if (removedFunctions.add(functionNode)) {
+        hasChanged = true;
+        removedFunctionToBlock.put(functionNode, declaringBlock);
+      }
     }
     
     /**

@@ -440,12 +440,12 @@ public class SpecializeModuleTest extends CompilerTestCase {
       
       Node functionF = findFunction("F");
       
-      lastState.reportRemovedFunction(functionF);
+      lastState.reportRemovedFunction(functionF, functionF.getParent());
       assertEquals(ImmutableSet.of(functionF), lastState.getRemovedFunctions());
 
       Node functionG = findFunction("F");
       
-      lastState.reportRemovedFunction(functionG);
+      lastState.reportRemovedFunction(functionG, functionF.getParent());
       assertEquals(ImmutableSet.of(functionF, functionG),
           lastState.getRemovedFunctions());
       

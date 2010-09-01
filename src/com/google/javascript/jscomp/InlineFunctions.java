@@ -791,7 +791,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
         verifyAllReferencesInlined(fs);
 
         if (specializationState != null) {
-          specializationState.reportRemovedFunction(fn.getFunctionNode());
+          specializationState.reportRemovedFunction(
+              fn.getFunctionNode(), fn.getDeclaringBlock());
         }
 
         fn.remove();
@@ -975,6 +976,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     /** Removes itself from the javascript */
     public void remove();
+
+    public Node getDeclaringBlock();
   }
 
   /** NamedFunction implementation of the Function interface */
@@ -996,6 +999,11 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     public void remove() {
       NodeUtil.removeChild(fn.getParent(), fn);
     }
+
+    @Override
+    public Node getDeclaringBlock() {
+      return fn.getParent();
+    }
   }
 
   /** FunctionVar implementation of the Function interface */
@@ -1016,6 +1024,11 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     public void remove() {
       NodeUtil.removeChild(var.getParent(), var);
+    }
+
+    @Override
+    public Node getDeclaringBlock() {
+      return var.getParent();
     }
   }
 
@@ -1042,6 +1055,12 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     public void remove() {
       // Nothing to do. The function is removed with the call.
     }
+
+    @Override
+    public Node getDeclaringBlock() {
+      return null;
+    }
+
   }
 
   class Reference extends FunctionInjector.Reference {

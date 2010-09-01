@@ -323,7 +323,7 @@ class DevirtualizePrototypeMethods implements SpecializationAwareCompilerPass {
         .copyInformationFrom(parent.getFirstChild());
 
     if (specializationState != null) {
-      specializationState.reportRemovedFunction(functionNode);
+      specializationState.reportRemovedFunction(functionNode, block);
     }
 
     parent.removeChild(functionNode);

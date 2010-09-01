@@ -93,7 +93,8 @@ class RemoveUnusedPrototypeProperties implements
               getSpecializableFunctionFromSymbol(declaration);
 
             if (specializableFunction != null) {
-              specializationState.reportRemovedFunction(specializableFunction);
+              specializationState.reportRemovedFunction(
+                  specializableFunction, null);
               canRemove = true;
             }
           }
