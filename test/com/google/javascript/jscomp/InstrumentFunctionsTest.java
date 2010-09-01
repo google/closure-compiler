@@ -225,6 +225,14 @@ public class InstrumentFunctionsTest extends CompilerTestCase {
          "function a(){try{}catch(err){}finally{return $$testExit(0)}}");
   }
 
+  public void testNestedExit() {
+    this.instrumentationPb = "report_exit: \"$$testExit\"\n" +
+        "report_defined: \"$$testDefine\"";
+    test("function a(){ return function(){ return c;}}",
+         "$$testDefine(1);function a(){$$testDefine(0);" +
+         "return $$testExit(1, function(){return $$testExit(0, c);});}");
+  }
+
   public void testProtobuffParseFail() {
     this.instrumentationPb = "not an ascii pb\n";
     test("function a(){b}", "", RhinoErrorReporter.PARSE_ERROR);

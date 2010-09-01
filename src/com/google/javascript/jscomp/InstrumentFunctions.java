@@ -209,7 +209,7 @@ class InstrumentFunctions implements CompilerPass {
    * }
    *
    **/
-  private class InstrumentReturns extends AbstractPostOrderCallback {
+  private class InstrumentReturns implements NodeTraversal.Callback {
     private final int functionId;
     /**
      * @param functionId Function identifier computed by FunctionNames;
@@ -233,6 +233,11 @@ class InstrumentFunctions implements CompilerPass {
         body.addChildToBack(expr);
         compiler.reportCodeChange();
       }
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return n.getType() != Token.FUNCTION;
     }
 
     @Override
