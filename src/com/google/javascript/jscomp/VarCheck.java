@@ -97,7 +97,13 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, new NameRefInExternsCheck());
+    // Don't run externs-checking in sanity check mode. Normalization will
+    // remove duplicate VAR declarations, which will make
+    // externs look like they have assigns.
+    if (!sanityCheck) {
+      NodeTraversal.traverse(compiler, externs, new NameRefInExternsCheck());
+    }
+
     NodeTraversal.traverseRoots(
         compiler, Lists.newArrayList(externs, root), this);
     for (String varName : varsToDeclareInExterns) {

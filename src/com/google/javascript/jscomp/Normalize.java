@@ -124,7 +124,7 @@ class Normalize implements CompilerPass {
     //   }
     // otherwise 'var e = 1' would be rewritten as 'e = 1'.
     // TODO(johnlenz): Introduce a seperate scope for catch nodes.
-    removeDuplicateDeclarations(root);
+    removeDuplicateDeclarations(externs, root);
     new PropogateConstantAnnotations(compiler, assertOnChange)
         .process(externs, root);
 
@@ -548,12 +548,12 @@ class Normalize implements CompilerPass {
   /**
    * Remove duplicate VAR declarations.
    */
-  private void removeDuplicateDeclarations(Node root) {
+  private void removeDuplicateDeclarations(Node externs, Node root) {
     Callback tickler = new ScopeTicklingCallback();
     ScopeCreator scopeCreator =  new SyntacticScopeCreator(
         compiler, new DuplicateDeclarationHandler());
     NodeTraversal t = new NodeTraversal(compiler, tickler, scopeCreator);
-    t.traverse(root);
+    t.traverseRoots(externs, root);
   }
 
   /**
