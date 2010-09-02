@@ -1403,9 +1403,17 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     Iterator<Node> parameters = functionType.getParameters().iterator();
     int ordinal = 0;
-    while (arguments.hasNext() && parameters.hasNext()) {
-      Node parameter = parameters.next();
-      Node argument = arguments.next();
+    Node parameter = null;
+    Node argument = null;
+    while (arguments.hasNext() &&
+           (parameters.hasNext() ||
+            parameter != null && parameter.isVarArgs())) {
+      // If there are no parameters left in the list, then the while loop
+      // above implies that this must be a var_args function.
+      if (parameters.hasNext()) {
+        parameter = parameters.next();
+      }
+      argument = arguments.next();
       ordinal++;
 
       validator.expectArgumentMatchesParameter(t, argument,

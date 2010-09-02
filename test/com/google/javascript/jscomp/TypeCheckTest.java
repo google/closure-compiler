@@ -1358,6 +1358,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "and no more than 1 argument(s).");
   }
 
+  public void testFunctionArguments16() throws Exception {
+    testTypes(
+        "/** @param {...number} var_args */" +
+        "function g(var_args) {} g(1, true);",
+        "actual parameter 2 of g does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: (number|undefined)");
+  }
+
   public void testPrintFunctionName1() throws Exception {
     // Ensures that the function name is pretty.
     testTypes(
