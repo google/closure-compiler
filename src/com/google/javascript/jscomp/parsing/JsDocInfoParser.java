@@ -394,6 +394,17 @@ public final class JsDocInfoParser {
                   token = eatTokensUntilEOL();
                   continue retry;
 
+                case MEANING:
+                  ExtractionInfo meaningInfo =
+                      extractMultilineTextualBlock(token);
+                  String meaning = meaningInfo.string;
+                  token = meaningInfo.token;
+                  if (!jsdocBuilder.recordMeaning(meaning)) {
+                    parser.addWarning("msg.jsdoc.meaning.extra",
+                        stream.getLineno(), stream.getCharno());
+                  }
+                  continue retry;
+
                 case NO_ALIAS:
                   if (!jsdocBuilder.recordNoAlias()) {
                     parser.addWarning("msg.jsdoc.noalias",

@@ -509,6 +509,22 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Records a meaning giving context for translation (i18n). Different
+   * meanings will result in different translations.
+   *
+   * @return {@code true} If the meaning was successfully updated.
+   */
+  public boolean recordMeaning(String meaning) {
+    if (meaning != null && currentInfo.getMeaning() == null) {
+      currentInfo.setMeaning(meaning);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records a fileoverview description.
    *
    * @return {@code true} if the description was recorded and {@code false}

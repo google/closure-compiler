@@ -43,6 +43,7 @@ enum Annotation {
   INTERFACE,
   JAVA_DISPATCH,
   LICENSE, // same as preserve
+  MEANING,
   NO_ALIAS,
   NO_COMPILE,
   NO_SHADOW,
@@ -89,6 +90,7 @@ enum Annotation {
       put("interface", Annotation.INTERFACE).
       put("javadispatch", Annotation.JAVA_DISPATCH).
       put("license", Annotation.LICENSE).
+      put("meaning", Annotation.MEANING).
       put("noalias", Annotation.NO_ALIAS).
       put("nocompile", Annotation.NO_COMPILE).
       put("noshadow", Annotation.NO_SHADOW).

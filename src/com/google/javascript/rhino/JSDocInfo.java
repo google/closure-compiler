@@ -96,6 +96,7 @@ public final class JSDocInfo implements Serializable {
 
     // Other information
     String description = null;
+    String meaning = null;
     String deprecated = null;
     String license = null;
     Set<String> suppressions = null;
@@ -964,6 +965,26 @@ public final class JSDocInfo implements Serializable {
   void setDescription(String desc) {
     lazyInitInfo();
     info.description = desc;
+  }
+
+  /**
+   * Gets the meaning specified by the {@code @meaning} annotation.
+   *
+   * In localization systems, two messages with the same content but
+   * different "meanings" may be translated differently. By default, we
+   * use the name of the variable that the message is initialized to as
+   * the "meaning" of the message.
+   *
+   * But some code generators (like Closure Templates) inject their own
+   * meaning with the jsdoc {@code @meaning} annotation.
+   */
+  public String getMeaning() {
+    return (info == null) ? null : info.meaning;
+  }
+
+  void setMeaning(String meaning) {
+    lazyInitInfo();
+    info.meaning = meaning;
   }
 
   /**

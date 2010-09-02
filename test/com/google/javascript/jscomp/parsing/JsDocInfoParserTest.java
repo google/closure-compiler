@@ -1110,6 +1110,28 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertEquals(": [ ] ...", parse(comment).getDescription());
   }
 
+  public void testParseMeaning1() throws Exception {
+    assertEquals("tigers",
+        parse("@meaning tigers   */").getMeaning());
+  }
+
+  public void testParseMeaning2() throws Exception {
+    assertEquals("tigers and lions and bears",
+        parse("@meaning tigers\n * and lions\n * and bears */").getMeaning());
+  }
+
+  public void testParseMeaning3() throws Exception {
+    JSDocInfo info =
+        parse("@meaning  tigers\n * and lions\n * @desc  and bears */");
+    assertEquals("tigers and lions", info.getMeaning());
+    assertEquals("and bears", info.getDescription());
+  }
+
+  public void testParseMeaning4() throws Exception {
+    parse("@meaning  tigers\n * @meaning and lions  */",
+        "extra @meaning tag");
+  }
+
   public void testParsePreserve() throws Exception {
     Node node = new Node(1);
     this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
