@@ -84,7 +84,7 @@
       <zipfileset src="${lib.dir}/args4j_deploy.jar" />
       <zipfileset src="${lib.dir}/guava-r06.jar" />
       <zipfileset src="${lib.dir}/jsr305.jar" />
-      <zipfileset src="${lib.dir}/protobuf_deploy.jar" />
+      <zipfileset src="${lib.dir}/protobuf-java-2.3.0.jar" />
       <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
       <fileset dir="${classes.dir}" />
       <fileset dir="${build.dir}" includes="externs.zip" />
@@ -117,7 +117,7 @@
       <zipfileset src="${lib.dir}/hamcrest-core-1.1.jar" />
       <zipfileset src="${lib.dir}/guava-r06.jar" />
       <zipfileset src="${lib.dir}/jsr305.jar" />
-      <zipfileset src="${lib.dir}/protobuf_deploy.jar" />
+      <zipfileset src="${lib.dir}/protobuf-java-2.3.0.jar" />
       <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
       <fileset dir="${classes.dir}" />
       <fileset dir="${testClasses.dir}" />

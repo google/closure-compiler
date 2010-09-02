@@ -248,11 +248,11 @@ Local Modifications: None.
 
 ---
 Code in:
-lib/protobuf_deploy.jar
+lib/protobuf-java-2.3.0.jar
 
 Protocol Buffers
 URL: http://code.google.com/p/protobuf/
-Version: 2.2.0a
+Version: 2.3.0
 License: New BSD License
 
 Description: Supporting libraries for protocol buffers,
