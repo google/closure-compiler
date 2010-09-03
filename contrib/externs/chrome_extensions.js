@@ -415,6 +415,34 @@ chrome.bookmarks.onMoved;
 chrome.bookmarks.onRemoved;
 
 
+/** @see http://code.google.com/chrome/extensions/dev/contextMenus.html */
+chrome.contextMenus = {};
+
+/**
+ * @param {!Object} createProperties
+ * @param {function()=} opt_callback
+ */
+chrome.contextMenus.create = function(createProperties, opt_callback) {};
+
+/**
+ * @param {number} menuItemId
+ * @param {function()=} opt_callback
+ */
+chrome.contextMenus.remove = function(menuItemId, opt_callback) {};
+
+/**
+ * @param {function()=} opt_callback
+ */
+chrome.contextMenus.removeAll = function(opt_callback) {};
+
+/**
+ * @param {number} id
+ * @param {!Object} updateProperties
+ * @param {function()=} opt_callback
+ */
+chrome.contextMenus.update = function(id, updateProperties, opt_callback) {};
+
+
 /** @see http://code.google.com/chrome/extensions/dev/cookies.html */
 chrome.cookies = {};
 
@@ -799,3 +827,27 @@ MetricType.prototype.buckets;
 function Process() {}
 /** @type {number} */
 Process.prototype.id;
+
+/**
+ * @see http://code.google.com/chrome/extensions/dev/contextMenus.html#type-OnClickData
+ * @constructor
+ */
+function OnClickData() {}
+/** @type {number} */
+OnClickData.prototype.menuItemId;
+/** @type {number} */
+OnClickData.prototype.parentMenuItemId;
+/** @type {string} */
+OnClickData.prototype.mediaType;
+/** @type {string} */
+OnClickData.prototype.linkUrl;
+/** @type {string} */
+OnClickData.prototype.srcUrl;
+/** @type {string} */
+OnClickData.prototype.pageUrl;
+/** @type {string} */
+OnClickData.prototype.frameUrl;
+/** @type {string} */
+OnClickData.prototype.selectionText;
+/** @type {string} */
+OnClickData.prototype.editable;
