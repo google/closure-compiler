@@ -182,6 +182,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     // don't touch cases where either side doesn't return a value
     foldSame("function(){if(x)return;else return 2-x}");
     foldSame("function(){if(x)return x;else return}");
+
+    foldSame("function(){for(var x in y) { return x.y; } return k}");
   }
 
   /** Try to minimize assignments */
@@ -476,5 +478,72 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("var x = new RegExp('')", "var x = RegExp('')");
     fold("var x = new Error('20')", "var x = Error(\"20\")");
     fold("var x = new Array(20)", "var x = Array(20)");
+  }
+
+  public void testSubsituteReturn() {
+
+    fold("function f() { while(x) { return }}",
+         "function f() { while(x) { break }}");
+
+    foldSame("function f() { while(x) { return 5 } }");
+
+    foldSame("function f() { a: { return 5 } }");
+
+    fold("function f() { while(x) { return 5}  return 5}",
+         "function f() { while(x) { break }    return 5}");
+
+    fold("function f() { while(x) { return x}  return x}",
+         "function f() { while(x) { break }    return x}");
+
+    fold("function f() { while(x) { if (y) { return }}} ",
+         "function f() { while(x) { if (y) { break  }}} ");
+
+    fold("function f() { while(x) { if (y) { return }} return} ",
+         "function f() { while(x) { if (y) { break  }} return} ");
+
+    fold("function f() { while(x) { if (y) { return 5 }} return 5} ",
+         "function f() { while(x) { if (y) { break    }} return 5} ");
+
+    // It doesn't matter if x is changed between them. We are still returning
+    // x at whatever x value current holds. The whole x = 1 is skipped.
+    fold("function f() { while(x) { if (y) { return x } x = 1} return x} ",
+         "function f() { while(x) { if (y) { break    } x = 1} return x} ");
+
+    // RemoveUnreachableCode would take care of the useless breaks.
+    fold("function f() { while(x) { if (y) { return x } return x} return x}",
+         "function f() { while(x) { if (y) { break    } break   } return x}");
+
+    // A break here only breaks out of the inner loop.
+    foldSame("function f() { while(x) { while (y) { return } } }");
+
+    foldSame("function f() { while(1) { return 7}  return 5}");
+
+
+    foldSame("function f() {" +
+             "  try { while(x) {return f()}} catch (e) { } return f()}");
+
+    foldSame("function f() {" +
+             "  try { while(x) {return f()}} finally {alert(1)} return f()}");
+
+
+    // Both returns has the same handler
+    fold("function f() {" +
+         "  try { while(x) { return f() } return f() } catch (e) { } }",
+         "function f() {" +
+         "  try { while(x) { break } return f() } catch (e) { } }");
+
+    // We can't fold this because it'll change the order of when foo is called.
+    foldSame("function f() {" +
+             "  try { while(x) { return foo() } } finally { alert(1) } "  +
+             "  return foo()}");
+
+    // This is fine, we have no side effect in the return value.
+    fold("function f() {" +
+         "  try { while(x) { return 1 } } finally { alert(1) } return 1}",
+         "function f() {" +
+         "  try { while(x) { break    } } finally { alert(1) } return 1}"
+         );
+
+    foldSame("function f() { try{ return a } finally { a = 2 } return a; }");
   }
 }

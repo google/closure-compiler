@@ -561,7 +561,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
      * are not known yet due to the way we traverse the nodes.
      */
     for (cur = node, lastJump = node;
-        !isBreakTarget(cur, parent, label);
+        !isBreakTarget(cur, label);
         cur = parent, parent = parent.getParent()) {
       if (cur.getType() == Token.TRY && NodeUtil.hasFinally(cur)) {
         if (lastJump == node) {
@@ -853,9 +853,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * Checks if target is actually the break target of labeled continue. The
    * label can be null if it is an unlabeled break.
    */
-  private static boolean isBreakTarget(
-      Node target, Node parent, String label) {
-    return isBreakStructure(target, label != null) && matchLabel(parent, label);
+  public static boolean isBreakTarget(Node target, String label) {
+    return isBreakStructure(target, label != null) &&
+      matchLabel(target.getParent(), label);
   }
 
   /**
@@ -886,7 +886,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   /**
    * Determines if the subtree might throw an exception.
    */
-  private static boolean mayThrowException(Node n) {
+  public static boolean mayThrowException(Node n) {
     switch (n.getType()) {
       case Token.CALL:
       case Token.GETPROP:
@@ -940,6 +940,40 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       default:
         return false;
     }
+  }
+
+  /**
+   * Get the TRY block with a CATCH that would be run if n throws an exception.
+   * @return The CATCH node or null if it there isn't a CATCH before the
+   *     the function terminates.
+   */
+  static Node getExceptionHandler(Node n) {
+    for (Node cur = n;
+        cur.getType() != Token.SCRIPT && cur.getType() != Token.FUNCTION;
+        cur = cur.getParent()) {
+      Node catchNode = getCatchHandlerForBlock(cur);
+      if (catchNode != null) {
+        return catchNode;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Locate the catch BLOCK given the first block in a TRY.
+   * @return The CATCH node or null there is no catch handler.
+   */
+  static Node getCatchHandlerForBlock(Node block) {
+    if (block.getType() == Token.BLOCK &&
+        block.getParent().getType() == Token.TRY &&
+        block.getParent().getFirstChild() == block) {
+      for (Node s = block.getNext(); s != null; s = s.getNext()) {
+        if (NodeUtil.hasCatchHandler(s)) {
+          return s.getFirstChild();
+        }
+      }
+    }
+    return null;
   }
 
   /**

@@ -110,6 +110,86 @@ public class PeepholeSubstituteAlternateSyntax
    */
   private Node tryReduceReturn(Node n) {
     Node result = n.getFirstChild();
+
+    boolean possibleException = result != null &&
+        ControlFlowAnalysis.mayThrowException(result);
+
+    // Try to use a substitute that with a break because it is shorter.
+
+    // First lets pretend it is a break with no labels.
+    Node breakTarget = n;
+    boolean safe = true;
+
+    for (;!ControlFlowAnalysis.isBreakTarget(breakTarget, null /* no label */);
+        breakTarget = breakTarget.getParent()) {
+      if (NodeUtil.isFunction(breakTarget) ||
+          breakTarget.getType() == Token.SCRIPT) {
+
+          // We can switch the return to a break if the return value has
+          // side effect and it must encounter a finally.
+
+          // example: return alert('a') -> finally { alert('b') } ->
+          //          return alert('a')
+          // prints a then b. If the first return is a break,
+          // it prints b then a.
+        safe = false;
+        break;
+      }
+    }
+
+    Node follow = ControlFlowAnalysis.computeFollowNode(breakTarget);
+
+    // Skip pass all the finally blocks because both the break and return will
+    // also trigger all the finally blocks. However, the order of execution is
+    // slightly changed. Consider:
+    //
+    // return a() -> finally { b() } -> return a()
+    //
+    // which would call a() first. However, changing the first return to a
+    // break will result in calling b().
+    while (follow != null &&
+        NodeUtil.isTryFinallyNode(follow.getParent(), follow)) {
+      if (result != null &&
+          // TODO(user): Use the new side effects API for more accuracy.
+          (NodeUtil.canBeSideEffected(result) ||
+           NodeUtil.mayHaveSideEffects(result))) {
+        safe = false;
+        break;
+      }
+      follow = ControlFlowAnalysis.computeFollowNode(follow);
+    }
+
+    if (safe) {
+      if (follow == null) {
+        // When follow is null, this mean the follow of a break target is the
+        // end of a function. This means a break is same as return.
+        if (result == null) {
+          n.setType(Token.BREAK);
+          reportCodeChange();
+          return n;
+        }
+
+      } else if (follow.getType() == Token.RETURN &&
+          (result == follow.getFirstChild() ||
+           (result != null && follow.hasChildren() &&
+            result.checkTreeEqualsSilent(follow.getFirstChild())) &&
+            ControlFlowAnalysis.getExceptionHandler(n) ==
+            ControlFlowAnalysis.getExceptionHandler(follow)
+           )) {
+        // When the follow is a return, if both doesn't return anything
+        // or both returns the same thing. This mean we can replace it with a
+        // break.
+        n.removeChildren();
+        n.setType(Token.BREAK);
+        reportCodeChange();
+        return n;
+      }
+      // If any of the above is executed, we must return because n is no longer
+      // a "return" node.
+    }
+
+    // TODO(user): consider cases such as if (x) { return 1} return 1;
+
     if (result != null) {
       switch (result.getType()) {
         case Token.VOID:
