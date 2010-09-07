@@ -87,8 +87,9 @@ public final class NullType extends ValueType {
 
   @Override
   public TernaryValue testForEquality(JSType that) {
-    if (UNKNOWN.equals(super.testForEquality(that))) {
-      return UNKNOWN;
+    TernaryValue result = super.testForEquality(that);
+    if (result != null) {
+      return result;
     }
     if (that.isNullType() || that.isVoidType()) {
       return TRUE;

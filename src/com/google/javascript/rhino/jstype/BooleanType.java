@@ -61,8 +61,9 @@ public class BooleanType extends ValueType {
 
   @Override
   public TernaryValue testForEquality(JSType that) {
-    if (UNKNOWN.equals(super.testForEquality(that))) {
-      return UNKNOWN;
+    TernaryValue result = super.testForEquality(that);
+    if (result != null) {
+      return result;
     }
     if (that.isUnknownType() || that.isSubtype(
             getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN)) ||

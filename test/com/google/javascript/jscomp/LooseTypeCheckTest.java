@@ -516,11 +516,14 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testBooleanPreservation3() throws Exception {
     testTypes("/** @param {Function?} x\n @return {boolean?} */" +
-        "function f(x) { return x && x == \"a\"; }");
+        "function f(x) { return x && x == \"a\"; }",
+        "condition always evaluates to false\n" +
+        "left : Function\n" +
+        "right: string");
   }
 
   public void testBooleanPreservation4() throws Exception {
-    testTypes("/** @param {Function?} x\n @return {boolean} */" +
+    testTypes("/** @param {Function?|boolean} x\n @return {boolean} */" +
         "function f(x) { return x && x == \"a\"; }",
         "inconsistent return type\n" +
         "found   : (boolean|null|undefined)\n" +

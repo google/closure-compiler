@@ -504,11 +504,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testBooleanPreservation3() throws Exception {
     testTypes("/** @param {Function?} x\n @return {boolean?} */" +
-        "function f(x) { return x && x == \"a\"; }");
+        "function f(x) { return x && x == \"a\"; }",
+        "condition always evaluates to false\n" +
+        "left : Function\n" +
+        "right: string");
   }
 
   public void testBooleanPreservation4() throws Exception {
-    testTypes("/** @param {Function?} x\n @return {boolean} */" +
+    testTypes("/** @param {Function?|boolean} x\n @return {boolean} */" +
         "function f(x) { return x && x == \"a\"; }",
         "inconsistent return type\n" +
         "found   : (boolean|null)\n" +
@@ -2219,6 +2222,30 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testComparison10() throws Exception {
     testTypes("/** @type {Array.<undefined>} */ var a = [];" +
         "a[0] === null");
+  }
+
+  public void testComparison11() throws Exception {
+    testTypes(
+        "(function(){}) == 'x'",
+        "condition always evaluates to false\n" +
+        "left : function (): undefined\n" +
+        "right: string");
+  }
+
+  public void testComparison12() throws Exception {
+    testTypes(
+        "(function(){}) == 3",
+        "condition always evaluates to false\n" +
+        "left : function (): undefined\n" +
+        "right: number");
+  }
+
+  public void testComparison13() throws Exception {
+    testTypes(
+        "(function(){}) == false",
+        "condition always evaluates to false\n" +
+        "left : function (): undefined\n" +
+        "right: boolean");
   }
 
   public void testEnumStaticMethod1() throws Exception {

@@ -486,23 +486,29 @@ public abstract class JSType implements Serializable {
    * </ul>
    */
   public TernaryValue testForEquality(JSType that) {
-    if (that.isAllType() || that.isNoType() || that.isUnknownType()) {
+    return testForEqualityHelper(this, that);
+  }
+
+  TernaryValue testForEqualityHelper(JSType aType, JSType bType) {
+    if (bType.isAllType() || bType.isEmptyType() || bType.isUnknownType()) {
       return UNKNOWN;
     }
-    if (that.isEnumElementType()) {
-      return that.testForEquality(this);
-    }
-    if (that instanceof UnionType) {
-      UnionType union = (UnionType) that;
-      TernaryValue result = null;
-      for (JSType t : union.alternates) {
-        TernaryValue test = this.testForEquality(t);
-        if (result == null) {
-          result = test;
-        } else if (!result.equals(test)) {
-          return UNKNOWN;
-        }
+    if (aType.isFunctionType() || bType.isFunctionType()) {
+      JSType otherType = aType.isFunctionType() ? bType : aType;
+      // In theory, functions are comparable to anything except
+      // null/undefined. For example, on FF3:
+      // function() {} == 'function () {\n}'
+      // In practice, how a function serializes to a string is
+      // implementation-dependent, so it does not really make sense to test
+      // for equality with a string.
+      if (otherType.isSubtype(getNativeType(JSTypeNative.OBJECT_TYPE))) {
+        return TernaryValue.UNKNOWN;
+      } else {
+        return TernaryValue.FALSE;
       }
+    }
+    if (bType.isEnumElementType() || bType.isUnionType()) {
+      return bType.testForEquality(aType);
     }
     return null;
   }

@@ -258,7 +258,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForEqualityWith(ALL_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(ARRAY_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
+    assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(BOOLEAN_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(BOOLEAN_OBJECT_TYPE));
@@ -274,7 +274,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForEqualityWith(recordType));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(NULL_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
+    assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(NUMBER_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(NUMBER_OBJECT_TYPE));
@@ -288,7 +288,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForEqualityWith(REFERENCE_ERROR_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
+    assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(STRING_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(STRING_OBJECT_TYPE));
@@ -433,30 +433,30 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_OBJECT_TYPE.canAssignTo(VOID_TYPE));
 
     // canTestForEqualityWith
-    assertFalse(NO_OBJECT_TYPE.canTestForEqualityWith(NO_TYPE));
-    assertFalse(NO_OBJECT_TYPE.canTestForEqualityWith(NO_OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(ARRAY_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(BOOLEAN_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(BOOLEAN_OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(EVAL_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(recordType));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(NULL_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(NUMBER_OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(URI_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(REFERENCE_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(STRING_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(TYPE_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForEqualityWith(VOID_TYPE));
+    assertCannotTestForEqualityWith(NO_OBJECT_TYPE, NO_TYPE);
+    assertCannotTestForEqualityWith(NO_OBJECT_TYPE, NO_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, ARRAY_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, BOOLEAN_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, BOOLEAN_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, EVAL_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, functionType);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, recordType);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, NULL_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, NUMBER_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, URI_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, RANGE_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, REFERENCE_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, STRING_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, SYNTAX_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, TYPE_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, VOID_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -568,29 +568,29 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_TYPE.canAssignTo(VOID_TYPE));
 
     // canTestForEqualityWith
-    assertFalse(NO_TYPE.canTestForEqualityWith(NO_TYPE));
-    assertFalse(NO_TYPE.canTestForEqualityWith(NO_OBJECT_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(ARRAY_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(BOOLEAN_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(BOOLEAN_OBJECT_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(EVAL_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(NO_TYPE.canTestForEqualityWith(NULL_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(NUMBER_OBJECT_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(URI_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(REFERENCE_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(STRING_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(TYPE_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(NO_TYPE.canTestForEqualityWith(VOID_TYPE));
+    assertCannotTestForEqualityWith(NO_TYPE, NO_TYPE);
+    assertCannotTestForEqualityWith(NO_TYPE, NO_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, ARRAY_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, BOOLEAN_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, BOOLEAN_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, EVAL_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, functionType);
+    assertCanTestForEqualityWith(NO_TYPE, NULL_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, NUMBER_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, URI_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, RANGE_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, REFERENCE_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, STRING_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, SYNTAX_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, TYPE_ERROR_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, VOID_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -687,17 +687,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ARRAY_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(NO_TYPE));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(NO_OBJECT_TYPE));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(recordType));
-    assertFalse(ARRAY_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(ARRAY_TYPE.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(ARRAY_TYPE, NO_TYPE);
+    assertCanTestForEqualityWith(ARRAY_TYPE, NO_OBJECT_TYPE);
+    assertCanTestForEqualityWith(ARRAY_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(ARRAY_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(ARRAY_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(ARRAY_TYPE, functionType);
+    assertCanTestForEqualityWith(ARRAY_TYPE, recordType);
+    assertCannotTestForEqualityWith(ARRAY_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(ARRAY_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(ARRAY_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(ARRAY_TYPE, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(ARRAY_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -834,16 +834,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(UNKNOWN_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(UNKNOWN_TYPE));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(STRING_TYPE));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(recordType));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(UNKNOWN_TYPE.canTestForEqualityWith(BOOLEAN_TYPE));
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, UNKNOWN_TYPE);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, STRING_TYPE);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, functionType);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, recordType);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, BOOLEAN_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(UNKNOWN_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -939,15 +939,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ALL_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(ALL_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(ALL_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(ALL_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(ALL_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(ALL_TYPE.canTestForEqualityWith(recordType));
-    assertTrue(ALL_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(ALL_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(ALL_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(ALL_TYPE.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(ALL_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(ALL_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(ALL_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(ALL_TYPE, functionType);
+    assertCanTestForEqualityWith(ALL_TYPE, recordType);
+    assertCanTestForEqualityWith(ALL_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(ALL_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(ALL_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(ALL_TYPE, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -1062,19 +1062,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(OBJECT_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(STRING_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(BOOLEAN_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(recordType));
-    assertFalse(OBJECT_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(ARRAY_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForEqualityWith(UNKNOWN_TYPE));
+    assertCanTestForEqualityWith(OBJECT_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, STRING_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, BOOLEAN_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, functionType);
+    assertCanTestForEqualityWith(OBJECT_TYPE, recordType);
+    assertCannotTestForEqualityWith(OBJECT_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, ARRAY_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, UNKNOWN_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -1214,18 +1214,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_OBJECT_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(NO_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(NO_OBJECT_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(elementsType));
-    assertFalse(NUMBER_OBJECT_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(NUMBER_OBJECT_TYPE.canTestForEqualityWith(ARRAY_TYPE));
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, NO_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, NO_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, functionType);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, elementsType);
+    assertCannotTestForEqualityWith(NUMBER_OBJECT_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, ARRAY_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -1344,18 +1344,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(NO_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(NO_OBJECT_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(functionType));
-    assertFalse(NUMBER_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(ARRAY_TYPE));
-    assertTrue(NUMBER_TYPE.canTestForEqualityWith(UNKNOWN_TYPE));
+    assertCanTestForEqualityWith(NUMBER_TYPE, NO_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, NO_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(NUMBER_TYPE, functionType);
+    assertCannotTestForEqualityWith(NUMBER_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, ARRAY_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, UNKNOWN_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(NUMBER_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -1475,29 +1475,29 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NULL_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(NULL_TYPE.canTestForEqualityWith(NO_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(NO_OBJECT_TYPE));
-    assertTrue(NULL_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(ARRAY_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(BOOLEAN_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(BOOLEAN_OBJECT_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(EVAL_ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(functionType));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(NULL_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(NUMBER_OBJECT_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(URI_ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(REFERENCE_ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(STRING_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(TYPE_ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForEqualityWith(VOID_TYPE));
+    assertCanTestForEqualityWith(NULL_TYPE, NO_TYPE);
+    assertCanTestForEqualityWith(NULL_TYPE, NO_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NULL_TYPE, ALL_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, ARRAY_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, BOOLEAN_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, BOOLEAN_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, DATE_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, ERROR_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, EVAL_ERROR_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, functionType);
+    assertCannotTestForEqualityWith(NULL_TYPE, NULL_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, NUMBER_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, NUMBER_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, OBJECT_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, URI_ERROR_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, RANGE_ERROR_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, REFERENCE_ERROR_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, REGEXP_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, STRING_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, SYNTAX_ERROR_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, TYPE_ERROR_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, VOID_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(NULL_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -1615,15 +1615,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(DATE_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(DATE_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(DATE_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(DATE_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(DATE_TYPE.canTestForEqualityWith(functionType));
-    assertFalse(DATE_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(DATE_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(DATE_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(DATE_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(DATE_TYPE.canTestForEqualityWith(ARRAY_TYPE));
+    assertCanTestForEqualityWith(DATE_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(DATE_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(DATE_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(DATE_TYPE, functionType);
+    assertCannotTestForEqualityWith(DATE_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(DATE_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(DATE_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(DATE_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(DATE_TYPE, ARRAY_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(DATE_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -1820,15 +1820,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(REGEXP_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(REGEXP_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(REGEXP_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(REGEXP_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(REGEXP_TYPE.canTestForEqualityWith(functionType));
-    assertFalse(REGEXP_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(REGEXP_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(REGEXP_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(REGEXP_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(REGEXP_TYPE.canTestForEqualityWith(ARRAY_TYPE));
+    assertCanTestForEqualityWith(REGEXP_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(REGEXP_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(REGEXP_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(REGEXP_TYPE, functionType);
+    assertCannotTestForEqualityWith(REGEXP_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(REGEXP_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(REGEXP_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(REGEXP_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(REGEXP_TYPE, ARRAY_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(REGEXP_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -1957,18 +1957,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_OBJECT_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(STRING_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(BOOLEAN_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(BOOLEAN_OBJECT_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(ARRAY_TYPE));
-    assertTrue(STRING_OBJECT_TYPE.canTestForEqualityWith(UNKNOWN_TYPE));
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, STRING_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, functionType);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, BOOLEAN_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, BOOLEAN_OBJECT_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, ARRAY_TYPE);
+    assertCanTestForEqualityWith(STRING_OBJECT_TYPE, UNKNOWN_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -2114,17 +2114,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(STRING_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(functionType));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(BOOLEAN_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(BOOLEAN_OBJECT_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(ARRAY_TYPE));
-    assertTrue(STRING_TYPE.canTestForEqualityWith(UNKNOWN_TYPE));
+    assertCanTestForEqualityWith(STRING_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(STRING_TYPE, functionType);
+    assertCanTestForEqualityWith(STRING_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, BOOLEAN_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, BOOLEAN_OBJECT_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, ARRAY_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, UNKNOWN_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(STRING_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -2223,14 +2223,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(recordType.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(recordType.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(recordType.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(recordType.canTestForEqualityWith(recordType));
-    assertTrue(recordType.canTestForEqualityWith(functionType));
-    assertTrue(recordType.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(recordType.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(recordType.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(recordType.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(recordType, ALL_TYPE);
+    assertCanTestForEqualityWith(recordType, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(recordType, recordType);
+    assertCanTestForEqualityWith(recordType, functionType);
+    assertCanTestForEqualityWith(recordType, OBJECT_TYPE);
+    assertCanTestForEqualityWith(recordType, NUMBER_TYPE);
+    assertCanTestForEqualityWith(recordType, DATE_TYPE);
+    assertCanTestForEqualityWith(recordType, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(recordType.canTestForShallowEqualityWith(NO_TYPE));
@@ -2298,13 +2298,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(functionInst.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(functionInst.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(functionInst.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(functionInst.canTestForEqualityWith(functionInst));
-    assertTrue(functionInst.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(functionInst.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(functionInst.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(functionInst.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(functionInst, ALL_TYPE);
+    assertCanTestForEqualityWith(functionInst, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(functionInst, functionInst);
+    assertCanTestForEqualityWith(functionInst, OBJECT_TYPE);
+    assertCannotTestForEqualityWith(functionInst, NUMBER_TYPE);
+    assertCanTestForEqualityWith(functionInst, DATE_TYPE);
+    assertCanTestForEqualityWith(functionInst, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(functionInst.canTestForShallowEqualityWith(NO_TYPE));
@@ -2379,13 +2379,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(functionType.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(functionType.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(functionType.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(functionType.canTestForEqualityWith(functionType));
-    assertTrue(functionType.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(functionType.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(functionType.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(functionType.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(functionType, ALL_TYPE);
+    assertCanTestForEqualityWith(functionType, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(functionType, functionType);
+    assertCanTestForEqualityWith(functionType, OBJECT_TYPE);
+    assertCannotTestForEqualityWith(functionType, NUMBER_TYPE);
+    assertCanTestForEqualityWith(functionType, DATE_TYPE);
+    assertCanTestForEqualityWith(functionType, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(functionType.canTestForShallowEqualityWith(NO_TYPE));
@@ -2914,8 +2914,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertNull(VOID_TYPE.autoboxesTo());
 
     // canTestForEqualityWith
-    assertTrue(VOID_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertFalse(VOID_TYPE.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(VOID_TYPE, ALL_TYPE);
+    assertCannotTestForEqualityWith(VOID_TYPE, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(VOID_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -3001,15 +3001,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(BOOLEAN_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(BOOLEAN_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(BOOLEAN_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(BOOLEAN_TYPE.canTestForEqualityWith(functionType));
-    assertFalse(BOOLEAN_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(BOOLEAN_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(BOOLEAN_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(BOOLEAN_TYPE.canTestForEqualityWith(REGEXP_TYPE));
-    assertTrue(BOOLEAN_TYPE.canTestForEqualityWith(UNKNOWN_TYPE));
+    assertCanTestForEqualityWith(BOOLEAN_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_TYPE, NUMBER_TYPE);
+    assertCannotTestForEqualityWith(BOOLEAN_TYPE, functionType);
+    assertCannotTestForEqualityWith(BOOLEAN_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_TYPE, UNKNOWN_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(BOOLEAN_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -3097,14 +3097,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_OBJECT_TYPE.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(BOOLEAN_OBJECT_TYPE.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(BOOLEAN_OBJECT_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(BOOLEAN_OBJECT_TYPE.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(BOOLEAN_OBJECT_TYPE.canTestForEqualityWith(functionType));
-    assertFalse(BOOLEAN_OBJECT_TYPE.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(BOOLEAN_OBJECT_TYPE.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(BOOLEAN_OBJECT_TYPE.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(BOOLEAN_OBJECT_TYPE.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(BOOLEAN_OBJECT_TYPE, ALL_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_OBJECT_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_OBJECT_TYPE, functionType);
+    assertCannotTestForEqualityWith(BOOLEAN_OBJECT_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_OBJECT_TYPE, OBJECT_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_OBJECT_TYPE, DATE_TYPE);
+    assertCanTestForEqualityWith(BOOLEAN_OBJECT_TYPE, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(NO_TYPE));
@@ -3204,14 +3204,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(enumType.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(enumType.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(enumType.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(enumType.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(enumType.canTestForEqualityWith(functionType));
-    assertFalse(enumType.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(enumType.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(enumType.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(enumType.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(enumType, ALL_TYPE);
+    assertCanTestForEqualityWith(enumType, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(enumType, NUMBER_TYPE);
+    assertCanTestForEqualityWith(enumType, functionType);
+    assertCannotTestForEqualityWith(enumType, VOID_TYPE);
+    assertCanTestForEqualityWith(enumType, OBJECT_TYPE);
+    assertCanTestForEqualityWith(enumType, DATE_TYPE);
+    assertCanTestForEqualityWith(enumType, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(enumType.canTestForShallowEqualityWith(NO_TYPE));
@@ -3307,16 +3307,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(elementsType.canBeCalled());
 
     // canTestForEqualityWith
-    assertTrue(elementsType.canTestForEqualityWith(ALL_TYPE));
-    assertTrue(elementsType.canTestForEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(elementsType.canTestForEqualityWith(NUMBER_TYPE));
-    assertTrue(elementsType.canTestForEqualityWith(NUMBER_OBJECT_TYPE));
-    assertTrue(elementsType.canTestForEqualityWith(elementsType));
-    assertTrue(elementsType.canTestForEqualityWith(functionType));
-    assertFalse(elementsType.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(elementsType.canTestForEqualityWith(OBJECT_TYPE));
-    assertTrue(elementsType.canTestForEqualityWith(DATE_TYPE));
-    assertTrue(elementsType.canTestForEqualityWith(REGEXP_TYPE));
+    assertCanTestForEqualityWith(elementsType, ALL_TYPE);
+    assertCanTestForEqualityWith(elementsType, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(elementsType, NUMBER_TYPE);
+    assertCanTestForEqualityWith(elementsType, NUMBER_OBJECT_TYPE);
+    assertCanTestForEqualityWith(elementsType, elementsType);
+    assertCannotTestForEqualityWith(elementsType, functionType);
+    assertCannotTestForEqualityWith(elementsType, VOID_TYPE);
+    assertCanTestForEqualityWith(elementsType, OBJECT_TYPE);
+    assertCanTestForEqualityWith(elementsType, DATE_TYPE);
+    assertCanTestForEqualityWith(elementsType, REGEXP_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(elementsType.canTestForShallowEqualityWith(NO_TYPE));
@@ -3425,7 +3425,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertNull(objectType.autoboxesTo());
 
     // canTestForEqualityWith
-    assertTrue(objectType.canTestForEqualityWith(NUMBER_TYPE));
+    assertCanTestForEqualityWith(objectType, NUMBER_TYPE);
 
     // matchesXxxContext
     assertFalse(objectType.matchesInt32Context());
@@ -3747,13 +3747,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   @SuppressWarnings("checked")
   public void testCanTestForEqualityWithCornerCases() {
     // null == undefined is always true
-    assertFalse(NULL_TYPE.canTestForEqualityWith(VOID_TYPE));
+    assertCannotTestForEqualityWith(NULL_TYPE, VOID_TYPE);
 
     // (Object,null) == undefined could be true or false
     UnionType nullableObject =
         (UnionType) createUnionType(OBJECT_TYPE, NULL_TYPE);
-    assertTrue(nullableObject.canTestForEqualityWith(VOID_TYPE));
-    assertTrue(VOID_TYPE.canTestForEqualityWith(nullableObject));
+    assertCanTestForEqualityWith(nullableObject, VOID_TYPE);
+    assertCanTestForEqualityWith(VOID_TYPE, nullableObject);
   }
 
   /**
@@ -3802,11 +3802,29 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     compare(UNKNOWN, UNKNOWN_TYPE, BOOLEAN_TYPE);
     compare(UNKNOWN, UNKNOWN_TYPE, NULL_TYPE);
     compare(UNKNOWN, UNKNOWN_TYPE, VOID_TYPE);
+
+    compare(FALSE, U2U_CONSTRUCTOR_TYPE, BOOLEAN_TYPE);
+    compare(FALSE, U2U_CONSTRUCTOR_TYPE, NUMBER_TYPE);
+    compare(FALSE, U2U_CONSTRUCTOR_TYPE, STRING_TYPE);
+    compare(FALSE, U2U_CONSTRUCTOR_TYPE, VOID_TYPE);
+    compare(FALSE, U2U_CONSTRUCTOR_TYPE, NULL_TYPE);
+    compare(UNKNOWN, U2U_CONSTRUCTOR_TYPE, OBJECT_TYPE);
+    compare(UNKNOWN, U2U_CONSTRUCTOR_TYPE, ALL_TYPE);
   }
 
   private void compare(TernaryValue r, JSType t1, JSType t2) {
     assertEquals(r, t1.testForEquality(t2));
     assertEquals(r, t2.testForEquality(t1));
+  }
+
+  private void assertCanTestForEqualityWith(JSType t1, JSType t2) {
+    assertTrue(t1.canTestForEqualityWith(t2));
+    assertTrue(t2.canTestForEqualityWith(t1));
+  }
+
+  private void assertCannotTestForEqualityWith(JSType t1, JSType t2) {
+    assertFalse(t1.canTestForEqualityWith(t2));
+    assertFalse(t2.canTestForEqualityWith(t1));
   }
 
   /**
