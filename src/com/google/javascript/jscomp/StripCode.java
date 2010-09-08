@@ -119,6 +119,7 @@ class StripCode implements CompilerPass {
           break;
 
         case Token.CALL:
+        case Token.NEW:
           maybeRemoveCall(t, n, parent);
           break;
 
@@ -185,31 +186,7 @@ class StripCode implements CompilerPass {
           //   NAME
           //   NUMBER|STRING|NAME|...
           if (parent.getFirstChild() == n && isReferenceToRemovedVar(t, n)) {
-            // Use a while loop to get up out of any nested property/element
-            // accesses and/or calls. For example, if we have just detected
-            // that we need to remove the a.b access in a.b[c].d(), we'll have
-            // to remove all of the accesses, and it will take a few iterations
-            // through this loop to get up to the call above d.
-            Node ancestor = parent.getParent();
-            Node ancestorChild = parent;
-            while (true) {
-              if (NodeUtil.isExpressionNode(ancestor)) {
-                // Remove the entire expression statement.
-                Node ancParent = ancestor.getParent();
-                replaceWithEmpty(ancestor, ancParent);
-                break;
-              }
-              int type = ancestor.getType();
-              if (type != Token.GETPROP &&
-                  type != Token.GETELEM &&
-                  type != Token.CALL) {
-                replaceWithNull(ancestorChild, ancestor);
-                break;
-              }
-              ancestorChild = ancestor;
-              ancestor = ancestor.getParent();
-            }
-            compiler.reportCodeChange();
+            replaceHighestNestedCallWithNull(parent, parent.getParent());
           }
           break;
 
@@ -255,6 +232,39 @@ class StripCode implements CompilerPass {
           }
           break;
       }
+    }
+
+    /**
+     * Use a while loop to get up out of any nested calls. For example,
+     * if we have just detected that we need to remove the a.b() call
+     * in a.b().c().d(), we'll have to remove all of the calls, and it
+     * will take a few iterations through this loop to get up to d().
+     */
+    void replaceHighestNestedCallWithNull(Node node, Node parent) {
+      Node ancestor = parent;
+      Node ancestorChild = node;
+      while (true) {
+        if (ancestor.getFirstChild() != ancestorChild) {
+          replaceWithNull(ancestorChild, ancestor);
+          break;
+        }
+        if (NodeUtil.isExpressionNode(ancestor)) {
+          // Remove the entire expression statement.
+          Node ancParent = ancestor.getParent();
+          replaceWithEmpty(ancestor, ancParent);
+          break;
+        }
+        int type = ancestor.getType();
+        if (type != Token.GETPROP &&
+            type != Token.GETELEM &&
+            type != Token.CALL) {
+          replaceWithNull(ancestorChild, ancestor);
+          break;
+        }
+        ancestorChild = ancestor;
+        ancestor = ancestor.getParent();
+      }
+      compiler.reportCodeChange();
     }
 
     /**
@@ -318,7 +328,7 @@ class StripCode implements CompilerPass {
     }
 
     /**
-     * Removes a method call if {@link #isMethodCallThatTriggersRemoval}
+     * Removes a method call if {@link #isMethodOrCtorCallThatTriggersRemoval}
      * indicates that it should be removed.
      *
      * @param t The traversal
@@ -326,39 +336,11 @@ class StripCode implements CompilerPass {
      * @param parent {@code n}'s parent
      */
     void maybeRemoveCall(NodeTraversal t, Node n, Node parent) {
-      // CALL
+      // CALL/NEW
       //   function
       //   arguments
-      if (isMethodCallThatTriggersRemoval(t, n, parent)) {
-        // Use a while loop to get up out of any nested calls. For example,
-        // if we have just detected that we need to remove the a.b() call
-        // in a.b().c().d(), we'll have to remove all of the calls, and it
-        // will take a few iterations through this loop to get up to d().
-        Node ancestor = parent;
-        Node ancestorChild = n;
-        int ancestorLevel = 1;
-        while (true) {
-          if (ancestor.getFirstChild() != ancestorChild) {
-            replaceWithNull(ancestorChild, ancestor);
-            break;
-          }
-          if (NodeUtil.isExpressionNode(ancestor)) {
-            // Remove the entire expression statement.
-            Node ancParent = ancestor.getParent();
-            replaceWithEmpty(ancestor, ancParent);
-            break;
-          }
-          int type = ancestor.getType();
-          if (type != Token.GETPROP &&
-              type != Token.GETELEM &&
-              type != Token.CALL) {
-            replaceWithNull(ancestorChild, ancestor);
-            break;
-          }
-          ancestorChild = ancestor;
-          ancestor = ancestor.getParent();
-        }
-        compiler.reportCodeChange();
+      if (isMethodOrCtorCallThatTriggersRemoval(t, n, parent)) {
+        replaceHighestNestedCallWithNull(n, parent);
       }
     }
 
@@ -404,8 +386,11 @@ class StripCode implements CompilerPass {
      * @return Whether the call's return value should be stripped
      */
     boolean isCallWhoseReturnValueShouldBeStripped(@Nullable Node n) {
-      return n != null && n.getType() == Token.CALL && n.hasChildren()
-          && (qualifiedNameBeginsWithStripType(n.getFirstChild()) ||
+      return n != null &&
+          (n.getType() == Token.CALL ||
+           n.getType() == Token.NEW) &&
+          n.hasChildren() &&
+          (qualifiedNameBeginsWithStripType(n.getFirstChild()) ||
               nameEndsWithFieldNameToStrip(n.getFirstChild()));
     }
 
@@ -474,9 +459,9 @@ class StripCode implements CompilerPass {
      * @param n A CALL node
      * @return Whether the node triggers statement removal
      */
-    boolean isMethodCallThatTriggersRemoval(NodeTraversal t, Node n,
-                                            Node parent) {
-      // CALL
+    boolean isMethodOrCtorCallThatTriggersRemoval(
+        NodeTraversal t, Node n, Node parent) {
+      // CALL/NEW
       //   GETPROP (function)         <-- we're interested in this, the function
       //     GETPROP (callee object)  <-- or the object on which it is called
       //       ...
@@ -508,7 +493,7 @@ class StripCode implements CompilerPass {
       Node callee = function.getFirstChild();
       return nameEndsWithFieldNameToStrip(callee) ||
           nameEndsWithFieldNameToStrip(function) ||
-          qualifiedNameBeginsWithStripType(callee) ||
+          qualifiedNameBeginsWithStripType(function) ||
           actsOnStripType(t, n);
     }
 

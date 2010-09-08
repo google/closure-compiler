@@ -31,7 +31,7 @@ public class StripCodeTest extends CompilerTestCase {
   private static final String EXTERNS = "";
 
   public StripCodeTest() {
-    super(EXTERNS, false);
+    super(EXTERNS, true);
   }
 
   /**
@@ -319,5 +319,41 @@ public class StripCodeTest extends CompilerTestCase {
     test("(GA_GoogleDebugger.foo = 7) + 8",
          "(GA_GoogleDebugger.foo = 7) + 8",
          StripCode.STRIP_ASSIGNMENT_ERROR);
+  }
+
+  public void testNewOperatior1() {
+    test("function foo() {} foo.bar = new goog.debug.Logger();",
+         "function foo() {} foo.bar = null;");
+  }
+
+  public void testNewOperatior2() {
+    test("function foo() {} foo.bar = (new goog.debug.Logger()).foo();",
+         "function foo() {} foo.bar = null;");
+  }
+
+  public void testCrazyNesting1() {
+    test("var x = {}; x[new goog.debug.Logger()] = 3;",
+         "var x = {}; x[null] = 3;");
+  }
+
+  public void testCrazyNesting2() {
+    test("var x = {}; x[goog.debug.Logger.getLogger()] = 3;",
+         "var x = {}; x[null] = 3;");
+  }
+
+  public void testCrazyNesting3() {
+    test("var x = function() {}; x(new goog.debug.Logger());",
+         "var x = function() {}; x(null);");
+  }
+
+  public void testCrazyNesting4() {
+    test("var x = function() {}; x(goog.debug.Logger.getLogger());",
+         "var x = function() {}; x(null);");
+  }
+
+  public void testCrazyNesting5() {
+    test("var x = function() {}; var y = {}; " +
+         "var z = goog.debug.Logger.getLogger(); x(y[z['foo']]);",
+         "var x = function() {}; var y = {}; x(y[null]);");
   }
 }
