@@ -302,10 +302,8 @@ class CodeGenerator {
         if (n.getClass() != Node.class) {
           throw new Error("Unexpected Node subclass.");
         }
-        boolean stripBlock = n.isSyntheticBlock() ||
-            n.getType() == Token.SCRIPT ||
-            ((context != Context.PRESERVE_BLOCK) && (n.getChildCount() < 2));
-        if (!stripBlock) {
+        boolean preserveBlock = context == Context.PRESERVE_BLOCK;
+        if (preserveBlock) {
           cc.beginBlock();
         }
         for (Node c = first; c != null; c = c.getNext()) {
@@ -326,7 +324,7 @@ class CodeGenerator {
             cc.notePreferredLineBreak();
           }
         }
-        if (!stripBlock) {
+        if (preserveBlock) {
           cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
         }
         break;
@@ -345,7 +343,7 @@ class CodeGenerator {
           add(";");
           add(first.getNext().getNext());
           add(")");
-          addNonEmptyExpression(
+          addNonEmptyStatement(
               last, getContextForNonEmptyExpression(context), false);
         } else {
           Preconditions.checkState(childCount == 3);
@@ -354,7 +352,7 @@ class CodeGenerator {
           add("in");
           add(first.getNext());
           add(")");
-          addNonEmptyExpression(
+          addNonEmptyStatement(
               last, getContextForNonEmptyExpression(context), false);
         }
         break;
@@ -362,7 +360,7 @@ class CodeGenerator {
       case Token.DO:
         Preconditions.checkState(childCount == 2);
         add("do");
-        addNonEmptyExpression(first, Context.OTHER, false);
+        addNonEmptyStatement(first, Context.OTHER, false);
         add("while(");
         add(last);
         add(")");
@@ -374,7 +372,7 @@ class CodeGenerator {
         add("while(");
         add(first);
         add(")");
-        addNonEmptyExpression(
+        addNonEmptyStatement(
             last, getContextForNonEmptyExpression(context), false);
         break;
 
@@ -417,7 +415,7 @@ class CodeGenerator {
         add("with(");
         add(first);
         add(")");
-        addNonEmptyExpression(
+        addNonEmptyStatement(
             last, getContextForNonEmptyExpression(context), false);
         break;
 
@@ -474,13 +472,13 @@ class CodeGenerator {
         add(")");
 
         if (hasElse) {
-          addNonEmptyExpression(
+          addNonEmptyStatement(
               first.getNext(), Context.BEFORE_DANGLING_ELSE, false);
           add("else");
-          addNonEmptyExpression(
+          addNonEmptyStatement(
               last, getContextForNonEmptyExpression(context), false);
         } else {
-          addNonEmptyExpression(first.getNext(), Context.OTHER, false);
+          addNonEmptyStatement(first.getNext(), Context.OTHER, false);
           Preconditions.checkState(childCount == 2);
         }
 
@@ -633,7 +631,7 @@ class CodeGenerator {
         }
         add(first);
         add(":");
-        addNonEmptyExpression(
+        addNonEmptyStatement(
             last, getContextForNonEmptyExpression(context), true);
         break;
 
@@ -664,7 +662,7 @@ class CodeGenerator {
    * @param n The node to print.
    * @param context The context to determine how the node should be printed.
    */
-  private void addNonEmptyExpression(
+  private void addNonEmptyStatement(
       Node n, Context context, boolean allowNonBlockChild) {
     Node nodeToProcess = n;
 
@@ -674,7 +672,7 @@ class CodeGenerator {
 
     // Strip unneeded blocks, that is blocks with <2 children unless
     // the CodePrinter specifically wants to keep them.
-    if (n.getType() == Token.BLOCK ) {
+    if (n.getType() == Token.BLOCK) {
       int count = getNonEmptyChildCount(n, 2);
       if (count == 0) {
         if (cc.shouldPreserveExtraBlocks()) {
@@ -702,6 +700,10 @@ class CodeGenerator {
           // Continue with the only child.
           nodeToProcess = firstAndOnlyChild;
         }
+      }
+
+      if (count > 1) {
+        context = Context.PRESERVE_BLOCK;
       }
     }
 
@@ -980,7 +982,9 @@ class CodeGenerator {
     int i = 0;
     Node c = n.getFirstChild();
     for (; c != null && i < maxCount; c = c.getNext()) {
-      if (c.getType() != Token.EMPTY) {
+      if (c.getType() == Token.BLOCK) {
+        i += getNonEmptyChildCount(c, maxCount-i);
+      } else if (c.getType() != Token.EMPTY) {
         i++;
       }
     }
@@ -990,7 +994,12 @@ class CodeGenerator {
   /** Gets the first non-empty child of the given node. */
   private static Node getFirstNonEmptyChild(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (c.getType() != Token.EMPTY) {
+      if (c.getType() == Token.BLOCK) {
+        Node result = getFirstNonEmptyChild(c);
+        if (result != null) {
+          return result;
+        }
+      } else if (c.getType() != Token.EMPTY) {
         return c;
       }
     }

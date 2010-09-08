@@ -123,4 +123,8 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
     testSame("function foo(endMarker){}");
     testSame("function foo(){startMarker:foo()}");
   }
+
+  public void testContainingBlockPreservation() {
+    testSame("if(y){startMarker();x();endMarker()}");
+  }
 }

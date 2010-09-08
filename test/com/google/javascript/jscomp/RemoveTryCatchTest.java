@@ -37,16 +37,16 @@ public class RemoveTryCatchTest extends CompilerTestCase {
     test("try{var a=1;}catch(ex){var b=2;}",
          "var b;var a=1");
     test("try{var a=1;var b=2}catch(ex){var c=3;var d=4;}",
-         "var d;var c;{var a=1;var b=2}");
+         "var d;var c;var a=1;var b=2");
     test("try{var a=1;var b=2}catch(ex){}",
-         "{var a=1;var b=2}");
+         "var a=1;var b=2");
   }
 
   public void testRemoveTryFinally() {
     test("try{var a=1;}finally{var c=3;}",
          "var a=1;var c=3");
     test("try{var a=1;var b=2}finally{var e=5;var f=6;}",
-         "{var a=1;var b=2}{var e=5;var f=6}");
+         "var a=1;var b=2;var e=5;var f=6");
   }
 
   public void testRemoveTryCatchFinally() {
@@ -54,7 +54,7 @@ public class RemoveTryCatchTest extends CompilerTestCase {
          "var b;var a=1;var c=3");
     test("try{var a=1;var b=2}catch(ex){var c=3;var d=4;}finally{var e=5;" +
          "var f=6;}",
-         "var d;var c;{var a=1;var b=2}{var e=5;var f=6}");
+         "var d;var c;var a=1;var b=2;var e=5;var f=6");
   }
 
   public void testPreserveTryBlockContainingReturnStatement() {

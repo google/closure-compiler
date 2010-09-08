@@ -837,11 +837,11 @@ public class CodePrinterTest extends TestCase {
     assertPrint(
         "var user = new function() {"
         + "this.name = \"foo\";"
-        + "this.local = function(){alert(this.name)};}", 
+        + "this.local = function(){alert(this.name)};}",
         "var user=new function(){"
         + "this.name=\"foo\";"
         + "this.local=function(){alert(this.name)}}");
-  }  
+  }
 
   public void testLineLength() {
     // list
@@ -924,7 +924,7 @@ public class CodePrinterTest extends TestCase {
     testReparse("with(foo()) { x = z; y = t; } with(bar()) a = z;");
     testReparse("delete foo['bar']; delete foo;");
     testReparse("var x = { 'a':'paul', 1:'3', 2:(3,4) };");
-    testReparse("switch(a) { case 2: case 3: { stuff(); break; }" +
+    testReparse("switch(a) { case 2: case 3: stuff(); break;" +
         "case 4: morestuff(); break; default: done();}");
     testReparse("x = foo['bar'] + foo['my stuff'] + foo[bar] + f.stuff;");
     testReparse("a.v = b.v; x['foo'] = y['zoo'];");
@@ -934,9 +934,13 @@ public class CodePrinterTest extends TestCase {
   }
 
   private void testReparse(String code) {
+    Compiler compiler = new Compiler();
     Node parse1 = parse(code);
     Node parse2 = parse(new CodePrinter.Builder(parse1).build());
-    assertTrue(code, parse1.checkTreeEqualsSilent(parse2));
+    String explanation = parse1.checkTreeEquals(parse2);
+    assertNull("\nExpected: " + compiler.toSource(parse1) +
+        "\nResult: " + compiler.toSource(parse2) +
+        "\n" + explanation, explanation);
   }
 
   public void testDoLoopIECompatiblity() {
@@ -1053,10 +1057,10 @@ public class CodePrinterTest extends TestCase {
   public void testPrintScript() {
     // Verify that SCRIPT nodes not marked as synthetic are printed as
     // blocks.
-    Node ast = new Node(Token.SCRIPT, 
-        new Node(Token.EXPR_RESULT, Node.newString("f")), 
-        new Node(Token.EXPR_RESULT, Node.newString("g"))); 
-    String result = new CodePrinter.Builder(ast).setPrettyPrint(true).build();    
+    Node ast = new Node(Token.SCRIPT,
+        new Node(Token.EXPR_RESULT, Node.newString("f")),
+        new Node(Token.EXPR_RESULT, Node.newString("g")));
+    String result = new CodePrinter.Builder(ast).setPrettyPrint(true).build();
     assertEquals("\"f\";\n\"g\"", result);
   }
 }
