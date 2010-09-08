@@ -440,8 +440,20 @@ class Normalize implements CompilerPass {
             extractForInitializer(c, insertBefore, insertBeforeParent);
             break;
           case Token.FOR:
-            if (!NodeUtil.isForIn(c)
-                && c.getFirstChild().getType() != Token.EMPTY) {
+            if (NodeUtil.isForIn(c)) {
+              Node first = c.getFirstChild();
+              if (first.getType() == Token.VAR) {
+                // Transform:
+                //    for (var a in b) {}
+                // to:
+                //    var a; for (a in b) {};
+                Node newStatement = first.cloneTree();
+                Node name = first.removeFirstChild();
+                first.getParent().replaceChild(first, name);
+                insertBeforeParent.addChildBefore(newStatement, insertBefore);
+                reportCodeChange("FOR-IN var declaration");
+              }
+            } else if (c.getFirstChild().getType() != Token.EMPTY) {
               Node init = c.getFirstChild();
               Node empty = new Node(Token.EMPTY);
               empty.copyInformationFrom(c);

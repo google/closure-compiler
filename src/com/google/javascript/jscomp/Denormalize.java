@@ -76,9 +76,24 @@ class Denormalize implements CompilerPass, Callback {
 
     // Is the next statement a valid FOR?
     Node nextSibling = n.getNext();
-    if (nextSibling != null
-        && nextSibling.getType() == Token.FOR
-        && !NodeUtil.isForIn(nextSibling)
+    if (nextSibling == null) {
+      return;
+    } else if (NodeUtil.isForIn(nextSibling)) {
+      Node forNode = nextSibling;
+      Node forVar = forNode.getFirstChild();
+      if (NodeUtil.isName(forVar)
+          && NodeUtil.isVar(n) && n.hasOneChild()) {
+        Node name = n.getFirstChild();
+        if (!name.hasChildren()
+            && forVar.getString().equals(name.getString())) {
+          // Ok, the names match, and the var declaration does not have an
+          // initializer. Move it into the loop.
+          parent.removeChild(n);
+          forNode.replaceChild(forVar, n);
+          compiler.reportCodeChange();
+        }
+      }
+    } else if (nextSibling.getType() == Token.FOR
         && nextSibling.getFirstChild().getType() == Token.EMPTY) {
 
       // Does the current node contain an in operator?  If so, embedding

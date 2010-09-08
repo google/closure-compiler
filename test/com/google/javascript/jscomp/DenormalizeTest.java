@@ -36,16 +36,15 @@ public class DenormalizeTest extends CompilerTestCase {
   }
 
   public void testFor() {
-    // Verify assignments are extracted from the FOR init node.
+    // Verify assignments are moved into the FOR init node.
     test("a = 0; for(; a < 2 ; a++) foo()",
          "for(a = 0; a < 2 ; a++) foo();");
-    // Verify vars are extracted from the FOR init node.
+    // Verify vars are are moved into the FOR init node.
     test("var a = 0; for(; c < b ; c++) foo()",
          "for(var a = 0; c < b ; c++) foo()");
 
-    // We don't handle these.
+    // We don't handle labels yet.
     testSame("var a = 0; a:for(; c < b ; c++) foo()");
-    // Verify vars are extracted from the FOR init before the labels node.
     testSame("var a = 0; a:b:for(; c < b ; c++) foo()");
 
     // Verify FOR inside IFs.
@@ -60,6 +59,26 @@ public class DenormalizeTest extends CompilerTestCase {
     test("function(){ var a; for(; a < 2 ; a++) foo() }",
          "function(){ for(var a; a < 2 ; a++) foo() }");
     testSame("function(){ return; for(; a < 2 ; a++) foo() }");
+  }
+
+  public void testForIn() {
+    test("var a; for(a in b) foo()", "for (var a in b) foo()");
+    testSame("a = 0; for(a in b) foo()");
+    testSame("var a = 0; for(a in b) foo()");
+
+    // We don't handle labels yet.
+    testSame("var a; a:for(a in b) foo()");
+    testSame("var a; a:b:for(a in b) foo()");
+
+    // Verify FOR inside IFs.
+    test("if(x){var a; for(a in b) foo()}",
+         "if(x){for(var a in b) foo()}");
+
+    // Any other expression.
+    testSame("init(); for(a in b) foo()");
+
+    // Other statements are left as is.
+    testSame("function(){ return; for(a in b) foo() }");
   }
 
   public void testInOperatorNotInsideFor() {

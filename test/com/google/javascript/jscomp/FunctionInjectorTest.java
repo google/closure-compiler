@@ -916,9 +916,9 @@ public class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(a){for(var b in c)return a;}; " +
         "for(;1;){ foo(1); }",
-        "function foo(a){for(var b in c)return a;}; " +
+        "function foo(a){var b;for(b in c)return a;}; " +
         "for(;1;){ {JSCompiler_inline_label_foo_4:{" +
-            "for(var b$$inline_3 in c){" +
+            "var b$$inline_3=void 0;for(b$$inline_3 in c){" +
               "1;break JSCompiler_inline_label_foo_4" +
             "}}}}",
         "foo", INLINE_BLOCK);

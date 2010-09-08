@@ -302,13 +302,17 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testUnusedAssign7() {
+    // This loop is normalized to "var i;for(i in..."
     test("var a = 3; for (var i in {}) { i = a; }",
-         "for (var i in {}) {}");
+         // TODO(johnlenz): "i = a" should be removed here.
+         "var a = 3; var i; for (i in {}) {i = a;}");
   }
 
   public void testUnusedAssign8() {
+    // This loop is normalized to "var i;for(i in..."
     test("var a = 3; for (var i in {}) { i = a; } alert(a);",
-         "var a = 3; for (var i in {}) {} alert(a);");
+         // TODO(johnlenz): "i = a" should be removed here.
+         "var a = 3; var i; for (i in {}) {i = a} alert(a);");
   }
 
   public void testUnusedPropAssign1() {

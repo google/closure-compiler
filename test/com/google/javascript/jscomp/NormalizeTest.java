@@ -121,6 +121,26 @@ public class NormalizeTest extends CompilerTestCase {
          "init(); for(; a < 2 ; a++) foo()");
   }
 
+  public void testForIn() {
+    // Verify nothing happens with simple for-in
+    testSame("for(a in b) foo();");
+
+    // Verify vars are extracted from the FOR-IN node.
+    test("for(var a in b) foo()",
+         "var a; for(a in b) foo()");
+
+    // Verify vars are extracted from the FOR init before the label node.
+    test("a:for(var a in b) foo()",
+         "var a; a:for(a in b) foo()");
+    // Verify vars are extracted from the FOR init before the labels node.
+    test("a:b:for(var a in b) foo()",
+         "var a; a:b:for(a in b) foo()");
+
+    // Verify block are properly introduced for ifs.
+    test("if (x) for(var a in b) foo()",
+         "if (x) { var a; for(a in b) foo() }");
+  }
+
   public void testWhile() {
     // Verify while loops are converted to FOR loops.
     test("while(c < b) foo()",
