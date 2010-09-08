@@ -23,7 +23,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
@@ -333,24 +332,8 @@ class TypeInference
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
 
-      case Token.NULL:
-        n.setJSType(getNativeType(NULL_TYPE));
-        break;
-
-      case Token.VOID:
-        n.setJSType(getNativeType(VOID_TYPE));
-        break;
-
       case Token.ARRAYLIT:
         scope = traverseArrayLiteral(n, scope);
-        break;
-
-      case Token.REF_SPECIAL:
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
-        break;
-
-      case Token.REGEXP:
-        n.setJSType(getNativeType(REGEXP_TYPE));
         break;
 
       case Token.THIS:
@@ -380,7 +363,6 @@ class TypeInference
       case Token.DEC:
       case Token.INC:
       case Token.BITNOT:
-      case Token.NUMBER:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
@@ -396,7 +378,6 @@ class TypeInference
         n.setJSType(getJSType(n.getLastChild()));
         break;
 
-      case Token.STRING:
       case Token.TYPEOF:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(STRING_TYPE));
@@ -413,8 +394,6 @@ class TypeInference
       case Token.SHNE:
       case Token.INSTANCEOF:
       case Token.IN:
-      case Token.TRUE:
-      case Token.FALSE:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(BOOLEAN_TYPE));
         break;
@@ -677,13 +656,7 @@ class TypeInference
   }
 
   private FlowScope traverseObjectLiteral(Node n, FlowScope scope) {
-    if (n.getJSType() != null) {
-      // The node has already been traversed by the data-flow analysis
-      // framework. Don't re-generate the anonymous object as it might lead to
-      // pernicious bugs.
-      return scope;
-    }
-    ObjectType objectType = registry.createAnonymousObjectType();
+    ObjectType objectType = (ObjectType) n.getJSType();
     for (Node name = n.getFirstChild(); name != null;
          name = name.getNext().getNext()) {
       Node value = name.getNext();
@@ -691,16 +664,12 @@ class TypeInference
       scope = traverse(value, scope);
       String memberName = NodeUtil.getStringValue(name);
       if (memberName != null) {
-        // TODO(nicksantos): We need to fix the parser so that we can
-        // attach JSDoc to the individual elements of object literals.
-        // Right now, this is not possible.
         objectType.defineInferredProperty(memberName, getJSType(value), false);
       } else {
         n.setJSType(getNativeType(UNKNOWN_TYPE));
         return scope;
       }
     }
-    n.setJSType(objectType);
     return scope;
   }
 

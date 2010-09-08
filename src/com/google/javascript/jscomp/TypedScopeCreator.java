@@ -28,13 +28,17 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.EVAL_ERROR_FUNCTIO
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.RANGE_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.TYPE_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
@@ -297,6 +301,50 @@ final class TypedScopeCreator implements ScopeCreator {
     return null;
   }
 
+  private void attachLiteralTypes(Node n) {
+    switch (n.getType()) {
+      case Token.NULL:
+        n.setJSType(getNativeType(NULL_TYPE));
+        break;
+
+      case Token.VOID:
+        n.setJSType(getNativeType(VOID_TYPE));
+        break;
+
+      case Token.STRING:
+        n.setJSType(getNativeType(STRING_TYPE));
+        break;
+
+      case Token.NUMBER:
+        n.setJSType(getNativeType(NUMBER_TYPE));
+        break;
+
+      case Token.TRUE:
+      case Token.FALSE:
+        n.setJSType(getNativeType(BOOLEAN_TYPE));
+        break;
+
+      case Token.REGEXP:
+        n.setJSType(getNativeType(REGEXP_TYPE));
+        break;
+
+      case Token.REF_SPECIAL:
+        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        break;
+
+      case Token.OBJECTLIT:
+        n.setJSType(typeRegistry.createAnonymousObjectType());
+        break;
+
+      // NOTE(nicksantos): If we ever support Array tuples,
+      // we will need to put ARRAYLIT here as well.
+    }
+  }
+
+  private JSType getNativeType(JSTypeNative nativeType) {
+    return typeRegistry.getNativeType(nativeType);
+  }
+
   private abstract class AbstractScopeBuilder
       implements NodeTraversal.Callback {
 
@@ -536,7 +584,7 @@ final class TypedScopeCreator implements ScopeCreator {
           CompilerInput input = compiler.getInput(sourceName);
           Preconditions.checkNotNull(input, sourceName);
           type = input.isExtern() ?
-              typeRegistry.getNativeType(UNKNOWN_TYPE) : null;
+              getNativeType(UNKNOWN_TYPE) : null;
         } else if (info.hasEnumParameterType()) {
           type = getEnumType(name.getString(), var, value,
               info.getEnumParameterType().evaluate(scope, typeRegistry));
@@ -789,7 +837,7 @@ final class TypedScopeCreator implements ScopeCreator {
           if (inferred) {
             globalThis.defineInferredProperty(variableName,
                 type == null ?
-                    typeRegistry.getNativeType(JSTypeNative.NO_TYPE) :
+                    getNativeType(JSTypeNative.NO_TYPE) :
                     type,
                 isExtern);
           } else {
@@ -808,7 +856,7 @@ final class TypedScopeCreator implements ScopeCreator {
                 /* declared iff there's an explicit supertype */
                 superClassCtor == null ||
                 superClassCtor.getInstanceType().equals(
-                    typeRegistry.getNativeType(OBJECT_TYPE)));
+                    getNativeType(OBJECT_TYPE)));
           }
         }
       }
@@ -848,6 +896,8 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param parent The parent of n
      */
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      attachLiteralTypes(n);
+
       switch (n.getType()) {
         case Token.CALL:
           checkForClassDefiningCalls(t, n, parent);
@@ -997,7 +1047,7 @@ final class TypedScopeCreator implements ScopeCreator {
           FunctionParamBuilder functionParamBuilder =
               new FunctionParamBuilder(typeRegistry);
           functionParamBuilder.addRequiredParams(
-              typeRegistry.getNativeType(U2U_CONSTRUCTOR_TYPE));
+              getNativeType(U2U_CONSTRUCTOR_TYPE));
           FunctionType findDelegate = typeRegistry.createFunctionType(
               typeRegistry.createDefaultObjectUnion(delegateBaseObject),
               functionParamBuilder.build());
@@ -1047,7 +1097,7 @@ final class TypedScopeCreator implements ScopeCreator {
       typeRegistry.declareType(typedef, realType);
       if (candidate.getType() == Token.GETPROP) {
         defineSlot(candidate, candidate.getParent(),
-            typeRegistry.getNativeType(NO_TYPE), false);
+            getNativeType(NO_TYPE), false);
       }
     }
 
@@ -1142,21 +1192,6 @@ final class TypedScopeCreator implements ScopeCreator {
         if (parent.getType() == Token.EXPR_RESULT) {
           stubDeclarations.add(new StubDeclaration(
               n, t.getInput().isExtern(), ownerName));
-        } else if (rhsValue != null &&
-                   rhsValue.getType() == Token.TRUE) {
-          // We declare these for delegate proxy method properties.
-          ObjectType ownerType = getObjectSlot(ownerName);
-          if (ownerType instanceof FunctionType) {
-            JSType ownerTypeOfThis = ((FunctionType) ownerType).getTypeOfThis();
-            String delegateName = codingConvention.getDelegateSuperclassName();
-            JSType delegateType = delegateName == null ?
-                null : typeRegistry.getType(delegateName);
-            if (delegateType != null &&
-                ownerTypeOfThis.isSubtype(delegateType)) {
-              defineSlot(n, parent, typeRegistry.getNativeType(BOOLEAN_TYPE),
-                         true);
-            }
-          }
         }
 
         return;
@@ -1194,6 +1229,21 @@ final class TypedScopeCreator implements ScopeCreator {
         // If the property is already declared, the error will be
         // caught when we try to declare it in the current scope.
         defineSlot(n, parent, valueType, inferred);
+      } else if (rhsValue != null &&
+          rhsValue.getType() == Token.TRUE) {
+        // We declare these for delegate proxy method properties.
+        ObjectType ownerType = getObjectSlot(ownerName);
+        if (ownerType instanceof FunctionType) {
+          JSType ownerTypeOfThis = ((FunctionType) ownerType).getTypeOfThis();
+          String delegateName = codingConvention.getDelegateSuperclassName();
+          JSType delegateType = delegateName == null ?
+              null : typeRegistry.getType(delegateName);
+          if (delegateType != null &&
+              ownerTypeOfThis.isSubtype(delegateType)) {
+            defineSlot(n, parent, getNativeType(BOOLEAN_TYPE),
+                true);
+          }
+        }
       }
     }
 
@@ -1373,6 +1423,7 @@ final class TypedScopeCreator implements ScopeCreator {
         return;
       }
 
+      attachLiteralTypes(n);
       switch (n.getType()) {
         case Token.FUNCTION:
           // VARs and ASSIGNs are handled separately.

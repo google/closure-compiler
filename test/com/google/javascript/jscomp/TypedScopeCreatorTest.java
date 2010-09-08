@@ -22,6 +22,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -29,6 +30,7 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.ScopeCreator;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -37,7 +39,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Deque;
-
 
 /**
  * Tests for {@link TypedScopeCreator} and {@link TypeInference}. Admittedly,
@@ -720,13 +721,45 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         findNameType("f", globalScope).toString());
   }
 
-  private JSType findNameType(String name, Scope scope) {
+  public void testLiteralTypesInferred() {
+    testSame("null + true + false + 0 + '' + {}");
+    assertEquals(
+        "null", findTokenType(Token.NULL, globalScope).toString());
+    assertEquals(
+        "boolean", findTokenType(Token.TRUE, globalScope).toString());
+    assertEquals(
+        "boolean", findTokenType(Token.FALSE, globalScope).toString());
+    assertEquals(
+        "number", findTokenType(Token.NUMBER, globalScope).toString());
+    assertEquals(
+        "string", findTokenType(Token.STRING, globalScope).toString());
+    assertEquals(
+        "{}", findTokenType(Token.OBJECTLIT, globalScope).toString());
+  }
+
+  private JSType findNameType(final String name, Scope scope) {
+    return findTypeOnMatchedNode(new Predicate<Node>() {
+      @Override public boolean apply(Node n) {
+        return name.equals(n.getQualifiedName());
+      }
+    }, scope);
+  }
+
+  private JSType findTokenType(final int type, Scope scope) {
+    return findTypeOnMatchedNode(new Predicate<Node>() {
+      @Override public boolean apply(Node n) {
+        return type == n.getType();
+      }
+    }, scope);
+  }
+
+  private JSType findTypeOnMatchedNode(Predicate<Node> matcher, Scope scope) {
     Node root = scope.getRootNode();
     Deque<Node> queue = Lists.newLinkedList();
     queue.push(root);
     while (!queue.isEmpty()) {
       Node current = queue.pop();
-      if (name.equals(current.getQualifiedName()) &&
+      if (matcher.apply(current) &&
           current.getJSType() != null) {
         return current.getJSType();
       }

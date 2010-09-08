@@ -24,7 +24,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
@@ -84,14 +83,16 @@ public class TypeInferenceTest extends TestCase {
 
   private void inFunction(String js) {
     // Parse the body of the function.
-    Node n = compiler.parseTestCode("function() {" + js + "}");
+    Node root = compiler.parseTestCode("(function() {" + js + "});");
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
-    n = n.getFirstChild();
+
+    Node n = root.getFirstChild().getFirstChild();
     // Create the scope with the assumptions.
-    Scope assumedScope =
-        new SyntacticScopeCreator(compiler).createScope(n, null);
+    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
+    Scope assumedScope = scopeCreator.createScope(
+        n, scopeCreator.createScope(root, null));
     for (Map.Entry<String,JSType> entry : assumptions.entrySet()) {
       assumedScope.declare(entry.getKey(), null, entry.getValue(), null);
     }
@@ -648,35 +649,30 @@ public class TypeInferenceTest extends TestCase {
 
   public void testInstanceOf1() {
     assuming("x", OBJECT_TYPE);
-    assuming("String", STRING_OBJECT_FUNCTION_TYPE);
     inFunction("var y = null; if (x instanceof String) y = x;");
     verify("y", createNullableType(STRING_OBJECT_TYPE));
   }
 
   public void testInstanceOf2() {
     assuming("x", createNullableType(OBJECT_TYPE));
-    assuming("String", STRING_OBJECT_FUNCTION_TYPE);
     inFunction("var y = 1; if (x instanceof String) y = x;");
     verify("y", createUnionType(STRING_OBJECT_TYPE, NUMBER_TYPE));
   }
 
   public void testInstanceOf3() {
     assuming("x", createUnionType(STRING_OBJECT_TYPE, NUMBER_OBJECT_TYPE));
-    assuming("String", STRING_OBJECT_FUNCTION_TYPE);
     inFunction("var y = null; if (x instanceof String) y = x;");
     verify("y", createNullableType(STRING_OBJECT_TYPE));
   }
 
   public void testInstanceOf4() {
     assuming("x", createUnionType(STRING_OBJECT_TYPE, NUMBER_OBJECT_TYPE));
-    assuming("String", STRING_OBJECT_FUNCTION_TYPE);
     inFunction("var y = null; if (x instanceof String); else y = x;");
     verify("y", createNullableType(NUMBER_OBJECT_TYPE));
   }
 
   public void testInstanceOf5() {
     assuming("x", OBJECT_TYPE);
-    assuming("String", STRING_OBJECT_FUNCTION_TYPE);
     inFunction("var y = null; if (x instanceof String); else y = x;");
     verify("y", createNullableType(OBJECT_TYPE));
   }
