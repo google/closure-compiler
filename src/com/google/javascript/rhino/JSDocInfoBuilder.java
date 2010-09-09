@@ -558,7 +558,7 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isNoCompilek()} flag set to {@code true}.
+   * {@link JSDocInfo#isNoCompile()} flag set to {@code true}.
    *
    * @return {@code true} if the no compile flag was recorded and {@code false}
    *     if it was already recorded
