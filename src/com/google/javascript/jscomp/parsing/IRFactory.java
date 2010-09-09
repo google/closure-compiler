@@ -428,16 +428,10 @@ public class IRFactory {
       AstNode catchVar = clauseNode.getVarName();
       Node node = newNode(Token.CATCH, transform(catchVar));
       if (clauseNode.getCatchCondition() != null) {
-        node.addChildToBack(transform(clauseNode.getCatchCondition()));
-      } else {
-        Node catchCondition = newNode(Token.EMPTY);
-        // Old Rhino used the position of the catchVar as the position
-        // for the (nonexistent) error being caught.
-        catchCondition.setLineno(catchVar.getLineno());
-        int clauseAbsolutePosition =
-            position2charno(catchVar.getAbsolutePosition());
-        catchCondition.setCharno(clauseAbsolutePosition);
-        node.addChildToBack(catchCondition);
+        errorReporter.error(
+            "Catch clauses are not supported",
+            sourceName,
+            clauseNode.getCatchCondition().getLineno(), "", 0);
       }
       node.addChildToBack(transformBlock(clauseNode.getBody()));
       return node;

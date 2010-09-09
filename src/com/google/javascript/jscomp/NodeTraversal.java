@@ -449,15 +449,6 @@ public class NodeTraversal {
     if (!callback.shouldTraverse(this, n, parent)) return;
 
     switch (type) {
-      case Token.CATCH:
-        Preconditions.checkState(n.getChildCount() == 3);
-        Preconditions.checkState(n.getFirstChild().getType() == Token.NAME);
-        // the first child is the catch var and the third child
-        // is the code block
-        traverseBranch(n.getFirstChild(), n);
-        traverseBranch(n.getFirstChild().getNext().getNext(), n);
-        break;
-
       case Token.FUNCTION:
         traverseFunction(n, parent);
         break;

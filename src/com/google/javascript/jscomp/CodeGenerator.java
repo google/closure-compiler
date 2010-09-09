@@ -140,12 +140,7 @@ class CodeGenerator {
       }
 
       case Token.CATCH:
-        Preconditions.checkState(childCount == 3);
-        if (first.getNext().getType() != Token.EMPTY) {
-          throw new Error("Catch conditions not suppored because I think" +
-                          " that it may be a netscape only feature.");
-        }
-
+        Preconditions.checkState(childCount == 2);
         add("catch(");
         add(first);
         add(")");

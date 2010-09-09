@@ -582,6 +582,11 @@ public class ParserTest extends BaseJSTypeTestCase {
     parseError("var a = {,};", BAD_PROPERTY_MESSAGE);
   }
 
+  public void testCatchClauseForbidden() {
+    parseError("try { } catch (e if true) {}",
+        "Catch clauses are not supported");
+  }
+
   public void testConstForbidden() {
     parseError("const x = 3;", "Unsupported syntax: CONST");
   }

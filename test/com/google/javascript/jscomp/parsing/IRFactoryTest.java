@@ -173,32 +173,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     parse("new A(b, c)");
   }
 
-  public void testTry() {
-    parse("try { a(); } catch (e) { b(); }");
-  }
-
-  public void testTry2() {
-    parse("try { a(); } finally { b(); }");
-  }
-
-  public void testTry3() {
-    parse("try { a(); } catch (e) { b(); } finally { c(); }");
-  }
-
-  public void testTry4() {
-    parse("try { a(); }" +
-        "catch (e if e == 'b') { b(); } " +
-        "catch (e if e == 'c') { c(); }");
-  }
-
-  public void testTry5() {
-    parse("try { a(); }" +
-        "catch (e if e == 'b') { b(); } " +
-        "catch (e if e == 'c') { c(); } " +
-        "catch (e) { d(); } " +
-        "finally { f(); }");
-  }
-
   public void testFunction() {
     parse("function f() {}");
   }
@@ -891,17 +865,14 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Node catchBlock = tryBlock.getNext();
     Node catchStmt = catchBlock.getFirstChild();
     Node exceptionVar = catchStmt.getFirstChild();
-    Node catchCondition = exceptionVar.getNext();
-    Node exceptionBlock = catchCondition.getNext();
+    Node exceptionBlock = exceptionVar.getNext();
     Node varDecl = exceptionBlock.getFirstChild();
-
 
     assertNodePosition(1, 0, tryStmt);
     assertNodePosition(1, 4, tryBlock);
     assertNodePosition(3, 0, catchBlock);
     assertNodePosition(3, 2, catchStmt);
     assertNodePosition(3, 9, exceptionVar);
-    assertNodePosition(3, 9, catchCondition);
     assertNodePosition(3, 13, exceptionBlock);
     assertNodePosition(4, 2, varDecl);
   }
