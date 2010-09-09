@@ -287,4 +287,22 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     foldSame("var x; foo:{x = 3;}");
     foldSame("var x; foo:x = 3;");
   }
+
+  public void testShortCircuit1() {
+    test("1 && a()", "a()");
+  }
+
+  public void testShortCircuit2() {
+    test("1 && a() && 2", "a()");
+  }
+
+  public void testShortCircuit3() {
+    test("a() && 1 && 2", "a()");
+  }
+
+  public void testShortCircuit4() {
+    test("a() && (1 && b())", "a() && b()");
+    test("a() && 1 && b()", "a() && b()");
+    testSame("(a() && 1) && b()");
+  }
 }

@@ -222,6 +222,9 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("var a = (foo(), true);");
     foldSame("a = (foo(), true);");
 
+    // Don't try to split COMMA under LABELs.
+    foldSame("a:a(),b()");
+
     fold("(x=2), foo()", "x=2; foo()");
     fold("foo(), boo();", "foo(); boo()");
     fold("(a(), b()), (c(), d());", "a(); b(); c(); d();");
@@ -317,5 +320,272 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("switch(a){case 1: var c =2; break;}");
     foldSame("function f() {switch(a){case 1: return;}}");
     foldSame("x:switch(a){case 1: break x;}");
+  }
+
+  public void testRemoveNumber() {
+    test("3", "");
+  }
+
+  public void testRemoveVarGet1() {
+    test("a", "");
+  }
+
+  public void testRemoveVarGet2() {
+    test("var a = 1;a", "var a = 1");
+  }
+
+  public void testRemoveNamespaceGet1() {
+    test("var a = {};a.b", "var a = {}");
+  }
+
+  public void testRemoveNamespaceGet2() {
+    test("var a = {};a.b=1;a.b", "var a = {};a.b=1");
+  }
+
+  public void testRemovePrototypeGet1() {
+    test("var a = {};a.prototype.b", "var a = {}");
+  }
+
+  public void testRemovePrototypeGet2() {
+    test("var a = {};a.prototype.b = 1;a.prototype.b",
+         "var a = {};a.prototype.b = 1");
+  }
+
+  public void testRemoveAdd1() {
+    test("1 + 2", "");
+  }
+
+  public void testNoRemoveVar1() {
+    testSame("var a = 1");
+  }
+
+  public void testNoRemoveVar2() {
+    testSame("var a = 1, b = 2");
+  }
+
+  public void testNoRemoveAssign1() {
+    testSame("a = 1");
+  }
+
+  public void testNoRemoveAssign2() {
+    testSame("a = b = 1");
+  }
+
+  public void testNoRemoveAssign3() {
+    test("1 + (a = 2)", "a = 2");
+  }
+
+  public void testNoRemoveAssign4() {
+    testSame("x.a = 1");
+  }
+
+  public void testNoRemoveAssign5() {
+    testSame("x.a = x.b = 1");
+  }
+
+  public void testNoRemoveAssign6() {
+    test("1 + (x.a = 2)", "x.a = 2");
+  }
+
+  public void testNoRemoveCall1() {
+    testSame("a()");
+  }
+
+  public void testNoRemoveCall2() {
+    test("a()+b()", "a();b()");
+  }
+
+  public void testNoRemoveCall3() {
+    testSame("a() && b()");
+  }
+
+  public void testNoRemoveCall4() {
+    testSame("a() || b()");
+  }
+
+  public void testNoRemoveCall5() {
+    test("a() || 1", "a()");
+  }
+
+  public void testNoRemoveCall6() {
+    testSame("1 || a()");
+  }
+
+  public void testNoRemoveThrow1() {
+    testSame("function f(){throw a()}");
+  }
+
+  public void testNoRemoveThrow2() {
+    testSame("function f(){throw a}");
+  }
+
+  public void testNoRemoveThrow3() {
+    testSame("function f(){throw 10}");
+  }
+
+  public void testRemoveInControlStructure1() {
+    test("if(x()) 1", "x()");
+  }
+
+  public void testRemoveInControlStructure2() {
+    test("while(2) 1", "while(2);");
+  }
+
+  public void testRemoveInControlStructure3() {
+    test("for(1;2;3) 4", "for(;;);");
+  }
+
+  public void testHook1() {
+    test("1 ? 2 : 3", "");
+  }
+
+  public void testHook2() {
+    test("x ? a() : 3", "x && a()");
+  }
+
+  public void testHook3() {
+    test("x ? 2 : a()", "x || a()");
+  }
+
+  public void testHook4() {
+    testSame("x ? a() : b()");
+  }
+
+  public void testHook5() {
+    test("a() ? 1 : 2", "a()");
+  }
+
+  public void testHook6() {
+    test("a() ? b() : 2", "a() && b()");
+  }
+
+  // TODO(johnlenz): Consider adding a post optimization pass to
+  // convert OR into HOOK to save parentheses when the operator
+  // precedents would require them.
+  public void testHook7() {
+    test("a() ? 1 : b()", "a() || b()");
+  }
+
+  public void testHook8() {
+    testSame("a() ? b() : c()");
+  }
+
+  public void testShortCircuit1() {
+    testSame("1 && a()");
+  }
+
+  public void testShortCircuit2() {
+    test("1 && a() && 2", "1 && a()");
+  }
+
+  public void testShortCircuit3() {
+    test("a() && 1 && 2", "a()");
+  }
+
+  public void testShortCircuit4() {
+    testSame("a() && 1 && b()");
+  }
+
+  public void testComma1() {
+    test("1, 2", "");
+  }
+
+  public void testComma2() {
+    test("1, a()", "a()");
+  }
+
+  public void testComma3() {
+    test("1, a(), b()", "a();b()");
+  }
+
+  public void testComma4() {
+    test("a(), b()", "a();b()");
+  }
+
+  public void testComma5() {
+    test("a(), b(), 1", "a();b()");
+  }
+
+  public void testComplex1() {
+    test("1 && a() + b() + c()", "1 && (a(), b(), c())");
+  }
+
+  public void testComplex2() {
+    test("1 && (a() ? b() : 1)", "1 && a() && b()");
+  }
+
+  public void testComplex3() {
+    test("1 && (a() ? b() : 1 + c())", "1 && (a() ? b() : c())");
+  }
+
+  public void testComplex4() {
+    test("1 && (a() ? 1 : 1 + c())", "1 && (a() || c())");
+  }
+
+  public void testComplex5() {
+    // can't simplify lhs of short circuit statements with side effects
+    testSame("(a() ? 1 : 1 + c()) && foo()");
+  }
+
+  public void testNoRemoveFunctionDeclaration1() {
+    testSame("function foo(){}");
+  }
+
+  public void testNoRemoveFunctionDeclaration2() {
+    testSame("var foo = function (){}");
+  }
+
+  public void testNoSimplifyFunctionArgs1() {
+    testSame("f(1 + 2, 3 + g())");
+  }
+
+  public void testNoSimplifyFunctionArgs2() {
+    testSame("1 && f(1 + 2, 3 + g())");
+  }
+
+  public void testNoSimplifyFunctionArgs3() {
+    testSame("1 && foo(a() ? b() : 1 + c())");
+  }
+
+  public void testNoRemoveInherits1() {
+    testSame("var a = {}; this.b = {}; var goog = {}; goog.inherits(b, a)");
+  }
+
+  public void testNoRemoveInherits2() {
+    test("var a = {}; this.b = {}; var goog = {}; goog.inherits(b, a) + 1",
+         "var a = {}; this.b = {}; var goog = {}; goog.inherits(b, a)");
+  }
+
+  public void testNoRemoveInherits3() {
+    testSame("this.a = {}; var b = {}; b.inherits(a);");
+  }
+
+  public void testNoRemoveInherits4() {
+    test("this.a = {}; var b = {}; b.inherits(a) + 1;",
+         "this.a = {}; var b = {}; b.inherits(a)");
+  }
+
+  public void testRemoveFromLabel1() {
+    test("LBL: void 0", "LBL: {}");
+  }
+
+  public void testRemoveFromLabel2() {
+    test("LBL: foo() + 1 + bar()", "LBL: foo(),bar()");
+  }
+
+  public void testCall1() {
+    test("Math.sin(0);", "");
+  }
+
+  public void testCall2() {
+    test("1 + Math.sin(0);", "");
+  }
+
+  public void testNew1() {
+    test("new Date;", "");
+  }
+
+  public void testNew2() {
+    test("1 + new Date;", "");
   }
 }

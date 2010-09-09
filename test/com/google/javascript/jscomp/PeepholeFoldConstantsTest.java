@@ -197,6 +197,12 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = foo() && true && bar()", "x = foo()&&bar()");
     fold("x = foo() && false || bar()", "x = foo()&&false||bar()");
 
+    fold("1 && b()", "b()");
+    fold("a() && (1 && b())", "a() && b()");
+    // TODO(johnlenz): Consider folding the following to:
+    //   "(a(),1) && b();
+    fold("(a() && 1) && b()", "(a() && 1) && b()");
+
     // Really not foldable, because it would change the type of the
     // expression if foo() returns something equivalent, but not
     // identical, to true. Cf. FoldConstants.tryFoldAndOr().

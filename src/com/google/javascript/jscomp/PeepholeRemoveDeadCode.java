@@ -76,10 +76,15 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldExpr(Node subtree) {
-    if (subtree.getParent().getType() != Token.LABEL) {
-      Node result = trySimpilifyUnusedResult(subtree.getFirstChild());
-      if (result == null) {
-        // If the EXPR_RESULT no longer has any children, remove it as well.
+    Node result = trySimpilifyUnusedResult(subtree.getFirstChild());
+    if (result == null) {
+      Node parent = subtree.getParent();
+      // If the EXPR_RESULT no longer has any children, remove it as well.
+      if (parent.getType() == Token.LABEL) {
+        Node replacement = new Node(Token.BLOCK).copyInformationFrom(subtree);
+        parent.replaceChild(subtree, replacement);
+        subtree = replacement;
+      } else {
         subtree.detachFromParent();
         subtree = null;
       }
@@ -382,7 +387,7 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node left = n.getFirstChild();
     Node right = left.getNext();
 
-    left = trySimpilifyUnusedResult(left, false);
+    left = trySimpilifyUnusedResult(left);
     if (left == null || !mayHaveSideEffects(left)) {
       // Fold it!
       n.removeChild(right);
@@ -390,7 +395,8 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       reportCodeChange();
       return right;
     } else {
-      if (parent.getType() == Token.EXPR_RESULT) {
+      if (parent.getType() == Token.EXPR_RESULT
+          && parent.getParent().getType() != Token.LABEL) {
         // split comma
         n.detachChildren();
         // Replace the original expression with the left operand.
