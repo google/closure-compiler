@@ -105,6 +105,19 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       " */\n" +
       "externObj3.prototype.propWithStubBefore = function(s) {};" +
 
+      // useless jsdoc
+      "/**\n" +
+      " * @see {foo}\n" +
+      " */\n" +
+      "externObj3.prototype.propWithStubBeforeWithJSDoc;" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " * @nosideeffects\n" +
+      " */\n" +
+      "externObj3.prototype.propWithStubBeforeWithJSDoc = function(s) {};" +
+
       // An externs definition with a stub after.
 
       "/**@constructor*/function externObj4(){}" +
@@ -116,7 +129,20 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       " */\n" +
       "externObj4.prototype.propWithStubAfter = function(s) {};" +
 
-      "externObj4.prototype.propWithStubAfter;";
+      "externObj4.prototype.propWithStubAfter;" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " * @nosideeffects\n" +
+      " */\n" +
+      "externObj4.prototype.propWithStubAfterWithJSDoc = function(s) {};" +
+
+      // useless jsdoc
+      "/**\n" +
+      " * @see {foo}\n" +
+      " */\n" +
+      "externObj4.prototype.propWithStubAfterWithJSDoc;";
 
   public PureFunctionIdentifierTest() {
     super(kExterns);
@@ -283,7 +309,17 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         ImmutableList.<String>of("o.propWithStubBefore"));
   }
 
+  public void testAnnotationInExternStubs1b() throws Exception {
+    checkMarkedCalls("o.propWithStubBeforeWithJSDoc('a');",
+        ImmutableList.<String>of("o.propWithStubBeforeWithJSDoc"));
+  }
+
   public void testAnnotationInExternStubs2() throws Exception {
+    checkMarkedCalls("o.propWithStubAfter('a');",
+        ImmutableList.<String>of("o.propWithStubAfter"));
+  }
+
+  public void testAnnotationInExternStubs2b() throws Exception {
     checkMarkedCalls("o.propWithStubAfter('a');",
         ImmutableList.<String>of("o.propWithStubAfter"));
   }

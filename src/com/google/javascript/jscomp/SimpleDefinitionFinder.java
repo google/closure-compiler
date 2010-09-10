@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.DefinitionsRemover.ExternalNameOnlyDefinition;
 import com.google.javascript.jscomp.DefinitionsRemover.UnknownDefinition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -186,7 +187,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
             if (qualifiedName != null) {
               for (Definition prevDef : nameDefinitionMultimap.get(name)) {
                 if (prevDef instanceof ExternalNameOnlyDefinition
-                    && node.getJSDocInfo() == null) {
+                    && !jsdocContainsDeclarations(node)) {
                   String prevName = prevDef.getLValue().getQualifiedName();
                   if (qualifiedName.equals(prevName)) {
                     // Drop this stub, there is a real definition.
@@ -224,7 +225,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
           //    externs definition if no other definition is provided.
 
           boolean dropStub = false;
-          if (node.getJSDocInfo() == null) {
+          if (!jsdocContainsDeclarations(node)) {
             String qualifiedName = node.getQualifiedName();
             if (qualifiedName != null) {
               for (Definition prevDef : nameDefinitionMultimap.get(name)) {
@@ -250,6 +251,14 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
           }
         }
       }
+    }
+
+    /**
+     * @return Whether the node has a JSDoc that actually declares something.
+     */
+    private boolean jsdocContainsDeclarations(Node node) {
+      JSDocInfo info = node.getJSDocInfo();
+      return (info != null && info.containsDeclaration());
     }
   }
 

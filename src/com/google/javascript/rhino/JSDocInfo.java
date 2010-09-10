@@ -451,6 +451,28 @@ public final class JSDocInfo implements Serializable {
     return getFlag(MASK_NOCOMPILE);
   }
 
+  /**
+   * @return Whether there is declaration present on this {@link JSDocInfo}.
+   */
+  public boolean containsDeclaration() {
+    return (hasType()
+        || hasReturnType()
+        || hasEnumParameterType()
+        || hasTypedefType()
+        || hasThisType()
+        || getParameterCount() > 0
+        || getFlag(MASK_CONSTANT
+            | MASK_CONSTRUCTOR
+            | MASK_DEFINE
+            | MASK_OVERRIDE
+            | MASK_NOALIAS
+            | MASK_DEPRECATED
+            | MASK_INTERFACE
+            | MASK_NOSHADOW
+            | MASK_IMPLICITCAST
+            | MASK_NOSIDEEFFECTS));
+  }
+
   private boolean getFlag(int mask) {
     return (bitset & mask) != 0x00;
   }
