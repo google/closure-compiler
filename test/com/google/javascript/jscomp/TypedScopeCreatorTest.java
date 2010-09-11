@@ -528,12 +528,14 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testObjectLiteralCast() {
     testSame("/** @constructor */ A.B = function() {}\n" +
-             "goog.reflect.object(A.B, {})");
+             "A.B.prototype.isEnabled = true;\n" +
+             "goog.reflect.object(A.B, {isEnabled: 3})\n" +
+             "var x = (new A.B()).isEnabled;");
 
     assertEquals("A.B",
-                 globalScope.getRootNode().getLastChild().getFirstChild().
-                 getLastChild().getFirstChild().getLastChild().getJSType().
-                 toString());
+        findTokenType(Token.OBJECTLIT, globalScope).toString());
+    assertEquals("boolean",
+        findNameType("x", globalScope).toString());
   }
 
   public void testBadObjectLiteralCast1() {

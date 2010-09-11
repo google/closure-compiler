@@ -657,6 +657,14 @@ class TypeInference
 
   private FlowScope traverseObjectLiteral(Node n, FlowScope scope) {
     ObjectType objectType = (ObjectType) n.getJSType();
+
+    // Object literals can be reflected on other types.
+    // See CodingConvention#getObjectLiteralCase and goog.object.reflect.
+    // Ignore these types of literals.
+    if (objectType.hasReferenceName()) {
+      return scope;
+    }
+
     for (Node name = n.getFirstChild(); name != null;
          name = name.getNext().getNext()) {
       Node value = name.getNext();
