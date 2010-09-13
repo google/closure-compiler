@@ -158,37 +158,42 @@ final class TypedScopeCreator implements ScopeCreator {
     // inner scopes, because only global scopes can contain named classes that
     // show up in the type registry.
     Scope newScope = null;
+    AbstractScopeBuilder scopeBuilder = null;
     if (parent == null) {
       // Find all the classes in the global scope.
       newScope = createInitialScope(root);
 
-      GlobalScopeBuilder scopeBuilder = new GlobalScopeBuilder(newScope);
+      GlobalScopeBuilder globalScopeBuilder = new GlobalScopeBuilder(newScope);
+      scopeBuilder = globalScopeBuilder;
       NodeTraversal.traverse(compiler, root, scopeBuilder);
-      scopeBuilder.resolveStubDeclarations();
-      scopeBuilder.resolveTypes();
-
-      // Gather the properties in each function that we found in the
-      // global scope, if that function has a @this type that we can
-      // build properties on.
-      for (Node functionNode : scopeBuilder.nonExternFunctions) {
-        JSType type = functionNode.getJSType();
-        if (type != null && type instanceof FunctionType) {
-          FunctionType fnType = (FunctionType) type;
-          ObjectType fnThisType = fnType.getTypeOfThis();
-          if (!fnThisType.isUnknownType()) {
-            NodeTraversal.traverse(compiler, functionNode.getLastChild(),
-                scopeBuilder.new CollectProperties(fnThisType));
-          }
-        }
-      }
-
-      codingConvention.defineDelegateProxyPrototypeProperties(
-          typeRegistry, newScope, delegateProxyPrototypes);
     } else {
       newScope = new Scope(parent, root);
-      LocalScopeBuilder scopeBuilder = new LocalScopeBuilder(newScope);
-      scopeBuilder.build();
-      scopeBuilder.resolveTypes();
+      LocalScopeBuilder localScopeBuilder = new LocalScopeBuilder(newScope);
+      scopeBuilder = localScopeBuilder;
+      localScopeBuilder.build();
+    }
+
+    scopeBuilder.resolveStubDeclarations();
+    scopeBuilder.resolveTypes();
+
+    // Gather the properties in each function that we found in the
+    // global scope, if that function has a @this type that we can
+    // build properties on.
+    for (Node functionNode : scopeBuilder.nonExternFunctions) {
+      JSType type = functionNode.getJSType();
+      if (type != null && type instanceof FunctionType) {
+        FunctionType fnType = (FunctionType) type;
+        ObjectType fnThisType = fnType.getTypeOfThis();
+        if (!fnThisType.isUnknownType()) {
+          NodeTraversal.traverse(compiler, functionNode.getLastChild(),
+              scopeBuilder.new CollectProperties(fnThisType));
+        }
+      }
+    }
+
+    if (parent == null) {
+      codingConvention.defineDelegateProxyPrototypeProperties(
+          typeRegistry, newScope, delegateProxyPrototypes);
     }
     return newScope;
   }
@@ -359,6 +364,20 @@ final class TypedScopeCreator implements ScopeCreator {
         Lists.newArrayList();
 
     /**
+     * Functions that we found in the global scope and not in externs.
+     */
+    private final List<Node> nonExternFunctions = Lists.newArrayList();
+
+    /**
+     * Type-less stubs.
+     *
+     * If at the end of traversal, we still don't have types for these
+     * stubs, then we should declare UNKNOWN types.
+     */
+    private final List<StubDeclaration> stubDeclarations =
+        Lists.newArrayList();
+
+    /**
      * The current source file that we're in.
      */
     private String sourceName = null;
@@ -403,7 +422,58 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     @Override
-    public abstract void visit(NodeTraversal t, Node n, Node parent);
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      attachLiteralTypes(n);
+
+      switch (n.getType()) {
+        case Token.CALL:
+          checkForClassDefiningCalls(t, n, parent);
+          break;
+
+        case Token.FUNCTION:
+          if (t.getInput() == null || !t.getInput().isExtern()) {
+            nonExternFunctions.add(n);
+          }
+
+          // VARs and ASSIGNs are handled in different branches of this
+          // switch statement.
+          if (parent.getType() != Token.ASSIGN &&
+              parent.getType() != Token.NAME) {
+            defineDeclaredFunction(n, parent);
+          }
+
+          break;
+
+        case Token.ASSIGN:
+          // Handle constructor and enum definitions.
+          defineNamedTypeAssign(n, parent);
+
+          // Handle initialization of properties.
+          Node firstChild = n.getFirstChild();
+          if (firstChild.getType() == Token.GETPROP &&
+              firstChild.isQualifiedName()) {
+            maybeDeclareQualifiedName(t, n.getJSDocInfo(),
+                firstChild, n, firstChild.getNext());
+          }
+          break;
+
+        case Token.CATCH:
+          defineCatch(n, parent);
+          break;
+
+        case Token.VAR:
+          defineVar(n, parent);
+          break;
+
+        case Token.GETPROP:
+          // Handle stubbed properties.
+          if (parent.getType() == Token.EXPR_RESULT &&
+              n.isQualifiedName()) {
+            maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
+          }
+          break;
+      }
+    }
 
     /**
      * Returns the type specified in a JSDoc annotation near a GETPROP or NAME.
@@ -615,8 +685,8 @@ final class TypedScopeCreator implements ScopeCreator {
         Node rValue, JSDocInfo info, @Nullable Node lvalueNode) {
       FunctionType functionType = null;
 
-      // Handle function aliases.
-      if (rValue != null && rValue.isQualifiedName()) {
+      // Global function aliases should be registered with the type registry.
+      if (rValue != null && rValue.isQualifiedName() && scope.isGlobal()) {
         Var var = scope.getVar(rValue.getQualifiedName());
         if (var != null && var.getType() instanceof FunctionType) {
           functionType = (FunctionType) var.getType();
@@ -863,100 +933,27 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
     }
-  }
-
-  /**
-   * A shallow traversal of the global scope to build up all classes,
-   * functions, and methods.
-   */
-  private final class GlobalScopeBuilder extends AbstractScopeBuilder {
 
     /**
-     * Functions that we found in the global scope and not in externs.
-     */
-    private final List<Node> nonExternFunctions = Lists.newArrayList();
-
-    /**
-     * Type-less stubs in the global scope.
+     * Look for a type declaration on a GETPROP node.
      *
-     * If at the end of traversal, we still don't have types for these
-     * stubs, then we should declare UNKNOWN types.
+     * @param info The doc info for this property.
+     * @param n A top-level GETPROP node (it should not be contained inside
+     *     another GETPROP).
+     * @param rhsValue The node that {@code n} is being initialized to,
+     *     or {@code null} if this is a stub declaration.
      */
-    private final List<StubDeclaration> stubDeclarations =
-        Lists.newArrayList();
-
-    private GlobalScopeBuilder(Scope scope) {
-      super(scope);
-    }
-
-    /**
-     * Visit a node in the global scope, and add anything it declares to the
-     * global symbol table.
-     *
-     * @param t The current traversal.
-     * @param n The node being visited.
-     * @param parent The parent of n
-     */
-    @Override public void visit(NodeTraversal t, Node n, Node parent) {
-      attachLiteralTypes(n);
-
-      switch (n.getType()) {
-        case Token.CALL:
-          checkForClassDefiningCalls(t, n, parent);
-          break;
-
-        case Token.FUNCTION:
-          if (!t.getInput().isExtern()) {
-            nonExternFunctions.add(n);
-          }
-
-          // VARs and ASSIGNs are handled separately.
-          if (parent.getType() == Token.ASSIGN ||
-              parent.getType() == Token.NAME) {
-            return;
-          }
-
-          defineDeclaredFunction(n, parent);
-          break;
-
-        case Token.ASSIGN:
-          // Handle constructor and enum definitions.
-          defineNamedTypeAssign(n, parent);
-
-          // Handle typedefs.
-          checkForOldStyleTypedef(t, n);
-
-          // Handle initialization of properties.
-          Node firstChild = n.getFirstChild();
-          if (firstChild.getType() == Token.GETPROP &&
-              firstChild.isQualifiedName()) {
-            maybeDeclareQualifiedName(t, n.getJSDocInfo(),
-                firstChild, n, firstChild.getNext());
-          }
-          break;
-
-        case Token.CATCH:
-          defineCatch(n, parent);
-          break;
-
-        case Token.VAR:
-          defineVar(n, parent);
-
-          // Handle typedefs.
-          if (n.hasOneChild()) {
-            checkForOldStyleTypedef(t, n);
-            checkForTypedef(t, n.getFirstChild(), n.getJSDocInfo());
-          }
-          break;
-
-        case Token.GETPROP:
-          // Handle stubbed properties.
-          if (parent.getType() == Token.EXPR_RESULT &&
-              n.isQualifiedName()) {
-            checkForTypedef(t, n, n.getJSDocInfo());
-            maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
-          }
-          break;
+    private JSType getDeclaredGetPropType(NodeTraversal t, JSDocInfo info,
+        Node n, Node rhsValue) {
+      if (info != null && info.hasType()) {
+        return getDeclaredTypeInAnnotation(t, n, info);
+      } else if (info != null && info.hasEnumParameterType()) {
+        return n.getJSType();
+      } else if (rhsValue != null &&
+          rhsValue.getType() == Token.FUNCTION) {
+        return rhsValue.getJSType();
+      } else {
+        return getDeclaredTypeInAnnotation(t, n, info);
       }
     }
 
@@ -1068,6 +1065,284 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     /**
+     * Declare the symbol for a qualified name in the global scope.
+     *
+     * @param info The doc info for this property.
+     * @param n A top-level GETPROP node (it should not be contained inside
+     *     another GETPROP).
+     * @param parent The parent of {@code n}.
+     * @param rhsValue The node that {@code n} is being initialized to,
+     *     or {@code null} if this is a stub declaration.
+     */
+    void maybeDeclareQualifiedName(NodeTraversal t, JSDocInfo info,
+        Node n, Node parent, Node rhsValue) {
+      Node ownerNode = n.getFirstChild();
+      String ownerName = ownerNode.getQualifiedName();
+      String qName = n.getQualifiedName();
+      String propName = n.getLastChild().getString();
+      Preconditions.checkArgument(qName != null && ownerName != null);
+
+      // Function prototypes are special.
+      // It's a common JS idiom to do:
+      // F.prototype = { ... };
+      // So if F does not have an explicitly declared super type,
+      // allow F.prototype to be redefined arbitrarily.
+      if ("prototype".equals(propName)) {
+        Var qVar = scope.getVar(qName);
+        if (qVar != null) {
+          if (!qVar.isTypeInferred()) {
+            // Just ignore assigns to declared prototypes.
+            return;
+          }
+          scope.undeclare(qVar);
+        }
+      }
+
+      // Precedence of type information on GETPROPs:
+      // 1) @type annotation / @enum annotation
+      // 2) ASSIGN to FUNCTION literal
+      // 3) @param/@return annotation (with no function literal)
+      // 4) ASSIGN to anything else
+      //
+      // 1 and 3 are declarations, 4 is inferred, and 2 is a declaration iff
+      // the function has not been declared before.
+      //
+      // FUNCTION literals are special because TypedScopeCreator is very smart
+      // about getting as much type information as possible for them.
+
+      // Determining type for #1 + #2 + #3
+      JSType valueType = getDeclaredGetPropType(t, info, n, rhsValue);
+      if (valueType == null && rhsValue != null) {
+        // Determining type for #4
+        valueType = rhsValue.getJSType();
+      }
+
+      if (valueType == null) {
+        if (parent.getType() == Token.EXPR_RESULT) {
+          stubDeclarations.add(new StubDeclaration(
+              n,
+              t.getInput() != null && t.getInput().isExtern(),
+              ownerName));
+        }
+
+        return;
+      }
+
+      boolean inferred = true;
+      if (info != null) {
+        // Determining declaration for #1 + #3
+        inferred = !(info.hasType() || info.hasEnumParameterType() ||
+            FunctionTypeBuilder.isFunctionTypeDeclaration(info));
+      }
+
+      if (inferred) {
+        // Determining declaration for #2
+        inferred = !(rhsValue != null &&
+            rhsValue.getType() == Token.FUNCTION &&
+            !scope.isDeclared(qName, false));
+      }
+
+      if (!inferred) {
+        ObjectType ownerType = getObjectSlot(ownerName);
+        if (ownerType != null) {
+          // Only declare this as an official property if it has not been
+          // declared yet.
+          boolean isExtern = t.getInput() != null && t.getInput().isExtern();
+          if ((!ownerType.hasOwnProperty(propName) ||
+               ownerType.isPropertyTypeInferred(propName)) &&
+              ((isExtern && !ownerType.isNativeObjectType()) ||
+               !ownerType.isInstanceType())) {
+            // If the property is undeclared or inferred, declare it now.
+            ownerType.defineDeclaredProperty(propName, valueType, isExtern);
+          }
+        }
+
+        // If the property is already declared, the error will be
+        // caught when we try to declare it in the current scope.
+        defineSlot(n, parent, valueType, inferred);
+      } else if (rhsValue != null &&
+          rhsValue.getType() == Token.TRUE) {
+        // We declare these for delegate proxy method properties.
+        ObjectType ownerType = getObjectSlot(ownerName);
+        if (ownerType instanceof FunctionType) {
+          JSType ownerTypeOfThis = ((FunctionType) ownerType).getTypeOfThis();
+          String delegateName = codingConvention.getDelegateSuperclassName();
+          JSType delegateType = delegateName == null ?
+              null : typeRegistry.getType(delegateName);
+          if (delegateType != null &&
+              ownerTypeOfThis.isSubtype(delegateType)) {
+            defineSlot(n, parent, getNativeType(BOOLEAN_TYPE),
+                true);
+          }
+        }
+      }
+    }
+
+    /**
+     * Find the ObjectType associated with the given slot.
+     * @param slotName The name of the slot to find the type in.
+     * @return An object type, or null if this slot does not contain an object.
+     */
+    private ObjectType getObjectSlot(String slotName) {
+      Var ownerVar = scope.getVar(slotName);
+      if (ownerVar != null) {
+        JSType ownerVarType = ownerVar.getType();
+        return ObjectType.cast(ownerVarType == null ?
+            null : ownerVarType.restrictByNotNullOrUndefined());
+      }
+      return null;
+    }
+
+    /**
+     * Resolve any stub delcarations to unknown types if we could not
+     * find types for them during traversal.
+     */
+    void resolveStubDeclarations() {
+      for (StubDeclaration stub : stubDeclarations) {
+        Node n = stub.node;
+        Node parent = n.getParent();
+        String qName = n.getQualifiedName();
+        String propName = n.getLastChild().getString();
+        String ownerName = stub.ownerName;
+        boolean isExtern = stub.isExtern;
+
+        if (scope.isDeclared(qName, false)) {
+          continue;
+        }
+
+        // If we see a stub property, make sure to register this property
+        // in the type registry.
+        ObjectType ownerType = getObjectSlot(ownerName);
+        ObjectType unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
+        defineSlot(n, parent, unknownType, true);
+
+        if (ownerType != null &&
+            (isExtern || ownerType.isFunctionPrototypeType())) {
+          // If this is a stub for a prototype, just declare it
+          // as an unknown type. These are seen often in externs.
+          ownerType.defineInferredProperty(
+              propName, unknownType, isExtern);
+        } else {
+          typeRegistry.registerPropertyOnType(
+              propName, ownerType == null ? unknownType : ownerType);
+        }
+      }
+    }
+
+    /**
+     * Collects all declared properties in a function, and
+     * resolves them relative to the global scope.
+     */
+    private final class CollectProperties
+        extends AbstractShallowCallback {
+      private final ObjectType thisType;
+
+      CollectProperties(ObjectType thisType) {
+        this.thisType = thisType;
+      }
+
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        if (parent != null && parent.getType() == Token.EXPR_RESULT) {
+          switch (n.getType()) {
+            case Token.ASSIGN:
+              maybeCollectMember(t, n.getFirstChild(), n);
+              break;
+            case Token.GETPROP:
+              maybeCollectMember(t, n, n);
+              break;
+          }
+        }
+      }
+
+      private void maybeCollectMember(NodeTraversal t,
+          Node member, Node nodeWithJsDocInfo) {
+        JSDocInfo info = nodeWithJsDocInfo.getJSDocInfo();
+
+        // Do nothing if there is no JSDoc type info, or
+        // if the node is not a member expression, or
+        // if the member expression is not of the form: this.someProperty.
+        if (info == null ||
+            member.getType() != Token.GETPROP ||
+            member.getFirstChild().getType() != Token.THIS) {
+          return;
+        }
+
+        member.getFirstChild().setJSType(thisType);
+        JSType jsType = getDeclaredTypeInAnnotation(t, member, info);
+        Node name = member.getLastChild();
+        if (jsType != null &&
+            (name.getType() == Token.NAME || name.getType() == Token.STRING)) {
+          thisType.defineDeclaredProperty(
+              name.getString(),
+              jsType,
+              false /* functions with implementations are not in externs */);
+        }
+      }
+    } // end CollectProperties
+  }
+
+  /**
+   * A stub declaration without any type information.
+   */
+  private static final class StubDeclaration {
+    private final Node node;
+    private final boolean isExtern;
+    private final String ownerName;
+
+    private StubDeclaration(Node node, boolean isExtern, String ownerName) {
+      this.node = node;
+      this.isExtern = isExtern;
+      this.ownerName = ownerName;
+    }
+  }
+
+  /**
+   * A shallow traversal of the global scope to build up all classes,
+   * functions, and methods.
+   */
+  private final class GlobalScopeBuilder extends AbstractScopeBuilder {
+
+    private GlobalScopeBuilder(Scope scope) {
+      super(scope);
+    }
+
+    /**
+     * Visit a node in the global scope, and add anything it declares to the
+     * global symbol table.
+     *
+     * @param t The current traversal.
+     * @param n The node being visited.
+     * @param parent The parent of n
+     */
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      super.visit(t, n, parent);
+
+      switch (n.getType()) {
+
+        case Token.ASSIGN:
+          // Handle typedefs.
+          checkForOldStyleTypedef(t, n);
+          break;
+
+        case Token.VAR:
+          // Handle typedefs.
+          if (n.hasOneChild()) {
+            checkForOldStyleTypedef(t, n);
+            checkForTypedef(t, n.getFirstChild(), n.getJSDocInfo());
+          }
+          break;
+      }
+    }
+
+    @Override
+    void maybeDeclareQualifiedName(
+        NodeTraversal t, JSDocInfo info,
+        Node n, Node parent, Node rhsValue) {
+      checkForTypedef(t, n, info);
+      super.maybeDeclareQualifiedName(t, info, n, parent, rhsValue);
+    }
+
+    /**
      * Handle typedefs.
      * @param t The current traversal.
      * @param candidate A qualified name node.
@@ -1136,258 +1411,6 @@ final class TypedScopeCreator implements ScopeCreator {
         // this typedef in the scope.
       }
     }
-
-    /**
-     * Declare the symbol for a qualified name in the global scope.
-     *
-     * @param info The doc info for this property.
-     * @param n A top-level GETPROP node (it should not be contained inside
-     *     another GETPROP).
-     * @param parent The parent of {@code n}.
-     * @param rhsValue The node that {@code n} is being initialized to,
-     *     or {@code null} if this is a stub declaration.
-     */
-    private void maybeDeclareQualifiedName(NodeTraversal t, JSDocInfo info,
-        Node n, Node parent, Node rhsValue) {
-      Node ownerNode = n.getFirstChild();
-      String ownerName = ownerNode.getQualifiedName();
-      String qName = n.getQualifiedName();
-      String propName = n.getLastChild().getString();
-      Preconditions.checkArgument(qName != null && ownerName != null);
-
-      // Function prototypes are special.
-      // It's a common JS idiom to do:
-      // F.prototype = { ... };
-      // So if F does not have an explicitly declared super type,
-      // allow F.prototype to be redefined arbitrarily.
-      if ("prototype".equals(propName)) {
-        Var qVar = scope.getVar(qName);
-        if (qVar != null) {
-          if (!qVar.isTypeInferred()) {
-            // Just ignore assigns to declared prototypes.
-            return;
-          }
-          scope.undeclare(qVar);
-        }
-      }
-
-      // Precedence of type information on GETPROPs:
-      // 1) @type annotation / @enum annotation
-      // 2) ASSIGN to FUNCTION literal
-      // 3) @param/@return annotation (with no function literal)
-      // 4) ASSIGN to anything else
-      //
-      // 1 and 3 are declarations, 4 is inferred, and 2 is a declaration iff
-      // the function has not been declared before.
-      //
-      // FUNCTION literals are special because TypedScopeCreator is very smart
-      // about getting as much type information as possible for them.
-
-      // Determining type for #1 + #2 + #3
-      JSType valueType = getDeclaredGetPropType(t, info, n, rhsValue);
-      if (valueType == null && rhsValue != null) {
-        // Determining type for #4
-        valueType = rhsValue.getJSType();
-      }
-
-      if (valueType == null) {
-        if (parent.getType() == Token.EXPR_RESULT) {
-          stubDeclarations.add(new StubDeclaration(
-              n, t.getInput().isExtern(), ownerName));
-        }
-
-        return;
-      }
-
-      boolean inferred = true;
-      if (info != null) {
-        // Determining declaration for #1 + #3
-        inferred = !(info.hasType() || info.hasEnumParameterType() ||
-            FunctionTypeBuilder.isFunctionTypeDeclaration(info));
-      }
-
-      if (inferred) {
-        // Determining declaration for #2
-        inferred = !(rhsValue != null &&
-            rhsValue.getType() == Token.FUNCTION &&
-            !scope.isDeclared(qName, false));
-      }
-
-      if (!inferred) {
-        ObjectType ownerType = getObjectSlot(ownerName);
-        if (ownerType != null) {
-          // Only declare this as an official property if it has not been
-          // declared yet.
-          boolean isExtern = t.getInput().isExtern();
-          if ((!ownerType.hasOwnProperty(propName) ||
-               ownerType.isPropertyTypeInferred(propName)) &&
-              ((isExtern && !ownerType.isNativeObjectType()) ||
-               !ownerType.isInstanceType())) {
-            // If the property is undeclared or inferred, declare it now.
-            ownerType.defineDeclaredProperty(propName, valueType, isExtern);
-          }
-        }
-
-        // If the property is already declared, the error will be
-        // caught when we try to declare it in the current scope.
-        defineSlot(n, parent, valueType, inferred);
-      } else if (rhsValue != null &&
-          rhsValue.getType() == Token.TRUE) {
-        // We declare these for delegate proxy method properties.
-        ObjectType ownerType = getObjectSlot(ownerName);
-        if (ownerType instanceof FunctionType) {
-          JSType ownerTypeOfThis = ((FunctionType) ownerType).getTypeOfThis();
-          String delegateName = codingConvention.getDelegateSuperclassName();
-          JSType delegateType = delegateName == null ?
-              null : typeRegistry.getType(delegateName);
-          if (delegateType != null &&
-              ownerTypeOfThis.isSubtype(delegateType)) {
-            defineSlot(n, parent, getNativeType(BOOLEAN_TYPE),
-                true);
-          }
-        }
-      }
-    }
-
-    /**
-     * Find the ObjectType associated with the given slot.
-     * @param slotName The name of the slot to find the type in.
-     * @return An object type, or null if this slot does not contain an object.
-     */
-    private ObjectType getObjectSlot(String slotName) {
-      Var ownerVar = scope.getVar(slotName);
-      if (ownerVar != null) {
-        JSType ownerVarType = ownerVar.getType();
-        return ObjectType.cast(ownerVarType == null ?
-            null : ownerVarType.restrictByNotNullOrUndefined());
-      }
-      return null;
-    }
-
-    /**
-     * Look for a type declaration on a GETPROP node.
-     *
-     * @param info The doc info for this property.
-     * @param n A top-level GETPROP node (it should not be contained inside
-     *     another GETPROP).
-     * @param rhsValue The node that {@code n} is being initialized to,
-     *     or {@code null} if this is a stub declaration.
-     */
-    private JSType getDeclaredGetPropType(NodeTraversal t, JSDocInfo info,
-        Node n, Node rhsValue) {
-      if (info != null && info.hasType()) {
-        return getDeclaredTypeInAnnotation(t, n, info);
-      } else if (info != null && info.hasEnumParameterType()) {
-        return n.getJSType();
-      } else if (rhsValue != null &&
-          rhsValue.getType() == Token.FUNCTION) {
-        return rhsValue.getJSType();
-      } else {
-        return getDeclaredTypeInAnnotation(t, n, info);
-      }
-    }
-
-    /**
-     * Resolve any stub delcarations to unknown types if we could not
-     * find types for them during traversal.
-     */
-    private void resolveStubDeclarations() {
-      for (StubDeclaration stub : stubDeclarations) {
-        Node n = stub.node;
-        Node parent = n.getParent();
-        String qName = n.getQualifiedName();
-        String propName = n.getLastChild().getString();
-        String ownerName = stub.ownerName;
-        boolean isExtern = stub.isExtern;
-
-        if (scope.isDeclared(qName, false)) {
-          continue;
-        }
-
-        // If we see a stub property, make sure to register this property
-        // in the type registry.
-        ObjectType ownerType = getObjectSlot(ownerName);
-        ObjectType unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
-        defineSlot(n, parent, unknownType, true);
-
-        if (ownerType != null &&
-            (isExtern || ownerType.isFunctionPrototypeType())) {
-          // If this is a stub for a prototype, just declare it
-          // as an unknown type. These are seen often in externs.
-          ownerType.defineInferredProperty(
-              propName, unknownType, isExtern);
-        } else {
-          typeRegistry.registerPropertyOnType(
-              propName, ownerType == null ? unknownType : ownerType);
-        }
-      }
-    }
-
-    /**
-     * A stub declaration without any type information.
-     */
-    private final class StubDeclaration {
-      private final Node node;
-      private final boolean isExtern;
-      private final String ownerName;
-
-      private StubDeclaration(Node node, boolean isExtern, String ownerName) {
-        this.node = node;
-        this.isExtern = isExtern;
-        this.ownerName = ownerName;
-      }
-    }
-
-    /**
-     * Collects all declared properties in a function, and
-     * resolves them relative to the global scope.
-     */
-    private final class CollectProperties
-        extends AbstractShallowCallback {
-      private final ObjectType thisType;
-
-      CollectProperties(ObjectType thisType) {
-        this.thisType = thisType;
-      }
-
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (parent != null && parent.getType() == Token.EXPR_RESULT) {
-          switch (n.getType()) {
-            case Token.ASSIGN:
-              maybeCollectMember(t, n.getFirstChild(), n);
-              break;
-            case Token.GETPROP:
-              maybeCollectMember(t, n, n);
-              break;
-          }
-        }
-      }
-
-      private void maybeCollectMember(NodeTraversal t,
-          Node member, Node nodeWithJsDocInfo) {
-        JSDocInfo info = nodeWithJsDocInfo.getJSDocInfo();
-
-        // Do nothing if there is no JSDoc type info, or
-        // if the node is not a member expression, or
-        // if the member expression is not of the form: this.someProperty.
-        if (info == null ||
-            member.getType() != Token.GETPROP ||
-            member.getFirstChild().getType() != Token.THIS) {
-          return;
-        }
-
-        member.getFirstChild().setJSType(thisType);
-        JSType jsType = getDeclaredTypeInAnnotation(t, member, info);
-        Node name = member.getLastChild();
-        if (jsType != null &&
-            (name.getType() == Token.NAME || name.getType() == Token.STRING)) {
-          thisType.defineDeclaredProperty(
-              name.getString(),
-              jsType,
-              false /* functions with implementations are not in externs */);
-        }
-      }
-    } // end CollectProperties
   } // end GlobalScopeBuilder
 
   /**
@@ -1425,24 +1448,7 @@ final class TypedScopeCreator implements ScopeCreator {
         return;
       }
 
-      attachLiteralTypes(n);
-      switch (n.getType()) {
-        case Token.FUNCTION:
-          // VARs and ASSIGNs are handled separately.
-          if (parent.getType() == Token.NAME) {
-            return;
-          }
-          defineDeclaredFunction(n, parent);
-          break;
-
-        case Token.CATCH:
-          defineCatch(n, parent);
-          break;
-
-        case Token.VAR:
-          defineVar(n, parent);
-          break;
-      }
+      super.visit(t, n, parent);
     }
 
     /** Handle bleeding functions and function parameters. */
