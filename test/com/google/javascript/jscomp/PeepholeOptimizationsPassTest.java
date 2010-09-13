@@ -28,7 +28,6 @@ import java.util.Set;
 /**
  * Unit tests for PeepholeOptimizationsPass.
  *
- *
  */
 public class PeepholeOptimizationsPassTest extends CompilerTestCase {
 

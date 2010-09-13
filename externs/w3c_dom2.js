@@ -22,8 +22,6 @@
  *  http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
  *
  * @externs
- *
- *
  */
 // All the provided definitions have been type annotated.
 

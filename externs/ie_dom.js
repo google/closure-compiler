@@ -20,8 +20,6 @@
  *  w3c_dom2.js. The whole file has NOT been fully type annotated.
  *
  * @externs
- *
- *
  */
 
 // TODO(nicksantos): Rewrite all the DOM interfaces as interfaces, instead

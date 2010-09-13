@@ -25,7 +25,6 @@ import com.google.javascript.rhino.Token;
  * possible. Dot syntax is more compact and avoids an object allocation in
  * IE 6.
  *
- *
  */
 class ConvertToDottedProperties extends AbstractPostOrderCallback
     implements CompilerPass {

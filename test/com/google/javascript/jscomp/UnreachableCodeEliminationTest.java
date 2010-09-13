@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Test for {@link UnreachableCodeElimination}.
  *
- *
  */
 public class UnreachableCodeEliminationTest extends CompilerTestCase {
   private boolean removeNoOpStatements = true;

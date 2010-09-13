@@ -45,7 +45,6 @@ import com.google.javascript.rhino.Token;
 /**
  * Chainable reverse abstract interpreter providing basic functionality.
  *
- *
  */
 abstract class ChainableReverseAbstractInterpreter
     implements ReverseAbstractInterpreter {

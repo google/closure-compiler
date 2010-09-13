@@ -45,7 +45,6 @@ package com.google.javascript.rhino;
  * Java reflection of JavaScript exceptions.
  * Instances of this class are thrown by the JavaScript 'throw' keyword.
  *
- *
  */
 class JavaScriptException extends RhinoException
 {

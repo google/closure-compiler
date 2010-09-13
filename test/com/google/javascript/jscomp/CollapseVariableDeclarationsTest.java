@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for variable declaration collapsing.
  *
- *
  */
 public class CollapseVariableDeclarationsTest extends CompilerTestCase {
   public void testCollapsing() throws Exception {

@@ -20,7 +20,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link OptimizeParameters}
  *
- *
  */
 public class OptimizeParametersTest extends CompilerTestCase {
   @Override

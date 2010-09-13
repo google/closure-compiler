@@ -20,7 +20,6 @@ package com.google.javascript.jscomp;
 /**
  * {@link IgnoreCajaProperties} tests.
  *
- *
  */
 public class IgnoreCajaPropertiesTest extends CompilerTestCase {
 

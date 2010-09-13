@@ -20,7 +20,6 @@ package com.google.javascript.jscomp;
 /**
  * {@link RenameProperties} tests.
  *
- *
  */
 public class RenamePropertiesTest extends CompilerTestCase {
 

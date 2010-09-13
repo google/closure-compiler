@@ -44,7 +44,6 @@ import java.util.TreeSet;
  * a module's depth is defined as the number of hops in the longest path from
  * the module to a module with no dependencies.
  *
- *
  */
 public class JSModuleGraph {
 

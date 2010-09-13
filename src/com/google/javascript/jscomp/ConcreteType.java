@@ -43,7 +43,6 @@ import java.util.Set;
  *
  * These types are computed by {@code TightenTypes}.
  *
- *
  */
 abstract class ConcreteType implements LatticeElement {
   /** Static instance of the empty set of concrete types. */

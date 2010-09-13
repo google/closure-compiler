@@ -27,7 +27,6 @@ import java.util.List;
  * Proxy that provides a high level interface that compiler passes can
  * use to replace or remove sections of the AST.
  *
- *
  */
 class AstChangeProxy {
 

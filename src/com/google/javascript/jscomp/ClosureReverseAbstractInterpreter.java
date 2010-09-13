@@ -40,7 +40,6 @@ import java.util.Map;
  * A reverse abstract interpreter (RAI) for specific closure patterns such as
  * {@code goog.isDef}.
  *
- *
  */
 class ClosureReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {

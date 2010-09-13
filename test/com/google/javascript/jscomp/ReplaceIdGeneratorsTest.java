@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Tests for {@link ReplaceIdGenerators}.
  *
- *
  */
 public class ReplaceIdGeneratorsTest extends CompilerTestCase {
   @Override

@@ -47,7 +47,6 @@ import java.util.Set;
  * is not pure.
  *
  *
- *
  * We will prevail, in peace and freedom from fear, and in true
  * health, through the purity and essence of our natural... fluids.
  *                                    - General Turgidson

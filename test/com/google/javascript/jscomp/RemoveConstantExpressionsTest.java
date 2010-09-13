@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link RemoveConstantExpressions}
  *
- *
  */
 public class RemoveConstantExpressionsTest extends CompilerTestCase {
 

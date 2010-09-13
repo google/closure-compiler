@@ -37,8 +37,6 @@ import java.util.Map.Entry;
  * @see CodeGenerator
  * @see CodePrinter
  *
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public class SourceMap2 implements SourceMap {
 

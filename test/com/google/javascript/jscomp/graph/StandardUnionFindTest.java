@@ -30,7 +30,6 @@ import java.util.Set;
 /**
  * Unit test for the {@link StandardUnionFind} data structure.
  *
- *
  */
 public class StandardUnionFindTest extends TestCase {
   private StandardUnionFind<String> union;

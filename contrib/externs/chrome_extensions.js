@@ -18,8 +18,6 @@
  * @fileoverview Definitions for the Chromium extensions API.
  * @externs
  *
- *
- *
  */
 
 /** namespace */

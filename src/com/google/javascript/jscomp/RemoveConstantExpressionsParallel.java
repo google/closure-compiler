@@ -25,7 +25,6 @@ import com.google.javascript.rhino.Node;
 /**
  * Execute {@link RemoveConstantExpressions} in parallel.
  *
- *
  */
 final class RemoveConstantExpressionsParallel implements CompilerPass {
 

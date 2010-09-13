@@ -20,7 +20,6 @@
  *  w3c_event.js.
  *
  * @externs
- *
  */
 
 // TODO: Almost all of it has not been annotated with types.

@@ -35,7 +35,6 @@ import com.google.javascript.rhino.Token;
  * This reduces the generated code size but changes the semantics because f
  * will be defined before its definition is reached.
  *
- *
  */
 class CollapseAnonymousFunctions implements CompilerPass {
   private final AbstractCompiler compiler;

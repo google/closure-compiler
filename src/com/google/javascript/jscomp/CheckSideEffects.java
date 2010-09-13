@@ -31,8 +31,6 @@ import com.google.javascript.rhino.Token;
  * </p>
  * and generates warnings.
  *
- *
- *
  */
 final class CheckSideEffects extends AbstractPostOrderCallback {
 

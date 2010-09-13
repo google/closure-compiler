@@ -20,8 +20,6 @@ import com.google.javascript.rhino.Node;
 /**
  * Tests for {@link CreateSyntheticBlocks}
  *
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public class CreateSyntheticBlocksTest extends CompilerTestCase {
   private static final String START_MARKER = "startMarker";

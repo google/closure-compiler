@@ -59,7 +59,6 @@ import java.util.Set;
  * Type inference within a script node or a function body, using the data-flow
  * analysis framework.
  *
- *
  */
 class TypeInference
     extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Node, FlowScope> {

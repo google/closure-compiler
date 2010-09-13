@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 /**
  * Simple region.
- *
  */
 public class SimpleRegion implements Region {
   private final int beginningLineNumber;

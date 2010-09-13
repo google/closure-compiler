@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Test for the control structure verification.
  *
- *
  */
 public class ControlStructureCheckTest extends CompilerTestCase {
   // Rhino parse error message text

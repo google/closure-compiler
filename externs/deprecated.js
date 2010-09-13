@@ -20,7 +20,6 @@
  * still needed in some project's build.
  * @externs
  *
- *
  */
 
 // Do we need an opera.js?

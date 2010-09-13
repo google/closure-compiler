@@ -31,7 +31,6 @@ import java.util.Comparator;
 /**
  * Tests for {@link GraphColoring}.
  *
- *
  */
 public class GraphColoringTest extends TestCase {
 

@@ -28,8 +28,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
  * description of this algorithm.
  *
  *
- *
- *
  * @param <N> The node type.
  * @param <E> The edge type.
  */

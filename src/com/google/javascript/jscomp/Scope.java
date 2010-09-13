@@ -47,8 +47,6 @@ import java.util.Map;
  * @see NodeTraversal
  * @see DataFlowAnalysis
  *
- *
- *
  */
 public class Scope implements StaticScope<JSType> {
   private final Map<String, Var> vars = new LinkedHashMap<String, Var>();

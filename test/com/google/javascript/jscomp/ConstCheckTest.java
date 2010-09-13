@@ -20,7 +20,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests {@link ConstCheck}.
  *
- *
  */
 public class ConstCheckTest extends CompilerTestCase {
 

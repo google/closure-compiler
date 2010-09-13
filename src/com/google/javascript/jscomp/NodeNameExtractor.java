@@ -27,7 +27,6 @@ import com.google.javascript.rhino.TokenStream;
  * related nodes based on it (as done by the NameAnonymousFunctions
  * compiler pass).
  *
- *
  */
 class NodeNameExtractor {
   private final char delimiter;

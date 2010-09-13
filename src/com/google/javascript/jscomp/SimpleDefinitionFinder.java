@@ -43,7 +43,6 @@ import java.util.Map;
  * hand side is an immutable value or function expression.  All
  * complex definitions are treated as unknowns.
  *
- *
  */
 class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
   private final AbstractCompiler compiler;

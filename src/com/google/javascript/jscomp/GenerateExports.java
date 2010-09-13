@@ -26,7 +26,6 @@ import java.util.Map;
 /**
  * Generates goog.exportSymbol/goog.exportProperty for the @export annotation.
  *
- *
  */
 class GenerateExports implements CompilerPass {
 

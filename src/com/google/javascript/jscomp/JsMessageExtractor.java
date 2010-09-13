@@ -47,8 +47,6 @@ import java.util.List;
  * <p>This class enforces the policy that message variable names must be unique
  * across all JS files.
  *
- *
- *
  */
 public class JsMessageExtractor {
 

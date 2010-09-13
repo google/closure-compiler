@@ -37,7 +37,6 @@ import java.util.List;
  *   foo();bar()
  * </pre>
  *
- *
  */
 final class RemoveConstantExpressions implements CompilerPass {
   private final AbstractCompiler compiler;

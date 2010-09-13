@@ -58,7 +58,6 @@ import java.util.SortedMap;
  * constraints of the record type. A record type of the form { a : A, b : B }
  * can be assigned to a record of type { a : A }.
  *
- *
  */
 public class RecordType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;

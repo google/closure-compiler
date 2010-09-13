@@ -31,7 +31,6 @@ import java.util.Set;
 /**
  * A code generator that outputs type annotations for functions and
  * constructors.
- *
  */
 class TypedCodeGenerator extends CodeGenerator {
   TypedCodeGenerator(CodeConsumer consumer, Charset outputCharset) {

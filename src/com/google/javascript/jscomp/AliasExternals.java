@@ -72,7 +72,6 @@ import java.util.Set;
  *
  * <p>Globals that are lvalues are not aliased.</p>
  *
- *
  */
 class AliasExternals implements CompilerPass {
 

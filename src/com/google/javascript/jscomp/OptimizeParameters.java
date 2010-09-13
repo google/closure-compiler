@@ -39,7 +39,6 @@ import java.util.List;
  *     </li>
  * </ul>
  *
- *
  */
 class OptimizeParameters implements CompilerPass {
 

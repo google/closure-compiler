@@ -29,7 +29,6 @@ import java.util.List;
 /**
  * Unit tests for {@link FunctionTypeBuilder}.
  *
- *
  */
 public class FunctionTypeBuilderTest extends CompilerTestCase {
 

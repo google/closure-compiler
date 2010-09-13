@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.CheckLevel;
  * bad property writes and reads are reported, and that no spurious errors or
  * warnings are generated.
  *
- *
  */
 public class SuspiciousPropertiesCheckTest extends CompilerTestCase {
 

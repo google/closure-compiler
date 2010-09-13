@@ -64,8 +64,6 @@ import java.util.logging.Logger;
  * {@code FlowSensitiveInlineVariables}, except that it works for variables
  * used across scopes.
  *
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class RemoveUnusedVars implements CompilerPass {
   private static final Logger logger =

@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Unit test for {@link NameAnonymousFunctionsTest}.
  *
- *
  */
 public class NameAnonymousFunctionsTest extends CompilerTestCase {
 

@@ -25,7 +25,6 @@ import junit.framework.TestCase;
 /**
  * Tests {@link BasicErrorManager}.
  *
- *
  */
 public class BasicErrorManagerTest extends TestCase {
   private static final String NULL_SOURCE = null;

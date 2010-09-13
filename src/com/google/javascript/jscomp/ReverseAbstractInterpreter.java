@@ -27,7 +27,6 @@ import com.google.javascript.rhino.Node;
  * and calculating a preciser view of the world than the view without knowing
  * the outcome of the computation.</p>
  *
- *
  */
 interface ReverseAbstractInterpreter {
   /**

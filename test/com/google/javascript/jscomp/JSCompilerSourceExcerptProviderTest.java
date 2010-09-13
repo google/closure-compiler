@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import junit.framework.TestCase;
 
 /**
- *
  */
 public class JSCompilerSourceExcerptProviderTest extends TestCase {
   private SourceExcerptProvider provider;

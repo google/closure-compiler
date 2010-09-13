@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for ExportTestFunctions.
  *
- *
  */
 public class ExportTestFunctionsTest extends CompilerTestCase {
 

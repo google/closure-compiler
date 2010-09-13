@@ -49,8 +49,6 @@ package com.google.javascript.rhino;
  *
  * @see com.google.javascript.rhino.Parser
  *
- *
- *
  */
 
 public class Token

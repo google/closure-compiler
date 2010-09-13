@@ -53,7 +53,6 @@ import java.util.ResourceBundle;
 /**
  * This is the class that implements the runtime.
  *
- *
  */
 
 public class ScriptRuntime {

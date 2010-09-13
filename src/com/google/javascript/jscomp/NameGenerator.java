@@ -28,7 +28,6 @@ import java.util.*;
  *
  * <p>This class is not thread safe.
  *
- *
  */
 final class NameGenerator {
   /** Generate short name with this first character */

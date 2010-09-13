@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.CheckLevel;
 /**
  * Tests for {@link CheckProvides}.
  *
- *
  */
 public class CheckProvidesTest extends CompilerTestCase {
   @Override

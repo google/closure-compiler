@@ -30,8 +30,6 @@ import java.util.Set;
  * accessed only in the file that declares them, and that any var references
  * that cross module boundaries respect declared module dependencies.
  *
- *
- *
  */
 class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
 

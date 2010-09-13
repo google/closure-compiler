@@ -44,7 +44,6 @@ import java.util.*;
  *  goog.widget::local_fn
  *  goog.widget::<anonymous>
  *
- *
  */
 
 class FunctionNames implements CompilerPass, Serializable {

@@ -37,8 +37,6 @@ import java.util.Map;
 /**
  * Tests for {@link SourceMap}.
  *
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public class SourceMap2Test extends TestCase {
   private static final JSSourceFile[] EXTERNS = {

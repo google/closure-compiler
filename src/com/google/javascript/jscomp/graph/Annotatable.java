@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.graph;
 
 /**
  * Object that has an annotation.
- *
  */
 public interface Annotatable {
   /**

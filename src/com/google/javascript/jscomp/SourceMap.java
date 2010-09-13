@@ -29,8 +29,6 @@ import java.io.IOException;
  * @see CodeGenerator
  * @see CodePrinter
  *
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public interface SourceMap {
 

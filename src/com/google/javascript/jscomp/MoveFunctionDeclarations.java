@@ -46,7 +46,6 @@ import java.util.Map.Entry;
  *   function f() {}
  * } catch(e) {}
  *
- *
  */
 class MoveFunctionDeclarations implements Callback, CompilerPass {
   private final AbstractCompiler compiler;

@@ -48,8 +48,6 @@ import java.util.Set;
 /**
  * The type of individual elements of an enum type
  * (see {@link EnumType}).
- *
- *
  */
 public class EnumElementType extends ObjectType {
   private static final long serialVersionUID = 1L;

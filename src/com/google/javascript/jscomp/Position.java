@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Represents a position in a source file.
  *
- *
  */
 class Position {
   private final int lineNumber;

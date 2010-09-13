@@ -36,7 +36,6 @@ import java.util.Map;
  * Operations from <code>Graph</code> would tends to be slower.
  *
  *
- *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.
  */

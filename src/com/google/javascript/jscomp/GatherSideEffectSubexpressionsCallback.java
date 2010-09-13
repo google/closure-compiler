@@ -33,7 +33,6 @@ import java.util.Set;
  * list.  In the case of branching subexpressions, it simplifies the
  * subexpression before adding it to the replacement list.
  *
- *
  */
 class GatherSideEffectSubexpressionsCallback implements Callback {
 

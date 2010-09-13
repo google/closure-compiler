@@ -30,8 +30,6 @@ import java.util.regex.Pattern;
  * expressions, replacing IFs with HOOKs, replacing object constructors
  * with literals, and simplifying returns.
  *
- *
- *
  */
 public class PeepholeSubstituteAlternateSyntax
   extends AbstractPeepholeOptimization {

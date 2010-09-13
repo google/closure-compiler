@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
  * Format warnings and errors. This interface may be used by implementations of
  * {@link ErrorManager} to request message formatting capabilities.
  *
- *
  */
 public interface MessageFormatter {
   /**

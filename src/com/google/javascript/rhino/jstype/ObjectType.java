@@ -75,7 +75,6 @@ import java.util.Set;
  * type has all properties, but we do not know whether they are
  * declared or inferred.
  *
- *
  */
 public abstract class ObjectType extends JSType {
   private boolean visited;

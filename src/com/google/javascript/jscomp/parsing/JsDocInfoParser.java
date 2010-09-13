@@ -34,8 +34,6 @@ import java.util.Set;
 /**
  * A parser for JSDoc comments.
  *
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 // TODO(nicksantos): Unify all the JSDocInfo stuff into one package, instead of
 // spreading it across mutliple packages.

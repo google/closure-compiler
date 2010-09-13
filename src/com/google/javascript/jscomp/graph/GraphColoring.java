@@ -43,7 +43,6 @@ import java.util.List;
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.
  *
- *
  */
 public abstract class GraphColoring<N, E> {
   // Maps a color (represented by an integer) to a variable. If, for example,

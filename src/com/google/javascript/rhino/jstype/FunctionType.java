@@ -61,8 +61,6 @@ import java.util.Set;
  * Note: the parameters list is the LP node that is the parent of the
  * actual NAME node containing the parsed argument list (annotated with
  * JSDOC_TYPE_PROP's for the compile-time type of each argument.
- *
- *
  */
 public class FunctionType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;

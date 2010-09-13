@@ -62,7 +62,6 @@ import java.util.List;
  *     var total = accumulate(a, 2)
  * </pre>
  *
- *
  */
 class DevirtualizePrototypeMethods implements SpecializationAwareCompilerPass {
   private final AbstractCompiler compiler;

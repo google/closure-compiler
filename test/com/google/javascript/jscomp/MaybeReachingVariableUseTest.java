@@ -29,7 +29,6 @@ import java.util.List;
 /**
  * Tests for {@link MaybeReachingVariableUse}.
  *
- *
  */
 public class MaybeReachingVariableUseTest extends TestCase {
 

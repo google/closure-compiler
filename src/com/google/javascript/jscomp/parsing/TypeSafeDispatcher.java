@@ -69,7 +69,6 @@ import com.google.javascript.jscomp.mozilla.rhino.ast.WithStatement;
  * classes - which would make switching based on types and casting
  * unnecessary.
  *
- *
  */
 abstract class TypeSafeDispatcher<T> {
   abstract T processArrayLiteral(ArrayLiteral literalNode);

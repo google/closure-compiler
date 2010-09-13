@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.CompilerOptions;
 /**
  * Convert the warnings level to an Options object.
  *
- *
  */
 public enum WarningLevel {
   QUIET,

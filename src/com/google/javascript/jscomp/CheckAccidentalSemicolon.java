@@ -28,8 +28,6 @@ import com.google.javascript.rhino.Token;
  * </pre>
  * and generates warnings.
  *
- *
- *
  */
 final class CheckAccidentalSemicolon extends AbstractPostOrderCallback {
 

@@ -23,7 +23,6 @@ import java.util.*;
 /**
  * Tests for {@link AliasStrings}.
  *
- *
  */
 public class AliasStringsTest extends CompilerTestCase {
 

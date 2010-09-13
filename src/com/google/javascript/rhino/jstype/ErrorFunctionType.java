@@ -43,8 +43,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 
 /**
  * This type is for built-in error constructors.
- *
- *
  */
 class ErrorFunctionType extends FunctionType {
   private static final long serialVersionUID = 1L;

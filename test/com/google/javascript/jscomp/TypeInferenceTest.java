@@ -47,7 +47,6 @@ import java.util.Map;
 /**
  * Tests {@link TypeInference}.
  *
- *
  */
 public class TypeInferenceTest extends TestCase {
 

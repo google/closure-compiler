@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link FunctionRewriter}
  *
- *
  */
 public class FunctionRewriterTest extends CompilerTestCase {
 

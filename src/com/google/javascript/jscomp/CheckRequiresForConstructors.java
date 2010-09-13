@@ -34,7 +34,6 @@ import java.util.Set;
  * 'goog.require' nodes. It reconciles these Collections, creating a
  * warning for each discrepancy.
  *
- *
  */
 class CheckRequiresForConstructors implements CompilerPass {
   private final AbstractCompiler compiler;
@@ -66,7 +65,6 @@ class CheckRequiresForConstructors implements CompilerPass {
   /**
    * This class "records" each constructor and goog.require visited and creates
    * a warning for each new node without an appropriate goog.require node.
-   *
    *
    */
   private class CheckRequiresForConstructorsCallback implements Callback {

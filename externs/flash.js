@@ -20,7 +20,6 @@
  * http://www.adobe.com/support/flash/publishexport/scriptingwithflash/scriptingwithflash_03.html
  *
  * @externs
- *
  */
 
 

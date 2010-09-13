@@ -33,7 +33,6 @@ import java.util.Set;
  * <p>Browser global variables such as {@code self} shouldn't be shadowed
  * because it is highly error prone to do so.
  *
- *
  */
 class VariableShadowDeclarationCheck implements CompilerPass {
 

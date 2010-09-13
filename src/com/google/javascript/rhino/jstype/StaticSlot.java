@@ -43,8 +43,6 @@ package com.google.javascript.rhino.jstype;
  * The {@code StaticSlot} interface must be implemented by variables that can
  * appear as members of a {@code StaticScope}.
  *
- *
- *
  * @param <T> The type of information stored about the slot
  */
 public interface StaticSlot<T> {

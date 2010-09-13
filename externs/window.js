@@ -18,8 +18,6 @@
  * @fileoverview Java Script Builtins for windows properties.
  *
  * @externs
- *
- *
  */
 
 // Window properties

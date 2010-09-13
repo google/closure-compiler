@@ -20,7 +20,6 @@
  *  w3c_xml.js. The whole file has been fully type annotated.
  *
  * @externs
- *
  */
 
 /**

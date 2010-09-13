@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link CrossModuleCodeMotion}.
  *
- *
  */
 public class CrossModuleCodeMotionTest extends CompilerTestCase {
 

@@ -49,8 +49,6 @@ import com.google.javascript.rhino.Node;
  * seen in typical functional programming languages.  It is used soley for
  * separating the management of the arrow type from the complex
  * {@link FunctionType} that models JavaScript's notion of functions.
- *
- *
  */
 final class ArrowType extends JSType {
   private static final long serialVersionUID = 1L;

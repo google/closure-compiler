@@ -35,7 +35,6 @@ import com.google.javascript.rhino.Token;
  * - Annotates all OBJECT_LITERAL unquoted string key nodes with an
  *   ORIGINALNAME_PROP.
  *
- *
  */
 class SourceInformationAnnotator extends
   NodeTraversal.AbstractPostOrderCallback {

@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link MoveFunctionDeclarations}
  *
- *
  */
 public class MoveFunctionDeclarationsTest extends CompilerTestCase {
 

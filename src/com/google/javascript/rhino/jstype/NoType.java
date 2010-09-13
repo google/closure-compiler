@@ -56,7 +56,6 @@ package com.google.javascript.rhino.jstype;
  * so that {@code f(x)} is legal no matter what the type of {@code f}'s
  * first argument is.
  *
- *
  * @see <a href="http://en.wikipedia.org/wiki/Bottom_type">Bottom types</a>
  */
 public final class NoType extends NoObjectType {

@@ -174,7 +174,6 @@ import javax.annotation.Nullable;
  * Tracer#initCurrentThreadTrace()}, then a Third Eye WARNING message is logged,
  * which should help track down the problem.
  *
- *
  */
 final class Tracer {
   // package-private for access from unit tests
@@ -986,7 +985,6 @@ final class Tracer {
    * The class {@link com.google.monitoring.tracing.TracingStatistics} contains several
    * useful tracing statistics
    *
-   *
    */
   static interface TracingStatistic {
     /**
@@ -1030,7 +1028,6 @@ final class Tracer {
   /**
    * This class encapsulates a map for keeping track of tracing statistics.
    * It allows the caller to atomically increment named fields.
-   *
    *
    */
   static final class AtomicTracerStatMap {

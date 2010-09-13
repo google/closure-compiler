@@ -23,9 +23,6 @@ import javax.annotation.Nullable;
 /**
  * Compile error description
  *
- *
- *
- *
  */
 public class JSError {
   /** A type of the error */

@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableMap;
 /**
  * A builder for record types.
  *
- *
  */
 public class RecordTypeBuilder {
   private boolean isEmpty = true;

@@ -36,7 +36,6 @@ import java.util.Set;
 /**
  * Tests for the graph data structure.
  *
- *
  */
 public class GraphTest extends TestCase {
 

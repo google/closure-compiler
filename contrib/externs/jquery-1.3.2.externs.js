@@ -23,7 +23,6 @@
  * expecting. For example:
  *    <code>var elt = /** @type {Element} * / (foo.get(0));</code>
  * @see http://docs.jquery.com/
- *
  */
 
 /**

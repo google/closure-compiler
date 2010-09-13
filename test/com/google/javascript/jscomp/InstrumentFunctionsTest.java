@@ -25,7 +25,6 @@ import java.util.List;
 /**
  * Tests for {@link InstrumentFunctions}
  *
- *
  */
 public class InstrumentFunctionsTest extends CompilerTestCase {
   private String instrumentationPb;

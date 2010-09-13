@@ -36,7 +36,6 @@ import com.google.javascript.rhino.Token;
  * language as a means to reverse interpret computations. This interpreter
  * expects the parse tree inputs to be typed.
  *
- *
  */
 class SemanticReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {

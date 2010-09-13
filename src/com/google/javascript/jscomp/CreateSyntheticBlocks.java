@@ -31,8 +31,6 @@ import javax.annotation.Nullable;
  * Creates synthetic blocks to optimizations from moving code
  * past markers in the source.
  *
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class CreateSyntheticBlocks implements CompilerPass {
   static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.warning(

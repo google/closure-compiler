@@ -24,7 +24,6 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link SyntacticScopeCreator}.
  *
- *
  */
 public class SyntacticScopeCreatorTest extends TestCase {
 

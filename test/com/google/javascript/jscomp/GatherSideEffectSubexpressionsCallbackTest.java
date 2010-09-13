@@ -29,7 +29,6 @@ import java.util.List;
 /**
  * Tests for {@link GatherSideEffectSubexpressionsCallback}
  *
- *
  */
 public class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
   public void testAndOr() throws Exception {

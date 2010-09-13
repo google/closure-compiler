@@ -35,7 +35,6 @@ import com.google.javascript.rhino.Token;
  *
  * @see ObjectPropertyStringPostprocess
  *
- *
  */
 public class ObjectPropertyStringPreprocess implements CompilerPass {
   static final String OBJECT_PROPERTY_STRING =

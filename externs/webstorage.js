@@ -17,7 +17,6 @@
  * @fileoverview Definitions for W3C's WebStorage specificiation.
  * This file depends on html5.js.
  * @externs
- *
  */
 
 /**

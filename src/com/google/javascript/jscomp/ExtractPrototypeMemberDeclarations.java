@@ -72,7 +72,6 @@ import java.util.List;
  * Such logic is highly unlikely and we will assume that it never occurs.
  *
  *
- *
  */
 class ExtractPrototypeMemberDeclarations implements CompilerPass {
 

@@ -26,7 +26,6 @@ import java.util.logging.Level;
  * collecting them in memory. Errors are logged at the SEVERE level and warnings
  * are logged at the WARNING level.
  *
- *
  */
 public class LoggerErrorManager extends BasicErrorManager {
   private final MessageFormatter formatter;

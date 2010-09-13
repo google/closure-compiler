@@ -31,7 +31,6 @@ import junit.framework.TestCase;
  * class is here for a quick sanity test purpose. At the very least, it verifies
  * that all the worker terminates and no dead lock exists in the test cases.
  *
- *
  */
 public class ParallelCompilerPassTest extends TestCase {
 

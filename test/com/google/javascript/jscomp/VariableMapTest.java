@@ -28,7 +28,6 @@ import java.util.List;
 /**
  * Tests for {@link VariableMap}.
  *
- *
  */
 public class VariableMapTest extends TestCase {
 

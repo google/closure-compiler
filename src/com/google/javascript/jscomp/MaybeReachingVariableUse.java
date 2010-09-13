@@ -38,7 +38,6 @@ import java.util.Set;
  * the use node reaches that definition and it is the last definition before
  * the use on that path.
  *
- *
  */
 class MaybeReachingVariableUse extends
     DataFlowAnalysis<Node, MaybeReachingVariableUse.ReachingUses> {

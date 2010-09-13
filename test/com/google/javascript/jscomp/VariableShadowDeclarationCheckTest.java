@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link VariableShadowDeclarationCheck}
  *
- *
  */
 public class VariableShadowDeclarationCheckTest extends CompilerTestCase {
 

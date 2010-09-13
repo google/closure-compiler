@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link ChainCalls}
  *
- *
  */
 public class ChainCallsTest extends CompilerTestCase {
   @Override

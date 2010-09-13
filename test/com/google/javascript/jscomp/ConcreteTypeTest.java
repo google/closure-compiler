@@ -48,7 +48,6 @@ import java.util.Map;
 /**
  * Unit test for the the subclasses of ConcreteType.
  *
- *
  */
 public class ConcreteTypeTest extends TestCase {
   private JSTypeRegistry typeRegistry;

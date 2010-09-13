@@ -27,7 +27,6 @@ import java.util.Set;
  * a scope.
  *
  *
- *
  */
 class VariableNameGenerator {
   private final NameGenerator names;

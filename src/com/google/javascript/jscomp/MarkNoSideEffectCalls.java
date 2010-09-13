@@ -36,7 +36,6 @@ import java.util.Set;
  * function definition sites; eventually we should traverse function
  * bodies to determine if they have side effects.
  *
- *
  */
 class MarkNoSideEffectCalls implements CompilerPass {
   static final DiagnosticType INVALID_NO_SIDE_EFFECT_ANNOTATION =

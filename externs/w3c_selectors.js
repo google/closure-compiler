@@ -20,7 +20,6 @@
  *  Created from http://www.w3.org/TR/selectors-api/
  *
  * @externs
- *
  */
 
 /**

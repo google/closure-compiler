@@ -39,7 +39,6 @@ import javax.annotation.Nullable;
  * the use of {@code A} in {@code alert(A)} if all paths from entry node must
  * reaches that definition and it is the last definition before the use.
  *
- *
  */
 final class MustBeReachingVariableDef extends
     DataFlowAnalysis<Node, MustBeReachingVariableDef.MustDef> {

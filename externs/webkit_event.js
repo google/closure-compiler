@@ -20,7 +20,6 @@
  *  All the provided definitions have been type annotated
  *
  * @externs
- *
  */
 
 /** @type {number} */

@@ -23,7 +23,6 @@ import com.google.javascript.rhino.Node;
  * Includes the refering node, and context in which the reference
  * occurs - including the module in which the reference appears.
  *
- *
  */
 
 class UseSite {

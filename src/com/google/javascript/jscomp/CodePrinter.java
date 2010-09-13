@@ -30,8 +30,6 @@ import java.util.List;
  * CodePrinter prints out js code in either pretty format or compact format.
  *
  * @see CodeGenerator
- *
- *
  */
 class CodePrinter {
   // The number of characters after which we insert a line break in the code

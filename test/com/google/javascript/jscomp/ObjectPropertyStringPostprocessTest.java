@@ -20,7 +20,6 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link ObjectPropertyStringPostprocess}.
  *
- *
  */
 public class ObjectPropertyStringPostprocessTest extends CompilerTestCase {
   @Override

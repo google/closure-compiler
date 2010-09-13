@@ -21,7 +21,6 @@ package com.google.javascript.jscomp.parsing;
  *
  * This class is based on Rhino's Token.
  *
- *
  */
 enum JsDocToken {
   // Tokens recycled from Rhino

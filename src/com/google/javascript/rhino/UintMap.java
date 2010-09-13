@@ -50,7 +50,6 @@ import java.io.ObjectOutputStream;
  * operations on one thread before passing the map to others.
  *
  *
- *
  */
 
 public class UintMap implements Serializable

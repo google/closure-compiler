@@ -33,8 +33,6 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQU
 /**
  * Tests for {@link ProcessClosurePrimitives}.
  *
- *
- *
  */
 public class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private String additionalCode;

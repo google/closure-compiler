@@ -23,7 +23,6 @@ import java.util.Map;
 /**
  * Tests for {@link FunctionNames}
  *
- *
  */
 public class FunctionNamesTest extends CompilerTestCase {
   private FunctionNames functionNames;

@@ -45,7 +45,6 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 /**
  * Number type.
- *
  */
 public class NumberType extends ValueType {
   private static final long serialVersionUID = 1L;

@@ -32,7 +32,6 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  * expected for functions with return type information. Functions with empty
  * bodies are ignored.
  *
- *
  */
 class CheckMissingReturn implements ScopedCallback {
 

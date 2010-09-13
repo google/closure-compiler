@@ -32,7 +32,6 @@ import com.google.javascript.rhino.Token;
  * <li> No use of "eval" (optional check for Caja).
  * </ol>
  *
- *
  */
 class StrictModeCheck extends AbstractPostOrderCallback
     implements CompilerPass {

@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 /**
  * Removes unused names.
  *
- *
  */
 class RemoveUnusedNames implements CompilerPass {
 

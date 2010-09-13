@@ -51,7 +51,6 @@ import junit.framework.TestCase;
  * and {@link TernaryValue#xor(TernaryValue)} as well as the
  * {@link TernaryValue#toBoolean(boolean)} method.
  *
- *
  */
 public class TernaryValueTest extends TestCase {
   public void testOrdinal() throws Exception {

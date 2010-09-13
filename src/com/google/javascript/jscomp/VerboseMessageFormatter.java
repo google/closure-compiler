@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.CheckLevel;
  * Verbose message formatter. This formatter generates very loud and long
  * messages with multiline source excerpts.
  *
- *
  */
 class VerboseMessageFormatter extends AbstractMessageFormatter {
   VerboseMessageFormatter(SourceExcerptProvider source) {

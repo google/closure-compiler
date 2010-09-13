@@ -30,7 +30,6 @@ import java.util.List;
 /**
  * Tests for {@link DevirtualizePrototypeMethods}
  *
- *
  */
 public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   private static final String EXTERNAL_SYMBOLS =

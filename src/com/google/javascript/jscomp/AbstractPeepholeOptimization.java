@@ -26,7 +26,6 @@ import com.google.javascript.rhino.Token;
  * optimizations that look at a small section of code and either remove
  * that code (if it is not needed) or replaces it with smaller code.
  *
- *
  */
 abstract class AbstractPeepholeOptimization {
 

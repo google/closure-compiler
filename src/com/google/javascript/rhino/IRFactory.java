@@ -46,8 +46,6 @@ package com.google.javascript.rhino;
  * This class allows the creation of nodes, and follows the Factory pattern.
  *
  * @see Node
- *
- *
  */
 final class IRFactory
 {

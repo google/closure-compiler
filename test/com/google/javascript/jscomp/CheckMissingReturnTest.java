@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.CheckLevel;
 /**
  * Tests for {@link CheckMissingReturn}.
  *
- *
  */
 public class CheckMissingReturnTest extends CompilerTestCase {
 

@@ -30,7 +30,6 @@ import java.util.Map;
 /**
  * Tests for ReplaceCssNames.java.
  *
- *
  */
 public class ReplaceCssNamesTest extends CompilerTestCase {
   /** Whether to pass the map of replacements as opposed to null */

@@ -26,9 +26,6 @@ import java.util.Iterator;
  * ReplaceMessages replaces user-visible messages with alternatives.
  * It uses Google specific JsMessageVisitor implementation.
  *
- *
- *
- * @author anatol@google.com (Anatol Pomazau)
  */
 class ReplaceMessages extends JsMessageVisitor {
   private final MessageBundle bundle;

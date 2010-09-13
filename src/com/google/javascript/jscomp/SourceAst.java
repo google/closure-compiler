@@ -23,7 +23,6 @@ import java.io.Serializable;
 /**
  * An interface for accessing the AST root of an input.
  *
- *
  */
 public interface SourceAst extends Serializable {
   /**
