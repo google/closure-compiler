@@ -832,7 +832,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      */
     private Node makeVarDeclNode(String namespace, Node sourceNode) {
       Node name = Node.newString(Token.NAME, namespace);
-      name.addChildToFront(new Node(Token.OBJECTLIT));
+      name.addChildToFront(createNamespaceLiteral());
 
       Node decl = new Node(Token.VAR, name);
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
@@ -848,6 +848,18 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     /**
+     * There are some special cases where clients of the compiler
+     * do not run TypedScopeCreator after running this pass.
+     * So always give the namespace literal a type.
+     */
+    private Node createNamespaceLiteral() {
+      Node objlit = new Node(Token.OBJECTLIT);
+      objlit.setJSType(
+          compiler.getTypeRegistry().createAnonymousObjectType());
+      return objlit;
+    }
+
+    /**
      * Creates a dotted namespace assignment expression
      * (e.g. <code>foo.bar = {};</code>).
      *
@@ -857,8 +869,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     private Node makeAssignmentExprNode(String namespace, Node node) {
       Node decl = new Node(Token.EXPR_RESULT,
           new Node(Token.ASSIGN,
-            NodeUtil.newQualifiedNameNode(namespace, node, namespace),
-              new Node(Token.OBJECTLIT)));
+              NodeUtil.newQualifiedNameNode(namespace, node, namespace),
+              createNamespaceLiteral()));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
       Preconditions.checkState(isNamespacePlaceholder(decl));
       decl.copyInformationFromForTree(node);

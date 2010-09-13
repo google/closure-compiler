@@ -657,12 +657,7 @@ class TypeInference
 
   private FlowScope traverseObjectLiteral(Node n, FlowScope scope) {
     ObjectType objectType = (ObjectType) n.getJSType();
-
-    if (objectType == null) {
-      // This will only happen if someone didn't run typed scope creation
-      // properly.
-      return scope;
-    }
+    Preconditions.checkNotNull(objectType);
 
     // Object literals can be reflected on other types.
     // See CodingConvention#getObjectLiteralCase and goog.object.reflect.

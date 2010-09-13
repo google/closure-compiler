@@ -333,7 +333,9 @@ final class TypedScopeCreator implements ScopeCreator {
         break;
 
       case Token.OBJECTLIT:
-        n.setJSType(typeRegistry.createAnonymousObjectType());
+        if (n.getJSType() == null) {
+          n.setJSType(typeRegistry.createAnonymousObjectType());
+        }
         break;
 
       // NOTE(nicksantos): If we ever support Array tuples,
