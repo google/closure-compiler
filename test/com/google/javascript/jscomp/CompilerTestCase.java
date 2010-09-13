@@ -859,7 +859,7 @@ public abstract class CompilerTestCase extends TestCase  {
   /**
    * Parses expected js inputs and returns the root of the parse tree.
    */
-  Node parseExpectedJs(String[] expected) {
+  protected Node parseExpectedJs(String[] expected) {
     Compiler compiler = createCompiler();
     JSSourceFile[] inputs = new JSSourceFile[expected.length];
     for (int i = 0; i < expected.length; i++) {
@@ -879,7 +879,7 @@ public abstract class CompilerTestCase extends TestCase  {
     return mainRoot;
   }
 
-  Node parseExpectedJs(String expected) {
+  protected Node parseExpectedJs(String expected) {
     return parseExpectedJs(new String[] {expected});
   }
 
