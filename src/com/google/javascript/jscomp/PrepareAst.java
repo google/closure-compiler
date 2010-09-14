@@ -154,9 +154,26 @@ class PrepareAst implements CompilerPass {
           break;
 
         case Token.OBJECTLIT:
-          normalizeObjectLitJsDocs(n);
+          visitObjectLiteral(n);
           break;
       }
+    }
+
+    private void visitObjectLiteral(Node objlit) {
+      Preconditions.checkState(objlit.getType() == Token.OBJECTLIT);
+      for (Node key = objlit.getFirstChild();
+           key != null; key = key.getNext().getNext()) {
+        Node value = key.getNext();
+        visitObjectLiteralKey(objlit, key, value);
+      }
+    }
+
+    /**
+     * Prepare the object literal keys.
+     */
+    private void visitObjectLiteralKey(Node objlit, Node key, Node value) {
+      normalizeObjectLitJsDocs(objlit, key, value);
+      annotateObjLitConstants(objlit, key, value);
     }
 
     /**
@@ -210,20 +227,16 @@ class PrepareAst implements CompilerPass {
      * But in few narrow cases (in particular, function literals), it's
      * a lot easier for us if the doc is attached to the value.
      */
-    private void normalizeObjectLitJsDocs(Node n) {
-      Preconditions.checkState(n.getType() == Token.OBJECTLIT);
-      for (Node key = n.getFirstChild();
-           key != null; key = key.getNext().getNext()) {
-        Node value = key.getNext();
-        if (key.getJSDocInfo() != null &&
-            key.getNext().getType() == Token.FUNCTION) {
-          value.setJSDocInfo(key.getJSDocInfo());
-        }
+    private void normalizeObjectLitJsDocs(Node objlit, Node key, Node value) {
+      Preconditions.checkState(objlit.getType() == Token.OBJECTLIT);
+      if (key.getJSDocInfo() != null &&
+          value.getType() == Token.FUNCTION) {
+        value.setJSDocInfo(key.getJSDocInfo());
       }
     }
 
     /**
-     * Mark names that are constants by convention.
+     * Mark names and properties that are constants by convention.
      */
     private void annotateConstants(Node n, Node parent) {
       Preconditions.checkState(
@@ -233,10 +246,21 @@ class PrepareAst implements CompilerPass {
       // may be a variable reference: The right side of a GETPROP
       // or an OBJECTLIT key.
       if (n.getType() != Token.STRING
-          || parent.getType() == Token.OBJECTLIT
           || parent.getType() == Token.GETPROP) {
         if (NodeUtil.isConstantByConvention(convention, n, parent)) {
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        }
+      }
+    }
+
+    /**
+     * Mark objlit names that are constants by convention.
+     */
+    private void annotateObjLitConstants(Node objlit, Node key, Node value) {
+      if (key.getType() == Token.NAME || key.getType() == Token.STRING) {
+        String name = key.getString();
+        if (convention.isConstantKey(name)) {
+          key.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
       }
     }
