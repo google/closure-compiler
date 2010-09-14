@@ -53,7 +53,7 @@ import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
-import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -254,7 +254,7 @@ final class TypedScopeCreator implements ScopeCreator {
     scope.declare(name, null, t, null, false);
   }
 
-  private static class DiscoverEnums extends AbstractShallowCallback {
+  private static class DiscoverEnums extends AbstractShallowStatementCallback {
     private final JSTypeRegistry registry;
 
     DiscoverEnums(JSTypeRegistry registry) {
@@ -265,24 +265,26 @@ final class TypedScopeCreator implements ScopeCreator {
     public void visit(NodeTraversal t, Node node, Node parent) {
       Node nameNode = null;
       switch (node.getType()) {
-        case Token.NAME:
-          nameNode = node;
-          break;
         case Token.VAR:
-          if (node.hasOneChild()) {
-            nameNode = node.getFirstChild();
+          for (Node child = node.getFirstChild();
+               child != null; child = child.getNext()) {
+            identifyEnumInNameNode(
+                child, NodeUtil.getInfoForNameNode(child));
           }
           break;
-        case Token.ASSIGN:
-          nameNode = node.getFirstChild();
+        case Token.EXPR_RESULT:
+          Node maybeAssign = node.getFirstChild();
+          if (maybeAssign.getType() == Token.ASSIGN) {
+            identifyEnumInNameNode(
+                maybeAssign.getFirstChild(), maybeAssign.getJSDocInfo());
+          }
           break;
       }
+    }
 
-      if (nameNode != null) {
-        JSDocInfo info = node.getJSDocInfo();
-        if (info != null && info.hasEnumParameterType()) {
-          registry.identifyEnumName(nameNode.getQualifiedName());
-        }
+    private void identifyEnumInNameNode(Node nameNode, JSDocInfo info) {
+      if (info != null && info.hasEnumParameterType()) {
+        registry.identifyEnumName(nameNode.getQualifiedName());
       }
     }
   }
@@ -1234,7 +1236,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * resolves them relative to the global scope.
      */
     private final class CollectProperties
-        extends AbstractShallowCallback {
+        extends AbstractShallowStatementCallback {
       private final ObjectType thisType;
 
       CollectProperties(ObjectType thisType) {
@@ -1242,13 +1244,14 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (parent != null && parent.getType() == Token.EXPR_RESULT) {
-          switch (n.getType()) {
+        if (n.getType() == Token.EXPR_RESULT) {
+          Node child = n.getFirstChild();
+          switch (child.getType()) {
             case Token.ASSIGN:
-              maybeCollectMember(t, n.getFirstChild(), n);
+              maybeCollectMember(t, child.getFirstChild(), child);
               break;
             case Token.GETPROP:
-              maybeCollectMember(t, n, n);
+              maybeCollectMember(t, child, child);
               break;
           }
         }
