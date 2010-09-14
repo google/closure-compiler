@@ -1252,6 +1252,11 @@ google.maps.DirectionsRendererOptions.prototype.directions;
 /**
  * @type {boolean}
  */
+google.maps.DirectionsRendererOptions.prototype.draggable;
+
+/**
+ * @type {boolean}
+ */
 google.maps.DirectionsRendererOptions.prototype.hideRouteList;
 
 /**
@@ -1594,6 +1599,11 @@ google.maps.DirectionsStep.prototype.path;
  * @type {google.maps.LatLng}
  */
 google.maps.DirectionsStep.prototype.start_location;
+
+/**
+ * @type {google.maps.DirectionsTravelMode}
+ */
+google.maps.DirectionsStep.prototype.travel_mode;
 
 /**
  * @constructor
