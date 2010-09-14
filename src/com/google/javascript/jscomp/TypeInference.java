@@ -73,6 +73,11 @@ class TypeInference
       "A function type with the template type as the type of this must be a " +
       "parameter type");
 
+  static final DiagnosticType FUNCTION_LITERAL_UNDEFINED_THIS =
+    DiagnosticType.warning(
+        "JSC_FUNCTION_LITERAL_UNDEFINED_THIS",
+        "Function literal argument refers to undefined this argument");
+
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
@@ -868,42 +873,42 @@ class TypeInference
       iParameterType = iParameterType.restrictByNotNullOrUndefined();
       if (iParameterType.isTemplateType()) {
         // Find the actual type of this argument.
-        if (i + 1 >= childCount) {
-          // TypeCheck#visitParameterList will warn so we bail.
-          return;
-        }
-        Node iArgument = n.getChildAtIndex(i + 1);
-        JSType iArgumentType = getJSType(iArgument);
-        if (iArgumentType != null) {
-          iArgumentType = iArgumentType.restrictByNotNullOrUndefined();
+        JSType iArgumentType = null;
+        boolean foundTemplateTypeArgument = false;
+        if (i + 1 < childCount) {
+          foundTemplateTypeArgument = true;
+          Node iArgument = n.getChildAtIndex(i + 1);
+          iArgumentType = getJSType(iArgument).restrictByNotNullOrUndefined();
           if (!(iArgumentType instanceof ObjectType)) {
             compiler.report(
                 JSError.make(NodeUtil.getSourceName(iArgument), iArgument,
-                             TEMPLATE_TYPE_NOT_OBJECT_TYPE));
+                    TEMPLATE_TYPE_NOT_OBJECT_TYPE));
             return;
           }
+        }
 
-          // Find the parameter whose type is function(this: T, ...)
-          boolean foundTemplateTypeOfThisParameter = false;
-          int j = 0;
-          for (Node jParameter : fnType.getParameters()) {
-            JSType jParameterType = getJSType(jParameter);
-            if (jParameterType instanceof FunctionType) {
-              FunctionType jParameterFnType = (FunctionType) jParameterType;
-              if (jParameterFnType.getTypeOfThis().equals(iParameterType)) {
-                foundTemplateTypeOfThisParameter = true;
-                // Find the actual type of this argument.
-                if (j + 1 >= childCount) {
-                  // TypeCheck#visitParameterList will warn so we bail.
-                  return;
-                }
-                Node jArgument = n.getChildAtIndex(j + 1);
-                JSType jArgumentType = getJSType(jArgument);
-                if (jArgument.getType() == Token.FUNCTION &&
-                    jArgumentType instanceof FunctionType) {
+        // Find the parameter whose type is function(this: T, ...)
+        boolean foundTemplateTypeOfThisParameter = false;
+        int j = 0;
+        for (Node jParameter : fnType.getParameters()) {
+          JSType jParameterType = getJSType(jParameter);
+          if (jParameterType instanceof FunctionType) {
+            FunctionType jParameterFnType = (FunctionType) jParameterType;
+            if (jParameterFnType.getTypeOfThis().equals(iParameterType)) {
+              foundTemplateTypeOfThisParameter = true;
+              // Find the actual type of the this argument.
+              if (j + 1 >= childCount) {
+                // TypeCheck#visitParameterList will warn so we bail.
+                return;
+              }
+              Node jArgument = n.getChildAtIndex(j + 1);
+              JSType jArgumentType = getJSType(jArgument);
+              if (jArgument.getType() == Token.FUNCTION &&
+                  jArgumentType instanceof FunctionType) {
+                if (foundTemplateTypeArgument) {
                   // If it's an function expression, update the type of this
                   // using the actual type of T.
-                  FunctionType jArgumentFnType =(FunctionType) jArgumentType;
+                  FunctionType jArgumentFnType = (FunctionType) jArgumentType;
                   if (jArgumentFnType.getTypeOfThis().isUnknownType()) {
                     // The new type will be picked up when we traverse the inner
                     // function.
@@ -911,20 +916,27 @@ class TypeInference
                         registry.createFunctionTypeWithNewThisType(
                             jArgumentFnType, (ObjectType) iArgumentType));
                   }
+                } else {
+                  // Warn if the anonymous function literal references this.
+                  if (NodeUtil.referencesThis(
+                          NodeUtil.getFunctionBody(jArgument))) {
+                    compiler.report(JSError.make(NodeUtil.getSourceName(n), n,
+                        FUNCTION_LITERAL_UNDEFINED_THIS));
+                  }
                 }
-                // TODO(user): Add code to TypeCheck to check that the
-                // types of the arguments match.
               }
+              // TODO(user): Add code to TypeCheck to check that the
+              // types of the arguments match.
             }
-            j++;
           }
+          j++;
+        }
 
-          if (!foundTemplateTypeOfThisParameter) {
-            Node source = fnType.getSource();
-            compiler.report(JSError.make(NodeUtil.getSourceName(source), source,
-                                         TEMPLATE_TYPE_OF_THIS_EXPECTED));
-            return;
-          }
+        if (!foundTemplateTypeOfThisParameter) {
+          Node source = fnType.getSource();
+          compiler.report(JSError.make(NodeUtil.getSourceName(source), source,
+              TEMPLATE_TYPE_OF_THIS_EXPECTED));
+          return;
         }
       }
       i++;

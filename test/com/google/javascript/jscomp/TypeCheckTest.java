@@ -7227,6 +7227,29 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format(), true);
   }
 
+  public void testFunctionLiteralUndefinedThisArgument() throws Exception {
+    testTypes(""
+        + "/**\n"
+        + " * @param {function(this:T, ...)} fn\n"
+        + " * @param {T} opt_obj\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function baz(fn, opt_obj) {}\n"
+        + "baz(function() { this; });",
+        "Function literal argument refers to undefined this argument");
+  }
+
+  public void testFunctionLiteralDefinedThisArgument() throws Exception {
+    testTypes(""
+        + "/**\n"
+        + " * @param {function(this:T, ...)} fn\n"
+        + " * @param {T} opt_obj\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function baz(fn, opt_obj) {}\n"
+        + "baz(function() { this; }, {});");
+  }
+
   public void testActiveXObject() throws Exception {
     testTypes(
         "/** @type {Object} */ var x = new ActiveXObject();" +
