@@ -36,7 +36,6 @@ import com.google.javascript.jscomp.graph.UndiGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.Iterator;
@@ -220,99 +219,76 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       }
     }
 
-    // Go through every single point of the program and look at each variable
-    // pairs. If they are both live at the same time, at an edge between them.
-    for (DiGraphNode<Node, Branch> cfgNode : cfg.getDirectedGraphNodes()) {
-      FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
-      if (cfg.isImplicitReturn(cfgNode)) {
-        continue;
-      }
+    // Go through each variable and try to connect them.
+    for (Iterator<Var> i1 = scope.getVars(); i1.hasNext();) {
+      Var v1 = i1.next();
 
-      int varsInScope = scope.getVarCount();
-      ArrayList<CombinedLiveRangeChecker> rangesToCheck =
-          new ArrayList<CombinedLiveRangeChecker>(
-              varsInScope * varsInScope);
+      NEXT_VAR_PAIR:
+      for (Iterator<Var> i2 = scope.getVars(); i2.hasNext();) {
+        Var v2 = i2.next();
 
-      for (Iterator<Var> i1 = scope.getVars(); i1.hasNext();) {
-        Var v1 = i1.next();
-        for (Iterator<Var> i2 = scope.getVars(); i2.hasNext();) {
-          Var v2 = i2.next();
+        // Skip duplicate pairs.
+        if (v1.index >= v2.index) {
+          continue;
+        }
 
-          if (v1 == v2 || !interferenceGraph.hasNode(v1) ||
-              !interferenceGraph.hasNode(v2)) {
-            // Skip nodes that were not added. They are globals and escaped
-            // locals. Also avoid merging a variable with itself.
-            continue;
+        if (!interferenceGraph.hasNode(v1) ||
+            !interferenceGraph.hasNode(v2)) {
+          // Skip nodes that were not added. They are globals and escaped
+          // locals. Also avoid merging a variable with itself.
+          continue NEXT_VAR_PAIR;
+        }
+
+        if (v1.getParentNode().getType() == Token.LP &&
+            v2.getParentNode().getType() == Token.LP) {
+          interferenceGraph.connectIfNotFound(v1, null, v2);
+          continue NEXT_VAR_PAIR;
+        }
+
+        // Go through every CFG node in the program and look at
+        // this variable pair. If they are both live at the same
+        // time, add an edge between them and continue to the next pair.
+        NEXT_CROSS_CFG_NODE:
+        for (DiGraphNode<Node, Branch> cfgNode : cfg.getDirectedGraphNodes()) {
+          if (cfg.isImplicitReturn(cfgNode)) {
+            continue NEXT_CROSS_CFG_NODE;
           }
 
-          boolean v1OutLive = state.getOut().isLive(v1);
-          boolean v2OutLive = state.getOut().isLive(v2);
-          // Finally, check the live states and add edge when possible.
-          if (v1.getParentNode().getType() == Token.LP &&
-              v2.getParentNode().getType() == Token.LP) {
+          FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
+          // Check the live states and add edge when possible.
+          if ((state.getIn().isLive(v1) && state.getIn().isLive(v2)) ||
+              (state.getOut().isLive(v1) && state.getOut().isLive(v2))) {
             interferenceGraph.connectIfNotFound(v1, null, v2);
-          } else if ((state.getIn().isLive(v1) && state.getIn().isLive(v2)) ||
-              (v1OutLive && v2OutLive)) {
-            interferenceGraph.connectIfNotFound(v1, null, v2);
-          } else {
-            LiveRangeChecker checker1 =
-                new LiveRangeChecker(v1, v2OutLive ? null : v2);
-            LiveRangeChecker checker2 =
-                new LiveRangeChecker(v2, v1OutLive ? null : v1);
-            rangesToCheck.add(new CombinedLiveRangeChecker(checker1, checker2));
+            continue NEXT_VAR_PAIR;
           }
         }
-      }
 
-      // Do the collected live range checks.
-      checkRanges(rangesToCheck, cfgNode.getValue());
-      for (CombinedLiveRangeChecker range : rangesToCheck) {
-        range.connectIfCrossed(interferenceGraph);
+        // v1 and v2 might not have an edge between them! woohoo. there's
+        // one last sanity check that we have to do: we have to check
+        // if there's a collision *within* the cfg node.
+        NEXT_INTRA_CFG_NODE:
+        for (DiGraphNode<Node, Branch> cfgNode : cfg.getDirectedGraphNodes()) {
+          if (cfg.isImplicitReturn(cfgNode)) {
+            continue NEXT_INTRA_CFG_NODE;
+          }
+
+          FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
+          boolean v1OutLive = state.getOut().isLive(v1);
+          boolean v2OutLive = state.getOut().isLive(v2);
+          CombinedLiveRangeChecker checker = new CombinedLiveRangeChecker(
+              new LiveRangeChecker(v1, v2OutLive ? null : v2),
+              new LiveRangeChecker(v2, v1OutLive ? null : v1));
+          NodeTraversal.traverse(
+              compiler,
+              cfgNode.getValue(),
+              checker);
+          if (checker.connectIfCrossed(interferenceGraph)) {
+            continue NEXT_VAR_PAIR;
+          }
+        }
       }
     }
     return interferenceGraph;
-  }
-
-  /**
-   * Check if the live ranges of the given pairs of variables overlap within a
-   * node represented by a CFG node. This only occurs when a variable {@code
-   * def} is assigned within a node and a second variable {@code use} is live
-   * after it. This function will traversing the subtree in a
-   * left-to-right-post-order fashion in correspondent to how expressions are
-   * evaluated.
-   *
-   * @param root The current subtree represent by a control flow graph node.
-   */
-  private void checkRanges(
-      ArrayList<CombinedLiveRangeChecker> rangesToCheck, Node root) {
-    CombinedCfgNodeLiveRangeChecker callbacks =
-      new CombinedCfgNodeLiveRangeChecker(rangesToCheck);
-    NodeTraversal.traverse(compiler, root, callbacks);
-  }
-
-  /**
-   * A simple wrapper calls to call two AbstractCfgNodeTraversalCallback
-   * callback during the same traversal.  All traversals callbacks have the same
-   * "shouldTraverse" conditions.
-   */
-  private static class CombinedCfgNodeLiveRangeChecker
-      extends AbstractCfgNodeTraversalCallback {
-
-    private final ArrayList<CombinedLiveRangeChecker> callbacks;
-
-    CombinedCfgNodeLiveRangeChecker(
-        ArrayList<CombinedLiveRangeChecker> callbacks) {
-      this.callbacks = callbacks;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (CombinedLiveRangeChecker.shouldVisit(n)) {
-        for (CombinedLiveRangeChecker callback : callbacks) {
-          callback.visit(t, n, parent);
-        }
-      }
-    }
   }
 
   /**
@@ -333,26 +309,22 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       this.callback2 = callback2;
     }
 
-    /**
-     * @return Whether any CombinedLiveRangeChecker would be interested in the
-     * node.
-     */
-    public static boolean shouldVisit(Node n) {
-      return LiveRangeChecker.shouldVisit(n);
-    }
-
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      callback1.visit(t, n, parent);
-      callback2.visit(t, n, parent);
+      if (LiveRangeChecker.shouldVisit(n)) {
+        callback1.visit(t, n, parent);
+        callback2.visit(t, n, parent);
+      }
     }
 
-    void connectIfCrossed(UndiGraph<Var, Void> interferenceGraph) {
+    boolean connectIfCrossed(UndiGraph<Var, Void> interferenceGraph) {
       if (callback1.crossed || callback2.crossed) {
         Var v1 = callback1.getDef();
         Var v2 = callback2.getDef();
         interferenceGraph.connectIfNotFound(v1, null, v2);
+        return true;
       }
+      return false;
     }
   }
 
