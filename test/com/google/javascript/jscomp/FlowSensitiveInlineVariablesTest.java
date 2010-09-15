@@ -50,12 +50,14 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("var x; x = 1; print(x)", "var x; print(1)");
     inline("var x; x = 1; x", "var x; 1");
     inline("var x; x = 1; var a = x", "var x; var a = 1");
+    inline("var x; x = 1; x = x + 1", "var x; x = 1 + 1");
   }
 
   public void testSimpleVar() {
     inline("var x = 1; print(x)", "var x; print(1)");
     inline("var x = 1; x", "var x; 1");
     inline("var x = 1; var a = x", "var x; var a = 1");
+    inline("var x = 1; x = x + 1", "var x; x = 1 + 1");
   }
 
   public void testExported() {
@@ -353,6 +355,17 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     // it can be modified by code outside of this scope. We can't inline
     // at all if the definition has dependence on such variable.
     noInline("var x; function foo() { var y = x; print(y) }");
+  }
+
+  public void testInlineIfNameIsLeftSideOfAssign() {
+    inline("var x = 1; x = print(x) + 1", "var x; x = print(1) + 1");
+    inline("var x = 1; L: x = x + 2", "var x; L: x = 1 + 2");
+    inline("var x = 1; x = (x = x + 1)", "var x; x = (x = 1 + 1)");
+
+    noInline("var x = 1; x = (x = (x = 10) + x)");
+    noInline("var x = 1; x = (f(x) = (x = 10) + x);");
+    noInline("var x = 1; x=-1,foo(x)");
+    noInline("var x = 1; x-=1,foo(x)");
   }
 
   public void testInlineArguments() {

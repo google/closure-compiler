@@ -422,7 +422,10 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
         @Override
         public void visit(NodeTraversal t, Node n, Node parent) {
-          if (NodeUtil.isName(n) && n.getString().equals(varName)) {
+          if (NodeUtil.isName(n) && n.getString().equals(varName) &&
+              // do not count in if it is left child of an assignment operator
+              !(NodeUtil.isAssign(parent) &&
+               (parent.getFirstChild() == n))) {
             numUseWithinUseCfgNode++;
           }
         }
