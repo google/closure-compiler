@@ -892,9 +892,24 @@ final class TypedScopeCreator implements ScopeCreator {
       String variableName = n.getQualifiedName();
       Preconditions.checkArgument(!variableName.isEmpty());
 
+      // If n is a property, then we should really declare it in the
+      // scope where the root object appears. This helps out people
+      // who declare "global" names in an anonymous namespace.
+      Scope scopeToDeclareIn = scope;
+      if (n.getType() == Token.GETPROP && !scope.isGlobal() &&
+          isQnameRootedInGlobalScope(n)) {
+        Scope globalScope = scope.getGlobalScope();
+
+        // don't try to declare in the global scope if there's
+        // already a symbol there with this name.
+        if (!globalScope.isDeclared(variableName, false)) {
+          scopeToDeclareIn = scope.getGlobalScope();
+        }
+      }
+
       // declared in closest scope?
-      if (scope.isDeclared(variableName, false)) {
-        Var oldVar = scope.getVar(variableName);
+      if (scopeToDeclareIn.isDeclared(variableName, false)) {
+        Var oldVar = scopeToDeclareIn.getVar(variableName);
         validator.expectUndeclaredVariable(
             sourceName, n, parent, oldVar, variableName, type);
       } else {
@@ -902,7 +917,7 @@ final class TypedScopeCreator implements ScopeCreator {
           setDeferredType(n, type);
         }
         CompilerInput input = compiler.getInput(sourceName);
-        scope.declare(variableName, n, type, input, inferred);
+        scopeToDeclareIn.declare(variableName, n, type, input, inferred);
 
         if (shouldDeclareOnGlobalThis) {
           ObjectType globalThis =
@@ -921,11 +936,11 @@ final class TypedScopeCreator implements ScopeCreator {
 
         // If we're in the global scope, also declare var.prototype
         // in the scope chain.
-        if (scope.isGlobal() && type instanceof FunctionType) {
+        if (scopeToDeclareIn.isGlobal() && type instanceof FunctionType) {
           FunctionType fnType = (FunctionType) type;
           if (fnType.isConstructor() || fnType.isInterface()) {
             FunctionType superClassCtor = fnType.getSuperClassConstructor();
-            scope.declare(variableName + ".prototype", n,
+            scopeToDeclareIn.declare(variableName + ".prototype", n,
                 fnType.getPrototype(), compiler.getInput(sourceName),
                 /* declared iff there's an explicit supertype */
                 superClassCtor == null ||
@@ -934,6 +949,20 @@ final class TypedScopeCreator implements ScopeCreator {
           }
         }
       }
+    }
+
+    /**
+     * Check if the given node is a property of a name in the global scope.
+     */
+    private boolean isQnameRootedInGlobalScope(Node n) {
+      Node root = NodeUtil.getRootOfQualifiedName(n);
+      if (root.getType() == Token.NAME) {
+        Var var = scope.getVar(root.getString());
+        if (var != null) {
+          return var.isGlobal();
+        }
+      }
+      return false;
     }
 
     /**

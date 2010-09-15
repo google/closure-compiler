@@ -772,6 +772,18 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "{}", findTokenType(Token.OBJECTLIT, globalScope).toString());
   }
 
+  public void testGlobalQualifiedNameInLocalScope() {
+    testSame(
+        "var ns = {}; " +
+        "(function() { " +
+        "    /** @param {number} x */ ns.foo = function(x) {}; })();" +
+        "(function() { ns.foo(3); })();");
+    assertNotNull(globalScope.getVar("ns.foo"));
+    assertEquals(
+        "function (number): undefined",
+        globalScope.getVar("ns.foo").getType().toString());
+  }
+
   private JSType findNameType(final String name, Scope scope) {
     return findTypeOnMatchedNode(new Predicate<Node>() {
       @Override public boolean apply(Node n) {

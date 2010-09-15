@@ -4757,6 +4757,29 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testQualifiedNameInference5() throws Exception {
+    testTypes(
+        "var ns = {}; " +
+        "(function() { " +
+        "    /** @param {number} x */ ns.foo = function(x) {}; })();" +
+        "(function() { ns.foo(true); })();",
+        "actual parameter 1 of ns.foo does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testQualifiedNameInference6() throws Exception {
+    testTypes(
+        "var ns = {}; " +
+        "/** @param {number} x */ ns.foo = function(x) {};" +
+        "(function() { " +
+        "    ns.foo = function(x) {};" +
+        "    ns.foo(true); })();",
+        "actual parameter 1 of ns.foo does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
   public void testSheqRefinedScope() throws Exception {
     Node n = parseAndTypeCheck(
         "/** @constructor */function A() {}\n" +

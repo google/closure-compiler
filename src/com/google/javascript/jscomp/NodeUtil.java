@@ -1645,6 +1645,20 @@ public final class NodeUtil {
   }
 
   /**
+   * Gets the root node of a qualified name. Must be either NAME or THIS.
+   */
+  static Node getRootOfQualifiedName(Node qName) {
+    for (Node current = qName; true;
+         current = current.getFirstChild()) {
+      int type = current.getType();
+      if (type == Token.NAME || type == Token.THIS) {
+        return current;
+      }
+      Preconditions.checkState(type == Token.GETPROP);
+    }
+  }
+
+  /**
    * Sets the debug information (source file info and orignal name)
    * on the given node.
    *
