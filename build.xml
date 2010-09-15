@@ -158,6 +158,23 @@
     </junit>
   </target>
 
+  <target name="testclass"
+          depends="compile-tests"
+          description="compile and execute one JUnit class">
+    <junit printsummary="on" fork="true" forkmode="once" showoutput="true">
+      <classpath refid="classpath.path" />
+      <classpath>
+        <pathelement location="${build.dir}/test" />
+      </classpath>
+      <formatter type="plain" usefile="false" />
+      <batchtest>
+        <fileset dir="${build.dir}/test">
+          <include name="**/${test}.class" />
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
   <target name="fuzz-test"
           depends="all-classes-jar"
           description="checks the compiler against a variety of js programs">

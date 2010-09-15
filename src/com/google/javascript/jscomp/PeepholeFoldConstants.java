@@ -70,6 +70,9 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.CALL:
         return tryFoldKnownMethods(subtree);
 
+      case Token.NEW:
+        return tryFoldCtorCall(subtree);
+
       case Token.TYPEOF:
         return tryFoldTypeof(subtree);
 
@@ -912,6 +915,64 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     reportCodeChange();
 
     return newNode;
+  }
+
+  /**
+   * Try to fold away unnecessary object instantiation.
+   * e.g. this[new String('eval')] -> this.eval
+   */
+  private Node tryFoldCtorCall(Node n) {
+    Preconditions.checkArgument(n.getType() == Token.NEW);
+
+    // we can remove this for GETELEM calls (anywhere else?)
+    if (inForcedStringContext(n)) {
+      return tryFoldInForcedStringContext(n);
+    }
+    return n;
+  }
+
+  /** Returns whether this node must be coerced to a string. */
+  private boolean inForcedStringContext(Node n) {
+    return n.getParent().getType() == Token.GETELEM &&
+        n.getParent().getLastChild() == n;
+  }
+
+  private Node tryFoldInForcedStringContext(Node n) {
+    // For now, we only know how to fold ctors.
+    Preconditions.checkArgument(n.getType() == Token.NEW);
+
+    Node objectType = n.getFirstChild();
+    if (objectType.getType() != Token.NAME) {
+      return n;
+    }
+
+    if (objectType.getString().equals("String")) {
+      Node value = objectType.getNext();
+      String stringValue = null;
+      if (value == null) {
+        stringValue = "";
+      } else {
+        if (!NodeUtil.isImmutableValue(value)) {
+          return n;
+        }
+
+        stringValue = NodeUtil.getStringValue(value);
+      }
+
+      if (stringValue == null) {
+        return n;
+      }
+
+      Node parent = n.getParent();
+      Node newString = Node.newString(stringValue);
+
+      parent.replaceChild(n, newString);
+      newString.copyInformationFrom(parent);
+      reportCodeChange();
+
+      return newString;
+    }
+    return n;
   }
 
   private Node tryFoldKnownMethods(Node subtree) {

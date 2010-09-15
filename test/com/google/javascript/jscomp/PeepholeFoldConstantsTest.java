@@ -320,6 +320,16 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = '' + []", "x = \"\"+[]");      // cannot fold (but nice if we can)
   }
 
+  public void testFoldConstructor() {
+    fold("x = this[new String('a')]", "x = this['a']");
+    fold("x = ob[new String(12)]", "x = ob['12']");
+    fold("x = ob[new String(false)]", "x = ob['false']");
+    fold("x = ob[new String(null)]", "x = ob['null']");
+    foldSame("x = ob[new String(a)]");
+    foldSame("x = new String('a')");
+    foldSame("x = (new String('a'))[3]");
+  }
+
   public void testStringIndexOf() {
     fold("x = 'abcdef'.indexOf('b')", "x = 1");
     fold("x = 'abcdefbe'.indexOf('b', 2)", "x = 6");
