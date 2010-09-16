@@ -1125,7 +1125,9 @@ final class TypedScopeCreator implements ScopeCreator {
             // Just ignore assigns to declared prototypes.
             return;
           }
-          scope.undeclare(qVar);
+          if (qVar.getScope() == scope) {
+            scope.undeclare(qVar);
+          }
         }
       }
 

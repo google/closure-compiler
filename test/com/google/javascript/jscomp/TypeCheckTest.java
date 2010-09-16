@@ -2850,6 +2850,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @return {string} */ function foo() { return (new Base).foo; }");
   }
 
+  public void testDirectPrototypeAssignment3() throws Exception {
+    // This verifies that the compiler doesn't crash if the user
+    // overwrites the prototype of a global variable in a local scope.
+    testTypes(
+        "/** @constructor */ var MainWidgetCreator = function() {};" +
+        "/** @param {Function} ctor */" +
+        "function createMainWidget(ctor) {" +
+        "  /** @constructor */ function tempCtor() {};" +
+        "  tempCtor.prototype = ctor.prototype;" +
+        "  MainWidgetCreator.superClass_ = ctor.prototype;" +
+        "  MainWidgetCreator.prototype = new tempCtor();" +
+        "}");
+  }
+
   public void testGoodImplements1() throws Exception {
     testTypes("/** @interface */function Disposable() {}\n" +
         "/** @implements {Disposable}\n * @constructor */function f() {}");
