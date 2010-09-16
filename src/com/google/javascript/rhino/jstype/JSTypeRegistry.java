@@ -774,6 +774,18 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
+   * Try to resolve a type name, but forgive the user and don't emit
+   * a warning if this doesn't resolve.
+   */
+  public JSType getForgivingType(StaticScope<JSType> scope, String jsTypeName,
+      String sourceName, int lineno, int charno) {
+    JSType type = getType(
+        scope, jsTypeName, sourceName, lineno, charno);
+    type.forgiveUnknownNames();
+    return type;
+  }
+
+  /**
    * Looks up a type by name. To allow for forward references to types, an
    * unrecognized string has to be bound to a NamedType object that will be
    * resolved later.

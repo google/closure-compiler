@@ -359,7 +359,7 @@ final class FunctionTypeBuilder {
       // then we should not give it a @this type.
       String ownerTypeName = owner.getQualifiedName();
       ObjectType ownerType = ObjectType.cast(
-          typeRegistry.getType(
+          typeRegistry.getForgivingType(
               scope, ownerTypeName, sourceName,
               owner.getLineno(), owner.getCharno()));
       if (ownerType != null) {

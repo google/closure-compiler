@@ -4676,7 +4676,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function foo(x) { return x.index; }");
   }
 
-  public void testScopedConstructors() throws Exception {
+  public void testScopedConstructors1() throws Exception {
     testTypes(
         "function foo1() { " +
         "  /** @constructor */ function Bar() { " +
@@ -4696,6 +4696,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "inconsistent return type\n" +
         "found   : string\n" +
         "required: number");
+  }
+
+  public void testScopedConstructors2() throws Exception {
+    testTypes(
+        "/** @param {Function} f */" +
+        "function foo1(f) { " +
+        "  /** @param {Function} g */" +
+        "  f.prototype.bar = function(g) {};" +
+        "}");
   }
 
   public void testQualifiedNameInference1() throws Exception {
