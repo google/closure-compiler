@@ -39,9 +39,10 @@ HTMLCanvasElement.prototype.toDataURL = function(opt_type) {};
 
 /**
  * @param {string} contextId
+ * @param {Object=} opt_args
  * @return {Object}
  */
-HTMLCanvasElement.prototype.getContext = function(contextId) {};
+HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 
 /**
  * @constructor
