@@ -139,14 +139,24 @@ public final class JsDocInfoParser {
     JSTypeExpression type;
 
     state = State.SEARCHING_ANNOTATION;
+    skipEOLs();
+
     JsDocToken token = next();
 
-    ExtractionInfo blockInfo = extractBlockComment(token);
-    token = blockInfo.token;
-
-    // If we have a block level comment, record it.
-    if (blockInfo.string.length() > 0) {
-      jsdocBuilder.recordBlockDescription(blockInfo.string);
+    // Always record that we have a comment.
+    if (jsdocBuilder.shouldParseDocumentation()) {
+      ExtractionInfo blockInfo = extractBlockComment(token);
+      token = blockInfo.token;
+      if (!blockInfo.string.isEmpty()) {
+        jsdocBuilder.recordBlockDescription(blockInfo.string);
+      }
+    } else {
+      if (token != JsDocToken.ANNOTATION &&
+          token != JsDocToken.EOC) {
+        // Mark that there was a description, but don't bother marking
+        // what it was.
+        jsdocBuilder.recordBlockDescription("");
+      }
     }
 
     // Parse the actual JsDoc.
@@ -169,17 +179,20 @@ public final class JsDocInfoParser {
 
               switch (annotation) {
                 case AUTHOR:
-                  ExtractionInfo authorInfo = extractSingleLineBlock();
-                  String author = authorInfo.string;
+                  if (jsdocBuilder.shouldParseDocumentation()) {
+                    ExtractionInfo authorInfo = extractSingleLineBlock();
+                    String author = authorInfo.string;
 
-                  if (author.length() == 0) {
-                    parser.addWarning("msg.jsdoc.authormissing",
+                    if (author.length() == 0) {
+                      parser.addWarning("msg.jsdoc.authormissing",
                           stream.getLineno(), stream.getCharno());
+                    } else {
+                      jsdocBuilder.addAuthor(author);
+                    }
+                    token = authorInfo.token;
                   } else {
-                    jsdocBuilder.addAuthor(author);
+                    token = eatTokensUntilEOL(token);
                   }
-
-                  token = authorInfo.token;
                   continue retry;
 
                 case CONSTANT:
@@ -253,18 +266,24 @@ public final class JsDocInfoParser {
                   }
 
                 case FILE_OVERVIEW:
-                  ExtractionInfo fileOverviewInfo =
-                      extractMultilineTextualBlock(token,
-                                                   WhitespaceOption.TRIM);
+                  String fileOverview = "";
+                  if (jsdocBuilder.shouldParseDocumentation()) {
+                    ExtractionInfo fileOverviewInfo =
+                        extractMultilineTextualBlock(token,
+                            WhitespaceOption.TRIM);
 
-                  String fileOverview = fileOverviewInfo.string;
+                    fileOverview = fileOverviewInfo.string;
+
+                    token = fileOverviewInfo.token;
+                  } else {
+                    token = eatTokensUntilEOL(token);
+                  }
 
                   if (!jsdocBuilder.recordFileOverview(fileOverview) ||
                       fileOverviewJSDocInfo != null) {
                     parser.addWarning("msg.jsdoc.fileoverview.extra",
                         stream.getLineno(), stream.getCharno());
                   }
-                  token = fileOverviewInfo.token;
                   continue retry;
 
                 case LICENSE:
@@ -466,16 +485,20 @@ public final class JsDocInfoParser {
                   jsdocBuilder.recordThrowType(type);
 
                   // Find the throw's description (if applicable).
-                  ExtractionInfo descriptionInfo =
-                      extractMultilineTextualBlock(token);
+                  if (jsdocBuilder.shouldParseDocumentation()) {
+                    ExtractionInfo descriptionInfo =
+                        extractMultilineTextualBlock(token);
 
-                  String description = descriptionInfo.string;
+                    String description = descriptionInfo.string;
 
-                  if (description.length() > 0) {
-                    jsdocBuilder.recordThrowDescription(type, description);
+                    if (description.length() > 0) {
+                      jsdocBuilder.recordThrowDescription(type, description);
+                    }
+
+                    token = descriptionInfo.token;
+                  } else {
+                    token = eatTokensUntilEOL(token);
                   }
-
-                  token = descriptionInfo.token;
                   continue retry;
 
                 case PARAM:
@@ -558,17 +581,21 @@ public final class JsDocInfoParser {
                   jsdocBuilder.markName(name, lineno, charno);
 
                   // Find the parameter's description (if applicable).
-                  ExtractionInfo paramDescriptionInfo =
-                      extractMultilineTextualBlock(token);
+                  if (jsdocBuilder.shouldParseDocumentation()) {
+                    ExtractionInfo paramDescriptionInfo =
+                        extractMultilineTextualBlock(token);
 
-                  String paramDescription = paramDescriptionInfo.string;
+                    String paramDescription = paramDescriptionInfo.string;
 
-                  if (paramDescription.length() > 0) {
-                    jsdocBuilder.recordParameterDescription(name,
-                                                            paramDescription);
+                    if (paramDescription.length() > 0) {
+                      jsdocBuilder.recordParameterDescription(name,
+                          paramDescription);
+                    }
+
+                    token = paramDescriptionInfo.token;
+                  } else {
+                    token = eatTokensUntilEOL(token);
                   }
-
-                  token = paramDescriptionInfo.token;
                   continue retry;
 
                 case PRESERVE_TRY:
@@ -628,17 +655,21 @@ public final class JsDocInfoParser {
                   continue retry;
 
                 case SEE:
-                  ExtractionInfo referenceInfo = extractSingleLineBlock();
-                  String reference = referenceInfo.string;
+                  if (jsdocBuilder.shouldParseDocumentation()) {
+                    ExtractionInfo referenceInfo = extractSingleLineBlock();
+                    String reference = referenceInfo.string;
 
-                  if (reference.length() == 0) {
-                    parser.addWarning("msg.jsdoc.seemissing",
+                    if (reference.length() == 0) {
+                      parser.addWarning("msg.jsdoc.seemissing",
                           stream.getLineno(), stream.getCharno());
-                  } else {
-                    jsdocBuilder.addReference(reference);
-                  }
+                    } else {
+                      jsdocBuilder.addReference(reference);
+                    }
 
-                  token = referenceInfo.token;
+                    token = referenceInfo.token;
+                  } else {
+                    token = eatTokensUntilEOL(token);
+                  }
                   continue retry;
 
                 case SUPPRESS:
@@ -722,17 +753,22 @@ public final class JsDocInfoParser {
                         token = current();
 
                         // Find the return's description (if applicable).
-                        ExtractionInfo returnDescriptionInfo =
-                            extractMultilineTextualBlock(token);
+                        if (jsdocBuilder.shouldParseDocumentation()) {
+                          ExtractionInfo returnDescriptionInfo =
+                              extractMultilineTextualBlock(token);
 
-                        String returnDescription = returnDescriptionInfo.string;
+                          String returnDescription =
+                              returnDescriptionInfo.string;
 
-                        if (returnDescription.length() > 0) {
-                          jsdocBuilder.recordReturnDescription(
-                              returnDescription);
+                          if (returnDescription.length() > 0) {
+                            jsdocBuilder.recordReturnDescription(
+                                returnDescription);
+                          }
+
+                          token = returnDescriptionInfo.token;
+                        } else {
+                          token = eatTokensUntilEOL(token);
                         }
-
-                        token = returnDescriptionInfo.token;
                         continue retry;
 
                       case THIS:

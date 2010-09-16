@@ -69,6 +69,10 @@ final public class JSDocInfoBuilder {
     this.parseDocumentation = parseDocumentation;
   }
 
+  public boolean shouldParseDocumentation() {
+    return parseDocumentation;
+  }
+
   /**
    * Returns whether this builder is populated with information that can be
    * used to {@link #build} a {@link JSDocInfo} object.

@@ -442,6 +442,21 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertNotNull(objectLitNode.getFirstChild().getJSDocInfo());
   }
 
+  public void testJSDocAttachment13() {
+    Node varNode = parse("/** foo */ var a;").getFirstChild();
+    assertNotNull(varNode.getJSDocInfo());
+  }
+
+  public void testJSDocAttachment14() {
+    Node varNode = parse("/** */ var a;").getFirstChild();
+    assertNull(varNode.getJSDocInfo());
+  }
+
+  public void testJSDocAttachment15() {
+    Node varNode = parse("/** \n * \n */ var a;").getFirstChild();
+    assertNull(varNode.getJSDocInfo());
+  }
+
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),
