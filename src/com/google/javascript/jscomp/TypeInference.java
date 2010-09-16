@@ -660,13 +660,17 @@ class TypeInference
   }
 
   private FlowScope traverseObjectLiteral(Node n, FlowScope scope) {
-    ObjectType objectType = (ObjectType) n.getJSType();
-    Preconditions.checkNotNull(objectType);
+    JSType type = n.getJSType();
+    Preconditions.checkNotNull(type);
 
-    // Object literals can be reflected on other types.
+    // Object literals can be reflected on other types, or changed with
+    // type casts.
     // See CodingConvention#getObjectLiteralCase and goog.object.reflect.
     // Ignore these types of literals.
-    if (objectType.hasReferenceName()) {
+    // TODO(nicksantos): There should be an "anonymous object" type that
+    // we can check for here.
+    ObjectType objectType = ObjectType.cast(type);
+    if (objectType == null || objectType.hasReferenceName()) {
       return scope;
     }
 

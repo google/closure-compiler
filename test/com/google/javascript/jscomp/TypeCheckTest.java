@@ -5272,6 +5272,24 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         null);
   }
 
+  public void testCast15() throws Exception {
+    // This fixes a bug where a type cast on an object literal
+    // would cause a runtime cast exception if the node was visited
+    // more than once.
+    //
+    // Some code assumes that an object literal must have a object type,
+    // while because of the cast, it could have any type (including
+    // a union).
+    testTypes(
+        "for (var i = 0; i < 10; i++) {" +
+          "var x = /** @type {Object|number} */ ({foo: 3});" +
+          "/** @param {boolean} x */ function f(x) {}" +
+          "f(x.foo);" +
+          "f([].foo);" +
+        "}",
+        "Property foo never defined on Array");
+  }
+
   public void testNestedCasts() throws Exception {
     testTypes("/** @constructor */var T = function() {};\n" +
         "/** @constructor */var V = function() {};\n" +
