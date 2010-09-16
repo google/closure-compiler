@@ -127,6 +127,9 @@ public class DefaultPassConfig extends PassConfig {
   /** String replacement map */
   private VariableMap stringMap = null;
 
+  /** Id generator map */
+  private String idGeneratorMap = null;
+
   public DefaultPassConfig(CompilerOptions options) {
     super(options);
   }
@@ -138,7 +141,7 @@ public class DefaultPassConfig extends PassConfig {
         exportedNames == null ? null :
             Collections.unmodifiableSet(exportedNames),
         crossModuleIdGenerator, variableMap, propertyMap,
-        anonymousFunctionNameMap, stringMap, functionNames);
+        anonymousFunctionNameMap, stringMap, functionNames, idGeneratorMap);
   }
 
   @Override
@@ -153,6 +156,7 @@ public class DefaultPassConfig extends PassConfig {
     this.anonymousFunctionNameMap = state.anonymousFunctionNameMap;
     this.stringMap = state.stringMap;
     this.functionNames = state.functionNames;
+    this.idGeneratorMap = state.idGeneratorMap;
   }
 
   @Override
@@ -1164,8 +1168,15 @@ public class DefaultPassConfig extends PassConfig {
   private final PassFactory replaceIdGenerators =
       new PassFactory("replaceIdGenerators", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new ReplaceIdGenerators(compiler, options.idGenerators);
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override public void process(Node externs, Node root) {
+          ReplaceIdGenerators pass =
+              new ReplaceIdGenerators(compiler, options.idGenerators);
+          pass.process(externs, root);
+          idGeneratorMap = pass.getIdGeneratorMap();
+        }
+      };
     }
   };
 

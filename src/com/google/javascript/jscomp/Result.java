@@ -34,14 +34,15 @@ public class Result {
   public final SourceMap sourceMap;
   public final Map<String, Integer> cssNames;
   public final String externExport;
+  public final String idGeneratorMap;
 
   Result(JSError[] errors, JSError[] warnings, String debugLog,
          VariableMap variableMap, VariableMap propertyMap,
          VariableMap namedAnonFunctionMap,
          VariableMap stringMap,
          FunctionInformationMap functionInformationMap,
-         SourceMap sourceMap,  String externExport,
-         Map<String, Integer> cssNames) {
+         SourceMap sourceMap, String externExport,
+         Map<String, Integer> cssNames, String idGeneratorMap) {
     this.success = errors.length == 0;
     this.errors = errors;
     this.warnings = warnings;
@@ -54,6 +55,7 @@ public class Result {
     this.sourceMap = sourceMap;
     this.externExport = externExport;
     this.cssNames = cssNames;
+    this.idGeneratorMap = idGeneratorMap;
   }
 
   // Visible for testing only.
@@ -64,6 +66,6 @@ public class Result {
                 SourceMap sourceMap, String externExport) {
     this(errors, warnings, debugLog, variableMap, propertyMap,
          namedAnonFunctionMap, null, functionInformationMap, sourceMap,
-         externExport, null);
+         externExport, null, null);
   }
 }

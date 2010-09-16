@@ -16,12 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,15 +46,18 @@ class ReplaceIdGenerators implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final Map<String, NameGenerator> nameGenerators;
+  private final Map<String, List<Replacement>> idGeneratorMaps;
 
   public ReplaceIdGenerators(AbstractCompiler compiler,
                              Set<String> idGenerators) {
     this.compiler = compiler;
     nameGenerators = Maps.newHashMap();
+    idGeneratorMaps = Maps.newLinkedHashMap();
     for (String idGenerator : idGenerators) {
       nameGenerators.put(
           idGenerator,
           new NameGenerator(Collections.<String>emptySet(), "", null));
+      idGeneratorMaps.put(idGenerator, Lists.<Replacement>newArrayList());
     }
   }
 
@@ -71,6 +76,7 @@ class ReplaceIdGenerators implements CompilerPass {
       if (nameGenerator == null) {
         return;
       }
+      List<Replacement> idGeneratorMap = idGeneratorMaps.get(callName);
 
       if (!t.inGlobalScope()) {
         // Warn about calls not in the global scope.
@@ -87,9 +93,48 @@ class ReplaceIdGenerators implements CompilerPass {
       }
 
       String nextName = nameGenerator.generateNextName();
+
       parent.replaceChild(n, Node.newString(nextName));
+      idGeneratorMap.add(
+          new Replacement(nextName, t.getSourceName(), t.getLineNumber()));
 
       compiler.reportCodeChange();
+    }
+  }
+
+  /**
+   * @return the id generator map.
+   */
+  public String getIdGeneratorMap() {
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<String, List<Replacement>> entry :
+        idGeneratorMaps.entrySet()) {
+      sb.append("[");
+      sb.append(entry.getKey());
+      sb.append("]\n\n");
+      for (Replacement replacement : entry.getValue()) {
+        sb.append(replacement.toString());
+        sb.append("\n");
+      }
+      sb.append("\n");
+    }
+    return sb.toString();
+  }
+
+  private static class Replacement {
+    private final String name;
+    private final String sourceName;
+    private final int lineNumber;
+
+    private Replacement(String name, String sourceName, int lineNumber) {
+      this.name = name;
+      this.sourceName = sourceName;
+      this.lineNumber = lineNumber;
+    }
+
+    @Override
+    public String toString() {
+      return name + ":" + sourceName + ":" + lineNumber;
     }
   }
 }

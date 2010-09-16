@@ -838,7 +838,7 @@ public class Compiler extends AbstractCompiler {
     return new Result(getErrors(), getWarnings(), debugLog.toString(),
         state.variableMap, state.propertyMap,
         state.anonymousFunctionNameMap, state.stringMap, functionInformationMap,
-        sourceMap, externExports, state.cssNames);
+        sourceMap, externExports, state.cssNames, state.idGeneratorMap);
   }
 
   /**

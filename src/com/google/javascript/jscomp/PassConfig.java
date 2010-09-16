@@ -248,12 +248,14 @@ public abstract class PassConfig {
     final VariableMap anonymousFunctionNameMap;
     final VariableMap stringMap;
     final FunctionNames functionNames;
+    final String idGeneratorMap;
 
     State(Map<String, Integer> cssNames, Set<String> exportedNames,
           CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator,
           VariableMap variableMap, VariableMap propertyMap,
           VariableMap anonymousFunctionNameMap,
-          VariableMap stringMap, FunctionNames functionNames) {
+          VariableMap stringMap, FunctionNames functionNames,
+          String idGeneratorMap) {
       this.cssNames = cssNames;
       this.exportedNames = exportedNames;
       this.crossModuleIdGenerator = crossModuleIdGenerator;
@@ -261,6 +263,7 @@ public abstract class PassConfig {
       this.propertyMap = propertyMap;
       this.anonymousFunctionNameMap = anonymousFunctionNameMap;
       this.stringMap = stringMap;
+      this.idGeneratorMap = idGeneratorMap;
       this.functionNames = functionNames;
     }
   }
