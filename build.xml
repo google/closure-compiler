@@ -29,6 +29,8 @@
   <property name="tools.dir" value="${basedir}/tools" />
   <property name="jarfile" value="${build.dir}/${ant.project.name}.jar" />
   <property name="num-fuzz-tests" value="10000"/>
+  <property name="test" value="*Test"/>
+  <property name="version" value="HEAD"/>
 
   <property file="build.properties" />
 
@@ -69,6 +71,13 @@
     <!-- Move ParserConfig.properties where ParserRunner.java expects it. -->
     <copy file="${src.dir}/com/google/javascript/jscomp/parsing/ParserConfig.properties"
           todir="${classes.dir}/com/google/javascript/jscomp/parsing" />
+
+    <propertyfile
+        file="${classes.dir}/com/google/javascript/jscomp/parsing/ParserConfig.properties"
+        comment="Parser properties">
+      <entry key="compiler.date" type="date" value="now"/>
+      <entry key="compiler.version" value="${version}"/>
+    </propertyfile>
 
     <!-- Move runtime_type_check.js where RuntimeTypeCheck.java expects it. -->
     <mkdir dir="${classes.dir}/com/google/javascript/jscomp/js" />
@@ -160,7 +169,7 @@
 
   <target name="testclass"
           depends="compile-tests"
-          description="compile and execute one JUnit class">
+          description="compile and execute one JUnit class specified with the -Dtest flag.">
     <junit printsummary="on" fork="true" forkmode="once" showoutput="true">
       <classpath refid="classpath.path" />
       <classpath>

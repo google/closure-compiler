@@ -36,6 +36,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -297,6 +298,10 @@ public class CommandLineRunner extends
         + "a manifest for each module.")
     private String output_manifest = "";
 
+    @Option(name = "--version",
+        usage = "Prints the compiler version to stderr.")
+    private boolean version = false;
+
     // Our own option parser to be backwards-compatible.
     // It needs to be public because of the crazy reflection that args4j does.
     public static class BooleanOptionHandler extends OptionHandler<Boolean> {
@@ -362,6 +367,9 @@ public class CommandLineRunner extends
 
   private final Flags flags = new Flags();
 
+  private static final String configResource =
+      "com.google.javascript.jscomp.parsing.ParserConfig";
+
   private boolean isConfigValid = false;
 
   /**
@@ -410,6 +418,15 @@ public class CommandLineRunner extends
     } catch (CmdLineException e) {
       err.println(e.getMessage());
       isConfigValid = false;
+    }
+
+    if (flags.version) {
+      ResourceBundle config = ResourceBundle.getBundle(configResource);
+      err.println(
+          "Closure Compiler (http://code.google.com/p/closure/compiler)\n" +
+          "Version: " + config.getString("compiler.version") + "\n" +
+          "Built on: " + config.getString("compiler.date"));
+      err.flush();
     }
 
     if (!isConfigValid || flags.display_help) {
