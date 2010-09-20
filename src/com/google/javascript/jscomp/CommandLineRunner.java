@@ -423,7 +423,7 @@ public class CommandLineRunner extends
     if (flags.version) {
       ResourceBundle config = ResourceBundle.getBundle(configResource);
       err.println(
-          "Closure Compiler (http://code.google.com/p/closure/compiler)\n" +
+          "Closure Compiler (http://code.google.com/closure/compiler)\n" +
           "Version: " + config.getString("compiler.version") + "\n" +
           "Built on: " + config.getString("compiler.date"));
       err.flush();
