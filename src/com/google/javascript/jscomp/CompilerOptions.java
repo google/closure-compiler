@@ -201,8 +201,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Folds constants (e.g. (2 + 3) to 5) */
   public boolean foldConstants;
 
-  public boolean removeConstantExpressions;
-
   public boolean deadAssignmentElimination;
 
   /** Inlines constants (symbols that are all CAPS) */
@@ -646,7 +644,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     // Optimizations
     foldConstants = false;
-    removeConstantExpressions = false;
     coalesceVariableNames = false;
     deadAssignmentElimination = false;
     inlineConstantVars = false;

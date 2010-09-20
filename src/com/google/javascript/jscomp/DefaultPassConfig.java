@@ -642,10 +642,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(inlineConstants);
     }
 
-    if (options.removeConstantExpressions) {
-      passes.add(removeConstantExpressions);
-    }
-
     if (options.foldConstants) {
       // These used to be one pass.
       passes.add(minimizeExitPoints);
@@ -1357,17 +1353,6 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new InlineVariables(
           compiler, InlineVariables.Mode.CONSTANTS_ONLY, true);
-    }
-  };
-
-  /**
-   * Simplify expressions by removing the parts that have no side effects.
-   */
-  private final PassFactory removeConstantExpressions =
-      new PassFactory("removeConstantExpressions", false) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new RemoveConstantExpressions(compiler);
     }
   };
 

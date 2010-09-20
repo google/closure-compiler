@@ -96,7 +96,6 @@ public enum CompilationLevel {
     options.inlineLocalFunctions = true;
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
-    options.removeConstantExpressions = true;
     options.coalesceVariableNames = true;
     options.deadAssignmentElimination = true;
     options.collapseVariableDeclarations = true;
@@ -124,7 +123,6 @@ public enum CompilationLevel {
     // All the safe optimizations.
     options.closurePass = true;
     options.foldConstants = true;
-    options.removeConstantExpressions = true;
     options.coalesceVariableNames = true;
     options.deadAssignmentElimination = true;
     options.extractPrototypeMemberDeclarations = true;
@@ -153,7 +151,6 @@ public enum CompilationLevel {
     options.inlineLocalFunctions = true;
     options.inlineGetters = true;
     options.inlineVariables = true;
-    options.removeConstantExpressions = true;
     options.computeFunctionSideEffects = true;
     
     // Remove unused vars also removes unused functions.
