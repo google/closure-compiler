@@ -976,54 +976,77 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   private Node tryFoldKnownMethods(Node subtree) {
-    // For now we only support .join() and .indexOf()
+    // For now we only support .join(),
+    // .indexOf(), .substring() and .substr()
 
-    subtree = tryFoldStringJoin(subtree);
+    subtree = tryFoldArrayJoin(subtree);
 
     if (subtree.getType() == Token.CALL) {
-      subtree = tryFoldStringIndexOf(subtree);
+      subtree = tryFoldKnownStringMethods(subtree);
     }
 
     return subtree;
   }
 
   /**
+   * Try to eveluate known String methods
+   *    .indexOf(), .substr(), .substring()
+   */
+  private Node tryFoldKnownStringMethods(Node subtree) {
+    Preconditions.checkArgument(subtree.getType() == Token.CALL);
+
+    // check if this is a call on a string method
+    // then dispatch to specific folding method.
+    Node callTarget = subtree.getFirstChild();
+    if (callTarget == null) {
+      return subtree;
+    }
+
+    Node firstArg = callTarget.getNext();
+    if (firstArg == null) {
+      return subtree;
+    }
+
+    if (!NodeUtil.isGet(callTarget) ||
+        !NodeUtil.isImmutableValue(firstArg)) {
+      return subtree;
+    }
+
+    Node stringNode = callTarget.getFirstChild();
+    Node functionName = stringNode.getNext();
+
+    if ((stringNode.getType() != Token.STRING) || (
+        (functionName.getType() != Token.STRING))) {
+      return subtree;
+    }
+
+    String functionNameString = functionName.getString();
+    if (functionNameString.equals("indexOf") ||
+        functionNameString.equals("lastIndexOf")) {
+      subtree = tryFoldStringIndexOf(subtree, functionNameString,
+          stringNode, firstArg);
+    } else if (functionNameString.equals("substr")) {
+      subtree = tryFoldStringSubstr(subtree, stringNode, firstArg);
+    } else if (functionNameString.equals("substring")) {
+      subtree = tryFoldStringSubstring(subtree, stringNode, firstArg);
+    }
+
+    return subtree;
+ }
+
+  /**
    * Try to evaluate String.indexOf/lastIndexOf:
    *     "abcdef".indexOf("bc") -> 1
    *     "abcdefbc".indexOf("bc", 3) -> 6
    */
-  private Node tryFoldStringIndexOf(Node n) {
+  private Node tryFoldStringIndexOf(
+      Node n, String functionName, Node lstringNode, Node firstArg) {
     Preconditions.checkArgument(n.getType() == Token.CALL);
-
-    Node left = n.getFirstChild();
-
-    if (left == null) {
-      return n;
-    }
-
-    Node right = left.getNext();
-
-    if (right == null) {
-      return n;
-    }
-
-    if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
-      return n;
-    }
-
-    Node lstringNode = left.getFirstChild();
-    Node functionName = lstringNode.getNext();
-
-    if ((lstringNode.getType() != Token.STRING) ||
-        (!functionName.getString().equals("indexOf") &&
-        !functionName.getString().equals("lastIndexOf"))) {
-      return n;
-    }
+    Preconditions.checkArgument(lstringNode.getType() == Token.STRING);
 
     String lstring = NodeUtil.getStringValue(lstringNode);
-    boolean isIndexOf = functionName.getString().equals("indexOf");
-    Node firstArg = right;
-    Node secondArg = right.getNext();
+    boolean isIndexOf = functionName.equals("indexOf");
+    Node secondArg = firstArg.getNext();
     String searchValue = NodeUtil.getStringValue(firstArg);
     // searchValue must be a valid string.
     if (searchValue == null) {
@@ -1052,24 +1075,24 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   /**
    * Try to fold an array join: ['a', 'b', 'c'].join('') -> 'abc';
    */
-  private Node tryFoldStringJoin(Node n) {
-    Node left = n.getFirstChild();
+  private Node tryFoldArrayJoin(Node n) {
+    Node callTarget = n.getFirstChild();
 
-    if (left == null) {
+    if (callTarget == null) {
       return n;
     }
 
-    Node right = left.getNext();
+    Node right = callTarget.getNext();
 
     if (right == null) {
       return n;
     }
 
-    if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
+    if (!NodeUtil.isGetProp(callTarget) || !NodeUtil.isImmutableValue(right)) {
       return n;
     }
 
-    Node arrayNode = left.getFirstChild();
+    Node arrayNode = callTarget.getFirstChild();
     Node functionName = arrayNode.getNext();
 
     if ((arrayNode.getType() != Token.ARRAYLIT) ||
@@ -1162,6 +1185,113 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     return n;
+  }
+
+  /**
+   * Try to fold .substr() calls on strings
+   */
+  private Node tryFoldStringSubstr(Node n, Node stringNode, Node arg1) {
+    Preconditions.checkArgument(n.getType() == Token.CALL);
+    Preconditions.checkArgument(stringNode.getType() == Token.STRING);
+
+    int start, length;
+    String stringAsString = stringNode.getString();
+
+    // TODO(nicksantos): We really need a NodeUtil.getNumberValue
+    // function.
+    if (arg1 != null && arg1.getType() == Token.NUMBER) {
+      start = (int) arg1.getDouble();
+    } else {
+      return n;
+    }
+
+    Node arg2 = arg1.getNext();
+    if (arg2 != null) {
+      if (arg2.getType() == Token.NUMBER) {
+        length = (int) arg2.getDouble();
+      } else {
+        return n;
+      }
+
+      if (arg2.getNext() != null) {
+        // If we got more args than we expected, bail out.
+        return n;
+      }
+    } else {
+      // parameter 2 not passed
+      length = stringAsString.length() - start;
+    }
+
+    // Don't handle these cases. The specification actually does
+    // specify the behavior in some of these cases, but we haven't
+    // done a thorough investigation that it is correctly implemented
+    // in all browsers.
+    if ((start + length) > stringAsString.length() ||
+        (length < 0) ||
+        (start < 0)) {
+      return n;
+    }
+
+    String result = stringAsString.substring(start, start + length);
+    Node resultNode = Node.newString(result);
+
+    Node parent = n.getParent();
+    parent.replaceChild(n, resultNode);
+    reportCodeChange();
+    return resultNode;
+  }
+
+  /**
+   * Try to fold .substring() calls on strings
+   */
+  private Node tryFoldStringSubstring(Node n, Node stringNode, Node arg1) {
+    Preconditions.checkArgument(n.getType() == Token.CALL);
+    Preconditions.checkArgument(stringNode.getType() == Token.STRING);
+
+    int start, end;
+    String stringAsString = stringNode.getString();
+
+    if (arg1 != null && arg1.getType() == Token.NUMBER) {
+      start = (int) arg1.getDouble();
+    } else {
+      return n;
+    }
+
+    Node arg2 = arg1.getNext();
+    if (arg2 != null) {
+      if (arg2.getType() == Token.NUMBER) {
+        end = (int) arg2.getDouble();
+      } else {
+        return n;
+      }
+
+      if (arg2.getNext() != null) {
+        // If we got more args than we expected, bail out.
+        return n;
+      }
+    } else {
+      // parameter 2 not passed
+      end = stringAsString.length();
+    }
+
+    // Don't handle these cases. The specification actually does
+    // specify the behavior in some of these cases, but we haven't
+    // done a thorough investigation that it is correctly implemented
+    // in all browsers.
+    if ((end > stringAsString.length()) ||
+        (start > stringAsString.length()) ||
+        (end < 0) ||
+        (start < 0)) {
+      return n;
+    }
+
+    String result = stringAsString.substring(start, end);
+    Node resultNode = Node.newString(result);
+
+    Node parent = n.getParent();
+    parent.replaceChild(n, resultNode);
+    reportCodeChange();
+    return resultNode;
   }
 
   /**

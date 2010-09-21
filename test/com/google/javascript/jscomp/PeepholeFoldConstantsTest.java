@@ -408,6 +408,32 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("[foo()].join('')", "'' + foo()");
   }
 
+  public void testFoldStringSubstr() {
+    fold("x = 'abcde'.substr(0,2)", "x = 'ab'");
+    fold("x = 'abcde'.substr(1,2)", "x = 'bc'");
+    fold("x = 'abcde'['substr'](1,3)", "x = 'bcd'");
+    fold("x = 'abcde'.substr(2)", "x = 'cde'");
+
+    // we should be leaving negative indexes alone for now
+    foldSame("x = 'abcde'.substr(-1)");
+    foldSame("x = 'abcde'.substr(1, -2)");
+    foldSame("x = 'abcde'.substr(1, 2, 3)");
+    foldSame("x = 'a'.substr(0, 2)");
+  }
+
+  public void testFoldStringSubstring() {
+    fold("x = 'abcde'.substring(0,2)", "x = 'ab'");
+    fold("x = 'abcde'.substring(1,2)", "x = 'b'");
+    fold("x = 'abcde'['substring'](1,3)", "x = 'bc'");
+    fold("x = 'abcde'.substring(2)", "x = 'cde'");
+
+    // we should be leaving negative indexes alone for now
+    foldSame("x = 'abcde'.substring(-1)");
+    foldSame("x = 'abcde'.substring(1, -2)");
+    foldSame("x = 'abcde'.substring(1, 2, 3)");
+    foldSame("x = 'a'.substring(0, 2)");
+  }
+
   public void testFoldArithmetic() {
     fold("x = 10 + 20", "x = 30");
     fold("x = 2 / 4", "x = 0.5");
