@@ -364,6 +364,8 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceMapExpansion1() {
+    args.add("--js_output_file");
+    args.add("/path/to/out.js");
     args.add("--create_source_map=%outname%.map");
     testSame("var x = 3;");
     assertEquals("/path/to/out.js.map",
@@ -457,6 +459,22 @@ public class CommandLineRunnerTest extends TestCase {
             "Built on:"));
   }
 
+  public void testPrintAstFlag() {
+    args.add("--print_ast=true");
+    testSame("");
+    assertEquals(
+        "digraph AST {\n" +
+        "  node [color=lightblue2, style=filled];\n" +
+        "  node0 [label=\"BLOCK\"];\n" +
+        "  node1 [label=\"SCRIPT\"];\n" +
+        "  node0 -> node1 [weight=1];\n" +
+        "  node1 -> RETURN [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+        "  node0 -> RETURN [label=\"SYN_BLOCK\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+        "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+        "}\n\n",
+        new String(outReader.toByteArray()));
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
@@ -543,9 +561,6 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   private CommandLineRunner createCommandLineRunner(String[] original) {
-    args.add("--js_output_file");
-    args.add("/path/to/out.js");
-
     for (int i = 0; i < original.length; i++) {
       args.add("--js");
       args.add("/path/to/input" + i + ".js");

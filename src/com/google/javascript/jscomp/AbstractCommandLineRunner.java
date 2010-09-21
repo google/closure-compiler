@@ -583,7 +583,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     int errCode = processResults(result, modules, options);
     // Close the output if we are writing to a file.
     if (out instanceof Closeable) {
-      ((Closeable)out).close();
+      ((Closeable) out).close();
     }
     return errCode;
   }
@@ -612,7 +612,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         return 1;
       } else {
         ControlFlowGraph<Node> cfg = compiler.computeCFG();
-        DotFormatter.appendDot(compiler.getRoot(), cfg, out);
+        DotFormatter.appendDot(compiler.getRoot().getLastChild(), cfg, out);
         out.append('\n');
         return 0;
       }
