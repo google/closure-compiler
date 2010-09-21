@@ -61,6 +61,7 @@ public class PeepholeSubstituteAlternateSyntax
         return tryReduceReturn(node);
 
       case Token.NOT:
+        tryMinimizeCondition(node.getFirstChild());
         return tryMinimizeNot(node);
 
       case Token.IF:
@@ -667,43 +668,121 @@ public class PeepholeSubstituteAlternateSyntax
           case Token.NOT: {
               Node newRoot = first.removeFirstChild();
               parent.replaceChild(n, newRoot);
-              n = newRoot; // continue from here.
               reportCodeChange();
-
-              // The child has moved up, to minimize it recurse.
-
-              return tryMinimizeCondition(n);
+              // No need to traverse, tryMinimizeCondition is called on the
+              // NOT children are handled below.
+              return newRoot;
             }
           case Token.AND:
           case Token.OR: {
               Node leftParent = first.getFirstChild();
               Node rightParent = first.getLastChild();
-              if (leftParent.getType() != Token.NOT
-                  || rightParent.getType() != Token.NOT) {
-                // No NOTs to elminate.
-                break;
+              if (leftParent.getType() == Token.NOT
+                  && rightParent.getType() == Token.NOT) {
+                Node left = leftParent.removeFirstChild();
+                Node right = rightParent.removeFirstChild();
+
+                int newOp = (first.getType() == Token.AND) ? Token.OR : Token.AND;
+                Node newRoot = new Node(newOp, left, right);
+                parent.replaceChild(n, newRoot);
+                reportCodeChange();
+                // No need to traverse, tryMinimizeCondition is called on the
+                // AND and OR children below.
+                return newRoot;
               }
-              Node left = leftParent.removeFirstChild();
-              Node right = rightParent.removeFirstChild();
-
-              int newOp = (first.getType() == Token.AND) ? Token.OR : Token.AND;
-              Node newRoot = new Node(newOp, left, right);
-              parent.replaceChild(n, newRoot);
-              n = newRoot; // continue from here.
-              reportCodeChange();
-
-              // Unlike the NOT case above, we know that AND and OR are
-              // valid root to check minimize so just break out and check
-              // the children.
             }
             break;
         }
-        break;
+        // No need to traverse, tryMinimizeCondition is called on the NOT
+        // children in the general case in the main post-order traversal.
+        return n;
 
       case Token.OR:
-      case Token.AND:
-        // check the children.
-        break;
+      case Token.AND: {
+        Node left = n.getFirstChild();
+        Node right = n.getLastChild();
+
+        // Because the expression is in a boolean context minimize
+        // the children, this can't be done in the general case.
+        left = tryMinimizeCondition(left);
+        right = tryMinimizeCondition(right);
+
+        // Remove useless conditionals
+        // Handle four cases:
+        //   x || false --> x
+        //   x || true  --> true
+        //   x && true --> x
+        //   x && false  --> false
+        TernaryValue rightVal = NodeUtil.getBooleanValue(right);
+        if (NodeUtil.getBooleanValue(right) != TernaryValue.UNKNOWN) {
+          int type = n.getType();
+          Node replacement = null;
+          boolean rval = rightVal.toBoolean(true);
+
+          // (x || FALSE) => x
+          // (x && TRUE) => x
+          if (type == Token.OR && !rval ||
+              type == Token.AND && rval) {
+            replacement = left;
+          } else if (!mayHaveSideEffects(left)) {
+            replacement = right;
+          }
+
+          if (replacement != null) {
+            n.detachChildren();
+            parent.replaceChild(n, replacement);
+            reportCodeChange();
+            return replacement;
+          }
+        }
+        return n;
+      }
+
+      case Token.HOOK: {
+        Node condition = n.getFirstChild();
+        Node trueNode = n.getFirstChild().getNext();
+        Node falseNode = n.getLastChild();
+
+        // Because the expression is in a boolean context minimize
+        // the result children, this can't be done in the general case.
+        // The condition is handled in the general case in #optimizeSubtree
+        trueNode = tryMinimizeCondition(trueNode);
+        falseNode = tryMinimizeCondition(falseNode);
+
+        // Handle four cases:
+        //   x ? true : false --> x
+        //   x ? false : true --> !x
+        //   x ? true : y     --> x || y
+        //   x ? y : false    --> x && y
+        Node replacement = null;
+        if (NodeUtil.getBooleanValue(trueNode) == TernaryValue.TRUE
+            && NodeUtil.getBooleanValue(falseNode) == TernaryValue.FALSE) {
+          // Remove useless conditionals, keep the condition
+          condition.detachFromParent();
+          replacement = condition;
+        } else if (NodeUtil.getBooleanValue(trueNode) == TernaryValue.FALSE
+            && NodeUtil.getBooleanValue(falseNode) == TernaryValue.TRUE) {
+          // Remove useless conditionals, keep the condition
+          condition.detachFromParent();
+          replacement = new Node(Token.NOT, condition);
+        } else if (NodeUtil.getBooleanValue(trueNode) == TernaryValue.TRUE) {
+          // Remove useless true case.
+          n.detachChildren();
+          replacement = new Node(Token.OR, condition, falseNode);
+        } else if (NodeUtil.getBooleanValue(falseNode) == TernaryValue.FALSE) {
+          // Remove useless false case
+          n.detachChildren();
+          replacement = new Node(Token.AND, condition, trueNode);
+        }
+
+        if (replacement != null) {
+          parent.replaceChild(n, replacement);
+          n = replacement;
+          reportCodeChange();
+        }
+
+        return n;
+      }
 
       default:
         // while(true) --> while(1)
@@ -716,14 +795,6 @@ public class PeepholeSubstituteAlternateSyntax
         // We can't do anything else currently.
         return n;
     }
-
-    for (Node c = n.getFirstChild(); c != null; ) {
-      Node next = c.getNext();  // c may be removed.
-      tryMinimizeCondition(c);
-      c = next;
-    }
-
-    return n;
   }
 
   /**

@@ -409,44 +409,10 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         // (TRUE && x) => x
         result = right;
       }
-    } else {
-      TernaryValue rightVal = NodeUtil.getBooleanValue(right);
-      if (rightVal != TernaryValue.UNKNOWN) {
-
-      // Note: We cannot always fold when the constant is on the
-      // right, because the typed value of the expression will depend
-      // on the type of the constant on the right, even if the boolean
-      // equivalent of the value does not. Specifically, in "a = x ||
-      // 0", a will be numeric 0 if x is undefined (and hence is
-      // e.g. a valid array index). However, it is safe to fold
-      // e.g. "if (x || true)" because 'if' doesn't care if the
-      // expression is 'true' or '3'.
-      int pt = parent.getType();
-      if (pt == Token.IF || pt == Token.WHILE || pt == Token.DO ||
-          (pt == Token.FOR && NodeUtil.getConditionExpression(parent) == n) ||
-          (pt == Token.HOOK && parent.getFirstChild() == n)) {
-        boolean rval = rightVal.toBoolean(true);
-
-        // (x || FALSE) => x
-        // (x && TRUE) => x
-        if (type == Token.OR && !rval ||
-            type == Token.AND && rval) {
-          result = left;
-        } else {
-          // If x has no side-effects:
-          //   (x || TRUE) => TRUE
-          //   (x && FALSE) => FALSE
-          if (!mayHaveSideEffects(left)) {
-            result = right;
-          }
-        }
-        }
-      }
     }
 
-    // Note: The parser parses 'x && FALSE && y' as 'x && (FALSE && y)', so
-    // there is not much need to worry about const values on left's
-    // right child.
+    // Note: Right hand side folding is handled by
+    // PeepholeSubstituteAlternateSyntax#tryMinimizeCondition
 
     if (result != null) {
       // Fold it!

@@ -260,6 +260,11 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("while(!(x<y)){a=b;}");
     foldSame("while(!(x<=y)){a=b;}");
     foldSame("while(!(x<=NaN)){a=b;}");
+
+    // NOT forces a boolean context
+    fold("x = !(y() && true)", "x = !y()");
+    // This will be further optimized by PeepholeFoldConstants.
+    fold("x = !true", "x = !1");
   }
 
   public void testFoldRegExpConstructor() {
@@ -410,6 +415,17 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))");
   }
 
+  public void testMinimizeExprCondition() {
+    fold("(x ? true : false) && y()", "x&&y()");
+    fold("(x ? false : true) && y()", "(!x)&&y()");
+    fold("(x ? true : y) && y()", "(x || y)&&y()");
+    fold("(x ? y : false) && y()", "(x && y)&&y()");
+    fold("(x && true) && y()", "x && y()");
+    fold("(x && false) && y()", "0&&y()");
+    fold("(x || true) && y()", "1&&y()");
+    fold("(x || false) && y()", "x&&y()");
+  }
+
   public void testMinimizeWhileCondition() {
     // This test uses constant folding logic, so is only here for completeness.
     fold("while(!!true) foo()", "while(1) foo()");
@@ -425,7 +441,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     // These could be simplified to "for(;;) ..."
     fold("for(;!!true;) foo()", "for(;1;) foo()");
     // Don't bother with FOR inits as there are normalized out.
-    foldSame("for(!!true;;) foo()");
+    fold("for(!!true;;) foo()", "for(!!1;;) foo()");
 
     // These test tryMinimizeCondition
     fold("for(;!!x;) foo()", "for(;x;) foo()");
@@ -434,7 +450,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("for(a in b) foo()");
     foldSame("for(a in {}) foo()");
     foldSame("for(a in []) foo()");
-    foldSame("for(a in !!true) foo()");
+    fold("for(a in !!true) foo()", "for(a in !!1) foo()");
   }
 
   public void testMinimizeCondition_example1() {

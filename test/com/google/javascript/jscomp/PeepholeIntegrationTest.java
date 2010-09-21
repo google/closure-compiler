@@ -303,6 +303,15 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public void testShortCircuit4() {
     test("a() && (1 && b())", "a() && b()");
     test("a() && 1 && b()", "a() && b()");
-    testSame("(a() && 1) && b()");
+    test("(a() && 1) && b()", "a() && b()");
+  }
+
+  public void testMinimizeExprCondition() {
+    fold("(x || true) && y()", "y()");
+    fold("(x || false) && y()", "x&&y()");
+    fold("(x && true) && y()", "x && y()");
+    fold("(x && false) && y()", "");
+    fold("a = x || false ? b : c", "a=x?b:c");
+    fold("do {x()} while((x && false) && y())", "{x()}");
   }
 }

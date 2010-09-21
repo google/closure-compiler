@@ -185,9 +185,9 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("a = b ? c : x && true", "a=b?c:x&&true");
     fold("a = b ? x && true : c", "a=b?x&&true:c");
 
-    // foldable, analogous to if().
-    fold("a = x || false ? b : c", "a=x?b:c");
-    fold("a = x && true ? b : c", "a=x?b:c");
+    // folded, but not here.
+    foldSame("a = x || false ? b : c");
+    foldSame("a = x && true ? b : c");
 
     fold("x = foo() || true || bar()", "x = foo()||true");
     fold("x = foo() || false || bar()", "x = foo()||bar()");
