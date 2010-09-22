@@ -31,6 +31,10 @@
   <property name="num-fuzz-tests" value="10000"/>
   <property name="test" value="*Test"/>
   <property name="version" value="HEAD"/>
+  <property name="jsonml.dir" value="${basedir}/src/com/google/javascript/jscomp/jsonml" />
+  <property name="jsonml-classes.dir" value = "${build.dir}/jsonml-classes" />
+  <property name="jsonml-jarfile" value="${build.dir}/secure_compiler.jar" />
+
 
   <property file="build.properties" />
 
@@ -58,7 +62,7 @@
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
-           excludes=".svn"
+           excludes=".svn,/jsonml/"
            debug="${javac.debug}">
       <classpath refid="classpath.path" />
     </javac>
@@ -233,4 +237,44 @@
     </javadoc>
   </target>
 
+  <!-- JsonML package related targets                 -->
+  <!-- set the classpath for the project              -->
+  <!-- this includes the generated source class files -->
+  <!-- and every jar in the /lib directory            -->
+  <path id="jsonml-classpath.path">
+    <pathelement location="${classes.dir}" />
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+    <fileset dir="${classes.dir}">
+      <include name="*.class" />
+    </fileset>
+  </path>
+
+  <target name="jsonml-compile"
+          description="compile the source code of classes from JsonML package"
+          depends="compile">
+    <mkdir dir="${jsonml-classes.dir}" />
+    <javac srcdir="${jsonml.dir}"
+           destdir="${jsonml-classes.dir}"
+           excludes=".svn"
+           debug="${javac.debug}">
+      <classpath refid="jsonml-classpath.path" />
+    </javac>
+  </target>
+
+   <target name="jsonml-jar"
+           description="package the compiler and JsonML clsses"
+           depends="jsonml-compile, compile">
+    <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" />
+    <jar destfile="${jsonml-jarfile}" update="true">
+      <zipfileset src="${lib.dir}/guava-r06.jar" />
+      <zipfileset src="${lib.dir}/jsr305.jar" />
+      <zipfileset src="${lib.dir}/json.jar" />
+      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
+      <fileset dir="${classes.dir}" />
+      <fileset dir="${jsonml-classes.dir}" />
+    </jar>
+   </target>
 </project>
+
