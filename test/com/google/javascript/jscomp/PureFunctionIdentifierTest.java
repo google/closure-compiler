@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
@@ -488,6 +489,105 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      ImmutableList.<String>of());
   }
 
+  public void testLocalizedSideEffects1() throws Exception {
+    // Returning a function that contains a modification of a local
+    // is not a global side-effect.
+    checkMarkedCalls("function f() {" +
+                     "  var x = {foo : 0}; return function() {x.foo++};" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of("f"));
+  }
+
+  public void testLocalizedSideEffects2() throws Exception {
+    // Calling a function that contains a modification of a local
+    // is a global side-effect (the value has escaped).
+    checkMarkedCalls("function f() {" +
+                     "  var x = {foo : 0}; (function() {x.foo++})();" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of());
+  }
+
+  public void testLocalizedSideEffects3() throws Exception {
+    // A local that might be assigned a gobal value and whose properties
+    // are modified must be considered a global side-effect.
+    checkMarkedCalls("var g = {foo:1}; function f() {var x = g; x.foo++}" +
+                     "f()",
+                     ImmutableList.<String>of());
+  }
+
+  public void testLocalizedSideEffects4() throws Exception {
+    // An array is an local object, assigning a local array is not a global
+    // side-effect.
+    checkMarkedCalls("function f() {var x = []; x[0] = 1;}" +
+                     "f()",
+                     ImmutableList.<String>of("f"));
+  }
+
+  public void testLocalizedSideEffects5() throws Exception {
+    // Assigning a local alias of a global is a global
+    // side-effect.
+    checkMarkedCalls("var g = [];function f() {var x = g; x[0] = 1;}" +
+                     "f()",
+                     ImmutableList.<String>of());
+  }
+
+  public void testLocalizedSideEffects6() throws Exception {
+    // Returning a local object that has been modified
+    // is not a global side-effect.
+    checkMarkedCalls("function f() {" +
+                     "  var x = {}; x.foo = 1; return x;" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of("f"));
+  }
+
+  public void testLocalizedSideEffects7() throws Exception {
+    // Returning a local object that has been modified
+    // is not a global side-effect.
+    checkMarkedCalls("/** @constructor A */ function A() {};" +
+                     "function f() {" +
+                     "  var a = []; a[1] = 1; return a;" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of("f"));
+  }
+
+  public void testLocalizedSideEffects8() throws Exception {
+    // Returning a local object that has been modified
+    // is not a global side-effect.
+    checkMarkedCalls("/** @constructor A */ function A() {};" +
+                     "function f() {" +
+                     "  var a = new A; a.foo = 1; return a;" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of("A", "f"));
+  }
+
+  public void testLocalizedSideEffects9() throws Exception {
+    // Returning a local object that has been modified
+    // is not a global side-effect.
+    checkMarkedCalls("/** @constructor A */ function A() {this.x = 1};" +
+                     "function f() {" +
+                     "  var a = new A; a.foo = 1; return a;" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of("A", "f"));
+  }
+
+  public void testLocalizedSideEffects10() throws Exception {
+    // Returning a local object that has been modified
+    // is not a global side-effect.
+    checkMarkedCalls("/** @constructor A */ function A() {};" +
+                     "A.prototype.g = function() {this.x = 1};" +
+                     "function f() {" +
+                     "  var a = new A; a.g(); return a;" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of("A", "f"));
+  }
+
   public void testUnaryOperators1() throws Exception {
     checkMarkedCalls("function f() {var x = 1; x++}" +
                      "f()",
@@ -504,7 +604,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testUnaryOperators3() throws Exception {
     checkMarkedCalls("function f() {var x = {foo : 0}; x.foo++}" +
                      "f()",
-                     ImmutableList.<String>of());
+                     ImmutableList.<String>of("f"));
   }
 
   public void testUnaryOperators4() throws Exception {
@@ -742,7 +842,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function g(){var a = new A; a.foo(); return a}\n" +
         "f(); g()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f"));
+    checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f", "g"));
   }
 
   public void testCallFunctionFOrG() throws Exception {
@@ -866,6 +966,109 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     test("var f = function() {};" +
          "f.x = /** @nosideeffects */ function() {}",
          null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+  }
+
+  public void testLocalValue1() throws Exception {
+    // Names are not known to be local.
+    assertFalse(testLocalValue("x"));
+    assertFalse(testLocalValue("x()"));
+    assertFalse(testLocalValue("this"));
+    assertFalse(testLocalValue("arguments"));
+
+    // new objects are local
+    assertTrue(testLocalValue("new x()"));
+
+    // property references are assume to be non-local
+    assertFalse(testLocalValue("(new x()).y"));
+    assertFalse(testLocalValue("(new x())['y']"));
+
+    // Primitive values are local
+    assertTrue(testLocalValue("null"));
+    assertTrue(testLocalValue("undefined"));
+    assertTrue(testLocalValue("Infinity"));
+    assertTrue(testLocalValue("NaN"));
+    assertTrue(testLocalValue("1"));
+    assertTrue(testLocalValue("'a'"));
+    assertTrue(testLocalValue("true"));
+    assertTrue(testLocalValue("false"));
+    assertTrue(testLocalValue("[]"));
+    assertTrue(testLocalValue("{}"));
+
+    // The contents of arrays and objects don't matter
+    assertTrue(testLocalValue("[x]"));
+    assertTrue(testLocalValue("{'a':x}"));
+
+    // Pre-increment results in primitive number
+    assertTrue(testLocalValue("++x"));
+    assertTrue(testLocalValue("--x"));
+
+    // Post-increment, the previous value matters.
+    assertFalse(testLocalValue("x++"));
+    assertFalse(testLocalValue("x--"));
+
+    // Only the right side of an assign matters
+    assertTrue(testLocalValue("x=1"));
+    assertFalse(testLocalValue("x=y"));
+    // The right hand side of assignment opts don't matter, as they force
+    // a local result.
+    assertTrue(testLocalValue("x+=y"));
+    assertTrue(testLocalValue("x*=y"));
+    // Comparisons always result in locals, as they force a local boolean
+    // result.
+    assertTrue(testLocalValue("x==y"));
+    assertTrue(testLocalValue("x!=y"));
+    assertTrue(testLocalValue("x>y"));
+    // Only the right side of a comma matters
+    assertTrue(testLocalValue("(1,2)"));
+    assertTrue(testLocalValue("(x,1)"));
+    assertFalse(testLocalValue("(x,y)"));
+
+    // Both the operands of OR matter
+    assertTrue(testLocalValue("1||2"));
+    assertFalse(testLocalValue("x||1"));
+    assertFalse(testLocalValue("x||y"));
+    assertFalse(testLocalValue("1||y"));
+
+    // Both the operands of AND matter
+    assertTrue(testLocalValue("1&&2"));
+    assertFalse(testLocalValue("x&&1"));
+    assertFalse(testLocalValue("x&&y"));
+    assertFalse(testLocalValue("1&&y"));
+
+    // Only the results of HOOK matter
+    assertTrue(testLocalValue("x?1:2"));
+    assertFalse(testLocalValue("x?x:2"));
+    assertFalse(testLocalValue("x?1:x"));
+    assertFalse(testLocalValue("x?x:y"));
+
+    // Results of ops are local values
+    assertTrue(testLocalValue("!y"));
+    assertTrue(testLocalValue("~y"));
+    assertTrue(testLocalValue("y + 1"));
+    assertTrue(testLocalValue("y + z"));
+    assertTrue(testLocalValue("y * z"));
+
+    assertTrue(testLocalValue("'a' in x"));
+    assertTrue(testLocalValue("typeof x"));
+    assertTrue(testLocalValue("x instanceof y"));
+
+    assertTrue(testLocalValue("void x"));
+    assertTrue(testLocalValue("void 0"));
+  }
+
+  boolean testLocalValue(String js) {
+     Node root = this.parseExpectedJs("var test = " + js +";");
+     Preconditions.checkState(root.getType() == Token.BLOCK);
+     Node script = root.getFirstChild();
+     Preconditions.checkState(script.getType() == Token.SCRIPT);
+     Node var = script.getFirstChild();
+     Preconditions.checkState(var.getType() == Token.VAR);
+     Node name = var.getFirstChild();
+     Preconditions.checkState(name.getType() == Token.NAME);
+     Node value = name.getFirstChild();
+
+     return PureFunctionIdentifier.isKnownLocalValue(value);
+
   }
 
   void checkMarkedCalls(String source, List<String> expected) {

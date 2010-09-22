@@ -16,12 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
@@ -32,6 +33,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -337,7 +340,7 @@ class PureFunctionIdentifier implements CompilerPass {
    * annotations, call sites, and functions that may mutate variables
    * not defined in the local scope.
    */
-  private class FunctionAnalyzer implements Callback {
+  private class FunctionAnalyzer implements ScopedCallback {
     private final boolean inExterns;
 
     FunctionAnalyzer(boolean inExterns) {
@@ -383,8 +386,9 @@ class PureFunctionIdentifier implements CompilerPass {
         Preconditions.checkNotNull(sideEffectInfo);
 
         if (NodeUtil.isAssignmentOp(node)) {
-          visitAssignmentOrUnaryOperatorLhs(
-              sideEffectInfo, traversal.getScope(), node.getFirstChild());
+          visitAssignmentOrUnaryOperator(
+              sideEffectInfo, traversal.getScope(),
+              node, node.getFirstChild(), node.getLastChild());
         } else {
           switch(node.getType()) {
             case Token.CALL:
@@ -394,16 +398,25 @@ class PureFunctionIdentifier implements CompilerPass {
             case Token.DELPROP:
             case Token.DEC:
             case Token.INC:
-              visitAssignmentOrUnaryOperatorLhs(
-                  sideEffectInfo, traversal.getScope(), node.getFirstChild());
+              visitAssignmentOrUnaryOperator(
+                  sideEffectInfo, traversal.getScope(),
+                  node, node.getFirstChild(), null);
               break;
             case Token.NAME:
-
               // Variable definition are not side effects.
               // Just check that the name appears in the context of a
               // variable declaration.
               Preconditions.checkArgument(
                   NodeUtil.isVarDeclaration(node));
+              Node value = node.getFirstChild();
+              // Assignment to local, if the value isn't a safe local value,
+              // new object creation or literal or known primitive result
+              // value, add it to the local blacklist.
+              if (value != null && !isKnownLocalValue(value)) {
+                Scope scope = traversal.getScope();
+                Var var = scope.getVar(node.getString());
+                sideEffectInfo.blacklistLocal(var);
+              }
               break;
             case Token.THROW:
               visitThrow(sideEffectInfo);
@@ -417,28 +430,105 @@ class PureFunctionIdentifier implements CompilerPass {
       }
     }
 
+    @Override
+    public void enterScope(NodeTraversal t) {
+      // Nothing to do.
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+      if (t.inGlobalScope()) {
+        return;
+      }
+
+      // Handle deferred local variable modifications:
+      //
+      FunctionInformation sideEffectInfo =
+        functionSideEffectMap.get(t.getScopeRoot());
+      if (sideEffectInfo.mutatesGlobalState()){
+        sideEffectInfo.resetLocalVars();
+        return;
+      }
+
+      for (Iterator<Var> i = t.getScope().getVars(); i.hasNext();) {
+        Var v = i.next();
+        boolean localVar = false;
+        // Parameters and catch values come can from other scopes.
+        if (v.getParentNode().getType() == Token.VAR) {
+          // TODO(johnlenz): create a useful parameter list
+          sideEffectInfo.knownLocals.add(v.getName());
+          localVar = true;
+        }
+
+        // Take care of locals that might have been tainted.
+        if (!localVar || sideEffectInfo.blacklisted.contains(v)) {
+          if (sideEffectInfo.taintedLocals.contains(v)) {
+            // If the function has global side-effects
+            // don't bother with the local side-effects.
+            sideEffectInfo.setTaintsUnknown();
+            sideEffectInfo.resetLocalVars();
+            break;
+          }
+        }
+      }
+
+      sideEffectInfo.taintedLocals = null;
+      sideEffectInfo.blacklisted = null;
+    }
+
+
     /**
      * Record information about the side effects caused by an
      * assigment or mutating unary operator.
      *
      * If the operation modifies this or taints global state, mark the
      * enclosing function as having those side effects.
+     * @param op operation being performed.
+     * @param lhs The store location (name or get) being operated on.
+     * @param rhs The right have value, if any.
      */
-    private void visitAssignmentOrUnaryOperatorLhs(
-        FunctionInformation sideEffectInfo, Scope scope, Node lhs) {
+    private void visitAssignmentOrUnaryOperator(
+        FunctionInformation sideEffectInfo,
+        Scope scope, Node op, Node lhs, Node rhs) {
       if (NodeUtil.isName(lhs)) {
         Var var = scope.getVar(lhs.getString());
         if (var == null || var.scope != scope) {
           sideEffectInfo.setTaintsGlobalState();
+        } else {
+          // Assignment to local, if the value isn't a safe local value,
+          // a literal or new object creation, add it to the local blacklist.
+          // parameter values depend on the caller.
+
+          // Note: other ops result in the name or prop being assigned a local
+          // value (x++ results in a number, for instance)
+          Preconditions.checkState(
+              NodeUtil.isAssignmentOp(op)
+              || isIncDec(op) || op.getType() == Token.DELPROP);
+          if (rhs != null && NodeUtil.isAssign(op) && !isKnownLocalValue(rhs)) {
+            sideEffectInfo.blacklistLocal(var);
+          }
         }
-      } else if (NodeUtil.isGetProp(lhs)) {
+      } else if (NodeUtil.isGet(lhs)) {
         if (NodeUtil.isThis(lhs.getFirstChild())) {
           sideEffectInfo.setTaintsThis();
         } else {
-          sideEffectInfo.setTaintsUnknown();
+          Var var = null;
+          Node objectNode = lhs.getFirstChild();
+          if (NodeUtil.isName(objectNode)) {
+            var = scope.getVar(objectNode.getString());
+          }
+          if (var == null || var.scope != scope) {
+            sideEffectInfo.setTaintsUnknown();
+          } else {
+            // Maybe a local object modification.  We won't know for sure until
+            // we exit the scope and can validate the value of the local.
+            //
+            sideEffectInfo.addTaintedLocalObject(var);
+          }
         }
       } else {
-        sideEffectInfo.setTaintsUnknown();
+        // The only valid lhs expressions are NAME, GETELEM, or GETPROP.
+        throw new IllegalStateException("Unexpected lhs expression:" + lhs);
       }
     }
 
@@ -519,6 +609,81 @@ class PureFunctionIdentifier implements CompilerPass {
     }
   }
 
+  private static boolean isIncDec(Node n) {
+    int type = n.getType();
+    return (type == Token.INC || type == Token.DEC);
+  }
+
+  /**
+   * @return Whether the node is known to be a value that is not a reference
+   *     outside the local scope.
+   */
+  @VisibleForTesting
+  static boolean isKnownLocalValue(Node value) {
+    // TODO(johnlenz): traverse into expression.
+    // return NodeUtil.isNew(value) || NodeUtil.isLiteralValue(value, true);
+    switch (value.getType()) {
+      case Token.ASSIGN:
+      case Token.COMMA:
+        return isKnownLocalValue(value.getLastChild());
+      case Token.AND:
+      case Token.OR:
+        return isKnownLocalValue(value.getFirstChild()) &&
+           isKnownLocalValue(value.getLastChild());
+      case Token.HOOK:
+        return isKnownLocalValue(value.getFirstChild().getNext()) &&
+           isKnownLocalValue(value.getLastChild());
+      case Token.INC:
+      case Token.DEC:
+        if (value.getBooleanProp(Node.INCRDECR_PROP)) {
+          return isKnownLocalValue(value.getFirstChild());
+        } else {
+          return true;
+        }
+      case Token.THIS:
+        // TODO(johnlenz): maybe redirect this to be a tainting list for 'this'.
+        return false;
+      case Token.NAME:
+        // TODO(johnlenz): add to local tainting list, if the NAME
+        // is known to be a local.
+
+        // "undefined", "NaN" and "Infinity" are allowed.
+        return NodeUtil.isImmutableValue(value);
+      case Token.GETELEM:
+      case Token.GETPROP:
+        // There is no information about the locality of object properties.
+        return false;
+      case Token.CALL:
+        // TODO(johnlenz): add to local tainting list, if the call result
+        // is not known to be a local result.
+        return false;
+      case Token.NEW:
+        return true;
+      case Token.FUNCTION:
+      case Token.REGEXP:
+      case Token.ARRAYLIT:
+      case Token.OBJECTLIT:
+        // Literals objects with non-literal children are allowed.
+        return true;
+      case Token.IN:
+        // The IN operator is not include in NodeUtil#isSimpleOperator.
+        return true;
+      default:
+        // Other op force a local value:
+        //  x = '' + g (x is now an local string)
+        //  x -= g (x is now an local number)
+        if (NodeUtil.isAssignmentOp(value)
+            || NodeUtil.isSimpleOperator(value)
+            || NodeUtil.isImmutableValue(value)) {
+          return true;
+        }
+
+        throw new IllegalStateException(
+            "Unexpected expression node" + value +
+            "\n parent:" + value.getParent());
+    }
+  }
+
   /**
    * Callback that propagates side effect information across call sites.
    */
@@ -546,11 +711,30 @@ class PureFunctionIdentifier implements CompilerPass {
         // Calling a constructor that modifies "this" has no side effects.
         if (callSite.getType() != Token.NEW) {
           Node objectNode = getCallThisObject(callSite);
-          if (objectNode != null && NodeUtil.isThis(objectNode)) {
+          if (objectNode != null && NodeUtil.isName(objectNode)
+              && !isCallOrApply(callSite)) {
+            // Exclude ".call" and ".apply" as the value may still be may be
+            // null or undefined. We don't need to worry about this with a
+            // direct method call because null and undefined don't have any
+            // properties.
+            String name = objectNode.getString();
+            if (!caller.knownLocals.contains(name)) {
+              if (!caller.mutatesGlobalState()) {
+                caller.setTaintsGlobalState();
+                changed = true;
+              }
+            }
+          } else if (objectNode != null && NodeUtil.isThis(objectNode)) {
             if (!caller.mutatesThis()) {
               caller.setTaintsThis();
               changed = true;
             }
+          } else if (objectNode != null && isKnownLocalValue(objectNode)
+              && !isCallOrApply(callSite)) {
+            // Modifying 'this' on a known local object doesn't change any
+            // significant state.
+            // TODO(johnlenz): We can improve this by including literal values
+            // that we know for sure are not null.
           } else if (!caller.mutatesGlobalState()) {
             caller.setTaintsGlobalState();
             changed = true;
@@ -572,21 +756,30 @@ class PureFunctionIdentifier implements CompilerPass {
    * @return node that will act as "this" for the call.
    */
   private static Node getCallThisObject(Node callSite) {
-    Node foo = callSite.getFirstChild();
-    if (!NodeUtil.isGetProp(foo)) {
+    Node callTarget = callSite.getFirstChild();
+    if (!NodeUtil.isGet(callTarget)) {
 
       // "this" is not specified explicitly; call modifies global "this".
       return null;
     }
 
-    Node object = null;
-
-    String propString = foo.getLastChild().getString();
+    String propString = callTarget.getLastChild().getString();
     if (propString.equals("call") || propString.equals("apply")) {
-      return foo.getNext();
+      return callTarget.getNext();
     } else {
-      return foo.getFirstChild();
+      return callTarget.getFirstChild();
     }
+  }
+
+  private static boolean isCallOrApply(Node callSite) {
+    Node callTarget = callSite.getFirstChild();
+    if (NodeUtil.isGet(callTarget)) {
+      String propString = callTarget.getLastChild().getString();
+      if (propString.equals("call") || propString.equals("apply")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -596,6 +789,9 @@ class PureFunctionIdentifier implements CompilerPass {
   private static class FunctionInformation {
     private final boolean extern;
     private final List<Node> callsInFunctionBody = Lists.newArrayList();
+    private Set<Var> blacklisted = Sets.newHashSet();
+    private Set<Var> taintedLocals = Sets.newHashSet();
+    private Set<String> knownLocals = Sets.newHashSet();
     private boolean pureFunction = false;
     private boolean functionThrows = false;
     private boolean taintsGlobalState = false;
@@ -605,6 +801,26 @@ class PureFunctionIdentifier implements CompilerPass {
     FunctionInformation(boolean extern) {
       this.extern = extern;
       checkInvariant();
+    }
+
+    /**
+     * @param var
+     */
+    void addTaintedLocalObject(Var var) {
+      taintedLocals.add(var);
+    }
+
+    void resetLocalVars() {
+      blacklisted = null;
+      taintedLocals = null;
+      knownLocals = Collections.emptySet();
+    }
+
+    /**
+     * @param var
+     */
+    public void blacklistLocal(Var var) {
+      blacklisted.add(var);
     }
 
     /**
