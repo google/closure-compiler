@@ -34,6 +34,14 @@ public class JsMessageTest extends TestCase {
         .build().isEmpty());
   }
 
+  public void testMeaningChangesId() {
+    String id1 = new JsMessage.Builder()
+        .appendStringPart("foo").build().getId();
+    String id2 = new JsMessage.Builder()
+        .appendStringPart("foo").setMeaning("bar").build().getId();
+    assertFalse(id1.equals(id2));
+  }
+
   public void testHashValues() {
     final String EMPTY = "";
     final String VAL = "Hello, world";

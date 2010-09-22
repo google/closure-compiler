@@ -19,12 +19,14 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Unit test for {@link JsMessageExtractor}.
@@ -193,11 +195,30 @@ public class JsMessageExtractorTest extends TestCase {
     assertEquals("bar", iter.next().toString());
   }
 
+  public void testMeaningAnnotation() {
+    List<JsMessage> msgs = Lists.newArrayList(
+        extractMessages(
+            "var MSG_UNNAMED_1 = goog.getMsg('foo');",
+            "var MSG_UNNAMED_2 = goog.getMsg('foo');"));
+    assertEquals(2, msgs.size());
+    assertTrue(msgs.get(0).getId().equals(msgs.get(1).getId()));
+    assertEquals(msgs.get(0), msgs.get(1));
+
+    msgs = Lists.newArrayList(
+        extractMessages(
+            "var MSG_UNNAMED_1 = goog.getMsg('foo');",
+            "/** @meaning bar */ var MSG_UNNAMED_2 = goog.getMsg('foo');"));
+    assertEquals(2, msgs.size());
+    assertFalse(msgs.get(0).getId().equals(msgs.get(1).getId()));
+  }
+
   private void assertEquals(JsMessage expected, JsMessage actual) {
+    assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getKey(), actual.getKey());
     assertEquals(expected.parts(), actual.parts());
     assertEquals(expected.placeholders(), actual.placeholders());
     assertEquals(expected.getDesc(), actual.getDesc());
     assertEquals(expected.isHidden(), actual.isHidden());
+    assertEquals(expected.getMeaning(), actual.getMeaning());
   }
 }

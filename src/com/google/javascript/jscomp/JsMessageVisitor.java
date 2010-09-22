@@ -434,6 +434,9 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
       if (info.isHidden()) {
         builder.setIsHidden(true);
       }
+      if (info.getMeaning() != null) {
+        builder.setMeaning(info.getMeaning());
+      }
     }
 
     return messageHasDesc;

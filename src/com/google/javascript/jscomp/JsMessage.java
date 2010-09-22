@@ -80,6 +80,7 @@ public class JsMessage {
   private final Set<String> placeholders;
   private final String desc;
   private final boolean hidden;
+  private final String meaning;
 
   private final String sourceName;
   private final boolean isAnonymous;
@@ -93,11 +94,13 @@ public class JsMessage {
    * @param id an id that *uniquely* identifies the message in the bundle.
    *     It could be either the message name or id generated from the message
    *     content.
+   * @param meaning The user-specified meaning of the message. May be null if
+   *     the user did not specify an explicit meaning.
    */
   private JsMessage(String sourceName, String key,
       boolean isAnonymous, boolean isExternal,
       String id, List<CharSequence> parts, Set<String> placeholders,
-      String desc, boolean hidden) {
+      String desc, boolean hidden, String meaning) {
 
     Preconditions.checkState(key != null);
     Preconditions.checkState(id != null);
@@ -108,6 +111,7 @@ public class JsMessage {
     this.placeholders = Collections.unmodifiableSet(placeholders);
     this.desc = desc;
     this.hidden = hidden;
+    this.meaning = meaning;
 
     this.sourceName = sourceName;
     this.isAnonymous = isAnonymous;
@@ -149,6 +153,14 @@ public class JsMessage {
    */
   public String getDesc() {
     return desc;
+  }
+
+  /**
+   * Gets the meaning annotated to the message, intended to force different
+   * translations.
+   */
+  String getMeaning() {
+    return meaning;
   }
 
   /**
@@ -202,6 +214,7 @@ public class JsMessage {
            key.equals(m.key) &&
            isAnonymous == m.isAnonymous &&
            parts.equals(m.parts) &&
+           (meaning == null ? m.meaning == null : meaning.equals(m.meaning)) &&
            placeholders.equals(m.placeholders) &&
            (desc == null ? m.desc == null : desc.equals(m.desc)) &&
            (sourceName == null
@@ -290,6 +303,9 @@ public class JsMessage {
     }
 
     private String key;
+
+    private String meaning;
+
     private String desc;
     private boolean hidden;
 
@@ -358,6 +374,15 @@ public class JsMessage {
       return this;
     }
 
+    /**
+     * Sets the programmer-specified meaning of this message, which
+     * forces this message to translate differently.
+     */
+    public Builder setMeaning(String meaning) {
+      this.meaning = meaning;
+      return this;
+    }
+
     /** Sets whether the message should be hidden from volunteer translators. */
     public Builder setIsHidden(boolean hidden) {
       this.hidden = hidden;
@@ -398,11 +423,13 @@ public class JsMessage {
       }
 
       if (!isExternal) {
-        id = idGenerator == null ? key : idGenerator.generateId(key, parts);
+        String defactoMeaning = meaning != null ? meaning : key;
+        id = idGenerator == null ? defactoMeaning :
+            idGenerator.generateId(defactoMeaning, parts);
       }
 
       return new JsMessage(sourceName, key, isAnonymous, isExternal, id, parts,
-          placeholders, desc, hidden);
+          placeholders, desc, hidden, meaning);
     }
 
     /**
@@ -641,7 +668,18 @@ public class JsMessage {
   }
 
   public interface IdGenerator {
-
-    String generateId(String key, List<CharSequence> messageParts);
+    /**
+     * Generate the ID for the message. Messages with the same messageParts
+     * and meaning will get the same id. Messages with the same id
+     * will get the same translation.
+     *
+     * @param meaning The programmer-specified meaning. If no {@code @meaning}
+     *     annotation appears, we will use the name of the variable it's
+     *     assigned to. If the variable is unnamed, then we will just
+     *     use a fingerprint of the message.
+     * @param messageParts The parts of the message, including the main
+     *     message text.
+     */
+    String generateId(String meaning, List<CharSequence> messageParts);
   }
 }
