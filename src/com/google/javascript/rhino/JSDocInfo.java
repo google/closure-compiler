@@ -99,6 +99,7 @@ public final class JSDocInfo implements Serializable {
     String deprecated = null;
     String license = null;
     Set<String> suppressions = null;
+    Set<String> modifies = null;
   }
 
   private static final class LazilyInitializedDocumentation {
@@ -561,6 +562,33 @@ public final class JSDocInfo implements Serializable {
     }
 
     info.suppressions = suppressions;
+    return true;
+  }
+
+  /**
+   * Add modifies values.
+   */
+  void addModifies(String modifies) {
+    lazyInitInfo();
+
+    if (info.modifies == null) {
+      info.modifies = Sets.newHashSet();
+    }
+    info.modifies.add(modifies);
+  }
+
+  /**
+   * Sets modifies values.
+   * @param modifies A list of modifies types.
+   */
+  boolean setModifies(Set<String> modifies) {
+    lazyInitInfo();
+
+    if (info.modifies != null) {
+      return false;
+    }
+
+    info.modifies = modifies;
     return true;
   }
 
@@ -1096,6 +1124,14 @@ public final class JSDocInfo implements Serializable {
   }
 
   /**
+   * Returns the set of sideeffect notations.
+   */
+  public Set<String> getModifies() {
+    Set<String> modifies = info == null ? null : info.modifies;
+    return modifies == null ? Collections.<String>emptySet() : modifies;
+  }
+
+  /**
    * Returns whether a description exists for the parameter with the specified
    * name.
    */
@@ -1238,5 +1274,9 @@ public final class JSDocInfo implements Serializable {
     }
 
     return nodes;
+  }
+
+  public boolean hasModifies() {
+    return info != null && info.modifies != null;
   }
 }

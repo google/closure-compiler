@@ -420,6 +420,16 @@ public class JSDocInfoTest extends TestCase {
     assertEquals(Sets.newHashSet("bob", "sam"), info.getSuppressions());
   }
 
+  public void testSetModifies() {
+    JSDocInfo info = new JSDocInfo(true);
+    info.setModifies(Sets.newHashSet("this"));
+    assertEquals(Sets.newHashSet("this"), info.getModifies());
+
+    info = new JSDocInfo(true);
+    info.setModifies(Sets.newHashSet("arguments"));
+    assertEquals(Sets.newHashSet("arguments"), info.getModifies());
+  }  
+
   /** Gets the type expression for a simple type name. */
   private JSTypeExpression fromString(String s) {
     return new JSTypeExpression(Node.newString(s), "");

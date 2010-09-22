@@ -347,6 +347,19 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Records the list of modifies warnings.
+   */
+  public boolean recordModifies(Set<String> modifies) {
+    if (!hasAnySingletonSideEffectTags()
+        && currentInfo.setModifies(modifies)) {
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records a type.
    *
    * @return {@code true} if the type was recorded and {@code false} if
@@ -768,7 +781,8 @@ final public class JSDocInfoBuilder {
    * {@link JSDocInfo#isNoSideEffects()} flag set to {@code true}.
    */
   public boolean recordNoSideEffects() {
-    if (!currentInfo.isNoSideEffects()) {
+    if (!hasAnySingletonSideEffectTags()
+        && !currentInfo.isNoSideEffects()) {
       currentInfo.setNoSideEffects(true);
       populated = true;
       return true;
@@ -842,4 +856,15 @@ final public class JSDocInfoBuilder {
         currentInfo.hasTypedefType() ||
         currentInfo.hasEnumParameterType();
   }
+
+  /**
+   * Whether the current doc info has any of the singleton type
+   * tags that may not appear with other type tags, like
+   * {@code @type} or {@code @typedef}.
+   */
+  private boolean hasAnySingletonSideEffectTags() {
+    return currentInfo.isNoSideEffects() ||
+        currentInfo.hasModifies();
+  }
+
 }

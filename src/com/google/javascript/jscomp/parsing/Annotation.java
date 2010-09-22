@@ -44,6 +44,7 @@ enum Annotation {
   JAVA_DISPATCH,
   LICENSE, // same as preserve
   MEANING,
+  MODIFIES,
   NO_ALIAS,
   NO_COMPILE,
   NO_SHADOW,
@@ -91,6 +92,7 @@ enum Annotation {
       put("javadispatch", Annotation.JAVA_DISPATCH).
       put("license", Annotation.LICENSE).
       put("meaning", Annotation.MEANING).
+      put("modifies", Annotation.MODIFIES).
       put("noalias", Annotation.NO_ALIAS).
       put("nocompile", Annotation.NO_COMPILE).
       put("noshadow", Annotation.NO_SHADOW).

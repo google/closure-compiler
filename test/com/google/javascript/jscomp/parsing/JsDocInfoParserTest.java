@@ -1806,6 +1806,83 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "unknown @suppress parameter: impossible");
   }
 
+  public void testModifies1() throws Exception {
+    JSDocInfo info = parse("@modifies {this} */");
+    assertEquals(Sets.newHashSet("this"), info.getModifies());
+  }
+
+  public void testModifies2() throws Exception {
+    JSDocInfo info = parse("@modifies {arguments} */");
+    assertEquals(Sets.newHashSet("arguments"), info.getModifies());
+  }
+
+  public void testModifies3() throws Exception {
+    JSDocInfo info = parse("@modifies {this|arguments} */");
+    assertEquals(Sets.newHashSet("this", "arguments"), info.getModifies());
+  }
+
+  public void testModifies4() throws Exception {
+    JSDocInfo info = parse("@param {*} x\n * @modifies {x} */");
+    assertEquals(Sets.newHashSet("x"), info.getModifies());
+  }
+
+  public void testModifies5() throws Exception {
+    JSDocInfo info = parse(
+        "@param {*} x\n"
+        + " * @param {*} y\n"
+        + " * @modifies {x} */");
+    assertEquals(Sets.newHashSet("x"), info.getModifies());
+  }
+
+  public void testModifies6() throws Exception {
+    JSDocInfo info = parse(
+        "@param {*} x\n"
+        + " * @param {*} y\n"
+        + " * @modifies {x|y} */");
+    assertEquals(Sets.newHashSet("x", "y"), info.getModifies());
+  }
+
+
+  public void testBadModifies1() throws Exception {
+    parse("@modifies {} */", "malformed @modifies tag");
+  }
+
+  public void testBadModifies2() throws Exception {
+    parse("@modifies {this|} */", "malformed @modifies tag");
+  }
+
+  public void testBadModifies3() throws Exception {
+    parse("@modifies {|this} */", "malformed @modifies tag");
+  }
+
+  public void testBadModifies4() throws Exception {
+    parse("@modifies {this|arguments */", "malformed @modifies tag");
+  }
+
+  public void testBadModifies5() throws Exception {
+    parse("@modifies {this,arguments} */", "malformed @modifies tag");
+  }
+
+  public void testBadModifies6() throws Exception {
+    parse("@modifies {this} \n * @modifies {this} */", 
+        "conflicting @modifies tag");
+  }
+
+  public void testBadModifies7() throws Exception {
+    parse("@modifies {impossible} */",
+          "unknown @modifies parameter: impossible");
+  }
+
+  public void testBadModifies8() throws Exception {
+    parse("@modifies {this}\n"
+        + "@nosideeffects */", "conflicting @nosideeffects tag");
+  }
+
+  public void testBadModifies9() throws Exception {
+    parse("@nosideeffects\n"
+        + "@modifies {this} */", "conflicting @modifies tag");
+  }
+
   //public void testNoParseFileOverview() throws Exception {
   //  JSDocInfo jsdoc = parseFileOverviewWithoutDoc("@fileoverview Hi mom! */");
   //  assertNull(jsdoc.getFileOverview());

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -63,6 +64,8 @@ public final class JsDocInfoParser {
 
   private final Map<String, Annotation> annotationNames;
   private final Set<String> suppressionNames;
+  static private final Set<String> modifiesAnnotationKeywords =
+      ImmutableSet.<String>of("this", "arguments");
 
   private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder;
 
@@ -646,6 +649,10 @@ public final class JsDocInfoParser {
                   token = eatTokensUntilEOL();
                   continue retry;
 
+                case MODIFIES:
+                  token = parseModifiesTag(next());
+                  continue retry;
+
                 case IMPLICIT_CAST:
                   if (!jsdocBuilder.recordImplicitCast()) {
                     parser.addWarning("msg.jsdoc.implicitcast",
@@ -877,6 +884,53 @@ public final class JsDocInfoParser {
         token = next();
         if (!jsdocBuilder.recordSuppressions(suppressions)) {
           parser.addWarning("msg.jsdoc.suppress.duplicate",
+              stream.getLineno(), stream.getCharno());
+        }
+      }
+    }
+    return token;
+  }
+
+  /**
+   * Parse a {@code @modifies} tag of the form
+   * {@code @modifies&#123;this|arguments|param&#125;}.
+   *
+   * @param token The current token.
+   */
+  private JsDocToken parseModifiesTag(JsDocToken token) {
+    if (token == JsDocToken.LC) {
+      Set<String> modifies = new HashSet<String>();
+      while (true) {
+        if (match(JsDocToken.STRING)) {
+          String name = stream.getString();
+          if (!modifiesAnnotationKeywords.contains(name)
+              && !jsdocBuilder.hasParameter(name)) {
+              parser.addWarning("msg.jsdoc.modifies.unknown", name,
+                  stream.getLineno(), stream.getCharno());
+          }
+
+          modifies.add(stream.getString());
+          token = next();
+        } else {
+          parser.addWarning("msg.jsdoc.modifies",
+              stream.getLineno(), stream.getCharno());
+          return token;
+        }
+
+        if (match(JsDocToken.PIPE)) {
+          token = next();
+        } else {
+          break;
+        }
+      }
+
+      if (!match(JsDocToken.RC)) {
+        parser.addWarning("msg.jsdoc.modifies",
+            stream.getLineno(), stream.getCharno());
+      } else {
+        token = next();
+        if (!jsdocBuilder.recordModifies(modifies)) {
+          parser.addWarning("msg.jsdoc.modifies.duplicate",
               stream.getLineno(), stream.getCharno());
         }
       }
