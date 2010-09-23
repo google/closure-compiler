@@ -205,6 +205,7 @@ Object.prototype.eval = function(code) {};
  *
  * @param {string} sprop
  * @param {Function} fun
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/defineGetter
  */
 Object.prototype.__defineGetter__ = function(sprop, fun) {};
@@ -216,6 +217,7 @@ Object.prototype.__defineGetter__ = function(sprop, fun) {};
  *
  * @param {string} sprop
  * @param {Function} fun
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/defineSetter
  */
 Object.prototype.__defineSetter__ = function(sprop, fun) {};
@@ -247,6 +249,7 @@ Object.prototype.isPrototypeOf = function(other) {};
  * @param {string} sprop a string containing the name of the property whose
  * getter should be returned
  * @return {Function}
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/lookupGetter
  */
 Object.prototype.__lookupGetter__ = function(sprop) {};
@@ -258,6 +261,7 @@ Object.prototype.__lookupGetter__ = function(sprop) {};
  * @param {string} sprop a string containing the name of the property whose
  *     setter should be returned.
  * @return {Function}
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/lookupSetter
  */
 Object.prototype.__lookupSetter__ = function(sprop) {};
@@ -277,6 +281,7 @@ Object.prototype.__noSuchMethod__ = function(fun) {};
  * Mozilla-only.
  *
  * @return {Object}
+ * @deprecated
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/parent
  */
 Object.prototype.__parent__ = function(fun) {};
@@ -297,6 +302,7 @@ Object.prototype.__proto__ = function(fun) {};
  *
  * @param {string} propertyName
  * @return {boolean}
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/propertyIsEnumerable
  */
 Object.prototype.propertyIsEnumerable = function(propertyName) {};
@@ -338,6 +344,7 @@ Object.prototype.unwatch = function(prop) {};
 /**
  * Returns the object's {@code this} value.
  * @return {*}
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/valueOf
  */
 Object.prototype.valueOf = function() {};
@@ -355,6 +362,7 @@ Object.prototype.watch = function(prop, handler) {};
 /**
  * @constructor
  * @param {...*} var_args
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function
  */
 function Function(var_args) {}
@@ -454,6 +462,7 @@ Array.prototype.join = function(opt_separator) {};
  * Removes the last element from an array and returns that element.
  *
  * @this {Object}
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/pop
  */
 Array.prototype.pop = function() {};
@@ -465,6 +474,7 @@ Array.prototype.pop = function() {};
  * @param {...*} var_args
  * @return {number} The new length of the array.
  * @this {Object}
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/push
  */
 Array.prototype.push = function(var_args) {};
@@ -474,6 +484,7 @@ Array.prototype.push = function(var_args) {};
  * last and the last becomes the first.
  *
  * @this {Object}
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reverse
  */
 Array.prototype.reverse = function() {};
@@ -483,6 +494,7 @@ Array.prototype.reverse = function() {};
  * method changes the length of the array.
  *
  * @this {Object}
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/shift
  */
 Array.prototype.shift = function() {};
@@ -507,6 +519,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
  * @param {Function=} opt_compareFunction Specifies a function that defines the
  *     sort order.
  * @this {Object}
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/sort
  */
 Array.prototype.sort = function(opt_compareFunction) {};
@@ -522,6 +535,7 @@ Array.prototype.sort = function(opt_compareFunction) {};
  * @param {...*} var_args
  * @return {!Array}
  * @this {Object}
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/splice
  */
 Array.prototype.splice = function(opt_index, opt_howMany, var_args) {};
@@ -549,6 +563,7 @@ Array.prototype.toString = function() {};
  * @param {...*} var_args
  * @return {number} The new length of the array
  * @this {Object}
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/unshift
  */
 Array.prototype.unshift = function(var_args) {};
@@ -949,6 +964,7 @@ Math.pow = function(x, y) {};
 
 /**
  * @return {number}
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/random
  */
 Math.random = function() {};
@@ -1228,6 +1244,7 @@ Date.prototype.getUTCMilliseconds = function() {};
  * Sets the day of the month for a specified date according to local time.
  *
  * @param {number} dayValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setDate
  */
 Date.prototype.setDate = function(dayValue) {};
@@ -1237,6 +1254,7 @@ Date.prototype.setDate = function(dayValue) {};
  *
  * @param {number} monthValue
  * @param {number=} opt_dayValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setMonth
  */
 Date.prototype.setMonth = function(monthValue, opt_dayValue) {};
@@ -1247,6 +1265,7 @@ Date.prototype.setMonth = function(monthValue, opt_dayValue) {};
  * @param {number} yearValue
  * @param {number=} opt_monthValue
  * @param {number=} opt_dayValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setFullYear
  */
 Date.prototype.setFullYear =
@@ -1257,6 +1276,7 @@ Date.prototype.setFullYear =
  *
  * @param {number} yearValue
  * @deprecated
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setYear
  */
 Date.prototype.setYear = function(yearValue) {};
@@ -1268,6 +1288,7 @@ Date.prototype.setYear = function(yearValue) {};
  * @param {number=} opt_minutesValue
  * @param {number=} opt_secondsValue
  * @param {number=} opt_msValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setHours
  */
 Date.prototype.setHours = function(hoursValue, opt_minutesValue,
@@ -1279,6 +1300,7 @@ Date.prototype.setHours = function(hoursValue, opt_minutesValue,
  * @param {number} minutesValue
  * @param {number=} opt_secondsValue
  * @param {number=} opt_msValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setMinutes
  */
 Date.prototype.setMinutes =
@@ -1289,6 +1311,7 @@ Date.prototype.setMinutes =
  *
  * @param {number} secondsValue
  * @param {number=} opt_msValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setSeconds
  */
 Date.prototype.setSeconds = function(secondsValue, opt_msValue) {};
@@ -1297,6 +1320,7 @@ Date.prototype.setSeconds = function(secondsValue, opt_msValue) {};
  * Sets the milliseconds for a specified date according to local time.
  *
  * @param {number} millisecondsValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setMilliseconds
  */
 Date.prototype.setMilliseconds = function(millisecondsValue) {};
@@ -1306,6 +1330,7 @@ Date.prototype.setMilliseconds = function(millisecondsValue) {};
  * since January 1, 1970, 00:00:00 UTC.
  *
  * @param {number} timeValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setTime
  */
 Date.prototype.setTime = function(timeValue) {};
@@ -1314,6 +1339,7 @@ Date.prototype.setTime = function(timeValue) {};
  * Sets the day of the month for a specified date according to universal time.
  *
  * @param {number} dayValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCDate
  */
 Date.prototype.setUTCDate = function(dayValue) {};
@@ -1323,6 +1349,7 @@ Date.prototype.setUTCDate = function(dayValue) {};
  *
  * @param {number} monthValue
  * @param {number=} opt_dayValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCMonth
  */
 Date.prototype.setUTCMonth = function(monthValue, opt_dayValue) {};
@@ -1333,6 +1360,7 @@ Date.prototype.setUTCMonth = function(monthValue, opt_dayValue) {};
  * @param {number} yearValue
  * @param {number=} opt_monthValue
  * @param {number=} opt_dayValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCFullYear
  */
 Date.prototype.setUTCFullYear = function(yearValue, opt_monthValue,
@@ -1345,6 +1373,7 @@ Date.prototype.setUTCFullYear = function(yearValue, opt_monthValue,
  * @param {number=} opt_minutesValue
  * @param {number=} opt_secondsValue
  * @param {number=} opt_msValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCHours
  */
 Date.prototype.setUTCHours = function(hoursValue, opt_minutesValue,
@@ -1356,6 +1385,7 @@ Date.prototype.setUTCHours = function(hoursValue, opt_minutesValue,
  * @param {number} minutesValue
  * @param {number=} opt_secondsValue
  * @param {number=} opt_msValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCMinutes
  */
 Date.prototype.setUTCMinutes = function(minutesValue, opt_secondsValue,
@@ -1367,6 +1397,7 @@ Date.prototype.setUTCMinutes = function(minutesValue, opt_secondsValue,
  *
  * @param {number} secondsValue
  * @param {number=} opt_msValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCSeconds
  */
 Date.prototype.setUTCSeconds = function(secondsValue, opt_msValue) {};
@@ -1375,6 +1406,7 @@ Date.prototype.setUTCSeconds = function(secondsValue, opt_msValue) {};
  * Sets the milliseconds for a specified date according to universal time.
  *
  * @param {number} millisecondsValue
+ * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCMilliseconds
  */
 Date.prototype.setUTCMilliseconds = function(millisecondsValue) {};
@@ -1466,6 +1498,7 @@ function String(opt_str) {}
 /**
  * @param {...number} var_args
  * @return {string}
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/fromCharCode
  */
 String.fromCharCode = function(var_args) {};
@@ -1777,6 +1810,8 @@ String.prototype.length;
 function RegExp(opt_pattern, opt_flags) {}
 
 /**
+ * @modifies {this}
+ * @deprecated
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/compile
  */
 RegExp.prototype.compile;
@@ -2064,6 +2099,7 @@ function ActiveXObject(progId, opt_location) {}
 
 /**
  * @return {string}
+ * @nosideeffects
  * @see http://msdn.microsoft.com/en-us/library/9k34bww2(VS.80).aspx
  */
 function ScriptEngine() {}
