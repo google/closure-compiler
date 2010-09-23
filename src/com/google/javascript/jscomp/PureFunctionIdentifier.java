@@ -527,8 +527,14 @@ class PureFunctionIdentifier implements CompilerPass {
           }
         }
       } else {
+        // TODO(johnlenz): track down what is inserting NULL on the lhs
+        // of an assign.
+
         // The only valid lhs expressions are NAME, GETELEM, or GETPROP.
-        throw new IllegalStateException("Unexpected lhs expression:" + lhs);
+        // throw new IllegalStateException(
+        //     "Unexpected lhs expression:" + lhs.toStringTree()
+        //    + ", parent: " + op.toStringTree() );
+        sideEffectInfo.setTaintsUnknown();
       }
     }
 
