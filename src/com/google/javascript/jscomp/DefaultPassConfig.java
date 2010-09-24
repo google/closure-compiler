@@ -1304,7 +1304,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("markPureFunctions", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new PureFunctionMarker(
+      return new PureFunctionIdentifier.Driver(
           compiler, options.debugFunctionSideEffectsPath, false);
     }
   };
@@ -1923,49 +1923,6 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     return additionalReplacements;
-  }
-
-  /** A compiler pass that marks pure functions. */
-  private static class PureFunctionMarker implements CompilerPass {
-    private final AbstractCompiler compiler;
-    private final String reportPath;
-    private final boolean useNameReferenceGraph;
-
-    PureFunctionMarker(AbstractCompiler compiler, String reportPath,
-        boolean useNameReferenceGraph) {
-      this.compiler = compiler;
-      this.reportPath = reportPath;
-      this.useNameReferenceGraph = useNameReferenceGraph;
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      DefinitionProvider definitionProvider = null;
-      if (useNameReferenceGraph) {
-        NameReferenceGraphConstruction graphBuilder =
-            new NameReferenceGraphConstruction(compiler);
-        graphBuilder.process(externs, root);
-        definitionProvider = graphBuilder.getNameReferenceGraph();
-      } else {
-        SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
-        defFinder.process(externs, root);
-        definitionProvider = defFinder;
-      }
-
-      PureFunctionIdentifier pureFunctionIdentifier =
-          new PureFunctionIdentifier(compiler, definitionProvider);
-      pureFunctionIdentifier.process(externs, root);
-
-      if (reportPath != null) {
-        try {
-          Files.write(pureFunctionIdentifier.getDebugReport(),
-              new File(reportPath),
-              Charsets.UTF_8);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    }
   }
 
   private final PassFactory printNameReferenceGraph =

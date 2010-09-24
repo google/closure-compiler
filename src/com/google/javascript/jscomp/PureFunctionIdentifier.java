@@ -17,10 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
@@ -32,6 +34,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -1124,6 +1128,52 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       return "Side effects: " + status.toString();
+    }
+  }
+
+  /**
+   * A compiler pass that constructs a reference graph and drives
+   * the PureFunctionIdentifier across it.
+   */
+  static class Driver implements CompilerPass {
+    private final AbstractCompiler compiler;
+    private final String reportPath;
+    private final boolean useNameReferenceGraph;
+
+    Driver(AbstractCompiler compiler, String reportPath,
+        boolean useNameReferenceGraph) {
+      this.compiler = compiler;
+      this.reportPath = reportPath;
+      this.useNameReferenceGraph = useNameReferenceGraph;
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      DefinitionProvider definitionProvider = null;
+      if (useNameReferenceGraph) {
+        NameReferenceGraphConstruction graphBuilder =
+            new NameReferenceGraphConstruction(compiler);
+        graphBuilder.process(externs, root);
+        definitionProvider = graphBuilder.getNameReferenceGraph();
+      } else {
+        SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+        defFinder.process(externs, root);
+        definitionProvider = defFinder;
+      }
+
+      PureFunctionIdentifier pureFunctionIdentifier =
+          new PureFunctionIdentifier(compiler, definitionProvider);
+      pureFunctionIdentifier.process(externs, root);
+
+      if (reportPath != null) {
+        try {
+          Files.write(pureFunctionIdentifier.getDebugReport(),
+              new File(reportPath),
+              Charsets.UTF_8);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
     }
   }
 }
