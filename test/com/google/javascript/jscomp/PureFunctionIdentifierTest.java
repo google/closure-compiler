@@ -39,6 +39,27 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
   private static String kExterns =
       CompilerTypeTestCase.DEFAULT_EXTERNS +
+      "/**@nosideeffects*/ function externSENone(){}\n" +
+
+      "/**@modifies{this}*/ function externSEThis(){}\n" +
+      "/**@constructor\n" +
+      " * @modifies{this}*/\n" +
+      "function externObjSEThis(){}\n" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " * @modifies{this}\n" +
+      " */\n" +
+      "externObjSEThis.prototype.externObjSEThisMethod = function(s) {};" +
+
+      "/**\n" +
+      " * @param {string} s id.\n" +
+      " * @return {string}\n" +
+      " * @modifies{arguments}\n" +
+      " */\n" +
+      "externObjSEThis.prototype.externObjSEThisMethod2 = function(s) {};" +
+
       "/**@nosideeffects*/function Error(){}" +
 
       "function externSef1(){}" +
@@ -162,6 +183,101 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     noSideEffectCalls.clear();
     localResultCalls.clear();
     boolean regExpHaveSideEffects = true;
+  }
+
+  public void testAnnotationInExterns_new1() throws Exception {
+    checkMarkedCalls("externSENone()",
+        ImmutableList.<String>of("externSENone"));
+  }
+
+  public void testAnnotationInExterns_new2() throws Exception {
+    checkMarkedCalls("externSEThis()",
+        ImmutableList.<String>of());
+  }
+
+  public void testAnnotationInExterns_new3() throws Exception {
+    checkMarkedCalls("new externObjSEThis()",
+        ImmutableList.<String>of("externObjSEThis"));
+  }
+
+  public void testAnnotationInExterns_new4() throws Exception {
+    // TODO(johnlenz): We would like the entire expression containing
+    // "externObjSEThisMethod" to be considered side-effect free
+    // in this context, but not yet, and maybe not here.
+    checkMarkedCalls("new externObjSEThis().externObjSEThisMethod('')",
+        ImmutableList.<String>of("externObjSEThis"));
+  }
+
+  public void testAnnotationInExterns_new5() throws Exception {
+    checkMarkedCalls(
+        "function f() { new externObjSEThis() };" +
+        "f();",
+        ImmutableList.<String>of("externObjSEThis", "f"));
+  }
+
+  public void testAnnotationInExterns_new6() throws Exception {
+    // While "externObjSEThisMethod" has modifies "this"
+    // it does not have global side-effects with "this" is
+    // a known local value.
+    checkMarkedCalls(
+        "function f() {" +
+        "  new externObjSEThis().externObjSEThisMethod('') " +
+        "};" +
+        "f();",
+        ImmutableList.<String>of("externObjSEThis", "f"));
+  }
+
+  public void testAnnotationInExterns_new7() throws Exception {
+    // While "externObjSEThisMethod" has modifies "this"
+    // it does not have global side-effects with "this" is
+    // a known local value.
+    checkMarkedCalls(
+        "function f() {" +
+        "  var x = new externObjSEThis(); " +
+        "  x.externObjSEThisMethod('') " +
+        "};" +
+        "f();",
+        ImmutableList.<String>of("externObjSEThis", "f"));
+  }
+
+  public void testAnnotationInExterns_new8() throws Exception {
+    // "externObjSEThisMethod" modifies "this", the 'this'
+    // is not a known local value, so it must be assumed it is to
+    // have global side-effects.
+    checkMarkedCalls(
+        "function f(x) {" +
+        "  x.externObjSEThisMethod('') " +
+        "};" +
+        "f(new externObjSEThis());",
+        ImmutableList.<String>of("externObjSEThis"));
+  }
+
+  public void testAnnotationInExterns_new9() throws Exception {
+    // "externObjSEThisMethod" modifies "this", the 'this'
+    // is not a known local value, so it must be assumed it is to
+    // have global side-effects.  All possible values of "x" are considered
+    // as no intraprocedural data flow is done.
+    checkMarkedCalls(
+        "function f(x) {" +
+        "  x = new externObjSEThis(); " +
+        "  x.externObjSEThisMethod('') " +
+        "};" +
+        "f(g);",
+        ImmutableList.<String>of("externObjSEThis"));
+  }
+
+
+  public void testAnnotationInExterns_new10() throws Exception {
+    // While "externObjSEThisMethod2" only modifies it arguments
+    // and the arguments are known local values, we don't
+    // yet connect the dots, and "f" is consider to have
+    // global side-effects.
+    checkMarkedCalls(
+        "function f() {" +
+        "  new externObjSEThis().externObjSEThisMethod2('') " +
+        "};" +
+        "f();",
+        ImmutableList.<String>of("externObjSEThis"));
   }
 
   public void testAnnotationInExterns1() throws Exception {

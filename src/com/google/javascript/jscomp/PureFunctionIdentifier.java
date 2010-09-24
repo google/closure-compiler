@@ -60,6 +60,11 @@ class PureFunctionIdentifier implements CompilerPass {
           "JSC_INVALID_NO_SIDE_EFFECT_ANNOTATION",
           "@nosideeffects may only appear in externs files.");
 
+  static final DiagnosticType INVALID_MODIFIES_ANNOTATION =
+    DiagnosticType.error(
+        "JSC_INVALID_MODIFIES_ANNOTATION",
+        "@modifies may only appear in externs files.");
+
   private final AbstractCompiler compiler;
   private final DefinitionProvider definitionProvider;
 
@@ -650,14 +655,42 @@ class PureFunctionIdentifier implements CompilerPass {
       FunctionInformation sideEffectInfo = new FunctionInformation(inExterns);
       functionSideEffectMap.put(node, sideEffectInfo);
 
-      if (hasNoSideEffectsAnnotation(node, parent, gramp)) {
-        if (inExterns) {
-          sideEffectInfo.setIsPure();
-        } else {
-          traversal.report(node, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+      JSDocInfo info = getJSDocInfoForFunction(node, parent, gramp);
+      if (info != null) {
+        boolean hasSpecificSideEffects = false;
+        if (hasSideEffectsThisAnnotation(info)) {
+          if (inExterns) {
+            hasSpecificSideEffects = true;
+            sideEffectInfo.setTaintsThis();
+          } else {
+            traversal.report(node, INVALID_MODIFIES_ANNOTATION);
+          }
         }
-      } else if (inExterns) {
-        sideEffectInfo.setTaintsGlobalState();
+
+        if (hasSideEffectsArgumentsAnnotation(info)) {
+          if (inExterns) {
+            hasSpecificSideEffects = true;
+            sideEffectInfo.setTaintsArguments();
+          } else {
+            traversal.report(node, INVALID_MODIFIES_ANNOTATION);
+          }
+        }
+
+        if (!hasSpecificSideEffects) {
+          if (hasNoSideEffectsAnnotation(info)) {
+            if (inExterns) {
+              sideEffectInfo.setIsPure();
+            } else {
+              traversal.report(node, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+            }
+          } else if (inExterns) {
+            sideEffectInfo.setTaintsGlobalState();
+          }
+        }
+      } else {
+        if (inExterns) {
+          sideEffectInfo.setTaintsGlobalState();
+        }
       }
     }
 
@@ -669,30 +702,51 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /**
+     * Get the doc info associated with the function.
+     */
+    private JSDocInfo getJSDocInfoForFunction(
+        Node node, Node parent, Node gramp) {
+      JSDocInfo info = node.getJSDocInfo();
+      if (info != null) {
+        return info;
+      } else if (NodeUtil.isName(parent)) {
+        return gramp.hasOneChild() ? gramp.getJSDocInfo() : null;
+      } else if (NodeUtil.isAssign(parent)) {
+        return parent.getJSDocInfo();
+      } else {
+        return null;
+      }
+    }
+
+    /**
      * Get the value of the @nosideeffects annotation stored in the
      * doc info.
      */
-    private boolean hasNoSideEffectsAnnotation(Node node,
-                                               Node parent,
-                                               Node gramp) {
-      {
-        JSDocInfo docInfo = node.getJSDocInfo();
-        if (docInfo != null && docInfo.isNoSideEffects()) {
-          return true;
-        }
-      }
+    private boolean hasNoSideEffectsAnnotation(JSDocInfo docInfo) {
+      Preconditions.checkNotNull(docInfo);
+      return docInfo.isNoSideEffects();
+    }
 
-      if (NodeUtil.isName(parent)) {
-        JSDocInfo docInfo = gramp.getJSDocInfo();
-        return gramp.hasOneChild() &&
-            docInfo != null &&
-            docInfo.isNoSideEffects();
-      } else if (NodeUtil.isAssign(parent)) {
-        JSDocInfo docInfo = parent.getJSDocInfo();
-        return docInfo != null && docInfo.isNoSideEffects();
-      } else {
-        return false;
-      }
+    /**
+     * Get the value of the @modifies{this} annotation stored in the
+     * doc info.
+     */
+    private boolean hasSideEffectsThisAnnotation(JSDocInfo docInfo) {
+      Preconditions.checkNotNull(docInfo);
+      return (docInfo.getModifies().contains("this"));
+    }
+
+    /**
+     * @returns Whether the @modifies annotation includes "arguments"
+     * or any named parameters.
+     */
+    private boolean hasSideEffectsArgumentsAnnotation(JSDocInfo docInfo) {
+      Preconditions.checkNotNull(docInfo);
+      Set<String> modifies = docInfo.getModifies();
+      // TODO(johnlenz): if we start tracking parameters individually
+      // this should simply be a check for "arguments".
+      return (modifies.size() > 1
+          || (modifies.size() == 1 && !modifies.contains("this")));
     }
   }
 
@@ -883,6 +937,7 @@ class PureFunctionIdentifier implements CompilerPass {
     private boolean functionThrows = false;
     private boolean taintsGlobalState = false;
     private boolean taintsThis = false;
+    private boolean taintsArguments = false;
     private boolean taintsUnknown = false;
     private boolean taintsReturn = false;
 
@@ -925,6 +980,7 @@ class PureFunctionIdentifier implements CompilerPass {
       return !(functionThrows ||
                taintsGlobalState ||
                taintsThis ||
+               taintsArguments ||
                taintsUnknown);
     }
 
@@ -960,6 +1016,14 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /**
+     * Marks the function as having "modifies arguments" side effects.
+     */
+    void setTaintsArguments() {
+      taintsArguments = true;
+      checkInvariant();
+    }
+
+    /**
      * Marks the function as having "throw" side effects.
      */
     void setFunctionThrows() {
@@ -989,7 +1053,8 @@ class PureFunctionIdentifier implements CompilerPass {
      * Returns true if function mutates global state.
      */
     boolean mutatesGlobalState() {
-      return taintsGlobalState || taintsUnknown;
+      // TODO(johnlenz): track arguments separately.
+      return taintsGlobalState || taintsArguments || taintsUnknown;
     }
 
     /**
