@@ -193,7 +193,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
         }
       }
 
-      node.setIsNoSideEffectsCall();
+      node.setSideEffectFlags(Node.NO_SIDE_EFFECTS);
     }
   }
 }

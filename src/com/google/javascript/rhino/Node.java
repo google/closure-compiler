@@ -132,8 +132,8 @@ public class Node implements Cloneable, Serializable {
       ORIGINALNAME_PROP  = 39,    // The original name of the node, before
                                   // renaming.
       BRACELESS_TYPE     = 40,    // The type syntax without curly braces.
-      NO_SIDE_EFFECTS_CALL = 41,  // Function or constructor call has no
-                                  // side effects.
+      SIDE_EFFECT_FLAGS  = 41,    // Function or constructor call side effect
+                                  // flags
       // Coding convention props
       IS_CONSTANT_NAME   = 42,    // The variable or property is constant.
       IS_OPTIONAL_PARAM  = 43,    // The parameter is optional.
@@ -220,7 +220,7 @@ public class Node implements Cloneable, Serializable {
         case SYNTHETIC_BLOCK_PROP: return "synthetic";
         case EMPTY_BLOCK: return "empty_block";
         case ORIGINALNAME_PROP: return "originalname";
-        case NO_SIDE_EFFECTS_CALL: return "no_side_effects_call";
+        case SIDE_EFFECT_FLAGS: return "side_effect_flags";
 
         case IS_CONSTANT_NAME:   return "is_constant_name";
         case IS_OPTIONAL_PARAM:  return "is_optional_param";
@@ -2062,18 +2062,50 @@ public class Node implements Cloneable, Serializable {
     return getBooleanProp(EMPTY_BLOCK);
   }
 
+  // There are four values of interest:
+  //   global state changes
+  //   this state changes
+  //   arguments state changes
+  //   whether the call throws an exception
+  //   locality of the result
+  // We want a value of 0 to mean "global state changes and
+  // unknown locality of result".
+
+  final public static int FLAG_GLOBAL_STATE_UNMODIFIED = 1;
+  final public static int FLAG_THIS_UNMODIFIED = 2;
+  final public static int FLAG_ARGUMENTS_UNMODIFIED = 4;
+  final public static int FLAG_NO_THROWS = 8;
+  final public static int FLAG_LOCAL_RESULTS = 16;
+
+  final public static int SIDE_EFFECTS_FLAGS_MASK = 31;
+
+  final public static int SIDE_EFFECTS_ALL = 0;
+  final public static int NO_SIDE_EFFECTS =
+    FLAG_GLOBAL_STATE_UNMODIFIED
+    | FLAG_THIS_UNMODIFIED
+    | FLAG_ARGUMENTS_UNMODIFIED
+    | FLAG_NO_THROWS;
+
+
   /**
-   * Marks this function or constructor call node as having no side effects.
+   * Marks this function or constructor call's side effect flags.
    * This property is only meaningful for {@link Token#CALL} and
    * {@link Token#NEW} nodes.
    */
-  public void setIsNoSideEffectsCall() {
+  public void setSideEffectFlags(int flags) {
     Preconditions.checkArgument(
        getType() == Token.CALL || getType() == Token.NEW,
        "setIsNoSideEffectsCall only supports CALL and NEW nodes, got " +
        Token.name(getType()));
 
-    putBooleanProp(NO_SIDE_EFFECTS_CALL, true);
+    putIntProp(SIDE_EFFECT_FLAGS, flags);
+  }
+
+  /**
+   * Returns the side effects flags for this node.
+   */
+  public int getSideEffectFlags() {
+    return getIntProp(SIDE_EFFECT_FLAGS);
   }
 
   /**
@@ -2081,18 +2113,34 @@ public class Node implements Cloneable, Serializable {
    * has no side effects.
    */
   public boolean isNoSideEffectsCall() {
-    return getBooleanProp(NO_SIDE_EFFECTS_CALL);
+    return areBitFlagsSet(getSideEffectFlags(), NO_SIDE_EFFECTS);
   }
 
   /**
-   * This should only be called for STRING nodes created in object lits.
+   * Returns true if this node is a function or constructor call that
+   * returns a primitive or a local object (an object that has no other
+   * references).
+   */
+  public boolean isLocalResultCall() {
+    return areBitFlagsSet(getSideEffectFlags(), FLAG_LOCAL_RESULTS);
+  }
+
+  /**
+   * returns true if all the flags are set in value.
+   */
+  private boolean areBitFlagsSet(int value, int flags) {
+    return (value & flags) == flags;
+  }
+
+  /**
+   * This should only be called for STRING nodes children of OBJECTLIT.
    */
   public boolean isQuotedString() {
     return false;
   }
 
   /**
-   * This should only be called for STRING nodes created in object lits.
+   * This should only be called for STRING nodes children of OBJECTLIT.
    */
   public void setQuotedString() {
     Kit.codeBug();

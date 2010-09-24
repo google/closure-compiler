@@ -297,20 +297,39 @@ class PureFunctionIdentifier implements CompilerPass {
       Node name = callNode.getFirstChild();
       Collection<Definition> defs =
           getCallableDefinitions(definitionProvider, name);
-      boolean hasSideEffects = true;
-      if (defs != null) {
-        hasSideEffects = false;
+      // Default to side effects, non-local results
+      SideEffectFlags flags = new SideEffectFlags();
+      if (defs == null) {
+        flags.setMutatesGlobalState();
+        flags.setThrows();
+        flags.setReturnsTainted();
+      } else {
+        flags.clearAllFlags();
         for (Definition def : defs) {
           FunctionInformation functionInfo =
               functionSideEffectMap.get(def.getRValue());
           Preconditions.checkNotNull(functionInfo);
+          // TODO(johnlenz): set the arguments separately from the
+          // global state flag.
+          if (functionInfo.mutatesGlobalState()) {
+            flags.setMutatesGlobalState();
+          }
 
-          if ((NodeUtil.isCall(callNode)
-                  && functionInfo.mayHaveSideEffects())
-               || (NodeUtil.isNew(callNode)
-                      && (functionInfo.mutatesGlobalState()
-                          || functionInfo.functionThrows()))) {
-            hasSideEffects = true;
+          if (functionInfo.functionThrows) {
+            flags.setThrows();
+          }
+
+          if (!NodeUtil.isNew(callNode)) {
+            if (functionInfo.taintsThis) {
+              flags.setMutatesThis();
+            }
+          }
+
+          if (functionInfo.taintsReturn) {
+            flags.setReturnsTainted();
+          }
+
+          if (flags.areAllFlagsSet()) {
             break;
           }
         }
@@ -320,18 +339,73 @@ class PureFunctionIdentifier implements CompilerPass {
       if (NodeUtil.isCall(callNode)) {
         Preconditions.checkState(compiler != null);
         if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
-          hasSideEffects = false;
+          flags.clearSideEffectFlags();
         }
       } else if (NodeUtil.isNew(callNode)) {
         // Handle known cases now (Object, Date, RegExp, etc)
         if (!NodeUtil.constructorCallHasSideEffects(callNode)) {
-          hasSideEffects = false;
+          flags.clearSideEffectFlags();
         }
       }
 
-      if (!hasSideEffects) {
-        callNode.setIsNoSideEffectsCall();
-      }
+      callNode.setSideEffectFlags(flags.valueOf());
+    }
+  }
+
+  private static class SideEffectFlags {
+    private int value = Node.SIDE_EFFECTS_ALL;
+
+    int valueOf() {
+      return value;
+    }
+
+    /** All side-effect occur and the returned results are non-local. */
+    void setAllFlags() {
+      value = Node.SIDE_EFFECTS_ALL;
+    }
+
+    /** No side-effects occur and the returned results are local. */
+    void clearAllFlags() {
+      value = Node.NO_SIDE_EFFECTS | Node.FLAG_LOCAL_RESULTS;
+    }
+
+    boolean areAllFlagsSet() {
+      return value == Node.SIDE_EFFECTS_ALL;
+    }
+
+    /**
+     * Preserve the return result flag, but clear the others:
+     *   no global state change, no throws, no this change, no arguments change
+     */
+    void clearSideEffectFlags() {
+      value |= Node.NO_SIDE_EFFECTS;
+    }
+
+    void setMutatesGlobalState() {
+      // Modify global means everything must be assumed to be modified.
+      removeFlag(Node.FLAG_GLOBAL_STATE_UNMODIFIED);
+      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
+      removeFlag(Node.FLAG_THIS_UNMODIFIED);
+    }
+
+    void setThrows() {
+      removeFlag(Node.FLAG_NO_THROWS);
+    }
+
+    void setMutatesThis() {
+      removeFlag(Node.FLAG_THIS_UNMODIFIED);
+    }
+
+    void setMutatesArguments() {
+      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
+    }
+
+    void setReturnsTainted() {
+      removeFlag(Node.FLAG_LOCAL_RESULTS);
+    }
+
+    private void removeFlag(int flag) {
+      value &= ~flag;
     }
   }
 
@@ -371,7 +445,8 @@ class PureFunctionIdentifier implements CompilerPass {
         return;
       }
 
-      if (!NodeUtil.nodeTypeMayHaveSideEffects(node)) {
+      if (!NodeUtil.nodeTypeMayHaveSideEffects(node)
+          && node.getType() != Token.RETURN) {
         return;
       }
 
@@ -420,6 +495,12 @@ class PureFunctionIdentifier implements CompilerPass {
               break;
             case Token.THROW:
               visitThrow(sideEffectInfo);
+              break;
+            case Token.RETURN:
+              if (node.hasChildren()
+                  && !isKnownLocalValue(node.getFirstChild())) {
+                sideEffectInfo.setTaintsReturn();
+              }
               break;
             default:
               throw new IllegalArgumentException(
@@ -803,6 +884,7 @@ class PureFunctionIdentifier implements CompilerPass {
     private boolean taintsGlobalState = false;
     private boolean taintsThis = false;
     private boolean taintsUnknown = false;
+    private boolean taintsReturn = false;
 
     FunctionInformation(boolean extern) {
       this.extern = extern;
@@ -893,6 +975,15 @@ class PureFunctionIdentifier implements CompilerPass {
       taintsUnknown = true;
       checkInvariant();
     }
+
+    /**
+     * Marks the function as having non-local return result.
+     */
+    void setTaintsReturn() {
+      taintsReturn = true;
+      checkInvariant();
+    }
+
 
     /**
      * Returns true if function mutates global state.

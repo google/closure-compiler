@@ -33,6 +33,7 @@ import java.util.List;
  */
 public class PureFunctionIdentifierTest extends CompilerTestCase {
   List<String> noSideEffectCalls = Lists.newArrayList();
+  List<String> localResultCalls = Lists.newArrayList();
 
   boolean regExpHaveSideEffects = true;
 
@@ -159,6 +160,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   protected void tearDown() throws Exception {
     super.tearDown();
     noSideEffectCalls.clear();
+    localResultCalls.clear();
     boolean regExpHaveSideEffects = true;
   }
 
@@ -413,6 +415,58 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     checkMarkedCalls(
         "function g(x) { x.foo = 3; }" /* to suppress missing property */ +
         prefix + "return externObj.foo" + suffix, expected);
+  }
+
+  public void testResultLocalitySimple() throws Exception {
+    String prefix = "var g; function f(){";
+    String suffix = "} f()";
+    List<String> expected = ImmutableList.of("f");
+    List<String> notExpected = ImmutableList.of();
+
+    // no return
+    checkLocalityOfMarkedCalls(
+        prefix + "" + suffix, expected);
+    // simple return expressions
+    checkLocalityOfMarkedCalls(
+        prefix + "return 1" + suffix, expected);
+    checkLocalityOfMarkedCalls(
+        prefix + "return 1 + 2" + suffix, expected);
+
+    // global result
+    checkLocalityOfMarkedCalls(
+        prefix + "return g" + suffix, notExpected);
+
+    // multiple returns
+    checkLocalityOfMarkedCalls(
+        prefix + "return 1; return 2" + suffix, expected);
+    checkLocalityOfMarkedCalls(
+        prefix + "return 1; return g" + suffix, notExpected);
+
+
+    // local var, not yet.
+    checkLocalityOfMarkedCalls(
+        prefix + "var a = 1; return a" + suffix, notExpected);
+
+    // mutate local var, not yet.
+    checkLocalityOfMarkedCalls(
+        prefix + "var a = 1; a = 2; return a" + suffix, notExpected);
+    checkLocalityOfMarkedCalls(
+        prefix + "var a = 1; a = 2; return a + 1" + suffix, expected);
+
+    // read from obj literal
+    checkLocalityOfMarkedCalls(
+        prefix + "return {foo : 1}.foo" + suffix,
+        notExpected);
+    checkLocalityOfMarkedCalls(
+        prefix + "var a = {foo : 1}; return a.foo" + suffix,
+        notExpected);
+
+    // read from extern
+    checkLocalityOfMarkedCalls(
+        prefix + "return externObj" + suffix, notExpected);
+    checkLocalityOfMarkedCalls(
+        "function inner(x) { x.foo = 3; }" /* to suppress missing property */ +
+        prefix + "return externObj.foo" + suffix, notExpected);
   }
 
   public void testExternCalls() throws Exception {
@@ -1077,6 +1131,12 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     noSideEffectCalls.clear();
   }
 
+  void checkLocalityOfMarkedCalls(String source, List<String> expected) {
+    testSame(source);
+    assertEquals(expected, localResultCalls);
+    localResultCalls.clear();
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new NoSideEffectCallEnumerator(compiler);
@@ -1118,6 +1178,9 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
       } else if (n.getType() == Token.CALL) {
         if (!NodeUtil.functionCallHasSideEffects(n)) {
           noSideEffectCalls.add(generateNameString(n.getFirstChild()));
+        }
+        if (NodeUtil.callHasLocalResult(n)) {
+          localResultCalls.add(generateNameString(n.getFirstChild()));
         }
       }
     }

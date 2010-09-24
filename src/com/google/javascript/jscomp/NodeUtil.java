@@ -632,6 +632,14 @@ public final class NodeUtil {
   }
 
   /**
+   * @return Whether the call has a local result.
+   */
+  static boolean callHasLocalResult(Node n) {
+    Preconditions.checkState(n.getType() == Token.CALL);
+    return (n.getSideEffectFlags() & Node.FLAG_LOCAL_RESULTS) > 0;
+  }
+
+  /**
    * Returns true if the current node's type implies side effects.
    *
    * This is a non-recursive version of the may have side effects
