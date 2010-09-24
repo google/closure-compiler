@@ -56,3 +56,27 @@ Window.prototype.JSON.stringify =
  * @return {string}
  */
 Date.prototype.toJSON = function(opt_ignoredKey) {};
+
+
+/**
+ * @return {string}
+ * @nosideeffects
+ * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/Trim
+ */
+String.prototype.trim = function() {};
+
+
+/**
+ * @return {string}
+ * @nosideeffects
+ * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/TrimLeft
+ */
+String.prototype.trimLeft = function() {};
+
+
+/**
+ * @return {string}
+ * @nosideeffects
+ * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/TrimRight
+ */
+String.prototype.trimRight = function() {};
