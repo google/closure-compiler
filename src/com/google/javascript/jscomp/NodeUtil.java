@@ -209,6 +209,39 @@ public final class NodeUtil {
   }
 
   /**
+   * Gets the function's name. This method recognizes the forms:
+   * <ul>
+   * <li>{@code {'name': function() ...}}</li>
+   * <li>{@code {name: function() ...}}</li>
+   * <li>{@code function name() ...}</li>
+   * <li>{@code var name = function() ...}</li>
+   * <li>{@code qualified.name = function() ...}</li>
+   * <li>{@code var name2 = function name1() ...}</li>
+   * <li>{@code qualified.name2 = function name1() ...}</li>
+   * </ul>
+   *
+   * @param n a node whose type is {@link Token#FUNCTION}
+   * @return the function's name, or {@code null} if it has no name
+   */
+  static String getNearestFunctionName(Node n) {
+    String name = getFunctionName(n);
+    if (name != null) {
+      return name;
+    }
+
+    // Check for the form { 'x' : function() { } }
+    Node parent = n.getParent();
+    switch (parent.getType()) {
+      case Token.OBJECTLIT:
+        // Return the name of the literal's key.
+        return getStringValue(parent.getFirstChild());
+    }
+
+    return null;
+  }
+
+
+  /**
    * Returns true if this is an immutable value.
    */
   static boolean isImmutableValue(Node n) {

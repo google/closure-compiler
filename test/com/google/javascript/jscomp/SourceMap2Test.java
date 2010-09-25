@@ -65,7 +65,7 @@ public class SourceMap2Test extends TestCase {
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAkBEBEB\"],\n" +
                    "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9],\n" +
+                   "\"mappings\":[[0,1,9,\"__BASIC__\"],\n" +
                    "[0,1,9,\"__BASIC__\"],\n" +
                    "[0,1,18],\n" +
                    "[0,1,21],\n" +
@@ -90,7 +90,7 @@ public class SourceMap2Test extends TestCase {
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAkBABkBA/kCA+ADMBcBgBA9\"],\n" +
                    "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9],\n" +
+                   "\"mappings\":[[0,1,9,\"__BASIC__\"],\n" +
                    "[0,1,9,\"__BASIC__\"],\n" +
                    "[0,1,18],\n" +
                    "[0,1,19,\"__PARAM1__\"],\n" +
@@ -148,7 +148,7 @@ public class SourceMap2Test extends TestCase {
                    "\"lineMaps\":" +
                        "[\"cAEBABIBA/ICA+ADICA/ICA+IDA9AEYBMBA5\"],\n" +
                    "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9],\n" +
+                   "\"mappings\":[[0,1,9,\"f\"],\n" +
                    "[0,1,9,\"f\"],\n" +
                    "[0,1,10],\n" +
                    "[0,1,11,\"foo\"],\n" +
@@ -174,7 +174,7 @@ public class SourceMap2Test extends TestCase {
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAEBA/ICA+IDE9IEA8IFA7IGg6MHA5\"],\n" +
                    "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9],\n" +
+                   "\"mappings\":[[0,1,9,\"f\"],\n" +
                    "[0,1,9,\"f\"],\n" +
                    "[0,1,11,\"foo\"],\n" +
                    "[0,1,16,\"bar\"],\n" +
@@ -197,7 +197,7 @@ public class SourceMap2Test extends TestCase {
                    "\"lineMaps\":" +
                        "[\"cAEBABIBA/ICA+ADICA/ICA+IDA9IEYBMBA5\"],\n" +
                    "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9],\n" +
+                   "\"mappings\":[[0,1,9,\"f\"],\n" +
                    "[0,1,9,\"f\"],\n" +
                    "[0,1,10],\n" +
                    "[0,1,11,\"foo\"],\n" +

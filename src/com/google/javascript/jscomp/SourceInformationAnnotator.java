@@ -35,6 +35,9 @@ import com.google.javascript.rhino.Token;
  * - Annotates all OBJECT_LITERAL unquoted string key nodes with an
  *   ORIGINALNAME_PROP.
  *
+ * - Annotates all FUNCTION nodes with an ORIGINALNAME_PROP indicating its
+ *   nearest original name.
+ *
  */
 class SourceInformationAnnotator extends
   NodeTraversal.AbstractPostOrderCallback {
@@ -62,7 +65,13 @@ class SourceInformationAnnotator extends
         if (propNode.getType() == Token.STRING) {
           n.putProp(Node.ORIGINALNAME_PROP, propNode.getString());
         }
+        break;
 
+      case Token.FUNCTION:
+        String functionName = NodeUtil.getNearestFunctionName(n);
+        if (functionName != null) {
+          n.putProp(Node.ORIGINALNAME_PROP, functionName);
+        }
         break;
 
       case Token.NAME:
@@ -70,8 +79,8 @@ class SourceInformationAnnotator extends
         break;
 
       case Token.OBJECTLIT:
-         for (Node key = n.getFirstChild(); key != null;
-              key = key.getNext().getNext()) {
+        for (Node key = n.getFirstChild(); key != null;
+             key = key.getNext().getNext()) {
            // We only want keys that are strings (not numbers), and only keys
            // that were unquoted.
            if (key.getType() == Token.STRING) {

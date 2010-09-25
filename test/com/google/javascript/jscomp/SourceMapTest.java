@@ -93,6 +93,81 @@ public class SourceMapTest extends TestCase {
                    "/** Begin mapping definitions. **/\n");
   }
 
+  public void testFunctionNameOutput1() throws Exception {
+    checkSourceMap("function f() {}",
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
+                   "\"count\": 1 }\n" +
+
+                   "[0,0,0,0,0,0,0,0,1,1,2,2,3,3]\n" +
+
+                   "/** Begin file information. **/\n" +
+                   "[]\n" +
+
+                   "/** Begin mapping definitions. **/\n" +
+                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,10]\n" +
+                   "[\"testcode\",1,13]\n");
+  }
+
+  public void testFunctionNameOutput2() throws Exception {
+    checkSourceMap("a.b.c = function () {};",
+
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
+                   "\"count\": 1 }\n" +
+
+                   "[3,2,2,1,1,0,4,4,4,4,4,4,4,4,5,5,6,6]\n" +
+
+                   "/** Begin file information. **/\n" +
+                   "[]\n" +
+
+                   "/** Begin mapping definitions. **/\n" +
+                   "[\"testcode\",1,0]\n" +
+                   "[\"testcode\",1,0,\"c\"]\n" +
+                   "[\"testcode\",1,0,\"b\"]\n" +
+                   "[\"testcode\",1,0,\"a\"]\n" +
+                   "[\"testcode\",1,17,\"a.b.c\"]\n" +
+                   "[\"testcode\",1,17]\n" +
+                   "[\"testcode\",1,20]\n");
+  }
+
+  public void testFunctionNameOutput3() throws Exception {
+    checkSourceMap("var q = function () {};",
+
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
+                   "\"count\": 1 }\n" +
+
+                   "[0,0,0,0,1,1,2,2,2,2,2,2,2,2,3,3,4,4]\n" +
+
+                   "/** Begin file information. **/\n" +
+                   "[]\n" +
+
+                   "/** Begin mapping definitions. **/\n" +
+                   "[\"testcode\",1,0]\n" +
+                   "[\"testcode\",1,4,\"q\"]\n" +
+                   "[\"testcode\",1,17,\"q\"]\n" +
+                   "[\"testcode\",1,17]\n" +
+                   "[\"testcode\",1,20]\n");
+  }
+
+  public void testFunctionNameOutput4() throws Exception {
+    checkSourceMap("({ 'q' : function () {} })",
+
+                   "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
+                   "\"count\": 1 }\n" +
+
+                   "[0,0,0,0,1,1,1,1,1,1,1,1,2,2,3,3,0,0]\n" +
+
+                   "/** Begin file information. **/\n" +
+                   "[]\n" +
+
+                   "/** Begin mapping definitions. **/\n" +
+                   "[\"testcode\",1,1]\n" +
+                   "[\"testcode\",1,18,\"q\"]\n" +
+                   "[\"testcode\",1,18]\n" +
+                   "[\"testcode\",1,21]\n");
+  }
+
   public void testGoldenOutput1() throws Exception {
     detailLevel = SourceMap.DetailLevel.ALL;
 
@@ -108,7 +183,7 @@ public class SourceMapTest extends TestCase {
                    "[]\n" +
 
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,9]\n" +
+                   "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,10]\n" +
                    "[\"testcode\",1,11,\"foo\"]\n" +
@@ -136,7 +211,7 @@ public class SourceMapTest extends TestCase {
                    "[]\n" +
 
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,9]\n" +
+                   "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,11,\"foo\"]\n" +
                    "[\"testcode\",1,16,\"bar\"]\n" +
@@ -160,7 +235,7 @@ public class SourceMapTest extends TestCase {
                    "/** Begin file information. **/\n" +
                    "[]\n" +
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,9]\n" +
+                   "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,10]\n" +
                    "[\"testcode\",1,11,\"foo\"]\n" +
