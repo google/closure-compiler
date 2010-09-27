@@ -2086,7 +2086,6 @@ public class Node implements Cloneable, Serializable {
     | FLAG_ARGUMENTS_UNMODIFIED
     | FLAG_NO_THROWS;
 
-
   /**
    * Marks this function or constructor call's side effect flags.
    * This property is only meaningful for {@link Token#CALL} and
@@ -2101,11 +2100,94 @@ public class Node implements Cloneable, Serializable {
     putIntProp(SIDE_EFFECT_FLAGS, flags);
   }
 
+  public void setSideEffectFlags(SideEffectFlags flags) {
+    setSideEffectFlags(flags.valueOf());
+  }
+
   /**
    * Returns the side effects flags for this node.
    */
   public int getSideEffectFlags() {
     return getIntProp(SIDE_EFFECT_FLAGS);
+  }
+
+  /**
+   * A helper class for getting and setting the side-effect flags.
+   * @author johnlenz@google.com (John Lenz)
+   */
+  public static class SideEffectFlags {
+    private int value = Node.SIDE_EFFECTS_ALL;
+
+    public SideEffectFlags() {
+    }
+
+    public SideEffectFlags(int value) {
+      this.value = value;
+    }
+
+    public int valueOf() {
+      return value;
+    }
+
+    /** All side-effect occur and the returned results are non-local. */
+    public void setAllFlags() {
+      value = Node.SIDE_EFFECTS_ALL;
+    }
+
+    /** No side-effects occur and the returned results are local. */
+    public void clearAllFlags() {
+      value = Node.NO_SIDE_EFFECTS | Node.FLAG_LOCAL_RESULTS;
+    }
+
+    public boolean areAllFlagsSet() {
+      return value == Node.SIDE_EFFECTS_ALL;
+    }
+
+    /**
+     * Preserve the return result flag, but clear the others:
+     *   no global state change, no throws, no this change, no arguments change
+     */
+    public void clearSideEffectFlags() {
+      value |= Node.NO_SIDE_EFFECTS;
+    }
+
+    public void setMutatesGlobalState() {
+      // Modify global means everything must be assumed to be modified.
+      removeFlag(Node.FLAG_GLOBAL_STATE_UNMODIFIED);
+      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
+      removeFlag(Node.FLAG_THIS_UNMODIFIED);
+    }
+
+    public void setThrows() {
+      removeFlag(Node.FLAG_NO_THROWS);
+    }
+
+    public void setMutatesThis() {
+      removeFlag(Node.FLAG_THIS_UNMODIFIED);
+    }
+
+    public void setMutatesArguments() {
+      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
+    }
+
+    public void setReturnsTainted() {
+      removeFlag(Node.FLAG_LOCAL_RESULTS);
+    }
+
+    private void removeFlag(int flag) {
+      value &= ~flag;
+    }
+  }
+
+  /**
+   * @return Whether the only side-effect is "modifies this"
+   */
+  public boolean isOnlyModifiesThisCall() {
+    return areBitFlagsSet(
+        getSideEffectFlags() & Node.NO_SIDE_EFFECTS,
+        Node.FLAG_GLOBAL_STATE_UNMODIFIED
+            | Node.FLAG_ARGUMENTS_UNMODIFIED
+            | Node.FLAG_NO_THROWS);
   }
 
   /**

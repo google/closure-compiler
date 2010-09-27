@@ -530,6 +530,11 @@ public final class NodeUtil {
         }
 
         if (isAssignmentOp(n)) {
+          Node assignTarget = n.getFirstChild();
+          if (isName(assignTarget)) {
+            return true;
+          }
+
           // Assignments will have side effects if
           // a) The RHS has side effects, or
           // b) The LHS has side effects, or
@@ -541,13 +546,32 @@ public final class NodeUtil {
             return true;
           }
 
-          Node current = n.getFirstChild();
-          for (;
-               current.getType() == Token.GETPROP ||
-               current.getType() == Token.GETELEM;
-               current = current.getFirstChild()) { }
+          if (isGet(assignTarget)) {
+            // If the object being assigned to is a local object, don't
+            // consider this a side-effect as it can't be referenced
+            // elsewhere.  Don't do this recursively as the property might
+            // be an alias of another object, unlike a literal below.
+            Node current = assignTarget.getFirstChild();
+            if (evaluatesToLocalValue(current)) {
+              return false;
+            }
 
-          return !isLiteralValue(current, true);
+            // A literal value as defined by "isLiteralValue" is guaranteed
+            // not to be an alias, or any components which are aliases of
+            // other objects.
+            // If the root object is a literal don't consider this a
+            // side-effect.
+            while (isGet(current)) {
+              current = current.getFirstChild();
+            }
+
+            return !isLiteralValue(current, true);
+          } else {
+            // TODO(johnlenz): remove this code and make this an exception. This
+            // is here only for legacy reasons, the AST is not valid but
+            // preserve existing behavior.
+            return !isLiteralValue(assignTarget, true);
+          }
         }
 
         return true;
@@ -637,6 +661,11 @@ public final class NodeUtil {
         return false;
       }
     } else if (nameNode.getType() == Token.GETPROP) {
+      if (callNode.isOnlyModifiesThisCall()
+          && evaluatesToLocalValue(nameNode.getFirstChild())) {
+        return false;
+      }
+
       // Functions in the "Math" namespace have no side effects.
       if (nameNode.getFirstChild().getType() == Token.NAME) {
         String namespaceName = nameNode.getFirstChild().getString();
@@ -2212,5 +2241,80 @@ public final class NodeUtil {
       call.addChildToBack(parameter);
     }
     return call;
+  }
+
+  /**
+   * @return Whether the node is known to be a value that is not referenced
+   * elsewhere.
+   */
+  static boolean evaluatesToLocalValue(Node value) {
+    return evaluatesToLocalValue(value, Predicates.<Node>alwaysFalse());
+  }
+
+  /**
+   * @param locals A predicate to apply to unknown local values.
+   * @return Whether the node is known to be a value that is not a reference
+   *     outside the expression scope.
+   */
+  static boolean evaluatesToLocalValue(Node value, Predicate<Node> locals) {
+    switch (value.getType()) {
+      case Token.ASSIGN:
+        // A result that is aliased by a non-local name, is the effectively the
+        // same as returning a non-local name, but this doesn't matter if the
+        // value is immutable.
+        return NodeUtil.isImmutableValue(value.getLastChild())
+            || (locals.apply(value)
+                && evaluatesToLocalValue(value.getLastChild(), locals));
+      case Token.COMMA:
+        return evaluatesToLocalValue(value.getLastChild(), locals);
+      case Token.AND:
+      case Token.OR:
+        return evaluatesToLocalValue(value.getFirstChild(), locals)
+           && evaluatesToLocalValue(value.getLastChild(), locals);
+      case Token.HOOK:
+        return evaluatesToLocalValue(value.getFirstChild().getNext(), locals)
+           && evaluatesToLocalValue(value.getLastChild(), locals);
+      case Token.INC:
+      case Token.DEC:
+        if (value.getBooleanProp(Node.INCRDECR_PROP)) {
+          return evaluatesToLocalValue(value.getFirstChild(), locals);
+        } else {
+          return true;
+        }
+      case Token.THIS:
+        return locals.apply(value);
+      case Token.NAME:
+        return isImmutableValue(value) || locals.apply(value);
+      case Token.GETELEM:
+      case Token.GETPROP:
+        // There is no information about the locality of object properties.
+        return locals.apply(value);
+      case Token.CALL:
+        return callHasLocalResult(value) || locals.apply(value);
+      case Token.NEW:
+        return true;
+      case Token.FUNCTION:
+      case Token.REGEXP:
+      case Token.ARRAYLIT:
+      case Token.OBJECTLIT:
+        // Literals objects with non-literal children are allowed.
+        return true;
+      case Token.IN:
+        // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
+        return true;
+      default:
+        // Other op force a local value:
+        //  x = '' + g (x is now an local string)
+        //  x -= g (x is now an local number)
+        if (isAssignmentOp(value)
+            || isSimpleOperator(value)
+            || isImmutableValue(value)) {
+          return true;
+        }
+
+        throw new IllegalStateException(
+            "Unexpected expression node" + value +
+            "\n parent:" + value.getParent());
+    }
   }
 }

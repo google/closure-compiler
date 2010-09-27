@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -307,7 +307,7 @@ class PureFunctionIdentifier implements CompilerPass {
       Collection<Definition> defs =
           getCallableDefinitions(definitionProvider, name);
       // Default to side effects, non-local results
-      SideEffectFlags flags = new SideEffectFlags();
+      Node.SideEffectFlags flags = new Node.SideEffectFlags();
       if (defs == null) {
         flags.setMutatesGlobalState();
         flags.setThrows();
@@ -358,63 +358,6 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       callNode.setSideEffectFlags(flags.valueOf());
-    }
-  }
-
-  private static class SideEffectFlags {
-    private int value = Node.SIDE_EFFECTS_ALL;
-
-    int valueOf() {
-      return value;
-    }
-
-    /** All side-effect occur and the returned results are non-local. */
-    void setAllFlags() {
-      value = Node.SIDE_EFFECTS_ALL;
-    }
-
-    /** No side-effects occur and the returned results are local. */
-    void clearAllFlags() {
-      value = Node.NO_SIDE_EFFECTS | Node.FLAG_LOCAL_RESULTS;
-    }
-
-    boolean areAllFlagsSet() {
-      return value == Node.SIDE_EFFECTS_ALL;
-    }
-
-    /**
-     * Preserve the return result flag, but clear the others:
-     *   no global state change, no throws, no this change, no arguments change
-     */
-    void clearSideEffectFlags() {
-      value |= Node.NO_SIDE_EFFECTS;
-    }
-
-    void setMutatesGlobalState() {
-      // Modify global means everything must be assumed to be modified.
-      removeFlag(Node.FLAG_GLOBAL_STATE_UNMODIFIED);
-      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
-      removeFlag(Node.FLAG_THIS_UNMODIFIED);
-    }
-
-    void setThrows() {
-      removeFlag(Node.FLAG_NO_THROWS);
-    }
-
-    void setMutatesThis() {
-      removeFlag(Node.FLAG_THIS_UNMODIFIED);
-    }
-
-    void setMutatesArguments() {
-      removeFlag(Node.FLAG_ARGUMENTS_UNMODIFIED);
-    }
-
-    void setReturnsTainted() {
-      removeFlag(Node.FLAG_LOCAL_RESULTS);
-    }
-
-    private void removeFlag(int flag) {
-      value &= ~flag;
     }
   }
 
@@ -496,7 +439,7 @@ class PureFunctionIdentifier implements CompilerPass {
               // Assignment to local, if the value isn't a safe local value,
               // new object creation or literal or known primitive result
               // value, add it to the local blacklist.
-              if (value != null && !isKnownLocalValue(value)) {
+              if (value != null && !NodeUtil.evaluatesToLocalValue(value)) {
                 Scope scope = traversal.getScope();
                 Var var = scope.getVar(node.getString());
                 sideEffectInfo.blacklistLocal(var);
@@ -507,7 +450,7 @@ class PureFunctionIdentifier implements CompilerPass {
               break;
             case Token.RETURN:
               if (node.hasChildren()
-                  && !isKnownLocalValue(node.getFirstChild())) {
+                  && !NodeUtil.evaluatesToLocalValue(node.getFirstChild())) {
                 sideEffectInfo.setTaintsReturn();
               }
               break;
@@ -594,7 +537,9 @@ class PureFunctionIdentifier implements CompilerPass {
           Preconditions.checkState(
               NodeUtil.isAssignmentOp(op)
               || isIncDec(op) || op.getType() == Token.DELPROP);
-          if (rhs != null && NodeUtil.isAssign(op) && !isKnownLocalValue(rhs)) {
+          if (rhs != null
+              && NodeUtil.isAssign(op)
+              && !NodeUtil.evaluatesToLocalValue(rhs)) {
             sideEffectInfo.blacklistLocal(var);
           }
         }
@@ -658,6 +603,12 @@ class PureFunctionIdentifier implements CompilerPass {
 
       FunctionInformation sideEffectInfo = new FunctionInformation(inExterns);
       functionSideEffectMap.put(node, sideEffectInfo);
+
+      if (inExterns) {
+        // TODO(johnlenz): determine the locality of the results of extern
+        // functions.
+        sideEffectInfo.setTaintsReturn();
+      }
 
       JSDocInfo info = getJSDocInfoForFunction(node, parent, gramp);
       if (info != null) {
@@ -763,70 +714,33 @@ class PureFunctionIdentifier implements CompilerPass {
    * @return Whether the node is known to be a value that is not a reference
    *     outside the local scope.
    */
-  @VisibleForTesting
-  static boolean isKnownLocalValue(Node value) {
-    // TODO(johnlenz): traverse into expression.
-    // return NodeUtil.isNew(value) || NodeUtil.isLiteralValue(value, true);
-    switch (value.getType()) {
-      case Token.ASSIGN:
-      case Token.COMMA:
-        return isKnownLocalValue(value.getLastChild());
-      case Token.AND:
-      case Token.OR:
-        return isKnownLocalValue(value.getFirstChild()) &&
-           isKnownLocalValue(value.getLastChild());
-      case Token.HOOK:
-        return isKnownLocalValue(value.getFirstChild().getNext()) &&
-           isKnownLocalValue(value.getLastChild());
-      case Token.INC:
-      case Token.DEC:
-        if (value.getBooleanProp(Node.INCRDECR_PROP)) {
-          return isKnownLocalValue(value.getFirstChild());
-        } else {
-          return true;
-        }
-      case Token.THIS:
-        // TODO(johnlenz): maybe redirect this to be a tainting list for 'this'.
-        return false;
-      case Token.NAME:
-        // TODO(johnlenz): add to local tainting list, if the NAME
-        // is known to be a local.
+  private static boolean isKnownLocalValue(Node value) {
+    Predicate<Node> taintingPredicate = new Predicate<Node>() {
+      @Override
+      public boolean apply(Node value) {
+        switch (value.getType()) {
+          case Token.THIS:
+            // TODO(johnlenz): maybe redirect this to be a tainting list for 'this'.
+            return false;
+          case Token.NAME:
+            // TODO(johnlenz): add to local tainting list, if the NAME
+            // is known to be a local.
 
-        // "undefined", "NaN" and "Infinity" are allowed.
-        return NodeUtil.isImmutableValue(value);
-      case Token.GETELEM:
-      case Token.GETPROP:
-        // There is no information about the locality of object properties.
-        return false;
-      case Token.CALL:
-        // TODO(johnlenz): add to local tainting list, if the call result
-        // is not known to be a local result.
-        return false;
-      case Token.NEW:
-        return true;
-      case Token.FUNCTION:
-      case Token.REGEXP:
-      case Token.ARRAYLIT:
-      case Token.OBJECTLIT:
-        // Literals objects with non-literal children are allowed.
-        return true;
-      case Token.IN:
-        // The IN operator is not include in NodeUtil#isSimpleOperator.
-        return true;
-      default:
-        // Other op force a local value:
-        //  x = '' + g (x is now an local string)
-        //  x -= g (x is now an local number)
-        if (NodeUtil.isAssignmentOp(value)
-            || NodeUtil.isSimpleOperator(value)
-            || NodeUtil.isImmutableValue(value)) {
-          return true;
+            return false;
+          case Token.GETELEM:
+          case Token.GETPROP:
+            // There is no information about the locality of object properties.
+            return false;
+          case Token.CALL:
+            // TODO(johnlenz): add to local tainting list, if the call result
+            // is not known to be a local result.
+            return false;
         }
+        return false;
+      }
+    };
 
-        throw new IllegalStateException(
-            "Unexpected expression node" + value +
-            "\n parent:" + value.getParent());
-    }
+    return NodeUtil.evaluatesToLocalValue(value, taintingPredicate);
   }
 
   /**
@@ -874,7 +788,8 @@ class PureFunctionIdentifier implements CompilerPass {
               caller.setTaintsThis();
               changed = true;
             }
-          } else if (objectNode != null && isKnownLocalValue(objectNode)
+          } else if (objectNode != null
+              && NodeUtil.evaluatesToLocalValue(objectNode)
               && !isCallOrApply(callSite)) {
             // Modifying 'this' on a known local object doesn't change any
             // significant state.
