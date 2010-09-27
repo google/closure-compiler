@@ -249,6 +249,20 @@ public class CommandLineRunnerTest extends TestCase {
         "throw (new function Foo() {}).$x$;");
   }
 
+  public void testBooleanFlag1() {
+    args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
+    args.add("--debug");
+    test("function foo(a) {alert(a)}",
+         "function foo($a$$) {alert($a$$)}");
+  }
+
+  public void testBooleanFlag2() {
+    args.add("--debug");
+    args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
+    test("function foo(a) {alert(a)}",
+         "function foo($a$$) {alert($a$$)}");
+  }
+
   public void testHelpFlag() {
     args.add("--help");
     assertFalse(

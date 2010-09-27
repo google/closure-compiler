@@ -82,6 +82,7 @@ public class CommandLineRunner extends
 
   private static class Flags {
     @Option(name = "--help",
+        handler = BooleanOptionHandler.class,
         usage = "Displays this message")
     private boolean display_help = false;
 
@@ -103,6 +104,7 @@ public class CommandLineRunner extends
     private boolean print_ast = false;
 
     @Option(name = "--print_pass_graph",
+        handler = BooleanOptionHandler.class,
         usage = "Prints a dot file describing the passes that will get run"
         + " and exits")
     private boolean print_pass_graph = false;
@@ -299,6 +301,7 @@ public class CommandLineRunner extends
     private String output_manifest = "";
 
     @Option(name = "--version",
+        handler = BooleanOptionHandler.class,
         usage = "Prints the compiler version to stderr.")
     private boolean version = false;
 
@@ -329,8 +332,8 @@ public class CommandLineRunner extends
           } else if (FALSES.contains(lowerParam)) {
             setter.addValue(false);
           } else {
-            throw new CmdLineException(owner,
-               "Illegal boolean value: " + lowerParam);
+            setter.addValue(true);
+            return 0;
           }
           return 1;
         }
