@@ -33,6 +33,9 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 import java.io.File;
 import java.io.IOException;
@@ -605,9 +608,18 @@ class PureFunctionIdentifier implements CompilerPass {
       functionSideEffectMap.put(node, sideEffectInfo);
 
       if (inExterns) {
-        // TODO(johnlenz): determine the locality of the results of extern
-        // functions.
-        sideEffectInfo.setTaintsReturn();
+        JSType jstype = node.getJSType();
+        boolean knownLocalResult = false;
+        if (jstype != null && jstype.isFunctionType()) {
+          FunctionType functionType = (FunctionType) jstype;
+          JSType jstypeReturn = functionType.getReturnType();
+          if (isLocalValueType(jstypeReturn, true)) {
+            knownLocalResult = true;
+          }
+        }
+        if (!knownLocalResult) {
+          sideEffectInfo.setTaintsReturn();
+        }
       }
 
       JSDocInfo info = getJSDocInfoForFunction(node, parent, gramp);
@@ -647,6 +659,18 @@ class PureFunctionIdentifier implements CompilerPass {
           sideEffectInfo.setTaintsGlobalState();
         }
       }
+    }
+
+    /**
+     * @return Whether the jstype is something known to be a local value.
+     */
+    private boolean isLocalValueType(JSType jstype, boolean recurse) {
+      Preconditions.checkNotNull(jstype);
+      JSType subtype =  jstype.getGreatestSubtype(
+          compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE));
+      // If the type includes anything related to a object type, don't assume
+      // anything about the locality of the value.
+      return subtype.isNoType();
     }
 
     /**
@@ -714,18 +738,20 @@ class PureFunctionIdentifier implements CompilerPass {
    * @return Whether the node is known to be a value that is not a reference
    *     outside the local scope.
    */
-  private static boolean isKnownLocalValue(Node value) {
+  private static boolean isKnownLocalValue(final Node value) {
     Predicate<Node> taintingPredicate = new Predicate<Node>() {
       @Override
       public boolean apply(Node value) {
         switch (value.getType()) {
+          case Token.ASSIGN:
+            // The assignment might cause an alias, look at the lhs.
+            return false;
           case Token.THIS:
             // TODO(johnlenz): maybe redirect this to be a tainting list for 'this'.
             return false;
           case Token.NAME:
             // TODO(johnlenz): add to local tainting list, if the NAME
             // is known to be a local.
-
             return false;
           case Token.GETELEM:
           case Token.GETPROP:
