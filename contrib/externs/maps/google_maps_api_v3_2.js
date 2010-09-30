@@ -245,25 +245,25 @@ google.maps.MapTypeId = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.MapTypeId.prototype.HYBRID;
+google.maps.MapTypeId.HYBRID;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.MapTypeId.prototype.ROADMAP;
+google.maps.MapTypeId.ROADMAP;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.MapTypeId.prototype.SATELLITE;
+google.maps.MapTypeId.SATELLITE;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.MapTypeId.prototype.TERRAIN;
+google.maps.MapTypeId.TERRAIN;
 
 /**
  * @constructor
@@ -293,19 +293,19 @@ google.maps.MapTypeControlStyle = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.MapTypeControlStyle.prototype.DEFAULT;
+google.maps.MapTypeControlStyle.DEFAULT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.MapTypeControlStyle.prototype.DROPDOWN_MENU;
+google.maps.MapTypeControlStyle.DROPDOWN_MENU;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.MapTypeControlStyle.prototype.HORIZONTAL_BAR;
+google.maps.MapTypeControlStyle.HORIZONTAL_BAR;
 
 /**
  * @constructor
@@ -330,25 +330,25 @@ google.maps.NavigationControlStyle = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.NavigationControlStyle.prototype.ANDROID;
+google.maps.NavigationControlStyle.ANDROID;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.NavigationControlStyle.prototype.DEFAULT;
+google.maps.NavigationControlStyle.DEFAULT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.NavigationControlStyle.prototype.SMALL;
+google.maps.NavigationControlStyle.SMALL;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.NavigationControlStyle.prototype.ZOOM_PAN;
+google.maps.NavigationControlStyle.ZOOM_PAN;
 
 /**
  * @constructor
@@ -373,7 +373,7 @@ google.maps.ScaleControlStyle = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.ScaleControlStyle.prototype.DEFAULT;
+google.maps.ScaleControlStyle.DEFAULT;
 
 /**
  * @constructor
@@ -383,49 +383,49 @@ google.maps.ControlPosition = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.ControlPosition.prototype.BOTTOM;
+google.maps.ControlPosition.BOTTOM;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ControlPosition.prototype.BOTTOM_LEFT;
+google.maps.ControlPosition.BOTTOM_LEFT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ControlPosition.prototype.BOTTOM_RIGHT;
+google.maps.ControlPosition.BOTTOM_RIGHT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ControlPosition.prototype.LEFT;
+google.maps.ControlPosition.LEFT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ControlPosition.prototype.RIGHT;
+google.maps.ControlPosition.RIGHT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ControlPosition.prototype.TOP;
+google.maps.ControlPosition.TOP;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ControlPosition.prototype.TOP_LEFT;
+google.maps.ControlPosition.TOP_LEFT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ControlPosition.prototype.TOP_RIGHT;
+google.maps.ControlPosition.TOP_RIGHT;
 
 /**
  * @constructor
@@ -1052,43 +1052,43 @@ google.maps.GeocoderStatus = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderStatus.prototype.ERROR;
+google.maps.GeocoderStatus.ERROR;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderStatus.prototype.INVALID_REQUEST;
+google.maps.GeocoderStatus.INVALID_REQUEST;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderStatus.prototype.OK;
+google.maps.GeocoderStatus.OK;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderStatus.prototype.OVER_QUERY_LIMIT;
+google.maps.GeocoderStatus.OVER_QUERY_LIMIT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderStatus.prototype.REQUEST_DENIED;
+google.maps.GeocoderStatus.REQUEST_DENIED;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderStatus.prototype.UNKNOWN_ERROR;
+google.maps.GeocoderStatus.UNKNOWN_ERROR;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderStatus.prototype.ZERO_RESULTS;
+google.maps.GeocoderStatus.ZERO_RESULTS;
 
 /**
  * @constructor
@@ -1163,25 +1163,25 @@ google.maps.GeocoderLocationType = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderLocationType.prototype.APPROXIMATE;
+google.maps.GeocoderLocationType.APPROXIMATE;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderLocationType.prototype.GEOMETRIC_CENTER;
+google.maps.GeocoderLocationType.GEOMETRIC_CENTER;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderLocationType.prototype.RANGE_INTERPOLATED;
+google.maps.GeocoderLocationType.RANGE_INTERPOLATED;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.GeocoderLocationType.prototype.ROOFTOP;
+google.maps.GeocoderLocationType.ROOFTOP;
 
 /**
  * @constructor
@@ -1383,19 +1383,19 @@ google.maps.DirectionsTravelMode = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsTravelMode.prototype.BICYCLING;
+google.maps.DirectionsTravelMode.BICYCLING;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsTravelMode.prototype.DRIVING;
+google.maps.DirectionsTravelMode.DRIVING;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsTravelMode.prototype.WALKING;
+google.maps.DirectionsTravelMode.WALKING;
 
 /**
  * @constructor
@@ -1405,13 +1405,13 @@ google.maps.DirectionsUnitSystem = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsUnitSystem.prototype.IMPERIAL;
+google.maps.DirectionsUnitSystem.IMPERIAL;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsUnitSystem.prototype.METRIC;
+google.maps.DirectionsUnitSystem.METRIC;
 
 /**
  * @constructor
@@ -1436,49 +1436,49 @@ google.maps.DirectionsStatus = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsStatus.prototype.INVALID_REQUEST;
+google.maps.DirectionsStatus.INVALID_REQUEST;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsStatus.prototype.MAX_WAYPOINTS_EXCEEDED;
+google.maps.DirectionsStatus.MAX_WAYPOINTS_EXCEEDED;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsStatus.prototype.NOT_FOUND;
+google.maps.DirectionsStatus.NOT_FOUND;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsStatus.prototype.OK;
+google.maps.DirectionsStatus.OK;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsStatus.prototype.OVER_QUERY_LIMIT;
+google.maps.DirectionsStatus.OVER_QUERY_LIMIT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsStatus.prototype.REQUEST_DENIED;
+google.maps.DirectionsStatus.REQUEST_DENIED;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsStatus.prototype.UNKNOWN_ERROR;
+google.maps.DirectionsStatus.UNKNOWN_ERROR;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.DirectionsStatus.prototype.ZERO_RESULTS;
+google.maps.DirectionsStatus.ZERO_RESULTS;
 
 /**
  * @constructor
@@ -1700,31 +1700,31 @@ google.maps.ElevationStatus = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.ElevationStatus.prototype.INVALID_REQUEST;
+google.maps.ElevationStatus.INVALID_REQUEST;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ElevationStatus.prototype.OK;
+google.maps.ElevationStatus.OK;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ElevationStatus.prototype.OVER_QUERY_LIMIT;
+google.maps.ElevationStatus.OVER_QUERY_LIMIT;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ElevationStatus.prototype.REQUEST_DENIED;
+google.maps.ElevationStatus.REQUEST_DENIED;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.ElevationStatus.prototype.UNKNOWN_ERROR;
+google.maps.ElevationStatus.UNKNOWN_ERROR;
 
 /**
  * @constructor
@@ -2810,19 +2810,19 @@ google.maps.StreetViewStatus = function() {};
  * @type {string|number}
  * @const
  */
-google.maps.StreetViewStatus.prototype.OK;
+google.maps.StreetViewStatus.OK;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.StreetViewStatus.prototype.UNKNOWN_ERROR;
+google.maps.StreetViewStatus.UNKNOWN_ERROR;
 
 /**
  * @type {string|number}
  * @const
  */
-google.maps.StreetViewStatus.prototype.ZERO_RESULTS;
+google.maps.StreetViewStatus.ZERO_RESULTS;
 
 /**
  * @constructor
