@@ -43,6 +43,11 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     };
   }
 
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
   public void testSimple() {
     inFunction("var a; a=1", "var a; 1");
     inFunction("var a; a=1+1", "var a; 1+1");
@@ -108,6 +113,14 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testAssignmentInReturn() {
     inFunction("var x; return x = 1;", "var x; return 1");
     inFunction("var x; return");
+  }
+
+  public void testAssignmentSamples() {
+    // We want this to be "var x" in these cases.
+    inFunction("var x = 2;");
+    inFunction("var x = 2; x++;", "var x=2; void 0");
+    inFunction("var x; x=x++;", "var x;x++");
+    inFunction("var x; x+=1;", "var x;x+1");
   }
 
   public void testAssignmentInArgs() {
@@ -287,8 +300,8 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var a; a = (a *= 2)", "var a; a*2");
 
     // Note a = (a++) is not same as a++. Only if 'a' is dead.
-    inFunction("var a; a = (a++)", "var a; void 0");
-    inFunction("var a; a = (++a)", "var a; void 0");
+    inFunction("var a; a = (a++)", "var a; a++"); // Preferred: "var a"
+    inFunction("var a; a = (++a)", "var a; ++a"); // Preferred: "var a"
 
     inFunction("var a; a = (b = (a = 1))", "var a; b = 1");
     inFunction("var a; a = (b = (a *= 2))", "var a; b = a * 2");
@@ -298,8 +311,10 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // Include b as local.
     inFunction("var a,b; a = (b = (a = 1))", "var a,b; 1");
     inFunction("var a,b; a = (b = (a *= 2))", "var a,b; a * 2");
-    inFunction("var a,b; a = (b = (a++))", "var a,b; void 0");
-    inFunction("var a,b; a = (b = (++a))", "var a,b; void 0");
+    inFunction("var a,b; a = (b = (a++))",
+               "var a,b; a++"); // Preferred: "var a,b"
+    inFunction("var a,b; a = (b = (++a))",
+               "var a,b; ++a"); // Preferred: "var a,b"
 
     inFunction("var a; a += (a++)", "var a; a + a++");
     inFunction("var a; a += (++a)", "var a; a+ (++a)");
