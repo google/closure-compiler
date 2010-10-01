@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
@@ -1065,5 +1066,36 @@ public class NodeUtilTest extends TestCase {
     Node value = name.getFirstChild();
 
     return NodeUtil.evaluatesToLocalValue(value);
+  }
+  
+  public void testValidDefine() {
+    assertTrue(testValidDefineValue("1"));
+    assertTrue(testValidDefineValue("-3"));
+    assertTrue(testValidDefineValue("true"));
+    assertTrue(testValidDefineValue("false"));
+    assertTrue(testValidDefineValue("'foo'"));
+    
+    assertFalse(testValidDefineValue("x"));
+    assertFalse(testValidDefineValue("null"));
+    assertFalse(testValidDefineValue("undefined"));
+    assertFalse(testValidDefineValue("NaN"));
+    
+    assertTrue(testValidDefineValue("!true"));
+    assertTrue(testValidDefineValue("-true"));
+    assertTrue(testValidDefineValue("1 & 8"));
+    assertTrue(testValidDefineValue("1 + 8"));
+    assertTrue(testValidDefineValue("'a' + 'b'"));
+
+    assertFalse(testValidDefineValue("1 & foo"));
+  }
+  
+  private boolean testValidDefineValue(String js) {
+    Node script = parse("var test = " + js +";");
+    Node var = script.getFirstChild();
+    Node name = var.getFirstChild();
+    Node value = name.getFirstChild();
+
+    ImmutableSet<String> defines = ImmutableSet.of();
+    return NodeUtil.isValidDefineValue(value, defines);   
   }
 }

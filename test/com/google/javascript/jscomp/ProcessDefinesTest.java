@@ -84,10 +84,15 @@ public class ProcessDefinesTest extends CompilerTestCase {
         null, ProcessDefines.INVALID_DEFINE_TYPE_ERROR);
   }
 
-  public void testDefineWithBadValue() {
+  public void testDefineWithBadValue1() {
     test("/** @define {boolean} */ var DEF = new Boolean(true);", null,
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
+  
+  public void testDefineWithBadValue2() {
+    test("/** @define {string} */ var DEF = 'x' + y;", null,
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }  
 
   public void testDefineWithDependentValue() {
     test("/** @define {boolean} */ var BASE = false;\n" +
@@ -132,6 +137,32 @@ public class ProcessDefinesTest extends CompilerTestCase {
         "var DEF_OVERRIDE_TO_TRUE=true");
   }
 
+  public void testOverridingString0() {
+    test(
+        "/** @define {string} */ var DEF_OVERRIDE_STRING = 'x';",
+        "var DEF_OVERRIDE_STRING=\"x\"");
+  }
+  
+  public void testOverridingString1() {
+    test(
+        "/** @define {string} */ var DEF_OVERRIDE_STRING = 'x' + 'y';",
+        "var DEF_OVERRIDE_STRING=\"x\" + \"y\"");
+  }  
+  
+  public void testOverridingString2() {
+    overrides.put("DEF_OVERRIDE_STRING", Node.newString("foo"));
+    test(
+        "/** @define {string} */ var DEF_OVERRIDE_STRING = 'x';",
+        "var DEF_OVERRIDE_STRING=\"foo\"");
+  }  
+  
+  public void testOverridingString3() {
+    overrides.put("DEF_OVERRIDE_STRING", Node.newString("foo"));
+    test(
+        "/** @define {string} */ var DEF_OVERRIDE_STRING = 'x' + 'y';",
+        "var DEF_OVERRIDE_STRING=\"foo\"");
+  }
+  
   public void testMisspelledOverride() {
     overrides.put("DEF_BAD_OVERIDE", new Node(Token.TRUE));
     test("/** @define {boolean} */ var DEF_BAD_OVERRIDE = true",
