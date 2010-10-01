@@ -833,6 +833,19 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Records that we're lending to another name.
+   */
+  public boolean recordLends(String name) {
+    if (!hasAnyTypeRelatedTags()) {
+      currentInfo.setLendsName(name);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Whether the current doc info has other type tags, like
    * {@code @param} or {@code @return} or {@code @type} or etc.
    */
@@ -842,6 +855,7 @@ final public class JSDocInfoBuilder {
         currentInfo.getParameterCount() > 0 ||
         currentInfo.hasReturnType() ||
         currentInfo.hasBaseType() ||
+        currentInfo.getLendsName() != null ||
         currentInfo.hasThisType() ||
         hasAnySingletonTypeTags();
   }

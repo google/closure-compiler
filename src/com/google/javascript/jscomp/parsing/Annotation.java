@@ -42,6 +42,7 @@ enum Annotation {
   INHERIT_DOC,
   INTERFACE,
   JAVA_DISPATCH,
+  LENDS,
   LICENSE, // same as preserve
   MEANING,
   MODIFIES,
@@ -90,6 +91,7 @@ enum Annotation {
       put("inheritDoc", Annotation.INHERIT_DOC).
       put("interface", Annotation.INTERFACE).
       put("javadispatch", Annotation.JAVA_DISPATCH).
+      put("lends", Annotation.LENDS).
       put("license", Annotation.LICENSE).
       put("meaning", Annotation.MEANING).
       put("modifies", Annotation.MODIFIES).

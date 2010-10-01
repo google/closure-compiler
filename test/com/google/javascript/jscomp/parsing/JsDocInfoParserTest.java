@@ -1132,6 +1132,38 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "extra @meaning tag");
   }
 
+  public void testParseLends1() throws Exception {
+    JSDocInfo info = parse("@lends {name} */");
+    assertEquals("name", info.getLendsName());
+  }
+
+  public void testParseLends2() throws Exception {
+    JSDocInfo info = parse("@lends   foo.bar  */");
+    assertEquals("foo.bar", info.getLendsName());
+  }
+
+  public void testParseLends3() throws Exception {
+    parse("@lends {name */", "expected closing }");
+  }
+
+  public void testParseLends4() throws Exception {
+    parse("@lends {} */", "missing object name in @lends tag");
+  }
+
+  public void testParseLends5() throws Exception {
+    parse("@lends } */", "missing object name in @lends tag");
+  }
+
+  public void testParseLends6() throws Exception {
+    parse("@lends {string} \n * @lends {string} */",
+        "@lends tag incompatible with other annotations");
+  }
+
+  public void testParseLends7() throws Exception {
+    parse("@type {string} \n * @lends {string} */",
+        "@lends tag incompatible with other annotations");
+  }
+
   public void testParsePreserve() throws Exception {
     Node node = new Node(1);
     this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
@@ -2231,7 +2263,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @id \n" +
       "* @ignore \n" +
       "* @inner \n" +
-      "* @lends \n" +
+      "* @lends {string} \n" +
       "* @link \n" +
       "* @member \n" +
       "* @memberOf \n" +

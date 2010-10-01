@@ -100,6 +100,7 @@ public final class JSDocInfo implements Serializable {
     String license = null;
     Set<String> suppressions = null;
     Set<String> modifies = null;
+    String lendsName = null;
   }
 
   private static final class LazilyInitializedDocumentation {
@@ -1034,6 +1035,23 @@ public final class JSDocInfo implements Serializable {
   void setMeaning(String meaning) {
     lazyInitInfo();
     info.meaning = meaning;
+  }
+
+  /**
+   * Gets the name we're lending to in a {@code @lends} annotation.
+   *
+   * In many reflection APIs, you pass an anonymous object to a function,
+   * and that function mixes the anonymous object into another object.
+   * The {@code @lends} annotation allows the type system to track
+   * those property assignments.
+   */
+  public String getLendsName() {
+    return (info == null) ? null : info.lendsName;
+  }
+
+  void setLendsName(String name) {
+    lazyInitInfo();
+    info.lendsName = name;
   }
 
   /**

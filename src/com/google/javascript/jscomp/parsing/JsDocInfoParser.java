@@ -414,6 +414,33 @@ public final class JsDocInfoParser {
                   token = eatTokensUntilEOL();
                   continue retry;
 
+                case LENDS:
+                  skipEOLs();
+
+                  matchingRc = false;
+                  if (match(JsDocToken.LC)) {
+                    token = next();
+                    matchingRc = true;
+                  }
+
+                  if (match(JsDocToken.STRING)) {
+                    token = next();
+                    if (!jsdocBuilder.recordLends(stream.getString())) {
+                      parser.addWarning("msg.jsdoc.lends.incompatible",
+                          stream.getLineno(), stream.getCharno());
+                    }
+                  } else {
+                    parser.addWarning("msg.jsdoc.lends.missing",
+                        stream.getLineno(), stream.getCharno());
+                  }
+
+                  if (matchingRc && !match(JsDocToken.RC)) {
+                    parser.addWarning("msg.jsdoc.missing.rc",
+                        stream.getLineno(), stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
                 case MEANING:
                   ExtractionInfo meaningInfo =
                       extractMultilineTextualBlock(token);
