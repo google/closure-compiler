@@ -234,6 +234,21 @@ Document.prototype.xmlStandalone;
 Document.prototype.xmlVersion;
 
 /**
+ * @return {undefined}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-normalizeDocument
+ */
+Document.prototype.normalizeDocument = function() {};
+
+/**
+ * @param {Node} n
+ * @param {string} namespaceURI
+ * @param {string} qualifiedName
+ * @return {Node}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-renameNode
+ */
+Document.prototype.renameNode = function(n, namespaceURI, qualifiedName) {};
+
+/**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-baseURI
  */
@@ -263,6 +278,42 @@ Node.prototype.prefix;
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-textContent
  */
 Node.prototype.textContent;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_DISCONNECTED
+ */
+Node.DOCUMENT_POSITION_DISCONNECTED = 0x01;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_PRECEDING
+ */
+Node.DOCUMENT_POSITION_PRECEDING    = 0x02;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_FOLLOWING
+ */
+Node.DOCUMENT_POSITION_FOLLOWING    = 0x04;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_CONTAINS
+ */
+Node.DOCUMENT_POSITION_CONTAINS     = 0x08;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_CONTAINED_BY
+ */
+Node.DOCUMENT_POSITION_CONTAINED_BY = 0x10;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node-DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+ */
+Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
 
 /**
  * @param {Node} other
@@ -644,6 +695,24 @@ DOMError.prototype.relatedData;
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-relatedException
  */
 DOMError.prototype.relatedException;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-severity-warning
+ */
+DOMError.SEVERITY_WARNING = 1;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-severity-error
+ */
+DOMError.SEVERITY_ERROR = 2;
+
+/**
+ * @type {number}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-severity-fatal-error
+ */
+DOMError.SEVERITY_FATAL_ERROR = 3;
 
 /**
  * @type {number}
