@@ -480,7 +480,7 @@ Array.prototype.pop = function() {};
 Array.prototype.push = function(var_args) {};
 
 /**
- * Transposes the elements of an array: the first array element becomes the
+ * Transposes the elements of an array in place: the first array element becomes the
  * last and the last becomes the first.
  *
  * @this {Object}
@@ -519,7 +519,6 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
  * @param {Function=} opt_compareFunction Specifies a function that defines the
  *     sort order.
  * @this {Object}
- * @modifies {this}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/sort
  */
 Array.prototype.sort = function(opt_compareFunction) {};
@@ -623,6 +622,7 @@ Array.prototype.forEach = function(callback, opt_thisobj) {};
  * Mozilla 1.6+ only.
  * @param {*} obj
  * @param {number=} opt_fromIndex
+ * @return {number}
  * @this {Object}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/indexOf
@@ -633,6 +633,7 @@ Array.prototype.indexOf = function(obj, opt_fromIndex) {};
  * Mozilla 1.6+ only.
  * @param {*} obj
  * @param {number=} opt_fromIndex
+ * @return {number}
  * @this {Object}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/lastIndexOf
@@ -1810,19 +1811,26 @@ String.prototype.length;
 function RegExp(opt_pattern, opt_flags) {}
 
 /**
+ * @param {*} pattern
+ * @param {*=} opt_flags
+ * @return {void}
  * @modifies {this}
  * @deprecated
+ * @see http://msdn.microsoft.com/en-us/library/x9cswe0z(v=VS.85).aspx
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/compile
  */
-RegExp.prototype.compile;
+RegExp.prototype.compile = function(pattern, opt_flags) {};
 
 /**
+ * @param {*} str The string to search.
+ * @return {Array.<string>|null}
+ * @see http://msdn.microsoft.com/en-us/library/z908hy33(VS.85).aspx
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/exec
  */
-RegExp.prototype.exec;
+RegExp.prototype.exec = function(str) {};
 
 /**
- * @param {*} str The string to search for.
+ * @param {*} str The string to search.
  * @return {boolean} Whether the string was matched.
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/test
  */
