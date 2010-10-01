@@ -858,7 +858,7 @@ Element.prototype.prefix;
  * @implicitCast
  */
 Element.prototype.tabIndex;
-Element.prototype.tagName;
+
 /**
  * @type {string}
  * @implicitCast

@@ -289,7 +289,7 @@ CanvasRenderingContext2D.prototype.strokeText = function(
 CanvasRenderingContext2D.prototype.measureText = function(text) {};
 
 /**
- * @param {HTMLImageElement|HTMLCanvasElement} image
+ * @param {HTMLImageElement|HTMLCanvasElement|Image} image
  * @param {number} dx Destination x coordinate.
  * @param {number} dy Destination y coordinate.
  * @param {number=} opt_dw Destination box width.  Defaults to the image width.
