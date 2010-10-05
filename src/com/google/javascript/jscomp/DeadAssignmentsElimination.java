@@ -17,16 +17,17 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 
 /**
  * Removes local variable assignments that are useless based on information from
@@ -40,6 +41,19 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
 
   private final AbstractCompiler compiler;
   private LiveVariablesAnalysis liveness;
+
+  // Matches all assignment operators and increment/decrement operators.
+  // Does *not* match VAR initialization, since RemoveUnusedVariables
+  // will already remove variables that are initialized but unused.
+  private static final Predicate<Node> matchRemovableAssigns =
+      new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return (NodeUtil.isAssignmentOp(n) &&
+              n.getFirstChild().getType() == Token.NAME) ||
+          n.getType() == Token.INC || n.getType() == Token.DEC;
+    }
+  };
 
   public DeadAssignmentsElimination(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -65,14 +79,23 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
     // We are not going to do any dead assignment elimination in when there is
     // at least one inner function because in most browsers, when there is a
     // closure, ALL the variables are saved (escaped).
-    if (!NodeUtil.containsFunction(
-        t.getScopeRoot().getLastChild())) {
-      // Computes liveness information first.
-      ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
-      liveness = new LiveVariablesAnalysis(cfg, scope, compiler);
-      liveness.analyze();
-      tryRemoveDeadAssignments(t, cfg);
+    Node fnBlock = t.getScopeRoot().getLastChild();
+    if (NodeUtil.containsFunction(fnBlock)) {
+      return;
     }
+
+    // We don't do any dead assignment elimination if there are no assigns
+    // to eliminate. :)
+    if (!NodeUtil.has(fnBlock, matchRemovableAssigns,
+            Predicates.<Node>alwaysTrue())) {
+      return;
+    }
+
+    // Computes liveness information first.
+    ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
+    liveness = new LiveVariablesAnalysis(cfg, scope, compiler);
+    liveness.analyze();
+    tryRemoveDeadAssignments(t, cfg);
   }
 
   @Override
