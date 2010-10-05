@@ -93,6 +93,7 @@ public enum CompilationLevel {
     options.closurePass = true;
     options.variableRenaming = VariableRenamingPolicy.LOCAL;
     options.inlineLocalVariables = true;
+    options.flowSensitiveInlineVariables = true;
     options.inlineLocalFunctions = true;
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
@@ -151,6 +152,7 @@ public enum CompilationLevel {
     options.inlineLocalFunctions = true;
     options.inlineGetters = true;
     options.inlineVariables = true;
+    options.flowSensitiveInlineVariables = true;
     options.computeFunctionSideEffects = true;
     
     // Remove unused vars also removes unused functions.
