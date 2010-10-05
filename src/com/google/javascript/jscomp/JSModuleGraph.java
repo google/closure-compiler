@@ -27,6 +27,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
+import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -279,27 +280,38 @@ public class JSModuleGraph {
    * a symbol that is not required until a later module, then that
    * file will be moved to the later module.
    *
+   * @param entryPoints The entry points into the program.
+   *     Expressed as JS symbols.
    * @param inputs The original list of sources. Used to ensure that the sort
    *     is stable.
    * @return The sorted list of sources.
+   * @throws CircularDependencyException if there is a circular dependency
+   *     between the provides and requires.
+   * @throws MissingProvideException if an entry point was not provided
+   *     by any of the inputs.
    */
-  List<CompilerInput> manageDependencies(List<CompilerInput> inputs)
-      throws CircularDependencyException {
+  List<CompilerInput> manageDependencies(
+      List<String> entryPoints,
+      List<CompilerInput> inputs)
+      throws CircularDependencyException, MissingProvideException {
     SortedDependencies<CompilerInput> sorter =
         new SortedDependencies<CompilerInput>(inputs);
-    List<CompilerInput> inputsWithoutProvides =
-        sorter.getInputsWithoutProvides();
+    Set<CompilerInput> entryPointInputs =
+        Sets.newLinkedHashSet(sorter.getInputsWithoutProvides());
+    for (String entryPoint : entryPoints) {
+      entryPointInputs.add(sorter.getInputProviding(entryPoint));
+    }
 
     // The order of inputs, sorted independently of modules.
     List<CompilerInput> absoluteOrder = sorter.getSortedDependenciesOf(inputs);
 
     // Figure out which sources *must* be in each module.
-    ListMultimap<JSModule, CompilerInput> inputsWithoutProvidesPerModule =
+    ListMultimap<JSModule, CompilerInput> entryPointInputsPerModule =
         LinkedListMultimap.create();
-    for (CompilerInput input : inputsWithoutProvides) {
+    for (CompilerInput input : entryPointInputs) {
       JSModule module = input.getModule();
       Preconditions.checkNotNull(module);
-      inputsWithoutProvidesPerModule.put(module, input);
+      entryPointInputsPerModule.put(module, input);
     }
 
     // Clear the modules of their inputs. This also nulls out
@@ -310,16 +322,19 @@ public class JSModuleGraph {
 
     // Figure out which sources *must* be in each module, or in one
     // of that module's dependencies.
-    for (JSModule module : inputsWithoutProvidesPerModule.keySet()) {
+    for (JSModule module : entryPointInputsPerModule.keySet()) {
       List<CompilerInput> transitiveClosure =
           sorter.getSortedDependenciesOf(
-              inputsWithoutProvidesPerModule.get(module));
+              entryPointInputsPerModule.get(module));
       for (CompilerInput input : transitiveClosure) {
         JSModule oldModule = input.getModule();
-        input.setModule(
-            oldModule == null ?
-                module :
-                getDeepestCommonDependencyInclusive(oldModule, module));
+        if (oldModule == null) {
+          input.setModule(module);
+        } else {
+          input.setModule(null);
+          input.setModule(
+              getDeepestCommonDependencyInclusive(oldModule, module));
+        }
       }
     }
 

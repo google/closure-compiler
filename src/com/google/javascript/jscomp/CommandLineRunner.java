@@ -291,6 +291,16 @@ public class CommandLineRunner extends
         + "be included in the compilation.")
     private boolean manage_closure_dependencies = false;
 
+    @Option(name = "--closure_entry_point",
+        usage = "Entry points to the program. Must be goog.provide'd "
+        + "symbols. Any goog.provide'd symbols that are not a transitive "
+        + "dependency of the entry points will be removed. Files without "
+        + "goog.provides, and their dependencies, will always be left in. "
+        + "If any entry points are specified, then the "
+        + "manage_closure_dependencies option will be set to true and "
+        + "all files will be sorted in dependency order.")
+    private List<String> closure_entry_point = Lists.newArrayList();
+
     @Option(name = "--output_manifest",
         usage = "Prints out a list of all the files in the compilation. "
         + "If --manage_closure_dependencies is on, this will not include "
@@ -467,6 +477,7 @@ public class CommandLineRunner extends
           .setDefine(flags.define)
           .setCharset(flags.charset)
           .setManageClosureDependencies(flags.manage_closure_dependencies)
+          .setClosureEntryPoints(flags.closure_entry_point)
           .setOutputManifest(flags.output_manifest);
     }
   }

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -145,7 +146,37 @@ public class JSModuleGraphTest extends TestCase {
     assertEquals("d.js", E.getInputs().get(0).getName());
   }
 
-  public void testManageDependencies() throws Exception {
+  public void testManageDependencies1() throws Exception {
+    List<CompilerInput> inputs = setUpManageDependenciesTest();
+    List<CompilerInput> results = graph.manageDependencies(
+        ImmutableList.<String>of(), inputs);
+
+    assertInputs(A, "a1", "a3");
+    assertInputs(B, "a2", "b2");
+    assertInputs(C); // no inputs
+    assertInputs(E, "c1", "e1", "e2");
+
+    assertEquals(
+        Lists.newArrayList("a1", "a3", "a2", "b2", "c1", "e1", "e2"),
+        sourceNames(results));
+  }
+
+  public void testManageDependencies2() throws Exception {
+    List<CompilerInput> inputs = setUpManageDependenciesTest();
+    List<CompilerInput> results = graph.manageDependencies(
+        ImmutableList.<String>of("c2"), inputs);
+
+    assertInputs(A, "a1", "a3");
+    assertInputs(B, "a2", "b2");
+    assertInputs(C, "c1", "c2");
+    assertInputs(E, "e1", "e2");
+
+    assertEquals(
+        Lists.newArrayList("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"),
+        sourceNames(results));
+  }
+
+  private List<CompilerInput> setUpManageDependenciesTest() {
     List<CompilerInput> inputs = Lists.newArrayList();
 
     A.add(code("a1", provides("a1"), requires()));
@@ -169,17 +200,7 @@ public class JSModuleGraphTest extends TestCase {
     for (CompilerInput input : inputs) {
       input.setCompiler(compiler);
     }
-
-    List<CompilerInput> results = graph.manageDependencies(inputs);
-
-    assertInputs(A, "a1", "a3");
-    assertInputs(B, "a2", "b2");
-    assertInputs(C); // no inputs
-    assertInputs(E, "c1", "e1", "e2");
-
-    assertEquals(
-        Lists.newArrayList("a1", "a3", "a2", "b2", "c1", "e1", "e2"),
-        sourceNames(results));
+    return inputs;
   }
 
   private void assertInputs(JSModule module, String ... sourceNames) {

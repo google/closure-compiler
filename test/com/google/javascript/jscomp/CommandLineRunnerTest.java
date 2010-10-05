@@ -339,7 +339,7 @@ public class CommandLineRunnerTest extends TestCase {
          JSModule.CIRCULAR_DEPENDENCY_ERROR);
   }
 
-  public void testSourcePruningOn() {
+  public void testSourcePruningOn1() {
     args.add("--manage_closure_dependencies=true");
     test(new String[] {
           "goog.require('beer');",
@@ -351,6 +351,70 @@ public class CommandLineRunnerTest extends TestCase {
            ""
          });
   }
+
+  public void testSourcePruningOn2() {
+    args.add("--closure_entry_point=guinness");
+    test(new String[] {
+          "goog.provide('guinness');\ngoog.require('beer');",
+          "goog.provide('beer');",
+          "goog.provide('scotch'); var x = 3;"
+         },
+         new String[] {
+           "var beer = {};",
+           "var guinness = {};"
+         });
+  }
+
+  public void testSourcePruningOn3() {
+    args.add("--closure_entry_point=scotch");
+    test(new String[] {
+          "goog.provide('guinness');\ngoog.require('beer');",
+          "goog.provide('beer');",
+          "goog.provide('scotch'); var x = 3;"
+         },
+         new String[] {
+           "var scotch = {}, x = 3;",
+         });
+  }
+
+  public void testSourcePruningOn4() {
+    args.add("--closure_entry_point=scotch");
+    args.add("--closure_entry_point=beer");
+    test(new String[] {
+          "goog.provide('guinness');\ngoog.require('beer');",
+          "goog.provide('beer');",
+          "goog.provide('scotch'); var x = 3;"
+         },
+         new String[] {
+           "var beer = {};",
+           "var scotch = {}, x = 3;",
+         });
+  }
+
+  public void testSourcePruningOn5() {
+    args.add("--closure_entry_point=shiraz");
+    test(new String[] {
+          "goog.provide('guinness');\ngoog.require('beer');",
+          "goog.provide('beer');",
+          "goog.provide('scotch'); var x = 3;"
+         },
+         Compiler.MISSING_ENTRY_ERROR);
+  }
+
+  public void testSourcePruningOn6() {
+    args.add("--closure_entry_point=scotch");
+    test(new String[] {
+          "goog.require('beer');",
+          "goog.provide('beer');",
+          "goog.provide('scotch'); var x = 3;"
+         },
+         new String[] {
+           "var beer = {};",
+           "",
+           "var scotch = {}, x = 3;",
+         });
+  }
+
 
   public void testForwardDeclareDroppedTypes() {
     args.add("--manage_closure_dependencies=true");

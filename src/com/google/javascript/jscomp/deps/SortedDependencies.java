@@ -108,6 +108,19 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   }
 
   /**
+   * Return the input that gives us the given symbol.
+   * @throws MissingProvideException An exception if there is no
+   *     input for this symbol.
+   */
+  public INPUT getInputProviding(String symbol)
+      throws MissingProvideException {
+    if (provideMap.containsKey(symbol)) {
+      return provideMap.get(symbol);
+    }
+    throw new MissingProvideException(symbol);
+  }
+
+  /**
    * Returns the first circular dependency found. Expressed as a list of
    * items in reverse dependency order (the second element depends on the
    * first, etc.).
@@ -251,6 +264,12 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   public static class CircularDependencyException extends Exception {
     CircularDependencyException(String message) {
       super(message);
+    }
+  }
+
+  public static class MissingProvideException extends Exception {
+    MissingProvideException(String provide) {
+      super(provide);
     }
   }
 }

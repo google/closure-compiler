@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
+import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -61,6 +62,16 @@ import java.util.logging.Logger;
  *
  */
 public class Compiler extends AbstractCompiler {
+
+  static final DiagnosticType MODULE_DEPENDENCY_ERROR =
+      DiagnosticType.error("JSC_MODULE_DEPENDENCY_ERROR",
+          "Bad dependency: {0} -> {1}. "
+              + "Modules must be listed in dependency order.");
+
+  static final DiagnosticType MISSING_ENTRY_ERROR = DiagnosticType.error(
+      "JSC_MISSING_ENTRY_ERROR",
+      "required entry point \"{0}\" never provided");
+
   CompilerOptions options = null;
 
   private PassConfig passes = null;
@@ -271,11 +282,6 @@ public class Compiler extends AbstractCompiler {
 
     initModules(externs, Lists.newArrayList(module), options);
   }
-
-  static final DiagnosticType MODULE_DEPENDENCY_ERROR =
-      DiagnosticType.error("JSC_MODULE_DEPENDENCY_ERROR",
-          "Bad dependency: {0} -> {1}. "
-              + "Modules must be listed in dependency order.");
 
   /**
    * Initializes the instance state needed for a compile job if the sources
@@ -1070,10 +1076,15 @@ public class Compiler extends AbstractCompiler {
         try {
           inputs =
               (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
-              .manageDependencies(inputs);
+              .manageDependencies(
+                  options.manageClosureDependenciesEntryPoints, inputs);
         } catch (CircularDependencyException e) {
           report(JSError.make(
               JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
+          return null;
+        } catch (MissingProvideException e) {
+          report(JSError.make(
+              MISSING_ENTRY_ERROR, e.getMessage()));
           return null;
         }
       }

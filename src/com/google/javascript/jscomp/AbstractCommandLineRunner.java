@@ -201,6 +201,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     createDefineReplacements(config.define, options);
 
     options.manageClosureDependencies = config.manageClosureDependencies;
+    if (config.closureEntryPoints.size() > 0) {
+      options.setManageClosureDependencies(config.closureEntryPoints);
+    }
     options.devMode = config.jscompDevMode;
     options.setCodingConvention(config.codingConvention);
     options.setSummaryDetailLevel(config.summaryDetailLevel);
@@ -1506,6 +1509,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setManageClosureDependencies(boolean newVal) {
       this.manageClosureDependencies = newVal;
+      return this;
+    }
+
+    private List<String> closureEntryPoints = ImmutableList.of();
+
+    /**
+     * Set closure entry points, which makes the compiler only include
+     * those files and sort them in dependency order.
+     */
+    CommandLineConfig setClosureEntryPoints(List<String> entryPoints) {
+      Preconditions.checkNotNull(entryPoints);
+      this.closureEntryPoints = entryPoints;
       return this;
     }
 
