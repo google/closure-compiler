@@ -378,10 +378,12 @@ Document.prototype.createCDATASection = function(data) {};
 Document.prototype.createDocumentFragment = function() {};
 
 /**
+ * Create a DOM element. Surprisingly, this has side-effects on IE
+ * (creating and element with a custom tag boots up a sub-system that
+ * handles custom tags).
  * @param {string} tagName
  * @return {!Element}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createElement
- * @nosideeffects
  */
 Document.prototype.createElement = function(tagName) {};
 

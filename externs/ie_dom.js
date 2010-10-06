@@ -1116,11 +1116,6 @@ Document.prototype.createComment;
 Document.prototype.createDocumentFragment;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms536389(VS.85).aspx
- */
-Document.prototype.createElement;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536390(VS.85).aspx
  */
 Document.prototype.createEventObject;
