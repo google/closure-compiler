@@ -74,6 +74,12 @@ Notification.prototype.onerror;
 Notification.prototype.ondisplay;
 
 /**
+ * An event handler called when the notification has been clicked on.
+ * @type {?function(Event)}
+ */
+Notification.prototype.onclick;
+
+/**
  * @constructor
  * @see http://dev.w3.org/2006/webapi/WebNotifications/publish/#dialog-if
  */
