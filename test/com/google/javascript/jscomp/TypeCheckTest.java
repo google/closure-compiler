@@ -6800,6 +6800,34 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testTypeDef4() throws Exception {
+    testTypes(
+        "/** @constructor */ function A() {}" +
+        "/** @constructor */ function B() {}" +
+        "/** @typedef {(A|B)} */ var AB;" +
+        "/** @param {AB} x */ function f(x) {}" +
+        "f(new A()); f(new B()); f(1);",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: (A|B|null)");
+  }
+
+  public void testTypeDef5() throws Exception {
+    // Notice that the error message is slightly different than
+    // the one for testTypeDef4, even though they should be the same.
+    // This is an implementation detail necessary for NamedTypes work out
+    // ok, and it should change if NamedTypes ever go away.
+    testTypes(
+        "/** @param {AB} x */ function f(x) {}" +
+        "/** @constructor */ function A() {}" +
+        "/** @constructor */ function B() {}" +
+        "/** @typedef {(A|B)} */ var AB;" +
+        "f(new A()); f(new B()); f(1);",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: (AB|null)");
+  }
+
   public void testCircularTypeDef() throws Exception {
     testTypes(
         "var goog = {};" +

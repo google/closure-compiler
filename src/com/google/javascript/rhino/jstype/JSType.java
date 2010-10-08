@@ -841,7 +841,7 @@ public abstract class JSType implements Serializable {
     }
     // named types
     if (thatType instanceof NamedType) {
-      return thisType.isSubtype(((NamedType)thatType).referencedType);
+      return thisType.isSubtype(((NamedType)thatType).getReferencedType());
     }
     return false;
   }

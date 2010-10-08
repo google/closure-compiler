@@ -115,7 +115,7 @@ class NamedType extends ProxyObjectType {
 
   /** Returns the type to which this refers (which is unknown if unresolved). */
   public JSType getReferencedType() {
-    return referencedType;
+    return getReferencedTypeInternal();
   }
 
   @Override
@@ -188,7 +188,8 @@ class NamedType extends ProxyObjectType {
 
     if (resolved) {
       super.resolveInternal(t, enclosing);
-      return registry.isLastGeneration() ? referencedType : this;
+      return registry.isLastGeneration() ?
+          getReferencedType() : this;
     }
 
     resolveViaProperties(t, enclosing);
@@ -197,7 +198,8 @@ class NamedType extends ProxyObjectType {
     }
 
     super.resolveInternal(t, enclosing);
-    return registry.isLastGeneration() ? referencedType : this;
+    return registry.isLastGeneration() ?
+        getReferencedType() : this;
   }
 
   /**
@@ -206,9 +208,9 @@ class NamedType extends ProxyObjectType {
    */
   private boolean resolveViaRegistry(
       ErrorReporter t, StaticScope<JSType> enclosing) {
-    ObjectType type = ObjectType.cast(registry.getType(reference));
+    JSType type = registry.getType(reference);
     if (type != null) {
-      setReferencedType(type, t, enclosing);
+      setReferencedAndResolvedType(type, t, enclosing);
       return true;
     }
     return false;
@@ -226,9 +228,11 @@ class NamedType extends ProxyObjectType {
     if ((value instanceof FunctionType) &&
         (value.isConstructor() || value.isInterface())) {
       FunctionType functionType = (FunctionType) value;
-      setReferencedType(functionType.getInstanceType(), t, enclosing);
+      setReferencedAndResolvedType(
+          functionType.getInstanceType(), t, enclosing);
     } else if (value instanceof EnumType) {
-      setReferencedType(((EnumType) value).getElementsType(), t, enclosing);
+      setReferencedAndResolvedType(
+          ((EnumType) value).getElementsType(), t, enclosing);
     } else {
       // We've been running into issues where people forward-declare
       // non-named types. (This is legitimate...our dependency management
@@ -282,21 +286,23 @@ class NamedType extends ProxyObjectType {
     return value;
   }
 
-  private void setReferencedType(ObjectType type, ErrorReporter t,
+  private void setReferencedAndResolvedType(JSType type, ErrorReporter t,
       StaticScope<JSType> enclosing) {
-    referencedType = type;
+    setReferencedType(type);
     checkEnumElementCycle(t);
-    setResolvedTypeInternal(referencedType);
+    setResolvedTypeInternal(getReferencedType());
   }
 
   private void handleTypeCycle(ErrorReporter t) {
-    referencedType = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+    setReferencedType(
+        registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
     t.warning("Cycle detected in inheritance chain of type " + reference,
         sourceName, lineno, null, charno);
-    setResolvedTypeInternal(referencedType);
+    setResolvedTypeInternal(getReferencedType());
   }
 
   private void checkEnumElementCycle(ErrorReporter t) {
+    JSType referencedType = getReferencedType();
     if (referencedType instanceof EnumElementType &&
         ((EnumElementType) referencedType).getPrimitiveType() == this) {
       handleTypeCycle(t);
@@ -315,11 +321,12 @@ class NamedType extends ProxyObjectType {
         t.warning("Unknown type " + reference, sourceName, lineno, null,
             charno);
       } else {
-        referencedType = registry.getNativeObjectType(
-            JSTypeNative.CHECKED_UNKNOWN_TYPE);
+        setReferencedType(
+            registry.getNativeObjectType(
+                JSTypeNative.CHECKED_UNKNOWN_TYPE));
       }
 
-      setResolvedTypeInternal(referencedType);
+      setResolvedTypeInternal(getReferencedType());
     } else {
       setResolvedTypeInternal(this);
     }

@@ -39,9 +39,11 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -54,21 +56,37 @@ import java.util.Set;
 class ProxyObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
-  ObjectType referencedType;
+  private JSType referencedType;
+  private ObjectType referencedObjType;
 
-  ProxyObjectType(JSTypeRegistry registry, ObjectType referencedType) {
+  ProxyObjectType(JSTypeRegistry registry, JSType referencedType) {
     super(registry);
+    setReferencedType(referencedType);
+  }
+
+  JSType getReferencedTypeInternal() {
+    return referencedType;
+  }
+
+  void setReferencedType(JSType referencedType) {
     this.referencedType = referencedType;
+    if (referencedType instanceof ObjectType) {
+      this.referencedObjType = (ObjectType) referencedType;
+    } else {
+      this.referencedObjType = null;
+    }
   }
 
   @Override
   public String getReferenceName() {
-    return referencedType.getReferenceName();
+    return referencedObjType == null ?
+        "" : referencedObjType.getReferenceName();
   }
 
   @Override
   public boolean hasReferenceName() {
-    return referencedType.hasReferenceName();
+    return referencedObjType == null ?
+        null : referencedObjType.hasReferenceName();
   }
 
   @Override public boolean matchesNumberContext() {
@@ -156,7 +174,8 @@ class ProxyObjectType extends ObjectType {
 
   @Override
   public Iterable<ObjectType> getCtorImplementedInterfaces() {
-    return referencedType.getCtorImplementedInterfaces();
+    return referencedObjType == null ? Collections.<ObjectType>emptyList() :
+        referencedObjType.getCtorImplementedInterfaces();
   }
 
   @Override
@@ -184,39 +203,47 @@ class ProxyObjectType extends ObjectType {
 
   @Override
   public ObjectType getImplicitPrototype() {
-    return referencedType.getImplicitPrototype();
+    return referencedObjType == null ? null :
+        referencedObjType.getImplicitPrototype();
   }
 
   @Override
   boolean defineProperty(String propertyName, JSType type,
       boolean inferred, boolean inExterns) {
-    return referencedType.defineProperty(propertyName, type, inferred,
-                                         inExterns);
+    return referencedObjType == null ? true :
+        referencedObjType.defineProperty(
+            propertyName, type, inferred, inExterns);
   }
 
   @Override
   public boolean isPropertyTypeDeclared(String propertyName) {
-    return referencedType.isPropertyTypeDeclared(propertyName);
+    return referencedObjType == null ? false :
+        referencedObjType.isPropertyTypeDeclared(propertyName);
   }
 
   @Override
   public boolean isPropertyTypeInferred(String propertyName) {
-    return referencedType.isPropertyTypeInferred(propertyName);
+    return referencedObjType == null ? false :
+        referencedObjType.isPropertyTypeInferred(propertyName);
   }
 
   @Override
   public boolean isPropertyInExterns(String propertyName) {
-    return referencedType.isPropertyInExterns(propertyName);
+    return referencedObjType == null ? false :
+        referencedObjType.isPropertyInExterns(propertyName);
   }
 
   @Override
   public int getPropertiesCount() {
-    return referencedType.getPropertiesCount();
+    return referencedObjType == null ? 0 :
+        referencedObjType.getPropertiesCount();
   }
 
   @Override
   protected void collectPropertyNames(Set<String> props) {
-    referencedType.collectPropertyNames(props);
+    if (referencedObjType != null) {
+      referencedObjType.collectPropertyNames(props);
+    }
   }
 
   @Override
@@ -226,7 +253,9 @@ class ProxyObjectType extends ObjectType {
 
   @Override
   public JSType getPropertyType(String propertyName) {
-    return referencedType.getPropertyType(propertyName);
+    return referencedObjType == null ?
+        getNativeType(JSTypeNative.UNKNOWN_TYPE) :
+        referencedObjType.getPropertyType(propertyName);
   }
 
   @Override
@@ -236,48 +265,59 @@ class ProxyObjectType extends ObjectType {
 
   @Override
   public void setJSDocInfo(JSDocInfo info) {
-    referencedType.setJSDocInfo(info);
+    if (referencedObjType != null) {
+      referencedObjType.setJSDocInfo(info);
+    }
   }
 
   @Override
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
-    return referencedType.getOwnPropertyJSDocInfo(propertyName);
+    return referencedObjType == null ? null :
+        referencedObjType.getOwnPropertyJSDocInfo(propertyName);
   }
 
   @Override
   public void setPropertyJSDocInfo(String propertyName, JSDocInfo info,
       boolean inExterns) {
-    referencedType.setPropertyJSDocInfo(propertyName, info, inExterns);
+    if (referencedObjType != null) {
+      referencedObjType.setPropertyJSDocInfo(propertyName, info, inExterns);
+    }
   }
 
   @Override
   public boolean hasProperty(String propertyName) {
-    return referencedType.hasProperty(propertyName);
+    return referencedObjType == null ? false :
+        referencedObjType.hasProperty(propertyName);
   }
 
   @Override
   public boolean hasOwnProperty(String propertyName) {
-    return referencedType.hasOwnProperty(propertyName);
+    return referencedObjType == null ? false :
+        referencedObjType.hasOwnProperty(propertyName);
   }
 
   @Override
   public Set<String> getOwnPropertyNames() {
-    return referencedType.getOwnPropertyNames();
+    return referencedObjType == null ? ImmutableSet.<String>of() :
+        referencedObjType.getOwnPropertyNames();
   }
 
   @Override
   public FunctionType getConstructor() {
-    return referencedType.getConstructor();
+    return referencedObjType == null ? null :
+        referencedObjType.getConstructor();
   }
 
   @Override
   public JSType getParameterType() {
-    return referencedType.getParameterType();
+    return referencedObjType == null ? null :
+        referencedObjType.getParameterType();
   }
 
   @Override
   public JSType getIndexType() {
-    return referencedType.getIndexType();
+    return referencedObjType == null ? null :
+        referencedObjType.getIndexType();
   }
 
   @Override
@@ -287,7 +327,7 @@ class ProxyObjectType extends ObjectType {
 
   @Override
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
-    referencedType = (ObjectType) referencedType.resolve(t, scope);
+    setReferencedType(referencedType.resolve(t, scope));
     return this;
   }
 
