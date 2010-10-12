@@ -299,6 +299,13 @@ class CodeGenerator {
         if (preserveBlock) {
           cc.beginBlock();
         }
+
+        boolean preferLineBreaks =
+            type == Token.SCRIPT ||
+            (type == Token.BLOCK &&
+                !preserveBlock &&
+                n.getParent() != null &&
+                n.getParent().getType() == Token.SCRIPT);
         for (Node c = first; c != null; c = c.getNext()) {
           add(c, Context.STATEMENT);
 
@@ -313,7 +320,7 @@ class CodeGenerator {
 
           // Prefer to break lines in between top-level statements
           // because top level statements are more homogeneous.
-          if (type == Token.SCRIPT) {
+          if (preferLineBreaks) {
             cc.notePreferredLineBreak();
           }
         }
