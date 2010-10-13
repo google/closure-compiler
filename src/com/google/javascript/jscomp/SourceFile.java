@@ -232,6 +232,11 @@ public abstract class SourceFile {
     }
   }
 
+  @Override
+  public String toString() {
+    return fileName;
+  }
+
   public static SourceFile fromFile(String fileName, Charset c) {
     return fromFile(new File(fileName), c);
   }
