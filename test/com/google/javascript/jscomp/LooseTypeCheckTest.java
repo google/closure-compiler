@@ -29,6 +29,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Tests {@link TypeCheck}.
@@ -5997,11 +5998,13 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPrototypeLoop() throws Exception {
-    testTypes(
+    testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
         "/** @constructor \n * @extends {T} */var T = function() {};" +
         "alert((new T).foo);",
-        "Parse error. Cycle detected in inheritance chain of type T");
+        Lists.newArrayList(
+            "Parse error. Cycle detected in inheritance chain of type T",
+            "Could not resolve type in @extends tag of T"));
   }
 
   public void testDirectPrototypeAssign() throws Exception {
@@ -6313,7 +6316,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
         "goog.addDependency('zzz.js', ['MyType'], []);" +
         "/** @param {MyType} x \n * @return {number} */" +
-        "function f(x) { return x; }", null);
+        "function f(x) { return 3; }", null);
   }
 
   public void testForwardTypeDeclaration2() throws Exception {
@@ -6908,6 +6911,12 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   private void testClosureTypes(String js, String description)
       throws Exception {
+    testClosureTypesMultipleWarnings(js,
+        description == null ? null : Lists.newArrayList(description));
+  }
+
+  private void testClosureTypesMultipleWarnings(
+      String js, List<String> descriptions) throws Exception {
     Node n = compiler.parseTestCode(js);
     Node externs = new Node(Token.BLOCK);
     Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
@@ -6933,14 +6942,17 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
     assertEquals(0, compiler.getErrorCount());
 
-    if (description == null) {
+    if (descriptions == null) {
       assertEquals(
           "unexpected warning(s) : " +
           Joiner.on(", ").join(compiler.getWarnings()),
           0, compiler.getWarningCount());
     } else {
-      assertEquals(1, compiler.getWarningCount());
-      assertEquals(description, compiler.getWarnings()[0].description);
+      assertEquals(descriptions.size(), compiler.getWarningCount());
+      for (int i = 0; i < descriptions.size(); i++) {
+        assertEquals(descriptions.get(i),
+            compiler.getWarnings()[i].description);
+      }
     }
   }
 

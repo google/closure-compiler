@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.javascript.rhino.ErrorReporter;
 
 /**
@@ -81,6 +82,11 @@ class NamedType extends ProxyObjectType {
   private final String sourceName;
   private final int lineno;
   private final int charno;
+
+  /**
+   * Validates the type resolution.
+   */
+  private Predicate<JSType> validator;
 
   /**
    * If true, don't warn about unresolveable type names.
@@ -288,6 +294,9 @@ class NamedType extends ProxyObjectType {
 
   private void setReferencedAndResolvedType(JSType type, ErrorReporter t,
       StaticScope<JSType> enclosing) {
+    if (validator != null) {
+      validator.apply(type);
+    }
     setReferencedType(type);
     checkEnumElementCycle(t);
     setResolvedTypeInternal(getReferencedType());
@@ -314,9 +323,10 @@ class NamedType extends ProxyObjectType {
   private void handleUnresolvedType(
       ErrorReporter t, boolean ignoreForwardReferencedTypes) {
     if (registry.isLastGeneration()) {
-      boolean beForgiving = forgiving ||
-          (ignoreForwardReferencedTypes &&
-           registry.isForwardDeclaredType(reference));
+      boolean isForwardDeclared =
+          ignoreForwardReferencedTypes &&
+          registry.isForwardDeclaredType(reference);
+      boolean beForgiving = forgiving || isForwardDeclared;
       if (!beForgiving && registry.isLastGeneration()) {
         t.warning("Unknown type " + reference, sourceName, lineno, null,
             charno);
@@ -324,6 +334,10 @@ class NamedType extends ProxyObjectType {
         setReferencedType(
             registry.getNativeObjectType(
                 JSTypeNative.CHECKED_UNKNOWN_TYPE));
+
+        if (registry.isLastGeneration() && validator != null) {
+          validator.apply(getReferencedType());
+        }
       }
 
       setResolvedTypeInternal(getReferencedType());
@@ -339,5 +353,18 @@ class NamedType extends ProxyObjectType {
     }
     handleUnresolvedType(t, true);
     return null;
+  }
+
+  @Override
+  public boolean setValidator(Predicate<JSType> validator) {
+    // If the type is already resolved, we can validate it now. If
+    // the type has not been resolved yet, we need to wait till its
+    // resolved before we can validate it.
+    if (this.isResolved()) {
+      return super.setValidator(validator);
+    } else {
+      this.validator = validator;
+      return true;
+    }
   }
 }

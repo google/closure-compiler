@@ -359,9 +359,13 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "Foo.prototype.Foo_prototype$a=0;"
         + "var Bar=function(){};"
         + "Bar.prototype.Bar_prototype$a=0;";
-    testSets(false, js, js, "{}");
+    testSets(false, BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES,
+        js, js, "{}", FunctionTypeBuilder.RESOLVED_TAG_EMPTY,
+        "Could not resolve type in @extends tag of Foo");
     testSets(true, BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES,
-        js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+        js, output, "{a=[[Bar.prototype], [Foo.prototype]]}",
+        FunctionTypeBuilder.RESOLVED_TAG_EMPTY,
+        "Could not resolve type in @extends tag of Foo");
   }
 
   public void testNamedType() {

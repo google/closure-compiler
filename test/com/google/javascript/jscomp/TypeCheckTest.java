@@ -28,6 +28,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Tests {@link TypeCheck}.
@@ -2735,6 +2736,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: boolean");
   }
 
+  public void testGoodExtends12() throws Exception {
+    testTypes(
+        "/** @constructor \n * @extends {Super} */ function Sub() {}" +
+        "/** @constructor \n * @extends {Sub} */ function Sub2() {}" +
+        "/** @constructor */ function Super() {}" +
+        "/** @param {Super} x */ function foo(x) {}" +
+        "foo(new Sub2());");
+  }
+
   public void testBadExtends1() throws Exception {
     testTypes("/** @constructor */function base() {}\n" +
         "/** @constructor\n * @extends {not_base} */function derived() {}\n",
@@ -2760,6 +2770,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testBadExtends3() throws Exception {
     testTypes("/** @extends {Object} */function base() {}",
         "@extends used without @constructor or @interface for base");
+  }
+
+  public void testBadExtends4() throws Exception {
+    // If there's a subclass of a class with a bad extends,
+    // we only want to warn about the first one.
+    testTypes(
+        "/** @constructor \n * @extends {bad} */ function Sub() {}" +
+        "/** @constructor \n * @extends {Sub} */ function Sub2() {}" +
+        "/** @param {Sub} x */ function foo(x) {}" +
+        "foo(new Sub2());",
+        "Parse error. Unknown type bad");
   }
 
   public void testLateExtends() throws Exception {
@@ -5963,7 +5984,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInheritanceCheck14() throws Exception {
-    testTypes(
+    testClosureTypes(
         "var goog = {};\n" +
         "/** @constructor\n @extends {goog.Missing} */\n" +
         "goog.Super = function() {};\n" +
@@ -6361,11 +6382,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPrototypeLoop() throws Exception {
-    testTypes(
+    testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
         "/** @constructor \n * @extends {T} */var T = function() {};" +
         "alert((new T).foo);",
-        "Parse error. Cycle detected in inheritance chain of type T");
+        Lists.newArrayList(
+            "Parse error. Cycle detected in inheritance chain of type T",
+            "Could not resolve type in @extends tag of T"));
   }
 
   public void testDirectPrototypeAssign() throws Exception {
@@ -6677,7 +6700,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
         "goog.addDependency('zzz.js', ['MyType'], []);" +
         "/** @param {MyType} x \n * @return {number} */" +
-        "function f(x) { return x; }", null);
+        "function f(x) { return 3; }", null);
   }
 
   public void testForwardTypeDeclaration2() throws Exception {
@@ -6696,6 +6719,39 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "actual parameter 1 of f does not match formal parameter\n" +
         "found   : number\n" +
         "required: (MyType|null)");
+  }
+
+  public void testForwardTypeDeclaration4() throws Exception {
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MyType'], []);" +
+        "/** @param {MyType} x */ function f(x) { return x; }" +
+        "/** @constructor */ var MyType = function() {};" +
+        "f(new MyType());",
+        null);
+  }
+
+  public void testForwardTypeDeclaration5() throws Exception {
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MyType'], []);" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {MyType}\n" +
+        " */ var YourType = function() {};" +
+        "/** @override */ YourType.prototype.method = function() {};",
+        "Could not resolve type in @extends tag of YourType");
+  }
+
+  public void testForwardTypeDeclaration6() throws Exception {
+    testClosureTypesMultipleWarnings(
+        "goog.addDependency('zzz.js', ['MyType'], []);" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @implements {MyType}\n" +
+        " */ var YourType = function() {};" +
+        "/** @override */ YourType.prototype.method = function() {};",
+        Lists.newArrayList(
+            "Could not resolve type in @implements tag of YourType",
+            "property method not defined on any superclass of YourType"));
   }
 
   public void testMalformedOldTypeDef() throws Exception {
@@ -7373,6 +7429,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   private void testClosureTypes(String js, String description)
       throws Exception {
+    testClosureTypesMultipleWarnings(js,
+        description == null ? null : Lists.newArrayList(description));
+  }
+
+  private void testClosureTypesMultipleWarnings(
+      String js, List<String> descriptions) throws Exception {
     Node n = compiler.parseTestCode(js);
     Node externs = new Node(Token.BLOCK);
     Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
@@ -7398,14 +7460,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
     assertEquals(0, compiler.getErrorCount());
 
-    if (description == null) {
+    if (descriptions == null) {
       assertEquals(
           "unexpected warning(s) : " +
           Joiner.on(", ").join(compiler.getWarnings()),
           0, compiler.getWarningCount());
     } else {
-      assertEquals(1, compiler.getWarningCount());
-      assertEquals(description, compiler.getWarnings()[0].description);
+      assertEquals(descriptions.size(), compiler.getWarningCount());
+      for (int i = 0; i < descriptions.size(); i++) {
+        assertEquals(descriptions.get(i),
+            compiler.getWarnings()[i].description);
+      }
     }
   }
 

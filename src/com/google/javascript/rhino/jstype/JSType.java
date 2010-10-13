@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.base.Predicate;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode;
@@ -923,6 +924,16 @@ public abstract class JSType implements Serializable {
   static final JSType safeResolve(
       JSType type, ErrorReporter t, StaticScope<JSType> scope) {
     return type == null ? null : type.resolve(t, scope);
+  }
+
+  /**
+   * Certain types have constraints on them at resolution-time.
+   * For example, a type in an {@code @extends} annotation must be an
+   * object. Clients should inject a validator that emits a warning
+   * if the type does not validate, and return false.
+   */
+  public boolean setValidator(Predicate<JSType> validator) {
+    return validator.apply(this);
   }
 
   public static class TypePair {

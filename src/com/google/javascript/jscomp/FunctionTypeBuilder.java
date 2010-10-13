@@ -22,6 +22,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -89,6 +90,10 @@ final class FunctionTypeBuilder {
       "JSC_EXTENDS_NON_OBJECT",
       "{0} @extends non-object type {1}");
 
+  static final DiagnosticType RESOLVED_TAG_EMPTY = DiagnosticType.warning(
+      "JSC_RESOLVED_TAG_EMPTY",
+      "Could not resolve type in {0} tag of {1}");
+
   static final DiagnosticType IMPLEMENTS_WITHOUT_CONSTRUCTOR =
       DiagnosticType.warning(
           "JSC_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
@@ -119,6 +124,46 @@ final class FunctionTypeBuilder {
   static final DiagnosticType TEMPLATE_TYPE_EXPECTED = DiagnosticType.error(
       "JSC_TEMPLATE_TYPE_EXPECTED",
       "The template type must be a parameter type");
+
+  private class ExtendedTypeValidator implements Predicate<JSType> {
+    @Override
+    public boolean apply(JSType type) {
+      ObjectType objectType = ObjectType.cast(type);
+      if (objectType == null) {
+        reportWarning(EXTENDS_NON_OBJECT, fnName, type.toString());
+      } else if (objectType.isUnknownType() &&
+          // If this has a supertype that hasn't been resolved yet,
+          // then we can assume this type will be ok once the super
+          // type resolves.
+          (objectType.getImplicitPrototype() == null ||
+           objectType.getImplicitPrototype().isResolved())) {
+        reportWarning(RESOLVED_TAG_EMPTY, "@extends", fnName);
+      } else {
+        return true;
+      }
+      return false;
+    }
+  };
+
+  private class ImplementedTypeValidator implements Predicate<JSType> {
+    @Override
+    public boolean apply(JSType type) {
+      ObjectType objectType = ObjectType.cast(type);
+      if (objectType == null) {
+        reportError(BAD_IMPLEMENTED_TYPE, fnName);
+      } else if (objectType.isUnknownType() &&
+          // If this has a supertype that hasn't been resolved yet,
+          // then we can assume this type will be ok once the super
+          // type resolves.
+          (objectType.getImplicitPrototype() == null ||
+           objectType.getImplicitPrototype().isResolved())) {
+        reportWarning(RESOLVED_TAG_EMPTY, "@implements", fnName);
+      } else {
+        return true;
+      }
+      return false;
+    }
+  };
 
   /**
    * @param fnName The function name.
@@ -278,9 +323,11 @@ final class FunctionTypeBuilder {
       // base type
       if (info.hasBaseType()) {
         if (isConstructor || isInterface) {
-          baseType = ObjectType.cast(info.getBaseType().evaluate(scope, typeRegistry));
-          if (baseType == null) {
-            reportWarning(EXTENDS_NON_OBJECT, fnName, baseType.toString());
+          JSType maybeBaseType =
+              info.getBaseType().evaluate(scope, typeRegistry);
+          if (maybeBaseType != null &&
+              maybeBaseType.setValidator(new ExtendedTypeValidator())) {
+            baseType = (ObjectType) maybeBaseType;
           }
         } else {
           reportWarning(EXTENDS_WITHOUT_TYPEDEF, fnName);
@@ -291,11 +338,10 @@ final class FunctionTypeBuilder {
       if (isConstructor || isInterface) {
         implementedInterfaces = Lists.newArrayList();
         for (JSTypeExpression t : info.getImplementedInterfaces()) {
-          ObjectType interType = ObjectType.cast(t.evaluate(scope, typeRegistry));
-          if (interType != null) {
-            implementedInterfaces.add(interType);
-          } else {
-            reportError(BAD_IMPLEMENTED_TYPE, fnName);
+          JSType maybeInterType = t.evaluate(scope, typeRegistry);
+          if (maybeInterType != null &&
+              maybeInterType.setValidator(new ImplementedTypeValidator())) {
+            implementedInterfaces.add((ObjectType) maybeInterType);
           }
         }
         if (baseType != null) {
