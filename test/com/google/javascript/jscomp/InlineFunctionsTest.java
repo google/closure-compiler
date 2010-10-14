@@ -333,6 +333,18 @@ public class InlineFunctionsTest extends CompilerTestCase {
     testSame("function _foo(x){return x}_foo(1)");
   }
 
+  public void testInlineFunctions27() {
+    test("var window = {}; function foo(){window.bar++; return 3;}" +
+        "var x = {y: 1, z: foo(2)};",
+        "var window={};" +
+        "{" +
+        "  var JSCompiler_inline_result$$0;" +
+        "  window.bar++;" +
+        "  JSCompiler_inline_result$$0 = 3;" +
+        "}" +
+        "var x = {y: 1, z: JSCompiler_inline_result$$0};");
+  }
+
   public void testMixedModeInlining1() {
     // Base line tests, direct inlining
     test("function foo(){return 1}" +
@@ -1493,8 +1505,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testFunctionExpressionCallInlining11c() {
     // Can't inline functions that return inner functions into non-global scope.
     testSame("function _x() {" +
-    		"((function(){return function(){foo()}})())();" +
-    		"}");
+                "((function(){return function(){foo()}})())();" +
+                "}");
   }
 
   public void testFunctionExpressionCallInlining12() {

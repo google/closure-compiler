@@ -79,6 +79,7 @@ class ExpressionDecomposer {
     int i = 0;
     while (DecompositionType.DECOMPOSABLE == canExposeExpression(expression)) {
       exposeExpression(expression);
+      i++;
       if (i > MAX_INTERATIONS) {
         throw new IllegalStateException(
             "DecomposeExpression depth exceeded on :\n" +
