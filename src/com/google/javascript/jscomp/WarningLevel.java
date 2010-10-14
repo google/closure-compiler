@@ -91,5 +91,7 @@ public enum WarningLevel {
     options.checkTypes = true;
     options.checkGlobalNamesLevel = CheckLevel.WARNING;
     options.aggressiveVarCheck = CheckLevel.WARNING;
+    options.setWarningLevel(
+        DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
   }
 }

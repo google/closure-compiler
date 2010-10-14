@@ -59,9 +59,29 @@ public class CommandLineRunnerTest extends TestCase {
   private final List<JSSourceFile> externs = Lists.newArrayList(
     JSSourceFile.fromCode("externs",
         "var arguments;"
-        + "/** @constructor \n * @param {...*} var_args \n "
-        + "* @return {!Array} */ "
-        + "function Array(var_args) {}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @param {...*} var_args\n"
+        + " */\n"
+        + "function Function(var_args) {}\n"
+        + "/**\n"
+        + " * @param {...*} var_args\n"
+        + " * @return {*}\n"
+        + " */\n"
+        + "Function.prototype.call = function(var_args) {};"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @param {...*} var_args\n"
+        + " * @return {!Array}\n"
+        + " */\n"
+        + "function Array(var_args) {}"
+        + "/**\n"
+        + " * @param {*=} opt_begin\n"
+        + " * @param {*=} opt_end\n"
+        + " * @return {!Array}\n"
+        + " * @this {Object}\n"
+        + " */\n"
+        + "Array.prototype.slice = function(opt_begin, opt_end) {};"
         + "/** @constructor */ function Window() {}\n"
         + "/** @type {string} */ Window.prototype.name;\n"
         + "/** @type {Window} */ var window;"
@@ -127,10 +147,22 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("x = 3;");
   }
 
-  public void testCheckUndefinedProperties() {
+  public void testCheckUndefinedProperties1() {
     args.add("--warning_level=VERBOSE");
     args.add("--jscomp_error=missingProperties");
     test("var x = {}; var y = x.bar;", TypeCheck.INEXISTENT_PROPERTY);
+  }
+
+  public void testCheckUndefinedProperties2() {
+    args.add("--warning_level=VERBOSE");
+    args.add("--jscomp_off=missingProperties");
+    test("var x = {}; var y = x.bar;", CheckGlobalNames.UNDEFINED_NAME_WARNING);
+  }
+
+  public void testCheckUndefinedProperties3() {
+    args.add("--warning_level=VERBOSE");
+    test("function f() {var x = {}; var y = x.bar;}",
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testDuplicateParams() {
