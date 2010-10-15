@@ -164,6 +164,34 @@ public abstract class ObjectType extends JSType {
   public abstract String getReferenceName();
 
   /**
+   * Due to the complexity of some of our internal type systems, sometimes
+   * we have different types constructed by the same constructor.
+   * In other parts of the type system, these are called delegates.
+   * We construct these types by appending suffixes to the constructor name.
+   *
+   * The normalized reference name does not have these suffixes, and as such,
+   * recollapses these implicit types back to their real type.
+   */
+  public String getNormalizedReferenceName() {
+    String name = getReferenceName();
+    if (name != null) {
+      int pos = name.indexOf("(");
+      if (pos != -1) {
+        return name.substring(0, pos);
+      }
+    }
+    return name;
+  }
+
+  /**
+   * Creates a suffix for a proxy delegate.
+   * @see #getNormalizedReferenceName
+   */
+  public static String createDelegateSuffix(String suffix) {
+    return "(" + suffix + ")";
+  }
+
+  /**
    * Returns true if the object is named.
    * @return true if the object is named, false if it is anonymous
    */

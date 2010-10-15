@@ -88,7 +88,8 @@ final class TypedScopeCreator implements ScopeCreator {
   /**
    * A suffix for naming delegate proxies differently from their base.
    */
-  static final String DELEGATE_PROXY_SUFFIX = "(Proxy)";
+  static final String DELEGATE_PROXY_SUFFIX =
+      ObjectType.createDelegateSuffix("Proxy");
 
   static final DiagnosticType MALFORMED_TYPEDEF =
       DiagnosticType.warning(
