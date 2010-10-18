@@ -162,8 +162,8 @@ class PrepareAst implements CompilerPass {
     private void visitObjectLiteral(Node objlit) {
       Preconditions.checkState(objlit.getType() == Token.OBJECTLIT);
       for (Node key = objlit.getFirstChild();
-           key != null; key = key.getNext().getNext()) {
-        Node value = key.getNext();
+           key != null; key = key.getNext()) {
+        Node value = key.getFirstChild();
         visitObjectLiteralKey(objlit, key, value);
       }
     }

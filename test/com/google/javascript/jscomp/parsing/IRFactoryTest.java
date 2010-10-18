@@ -218,23 +218,23 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testObjectLiteral() {
-    parse("var o = {}");
+    newParse("var o = {}");
   }
 
   public void testObjectLiteral2() {
-    parse("var o = {a: 1}");
+    newParse("var o = {a: 1}");
   }
 
   public void testObjectLiteral3() {
-    parse("var o = {a: 1, b: 2}");
+    newParse("var o = {a: 1, b: 2}");
   }
 
   public void testObjectLiteral4() {
-    parse("var o = {1: 'a'}");
+    newParse("var o = {1: 'a'}");
   }
 
   public void testObjectLiteral5() {
-    parse("var o = {'a': 'a'}");
+    newParse("var o = {'a': 'a'}");
   }
 
   public void testKeywordLiteral() {
@@ -810,13 +810,13 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Node firstVar = firstVarDecl.getFirstChild();
     Node firstObjectLit = firstVar.getFirstChild();
     Node firstKey = firstObjectLit.getFirstChild();
-    Node firstValue = firstKey.getNext();
+    Node firstValue = firstKey.getFirstChild();
 
-    Node secondKey = firstValue.getNext();
-    Node secondValue = secondKey.getNext();
+    Node secondKey = firstKey.getNext();
+    Node secondValue = secondKey.getFirstChild();
 
-    Node thirdKey = secondValue.getNext();
-    Node thirdValue = thirdKey.getNext();
+    Node thirdKey = secondKey.getNext();
+    Node thirdValue = thirdKey.getFirstChild();
 
     assertNodePosition(1, 4, firstVar);
     assertNodePosition(2, 0, firstObjectLit);

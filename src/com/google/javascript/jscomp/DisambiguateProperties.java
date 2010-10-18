@@ -427,7 +427,7 @@ class DisambiguateProperties<T> implements CompilerPass {
           }
         }
 
-        child = child.getNext().getNext();
+        child = child.getNext();
       }
     }
 

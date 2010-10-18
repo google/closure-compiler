@@ -178,7 +178,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
     if (!noCajaChecks) {
       for (Node key = n.getFirstChild();
            key != null;
-           key = key.getNext().getNext()) {
+           key = key.getNext()) {
         if (key.getString().endsWith("__")) {
           t.report(key, ILLEGAL_NAME);
         }

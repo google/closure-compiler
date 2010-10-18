@@ -432,7 +432,7 @@ class AmbiguateProperties implements CompilerPass {
         case Token.OBJECTLIT:
           for (Node child = n.getFirstChild();
                child != null;
-               child = child.getNext().getNext()) {
+               child = child.getNext()) {
             if (child.getType() == Token.STRING) {
               externedNames.add(child.getString());
             }
@@ -456,7 +456,7 @@ class AmbiguateProperties implements CompilerPass {
           // The children of an OBJECTLIT node are alternating key/value pairs.
           // We skip the values.
           for (Node key = n.getFirstChild(); key != null;
-               key = key.getNext().getNext()) {
+               key = key.getNext()) {
             // We only want keys that are strings (not numbers), and only keys
             // that were unquoted.
             if (key.getType() == Token.STRING) {

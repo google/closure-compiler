@@ -507,8 +507,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       final Map<String, String> cssNames = Maps.newHashMap();
       JSError error = null;
       for (Node key = arg.getFirstChild(); key != null;
-          key = key.getNext().getNext()) {
-        Node value = key.getNext();
+          key = key.getNext()) {
+        Node value = key.getFirstChild();
         if (key.getType() != Token.STRING
             || value == null
             || value.getType() != Token.STRING) {

@@ -53,7 +53,7 @@ class DefinitionsRemover {
     } else if (NodeUtil.isAssign(parent) && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n, parent)) {
-      return new ObjectLiteralPropertyDefinition(parent, n, n.getNext(),
+      return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(),
           isExtern);
     } else if (parent.getType() == Token.LP) {
       Node function = parent.getParent();
@@ -306,7 +306,6 @@ class DefinitionsRemover {
     @Override
     public void performRemove() {
       literal.removeChild(name);
-      literal.removeChild(value);
     }
 
     @Override

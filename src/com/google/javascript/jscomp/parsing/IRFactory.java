@@ -640,8 +640,9 @@ public class IRFactory {
         } else if (el.isSetter()) {
           reportSetter(el);
         } else {
-          node.addChildToBack(transformAsString(el.getLeft()));
-          node.addChildToBack(transform(el.getRight()));
+          Node key = transformAsString(el.getLeft());
+          key.addChildToFront(transform(el.getRight()));
+          node.addChildToBack(key);
         }
       }
       return node;

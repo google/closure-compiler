@@ -825,7 +825,6 @@ final class TypedScopeCreator implements ScopeCreator {
               enumType.defineElement(keyName);
             }
             key = key.getNext();
-            key = (key == null) ? null : key.getNext();
           }
         } else if (value.isQualifiedName()) {
           Var var = scope.getVar(value.getQualifiedName());

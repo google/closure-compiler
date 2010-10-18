@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -108,16 +107,10 @@ class AnonymousFunctionNamingCallback
   }
 
   private void nameObjectLiteralMethods(Node objectLiteral, String context) {
-    // Object literals are a list of key-value pairs.  All object
-    // literals produced by the parser have an even number of
-    // children.
-    Preconditions.checkState(objectLiteral.getChildCount() % 2 == 0);
-
     for (Node keyNode = objectLiteral.getFirstChild();
          keyNode != null;
-         keyNode = keyNode.getNext().getNext()) {  // skip 2 for next key
-
-      Node valueNode = keyNode.getNext();
+         keyNode = keyNode.getNext()) {
+      Node valueNode = keyNode.getFirstChild();
 
       // Object literal keys may be strings or numbers.  Numbers are
       // skipped because name tokens may not start with a number.

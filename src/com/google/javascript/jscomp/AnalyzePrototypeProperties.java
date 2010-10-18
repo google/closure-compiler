@@ -238,7 +238,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
         // var x = {a: 1, b: 2}
         // should count as a use of property a and b.
         for (Node propNameNode = n.getFirstChild(); propNameNode != null;
-             propNameNode = propNameNode.getNext().getNext()) {
+             propNameNode = propNameNode.getNext()) {
           if (propNameNode.getType() == Token.STRING &&
               !propNameNode.isQuotedString()) {
             addSymbolUse(propNameNode.getString(), t.getModule(), PROPERTY);
@@ -391,11 +391,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
             // assumes the object literal is well formed
             // (has an even number of children)
             for (Node key = map.getFirstChild();
-                 key != null; key = key.getNext().getNext()) {
+                 key != null; key = key.getNext()) {
               if (key.getType() == Token.STRING) {
                 String name = key.getString();
                 Property prop = new LiteralProperty(
-                    key, key.getNext(), map, n, t.getModule());
+                    key, key.getFirstChild(), map, n, t.getModule());
                 getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
               }
             }
@@ -588,7 +588,6 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public void remove() {
       map.removeChild(key);
-      map.removeChild(value);
     }
 
     @Override

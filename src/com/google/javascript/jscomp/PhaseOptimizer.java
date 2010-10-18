@@ -185,12 +185,13 @@ class PhaseOptimizer implements CompilerPass {
    */
   private void endPass(Node externs, Node root) {
     Preconditions.checkState(currentTracer != null && currentPassName != null);
-    stopTracer(currentTracer, currentPassName);
-    String passToCheck = currentPassName;
-    currentPassName = null;
-    currentTracer = null;
 
+    String passToCheck = currentPassName;
     try {
+      stopTracer(currentTracer, currentPassName);
+      currentPassName = null;
+      currentTracer = null;
+
       maybeSanityCheck(externs, root);
     } catch (Exception e) {
       // TODO(johnlenz): Remove this once the normalization checks report

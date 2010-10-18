@@ -358,14 +358,13 @@ class StripCode implements CompilerPass {
       while (key != null) {
         if (key.getType() == Token.STRING &&
             isStripName(key.getString())) {
-          Node value = key.getNext();
-          Node next = value.getNext();
+          Node value = key.getFirstChild();
+          Node next = key.getNext();
           n.removeChild(key);
-          n.removeChild(value);
           key = next;
           compiler.reportCodeChange();
         } else {
-          key = key.getNext().getNext();
+          key = key.getNext();
         }
       }
     }

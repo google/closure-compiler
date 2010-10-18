@@ -1558,17 +1558,14 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkEnumInitializer(
       NodeTraversal t, Node value, JSType primitiveType) {
     if (value.getType() == Token.OBJECTLIT) {
-      // re-using value as the value of the object literal and advancing twice
-      value = value.getFirstChild();
-      value = (value == null) ? null : value.getNext();
-      while (value != null) {
-        // the value's type must be assignable to the enum's primitive type
-        validator.expectCanAssignTo(t, value, getJSType(value), primitiveType,
-            "element type must match enum's type");
+      for (Node key = value.getFirstChild();
+           key != null; key = key.getNext()) {
+        Node propValue = key.getFirstChild();
 
-        // advancing twice
-        value = value.getNext();
-        value = (value == null) ? null : value.getNext();
+        // the value's type must be assignable to the enum's primitive type
+        validator.expectCanAssignTo(
+            t, propValue, getJSType(propValue), primitiveType,
+            "element type must match enum's type");
       }
     } else if (value.getJSType() instanceof EnumType) {
       // TODO(user): Remove the instanceof check in favor

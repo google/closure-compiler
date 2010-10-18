@@ -45,10 +45,10 @@ public class PrepareAstTest extends CompilerTestCase {
     assertEquals(Token.OBJECTLIT, objlit.getType());
 
     Node firstKey = objlit.getFirstChild();
-    Node firstVal = firstKey.getNext();
+    Node firstVal = firstKey.getFirstChild();
 
-    Node secondKey = firstVal.getNext();
-    Node secondVal = secondKey.getNext();
+    Node secondKey = firstKey.getNext();
+    Node secondVal = secondKey.getFirstChild();
     assertNotNull(firstKey.getJSDocInfo());
     assertNotNull(firstVal.getJSDocInfo());
     assertNull(secondKey.getJSDocInfo());

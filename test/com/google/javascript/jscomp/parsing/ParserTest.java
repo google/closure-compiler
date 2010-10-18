@@ -165,29 +165,29 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertEquals(3, n.getLineno());
     assertEquals(9, n.getCharno());
 
-    n = n.getFirstChild();
+    Node key = n.getFirstChild();
 
-    assertEquals(Token.STRING, n.getType());
-    assertEquals(3, n.getLineno());
-    assertEquals(10, n.getCharno());
+    assertEquals(Token.STRING, key.getType());
+    assertEquals(3, key.getLineno());
+    assertEquals(10, key.getCharno());
 
-    n = n.getNext();
+    Node value = key.getFirstChild();
 
-    assertEquals(Token.NUMBER, n.getType());
-    assertEquals(3, n.getLineno());
-    assertEquals(12, n.getCharno());
+    assertEquals(Token.NUMBER, value.getType());
+    assertEquals(3, value.getLineno());
+    assertEquals(12, value.getCharno());
 
-    n = n.getNext();
+    key = key.getNext();
 
-    assertEquals(Token.STRING, n.getType());
-    assertEquals(4, n.getLineno());
-    assertEquals(1, n.getCharno());
+    assertEquals(Token.STRING, key.getType());
+    assertEquals(4, key.getLineno());
+    assertEquals(1, key.getCharno());
 
-    n = n.getNext();
+    value = key.getFirstChild();
 
-    assertEquals(Token.NUMBER, n.getType());
-    assertEquals(4, n.getLineno());
-    assertEquals(4, n.getCharno());
+    assertEquals(Token.NUMBER, value.getType());
+    assertEquals(4, value.getLineno());
+    assertEquals(4, value.getCharno());
   }
 
   public void testLinenoCharnoAdd() throws Exception {

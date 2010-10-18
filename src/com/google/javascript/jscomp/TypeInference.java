@@ -675,9 +675,8 @@ class TypeInference
     }
 
     for (Node name = n.getFirstChild(); name != null;
-         name = name.getNext().getNext()) {
-      Node value = name.getNext();
-      scope = traverse(name, scope);
+         name = name.getNext()) {
+      Node value = name.getFirstChild();
       scope = traverse(value, scope);
       String memberName = NodeUtil.getStringValue(name);
       if (memberName != null) {

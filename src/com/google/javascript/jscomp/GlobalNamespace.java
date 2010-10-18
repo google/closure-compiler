@@ -253,7 +253,7 @@ class GlobalNamespace {
           }
           if (name == null) return;
           isSet = true;
-          type = getValueType(n.getNext());
+          type = getValueType(n.getFirstChild());
           break;
         case Token.NAME:
           // This may be a variable get or set.
@@ -339,19 +339,15 @@ class GlobalNamespace {
      *   key of an object literal that can be named
      */
     String getNameForObjLitKey(Node n) {
-      // Verify that this node is a key in the object literal (odd numbered).
       Node parent = n.getParent();
-      for (Node walker = parent.getFirstChild(); walker != n;
-           walker = walker.getNext().getNext()) {
-        if (walker == null) {
-          return null;
-        }
-      }
+      Preconditions.checkState(parent.getType() == Token.OBJECTLIT);
+
       Node gramps = parent.getParent();
       if (gramps == null) {
         return null;
       }
 
+      Node greatGramps = gramps.getParent();
       String name;
       switch (gramps.getType()) {
         case Token.NAME:
@@ -359,7 +355,6 @@ class GlobalNamespace {
           //   NAME (gramps)
           //     OBJLIT (parent)
           //       STRING (n)
-          Node greatGramps = gramps.getParent();
           if (greatGramps == null ||
               greatGramps.getType() != Token.VAR) {
             return null;
@@ -374,14 +369,14 @@ class GlobalNamespace {
           Node lvalue = gramps.getFirstChild();
           name = lvalue.getQualifiedName();
           break;
-        case Token.OBJECTLIT:
-          // OBJLIT (gramps)
-          //   STRING
-          //   OBJLIT (parent)
-          //     STRING (n)
-          Node key = gramps.getChildBefore(parent);
-          if (key.getType() == Token.STRING) {
-            name = getNameForObjLitKey(key);
+        case Token.STRING:
+          // OBJLIT
+          //   STRING (gramps)
+          //     OBJLIT (parent)
+          //       STRING (n)
+          if (greatGramps != null &&
+              greatGramps.getType() == Token.OBJECTLIT) {
+            name = getNameForObjLitKey(gramps);
           } else {
             return null;
           }

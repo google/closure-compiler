@@ -208,6 +208,9 @@ class ExpressionDecomposer {
             parent = replacement;
           }
         }
+      } else if (parentType == Token.OBJECTLIT) {
+        decomposeObjectLiteralKeys(
+            parent.getFirstChild(), child, state);
       } else {
         decomposeSubExpressions(
             parent.getFirstChild(), child, state);
@@ -274,15 +277,31 @@ class ExpressionDecomposer {
   }
 
   /**
+   * Decompose an object literal.
+   * @param key The object literal key.
+   * @param stopNode A node after which to stop iterating.
+   */
+  private void decomposeObjectLiteralKeys(
+      Node key, Node stopNode, DecompositionState state) {
+    if (key == null || key == stopNode) {
+      return;
+    }
+    decomposeObjectLiteralKeys(key.getNext(), stopNode, state);
+    decomposeSubExpressions(key.getFirstChild(), stopNode, state);
+  }
+
+  /**
    * @param n The node with which to start iterating.
    * @param stopNode A node after which to stop iterating.
    */
   private void decomposeSubExpressions(
       Node n, Node stopNode, DecompositionState state) {
-
     if (n == null || n == stopNode) {
       return;
     }
+
+    // Never try to decompose anobject literal key.
+    Preconditions.checkState(!NodeUtil.isObjectLitKey(n, n.getParent()));
 
     // Decompose the children in reverse evaluation order.  This simplifies
     // determining if the any of the children following have side-effects.

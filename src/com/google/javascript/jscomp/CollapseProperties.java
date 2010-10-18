@@ -395,11 +395,17 @@ class CollapseProperties implements CompilerPass {
     // This method has to work for both GETPROP chains and, in rare cases,
     // OBJLIT keys, possibly nested. That's why we check for children before
     // proceeding. In the OBJLIT case, we don't need to do anything.
-    for (int i = 1; i < depth && n.hasChildren(); i++) {
-      n = n.getFirstChild();
-    }
-    if (n.hasChildren()) {
-      flattenNameRef(alias, n.getFirstChild(), n, originalName);
+    int nType = n.getType();
+    boolean isQName = nType == Token.NAME || nType == Token.GETPROP;
+    boolean isObjKey = nType == Token.STRING || nType == Token.NUMBER;
+    Preconditions.checkState(isObjKey || isQName);
+    if (isQName) {
+      for (int i = 1; i < depth && n.hasChildren(); i++) {
+        n = n.getFirstChild();
+      }
+      if (n.hasChildren()) {
+        flattenNameRef(alias, n.getFirstChild(), n, originalName);
+      }
     }
   }
 
@@ -726,8 +732,8 @@ class CollapseProperties implements CompilerPass {
 
     for (Node key = objlit.getFirstChild(), nextKey; key != null;
          key = nextKey) {
-      Node value = key.getNext();
-      nextKey = value.getNext();
+      Node value = key.getFirstChild();
+      nextKey = key.getNext();
 
       // We generate arbitrary names for keys that aren't valid JavaScript
       // identifiers, since those keys are never referenced. (If they were,
@@ -744,14 +750,15 @@ class CollapseProperties implements CompilerPass {
       Node refNode = null;
       if (discardKeys) {
         objlit.removeChild(key);
-        objlit.removeChild(value);
+        value.detachFromParent();
       } else {
         // Substitute a reference for the value.
         refNode = Node.newString(Token.NAME, propAlias);
         if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
           refNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
-        objlit.replaceChildAfter(key, refNode);
+
+        key.replaceChild(value, refNode);
       }
 
       // Declare the collapsed name as a variable with the original value.

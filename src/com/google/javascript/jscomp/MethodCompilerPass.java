@@ -158,9 +158,9 @@ abstract class MethodCompilerPass implements CompilerPass {
           // assumes the object literal is well formed
           // (has an even number of children)
           for (Node key = n.getFirstChild();
-               key != null; key = key.getNext().getNext()) {
+               key != null; key = key.getNext()) {
             if (key.getType() == Token.STRING) {
-              Node value = key.getNext();
+              Node value = key.getFirstChild();
               String name = key.getString();
               if (value.getType() == Token.FUNCTION) {
                 addSignature(name, value, t.getSourceName());
@@ -211,9 +211,9 @@ abstract class MethodCompilerPass implements CompilerPass {
           // assumes the object literal is well formed
           // (has an even number of children)
           for (Node key = n.getFirstChild();
-               key != null; key = key.getNext().getNext()) {
+               key != null; key = key.getNext()) {
             if (key.getType() == Token.STRING) {
-              Node value = key.getNext();
+              Node value = key.getFirstChild();
               addPossibleSignature(key.getString(), value, t);
             }
           }

@@ -212,7 +212,10 @@ class CodeGenerator {
         break;
 
       case Token.NUMBER:
-        Preconditions.checkState(childCount == 0);
+        Preconditions.checkState(
+            childCount ==
+            ((n.getParent() != null &&
+              n.getParent().getType() == Token.OBJECTLIT) ? 1 : 0));
         cc.addNumber(n.getDouble());
         break;
 
@@ -558,7 +561,11 @@ class CodeGenerator {
         break;
 
       case Token.STRING:
-        Preconditions.checkState(childCount == 0);
+        Preconditions.checkState(
+            childCount ==
+            ((n.getParent() != null &&
+              n.getParent().getType() == Token.OBJECTLIT) ? 1 : 0),
+            n.getParent().toStringTree());
         add(jsString(n.getString(), outputCharsetEncoder));
         break;
 
@@ -569,13 +576,12 @@ class CodeGenerator {
         break;
 
       case Token.OBJECTLIT: {
-        Preconditions.checkState(childCount % 2 == 0);
         boolean needsParens = (context == Context.START_OF_EXPR);
         if (needsParens) {
           add("(");
         }
         add("{");
-        for (Node c = first; c != null; c = c.getNext().getNext()) {
+        for (Node c = first; c != null; c = c.getNext()) {
           if (c != first) {
             cc.listSeparator();
           }
@@ -593,7 +599,7 @@ class CodeGenerator {
             addExpr(c, 1);
           }
           add(":");
-          addExpr(c.getNext(), 1);
+          addExpr(c.getFirstChild(), 1);
         }
         add("}");
         if (needsParens) {

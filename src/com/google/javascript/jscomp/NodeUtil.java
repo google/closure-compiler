@@ -232,9 +232,9 @@ public final class NodeUtil {
     // Check for the form { 'x' : function() { } }
     Node parent = n.getParent();
     switch (parent.getType()) {
-      case Token.OBJECTLIT:
+      case Token.STRING:
         // Return the name of the literal's key.
-        return getStringValue(parent.getFirstChild());
+        return getStringValue(parent);
     }
 
     return null;
@@ -292,12 +292,21 @@ public final class NodeUtil {
   static boolean isLiteralValue(Node n, boolean includeFunctions) {
     switch (n.getType()) {
       case Token.ARRAYLIT:
-      case Token.OBJECTLIT:
       case Token.REGEXP:
         // Return true only if all children are const.
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
           if (!isLiteralValue(child, includeFunctions)) {
+            return false;
+          }
+        }
+        return true;
+
+      case Token.OBJECTLIT:
+        // Return true only if all values are const.
+        for (Node child = n.getFirstChild(); child != null;
+             child = child.getNext()) {
+          if (!isLiteralValue(child.getFirstChild(), includeFunctions)) {
             return false;
           }
         }
@@ -503,6 +512,17 @@ public final class NodeUtil {
         return true;
 
       case Token.OBJECTLIT:
+        if (checkForNewObjects) {
+          return true;
+        }
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          if (checkForStateChangeHelper(
+                  c.getFirstChild(), checkForNewObjects, compiler)) {
+            return true;
+          }
+        }
+        return false;
+
       case Token.ARRAYLIT:
       case Token.REGEXP:
         if (checkForNewObjects) {
@@ -1513,18 +1533,9 @@ public final class NodeUtil {
    * @param parent The node's parent
    */
   static boolean isObjectLitKey(Node node, Node parent) {
-    if (node.getType() == Token.STRING && parent.getType() == Token.OBJECTLIT) {
-      int index = 0;
-      for (Node current = parent.getFirstChild();
-           current != null;
-           current = current.getNext()) {
-        if (current == node) {
-          return index % 2 == 0;
-        }
-        index++;
-      }
-    }
-    return false;
+    // TODO(nicksantos): What about NUMBER?
+    return node.getType() == Token.STRING &&
+        parent.getType() == Token.OBJECTLIT;
   }
 
   /**

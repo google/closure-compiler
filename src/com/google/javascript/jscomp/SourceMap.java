@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 import java.io.IOException;
 
@@ -66,7 +67,9 @@ public interface SourceMap {
             || NodeUtil.isFunction(node)
             || NodeUtil.isName(node)
             || NodeUtil.isGet(node)
-            || (NodeUtil.isString(node) && NodeUtil.isGet(node.getParent()));
+            || (NodeUtil.isString(node) &&
+                (node.getParent().getType() == Token.OBJECTLIT ||
+                 NodeUtil.isGet(node.getParent())));
       }
     };
   }

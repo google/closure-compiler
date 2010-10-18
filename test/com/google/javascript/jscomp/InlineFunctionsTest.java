@@ -345,6 +345,38 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "var x = {y: 1, z: JSCompiler_inline_result$$0};");
   }
 
+  public void testInlineFunctions28() {
+    test("var window = {}; function foo(){window.bar++; return 3;}" +
+        "var x = {y: alert(), z: foo(2)};",
+        "var window = {};" +
+        "var JSCompiler_temp_const$$0 = alert();" +
+        "{" +
+        " var JSCompiler_inline_result$$1;" +
+        " window.bar++;" +
+        " JSCompiler_inline_result$$1 = 3;}" +
+        "var x = {" +
+        "  y: JSCompiler_temp_const$$0," +
+        "  z: JSCompiler_inline_result$$1" +
+        "};");
+  }
+
+  public void testInlineFunctions29() {
+    test("var window = {}; function foo(){window.bar++; return 3;}" +
+        "var x = {a: alert(), b: alert2(), c: foo(2)};",
+        "var window = {};" +
+        "var JSCompiler_temp_const$$1 = alert();" +
+        "var JSCompiler_temp_const$$0 = alert2();" +
+        "{" +
+        " var JSCompiler_inline_result$$2;" +
+        " window.bar++;" +
+        " JSCompiler_inline_result$$2 = 3;}" +
+        "var x = {" +
+        "  a: JSCompiler_temp_const$$1," +
+        "  b: JSCompiler_temp_const$$0," +
+        "  c: JSCompiler_inline_result$$2" +
+        "};");
+  }
+
   public void testMixedModeInlining1() {
     // Base line tests, direct inlining
     test("function foo(){return 1}" +

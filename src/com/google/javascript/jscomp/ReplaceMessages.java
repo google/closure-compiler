@@ -291,10 +291,10 @@ class ReplaceMessages extends JsMessageVisitor {
       JsMessage.PlaceholderReference phRef =
           (JsMessage.PlaceholderReference) part;
 
-      for (Node n = objLitNode.getFirstChild(); n != null;
-          n = n.getNext().getNext()) {
-        if (n.getString().equals(phRef.getName())) {
-          Node valueNode = n.getNext();
+      for (Node key = objLitNode.getFirstChild(); key != null;
+           key = key.getNext()) {
+        if (key.getString().equals(phRef.getName())) {
+          Node valueNode = key.getFirstChild();
           partNode = valueNode.cloneTree();
         }
       }

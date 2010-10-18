@@ -207,17 +207,12 @@ class SuspiciousPropertiesCheck implements CompilerPass {
           }
           break;
         case Token.OBJECTLIT:
-          // Object literals have their property name/value pairs as a flat
-          // list as their children. We want every other node in order to get
-          // only the property names.
-          boolean isKey = true;
           for (Node child = n.getFirstChild();
                child != null;
                child = child.getNext()) {
-            if (isKey && child.getType() == Token.STRING) {
+            if (child.getType() == Token.STRING) {
               addWrite(child, t, true);
             }
-            isKey = !isKey;
           }
           break;
         case Token.CALL:
