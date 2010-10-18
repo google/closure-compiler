@@ -801,13 +801,6 @@ Selection.prototype.selectionLanguageChange;
 /** @type {NamedNodeMap} */ Element.prototype.attributes;
 Element.prototype.baseURIObject;
 /** @type {!NodeList} */ Element.prototype.childNodes;
-
-/**
- * @type {!NodeList}
- * @see https://developer.mozilla.org/en/DOM/element.children
- */
-Element.prototype.children;
-
 /**
  * @type {string}
  * @implicitCast
