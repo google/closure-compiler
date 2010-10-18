@@ -706,6 +706,7 @@ Array.forEach = function(arr, callback, opt_context) {};
  * @param { ?{length: number} } arr
  * @param {*} obj
  * @param {number=} opt_fromIndex
+ * @return {number}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/indexOf
  */
@@ -716,6 +717,7 @@ Array.indexOf = function(arr, obj, opt_fromIndex) {};
  * @param { ?{length: number} } arr
  * @param {*} obj
  * @param {number=} opt_fromIndex
+ * @return {number}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/lastIndexOf
  */
@@ -853,6 +855,7 @@ Number.POSITIVE_INFINITY;
 
 
 /**
+ * @const
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math
  */
 var Math = {};
