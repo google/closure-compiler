@@ -269,8 +269,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Removes unused variables */
   public boolean removeUnusedVars;
 
-  /** Removes unused variables in global scope. */
-  public boolean removeUnusedVarsInGlobalScope;
+  /** Removes unused variables in local scope. */
+  public boolean removeUnusedLocalVars;
 
   /** Adds variable aliases for externals to reduce code size */
   public boolean aliasExternals;
@@ -662,7 +662,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     removeUnusedPrototypeProperties = false;
     removeUnusedPrototypePropertiesInExterns = false;
     removeUnusedVars = false;
-    removeUnusedVarsInGlobalScope = true;
+    removeUnusedLocalVars = false;
     aliasExternals = false;
     collapseVariableDeclarations = false;
     groupVariableDeclarations = false;

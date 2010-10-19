@@ -138,8 +138,8 @@ public class SecureCompiler {
     options.labelRenaming = true;
     options.removeDeadCode = true;
     options.optimizeArgumentsArray = true;
-    options.removeUnusedVars = true;
-    options.removeUnusedVarsInGlobalScope = false;
+    options.removeUnusedVars = false;
+    options.removeUnusedLocalVars = true;
 
     return options;
   }

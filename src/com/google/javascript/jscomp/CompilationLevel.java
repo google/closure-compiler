@@ -104,8 +104,8 @@ public enum CompilationLevel {
     options.labelRenaming = true;
     options.removeDeadCode = true;
     options.optimizeArgumentsArray = true;
-    options.removeUnusedVars = true;
-    options.removeUnusedVarsInGlobalScope = false;
+    options.removeUnusedVars = false;
+    options.removeUnusedLocalVars = true;
 
     // Allows annotations that are not standard.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
@@ -157,7 +157,7 @@ public enum CompilationLevel {
     
     // Remove unused vars also removes unused functions.
     options.removeUnusedVars = true;
-    options.removeUnusedVarsInGlobalScope = true;
+    options.removeUnusedLocalVars = true;
 
     // Move code around based on the defined modules.
     options.crossModuleCodeMotion = true;

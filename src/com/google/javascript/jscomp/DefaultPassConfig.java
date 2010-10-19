@@ -623,7 +623,7 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(inlineFunctions);
     }
 
-    if (options.removeUnusedVars) {
+    if (options.removeUnusedVars || options.removeUnusedLocalVars) {
       if (options.deadAssignmentElimination) {
         passes.add(deadAssignmentsElimination);
       }
@@ -1461,11 +1461,13 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("removeUnusedVars", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
+      boolean removeOnlyLocals = options.removeUnusedLocalVars
+          && !options.removeUnusedVars;
       boolean preserveAnonymousFunctionNames =
-        options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
+          options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
       return new RemoveUnusedVars(
           compiler,
-          options.removeUnusedVarsInGlobalScope,
+          !removeOnlyLocals,
           preserveAnonymousFunctionNames);
     }
   };
