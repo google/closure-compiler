@@ -107,6 +107,9 @@ Event.prototype.cancelable;
 /** @type {number} */
 Event.prototype.timeStamp;
 
+/** @type {Object} */
+Event.prototype.state;
+
 /**
  * @return {undefined}
  */
@@ -190,6 +193,7 @@ MouseEvent.prototype.button;
 
 /** @type {EventTarget} */
 MouseEvent.prototype.relatedTarget;
+
 
 /**
  * @constructor

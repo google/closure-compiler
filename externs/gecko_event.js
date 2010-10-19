@@ -50,6 +50,7 @@
 /** @type {boolean} */ Event.prototype.shiftKey;
 /** @type {Window} */ Event.prototype.view;
 /** @type {number} */ Event.prototype.which;
+/** @type {Object} */ Event.prototype.state;
 
 //Methods
 Event.prototype.initEvent;
