@@ -872,8 +872,8 @@ class TypeInference
     int childCount = n.getChildCount();
     // Find the parameter whose type is the template type.
     for (Node iParameter : fnType.getParameters()) {
-      JSType iParameterType = getJSType(iParameter);
-      iParameterType = iParameterType.restrictByNotNullOrUndefined();
+      JSType iParameterType =
+          getJSType(iParameter).restrictByNotNullOrUndefined();
       if (iParameterType.isTemplateType()) {
         // Find the actual type of this argument.
         JSType iArgumentType = null;
@@ -894,7 +894,8 @@ class TypeInference
         boolean foundTemplateTypeOfThisParameter = false;
         int j = 0;
         for (Node jParameter : fnType.getParameters()) {
-          JSType jParameterType = getJSType(jParameter);
+          JSType jParameterType =
+              getJSType(jParameter).restrictByNotNullOrUndefined();
           if (jParameterType instanceof FunctionType) {
             FunctionType jParameterFnType = (FunctionType) jParameterType;
             if (jParameterFnType.getTypeOfThis().equals(iParameterType)) {

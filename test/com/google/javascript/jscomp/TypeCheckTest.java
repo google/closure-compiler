@@ -7378,8 +7378,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testFunctionLiteralUndefinedThisArgument() throws Exception {
     testTypes(""
         + "/**\n"
-        + " * @param {function(this:T, ...)} fn\n"
-        + " * @param {T} opt_obj\n"
+        + " * @param {function(this:T, ...)?} fn\n"
+        + " * @param {?T} opt_obj\n"
         + " * @template T\n"
         + " */\n"
         + "function baz(fn, opt_obj) {}\n"
@@ -7390,8 +7390,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testFunctionLiteralDefinedThisArgument() throws Exception {
     testTypes(""
         + "/**\n"
-        + " * @param {function(this:T, ...)} fn\n"
-        + " * @param {T} opt_obj\n"
+        + " * @param {function(this:T, ...)?} fn\n"
+        + " * @param {?T} opt_obj\n"
         + " * @template T\n"
         + " */\n"
         + "function baz(fn, opt_obj) {}\n"
