@@ -613,11 +613,9 @@ class CollapseProperties implements CompilerPass {
     }
 
     if (isObjLit) {
-      boolean discardKeys = n.aliasingGets == 0;
       declareVarsForObjLitValues(
           n, alias, rvalue,
-          varNode, varParent.getChildBefore(varNode), varParent,
-          discardKeys);
+          varNode, varParent.getChildBefore(varNode), varParent);
     }
 
     addStubsForUndeclaredProperties(n, alias, varParent, varNode);
@@ -670,10 +668,9 @@ class CollapseProperties implements CompilerPass {
     int numChanges = 0;
 
     if (isObjLit) {
-      boolean discardKeys = n.aliasingGets == 0;
       numChanges += declareVarsForObjLitValues(
           n, name, rvalue, varNode, gramps.getChildBefore(varNode),
-          gramps, discardKeys);
+          gramps);
     }
 
     numChanges += addStubsForUndeclaredProperties(n, name, gramps, varNode);
@@ -720,15 +717,14 @@ class CollapseProperties implements CompilerPass {
    * @param nameToAddAfter The child of {@code varNode} after which new
    *     variables should be added (may be null)
    * @param varParent {@code varNode}'s parent
-   * @param discardKeys Whether to eliminate the object literal's keys after
-   *     declaring variables for its values
    * @return The number of variables added
    */
   private int declareVarsForObjLitValues(
       Name objlitName, String alias, Node objlit, Node varNode,
-      Node nameToAddAfter, Node varParent, boolean discardKeys) {
+      Node nameToAddAfter, Node varParent) {
     int numVars = 0;
     int arbitraryNameCounter = 0;
+    boolean discardKeys = !objlitName.shouldKeepKeys();
 
     for (Node key = objlit.getFirstChild(), nextKey; key != null;
          key = nextKey) {

@@ -47,6 +47,13 @@ class SanityCheck implements CompilerPass {
   public void process(Node externs, Node root) {
     sanityCheckNormalization(externs, root);
     sanityCheckCodeGeneration(root);
+    sanityCheckVars(externs, root);
+  }
+
+  private void sanityCheckVars(Node externs, Node root) {
+    if (compiler.isNormalized()) {
+      (new VarCheck(compiler, true)).process(externs, root);
+    }
   }
 
   /**

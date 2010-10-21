@@ -235,6 +235,36 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          null, CollapseProperties.UNSAFE_NAMESPACE_WARNING);
   }
 
+  public void testAliasCreatedForEnumOfObjects() {
+    test("var a = {}; " +
+         "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c;" +
+         "searchEnum(a.b);",
+         "var a$b$c = {d: 1};var a$b = {c: a$b$c}; a$b$c; " +
+         "searchEnum(a$b)");
+  }
+
+  public void testAliasCreatedForEnumOfObjects2() {
+    test("var a = {}; " +
+         "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c.d;" +
+         "searchEnum(a.b);",
+         "var a$b$c = {d: 1};var a$b = {c: a$b$c}; a$b$c.d; " +
+         "searchEnum(a$b)");
+  }
+
+  public void testAliasCreatedForPropertyOfEnumOfObjects() {
+    test("var a = {}; " +
+         "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c;" +
+         "searchEnum(a.b.c);",
+         "var a$b$c = {d: 1}; a$b$c; searchEnum(a$b$c);");
+  }
+
+  public void testAliasCreatedForPropertyOfEnumOfObjects2() {
+    test("var a = {}; " +
+         "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c.d;" +
+         "searchEnum(a.b.c);",
+         "var a$b$c = {d: 1}; a$b$c.d; searchEnum(a$b$c);");
+  }
+
   public void testMisusedEnumTag() {
     testSame("var a = {}; var d = a; a.b = function() {};" +
              "/** @enum */ a.b.c = 0; a.b.c;");
@@ -315,6 +345,12 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "new f(a.b); a.b.c;",
          "var a$b = {}; var a$b$c = function(){}; new f(a$b); a$b$c;",
          null, CollapseProperties.UNSAFE_NAMESPACE_WARNING);
+  }
+
+  public void testAliasCreatedForClassProperty() {
+    test("var a = {}; /** @constructor */ a.b = function(){};" +
+         "a.b.c = {d: 3}; new f(a.b.c); a.b.c.d;",
+         "var a$b = function(){}; var a$b$c = {d:3}; new f(a$b$c); a$b$c.d;");
   }
 
   public void testNestedObjLit() {

@@ -904,8 +904,25 @@ class GlobalNamespace {
       if (isClassOrEnum) {
         return true;
       }
-      return (type == Type.FUNCTION || aliasingGets == 0) &&
-          (parent == null || parent.canCollapseUnannotatedChildNames());
+
+      // If this is a key of an aliased object literal, then it will be aliased
+      // later. So we won't be able to collapse its properties.
+      if (parent != null && parent.shouldKeepKeys()) {
+        return false;
+      }
+
+      // If this is aliased, and its not a function, then its properties
+      // can't be collapsed either.
+      if (type != Type.FUNCTION && aliasingGets > 0) {
+        return false;
+      }
+
+      return (parent == null || parent.canCollapseUnannotatedChildNames());
+    }
+
+    /** Whether this is an object literal that needs to keep its keys. */
+    boolean shouldKeepKeys() {
+      return type == Type.OBJECTLIT && aliasingGets > 0;
     }
 
     boolean needsToBeStubbed() {
