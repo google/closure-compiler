@@ -681,9 +681,10 @@ public class FunctionType extends PrototypeObjectType {
    */
   @Override
   public boolean isSubtype(JSType that) {
-    if (this.isEquivalentTo(that)) {
+    if (JSType.isSubtype(this, that)) {
       return true;
     }
+
     if (that.isFunctionType()) {
       if (((FunctionType) that).isInterface()) {
         // Any function can be assigned to an interface function.
@@ -706,14 +707,7 @@ public class FunctionType extends PrototypeObjectType {
               this.typeOfThis.isSubtype(other.typeOfThis)) &&
           this.call.isSubtype(other.call);
     }
-    if (that instanceof UnionType) {
-      UnionType union = (UnionType) that;
-      for (JSType element : union.alternates) {
-        if (this.isSubtype(element)) {
-          return true;
-        }
-      }
-    }
+
     return getNativeType(JSTypeNative.FUNCTION_PROTOTYPE).isSubtype(that);
   }
 

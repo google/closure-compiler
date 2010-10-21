@@ -55,12 +55,12 @@ public final class AllType extends JSType {
 
   /**
    * The All type is the greatest type (top) and is never a subtype of
-   * another except itself or the Unknown type.
+   * another except itself or the Unknown type or a named alias.
    * @return {@code this.isEquivalentTo(that)}
    */
   @Override
   public boolean isSubtype(JSType that) {
-    return that.isAllType() || that.isUnknownType();
+    return JSType.isSubtype(this, that);
   }
 
   @Override

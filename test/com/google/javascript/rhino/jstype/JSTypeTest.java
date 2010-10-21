@@ -4733,21 +4733,34 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType typeI = typeChain.get(i);
         JSType typeJ = typeChain.get(j);
 
+        JSType namedTypeI = getNamedWrapper("TypeI", typeI);
+        JSType namedTypeJ = getNamedWrapper("TypeJ", typeJ);
+
         if (i == j) {
           assertTrue(typeI + " should equal itself",
               typeI.isEquivalentTo(typeI));
+          assertTrue("Named " + typeI + " should equal itself",
+              namedTypeI.isEquivalentTo(namedTypeI));
         } else {
           assertFalse(typeI + " should not equal " + typeJ,
               typeI.isEquivalentTo(typeJ));
+          assertFalse("Named " + typeI + " should not equal " + typeJ,
+              namedTypeI.isEquivalentTo(namedTypeJ));
         }
 
         if (checkSubtyping) {
           if (i <= j) {
             assertTrue(typeJ + " should be a subtype of " + typeI,
                 typeJ.isSubtype(typeI));
+            assertTrue(
+                "Named " + typeJ + " should be a subtype of Named " + typeI,
+                namedTypeJ.isSubtype(namedTypeI));
           } else {
             assertFalse(typeJ + " should not be a subtype of " + typeI,
                 typeJ.isSubtype(typeI));
+            assertFalse(
+                "Named " + typeJ + " should not be a subtype of Named " + typeI,
+                namedTypeJ.isSubtype(namedTypeI));
           }
 
           JSType expectedSupremum = i < j ? typeI : typeJ;
@@ -4762,6 +4775,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
               expectedInfimum, typeI.getGreatestSubtype(typeJ));
         }
       }
+    }
+  }
+
+  JSType getNamedWrapper(String name, JSType jstype) {
+    // Normally, there is no way to create a Named NoType alias so
+    // avoid confusing things by doing it here..
+    if (!jstype.isNoType()) {
+      NamedType namedWrapper = new NamedType(
+          registry, name, "[testcode]", -1, -1);
+      namedWrapper.setReferencedType(jstype);
+      return namedWrapper;
+    } else {
+      return jstype;
     }
   }
 
