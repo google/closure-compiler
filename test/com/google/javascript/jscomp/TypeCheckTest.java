@@ -7237,6 +7237,27 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Foo.prototype.baz = function() { this.b = 3; };");
   }
 
+  public void testMissingProperty35() throws Exception {
+    // Bar has specialProp defined, so Bar|Baz may have specialProp defined.
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @constructor */ function Bar() {}" +
+        "/** @constructor */ function Baz() {}" +
+        "/** @param {Foo|Bar} x */ function f(x) { x.specialProp = 1; }" +
+        "/** @param {Bar|Baz} x */ function g(x) { return x.specialProp; }");
+  }
+
+  public void testMissingProperty36() throws Exception {
+    // Foo has baz defined, and SubFoo has bar defined, so some objects with
+    // bar may have baz.
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.baz = 0;" +
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
+        "SubFoo.prototype.bar = 0;" +
+        "/** @param {{bar: number}} x */ function f(x) { return x.baz; }");
+  }
+
   public void testDeclaredNativeTypeEquality() throws Exception {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
     assertEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),

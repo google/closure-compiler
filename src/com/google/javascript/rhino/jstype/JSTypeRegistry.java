@@ -640,7 +640,7 @@ public class JSTypeRegistry implements Serializable {
   public boolean canPropertyBeDefined(JSType type, String propertyName) {
     if (typesIndexedByProperty.containsKey(propertyName)) {
       for (JSType alt : typesIndexedByProperty.get(propertyName)) {
-        if (alt.isSubtype(type) || type.isSubtype(alt)) {
+        if (!alt.getGreatestSubtype(type).isEmptyType()) {
           return true;
         }
       }
