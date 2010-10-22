@@ -74,6 +74,20 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         .isReturnTypeInferred());
   }
 
+  public void testSupAndInfOfReturnTypesWithDifferentParams() {
+    FunctionType retString = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .withInferredReturnType(STRING_TYPE).build();
+    FunctionType retNumber = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
+        .withReturnType(NUMBER_TYPE).build();
+
+    assertLeastSupertype(
+        "Function", retString, retNumber);
+    assertGreatestSubtype(
+        "function (...[*]): None", retString, retNumber);
+  }
+
   public void testSupAndInfWithDifferentParams() {
     FunctionType retString = new FunctionBuilder(registry)
         .withParamsNode(registry.createParameters(NUMBER_TYPE))
@@ -85,21 +99,39 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertLeastSupertype(
         "Function", retString, retNumber);
     assertGreatestSubtype(
-        "NoObject", retString, retNumber);
+        "function (...[*]): None", retString, retNumber);
   }
 
   public void testSupAndInfWithDifferentThisTypes() {
     FunctionType retString = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
         .withTypeOfThis(OBJECT_TYPE)
         .withReturnType(STRING_TYPE).build();
     FunctionType retNumber = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
         .withTypeOfThis(DATE_TYPE)
         .withReturnType(NUMBER_TYPE).build();
 
     assertLeastSupertype(
-        "Function", retString, retNumber);
+        "function (this:Object): (number|string)", retString, retNumber);
     assertGreatestSubtype(
-        "NoObject", retString, retNumber);
+        "function (this:Date): None", retString, retNumber);
+  }
+
+  public void testSupAndInfWithDifferentThisTypes2() {
+    FunctionType retString = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
+        .withTypeOfThis(ARRAY_TYPE)
+        .withReturnType(STRING_TYPE).build();
+    FunctionType retNumber = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
+        .withTypeOfThis(DATE_TYPE)
+        .withReturnType(NUMBER_TYPE).build();
+
+    assertLeastSupertype(
+        "function (this:Object): (number|string)", retString, retNumber);
+    assertGreatestSubtype(
+        "function (this:NoObject): None", retString, retNumber);
   }
 
   private void assertLeastSupertype(String s, JSType t1, JSType t2) {

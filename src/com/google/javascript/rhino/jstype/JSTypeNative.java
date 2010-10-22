@@ -139,8 +139,6 @@ public enum JSTypeNative {
   U2U_CONSTRUCTOR_TYPE,
   U2U_FUNCTION_TYPE,
 
-  // TODO(nicksantos): Fix up these types so that they fit into the
-  // type lattice properly. Right now, they're broken.
   LEAST_FUNCTION_TYPE,
   GREATEST_FUNCTION_TYPE,
 

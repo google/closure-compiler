@@ -2796,7 +2796,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
           assertTypeEquals(String.format("sup(%s, %s)", typeA, typeB),
               U2U_CONSTRUCTOR_TYPE, typeA.getLeastSupertype(typeB));
           assertTypeEquals(String.format("inf(%s, %s)", typeA, typeB),
-              NO_OBJECT_TYPE, typeA.getGreatestSubtype(typeB));
+              LEAST_FUNCTION_TYPE, typeA.getGreatestSubtype(typeB));
         }
       }
     }
@@ -2841,7 +2841,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
           assertTypeEquals(String.format("sup(%s, %s)", typeA, typeB),
               U2U_CONSTRUCTOR_TYPE, typeA.getLeastSupertype(typeB));
           assertTypeEquals(String.format("inf(%s, %s)", typeA, typeB),
-              NO_OBJECT_TYPE, typeA.getGreatestSubtype(typeB));
+              LEAST_FUNCTION_TYPE, typeA.getGreatestSubtype(typeB));
         }
       }
     }
@@ -4269,6 +4269,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         BOOLEAN_TYPE,
         OBJECT_TYPE,
         U2U_CONSTRUCTOR_TYPE,
+        LEAST_FUNCTION_TYPE,
+        GREATEST_FUNCTION_TYPE,
         ALL_TYPE,
         NO_TYPE,
         NO_OBJECT_TYPE,
@@ -4657,7 +4659,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
         registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
+        registry.getNativeType(JSTypeNative.GREATEST_FUNCTION_TYPE),
         dateMethod,
+        registry.getNativeType(JSTypeNative.LEAST_FUNCTION_TYPE),
         registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
         registry.getNativeType(JSTypeNative.NO_TYPE));
     verifySubtypeChain(typeChain);

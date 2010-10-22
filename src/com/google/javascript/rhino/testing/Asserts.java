@@ -82,8 +82,8 @@ public class Asserts {
     Assert.assertTrue(
         message +
         (message.isEmpty() ? "" : "\n") +
-        "Expected: " + b + "\n" +
-        "Actual  : " + a,
+        "Expected: " + a + "\n" +
+        "Actual  : " + b,
         a.isEquivalentTo(b));
   }
 }

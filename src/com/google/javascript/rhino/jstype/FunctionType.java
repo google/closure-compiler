@@ -461,7 +461,7 @@ public class FunctionType extends PrototypeObjectType {
   private JSType supAndInfHelper(JSType that, boolean leastSuper) {
     // NOTE(nicksantos): When we remove the unknown type, the function types
     // form a lattice with the universal constructor at the top of the lattice,
-    // and the NoObject type at the bottom of the lattice.
+    // and the LEAST_FUNCTION_TYPE type at the bottom of the lattice.
     //
     // When we introduce the unknown type, it's much more difficult to make
     // heads or tails of the partial ordering of types, because there's no
@@ -470,30 +470,43 @@ public class FunctionType extends PrototypeObjectType {
     //
     // Rather than make the situation more complicated by introducing new
     // types (like unions of functions), we just fallback on the simpler
-    // approach of using the universal constructor and the AnyObject as
-    // the supremum and infinum of all function types.
+    // approach of getting things right at the top and the bottom of the
+    // lattice.
     if (isFunctionType() && that.isFunctionType()) {
       if (isEquivalentTo(that)) {
         return this;
       }
 
-      // If this is a normal function, look to see if the arguments are equal.
-      // If they are, we can just take the least supertype (or greatest
-      // subtype) of the return types.
-      if (isOrdinaryFunction() && that.isOrdinaryFunction() &&
-          that instanceof FunctionType) {
-        FunctionType other = (FunctionType) that;
-        if (call.hasEqualParameters(other.call) &&
-            isEquivalent(typeOfThis, other.typeOfThis)) {
-          JSType newReturnType = leastSuper ?
-              call.returnType.getLeastSupertype(other.call.returnType) :
-              call.returnType.getGreatestSubtype(other.call.returnType);
-          return cloneWithNewReturnType(
-              newReturnType,
-              call.returnTypeInferred || other.call.returnTypeInferred);
+      FunctionType other = null;
+      if (that instanceof FunctionType) {
+        other = (FunctionType) that;
+      }
+
+      // If these are ordinary functions, then merge them.
+      // Don't do this if any of the params/return
+      // values are unknown, because then there will be cycles in
+      // their local lattice and they will merge in weird ways.
+      if (other != null &&
+          isOrdinaryFunction() && that.isOrdinaryFunction() &&
+          !this.call.hasUnknownParamsOrReturn() &&
+          !other.call.hasUnknownParamsOrReturn()) {
+
+        // Check for the degenerate case.
+        if (this.isSubtype(that)) {
+          return leastSuper ? that : this;
+        } else if (that.isSubtype(this)) {
+          return leastSuper ? this : that;
+        }
+
+        // Merge the two functions component-wise.
+        FunctionType merged = tryMergeFunctionPiecewise(other, leastSuper);
+        if (merged != null) {
+          return merged;
         }
       }
 
+      // The function instance type is a special case
+      // that lives above the rest of the lattice.
       JSType functionInstance = registry.getNativeType(
           JSTypeNative.FUNCTION_INSTANCE_TYPE);
       if (functionInstance.isEquivalentTo(that)) {
@@ -502,9 +515,17 @@ public class FunctionType extends PrototypeObjectType {
         return leastSuper ? this : that;
       }
 
-      return leastSuper ?
-          registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE) :
-          registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+      // In theory, we should be using the GREATEST_FUNCTION_TYPE as the
+      // greatest function. In practice, we don't because it's way too
+      // broad. The greatest function takes var_args None parameters, which
+      // means that all parameters register a type warning.
+      //
+      // Instead, we use the U2U ctor type, which has unknown type args.
+      FunctionType greatestFn =
+          registry.getNativeFunctionType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
+      FunctionType leastFn =
+          registry.getNativeFunctionType(JSTypeNative.LEAST_FUNCTION_TYPE);
+      return leastSuper ? greatestFn : leastFn;
     }
 
     return leastSuper ?
@@ -512,12 +533,49 @@ public class FunctionType extends PrototypeObjectType {
         super.getGreatestSubtype(that);
   }
 
-  FunctionType cloneWithNewReturnType(JSType newReturnType, boolean inferred) {
+  /**
+   * Try to get the sup/inf of two functions by looking at the
+   * piecewise components.
+   */
+  private FunctionType tryMergeFunctionPiecewise(
+      FunctionType other, boolean leastSuper) {
+    Node newParamsNode = null;
+    if (call.hasEqualParameters(other.call)) {
+      newParamsNode = call.parameters;
+    } else {
+      // If the parameters are not equal, don't try to merge them.
+      // Someday, we should try to merge the individual params.
+      return null;
+    }
+
+    JSType newReturnType = leastSuper ?
+        call.returnType.getLeastSupertype(other.call.returnType) :
+        call.returnType.getGreatestSubtype(other.call.returnType);
+
+    ObjectType newTypeOfThis = null;
+    if (isEquivalent(typeOfThis, other.typeOfThis)) {
+      newTypeOfThis = typeOfThis;
+    } else {
+      JSType maybeNewTypeOfThis = leastSuper ?
+          typeOfThis.getLeastSupertype(other.typeOfThis) :
+          typeOfThis.getGreatestSubtype(other.typeOfThis);
+      if (maybeNewTypeOfThis instanceof ObjectType) {
+        newTypeOfThis = (ObjectType) maybeNewTypeOfThis;
+      } else {
+        newTypeOfThis = leastSuper ?
+            registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE) :
+            registry.getNativeObjectType(JSTypeNative.NO_OBJECT_TYPE);
+      }
+    }
+
+    boolean newReturnTypeInferred =
+        call.returnTypeInferred || other.call.returnTypeInferred;
+
     return new FunctionType(
-        registry, null, source,
+        registry, null, null,
         new ArrowType(
-            registry, call.parameters, newReturnType, inferred),
-        typeOfThis, null, false, false);
+            registry, newParamsNode, newReturnType, newReturnTypeInferred),
+        newTypeOfThis, null, false, false);
   }
 
   /**
