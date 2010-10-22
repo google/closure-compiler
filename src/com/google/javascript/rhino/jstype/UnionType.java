@@ -412,6 +412,14 @@ public class UnionType extends JSType {
 
   @Override
   public boolean isSubtype(JSType that) {
+    // unknown
+    if (that.isUnknownType()) {
+      return true;
+    }
+    // all type
+    if (that.isAllType()) {
+      return true;
+    }
     for (JSType element : alternates) {
       if (!element.isSubtype(that)) {
         return false;
