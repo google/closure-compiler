@@ -220,4 +220,21 @@ public class CheckGlobalThisTest extends CompilerTestCase {
     testSame("function Foo() {} " +
         "Foo.prototype = {write: function() { this.foo = 3; }};");
   }
+
+  public void testLendsAnnotation1() {
+    testFailure("/** @constructor */ function F() {}" +
+        "dojo.declare(F, {foo: function() { return this.foo; }});");
+  }
+
+  public void testLendsAnnotation2() {
+    testFailure("/** @constructor */ function F() {}" +
+        "dojo.declare(F, /** @lends {F.bar} */ (" +
+        "    {foo: function() { return this.foo; }}));");
+  }
+
+  public void testLendsAnnotation3() {
+    testSame("/** @constructor */ function F() {}" +
+        "dojo.declare(F, /** @lends {F.prototype} */ (" +
+        "    {foo: function() { return this.foo; }}));");
+  }
 }

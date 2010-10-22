@@ -110,6 +110,17 @@ final class CheckGlobalThis implements Callback {
             pType == Token.NUMBER)) {
         return false;
       }
+
+      // Don't traverse functions that are getting lent to a prototype.
+      Node gramps = parent.getParent();
+      if (NodeUtil.isObjectLitKey(parent, gramps)) {
+        JSDocInfo maybeLends = gramps.getJSDocInfo();
+        if (maybeLends != null &&
+            maybeLends.getLendsName() != null &&
+            maybeLends.getLendsName().endsWith(".prototype")) {
+          return false;
+        }
+      }
     }
 
     if (parent != null && parent.getType() == Token.ASSIGN) {
