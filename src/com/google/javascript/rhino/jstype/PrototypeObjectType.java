@@ -71,8 +71,12 @@ class PrototypeObjectType extends ObjectType {
 
   private final String className;
   private final Map<String, Property> properties;
-  private ObjectType implicitPrototype;
   private final boolean nativeType;
+
+  // NOTE(nicksantos): The implicit prototype can change over time.
+  // Modelling this is a bear. Always call getImplicitPrototype(), because
+  // some subclasses override this to do special resolution handling.
+  private ObjectType implicitPrototypeFallback;
 
   // Whether the toString representation of this should be pretty-printed,
   // by printing all properties.
@@ -106,13 +110,11 @@ class PrototypeObjectType extends ObjectType {
     this.properties = Maps.newTreeMap();
     this.className = className;
     this.nativeType = nativeType;
-    if (nativeType) {
-      this.implicitPrototype = implicitPrototype;
-    } else if (implicitPrototype == null) {
-      this.implicitPrototype =
-          registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+    if (nativeType || implicitPrototype != null) {
+      setImplicitPrototype(implicitPrototype);
     } else {
-      this.implicitPrototype = implicitPrototype;
+      setImplicitPrototype(
+          registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
     }
   }
 
@@ -375,7 +377,7 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public ObjectType getImplicitPrototype() {
-    return implicitPrototype;
+    return implicitPrototypeFallback;
   }
 
   /**
@@ -384,9 +386,9 @@ class PrototypeObjectType extends ObjectType {
    * in super class declaration, and only before properties on that type are
    * processed.
    */
-  void setImplicitPrototype(ObjectType implicitPrototype) {
+  final void setImplicitPrototype(ObjectType implicitPrototype) {
     checkState(!hasCachedValues());
-    this.implicitPrototype = implicitPrototype;
+    this.implicitPrototypeFallback = implicitPrototype;
   }
 
   @Override
@@ -503,10 +505,10 @@ class PrototypeObjectType extends ObjectType {
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
     setResolvedTypeInternal(this);
 
-    // Don't try to resolve native types, because it's unnecessary and
-    // there are infinite loops between native types.
-    if (implicitPrototype != null && !implicitPrototype.isNativeObjectType()) {
-      implicitPrototype = (ObjectType) implicitPrototype.resolve(t, scope);
+    ObjectType implicitPrototype = getImplicitPrototype();
+    if (implicitPrototype != null) {
+      implicitPrototypeFallback =
+          (ObjectType) implicitPrototype.resolve(t, scope);
     }
     for (Property prop : properties.values()) {
       prop.type = safeResolve(prop.type, t, scope);

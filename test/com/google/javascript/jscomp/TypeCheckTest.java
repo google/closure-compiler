@@ -2745,6 +2745,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "foo(new Sub2());");
   }
 
+  public void testGoodExtends13() throws Exception {
+    testTypes(
+        "/** @constructor \n * @extends {B}  */ function C() {}" +
+        "/** @constructor \n * @extends {D}  */ function E() {}" +
+        "/** @constructor \n * @extends {C}  */ function D() {}" +
+        "/** @constructor \n * @extends {A} */ function B() {}" +
+        "/** @constructor */ function A() {}" +
+        "/** @param {number} x */ function f(x) {} f(new E());",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : E\n" +
+        "required: number");
+  }
+
   public void testBadExtends1() throws Exception {
     testTypes("/** @constructor */function base() {}\n" +
         "/** @constructor\n * @extends {not_base} */function derived() {}\n",
