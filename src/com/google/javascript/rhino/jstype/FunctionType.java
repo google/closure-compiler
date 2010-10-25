@@ -458,6 +458,14 @@ public class FunctionType extends PrototypeObjectType {
     return supAndInfHelper(that, false);
   }
 
+  /**
+   * Computes the supremum or infimum of functions with other types.
+   * Because sup() and inf() share a lot of logic for functions, we use
+   * a single helper.
+   * @param leastSuper If true, compute the supremum of {@code this} with
+   *     {@code that}. Otherwise compute the infimum.
+   * @return The least supertype or greatest subtype.
+   */
   private JSType supAndInfHelper(JSType that, boolean leastSuper) {
     // NOTE(nicksantos): When we remove the unknown type, the function types
     // form a lattice with the universal constructor at the top of the lattice,
@@ -491,10 +499,13 @@ public class FunctionType extends PrototypeObjectType {
           !this.call.hasUnknownParamsOrReturn() &&
           !other.call.hasUnknownParamsOrReturn()) {
 
-        // Check for the degenerate case.
-        if (this.isSubtype(that)) {
+        // Check for the degenerate case, but double check
+        // that there's not a cycle.
+        boolean isSubtypeOfThat = this.isSubtype(that);
+        boolean isSubtypeOfThis = that.isSubtype(this);
+        if (isSubtypeOfThat && !isSubtypeOfThis) {
           return leastSuper ? that : this;
-        } else if (that.isSubtype(this)) {
+        } else if (isSubtypeOfThis && !isSubtypeOfThat) {
           return leastSuper ? this : that;
         }
 

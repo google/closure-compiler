@@ -134,6 +134,20 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         "function (this:NoObject): None", retString, retNumber);
   }
 
+  public void testSupAndInfOfReturnTypesWithNumOfParams() {
+    FunctionType twoNumbers = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(NUMBER_TYPE, NUMBER_TYPE))
+        .withReturnType(BOOLEAN_TYPE).build();
+    FunctionType oneNumber = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .withReturnType(BOOLEAN_TYPE).build();
+
+    assertLeastSupertype(
+        "Function", twoNumbers, oneNumber);
+    assertGreatestSubtype(
+        "function (...[*]): None", twoNumbers, oneNumber);
+  }
+
   private void assertLeastSupertype(String s, JSType t1, JSType t2) {
     assertEquals(s, t1.getLeastSupertype(t2).toString());
     assertEquals(s, t2.getLeastSupertype(t1).toString());
