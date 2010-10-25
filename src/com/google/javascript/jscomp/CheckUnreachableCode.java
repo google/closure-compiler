@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -39,7 +38,6 @@ class CheckUnreachableCode implements ScopedCallback {
 
   private final AbstractCompiler compiler;
   private final CheckLevel level;
-  private boolean scopeNeedsInit = true;
 
   CheckUnreachableCode(AbstractCompiler compiler, CheckLevel level) {
     this.compiler = compiler;
@@ -48,20 +46,11 @@ class CheckUnreachableCode implements ScopedCallback {
 
   @Override
   public void enterScope(NodeTraversal t) {
-    scopeNeedsInit = true;
+    initScope(t.getControlFlowGraph());
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (!shouldCheck(n)) {
-      return false;
-    }
-
-    if (scopeNeedsInit) {
-      initScope(t.getControlFlowGraph());
-      scopeNeedsInit = false;
-    }
-
     GraphNode<Node, Branch> gNode = t.getControlFlowGraph().getNode(n);
     if (gNode != null && gNode.getAnnotation() != GraphReachability.REACHABLE) {
 
@@ -89,20 +78,6 @@ class CheckUnreachableCode implements ScopedCallback {
     new GraphReachability<Node, ControlFlowGraph.Branch>(
         controlFlowGraph, new ReachablePredicate()).compute(
             controlFlowGraph.getEntry().getValue());
-  }
-
-  private boolean shouldCheck(Node n) {
-    switch (n.getType()) {
-      case Token.SCRIPT:
-      case Token.BLOCK:
-      case Token.FUNCTION:
-        JSDocInfo info = n.getJSDocInfo();
-        if (info != null && info.getSuppressions().contains("unreachable")) {
-          return false;
-        }
-    }
-
-    return true;
   }
 
   @Override

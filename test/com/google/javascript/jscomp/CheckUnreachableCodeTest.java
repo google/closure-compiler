@@ -161,32 +161,32 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
 
     testSame(
         "/** @fileoverview\n" +
-        " * @suppress {unreachable}\n" +
+        " * @suppress {uselessCode}\n" +
         " */\n" +
         "if(false) { }");
 
     testSame(
         "/** @fileoverview\n" +
-        " * @suppress {unreachable}\n" +
+        " * @suppress {uselessCode}\n" +
         " */\n" +
         "function f() { if(false) { } }");
 
     testSame(
         "/**\n" +
-        " * @suppress {unreachable}\n" +
+        " * @suppress {uselessCode}\n" +
         " */\n" +
         "function f() { if(false) { } }");
 
     assertUnreachable(
         "/**\n" +
-        " * @suppress {unreachable}\n" +
+        " * @suppress {uselessCode}\n" +
         " */\n" +
         "function f() { if(false) { } }\n" +
         "function g() { if(false) { } }\n");
 
     testSame(
         "/**\n" +
-        " * @suppress {unreachable}\n" +
+        " * @suppress {uselessCode}\n" +
         " */\n" +
         "function f() {\n" +
         "  function g() { if(false) { } }\n" +
@@ -195,7 +195,7 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable(
         "function f() {\n" +
         "  /**\n" +
-        "   * @suppress {unreachable}\n" +
+        "   * @suppress {uselessCode}\n" +
         "   */\n" +
         "  function g() { if(false) { } }\n" +
         "  if(false) { } }\n");
@@ -203,7 +203,7 @@ public class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame(
         "function f() {\n" +
         "  /**\n" +
-        "   * @suppress {unreachable}\n" +
+        "   * @suppress {uselessCode}\n" +
         "   */\n" +
         "  function g() { if(false) { } }\n" +
         "}\n");

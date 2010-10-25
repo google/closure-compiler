@@ -624,8 +624,7 @@ public class NodeTraversal {
    */
   public JSError makeError(Node n, CheckLevel level, DiagnosticType type,
       String... arguments) {
-    return JSError.make(getSourceName(), n.getLineno(), n.getCharno(), level,
-        type, arguments);
+    return JSError.make(getSourceName(), n, level, type, arguments);
   }
 
   /**
