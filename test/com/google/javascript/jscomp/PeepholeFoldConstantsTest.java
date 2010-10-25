@@ -441,6 +441,9 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("z = x * y", "z = x * y");
     fold("x = y * 5", "x = y * 5");
     fold("x = 1 / 0", "", PeepholeFoldConstants.DIVIDE_BY_0_ERROR);
+    fold("x = 3 % 2", "x = 1");
+    fold("x = 3 % -2", "x = 1");
+    fold("x = 1 % 0", "", PeepholeFoldConstants.DIVIDE_BY_0_ERROR);
   }
 
   public void testFoldArithmeticStringComp() {

@@ -132,6 +132,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.SUB:
       case Token.MUL:
       case Token.DIV:
+      case Token.MOD:
         return tryFoldArithmetic(subtree, left, right);
 
       case Token.LT:
@@ -511,6 +512,13 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           break;
         case Token.MUL:
           result = lval * rval;
+          break;
+        case Token.MOD:
+          if (rval == 0) {
+            error(DIVIDE_BY_0_ERROR, right);
+            return n;
+          }
+          result = lval % rval;
           break;
         case Token.DIV:
           if (rval == 0) {
