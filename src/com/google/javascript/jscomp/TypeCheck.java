@@ -246,7 +246,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       UNKNOWN_EXPR_TYPE,
       UNRESOLVED_TYPE,
       WRONG_ARGUMENT_COUNT,
-      ILLEGAL_IMPLICIT_CAST);
+      ILLEGAL_IMPLICIT_CAST,
+      TypedScopeCreator.UNKNOWN_LENDS,
+      TypedScopeCreator.LENDS_ON_NON_OBJECT);
 
   private final AbstractCompiler compiler;
   private final TypeValidator validator;

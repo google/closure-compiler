@@ -7271,6 +7271,82 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {{bar: number}} x */ function f(x) { return x.baz; }");
   }
 
+  public void testLends1() throws Exception {
+    testTypes(
+        "function extend(x, y) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "extend(Foo, /** @lends */ ({bar: 1}));",
+        "Parse error. missing object name in @lends tag");
+  }
+
+  public void testLends2() throws Exception {
+    testTypes(
+        "function extend(x, y) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "extend(Foo, /** @lends {Foob} */ ({bar: 1}));",
+        "Variable Foob not declared before @lends annotation.");
+  }
+
+  public void testLends3() throws Exception {
+    testTypes(
+        "function extend(x, y) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "extend(Foo, {bar: 1});" +
+        "alert(Foo.bar);",
+        "Property bar never defined on Foo");
+  }
+
+  public void testLends4() throws Exception {
+    testTypes(
+        "function extend(x, y) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "extend(Foo, /** @lends {Foo} */ ({bar: 1}));" +
+        "alert(Foo.bar);");
+  }
+
+  public void testLends5() throws Exception {
+    testTypes(
+        "function extend(x, y) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "extend(Foo, {bar: 1});" +
+        "alert((new Foo()).bar);",
+        "Property bar never defined on Foo");
+  }
+
+  public void testLends6() throws Exception {
+    testTypes(
+        "function extend(x, y) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "extend(Foo, /** @lends {Foo.prototype} */ ({bar: 1}));" +
+        "alert((new Foo()).bar);");
+  }
+
+  public void testLends7() throws Exception {
+    testTypes(
+        "function extend(x, y) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "extend(Foo, /** @lends {Foo.prototype|Foo} */ ({bar: 1}));",
+        "Parse error. expected closing }");
+  }
+
+  public void testLends8() throws Exception {
+    testTypes(
+        "function extend(x, y) {}" +
+        "/** @type {number} */ var Foo = 3;" +
+        "extend(Foo, /** @lends {Foo} */ ({bar: 1}));",
+        "May only lend properties to object types. Foo has type number.");
+  }
+
+  public void testLends9() throws Exception {
+    testClosureTypesMultipleWarnings(
+        "function extend(x, y) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "extend(Foo, /** @lends {!Foo} */ ({bar: 1}));",
+        Lists.newArrayList(
+            "Parse error. expected closing }",
+            "Parse error. missing object name in @lends tag"));
+  }
+
   public void testDeclaredNativeTypeEquality() throws Exception {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
     assertEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),

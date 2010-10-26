@@ -106,6 +106,16 @@ final class TypedScopeCreator implements ScopeCreator {
           "JSC_REFLECT_CONSTRUCTOR_EXPECTED",
           "Constructor expected as first argument");
 
+  static final DiagnosticType UNKNOWN_LENDS =
+      DiagnosticType.warning(
+          "JSC_UNKNOWN_LENDS",
+          "Variable {0} not declared before @lends annotation.");
+
+  static final DiagnosticType LENDS_ON_NON_OBJECT =
+      DiagnosticType.warning(
+          "JSC_LENDS_ON_NON_OBJECT",
+          "May only lend properties to object types. {0} has type {1}.");
+
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
   private final TypeValidator validator;
@@ -309,48 +319,6 @@ final class TypedScopeCreator implements ScopeCreator {
     return null;
   }
 
-  private void attachLiteralTypes(Node n) {
-    switch (n.getType()) {
-      case Token.NULL:
-        n.setJSType(getNativeType(NULL_TYPE));
-        break;
-
-      case Token.VOID:
-        n.setJSType(getNativeType(VOID_TYPE));
-        break;
-
-      case Token.STRING:
-        n.setJSType(getNativeType(STRING_TYPE));
-        break;
-
-      case Token.NUMBER:
-        n.setJSType(getNativeType(NUMBER_TYPE));
-        break;
-
-      case Token.TRUE:
-      case Token.FALSE:
-        n.setJSType(getNativeType(BOOLEAN_TYPE));
-        break;
-
-      case Token.REGEXP:
-        n.setJSType(getNativeType(REGEXP_TYPE));
-        break;
-
-      case Token.REF_SPECIAL:
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
-        break;
-
-      case Token.OBJECTLIT:
-        if (n.getJSType() == null) {
-          n.setJSType(typeRegistry.createAnonymousObjectType());
-        }
-        break;
-
-      // NOTE(nicksantos): If we ever support Array tuples,
-      // we will need to put ARRAYLIT here as well.
-    }
-  }
-
   private JSType getNativeType(JSTypeNative nativeType) {
     return typeRegistry.getNativeType(nativeType);
   }
@@ -475,6 +443,75 @@ final class TypedScopeCreator implements ScopeCreator {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
           }
           break;
+      }
+    }
+
+    private void attachLiteralTypes(Node n) {
+      switch (n.getType()) {
+        case Token.NULL:
+          n.setJSType(getNativeType(NULL_TYPE));
+          break;
+
+        case Token.VOID:
+          n.setJSType(getNativeType(VOID_TYPE));
+          break;
+
+        case Token.STRING:
+          n.setJSType(getNativeType(STRING_TYPE));
+          break;
+
+        case Token.NUMBER:
+          n.setJSType(getNativeType(NUMBER_TYPE));
+          break;
+
+        case Token.TRUE:
+        case Token.FALSE:
+          n.setJSType(getNativeType(BOOLEAN_TYPE));
+          break;
+
+        case Token.REGEXP:
+          n.setJSType(getNativeType(REGEXP_TYPE));
+          break;
+
+        case Token.REF_SPECIAL:
+          n.setJSType(getNativeType(UNKNOWN_TYPE));
+          break;
+
+        case Token.OBJECTLIT:
+          processObjectLit(n);
+          break;
+
+          // NOTE(nicksantos): If we ever support Array tuples,
+          // we will need to put ARRAYLIT here as well.
+      }
+    }
+
+    private void processObjectLit(Node objectLit) {
+      JSDocInfo info = objectLit.getJSDocInfo();
+      if (info != null &&
+          info.getLendsName() != null) {
+        String lendsName = info.getLendsName();
+        Var lendsVar = scope.getVar(lendsName);
+        if (lendsVar == null) {
+          compiler.report(
+              JSError.make(sourceName, objectLit, UNKNOWN_LENDS, lendsName));
+        } else {
+          JSType type = lendsVar.getType();
+          if (type == null) {
+            type = typeRegistry.getNativeType(UNKNOWN_TYPE);
+          }
+          if (!type.isSubtype(typeRegistry.getNativeType(OBJECT_TYPE))) {
+            compiler.report(
+                JSError.make(sourceName, objectLit, LENDS_ON_NON_OBJECT,
+                    lendsName, type.toString()));
+          } else {
+            objectLit.setJSType(type);
+          }
+        }
+      }
+
+      if (objectLit.getJSType() == null) {
+        objectLit.setJSType(typeRegistry.createAnonymousObjectType());
       }
     }
 

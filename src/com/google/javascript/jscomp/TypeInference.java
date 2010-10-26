@@ -670,7 +670,13 @@ class TypeInference
     // TODO(nicksantos): There should be an "anonymous object" type that
     // we can check for here.
     ObjectType objectType = ObjectType.cast(type);
-    if (objectType == null || objectType.hasReferenceName()) {
+    if (objectType == null) {
+      return scope;
+    }
+
+    boolean hasLendsName = n.getJSDocInfo() != null &&
+        n.getJSDocInfo().getLendsName() != null;
+    if (objectType.hasReferenceName() && !hasLendsName) {
       return scope;
     }
 
