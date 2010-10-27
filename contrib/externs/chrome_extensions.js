@@ -609,6 +609,8 @@ chrome.experimental.popup = {};
  */
 chrome.experimental.popup.show = function(url, showDetails, opt_callback) {};
 
+/** @type {ChromeEvent} */
+chrome.experimental.popup.onClosed;
 
 /** @see http://code.google.com/chrome/extensions/experimental.processes.html */
 chrome.experimental.processes = {};
