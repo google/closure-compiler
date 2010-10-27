@@ -219,6 +219,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       options.sourceMapOutputPath = config.createSourceMap;
     }
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
+    options.sourceMapFormat = config.sourceMapFormat;
 
     if (!config.variableMapInputFile.equals("")) {
       options.inputVariableMapSerialized =

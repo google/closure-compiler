@@ -504,6 +504,14 @@ public class CommandLineRunnerTest extends TestCase {
             lastCompiler.getModuleGraph().getRootModule()));
   }
 
+  public void testSourceMapFormat1() {
+    args.add("--js_output_file");
+    args.add("/path/to/out.js");
+    testSame("var x = 3;");
+    assertEquals(SourceMap.Format.LEGACY,
+        lastCompiler.getOptions().sourceMapFormat);
+  }
+
   public void testCharSetExpansion() {
     testSame("");
     assertEquals("US-ASCII", lastCompiler.getOptions().outputCharset);
