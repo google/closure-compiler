@@ -1433,7 +1433,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // TODO(nicksantos|user): This is a terrible, terrible hack
       // to bail out on recusive typedefs. We'll eventually need
       // to handle these properly.
-      typeRegistry.forwardDeclareType(typedef);
+      typeRegistry.declareType(typedef, getNativeType(UNKNOWN_TYPE));
 
       JSType realType = info.getTypedefType().evaluate(scope, typeRegistry);
       if (realType == null) {
@@ -1442,7 +1442,7 @@ final class TypedScopeCreator implements ScopeCreator {
                 t.getSourceName(), candidate, MALFORMED_TYPEDEF, typedef));
       }
 
-      typeRegistry.declareType(typedef, realType);
+      typeRegistry.overwriteDeclaredType(typedef, realType);
       if (candidate.getType() == Token.GETPROP) {
         defineSlot(candidate, candidate.getParent(),
             getNativeType(NO_TYPE), false);
@@ -1462,7 +1462,7 @@ final class TypedScopeCreator implements ScopeCreator {
         // TODO(nicksantos|user): This is a terrible, terrible hack
         // to bail out on recusive typedefs. We'll eventually need
         // to handle these properly.
-        typeRegistry.forwardDeclareType(typedef);
+        typeRegistry.declareType(typedef, getNativeType(UNKNOWN_TYPE));
 
         JSDocInfo info = candidate.getJSDocInfo();
         JSType realType = null;
@@ -1476,7 +1476,7 @@ final class TypedScopeCreator implements ScopeCreator {
                   t.getSourceName(), candidate, MALFORMED_TYPEDEF, typedef));
         }
 
-        typeRegistry.declareType(typedef, realType);
+        typeRegistry.overwriteDeclaredType(typedef, realType);
 
         // Duplicate typedefs get handled when we try to register
         // this typedef in the scope.

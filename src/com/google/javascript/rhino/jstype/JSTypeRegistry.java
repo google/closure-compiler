@@ -46,6 +46,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
@@ -710,9 +711,8 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Records declared type names. Given the limited scopes of JavaScript, all
-   * named types are dumped in a common global scope. We may need to revise this
-   * assumption in the future.
+   * Records declared global type names. This makes resolution faster
+   * and more robust in the common case.
    *
    * @param name The name of the type to be recorded.
    * @param t The actual type being associated with the name.
@@ -724,6 +724,15 @@ public class JSTypeRegistry implements Serializable {
     }
     register(t, name);
     return true;
+  }
+
+  /**
+   * Overrides a declared global type name. Throws an exception if this
+   * type name hasn't been declared yet.
+   */
+  public void overwriteDeclaredType(String name, JSType t) {
+    Preconditions.checkState(namesToTypes.containsKey(name));
+    register(t, name);
   }
 
   /**
