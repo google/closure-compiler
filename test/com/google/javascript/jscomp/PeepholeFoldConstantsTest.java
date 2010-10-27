@@ -443,6 +443,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 1 / 0", "", PeepholeFoldConstants.DIVIDE_BY_0_ERROR);
     fold("x = 3 % 2", "x = 1");
     fold("x = 3 % -2", "x = 1");
+    fold("x = -1 % 3", "x = -1");
     fold("x = 1 % 0", "", PeepholeFoldConstants.DIVIDE_BY_0_ERROR);
   }
 
