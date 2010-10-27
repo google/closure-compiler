@@ -1254,3 +1254,13 @@ function XMLHttpRequestUpload() {}
  * @extends {HTMLImageElement}
  */
 function Image(opt_width, opt_height) {}
+
+
+/**
+ * Dataset collection.
+ * This is really a DOMStringMap but it behaves close enough to an object to
+ * pass as an object.
+ * @type {Object}
+ * @const
+ */
+HTMLElement.prototype.dataset;
