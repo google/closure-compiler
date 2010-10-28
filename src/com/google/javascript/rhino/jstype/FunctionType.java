@@ -864,7 +864,14 @@ public class FunctionType extends PrototypeObjectType {
 
     call = (ArrowType) safeResolve(call, t, scope);
     prototype = (FunctionPrototypeType) safeResolve(prototype, t, scope);
-    typeOfThis = (ObjectType) safeResolve(typeOfThis, t, scope);
+
+    // Warning about typeOfThis if it doesn't resolve to an ObjectType
+    // is handled further upstream.
+    // TODO(nicksantos): Handle this correctly if we have a UnionType.
+    JSType maybeTypeOfThis = safeResolve(typeOfThis, t, scope);
+    if (maybeTypeOfThis instanceof ObjectType) {
+      typeOfThis = (ObjectType) maybeTypeOfThis;
+    }
 
     boolean changed = false;
     ImmutableList.Builder<ObjectType> resolvedInterfaces =

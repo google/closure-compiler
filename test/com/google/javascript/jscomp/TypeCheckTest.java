@@ -2606,6 +2606,28 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "element BAR does not exist on this enum");
   }
 
+  public void testBackwardsTypedefUse1() throws Exception {
+    testTypes(
+        "/** @this {MyTypedef} */ function f() {}" +
+        "/** @typedef {string} */ var MyTypedef;",
+        "@this type of a function must be an object\n" +
+        "Actual type: string");
+  }
+
+  public void testBackwardsTypedefUse2() throws Exception {
+    testTypes(
+        "/** @this {MyTypedef} */ function f() {}" +
+        "/** @typedef {!(Date|Array)} */ var MyTypedef;");
+  }
+
+  public void testBackwardsTypedefUse3() throws Exception {
+    testTypes(
+        "/** @this {MyTypedef} */ function f() {}" +
+        "/** @typedef {(Date|Array)} */ var MyTypedef;",
+        "@this type of a function must be an object\n" +
+        "Actual type: (Array|Date|null)");
+  }
+
   public void testBackwardsConstructor1() throws Exception {
     testTypes(
         "function f() { (new Foo(true)); }" +

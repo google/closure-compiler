@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -125,6 +126,12 @@ final class FunctionTypeBuilder {
       "JSC_TEMPLATE_TYPE_EXPECTED",
       "The template type must be a parameter type");
 
+  static final DiagnosticType THIS_TYPE_NON_OBJECT =
+      DiagnosticType.warning(
+          "JSC_THIS_TYPE_NON_OBJECT",
+          "@this type of a function must be an object\n" +
+          "Actual type: {0}");
+
   private class ExtendedTypeValidator implements Predicate<JSType> {
     @Override
     public boolean apply(JSType type) {
@@ -162,6 +169,23 @@ final class FunctionTypeBuilder {
         return true;
       }
       return false;
+    }
+  };
+
+  private class ThisTypeValidator implements Predicate<JSType> {
+    @Override
+    public boolean apply(JSType type) {
+      // TODO(user): Doing an instanceof check here is too
+      // restrictive as (Date,Error) is, for instance, an object type
+      // even though its implementation is a UnionType. Would need to
+      // create interfaces JSType, ObjectType, FunctionType etc and have
+      // separate implementation instead of the class hierarchy, so that
+      // union types can also be object types, etc.
+      if (!type.isSubtype(typeRegistry.getNativeType(OBJECT_TYPE))) {
+        reportWarning(THIS_TYPE_NON_OBJECT, type.toString());
+        return false;
+      }
+      return true;
     }
   };
 
@@ -388,13 +412,8 @@ final class FunctionTypeBuilder {
           info.getThisType().evaluate(scope, typeRegistry));
     }
     if (maybeThisType != null) {
-      // TODO(user): Doing an instanceof check here is too
-      // restrictive as (Date,Error) is, for instance, an object type
-      // even though its implementation is a UnionType. Would need to
-      // create interfaces JSType, ObjectType, FunctionType etc and have
-      // separate implementation instead of the class hierarchy, so that
-      // union types can also be object types, etc.
       thisType = maybeThisType;
+      thisType.setValidator(new ThisTypeValidator());
     } else if (owner != null &&
                (info == null || !info.hasType())) {
       // If the function is of the form:
