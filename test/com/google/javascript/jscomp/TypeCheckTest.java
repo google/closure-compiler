@@ -2628,6 +2628,41 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Actual type: (Array|Date|null)");
   }
 
+  public void testBackwardsTypedefUse4() throws Exception {
+    testTypes(
+        "/** @return {MyTypedef} */ function f() { return null; }" +
+        "/** @typedef {string} */ var MyTypedef;",
+        "inconsistent return type\n" +
+        "found   : null\n" +
+        "required: string");
+  }
+
+  public void testBackwardsTypedefUse5() throws Exception {
+    testTypes(
+        "/** @return {MyTypedef} */ function f() { return null; }" +
+        "/** @type {string} */ var MyTypedef = goog.typedef;",
+        "inconsistent return type\n" +
+        "found   : null\n" +
+        "required: string");
+  }
+
+  public void testBackwardsTypedefUse6() throws Exception {
+    testTypes(
+        "/** @return {goog.MyTypedef} */ function f() { return null; }" +
+        "var goog = {};" +
+        "/** @typedef {string} */ goog.MyTypedef;",
+        "inconsistent return type\n" +
+        "found   : null\n" +
+        "required: string");
+  }
+
+  public void testBackwardsTypedefUse7() throws Exception {
+    testTypes(
+        "/** @return {goog.MyTypedef} */ function f() { return null; }" +
+        "var goog = {};" +
+        "/** @typedef {Object} */ goog.MyTypedef;");
+  }
+
   public void testBackwardsConstructor1() throws Exception {
     testTypes(
         "function f() { (new Foo(true)); }" +
@@ -6916,7 +6951,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "f(new A()); f(new B()); f(1);",
         "actual parameter 1 of f does not match formal parameter\n" +
         "found   : number\n" +
-        "required: (AB|null)");
+        "required: (A|B|null)");
   }
 
   public void testCircularTypeDef() throws Exception {

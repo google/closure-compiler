@@ -91,6 +91,8 @@ final class TypedScopeCreator implements ScopeCreator {
   static final String DELEGATE_PROXY_SUFFIX =
       ObjectType.createDelegateSuffix("Proxy");
 
+  private static final String LEGACY_TYPEDEF = "goog.typedef";
+
   static final DiagnosticType MALFORMED_TYPEDEF =
       DiagnosticType.warning(
           "JSC_MALFORMED_TYPEDEF",
@@ -216,7 +218,8 @@ final class TypedScopeCreator implements ScopeCreator {
   @VisibleForTesting
   Scope createInitialScope(Node root) {
 
-    NodeTraversal.traverse(compiler, root, new DiscoverEnums(typeRegistry));
+    NodeTraversal.traverse(
+        compiler, root, new DiscoverEnumsAndTypedefs(typeRegistry));
 
     Scope s = new Scope(root, compiler);
     declareNativeFunctionType(s, ARRAY_FUNCTION_TYPE);
@@ -239,7 +242,7 @@ final class TypedScopeCreator implements ScopeCreator {
     // The typedef construct needs the any type, so that it can be assigned
     // to anything. This is kind of a hack, and an artifact of the typedef
     // syntax we've chosen.
-    declareNativeValueType(s, "goog.typedef", NO_TYPE);
+    declareNativeValueType(s, LEGACY_TYPEDEF, NO_TYPE);
 
     // ActiveXObject is unqiuely special, because it can be used to construct
     // any type (the type that it creates is related to the arguments you
@@ -265,10 +268,11 @@ final class TypedScopeCreator implements ScopeCreator {
     scope.declare(name, null, t, null, false);
   }
 
-  private static class DiscoverEnums extends AbstractShallowStatementCallback {
+  private static class DiscoverEnumsAndTypedefs
+      extends AbstractShallowStatementCallback {
     private final JSTypeRegistry registry;
 
-    DiscoverEnums(JSTypeRegistry registry) {
+    DiscoverEnumsAndTypedefs(JSTypeRegistry registry) {
       this.registry = registry;
     }
 
@@ -279,23 +283,40 @@ final class TypedScopeCreator implements ScopeCreator {
         case Token.VAR:
           for (Node child = node.getFirstChild();
                child != null; child = child.getNext()) {
-            identifyEnumInNameNode(
-                child, NodeUtil.getInfoForNameNode(child));
+            identifyNameNode(
+                child, child.getFirstChild(),
+                NodeUtil.getInfoForNameNode(child));
           }
           break;
         case Token.EXPR_RESULT:
-          Node maybeAssign = node.getFirstChild();
-          if (maybeAssign.getType() == Token.ASSIGN) {
-            identifyEnumInNameNode(
-                maybeAssign.getFirstChild(), maybeAssign.getJSDocInfo());
+          Node firstChild = node.getFirstChild();
+          if (firstChild.getType() == Token.ASSIGN) {
+            identifyNameNode(
+                firstChild.getFirstChild(), firstChild.getLastChild(),
+                firstChild.getJSDocInfo());
+          } else {
+            identifyNameNode(
+                firstChild, null, firstChild.getJSDocInfo());
           }
           break;
       }
     }
 
-    private void identifyEnumInNameNode(Node nameNode, JSDocInfo info) {
-      if (info != null && info.hasEnumParameterType()) {
-        registry.identifyEnumName(nameNode.getQualifiedName());
+    private void identifyNameNode(
+        Node nameNode, Node valueNode, JSDocInfo info) {
+      if (nameNode.isQualifiedName()) {
+        if (info != null) {
+          if (info.hasEnumParameterType()) {
+            registry.identifyNonNullableName(nameNode.getQualifiedName());
+          } else if (info.hasTypedefType()) {
+            registry.identifyNonNullableName(nameNode.getQualifiedName());
+          }
+        }
+
+        if (valueNode != null &&
+            LEGACY_TYPEDEF.equals(valueNode.getQualifiedName())) {
+          registry.identifyNonNullableName(nameNode.getQualifiedName());
+        }
       }
     }
   }

@@ -102,10 +102,10 @@ public class JSTypeRegistry implements Serializable {
   // /** @enum {MyObject} */ var MyEnum = ...;
   // we won't be to declare "MyEnum" without evaluating the expression
   // {MyObject}, and following those dependencies starts to lead us into
-  // undecidable territory. Instead, we "pre-declare" enum types,
+  // undecidable territory. Instead, we "pre-declare" enum types and typedefs,
   // so that the expression resolver can decide whether a given name is
   // nullable or not.
-  private final Set<String> enumTypeNames = new HashSet<String>();
+  private final Set<String> nonNullableTypeNames = new HashSet<String>();
 
   // Types that have been "forward-declared."
   // If these types are not declared anywhere in the binary, we shouldn't
@@ -1278,10 +1278,11 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Identifies the name of an enum before we actually declare it.
+   * Identifies the name of a typedef or enum before we actually declare it.
    */
-  public void identifyEnumName(String name) {
-    enumTypeNames.add(name);
+  public void identifyNonNullableName(String name) {
+    Preconditions.checkNotNull(name);
+    nonNullableTypeNames.add(name);
   }
 
   /**
@@ -1395,7 +1396,7 @@ public class JSTypeRegistry implements Serializable {
           namedType = namedType.resolveInternal(reporter, scope);
         }
         if ((namedType instanceof ObjectType) &&
-            !(enumTypeNames.contains(n.getString()))) {
+            !(nonNullableTypeNames.contains(n.getString()))) {
           Node typeList = n.getFirstChild();
           if (typeList != null &&
               ("Array".equals(n.getString()) ||
