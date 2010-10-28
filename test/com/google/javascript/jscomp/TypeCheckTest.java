@@ -38,6 +38,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   private CheckLevel reportMissingOverrides = CheckLevel.WARNING;
 
+  @Override
   public void setUp() throws Exception {
     super.setUp();
     reportMissingOverrides = CheckLevel.WARNING;
@@ -6356,9 +6357,39 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   //      "interface members can only be plain functions");
   //}
 
-  public void testDataPropertyOnInterface2() throws Exception {
+  public void testDataPropertyOnInterface1() throws Exception {
     testTypes("/** @interface */ function T() {};\n" +
         "/** @type {number} */T.prototype.x;");
+  }
+
+  public void testDataPropertyOnInterface2() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
+    testTypes("/** @interface */ function T() {};\n" +
+        "/** @type {number} */T.prototype.x;\n" +
+        "/** @constructor \n" +
+        " *  @implements {T} \n" +
+        " */\n" +
+        "function C() {}\n" +
+        "C.prototype.x = 'foo';",
+        "mismatch of the x property type and the type of the property it " +
+        "overrides from interface T\n" +
+        "original: number\n" +
+        "override: string");
+  }
+
+  public void testDataPropertyOnInterface3() throws Exception {
+    testTypes("/** @interface */ function T() {};\n" +
+        "/** @type {number} */T.prototype.x;\n" +
+        "/** @constructor \n" +
+        " *  @implements {T} \n" +
+        " */\n" +
+        "function C() {}\n" +
+        "/** @override */\n" +
+        "C.prototype.x = 'foo';",
+        "mismatch of the x property type and the type of the property it " +
+        "overrides from interface T\n" +
+        "original: number\n" +
+        "override: string");
   }
 
   public void testWarnDataPropertyOnInterface3() throws Exception {

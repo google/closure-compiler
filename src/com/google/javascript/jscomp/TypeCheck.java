@@ -980,10 +980,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               HIDDEN_INTERFACE_PROPERTY, propertyName,
               interfaceType.getTopMostDefiningType(propertyName).toString()));
         }
-        if (!declaredOverride) {
-          continue;
-        }
-        // @override is present and we have to check that it is ok
+        // Check that it is ok
         if (interfaceHasProperty) {
           JSType interfacePropType =
               interfaceType.getPrototype().getPropertyType(propertyName);
