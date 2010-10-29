@@ -561,11 +561,12 @@ class CodeGenerator {
         break;
 
       case Token.STRING:
-        Preconditions.checkState(
-            childCount ==
+        if (childCount !=
             ((n.getParent() != null &&
-              n.getParent().getType() == Token.OBJECTLIT) ? 1 : 0),
-            n.getParent().toStringTree());
+              n.getParent().getType() == Token.OBJECTLIT) ? 1 : 0)) {
+          throw new IllegalStateException(
+              "Unexpected String children: " + n.getParent().toStringTree());
+        }
         add(jsString(n.getString(), outputCharsetEncoder));
         break;
 
