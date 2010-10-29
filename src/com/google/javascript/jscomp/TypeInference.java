@@ -854,7 +854,7 @@ class TypeInference
         JSType iArgumentType = getJSType(iArgument);
         if (iArgument.getType() == Token.FUNCTION &&
             iArgumentType instanceof FunctionType &&
-            iArgument.getJSDocInfo() == null) {
+            iArgumentType.getJSDocInfo() == null) {
           iArgument.setJSType(iParameterFnType);
         }
       }
@@ -943,7 +943,8 @@ class TypeInference
         }
 
         if (!foundTemplateTypeOfThisParameter) {
-          compiler.report(JSError.make(NodeUtil.getSourceName(n), n,
+          Node source = fnType.getSource();
+          compiler.report(JSError.make(NodeUtil.getSourceName(source), source,
               TEMPLATE_TYPE_OF_THIS_EXPECTED));
           return;
         }
