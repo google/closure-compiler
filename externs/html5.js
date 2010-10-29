@@ -564,6 +564,7 @@ SQLResultSetRowList.prototype.item = function(index) {};
  * @param {string} version
  * @param {string} description
  * @param {number} size
+ * @return {Database}
  */
 function openDatabase(name, version, description, size) {}
 
@@ -572,8 +573,27 @@ function openDatabase(name, version, description, size) {}
  * @param {string} version
  * @param {string} description
  * @param {number} size
+ * @return {Database}
  */
 Window.prototype.openDatabase = function(name, version, description, size) {};
+
+//HTML5 LocalFileSystem objects
+/**
+ * @constructor
+ */
+function LocalFileSystem() {}
+
+/**
+ * Get LocalFileSystem object
+ * @return {LocalFileSystem}
+ */
+function requestFileSystem() {}
+
+/**
+ * Get LocalFileSystem object
+ * @return {LocalFileSystem}
+ */
+Window.prototype.requestFileSystem = function() {};
 
 /**
  * @type {boolean}
@@ -712,6 +732,53 @@ var applicationCache;
 
 /** @type {DOMApplicationCache} */
 Window.prototype.applicationCache;
+
+/**
+ * @see http://dev.w3.org/html5/workers/
+ * @constructor
+ * @implements {EventTarget}
+ */
+function WebWorker() {}
+
+/** @inheritDoc */
+WebWorker.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+WebWorker.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+WebWorker.prototype.dispatchEvent = function(evt) {};
+
+/**
+ * Stops the worker process
+ */
+WebWorker.prototype.terminate = function() {};
+
+/*
+ * Posts a message to the worker thread.
+ * @param {string} message
+ */
+WebWorker.prototype.postMessage = function(message) {};
+
+/**
+ * Sent when the worker thread posts a message to its creator.
+ * @type {EventListener}
+ */
+WebWorker.prototype.onmessage;
+
+/**
+ * Sent when the worker thread encounters an error.
+ * @type {EventListener}
+ */
+WebWorker.prototype.onerror;
+
+/** @type {WebWorker} */
+var Worker;
+
+/** @type {WebWorker} */
+Window.prototype.Worker;
 
 /**
  * @type {boolean}
