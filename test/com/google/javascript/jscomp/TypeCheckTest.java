@@ -7516,6 +7516,34 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         compiler.getWarnings()[0].description);
   }
 
+  public void testUpdateParameterTypeOnClosure() throws Exception {
+    testTypes(
+        "/**\n" +
+        "* @constructor\n" +
+        "* @param {*=} opt_value\n" +
+        "* @return {?}\n" +
+        "*/\n" +
+        "function Object(opt_value) {}\n" +
+        "/**\n" +
+        "* @constructor\n" +
+        "* @param {...*} var_args\n" +
+        "*/\n" +
+        "function Function(var_args) {}\n" +
+        "/**\n" +
+        "* @type {Function}\n" +
+        "*/\n" +
+        // The line below sets JSDocInfo on Object so that the type of the
+        // argument to function f has JSDoc through its prototype chain.
+        "Object.prototype.constructor = function() {};\n",
+        "/**\n" +
+        "* @param {function(): boolean} fn\n" +
+        "*/\n" +
+        "function f(fn) {}\n" +
+        "f(function(g) { });\n",
+        null,
+        false);
+  }
+
   public void testBadTemplateType1() throws Exception {
     testTypes(
         "/**\n" +
