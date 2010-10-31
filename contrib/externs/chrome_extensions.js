@@ -646,10 +646,12 @@ chrome.experimental.rlz.clearProductState = function(product, accessPoints) {};
  * @param {string} id
  * @param {string} lang
  * @param {boolean} excludeMachineId
+ * @param {function(boolean): void} callback
  */
 chrome.experimental.rlz.sendFinancialPing = function(product, accessPoints,
                                                      signature, brand, id, lang,
-                                                     excludeMachineId) {};
+                                                     excludeMachineId,
+                                                     callback) {};
 
 /**
  * @param {string} accessPoint
