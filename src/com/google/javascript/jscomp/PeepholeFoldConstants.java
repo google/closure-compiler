@@ -114,10 +114,6 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.OR:
         return tryFoldAndOr(subtree, left, right);
 
-      case Token.BITAND:
-      case Token.BITOR:
-        return tryFoldBitAndOr(subtree, left, right);
-
       case Token.LSH:
       case Token.RSH:
       case Token.URSH:
@@ -130,10 +126,22 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return tryFoldAdd(subtree, left, right);
 
       case Token.SUB:
-      case Token.MUL:
       case Token.DIV:
       case Token.MOD:
-        return tryFoldArithmetic(subtree, left, right);
+        if (left.getType() == Token.NUMBER && right.getType() == Token.NUMBER) {
+          return tryFoldOp(subtree, left, right);
+        } else {
+          return subtree;
+        }
+
+      case Token.MUL:
+      case Token.BITAND:
+      case Token.BITOR:
+        if (left.getType() == Token.NUMBER && right.getType() == Token.NUMBER) {
+          return tryFoldOp(subtree, left, right);
+        } else {
+          return tryFoldLeftChildOp(subtree, left, right);
+        }
 
       case Token.LT:
       case Token.GT:
@@ -435,9 +443,6 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *  - The left child is also and add expression
    *  - The right child is a constant value
    *  - The left child's right child is a STRING constant.
-   *
-   * WARNING: If javascript ever adds operator overloading, this will
-   * probably stop being correct.
    */
   private Node tryFoldLeftChildAdd(Node n, Node left, Node right) {
 
@@ -487,7 +492,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
     } else {
       // Try arithmetic add
-      return tryFoldArithmetic(n, left, right);
+      return tryFoldOp(n, left, right);
     }
 
     return n;
@@ -496,54 +501,137 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   /**
    * Try to fold arithmetic binary operators
    */
-  private Node tryFoldArithmetic(Node n, Node left, Node right) {
-    if (left.getType() == Token.NUMBER &&
-        right.getType() == Token.NUMBER) {
-      double result;
-      double lval = left.getDouble();
-      double rval = right.getDouble();
+  private Node tryFoldOp(Node n, Node left, Node right) {
+    Node result = performArithmeticOp(n.getType(), left, right);
+    if (result != null) {
+      n.getParent().replaceChild(n, result);
+      reportCodeChange();
+      return result;
+    }
+    return n;
+  }
 
-      switch (n.getType()) {
-        case Token.ADD:
-          result = lval + rval;
-          break;
-        case Token.SUB:
-          result = lval - rval;
-          break;
-        case Token.MUL:
-          result = lval * rval;
-          break;
-        case Token.MOD:
-          if (rval == 0) {
-            error(DIVIDE_BY_0_ERROR, right);
-            return n;
-          }
-          result = lval % rval;
-          break;
-        case Token.DIV:
-          if (rval == 0) {
-            error(DIVIDE_BY_0_ERROR, right);
-            return n;
-          }
-          result = lval / rval;
-          break;
-        default:
-          throw new Error("Unknown arithmetic operator");
+  /**
+   * Try to fold arithmetic binary operators
+   */
+  private Node performArithmeticOp(int opType, Node left, Node right) {
+    Preconditions.checkState(left.getType() == Token.NUMBER);
+    Preconditions.checkState(right.getType() == Token.NUMBER);
+    double result;
+    double lval = left.getDouble();
+    double rval = right.getDouble();
+
+    switch (opType) {
+      case Token.BITAND:
+        if (!areValidInts(lval, rval)) {
+          return null;
+        }
+        result = (int)lval & (int)rval;
+        break;
+      case Token.BITOR:
+        if (!areValidInts(lval, rval)) {
+          return null;
+        }
+        result = (int)lval | (int)rval;
+        break;
+      case Token.ADD:
+        result = lval + rval;
+        break;
+      case Token.SUB:
+        result = lval - rval;
+        break;
+      case Token.MUL:
+        result = lval * rval;
+        break;
+      case Token.MOD:
+        if (rval == 0) {
+          error(DIVIDE_BY_0_ERROR, right);
+          return null;
+        }
+        result = lval % rval;
+        break;
+      case Token.DIV:
+        if (rval == 0) {
+          error(DIVIDE_BY_0_ERROR, right);
+          return null;
+        }
+        result = lval / rval;
+        break;
+      default:
+        throw new Error("Unexpected arithmetic operator");
+    }
+
+    // TODO(johnlenz): consider removing the result length check.
+    // length of the left and right value plus 1 byte for the operator.
+    if (String.valueOf(result).length() <=
+        String.valueOf(lval).length() + String.valueOf(rval).length() + 1 &&
+
+        // Do not try to fold arithmetic for numbers > 2^53. After that
+        // point, fixed-point math starts to break down and become inaccurate.
+        Math.abs(result) <= MAX_FOLD_NUMBER) {
+      Node newNumber = Node.newNumber(result);
+      return newNumber;
+    }
+
+    return null;
+  }
+
+  /**
+   * @return Whether the double can be precisely represented as a int.
+   */
+  private boolean isValidInt(double val) {
+    return !(val < Integer.MIN_VALUE || val > Integer.MAX_VALUE)
+        && val == (int)val;
+  }
+
+  /**
+   * @return Whether the parameters are doubles can be precisely represented
+   * as a int.
+   */
+  private boolean areValidInts(double val1, double val2) {
+    return isValidInt(val1) && isValidInt(val2);
+  }
+
+  /**
+   * Expressions such as [foo() * 10 * 20] generate parse trees
+   * where no node has two const children ((foo() * 10) * 20), so
+   * performArithmeticOp() won't fold it -- tryFoldLeftChildOp() will.
+   * Specifically it folds associative expressions where:
+   *  - The left child is also an associative expression of the same time.
+   *  - The right child is a constant NUMBER constant.
+   *  - The left child's right child is a NUMBER constant.
+   */
+  private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
+    int opType = n.getType();
+    // Note: ADD is not associative when used as a string concat operator.
+    Preconditions.checkState(
+      NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType));
+    // TODO(johnlenz): create and use a getNumberValue.
+    if (right.getType() == Token.NUMBER && left.getType() == opType) {
+      Preconditions.checkState(left.getChildCount() == 2);
+
+      Node ll = left.getFirstChild();
+      Node lr = ll.getNext();
+
+      Node valueToCombine;
+      if (ll.getType() == Token.NUMBER) {
+        valueToCombine = ll;
+      } else if (lr.getType() == Token.NUMBER) {
+        valueToCombine = lr;
+      } else {
+        // Nothing to do.
+        return n;
       }
 
-      // length of the left and right value plus 1 byte for the operator.
-      if (String.valueOf(result).length() <=
-          String.valueOf(lval).length() + String.valueOf(rval).length() + 1 &&
-
-          // Do not try to fold arithmetic for numbers > 2^53. After that
-          // point, fixed-point math starts to break down and become inaccurate.
-          Math.abs(result) <= MAX_FOLD_NUMBER) {
-        Node newNumber = Node.newNumber(result);
-        n.getParent().replaceChild(n, newNumber);
+      Node replacement = performArithmeticOp(opType, valueToCombine, right);
+      if (replacement != null) {
+        left.removeChild(valueToCombine);
+        n.replaceChild(left, left.removeFirstChild());
+        n.replaceChild(right, replacement);
         reportCodeChange();
-        return newNumber;
       }
-   }
+    }
+
     return n;
   }
 
@@ -558,59 +646,6 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // a + 7 or 6 + a
       return tryFoldLeftChildAdd(node, left, right);
     }
-  }
-
-  /**
-   * Try to fold arithmetic binary operators
-   */
-  private Node tryFoldBitAndOr(Node n, Node left, Node right) {
-    Preconditions.checkArgument(n.getType() == Token.BITAND
-        || n.getType() == Token.BITOR);
-
-    if (left.getType() != Token.NUMBER ||
-        right.getType() != Token.NUMBER) {
-      return n;
-    }
-
-    double resultDouble;
-    double lval = left.getDouble();
-    double rval = right.getDouble();
-
-    // For now, we are being extra conservative, and only folding ints in
-    // the range MIN_VALUE-MAX_VALUE
-    if (lval < Integer.MIN_VALUE || lval > Integer.MAX_VALUE ||
-        rval < Integer.MIN_VALUE || rval > Integer.MAX_VALUE) {
-
-      // Fall back through and let the javascript use the larger values
-      return n;
-    }
-
-    // Convert the numbers to ints
-    int lvalInt = (int) lval;
-    if (lvalInt != lval) {
-      return n;
-    }
-
-    int rvalInt = (int) rval;
-    if (rvalInt != rval) {
-      return n;
-    }
-
-    switch (n.getType()) {
-      case Token.BITAND:
-        resultDouble = lvalInt & rvalInt;
-        break;
-      case Token.BITOR:
-        resultDouble = lvalInt | rvalInt;
-        break;
-      default:
-        throw new Error("Unknown bitwise operator");
-    }
-
-    Node newNumber = Node.newNumber(resultDouble);
-    n.getParent().replaceChild(n, newNumber);
-    reportCodeChange();
-    return newNumber;
   }
 
   /**

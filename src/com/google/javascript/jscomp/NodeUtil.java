@@ -922,7 +922,7 @@ public final class NodeUtil {
   /**
    * Returns true if the operator is associative.
    * e.g. (a * b) * c = a * (b * c)
-   * Note: "+" is not associative because it is also the concatentation
+   * Note: "+" is not associative because it is also the concatenation
    * for strings. e.g. "a" + (1 + 2) is not "a" + 1 + 2
    */
   static boolean isAssociative(int type) {
@@ -930,6 +930,24 @@ public final class NodeUtil {
       case Token.MUL:
       case Token.AND:
       case Token.OR:
+      case Token.BITOR:
+      case Token.BITAND:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Returns true if the operator is commutative.
+   * e.g. (a * b) * c = c * (b * a)
+   * Note 1: "+" is not commutative because it is also the concatenation
+   * for strings. e.g. "a" + (1 + 2) is not "a" + 1 + 2
+   * Note 2: only operations on literals and pure functions are commutative.
+   */
+  static boolean isCommutative(int type) {
+    switch (type) {
+      case Token.MUL:
       case Token.BITOR:
       case Token.BITAND:
         return true;

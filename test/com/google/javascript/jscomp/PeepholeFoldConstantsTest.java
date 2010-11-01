@@ -240,6 +240,22 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 1 | 3000000000", "x = 1|3000000000");
   }
 
+  public void testFoldBitwiseOp2() {
+    fold("x = y & 1 & 1", "x = y & 1");
+    fold("x = y & 1 & 2", "x = y & 0");
+    fold("x = y & 3 & 1", "x = y & 1");
+    fold("x = 3 & y & 1", "x = y & 1");
+    fold("x = y & 3 & 3", "x = y & 3");
+    fold("x = 3 & y & 3", "x = y & 3");
+
+    fold("x = y | 1 | 1", "x = y | 1");
+    fold("x = y | 1 | 2", "x = y | 3");
+    fold("x = y | 3 | 1", "x = y | 3");
+    fold("x = 3 | y | 1", "x = y | 3");
+    fold("x = y | 3 | 3", "x = y | 3");
+    fold("x = 3 | y | 3", "x = y | 3");
+  }
+
   public void testFoldBitwiseOpStringCompare() {
     assertResultString("x = -1 | 0", "x=-1");
     // EXPR_RESULT case is in in PeepholeIntegrationTest
@@ -445,6 +461,15 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 3 % -2", "x = 1");
     fold("x = -1 % 3", "x = -1");
     fold("x = 1 % 0", "", PeepholeFoldConstants.DIVIDE_BY_0_ERROR);
+  }
+
+  public void testFoldArithmetic2() {
+    foldSame("x = y + 10 + 20");
+    foldSame("x = y / 2 / 4");
+    fold("x = y * 2.25 * 3", "x = y * 6.75");
+    fold("z = x * y", "z = x * y");
+    fold("x = y * 5", "x = y * 5");
+    fold("x = y + (z * 24 * 60 * 60 * 1000)", "x = y + z * 864E5");
   }
 
   public void testFoldArithmeticStringComp() {
