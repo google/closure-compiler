@@ -181,7 +181,8 @@ final class FunctionTypeBuilder {
       // create interfaces JSType, ObjectType, FunctionType etc and have
       // separate implementation instead of the class hierarchy, so that
       // union types can also be object types, etc.
-      if (!type.isSubtype(typeRegistry.getNativeType(OBJECT_TYPE))) {
+      if (!type.restrictByNotNullOrUndefined().isSubtype(
+              typeRegistry.getNativeType(OBJECT_TYPE))) {
         reportWarning(THIS_TYPE_NON_OBJECT, type.toString());
         return false;
       }

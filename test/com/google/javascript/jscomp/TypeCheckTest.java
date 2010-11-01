@@ -2624,9 +2624,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testBackwardsTypedefUse3() throws Exception {
     testTypes(
         "/** @this {MyTypedef} */ function f() {}" +
-        "/** @typedef {(Date|Array)} */ var MyTypedef;",
+        "/** @typedef {(Date|string)} */ var MyTypedef;",
         "@this type of a function must be an object\n" +
-        "Actual type: (Array|Date|null)");
+        "Actual type: (Date|null|string)");
   }
 
   public void testBackwardsTypedefUse4() throws Exception {
@@ -2662,6 +2662,27 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @return {goog.MyTypedef} */ function f() { return null; }" +
         "var goog = {};" +
         "/** @typedef {Object} */ goog.MyTypedef;");
+  }
+
+  public void testBackwardsTypedefUse8() throws Exception {
+    // Tehnically, this isn't quite right, because the JS runtime
+    // will coerce null -> the global object. But we'll punt on that for now.
+    testTypes(
+        "/** @param {!Array} x */ function g(x) {}" +
+        "/** @this {goog.MyTypedef} */ function f() { g(this); }" +
+        "var goog = {};" +
+        "/** @typedef {(Array|null|undefined)} */ goog.MyTypedef;");
+  }
+
+  public void testBackwardsTypedefUse9() throws Exception {
+    testTypes(
+        "/** @param {!Array} x */ function g(x) {}" +
+        "/** @this {goog.MyTypedef} */ function f() { g(this); }" +
+        "var goog = {};" +
+        "/** @typedef {(Error|null|undefined)} */ goog.MyTypedef;",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : Error\n" +
+        "required: Array");
   }
 
   public void testBackwardsConstructor1() throws Exception {
