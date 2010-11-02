@@ -682,4 +682,9 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x.y=x.y+z", "x.y+=z");
     foldSame("next().x = next().x + 1");
   }
+
+  public void testFoldAdd1() {
+    foldSame("x=false+1");
+  }
+
 }

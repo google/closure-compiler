@@ -128,17 +128,13 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.SUB:
       case Token.DIV:
       case Token.MOD:
-        if (left.getType() == Token.NUMBER && right.getType() == Token.NUMBER) {
-          return tryFoldOp(subtree, left, right);
-        } else {
-          return subtree;
-        }
+        return tryFoldArithmeticOp(subtree, left, right);
 
       case Token.MUL:
       case Token.BITAND:
       case Token.BITOR:
         if (left.getType() == Token.NUMBER && right.getType() == Token.NUMBER) {
-          return tryFoldOp(subtree, left, right);
+          return tryFoldArithmeticOp(subtree, left, right);
         } else {
           return tryFoldLeftChildOp(subtree, left, right);
         }
@@ -492,7 +488,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
     } else {
       // Try arithmetic add
-      return tryFoldOp(n, left, right);
+      return tryFoldArithmeticOp(n, left, right);
     }
 
     return n;
@@ -501,12 +497,14 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   /**
    * Try to fold arithmetic binary operators
    */
-  private Node tryFoldOp(Node n, Node left, Node right) {
-    Node result = performArithmeticOp(n.getType(), left, right);
-    if (result != null) {
-      n.getParent().replaceChild(n, result);
-      reportCodeChange();
-      return result;
+  private Node tryFoldArithmeticOp(Node n, Node left, Node right) {
+    if (left.getType() == Token.NUMBER && right.getType() == Token.NUMBER) {
+      Node result = performArithmeticOp(n.getType(), left, right);
+      if (result != null) {
+        n.getParent().replaceChild(n, result);
+        reportCodeChange();
+        return result;
+      }
     }
     return n;
   }
