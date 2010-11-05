@@ -237,28 +237,40 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Runs the Compiler and calls System.exit() with the exit status of the
-   * compiler.
+   * Runs the Compiler and calls exit() with the exit status of the
+   * compiler. By default, exit() is just System.exit().
    */
   final public void run() {
-    int result = 0;
+    int exitCode = 0;
     int runs = 1;
+    Throwable error = null;
     if (config.computePhaseOrdering) {
       runs = NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER;
       PhaseOptimizer.randomizeLoops();
     }
     try {
-      for (int i = 0; i < runs && result == 0; i++) {
+      for (int i = 0; i < runs && exitCode == 0; i++) {
         runTimeStats.recordStartRun();
-        result = doRun();
+        exitCode = doRun();
         runTimeStats.recordEndRun();
       }
-    } catch (AbstractCommandLineRunner.FlagUsageException e) {
-      System.err.println(e.getMessage());
-      result = -1;
     } catch (Throwable t) {
-      t.printStackTrace();
-      result = -2;
+      error = t;
+    }
+    exit(runTimeStats, error, exitCode);
+  }
+
+  /**
+   * Exits the current process. Prints out any "process" statistics
+   * that the user might need to know about.
+   */
+  void exit(RunTimeStats runTimeStats, Throwable error, int exitCode) {
+    if (error instanceof AbstractCommandLineRunner.FlagUsageException) {
+      System.err.println(error.getMessage());
+      exitCode = 2;
+    } else if (error != null) {
+      error.printStackTrace();
+      exitCode = 37;
     }
 
     if (config.computePhaseOrdering) {
@@ -266,9 +278,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (testMode) {
-      exitCodeReceiverForTesting.apply(result);
+      exitCodeReceiverForTesting.apply(exitCode);
     } else {
-      System.exit(result);
+      System.exit(exitCode);
     }
   }
 
@@ -1117,10 +1129,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     out.append("\n");
   }
 
-  private class RunTimeStats {
+  class RunTimeStats {
     private long bestRunTime = Long.MAX_VALUE;
     private long worstRunTime = Long.MIN_VALUE;
-    private long lastStartTime = 0;
+    long lastStartTime = 0;
     private List<List<String>> loopedPassesInBestRun = null;
 
     /**
