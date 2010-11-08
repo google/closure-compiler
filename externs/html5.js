@@ -896,6 +896,26 @@ function HTMLAudioElement() {}
  */
 function HTMLVideoElement() {}
 
+/**
+ * Starts displaying the video in full screen mode.
+ */
+HTMLVideoElement.prototype.webkitEnterFullscreen = function() {};
+
+/**
+ * Starts displaying the video in full screen mode.
+ */
+HTMLVideoElement.prototype.webkitEnterFullScreen = function() {};
+
+/**
+ * Stops displaying the video in full screen mode.
+ */
+HTMLVideoElement.prototype.webkitExitFullscreen = function() {};
+
+/**
+ * Stops displaying the video in full screen mode.
+ */
+HTMLVideoElement.prototype.webkitExitFullScreen = function() {};
+
 /** @type {string} */
 HTMLVideoElement.prototype.width;
 
@@ -910,6 +930,12 @@ HTMLVideoElement.prototype.videoHeight;
 
 /** @type {string} */
 HTMLVideoElement.prototype.poster;
+
+/** @type {boolean} */
+HTMLVideoElement.prototype.webkitSupportsFullscreen;
+
+/** @type {boolean} */
+HTMLVideoElement.prototype.webkitDisplayingFullscreen;
 
 /**
  * @constructor
