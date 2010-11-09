@@ -1058,7 +1058,7 @@ Navigator.prototype.oscpu;
 Navigator.prototype.platform;
 
 /**
- * @type {Array}
+ * @type {PluginArray}
  * @see https://developer.mozilla.org/en/Navigator.plugins
  */
 Navigator.prototype.plugins;
@@ -1105,6 +1105,29 @@ Navigator.prototype.vendorSub;
  * @nosideeffects
  */
 Navigator.prototype.javaEnabled = function() {};
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/en/DOM/PluginArray
+ */
+function PluginArray() {}
+
+/** @type {number} */
+PluginArray.prototype.length;
+
+/**
+ * @param {number} index
+ * @return {Plugin}
+ */
+PluginArray.prototype.item = function(index) {};
+
+/**
+ * @param {string} name
+ * @return {Plugin}
+ */
+PluginArray.prototype.namedItem = function(name) {};
+
+PluginArray.prototype.refresh = function() {};
 
 /** @constructor */
 function MimeTypeArray() {}
