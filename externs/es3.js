@@ -1990,6 +1990,14 @@ Error.stackTraceLimit;
 
 
 /**
+ * IE-only.
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/2w6a45b5.aspx
+ */
+Error.prototype.description;
+
+
+/**
  * Mozilla-only.
  * @type {number}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error/lineNumber
