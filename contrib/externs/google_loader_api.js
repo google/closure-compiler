@@ -17,6 +17,7 @@
 /**
  * @fileoverview Externs for the Google Loader API.
  * @see http://code.google.com/apis/ajax/documentation/
+ * @externs
  */
 
 /** @param {function()} callback */

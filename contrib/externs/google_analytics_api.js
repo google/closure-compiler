@@ -17,6 +17,7 @@
 /**
  * @fileoverview Externs for the Google Analytics API.
  * @see http://code.google.com/intl/en/apis/analytics/docs/gaJS/gaJSApi.html
+ * @externs
  */
 
 var _gat = {};
