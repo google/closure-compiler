@@ -4614,6 +4614,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "right: null");
   }
 
+  public void testIssue259() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function f(x) {}" +
+        "/** @constructor */" +
+        "var Clock = function() {" +
+        "  /** @constructor */" +
+        "  this.Date = function() {};" +
+        "  f(new this.Date());" +
+        "};",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : this.Date\n" +
+        "required: number");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See
