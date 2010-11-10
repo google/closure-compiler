@@ -1295,6 +1295,13 @@ Document.prototype.scripts;
 Document.prototype.styleSheets;
 
 /**
+ * @param {string} sUrl
+ * @return {number}
+ * @see http://msdn.microsoft.com/en-us/library/ms535922(VS.85).aspx
+ */
+Element.prototype.addBehavior = function(sUrl) {};
+
+/**
  * @type {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms533546(VS.85).aspx
  */
@@ -1391,6 +1398,13 @@ Element.prototype.readyState;
  * @see http://msdn.microsoft.com/en-us/library/ms536689(VS.85).aspx
  */
 Element.prototype.releaseCapture = function() {};
+
+/**
+ * @param {number} iID
+ * @return {boolean}
+ * @see http://msdn.microsoft.com/en-us/library/ms536700(VS.85).aspx
+ */
+Element.prototype.removeBehavior = function(iID) {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/aa703996(VS.85).aspx
