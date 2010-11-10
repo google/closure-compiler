@@ -4174,6 +4174,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testThis11() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function f(x) {}" +
+        "/** @constructor */ function Ctor() {" +
+        "  /** @this {Date} */" +
+        "  this.method = function() {" +
+        "    f(this);" +
+        "  };" +
+        "}",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : Date\n" +
+        "required: number");
+  }
+
   public void testGlobalThis1() throws Exception {
     testTypes("/** @constructor */ function Window() {}" +
         "/** @param {string} msg */ " +

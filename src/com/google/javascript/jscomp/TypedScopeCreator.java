@@ -1033,7 +1033,7 @@ final class TypedScopeCreator implements ScopeCreator {
      *     or {@code null} if this is a stub declaration.
      */
     private JSType getDeclaredGetPropType(NodeTraversal t, JSDocInfo info,
-        Node n, Node rhsValue) {
+        Node n, @Nullable Node rhsValue) {
       if (info != null && info.hasType()) {
         return getDeclaredTypeInAnnotation(t, n, info);
       } else if (info != null && info.hasEnumParameterType()) {
@@ -1337,17 +1337,18 @@ final class TypedScopeCreator implements ScopeCreator {
           Node child = n.getFirstChild();
           switch (child.getType()) {
             case Token.ASSIGN:
-              maybeCollectMember(t, child.getFirstChild(), child);
+              maybeCollectMember(t, child.getFirstChild(), child,
+                  child.getLastChild());
               break;
             case Token.GETPROP:
-              maybeCollectMember(t, child, child);
+              maybeCollectMember(t, child, child, null);
               break;
           }
         }
       }
 
       private void maybeCollectMember(NodeTraversal t,
-          Node member, Node nodeWithJsDocInfo) {
+          Node member, Node nodeWithJsDocInfo, @Nullable Node value) {
         JSDocInfo info = nodeWithJsDocInfo.getJSDocInfo();
 
         // Do nothing if there is no JSDoc type info, or
@@ -1360,7 +1361,7 @@ final class TypedScopeCreator implements ScopeCreator {
         }
 
         member.getFirstChild().setJSType(thisType);
-        JSType jsType = getDeclaredTypeInAnnotation(t, member, info);
+        JSType jsType = getDeclaredGetPropType(t, info, member, value);
         Node name = member.getLastChild();
         if (jsType != null &&
             (name.getType() == Token.NAME || name.getType() == Token.STRING)) {
