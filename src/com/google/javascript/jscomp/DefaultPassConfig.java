@@ -425,7 +425,7 @@ public class DefaultPassConfig extends PassConfig {
     // and inline functions).  Smart Name Removal does better if run before
     // this pass.
     if (options.devirtualizePrototypeMethods) {
-      passes.add(devirtualizePrototypeMethods);
+      passes.add(optimizeCalls);
     }
 
     if (options.customPasses != null) {
@@ -1293,6 +1293,25 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new DevirtualizePrototypeMethods(compiler);
+    }
+  };
+
+  /**
+   * Rewrite instance methods as static methods, to make them easier
+   * to inline.
+   */
+  private final PassFactory optimizeCalls =
+      new PassFactory("optimizeCalls", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      OptimizeCallGraph passes = new OptimizeCallGraph(compiler);
+      if (options.optimizeReturns) {
+        passes.addPass(new OptimizeReturns(compiler));
+      }
+      // Devirtualize must be last as it modifies the the values
+      // represented by the simple definition finder.
+      passes.addPass(new DevirtualizePrototypeMethods(compiler));
+      return passes;
     }
   };
 

@@ -335,6 +335,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   public boolean optimizeParameters;
 
   /**
+   * Remove unused return values.
+   */
+  public boolean optimizeReturns;
+
+  /**
    * Provide formal names for elements of arguments array.
    */
   public boolean optimizeArgumentsArray;
@@ -674,6 +679,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     convertToDottedProperties = false;
     rewriteFunctionExpressions = false;
     optimizeParameters = false;
+    optimizeReturns = false;
 
     // Renaming
     variableRenaming = VariableRenamingPolicy.OFF;

@@ -52,7 +52,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
 
   public SimpleDefinitionFinder(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.definitionSiteMap = Maps.newHashMap();
+    this.definitionSiteMap = Maps.newLinkedHashMap();
     this.nameDefinitionMultimap = HashMultimap.create();
     this.nameUseSiteMultimap = HashMultimap.create();
   }

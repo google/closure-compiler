@@ -63,7 +63,9 @@ import java.util.List;
  * </pre>
  *
  */
-class DevirtualizePrototypeMethods implements SpecializationAwareCompilerPass {
+class DevirtualizePrototypeMethods
+    implements OptimizeCallGraph.CallGraphCompilerPass,
+               SpecializationAwareCompilerPass {
   private final AbstractCompiler compiler;
   private SpecializeModule.SpecializationState specializationState;
 
@@ -79,9 +81,13 @@ class DevirtualizePrototypeMethods implements SpecializationAwareCompilerPass {
   public void process(Node externs, Node root) {
     SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
     defFinder.process(externs, root);
+    process(defFinder);
+  }
 
-    for (DefinitionSite defSite : defFinder.getDefinitionSites()) {
-      rewriteDefinitionIfEligible(defSite, defFinder);
+  @Override
+  public void process(SimpleDefinitionFinder definitions) {
+    for (DefinitionSite defSite : definitions.getDefinitionSites()) {
+      rewriteDefinitionIfEligible(defSite, definitions);
     }
   }
 
