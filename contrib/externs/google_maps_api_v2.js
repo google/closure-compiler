@@ -17,6 +17,7 @@
 /**
  * @fileoverview Externs for the Google Maps V2 API.
  * @see http://code.google.com/apis/maps/documentation/javascript/v2/reference.html
+ * @externs
  */
 
 google.maps = {};
@@ -1323,7 +1324,7 @@ GMapType.prototype.getMaximumResolution = function() {};
 /**
  * @param {GLatLng} latlng
  * @param {function(Object.<string,*>)} callback
- * @param {number} opt_targetZoom
+ * @param {number=} opt_targetZoom
  */
 GMapType.prototype.getMaxZoomAtLatLng =
     function(latlng, callback, opt_targetZoom) {};
@@ -1627,7 +1628,7 @@ google.maps.MapTypeControl;
 /**
  * @see http://code.google.com/apis/maps/documentation/javascript/v2/reference.html#GMapUIOptions.GMapUIOptions
  * @constructor
- * @param {GSize} opt_size
+ * @param {GSize=} opt_size
  */
 function GMapUIOptions(opt_size) {}
 
@@ -3359,13 +3360,13 @@ GStreetviewPanorama.prototype.setPOV = function(pov) {};
 
 /**
  * @param {Object.<string, *>} pov
- * @param {boolean} opt_longRoute
+ * @param {boolean=} opt_longRoute
  */
 GStreetviewPanorama.prototype.panTo = function(pov, opt_longRoute) {};
 
 /**
  * @param {GLatLng} latlng
- * @param {Object.<string, *>} opt_pov
+ * @param {Object.<string, *>=} opt_pov
  */
 GStreetviewPanorama.prototype.setLocationAndPOV = function(latlng, opt_pov) {};
 
