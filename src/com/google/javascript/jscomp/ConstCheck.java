@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -50,6 +51,7 @@ class ConstCheck extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
+    Preconditions.checkState(compiler.isNormalized());
     NodeTraversal.traverse(compiler, root, this);
   }
 

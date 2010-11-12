@@ -93,6 +93,17 @@ class Normalize implements CompilerPass {
     return js;
   }
 
+  static Node parseAndNormalizeTestCode(
+      AbstractCompiler compiler, String code, String prefix) {
+    Node js = compiler.parseTestCode(code);
+    NodeTraversal.traverse(compiler, js,
+        new Normalize.NormalizeStatements(compiler, false));
+    NodeTraversal.traverse(
+        compiler, js,
+        new MakeDeclaredNamesUnique());
+    return js;
+  }
+
   private void reportCodeChange(String changeDescription) {
     if (assertOnChange) {
       throw new IllegalStateException(
@@ -125,19 +136,22 @@ class Normalize implements CompilerPass {
     // otherwise 'var e = 1' would be rewritten as 'e = 1'.
     // TODO(johnlenz): Introduce a seperate scope for catch nodes.
     removeDuplicateDeclarations(externs, root);
-    new PropogateConstantAnnotations(compiler, assertOnChange)
+    new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
 
     compiler.setNormalized();
   }
 
-  public static class PropogateConstantAnnotations
+  /**
+   * Propagate constant annotations over the Var graph.
+   */
+  static class PropagateConstantAnnotationsOverVars
       extends AbstractPostOrderCallback
       implements CompilerPass {
     private final AbstractCompiler compiler;
     private final boolean assertOnChange;
 
-    public PropogateConstantAnnotations(
+    PropagateConstantAnnotationsOverVars(
         AbstractCompiler compiler, boolean forbidChanges) {
       this.compiler = compiler;
       this.assertOnChange = forbidChanges;
@@ -163,8 +177,12 @@ class Normalize implements CompilerPass {
           info = var.getJSDocInfo();
         }
 
-        if ((info != null && info.isConstant()) &&
-            !n.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        boolean shouldBeConstant =
+            (info != null && info.isConstant()) ||
+            NodeUtil.isConstantByConvention(
+                compiler.getCodingConvention(), n, parent);
+        boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
+        if (shouldBeConstant && !isMarkedConstant) {
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
           if (assertOnChange) {
             String name = n.getString();
@@ -173,9 +191,6 @@ class Normalize implements CompilerPass {
                 "  name: "+ name + "\n" +
                 "  gramps:" + n.getParent().getParent().toStringTree());
           }
-          // Even though the AST has changed (an annotation was added),
-          // the annotations are not compared so don't report the change.
-          // reportCodeChange("constant annotation");
         }
       }
     }
@@ -267,6 +282,7 @@ class Normalize implements CompilerPass {
    *   - FOR loop are initializers are moved out of the FOR structure
    *   - LABEL node of children other than LABEL, BLOCK, WHILE, FOR, or DO are
    *     moved into a block.
+   *   - Add constant annotations based on coding convention.
    */
   static class NormalizeStatements implements Callback {
     private final AbstractCompiler compiler;
@@ -310,6 +326,41 @@ class Normalize implements CompilerPass {
         case Token.FUNCTION:
           normalizeFunctionDeclaration(n);
           break;
+
+        case Token.NAME:
+        case Token.STRING:
+          annotateConstantsByConvention(n, parent);
+          break;
+      }
+    }
+
+    /**
+     * Mark names and properties that are constants by convention.
+     */
+    private void annotateConstantsByConvention(Node n, Node parent) {
+      Preconditions.checkState(
+          n.getType() == Token.NAME || n.getType() == Token.STRING);
+
+      // There are only two cases where a string token
+      // may be a variable reference: The right side of a GETPROP
+      // or an OBJECTLIT key.
+      boolean isObjLitKey = NodeUtil.isObjectLitKey(n, parent);
+      boolean isProperty = isObjLitKey ||
+          (parent.getType() == Token.GETPROP &&
+           parent.getLastChild() == n);
+      if (n.getType() == Token.NAME || isProperty) {
+        if (NodeUtil.isConstantByConvention(
+                compiler.getCodingConvention(), n, parent)) {
+          n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+          // TODO(nicksantos): Turn this on.
+          // if (assertOnChange) {
+          //   String name = n.getString();
+          //   throw new IllegalStateException(
+          //       "Unexpected const change.\n" +
+          //       "  name: "+ name + "\n" +
+          //       "  gramps:" + n.getParent().getParent().toStringTree());
+          // }
+        }
       }
     }
 
@@ -696,5 +747,4 @@ class Normalize implements CompilerPass {
       // Nothing to do.
     }
   }
-
 }

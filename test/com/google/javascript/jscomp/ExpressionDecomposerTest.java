@@ -599,7 +599,7 @@ public class ExpressionDecomposerTest extends TestCase {
   }
 
   private static Node parse(Compiler compiler, String js) {
-    Node n = compiler.parseTestCode(js);
+    Node n = Normalize.parseAndNormalizeTestCode(compiler, js, "");
     assertEquals(0, compiler.getErrorCount());
     return n;
   }

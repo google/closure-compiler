@@ -17,7 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+
+import java.util.Set;
 
 /**
  * @author johnlenz@google.com (John Lenz)
@@ -385,6 +389,41 @@ public class NormalizeTest extends CompilerTestCase {
         compiler.toSource(code));
   }
 
+  public void testIsConstant() throws Exception {
+    testSame("var CONST = 3; var b = CONST;");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    assertEquals(2, constantNodes.size());
+    for (Node hasProp : constantNodes) {
+      assertEquals("CONST", hasProp.getString());
+    }
+  }
+
+  public void testPropertyIsConstant() throws Exception {
+    testSame("var a = {};a.CONST = 3; var b = a.CONST;");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    assertEquals(2, constantNodes.size());
+    for (Node hasProp : constantNodes) {
+      assertEquals("CONST", hasProp.getString());
+    }
+  }
+
+  private Set<Node> findNodesWithProperty(Node root, final int prop) {
+    final Set<Node> set = Sets.newHashSet();
+    NodeTraversal.traverse(
+        getLastCompiler(), root, new AbstractPostOrderCallback() {
+        public void visit(NodeTraversal t, Node node, Node parent) {
+          if (node.getBooleanProp(prop)) {
+            set.add(node);
+          }
+        }
+      });
+    return set;
+  }
+
   public void testRenamingConstantProperties() {
     // In order to detecte that foo.BAR is a constant, we need collapse
     // properties to run first so that we can tell if the initial value is
@@ -399,7 +438,7 @@ public class NormalizeTest extends CompilerTestCase {
 
     private void testConstantProperties() {
       test("var a={}; a.ACONST = 4;var b = a.ACONST;",
-            "var a$ACONST = 4; var b = a$ACONST;");
+           "var a$ACONST = 4; var b = a$ACONST;");
 
       test("var a={b:{}}; a.b.ACONST = 4;var b = a.b.ACONST;",
            "var a$b$ACONST = 4;var b = a$b$ACONST;");

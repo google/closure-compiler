@@ -141,6 +141,10 @@ public class ConstCheckTest extends CompilerTestCase {
     testError("var a$b$XYZ = 1; a$b$XYZ <<= 2;");
   }
 
+  public void testConstAnnotation() {
+    testError("/** @const */ var xyz = 1; xyz = 3;");
+  }
+
   private void testError(String js) {
     test(js, null, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }

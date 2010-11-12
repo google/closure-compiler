@@ -129,7 +129,7 @@ class PrepareAst implements CompilerPass {
    * around existing JSDoc annotations as well as internal annotations.
    */
   static class PrepareAnnotations
-      extends NodeTraversal.AbstractPostOrderCallback {
+      implements NodeTraversal.Callback {
 
     private final CodingConvention convention;
 
@@ -137,6 +137,15 @@ class PrepareAst implements CompilerPass {
       this.convention = compiler.getCodingConvention();
     }
 
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (n.getType() == Token.OBJECTLIT) {
+        normalizeObjectLiteralAnnotations(n);
+      }
+      return true;
+    }
+
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.CALL:
@@ -147,33 +156,16 @@ class PrepareAst implements CompilerPass {
           annotateFunctions(n, parent);
           annotateDispatchers(n, parent);
           break;
-
-        case Token.NAME:
-        case Token.STRING:
-          annotateConstants(n, parent);
-          break;
-
-        case Token.OBJECTLIT:
-          visitObjectLiteral(n);
-          break;
       }
     }
 
-    private void visitObjectLiteral(Node objlit) {
+    private void normalizeObjectLiteralAnnotations(Node objlit) {
       Preconditions.checkState(objlit.getType() == Token.OBJECTLIT);
       for (Node key = objlit.getFirstChild();
            key != null; key = key.getNext()) {
         Node value = key.getFirstChild();
-        visitObjectLiteralKey(objlit, key, value);
+        normalizeObjectLiteralKeyAnnotations(objlit, key, value);
       }
-    }
-
-    /**
-     * Prepare the object literal keys.
-     */
-    private void visitObjectLiteralKey(Node objlit, Node key, Node value) {
-      normalizeObjectLitJsDocs(objlit, key, value);
-      annotateObjLitConstants(objlit, key, value);
     }
 
     /**
@@ -227,41 +219,12 @@ class PrepareAst implements CompilerPass {
      * But in few narrow cases (in particular, function literals), it's
      * a lot easier for us if the doc is attached to the value.
      */
-    private void normalizeObjectLitJsDocs(Node objlit, Node key, Node value) {
+    private void normalizeObjectLiteralKeyAnnotations(
+        Node objlit, Node key, Node value) {
       Preconditions.checkState(objlit.getType() == Token.OBJECTLIT);
       if (key.getJSDocInfo() != null &&
           value.getType() == Token.FUNCTION) {
         value.setJSDocInfo(key.getJSDocInfo());
-      }
-    }
-
-    /**
-     * Mark names and properties that are constants by convention.
-     */
-    private void annotateConstants(Node n, Node parent) {
-      Preconditions.checkState(
-          n.getType() == Token.NAME || n.getType() == Token.STRING);
-
-      // There are only two cases where a string token
-      // may be a variable reference: The right side of a GETPROP
-      // or an OBJECTLIT key.
-      if (n.getType() != Token.STRING
-          || parent.getType() == Token.GETPROP) {
-        if (NodeUtil.isConstantByConvention(convention, n, parent)) {
-          n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        }
-      }
-    }
-
-    /**
-     * Mark objlit names that are constants by convention.
-     */
-    private void annotateObjLitConstants(Node objlit, Node key, Node value) {
-      if (key.getType() == Token.NAME || key.getType() == Token.STRING) {
-        String name = key.getString();
-        if (convention.isConstantKey(name)) {
-          key.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        }
       }
     }
 

@@ -144,6 +144,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract Node parseSyntheticCode(String filename, String code);
 
   /**
+   * Parses code for testing.
+   */
+  abstract Node parseTestCode(String code);
+
+  /**
    * Prints a node to source code.
    */
   abstract String toSource(Node root);

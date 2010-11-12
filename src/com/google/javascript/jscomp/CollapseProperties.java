@@ -138,10 +138,6 @@ class CollapseProperties implements CompilerPass {
     for (Name n : globalNames) {
       collapseDeclarationOfNameAndDescendants(n, n.name);
     }
-
-    // TODO(johnlenz): The pass should maintain the constant annotations during
-    // the main pass.
-    new Normalize.PropogateConstantAnnotations(compiler, false);
   }
 
   /**
