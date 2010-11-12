@@ -16,16 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
-import com.google.javascript.jscomp.NameReferenceGraph.Name;
-import com.google.javascript.jscomp.NameReferenceGraph.Reference;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -40,67 +38,127 @@ import java.util.List;
  * </ul>
  *
  */
-class OptimizeParameters implements CompilerPass {
+class OptimizeParameters
+    implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
 
   private final AbstractCompiler compiler;
-  private NameReferenceGraph nameGraph;
-
-  OptimizeParameters(AbstractCompiler compiler, NameReferenceGraph nameGraph) {
-    this.compiler = compiler;
-    this.nameGraph = nameGraph;
-  }
 
   OptimizeParameters(AbstractCompiler compiler) {
-    this(compiler, null);
+    this.compiler = compiler;
+  }
+
+  // TODO(johnlenz): Remove this.
+  OptimizeParameters(AbstractCompiler compiler, NameReferenceGraph unused) {
+    this(compiler);
   }
 
   @Override
+  @VisibleForTesting
   public void process(Node externs, Node root) {
-    if (nameGraph == null) {
-      NameReferenceGraphConstruction c =
-          new NameReferenceGraphConstruction(compiler);
-      c.process(externs, root);
-      nameGraph = c.getNameReferenceGraph();
-    }
+    SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+    defFinder.process(externs, root);
+    process(defFinder);
+  }
 
-    for (DiGraphNode<Name, Reference> node :
-        nameGraph.getDirectedGraphNodes()) {
-      Name name = node.getValue();
-      if (name.canChangeSignature()) {
-        List<DiGraphEdge<Name, Reference>> edges = node.getInEdges();
-        tryEliminateConstantArgs(name, edges);
-        tryEliminateOptionalArgs(name, edges);
+  @Override
+  public void process(SimpleDefinitionFinder definitions) {
+    for (DefinitionSite defSite : definitions.getDefinitionSites()) {
+      if (canChangeSignature(defSite, definitions)) {
+        tryEliminateConstantArgs(defSite, definitions);
+        tryEliminateOptionalArgs(defSite, definitions);
       }
     }
   }
 
   /**
-   * Removes any optional parameters if no callers specifies it as an argument.
-   * @param name The name of the function to optimize.
-   * @param edges All the references to this name.
+   * @return Whether the definitionSite represents a function whose call
+   *      signature can be modified.
    */
-  private void tryEliminateOptionalArgs(Name name,
-      List<DiGraphEdge<Name, Reference>> edges) {
+  private boolean canChangeSignature(
+      DefinitionSite definitionSite, SimpleDefinitionFinder defFinder) {
+    Definition definition = definitionSite.definition;
 
+    if (definitionSite.inExterns) {
+      return false;
+    }
+
+    // Only functions may be rewritten.
+    // Functions that access "arguments" are not eligible since
+    // rewrite changes the structure of this object.
+    Node rValue = definition.getRValue();
+    if (rValue == null ||
+        !NodeUtil.isFunction(rValue) ||
+        NodeUtil.isVarArgsFunction(rValue)) {
+      return false;
+    }
+
+    // TODO(johnlenz): support rewriting methods defined as part of
+    // object literals (they are generally problematic because they may be
+    // maps of functions use in for-in expressions, etc).
+    // Be conservative, don't try to optimize any declaration that isn't as
+    // simple function declaration or assignment.
+    if (!OptimizeReturns.isSimpleFunctionDeclaration(rValue)) {
+      return false;
+    }
+
+    // Assume an exported method result is used.
+    if (OptimizeReturns.maybeExported(compiler, definition)) {
+      return false;
+    }
+
+    Collection<UseSite> useSites = defFinder.getUseSites(definition);
+
+    if (useSites.isEmpty()) {
+      return false;
+    }
+
+    for (UseSite site : useSites) {
+      // Any non-call reference maybe introducing an alias. Don't try to
+      // change the function signature, if all the aliases can't also be
+      // changed.
+      if (!isCallSite(site.node)) {
+        return false;
+      }
+
+      // TODO(johnlenz): support specialization
+
+      // Multiple definitions prevent rewrite.
+      // TODO(johnlenz): Allow rewrite all definitions are valid.
+      Node nameNode = site.node;
+      Collection<Definition> singleSiteDefinitions =
+          defFinder.getDefinitionsReferencedAt(nameNode);
+      if (singleSiteDefinitions.size() > 1) {
+        return false;
+      }
+      Preconditions.checkState(!singleSiteDefinitions.isEmpty());
+      Preconditions.checkState(singleSiteDefinitions.contains(definition));
+    }
+
+    return true;
+  }
+
+  /**
+   * Removes any optional parameters if no callers specifies it as an argument.
+   */
+  private void tryEliminateOptionalArgs(
+      DefinitionSite defSite, SimpleDefinitionFinder defFinder) {
     // Count the maximum number of arguments passed into this function all
     // all points of the program.
     int maxArgs = -1;
 
-    for (DiGraphEdge<Name, Reference> refEdge : edges) {
-      Reference ref = refEdge.getValue();
-      Node call = ref.parent;
+    Definition definition = defSite.definition;
+    Collection<UseSite> useSites = defFinder.getUseSites(definition);
+    for (UseSite site : useSites) {
+      Preconditions.checkState(isCallSite(site.node));
+      Node call = site.node.getParent();
 
-      if (isCallSite(ref)) {
-        int numArgs = call.getChildCount() - 1;
-        if (numArgs > maxArgs) {
-          maxArgs = numArgs;
-        }
-      } // else this is a definition or a dereference, ignore it.
+      int numArgs = call.getChildCount() - 1;
+      if (numArgs > maxArgs) {
+        maxArgs = numArgs;
+      }
     }
 
-    for (Definition definition : name.getDeclarations()) {
-      eliminateParamsAfter(definition.getRValue(), maxArgs);
-    }
+    eliminateParamsAfter(definition.getRValue(), maxArgs);
   }
 
   /**
@@ -113,64 +171,63 @@ class OptimizeParameters implements CompilerPass {
    * function foo(b) { var a = 1 ... }
    * foo(2);
    * foo(3);
-   *
-   * @param name The name of the function to optimize.
-   * @param edges All the references to this name.
    */
-  private void tryEliminateConstantArgs(Name name,
-      List<DiGraphEdge<Name, Reference>> edges) {
+  private void tryEliminateConstantArgs(
+      DefinitionSite defSite, SimpleDefinitionFinder defFinder) {
 
     List<Parameter> parameters = Lists.newArrayList();
     boolean firstCall = true;
 
     // Build a list of parameters to remove
-    for (DiGraphEdge<Name, Reference> refEdge : edges) {
-      Reference ref = refEdge.getValue();
-      Node call = ref.parent;
+    Definition definition = defSite.definition;
+    Collection<UseSite> useSites = defFinder.getUseSites(definition);
+    for (UseSite site : useSites) {
+      Preconditions.checkState(isCallSite(site.node));
+      Node call = site.node.getParent();
 
-      if (isCallSite(ref)) {
-        Node cur = call.getFirstChild();
-        if (firstCall) {
-          // Use the first call to construct a list of parameters of the
-          // function.
-          buildParameterList(parameters, cur);
-          firstCall = false;
-        } else {
-          findConstantParameters(parameters, cur);
-        }
+      Node cur = call.getFirstChild();
+      if (firstCall) {
+        // Use the first call to construct a list of parameters of the
+        // function.
+        buildParameterList(parameters, cur);
+        firstCall = false;
+      } else {
+        findConstantParameters(parameters, cur);
       }
     }
 
     // Remove the constant parameters in all the calls
-    for (DiGraphEdge<Name, Reference> refEdge : edges) {
-      Reference ref = refEdge.getValue();
-      Node call = ref.parent;
+    for (UseSite site : useSites) {
+      Preconditions.checkState(isCallSite(site.node));
+      Node call = site.node.getParent();
 
-      if (isCallSite(ref)) {
-        optimizeCallSite(parameters, call);
-      }
+      optimizeCallSite(parameters, call);
     }
 
     // Remove the constant parameters in the definitions and add it as a local
     // variable.
-    for (Definition definition : name.getDeclarations()) {
-      Node function = definition.getRValue();
-      if (NodeUtil.isFunction(function)) {
-        optimizeFunctionDefinition(parameters, function);
-      }
+    Node function = definition.getRValue();
+    if (NodeUtil.isFunction(function)) {
+      optimizeFunctionDefinition(parameters, function);
     }
   }
 
   private void findConstantParameters(List<Parameter> parameters, Node cur) {
-    for (int index = 0; (cur = cur.getNext()) != null; index++) {
+    int index = 0;
+    while ((cur = cur.getNext()) != null) {
       if (index >= parameters.size()) {
         parameters.add(new Parameter(cur, false));
-      } else if (parameters.get(index).shouldRemove()){
+      } else if (parameters.get(index).shouldRemove()) {
         Node value = parameters.get(index).getArg();
         if (!nodesAreEqual(cur, value)) {
           parameters.get(index).setShouldRemove(false);
         }
       }
+      index++;
+    }
+
+    for (;index < parameters.size(); index++) {
+      parameters.get(index).setShouldRemove(false);
     }
   }
 
@@ -202,15 +259,15 @@ class OptimizeParameters implements CompilerPass {
   }
 
   /**
-   * @param ref A reference to a function.
+   * @param fn A function to check.
    * @return true, if it's safe to optimize this function.
    */
-  private boolean isCallSite(Reference ref) {
-    Node call = ref.parent;
+  private boolean isCallSite(Node fn) {
+    Node call = fn.getParent();
     // We need to make sure we're dealing with a call to the function we're
     // optimizing. If the the first child of the parent is not the site, this
     // is a nested call and it's a call to another function.
-    return isCallOrNew(call) && call.getFirstChild() == ref.site;
+    return isCallOrNew(call) && call.getFirstChild() == fn;
   }
 
   /**
@@ -296,17 +353,20 @@ class OptimizeParameters implements CompilerPass {
       argIndex--;
     }
 
-    while (formalArgPtr != null) {
-      Node next = formalArgPtr.getNext();
-      function.getFirstChild().getNext().removeChild(formalArgPtr);
-      Node var = new Node(Token.VAR, formalArgPtr);
-      function.getLastChild().addChildrenToFront(var);
-      compiler.reportCodeChange();
-      paramRemoved = true;
-      formalArgPtr = next;
-    }
+    return eliminateParamsAfter(function, formalArgPtr);
+  }
 
-    return paramRemoved;
+  private boolean eliminateParamsAfter(Node fnNode, Node argNode) {
+    if (argNode != null) {
+      // Keep the args in the same order, do the last first.
+      eliminateParamsAfter(fnNode, argNode.getNext());
+      argNode.detachFromParent();
+      Node var = new Node(Token.VAR, argNode).copyInformationFrom(argNode);
+      fnNode.getLastChild().addChildrenToFront(var);
+      compiler.reportCodeChange();
+      return true;
+    }
+    return false;
   }
 
   /**
