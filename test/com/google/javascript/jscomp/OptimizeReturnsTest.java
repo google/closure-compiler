@@ -211,4 +211,10 @@ public class OptimizeReturnsTest extends CompilerTestCase {
     testSame(source);
   }
 
+  public void testCallOrApply() throws Exception {
+    // TODO(johnlenz): Add support for .call and .apply
+    testSame("function a() {return 1}; a.call(new foo);");
+
+    testSame("function a() {return 1}; a.apply(new foo);");
+  }
 }
