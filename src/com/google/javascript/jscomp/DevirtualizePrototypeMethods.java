@@ -64,7 +64,7 @@ import java.util.List;
  *
  */
 class DevirtualizePrototypeMethods
-    implements OptimizeCallGraph.CallGraphCompilerPass,
+    implements OptimizeCalls.CallGraphCompilerPass,
                SpecializationAwareCompilerPass {
   private final AbstractCompiler compiler;
   private SpecializeModule.SpecializationState specializationState;

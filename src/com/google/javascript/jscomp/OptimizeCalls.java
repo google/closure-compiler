@@ -31,15 +31,15 @@ import java.util.List;
  * 
  * @author johnlenz@google.com (John Lenz)
  */
-class OptimizeCallGraph implements CompilerPass {
+class OptimizeCalls implements CompilerPass {
   List<CallGraphCompilerPass> passes = Lists.newArrayList();
   private AbstractCompiler compiler;
   
-  OptimizeCallGraph(AbstractCompiler compiler) {
+  OptimizeCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
   
-  OptimizeCallGraph addPass(CallGraphCompilerPass pass) {
+  OptimizeCalls addPass(CallGraphCompilerPass pass) {
     passes.add(pass);
     return this;
   }

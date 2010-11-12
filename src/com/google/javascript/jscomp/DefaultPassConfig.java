@@ -1304,7 +1304,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("optimizeCalls", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      OptimizeCallGraph passes = new OptimizeCallGraph(compiler);
+      OptimizeCalls passes = new OptimizeCalls(compiler);
       if (options.optimizeReturns) {
         passes.addPass(new OptimizeReturns(compiler));
       }

@@ -36,7 +36,7 @@ import java.util.Collection;
  * @author johnlenz@google.com (John Lenz)
  */
 public class OptimizeReturns
-    implements OptimizeCallGraph.CallGraphCompilerPass, CompilerPass {
+    implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
 
   private AbstractCompiler compiler;
 
