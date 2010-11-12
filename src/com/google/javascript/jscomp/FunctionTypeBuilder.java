@@ -150,7 +150,7 @@ final class FunctionTypeBuilder {
       }
       return false;
     }
-  };
+  }
 
   private class ImplementedTypeValidator implements Predicate<JSType> {
     @Override
@@ -170,7 +170,7 @@ final class FunctionTypeBuilder {
       }
       return false;
     }
-  };
+  }
 
   private class ThisTypeValidator implements Predicate<JSType> {
     @Override
@@ -188,7 +188,7 @@ final class FunctionTypeBuilder {
       }
       return true;
     }
-  };
+  }
 
   /**
    * @param fnName The function name.

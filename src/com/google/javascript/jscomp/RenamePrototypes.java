@@ -71,7 +71,6 @@ class RenamePrototypes implements CompilerPass {
     int prototypeCount;
     int objLitCount;
     int refCount;
-    CompilerInput input;
 
     Property(String name) {
       this.oldName = name;
@@ -79,7 +78,6 @@ class RenamePrototypes implements CompilerPass {
       this.prototypeCount = 0;
       this.objLitCount = 0;
       this.refCount = 0;
-      this.input = null;
     }
 
     int count() {
@@ -388,7 +386,7 @@ class RenamePrototypes implements CompilerPass {
      */
     private void markPrototypePropertyCandidate(Node n, CompilerInput input) {
       stringNodes.add(n);
-      getProperty(n.getString(), input).prototypeCount++;
+      getProperty(n.getString()).prototypeCount++;
     }
 
     /**
@@ -400,7 +398,7 @@ class RenamePrototypes implements CompilerPass {
      */
     private void markObjLitPropertyCandidate(Node n, CompilerInput input) {
       stringNodes.add(n);
-      getProperty(n.getString(), input).objLitCount++;
+      getProperty(n.getString()).objLitCount++;
     }
 
     /**
@@ -412,22 +410,18 @@ class RenamePrototypes implements CompilerPass {
      */
     private void markPropertyAccessCandidate(Node n, CompilerInput input) {
       stringNodes.add(n);
-      getProperty(n.getString(), input).refCount++;
+      getProperty(n.getString()).refCount++;
     }
 
     /**
      * Gets the current property for the given name, creating a new one if
      * none exists.
      */
-    private Property getProperty(String name, CompilerInput input) {
+    private Property getProperty(String name) {
       Property prop = properties.get(name);
       if (prop == null) {
         prop = new Property(name);
         properties.put(name, prop);
-
-        // Kind of arbitrary--if a property appears in multiple inputs, we
-        // consider it belonging to the first one we saw it in.
-        prop.input = input;
       }
       return prop;
     }

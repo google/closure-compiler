@@ -515,21 +515,6 @@ public class JsMessage {
     }
 
     /**
-     * Hash byte array to a 64 bit value. The digits of pi are used
-     * for the hash seed.
-     *
-     * @param value the bytes to hash
-     * @param offset the starting position of value where bytes are
-     * used for the hash computation
-     * @param length number of bytes of value that are used for the
-     * hash computation
-     * @return 64 bit hash value
-     */
-    private static long hash64(byte[] value, int offset, int length) {
-      return hash64(value, offset, length, SEED64);
-    }
-
-    /**
      * Hash byte array to a 64 bit value using the supplied seed.
      *
      * @param value the bytes to hash

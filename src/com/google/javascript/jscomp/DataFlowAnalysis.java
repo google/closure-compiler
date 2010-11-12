@@ -66,7 +66,7 @@ import java.util.Set;
  * <li>Flow Direction: Implement {@link #isForward()}.
  * <li>Lattice Elements: Implement {@link LatticeElement}.
  * <li>JOIN Operation: Implement
- *    {@link JoinOp#join(LatticeElement, LatticeElement)}.
+ *    {@link JoinOp#apply}.
  * <li>Flow Equations: Implement
  * {@link #flowThrough(Object, LatticeElement)}.
  * <li>Initial Entry Value: Implement {@link #createEntryLattice()}.

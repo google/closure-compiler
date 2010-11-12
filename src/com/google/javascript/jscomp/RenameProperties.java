@@ -323,7 +323,7 @@ class RenameProperties implements CompilerPass {
         case Token.GETPROP:
           Node propNode = n.getFirstChild().getNext();
           if (propNode.getType() == Token.STRING) {
-            maybeMarkCandidate(propNode, t);
+            maybeMarkCandidate(propNode);
           }
           break;
         case Token.OBJECTLIT:
@@ -335,7 +335,7 @@ class RenameProperties implements CompilerPass {
             // that were unquoted.
             if (key.getType() == Token.STRING) {
               if (!key.isQuotedString()) {
-                maybeMarkCandidate(key, t);
+                maybeMarkCandidate(key);
               } else {
                 // Ensure that we never rename some other property in a way
                 // that could conflict with this quoted key.
@@ -396,13 +396,12 @@ class RenameProperties implements CompilerPass {
      * and increments the property name's access count.
      *
      * @param n The STRING node for a property
-     * @param t The traversal
      */
-    private void maybeMarkCandidate(Node n, NodeTraversal t) {
+    private void maybeMarkCandidate(Node n) {
       String name = n.getString();
       if (!externedNames.contains(name)) {
         stringNodesToRename.add(n);
-        countPropertyOccurrence(name, t);
+        countPropertyOccurrence(name);
       }
     }
 
@@ -426,7 +425,7 @@ class RenameProperties implements CompilerPass {
           continue;
         }
         if (!externedNames.contains(name)) {
-          countPropertyOccurrence(name, t);
+          countPropertyOccurrence(name);
         }
       }
     }
@@ -435,12 +434,11 @@ class RenameProperties implements CompilerPass {
      * Increments the occurrence count for a property name.
      *
      * @param name The property name
-     * @param t The node traversal
      */
-    private void countPropertyOccurrence(String name, NodeTraversal t) {
+    private void countPropertyOccurrence(String name) {
       Property prop = propertyMap.get(name);
       if (prop == null) {
-        prop = new Property(name, t.getInput());
+        prop = new Property(name);
         propertyMap.put(name, prop);
       }
       prop.numOccurrences++;
@@ -454,13 +452,11 @@ class RenameProperties implements CompilerPass {
    */
   private class Property {
     final String oldName;
-    final CompilerInput input;
     String newName;
     int numOccurrences;
 
-    Property(String name, CompilerInput input) {
+    Property(String name) {
       this.oldName = name;
-      this.input = input;
     }
   }
 }

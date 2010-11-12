@@ -135,7 +135,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     resolveInlineConflicts();
     decomposeExpressions(fnNames);
     NodeTraversal.traverse(compiler, root,
-        new CallVisitor(fns, anonFns, new Inline(injector)));
+        new CallVisitor(
+            fns, anonFns, new Inline(injector, specializationState)));
 
     removeInlinedFunctions();
   }
@@ -315,7 +316,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
    * Returns the function the traversal is currently traversing, or null
    * if in the global scope.
    */
-  private Node getContainingFunction(NodeTraversal t) {
+  private static Node getContainingFunction(NodeTraversal t) {
     return (t.inGlobalScope()) ? null : t.getScopeRoot();
   }
 
@@ -555,11 +556,14 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
   /**
    * Inline functions at the call sites.
    */
-  private class Inline implements CallVisitorCallback {
+  private static class Inline implements CallVisitorCallback {
     private final FunctionInjector injector;
+    private final SpecializeModule.SpecializationState specializationState;
 
-    Inline(FunctionInjector injector) {
+    Inline(FunctionInjector injector,
+        SpecializeModule.SpecializationState specializationState) {
       this.injector = injector;
+      this.specializationState = specializationState;
     }
 
     public void visitCallSite(

@@ -211,8 +211,8 @@ public final class NodeUtil {
   /**
    * Gets the function's name. This method recognizes the forms:
    * <ul>
-   * <li>{@code {'name': function() ...}}</li>
-   * <li>{@code {name: function() ...}}</li>
+   * <li>{@code &#123;'name': function() ...&#125;}</li>
+   * <li>{@code &#123;name: function() ...&#125;}</li>
    * <li>{@code function name() ...}</li>
    * <li>{@code var name = function() ...}</li>
    * <li>{@code qualified.name = function() ...}</li>

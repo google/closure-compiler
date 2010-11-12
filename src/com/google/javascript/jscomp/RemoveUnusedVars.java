@@ -28,7 +28,6 @@ import com.google.javascript.rhino.Token;
 
 import java.util.*;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Garbage collection for variable and function definitions. Basically performs
@@ -66,8 +65,6 @@ import java.util.logging.Logger;
  *
  */
 class RemoveUnusedVars implements CompilerPass {
-  private static final Logger logger =
-    Logger.getLogger(RemoveUnusedVars.class.getName());
 
   private final AbstractCompiler compiler;
 

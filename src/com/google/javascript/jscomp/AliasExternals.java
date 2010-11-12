@@ -702,7 +702,7 @@ class AliasExternals implements CompilerPass {
    *
    * var GLOBAL_window = window;
    *
-   * @param globalName Name of global
+   * @param global Name of global
    * @param root Root of output tree that function can be added to
    */
   private void addGlobalAliasNode(Symbol global, Node root) {

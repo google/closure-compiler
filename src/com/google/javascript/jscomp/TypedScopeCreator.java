@@ -323,7 +323,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
   /**
    * Given a node, determines whether that node names a prototype
-   * property, and if so, returns the qualfied name node representing
+   * property, and if so, returns the qualified name node representing
    * the owner of that property. Otherwise, returns null.
    */
   private static Node getPrototypePropertyOwner(Node n) {

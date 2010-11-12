@@ -912,13 +912,6 @@ class PureFunctionIdentifier implements CompilerPass {
     }
 
     /**
-     * Function appeared in externs file.
-     */
-    boolean isExtern() {
-      return extern;
-    }
-
-    /**
      * @returns false if function known to have side effects.
      */
     boolean mayBePure() {
