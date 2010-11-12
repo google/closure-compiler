@@ -73,6 +73,11 @@ chrome.extension.getViews = function() {};
  */
 chrome.extension.sendRequest = function(opt_arg1, opt_request, opt_callback) {};
 
+/**
+ * @param {string} data
+ */
+chrome.extension.setUpdateUrlData = function(data) {};
+
 /** @type {ChromeEvent} */
 chrome.extension.onConnect;
 /** @type {ChromeEvent} */
@@ -660,7 +665,80 @@ chrome.experimental.rlz.sendFinancialPing = function(product, accessPoints,
 chrome.experimental.rlz.getAccessPointRlz = function(accessPoint, callback) {};
 
 
+chrome.management = {};
+
+/**
+ * @param {function(Array.<ExtensionInfo>): void} callback
+ */
+chrome.management.getAll = function(callback) {};
+
+/**
+ * @param {string} id
+ * @param {function(ExtensionInfo): void} callback
+ */
+chrome.management.get = function(id, callback) {};
+
+/**
+ * @param {string} id
+ * @param {boolean} enabled
+ * @param {function(): void} callback
+ */
+chrome.management.setEnabled = function(id, enabled, callback) {};
+
+/**
+ * @param {string} id
+ * @param {function(): void} callback
+ */
+chrome.management.uninstall = function(id, callback) {};
+
+/**
+ * @param {string} id
+ * @param {function(): void} callback
+ */
+chrome.management.launchApp = function(id, callback) {};
+
+/** @type {ChromeEvent} */
+chrome.management.onDisabled;
+/** @type {ChromeEvent} */
+chrome.management.onEnabled;
+/** @type {ChromeEvent} */
+chrome.management.onInstalled;
+/** @type {ChromeEvent} */
+chrome.management.onUninstalled;
+
 // Classes
+
+/**
+ * @see http://code.google.com/chrome/extensions/management.html
+ * @constructor
+ */
+function ExtensionInfo() {}
+/** @type {string} */
+ExtensionInfo.prototype.id;
+/** @type {string} */
+ExtensionInfo.prototype.name;
+/** @type {string} */
+ExtensionInfo.prototype.version;
+/** @type {boolean} */
+ExtensionInfo.prototype.enabled;
+/** @type {boolean} */
+ExtensionInfo.prototype.isApp;
+/** @type {string} */
+ExtensionInfo.prototype.appLaunchUrl;
+/** @type {string} */
+ExtensionInfo.prototype.optionsUrl;
+/** @type {Array.<IconInfo>} */
+ExtensionInfo.prototype.icons;
+
+/**
+ * @see http://code.google.com/chrome/extensions/management.html
+ * @constructor
+ */
+function IconInfo() {}
+/** @type {number} */
+IconInfo.prototype.size;
+/** @type {string} */
+IconInfo.prototype.url;
 
 /**
  * @see http://code.google.com/chrome/extensions/tabs.html
