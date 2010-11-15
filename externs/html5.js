@@ -785,6 +785,15 @@ Window.prototype.Worker;
  */
 HTMLElement.prototype.draggable;
 
+/**
+ * @see http://www.w3.org/TR/html5/dom.html#dom-getelementsbyclassname
+ * @param {string} classNames
+ * @return {!NodeList}
+ * @nosideeffects
+ */
+HTMLElement.prototype.getElementsByClassName = function(classNames) {};
+// NOTE: Document.prototype.getElementsByClassName is in gecko_dom.js
+
 /** @type {FileList} */
 HTMLInputElement.prototype.files;
 
