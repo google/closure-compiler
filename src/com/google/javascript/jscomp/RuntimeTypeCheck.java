@@ -151,7 +151,8 @@ class RuntimeTypeCheck implements CompilerPass {
         return nodeToInsertAfter;
       }
 
-      Node classNode = NodeUtil.newQualifiedNameNode(className, -1, -1);
+      Node classNode = NodeUtil.newQualifiedNameNode(
+          compiler.getCodingConvention(), className, -1, -1);
 
       Node marker = Node.newString(
               interfaceType == null ?
@@ -213,7 +214,7 @@ class RuntimeTypeCheck implements CompilerPass {
    * values. We have checkers for value types, class types (user-defined and
    * externed), and interface types.
    */
-  private static class AddChecks
+  private class AddChecks
       extends NodeTraversal.AbstractPostOrderCallback {
 
     private final AbstractCompiler compiler;
@@ -376,8 +377,9 @@ class RuntimeTypeCheck implements CompilerPass {
     compiler.reportCodeChange();
   }
 
-  private static Node jsCode(String prop) {
-    return NodeUtil.newQualifiedNameNode("jscomp.typecheck." + prop, -1, -1);
+  private Node jsCode(String prop) {
+    return NodeUtil.newQualifiedNameNode(
+        compiler.getCodingConvention(), "jscomp.typecheck." + prop, -1, -1);
   }
 
   @VisibleForTesting

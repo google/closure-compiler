@@ -93,22 +93,27 @@ class GenerateExports implements CompilerPass {
       if (useExportSymbol) {
         // exportSymbol(publicPath, object);
         call = new Node(Token.CALL,
-            NodeUtil.newQualifiedNameNode(exportSymbolFunction,
+            NodeUtil.newQualifiedNameNode(
+                compiler.getCodingConvention(), exportSymbolFunction,
                 context.getNode(), export));
         call.addChildToBack(Node.newString(export));
-        call.addChildToBack(NodeUtil.newQualifiedNameNode(export,
+        call.addChildToBack(NodeUtil.newQualifiedNameNode(
+            compiler.getCodingConvention(), export,
             context.getNode(), export));
       } else {
         // exportProperty(object, publicName, symbol);
         String property = getPropertyName(node);
         call = new Node(Token.CALL,
             new Node[] {
-                NodeUtil.newQualifiedNameNode(exportPropertyFunction,
+                NodeUtil.newQualifiedNameNode(
+                    compiler.getCodingConvention(), exportPropertyFunction,
                     context.getNode(), exportPropertyFunction),
-                NodeUtil.newQualifiedNameNode(parent,
+                NodeUtil.newQualifiedNameNode(
+                    compiler.getCodingConvention(), parent,
                     context.getNode(), exportPropertyFunction),
                 Node.newString(property),
-                NodeUtil.newQualifiedNameNode(export,
+                NodeUtil.newQualifiedNameNode(
+                    compiler.getCodingConvention(), export,
                     context.getNode(), exportPropertyFunction)
             });
       }

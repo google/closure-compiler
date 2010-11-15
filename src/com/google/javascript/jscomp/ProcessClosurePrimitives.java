@@ -393,6 +393,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       n.replaceChild(
           callee,
           NodeUtil.newQualifiedNameNode(
+            compiler.getCodingConvention(),
             String.format("%s.call", baseClassNode.getQualifiedName()),
             callee, "goog.base"));
       compiler.reportCodeChange();
@@ -419,6 +420,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       n.replaceChild(
           callee,
           NodeUtil.newQualifiedNameNode(
+            compiler.getCodingConvention(),
             String.format("%s.superClass_.%s.call",
                 className.getQualifiedName(), methodName),
             callee, "goog.base"));
@@ -866,7 +868,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     private Node makeAssignmentExprNode(String namespace, Node node) {
       Node decl = new Node(Token.EXPR_RESULT,
           new Node(Token.ASSIGN,
-              NodeUtil.newQualifiedNameNode(namespace, node, namespace),
+              NodeUtil.newQualifiedNameNode(
+                  compiler.getCodingConvention(), namespace, node, namespace),
               createNamespaceLiteral()));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
       Preconditions.checkState(isNamespacePlaceholder(decl));

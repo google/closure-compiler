@@ -423,7 +423,8 @@ class CollapseProperties implements CompilerPass {
     //     string c
     // AFTER:
     //   name a$b$c
-    Node ref = NodeUtil.newName(alias, n, originalName);
+    Node ref = NodeUtil.newName(
+        compiler.getCodingConvention(), alias, n, originalName);
     NodeUtil.copyNameAnnotations(n.getLastChild(), ref);
     parent.replaceChild(n, ref);
     compiler.reportCodeChange();
@@ -481,7 +482,8 @@ class CollapseProperties implements CompilerPass {
     Node greatGreatGramps = greatGramps.getParent();
 
     // Create the new alias node.
-    Node nameNode = NodeUtil.newName(alias, gramps.getFirstChild(),
+    Node nameNode = NodeUtil.newName(
+        compiler.getCodingConvention(), alias, gramps.getFirstChild(),
         refName.fullName());
     NodeUtil.copyNameAnnotations(ref.node.getLastChild(), nameNode);
 
@@ -594,6 +596,7 @@ class CollapseProperties implements CompilerPass {
       ref.node.getParent().removeChild(rvalue);
 
       Node nameNode = NodeUtil.newName(
+          compiler.getCodingConvention(),
           alias, ref.node.getAncestor(2), n.fullName());
 
       if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {

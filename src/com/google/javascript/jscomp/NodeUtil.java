@@ -1728,13 +1728,14 @@ public final class NodeUtil {
    * @param charno The source character offset from start of the line.
    * @return A NAME or GETPROP node
    */
-  public static Node newQualifiedNameNode(String name, int lineno, int charno) {
+  public static Node newQualifiedNameNode(
+      CodingConvention convention, String name, int lineno, int charno) {
     int endPos = name.indexOf('.');
     if (endPos == -1) {
-      return Node.newString(Token.NAME, name, lineno, charno);
+      return newName(convention, name, lineno, charno);
     }
-    Node node = Node.newString(Token.NAME, name.substring(0, endPos),
-                               lineno, charno);
+    Node node = newName(
+        convention, name.substring(0, endPos), lineno, charno);
     int startPos;
     do {
       startPos = endPos + 1;
@@ -1742,9 +1743,11 @@ public final class NodeUtil {
       String part = (endPos == -1
                      ? name.substring(startPos)
                      : name.substring(startPos, endPos));
-      node = new Node(Token.GETPROP, node,
-                      Node.newString(Token.STRING, part, lineno, charno),
-                      lineno, charno);
+      Node propNode = Node.newString(Token.STRING, part, lineno, charno);
+      if (convention.isConstantKey(part)) {
+        propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      }
+      node = new Node(Token.GETPROP, node, propNode, lineno, charno);
     } while (endPos != -1);
 
     return node;
@@ -1763,9 +1766,10 @@ public final class NodeUtil {
    *
    * @return A NAME or GETPROP node
    */
-  static Node newQualifiedNameNode(String name, Node basisNode,
+  static Node newQualifiedNameNode(
+      CodingConvention convention, String name, Node basisNode,
       String originalName) {
-    Node node = newQualifiedNameNode(name, -1, -1);
+    Node node = newQualifiedNameNode(convention, name, -1, -1);
     setDebugInformation(node, basisNode, originalName);
     return node;
   }
@@ -1798,6 +1802,15 @@ public final class NodeUtil {
     node.putProp(Node.ORIGINALNAME_PROP, originalName);
   }
 
+  private static Node newName(
+      CodingConvention convention, String name, int lineno, int charno) {
+    Node nameNode = Node.newString(Token.NAME, name, lineno, charno);
+    if (convention.isConstant(name)) {
+      nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
+    return nameNode;
+  }
+
   /**
    * Creates a new node representing an *existing* name, copying over the source
    * location information from the basis node.
@@ -1808,8 +1821,12 @@ public final class NodeUtil {
    *
    * @return The node created.
    */
-  static Node newName(String name, Node basisNode) {
+  static Node newName(
+      CodingConvention convention, String name, Node basisNode) {
     Node nameNode = Node.newString(Token.NAME, name);
+    if (convention.isConstantKey(name)) {
+      nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
     nameNode.copyInformationFrom(basisNode);
     return nameNode;
   }
@@ -1827,8 +1844,10 @@ public final class NodeUtil {
    *
    * @return The node created.
    */
-  static Node newName(String name, Node basisNode, String originalName) {
-    Node nameNode = newName(name, basisNode);
+  static Node newName(
+      CodingConvention convention, String name,
+      Node basisNode, String originalName) {
+    Node nameNode = newName(convention, name, basisNode);
     nameNode.putProp(Node.ORIGINALNAME_PROP, originalName);
     return nameNode;
   }

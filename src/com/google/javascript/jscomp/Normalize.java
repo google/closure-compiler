@@ -183,14 +183,14 @@ class Normalize implements CompilerPass {
                 compiler.getCodingConvention(), n, parent);
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (shouldBeConstant && !isMarkedConstant) {
-          n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
           if (assertOnChange) {
             String name = n.getString();
             throw new IllegalStateException(
                 "Unexpected const change.\n" +
                 "  name: "+ name + "\n" +
-                "  gramps:" + n.getParent().getParent().toStringTree());
+                "  parent:" + n.getParent().toStringTree());
           }
+          n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
       }
     }
@@ -220,7 +220,7 @@ class Normalize implements CompilerPass {
           compiler, Lists.newArrayList(externs, root), this);
     }
 
-    private Map<String,Boolean> constantMap = Maps.newHashMap();
+    private Map<String, Boolean> constantMap = Maps.newHashMap();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -349,17 +349,18 @@ class Normalize implements CompilerPass {
           (parent.getType() == Token.GETPROP &&
            parent.getLastChild() == n);
       if (n.getType() == Token.NAME || isProperty) {
-        if (NodeUtil.isConstantByConvention(
+        boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
+        if (!isMarkedConstant &&
+            NodeUtil.isConstantByConvention(
                 compiler.getCodingConvention(), n, parent)) {
+          if (assertOnChange) {
+            String name = n.getString();
+            throw new IllegalStateException(
+                "Unexpected const change.\n" +
+                "  name: "+ name + "\n" +
+                "  parent:" + n.getParent().toStringTree());
+          }
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-          // TODO(nicksantos): Turn this on.
-          // if (assertOnChange) {
-          //   String name = n.getString();
-          //   throw new IllegalStateException(
-          //       "Unexpected const change.\n" +
-          //       "  name: "+ name + "\n" +
-          //       "  gramps:" + n.getParent().getParent().toStringTree());
-          // }
         }
       }
     }

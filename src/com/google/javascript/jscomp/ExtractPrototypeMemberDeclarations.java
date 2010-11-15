@@ -137,7 +137,8 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     Node stmt = new Node(first.node.getType(),
         new Node(Token.ASSIGN,
             Node.newString(Token.NAME, prototypeAlias),
-            NodeUtil.newQualifiedNameNode(className + ".prototype",
+            NodeUtil.newQualifiedNameNode(
+                compiler.getCodingConvention(), className + ".prototype",
                 instance.parent, className + ".prototype")))
         .copyInformationFromForTree(first.node);
 
@@ -160,6 +161,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     Node assignment = declar.node.getFirstChild();
     Node lhs = assignment.getFirstChild();
     Node name = NodeUtil.newQualifiedNameNode(
+        compiler.getCodingConvention(),
         prototypeAlias + "." + declar.memberName, declar.node,
         declar.memberName);
 

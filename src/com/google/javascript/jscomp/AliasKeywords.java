@@ -161,14 +161,16 @@ class AliasKeywords implements CompilerPass {
 
   /** Aliases throw statements with a function call. */
   // TODO(user): Generalize this to work with typeof expressions.
-  private static class ThrowAliasSpecification extends AliasSpecification {
+  private class ThrowAliasSpecification extends AliasSpecification {
     ThrowAliasSpecification(String aliasName) {
       super(aliasName, Token.THROW);
     }
 
     @Override
     protected void aliasNode(Node throwNode, Node parent) {
-      Node name = NodeUtil.newName(getAliasName(), throwNode, getAliasName());
+      Node name = NodeUtil.newName(
+          compiler.getCodingConvention(),
+          getAliasName(), throwNode, getAliasName());
       Node aliasCall = new Node(Token.CALL, name, throwNode.removeFirstChild());
       Node exprResult = new Node(Token.EXPR_RESULT, aliasCall);
       parent.replaceChild(throwNode, exprResult);
@@ -186,39 +188,39 @@ class AliasKeywords implements CompilerPass {
     protected int minOccurrencesRequiredToAlias() {
       return MIN_OCCURRENCES_REQUIRED_TO_ALIAS_THROW;
     }
+  }
 
-    /**
-     * Calculates the minimum number of occurrences of throw needed to alias
-     * throw.
-     */
-    static int estimateMinOccurrencesRequriedToAlias() {
-      // Assuming that the alias function name is two bytes in length, two bytes
-      // will be saved per occurrence of throw:
-      //   <code>throw e;</code>, compared to
-      //   <code>TT(e);</code>.
-      // However, the alias definition is some length, N, e.g.,
-      //   <code>function TT(t){throw t;}</code>
-      // Hence there must be more than N/2 occurrences of throw to reduce
-      // the code size.
-      Node alias = createAliasFunctionNode("TT");
-      return InlineCostEstimator.getCost(alias) / 2 + 1;
-    }
+  /**
+   * Calculates the minimum number of occurrences of throw needed to alias
+   * throw.
+   */
+  static int estimateMinOccurrencesRequriedToAlias() {
+    // Assuming that the alias function name is two bytes in length, two bytes
+    // will be saved per occurrence of throw:
+    //   <code>throw e;</code>, compared to
+    //   <code>TT(e);</code>.
+    // However, the alias definition is some length, N, e.g.,
+    //   <code>function TT(t){throw t;}</code>
+    // Hence there must be more than N/2 occurrences of throw to reduce
+    // the code size.
+    Node alias = createAliasFunctionNode("TT");
+    return InlineCostEstimator.getCost(alias) / 2 + 1;
+  }
 
-    /**
-     * Creates a function node that takes a single argument, the object to
-     * throw. The function throws the object.
-     */
-    private static Node createAliasFunctionNode(String aliasName) {
-      Node parameterName = Node.newString(Token.NAME, "jscomp_throw_param");
-      List<Node> parameters = Lists.newArrayList(parameterName.cloneNode());
-      Node throwStatement = new Node(Token.THROW, parameterName);
-      Node body = new Node(Token.BLOCK, throwStatement);
-      return NodeUtil.newFunctionNode(aliasName, parameters, body, -1, -1);
-    }
+  /**
+   * Creates a function node that takes a single argument, the object to
+   * throw. The function throws the object.
+   */
+  private static Node createAliasFunctionNode(String aliasName) {
+    Node parameterName = Node.newString(Token.NAME, "jscomp_throw_param");
+    List<Node> parameters = Lists.newArrayList(parameterName.cloneNode());
+    Node throwStatement = new Node(Token.THROW, parameterName);
+    Node body = new Node(Token.BLOCK, throwStatement);
+    return NodeUtil.newFunctionNode(aliasName, parameters, body, -1, -1);
   }
 
   /** Aliases literal keywords (e.g., null) with variable names. */
-  private static class KeywordAliasSpecification extends AliasSpecification {
+  private class KeywordAliasSpecification extends AliasSpecification {
     KeywordAliasSpecification(String aliasName, int tokenId) {
       super(aliasName, tokenId);
     }
@@ -230,7 +232,8 @@ class AliasKeywords implements CompilerPass {
 
     @Override
     protected void aliasNode(Node n, Node parent) {
-      Node aliasNode = NodeUtil.newName(getAliasName(), n, getAliasName());
+      Node aliasNode = NodeUtil.newName(
+          compiler.getCodingConvention(), getAliasName(), n, getAliasName());
       parent.replaceChild(n, aliasNode);
     }
 
@@ -241,7 +244,9 @@ class AliasKeywords implements CompilerPass {
     protected void insertAliasDeclaration(Node codeRoot) {
       Node varNode = new Node(Token.VAR);
       Node value = new Node(getTokenId());
-      Node name = NodeUtil.newName(getAliasName(), varNode, getAliasName());
+      Node name = NodeUtil.newName(
+          compiler.getCodingConvention(), getAliasName(),
+          varNode, getAliasName());
       name.addChildToBack(value);
       varNode.addChildToBack(name);
       codeRoot.addChildrenToFront(varNode);
@@ -282,7 +287,7 @@ class AliasKeywords implements CompilerPass {
    * MIN_OCCURRENCES_REQUIRED_TO_ALIAS_THROW times.
    */
   static final int MIN_OCCURRENCES_REQUIRED_TO_ALIAS_THROW =
-      ThrowAliasSpecification.estimateMinOccurrencesRequriedToAlias();
+      estimateMinOccurrencesRequriedToAlias();
 
   /** Reference to JS Compiler */
   private final AbstractCompiler compiler;
