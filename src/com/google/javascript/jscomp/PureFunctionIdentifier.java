@@ -803,12 +803,15 @@ class PureFunctionIdentifier implements CompilerPass {
             // direct method call because null and undefined don't have any
             // properties.
             String name = objectNode.getString();
-            if (!caller.knownLocals.contains(name)) {
+
+            // TODO(nicksantos): Turn this back on when locals-tracking
+            // is fixed. See testLocalizedSideEffects11.
+            //if (!caller.knownLocals.contains(name)) {
               if (!caller.mutatesGlobalState()) {
                 caller.setTaintsGlobalState();
                 changed = true;
               }
-            }
+            //}
           } else if (objectNode != null && NodeUtil.isThis(objectNode)) {
             if (!caller.mutatesThis()) {
               caller.setTaintsThis();

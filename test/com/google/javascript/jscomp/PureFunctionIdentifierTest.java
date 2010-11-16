@@ -237,7 +237,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "  x.externObjSEThisMethod('') " +
         "};" +
         "f();",
-        ImmutableList.<String>of("externObjSEThis", "f"));
+        ImmutableList.<String>of("externObjSEThis"));
   }
 
   public void testAnnotationInExterns_new8() throws Exception {
@@ -755,7 +755,24 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var a = new A; a.g(); return a;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("A", "f"));
+                     ImmutableList.<String>of("A"));
+  }
+
+  public void testLocalizedSideEffects11() throws Exception {
+    // Calling a function of a local object that taints this.
+    checkMarkedCalls(
+        "/** @constructor */ function A() {}" +
+        "A.prototype.update = function() { this.x = 1; };" +
+        "/** @constructor */ function B() { " +
+        "  this.a_ = new A();" +
+        "}" +
+        "B.prototype.updateA = function() {" +
+        "  var b = this.a_;" +
+        "  b.update();" +
+        "};" +
+        "var x = new B();" +
+        "x.updateA();",
+        ImmutableList.of("A", "B"));
   }
 
   public void testUnaryOperators1() throws Exception {
@@ -1012,7 +1029,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function g(){var a = new A; a.foo(); return a}\n" +
         "f(); g()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f", "g"));
+    checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f"));
   }
 
   public void testCallFunctionFOrG() throws Exception {
