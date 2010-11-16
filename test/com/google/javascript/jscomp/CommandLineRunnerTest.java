@@ -573,8 +573,7 @@ public class CommandLineRunnerTest extends TestCase {
         0,
         new String(errReader.toByteArray()).indexOf(
             "Closure Compiler (http://code.google.com/closure/compiler)\n" +
-            "Version: HEAD\n" +
-            "Built on:"));
+            "Version: "));
   }
 
   public void testPrintAstFlag() {

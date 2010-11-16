@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project name="compiler" basedir="." default="jar">
+<project name="compiler" basedir="." default="jar" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
   <!-- define other variables -->
   <property name="src.dir" value="${basedir}/src" />
@@ -24,27 +24,115 @@
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testClasses.dir" value="${build.dir}/test" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
-  <property name="stylesheetfile" value="" />
+  <property name="stylesheetfile" value="${javadoc.dir}/dev_javadoc.css" />
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="tools.dir" value="${basedir}/tools" />
+  <property name="version" value="1.0-SNAPSHOT"/>
+  <property name="jarfile-nodeps" value="${build.dir}/closure-${ant.project.name}-${version}.jar" />
+  <property name="jarfile-javadoc" value="${build.dir}/closure-${ant.project.name}-${version}-javadoc.jar" />
+  <property name="jarfile-sources" value="${build.dir}/closure-${ant.project.name}-${version}-sources.jar" />
   <property name="jarfile" value="${build.dir}/${ant.project.name}.jar" />
   <property name="num-fuzz-tests" value="10000"/>
   <property name="test" value="*Test"/>
-  <property name="version" value="HEAD"/>
   <property name="jsonml.dir" value="${basedir}/src/com/google/javascript/jscomp/jsonml" />
   <property name="jsonml-classes.dir" value = "${build.dir}/jsonml-classes" />
   <property name="jsonml-jarfile" value="${build.dir}/secure_compiler.jar" />
 
+  <!-- The following server is used to deploy releases to maven central via Sonatypes
+       publishing service which runs on oss.sonatype.org.
+
+       You will need to have an account on sonatype.org to push releases.  You can
+       override these values if you want to deploy to a different repository
+  -->
+  <property name="maven-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+  <property name="maven-repository-id" value="sonatype-nexus-staging" />
 
   <property file="build.properties" />
+
+  <!-- maven ant tasks -->
+  <path id="maven-ant-tasks.classpath" path="${tools.dir}/maven-ant-tasks-2.1.1.jar" />
+  <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+           uri="antlib:org.apache.maven.artifact.ant"
+           classpathref="maven-ant-tasks.classpath" />
+
+  <artifact:pom id="project" file="closure-compiler.pom" />
+
+  <target name="mvn-install" depends="jar-nodeps,jar-javadoc,jar-sources" description="Install closure-compiler artifacts into the local maven repo">
+    <artifact:install file="${jarfile-nodeps}">
+      <pom refid="project"/>
+      <attach file="${jarfile-javadoc}" classifier="javadoc"/>
+      <attach file="${jarfile-sources}" classifier="sources"/>
+    </artifact:install>
+  </target>
+
+  <!-- The mvn-deploy target takes the generated maven artifacts and pushes
+       them to the Sonatype repository.  You will need to have a
+       gpg key defined and account set up. More docs on how to do this here:
+
+       https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide
+  -->
+
+  <target name="mvn-deploy"
+    depends="mvn-install"
+    description="Signs and Deploys closure-compiler artifacts to the central maven repo">
+
+    <!-- sign and deploy the main artifact -->
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-repository-url}" />
+      <arg value="-DrepositoryId=${maven-repository-id}" />
+      <arg value="-DpomFile=closure-compiler.pom" />
+      <arg value="-Dfile=${jarfile-nodeps}" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+    <!-- sign and deploy the sources artifact -->
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-repository-url}" />
+      <arg value="-DrepositoryId=${maven-repository-id}" />
+      <arg value="-DpomFile=closure-compiler.pom" />
+      <arg value="-Dfile=${jarfile-sources}" />
+      <arg value="-Dclassifier=sources" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+    <!-- sign and deploy the javadoc artifact -->
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-repository-url}" />
+      <arg value="-DrepositoryId=${maven-repository-id}" />
+      <arg value="-DpomFile=closure-compiler.pom" />
+      <arg value="-Dfile=${jarfile-javadoc}" />
+      <arg value="-Dclassifier=javadoc" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+  </target>
+
+  <!-- Sync maven dependencies listed in pom.xml -->
+  <target name="mvn-deps-sync" description="sync dependencies/jars in closure-compiler.pom to lib">
+    <artifact:dependencies filesetid="dependency.fileset"
+                           pathid="dependency.classpath"
+                           pomrefid="project"
+                           versionsId="dependency.versions"/>
+    <mkdir dir="${lib.dir}"/>
+    <copy todir="${lib.dir}">
+      <fileset refid="dependency.fileset" />
+      <!-- This mapper strips off all leading directory information -->
+      <mapper classpathref="maven-ant-tasks.classpath"
+          classname="org.apache.maven.artifact.ant.VersionMapper"
+          from="${dependency.versions}" to="flatten" />
+    </copy>
+  </target>
 
   <!-- set the classpath for the project              -->
   <!-- this includes the generated source class files -->
   <!-- and every jar in the /lib directory            -->
+
   <path id="classpath.path">
     <pathelement location="${classes.dir}" />
     <fileset dir="${lib.dir}">
-      <include name="*.jar" />
+      <include name="*.jar"/>
     </fileset>
   </path>
 
@@ -89,18 +177,26 @@
           todir="${classes.dir}/com/google/javascript/jscomp/js" />
   </target>
 
+  <target name="jar-nodeps"
+          depends="compile"
+          description="package compiler as an executable jar">
+    <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" />
+    <jar destfile="${jarfile-nodeps}" update="true">
+      <fileset dir="${classes.dir}" />
+      <fileset dir="${build.dir}" includes="externs.zip" />
+      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
+    </jar>
+  </target>
+
   <target name="jar"
           depends="compile"
           description="package compiler as an executable jar">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
     <jar destfile="${jarfile}" update="true">
-      <zipfileset src="${lib.dir}/args4j_deploy.jar" />
-      <zipfileset src="${lib.dir}/guava-r06.jar" />
-      <zipfileset src="${lib.dir}/jsr305.jar" />
-      <zipfileset src="${lib.dir}/protobuf-java-2.3.0.jar" />
-      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
       <fileset dir="${classes.dir}" />
       <fileset dir="${build.dir}" includes="externs.zip" />
+      <zipgroupfileset dir="${lib.dir}"/>
+
       <manifest>
         <attribute name="Main-Class"
                    value="com.google.javascript.jscomp.CommandLineRunner" />
@@ -123,17 +219,9 @@
           depends="compile,compile-tests"
           description="package the compiler and its tests into one jar">
     <jar destfile="${jarfile}" update="true">
-      <zipfileset src="${lib.dir}/ant_deploy.jar" />
-      <zipfileset src="${lib.dir}/args4j_deploy.jar" />
-      <zipfileset src="${lib.dir}/json.jar" />
-      <zipfileset src="${lib.dir}/junit.jar" />
-      <zipfileset src="${lib.dir}/hamcrest-core-1.1.jar" />
-      <zipfileset src="${lib.dir}/guava-r06.jar" />
-      <zipfileset src="${lib.dir}/jsr305.jar" />
-      <zipfileset src="${lib.dir}/protobuf-java-2.3.0.jar" />
-      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
       <fileset dir="${classes.dir}" />
       <fileset dir="${testClasses.dir}" />
+      <zipgroupfileset dir="${lib.dir}"/>
     </jar>
   </target>
 
@@ -237,6 +325,19 @@
     </javadoc>
   </target>
 
+  <target name="jar-javadoc" depends="javadoc">
+    <jar jarfile="${jarfile-javadoc}">
+      <fileset dir="${javadoc.dir}" />
+    </jar>
+  </target>
+
+  <target name="jar-sources" depends="javadoc">
+    <jar jarfile="${jarfile-sources}">
+      <fileset dir="${src.dir}" />
+      <fileset dir="${gen.dir}" />
+    </jar>
+  </target>
+
   <!-- JsonML package related targets                 -->
   <!-- set the classpath for the project              -->
   <!-- this includes the generated source class files -->
@@ -268,13 +369,9 @@
            depends="jsonml-compile, compile">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
     <jar destfile="${jsonml-jarfile}" update="true">
-      <zipfileset src="${lib.dir}/guava-r06.jar" />
-      <zipfileset src="${lib.dir}/jsr305.jar" />
-      <zipfileset src="${lib.dir}/json.jar" />
-      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
+      <zipgroupfileset dir="${lib.dir}"/>
       <fileset dir="${classes.dir}" />
       <fileset dir="${jsonml-classes.dir}" />
     </jar>
    </target>
 </project>
-
