@@ -36,6 +36,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -172,14 +173,18 @@ public final class CompileTask
     JSSourceFile[] externs = findExternFiles();
     JSSourceFile[] sources = findSourceFiles();
 
-    log("Compiling " + sources.length + " file(s) with " +
-        externs.length + " extern(s)");
+    if (isStale()) {
+      log("Compiling " + sources.length + " file(s) with " +
+          externs.length + " extern(s)");
 
-    Result result = compiler.compile(externs, sources, options);
-    if (result.success) {
-      writeResult(compiler.toSource());
+      Result result = compiler.compile(externs, sources, options);
+      if (result.success) {
+        writeResult(compiler.toSource());
+      } else {
+        throw new BuildException("Compilation failed.");
+      }
     } else {
-      throw new BuildException("Compilation failed.");
+      log("None of the files changed. Compilation skipped.");
     }
   }
 
@@ -276,5 +281,37 @@ public final class CompileTask
 
     log("Compiled javascript written to " + this.outputFile.getAbsolutePath(),
         Project.MSG_DEBUG);
+  }
+
+  /**
+   * Determine if compilation must actually happen, i.e. if any input file
+   * (extern or source) has changed after the outputFile was last modified.
+   *
+   * @return true if compilation should happen
+   */
+  private boolean isStale() {
+    long lastRun = outputFile.lastModified();
+    long sourcesLastModified = getLastModifiedTime(this.sourceFileLists);
+    long externsLastModified = getLastModifiedTime(this.externFileLists);
+
+    return lastRun <= sourcesLastModified || lastRun <= externsLastModified;
+  }
+
+  private long getLastModifiedTime(List<FileList> fileLists) {
+    long lastModified = 0;
+    for (FileList list : fileLists) {
+      for (String fileName : list.getFiles(this.getProject())) {
+        File path = list.getDir(this.getProject());
+        File file = new File(path, fileName);
+        long fileLastModified = file.lastModified();
+        // If the file is absent, we don't know if it changed (maybe
+        // was deleted), so assume it has just changed.
+        if (fileLastModified == 0) {
+          fileLastModified = new Date().getTime();
+        }
+        lastModified = Math.max(fileLastModified, lastModified);
+      }
+    }
+    return lastModified;
   }
 }
