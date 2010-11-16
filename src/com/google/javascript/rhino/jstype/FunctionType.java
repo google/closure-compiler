@@ -771,10 +771,22 @@ public class FunctionType extends PrototypeObjectType {
       // for aliasing constructors. Let's punt on all this for now.
       // TODO(nicksantos): fix this.
       FunctionType other = (FunctionType) that;
-      return (this.isConstructor() || other.isConstructor() ||
-              other.typeOfThis.isSubtype(this.typeOfThis) ||
-              this.typeOfThis.isSubtype(other.typeOfThis)) &&
-          this.call.isSubtype(other.call);
+      boolean treatThisTypesAsCovariant =
+        // If either one of these is a ctor, skip 'this' checking.
+        this.isConstructor() || other.isConstructor() ||
+
+        // An interface 'this'-type is non-restrictive.
+        // In practical terms, if C implements I, and I has a method m,
+        // then any m doesn't necessarily have to C#m's 'this'
+        // type doesn't need to match I.
+        (other.typeOfThis.getConstructor() != null &&
+             other.typeOfThis.getConstructor().isInterface()) ||
+
+        // If one of the 'this' types is covariant of the other,
+        // then we'll treat them as covariant (see comment above).
+        other.typeOfThis.isSubtype(this.typeOfThis) ||
+        this.typeOfThis.isSubtype(other.typeOfThis);
+      return treatThisTypesAsCovariant && this.call.isSubtype(other.call);
     }
 
     return getNativeType(JSTypeNative.FUNCTION_PROTOTYPE).isSubtype(that);

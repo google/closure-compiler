@@ -6232,6 +6232,36 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         });
   }
 
+  public void testInterfaceInheritanceCheck9() throws Exception {
+    testTypes(
+        "/** @interface */ function I() {}" +
+        "/** @return {number} */ I.prototype.bar = function() {};" +
+        "/** @constructor */ function F() {}" +
+        "/** @return {number} */ F.prototype.bar = function() {return 3; };" +
+        "/** @return {number} */ F.prototype.foo = function() {return 3; };" +
+        "/** @constructor \n * @extends {F} \n * @implements {I} */ " +
+        "function G() {}" +
+        "/** @return {string} */ function f() { return new G().bar(); }",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testInterfaceInheritanceCheck10() throws Exception {
+    testTypes(
+        "/** @interface */ function I() {}" +
+        "/** @return {number} */ I.prototype.bar = function() {};" +
+        "/** @constructor */ function F() {}" +
+        "/** @return {number} */ F.prototype.foo = function() {return 3; };" +
+        "/** @constructor \n * @extends {F} \n * @implements {I} */ " +
+        "function G() {}" +
+        "/** @return {number} \n * @override */ G.prototype.bar = G.prototype.foo;" +
+        "/** @return {string} */ function f() { return new G().bar(); }",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testInterfacePropertyNotImplemented() throws Exception {
     testTypes(
         "/** @interface */function Int() {};" +

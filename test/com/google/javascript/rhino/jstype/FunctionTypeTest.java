@@ -148,6 +148,19 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         "function (...[*]): None", twoNumbers, oneNumber);
   }
 
+  public void testSubtypeWithInterfaceThisType() {
+    FunctionType iface = registry.createInterfaceType("I", null);
+    FunctionType ifaceReturnBoolean = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
+        .withTypeOfThis(iface.getInstanceType())
+        .withReturnType(BOOLEAN_TYPE).build();
+    FunctionType objReturnBoolean = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
+        .withTypeOfThis(OBJECT_TYPE)
+        .withReturnType(BOOLEAN_TYPE).build();
+    assertTrue(objReturnBoolean.canAssignTo(ifaceReturnBoolean));
+  }
+
   private void assertLeastSupertype(String s, JSType t1, JSType t2) {
     assertEquals(s, t1.getLeastSupertype(t2).toString());
     assertEquals(s, t2.getLeastSupertype(t1).toString());
