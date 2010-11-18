@@ -57,6 +57,8 @@ public final class CompileTask
   private CompilationLevel compilationLevel;
   private boolean customExternsOnly;
   private boolean manageDependencies;
+  private boolean prettyPrint;
+  private boolean printInputDelimiter;
   private File outputFile;
   private final List<FileList> externFileLists;
   private final List<FileList> sourceFileLists;
@@ -67,6 +69,8 @@ public final class CompileTask
     this.compilationLevel = CompilationLevel.SIMPLE_OPTIMIZATIONS;
     this.customExternsOnly = false;
     this.manageDependencies = false;
+    this.prettyPrint = false;
+    this.printInputDelimiter = false;
     this.externFileLists = Lists.newLinkedList();
     this.sourceFileLists = Lists.newLinkedList();
   }
@@ -147,6 +151,20 @@ public final class CompileTask
   }
 
   /**
+   * Set pretty print formatting option
+   */
+  public void setPrettyPrint(boolean pretty) {
+    this.prettyPrint = pretty;
+  }
+
+  /**
+   * Set print input delimitter formatting option
+   */
+  public void setPrintInputDelimiter(boolean print) {
+    this.printInputDelimiter = print;
+  }
+
+  /**
    * Sets the externs file.
    */
   public void addExterns(FileList list) {
@@ -196,6 +214,9 @@ public final class CompileTask
     } else {
       this.compilationLevel.setOptionsForCompilationLevel(options);
     }
+
+    options.prettyPrint = this.prettyPrint;
+    options.printInputDelimiter = this.printInputDelimiter;
 
     this.warningLevel.setOptionsForWarningLevel(options);
     options.setManageClosureDependencies(manageDependencies);
