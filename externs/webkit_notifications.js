@@ -44,6 +44,14 @@ Notification.prototype.dispatchEvent = function(evt) {};
 Notification.prototype.replaceId;
 
 /**
+ * The string used by clients to specify the directionality (rtl/ltr) of the
+ * notification.
+ * @type {string}
+ * @see http://dev.w3.org/2006/webapi/WebNotifications/publish/Notifications.html#dfn-dir
+ */
+Notification.prototype.dir;
+
+/**
  * Displays the notification.
  */
 Notification.prototype.show = function() {};
