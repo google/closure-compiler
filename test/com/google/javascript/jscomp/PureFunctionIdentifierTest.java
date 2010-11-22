@@ -237,7 +237,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "  x.externObjSEThisMethod('') " +
         "};" +
         "f();",
-        ImmutableList.<String>of("externObjSEThis"));
+        ImmutableList.<String>of("externObjSEThis", "f"));
   }
 
   public void testAnnotationInExterns_new8() throws Exception {
@@ -533,6 +533,17 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         prefix + "return externObj.foo" + suffix, expected);
   }
 
+  public void testResultLocalitySimpleSample() throws Exception {
+    String prefix = "var g; function f(){";
+    String suffix = "} f()";
+    List<String> expected = ImmutableList.of("f");
+    List<String> notExpected = ImmutableList.of();
+
+    // global result
+    checkLocalityOfMarkedCalls(
+      prefix + "var a = (g = []); return a" + suffix, notExpected);
+  }
+
   public void testResultLocalitySimple() throws Exception {
     String prefix = "var g; function f(){";
     String suffix = "} f()";
@@ -559,15 +570,23 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         prefix + "return 1; return g" + suffix, notExpected);
 
 
-    // local var, not yet.
+    // local var.
     checkLocalityOfMarkedCalls(
-        prefix + "var a = 1; return a" + suffix, notExpected);
+        prefix + "var a = 1; return a" + suffix, expected);
 
-    // mutate local var, not yet.
+    // mutate local var.
     checkLocalityOfMarkedCalls(
-        prefix + "var a = 1; a = 2; return a" + suffix, notExpected);
+        prefix + "var a = 1; a = 2; return a" + suffix, expected);
     checkLocalityOfMarkedCalls(
         prefix + "var a = 1; a = 2; return a + 1" + suffix, expected);
+
+    // Global aliases of immutables is ok.
+    checkLocalityOfMarkedCalls(
+        prefix + "var a = (g = 2); return a" + suffix, expected);
+
+    checkLocalityOfMarkedCalls(
+       prefix + "var a = (g = []); return a" + suffix, notExpected);
+
 
     // read from obj literal
     checkLocalityOfMarkedCalls(
@@ -755,7 +774,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var a = new A; a.g(); return a;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("A"));
+                     ImmutableList.<String>of("A", "f"));
   }
 
   public void testLocalizedSideEffects11() throws Exception {
@@ -773,6 +792,28 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "var x = new B();" +
         "x.updateA();",
         ImmutableList.of("A", "B"));
+  }
+
+  public void testLocalizedSideEffects12() throws Exception {
+    // A expression containing an assignment is an alias of the value
+    checkMarkedCalls("var g = 1;" +
+                     "function f() {" +
+                     "  var a = (g = new Foo); return a;" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of());
+  }
+
+  public void testLocalizedSideEffects13() throws Exception {
+    // A expression containing an assignment is an alias of the value, but
+    // aliasing an immutable value doesn't matter, but the global side-effect
+    // does.
+    checkMarkedCalls("var g = 1;" +
+                     "function f() {" +
+                     "  var a = (g = 2); return a;" +
+                     "}" +
+                     "f()",
+                     ImmutableList.<String>of());
   }
 
   public void testUnaryOperators1() throws Exception {
@@ -1029,7 +1070,7 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "function g(){var a = new A; a.foo(); return a}\n" +
         "f(); g()";
 
-    checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f"));
+    checkMarkedCalls(source, ImmutableList.<String>of("A", "A", "f", "g"));
   }
 
   public void testCallFunctionFOrG() throws Exception {
