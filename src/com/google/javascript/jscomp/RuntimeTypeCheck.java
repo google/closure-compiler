@@ -84,7 +84,7 @@ class RuntimeTypeCheck implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new AddMarkers(compiler));
-    NodeTraversal.traverse(compiler, root, new AddChecks(compiler));
+    NodeTraversal.traverse(compiler, root, new AddChecks());
     addBoilerplateCode();
   }
 
@@ -217,10 +217,7 @@ class RuntimeTypeCheck implements CompilerPass {
   private class AddChecks
       extends NodeTraversal.AbstractPostOrderCallback {
 
-    private final AbstractCompiler compiler;
-
-    private AddChecks(AbstractCompiler compiler) {
-      this.compiler = compiler;
+    private AddChecks() {
     }
 
     @Override

@@ -1192,6 +1192,7 @@ public class Compiler extends AbstractCompiler {
     return parse(JSSourceFile.fromCode(fileName, js));
   }
 
+  @Override
   Node parseTestCode(String js) {
     initCompilerOptionsIfTesting();
     CompilerInput input = new CompilerInput(
