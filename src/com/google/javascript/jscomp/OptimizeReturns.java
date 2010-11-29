@@ -49,11 +49,12 @@ public class OptimizeReturns
   public void process(Node externs, Node root) {
     SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
     defFinder.process(externs, root);
-    process(defFinder);
+    process(externs, root, defFinder);
   }
 
   @Override
-  public void process(SimpleDefinitionFinder definitions) {
+  public void process(
+      Node externs, Node root, SimpleDefinitionFinder definitions) {
     for (DefinitionSite defSite : definitions.getDefinitionSites()) {
       optimizeResultsIfEligible(defSite, definitions);
     }
@@ -76,7 +77,7 @@ public class OptimizeReturns
       return;
     }
 
-    rewriteReturns(defSite.definition.getRValue());
+    rewriteReturns(defFinder, defSite.definition.getRValue());
   }
 
   /**
@@ -97,12 +98,12 @@ public class OptimizeReturns
 
     // Be conservative, don't try to optimize any declaration that isn't as
     // simple function declaration or assignment.
-    if (!isSimpleFunctionDeclaration(rValue)) {
+    if (!SimpleDefinitionFinder.isSimpleFunctionDeclaration(rValue)) {
       return true;
     }
 
     // Assume an exported method result is used.
-    if (maybeExported(compiler, definition)) {
+    if (SimpleDefinitionFinder.maybeExported(compiler, definition)) {
       return true;
     }
 
@@ -128,59 +129,6 @@ public class OptimizeReturns
     }
 
     // No possible use of the definition result
-    return false;
-  }
-
-  static boolean maybeExported(
-      AbstractCompiler compiler, Definition definition) {
-    // Assume an exported method result is used.
-    Node lValue = definition.getLValue();
-    if (lValue == null) {
-      return true;
-    }
-
-    String partialName;
-    if (NodeUtil.isGetProp(lValue)) {
-      partialName = lValue.getLastChild().getString();
-    } else if (NodeUtil.isName(lValue)) {
-      partialName = lValue.getString();
-    } else {
-      // GETELEM is assumed to be an export or other expression are unknown
-      // uses.
-      return true;
-    }
-
-    CodingConvention codingConvention = compiler.getCodingConvention();
-    if (codingConvention.isExported(partialName)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  static boolean isSimpleFunctionDeclaration(Node fn) {
-    Node parent = fn.getParent();
-    Node gramps = parent.getParent();
-
-    // Simple definition finder doesn't provide useful results in some
-    // cases, specifically:
-    //  - functions with recursive definitions
-    //  - functions defined in object literals
-    //  - functions defined in array litersals
-    // Here we defined a set of known function declaration that are 'ok'.
-
-    // example: function a(){};
-    if (NodeUtil.isFunctionDeclaration(fn)) {
-      return true;
-    }
-
-    // example: a = function(){};
-    // example: var a = function(){};
-    if (fn.getFirstChild().getString().isEmpty()
-        && (NodeUtil.isExprAssign(gramps) || NodeUtil.isName(parent))) {
-      return true;
-    }
-
     return false;
   }
 
@@ -219,7 +167,8 @@ public class OptimizeReturns
    *    foo(); return;
    * Useless return will be removed later by the peephole optimization passes.
    */
-  private void rewriteReturns(Node fnNode) {
+  private void rewriteReturns(
+      final SimpleDefinitionFinder defFinder, Node fnNode) {
     Preconditions.checkState(NodeUtil.isFunction(fnNode));
     NodeUtil.visitPostOrder(
       fnNode.getLastChild(),
@@ -227,8 +176,13 @@ public class OptimizeReturns
         @Override
         public void visit(Node node) {
           if (node.getType() == Token.RETURN && node.hasOneChild()) {
+            boolean keepValue = NodeUtil.mayHaveSideEffects(
+                node.getFirstChild(), compiler);
+            if (!keepValue) {
+              defFinder.removeReferences(node.getFirstChild());
+            }
             Node result = node.removeFirstChild();
-            if (NodeUtil.mayHaveSideEffects(result, compiler)) {
+            if (keepValue) {
               node.getParent().addChildBefore(
                 new Node(
                   Token.EXPR_RESULT, result).copyInformationFrom(result), node);

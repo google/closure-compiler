@@ -57,11 +57,12 @@ class OptimizeParameters
   public void process(Node externs, Node root) {
     SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
     defFinder.process(externs, root);
-    process(defFinder);
+    process(externs, root, defFinder);
   }
 
   @Override
-  public void process(SimpleDefinitionFinder definitions) {
+  public void process(
+      Node externs, Node root, SimpleDefinitionFinder definitions) {
     for (DefinitionSite defSite : definitions.getDefinitionSites()) {
       if (canChangeSignature(defSite, definitions)) {
         tryEliminateConstantArgs(defSite, definitions);
@@ -97,12 +98,12 @@ class OptimizeParameters
     // maps of functions use in for-in expressions, etc).
     // Be conservative, don't try to optimize any declaration that isn't as
     // simple function declaration or assignment.
-    if (!OptimizeReturns.isSimpleFunctionDeclaration(rValue)) {
+    if (!SimpleDefinitionFinder.isSimpleFunctionDeclaration(rValue)) {
       return false;
     }
 
     // Assume an exported method result is used.
-    if (OptimizeReturns.maybeExported(compiler, definition)) {
+    if (SimpleDefinitionFinder.maybeExported(compiler, definition)) {
       return false;
     }
 
@@ -116,9 +117,10 @@ class OptimizeParameters
       // Any non-call reference maybe introducing an alias. Don't try to
       // change the function signature, if all the aliases can't also be
       // changed.
-      if (!isCallSite(site.node)) {
+      if (!SimpleDefinitionFinder.isCallOrNewSite(site)) {
         return false;
       }
+
 
       // TODO(johnlenz): support specialization
 
@@ -149,7 +151,7 @@ class OptimizeParameters
     Definition definition = defSite.definition;
     Collection<UseSite> useSites = defFinder.getUseSites(definition);
     for (UseSite site : useSites) {
-      Preconditions.checkState(isCallSite(site.node));
+      Preconditions.checkState(SimpleDefinitionFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       int numArgs = call.getChildCount() - 1;
@@ -182,7 +184,7 @@ class OptimizeParameters
     Definition definition = defSite.definition;
     Collection<UseSite> useSites = defFinder.getUseSites(definition);
     for (UseSite site : useSites) {
-      Preconditions.checkState(isCallSite(site.node));
+      Preconditions.checkState(SimpleDefinitionFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       Node cur = call.getFirstChild();
@@ -198,7 +200,7 @@ class OptimizeParameters
 
     // Remove the constant parameters in all the calls
     for (UseSite site : useSites) {
-      Preconditions.checkState(isCallSite(site.node));
+      Preconditions.checkState(SimpleDefinitionFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       optimizeCallSite(parameters, call);
@@ -256,29 +258,6 @@ class OptimizeParameters
         eliminateCallParamAt(call, index);
       }
     }
-  }
-
-  /**
-   * @param fn A function to check.
-   * @return true, if it's safe to optimize this function.
-   */
-  private boolean isCallSite(Node fn) {
-    Node call = fn.getParent();
-    // We need to make sure we're dealing with a call to the function we're
-    // optimizing. If the the first child of the parent is not the site, this
-    // is a nested call and it's a call to another function.
-    return isCallOrNew(call) && call.getFirstChild() == fn;
-  }
-
-  /**
-   * Return true if the node can be considered a call. For the purpose of this
-   * class, the new operator is considered a call since it can be optimized
-   * in the same way.
-   * @param node A node
-   * @return True if the node is a call.
-   */
-  private boolean isCallOrNew(Node node) {
-    return NodeUtil.isCall(node) || NodeUtil.isNew(node);
   }
 
   /**
@@ -344,7 +323,6 @@ class OptimizeParameters
    * @return true if a parameter has been removed.
    */
   private boolean eliminateParamsAfter(Node function, int argIndex) {
-
     boolean paramRemoved = false;
 
     Node formalArgPtr = function.getFirstChild().getNext().getFirstChild();
@@ -370,22 +348,6 @@ class OptimizeParameters
   }
 
   /**
-   * Given the first argument of a function or call, this removes the nth
-   * argument of the function or call.
-   * @param firstArg The first arg of the call or function.
-   * @param argIndex the index of the arg to remove.
-   * @return the node of the removed argument.
-   */
-  private Node getArgumentAtIndex(Node firstArg, int argIndex) {
-    Node formalArgPtr = firstArg;
-    while (argIndex != 0 && formalArgPtr != null) {
-      formalArgPtr = formalArgPtr.getNext();
-      argIndex--;
-    }
-    return formalArgPtr;
-  }
-
-  /**
    * Eliminates the parameter from a function definition.
    * @param function The function node
    * @param argIndex The index of the the argument to remove.
@@ -395,8 +357,8 @@ class OptimizeParameters
     Preconditions.checkArgument(NodeUtil.isFunction(function),
         "Node must be a function.");
 
-    Node formalArgPtr = getArgumentAtIndex(
-        function.getFirstChild().getNext().getFirstChild(), argIndex);
+    Node formalArgPtr = NodeUtil.getArgumentForFunction(
+        function, argIndex);
 
     if (formalArgPtr != null) {
       function.getFirstChild().getNext().removeChild(formalArgPtr);
@@ -411,10 +373,11 @@ class OptimizeParameters
    * @return The Node of the argument removed.
    */
   private Node eliminateCallParamAt(Node call, int argIndex) {
-    Preconditions.checkArgument(isCallOrNew(call), "Node must be a call.");
+    Preconditions.checkArgument(
+        NodeUtil.isCallOrNew(call), "Node must be a call or new.");
 
-    Node formalArgPtr = getArgumentAtIndex(
-        call.getFirstChild().getNext(), argIndex);
+    Node formalArgPtr = NodeUtil.getArgumentForCallOrNew(
+        call, argIndex);
 
     if (formalArgPtr != null) {
       call.removeChild(formalArgPtr);

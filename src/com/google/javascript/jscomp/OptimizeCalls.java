@@ -45,7 +45,7 @@ class OptimizeCalls implements CompilerPass {
   }
   
   interface CallGraphCompilerPass {
-    void process(SimpleDefinitionFinder definitions);
+    void process(Node externs, Node root, SimpleDefinitionFinder definitions);
   }
 
   @Override
@@ -54,7 +54,7 @@ class OptimizeCalls implements CompilerPass {
       SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
       defFinder.process(externs, root);
       for (CallGraphCompilerPass pass : passes) {
-        pass.process(defFinder);
+        pass.process(externs, root, defFinder);
       }
     }
   }

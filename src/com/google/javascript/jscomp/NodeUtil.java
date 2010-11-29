@@ -43,6 +43,8 @@ import javax.annotation.Nullable;
  */
 public final class NodeUtil {
 
+  final static String JSC_PROPERTY_NAME_FN = "JSCompiler_renameProperty";
+
   // TODO(user): Eliminate this class and make all of the static methods
   // instance methods of com.google.javascript.rhino.Node.
 
@@ -638,9 +640,10 @@ public final class NodeUtil {
 
   static boolean constructorCallHasSideEffects(
       Node callNode, AbstractCompiler compiler) {
-    Preconditions.checkArgument(
-        callNode.getType() == Token.NEW,
-        "Expected NEW node, got " + Token.name(callNode.getType()));
+    if (callNode.getType() != Token.NEW) {
+      throw new IllegalStateException(
+          "Expected NEW node, got " + Token.name(callNode.getType()));
+    }
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
@@ -685,9 +688,10 @@ public final class NodeUtil {
    */
   static boolean functionCallHasSideEffects(
       Node callNode, @Nullable AbstractCompiler compiler) {
-    Preconditions.checkArgument(
-        callNode.getType() == Token.CALL,
-        "Expected CALL node, got " + Token.name(callNode.getType()));
+    if (callNode.getType() != Token.CALL) {
+      throw new IllegalStateException(
+          "Expected CALL node, got " + Token.name(callNode.getType()));
+    }
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
@@ -1375,6 +1379,14 @@ public final class NodeUtil {
    */
   static boolean isCall(Node n) {
     return n.getType() == Token.CALL;
+  }
+
+  /**
+   * @param node A node
+   * @return Whether the call is a NEW or CALL node.
+   */
+  static boolean isCallOrNew(Node node) {
+    return NodeUtil.isCall(node) || NodeUtil.isNew(node);
   }
 
   /**
@@ -2385,5 +2397,39 @@ public final class NodeUtil {
             "Unexpected expression node" + value +
             "\n parent:" + value.getParent());
     }
+  }
+
+  /**
+   * Given the first sibling, this returns the nth
+   * sibling or null if no such sibling exists.
+   * This is like "getChildAtIndex" but returns null for non-existent indexes.
+   */
+  private static Node getNthSibling(Node first, int index) {
+    Node sibling = first;
+    while (index != 0 && sibling != null) {
+      sibling = sibling.getNext();
+      index--;
+    }
+    return sibling;
+  }
+
+  /**
+   * Given the function, this returns the nth
+   * argument or null if no such parameter exists.
+   */
+  static Node getArgumentForFunction(Node function, int index) {
+    Preconditions.checkState(isFunction(function));
+    return getNthSibling(
+        function.getFirstChild().getNext().getFirstChild(), index);
+  }
+
+  /**
+   * Given the new or call, this returns the nth
+   * argument of the call or null if no such argument exists.
+   */
+  static Node getArgumentForCallOrNew(Node call, int index) {
+    Preconditions.checkState(isCallOrNew(call));
+    return getNthSibling(
+      call.getFirstChild().getNext(), index);
   }
 }

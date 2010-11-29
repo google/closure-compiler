@@ -66,6 +66,15 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     return definitionSiteMap.values();
   }
 
+  private DefinitionSite getDefinitionAt(Node node) {
+    return definitionSiteMap.get(node);
+  }
+
+  DefinitionSite getDefinitionForFunction(Node function) {
+    Preconditions.checkState(NodeUtil.isFunction(function));
+    return getDefinitionAt(getNameNodeFromFunctionNode(function));
+  }
+
   @Override
   public Collection<Definition> getDefinitionsReferencedAt(Node useSite) {
     if (definitionSiteMap.containsKey(useSite)) {
@@ -107,7 +116,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
    * definition.  Returns an empty collection if the definition is not
    * used anywhere.
    *
-   * @param definition Definition of insterest.
+   * @param definition Definition of interest.
    * @return use site collection.
    */
   Collection<UseSite> getUseSites(Definition definition) {
@@ -277,6 +286,144 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       nameUseSiteMultimap.put(
           name,
           new UseSite(node, traversal.getModule()));
+    }
+  }
+
+  /**
+   * @param use A use site to check.
+   * @return Whether the use is a call or new.
+   */
+  static boolean isCallOrNewSite(UseSite use) {
+    Node call = use.node.getParent();
+    if (call == null) {
+      // The node has been removed from the AST.
+      return false;
+    }
+    // We need to make sure we're dealing with a call to the function we're
+    // optimizing. If the the first child of the parent is not the site, this
+    // is a nested call and it's a call to another function.
+    return NodeUtil.isCallOrNew(call) && call.getFirstChild() == use.node;
+  }
+
+  /**
+   * @return Whether the definition is directly exported.
+   */
+  static boolean maybeExported(
+      AbstractCompiler compiler, Definition definition) {
+    // Assume an exported method result is used.
+    Node lValue = definition.getLValue();
+    if (lValue == null) {
+      return true;
+    }
+
+    String partialName;
+    if (NodeUtil.isGetProp(lValue)) {
+      partialName = lValue.getLastChild().getString();
+    } else if (NodeUtil.isName(lValue)) {
+      partialName = lValue.getString();
+    } else {
+      // GETELEM is assumed to be an export or other expression are unknown
+      // uses.
+      return true;
+    }
+
+    CodingConvention codingConvention = compiler.getCodingConvention();
+    if (codingConvention.isExported(partialName)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * @return Whether the function is defined in a non-aliasing expression.
+   */
+  static boolean isSimpleFunctionDeclaration(Node fn) {
+    Node parent = fn.getParent();
+    Node gramps = parent.getParent();
+
+    // Simple definition finder doesn't provide useful results in some
+    // cases, specifically:
+    //  - functions with recursive definitions
+    //  - functions defined in object literals
+    //  - functions defined in array litersals
+    // Here we defined a set of known function declaration that are 'ok'.
+
+    // Some projects seem to actually define "JSCompiler_renameProperty"
+    // rather than simply having an extern definition.  Don't mess with it.
+    Node nameNode = SimpleDefinitionFinder.getNameNodeFromFunctionNode(fn);
+    if (nameNode != null
+        && NodeUtil.isName(nameNode)
+        && nameNode.getString().equals(NodeUtil.JSC_PROPERTY_NAME_FN)) {
+      return false;
+    }
+
+    // example: function a(){};
+    if (NodeUtil.isFunctionDeclaration(fn)) {
+      return true;
+    }
+
+    // example: a = function(){};
+    // example: var a = function(){};
+    if (fn.getFirstChild().getString().isEmpty()
+        && (NodeUtil.isExprAssign(gramps) || NodeUtil.isName(parent))) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * @return the node defining the name for this function (if any).
+   */
+  static Node getNameNodeFromFunctionNode(Node function) {
+    Preconditions.checkState(NodeUtil.isFunction(function));
+    if (NodeUtil.isFunctionDeclaration(function)) {
+      return function.getFirstChild();
+    } else {
+      Node parent = function.getParent();
+      if (NodeUtil.isVarDeclaration(parent)) {
+        return parent;
+      } else if (NodeUtil.isAssign(parent)) {
+        return parent.getFirstChild();
+      } else if (NodeUtil.isObjectLitKey(parent, parent.getParent())) {
+        return parent;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Traverse a node and its children and remove any references to from
+   * the structures.
+   */
+  void removeReferences(Node node) {
+    if (DefinitionsRemover.isDefinitionNode(node)) {
+      DefinitionSite defSite = definitionSiteMap.get(node);
+      if (defSite != null) {
+        Definition def = defSite.definition;
+        String name = getSimplifiedName(def.getLValue());
+        if (name != null) {
+          this.definitionSiteMap.remove(node);
+          this.nameDefinitionMultimap.remove(name, node);
+        }
+      }
+    } else {
+      Node useSite = node;
+      if (NodeUtil.isGetProp(useSite)) {
+        String propName = useSite.getLastChild().getString();
+        if (propName.equals("apply") || propName.equals("call")) {
+          useSite = useSite.getFirstChild();
+        }
+      }
+      String name = getSimplifiedName(useSite);
+      if (name != null) {
+        this.nameUseSiteMultimap.remove(name, new UseSite(useSite, null));
+      }
+    }
+
+    for (Node child : node.children()) {
+      removeReferences(child);
     }
   }
 }

@@ -81,11 +81,12 @@ class DevirtualizePrototypeMethods
   public void process(Node externs, Node root) {
     SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
     defFinder.process(externs, root);
-    process(defFinder);
+    process(externs, root, defFinder);
   }
 
   @Override
-  public void process(SimpleDefinitionFinder definitions) {
+  public void process(
+      Node externs, Node root, SimpleDefinitionFinder definitions) {
     for (DefinitionSite defSite : definitions.getDefinitionSites()) {
       rewriteDefinitionIfEligible(defSite, definitions);
     }
@@ -237,7 +238,6 @@ class DevirtualizePrototypeMethods
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
 
     for (UseSite site : useSites) {
-
       // Accessing the property directly prevents rewrite.
       if (!isCall(site)) {
         return false;

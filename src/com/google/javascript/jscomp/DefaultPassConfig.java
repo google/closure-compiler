@@ -331,11 +331,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(optimizeArgumentsArray);
     }
 
-    // Remove all parameters that are constants or unused.
-    if (options.optimizeParameters) {
-      passes.add(removeUselessParameters);
-    }
-
     // Abstract method removal works best on minimally modified code, and also
     // only needs to run once.
     if (options.closurePass &&
@@ -424,7 +419,9 @@ public class DefaultPassConfig extends PassConfig {
     // optimizations based on global names (like cross module code motion
     // and inline functions).  Smart Name Removal does better if run before
     // this pass.
-    if (options.devirtualizePrototypeMethods) {
+    if (options.devirtualizePrototypeMethods
+        || options.optimizeReturns
+        || options.optimizeParameters) {
       passes.add(optimizeCalls);
     }
 
@@ -1204,24 +1201,6 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Removes unused or constant formal parameters. */
-  private final PassFactory removeUselessParameters =
-      new PassFactory("optimizeParameters", true) {
-    @Override
-    protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override public void process(Node externs, Node root) {
-          NameReferenceGraphConstruction c =
-              new NameReferenceGraphConstruction(compiler);
-          c.process(externs, root);
-
-          (new OptimizeParameters(compiler, c.getNameReferenceGraph())).process(
-              externs, root);
-        }
-      };
-    }
-  };
-
   /** Remove variables set to goog.abstractMethod. */
   private final PassFactory closureCodeRemoval =
       new PassFactory("closureCodeRemoval", true) {
@@ -1306,11 +1285,18 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       OptimizeCalls passes = new OptimizeCalls(compiler);
       if (options.optimizeReturns) {
+        // Remove unused return values.
         passes.addPass(new OptimizeReturns(compiler));
       }
-      // Devirtualize must be last as it modifies the the values
-      // represented by the simple definition finder.
-      passes.addPass(new DevirtualizePrototypeMethods(compiler));
+
+      if (options.optimizeParameters) {
+        // Remove all parameters that are constants or unused.
+        passes.addPass(new OptimizeParameters(compiler));
+      }
+
+      if (options.devirtualizePrototypeMethods) {
+        passes.addPass(new DevirtualizePrototypeMethods(compiler));
+      }
       return passes;
     }
   };

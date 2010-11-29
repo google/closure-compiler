@@ -33,4 +33,16 @@ class UseSite {
     this.node = node;
     this.module = module;
   }
+
+  // Use the node as the identifying feature to make the UseSite recreatable.
+
+  @Override
+  public int hashCode() {
+    return this.node.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return (o instanceof UseSite && ((UseSite)(o)).node.equals(this.node));
+  }
 }

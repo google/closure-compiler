@@ -35,8 +35,9 @@ class DefinitionsRemover {
    */
   static Definition getDefinition(Node n, boolean isExtern) {
     // TODO(user): Since we have parent pointers handy. A lot of constructors
-    // can be simplied.
+    // can be simplified.
 
+    // This logic must match #isDefinitionNode
     Node parent = n.getParent();
     if (parent == null) {
       return null;
@@ -61,6 +62,35 @@ class DefinitionsRemover {
     }
     return null;
   }
+
+  /**
+   * @return Whether a definition object can be created.
+   */
+  static boolean isDefinitionNode(Node n) {
+    // This logic must match #getDefinition
+    Node parent = n.getParent();
+    if (parent == null) {
+      return false;
+    }
+
+    if (NodeUtil.isVarDeclaration(n) && n.hasChildren()) {
+      return true;
+    } else if (NodeUtil.isFunction(parent) && parent.getFirstChild() == n) {
+      if (!NodeUtil.isFunctionExpression(parent)) {
+        return true;
+      } else if (!n.getString().equals("")) {
+        return true;
+      }
+    } else if (NodeUtil.isAssign(parent) && parent.getFirstChild() == n) {
+      return true;
+    } else if (NodeUtil.isObjectLitKey(n, parent)) {
+      return true;
+    } else if (parent.getType() == Token.LP) {
+      return true;
+    }
+    return false;
+  }
+
 
   static abstract class Definition {
 
