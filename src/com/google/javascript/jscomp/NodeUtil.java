@@ -664,6 +664,8 @@ public final class NodeUtil {
   private static final Set<String> BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS =
       ImmutableSet.of(
           "Object", "Array", "String", "Number", "Boolean", "RegExp", "Error");
+  private static final Set<String> OBJECT_METHODS_WITHOUT_SIDEEFFECTS =
+      ImmutableSet.of("toString", "valueOf");
   private static final Set<String> REGEXP_METHODS =
       ImmutableSet.of("test", "exec");
   private static final Set<String> STRING_REGEXP_METHODS =
@@ -706,6 +708,12 @@ public final class NodeUtil {
         return false;
       }
     } else if (nameNode.getType() == Token.GETPROP) {
+      if (callNode.hasOneChild()
+          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
+                nameNode.getLastChild().getString())) {
+        return false;
+      }
+
       if (callNode.isOnlyModifiesThisCall()
           && evaluatesToLocalValue(nameNode.getFirstChild())) {
         return false;
@@ -2371,7 +2379,9 @@ public final class NodeUtil {
         // There is no information about the locality of object properties.
         return locals.apply(value);
       case Token.CALL:
-        return callHasLocalResult(value) || locals.apply(value);
+        return callHasLocalResult(value)
+            || isToStringMethodCall(value)
+            || locals.apply(value);
       case Token.NEW:
         return true;
       case Token.FUNCTION:
@@ -2431,5 +2441,14 @@ public final class NodeUtil {
     Preconditions.checkState(isCallOrNew(call));
     return getNthSibling(
       call.getFirstChild().getNext(), index);
+  }
+
+  private static boolean isToStringMethodCall(Node call) {
+    Node getNode = call.getFirstChild();
+    if (isGet(getNode)) {
+      Node propNode = getNode.getLastChild();
+      return isString(propNode) && "toString".equals(propNode.getString());
+    }
+    return false;
   }
 }

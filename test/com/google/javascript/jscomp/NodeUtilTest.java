@@ -348,6 +348,15 @@ public class NodeUtilTest extends TestCase {
     assertSideEffect(false, "({},[]).foo = 2;");
   }
 
+  public void testObjectMethodSideEffects() {
+    // "toString" and "valueOf" are assumed to be side-effect free
+    assertSideEffect(false, "o.toString()");
+    assertSideEffect(false, "o.valueOf()");
+
+    // other methods depend on the extern definitions
+    assertSideEffect(true, "o.watch()");
+  }
+
   public void testRegExpSideEffect() {
     // A RegExp Object by itself doesn't have any side-effects
     assertSideEffect(false, "/abc/gi", true);
@@ -1052,8 +1061,13 @@ public class NodeUtilTest extends TestCase {
 
     assertTrue(testLocalValue("void x"));
     assertTrue(testLocalValue("void 0"));
-    
+
     assertFalse(testLocalValue("{}.x"));
+
+    assertTrue(testLocalValue("{}.toString()"));
+    assertTrue(testLocalValue("o.toString()"));
+
+    assertFalse(testLocalValue("o.valueOf()"));
   }
 
   private boolean testLocalValue(String js) {
@@ -1067,19 +1081,19 @@ public class NodeUtilTest extends TestCase {
 
     return NodeUtil.evaluatesToLocalValue(value);
   }
-  
+
   public void testValidDefine() {
     assertTrue(testValidDefineValue("1"));
     assertTrue(testValidDefineValue("-3"));
     assertTrue(testValidDefineValue("true"));
     assertTrue(testValidDefineValue("false"));
     assertTrue(testValidDefineValue("'foo'"));
-    
+
     assertFalse(testValidDefineValue("x"));
     assertFalse(testValidDefineValue("null"));
     assertFalse(testValidDefineValue("undefined"));
     assertFalse(testValidDefineValue("NaN"));
-    
+
     assertTrue(testValidDefineValue("!true"));
     assertTrue(testValidDefineValue("-true"));
     assertTrue(testValidDefineValue("1 & 8"));
@@ -1088,7 +1102,7 @@ public class NodeUtilTest extends TestCase {
 
     assertFalse(testValidDefineValue("1 & foo"));
   }
-  
+
   private boolean testValidDefineValue(String js) {
     Node script = parse("var test = " + js +";");
     Node var = script.getFirstChild();
@@ -1096,6 +1110,6 @@ public class NodeUtilTest extends TestCase {
     Node value = name.getFirstChild();
 
     ImmutableSet<String> defines = ImmutableSet.of();
-    return NodeUtil.isValidDefineValue(value, defines);   
+    return NodeUtil.isValidDefineValue(value, defines);
   }
 }
