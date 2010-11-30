@@ -160,7 +160,7 @@ public class OptimizeReturnsTest extends CompilerTestCase {
         "c();");
     test(source, expected);
   }
-  
+
   public void testRewriteUnusedResult7b() throws Exception {
     String source = newlineJoin(
         "c();",
@@ -176,7 +176,7 @@ public class OptimizeReturnsTest extends CompilerTestCase {
         "function b() { a(); return }",
         "function a() { return }");
     test(source, expected);
-  }  
+  }
 
   public void testRewriteUnusedResult8() throws Exception {
     String source = newlineJoin(
@@ -216,5 +216,15 @@ public class OptimizeReturnsTest extends CompilerTestCase {
     testSame("function a() {return 1}; a.call(new foo);");
 
     testSame("function a() {return 1}; a.apply(new foo);");
+  }
+
+  public void testRewriteUseSiteRemoval() throws Exception {
+    String source = newlineJoin(
+        "function a() { return {\"_id\" : 1} }",
+        "a();");
+    String expected = newlineJoin(
+        "function a() { return }",
+        "a();");
+    test(source, expected);
   }
 }

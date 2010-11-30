@@ -55,8 +55,13 @@ public class OptimizeReturns
   @Override
   public void process(
       Node externs, Node root, SimpleDefinitionFinder definitions) {
-    for (DefinitionSite defSite : definitions.getDefinitionSites()) {
-      optimizeResultsIfEligible(defSite, definitions);
+    // Create a snapshot of the definition sites to iterate over
+    // as they can be removed during processing.
+    for (DefinitionSite defSite :
+        definitions.getDefinitionSites().toArray(new DefinitionSite[0])) {
+      if (definitions.getDefinitionSites().contains(defSite)) {
+        optimizeResultsIfEligible(defSite, definitions);
+      }
     }
   }
 
