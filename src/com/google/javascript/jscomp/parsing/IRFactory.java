@@ -1200,12 +1200,4 @@ public class IRFactory {
   private Node newNumberNode(Double value) {
     return Node.newNumber(value).clonePropsFrom(templateNode);
   }
-
-  /**
-   * A simple wrapper struct, so that we can put a Node in the collection
-   * first and populate it later.
-   */
-  private final class NodeWithJsDoc {
-    private Node node = null;
-  }
 }

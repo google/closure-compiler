@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -62,7 +61,7 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
     for (Entry<JSModule, List<Node>> entry : functions.entrySet()) {
       JSModule module = entry.getKey();
       Node addingRoot = compiler.getNodeForCodeInsertion(module);
-      for (Node n : Iterables.reverse(entry.getValue())) {
+      for (Node n : Lists.reverse(entry.getValue())) {
         addingRoot.addChildToFront(n);
       }
     }

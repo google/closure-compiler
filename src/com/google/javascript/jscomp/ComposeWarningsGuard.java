@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
 
@@ -56,7 +55,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
   void addGuard(WarningsGuard guard) {
     if (guard instanceof ComposeWarningsGuard) {
       // Reverse the guards, so that they have the same order in the result.
-      addGuards(Iterables.reverse(((ComposeWarningsGuard) guard).guards));
+      addGuards(Lists.reverse(((ComposeWarningsGuard) guard).guards));
     } else {
       int index = Collections.binarySearch(this.guards, guard, guardComparator);
       if (index < 0) {
