@@ -16,6 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.javascript.rhino.Node;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Tests for PeepholeFoldConstants in isolation. Tests for the interaction of
  * multiple peephole passes are in PeepholeIntegrationTest.
@@ -712,5 +722,170 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public void testFoldAdd1() {
     foldSame("x=false+1");
+  }
+
+  public void testFoldLiteralNames() {
+    foldSame("NaN == NaN");
+    foldSame("Infinity == Infinity");
+    foldSame("Infinity == NaN");
+    fold("undefined == NaN", "false");
+    fold("undefined == Infinity", "false");
+
+    foldSame("Infinity >= Infinity");
+    foldSame("NaN >= NaN");
+  }
+
+  private static final List<String> LITERAL_OPERANDS =
+      ImmutableList.of(
+          "null",
+          "undefined",
+          "void 0",
+          "true",
+          "false",
+          "0",
+          "1",
+          "''",
+          "'abc'",
+          "'def'",
+          "NaN",
+          "Infinity"
+          // TODO(nicksantos): Add more literals
+          //"({})",
+          //"[]",
+          //"[0]",
+          //"Object",
+          //"(function() {})"
+          );
+
+  public void testInvertibleOperators() {
+    Map<String, String> inverses = ImmutableMap.<String, String>builder()
+        .put("==", "!=")
+        .put("===", "!==")
+        .put("<=", ">")
+        .put("<", ">=")
+        .put(">=", "<")
+        .put(">", "<=")
+        .put("!=", "==")
+        .put("!==", "===")
+        .build();
+    Set<String> comparators = ImmutableSet.of("<=", "<", ">=", ">");
+    Set<String> equalitors = ImmutableSet.of("==", "===");
+    Set<String> uncomparables = ImmutableSet.of("null", "undefined", "void 0");
+    List<String> operators = ImmutableList.copyOf(inverses.values());
+    for (int iOperandA = 0; iOperandA < LITERAL_OPERANDS.size(); iOperandA++) {
+      for (int iOperandB = 0;
+           iOperandB < LITERAL_OPERANDS.size();
+           iOperandB++) {
+        for (int iOp = 0; iOp < operators.size(); iOp++) {
+          String a = LITERAL_OPERANDS.get(iOperandA);
+          String b = LITERAL_OPERANDS.get(iOperandB);
+          String op = operators.get(iOp);
+          String inverse = inverses.get(op);
+
+          // Test invertability.
+          if (comparators.contains(op) &&
+              (uncomparables.contains(a) || uncomparables.contains(b))) {
+            // TODO(nicksantos): Eventually, all cases should be collapsed.
+            assertSameResultsOrUncollapsed(join(a, op, b), "false");
+            assertSameResultsOrUncollapsed(join(a, inverse, b), "false");
+          } else if (a.equals(b) && equalitors.contains(op)) {
+            if (a.equals("NaN") || a.equals("Infinity")) {
+              foldSame(join(a, op, b));
+              foldSame(join(a, inverse, b));
+            } else {
+              assertSameResults(join(a, op, b), "true");
+              assertSameResults(join(a, inverse, b), "false");
+            }
+          } else {
+            assertNotSameResults(join(a, op, b), join(a, inverse, b));
+          }
+        }
+      }
+    }
+  }
+
+  public void testCommutativeOperators() {
+    List<String> operators =
+        ImmutableList.of(
+            "==",
+            "!=",
+            "===",
+            "!==",
+            "*",
+            "|",
+            "&",
+            "^");
+    for (int iOperandA = 0; iOperandA < LITERAL_OPERANDS.size(); iOperandA++) {
+      for (int iOperandB = iOperandA;
+           iOperandB < LITERAL_OPERANDS.size();
+           iOperandB++) {
+        for (int iOp = 0; iOp < operators.size(); iOp++) {
+          String a = LITERAL_OPERANDS.get(iOperandA);
+          String b = LITERAL_OPERANDS.get(iOperandB);
+          String op = operators.get(iOp);
+
+          // Test commutativity.
+          // TODO(nicksantos): Eventually, all cases should be collapsed.
+          assertSameResultsOrUncollapsed(join(a, op, b), join(b, op, a));
+        }
+      }
+    }
+  }
+
+  private String join(String operandA, String op, String operandB) {
+    return operandA + " " + op + " " + operandB;
+  }
+
+  private void assertSameResultsOrUncollapsed(String exprA, String exprB) {
+    String resultA = process(exprA);
+    String resultB = process(exprB);
+    if (resultA.equals(print(exprA))) {
+      foldSame(exprA);
+      foldSame(exprB);
+    } else {
+      assertSameResults(exprA, exprB);
+    }
+  }
+
+  private void assertSameResults(String exprA, String exprB) {
+    assertEquals(
+        "Expressions did not fold the same\nexprA: " +
+        exprA + "\nexprB: " + exprB,
+        process(exprA), process(exprB));
+  }
+
+  private void assertNotSameResults(String exprA, String exprB) {
+    assertFalse(
+        "Expressions folded the same\nexprA: " +
+        exprA + "\nexprB: " + exprB,
+        process(exprA).equals(process(exprB)));
+  }
+
+  private String process(String js) {
+    return printHelper(js, true);
+  }
+
+  private String print(String js) {
+    return printHelper(js, false);
+  }
+
+  private String printHelper(String js, boolean runProcessor) {
+    Compiler compiler = createCompiler();
+    CompilerOptions options = getOptions();
+    compiler.init(
+        new JSSourceFile[] {},
+        new JSSourceFile[] { JSSourceFile.fromCode("testcode", js) },
+        options);
+    Node root = compiler.parseInputs();
+    assertTrue("Unexpected parse error(s): " +
+        Joiner.on("\n").join(compiler.getErrors()) +
+        "\nEXPR: " + js,
+        root != null);
+    Node externsRoot = root.getFirstChild();
+    Node mainRoot = externsRoot.getNext();
+    if (runProcessor) {
+      getProcessor(compiler).process(externsRoot, mainRoot);
+    }
+    return compiler.toSource(mainRoot);
   }
 }

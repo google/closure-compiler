@@ -959,7 +959,7 @@ public abstract class CompilerTestCase extends TestCase  {
     public void printSummary() {}
   }
 
-  private Compiler createCompiler() {
+  Compiler createCompiler() {
     Compiler compiler = new Compiler();
     return compiler;
   }

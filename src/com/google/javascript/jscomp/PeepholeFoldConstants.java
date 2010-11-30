@@ -835,6 +835,11 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         break;
 
       case Token.NAME:
+        if (undefinedRight) {
+          result = compareToUndefined(left, op);
+          break;
+        }
+
         if (rightLiteral) {
           boolean undefinedLeft = (left.getString().equals("undefined"));
           if (undefinedLeft) {
