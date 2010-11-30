@@ -88,9 +88,32 @@ public class OptimizeParametersTest extends CompilerTestCase {
 
   public void testDoOptimizeCall() {
     testSame("var foo = function () {}; foo(); foo.call();");
-    testSame("var foo = function () {}; foo(); foo.call(this);");
     // TODO(johnlenz): support foo.call
+    testSame("var foo = function () {}; foo(); foo.call(this);");
     testSame("var foo = function (a, b) {}; foo(1); foo.call(this, 1);");
+    testSame("var foo = function () {}; foo(); foo.call(null);");
+    testSame("var foo = function (a, b) {}; foo(1); foo.call(null, 1);");
+
+    testSame("var foo = function () {}; foo.call();");
+    // TODO(johnlenz): support foo.call
+    testSame("var foo = function () {}; foo.call(this);");
+    testSame("var foo = function (a, b) {}; foo.call(this, 1);");
+    testSame("var foo = function () {}; foo.call(null);");
+    testSame("var foo = function (a, b) {}; foo.call(null, 1);");
+  }
+
+  public void testDoOptimizeApply() {
+    testSame("var foo = function () {}; foo(); foo.apply();");
+    testSame("var foo = function () {}; foo(); foo.apply(this);");
+    testSame("var foo = function (a, b) {}; foo(1); foo.apply(this, 1);");
+    testSame("var foo = function () {}; foo(); foo.apply(null);");
+    testSame("var foo = function (a, b) {}; foo(1); foo.apply(null, []);");
+
+    testSame("var foo = function () {}; foo.apply();");
+    testSame("var foo = function () {}; foo.apply(this);");
+    testSame("var foo = function (a, b) {}; foo.apply(this, 1);");
+    testSame("var foo = function () {}; foo.apply(null);");
+    testSame("var foo = function (a, b) {}; foo.apply(null, []);");
   }
 
   public void testRemoveOneOptionalExpressionAssign() {

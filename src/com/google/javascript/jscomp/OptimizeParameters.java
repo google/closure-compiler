@@ -117,10 +117,10 @@ class OptimizeParameters
       // Any non-call reference maybe introducing an alias. Don't try to
       // change the function signature, if all the aliases can't also be
       // changed.
+      // TODO(johnlenz): Support .call signature changes.
       if (!SimpleDefinitionFinder.isCallOrNewSite(site)) {
         return false;
       }
-
 
       // TODO(johnlenz): support specialization
 
