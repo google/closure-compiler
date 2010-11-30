@@ -882,8 +882,6 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * @return Whether the boolean op is true or false
    */
   private boolean compareToUndefined(Node value, int op) {
-    boolean result;
-
     boolean valueUndefined = ((Token.NAME == value.getType()
         && value.getString().equals("undefined"))
         || (Token.VOID == value.getType()
@@ -893,28 +891,21 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     switch (op) {
       case Token.EQ:
         // undefined is only equal to null or an undefined value
-        result = equivalent;
-        break;
+        return equivalent;
       case Token.NE:
-        result = !equivalent;
-        break;
+        return !equivalent;
       case Token.SHEQ:
-        result = valueUndefined;
-        break;
+        return valueUndefined;
       case Token.SHNE:
-        result = !valueUndefined;
-        break;
+        return !valueUndefined;
       case Token.LT:
       case Token.GT:
       case Token.LE:
       case Token.GE:
-        result = false;
-        break;
+        return false;
       default:
         throw new IllegalStateException("unexpected.");
     }
-
-    return result;
   }
 
   /**

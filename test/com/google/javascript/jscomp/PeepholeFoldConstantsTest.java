@@ -160,7 +160,6 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("undefined === void 0", "true");
   }
 
-
   public void testUnaryOps() {
     // These cases are handled by PeepholeRemoveDeadCode.
     foldSame("!foo()");
