@@ -70,7 +70,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     scTest.test(js, expected);
   }
 
-  public void testUndefinedComparison() {
+  public void testUndefinedComparison1() {
     fold("undefined == undefined", "true");
     fold("undefined == null", "true");
     fold("undefined == void 0", "true");
@@ -132,6 +132,34 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("this == undefined");
     foldSame("x == undefined");
   }
+
+  public void testUndefinedComparison2() {
+    fold("\"123\" !== void 0", "true");
+    fold("\"123\" === void 0", "false");
+
+    fold("void 0 !== \"123\"", "true");
+    fold("void 0 === \"123\"", "false");
+  }
+
+  public void testUndefinedComparison3() {
+    fold("\"123\" !== undefined", "true");
+    fold("\"123\" === undefined", "false");
+
+    fold("undefined !== \"123\"", "true");
+    fold("undefined === \"123\"", "false");
+  }
+
+  public void testUndefinedComparison4() {
+    fold("1 !== void 0", "true");
+    fold("1 === void 0", "false");
+
+    fold("null !== void 0", "true");
+    fold("null === void 0", "false");
+
+    fold("undefined !== void 0", "false");
+    fold("undefined === void 0", "true");
+  }
+
 
   public void testUnaryOps() {
     // These cases are handled by PeepholeRemoveDeadCode.
@@ -686,5 +714,4 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
   public void testFoldAdd1() {
     foldSame("x=false+1");
   }
-
 }

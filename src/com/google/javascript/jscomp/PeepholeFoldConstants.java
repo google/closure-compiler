@@ -744,44 +744,20 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         } else if (!rightLiteral) {
           return n;
         } else {
-          boolean nullRight = (Token.NULL == right.getType());
-          boolean equivalent = undefinedRight || nullRight;
-          switch (op) {
-            case Token.EQ:
-              // undefined is only equal to
-              result = equivalent;
-              break;
-            case Token.NE:
-              result = !equivalent;
-              break;
-            case Token.SHEQ:
-              result = undefinedRight;
-              break;
-            case Token.SHNE:
-              result = !undefinedRight;
-              break;
-            case Token.LT:
-            case Token.GT:
-            case Token.LE:
-            case Token.GE:
-              result = false;
-              break;
-            default:
-              return n;
-          }
+          result = compareToUndefined(right, op);
         }
         break;
 
       case Token.NULL:
         if (undefinedRight) {
-          result = (op == Token.EQ);
+          result = compareToUndefined(left, op);
           break;
         }
         // fall through
       case Token.TRUE:
       case Token.FALSE:
         if (undefinedRight) {
-          result = false;
+          result = compareToUndefined(left, op);
           break;
         }
         // fall through
@@ -811,7 +787,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       case Token.STRING:
         if (undefinedRight) {
-          result = false;
+          result = compareToUndefined(left, op);
           break;
         }
         if (Token.STRING != right.getType()) {
@@ -835,7 +811,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       case Token.NUMBER:
         if (undefinedRight) {
-          result = false;
+          result = compareToUndefined(left, op);
           break;
         }
         if (Token.NUMBER != right.getType()) {
@@ -862,31 +838,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (rightLiteral) {
           boolean undefinedLeft = (left.getString().equals("undefined"));
           if (undefinedLeft) {
-            boolean nullRight = (Token.NULL == right.getType());
-            boolean equivalent = undefinedRight || nullRight;
-            switch (op) {
-              case Token.EQ:
-                // undefined is only equal to
-                result = equivalent;
-                break;
-              case Token.NE:
-                result = !equivalent;
-                break;
-              case Token.SHEQ:
-                result = undefinedRight;
-                break;
-              case Token.SHNE:
-                result = !undefinedRight;
-                break;
-              case Token.LT:
-              case Token.GT:
-              case Token.LE:
-              case Token.GE:
-                result = false;
-                break;
-              default:
-                return n;
-            }
+            result = compareToUndefined(right, op);
             break;
           }
         }
@@ -922,6 +874,47 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     reportCodeChange();
 
     return newNode;
+  }
+
+  /**
+   * @param value The value to compare to "undefined"
+   * @param op The boolean op to compare with
+   * @return Whether the boolean op is true or false
+   */
+  private boolean compareToUndefined(Node value, int op) {
+    boolean result;
+
+    boolean valueUndefined = ((Token.NAME == value.getType()
+        && value.getString().equals("undefined"))
+        || (Token.VOID == value.getType()
+            && NodeUtil.isLiteralValue(value.getFirstChild(), false)));
+    boolean valueNull = (Token.NULL == value.getType());
+    boolean equivalent = valueUndefined || valueNull;
+    switch (op) {
+      case Token.EQ:
+        // undefined is only equal to null or an undefined value
+        result = equivalent;
+        break;
+      case Token.NE:
+        result = !equivalent;
+        break;
+      case Token.SHEQ:
+        result = valueUndefined;
+        break;
+      case Token.SHNE:
+        result = !valueUndefined;
+        break;
+      case Token.LT:
+      case Token.GT:
+      case Token.LE:
+      case Token.GE:
+        result = false;
+        break;
+      default:
+        throw new IllegalStateException("unexpected.");
+    }
+
+    return result;
   }
 
   /**
