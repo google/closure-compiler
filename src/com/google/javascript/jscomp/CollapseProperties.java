@@ -481,6 +481,10 @@ class CollapseProperties implements CompilerPass {
     Node greatGramps = gramps.getParent();
     Node greatGreatGramps = greatGramps.getParent();
 
+    if (rvalue != null && rvalue.getType() == Token.FUNCTION) {
+      checkForHosedThisReferences(rvalue, refName.docInfo, refName);
+    }
+
     // Create the new alias node.
     Node nameNode = NodeUtil.newName(
         compiler.getCodingConvention(), alias, gramps.getFirstChild(),

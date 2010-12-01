@@ -276,28 +276,50 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAliasCreatedForFunctionDepth1_1() {
-    // A function's properties *are* collapsed even if the function is
+    testSame("var a = function(){}; a.b = 1; var c = a; c.b = 2; a.b != c.b;");
+  }
+
+  public void testAliasCreatedForCtorDepth1_1() {
+    // A constructor's properties *are* collapsed even if the function is
     // referenced in a such a way that an alias is created for it,
     // since a function with custom properties is considered a class and its
     // non-prototype properties are considered static methods and variables.
     // People don't typically iterate through static members of a class or
     // refer to them using an alias for the class name.
-    test("var a = function(){}; a.b = 1; var c = a; c.b = 2; a.b != c.b;",
+    test("/** @constructor */ var a = function(){}; a.b = 1; " +
+         "var c = a; c.b = 2; a.b != c.b;",
          "var a = function(){}; var a$b = 1; var c = a; c.b = 2; a$b != c.b;");
   }
 
   public void testAliasCreatedForFunctionDepth1_2() {
-    test("var a = function(){}; a.b = 1; f(a); a.b;",
+    testSame("var a = function(){}; a.b = 1; f(a); a.b;");
+  }
+
+  public void testAliasCreatedForCtorDepth1_2() {
+    test("/** @constructor */ var a = function(){}; a.b = 1; f(a); a.b;",
          "var a = function(){}; var a$b = 1; f(a); a$b;");
   }
 
   public void testAliasCreatedForFunctionDepth1_3() {
-    test("var a = function(){}; a.b = 1; new f(a); a.b;",
+    testSame("var a = function(){}; a.b = 1; new f(a); a.b;");
+  }
+
+  public void testAliasCreatedForCtorDepth1_3() {
+    test("/** @constructor */ var a = function(){}; a.b = 1; new f(a); a.b;",
          "var a = function(){}; var a$b = 1; new f(a); a$b;");
   }
 
   public void testAliasCreatedForFunctionDepth2() {
-    test("var a = {}; a.b = function() {}; a.b.c = 1; var d = a.b;" +
+    test(
+        "var a = {}; a.b = function() {}; a.b.c = 1; var d = a.b;" +
+        "a.b.c != d.c;",
+        "var a$b = function() {}; a$b.c = 1; var d = a$b;" +
+        "a$b.c != d.c;");
+  }
+
+  public void testAliasCreatedForCtorDepth2() {
+    test("var a = {}; /** @constructor */ a.b = function() {}; " +
+         "a.b.c = 1; var d = a.b;" +
          "a.b.c != d.c;",
          "var a$b = function() {}; var a$b$c = 1; var d = a$b;" +
          "a$b$c != d.c;");
@@ -519,8 +541,24 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAddPropertyToUncollapsibleFunctionInLocalScopeDepth1() {
-    test("function a() {} var c = a; (function() {a.b = 0;})(); a.b;",
-         "function a() {} var a$b; var c = a; (function() {a$b = 0;})(); a$b;");
+    testSame("function a() {} var c = a; (function() {a.b = 0;})(); a.b;");
+  }
+
+  public void testAddPropertyToUncollapsibleNamedCtorInLocalScopeDepth1() {
+    // This technically should be collapsed, according to the rules.
+    // We don't collapse named constructors for legacy reasons
+    // (this pass has been around too long, and we don't know who's
+    // depending on this behavior).
+    testSame(
+          "/** @constructor */ function a() {} var c = a; " +
+          "(function() {a.b = 0;})(); a.b;");
+  }
+
+  public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth1() {
+    test("/** @constructor */ var a = function() {}; var c = a; " +
+         "(function() {a.b = 0;})(); a.b;",
+         "var a = function() {}; var a$b; " +
+         "var c = a; (function() {a$b = 0;})(); a$b;");
   }
 
   public void testAddPropertyToUncollapsibleObjectInLocalScopeDepth2() {
@@ -532,6 +570,13 @@ public class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testAddPropertyToUncollapsibleFunctionInLocalScopeDepth2() {
     test("var a = {}; a.b = function (){}; var d = a.b;" +
+         "(function() {a.b.c = 0;})(); a.b.c;",
+         "var a$b = function (){}; var d = a$b;" +
+         "(function() {a$b.c = 0;})(); a$b.c;");
+  }
+
+  public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth2() {
+    test("var a = {}; /** @constructor */ a.b = function (){}; var d = a.b;" +
          "(function() {a.b.c = 0;})(); a.b.c;",
          "var a$b = function (){}; var a$b$c; var d = a$b;" +
          "(function() {a$b$c = 0;})(); a$b$c;");
@@ -562,9 +607,15 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAddPropertyToChildOfUncollapsibleFunctionInLocalScope() {
-    test("function a() {} a.b = {x: 0}; var c = a;" +
+    testSame(
+        "function a() {} a.b = {x: 0}; var c = a;" +
+        "(function() {a.b.y = 0;})(); a.b.y;");
+  }
+
+  public void testAddPropertyToChildOfUncollapsibleCtorInLocalScope() {
+    test("/** @constructor */ var a = function() {}; a.b = {x: 0}; var c = a;" +
          "(function() {a.b.y = 0;})(); a.b.y;",
-         "function a() {} var a$b$x = 0; var a$b$y; var c = a;" +
+         "var a = function() {}; var a$b$x = 0; var a$b$y; var c = a;" +
          "(function() {a$b$y = 0;})(); a$b$y;");
   }
 

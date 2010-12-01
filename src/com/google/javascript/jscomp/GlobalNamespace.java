@@ -467,6 +467,11 @@ class GlobalNamespace {
      *     declaration
      */
     private boolean isConstructorOrEnumDeclaration(Node n, Node parent) {
+      // NOTE(nicksantos): This does not handle named constructors
+      // function a() {}
+      // For legacy reasons, we should not fix this, because we do not
+      // know who's depending on the current behavior.
+
       JSDocInfo info;
       int valueNodeType;
       switch (parent.getType()) {
@@ -911,9 +916,8 @@ class GlobalNamespace {
         return false;
       }
 
-      // If this is aliased, and its not a function, then its properties
-      // can't be collapsed either.
-      if (type != Type.FUNCTION && aliasingGets > 0) {
+      // If this is aliased, then its properties can't be collapsed either.
+      if (aliasingGets > 0) {
         return false;
       }
 
