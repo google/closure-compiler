@@ -27,6 +27,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -624,7 +625,7 @@ final class FunctionTypeBuilder {
       fnType = getOrCreateConstructor();
     } else if (isInterface) {
       fnType = typeRegistry.createInterfaceType(fnName, sourceNode);
-      if (scope.isGlobal() && !fnName.isEmpty()) {
+      if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
         typeRegistry.declareType(fnName, fnType.getInstanceType());
       }
       maybeSetBaseType(fnType);
@@ -700,7 +701,7 @@ final class FunctionTypeBuilder {
 
     maybeSetBaseType(fnType);
 
-    if (scope.isGlobal() && !fnName.isEmpty()) {
+    if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
       typeRegistry.declareType(fnName, fnType.getInstanceType());
     }
     return fnType;
@@ -723,5 +724,22 @@ final class FunctionTypeBuilder {
         info.hasThisType() ||
         info.isConstructor() ||
         info.isInterface();
+  }
+
+  /**
+   * The scope that we should declare this function in, if it needs
+   * to be declared in a scope. Notice that TypedScopeCreator takes
+   * care of most scope-declaring.
+   */
+  private Scope getScopeDeclaredIn() {
+    int dotIndex = fnName.indexOf(".");
+    if (dotIndex != -1) {
+      String rootVarName = fnName.substring(0, dotIndex);
+      Var rootVar = scope.getVar(rootVarName);
+      if (rootVar != null) {
+        return rootVar.getScope();
+      }
+    }
+    return scope;
   }
 }

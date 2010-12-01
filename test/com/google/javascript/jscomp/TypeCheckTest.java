@@ -4944,6 +4944,60 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testQualifiedNameInference7() throws Exception {
+    testTypes(
+        "var ns = {}; " +
+        "(function() { " +
+        "  /** @constructor \n * @param {number} x */ " +
+        "  ns.Foo = function(x) {};" +
+        "  /** @param {ns.Foo} x */ function f(x) {}" +
+        "  f(new ns.Foo(true));" +
+        "})();",
+        "actual parameter 1 of ns.Foo does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testQualifiedNameInference8() throws Exception {
+    testTypes(
+        "var ns = {}; " +
+        "(function() { " +
+        "  /** @constructor \n * @param {number} x */ " +
+        "  ns.Foo = function(x) {};" +
+        "})();" +
+        "/** @param {ns.Foo} x */ function f(x) {}" +
+        "f(new ns.Foo(true));",
+        "Parse error. Unknown type ns.Foo");
+  }
+
+  public void testQualifiedNameInference9() throws Exception {
+    testTypes(
+        "var ns = {}; " +
+        "ns.ns2 = {}; " +
+        "(function() { " +
+        "  /** @constructor \n * @param {number} x */ " +
+        "  ns.ns2.Foo = function(x) {};" +
+        "  /** @param {ns.ns2.Foo} x */ function f(x) {}" +
+        "  f(new ns.ns2.Foo(true));" +
+        "})();",
+        "actual parameter 1 of ns.ns2.Foo does not match formal parameter\n" +
+        "found   : boolean\n" +
+        "required: number");
+  }
+
+  public void testQualifiedNameInference10() throws Exception {
+    testTypes(
+        "var ns = {}; " +
+        "ns.ns2 = {}; " +
+        "(function() { " +
+        "  /** @interface */ " +
+        "  ns.ns2.Foo = function() {};" +
+        "  /** @constructor \n * @implements {ns.ns2.Foo} */ " +
+        "  function F() {}" +
+        "  (new F());" +
+        "})();");
+  }
+
   public void testSheqRefinedScope() throws Exception {
     Node n = parseAndTypeCheck(
         "/** @constructor */function A() {}\n" +
