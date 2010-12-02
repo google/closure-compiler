@@ -103,6 +103,16 @@ final class TypedScopeCreator implements ScopeCreator {
           "JSC_ENUM_INITIALIZER_NOT_ENUM",
           "enum initializer must be an object literal or an enum");
 
+  static final DiagnosticType CTOR_INITIALIZER =
+      DiagnosticType.warning(
+          "JSC_CTOR_INITIALIZER_NOT_CTOR",
+          "Constructor {0} must be initialized at declaration");
+
+  static final DiagnosticType IFACE_INITIALIZER =
+      DiagnosticType.warning(
+          "JSC_IFACE_INITIALIZER_NOT_IFACE",
+          "Interface {0} must be initialized at declaration");
+
   static final DiagnosticType CONSTRUCTOR_EXPECTED =
       DiagnosticType.warning(
           "JSC_REFLECT_CONSTRUCTOR_EXPECTED",
@@ -751,7 +761,8 @@ final class TypedScopeCreator implements ScopeCreator {
         Var var = scope.getVar(rValue.getQualifiedName());
         if (var != null && var.getType() instanceof FunctionType) {
           functionType = (FunctionType) var.getType();
-          if (functionType != null && functionType.isConstructor()) {
+          if (functionType != null &&
+              (functionType.isConstructor() || functionType.isInterface())) {
             typeRegistry.declareType(name, functionType.getInstanceType());
           }
         }
@@ -975,12 +986,13 @@ final class TypedScopeCreator implements ScopeCreator {
           setDeferredType(n, type);
         }
         CompilerInput input = compiler.getInput(sourceName);
-        scopeToDeclareIn.declare(variableName, n, type, input, inferred);
+        boolean isExtern = input.isExtern();
+        Var newVar =
+            scopeToDeclareIn.declare(variableName, n, type, input, inferred);
 
         if (shouldDeclareOnGlobalThis) {
           ObjectType globalThis =
               typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
-          boolean isExtern = input.isExtern();
           if (inferred) {
             globalThis.defineInferredProperty(variableName,
                 type == null ?
@@ -992,18 +1004,30 @@ final class TypedScopeCreator implements ScopeCreator {
           }
         }
 
-        // If we're in the global scope, also declare var.prototype
-        // in the scope chain.
-        if (scopeToDeclareIn.isGlobal() && type instanceof FunctionType) {
+        // We need to do some additional work for constructors and interfaces.
+        if (type instanceof FunctionType &&
+            // We don't want to look at empty function types.
+            !type.isEmptyType()) {
           FunctionType fnType = (FunctionType) type;
-          if (fnType.isConstructor() || fnType.isInterface()) {
+          if ((fnType.isConstructor() || fnType.isInterface()) &&
+              !fnType.equals(getNativeType(U2U_CONSTRUCTOR_TYPE))) {
+            // Declare var.prototype in the scope chain.
             FunctionType superClassCtor = fnType.getSuperClassConstructor();
             scopeToDeclareIn.declare(variableName + ".prototype", n,
-                fnType.getPrototype(), compiler.getInput(sourceName),
+                fnType.getPrototype(), input,
                 /* declared iff there's an explicit supertype */
                 superClassCtor == null ||
                 superClassCtor.getInstanceType().equals(
                     getNativeType(OBJECT_TYPE)));
+
+            // Make sure the variable is initialized to something.
+            if (newVar.getInitialValue() == null && !isExtern) {
+              compiler.report(
+                  JSError.make(sourceName, n,
+                      fnType.isConstructor() ?
+                          CTOR_INITIALIZER : IFACE_INITIALIZER,
+                      variableName));
+            }
           }
         }
       }
@@ -1190,7 +1214,7 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       // Precedence of type information on GETPROPs:
-      // 1) @type annotation / @enum annotation
+      // 1) @type annnotation / @enum annotation
       // 2) ASSIGN to FUNCTION literal
       // 3) @param/@return annotation (with no function literal)
       // 4) ASSIGN to anything else

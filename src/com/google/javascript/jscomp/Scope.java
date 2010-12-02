@@ -186,8 +186,16 @@ public class Scope implements StaticScope<JSType> {
 
     public Node getInitialValue() {
       Node parent = getParentNode();
-      return parent.getType() == Token.FUNCTION ?
-          parent : nameNode.getFirstChild();
+      int pType = parent.getType();
+      if (pType == Token.FUNCTION) {
+        return parent;
+      } else if (pType == Token.ASSIGN) {
+        return parent.getLastChild();
+      } else if (pType == Token.VAR) {
+        return nameNode.getFirstChild();
+      } else {
+        return null;
+      }
     }
 
     /**

@@ -1984,7 +1984,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStubFunctionDeclaration2() throws Exception {
-    testFunctionType(
+    testExternFunctionType(
+        // externs
         "/** @constructor */ function f() {};" +
         "/** @constructor \n * @extends {f} */ f.subclass;",
         "f.subclass",
@@ -2090,6 +2091,21 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "initializing variable\n" +
         "found   : " + functionType + "\n" +
         "required: number");
+  }
+
+  /**
+   * Tests the type of a function definition in externs.
+   * The function defined by {@code functionDef} should be
+   * named {@code functionName}.
+   */
+  private void testExternFunctionType(String functionDef, String functionName,
+      String functionType) throws Exception {
+    testTypes(
+        functionDef,
+        "/** @type number */var a=" + functionName + ";",
+        "initializing variable\n" +
+        "found   : " + functionType + "\n" +
+        "required: number", false);
   }
 
   public void testTypeRedefinition() throws Exception {
@@ -5747,9 +5763,12 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testStubConstructorImplementingInterface() throws Exception {
     // This does not throw a warning for unimplemented property because Foo is
     // just a stub.
-    testTypes("/** @interface */ function Int() {}\n" +
+    testTypes(
+        // externs
+        "/** @interface */ function Int() {}\n" +
         "/** @desc description */Int.prototype.foo = function() {};" +
-        "/** @constructor \n @implements {Int} */ var Foo;\n");
+        "/** @constructor \n @implements {Int} */ var Foo;\n",
+        "", null, false);
   }
 
   public void testObjectLiteral() throws Exception {
@@ -5993,7 +6012,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInterfaceInstantiation() throws Exception {
-    testTypes("/** @interface */var f; new f",
+    testTypes("/** @interface */var f = function(){}; new f",
               "cannot instantiate non-constructor");
   }
 

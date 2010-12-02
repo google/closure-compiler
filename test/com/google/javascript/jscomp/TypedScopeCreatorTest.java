@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TypedScopeCreator.CTOR_INITIALIZER;
+import static com.google.javascript.jscomp.TypedScopeCreator.IFACE_INITIALIZER;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
@@ -782,6 +784,22 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals(
         "function (number): undefined",
         globalScope.getVar("ns.foo").getType().toString());
+  }
+
+  public void testBadCtorInit1() throws Exception {
+    testSame("/** @constructor */ var f;", CTOR_INITIALIZER);
+  }
+
+  public void testBadCtorInit2() throws Exception {
+    testSame("var x = {}; /** @constructor */ x.f;", CTOR_INITIALIZER);
+  }
+
+  public void testBadIfaceInit1() throws Exception {
+    testSame("/** @interface */ var f;", IFACE_INITIALIZER);
+  }
+
+  public void testBadIfaceInit2() throws Exception {
+    testSame("var x = {}; /** @interface */ x.f;", IFACE_INITIALIZER);
   }
 
   private JSType findNameType(final String name, Scope scope) {
