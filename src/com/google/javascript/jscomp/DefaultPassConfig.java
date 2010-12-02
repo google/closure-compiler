@@ -344,6 +344,12 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(collapseProperties);
     }
 
+    // ReplaceStrings runs after CollapseProperties in order to simplify
+    // pulling in values of constants defined in enums structures.
+    if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
+      passes.add(replaceStrings);
+    }
+
     // Tighten types based on actual usage.
     if (options.tightenTypes) {
       passes.add(tightenTypesBuilder);
@@ -380,12 +386,6 @@ public class DefaultPassConfig extends PassConfig {
     // property collapsing can introduce new constants (e.g. enum values).
     if (options.inlineConstantVars) {
       passes.add(checkConsts);
-    }
-
-    // ReplaceStrings needs the strings literals to be at in CALL to
-    // replace them so do this after constants have been inlined.
-    if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
-      passes.add(replaceStrings);
     }
 
     // The Caja library adds properties to Object.prototype, which breaks
