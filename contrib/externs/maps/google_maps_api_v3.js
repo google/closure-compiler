@@ -485,6 +485,12 @@ google.maps.Marker = function(opt_opts) {};
 
 /**
  * @nosideeffects
+ * @return {google.maps.Animation}
+ */
+google.maps.Marker.prototype.getAnimation = function() {};
+
+/**
+ * @nosideeffects
  * @return {boolean}
  */
 google.maps.Marker.prototype.getClickable = function() {};
@@ -554,6 +560,12 @@ google.maps.Marker.prototype.getVisible = function() {};
  * @return {number}
  */
 google.maps.Marker.prototype.getZIndex = function() {};
+
+/**
+ * @param {google.maps.Animation} animation
+ * @return {undefined}
+ */
+google.maps.Marker.prototype.setAnimation = function(animation) {};
 
 /**
  * @param {boolean} flag
@@ -674,6 +686,11 @@ google.maps.MarkerOptions.prototype.map;
 google.maps.MarkerOptions.prototype.position;
 
 /**
+ * @type {boolean}
+ */
+google.maps.MarkerOptions.prototype.raiseOnDrag;
+
+/**
  * @type {string|google.maps.MarkerImage}
  */
 google.maps.MarkerOptions.prototype.shadow;
@@ -727,6 +744,22 @@ google.maps.MarkerShape.prototype.coord;
  * @type {string}
  */
 google.maps.MarkerShape.prototype.type;
+
+/**
+ * @constructor
+ */
+google.maps.Animation = function() {};
+/**
+ * @type {string|number}
+ * @const
+ */
+google.maps.Animation.BOUNCE;
+
+/**
+ * @type {string|number}
+ * @const
+ */
+google.maps.Animation.DROP;
 
 /**
  * @constructor
@@ -2111,6 +2144,49 @@ google.maps.ElevationStatus.REQUEST_DENIED;
  * @const
  */
 google.maps.ElevationStatus.UNKNOWN_ERROR;
+
+/**
+ * @constructor
+ */
+google.maps.MaxZoomService = function() {};
+
+/**
+ * @param {google.maps.LatLng} latlng
+ * @param {function((google.maps.MaxZoomResult|Object.<string, *>))} callback
+ * @return {undefined}
+ */
+google.maps.MaxZoomService.prototype.getMaxZoomAtLatLng = function(latlng, callback) {};
+
+/**
+ * @constructor
+ */
+google.maps.MaxZoomResult = function() {};
+
+/**
+ * @type {google.maps.MaxZoomStatus}
+ */
+google.maps.MaxZoomResult.prototype.status;
+
+/**
+ * @type {number}
+ */
+google.maps.MaxZoomResult.prototype.zoom;
+
+/**
+ * @constructor
+ */
+google.maps.MaxZoomStatus = function() {};
+/**
+ * @type {string|number}
+ * @const
+ */
+google.maps.MaxZoomStatus.ERROR;
+
+/**
+ * @type {string|number}
+ * @const
+ */
+google.maps.MaxZoomStatus.OK;
 
 /**
  * @constructor
