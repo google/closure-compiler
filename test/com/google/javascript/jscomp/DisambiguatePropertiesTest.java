@@ -987,6 +987,25 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(false, externs, js, js, "{}");
   }
 
+  public void testSkipNativeFunctionStaticProperty() {
+    String js = ""
+      + "/** @param {!Function} ctor */\n"
+      + "function addSingletonGetter(ctor) { ctor.a; }\n"
+      + "/** @constructor */ function Foo() {}\n"
+      + "Foo.a = 0;"
+      + "/** @constructor */ function Bar() {}\n"
+      + "Bar.a = 0;";
+
+    String output = ""
+        + "function addSingletonGetter(ctor){ctor.a}"
+        + "function Foo(){}"
+        + "Foo.a=0;"
+        + "function Bar(){}"
+        + "Bar.a=0";
+
+    testSets(false, js, output, "{}");
+  }
+
   public void runFindHighestTypeInChain() {
     // Check that this doesn't go into an infinite loop.
     DisambiguateProperties.forJSTypeSystem(new Compiler())

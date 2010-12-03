@@ -641,6 +641,7 @@ class DisambiguateProperties<T> implements CompilerPass {
           registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
           registry.getNativeType(JSTypeNative.NO_TYPE),
           registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
+          registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
           registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
           registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
           registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
