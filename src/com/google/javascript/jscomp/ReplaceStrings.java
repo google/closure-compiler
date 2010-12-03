@@ -145,11 +145,16 @@ public class ReplaceStrings extends AbstractPostOrderCallback
   VariableMap getStringMap() {
     Map<String, String> map = Maps.newHashMap();
     for (Result result : results.values()) {
-      map.put(result.replacement, result.original);
+      /* VariableMap don't support newlines, escape them. */
+      map.put(result.replacement, escapeForVariableMap(result.original));
     }
 
     VariableMap stringMap = new VariableMap(map);
     return stringMap;
+  }
+
+  private String escapeForVariableMap(String original) {
+    return original.replace("\\", "\\\\").replace("\n", "\\n");
   }
 
   @Override
