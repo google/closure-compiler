@@ -81,7 +81,7 @@ final class NameAnalyzer implements CompilerPass {
 
   /** Reference dependency graph */
   private DiGraph<JsName, RefType> referenceGraph =
-      new LinkedDirectedGraph<JsName, RefType>();
+      LinkedDirectedGraph.createWithoutAnnotations();
 
   /**
    * Map of name scopes - all children of the Node key have a dependency on the

@@ -48,8 +48,29 @@ public class LinkedDirectedGraph<N, E>
     return new SimpleSubGraph<N, E>(this);
   }
 
+  public static <N, E> LinkedDirectedGraph<N, E> createWithoutAnnotations() {
+    return new LinkedDirectedGraph<N, E>(false, false);
+  }
+
+  public static <N, E> LinkedDirectedGraph<N, E> createWithNodeAnnotations() {
+    return new LinkedDirectedGraph<N, E>(true, false);
+  }
+
+  public static <N, E> LinkedDirectedGraph<N, E> createWithEdgeAnnotations() {
+    return new LinkedDirectedGraph<N, E>(false, true);
+  }
+
   public static <N, E> LinkedDirectedGraph<N, E> create() {
-    return new LinkedDirectedGraph<N, E>();
+    return new LinkedDirectedGraph<N, E>(true, true);
+  }
+
+  private final boolean useNodeAnnotations;
+  private final boolean useEdgeAnnotations;
+
+  protected LinkedDirectedGraph(
+      boolean useNodeAnnotations, boolean useEdgeAnnotations) {
+    this.useNodeAnnotations = useNodeAnnotations;
+    this.useEdgeAnnotations = useEdgeAnnotations;
   }
 
   @Override
@@ -57,6 +78,8 @@ public class LinkedDirectedGraph<N, E>
     LinkedDirectedGraphNode<N, E> src = getNodeOrFail(srcValue);
     LinkedDirectedGraphNode<N, E> dest = getNodeOrFail(destValue);
     LinkedDirectedGraphEdge<N, E> edge =
+        useEdgeAnnotations ?
+        new AnnotatedLinkedDirectedGraphEdge<N, E>(src, edgeValue, dest) :
         new LinkedDirectedGraphEdge<N, E>(src, edgeValue, dest);
     src.getOutEdges().add(edge);
     dest.getInEdges().add(edge);
@@ -110,7 +133,9 @@ public class LinkedDirectedGraph<N, E>
   public DiGraphNode<N, E> createDirectedGraphNode(N nodeValue) {
     LinkedDirectedGraphNode<N, E> node = nodes.get(nodeValue);
     if (node == null) {
-      node = new LinkedDirectedGraphNode<N, E>(nodeValue);
+      node = useNodeAnnotations ?
+          new AnnotatedLinkedDirectedGraphNode<N, E>(nodeValue) :
+          new LinkedDirectedGraphNode<N, E>(nodeValue);
       nodes.put(nodeValue, node);
     }
     return node;
@@ -295,12 +320,6 @@ public class LinkedDirectedGraph<N, E>
 
     protected final N value;
 
-    protected Annotation annotation;
-
-    protected int id;
-
-    private static int totalNodes = 0;
-
     /**
      * Constructor
      *
@@ -308,7 +327,6 @@ public class LinkedDirectedGraph<N, E>
      */
     LinkedDirectedGraphNode(N nodeValue) {
       this.value = nodeValue;
-      this.id = totalNodes++;
     }
 
     @Override
@@ -316,15 +334,16 @@ public class LinkedDirectedGraph<N, E>
       return value;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <A extends Annotation> A getAnnotation() {
-      return (A) annotation;
+      throw new UnsupportedOperationException(
+          "Graph initialized with node annotations turned off");
     }
 
     @Override
     public void setAnnotation(Annotation data) {
-      annotation = data;
+      throw new UnsupportedOperationException(
+          "Graph initialized with node annotations turned off");
     }
 
     @Override
@@ -334,7 +353,7 @@ public class LinkedDirectedGraph<N, E>
 
     @Override
     public String getId() {
-      return "LDN" + id;
+      return "LDN" + hashCode();
     }
 
     @Override
@@ -387,6 +406,33 @@ public class LinkedDirectedGraph<N, E>
   }
 
   /**
+   * A directed graph node with annotations.
+   */
+  static class AnnotatedLinkedDirectedGraphNode<N, E>
+      extends LinkedDirectedGraphNode<N, E> {
+
+    protected Annotation annotation;
+
+    /**
+     * @param nodeValue Node's value.
+     */
+    AnnotatedLinkedDirectedGraphNode(N nodeValue) {
+      super(nodeValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <A extends Annotation> A getAnnotation() {
+      return (A) annotation;
+    }
+
+    @Override
+    public void setAnnotation(Annotation data) {
+      annotation = data;
+    }
+  }
+
+  /**
    * A directed graph edge that stores the source and destination nodes at each
    * edge.
    */
@@ -398,8 +444,6 @@ public class LinkedDirectedGraph<N, E>
     private DiGraphNode<N, E> destNode;
 
     protected final E value;
-
-    protected Annotation annotation;
 
     /**
      * Constructor.
@@ -438,15 +482,16 @@ public class LinkedDirectedGraph<N, E>
       return value;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <A extends Annotation> A getAnnotation() {
-      return (A) annotation;
+      throw new UnsupportedOperationException(
+          "Graph initialized with edge annotations turned off");
     }
 
     @Override
     public void setAnnotation(Annotation data) {
-      annotation = data;
+      throw new UnsupportedOperationException(
+          "Graph initialized with edge annotations turned off");
     }
 
     @Override
@@ -482,6 +527,37 @@ public class LinkedDirectedGraph<N, E>
     @Override
     public GraphNode<N, E> getNodeB() {
       return destNode;
+    }
+  }
+
+  /**
+   * A directed graph edge that stores the source and destination nodes at each
+   * edge.
+   */
+  static class AnnotatedLinkedDirectedGraphEdge<N, E>
+      extends LinkedDirectedGraphEdge<N, E> {
+
+    protected Annotation annotation;
+
+    /**
+     * Constructor.
+     *
+     * @param edgeValue Edge Value.
+     */
+    AnnotatedLinkedDirectedGraphEdge(DiGraphNode<N, E> sourceNode,
+        E edgeValue, DiGraphNode<N, E> destNode) {
+      super(sourceNode, edgeValue, destNode);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <A extends Annotation> A getAnnotation() {
+      return (A) annotation;
+    }
+
+    @Override
+    public void setAnnotation(Annotation data) {
+      annotation = data;
     }
   }
 }

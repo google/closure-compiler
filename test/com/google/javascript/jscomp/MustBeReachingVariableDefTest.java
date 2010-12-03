@@ -161,7 +161,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
     Node root = compiler.parseTestCode(src).getFirstChild();
     assertEquals(0, compiler.getErrorCount());
     Scope scope = new SyntacticScopeCreator(compiler).createScope(root, null);
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, root);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     defUse = new MustBeReachingVariableDef(cfg, scope, compiler);

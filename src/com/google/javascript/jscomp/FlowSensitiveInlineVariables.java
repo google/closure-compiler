@@ -120,7 +120,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     }
 
     // Compute the forward reaching definition.
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     // Process the body of the function.
     Preconditions.checkState(NodeUtil.isFunction(t.getScopeRoot()));
     cfa.process(null, t.getScopeRoot().getLastChild());

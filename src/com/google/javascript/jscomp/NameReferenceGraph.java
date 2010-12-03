@@ -84,6 +84,7 @@ class NameReferenceGraph extends
   final AbstractCompiler compiler;
 
   public NameReferenceGraph(AbstractCompiler compiler) {
+    super(true, true);
     this.compiler = compiler;
 
     // Initialize builtins.

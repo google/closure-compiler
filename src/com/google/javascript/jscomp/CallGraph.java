@@ -36,80 +36,80 @@ import java.util.Map;
 /**
  * A pass the uses a {@link DefinitionProvider} to compute a call graph for an
  * AST.
- * 
- * <p>A {@link CallGraph} connects {@link Function}s to {@link Callsite}s and 
+ *
+ * <p>A {@link CallGraph} connects {@link Function}s to {@link Callsite}s and
  * vice versa: each function in the graph links to the callsites it contains and
  * each callsite links to the functions it could call. Similarly, each callsite
  * links to the function that contains it and each function links to the
  * callsites that could call it.
- * 
+ *
  * <p>The callgraph is not precise. That is, a callsite may indicate it can
- * call a function when in fact it does not do so in the running program. 
- * 
- * <p>The callgraph is also not complete: in some cases it may be unable to 
- * determine some targets of a callsite. In this case, 
+ * call a function when in fact it does not do so in the running program.
+ *
+ * <p>The callgraph is also not complete: in some cases it may be unable to
+ * determine some targets of a callsite. In this case,
  * Callsite.hasUnknownTarget() will return true.
  *
  * <p>The CallGraph doesn't (currently) have functions for externally defined
  * functions; however, callsites that target externs will have hasExternTarget()
  * return true.
- * 
+ *
  * <p>TODO(dcc): Have CallGraph (optionally?) include functions for externs.
  *
  * @author dcc@google.com (Devin Coughlin)
  */
-public class CallGraph implements CompilerPass { 
+public class CallGraph implements CompilerPass {
   private AbstractCompiler compiler;
-  
-  /** 
+
+  /**
    * Maps an AST node (with type Token.CALL or Token.NEW) to a Callsite object.
    */
   private Map<Node, Callsite> callsitesByNode;
-  
+
   /** Maps an AST node (with type Token.FUNCTION) to a Function object. */
   private Map<Node, Function> functionsByNode;
-  
+
   /**
    * Will the call graph support looking up the callsites that could call a
    * given function?
    */
   private boolean computeBackwardGraph;
-  
+
   /**
    * Will the call graph support looking up the functions that a given callsite
    * can call?
    */
   private boolean computeForwardGraph;
- 
+
   /**
-   * If true, then the callgraph will use NameReferenceGraph as a 
+   * If true, then the callgraph will use NameReferenceGraph as a
    * definition provider; otherwise, use the faster SimpleDefinitionProvider.
    */
   private boolean useNameReferenceGraph = false;
-  
+
   /** Has the CallGraph already been constructed? */
   private boolean alreadyRun = false;
-  
+
   /** The name we give the main function. */
   @VisibleForTesting
   public static final String MAIN_FUNCTION_NAME = "{main}";
-  
+
   /**
    *  Represents the global function. Calling getBody() on this
    *  function will yield the global script/block.
-   *  
+   *
    *  TODO(dcc): having a single main function is somewhat misleading. Perhaps
    *  it might be better to make CallGraph module aware and have one per
    *  module?
    */
   private Function mainFunction;
-  
+
   /**
    * Creates a call graph object supporting the specified lookups.
-   * 
+   *
    * At leats one (and possibly both) of computeForwardGraph and
    * computeBackwardGraph must be true.
-   * 
+   *
    * @param compiler The compiler
    * @param computeForwardGraph Should the call graph allow lookup of the target
    *        functions a given callsite could call?
@@ -119,23 +119,23 @@ public class CallGraph implements CompilerPass {
   public CallGraph(AbstractCompiler compiler, boolean computeForwardGraph,
       boolean computeBackwardGraph) {
     Preconditions.checkArgument(computeForwardGraph || computeBackwardGraph);
-    
-    this.compiler = compiler; 
-    
+
+    this.compiler = compiler;
+
     this.computeForwardGraph = computeForwardGraph;
     this.computeBackwardGraph = computeBackwardGraph;
-    
+
     callsitesByNode = Maps.newLinkedHashMap();
     functionsByNode = Maps.newLinkedHashMap();
   }
-  
+
   /**
    * Creates a call graph object support both forward and backward lookups.
    */
   public CallGraph(AbstractCompiler compiler) {
     this(compiler, true, true);
   }
-  
+
   /**
    * Builds a call graph for the given externsRoot and jsRoot.
    * This method must not be called more than once per CallGraph instance.
@@ -143,14 +143,14 @@ public class CallGraph implements CompilerPass {
   @Override
   public void process(Node externsRoot, Node jsRoot) {
     Preconditions.checkState(alreadyRun == false);
-    
+
     DefinitionProvider definitionProvider =
         constructDefinitionProvider(externsRoot, jsRoot);
-    
+
     createFunctionsAndCallsites(jsRoot, definitionProvider);
-    
+
     fillInFunctionInformation(definitionProvider);
-    
+
     alreadyRun = true;
   }
 
@@ -160,17 +160,17 @@ public class CallGraph implements CompilerPass {
    */
   public Function getFunctionForAstNode(Node functionNode) {
     Preconditions.checkArgument(NodeUtil.isFunction(functionNode));
-    
+
     return functionsByNode.get(functionNode);
   }
-  
+
   /**
    * Returns a Function object representing the "main" global function.
    */
   public Function getMainFunction() {
     return mainFunction;
   }
-  
+
   /**
    * Returns a collection of all functions (including the main function)
    * in the call graph.
@@ -178,14 +178,14 @@ public class CallGraph implements CompilerPass {
   public Collection<Function> getAllFunctions() {
     return functionsByNode.values();
   }
-  
+
   /**
    * Finds a function with the given name. Throws an exception if
    * there are no functions or multiple functions with the name. This is
    * for testing purposes only.
    */
   @VisibleForTesting
-  public Function getUniqueFunctionWithName(final String desiredName) {  
+  public Function getUniqueFunctionWithName(final String desiredName) {
     Collection<Function> functions =
         Collections2.<Function>filter(getAllFunctions(),
             new Predicate<Function>() {
@@ -205,7 +205,7 @@ public class CallGraph implements CompilerPass {
     if (functions.size() == 1) {
       return functions.iterator().next();
     } else {
-      throw new IllegalStateException("Found " + functions.size() 
+      throw new IllegalStateException("Found " + functions.size()
           + " functions with name " + desiredName);
     }
   }
@@ -215,19 +215,19 @@ public class CallGraph implements CompilerPass {
    * AST Token.CALL or Token.NEW node, or null if no such object exists.
    */
   public Callsite getCallsiteForAstNode(Node callsiteNode) {
-    Preconditions.checkArgument(callsiteNode.getType() == Token.CALL || 
+    Preconditions.checkArgument(callsiteNode.getType() == Token.CALL ||
         callsiteNode.getType() == Token.NEW);
-    
+
     return callsitesByNode.get(callsiteNode);
   }
-  
+
   /**
    * Returns a collection of all callsites in the call graph.
    */
   public Collection<Callsite> getAllCallsites() {
    return callsitesByNode.values();
   }
-  
+
   /**
    * Creates {@link Function}s and {@link Callsite}s in a single
    * AST traversal.
@@ -236,80 +236,80 @@ public class CallGraph implements CompilerPass {
       final DefinitionProvider provider) {
     // Create fake function representing global execution
     mainFunction = createFunction(jsRoot);
-    
-    NodeTraversal.traverse(compiler, jsRoot, new AbstractPostOrderCallback() {    
+
+    NodeTraversal.traverse(compiler, jsRoot, new AbstractPostOrderCallback() {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
         int nodeType = n.getType();
-        
+
         if (nodeType == Token.CALL || nodeType == Token.NEW) {
           Callsite callsite = createCallsite(n);
-          
+
           Node containingFunctionNode = t.getScopeRoot();
-          
+
           Function containingFunction =
               functionsByNode.get(containingFunctionNode);
-          
+
           if (containingFunction == null) {
             containingFunction = createFunction(containingFunctionNode);
           }
           callsite.containingFunction = containingFunction;
           containingFunction.addCallsiteInFunction(callsite);
-          
+
           connectCallsiteToTargets(callsite, provider);
-          
+
         } else if (NodeUtil.isFunction(n)) {
           if (!functionsByNode.containsKey(n)) {
             createFunction(n);
           }
-        }       
+        }
       }
     });
   }
-  
+
   /**
    * Create a Function object for given an Token.FUNCTION AST node.
-   * 
+   *
    * This is the bottleneck for Function creation: all Functions should
    * be created with this method.
    */
   private Function createFunction(Node functionNode) {
     Function function = new Function(functionNode);
-    functionsByNode.put(functionNode, function); 
-    
+    functionsByNode.put(functionNode, function);
+
     return function;
   }
-  
+
   private Callsite createCallsite(Node callsiteNode) {
-    Callsite callsite = new Callsite(callsiteNode);   
+    Callsite callsite = new Callsite(callsiteNode);
     callsitesByNode.put(callsiteNode, callsite);
-    
+
     return callsite;
   }
-  
+
   /**
-   * Maps a Callsite to the Function(s) it could call 
+   * Maps a Callsite to the Function(s) it could call
    * and each Function to the Callsite(s) that could call it.
-   * 
+   *
    * If the definitionProvider cannot determine the target of the Callsite,
    * the Callsite's hasUnknownTarget field is set to true.
-   * 
+   *
    * If the definitionProvider determines that the target of the Callsite
    * could be an extern-defined function, then the Callsite's hasExternTarget
    * field is set to true.
-   * 
+   *
    * @param callsite The callsite for which target functions should be found
    * @param definitionProvider The DefinitionProvider used to determine
    *    targets of callsites.
    */
   private void connectCallsiteToTargets(Callsite callsite,
-      DefinitionProvider definitionProvider) { 
+      DefinitionProvider definitionProvider) {
     Collection<Definition> definitions =
       lookupDefinitionsForTargetsOfCall(callsite.getAstNode(),
           definitionProvider);
 
     if (definitions == null) {
-      callsite.hasUnknownTarget = true; 
+      callsite.hasUnknownTarget = true;
     } else {
       for (Definition definition : definitions) {
         if (definition.isExtern()) {
@@ -319,11 +319,11 @@ public class CallGraph implements CompilerPass {
 
           if (target != null && NodeUtil.isFunction(target)) {
             Function targetFunction = functionsByNode.get(target);
-            
+
             if (targetFunction == null) {
               targetFunction = createFunction(target);
             }
-            
+
             if (computeForwardGraph) {
               callsite.addPossibleTarget(targetFunction);
             }
@@ -332,18 +332,18 @@ public class CallGraph implements CompilerPass {
               targetFunction.addCallsitePossiblyTargetingFunction(callsite);
             }
           } else {
-            callsite.hasUnknownTarget = true;                 
+            callsite.hasUnknownTarget = true;
           }
         }
       }
     }
   }
-  
+
   /**
    * Fills in function information (such as whether the function is ever
    * aliased or whether it is exposed to .call or .apply) using the
    * definition provider.
-   * 
+   *
    * We do this here, rather than when connecting the callgraph, to make sure
    * that we have correct information for all functions, rather than just
    * functions that are actually called.
@@ -351,69 +351,69 @@ public class CallGraph implements CompilerPass {
   private void fillInFunctionInformation(DefinitionProvider provider) {
     if (useNameReferenceGraph) {
       NameReferenceGraph referenceGraph = (NameReferenceGraph) provider;
-      
+
       for (Function function : getAllFunctions()) {
         if (!function.isMain()) {
           String functionName = function.getName();
-          
+
           if (functionName != null) {
             Name symbol = referenceGraph.getSymbol(functionName);
             updateFunctionForName(function, symbol);
           }
-        }  
+        }
       }
     } else {
       SimpleDefinitionFinder finder = (SimpleDefinitionFinder) provider;
-      
+
       for (DefinitionSite definitionSite : finder.getDefinitionSites()) {
         Definition definition = definitionSite.definition;
-        
+
         Function function = lookupFunctionForDefinition(definition);
-        
-        if (function != null) {              
+
+        if (function != null) {
           for (UseSite useSite : finder.getUseSites(definition)) {
             updateFunctionForUse(function, useSite.node);
           }
-        }                      
+        }
       }
     }
   }
-  
+
   /**
    * Updates {@link Function} information (such as whether is is aliased
    * or exposed to .apply or .call from a {@link NameReferenceGraph.Name}.
-   * 
+   *
    * Note: this method may be called multiple times per Function, each time
    * with a different name.
    */
   private void updateFunctionForName(Function function, Name name) {
     if (name.isAliased()) {
-      function.isAliased = true; 
-    }   
-     
+      function.isAliased = true;
+    }
+
     if (name.exposedToCallOrApply()) {
       function.isExposedToCallOrApply = true;
     }
   }
-  
+
   /**
    * Updates {@link Function} information (such as whether is is aliased
    * or exposed to .apply or .call based a site where the function is used.
-   * 
+   *
    * Note: this method may be called multiple times per Function, each time
    * with a different useNode.
    */
   private void updateFunctionForUse(Function function, Node useNode) {
     Node useParent = useNode.getParent();
     int parentType = useParent.getType();
-    
+
     if ((parentType == Token.CALL || parentType == Token.NEW)
         && useParent.getFirstChild() == useNode) {
       // Regular call sites don't count as aliases
     } else if (NodeUtil.isGet(useParent)) {
       // GET{PROP,ELEM} don't count as aliases
       // but we have to check for using them in .call and .apply.
-      
+
       if (NodeUtil.isGetProp(useParent)) {
         Node gramps = useParent.getParent();
         if (NodeUtil.isFunctionObjectApply(gramps) ||
@@ -425,7 +425,7 @@ public class CallGraph implements CompilerPass {
       function.isAliased = true;
     }
   }
-  
+
   /**
    * Returns a {@link CallGraph.Function} for the passed in {@link Definition}
    * or null if the definition isn't for a function.
@@ -433,46 +433,46 @@ public class CallGraph implements CompilerPass {
   private Function lookupFunctionForDefinition(Definition definition) {
     if (definition != null && !definition.isExtern()) {
       Node rValue = definition.getRValue();
-      
+
       if (rValue != null && NodeUtil.isFunction(rValue)) {
         Function function = functionsByNode.get(rValue);
         Preconditions.checkNotNull(function);
-        
+
         return function;
       }
     }
-    
+
     return null;
   }
-  
+
   /**
    * Constructs and returns a directed graph where the nodes are functions and
    * the edges are callsites connecting callers to callees.
-   * 
+   *
    * It is safe to call this method on both forward and backwardly constructed
    * CallGraphs.
    */
   public DiGraph<Function, Callsite> getForwardDirectedGraph() {
     return constructDirectedGraph(true);
   }
-  
+
   /**
    * Constructs and returns a directed graph where the nodes are functions and
    * the edges are callsites connecting callees to callers.
-   * 
+   *
    * It is safe to call this method on both forward and backwardly constructed
    * CallGraphs.
    */
   public DiGraph<Function, Callsite> getBackwardDirectedGraph() {
     return constructDirectedGraph(false);
   }
-  
+
   private static void digraphConnect(DiGraph<Function, Callsite> digraph,
       Function caller,
       Callsite callsite,
       Function callee,
       boolean forward) {
-    
+
     Function source;
     Function destination;
 
@@ -483,37 +483,37 @@ public class CallGraph implements CompilerPass {
       source = callee;
       destination = caller;
     }
-    
+
     digraph.connect(source, callsite, destination);
   }
-  
+
   /**
    * Constructs a digraph of the call graph. If {@code forward} is true, then
    * the edges in the digraph will go from callers to callees, if false then
    * the edges will go from callees to callers.
-   * 
+   *
    * It is safe to run this method on both a forwardly constructed callgraph
    * and a backwardly constructed callgraph, regardless of the value of
    * {@code forward}.
-   * 
+   *
    * @param forward If true then the digraph will be a forward digraph.
    */
   private DiGraph<Function, Callsite> constructDirectedGraph(boolean forward) {
     DiGraph<Function, Callsite>digraph =
-        new LinkedDirectedGraph<Function, Callsite>();
-    
+        LinkedDirectedGraph.createWithoutAnnotations();
+
     // Create nodes in call graph
     for (Function function : getAllFunctions()) {
       digraph.createNode(function);
     }
-    
+
     if (computeForwardGraph) {
       // The CallGraph is a forward graph, so go from callers to callees
       for (Function caller : getAllFunctions()) {
         for (Callsite callsite : caller.getCallsitesInFunction()) {
           for (Function callee : callsite.getPossibleTargets()) {
             digraphConnect(digraph, caller, callsite, callee,
-                forward);       
+                forward);
           }
         }
       }
@@ -522,26 +522,26 @@ public class CallGraph implements CompilerPass {
       for (Function callee : getAllFunctions()) {
         for (Callsite callsite :
             callee.getCallsitesPossiblyTargetingFunction()) {
-          
+
           Function caller = callsite.getContainingFunction();
           digraphConnect(digraph, caller, callsite, callee,
               forward);
         }
       }
-    }    
-    
+    }
+
     return digraph;
   }
-  
+
   /**
    * Constructs a DefinitionProvider that can be used to determine the
    * targets of callsites.
-   * 
+   *
    * This construction is the main cost of building the callgraph, so we offer
    * the client a choice of NameReferenceGraph, which is slow and hopefully more
    * precise, and SimpleDefinitionFinder, which is fast and perhaps not as
    * precise.
-   * 
+   *
    * We use SimpleNameFinder as the default because in practice it does
    * not appear to be less precise than NameReferenceGraph and is at least an
    * order of magnitude faster on large compiles.
@@ -550,7 +550,7 @@ public class CallGraph implements CompilerPass {
         Node jsRoot) {
     if (useNameReferenceGraph) {
       // Name reference graph is very, very slow
-      NameReferenceGraphConstruction graphConstruction 
+      NameReferenceGraphConstruction graphConstruction
           = new NameReferenceGraphConstruction(compiler);
 
       graphConstruction.process(externsRoot, jsRoot);
@@ -560,13 +560,13 @@ public class CallGraph implements CompilerPass {
       SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
       defFinder.process(externsRoot, jsRoot);
       return defFinder;
-    }   
+    }
   }
-  
+
   /**
    * Queries the definition provider for the definitions that could be the
    * targets of the given callsite node.
-   * 
+   *
    * This is complicated by the fact that NameReferenceGraph and
    * SimpleDefinitionProvider (the two definition providers we currently
    * use) differ on the types of target nodes they will analyze.
@@ -575,54 +575,54 @@ public class CallGraph implements CompilerPass {
       Node callsite, DefinitionProvider definitionProvider) {
     Preconditions.checkArgument(callsite.getType() == Token.CALL
         || callsite.getType() == Token.NEW);
-    
+
     Node targetExpression = callsite.getFirstChild();
-    
+
     // NameReferenceGraph throws an exception unless the node is
     // a GETPROP or a NAME
-    if (!useNameReferenceGraph 
+    if (!useNameReferenceGraph
         || (NodeUtil.isGetProp(targetExpression)
         ||  NodeUtil.isName(targetExpression))) {
-      
-      Collection<Definition> definitions = 
+
+      Collection<Definition> definitions =
         definitionProvider.getDefinitionsReferencedAt(targetExpression);
-      
+
       if (definitions != null && !definitions.isEmpty()) {
         return definitions;
       }
     }
-    
+
     return null;
   }
-  
+
   /**
    * An inner class that represents functions in the call graph.
    * A Function knows how to get its AST node and what Callsites
    * it contains.
    */
   public class Function {
-    
+
     private Node astNode;
-    
+
     private boolean isAliased = false;
-    
+
     private boolean isExposedToCallOrApply = false;
-    
+
     private Collection<Callsite> callsitesInFunction;
-    
+
     private Collection<Callsite> callsitesPossiblyTargetingFunction;
-    
+
     private Function(Node functionAstNode) {
       astNode = functionAstNode;
     }
-    
+
     /**
      * Does this function represent the global "main" function?
      */
     public boolean isMain() {
       return (this == CallGraph.this.mainFunction);
     }
-    
+
     /**
      * Returns the underlying AST node for the function. This usually
      * has type Token.FUNCTION but in the case of the "main" function
@@ -631,7 +631,7 @@ public class CallGraph implements CompilerPass {
     public Node getAstNode() {
       return astNode;
     }
-    
+
     /**
      * Returns the AST node for the body of the function. If this function
      * is the main function, it will return the global block.
@@ -643,7 +643,7 @@ public class CallGraph implements CompilerPass {
         return NodeUtil.getFunctionBody(astNode);
       }
     }
-    
+
     /**
      * Gets the name of this function. Returns null if the function is
      * anonymous.
@@ -655,7 +655,7 @@ public class CallGraph implements CompilerPass {
         return NodeUtil.getFunctionName(astNode);
       }
     }
-    
+
     /**
      * Returns the callsites in this function.
      */
@@ -666,22 +666,22 @@ public class CallGraph implements CompilerPass {
         return ImmutableList.of();
       }
     }
-    
+
     private void addCallsiteInFunction(Callsite callsite) {
       if (callsitesInFunction == null) {
         callsitesInFunction = new LinkedList<Callsite>();
-      } 
+      }
       callsitesInFunction.add(callsite);
     }
-    
+
     /**
      * Returns a collection of callsites that might call this function.
-     * 
+     *
      * getCallsitesPossiblyTargetingFunction() is a best effort only: the
      * collection may include callsites that do not actually call this function
      * and if this function is exported or aliased may be missing actual
-     * targets. 
-     * 
+     * targets.
+     *
      * This method should not be called on a Function from a CallGraph
      * that was constructed with {@code computeBackwardGraph} {@code false}.
      */
@@ -698,23 +698,23 @@ public class CallGraph implements CompilerPass {
             + "from a non-backward CallGraph");
       }
     }
-    
+
     private void addCallsitePossiblyTargetingFunction(Callsite callsite) {
       Preconditions.checkState(computeBackwardGraph);
       if (callsitesPossiblyTargetingFunction == null) {
         callsitesPossiblyTargetingFunction =
             new LinkedList<Callsite>();
-      } 
+      }
       callsitesPossiblyTargetingFunction.add(callsite);
     }
-  
+
     /**
      * Returns true if the function is aliased.
      */
     public boolean isAliased() {
       return isAliased;
     }
-    
+
     /**
      * Returns true if the function is ever exposed to ".call" or ".apply".
      */
@@ -722,7 +722,7 @@ public class CallGraph implements CompilerPass {
       return isExposedToCallOrApply;
     }
   }
-  
+
   /**
    * An inner class that represents call sites in the call graph.
    * A Callsite knows how to get its AST node, what its containing
@@ -730,37 +730,37 @@ public class CallGraph implements CompilerPass {
    */
   public class Callsite {
     private Node astNode;
-    
+
     private boolean hasUnknownTarget = false;
     private boolean hasExternTarget = false;
-     
+
     private Function containingFunction = null;
-    
+
     private Collection<Function> possibleTargets;
-    
+
     private Callsite(Node callsiteAstNode) {
       astNode = callsiteAstNode;
     }
-    
+
     public Node getAstNode() {
       return astNode;
     }
-    
+
     public Function getContainingFunction() {
       return containingFunction;
     }
-    
+
     /**
      * Returns the possible target functions that this callsite could call.
-     * 
+     *
      * These targets do not include functions defined in externs. If this
      * callsite could call an extern function, then hasExternTarget() will
      * return true.
-     * 
+     *
      * getKnownTargets() is a best effort only: the collection may include
      * other functions that are not actual targets and (if hasUnknownTargets()
      * is true) may be missing actual targets.
-     * 
+     *
      * This method should not be called on a Callsite from a CallGraph
      * that was constructed with {@code computeForwardGraph} {@code false}.
      */
@@ -777,27 +777,27 @@ public class CallGraph implements CompilerPass {
             "CallGraph");
       }
     }
-    
+
     private void addPossibleTarget(Function target) {
       Preconditions.checkState(computeForwardGraph);
-      
+
       if (possibleTargets == null) {
         possibleTargets = new LinkedList<Function>();
-      } 
+      }
       possibleTargets.add(target);
     }
-    
+
     /**
      * If true, then DefinitionProvider used in callgraph construction
      * was unable find all target functions of this callsite.
-     * 
+     *
      * If false, then getKnownTargets() contains all the possible targets of
      * this callsite (and, perhaps, additional targets as well).
      */
     public boolean hasUnknownTarget() {
       return hasUnknownTarget;
     }
-    
+
     /**
      * If true, then this callsite could target a function defined in the
      * externs. If false, then not.

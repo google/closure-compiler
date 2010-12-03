@@ -45,11 +45,38 @@ public class LinkedUndirectedGraph<N, E>
     return new SimpleSubGraph<N, E>(this);
   }
 
+  public static <N, E> LinkedUndirectedGraph<N, E> createWithoutAnnotations() {
+    return new LinkedUndirectedGraph<N, E>(false, false);
+  }
+
+  public static <N, E> LinkedUndirectedGraph<N, E> createWithNodeAnnotations() {
+    return new LinkedUndirectedGraph<N, E>(true, false);
+  }
+
+  public static <N, E> LinkedUndirectedGraph<N, E> createWithEdgeAnnotations() {
+    return new LinkedUndirectedGraph<N, E>(false, true);
+  }
+
+  public static <N, E> LinkedUndirectedGraph<N, E> create() {
+    return new LinkedUndirectedGraph<N, E>(true, true);
+  }
+
+  private final boolean useNodeAnnotations;
+  private final boolean useEdgeAnnotations;
+
+  protected LinkedUndirectedGraph(
+      boolean useNodeAnnotations, boolean useEdgeAnnotations) {
+    this.useNodeAnnotations = useNodeAnnotations;
+    this.useEdgeAnnotations = useEdgeAnnotations;
+  }
+
   @Override
   public void connect(N srcValue, E edgeValue, N destValue) {
     LinkedUndirectedGraphNode<N, E> src = getNodeOrFail(srcValue);
     LinkedUndirectedGraphNode<N, E> dest = getNodeOrFail(destValue);
     LinkedUndirectedGraphEdge<N, E> edge =
+        useEdgeAnnotations ?
+        new AnnotatedLinkedUndirectedGraphEdge<N, E>(src, edgeValue, dest) :
         new LinkedUndirectedGraphEdge<N, E>(src, edgeValue, dest);
     src.getNeighborEdges().add(edge);
     dest.getNeighborEdges().add(edge);
@@ -71,7 +98,9 @@ public class LinkedUndirectedGraph<N, E>
       N nodeValue) {
     LinkedUndirectedGraphNode<N, E> node = nodes.get(nodeValue);
     if (node == null) {
-      node = new LinkedUndirectedGraphNode<N, E>(nodeValue);
+      node = useNodeAnnotations ?
+          new AnnotatedLinkedUndirectedGraphNode<N, E>(nodeValue) :
+          new LinkedUndirectedGraphNode<N, E>(nodeValue);
       nodes.put(nodeValue, node);
     }
     return node;
@@ -243,13 +272,9 @@ public class LinkedUndirectedGraph<N, E>
     private List<UndiGraphEdge<N, E>> neighborList =
       Lists.newArrayList();
     private final N value;
-    private Annotation annotation;
-    private int id;
-    private static int totalNodes = 0;
 
-    public LinkedUndirectedGraphNode(N nodeValue) {
+    LinkedUndirectedGraphNode(N nodeValue) {
       this.value = nodeValue;
-      this.id = totalNodes++;
     }
 
     @Override
@@ -257,20 +282,21 @@ public class LinkedUndirectedGraph<N, E>
       return neighborList;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <A extends Annotation> A getAnnotation() {
-      return (A) annotation;
+      throw new UnsupportedOperationException(
+          "Graph initialized with node annotations turned off");
+    }
+
+    @Override
+    public void setAnnotation(Annotation data) {
+      throw new UnsupportedOperationException(
+          "Graph initialized with node annotations turned off");
     }
 
     @Override
     public N getValue() {
       return value;
-    }
-
-    @Override
-    public void setAnnotation(Annotation data) {
-      annotation = data;
     }
 
     @Override
@@ -280,7 +306,7 @@ public class LinkedUndirectedGraph<N, E>
 
     @Override
     public String getId() {
-      return "LDN" + id;
+      return "LDN" + hashCode();
     }
 
     @Override
@@ -320,6 +346,30 @@ public class LinkedUndirectedGraph<N, E>
   }
 
   /**
+   * An undirected graph node with annotations.
+   */
+  static class AnnotatedLinkedUndirectedGraphNode<N, E>
+      extends LinkedUndirectedGraphNode<N, E> {
+
+    protected Annotation annotation;
+
+    AnnotatedLinkedUndirectedGraphNode(N nodeValue) {
+      super(nodeValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <A extends Annotation> A getAnnotation() {
+      return (A) annotation;
+    }
+
+    @Override
+    public void setAnnotation(Annotation data) {
+      annotation = data;
+    }
+  }
+
+  /**
    * An undirected graph edge that stores two nodes at each edge.
    */
   static class LinkedUndirectedGraphEdge<N, E> implements UndiGraphEdge<N, E>,
@@ -328,9 +378,8 @@ public class LinkedUndirectedGraph<N, E>
     private UndiGraphNode<N, E> nodeA;
     private UndiGraphNode<N, E> nodeB;
     protected final E value;
-    protected Annotation annotation;
 
-    public LinkedUndirectedGraphEdge(UndiGraphNode<N, E> nodeA, E edgeValue,
+    LinkedUndirectedGraphEdge(UndiGraphNode<N, E> nodeA, E edgeValue,
         UndiGraphNode<N, E> nodeB) {
       this.value = edgeValue;
       this.nodeA = nodeA;
@@ -352,15 +401,16 @@ public class LinkedUndirectedGraph<N, E>
       return nodeB;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <A extends Annotation> A getAnnotation() {
-      return (A) annotation;
+      throw new UnsupportedOperationException(
+          "Graph initialized with edge annotations turned off");
     }
 
     @Override
     public void setAnnotation(Annotation data) {
-      annotation = data;
+      throw new UnsupportedOperationException(
+          "Graph initialized with edge annotations turned off");
     }
 
     @Override
@@ -388,6 +438,32 @@ public class LinkedUndirectedGraph<N, E>
     @Override
     public String toString() {
       return nodeA.toString() + " -- " + nodeB.toString();
+    }
+  }
+
+  /**
+   * An annotated undirected graph edge..
+   */
+  static class AnnotatedLinkedUndirectedGraphEdge<N, E>
+      extends LinkedUndirectedGraphEdge<N, E> {
+
+    protected Annotation annotation;
+
+    AnnotatedLinkedUndirectedGraphEdge(
+        UndiGraphNode<N, E> nodeA, E edgeValue,
+        UndiGraphNode<N, E> nodeB) {
+      super(nodeA, edgeValue, nodeB);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <A extends Annotation> A getAnnotation() {
+      return (A) annotation;
+    }
+
+    @Override
+    public void setAnnotation(Annotation data) {
+      annotation = data;
     }
   }
 }

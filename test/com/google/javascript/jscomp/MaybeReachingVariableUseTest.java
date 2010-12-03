@@ -136,7 +136,7 @@ public class MaybeReachingVariableUseTest extends TestCase {
     Node n = compiler.parseTestCode(src).getFirstChild();
     assertEquals(0, compiler.getErrorCount());
     Scope scope = new SyntacticScopeCreator(compiler).createScope(n, null);
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, n);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     useDef = new MaybeReachingVariableUse(cfg, scope, compiler);

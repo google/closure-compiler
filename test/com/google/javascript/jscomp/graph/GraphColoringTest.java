@@ -35,7 +35,7 @@ import java.util.Comparator;
 public class GraphColoringTest extends TestCase {
 
   public void testNoEdge() {
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     for (int i = 0; i < 5; i++) {
       graph.createNode("Node " + i);
       // All node with same color.
@@ -50,7 +50,7 @@ public class GraphColoringTest extends TestCase {
   }
 
   public void testTwoNodesConnected() {
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("A");
     graph.createNode("B");
     graph.connect("A", "--", "B");
@@ -63,7 +63,7 @@ public class GraphColoringTest extends TestCase {
   }
 
   public void testGreedy() {
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("A");
     graph.createNode("B");
     graph.createNode("C");
@@ -82,7 +82,7 @@ public class GraphColoringTest extends TestCase {
 
   public void testFullyConnected() {
     final int count = 100;
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     for (int i = 0; i < count; i++) {
       graph.createNode("Node " + i);
       for (int j = 0; j < count; j++) {
@@ -103,7 +103,7 @@ public class GraphColoringTest extends TestCase {
 
   public void testAllConnectedToOneNode() {
     final int count = 10;
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("Center");
     for (int i = 0; i < count; i++) {
       graph.createNode("Node " + i);
@@ -122,7 +122,7 @@ public class GraphColoringTest extends TestCase {
   public void testTwoFullyConnected() {
     final int count = 100;
     // A graph with two disconnected disjunct cliques.
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     for (int i = 0; i < count; i++) {
       graph.createNode("Node Left " + i);
       graph.createNode("Node Right " + i);
@@ -152,7 +152,7 @@ public class GraphColoringTest extends TestCase {
 
   public void testDeterministic() {
     // A pentagon.
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("A");
     graph.createNode("B");
     graph.createNode("C");

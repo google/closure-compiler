@@ -96,7 +96,7 @@ public class TypeInferenceTest extends TestCase {
       assumedScope.declare(entry.getKey(), null, entry.getValue(), null);
     }
     // Create the control graph.
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, n);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     // Create a simple reverse abstract interpreter.

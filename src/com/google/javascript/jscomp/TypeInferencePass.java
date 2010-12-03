@@ -143,7 +143,7 @@ class TypeInferencePass implements CompilerPass {
   }
 
   private ControlFlowGraph<Node> computeCfg(Node n) {
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, n);
     return cfa.getCfg();
   }

@@ -31,7 +31,7 @@ public class GraphReachabilityTest extends TestCase {
   DiGraph<String, String> graph = null;
 
   public void testSimple() {
-    graph = new LinkedDirectedGraph<String, String>();
+    graph = LinkedDirectedGraph.create();
     graph.createNode("A");
     reachability = new GraphReachability<String, String>(graph);
     reachability.compute("A");

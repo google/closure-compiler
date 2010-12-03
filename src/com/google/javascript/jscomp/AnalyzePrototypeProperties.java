@@ -82,7 +82,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   // then there would be a node for "scotch", a node for "age", and an edge
   // from scotch to age.
   private final LinkedDirectedGraph<NameInfo, JSModule> symbolGraph =
-      new LinkedDirectedGraph<NameInfo, JSModule>();
+      LinkedDirectedGraph.createWithoutAnnotations();
 
   // A dummy node for representing global references.
   private final NameInfo globalNode = new NameInfo("[global]");

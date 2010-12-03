@@ -252,7 +252,7 @@ class PureFunctionIdentifier implements CompilerPass {
   private void propagateSideEffects() {
     // Nodes are function declarations; Edges are function call sites.
     DiGraph<FunctionInformation, Node> sideEffectGraph =
-        new LinkedDirectedGraph<FunctionInformation, Node>();
+        LinkedDirectedGraph.createWithoutAnnotations();
 
     // create graph nodes
     for (FunctionInformation functionInfo : functionSideEffectMap.values()) {

@@ -68,7 +68,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     Scope scope = t.getScope();
 
     // Computes the control flow graph.
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, scope.getRootNode());
     cfgStack.push(curCfg);
     curCfg = cfa.getCfg();

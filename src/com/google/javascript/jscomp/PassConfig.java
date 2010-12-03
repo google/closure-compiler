@@ -87,7 +87,8 @@ public abstract class PassConfig {
    * Gets a graph of the passes run. For debugging.
    */
   GraphvizGraph getPassGraph() {
-    LinkedDirectedGraph<String, String> graph = LinkedDirectedGraph.create();
+    LinkedDirectedGraph<String, String> graph =
+        LinkedDirectedGraph.createWithoutAnnotations();
     Iterable<PassFactory> allPasses =
         Iterables.concat(getChecks(), getOptimizations());
     String lastPass = null;

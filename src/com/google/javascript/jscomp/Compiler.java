@@ -1521,7 +1521,7 @@ public class Compiler extends AbstractCompiler {
   ControlFlowGraph<Node> computeCFG() {
     logger.info("Computing Control Flow Graph");
     Tracer tracer = newTracer("computeCFG");
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(this, true);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(this, true, false);
     process(cfa);
     stopTracer(tracer, "computeCFG");
     return cfa.getCfg();
@@ -1781,7 +1781,7 @@ public class Compiler extends AbstractCompiler {
   /** Gets the DOT graph of the AST generated at the end of compilation. */
   public String getAstDotGraph() throws IOException {
     if (jsRoot != null) {
-      ControlFlowAnalysis cfa = new ControlFlowAnalysis(this, true);
+      ControlFlowAnalysis cfa = new ControlFlowAnalysis(this, true, false);
       cfa.process(null, jsRoot);
       return DotFormatter.toDot(jsRoot, cfa.getCfg());
     } else {

@@ -199,7 +199,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   private UndiGraph<Var, Void> computeVariableNamesInterferenceGraph(
       NodeTraversal t, ControlFlowGraph<Node> cfg, Set<Var> escaped) {
     UndiGraph<Var, Void> interferenceGraph =
-        new LinkedUndirectedGraph<Var, Void>();
+        LinkedUndirectedGraph.create();
     Scope scope = t.getScope();
 
     // First create a node for each non-escaped variable.

@@ -57,7 +57,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
 
   /** Tests straight-line graphs. */
   public void testSimple() {
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");
@@ -89,7 +89,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
    * are invalid.
    */
   public void testSomeValidPaths() {
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");
@@ -108,7 +108,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
 
   /** Tests a graph with many valid paths. */
   public void testManyValidPaths() {
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c1");
@@ -129,7 +129,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
 
   /** Tests a graph with some cycles. */
   public void testCycles1() {
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");
@@ -157,7 +157,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
    * version of CheckPathsBetweenNodes.
    */
   public void testCycles2() {
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");
@@ -178,7 +178,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
    * version of CheckPathsBetweenNodes.
    */
   public void testCycles3() {
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");
@@ -200,7 +200,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
    * that some paths are indeed correct for the some path case.
    */
   public void testSomePath1() {
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");
@@ -225,7 +225,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
 
   public void testSomePath2() {
     // No Paths between nodes, by definition, always false.
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
 
@@ -239,7 +239,7 @@ public class CheckPathsBetweenNodesTest extends TestCase {
 
   public void testNonInclusive() {
     // No Paths between nodes, by definition, always false.
-    DiGraph<String, String> g = new LinkedDirectedGraph<String, String>();
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
     g.createDirectedGraphNode("b");
     g.createDirectedGraphNode("c");

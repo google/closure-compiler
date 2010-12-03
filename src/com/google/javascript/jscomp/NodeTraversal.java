@@ -571,7 +571,7 @@ public class NodeTraversal {
   /** Gets the control flow graph for the current JS scope. */
   public ControlFlowGraph<Node> getControlFlowGraph() {
     if (cfgs.peek() == null) {
-      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
+      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
       cfa.process(null, getScopeRoot());
       cfgs.pop();
       cfgs.push(cfa.getCfg());

@@ -80,6 +80,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   private int priorityCounter;
 
   private final boolean shouldTraverseFunctions;
+  private final boolean edgeAnnotations;
 
   // We need to store where we started, in case we aren't doing a flow analysis
   // for the whole scope. This happens, for example, when running type inference
@@ -130,11 +131,14 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * @param compiler Compiler instance.
    * @param shouldTraverseFunctions Whether functions should be traversed (true
    *    by default).
+   * @param edgeAnnotations Whether to allow edge annotations. By default,
+   *    only node annotations are allowed.
    */
   ControlFlowAnalysis(AbstractCompiler compiler,
-      boolean shouldTraverseFunctions) {
+      boolean shouldTraverseFunctions, boolean edgeAnnotations) {
     this.compiler = compiler;
     this.shouldTraverseFunctions = shouldTraverseFunctions;
+    this.edgeAnnotations = edgeAnnotations;
   }
 
   ControlFlowGraph<Node> getCfg() {
@@ -147,7 +151,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     astPositionCounter = 0;
     astPosition = Maps.newHashMap();
     nodePriorities = Maps.newHashMap();
-    cfg = new AstControlFlowGraph(computeFallThrough(root), nodePriorities);
+    cfg = new AstControlFlowGraph(computeFallThrough(root), nodePriorities,
+                                  edgeAnnotations);
     NodeTraversal.traverse(compiler, root, this);
     astPosition.put(null, ++astPositionCounter); // the implicit return is last.
 
@@ -989,8 +994,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
      *    filled by the {@link ControlFlowAnalysis#shouldTraverse}).
      */
     private AstControlFlowGraph(Node entry,
-        Map<DiGraphNode<Node, Branch>, Integer> priorities) {
-      super(entry);
+        Map<DiGraphNode<Node, Branch>, Integer> priorities,
+        boolean edgeAnnotations) {
+      super(entry,
+          true /* node annotations */, edgeAnnotations);
       this.priorities = priorities;
     }
 

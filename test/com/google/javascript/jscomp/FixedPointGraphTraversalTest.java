@@ -71,7 +71,7 @@ public class FixedPointGraphTraversalTest extends TestCase {
     D = new Counter();
     E = new Counter();
 
-    graph = new LinkedDirectedGraph<Counter, String>();
+    graph = LinkedDirectedGraph.create();
     graph.createDirectedGraphNode(A);
     graph.createDirectedGraphNode(B);
     graph.createDirectedGraphNode(C);
@@ -194,7 +194,7 @@ public class FixedPointGraphTraversalTest extends TestCase {
     A = new Counter();
     B = new Counter();
 
-    graph = new LinkedDirectedGraph<Counter, String>();
+    graph = LinkedDirectedGraph.create();
     graph.createDirectedGraphNode(A);
     graph.createDirectedGraphNode(B);
 

@@ -222,7 +222,7 @@ public class ControlFlowAnalysisTest extends TestCase {
   private ControlFlowGraph<Node> createCfg(String input,
       boolean runSynBlockPass) {
     Compiler compiler = new Compiler();
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, true);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, true, true);
 
     Node root = compiler.parseSyntheticCode("cfgtest", input);
     if (runSynBlockPass) {
@@ -253,7 +253,7 @@ public class ControlFlowAnalysisTest extends TestCase {
       boolean shouldTraverseFunctions) {
     Compiler compiler = new Compiler();
     ControlFlowAnalysis cfa =
-        new ControlFlowAnalysis(compiler, shouldTraverseFunctions);
+        new ControlFlowAnalysis(compiler, shouldTraverseFunctions, true);
 
     Node root = compiler.parseSyntheticCode("cfgtest", input);
     cfa.process(null, root);
@@ -1192,7 +1192,7 @@ public class ControlFlowAnalysisTest extends TestCase {
 
   public void testPartialTraversalOfScope() {
     Compiler compiler = new Compiler();
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, true);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, true, true);
 
     Node script1 = compiler.parseSyntheticCode("cfgtest", "var foo;");
     Node script2 = compiler.parseSyntheticCode("cfgtest2", "var bar;");

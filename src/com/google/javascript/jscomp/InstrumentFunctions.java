@@ -264,7 +264,8 @@ class InstrumentFunctions implements CompilerPass {
      */
     private boolean allPathsReturn(Node block) {
       // Computes the control flow graph.
-      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false);
+      ControlFlowAnalysis cfa = new ControlFlowAnalysis(
+          compiler, false, false);
       cfa.process(null, block);
       ControlFlowGraph<Node> cfg = cfa.getCfg();
 

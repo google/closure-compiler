@@ -41,7 +41,7 @@ public class GraphTest extends TestCase {
 
   public void testDirectedSimple() {
     DiGraph<String, String> graph =
-        new LinkedDirectedGraph<String, String>();
+        LinkedDirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -90,7 +90,7 @@ public class GraphTest extends TestCase {
 
   public void testUndirectedSimple() {
     UndiGraph<String, String> graph =
-        new LinkedUndirectedGraph<String, String>();
+        LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -117,7 +117,7 @@ public class GraphTest extends TestCase {
 
   public void testDirectedSelfLoop() {
     DiGraph<String, String> graph =
-        new LinkedDirectedGraph<String, String>();
+        LinkedDirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.connect("a", "->", "a");
@@ -146,7 +146,7 @@ public class GraphTest extends TestCase {
 
   public void testUndirectedSelfLoop() {
     UndiGraph<String, String> graph =
-        new LinkedUndirectedGraph<String, String>();
+        LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.connect("a", "--", "a");
@@ -161,7 +161,7 @@ public class GraphTest extends TestCase {
 
   public void testDirectedInAndOutEdges() {
     DiGraph<String, String> graph =
-        new LinkedDirectedGraph<String, String>();
+        LinkedDirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -183,7 +183,7 @@ public class GraphTest extends TestCase {
 
   public void testUndirectedNeighbors() {
     UndiGraph<String, String> graph =
-        new LinkedUndirectedGraph<String, String>();
+        LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");
@@ -204,14 +204,14 @@ public class GraphTest extends TestCase {
   }
 
   public void testNodeAnnotations() {
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     GraphNode<String, String> a = graph.createNode("a");
     GraphNode<String, String> b = graph.createNode("b");
     checkAnnotations(graph, a, b);
   }
 
   public void testEdgeAnnotations() {
-    Graph<String, String> graph = new LinkedUndirectedGraph<String, String>();
+    Graph<String, String> graph = LinkedUndirectedGraph.create();
     graph.createNode("1");
     graph.createNode("2");
     graph.createNode("3");
@@ -271,8 +271,8 @@ public class GraphTest extends TestCase {
   }
 
   public void testDegree() {
-    testDirectedDegree(new LinkedDirectedGraph<String, String>());
-    testDirectedDegree(new LinkedUndirectedGraph<String, String>());
+    testDirectedDegree(LinkedDirectedGraph.<String, String>create());
+    testDirectedDegree(LinkedUndirectedGraph.<String, String>create());
   }
 
   public void testDirectedDegree(Graph<String, String> graph) {
@@ -292,8 +292,10 @@ public class GraphTest extends TestCase {
   }
 
   public void testDirectedConnectIfNotFound() {
-    testDirectedConnectIfNotFound(new LinkedDirectedGraph<String, String>());
-    testDirectedConnectIfNotFound(new LinkedUndirectedGraph<String, String>());
+    testDirectedConnectIfNotFound(
+        LinkedDirectedGraph.<String, String>create());
+    testDirectedConnectIfNotFound(
+        LinkedUndirectedGraph.<String, String>create());
   }
 
   public void testDirectedConnectIfNotFound(Graph<String, String> graph) {
@@ -311,7 +313,7 @@ public class GraphTest extends TestCase {
 
   public void testSimpleSubGraph() {
     UndiGraph<String, String> graph =
-        new LinkedUndirectedGraph<String, String>();
+        LinkedUndirectedGraph.create();
     graph.createNode("a");
     graph.createNode("b");
     graph.createNode("c");

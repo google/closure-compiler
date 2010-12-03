@@ -44,7 +44,9 @@ class ControlFlowGraph<N> extends
   /**
    * Constructor.
    */
-  public ControlFlowGraph(N entry) {
+  ControlFlowGraph(
+      N entry, boolean nodeAnnotations, boolean edgeAnnotations) {
+    super(nodeAnnotations, edgeAnnotations);
     implicitReturn = createDirectedGraphNode(null);
     this.entry = createDirectedGraphNode(entry);
   }
