@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
-import com.google.javascript.rhino.Node;
 
 import java.util.List;
 
@@ -65,7 +64,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  public CompilerPass getProcessor(Compiler compiler) {
     List<String> names = Lists.newArrayList(
         "Error(?)",
         "goog.debug.Trace.startTracer(*)",
@@ -73,13 +72,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
         "goog.debug.Logger.prototype.info(?)"
         );
     pass = new ReplaceStrings(compiler, "`", names);
-
-    return new CompilerPass() {
-        public void process(Node externs, Node js) {
-          new CollapseProperties(compiler, true, true).process(externs, js);
-          pass.process(externs, js);
-        }
-      };
+    return pass;
   }
 
   @Override
@@ -215,8 +208,9 @@ public class ReplaceStringsTest extends CompilerTestCase {
         "var x = {};" +
         "x.logger_ = goog.debug.Logger.getLogger('foo');" +
         "x.logger_.info('Some message');",
-        "var x$logger_ = goog.debug.Logger.getLogger('a');" +
-        "x$logger_.info('b');",
+        "var x = {};" +
+        "x.logger_ = goog.debug.Logger.getLogger('a');" +
+        "x.logger_.info('b');",
         new String[] {
             "a", "foo",
             "b", "Some message"});
@@ -224,30 +218,19 @@ public class ReplaceStringsTest extends CompilerTestCase {
 
   // Non-matching "info" property.
   public void testLoggerOnObject2() {
-    test(
+    testSame(
         "var x = {};" +
         "x.info = function(a) {};" +
-        "x.info('Some message');",
-        "var x$info = function(a) {};" +
-        "x$info('Some message');");
+        "x.info('Some message');");
   }
 
   // Non-matching "info" prototype property.
-  public void testLoggerOnObject3a() {
+  public void testLoggerOnObject3() {
     testSame(
         "/** @constructor */\n" +
         "var x = function() {};\n" +
         "x.prototype.info = function(a) {};" +
         "(new x).info('Some message');");
-  }
-
-  // Non-matching "info" prototype property.
-  public void testLoggerOnObject3b() {
-    testSame(
-      "/** @constructor */\n" +
-      "var x = function() {};\n" +
-      "x.prototype.info = function(a) {};" +
-      "var y = (new x); this.info('Some message');");
   }
 
   // Non-matching "info" property on "NoObject" type.

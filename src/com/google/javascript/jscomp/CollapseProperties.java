@@ -31,7 +31,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -427,10 +426,6 @@ class CollapseProperties implements CompilerPass {
     Node ref = NodeUtil.newName(
         compiler.getCodingConvention(), alias, n, originalName);
     NodeUtil.copyNameAnnotations(n.getLastChild(), ref);
-    JSType type = n.getJSType();
-    if (type != null) {
-      ref.setJSType(type);
-    }
     parent.replaceChild(n, ref);
     compiler.reportCodeChange();
   }
