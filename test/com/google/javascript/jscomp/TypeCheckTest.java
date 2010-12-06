@@ -5525,6 +5525,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Property foo never defined on Array");
   }
 
+  public void testCast16() throws Exception {
+    // Mostly verifying that rhino actually understands these JsDocs.
+    testTypes("/** @constructor */ function Foo() {} \n" +
+        "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");
+
+    testTypes("/** @constructor */ function Foo() {} \n" +
+        "/** @type {Foo} */ var x = (/** @type {Foo} */ {})");
+
+    // Not really encourage because of possible ambiguity but it works.
+    testTypes("/** @constructor */ function Foo() {} \n" +
+        "/** @type {Foo} */ var x = /** @type {Foo} */ {}");
+  }
+
   public void testNestedCasts() throws Exception {
     testTypes("/** @constructor */var T = function() {};\n" +
         "/** @constructor */var V = function() {};\n" +

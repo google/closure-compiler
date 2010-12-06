@@ -4956,6 +4956,80 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "Parse error. Unknown type foo");
   }
 
+  public void testCast9() throws Exception {
+    testTypes("var foo = {};" +
+        "function f() { return /** @type {foo} */ (new Object()); }",
+        "Parse error. Unknown type foo");
+  }
+
+  public void testCast10() throws Exception {
+    testTypes("var foo = function() {};" +
+        "function f() { return /** @type {foo} */ (new Object()); }",
+        "Parse error. Unknown type foo");
+  }
+
+  public void testCast11() throws Exception {
+    testTypes("var goog = {}; goog.foo = {};" +
+        "function f() { return /** @type {goog.foo} */ (new Object()); }",
+        "Parse error. Unknown type goog.foo");
+  }
+
+  public void testCast12() throws Exception {
+    testTypes("var goog = {}; goog.foo = function() {};" +
+        "function f() { return /** @type {goog.foo} */ (new Object()); }",
+        "Parse error. Unknown type goog.foo");
+  }
+
+  public void testCast13() throws Exception {
+    // Test to make sure that the forward-declaration still allows for
+    // a warning.
+    testClosureTypes("var goog = {}; " +
+        "goog.addDependency('zzz.js', ['goog.foo'], []);" +
+        "goog.foo = function() {};" +
+        "function f() { return /** @type {goog.foo} */ (new Object()); }",
+        "Parse error. Unknown type goog.foo");
+  }
+
+  public void testCast14() throws Exception {
+    // Test to make sure that the forward-declaration still prevents
+    // some warnings.
+    testClosureTypes("var goog = {}; " +
+        "goog.addDependency('zzz.js', ['goog.bar'], []);" +
+        "function f() { return /** @type {goog.bar} */ (new Object()); }",
+        null);
+  }
+
+  public void testCast15() throws Exception {
+    // This fixes a bug where a type cast on an object literal
+    // would cause a runtime cast exception if the node was visited
+    // more than once.
+    //
+    // Some code assumes that an object literal must have a object type,
+    // while because of the cast, it could have any type (including
+    // a union).
+    testTypes(
+        "for (var i = 0; i < 10; i++) {" +
+          "var x = /** @type {Object|number} */ ({foo: 3});" +
+          "/** @param {boolean} x */ function f(x) {}" +
+          "f(x.foo);" +
+          "f([].foo);" +
+        "}",
+        "Property foo never defined on Array");
+  }
+
+  public void testCast16() throws Exception {
+    // Mostly verifying that rhino actually understands these JsDocs.
+    testTypes("/** @constructor */ function Foo() {} \n" +
+        "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");
+
+    testTypes("/** @constructor */ function Foo() {} \n" +
+        "/** @type {Foo} */ var x = (/** @type {Foo} */ {})");
+
+    // Not really encourage because of possible ambiguity but it works.
+    testTypes("/** @constructor */ function Foo() {} \n" +
+        "/** @type {Foo} */ var x = /** @type {Foo} */ {}");
+  }
+
   public void testNestedCasts() throws Exception {
     testTypes("/** @constructor */var T = function() {};\n" +
         "/** @constructor */var V = function() {};\n" +
