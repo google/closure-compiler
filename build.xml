@@ -27,10 +27,6 @@
   <property name="stylesheetfile" value="${javadoc.dir}/dev_javadoc.css" />
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="tools.dir" value="${basedir}/tools" />
-  <property name="version" value="1.0-SNAPSHOT"/>
-  <property name="jarfile-nodeps" value="${build.dir}/closure-${ant.project.name}-${version}.jar" />
-  <property name="jarfile-javadoc" value="${build.dir}/closure-${ant.project.name}-${version}-javadoc.jar" />
-  <property name="jarfile-sources" value="${build.dir}/closure-${ant.project.name}-${version}-sources.jar" />
   <property name="jarfile" value="${build.dir}/${ant.project.name}.jar" />
   <property name="num-fuzz-tests" value="10000"/>
   <property name="test" value="*Test"/>
@@ -55,9 +51,34 @@
            uri="antlib:org.apache.maven.artifact.ant"
            classpathref="maven-ant-tasks.classpath" />
 
-  <artifact:pom id="project" file="closure-compiler.pom" />
+  <!-- gather svn version -->
+  <target name="svnversion">
+    <exec outputproperty="build.svnVersion"
+      executable="svnversion"
+      failonerror="false"
+      failifexecutionfails="false"
+      dir="."/>
+  </target>
 
-  <target name="mvn-install" depends="jar-nodeps,jar-javadoc,jar-sources" description="Install closure-compiler artifacts into the local maven repo">
+  <!-- Generate pom.xml with the proper svn build number -->
+  <target name="pom" depends="svnversion">
+    <copy file="closure-compiler.pom" tofile="${build.dir}/pom.xml">
+      <filterset>
+        <filter token="build.svnVersion"
+             value="${build.svnVersion}"/>
+      </filterset>
+    </copy>
+
+    <property name="jarfile-nodeps" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}.jar" />
+    <property name="jarfile-javadoc" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}-javadoc.jar" />
+    <property name="jarfile-sources" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}-sources.jar" />
+
+    <artifact:pom id="project" file="${build.dir}/pom.xml" />
+  </target>
+
+  <target name="mvn-install" 
+          depends="jar-nodeps,jar-javadoc,jar-sources,pom" 
+          description="Install closure-compiler artifacts into the local maven repo">
     <artifact:install file="${jarfile-nodeps}">
       <pom refid="project"/>
       <attach file="${jarfile-javadoc}" classifier="javadoc"/>
@@ -81,7 +102,7 @@
       <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
       <arg value="-Durl=${maven-repository-url}" />
       <arg value="-DrepositoryId=${maven-repository-id}" />
-      <arg value="-DpomFile=closure-compiler.pom" />
+      <arg value="-DpomFile=${build.dir}/pom.xml" />
       <arg value="-Dfile=${jarfile-nodeps}" />
       <arg value="-Pgpg" />
     </artifact:mvn>
@@ -91,7 +112,7 @@
       <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
       <arg value="-Durl=${maven-repository-url}" />
       <arg value="-DrepositoryId=${maven-repository-id}" />
-      <arg value="-DpomFile=closure-compiler.pom" />
+      <arg value="-DpomFile=${build.dir}/pom.xml" />
       <arg value="-Dfile=${jarfile-sources}" />
       <arg value="-Dclassifier=sources" />
       <arg value="-Pgpg" />
@@ -102,7 +123,7 @@
       <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.1:sign-and-deploy-file" />
       <arg value="-Durl=${maven-repository-url}" />
       <arg value="-DrepositoryId=${maven-repository-id}" />
-      <arg value="-DpomFile=closure-compiler.pom" />
+      <arg value="-DpomFile=${build.dir}/pom.xml" />
       <arg value="-Dfile=${jarfile-javadoc}" />
       <arg value="-Dclassifier=javadoc" />
       <arg value="-Pgpg" />
@@ -110,7 +131,7 @@
   </target>
 
   <!-- Sync maven dependencies listed in pom.xml -->
-  <target name="mvn-deps-sync" description="sync dependencies/jars in closure-compiler.pom to lib">
+  <target name="mvn-deps-sync" description="sync dependencies/jars in closure-compiler.pom to lib" depends="pom">
     <artifact:dependencies filesetid="dependency.fileset"
                            pathid="dependency.classpath"
                            pomrefid="project"
@@ -140,7 +161,7 @@
     <delete dir="${build.dir}" />
   </target>
 
-  <target name="compile" description="compile the source code">
+  <target name="compile" description="compile the source code" depends="svnversion">
     <mkdir dir="${classes.dir}" />
     <javac srcdir="${gen.dir}"
            destdir="${classes.dir}"
@@ -168,7 +189,7 @@
         file="${classes.dir}/com/google/javascript/jscomp/parsing/ParserConfig.properties"
         comment="Parser properties">
       <entry key="compiler.date" type="date" value="now"/>
-      <entry key="compiler.version" value="${version}"/>
+      <entry key="compiler.version" value="${build.svnVersion}"/>
     </propertyfile>
 
     <!-- Move runtime_type_check.js where RuntimeTypeCheck.java expects it. -->
@@ -178,7 +199,7 @@
   </target>
 
   <target name="jar-nodeps"
-          depends="compile"
+          depends="compile,pom"
           description="package compiler as an executable jar">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" />
     <jar destfile="${jarfile-nodeps}" update="true">
