@@ -22,12 +22,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.*;
+import java.util.Map;
 
 /**
  * Garbage collection for variable and function definitions. Basically performs
@@ -64,8 +64,7 @@ import java.util.*;
  * used across scopes.
  *
  */
-class RemoveUnusedVars
-    implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
+class RemoveUnusedVars implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
@@ -106,19 +105,13 @@ class RemoveUnusedVars
   private final Multimap<Var, Continuation> continuations =
       ArrayListMultimap.create();
 
-  private boolean modifyCallSites;
-
-  private CallSiteOptimizer callSiteOptimizer;
-
   RemoveUnusedVars(
       AbstractCompiler compiler,
       boolean removeGlobals,
-      boolean preserveFunctionExpressionNames,
-      boolean modifyCallSites) {
+      boolean preserveFunctionExpressionNames) {
     this.compiler = compiler;
     this.removeGlobals = removeGlobals;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
-    this.modifyCallSites = modifyCallSites;
   }
 
   /**
@@ -126,22 +119,6 @@ class RemoveUnusedVars
    * may occur to ensure all unused variables are removed.
    */
   public void process(Node externs, Node root) {
-    SimpleDefinitionFinder defFinder = null;
-    if (modifyCallSites) {
-      // For testing, allow the SimpleDefinitionFinder to be build now.
-      defFinder = new SimpleDefinitionFinder(compiler);
-      defFinder.process(externs, root);
-    }
-    process(externs, root, defFinder);
-  }
-
-  @Override
-  public void process(
-      Node externs, Node root, SimpleDefinitionFinder defFinder) {
-    if (modifyCallSites) {
-      Preconditions.checkNotNull(defFinder);
-      callSiteOptimizer = new CallSiteOptimizer(compiler, defFinder);
-    }
     traverseAndRemoveUnusedReferences(root);
   }
 
@@ -305,313 +282,32 @@ class RemoveUnusedVars
   }
 
   /**
-   * Removes unreferenced arguments from a function declaration and when
-   * possible the function's callSites.
+   * Removes unreferenced arguments from a function declaration.
    *
    * @param fnScope The scope inside the function
    */
   private void removeUnreferencedFunctionArgs(Scope fnScope) {
-    // TODO(johnlenz): Update type registry for function signature changes.
-
+    // Strip unreferenced args off the end of the function declaration.
     Node function = fnScope.getRootNode();
     Preconditions.checkState(function.getType() == Token.FUNCTION);
-    Node argList = getFunctionArgList(function);
-    boolean modifyCallers = modifyCallSites
-        && callSiteOptimizer.canModifyCallers(function);
-    if (!modifyCallers) {
-      // Strip unreferenced args off the end of the function declaration.
-      Node lastArg;
-      while ((lastArg = argList.getLastChild()) != null) {
-        Var var = fnScope.getVar(lastArg.getString());
-        if (!referenced.contains(var)) {
-          Preconditions.checkNotNull(var == null);
-          argList.removeChild(lastArg);
-          compiler.reportCodeChange();
-        } else {
-          break;
+
+    Node argList = function.getFirstChild().getNext();
+    Node lastArg;
+    while ((lastArg = argList.getLastChild()) != null) {
+      Var var = fnScope.getVar(lastArg.getString());
+      if (!referenced.contains(var)) {
+        if (var == null) {
+          throw new IllegalStateException(
+              "Function parameter not declared in scope: "
+              + lastArg.getString());
         }
-      }
-    } else {
-      callSiteOptimizer.optimize(fnScope, referenced);
-    }
-  }
-
-
-  /**
-   * @return the LP node containing the function parameters.
-   */
-  private static Node getFunctionArgList(Node function) {
-    return function.getFirstChild().getNext();
-  }
-
-  private static class CallSiteOptimizer {
-    private final AbstractCompiler compiler;
-    private final SimpleDefinitionFinder defFinder;
-
-    CallSiteOptimizer(
-        AbstractCompiler compiler,
-        SimpleDefinitionFinder defFinder) {
-      this.compiler = compiler;
-      this.defFinder = defFinder;
-    }
-
-    public void optimize(Scope fnScope, Set<Var> referenced) {
-      Node function = fnScope.getRootNode();
-      Preconditions.checkState(function.getType() == Token.FUNCTION);
-      Node argList = getFunctionArgList(function);
-
-      // In this path we try to modify all the call sites to remove unused
-      // function parameters.
-      boolean changeCallSignature = canChangeSignature(function);
-      removeUnreferencedFunctionArgs(
-          fnScope, function, referenced,
-          argList.getFirstChild(), 0, changeCallSignature);
-    }
-
-    /**
-     * For each unused function parameter, determine if it can be removed
-     * from all the call sites, if so, remove it from the function signature
-     * and the call sites otherwise replace the unused value where possible
-     * with a constant (0).
-     *
-     * @param scope The function scope
-     * @param function The function
-     * @param param The current parameter node in the parameter list.
-     * @param paramIndex The index of the current parameter
-     * @param canChangeSignature Whether function signature can be change.
-     * @return Whether there is a following function parameter.
-     */
-    private boolean removeUnreferencedFunctionArgs(
-        Scope scope, Node function, Set<Var> referenced,
-        Node param, int paramIndex,
-        boolean canChangeSignature) {
-      if (param != null) {
-        // Take care of the following siblings first.
-        boolean hasFollowing = removeUnreferencedFunctionArgs(
-            scope, function, referenced, param.getNext(), paramIndex+1,
-            canChangeSignature);
-
-        Var var = scope.getVar(param.getString());
-        if (!referenced.contains(var)) {
-          Preconditions.checkNotNull(var);
-
-          // Remove call parameter if we can generally change the signature
-          // or if it is the last parameter in the parameter list.
-          boolean modifyAllCallSites = canChangeSignature || !hasFollowing;
-          if (modifyAllCallSites) {
-            modifyAllCallSites = canRemoveArgFromCallSites(
-                function, paramIndex);
-          }
-
-          tryRemoveArgFromCallSites(function, paramIndex, modifyAllCallSites);
-
-          // Remove an unused function parameter if all the call sites can
-          // be modified to remove it, or if it is the last parameter.
-          if (modifyAllCallSites || !hasFollowing) {
-            getFunctionArgList(function).removeChild(param);
-            compiler.reportCodeChange();
-            return hasFollowing;
-          }
-        }
-        return true;
+        argList.removeChild(lastArg);
+        compiler.reportCodeChange();
       } else {
-        // Anything past the last formal parameter can be removed from the call
-        // sites.
-        tryRemoveAllFollowingArgs(function, paramIndex-1);
-        return false;
+        break;
       }
-    }
-
-    /**
-     * Remove all references to a parameter, otherwise simplify the known
-     * references.
-     * @return Whether all the references were removed.
-     */
-    private boolean canRemoveArgFromCallSites(Node function, int argIndex) {
-      Definition definition = getFunctionDefinition(function);
-
-      // Check all the call sites.
-      for (UseSite site : defFinder.getUseSites(definition)) {
-        if (isModifableCallSite(site)) {
-          Node arg = NodeUtil.getArgumentForCallOrNew(
-              site.node.getParent(), argIndex);
-          // TODO(johnlenz): try to remove parameters with side-effects by
-          // decomposing the call expression.
-          if (arg != null && NodeUtil.mayHaveSideEffects(arg, compiler)) {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    /**
-     * Remove all references to a parameter if possible otherwise simplify the
-     * side-effect free parameters.
-     */
-    private void tryRemoveArgFromCallSites(
-        Node function, int argIndex, boolean canModifyAllSites) {
-      Definition definition = getFunctionDefinition(function);
-
-      for (UseSite site : defFinder.getUseSites(definition)) {
-        if (isModifableCallSite(site)) {
-          Node arg = NodeUtil.getArgumentForCallOrNew(
-              site.node.getParent(), argIndex);
-          if (arg != null) {
-            Node argParent = arg.getParent();
-            // Even if we can't change the signature in general we can always
-            // remove an unused value off the end of the parameter list.
-            if (canModifyAllSites
-                || (arg.getNext() == null
-                    && !NodeUtil.mayHaveSideEffects(arg, compiler))) {
-              // Remove the arg completely
-              argParent.removeChild(arg);
-              compiler.reportCodeChange();
-            } else {
-              // replace the node in the arg with 0
-              if (!NodeUtil.mayHaveSideEffects(arg, compiler)
-                  && (arg.getType() != Token.NUMBER || arg.getDouble() != 0)) {
-                argParent.replaceChild(
-                    arg, Node.newNumber(0).copyInformationFrom(arg));
-                compiler.reportCodeChange();
-              }
-            }
-          }
-        }
-      }
-    }
-
-    /**
-     * Remove all the following parameters without side-effects
-     */
-    private void tryRemoveAllFollowingArgs(Node function, final int argIndex) {
-      Definition definition = getFunctionDefinition(function);
-      for (UseSite site : defFinder.getUseSites(definition)) {
-        if (!isModifableCallSite(site)) {
-          continue;
-        }
-
-        Node arg = NodeUtil.getArgumentForCallOrNew(
-            site.node.getParent(), argIndex);
-        while (arg != null) {
-          Node next = arg.getNext();
-          if (next != null && !NodeUtil.mayHaveSideEffects(next)) {
-            arg.getParent().removeChildAfter(arg);
-            compiler.reportCodeChange();
-          } else {
-            arg = next;
-          }
-        }
-      }
-    }
-
-    /**
-     * @param function
-     * @return Whether the callers to this function can be modified in any way.
-     */
-    boolean canModifyCallers(Node function) {
-      if (NodeUtil.isVarArgsFunction(function)) {
-        return false;
-      }
-
-      DefinitionSite defSite = defFinder.getDefinitionForFunction(function);
-      if (defSite == null) {
-        return false;
-      }
-
-      Definition definition = defSite.definition;
-
-      // Be conservative, don't try to optimize any declaration that isn't as
-      // simple function declaration or assignment.
-      if (!SimpleDefinitionFinder.isSimpleFunctionDeclaration(function)) {
-        return false;
-      }
-
-      // Assume an exported method result is used, and the definition might be
-      // changed.
-      if (SimpleDefinitionFinder.maybeExported(compiler, definition)) {
-        return false;
-      }
-
-      Collection<UseSite> useSites = defFinder.getUseSites(definition);
-      for (UseSite site : useSites) {
-        // Multiple definitions prevent rewrite.
-        // TODO(johnlenz): Allow rewrite all definitions are valid.
-        Node nameNode = site.node;
-        Collection<Definition> singleSiteDefinitions =
-            defFinder.getDefinitionsReferencedAt(nameNode);
-        if (singleSiteDefinitions.size() > 1) {
-          return false;
-        }
-        Preconditions.checkState(!singleSiteDefinitions.isEmpty());
-        Preconditions.checkState(singleSiteDefinitions.contains(definition));
-      }
-
-      return true;
-    }
-
-    /**
-     * @param site The site to inspect
-     * @return Whether the call site is suitable for modification
-     */
-    private static boolean isModifableCallSite(UseSite site) {
-      return SimpleDefinitionFinder.isCallOrNewSite(site)
-          && !NodeUtil.isFunctionObjectCallOrApply(site.node.getParent());
-    }
-
-    /**
-     * @return Whether the definitionSite represents a function whose call
-     *      signature can be modified.
-     */
-    private boolean canChangeSignature(Node function) {
-      Definition definition = getFunctionDefinition(function);
-
-      Preconditions.checkState(!definition.isExtern());
-
-      Collection<UseSite> useSites = defFinder.getUseSites(definition);
-      for (UseSite site : useSites) {
-        // Accessing the property directly prevents rewrite.
-        if (!SimpleDefinitionFinder.isCallOrNewSite(site)) {
-          return false;
-        }
-
-        // TODO(johnlenz): support .call signature changes.
-        if (NodeUtil.isFunctionObjectCallOrApply(site.node.getParent())) {
-          return false;
-        }
-
-        // TODO(johnlenz): support specialization
-
-        // Multiple definitions prevent rewrite.
-        // Attempt to validate the state of the simple definition finder.
-        Node nameNode = site.node;
-        Collection<Definition> singleSiteDefinitions =
-            defFinder.getDefinitionsReferencedAt(nameNode);
-        Preconditions.checkState(singleSiteDefinitions.size() == 1);
-        Preconditions.checkState(singleSiteDefinitions.contains(definition));
-      }
-
-      return true;
-    }
-
-    /**
-     * @param function
-     * @return the Definition object for the function.
-     */
-    private Definition getFunctionDefinition(Node function) {
-      DefinitionSite definitionSite = defFinder.getDefinitionForFunction(
-          function);
-      Preconditions.checkNotNull(definitionSite);
-      Definition definition = definitionSite.definition;
-      Preconditions.checkState(!definitionSite.inExterns);
-      Preconditions.checkState(definition.getRValue() == function);
-      return definition;
     }
   }
-
 
   /**
    * Look at all the property assigns to all variables.

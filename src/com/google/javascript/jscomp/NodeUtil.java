@@ -1535,18 +1535,6 @@ public final class NodeUtil {
 
   /**
    * @return Whether the callNode represents an expression in the form of:
-   *    x.apply(...)
-   *    x['apply'](...)
-   *  or
-   *    x.call(...)
-   *    x['call'](...)
-   */
-  static boolean isFunctionObjectCallOrApply(Node callNode) {
-    return isFunctionObjectCall(callNode) || isFunctionObjectApply(callNode);
-  }
-
-  /**
-   * @return Whether the callNode represents an expression in the form of:
    *    x.call(...)
    *    x['call'](...)
    * where x is a NAME node.
