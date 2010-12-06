@@ -353,9 +353,13 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     // rather than simply having an extern definition.  Don't mess with it.
     Node nameNode = SimpleDefinitionFinder.getNameNodeFromFunctionNode(fn);
     if (nameNode != null
-        && NodeUtil.isName(nameNode)
-        && nameNode.getString().equals(NodeUtil.JSC_PROPERTY_NAME_FN)) {
-      return false;
+        && NodeUtil.isName(nameNode)) {
+      String name = nameNode.getString();
+      if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN) ||
+             name.equals(
+                ObjectPropertyStringPreprocess.EXTERN_OBJECT_PROPERTY_STRING)) {
+        return false;
+      }
     }
 
     // example: function a(){};

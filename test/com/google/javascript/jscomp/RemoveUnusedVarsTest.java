@@ -21,6 +21,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
   private boolean removeGlobal = true;
   private boolean preserveFunctionExpressionNames = false;
+  private boolean modifyCallSites = false;
 
   public RemoveUnusedVarsTest() {
     super("function alert() {}");
@@ -31,12 +32,14 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   public void setUp() {
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
+    modifyCallSites = true;
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new RemoveUnusedVars(
-        compiler, removeGlobal, preserveFunctionExpressionNames);
+        compiler, removeGlobal, preserveFunctionExpressionNames,
+        modifyCallSites);
   }
 
   public void testRemoveUnusedVars() {
@@ -145,6 +148,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testFunctionArgRemoval() {
+    this.modifyCallSites = false;
     // remove all function arguments
     test("var b=function(c,d){return};b(1,2)",
          "var b=function(){return};b(1,2)");
@@ -158,6 +162,25 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "var b=function(c,d){return c+d};b(1,2)");
     test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
          "var b=function(e,c,f,d){return c+d};b(1,2)");
+  }
+
+  public void testFunctionArgRemovalFromCallSites() {
+    this.modifyCallSites = true;
+
+    // remove all function arguments
+    test("var b=function(c,d){return};b(1,2)",
+         "var b=function(){return};b()");
+
+    // remove no function arguments
+    testSame("var b=function(c,d){return c+d};b(1,2)");
+    test("var b=function(e,f,c,d){return c+d};b(1,2)",
+         "var b=function(c,d){return c+d};b()");
+
+    // remove some function arguments
+    test("var b=function(c,d,e,f){return c+d};b(1,2)",
+         "var b=function(c,d){return c+d};b(1,2)");
+    test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
+         "var b=function(c,d){return c+d};b(2)");
   }
 
   public void testVarInControlStructure() {
@@ -268,7 +291,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testUnusedAssign2() {
     test("function f(a) { a = 3; } this.x = f;",
-        "function f(){}this.x=f");
+         "function f(){} this.x=f");
   }
 
   public void testUnusedAssign3() {
@@ -446,8 +469,12 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testLocalVarReferencesGlobalVar2() {
+    this.modifyCallSites = false;
     test("var a=3;function f(b, c){b=a; alert(c);} f();",
          "function f(b, c) { alert(c); } f();");
+    this.modifyCallSites = true;
+    test("var a=3;function f(b, c){b=a; alert(c);} f();",
+         "function f(c) { alert(c); } f();");
   }
 
   public void testNestedAssign1() {
@@ -464,4 +491,83 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var b = 0; var z; z = z = b = 1; alert(b);",
          "var b = 0; b = 1; alert(b);");
   }
+
+  public void testCallSiteInteraction() {
+    this.modifyCallSites = true;
+
+    testSame("var b=function(){return};b()");
+    testSame("var b=function(c){return c};b(1)");
+    test("var b=function(c){};b.call(null, x)",
+         "var b=function(){};b.call(null, x)");
+    test("var b=function(c){};b.apply(null, x)",
+         "var b=function(){};b.apply(null, x)");
+
+    test("var b=function(c){return};b(1)",
+         "var b=function(){return};b()");
+    test("var b=function(c){return};b(1,2)",
+         "var b=function(){return};b()");
+    test("var b=function(c){return};b(1,2);b(3,4)",
+         "var b=function(){return};b();b()");
+
+    // Here there is a unknown reference to the function so we can't
+    // change the signature.
+    test("var b=function(c,d){return d};b(1,2);b(3,4);b.length",
+         "var b=function(c,d){return d};b(0,2);b(0,4);b.length");
+
+    test("var b=function(c){return};b(1,2);b(3,new x())",
+         "var b=function(){return};b();b(new x())");
+
+    test("var b=function(c){return};b(1,2);b(new x(),4)",
+         "var b=function(){return};b();b(new x())");
+
+    test("var b=function(c,d){return d};b(1,2);b(new x(),4)",
+         "var b=function(c,d){return d};b(0,2);b(new x(),4)");
+    test("var b=function(c,d,e){return d};b(1,2,3);b(new x(),4,new x())",
+         "var b=function(c,d){return d};b(0,2);b(new x(),4,new x())");
+
+    // Recursive calls are ok.
+    test("var b=function(c,d){b(1,2);return d};b(3,4);b(5,6)",
+         "var b=function(d){b(2);return d};b(4);b(6)");
+
+    test("var b=function(c){return arguments};b(1,2);b(3,4)",
+         "var b=function(){return arguments};b(1,2);b(3,4)");
+
+    // remove all function arguments
+    test("var b=function(c,d){return};b(1,2)",
+         "var b=function(){return};b()");
+
+    // remove no function arguments
+    testSame("var b=function(c,d){return c+d};b(1,2)");
+
+    // remove some function arguments
+    test("var b=function(e,f,c,d){return c+d};b(1,2)",
+         "var b=function(c,d){return c+d};b()");
+    test("var b=function(c,d,e,f){return c+d};b(1,2)",
+         "var b=function(c,d){return c+d};b(1,2)");
+    test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
+         "var b=function(c,d){return c+d};b(2)");
+    
+    // multiple definitions of "b", the parameters can be removed but
+    // the call sites are left unmodified for now.
+    test("var b=function(c,d){};var b=function(e,f){};b(1,2)",
+         "var b=function(){};var b=function(){};b(1,2)");  
+  }
+  
+  public void testDoNotOptimizeJSCompiler_renameProperty() {
+    this.modifyCallSites = true;
+    
+    // Only the function definition can be modified, none of the call sites.
+    test("function JSCompiler_renameProperty(a) {};" +
+         "JSCompiler_renameProperty('a');",
+         "function JSCompiler_renameProperty() {};" +
+         "JSCompiler_renameProperty('a');");
+  }
+  
+  public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
+    this.modifyCallSites = true;
+    test("function JSCompiler_ObjectPropertyString(a, b) {};" +
+         "JSCompiler_ObjectPropertyString(window,'b');",
+         "function JSCompiler_ObjectPropertyString() {};" +
+         "JSCompiler_ObjectPropertyString(window,'b');");
+  }  
 }

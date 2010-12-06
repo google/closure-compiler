@@ -400,7 +400,7 @@ public class OptimizeParametersTest extends CompilerTestCase {
 
   public void testRegexesCanBeInlined() {
     test("function foo(a) {}; foo(/abc/);",
-        "function foo() {var a = /abc/}; foo();");
+         "function foo() {var a = /abc/}; foo();");
   }
 
   public void testConstructorUsedAsFunctionCanBeOptimized() {
@@ -454,10 +454,20 @@ public class OptimizeParametersTest extends CompilerTestCase {
          "function foo(a) {var b = 1}; foo(arguments)");
 
     test("function foo(a, b) {}; foo(arguments)",
-    "function foo(a) {var b}; foo(arguments)");
+         "function foo(a) {var b}; foo(arguments)");
   }
 
   public void testDoNotOptimizeGoogExportFunctions() {
     testSame("function foo(a, b) {}; foo(); goog.export_function(foo);");
+  }
+
+  public void testDoNotOptimizeJSCompiler_renameProperty() {
+    testSame("function JSCompiler_renameProperty(a) {return a};" +
+             "JSCompiler_renameProperty('a');");
+  }
+
+  public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
+    testSame("function JSCompiler_ObjectPropertyString(a, b) {return a[b]};" +
+             "JSCompiler_renameProperty(window,'b');");
   }
 }

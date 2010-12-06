@@ -419,9 +419,15 @@ public class DefaultPassConfig extends PassConfig {
     // optimizations based on global names (like cross module code motion
     // and inline functions).  Smart Name Removal does better if run before
     // this pass.
-    if (options.devirtualizePrototypeMethods
-        || options.optimizeReturns
-        || options.optimizeParameters) {
+    if (options.devirtualizePrototypeMethods) {
+      passes.add(devirtualizePrototypeMethods);
+    }
+
+    // Running "optimizeCalls" after devirtualization is useful for removing
+    // unneeded "this" values.
+    if (options.optimizeCalls
+        || options.optimizeParameters
+        || options.optimizeReturns) {
       passes.add(optimizeCalls);
     }
 
@@ -1294,8 +1300,8 @@ public class DefaultPassConfig extends PassConfig {
         passes.addPass(new OptimizeParameters(compiler));
       }
 
-      if (options.devirtualizePrototypeMethods) {
-        passes.addPass(new DevirtualizePrototypeMethods(compiler));
+      if (options.optimizeCalls) {
+        passes.addPass(new RemoveUnusedVars(compiler, false, true, true));
       }
       return passes;
     }
@@ -1473,7 +1479,8 @@ public class DefaultPassConfig extends PassConfig {
       return new RemoveUnusedVars(
           compiler,
           !removeOnlyLocals,
-          preserveAnonymousFunctionNames);
+          preserveAnonymousFunctionNames,
+          false);
     }
   };
 

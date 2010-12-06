@@ -347,6 +347,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   public boolean optimizeReturns;
 
   /**
+   * Remove unused parameters from call sites.
+   */
+  public boolean optimizeCalls;
+
+  /**
    * Provide formal names for elements of arguments array.
    */
   public boolean optimizeArgumentsArray;
