@@ -43,9 +43,14 @@ public class ParserRunner {
   // Should never need to instantiate class of static methods.
   private ParserRunner() {}
 
+  @Deprecated
   public static Config createConfig(boolean isIdeMode) {
+    return createConfig(isIdeMode, false);
+  }
+
+  public static Config createConfig(boolean isIdeMode, boolean isES5Mode) {
     initResourceConfig();
-    return new Config(annotationNames, suppressionNames, isIdeMode);
+    return new Config(annotationNames, suppressionNames, isIdeMode, isES5Mode);
   }
 
   private static synchronized void initResourceConfig() {

@@ -22,8 +22,6 @@ import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 import java.io.IOException;
@@ -42,8 +40,12 @@ public class ParserTest extends BaseJSTypeTestCase {
       com.google.javascript.rhino.ScriptRuntime.getMessage0(
           "msg.jsdoc.missing.gt");
 
-  private JSType getNativeType(JSTypeNative typeId) {
-    return registry.getNativeType(typeId);
+  private boolean es5mode;
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    es5mode = false;
   }
 
   public void testLinenoCharnoAssign1() throws Exception {
@@ -730,6 +732,22 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("function foo(x, x) {}", "Duplicate parameter name \"x\".");
   }
 
+  public void testGetter() {
+    this.es5mode = false;
+    parseError("var x = {get a(){}};",
+        "getters are not supported in Internet Explorer");
+    this.es5mode = true;
+    parse("var x = {get a(){}};");
+  }
+
+  public void testSetter() {
+    this.es5mode = false;
+    parseError("var x = {set a(x){}};",
+        "setters are not supported in Internet Explorer");
+    this.es5mode = true;
+    parse("var x = {set a(x){}};");
+  }
+
   public void testLamestWarningEver() {
     // This used to be a warning.
     parse("var x = /** @type {undefined} */ (y);");
@@ -753,7 +771,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     Node script = null;
     try {
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(true),
+          "input", string, ParserRunner.createConfig(true, es5mode),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -769,7 +787,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     Node script = null;
     try {
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(true),
+          "input", string, ParserRunner.createConfig(true, es5mode),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);

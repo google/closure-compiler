@@ -635,15 +635,24 @@ public class IRFactory {
 
       Node node = newNode(Token.OBJECTLIT);
       for (ObjectProperty el : literalNode.getElements()) {
-        if (el.isGetter()) {
-          reportGetter(el);
-        } else if (el.isSetter()) {
-          reportSetter(el);
-        } else {
-          Node key = transformAsString(el.getLeft());
-          key.addChildToFront(transform(el.getRight()));
-          node.addChildToBack(key);
+        if (!config.acceptES5) {
+          if (el.isGetter()) {
+            reportGetter(el);
+            continue;
+          } else if (el.isSetter()) {
+            reportSetter(el);
+            continue;
+          }
         }
+
+        Node key = transformAsString(el.getLeft());
+        if (el.isGetter()) {
+          key.setType(Token.GET);
+        } else if (el.isSetter()) {
+          key.setType(Token.SET);
+        }
+        key.addChildToFront(transform(el.getRight()));
+        node.addChildToBack(key);
       }
       return node;
     }

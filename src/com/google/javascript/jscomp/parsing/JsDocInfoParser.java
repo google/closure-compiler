@@ -116,6 +116,7 @@ public final class JsDocInfoParser {
     Config config = new Config(
         Sets.<String>newHashSet(),
         Sets.<String>newHashSet(),
+        false,
         false);
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(typeString),
