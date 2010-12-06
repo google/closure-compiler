@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 import java.util.List;
-import java.io.IOException;
 
 /**
  * Tests for {@link JsDocTokenStream}.
@@ -285,7 +284,7 @@ public class JsDocTokenStreamTest extends TestCase {
   }
 
   private void testJSDocTokenStream(String comment, List<JsDocToken> tokens,
-      List<String> strings) throws IOException {
+      List<String> strings) {
     JsDocTokenStream stream = new JsDocTokenStream(comment, 0);
     int stringsIndex = 0;
     for (JsDocToken token : tokens) {

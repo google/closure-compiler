@@ -668,7 +668,7 @@ public class SourceMapTest extends TestCase {
 
   /**
    * Class for parsing and representing a SourceMap
-   * TODO(johnlenz): This would be best as a seperate open-source component.
+   * TODO(johnlenz): This would be best as a separate open-source component.
    *     Remove this when it is.
    */
   public class SourceMapReader {
@@ -724,7 +724,7 @@ public class SourceMapTest extends TestCase {
        * has been entirely consumed. Returns the string consumed (without the
        * newline).
        */
-      public String consumeUntilEOL() throws SourceMapParseException {
+      public String consumeUntilEOL() {
         StringBuilder sb = new StringBuilder();
 
         int ch = -1;
