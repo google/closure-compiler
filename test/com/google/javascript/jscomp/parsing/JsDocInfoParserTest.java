@@ -46,10 +46,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     super.setUp();
     extraAnnotations =
         Sets.newHashSet(
-            ParserRunner.createConfig(true, false).annotationNames.keySet());
+            ParserRunner.createConfig(true).annotationNames.keySet());
     extraSuppressions =
         Sets.newHashSet(
-            ParserRunner.createConfig(true, false).suppressionNames);
+            ParserRunner.createConfig(true).suppressionNames);
 
     extraSuppressions.add("x");
     extraSuppressions.add("y");
@@ -1896,7 +1896,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testBadModifies6() throws Exception {
-    parse("@modifies {this} \n * @modifies {this} */",
+    parse("@modifies {this} \n * @modifies {this} */", 
         "conflicting @modifies tag");
   }
 
@@ -2450,7 +2450,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     AstRoot script = p.parse(code, null, 0);
 
     Config config =
-        new Config(extraAnnotations, extraSuppressions, true, false);
+        new Config(extraAnnotations, extraSuppressions, true);
     for (Comment comment : script.getComments()) {
       JsDocInfoParser jsdocParser =
         new JsDocInfoParser(
@@ -2490,7 +2490,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
     Config config = new Config(extraAnnotations, extraSuppressions,
-        parseDocumentation, false);
+        parseDocumentation);
     JsDocInfoParser jsdocParser = new JsDocInfoParser(stream(comment),
         "testcode", config, errorReporter);
 

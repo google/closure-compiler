@@ -30,14 +30,6 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
  */
 public class IRFactoryTest extends BaseJSTypeTestCase {
 
-  private boolean es5mode = false;
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    es5mode = false;
-  }
-
   public void testScript() throws Exception {
     parse("");
   }
@@ -345,33 +337,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
       "        SUB 0\n" +
       "            NUMBER 1.0 0\n" +
       "            NUMBER -2.0 0\n");
-  }
-
-  public void testGetter() {
-    this.es5mode = true;
-    testNewParser("({get a() {}})",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        OBJECTLIT 0 [parenthesized: true]\n" +
-      "            GET a 0\n" +
-      "                FUNCTION  0\n" +
-      "                    NAME  0\n" +
-      "                    LP 0\n" +
-      "                    BLOCK 0\n");
-  }
-
-  public void testSetter() {
-    this.es5mode = true;
-    testNewParser("({set a(x) {}})",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        OBJECTLIT 0 [parenthesized: true]\n" +
-      "            SET a 0\n" +
-      "                FUNCTION  0\n" +
-      "                    NAME  0\n" +
-      "                    LP 0\n" +
-      "                        NAME x 0\n" +
-      "                    BLOCK 0\n");
   }
 
   public void testSwitch() {
@@ -1049,7 +1014,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Parser p = new Parser(environment);
     AstRoot script = p.parse(string, null, 0);
 
-    Config config = ParserRunner.createConfig(true, es5mode);
+    Config config = ParserRunner.createConfig(true);
     Node root = IRFactory.transformTree(script, string, config,
         new TestErrorReporter(null, null));
 

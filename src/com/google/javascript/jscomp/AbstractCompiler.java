@@ -195,11 +195,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract boolean isIdeMode();
 
   /**
-   * @return Whether the compiler is in ES5Mode.
-   */
-  abstract boolean acceptEcmaScript5();
-
-  /**
    * Returns the parser configuration.
    */
   abstract Config getParserConfig();

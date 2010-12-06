@@ -293,44 +293,6 @@ class CodeGenerator {
         }
         break;
 
-      case Token.GET:
-      case Token.SET:
-        Preconditions.checkState(n.getParent().getType() == Token.OBJECTLIT);
-        Preconditions.checkState(childCount == 1);
-        Preconditions.checkState(first.getType() == Token.FUNCTION);
-
-        // Get methods are unnamed
-        Preconditions.checkState(first.getFirstChild().getString().isEmpty());
-        if (type == Token.GET) {
-          // Get methods have no parameters.
-          Preconditions.checkState(!first.getChildAtIndex(1).hasChildren());
-          add("get ");
-        } else {
-          // Set methods have one parameter.
-          Preconditions.checkState(first.getChildAtIndex(1).hasOneChild());
-          add("set ");
-        }
-
-        // The name is on the GET or SET node.
-        String name = n.getString();
-        Node fn = first;
-        Node parameters = fn.getChildAtIndex(1);
-        Node body = fn.getLastChild();
-
-        // Add the property name.
-        if (TokenStream.isJSIdentifier(name) &&
-            // do not encode literally any non-literal characters that were
-            // unicode escaped.
-            NodeUtil.isLatin(name)) {
-          add(name);
-        } else {
-          add(jsString(n.getString(), outputCharsetEncoder));
-        }
-
-        add(parameters);
-        add(body, Context.PRESERVE_BLOCK);
-        break;
-
       case Token.SCRIPT:
       case Token.BLOCK: {
         if (n.getClass() != Node.class) {
@@ -625,24 +587,20 @@ class CodeGenerator {
             cc.listSeparator();
           }
 
-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
-            add(c);
+          // Object literal property names don't have to be quoted if they are
+          // not JavaScript keywords
+          if (c.getType() == Token.STRING &&
+              !TokenStream.isKeyword(c.getString()) &&
+              TokenStream.isJSIdentifier(c.getString()) &&
+              // do not encode literally any non-literal characters that were
+              // unicode escaped.
+              NodeUtil.isLatin(c.getString())) {
+            add(c.getString());
           } else {
-            // Object literal property names don't have to be quoted if they are
-            // not JavaScript keywords
-            if (c.getType() == Token.STRING &&
-                !TokenStream.isKeyword(c.getString()) &&
-                TokenStream.isJSIdentifier(c.getString()) &&
-                // do not encode literally any non-literal characters that were
-                // unicode escaped.
-                NodeUtil.isLatin(c.getString())) {
-              add(c.getString());
-            } else {
-              addExpr(c, 1);
-            }
-            add(":");
-            addExpr(c.getFirstChild(), 1);
+            addExpr(c, 1);
           }
+          add(":");
+          addExpr(c.getFirstChild(), 1);
         }
         add("}");
         if (needsParens) {

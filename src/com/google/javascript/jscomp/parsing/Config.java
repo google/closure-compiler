@@ -51,21 +51,15 @@ public class Config {
   final Set<String> suppressionNames;
 
   /**
-   * Recognized names in a {@code @suppress} tag.
-   */
-  final boolean acceptES5;
-
-  /**
    * Annotation names.
    */
 
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
-      boolean isIdeMode, boolean acceptES5) {
+      boolean isIdeMode) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = isIdeMode;
     this.suppressionNames = suppressionNames;
     this.isIdeMode = isIdeMode;
-    this.acceptES5 = acceptES5;
   }
 
   /**

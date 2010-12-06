@@ -22,7 +22,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
@@ -1594,15 +1593,9 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  public boolean acceptEcmaScript5() {
-    return options.languageIn == LanguageMode.ECMASCRIPT5;
-  }
-
-  @Override
   Config getParserConfig() {
     if (parserConfig == null) {
-      parserConfig = ParserRunner.createConfig(
-        isIdeMode(), acceptEcmaScript5());
+      parserConfig = ParserRunner.createConfig(isIdeMode());
     }
     return parserConfig;
   }
