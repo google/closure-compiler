@@ -78,6 +78,11 @@ class TypeInference
         "JSC_FUNCTION_LITERAL_UNDEFINED_THIS",
         "Function literal argument refers to undefined this argument");
 
+  static final DiagnosticType FUNCTION_LITERAL_UNREAD_THIS =
+    DiagnosticType.warning(
+        "JSC_FUNCTION_LITERAL_UNREAD_THIS",
+        "Function literal argument does not refer to bound this argument");
+
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
@@ -883,9 +888,7 @@ class TypeInference
       if (iParameterType.isTemplateType()) {
         // Find the actual type of this argument.
         JSType iArgumentType = null;
-        boolean foundTemplateTypeArgument = false;
         if (i + 1 < childCount) {
-          foundTemplateTypeArgument = true;
           Node iArgument = n.getChildAtIndex(i + 1);
           iArgumentType = getJSType(iArgument).restrictByNotNullOrUndefined();
           if (!(iArgumentType instanceof ObjectType)) {
@@ -915,7 +918,9 @@ class TypeInference
               JSType jArgumentType = getJSType(jArgument);
               if (jArgument.getType() == Token.FUNCTION &&
                   jArgumentType instanceof FunctionType) {
-                if (foundTemplateTypeArgument) {
+                if (iArgumentType != null &&
+                    // null and undefined get filtered out above.
+                    !iArgumentType.isNoType()) {
                   // If it's an function expression, update the type of this
                   // using the actual type of T.
                   FunctionType jArgumentFnType = (FunctionType) jArgumentType;
@@ -925,6 +930,12 @@ class TypeInference
                     jArgument.setJSType(
                         registry.createFunctionTypeWithNewThisType(
                             jArgumentFnType, (ObjectType) iArgumentType));
+                  }
+                  // Warn if the anonymous function literal does not reference this.
+                  if (!NodeUtil.referencesThis(
+                          NodeUtil.getFunctionBody(jArgument))) {
+                    compiler.report(JSError.make(NodeUtil.getSourceName(n), n,
+                        FUNCTION_LITERAL_UNREAD_THIS));
                   }
                 } else {
                   // Warn if the anonymous function literal references this.

@@ -7728,7 +7728,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "* @template T\n" +
         "*/\n" +
         "function f(x, y, z) {}\n" +
-        "f(this, this, function() {});",
+        "f(this, this, function() { this });",
         FunctionTypeBuilder.TEMPLATE_TYPE_DUPLICATED.format(), true);
   }
 
@@ -7797,6 +7797,29 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + " */\n"
         + "function baz(fn, opt_obj) {}\n"
         + "baz(function() { this; }, {});");
+  }
+
+  public void testFunctionLiteralUnreadThisArgument() throws Exception {
+    testTypes(""
+        + "/**\n"
+        + " * @param {function(this:T, ...)?} fn\n"
+        + " * @param {?T} opt_obj\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function baz(fn, opt_obj) {}\n"
+        + "baz(function() {}, {});",
+        "Function literal argument does not refer to bound this argument");
+  }
+
+  public void testFunctionLiteralUnreadNullThisArgument() throws Exception {
+    testTypes(""
+        + "/**\n"
+        + " * @param {function(this:T, ...)?} fn\n"
+        + " * @param {?T} opt_obj\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function baz(fn, opt_obj) {}\n"
+        + "baz(function() {}, null);");
   }
 
   public void testActiveXObject() throws Exception {

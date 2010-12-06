@@ -6931,7 +6931,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "* @template T\n" +
         "*/\n" +
         "function f(x, y, z) {}\n" +
-        "f(this, this, function() {});",
+        "f(this, this, function() { this });",
         FunctionTypeBuilder.TEMPLATE_TYPE_DUPLICATED.format(), true);
   }
 
