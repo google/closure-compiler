@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
+import com.google.javascript.rhino.Node;
 
 import java.io.Serializable;
 import java.util.List;
@@ -47,6 +48,15 @@ public abstract class PassConfig {
 
   public PassConfig(CompilerOptions options) {
     this.options = options;
+  }
+
+  /**
+   * Regenerates the top scope.
+   */
+  void regenerateGlobalTypedScope(AbstractCompiler compiler, Node root) {
+    typedScopeCreator =
+        new MemoizedScopeCreator(new TypedScopeCreator(compiler));
+    topScope = typedScopeCreator.createScope(root, null);
   }
 
   /**

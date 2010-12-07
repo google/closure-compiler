@@ -978,6 +978,37 @@ public class Compiler extends AbstractCompiler {
     inputsByName.put(sourceName, new CompilerInput(ast));
   }
 
+  /**
+   * Replace a source input dynamically. Intended for incremental
+   * re-compilation.
+   *
+   * If the new source input doesn't parse, then keep the old input
+   * in the AST and return false.
+   *
+   * @return Whether the new AST was attached successfully.
+   */
+  boolean replaceIncrementalSourceAst(JsAst ast) {
+    String sourceName = ast.getSourceFile().getName();
+    CompilerInput oldInput =
+        Preconditions.checkNotNull(
+            getInput(sourceName),
+            "No input to replace: " + sourceName);
+    Node newRoot = ast.getAstRoot(this);
+    if (newRoot == null) {
+      return false;
+    }
+
+    Node oldRoot = oldInput.getAstRoot(this);
+    if (oldRoot != null) {
+      oldRoot.getParent().replaceChild(oldRoot, newRoot);
+    } else {
+      getRoot().getLastChild().addChildToBack(newRoot);
+    }
+
+    inputsByName.put(sourceName, new CompilerInput(ast));
+    return true;
+  }
+
   @Override
   JSModuleGraph getModuleGraph() {
     return moduleGraph;

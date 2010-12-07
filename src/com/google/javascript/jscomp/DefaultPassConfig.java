@@ -1051,9 +1051,7 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     public void process(Node externs, Node root) {
       if (topScope == null) {
-        typedScopeCreator =
-            new MemoizedScopeCreator(new TypedScopeCreator(compiler));
-        topScope = typedScopeCreator.createScope(root.getParent(), null);
+        regenerateGlobalTypedScope(compiler, root.getParent());
       } else {
         compiler.getTypeRegistry().resolveTypesInScope(topScope);
       }
