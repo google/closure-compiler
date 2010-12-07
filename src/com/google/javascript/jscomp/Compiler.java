@@ -541,8 +541,17 @@ public class Compiler extends AbstractCompiler {
     useThreads = false;
   }
 
-  @SuppressWarnings("unchecked")
   private <T> T runInCompilerThread(final Callable<T> callable) {
+    return runCallable(callable, useThreads, options.tracer.isOn());
+  }
+
+  static <T> T runCallableWithLargeStack(final Callable<T> callable) {
+    return runCallable(callable, true, false);
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> T runCallable(
+      final Callable<T> callable, boolean useLargeStackThread, boolean trace) {
 
     // Under JRE 1.6, the jscompiler overflows the stack when running on some
     // large or complex js code. Here we start a new thread with a larger
@@ -550,7 +559,7 @@ public class Compiler extends AbstractCompiler {
     // increase the stack size for *every* thread (which is what -Xss does).
     // Might want to add thread pool support for clients that compile a lot.
 
-    final boolean dumpTraceReport = options.tracer.isOn();
+    final boolean dumpTraceReport = trace;
     final Object[] result = new Object[1];
     final Throwable[] exception = new Throwable[1];
     Runnable runnable = new Runnable() {
@@ -570,7 +579,7 @@ public class Compiler extends AbstractCompiler {
       }
     };
 
-    if (useThreads) {
+    if (useLargeStackThread) {
       Thread th = new Thread(null, runnable, "jscompiler", COMPILER_STACK_SIZE);
       th.start();
       while (true) {
