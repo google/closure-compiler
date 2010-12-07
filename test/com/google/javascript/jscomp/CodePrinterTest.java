@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -28,6 +29,9 @@ public class CodePrinterTest extends TestCase {
 
   static Node parse(String js, boolean checkTypes) {
     Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.languageIn = LanguageMode.ECMASCRIPT5; // Allow getters and setters.
+    compiler.initOptions(options);
     Node n = compiler.parseTestCode(js);
 
     if (checkTypes) {
@@ -41,8 +45,23 @@ public class CodePrinterTest extends TestCase {
       inferTypes.process(externs, n);
     }
 
-    assertEquals("Errors for: " + js, 0, compiler.getErrorCount());
+    checkUnexpectedErrorsOrWarnings(compiler, 0);
     return n;
+  }
+
+  private static void checkUnexpectedErrorsOrWarnings(
+      Compiler compiler, int expected) {
+    int actual = compiler.getErrors().length + compiler.getWarnings().length;
+    if (actual != expected) {
+      String msg = "";
+      for (JSError err : compiler.getErrors()) {
+        msg += "Error:" + err.toString() + "\n";
+      }
+      for (JSError err : compiler.getWarnings()) {
+        msg += "Warning:" + err.toString() + "\n";
+      }
+      assertEquals("Unexpected warnings or errors.\n " + msg, expected, actual);
+    }
   }
 
   String parsePrint(String js, boolean prettyprint, int lineThreshold) {
@@ -1062,5 +1081,38 @@ public class CodePrinterTest extends TestCase {
         new Node(Token.EXPR_RESULT, Node.newString("g")));
     String result = new CodePrinter.Builder(ast).setPrettyPrint(true).build();
     assertEquals("\"f\";\n\"g\"", result);
+  }
+
+  public void testGetter() {
+    assertPrint("var x = {}", "var x={}");
+    assertPrint("var x = {get a() {return 1}}", "var x={get a(){return 1}}");
+    assertPrint(
+      "var x = {get a() {}, get b(){}}",
+      "var x={get a(){},get b(){}}");
+
+    // Valid ES5 but Rhino doesn't accept this yet.
+    // assertPrint(
+    //  "var x = {get 1() {return 1}}",
+    //  "var x={get \"1\"(){return 1}}");
+
+    // Valid ES5 but Rhino doesn't accept this yet.
+    // assertPrint(
+    //  "var x = {get \"()\"() {return 1}}",
+    //   "var x={get \"()\"(){return 1}}");
+  }
+
+  public void testSetter() {
+    assertPrint("var x = {}", "var x={}");
+    assertPrint("var x = {set a(x) {return 1}}", "var x={set a(x){return 1}}");
+
+    // Valid ES5 but Rhino doesn't accept this yet.
+    // assertPrint(
+    //  "var x = {set 1(x) {return 1}}",
+    //  "var x={set \"1\"(x){return 1}}");
+
+    // Valid ES5 but Rhino doesn't accept this yet.
+    // assertPrint(
+    //  "var x = {set \"(x)\"() {return 1}}",
+    //   "var x={set \"(x)\"(){return 1}}");
   }
 }

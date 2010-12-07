@@ -39,6 +39,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   private static final long serialVersionUID = 7L;
 
   /**
+   * The JavaScript language version accepted.
+   */
+  LanguageMode languageIn;
+
+  // TODO(johnlenz): Add an language output mode.
+
+  /**
    * Configures the compiler for use as an IDE backend.  In this mode:
    * <ul>
    *  <li>No optimization passes will run.</li>
@@ -618,6 +625,9 @@ public class CompilerOptions implements Serializable, Cloneable {
    * like a builder.
    */
   public CompilerOptions() {
+    // Accepted language
+    languageIn = LanguageMode.ECMASCRIPT3;
+
     // Checks
     skipAllPasses = false;
     nameAnonymousFunctionsOnly = false;
@@ -1020,6 +1030,19 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   //////////////////////////////////////////////////////////////////////////////
   // Enums
+
+  /** When to do the extra sanity checks */
+  static enum LanguageMode {
+    /**
+     * Tranditional JavaScript
+     */
+    ECMASCRIPT3,
+
+    /**
+     * Shiny new JavaScript
+     */
+    ECMASCRIPT5,
+  }
 
   /** When to do the extra sanity checks */
   static enum DevMode {
