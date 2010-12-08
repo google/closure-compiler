@@ -145,7 +145,6 @@ public enum CompilationLevel {
     options.collapseProperties = true;
     options.checkGlobalThisLevel = CheckLevel.WARNING;
     options.rewriteFunctionExpressions = true;
-    options.devirtualizePrototypeMethods = true;
     options.smartNameRemoval = true;
     options.inlineConstantVars = true;
     options.inlineFunctions = true;
@@ -154,7 +153,7 @@ public enum CompilationLevel {
     options.inlineVariables = true;
     options.flowSensitiveInlineVariables = true;
     options.computeFunctionSideEffects = true;
-    
+
     // Remove unused vars also removes unused functions.
     options.removeUnusedVars = true;
     options.removeUnusedLocalVars = true;
@@ -162,7 +161,13 @@ public enum CompilationLevel {
     // Move code around based on the defined modules.
     options.crossModuleCodeMotion = true;
     options.crossModuleMethodMotion = true;
-    
+
+    // Call optimizations
+    options.devirtualizePrototypeMethods = true;
+    options.optimizeParameters = true;
+    options.optimizeReturns = true;
+    options.optimizeCalls = true;
+
     // Kindly tell the user that they have JsDocs that we don't understand.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
         CheckLevel.WARNING);
