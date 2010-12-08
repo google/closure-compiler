@@ -101,6 +101,11 @@ public final class NullType extends ValueType {
 
   @Override
   public String toString() {
+    return getDisplayName();
+  }
+
+  @Override
+  public String getDisplayName() {
     return "null";
   }
 

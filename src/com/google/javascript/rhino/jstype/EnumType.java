@@ -124,6 +124,11 @@ public class EnumType extends PrototypeObjectType {
   }
 
   @Override
+  public String getDisplayName() {
+    return elementsType.getDisplayName();
+  }
+
+  @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseObjectType(this);
   }

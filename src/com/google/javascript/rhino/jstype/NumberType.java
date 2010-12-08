@@ -94,6 +94,11 @@ public class NumberType extends ValueType {
 
   @Override
   public String toString() {
+    return getDisplayName();
+  }
+
+  @Override
+  public String getDisplayName() {
     return "number";
   }
 

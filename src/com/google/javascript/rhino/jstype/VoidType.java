@@ -93,6 +93,11 @@ public class VoidType extends ValueType {
 
   @Override
   public String toString() {
+    return getDisplayName();
+  }
+
+  @Override
+  public String getDisplayName() {
     return "undefined";
   }
 

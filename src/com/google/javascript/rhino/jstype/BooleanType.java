@@ -100,6 +100,11 @@ public class BooleanType extends ValueType {
 
   @Override
   public String toString() {
+    return getDisplayName();
+  }
+
+  @Override
+  public String getDisplayName() {
     return "boolean";
   }
 

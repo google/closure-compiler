@@ -89,6 +89,11 @@ public final class StringType extends ValueType {
 
   @Override
   public String toString() {
+    return getDisplayName();
+  }
+
+  @Override
+  public String getDisplayName() {
     return "string";
   }
 

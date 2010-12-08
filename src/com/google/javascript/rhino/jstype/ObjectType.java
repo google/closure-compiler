@@ -183,6 +183,11 @@ public abstract class ObjectType extends JSType {
     return name;
   }
 
+  @Override
+  public String getDisplayName() {
+    return getNormalizedReferenceName();
+  }
+
   /**
    * Creates a suffix for a proxy delegate.
    * @see #getNormalizedReferenceName

@@ -365,6 +365,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // toString
     assertEquals("Function",
         U2U_CONSTRUCTOR_TYPE.toString());
+    assertTrue(U2U_CONSTRUCTOR_TYPE.hasDisplayName());
+    assertEquals("Function", U2U_CONSTRUCTOR_TYPE.getDisplayName());
 
     // getPropertyType
     assertTypeEquals(UNKNOWN_TYPE,
@@ -504,6 +506,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("NoObject", NO_OBJECT_TYPE.toString());
+    assertFalse(NO_OBJECT_TYPE.hasDisplayName());
+    assertEquals(null, NO_OBJECT_TYPE.getDisplayName());
+
 
     // getPropertyType
     assertTypeEquals(NO_TYPE,
@@ -632,6 +637,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("None", NO_TYPE.toString());
+    assertEquals(null, NO_TYPE.getDisplayName());
+    assertFalse(NO_TYPE.hasDisplayName());
 
     // getPropertyType
     assertTypeEquals(NO_TYPE,
@@ -781,6 +788,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("Array", ARRAY_TYPE.toString());
+    assertTrue(ARRAY_TYPE.hasDisplayName());
+    assertEquals("Array", ARRAY_TYPE.getDisplayName());
 
     assertTrue(ARRAY_TYPE.isNativeObjectType());
 
@@ -887,6 +896,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("?", UNKNOWN_TYPE.toString());
+    assertTrue(UNKNOWN_TYPE.hasDisplayName());
+    assertEquals("Unknown", UNKNOWN_TYPE.getDisplayName());
 
     Asserts.assertResolvesToSame(UNKNOWN_TYPE);
   }
@@ -1003,6 +1014,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("*", ALL_TYPE.toString());
+
+    assertTrue(ALL_TYPE.hasDisplayName());
+    assertEquals("<Any Type>", ALL_TYPE.getDisplayName());
 
     Asserts.assertResolvesToSame(ALL_TYPE);
   }
@@ -1290,6 +1304,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("Number", NUMBER_OBJECT_TYPE.toString());
+    assertTrue(NUMBER_OBJECT_TYPE.hasDisplayName());
+    assertEquals("Number", NUMBER_OBJECT_TYPE.getDisplayName());
 
     assertTrue(NUMBER_OBJECT_TYPE.isNativeObjectType());
 
@@ -1412,6 +1428,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("number", NUMBER_TYPE.toString());
+    assertTrue(NUMBER_TYPE.hasDisplayName());
+    assertEquals("number", NUMBER_TYPE.getDisplayName());
 
     Asserts.assertResolvesToSame(NUMBER_TYPE);
   }
@@ -1556,6 +1574,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("null", NULL_TYPE.toString());
+    assertTrue(NULL_TYPE.hasDisplayName());
+    assertEquals("null", NULL_TYPE.getDisplayName());
 
     Asserts.assertResolvesToSame(NULL_TYPE);
   }
@@ -1759,6 +1779,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("Date", DATE_TYPE.toString());
+    assertTrue(DATE_TYPE.hasDisplayName());
+    assertEquals("Date", DATE_TYPE.getDisplayName());
 
     assertTrue(DATE_TYPE.isNativeObjectType());
 
@@ -1902,6 +1924,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("RegExp", REGEXP_TYPE.toString());
+    assertTrue(REGEXP_TYPE.hasDisplayName());
+    assertEquals("RegExp", REGEXP_TYPE.getDisplayName());
 
     assertTrue(REGEXP_TYPE.isNativeObjectType());
 
@@ -2063,6 +2087,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(STRING_OBJECT_TYPE.isNativeObjectType());
 
     Asserts.assertResolvesToSame(STRING_OBJECT_TYPE);
+
+    assertTrue(STRING_OBJECT_TYPE.hasDisplayName());
+    assertEquals("String", STRING_OBJECT_TYPE.getDisplayName());
   }
 
   /**
@@ -2166,6 +2193,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("string", STRING_TYPE.toString());
+    assertTrue(STRING_TYPE.hasDisplayName());
+    assertEquals("string", STRING_TYPE.getDisplayName());
 
     // findPropertyType
     assertTypeEquals(NUMBER_TYPE, STRING_TYPE.findPropertyType("length"));
@@ -2427,6 +2456,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertPropertyTypeInferred(functionType, "prototype");
 
     Asserts.assertResolvesToSame(functionType);
+
+
+    assertEquals("aFunctionName", new FunctionBuilder(registry).
+        withName("aFunctionName").build().getDisplayName());
   }
 
   /**
@@ -3051,6 +3084,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("boolean", BOOLEAN_TYPE.toString());
+    assertTrue(BOOLEAN_TYPE.hasDisplayName());
+    assertEquals("boolean", BOOLEAN_TYPE.getDisplayName());
 
     Asserts.assertResolvesToSame(BOOLEAN_TYPE);
   }
@@ -3155,6 +3190,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("Boolean", BOOLEAN_OBJECT_TYPE.toString());
+    assertTrue(BOOLEAN_OBJECT_TYPE.hasDisplayName());
+    assertEquals("Boolean", BOOLEAN_OBJECT_TYPE.getDisplayName());
 
     assertTrue(BOOLEAN_OBJECT_TYPE.isNativeObjectType());
 
@@ -3262,6 +3299,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("enum{Enum}", enumType.toString());
+    assertTrue(enumType.hasDisplayName());
+    assertEquals("Enum", enumType.getDisplayName());
+
+    assertEquals("AnotherEnum", new EnumType(registry, "AnotherEnum",
+        NUMBER_TYPE).getDisplayName());
+    assertFalse(new EnumType(registry, null, NUMBER_TYPE).hasDisplayName());
 
     Asserts.assertResolvesToSame(enumType);
   }
@@ -3367,6 +3410,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("Enum.<number>", elementsType.toString());
+    assertTrue(elementsType.hasDisplayName());
+    assertEquals("Enum", elementsType.getDisplayName());
 
     Asserts.assertResolvesToSame(elementsType);
   }
@@ -3440,6 +3485,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // toString
     assertEquals("{...}", objectType.toString());
+    assertEquals(null, objectType.getDisplayName());
+    assertFalse(objectType.hasReferenceName());
+    assertEquals("anObject", new PrototypeObjectType(registry, "anObject",
+        null).getDisplayName());
 
     Asserts.assertResolvesToSame(objectType);
   }

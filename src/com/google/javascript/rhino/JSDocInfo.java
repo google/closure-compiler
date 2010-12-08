@@ -64,7 +64,7 @@ import java.util.Set;
  * {@link JSDocInfoBuilder} which provides early incompatibility detection.</p>
  *
  */
-public final class JSDocInfo implements Serializable {
+public class JSDocInfo implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /**

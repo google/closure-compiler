@@ -171,6 +171,16 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
+  public String getDisplayName() {
+    return "Unknown";
+  }
+
+  @Override
+  public boolean hasDisplayName() {
+    return true;
+  }
+
+  @Override
   public boolean isPropertyTypeDeclared(String propertyName) {
     return false;
   }

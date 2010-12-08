@@ -120,6 +120,27 @@ public abstract class JSType implements Serializable {
   }
 
   /**
+   * Returns a user meaningful label for the JSType instance.  For example,
+   * Functions and Enums will return their declaration name (if they have one).
+   * Some types will not have a meaningful display name.  Calls to
+   * hasDisplayName() will return true IFF getDisplayName() will return null
+   * or a zero length string.
+   *
+   * @return the display name of the type, or null if one is not available
+   */
+  public String getDisplayName() {
+    return null;
+  }
+
+  /**
+   * @return true if the JSType has a user meaningful label.
+   */
+  public boolean hasDisplayName() {
+    String displayName = getDisplayName();
+    return displayName != null && !displayName.isEmpty();
+  }
+
+  /**
    * If we see a type name without braces, it might be legacy jsdoc.
    * So we shouldn't emit warnings about it. This method is how we skip
    * those warnings.

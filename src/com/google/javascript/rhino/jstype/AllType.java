@@ -109,6 +109,16 @@ public final class AllType extends JSType {
   }
 
   @Override
+  public String getDisplayName() {
+    return "<Any Type>";
+  }
+
+  @Override
+  public boolean hasDisplayName() {
+    return true;
+  }
+
+  @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseAllType();
   }
