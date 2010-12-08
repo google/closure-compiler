@@ -204,6 +204,10 @@ public class NodeUtilTest extends TestCase {
     assertEquals("undefined", NodeUtil.getStringValue(getNode("undefined")));
     assertEquals("undefined", NodeUtil.getStringValue(getNode("void 0")));
     assertEquals("undefined", NodeUtil.getStringValue(getNode("void foo()")));
+    
+    assertEquals("NaN", NodeUtil.getStringValue(getNode("NaN")));
+    assertEquals("Infinity", NodeUtil.getStringValue(getNode("Infinity")));
+    assertEquals(null, NodeUtil.getStringValue(getNode("x")));
   }
 
   public void testGetFunctionName1() throws Exception {

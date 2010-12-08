@@ -149,9 +149,17 @@ public final class NodeUtil {
   static String getStringValue(Node n) {
     // TODO(user): Convert constant array, object, and regex literals as well.
     switch (n.getType()) {
-      case Token.NAME:
       case Token.STRING:
         return n.getString();
+
+      case Token.NAME:
+        String name = n.getString();
+        if ("undefined".equals(name)
+            || "Infinity".equals(name)
+            || "NaN".equals(name)) {
+          return name;
+        }
+        break;
 
       case Token.NUMBER:
         double value = n.getDouble();
