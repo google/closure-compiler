@@ -184,6 +184,41 @@ public final class NodeUtil {
   }
 
   /**
+   * Gets the value of a node as a Number, or null if it cannot be converted.
+   * When it returns a non-null Double, this method effectively emulates the
+   * <code>Number()</code> JavaScript cast function.
+   */
+  static Double getNumberValue(Node n) {
+    switch (n.getType()) {
+      case Token.TRUE:
+        return 1.0;
+      case Token.FALSE:
+      case Token.NULL:
+        return 0.0;
+
+      case Token.NUMBER:
+        return n.getDouble();
+
+      case Token.VOID:
+        return Double.NaN;
+
+      case Token.NAME:
+        String name = n.getString();
+        if (name.equals("undefined")) {
+          return Double.NaN;
+        }
+        if (name.equals("NaN")) {
+          return Double.NaN;
+        }
+        if (name.equals("Infinity")) {
+          return Double.POSITIVE_INFINITY;
+        }
+        return null;
+    }
+    return null;
+  }
+
+  /**
    * Gets the function's name. This method recognizes five forms:
    * <ul>
    * <li>{@code function name() ...}</li>

@@ -133,11 +133,11 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.MUL:
       case Token.BITAND:
       case Token.BITOR:
-        if (left.getType() == Token.NUMBER && right.getType() == Token.NUMBER) {
-          return tryFoldArithmeticOp(subtree, left, right);
-        } else {
-          return tryFoldLeftChildOp(subtree, left, right);
+        Node result = tryFoldArithmeticOp(subtree, left, right);
+        if (result != subtree) {
+          return result;
         }
+        return tryFoldLeftChildOp(subtree, left, right);
 
       case Token.LT:
       case Token.GT:
@@ -498,13 +498,11 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold arithmetic binary operators
    */
   private Node tryFoldArithmeticOp(Node n, Node left, Node right) {
-    if (left.getType() == Token.NUMBER && right.getType() == Token.NUMBER) {
-      Node result = performArithmeticOp(n.getType(), left, right);
-      if (result != null) {
-        n.getParent().replaceChild(n, result);
-        reportCodeChange();
-        return result;
-      }
+    Node result = performArithmeticOp(n.getType(), left, right);
+    if (result != null) {
+      n.getParent().replaceChild(n, result);
+      reportCodeChange();
+      return result;
     }
     return n;
   }
@@ -513,11 +511,27 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold arithmetic binary operators
    */
   private Node performArithmeticOp(int opType, Node left, Node right) {
-    Preconditions.checkState(left.getType() == Token.NUMBER);
-    Preconditions.checkState(right.getType() == Token.NUMBER);
+    // Unlike other operations, ADD operands are not always converted
+    // to Number.
+    if (opType == Token.ADD
+        && (left.getType() != Token.NUMBER
+            || right.getType() != Token.NUMBER)) {
+      return null;
+    }
+
     double result;
-    double lval = left.getDouble();
-    double rval = right.getDouble();
+
+    Double lValObj = NodeUtil.getNumberValue(left);
+    if (lValObj == null) {
+      return null;
+    }
+    Double rValObj = NodeUtil.getNumberValue(right);
+    if (rValObj == null) {
+      return null;
+    }
+
+    double lval = lValObj;
+    double rval = rValObj;
 
     switch (opType) {
       case Token.BITAND:
@@ -569,6 +583,12 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         Math.abs(result) <= MAX_FOLD_NUMBER) {
       Node newNumber = Node.newNumber(result);
       return newNumber;
+    } else if (Double.isNaN(result)) {
+      return Node.newString(Token.NAME, "NaN");
+    } else if (result == Double.POSITIVE_INFINITY) {
+      return Node.newString(Token.NAME, "Infinity");
+    } else if (result == Double.NEGATIVE_INFINITY) {
+      return new Node(Token.NEG, Node.newString(Token.NAME, "Infinity"));
     }
 
     return null;
@@ -749,24 +769,16 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         break;
 
       case Token.NULL:
-        if (undefinedRight) {
-          result = compareToUndefined(left, op);
-          break;
-        }
-        // fall through
       case Token.TRUE:
       case Token.FALSE:
         if (undefinedRight) {
           result = compareToUndefined(left, op);
           break;
         }
-        // fall through
-      case Token.THIS:
-        int tt = right.getType();
-        if (tt != Token.THIS &&
-            tt != Token.TRUE &&
-            tt != Token.FALSE &&
-            tt != Token.NULL) {
+        int rhType = right.getType();
+        if (rhType != Token.TRUE &&
+            rhType != Token.FALSE &&
+            rhType != Token.NULL) {
           return n;
         }
         switch (op) {
@@ -780,8 +792,44 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             result = left.getType() != right.getType();
             break;
 
+          case Token.GE:
+          case Token.LE:
+          case Token.GT:
+          case Token.LT:
+            Boolean compareResult = compareAsNumbers(op, left, right);
+            if (compareResult != null) {
+              result = compareResult;
+            } else {
+              return n;
+            }
+            break;
+
           default:
             return n;  // we only handle == and != here
+        }
+        break;
+
+      case Token.THIS:
+        if (right.getType() != Token.THIS) {
+          return n;
+        }
+        switch (op) {
+          case Token.SHEQ:
+          case Token.EQ:
+            result = true;
+            break;
+
+          case Token.SHNE:
+          case Token.NE:
+            result = false;
+            break;
+
+          // We can only handle == and != here.
+          // GT, LT, GE, LE depend on the type of "this" and how it will
+          // be converted to number.  The results are different depending on
+          // whether it is a string, NaN or other number value.
+          default:
+            return n;
         }
         break;
 
@@ -817,20 +865,11 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (Token.NUMBER != right.getType()) {
           return n;  // Only eval if they are the same type
         }
-        double lv = left.getDouble();
-        double rv = right.getDouble();
-
-        switch (op) {
-          case Token.SHEQ:
-          case Token.EQ: result = lv == rv; break;
-          case Token.SHNE:
-          case Token.NE: result = lv != rv; break;
-          case Token.LE: result = lv <= rv; break;
-          case Token.LT: result = lv <  rv; break;
-          case Token.GE: result = lv >= rv; break;
-          case Token.GT: result = lv >  rv; break;
-          default:
-            return n;  // don't handle that op
+        Boolean compareResult = compareAsNumbers(op, left, right);
+        if (compareResult != null) {
+          result = compareResult;
+        } else {
+          return null;
         }
         break;
 
@@ -879,6 +918,47 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     reportCodeChange();
 
     return newNode;
+  }
+
+  /**
+   * The result of the comparison as a Boolean or null if the
+   * result could not be determined.
+   */
+  private Boolean compareAsNumbers(int op, Node left, Node right) {
+    Double leftValue = NodeUtil.getNumberValue(left);
+    if (leftValue == null) {
+      return null;
+    }
+    Double rightValue = NodeUtil.getNumberValue(right);
+    if (rightValue == null) {
+      return null;
+    }
+
+    double lv = leftValue;
+    double rv = rightValue;
+
+    Boolean result;
+    switch (op) {
+      case Token.SHEQ:
+      case Token.EQ:
+        Preconditions.checkState(
+            left.getType() == Token.NUMBER && right.getType() == Token.NUMBER);
+        result = lv == rv;
+        break;
+      case Token.SHNE:
+      case Token.NE:
+        Preconditions.checkState(
+            left.getType() == Token.NUMBER && right.getType() == Token.NUMBER);
+        result = lv != rv;
+        break;
+      case Token.LE: result = lv <= rv; break;
+      case Token.LT: result = lv <  rv; break;
+      case Token.GE: result = lv >= rv; break;
+      case Token.GT: result = lv >  rv; break;
+      default:
+        return null;  // don't handle that op
+    }
+    return result;
   }
 
   /**

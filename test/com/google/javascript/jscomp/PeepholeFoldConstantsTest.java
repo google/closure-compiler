@@ -509,6 +509,13 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = y + (z * 24 * 60 * 60 * 1000)", "x = y + z * 864E5");
   }
 
+  public void testFoldArithmetic3() {
+    fold("x = null * undefined", "x = NaN");
+    fold("x = null * 1", "x = 0");
+    fold("x = (null - 1) * 2", "x = -2");
+    foldSame("x = (null + 1) * 2"); // We don't fold "+" with mixed types yet.
+  }
+
   public void testFoldArithmeticStringComp() {
     // Negative Numbers.
     assertResultString("x = 10 - 20", "x=-10");
@@ -735,6 +742,34 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("NaN >= NaN");
   }
 
+  public void testFoldLiteralsTypeMismatches() {
+    fold("true == true", "true");
+    fold("true == false", "false");
+    fold("true == null", "false");
+    fold("false == null", "false");
+
+    // relational operators convert its operands
+    fold("null <= null", "true"); // 0 = 0
+    fold("null >= null", "true");
+    fold("null > null", "false");
+    fold("null < null", "false");
+
+    fold("false >= null", "true"); // 0 = 0
+    fold("false <= null", "true");
+    fold("false > null", "false");
+    fold("false < null", "false");
+
+    fold("true >= null", "true");  // 1 > 0
+    fold("true <= null", "false");
+    fold("true > null", "true");
+    fold("true < null", "false");
+
+    fold("true >= false", "true");  // 1 > 0
+    fold("true <= false", "false");
+    fold("true > false", "true");
+    fold("true < false", "false");
+  }
+
   private static final List<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",
@@ -770,7 +805,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
         .build();
     Set<String> comparators = ImmutableSet.of("<=", "<", ">=", ">");
     Set<String> equalitors = ImmutableSet.of("==", "===");
-    Set<String> uncomparables = ImmutableSet.of("null", "undefined", "void 0");
+    Set<String> uncomparables = ImmutableSet.of("undefined", "void 0");
     List<String> operators = ImmutableList.copyOf(inverses.values());
     for (int iOperandA = 0; iOperandA < LITERAL_OPERANDS.size(); iOperandA++) {
       for (int iOperandB = 0;
@@ -785,9 +820,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
           // Test invertability.
           if (comparators.contains(op) &&
               (uncomparables.contains(a) || uncomparables.contains(b))) {
-            // TODO(nicksantos): Eventually, all cases should be collapsed.
-            assertSameResultsOrUncollapsed(join(a, op, b), "false");
-            assertSameResultsOrUncollapsed(join(a, inverse, b), "false");
+            assertSameResults(join(a, op, b), "false");
+            assertSameResults(join(a, inverse, b), "false");
           } else if (a.equals(b) && equalitors.contains(op)) {
             if (a.equals("NaN") || a.equals("Infinity")) {
               foldSame(join(a, op, b));
