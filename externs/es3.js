@@ -1426,6 +1426,13 @@ Date.prototype.toSource = function() {};
 /**
  * @return {string}
  * @nosideeffects
+ * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date/toDateString
+ */
+Date.prototype.toDateString = function() {};
+
+/**
+ * @return {string}
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toGMTString
  */
 Date.prototype.toGMTString = function() {};
