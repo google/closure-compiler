@@ -60,9 +60,11 @@ chrome.extension.getToolstrips = function() {};
 chrome.extension.getURL = function(path) {};
 
 /**
+ * @param {Object=} fetchProperties An object with optional 'type' and optional
+ *     'windowId' keys.
  * @return {Array.<Window>} The global JS objects for each content view.
  */
-chrome.extension.getViews = function() {};
+chrome.extension.getViews = function(fetchProperties) {};
 
 /**
  * @param {number|*=} opt_arg1 Either the extensionId to send the request to,
