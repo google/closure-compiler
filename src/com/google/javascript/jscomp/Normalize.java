@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -27,6 +28,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The goal with this pass is to simplify the other passes,
@@ -626,16 +628,31 @@ class Normalize implements CompilerPass {
   private final class DuplicateDeclarationHandler implements
       SyntacticScopeCreator.RedeclarationHandler {
 
+    private Set<Var> hasOkDuplicateDeclaration = Sets.newHashSet();
+
     /**
      * Remove duplicate VAR declarations encountered discovered during
      * scope creation.
      */
     @Override
     public void onRedeclaration(
-        Scope s, String name, Node n, Node parent, Node gramps,
-        Node nodeWithLineNumber) {
+        Scope s, String name, Node n, CompilerInput input) {
       Preconditions.checkState(n.getType() == Token.NAME);
+      Node parent = n.getParent();
       Var v = s.getVar(name);
+
+      if (v != null && s.isGlobal()) {
+        // We allow variables to be duplicate declared if one
+        // declaration appears in source and the other in externs.
+        // This deals with issues where a browser built-in is declared
+        // in one browser but not in another.
+        if (v.isExtern() && !input.isExtern()) {
+          if (hasOkDuplicateDeclaration.add(v)) {
+            return;
+          }
+        }
+      }
+
       // If name is "arguments", Var maybe null.
       if (v != null && v.getParentNode().getType() == Token.CATCH) {
         // Redeclaration of a catch expression variable is hard to model
@@ -657,7 +674,7 @@ class Normalize implements CompilerPass {
             name);
         compiler.report(
             JSError.make(
-                NodeUtil.getSourceName(nodeWithLineNumber), nodeWithLineNumber,
+                input.getName(), n,
                 CATCH_BLOCK_VAR_ERROR, name));
       } else if (v != null && parent.getType() == Token.FUNCTION) {
         if (v.getParentNode().getType() == Token.VAR) {
@@ -669,7 +686,7 @@ class Normalize implements CompilerPass {
       } else if (parent.getType() == Token.VAR) {
         Preconditions.checkState(parent.hasOneChild());
 
-        replaceVarWithAssignment(n, parent, gramps);
+        replaceVarWithAssignment(n, parent, parent.getParent());
       }
     }
 

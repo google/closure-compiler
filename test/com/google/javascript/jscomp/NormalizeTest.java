@@ -93,7 +93,7 @@ public class NormalizeTest extends CompilerTestCase {
 
   public void testDuplicateVarInExterns() {
     test("var extern;",
-         "/** @suppress {duplicate} */ var extern = 3;", "extern = 3;",
+         "/** @suppress {duplicate} */ var extern = 3;", "var extern = 3;",
          null, null);
   }
 
@@ -255,8 +255,12 @@ public class NormalizeTest extends CompilerTestCase {
     test("try { } catch(e) {e; try { } catch(e) {e;}};",
          "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ");
 
-    // Verify global redefinition of extern definition is removed.
-    test("/** @suppress {duplicate} */\nvar window;", "");
+    // Verify the 1st global redefinition of extern definition is not removed.
+    test("/** @suppress {duplicate} */\nvar window;", "var window;");
+
+    // Verify the 2nd global redefinition of extern definition is removed.
+    test("/** @suppress {duplicate} */\nvar window;" +
+         "/** @suppress {duplicate} */\nvar window;", "var window;");
 
     // Verify local masking extern made unique.
     test("function f() {var window}",

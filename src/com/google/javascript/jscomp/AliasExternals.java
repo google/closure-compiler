@@ -109,11 +109,8 @@ class AliasExternals implements CompilerPass {
   private final Map<Node, Node> replacementMap =
     new IdentityHashMap<Node, Node>();
 
-  /** Map of all globals that we may aliasing */
+  /** Map of all globals that we may alias */
   private final Map<String, Symbol> globals = Maps.newHashMap();
-
-  /** Holds all of the globals that can be aliased to GLOBAL_ */
-  private final List<Node> globalUses = Lists.newArrayList();
 
   /** Reference to JS Compiler */
   private final AbstractCompiler compiler;
@@ -590,11 +587,10 @@ class AliasExternals implements CompilerPass {
     }
 
     // Change the references to the globals
-    for (Node globalUse : globalUses) {
-      replaceGlobalUse(globalUse);
-    }
-
     for (Symbol global : globals.values()) {
+      for (Node globalUse : global.uses) {
+        replaceGlobalUse(globalUse);
+      }
       if (global.aliasAccessor) {
         addGlobalAliasNode(global,
                            getAddingRoot(global.deepestModuleAccess));
@@ -659,6 +655,13 @@ class AliasExternals implements CompilerPass {
 
         Symbol global = globals.get(name);
         if (global != null) {
+          // If a variable is declared in both externs and normal source,
+          // don't alias it.
+          if (n.getParent().getType() == Token.VAR ||
+              n.getParent().getType() == Token.FUNCTION) {
+            globals.remove(name);
+          }
+
           boolean isFirst = parent.getFirstChild() == n;
           // If a global is being assigned to or otherwise modified, then we
           // don't want to alias it.
@@ -674,7 +677,7 @@ class AliasExternals implements CompilerPass {
             global.recordAccessor(t);
           }
 
-          globalUses.add(n);
+          global.uses.add(n);
         }
       }
     }
@@ -747,6 +750,8 @@ class AliasExternals implements CompilerPass {
 
     JSModule deepestModuleAccess = null;
     JSModule deepestModuleMutate = null;
+
+    List<Node> uses = Lists.newArrayList();
 
     private Symbol(String name, boolean isConstant) {
       this.name = name;
