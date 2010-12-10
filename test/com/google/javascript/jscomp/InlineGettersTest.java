@@ -41,11 +41,40 @@ public class InlineGettersTest extends CompilerTestCase {
     test(definitions + js, definitions + expected);
   }
 
-  public void testSimpleInline() {
+  public void testSimpleInline1() {
     testWithPrefix("function Foo(){}" +
         "Foo.prototype.bar=function(){return this.baz};",
         "var x=(new Foo).bar();var y=(new Foo).bar();",
         "var x=(new Foo).baz;var y=(new Foo).baz");
+  }
+
+  public void testSimpleInline2() {
+    testWithPrefix("function Foo(){}" +
+        "Foo.prototype={bar:function(){return this.baz}};",
+        "var x=(new Foo).bar();var y=(new Foo).bar();",
+        "var x=(new Foo).baz;var y=(new Foo).baz");
+  }
+
+  public void testSimpleGetterInline1() {
+    // TODO(johnlenz): Support this case.
+    testSame("function Foo(){}" +
+      "Foo.prototype={get bar(){return this.baz}};" +
+      "var x=(new Foo).bar;var y=(new Foo).bar");
+    // Verify we are not confusing calling the result of an ES5 getter
+    // with call the getter.
+    testSame("function Foo(){}" +
+      "Foo.prototype={get bar(){return this.baz}};" +
+      "var x=(new Foo).bar();var y=(new Foo).bar()");
+  }
+
+  public void testSimpleSetterInline1() {
+    // Verify 'get' and 'set' are not confused.
+    testSame("function Foo(){}" +
+      "Foo.prototype={set bar(a){return this.baz}};" +
+      "var x=(new Foo).bar;var y=(new Foo).bar");
+    testSame("function Foo(){}" +
+      "Foo.prototype={set bar(a){return this.baz}};" +
+      "var x=(new Foo).bar();var y=(new Foo).bar()");
   }
 
   public void testSelfInline() {
@@ -226,6 +255,11 @@ public class InlineGettersTest extends CompilerTestCase {
              "(new Foo).bar()");
   }
 
+  public void testObjectLit2() {
+    testSame("var blah={bar:function(){}};" +
+             "(new Foo).bar()");
+  }
+
   public void testObjectLitExtern() {
     String externs = "window.bridge={_sip:function(){}};";
     testSame(externs, "window.bridge._sip()", null);
@@ -252,5 +286,19 @@ public class InlineGettersTest extends CompilerTestCase {
   public void testIssue2508576_3() {
     // Anonymous object definition without side-effect should be removed.
     test("({a:function(){},b:alert}).a(\"a\")", "");
+  }
+
+  public void testAnonymousGet() {
+    // Anonymous object definition without side-effect should be removed.
+    testSame("({get a(){return function(){}},b:alert}).a(\"a\")");
+    testSame("({get a(){},b:alert}).a(\"a\")");
+    testSame("({get a(){},b:alert}).a");
+  }
+
+  public void testAnonymousSet() {
+    // Anonymous object definition without side-effect should be removed.
+    testSame("({set a(b){return function(){}},b:alert}).a(\"a\")");
+    testSame("({set a(b){},b:alert}).a(\"a\")");
+    testSame("({set a(b){},b:alert}).a");
   }
 }

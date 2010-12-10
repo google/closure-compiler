@@ -155,14 +155,12 @@ abstract class MethodCompilerPass implements CompilerPass {
         } break;
 
         case Token.OBJECTLIT: {
-          // assumes the object literal is well formed
-          // (has an even number of children)
-          for (Node key = n.getFirstChild();
-               key != null; key = key.getNext()) {
-            if (key.getType() == Token.STRING) {
+          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+            if (key.getType() != Token.NUMBER) {
               Node value = key.getFirstChild();
               String name = key.getString();
-              if (value.getType() == Token.FUNCTION) {
+              if (key.getType() == Token.STRING
+                  && value.getType() == Token.FUNCTION) {
                 addSignature(name, value, t.getSourceName());
               } else {
                 getSignatureStore().removeSignature(name);
@@ -208,13 +206,21 @@ abstract class MethodCompilerPass implements CompilerPass {
           break;
 
         case Token.OBJECTLIT:
-          // assumes the object literal is well formed
-          // (has an even number of children)
-          for (Node key = n.getFirstChild();
-               key != null; key = key.getNext()) {
-            if (key.getType() == Token.STRING) {
-              Node value = key.getFirstChild();
-              addPossibleSignature(key.getString(), value, t);
+          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+            switch(key.getType()) {
+              case Token.STRING:
+                addPossibleSignature(key.getString(), key.getFirstChild(), t);
+                break;
+              case Token.SET:
+              case Token.GET:
+                nonMethodProperties.add(key.getString());
+                break;
+              case Token.NUMBER:
+                // Ignore numberic keys.
+                break;
+              default:
+                throw new IllegalStateException(
+                    "unexpect OBJECTLIT key: " + key);
             }
           }
           break;
