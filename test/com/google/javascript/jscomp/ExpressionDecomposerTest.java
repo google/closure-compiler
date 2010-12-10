@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -395,6 +396,22 @@ public class ExpressionDecomposerTest extends TestCase {
         "var temp_const$$1 = temp_const$$0.b;" +
         "y = (temp_const$$0.b = temp_const$$1 + foo()) + goo().a");
   }
+  
+  public void testExposeObjectLit1() {
+    // Validate that getter and setters methods are see as side-effect
+    // free and that values can move past them.  We don't need to be 
+    // concerned with exposing the getter or setter here but the
+    // decomposer does not have a method of exposing properties only variables.
+    helperMoveExpression(
+        "var x = {get a() {}, b: foo()};",
+        "foo",
+        "var temp$$0=foo();var x = {get a() {}, b: temp$$0};");
+
+    helperMoveExpression(
+        "var x = {set a(p) {}, b: foo()};",
+        "foo",
+        "var temp$$0=foo();var x = {set a(p) {}, b: temp$$0};");
+  }
 
   /** Test case helpers. */
 
@@ -408,7 +425,7 @@ public class ExpressionDecomposerTest extends TestCase {
 
   private void helperCanExposeFunctionExpression(
       DecompositionType expectedResult, String code, int call) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = getCompiler();
     Set<String> knownConstants = Sets.newHashSet();
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(), knownConstants);
@@ -436,7 +453,7 @@ public class ExpressionDecomposerTest extends TestCase {
       String fnName,
       Set<String> knownConstants
       ) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = getCompiler();
     if (knownConstants == null) {
       knownConstants = Sets.newHashSet();
     }
@@ -487,7 +504,7 @@ public class ExpressionDecomposerTest extends TestCase {
       String expectedResult,
       Set<String> knownConstants
       ) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = getCompiler();
     if (knownConstants == null) {
       knownConstants = Sets.newHashSet();
     }
@@ -531,7 +548,7 @@ public class ExpressionDecomposerTest extends TestCase {
       String expectedResult,
       Set<String> knownConstants
       ) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = getCompiler();
     if (knownConstants == null) {
       knownConstants = Sets.newHashSet();
     }
@@ -558,6 +575,14 @@ public class ExpressionDecomposerTest extends TestCase {
         "\n" + explanation, explanation);
   }
 
+  private static Compiler getCompiler() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.languageIn = LanguageMode.ECMASCRIPT5;
+    compiler.initOptions(options);
+    return compiler;
+  }
+  
   private static Node findCall(Node n, String name) {
     return findCall(n, name, 1);
   }

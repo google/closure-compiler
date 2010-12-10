@@ -345,9 +345,23 @@ class DefinitionsRemover {
       // exists in the AST.  We will have to change the return type of
       // getLValue sooner or later in order to provide this added
       // flexibility.
-      return new Node(Token.GETPROP,
-                      new Node(Token.OBJECTLIT),
-                      name.cloneNode());
+
+      switch (name.getType()) {
+        case Token.STRING:
+          return new Node(Token.GETPROP,
+            new Node(Token.OBJECTLIT),
+            name.cloneNode());
+        case Token.NUMBER:
+          return new Node(Token.GETELEM,
+            new Node(Token.OBJECTLIT),
+            name.cloneNode());
+        case Token.SET:
+        case Token.GET:
+          // TODO(johnlenz): revisit. Not sure what to do here.
+          throw new IllegalStateException("not yet implemented");
+        default:
+          throw new IllegalStateException("unexpected");
+      }
     }
 
     @Override

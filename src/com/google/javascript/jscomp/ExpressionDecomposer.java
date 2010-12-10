@@ -300,7 +300,7 @@ class ExpressionDecomposer {
       return;
     }
 
-    // Never try to decompose anobject literal key.
+    // Never try to decompose an object literal key.
     Preconditions.checkState(!NodeUtil.isObjectLitKey(n, n.getParent()));
 
     // Decompose the children in reverse evaluation order.  This simplifies

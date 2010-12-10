@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CodeChangeHandler.RecentChange;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
@@ -82,6 +83,11 @@ public abstract class CompilerTestCase extends TestCase  {
   private Compiler lastCompiler;
 
   /**
+   * Whether to acceptES5 source.
+   */
+  private boolean acceptES5 = true;
+
+  /**
    * Constructs a test.
    *
    * @param externs Externs JS as a string
@@ -139,6 +145,10 @@ public abstract class CompilerTestCase extends TestCase  {
   protected CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
 
+    if (this.acceptES5) {
+      options.languageIn = LanguageMode.ECMASCRIPT5;
+    }
+
     // This doesn't affect whether checkSymbols is run--it just affects
     // whether variable warnings are filtered.
     options.checkSymbols = true;
@@ -171,6 +181,13 @@ public abstract class CompilerTestCase extends TestCase  {
   /** The most recently used JSComp instance. */
   Compiler getLastCompiler() {
     return lastCompiler;
+  }
+
+  /**
+   * Whether to allow ECMASCRIPT5 source parsing.
+   */
+  protected void enableEcmaScript5(boolean acceptES5) {
+    this.acceptES5 = acceptES5;
   }
 
   /**
@@ -366,6 +383,10 @@ public abstract class CompilerTestCase extends TestCase  {
     lastCompiler = compiler;
 
     CompilerOptions options = getOptions();
+
+    if (this.acceptES5) {
+      options.languageIn = LanguageMode.ECMASCRIPT5;
+    }
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.
     options.checkTypes = parseTypeInfo;

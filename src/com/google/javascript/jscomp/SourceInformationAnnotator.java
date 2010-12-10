@@ -83,7 +83,7 @@ class SourceInformationAnnotator extends
              key = key.getNext()) {
            // We only want keys that are strings (not numbers), and only keys
            // that were unquoted.
-           if (key.getType() == Token.STRING) {
+           if (key.getType() != Token.NUMBER) {
              if (!key.isQuotedString()) {
                key.putProp(Node.ORIGINALNAME_PROP, key.getString());
              }

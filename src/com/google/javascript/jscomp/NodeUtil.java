@@ -1626,9 +1626,15 @@ public final class NodeUtil {
    * @param parent The node's parent
    */
   static boolean isObjectLitKey(Node node, Node parent) {
-    // TODO(nicksantos): What about NUMBER?
-    return node.getType() == Token.STRING &&
-        parent.getType() == Token.OBJECTLIT;
+    switch (node.getType()) {
+      case Token.NUMBER:
+      case Token.STRING:
+        return parent.getType() == Token.OBJECTLIT;
+      case Token.GET:
+      case Token.SET:
+        return true;
+    }
+    return false;
   }
 
   /**

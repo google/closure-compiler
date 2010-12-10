@@ -75,6 +75,11 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
                         "USE GETPROP o.a -> [NUMBER]"));
 
     checkDefinitionsInJs(
+      "({1 : 1}); o[1]",
+      ImmutableSet.<String>of());
+
+
+    checkDefinitionsInJs(
         "var a = {b : 1}; a.b",
         ImmutableSet.of("DEF NAME a -> <null>",
                         "DEF STRING null -> NUMBER",

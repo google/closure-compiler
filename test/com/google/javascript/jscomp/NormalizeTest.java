@@ -404,8 +404,44 @@ public class NormalizeTest extends CompilerTestCase {
     }
   }
 
-  public void testPropertyIsConstant() throws Exception {
+  public void testPropertyIsConstant1() throws Exception {
     testSame("var a = {};a.CONST = 3; var b = a.CONST;");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    assertEquals(2, constantNodes.size());
+    for (Node hasProp : constantNodes) {
+      assertEquals("CONST", hasProp.getString());
+    }
+  }
+
+  public void testPropertyIsConstant2() throws Exception {
+    testSame("var a = {CONST: 3}; var b = a.CONST;");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    assertEquals(2, constantNodes.size());
+    for (Node hasProp : constantNodes) {
+      assertEquals("CONST", hasProp.getString());
+    }
+  }
+
+  public void testGetterPropertyIsConstant() throws Exception {
+    testSame("var a = { get CONST() {return 3} }; " +
+    		 "var b = a.CONST;");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    assertEquals(2, constantNodes.size());
+    for (Node hasProp : constantNodes) {
+      assertEquals("CONST", hasProp.getString());
+    }
+  }
+
+  public void testSetterPropertyIsConstant() throws Exception {
+    // Verifying that a SET is properly annotated.
+    testSame("var a = { set CONST(b) {throw 'invalid'} }; " +
+             "var c = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);

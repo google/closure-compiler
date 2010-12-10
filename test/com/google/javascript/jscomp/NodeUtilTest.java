@@ -21,6 +21,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -208,6 +209,38 @@ public class NodeUtilTest extends TestCase {
     assertEquals("NaN", NodeUtil.getStringValue(getNode("NaN")));
     assertEquals("Infinity", NodeUtil.getStringValue(getNode("Infinity")));
     assertEquals(null, NodeUtil.getStringValue(getNode("x")));
+  }
+
+  public void testIsObjectLiteralKey1() throws Exception {
+    testIsObjectLiteralKey(
+      parseExpr("({})"), false);
+    testIsObjectLiteralKey(
+      parseExpr("a"), false);
+    testIsObjectLiteralKey(
+      parseExpr("'a'"), false);
+    testIsObjectLiteralKey(
+      parseExpr("1"), false);
+    testIsObjectLiteralKey(
+      parseExpr("({a: 1})").getFirstChild(), true);
+    testIsObjectLiteralKey(
+      parseExpr("({1: 1})").getFirstChild(), true);
+    testIsObjectLiteralKey(
+      parseExpr("({get a(){}})").getFirstChild(), true);
+    testIsObjectLiteralKey(
+      parseExpr("({set a(b){}})").getFirstChild(), true);
+  }
+
+  private Node parseExpr(String js) {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.languageIn = LanguageMode.ECMASCRIPT5;
+    compiler.initOptions(options);
+    Node root = compiler.parseTestCode(js);
+    return root.getFirstChild().getFirstChild();
+  }
+
+  private void testIsObjectLiteralKey(Node node, boolean expected) {
+    assertEquals(expected, NodeUtil.isObjectLitKey(node, node.getParent()));
   }
 
   public void testGetFunctionName1() throws Exception {
