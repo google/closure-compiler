@@ -77,10 +77,48 @@ public class StripCodeTest extends CompilerTestCase {
          "a.b.c=function(){}");
   }
 
-  public void testLoggerDefinedInPrototype() {
+  public void testLoggerDefinedInPrototype1() {
     test("a.b.c = function() {};" +
          "a.b.c.prototype.logger = goog.debug.Logger.getLogger('a.b.c');",
          "a.b.c=function(){}");
+  }
+
+  public void testLoggerDefinedInPrototype2() {
+    test("a.b.c = function() {};" +
+         "a.b.c.prototype = {logger: goog.debug.Logger.getLogger('a.b.c')}",
+         "a.b.c = function() {};" +
+         "a.b.c.prototype = {}");
+  }
+
+  public void testLoggerDefinedInPrototype3() {
+    test("a.b.c = function() {};" +
+         "a.b.c.prototype = { " +
+         "  get logger() {return goog.debug.Logger.getLogger('a.b.c')}" +
+         "}",
+         "a.b.c = function() {};" +
+         "a.b.c.prototype = {}");
+  }
+
+  public void testLoggerDefinedInPrototype4() {
+    test("a.b.c = function() {};" +
+         "a.b.c.prototype = { " +
+         "  set logger(a) {this.x = goog.debug.Logger.getLogger('a.b.c')}" +
+         "}",
+         "a.b.c = function() {};" +
+         "a.b.c.prototype = {}");
+  }
+
+  public void testLoggerDefinedInPrototype5() {
+    test("a.b.c = function() {};" +
+         "a.b.c.prototype = { " +
+         "  get f() {return this.x;}," +
+         "  set f(a) {this.x = goog.debug.Logger.getLogger('a.b.c')}" +
+         "}",
+         "a.b.c = function() {};" +
+         "a.b.c.prototype = { " +
+         "  get f() {return this.x;}," +
+         "  set f(a) {this.x = null}" +
+         "}");
   }
 
   public void testLoggerDefinedStatically() {
@@ -89,12 +127,42 @@ public class StripCodeTest extends CompilerTestCase {
          "a.b.c=function(){}");
   }
 
-  public void testLoggerDefinedInObjectLiteral() {
+  public void testLoggerDefinedInObjectLiteral1() {
     test("a.b.c = {" +
          "  x: 0," +
          "  logger: goog.debug.Logger.getLogger('a.b.c')" +
          "};",
          "a.b.c={x:0}");
+  }
+
+  public void testLoggerDefinedInObjectLiteral2() {
+    test("a.b.c = {" +
+         "  x: 0," +
+         "  get logger() {return goog.debug.Logger.getLogger('a.b.c')}" +
+         "};",
+         "a.b.c={x:0}");
+  }
+
+  public void testLoggerDefinedInObjectLiteral3() {
+    test("a.b.c = {" +
+         "  x: null," +
+         "  get logger() {return this.x}," +
+         "  set logger(a) {this.x  = goog.debug.Logger.getLogger(a)}" +
+         "};",
+         "a.b.c={x:null}");
+  }
+
+  public void testLoggerDefinedInObjectLiteral4() {
+    test("a.b.c = {" +
+         "  x: null," +
+         "  get y() {return this.x}," +
+         "  set y(a) {this.x  = goog.debug.Logger.getLogger(a)}" +
+         "};",
+         "a.b.c = {" +
+         "  x: null," +
+         "  get y() {return this.x}," +
+         "  set y(a) {this.x  = null}" +
+         "};");
   }
 
   public void testLoggerDefinedInPrototypeAndUsedInConstructor() {

@@ -352,12 +352,13 @@ class StripCode implements CompilerPass {
     void eliminateKeysWithStripNamesFromObjLit(NodeTraversal t, Node n) {
       // OBJLIT
       //   key1
-      //   value1
+      //     value1
+      //   key2
       //   ...
       Node key = n.getFirstChild();
       while (key != null) {
-        if (key.getType() == Token.STRING &&
-            isStripName(key.getString())) {
+        if (key.getType() != Token.NUMBER
+            && isStripName(key.getString())) {
           Node value = key.getFirstChild();
           Node next = key.getNext();
           n.removeChild(key);
