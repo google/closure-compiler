@@ -618,6 +618,48 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(true, js, js, "{}");
   }
 
+  public void testObjectLiteralReflected() {
+    String js = ""
+        + "var goog = {};"
+        + "goog.reflect = {};"
+        + "goog.reflect.object = function(x, y) { return y; };"
+        + "/** @constructor */ function F() {}"
+        + "/** @type {number} */ F.prototype.foo = 3;"
+        + "/** @constructor */ function G() {}"
+        + "/** @type {number} */ G.prototype.foo = 3;"
+        + "goog.reflect.object(F, {foo: 5});";
+    String result = ""
+        + "var goog = {};"
+        + "goog.reflect = {};"
+        + "goog.reflect.object = function(x, y) { return y; };"
+        + "function F() {}"
+        + "F.prototype.F_prototype$foo = 3;"
+        + "function G() {}"
+        + "G.prototype.G_prototype$foo = 3;"
+        + "goog.reflect.object(F, {F_prototype$foo: 5});";
+    testSets(false, js, result, "{foo=[[F.prototype], [G.prototype]]}");
+    testSets(true, js, result, "{foo=[[F.prototype], [G.prototype]]}");
+  }
+
+  public void testObjectLiteralLends() {
+    String js = ""
+        + "var mixin = function(x) { return x; };"
+        + "/** @constructor */ function F() {}"
+        + "/** @type {number} */ F.prototype.foo = 3;"
+        + "/** @constructor */ function G() {}"
+        + "/** @type {number} */ G.prototype.foo = 3;"
+        + "mixin(/** @lends {F.prototype} */ ({foo: 5}));";
+    String result = ""
+        + "var mixin = function(x) { return x; };"
+        + "function F() {}"
+        + "F.prototype.F_prototype$foo = 3;"
+        + "function G() {}"
+        + "G.prototype.G_prototype$foo = 3;"
+        + "mixin(/** @lends {F.prototype} */ ({F_prototype$foo: 5}));";
+    testSets(false, js, result, "{foo=[[F.prototype], [G.prototype]]}");
+    testSets(true, js, result, "{foo=[[F.prototype], [G.prototype]]}");
+  }
+
   public void testClosureInherits() {
     String js = ""
         + "var goog = {};"
