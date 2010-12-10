@@ -4358,6 +4358,41 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testControlFlowRestrictsType10() throws Exception {
+    // We should correctly infer that y will be (null|{}) because
+    // the loop wraps around.
+    testTypes("/** @param {number} x */ function f(x) {}" +
+        "function g() {" +
+        "  var y = null;" +
+        "  for (var i = 0; i < 10; i++) {" +
+        "    f(y);" +
+        "    if (y != null) {" +
+        "      // y is None the first time it goes thru this branch\n" +
+        "    } else {" +
+        "      y = {};" +
+        "    }" +
+        "  }" +
+        "};",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : (null|{})\n" +
+        "required: number");
+  }
+
+  public void testControlFlowRestrictsType11() throws Exception {
+    testTypes("/** @param {boolean} x */ function f(x) {}" +
+        "function g() {" +
+        "  var y = null;" +
+        "  if (y != null) {" +
+        "    for (var i = 0; i < 10; i++) {" +
+        "      f(y);" +
+        "    }" +
+        "  }" +
+        "};",
+        "condition always evaluates to false\n" +
+        "left : null\n" +
+        "right: null");
+  }
+
   public void testSwitchCase3() throws Exception {
     testTypes("/** @type String */" +
         "var a = new String('foo');" +

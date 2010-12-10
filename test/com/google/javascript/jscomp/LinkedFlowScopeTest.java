@@ -264,7 +264,7 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
         childA.findUniqueRefinedSlot(localEntry).getType());
   }
 
-  public void testDiffer() {
+  public void testDiffer1() {
     FlowScope childA = localEntry.createChildFlowScope();
     childA.inferSlotType("localB", NUMBER_TYPE);
 
@@ -281,7 +281,7 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
     childBC.inferSlotType("localA", NO_TYPE);
 
     assertScopesSame(childAB, childB);
-    assertScopesSame(childABC, childBC);
+    assertScopesDiffer(childABC, childBC);
 
     assertScopesDiffer(childABC, childB);
     assertScopesDiffer(childAB, childBC);
@@ -290,6 +290,16 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
     assertScopesDiffer(childA, childABC);
     assertScopesDiffer(childA, childB);
     assertScopesDiffer(childA, childBC);
+  }
+
+  public void testDiffer2() {
+    FlowScope childA = localEntry.createChildFlowScope();
+    childA.inferSlotType("localA", NUMBER_TYPE);
+
+    FlowScope childB = localEntry.createChildFlowScope();
+    childB.inferSlotType("localA", NO_TYPE);
+
+    assertScopesDiffer(childA, childB);
   }
 
   private void assertScopesDiffer(FlowScope a, FlowScope b) {

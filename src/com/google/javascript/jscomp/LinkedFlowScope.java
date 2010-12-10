@@ -315,15 +315,8 @@ class LinkedFlowScope implements FlowScope {
       return true;
     }
 
-    // Both slots must be non-null.
-    JSType aType = slotA.getType();
-    JSType bType = slotB.getType();
-    if (aType.isNoType() || bType.isNoType()) {
-      return false;
-    }
-
-    // Both types must be non-null.
-    return aType.differsFrom(bType);
+    // Both slots and types must be non-null.
+    return slotA.getType().differsFrom(slotB.getType());
   }
 
   /**
