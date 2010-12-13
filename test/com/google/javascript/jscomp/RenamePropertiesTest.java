@@ -57,12 +57,41 @@ public class RenamePropertiesTest extends CompilerTestCase {
          "Bar.prototype.b = function(){}");
   }
 
-  public void testPrototypePropertiesAsObjLitKeys() {
+  public void testPrototypePropertiesAsObjLitKeys1() {
     test("Bar.prototype = {2: function(){}, getA: function(){}}; bar[2]();",
          "Bar.prototype = {2: function(){}, a: function(){}}; bar[2]();");
   }
 
-  public void testMixedQuotedAndUnquotedObjLitKeys() {
+  public void testPrototypePropertiesAsObjLitKeys2() {
+    // TODO(johnlenz): Add tests when Rhino supports numbers and quoted strings
+    // for get and set.
+
+    // testSame("Bar.prototype = {get 2(){}}; bar[2];");
+
+    // testSame("Bar.prototype = {get 'a'(){}}; bar['a'];");
+
+    test("Bar.prototype = {get getA(){}}; bar.getA;",
+         "Bar.prototype = {get a(){}}; bar.a;");
+  }
+
+  public void testPrototypePropertiesAsObjLitKeys3() {
+    // TODO(johnlenz): Add tests when Rhino supports numbers and quoted strings
+    // for get and set.
+
+    // testSame("Bar.prototype = {set 2(x){}}; bar[2];");
+
+    // testSame("Bar.prototype = {set 'a'(x){}}; bar['a'];");
+
+    test("Bar.prototype = {set getA(x){}}; bar.getA;",
+         "Bar.prototype = {set a(x){}}; bar.a;");
+  }
+
+  public void testMixedQuotedAndUnquotedObjLitKeys1() {
+    test("Bar = {getA: function(){}, 'getB': function(){}}; bar.getA();",
+         "Bar = {a: function(){}, 'getB': function(){}}; bar.a();");
+  }
+
+  public void testMixedQuotedAndUnquotedObjLitKeys2() {
     test("Bar = {getA: function(){}, 'getB': function(){}}; bar.getA();",
          "Bar = {a: function(){}, 'getB': function(){}}; bar.a();");
   }

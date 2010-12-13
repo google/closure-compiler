@@ -325,7 +325,7 @@ class RenamePrototypes implements CompilerPass {
                  child != null;
                  child = child.getNext()) {
 
-              if (child.getType() == Token.STRING) {
+              if (child.getType() != Token.NUMBER) {
                 markObjLitPropertyCandidate(child, t.getInput());
               }
             }
@@ -364,11 +364,9 @@ class RenamePrototypes implements CompilerPass {
             // the traversal reaches it.
             prototypeObjLits.add(map);
 
-            // assumes the object literal is well formed
-            // (has an even number of children)
             for (Node key = map.getFirstChild();
                  key != null; key = key.getNext()) {
-              if (key.getType() == Token.STRING) {
+              if (key.getType() != Token.NUMBER) { // May be STRING, GET, or SET
                 markPrototypePropertyCandidate(key, input);
               }
             }

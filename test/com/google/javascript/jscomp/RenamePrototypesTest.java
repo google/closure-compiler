@@ -92,6 +92,35 @@ public class RenamePrototypesTest extends CompilerTestCase {
          ";bar.b();bar.a");
   }
 
+  public void testRenamePrototypesWithGetOrSet() {
+    // Simple
+    // TODO(johnlenz): Enable these for after Rhino support is added.
+    // test("Bar.prototype={get 'getFoo'(){}}",
+    //      "Bar.prototype={get a(){}}");
+    // test("Bar.prototype={get 2(){}}",
+    //      "Bar.prototype={get 2(){}}");
+    test("Bar.prototype={get getFoo(){}}",
+         "Bar.prototype={get a(){}}");
+    test("Bar.prototype={get getFoo(){}}; a.getFoo;",
+         "Bar.prototype={get a(){}}; a.a;");
+
+    // TODO(johnlenz): Enable these for after Rhino support is added.
+    // test("Bar.prototype={set 'getFoo'(x){}}",
+    //      "Bar.prototype={set a(x){}}");
+    // test("Bar.prototype={set 2(x){}}",
+    //      "Bar.prototype={set 2(x){}}");
+    test("Bar.prototype={set getFoo(x){}}",
+         "Bar.prototype={set a(x){}}");
+    test("Bar.prototype={set getFoo(x){}}; a.getFoo;",
+         "Bar.prototype={set a(x){}}; a.a;");
+    
+    // overlap
+    test("Bar.prototype={get a(){}," +
+         "get b(){}};b.b()",
+         "Bar.prototype={get b(){}," +
+         "get a(){}};b.a()");
+  }
+
   /**
    * Test renaming private properties (end with underscores) and test to make
    * sure we don't rename other properties.

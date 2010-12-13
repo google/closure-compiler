@@ -300,7 +300,7 @@ class RenameProperties implements CompilerPass {
           for (Node child = n.getFirstChild();
                child != null;
                child = child.getNext()) {
-            if (child.getType() == Token.STRING) {
+            if (child.getType() != Token.NUMBER) { // expect STRING, GET, SET
               externedNames.add(child.getString());
             }
           }
@@ -327,13 +327,10 @@ class RenameProperties implements CompilerPass {
           }
           break;
         case Token.OBJECTLIT:
-          // The children of an OBJECTLIT node are alternating key/value pairs.
-          // We skip the values.
-          for (Node key = n.getFirstChild(); key != null;
-               key = key.getNext()) {
+          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             // We only want keys that are strings (not numbers), and only keys
             // that were unquoted.
-            if (key.getType() == Token.STRING) {
+            if (key.getType() != Token.NUMBER) {
               if (!key.isQuotedString()) {
                 maybeMarkCandidate(key);
               } else {
