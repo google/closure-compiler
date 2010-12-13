@@ -243,11 +243,15 @@ public abstract class ObjectType extends JSType {
    */
   public final boolean defineDeclaredProperty(String propertyName,
       JSType type, boolean inExterns) {
+    boolean result = defineProperty(propertyName, type, false, inExterns);
+
     // All property definitions go through this method
-    // or defineInferredProperty.
+    // or defineDeclaredProperty. Because the properties defined an an
+    // object can affect subtyping, it's slightly more efficient
+    // to register this after defining the property.
     registry.registerPropertyOnType(propertyName, this);
 
-    return defineProperty(propertyName, type, false, inExterns);
+    return result;
   }
 
   /**
@@ -261,17 +265,21 @@ public abstract class ObjectType extends JSType {
    */
   public final boolean defineInferredProperty(String propertyName,
       JSType type, boolean inExterns) {
-    // All property definitions go through this method
-    // or defineDeclaredProperty.
-    registry.registerPropertyOnType(propertyName, this);
-
     if (hasProperty(propertyName)) {
       JSType originalType = getPropertyType(propertyName);
       type = originalType == null ? type :
           originalType.getLeastSupertype(type);
     }
 
-    return defineProperty(propertyName, type, true, inExterns);
+    boolean result = defineProperty(propertyName, type, true, inExterns);
+
+    // All property definitions go through this method
+    // or defineDeclaredProperty. Because the properties defined an an
+    // object can affect subtyping, it's slightly more efficient
+    // to register this after defining the property.
+    registry.registerPropertyOnType(propertyName, this);
+
+    return result;
   }
 
   /**

@@ -185,7 +185,8 @@ public class RecordType extends PrototypeObjectType {
         String propName = entry.getKey();
         JSType propType = entry.getValue();
         UnionTypeBuilder builder = new UnionTypeBuilder(registry);
-        for (ObjectType alt : registry.getTypesWithProperty(propName)) {
+        for (ObjectType alt :
+                 registry.getEachReferenceTypeWithProperty(propName)) {
           JSType altPropType = alt.getPropertyType(propName);
           if (altPropType != null && !alt.isEquivalentTo(this) &&
               alt.isSubtype(that) &&

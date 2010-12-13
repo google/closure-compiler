@@ -26,7 +26,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.Scope.Var;
@@ -93,7 +92,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertFalse(foo.hasProperty("bar"));
     assertEquals(registry.getNativeType(UNKNOWN_TYPE),
         foo.getPropertyType("bar"));
-    assertEquals(Sets.newHashSet(foo), registry.getTypesWithProperty("bar"));
+    assertEquals(Lists.newArrayList(foo), registry.getTypesWithProperty("bar"));
   }
 
   public void testConstructorProperty() {
@@ -104,7 +103,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     JSType fooBar = foo.getPropertyType("Bar");
     assertEquals("function (this:foo.Bar): undefined", fooBar.toString());
-    assertEquals(Sets.newHashSet(foo), registry.getTypesWithProperty("Bar"));
+    assertEquals(Lists.newArrayList(foo), registry.getTypesWithProperty("Bar"));
   }
 
   public void testEnumProperty() {
@@ -116,7 +115,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     JSType fooBar = foo.getPropertyType("Bar");
     assertEquals("enum{foo.Bar}", fooBar.toString());
-    assertEquals(Sets.newHashSet(foo), registry.getTypesWithProperty("Bar"));
+    assertEquals(Lists.newArrayList(foo), registry.getTypesWithProperty("Bar"));
   }
 
   public void testInferredProperty() {

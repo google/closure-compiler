@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
@@ -6183,7 +6182,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
     assertEquals(
-        Sets.newHashSet(objectType),
+        Lists.newArrayList(objectType),
         registry.getTypesWithProperty("x"));
   }
 
@@ -6199,7 +6198,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
     assertEquals(
-        Sets.newHashSet(OBJECT_TYPE),
+        Lists.newArrayList(OBJECT_TYPE),
         registry.getTypesWithProperty("x"));
   }
 

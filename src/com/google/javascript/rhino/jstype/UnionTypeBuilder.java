@@ -80,6 +80,14 @@ class UnionTypeBuilder implements Serializable {
     this.registry = registry;
   }
 
+  Iterable<JSType> getAlternates() {
+    JSType specialCaseType = reduceAlternatesWithoutUnion();
+    if (specialCaseType != null) {
+      return ImmutableList.of(specialCaseType);
+    }
+    return alternates;
+  }
+
   /**
    * Adds an alternate to the union type under construction. Returns this
    * for easy chaining.
@@ -142,33 +150,43 @@ class UnionTypeBuilder implements Serializable {
   }
 
   /**
+   * Reduce the alternates into a non-union type.
+   * If the alternates can't be accurately represented with a non-union
+   * type, return null.
+   */
+  private JSType reduceAlternatesWithoutUnion() {
+    if (isAllType) {
+      return registry.getNativeType(ALL_TYPE);
+    } else if (isNativeUnknownType) {
+      if (areAllUnknownsChecked) {
+        return registry.getNativeType(CHECKED_UNKNOWN_TYPE);
+      } else {
+        return registry.getNativeType(UNKNOWN_TYPE);
+      }
+    } else {
+      int size = alternates.size();
+      if (size > MAX_UNION_SIZE) {
+        return registry.getNativeType(UNKNOWN_TYPE);
+      } else if (size > 1) {
+        return null;
+      } else if (size == 1) {
+        return alternates.iterator().next();
+      } else {
+        return registry.getNativeType(NO_TYPE);
+      }
+    }
+  }
+
+  /**
    * Creates a union.
    * @return A UnionType if it has two or more alternates, the
    *    only alternate if it has one and otherwise {@code NO_TYPE}.
    */
   JSType build() {
     if (result == null) {
-      if (isAllType) {
-        result = registry.getNativeType(ALL_TYPE);
-      } else if (isNativeUnknownType) {
-        if (areAllUnknownsChecked) {
-          result = registry.getNativeType(CHECKED_UNKNOWN_TYPE);
-        } else {
-          result = registry.getNativeType(UNKNOWN_TYPE);
-        }
-      } else {
-        int size = alternates.size();
-        if (size > MAX_UNION_SIZE) {
-          result = registry.getNativeType(UNKNOWN_TYPE);
-        } else {
-          if (size > 1) {
-            result = new UnionType(registry, getAlternateListCopy());
-          } else if (size == 1) {
-            result = alternates.iterator().next();
-          } else {
-            result = registry.getNativeType(NO_TYPE);
-          }
-        }
+      result = reduceAlternatesWithoutUnion();
+      if (result == null) {
+        result = new UnionType(registry, getAlternateListCopy());
       }
     }
     return result;

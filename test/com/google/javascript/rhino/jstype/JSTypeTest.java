@@ -58,7 +58,6 @@ import com.google.javascript.rhino.testing.EmptyScope;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 // TODO(nicksantos): Split some of this up into per-class unit tests.
 public class JSTypeTest extends BaseJSTypeTestCase {
@@ -3510,8 +3509,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeCanAssignToItself(namedGoogBar);
     googBar.canAssignTo(namedGoogBar);
     namedGoogBar.canAssignTo(googBar);
-    assertTrue(googBar.isEquivalentTo(googBar));
-    assertFalse(googBar.isEquivalentTo(googSubBar));
+    assertTypeEquals(googBar, googBar);
+    assertTypeNotEquals(googBar, googSubBar);
 
     Asserts.assertResolvesToSame(googBar);
     Asserts.assertResolvesToSame(googSubBar);
@@ -4368,8 +4367,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testWeirdBug() {
-    assertFalse(googBar.isEquivalentTo(googBar.getInstanceType()));
-    assertFalse(googBar.getInstanceType().isEquivalentTo(googBar));
+    assertTypeNotEquals(googBar, googBar.getInstanceType());
     assertFalse(googBar.isSubtype(googBar.getInstanceType()));
     assertFalse(googBar.getInstanceType().isSubtype(googBar));
   }
@@ -4470,9 +4468,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     NamedType a = new NamedType(jst, "type1", "source", 1, 0);
     NamedType b = new NamedType(jst, "type1", "source", 1, 0);
     assertTrue(a.isEquivalentTo(b));
-
-    // test != to non-NamedType
-    assertFalse(a.equals("type1"));
 
     // test == instance of referenced type
     assertTrue(namedGoogBar.isEquivalentTo(googBar.getInstanceType()));
@@ -4919,25 +4914,33 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testRegisterProperty() {
     int i = 0;
-    Set<JSType> allObjects = Sets.newHashSet();
+    List<JSType> allObjects = Lists.newArrayList();
     for (JSType type : types) {
       String propName = "ALF" + i++;
       if (type instanceof ObjectType) {
+
         ObjectType objType = (ObjectType) type;
         objType.defineDeclaredProperty(propName, UNKNOWN_TYPE, false);
         objType.defineDeclaredProperty("allHaz", UNKNOWN_TYPE, false);
+
         assertTypeEquals(type,
             registry.getGreatestSubtypeWithProperty(type, propName));
-        assertEquals(Sets.newHashSet(type),
-            registry.getTypesWithProperty(propName));
+
+        List<JSType> typesWithProp =
+            Lists.newArrayList(registry.getTypesWithProperty(propName));
+        String message = type.toString();
+        assertEquals(message, 1, typesWithProp.size());
+        assertTypeEquals(type, typesWithProp.get(0));
+
         assertTypeEquals(NO_TYPE,
             registry.getGreatestSubtypeWithProperty(type, "GRRR"));
         allObjects.add(type);
       }
     }
-    assertEquals(registry.getTypesWithProperty("GRRR"),
-        Sets.newHashSet(NO_TYPE));
-    assertEquals(allObjects, registry.getTypesWithProperty("allHaz"));
+    assertTypeListEquals(registry.getTypesWithProperty("GRRR"),
+        Lists.newArrayList(NO_TYPE));
+    assertTypeListEquals(allObjects,
+        registry.getTypesWithProperty("allHaz"));
   }
 
   public void testRegisterPropertyMemoization() {
@@ -5346,16 +5349,57 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testObjectGetSubTypes() throws Exception {
-    assertTrue(OBJECT_FUNCTION_TYPE.getSubTypes().contains(googBar));
-    assertTrue(googBar.getSubTypes().contains(googSubBar));
-    assertFalse(googBar.getSubTypes().contains(googSubSubBar));
-    assertFalse(googSubBar.getSubTypes().contains(googSubBar));
-    assertTrue(googSubBar.getSubTypes().contains(googSubSubBar));
+    assertTrue(
+        containsType(
+            OBJECT_FUNCTION_TYPE.getSubTypes(), googBar));
+    assertTrue(
+        containsType(
+            googBar.getSubTypes(), googSubBar));
+    assertFalse(
+        containsType(
+            googBar.getSubTypes(), googSubSubBar));
+    assertFalse(
+        containsType(
+            googSubBar.getSubTypes(), googSubBar));
+    assertTrue(
+        containsType(
+            googSubBar.getSubTypes(), googSubSubBar));
   }
 
   public void testImplementingType() throws Exception {
-    assertTrue(registry.getDirectImplementors(
-        interfaceType.getInstanceType()).contains(googBar));
+    assertTrue(
+        containsType(
+            registry.getDirectImplementors(
+                interfaceType.getInstanceType()),
+            googBar));
+  }
+
+  private static boolean containsType(
+      Iterable<? extends JSType> types, JSType type) {
+    for (JSType alt : types) {
+      if (alt.isEquivalentTo(type)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean assertTypeListEquals(
+      Iterable<? extends JSType> typeListA,
+      Iterable<? extends JSType> typeListB) {
+    for (JSType alt : typeListA) {
+      assertTrue(
+          "List : " + typeListA + "\n" +
+          "does not contain: " + alt,
+          containsType(typeListA, alt));
+    }
+    for (JSType alt : typeListB) {
+      assertTrue(
+          "List : " + typeListB + "\n" +
+          "does not contain: " + alt,
+          containsType(typeListB, alt));
+    }
+    return false;
   }
 
   private ArrowType createArrowType(Node params) {
@@ -5368,5 +5412,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   private void assertTypeEquals(String msg, JSType a, JSType b) {
     Asserts.assertTypeEquals(msg, a, b);
+  }
+
+  private void assertTypeNotEquals(JSType a, JSType b) {
+    Asserts.assertTypeNotEquals(a, b);
+  }
+
+  private void assertTypeNotEquals(String msg, JSType a, JSType b) {
+    Asserts.assertTypeNotEquals(msg, a, b);
   }
 }

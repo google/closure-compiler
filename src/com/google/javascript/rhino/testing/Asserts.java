@@ -74,6 +74,23 @@ public class Asserts {
     return resolvedType;
   }
 
+  public static void assertTypeNotEquals(JSType a, JSType b) {
+    assertTypeNotEquals("", a, b);
+  }
+
+  public static void assertTypeNotEquals(String message, JSType a, JSType b) {
+    Assert.assertFalse(
+        message +
+        (message.isEmpty() ? "" : "\n") +
+        "Type: " + b + "\n",
+        a.isEquivalentTo(b));
+    Assert.assertFalse(
+        message +
+        " Equals is not symmetric.\n" +
+        "Type: " + b + "\n",
+        b.isEquivalentTo(a));
+  }
+
   public static void assertTypeEquals(JSType a, JSType b) {
     assertTypeEquals("", a, b);
   }
@@ -85,5 +102,11 @@ public class Asserts {
         "Expected: " + a + "\n" +
         "Actual  : " + b,
         a.isEquivalentTo(b));
+    Assert.assertTrue(
+        message +
+        " Equals is not symmetric.\n" +
+        "Expected: " + b + "\n" +
+        "Actual  : " + a,
+        b.isEquivalentTo(a));
   }
 }

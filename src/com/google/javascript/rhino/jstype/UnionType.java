@@ -356,16 +356,19 @@ public class UnionType extends JSType {
 
   /**
    * A {@link UnionType} contains a given type (alternate) iff the member
-   * vector contains it.  Since the {@link #equals} method above conforms to
-   * the necessary semantics for the collection, everything works out just
-   * fine.
+   * vector contains it.
    *
    * @param alternate The alternate which might be in this union.
    *
    * @return {@code true} if the alternate is in the union
    */
-  public boolean contains(JSType alternate) {
-    return alternates.contains(alternate);
+  public boolean contains(JSType type) {
+    for (JSType alt : alternates) {
+      if (alt.isEquivalentTo(type)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

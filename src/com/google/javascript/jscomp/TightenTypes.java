@@ -22,11 +22,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import com.google.javascript.jscomp.ConcreteType.ConcreteFunctionType;
 import com.google.javascript.jscomp.ConcreteType.ConcreteInstanceType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
-
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionPrototypeType;
@@ -936,9 +934,11 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
 
       // If we didn't find a type that has the property, then check if there
       // exists a property with this name anywhere in the externs.
-      Set<ObjectType> types = getTypeRegistry().getTypesWithProperty(prop);
-      for (ObjectType type : types) {
-        actions.addAll(getImplicitActionsFromPropNonUnion(type, prop, fnNode));
+      for (ObjectType type :
+               getTypeRegistry().getEachReferenceTypeWithProperty(prop)) {
+        actions.addAll(
+            getImplicitActionsFromPropNonUnion(
+                  type, prop, fnNode));
       }
       return actions;
     }

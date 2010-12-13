@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -6785,7 +6784,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
     assertEquals(
-        Sets.newHashSet(objectType),
+        Lists.newArrayList(objectType),
         registry.getTypesWithProperty("x"));
   }
 
@@ -6801,7 +6800,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
     assertEquals(
-        Sets.newHashSet(OBJECT_TYPE),
+        Lists.newArrayList(OBJECT_TYPE),
         registry.getTypesWithProperty("x"));
   }
 
@@ -7567,6 +7566,26 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
         "SubFoo.prototype.bar = 0;" +
         "/** @param {{bar: number}} x */ function f(x) { return x.baz; }");
+  }
+
+  public void testMissingProperty37() throws Exception {
+    // This used to emit a missing property warning because we couldn't
+    // determine that the inf(Foo, {isVisible:boolean}) == SubFoo.
+    testTypes(
+        "/** @param {{isVisible: boolean}} x */ function f(x){" +
+        "  x.isVisible = false;" +
+        "}" +
+        "/** @constructor */ function Foo() {}" +
+        "/**\n" +
+        " * @constructor \n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() {}" +
+        "/** @type {boolean} */ SubFoo.prototype.isVisible = true;" +
+        "/**\n" +
+        " * @param {Foo} x\n" +
+        " * @return {boolean}\n" +
+        " */\n" +
+        "function g(x) { return x.isVisible; }");
   }
 
   public void testLends1() throws Exception {

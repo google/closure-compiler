@@ -48,6 +48,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -60,7 +61,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -113,8 +113,14 @@ public class JSTypeRegistry implements Serializable {
 
   // A map of properties to the types on which those properties have been
   // declared.
-  private final Map<String, Set<ObjectType>> typesIndexedByProperty =
+  private final Map<String, UnionTypeBuilder> typesIndexedByProperty =
       Maps.newHashMap();
+
+  // A map of properties to each reference type on which those
+  // properties have been declared. Each type has a unique name used
+  // for de-duping.
+  private final Map<String, Map<String, ObjectType>>
+      eachRefTypeIndexedByProperty = Maps.newHashMap();
 
   // A map of properties to the greatest subtype on which those properties have
   // been declared. This is filled lazily from the types declared in
@@ -219,6 +225,7 @@ public class JSTypeRegistry implements Serializable {
    */
   public void resetForTypeCheck() {
     typesIndexedByProperty.clear();
+    eachRefTypeIndexedByProperty.clear();
     initializeBuiltInTypes();
     namesToTypes.clear();
     namespaces.clear();
@@ -526,6 +533,10 @@ public class JSTypeRegistry implements Serializable {
       createFunctionType(ALL_TYPE, true, NO_TYPE);
     registerNativeType(JSTypeNative.GREATEST_FUNCTION_TYPE,
         GREATEST_FUNCTION_TYPE);
+
+    // Register the prototype property. See the comments below in
+    // registerPropertyOnType about the bootstrapping process.
+    registerPropertyOnType("prototype", OBJECT_FUNCTION_TYPE);
   }
 
   private void initializeRegistry() {
@@ -585,31 +596,38 @@ public class JSTypeRegistry implements Serializable {
    * show up in the type registry").
    */
   public void registerPropertyOnType(String propertyName, JSType type) {
-    ObjectType owner = null;
+    UnionTypeBuilder typeSet = typesIndexedByProperty.get(propertyName);
+    if (typeSet == null) {
+      typeSet = new UnionTypeBuilder(this);
+      typesIndexedByProperty.put(propertyName, typeSet);
+    }
 
-    // Properties can only be defined on object types, so normalize everything
-    // to discrete object types.
-    if (type instanceof ObjectType) {
-      owner = (ObjectType) type;
-    } else if (getNativeType(ALL_TYPE).isSubtype(type)) {
-      owner = getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+    typeSet.addAlternate(type);
+    addReferenceTypeIndexedByProperty(propertyName, type);
+
+    // Clear cached values that depend on typesIndexedByProperty.
+    greatestSubtypeByProperty.remove(propertyName);
+  }
+
+  private void addReferenceTypeIndexedByProperty(
+      String propertyName, JSType type) {
+    if (type instanceof ObjectType && ((ObjectType) type).hasReferenceName()) {
+      Map<String, ObjectType> typeSet =
+          eachRefTypeIndexedByProperty.get(propertyName);
+      if (typeSet == null) {
+        typeSet = Maps.newHashMap();
+        eachRefTypeIndexedByProperty.put(propertyName, typeSet);
+      }
+      ObjectType objType = (ObjectType) type;
+      typeSet.put(objType.getReferenceName(), objType);
+    } else if (type instanceof NamedType) {
+      addReferenceTypeIndexedByProperty(
+          propertyName, ((NamedType) type).getReferencedType());
     } else if (type instanceof UnionType) {
       for (JSType alternate : ((UnionType) type).getAlternates()) {
-        registerPropertyOnType(propertyName, alternate);
+        addReferenceTypeIndexedByProperty(propertyName, alternate);
       }
     }
-
-    if (owner == null) {
-      return;
-    }
-
-    Set<ObjectType> typeSet = typesIndexedByProperty.get(propertyName);
-    if (typeSet == null) {
-      typesIndexedByProperty.put(
-          propertyName, typeSet = new LinkedHashSet<ObjectType>());
-    }
-    greatestSubtypeByProperty.remove(propertyName);
-    typeSet.add(owner);
   }
 
   /**
@@ -623,11 +641,7 @@ public class JSTypeRegistry implements Serializable {
           .getGreatestSubtype(type);
     }
     if (typesIndexedByProperty.containsKey(propertyName)) {
-      UnionTypeBuilder builder = new UnionTypeBuilder(this);
-      for (JSType alt : typesIndexedByProperty.get(propertyName)) {
-        builder.addAlternate(alt);
-      }
-      JSType built = builder.build();
+      JSType built = typesIndexedByProperty.get(propertyName).build();
       greatestSubtypeByProperty.put(propertyName, built);
       return built.getGreatestSubtype(type);
     }
@@ -639,27 +653,49 @@ public class JSTypeRegistry implements Serializable {
    */
   public boolean canPropertyBeDefined(JSType type, String propertyName) {
     if (typesIndexedByProperty.containsKey(propertyName)) {
-      for (JSType alt : typesIndexedByProperty.get(propertyName)) {
+      for (JSType alt :
+               typesIndexedByProperty.get(propertyName).getAlternates()) {
         if (!alt.getGreatestSubtype(type).isEmptyType()) {
           return true;
         }
       }
     }
-
     return false;
   }
 
   /**
    * Returns each type that has a property {@code propertyName} defined on it.
+   *
+   * Like most types in our type system, the collection of types returned
+   * will be collapsed. This means that if a type is defined on
+   * {@code Object} and on {@code Array}, it would be reasonable for this
+   * method to return either {@code [Object, Array]} or just {@code [Object]}.
    */
-  public Set<ObjectType> getTypesWithProperty(String propertyName) {
-    Set<ObjectType> typeSet = typesIndexedByProperty.get(propertyName);
-    if (typeSet == null) {
-      Set<ObjectType> set = new LinkedHashSet<ObjectType>();
-      set.add(getNativeObjectType(NO_TYPE));
-      return set;
+  public Iterable<JSType> getTypesWithProperty(String propertyName) {
+    if (typesIndexedByProperty.containsKey(propertyName)) {
+      return typesIndexedByProperty.get(propertyName).getAlternates();
+    } else {
+      return ImmutableList.of();
     }
-    return typeSet;
+  }
+
+  /**
+   * Returns each reference type that has a property {@code propertyName}
+   * defined on it.
+   *
+   * Unlike most types in our type system, the collection of types returned
+   * will not be collapsed. This means that if a type is defined on
+   * {@code Object} and on {@code Array}, this method must return
+   * {@code [Object, Array]}. It would not be correct to collapse them to
+   * {@code [Object]}.
+   */
+  public Iterable<ObjectType> getEachReferenceTypeWithProperty(
+      String propertyName) {
+    if (eachRefTypeIndexedByProperty.containsKey(propertyName)) {
+      return eachRefTypeIndexedByProperty.get(propertyName).values();
+    } else {
+      return ImmutableList.of();
+    }
   }
 
   /**
