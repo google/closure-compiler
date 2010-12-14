@@ -272,7 +272,7 @@ public class PeepholeSubstituteAlternateSyntax
     Node elseBranch = thenBranch.getNext();
 
     if (elseBranch == null) {
-      if (isExpressBlock(thenBranch)) {
+      if (isFoldableExpressBlock(thenBranch)) {
         Node expr = getBlockExpression(thenBranch);
         if (isPropertyAssignmentInExpression(expr)) {
           // Keep opportunities for CollapseProperties such as
@@ -353,8 +353,8 @@ public class PeepholeSubstituteAlternateSyntax
       return returnNode;
     }
 
-    boolean thenBranchIsExpressionBlock = isExpressBlock(thenBranch);
-    boolean elseBranchIsExpressionBlock = isExpressBlock(elseBranch);
+    boolean thenBranchIsExpressionBlock = isFoldableExpressBlock(thenBranch);
+    boolean elseBranchIsExpressionBlock = isFoldableExpressBlock(elseBranch);
 
     if (thenBranchIsExpressionBlock && elseBranchIsExpressionBlock) {
       Node thenOp = getBlockExpression(thenBranch).getFirstChild();
@@ -516,10 +516,33 @@ public class PeepholeSubstituteAlternateSyntax
    * @return Whether the node is a block with a single statement that is
    *     an expression.
    */
-  private boolean isExpressBlock(Node n) {
+  private boolean isFoldableExpressBlock(Node n) {
     if (n.getType() == Token.BLOCK) {
       if (n.hasOneChild()) {
-        return NodeUtil.isExpressionNode(n.getFirstChild());
+        Node maybeExpr = n.getFirstChild();
+        if (maybeExpr.getType() == Token.EXPR_RESULT) {
+          // IE has a bug where event handlers behave differently when
+          // their return value is used vs. when their return value is in
+          // an EXPR_RESULT. It's pretty freaking weird. See:
+          // http://code.google.com/p/closure-compiler/issues/detail?id=291
+          // We try to detect this case, and not fold EXPR_RESULTs
+          // into other expressions.
+          if (maybeExpr.getFirstChild().getType() == Token.CALL) {
+            Node calledFn = maybeExpr.getFirstChild().getFirstChild();
+
+            // We only have to worry about methods with an implicit 'this'
+            // param, or this doesn't happen.
+            if (calledFn.getType() == Token.GETELEM) {
+              return false;
+            } else if (calledFn.getType() == Token.GETPROP &&
+                       calledFn.getLastChild().getString().startsWith("on")) {
+              return false;
+            }
+          }
+
+          return true;
+        }
+        return false;
       }
     }
 
@@ -530,7 +553,7 @@ public class PeepholeSubstituteAlternateSyntax
    * @return The expression node.
    */
   private Node getBlockExpression(Node n) {
-    Preconditions.checkState(isExpressBlock(n));
+    Preconditions.checkState(isFoldableExpressBlock(n));
     return n.getFirstChild();
   }
 
