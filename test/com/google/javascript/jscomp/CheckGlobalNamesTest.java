@@ -57,18 +57,28 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
     STRICT_MODULE_DEP_QNAME.level = CheckLevel.WARNING;
   }
 
+  private static final String GET_NAMES = 
+      "var a = {get d() {return 1}}; a.b = 3; a.c = {get e() {return 5}};";
+  private static final String SET_NAMES =
+      "var a = {set d(x) {}}; a.b = 3; a.c = {set e(y) {}};";
   private static final String NAMES = "var a = {d: 1}; a.b = 3; a.c = {e: 5};";
 
   public void testRefToDefinedProperties1() {
     testSame(NAMES + "alert(a.b); alert(a.c.e);");
+    testSame(GET_NAMES + "alert(a.b); alert(a.c.e);");
+    testSame(SET_NAMES + "alert(a.b); alert(a.c.e);");
   }
 
   public void testRefToDefinedProperties2() {
-    testSame(NAMES + "a.x={}; alert(a.x);");
+    testSame(NAMES + "a.x={}; alert(a.c);");
+    testSame(GET_NAMES + "a.x={}; alert(a.c);");
+    testSame(SET_NAMES + "a.x={}; alert(a.c);");
   }
 
   public void testRefToDefinedProperties3() {
     testSame(NAMES + "alert(a.d);");
+    testSame(GET_NAMES + "alert(a.d);");
+    testSame(SET_NAMES + "alert(a.d);");
   }
 
   public void testRefToMethod1() {
@@ -100,7 +110,15 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
 
   public void testRefToUndefinedProperty3() {
     testSame(NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
+    testSame(GET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
+    testSame(SET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
   }
+  
+  public void testRefToUndefinedProperty4() {
+    testSame(NAMES + "alert(a.d.x);");
+    testSame(GET_NAMES + "alert(a.d.x);");
+    testSame(SET_NAMES + "alert(a.d.x);");
+  }  
 
   public void testRefToDescendantOfUndefinedProperty1() {
     testSame(NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);

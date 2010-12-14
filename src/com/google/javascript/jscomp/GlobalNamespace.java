@@ -245,6 +245,8 @@ class GlobalNamespace {
       boolean isPropAssign = false;
 
       switch (n.getType()) {
+        case Token.GET:
+        case Token.SET:
         case Token.STRING:
           // This may be a key in an object literal declaration.
           name = null;
@@ -253,7 +255,19 @@ class GlobalNamespace {
           }
           if (name == null) return;
           isSet = true;
-          type = getValueType(n.getFirstChild());
+          switch (n.getType()) {
+            case Token.STRING:
+              type = getValueType(n.getFirstChild());
+              break;
+            case Token.GET:
+              type = Name.Type.GET;
+              break;
+            case Token.SET:
+              type = Name.Type.SET;
+              break;
+            default:
+              throw new IllegalStateException("unexpected:" + n);
+          }
           break;
         case Token.NAME:
           // This may be a variable get or set.
@@ -753,6 +767,8 @@ class GlobalNamespace {
     enum Type {
       OBJECTLIT,
       FUNCTION,
+      GET,
+      SET,
       OTHER,
     }
 
@@ -888,13 +904,18 @@ class GlobalNamespace {
     }
 
     boolean canCollapse() {
-      return !inExterns && (isClassOrEnum ||
+      return !inExterns && !isGetOrSetDefinition() && (isClassOrEnum ||
           (parent == null || parent.canCollapseUnannotatedChildNames()) &&
           (globalSets > 0 || localSets > 0));
     }
 
+    boolean isGetOrSetDefinition() {
+      return this.type == Type.GET || this.type == Type.SET;
+    }
+
     boolean canCollapseUnannotatedChildNames() {
-      if (type == Type.OTHER || globalSets != 1 || localSets != 0) {
+      if (type == Type.OTHER || isGetOrSetDefinition()
+          || globalSets != 1 || localSets != 0) {
         return false;
       }
 

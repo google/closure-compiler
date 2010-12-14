@@ -88,11 +88,11 @@ public class ProcessDefinesTest extends CompilerTestCase {
     test("/** @define {boolean} */ var DEF = new Boolean(true);", null,
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
-  
+
   public void testDefineWithBadValue2() {
     test("/** @define {string} */ var DEF = 'x' + y;", null,
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
-  }  
+  }
 
   public void testDefineWithDependentValue() {
     test("/** @define {boolean} */ var BASE = false;\n" +
@@ -142,27 +142,27 @@ public class ProcessDefinesTest extends CompilerTestCase {
         "/** @define {string} */ var DEF_OVERRIDE_STRING = 'x';",
         "var DEF_OVERRIDE_STRING=\"x\"");
   }
-  
+
   public void testOverridingString1() {
     test(
         "/** @define {string} */ var DEF_OVERRIDE_STRING = 'x' + 'y';",
         "var DEF_OVERRIDE_STRING=\"x\" + \"y\"");
-  }  
-  
+  }
+
   public void testOverridingString2() {
     overrides.put("DEF_OVERRIDE_STRING", Node.newString("foo"));
     test(
         "/** @define {string} */ var DEF_OVERRIDE_STRING = 'x';",
         "var DEF_OVERRIDE_STRING=\"foo\"");
-  }  
-  
+  }
+
   public void testOverridingString3() {
     overrides.put("DEF_OVERRIDE_STRING", Node.newString("foo"));
     test(
         "/** @define {string} */ var DEF_OVERRIDE_STRING = 'x' + 'y';",
         "var DEF_OVERRIDE_STRING=\"foo\"");
   }
-  
+
   public void testMisspelledOverride() {
     overrides.put("DEF_BAD_OVERIDE", new Node(Token.TRUE));
     test("/** @define {boolean} */ var DEF_BAD_OVERRIDE = true",
@@ -281,16 +281,40 @@ public class ProcessDefinesTest extends CompilerTestCase {
     assertNotNull(aDotB.declaration);
   }
 
-  public void testNamespacedDefine2() {
+  public void testNamespacedDefine2a() {
     overrides.put("a.B", new Node(Token.TRUE));
     test("var a = {}; /** @define {boolean} */ a.B = false;",
          "var a = {}; a.B = true;");
+  }
+
+  public void testNamespacedDefine2b() {
+    // TODO(johnlenz): We should either reject the define as invalid
+    // or replace its value.
+    overrides.put("a.B", new Node(Token.TRUE));
+    test("var a = { /** @define {boolean} */ B : false };",
+         "var a = {B : false};",
+         null, ProcessDefines.UNKNOWN_DEFINE_WARNING);
+  }
+
+  public void testNamespacedDefine2c() {
+    // TODO(johnlenz): We should either reject the define as invalid
+    // or replace its value.
+    overrides.put("a.B", new Node(Token.TRUE));
+    test("var a = { /** @define {boolean} */ get B() { return false } };",
+      "var a = {get B() { return false } };",
+      null, ProcessDefines.UNKNOWN_DEFINE_WARNING);
   }
 
   public void testNamespacedDefine3() {
     overrides.put("a.B", new Node(Token.TRUE));
     test("var a = {};", "var a = {};", null,
          ProcessDefines.UNKNOWN_DEFINE_WARNING);
+  }
+
+  public void testNamespacedDefine4() {
+    overrides.put("a.B", new Node(Token.TRUE));
+    test("var a = {}; /** @define {boolean} */ a.B = false;",
+         "var a = {}; a.B = true;");
   }
 
 

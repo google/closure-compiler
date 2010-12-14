@@ -162,6 +162,11 @@ class CollapseProperties implements CompilerPass {
     while (!workList.isEmpty()) {
       Name name = workList.pop();
 
+      // Don't attempt to inline a getter or setter property as a variable.
+      if (name.type == Name.Type.GET || name.type == Name.Type.SET) {
+        continue;
+      }
+
       if (name.globalSets == 1 && name.localSets == 0 &&
           name.aliasingGets > 0) {
         // {@code name} meets condition (b). Find all of its local aliases
@@ -394,7 +399,7 @@ class CollapseProperties implements CompilerPass {
     // proceeding. In the OBJLIT case, we don't need to do anything.
     int nType = n.getType();
     boolean isQName = nType == Token.NAME || nType == Token.GETPROP;
-    boolean isObjKey = nType == Token.STRING || nType == Token.NUMBER;
+    boolean isObjKey = NodeUtil.isObjectLitKey(n, n.getParent());
     Preconditions.checkState(isObjKey || isQName);
     if (isQName) {
       for (int i = 1; i < depth && n.hasChildren(); i++) {
@@ -738,6 +743,11 @@ class CollapseProperties implements CompilerPass {
          key = nextKey) {
       Node value = key.getFirstChild();
       nextKey = key.getNext();
+
+      // A get or a set can not be rewritten as a VAR.
+      if (key.getType() == Token.GET || key.getType() == Token.SET) {
+        continue;
+      }
 
       // We generate arbitrary names for keys that aren't valid JavaScript
       // identifiers, since those keys are never referenced. (If they were,

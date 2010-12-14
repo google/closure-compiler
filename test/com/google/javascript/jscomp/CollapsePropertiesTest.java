@@ -74,6 +74,39 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "var a$b = {}; var a$c = {}; var d = a$b; var e = a$c");
   }
 
+  public void testObjLitDeclarationWithGet1() {
+    testSame("var a = {get b(){}};");
+  }
+
+  public void testObjLitDeclarationWithGet2() {
+    test("var a = {b: {}, get c(){}}; var d = a.b; var e = a.c",
+         "var a$b = {};var a = {get c(){}};var d = a$b; var e = a.c");
+  }
+
+  public void testObjLitDeclarationWithGet3() {
+    test("var a = {b: {get c() { return 3; }}};",
+         "var a$b = {get c() { return 3; }};");
+  }
+
+  public void testObjLitDeclarationWithSet1() {
+    testSame("var a = {set b(a){}};");
+  }
+
+  public void testObjLitDeclarationWithSet2() {
+    test("var a = {b: {}, set c(a){}}; var d = a.b; var e = a.c",
+         "var a$b = {};var a = {set c(a){}};var d = a$b; var e = a.c");
+  }
+
+  public void testObjLitDeclarationWithSet3() {
+    test("var a = {b: {set c(d) {}}};",
+         "var a$b = {set c(d) {}};");
+  }
+
+  public void testObjLitDeclarationWithGetAndSet1() {
+    test("var a = {b: {get c() { return 3; },set c(d) {}}};",
+         "var a$b = {get c() { return 3; },set c(d) {}};");
+  }
+
   public void testObjLitDeclarationWithDuplicateKeys() {
     test("var a = {b: 0, b: 1}; var c = a.b;",
          "var a$b = 0; var a$b = 1; var c = a$b;",
@@ -109,6 +142,11 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   public void testGlobalObjectDeclaredToPreserveItsPreviousValue2() {
     test("var a = a || {}; a.c = 1;",
          "var a = a || {}; var a$c = 1;");
+  }
+
+  public void testGlobalObjectDeclaredToPreserveItsPreviousValue3() {
+    test("var a = a || {get b() {}}; a.c = 1;",
+         "var a = a || {get b() {}}; var a$c = 1;");
   }
 
   public void testGlobalObjectNameInBooleanExpressionDepth1_1() {
