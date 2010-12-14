@@ -293,7 +293,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       for(Node sibling = n.getNext(); sibling != null;
           sibling = sibling.getNext()) {
         if (!ControlFlowGraph.isEnteringNewCfgNode(sibling)) {
-          VariableLiveness state = readVariableBeforeKilling(sibling, variable);
+          VariableLiveness state = isVariableReadBeforeKill(sibling, variable);
 
           // If we see a READ or KILL there is no need to continue.
           if (state == VariableLiveness.READ) {
@@ -316,25 +316,34 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
   }
 
   /**
-   * Give an expression and a variable. It returns READ, if the right-most
-   * reference of that variable is a read. It returns KILL, if the right-most
+   * Give an expression and a variable. It returns READ, if the first
+   * reference of that variable is a read. It returns KILL, if the first
    * reference of that variable is an assignment. It returns MAY_LIVE otherwise.
-   *
-   * This need to be a pre-order traversal so we cannot use the normal node
-   * traversals.
    */
-  private VariableLiveness readVariableBeforeKilling(Node n, String variable) {
+  private VariableLiveness isVariableReadBeforeKill(
+      Node n, String variable) {
     if (NodeUtil.isName(n) && variable.equals(n.getString())) {
       if (NodeUtil.isLhs(n, n.getParent())) {
+        Preconditions.checkState(n.getParent().getType() == Token.ASSIGN);
+        // The expression to which the assignment is made is evaluated before
+        // the RHS is evaluated (normal left to right evaluation) but the KILL
+        // occurs after the RHS is evaluated.
+        Node rhs = n.getNext();
+        VariableLiveness state = isVariableReadBeforeKill(rhs, variable);
+        if (state == VariableLiveness.READ) {
+          return state;
+        }
         return VariableLiveness.KILL;
       } else {
         return VariableLiveness.READ;
       }
     }
+
+    // Expressions are evaluated left-right, depth first.
     for (Node child = n.getFirstChild();
         child != null; child = child.getNext()) {
-      if (!ControlFlowGraph.isEnteringNewCfgNode(child)) {
-        VariableLiveness state = readVariableBeforeKilling(child, variable);
+      if (!ControlFlowGraph.isEnteringNewCfgNode(child)) { // Not a FUNCTION
+        VariableLiveness state = isVariableReadBeforeKill(child, variable);
         if (state != VariableLiveness.MAYBE_LIVE) {
           return state;
         }

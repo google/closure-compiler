@@ -361,6 +361,95 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   public void testAssignToExtern() {
-    inFunction("extern = true;", "extern = true;");
+    inFunction("extern = true;");
+  }
+
+  public void testIssue297a() {
+    testSame("function f(p) {" +
+         " var x;" +
+         " return ((x=p.id) && (x=parseInt(x.substr(1))) && x>0);" +
+         "}; f('');");
+  }
+
+  public void testIssue297b() {
+    test("function f() {" +
+         " var x;" +
+         " return (x='') && (x = x.substr(1));" +
+         "};",
+         "function f() {" +
+         " var x;" +
+         " return (x='') && (x.substr(1));" +
+         "};");
+  }
+
+  public void testIssue297c() {
+    test("function f() {" +
+         " var x;" +
+         " return (x=1) && (x = f(x));" +
+         "};",
+         "function f() {" +
+         " var x;" +
+         " return (x=1) && f(x);" +
+         "};");
+  }
+
+  public void testIssue297d() {
+    test("function f(a) {" +
+         " return (a=1) && (a = f(a));" +
+         "};",
+         "function f(a) {" +
+         " return (a=1) && (f(a));" +
+         "};");
+  }
+
+  public void testIssue297e() {
+    test("function f(a) {" +
+         " return (a=1) - (a = g(a));" +
+         "};",
+         "function f(a) {" +
+         " return (a=1) - (g(a));" +
+         "};");
+  }
+
+  public void testIssue297f() {
+    test("function f(a) {" +
+         " h((a=1) - (a = g(a)));" +
+         "};",
+         "function f(a) {" +
+         " h((a=1) - (g(a)));" +
+         "};");
+  }
+
+  public void testIssue297g() {
+    test("function f(a) {" +
+         " var b = h((b=1) - (b = g(b)));" +
+         " return b;" +
+         "};",
+         // The last assignment in the initializer should be eliminated
+         "function f(a) {" +
+         " var b = h((b=1) - (b = g(b)));" +
+         " return b;" +
+         "};");
+  }
+
+  public void testIssue297h() {
+    test("function f(a) {" +
+         " var b = b=1;" +
+         " return b;" +
+         "};",
+         // The assignment in the initializer should be eliminated
+         "function f(a) {" +
+         " var b = b = 1;" +
+         " return b;" +
+         "};");
+  }
+
+
+  public void testInExpression() {
+    inFunction("var a; return a=(a=(a=3));", "var a; return 3;");
+    inFunction("var a; return a=(a=(a=a));", "var a; return a;");
+    inFunction("var a; return a=(a=(a=a+1)+1);", "var a; return a+1+1;");
+    inFunction("var a; return a=(a=(a=f(a)+1)+1);", "var a; return f(a)+1+1;");
+    inFunction("var a; return a=f(a=f(a=f(a)));", "var a; return f(f(f(a)));");
   }
 }
