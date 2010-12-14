@@ -794,11 +794,39 @@ HTMLElement.prototype.draggable;
 HTMLElement.prototype.getElementsByClassName = function(classNames) {};
 // NOTE: Document.prototype.getElementsByClassName is in gecko_dom.js
 
+/** @type {string} */
+HTMLInputElement.prototype.autocomplete;
+
+/** @type {string} */
+HTMLInputElement.prototype.dirname;
+
 /** @type {FileList} */
 HTMLInputElement.prototype.files;
 
+/** @type {string} */
+HTMLInputElement.prototype.list;
+
+/** @type {string} */
+HTMLInputElement.prototype.max;
+
+/** @type {string} */
+HTMLInputElement.prototype.min;
+
+/** @type {string} */
+HTMLInputElement.prototype.pattern;
+
 /** @type {boolean} */
 HTMLInputElement.prototype.multiple;
+
+/** @type {string} */
+HTMLInputElement.prototype.placeholder;
+
+/** @type {boolean} */
+HTMLInputElement.prototype.required;
+
+/** @type {string} */
+HTMLInputElement.prototype.step;
+
 
 /**
  * @constructor
