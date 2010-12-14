@@ -123,6 +123,16 @@ public class SuspiciousPropertiesCheckTest extends CompilerTestCase {
     noProb("");
   }
 
+  public void testGet() {
+    badRead("var p = {x:1}; alert(p.y);");
+    noProb("var p = {x:1, get y(){}}; alert(p.y);");
+  }
+
+  public void testSet() {
+    badRead("var p = {x:1}; alert(p.y);");
+    noProb("var p = {x:1, set y(a){}}; alert(p.y);");
+  }
+
   public void testNoWarningForDuckProperty() {
     noProb("var x = {}; x.prop; if (x.prop) {}");
   }

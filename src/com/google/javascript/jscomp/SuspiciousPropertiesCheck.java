@@ -114,7 +114,7 @@ class SuspiciousPropertiesCheck implements CompilerPass {
   private Property getProperty(String name) {
     Property prop = properties.get(name);
     if (prop == null) {
-      prop = new Property(name);
+      prop = new Property();
       properties.put(name, prop);
     }
     return prop;
@@ -155,7 +155,7 @@ class SuspiciousPropertiesCheck implements CompilerPass {
           for (Node child = n.getFirstChild();
                child != null;
                child = child.getNext()) {
-            if (child.getType() == Token.STRING) {
+            if (child.getType() != Token.NUMBER) {
               externPropertyNames.add(child.getString());
             }
           }
@@ -210,7 +210,7 @@ class SuspiciousPropertiesCheck implements CompilerPass {
           for (Node child = n.getFirstChild();
                child != null;
                child = child.getNext()) {
-            if (child.getType() == Token.STRING) {
+            if (child.getType() != Token.NUMBER) {
               addWrite(child, t, true);
             }
           }
@@ -312,8 +312,6 @@ class SuspiciousPropertiesCheck implements CompilerPass {
    * Tracks reads and writes for a property.
    */
   private static class Property {
-    final String name;
-
     int readCount = 0;
     int writeCount = 0;
 
@@ -329,8 +327,7 @@ class SuspiciousPropertiesCheck implements CompilerPass {
      */
     List<Node> writes = null;
 
-    Property(String name) {
-      this.name = name;
+    Property() {
     }
   }
 }
