@@ -129,6 +129,12 @@ public final class FunctionBuilder {
     return this;
   }
 
+  /** Set whether this is a constructor. */
+  public FunctionBuilder setIsConstructor(boolean isConstructor) {
+    this.isConstructor = isConstructor;
+    return this;
+  }
+
   /** Make this a native type. */
   FunctionBuilder forNativeType() {
     this.isNativeType = true;

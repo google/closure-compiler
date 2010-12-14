@@ -1986,7 +1986,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function f() {};" +
         "/** @constructor \n * @extends {f} */ f.subclass;",
         "f.subclass",
-        "function (this:f.subclass): ?");
+        "function (new:f.subclass): ?");
   }
 
   public void testStubFunctionDeclaration3() throws Exception {
@@ -2105,7 +2105,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testTypeRedefinition() throws Exception {
     testTypes("a={};/**@enum {string}*/ a.A = {ZOR:'b'};"
         + "/** @constructor */ a.A = function() {}",
-        "variable a.A redefined with type function (this:a.A): undefined, " +
+        "variable a.A redefined with type function (new:a.A): undefined, " +
         "original definition at [testcode]:1 with type enum{a.A}");
   }
 
@@ -2124,7 +2124,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testIn4() throws Exception {
     testTypes("Date in Object",
         "left side of 'in'\n" +
-        "found   : function (this:Date, ?, ?, ?, ?, ?, ?, ?): string\n" +
+        "found   : function (new:Date, ?, ?, ?, ?, ?, ?, ?): string\n" +
         "required: string");
   }
 
@@ -2787,7 +2787,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @extends {base}\n * @constructor */function derived() {}\n" +
         "derived.inherits(base);",
         "(new derived).constructor",
-        "function (this:derived): undefined");
+        "function (new:derived): undefined");
   }
 
   public void testGoodExtends8() throws Exception {
@@ -3658,6 +3658,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @type {function(this:Error,...[number]):Date} */var f; new f",
         "cannot instantiate non-constructor");
+  }
+
+  public void testHigherOrderFunctions5() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function g(x) {}" +
+        "/** @type {function(new:Error,...[number]):Date} */ var f;" +
+        "g(new f());",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : Error\n" +
+        "required: number");
   }
 
   public void testConstructorAlias1() throws Exception {
@@ -5631,7 +5641,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "Foo();",
-        "Constructor function (this:Foo): undefined should be called " +
+        "Constructor function (new:Foo): undefined should be called " +
         "with the \"new\" keyword");
   }
 
@@ -7085,7 +7095,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {number} */ goog.Bar = goog.typedef",
         "variable goog.Bar redefined with type number, " +
         "original definition at [testcode]:1 " +
-        "with type function (this:goog.Bar): undefined");
+        "with type function (new:goog.Bar): undefined");
   }
 
   public void testOldTypeDef1() throws Exception {
@@ -7133,7 +7143,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @typedef {number} */ goog.Bar;",
         "variable goog.Bar redefined with type None, " +
         "original definition at [testcode]:1 " +
-        "with type function (this:goog.Bar): undefined");
+        "with type function (new:goog.Bar): undefined");
   }
 
   public void testTypeDef1() throws Exception {

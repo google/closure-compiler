@@ -2750,16 +2750,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createFunctionType(BOOLEAN_TYPE, false, NUMBER_TYPE,
             STRING_TYPE).toString());
 
-    assertEquals("function (this:Array, ...[*]): Array",
+    assertEquals("function (new:Array, ...[*]): Array",
         ARRAY_FUNCTION_TYPE.toString());
 
-    assertEquals("function (this:Boolean, *): boolean",
+    assertEquals("function (new:Boolean, *): boolean",
         BOOLEAN_OBJECT_FUNCTION_TYPE.toString());
 
-    assertEquals("function (this:Number, *): number",
+    assertEquals("function (new:Number, *): number",
         NUMBER_OBJECT_FUNCTION_TYPE.toString());
 
-    assertEquals("function (this:String, *): string",
+    assertEquals("function (new:String, *): string",
         STRING_OBJECT_FUNCTION_TYPE.toString());
 
     assertEquals("function (...[number]): boolean",

@@ -1456,20 +1456,27 @@ public class JSTypeRegistry implements Serializable {
 
       case Token.FUNCTION:
         ObjectType thisType = null;
+        boolean isConstructor = false;
         Node current = n.getFirstChild();
-        if (current.getType() == Token.THIS) {
-          Node thisNode = current.getFirstChild();
+        if (current.getType() == Token.THIS ||
+            current.getType() == Token.NEW) {
+          Node contextNode = current.getFirstChild();
           thisType =
               ObjectType.cast(
                   createFromTypeNodesInternal(
-                      thisNode, sourceName, scope, false)
+                      contextNode, sourceName, scope, false)
                   .restrictByNotNullOrUndefined());
           if (thisType == null) {
             reporter.warning(
-                ScriptRuntime.getMessage0("msg.jsdoc.function.thisnotobject"),
-                sourceName, thisNode.getLineno(), "", thisNode.getCharno());
+                ScriptRuntime.getMessage0(
+                    current.getType() == Token.THIS ?
+                    "msg.jsdoc.function.thisnotobject" :
+                    "msg.jsdoc.function.newnotobject"),
+                sourceName,
+                contextNode.getLineno(), "", contextNode.getCharno());
           }
 
+          isConstructor = current.getType() == Token.NEW;
           current = current.getNext();
         }
 
@@ -1512,6 +1519,7 @@ public class JSTypeRegistry implements Serializable {
             .withParams(paramBuilder)
             .withReturnType(returnType)
             .withTypeOfThis(thisType)
+            .setIsConstructor(isConstructor)
             .build();
     }
 

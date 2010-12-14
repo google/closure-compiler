@@ -116,7 +116,7 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
         "CALL JSCompiler_StaticMethods_baz = null");
 
     static final List<String> EXPECTED_TYPE_CHECKING_ON = ImmutableList.of(
-        "FUNCTION a = function (this:a): undefined",
+        "FUNCTION a = function (new:a): undefined",
         "NAME JSCompiler_StaticMethods_foo$self = a",
         "FUNCTION JSCompiler_StaticMethods_foo = function (a): number",
         "NAME JSCompiler_StaticMethods_bar$self = a",

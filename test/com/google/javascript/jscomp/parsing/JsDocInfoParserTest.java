@@ -460,6 +460,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("function (?): (?|number)", "function (?): ?");
   }
 
+  public void testParseFunctionalType19() throws Exception {
+    testParseType("function (new:Object)", "function (new:Object): ?");
+  }
+
   public void testBug1419535() throws Exception {
     parse("@type {function(Object, string, *)?} */");
     parse("@type {function(Object, string, *)|null} */");
@@ -498,6 +502,23 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseFunctionalTypeError8() throws Exception {
     parse("@type {function(...number])}*/", "missing opening [");
+  }
+
+  public void testParseFunctionalTypeError9() throws Exception {
+    parse("@type {function (new:Array, this:Object)} */", "missing closing )");
+  }
+
+  public void testParseFunctionalTypeError10() throws Exception {
+    parse("@type {function (this:Array, new:Object)} */", "missing closing )");
+  }
+
+  public void testParseFunctionalTypeError11() throws Exception {
+    parse("@type {function (Array, new:Object)} */", "missing closing )");
+  }
+
+  public void testParseFunctionalTypeError12() throws Exception {
+    resolve(parse("@type {function (new:number)}*/").getType(),
+        "constructed type must be an object type");
   }
 
   public void testParseArrayType1() throws Exception {

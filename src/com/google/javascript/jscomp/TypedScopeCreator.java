@@ -1020,8 +1020,18 @@ final class TypedScopeCreator implements ScopeCreator {
                 superClassCtor.getInstanceType().equals(
                     getNativeType(OBJECT_TYPE)));
 
-            // Make sure the variable is initialized to something.
-            if (newVar.getInitialValue() == null && !isExtern) {
+            // Make sure the variable is initialized to something if
+            // it constructs itself.
+            if (newVar.getInitialValue() == null &&
+                !isExtern &&
+                // We want to make sure that when we declare a new instance
+                // type (with @constructor) that there's actually a ctor for it.
+                // This doesn't apply to structural constructors
+                // (like function(new:Array). Checking the constructed
+                // type against the variable name is a sufficient check for
+                // this.
+                variableName.equals(
+                    fnType.getInstanceType().getReferenceName())) {
               compiler.report(
                   JSError.make(sourceName, n,
                       fnType.isConstructor() ?

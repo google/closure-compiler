@@ -102,7 +102,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertFalse(foo.isPropertyTypeInferred("Bar"));
 
     JSType fooBar = foo.getPropertyType("Bar");
-    assertEquals("function (this:foo.Bar): undefined", fooBar.toString());
+    assertEquals("function (new:foo.Bar): undefined", fooBar.toString());
     assertEquals(Lists.newArrayList(foo), registry.getTypesWithProperty("Bar"));
   }
 
@@ -444,7 +444,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "", null);
 
     JSType e = globalScope.getVar("Extern").getType();
-    assertEquals("function (this:Extern): ?", e.toString());
+    assertEquals("function (new:Extern): ?", e.toString());
 
     ObjectType externProto = ((FunctionType) e).getPrototype();
     assertTrue(globalScope.getRootNode().toStringTree(),
@@ -589,7 +589,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType ctor = (ObjectType) (findNameType("goog.Foo", globalScope));
     assertNotNull(ctor);
     assertTrue(ctor.isConstructor());
-    assertEquals("function (this:goog.Foo): undefined", ctor.toString());
+    assertEquals("function (new:goog.Foo): undefined", ctor.toString());
   }
 
   public void testForLoopIntegration() {

@@ -1687,26 +1687,33 @@ public final class JsDocInfoParser {
       token = next();
 
       boolean hasParams = true;
-      if (token == JsDocToken.STRING && "this".equals(stream.getString())) {
-        if (match(JsDocToken.COLON)) {
-          next();
-          skipEOLs();
-          Node thisType = wrapNode(Token.THIS, parseTypeName(next()));
-          if (thisType == null) {
-            return null;
+      if (token == JsDocToken.STRING) {
+        String tokenStr = stream.getString();
+        boolean isThis = "this".equals(tokenStr);
+        boolean isNew = "new".equals(tokenStr);
+        if (isThis || isNew) {
+          if (match(JsDocToken.COLON)) {
+            next();
+            skipEOLs();
+            Node contextType = wrapNode(
+                isThis ? Token.THIS : Token.NEW,
+                parseTypeName(next()));
+            if (contextType == null) {
+              return null;
+            }
+
+            functionType.addChildToFront(contextType);
+          } else {
+            return reportTypeSyntaxWarning("msg.jsdoc.missing.colon");
           }
 
-          functionType.addChildToFront(thisType);
-        } else {
-          return reportTypeSyntaxWarning("msg.jsdoc.missing.colon");
-        }
-
-        if (match(JsDocToken.COMMA)) {
-          next();
-          skipEOLs();
-          token = next();
-        } else {
-          hasParams = false;
+          if (match(JsDocToken.COMMA)) {
+            next();
+            skipEOLs();
+            token = next();
+          } else {
+            hasParams = false;
+          }
         }
       }
 

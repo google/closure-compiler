@@ -131,7 +131,7 @@ public class FunctionType extends PrototypeObjectType {
     this.source = source;
     this.kind = isConstructor ? Kind.CONSTRUCTOR : Kind.ORDINARY;
     if (isConstructor) {
-      this.typeOfThis = typeOfThis != null && typeOfThis.isNoObjectType() ?
+      this.typeOfThis = typeOfThis != null ?
           typeOfThis : new InstanceObjectType(registry, this, nativeType);
     } else {
       this.typeOfThis = typeOfThis != null ?
@@ -704,7 +704,11 @@ public class FunctionType extends PrototypeObjectType {
     int paramNum = call.parameters.getChildCount();
     boolean hasKnownTypeOfThis = !typeOfThis.isUnknownType();
     if (hasKnownTypeOfThis) {
-      b.append("this:");
+      if (isConstructor()) {
+        b.append("new:");
+      } else {
+        b.append("this:");
+      }
       b.append(typeOfThis.toString());
     }
     if (paramNum > 0) {
