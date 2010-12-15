@@ -617,7 +617,7 @@ public class DefaultPassConfig extends PassConfig {
   private List<PassFactory> getMainOptimizationLoop() {
     List<PassFactory> passes = Lists.newArrayList();
     if (options.inlineGetters) {
-      passes.add(inlineGetters);
+      passes.add(inlineSimpleMethods);
     }
 
     passes.addAll(getCodeRemovingPasses());
@@ -1433,11 +1433,11 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Inlines simple methods, like getters */
-  private PassFactory inlineGetters =
-      new PassFactory("inlineGetters", false) {
+  private PassFactory inlineSimpleMethods =
+      new PassFactory("inlineSimpleMethods", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new InlineGetters(compiler);
+      return new InlineSimpleMethods(compiler);
     }
   };
 

@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-public class InlineGettersTest extends CompilerTestCase {
+public class InlineSimpleMethodsTest extends CompilerTestCase {
 
-  public InlineGettersTest() {
+  public InlineSimpleMethodsTest() {
     super("", false);
   }
 
@@ -30,7 +30,7 @@ public class InlineGettersTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new InlineGetters(compiler);
+    return new InlineSimpleMethods(compiler);
   }
 
   /**

@@ -50,12 +50,12 @@ import java.util.logging.Logger;
  * detected.
  *
  */
-class InlineGetters extends MethodCompilerPass {
+class InlineSimpleMethods extends MethodCompilerPass {
 
   private static final Logger logger =
-      Logger.getLogger(InlineGetters.class.getName());
+      Logger.getLogger(InlineSimpleMethods.class.getName());
 
-  InlineGetters(AbstractCompiler compiler) {
+  InlineSimpleMethods(AbstractCompiler compiler) {
     super(compiler);
   }
 
