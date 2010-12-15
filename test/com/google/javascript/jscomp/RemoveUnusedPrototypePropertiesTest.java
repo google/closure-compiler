@@ -333,4 +333,70 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
         "Foo.prototype.methodA = function() {};" +
         "this.methodA();");
   }
+
+  public void testGetterBaseline() {
+    anchorUnusedVars = true;
+    test(
+        "function Foo() {}" +
+        "Foo.prototype = { " +
+        "  methodA: function() {}," +
+        "  methodB: function() { x(); }" +
+        "};" +
+        "function x() { (new Foo).methodA(); }",
+
+        "function Foo() {}" +
+        "Foo.prototype = { " +
+        "  methodA: function() {}" +
+        "};" +
+        "function x() { (new Foo).methodA(); }");
+  }
+
+  public void testGetter1() {
+    test(
+      "function Foo() {}" +
+      "Foo.prototype = { " +
+      "  get methodA() {}," +
+      "  get methodB() { x(); }" +
+      "};" +
+      "function x() { (new Foo).methodA; }",
+
+      "function Foo() {}" +
+      "Foo.prototype = {};");
+    
+    anchorUnusedVars = true;
+    test(
+        "function Foo() {}" +
+        "Foo.prototype = { " +
+        "  get methodA() {}," +
+        "  get methodB() { x(); }" +
+        "};" +
+        "function x() { (new Foo).methodA; }",
+
+        "function Foo() {}" +
+        "Foo.prototype = { " +
+        "  get methodA() {}" +
+        "};" +
+        "function x() { (new Foo).methodA; }");
+  }
+
+  public void testGetter2() {
+    anchorUnusedVars = true;
+    test(
+        "function Foo() {}" +
+        "Foo.prototype = { " +
+        "  get methodA() {}," +
+        "  set methodA(a) {}," +
+        "  get methodB() { x(); }," +
+        "  set methodB(a) { x(); }" +
+        "};" +
+        "function x() { (new Foo).methodA; }",
+
+        "function Foo() {}" +
+        "Foo.prototype = { " +
+        "  get methodA() {}," +
+        "  set methodA(a) {}" +
+        "};" +
+        "function x() { (new Foo).methodA; }");
+  }
+
 }

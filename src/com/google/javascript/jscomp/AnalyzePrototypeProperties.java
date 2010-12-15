@@ -239,7 +239,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
         // should count as a use of property a and b.
         for (Node propNameNode = n.getFirstChild(); propNameNode != null;
              propNameNode = propNameNode.getNext()) {
-          if (propNameNode.getType() == Token.STRING &&
+          // May be NUMBER, STRING, GET, or SET, but NUMBER isn't interesting.
+          if (propNameNode.getType() != Token.NUMBER &&
               !propNameNode.isQuotedString()) {
             addSymbolUse(propNameNode.getString(), t.getModule(), PROPERTY);
           }
@@ -378,8 +379,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
               NodeUtil.isExprAssign(grandParent) &&
               NodeUtil.isLhs(n, parent)) {
             String name = dest.getString();
-            Property prop = new AssignmentProperty(grandParent,
-                grandParent.getParent(), t.getModule());
+            Property prop = new AssignmentProperty(grandParent, t.getModule());
             getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
           }
           break;
@@ -388,11 +388,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
         case Token.ASSIGN:
           Node map = n.getFirstChild().getNext();
           if (map.getType() == Token.OBJECTLIT) {
-            // assumes the object literal is well formed
-            // (has an even number of children)
             for (Node key = map.getFirstChild();
                  key != null; key = key.getNext()) {
-              if (key.getType() == Token.STRING) {
+              // May be NUMBER, STRING, GET, or SET,
+              // but NUMBER isn't interesting.
+              if (key.getType() != Token.NUMBER) {
                 String name = key.getString();
                 Property prop = new LiteralProperty(
                     key, key.getFirstChild(), map, n, t.getModule());
@@ -513,9 +513,6 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     /** Returns the value of this property. */
     Node getValue();
-
-    /** Returns the parent of the value of this property. */
-    Node getValueParent();
   }
 
   /**
@@ -525,36 +522,34 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * Foo.prototype.bar = function() { ... };</pre>
    */
   static class AssignmentProperty implements Property {
-    private final Node node;
+    private final Node exprNode;
     private final JSModule module;
 
     /**
      * @param node An EXPR node.
-     * @param parent parent of {@code node}
      */
-    AssignmentProperty(Node node, Node parent, JSModule module) {
-      this.node = node;
+    AssignmentProperty(Node node, JSModule module) {
+      this.exprNode = node;
       this.module = module;
     }
 
     @Override
     public void remove() {
-      NodeUtil.removeChild(node.getParent(), node);
+      NodeUtil.removeChild(exprNode.getParent(), exprNode);
     }
 
     @Override
     public Node getPrototype() {
-      return getValueParent().getFirstChild().getFirstChild();
+      return getAssignNode().getFirstChild().getFirstChild();
     }
 
     @Override
     public Node getValue() {
-      return getValueParent().getLastChild();
+      return getAssignNode().getLastChild();
     }
 
-    @Override
-    public Node getValueParent() {
-      return node.getFirstChild();
+    private Node getAssignNode() {
+      return exprNode.getFirstChild();
     }
 
     @Override
@@ -598,11 +593,6 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public Node getValue() {
       return value;
-    }
-
-    @Override
-    public Node getValueParent() {
-      return map;
     }
 
     @Override

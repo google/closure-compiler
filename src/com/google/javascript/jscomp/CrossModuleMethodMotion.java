@@ -125,6 +125,7 @@ class CrossModuleMethodMotion implements CompilerPass {
         // We should only move a property across modules if:
         // 1) We can move it deeper in the module graph, and
         // 2) it's a function.
+        // 3) it is not a get or a set.
         //
         // #1 should be obvious. #2 is more subtle. It's possible
         // to copy off of a prototype, as in the code:
@@ -139,7 +140,14 @@ class CrossModuleMethodMotion implements CompilerPass {
         Node value = prop.getValue();
         if (moduleGraph.dependsOn(deepestCommonModuleRef, prop.getModule()) &&
             value.getType() == Token.FUNCTION) {
-          Node valueParent = prop.getValueParent();
+          Node valueParent = value.getParent();
+          if (valueParent.getType() == Token.GET
+              || valueParent.getType() == Token.SET) {
+            // TODO(johnlenz): a GET or SET can't be deferred like a normal
+            // FUNCTION property definition as a mix-in would get the result
+            // of a GET instead of the function itself.
+            continue;
+          }
           Node proto = prop.getPrototype();
           int stubId = idGenerator.newId();
 

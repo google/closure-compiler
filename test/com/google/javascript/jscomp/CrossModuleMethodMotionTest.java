@@ -46,7 +46,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
     canMoveExterns = false;
   }
 
-  public void testMovePrototypeMethod() {
+  public void testMovePrototypeMethod1() {
     testSame(createModuleChain(
                  "function Foo() {}" +
                  "Foo.prototype.bar = function() {};",
@@ -67,6 +67,31 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
              "Foo.prototype.bar = JSCompiler_unstubMethod(0, function() {});" +
              "(new Foo).bar()"
          });
+  }
+
+  public void testMovePrototypeMethod2() {
+    test(createModuleChain(
+             "function Foo() {}" +
+             "Foo.prototype = { method: function() {} };",
+             // Module 2
+             "(new Foo).method()"),
+         new String[] {
+             STUB_DECLARATIONS +
+             "function Foo() {}" +
+             "Foo.prototype = { method: JSCompiler_stubMethod(0) };",
+             // Module 2
+             "Foo.prototype.method = " +
+             "    JSCompiler_unstubMethod(0, function() {});" +
+             "(new Foo).method()"
+         });
+  }
+
+  public void testMovePrototypeMethod3() {
+    testSame(createModuleChain(
+             "function Foo() {}" +
+             "Foo.prototype = { get method() {} };",
+             // Module 2
+             "(new Foo).method()"));
   }
 
   public void testMovePrototypeRecursiveMethod() {
@@ -385,7 +410,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
            "var y = new Foo(); y.baz();"
         });
   }
-  
+
   // An anonymous inner function reading a closure variable is fine.
   public void testInnerFunctionClosureVariableReads() {
     test(createModuleChain(
@@ -404,5 +429,5 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
            "var y = new Foo(); y.baz();"
         });
   }
-  
+
 }
