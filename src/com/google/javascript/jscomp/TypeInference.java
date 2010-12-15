@@ -213,15 +213,28 @@ class TypeInference
           if (NodeUtil.isForIn(source)) {
             // item is assigned a property name, so its type should be string.
             Node item = source.getFirstChild();
+            Node obj = item.getNext();
+
+            FlowScope informed = traverse(obj, output.createChildFlowScope());
+
             if (item.getType() == Token.VAR) {
               item = item.getFirstChild();
             }
             if (item.getType() == Token.NAME) {
-              FlowScope informed = output.createChildFlowScope();
-              redeclare(informed, item.getString(),
-                  getNativeType(STRING_TYPE));
-              newScope = informed;
+              JSType iterKeyType = getNativeType(STRING_TYPE);
+              ObjectType objType = getJSType(obj).dereference();
+              JSType objIndexType = objType == null ?
+                  null : objType.getIndexType();
+              if (objIndexType != null && !objIndexType.isUnknownType()) {
+                JSType narrowedKeyType =
+                    iterKeyType.getGreatestSubtype(objIndexType);
+                if (!narrowedKeyType.isEmptyType()) {
+                  iterKeyType = narrowedKeyType;
+                }
+              }
+              redeclare(informed, item.getString(), iterKeyType);
             }
+            newScope = informed;
             break;
           }
 

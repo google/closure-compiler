@@ -2163,6 +2163,69 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testForIn1() throws Exception {
+    testTypes(
+        "/** @param {boolean} x */ function f(x) {}" +
+        "for (var k in {}) {" +
+        "  f(k);" +
+        "}",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : string\n" +
+        "required: boolean");
+  }
+
+  public void testForIn2() throws Exception {
+    testTypes(
+        "/** @param {boolean} x */ function f(x) {}" +
+        "/** @enum {string} */ var E = {FOO: 'bar'};" +
+        "/** @type {Object.<E, string>} */ var obj = {};" +
+        "var k = null;" +
+        "for (k in obj) {" +
+        "  f(k);" +
+        "}",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : E.<string>\n" +
+        "required: boolean");
+  }
+
+  public void testForIn3() throws Exception {
+    testTypes(
+        "/** @param {boolean} x */ function f(x) {}" +
+        "/** @type {Object.<number>} */ var obj = {};" +
+        "for (var k in obj) {" +
+        "  f(obj[k]);" +
+        "}",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: boolean");
+  }
+
+  public void testForIn4() throws Exception {
+    testTypes(
+        "/** @param {boolean} x */ function f(x) {}" +
+        "/** @enum {string} */ var E = {FOO: 'bar'};" +
+        "/** @type {Object.<E, Array>} */ var obj = {};" +
+        "for (var k in obj) {" +
+        "  f(obj[k]);" +
+        "}",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : (Array|null)\n" +
+        "required: boolean");
+  }
+
+  public void testForIn5() throws Exception {
+    testTypes(
+        "/** @param {boolean} x */ function f(x) {}" +
+        "/** @constructor */ var E = function(){};" +
+        "/** @type {Object.<E, number>} */ var obj = {};" +
+        "for (var k in obj) {" +
+        "  f(k);" +
+        "}",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : string\n" +
+        "required: boolean");
+  }
+
   // TODO(nicksantos): change this to something that makes sense.
 //   public void testComparison1() throws Exception {
 //     testTypes("/**@type null */var a;" +
