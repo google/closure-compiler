@@ -49,7 +49,7 @@ public class JsonMLValidationTest extends TestCase {
       String errorMsg = String.format(
           "Validation error for %s.\n Received: %s\n Expected: %s\n",
           jsonml, msg, expected);
-      throw new Exception(errorMsg);
+      assertEquals(errorMsg, expected, msg);
     }
   }
 
@@ -565,12 +565,14 @@ public class JsonMLValidationTest extends TestCase {
             "['DataProp',{'name':'y'}," +
                 "['LiteralExpr',{'type':'number','value':2}]]]");
     // wrong types of children
+    TagType[] tags = 
+        {TagType.DataProp, TagType.GetterProp, TagType.SetterProp };
     testWrongChildTypeValidation("" +
         "['ObjectExpr',{}," +
             "['DataProp',{'name':'x'}," +
                 "['LiteralExpr',{'type':'number','value':1}]]," +
             "['IdExpr',{'name':'y'}]]",
-        TagType.ObjectExpr, TagType.DataProp, TagType.IdExpr, 1);
+        TagType.ObjectExpr, tags, TagType.IdExpr, 1);
   }
 
   public void testParamDeclValidation() throws Exception {

@@ -637,23 +637,32 @@ public class Writer {
   private void processObjectLiteral(Node node, JsonML currentParent) {
     JsonML element = new JsonML(TagType.ObjectExpr);
     currentParent.appendChild(element);
-    Iterator<Node> it = node.children().iterator();
-    while (it.hasNext()) {
-      JsonML item = new JsonML(TagType.DataProp);
-      Node child = it.next();
-      Object name = null;
-      switch (child.getType()) {
+    for (Node key : node.children()) {
+      Node value = key.getFirstChild();
+      JsonML item;
+      Object name;
+      switch (key.getType()) {
         case Token.STRING:
-          name = child.getString();
+          item = new JsonML(TagType.DataProp);
+          name = key.getString();
           break;
         case Token.NUMBER:
-          name = child.getDouble();
+          item = new JsonML(TagType.DataProp);
+          name = key.getDouble();
+          break;
+        case Token.GET:
+          item = new JsonML(TagType.GetterProp);
+          name = key.getString();
+          break;
+        case Token.SET:
+          item = new JsonML(TagType.SetterProp);
+          name = key.getString();
           break;
         default:
           throw new IllegalArgumentException("Illegal type of node.");
       }
       item.setAttribute(TagAttr.NAME, name);
-      processNode(it.next(), item);
+      processNode(value, item);
       element.appendChild(item);
     }
   }

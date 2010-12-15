@@ -99,7 +99,13 @@ public class Validator {
         validateCountExpr(element);
         break;
       case DataProp:
-        validateDataProp(element);
+        validateProp(element);
+        break;
+      case GetterProp:
+        validateProp(element);
+        break;
+      case SetterProp:
+        validateProp(element);
         break;
       case DeleteExpr:
         validateDeleteExpr(element);
@@ -228,7 +234,7 @@ public class Validator {
     validateArgument(element, TagAttr.OP);
   }
 
-  private void validateDataProp(JsonML element) {
+  private void validateProp(JsonML element) {
     validateChildrenSize(element, 1);
     if (!error) {
       validateArgument(element, TagAttr.NAME);
@@ -319,8 +325,10 @@ public class Validator {
   }
 
   private void validateObjectExpr(JsonML element) {
+    TagType[] expected =
+        {TagType.DataProp, TagType.GetterProp, TagType.SetterProp};
     for (int i = 0; i < element.childrenSize(); ++i) {
-      validateChildType(element, TagType.DataProp, i);
+      validateChildType(element, expected, i);
     }
   }
 

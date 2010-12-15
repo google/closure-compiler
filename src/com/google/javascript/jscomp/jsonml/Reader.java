@@ -285,6 +285,12 @@ public class Reader {
       case DataProp:
         transformDataProp(element, parent);
         break;
+      case GetterProp:
+        transformGetterProp(element, parent);
+        break;
+      case SetterProp:
+        transformSetterProp(element, parent);
+        break;
       case DefaultCase:
         transformDefaultCase(element, parent);
         break;
@@ -716,8 +722,49 @@ public class Reader {
     setPosition(node);
     parent.addChildToBack(node);
 
-    transformElement(element.getChild(0), parent);
+    transformElement(element.getChild(0), node);
   }
+
+  /*
+   * GetterProp is a object literal entry for a getter.
+   * For example, {get x() {return 1}}
+   */
+  private void transformGetterProp(JsonML element, Node parent)
+      throws JsonMLException {
+    transformProp(Token.GET, element, parent);
+  }
+
+  /*
+   * GetterProp is a object literal entry for a getter.
+   * For example, {set x() {return 1}}
+   */
+  private void transformSetterProp(JsonML element, Node parent)
+      throws JsonMLException {
+    transformProp(Token.SET, element, parent);
+  }
+
+  private void transformProp(int tokenType, JsonML element, Node parent)
+      throws JsonMLException {
+    Object name = getObjectAttribute(element, TagAttr.NAME);
+
+    Node node = null;
+    if (name instanceof Number) {
+      // TODO(johnlenz): convert the number to a quoted string.
+      throw new IllegalStateException(
+         "Not yet supported.");
+    } else if (name instanceof String) {
+      node = Node.newString(tokenType, (String) name);
+    } else {
+      throw new IllegalStateException(
+          "The name of the property has invalid type.");
+    }
+
+    setPosition(node);
+    parent.addChildToBack(node);
+
+    transformElement(element.getChild(0), node);
+  }
+
 
   private void transformDefaultCase(JsonML element, Node parent)
       throws JsonMLException {

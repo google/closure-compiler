@@ -72,8 +72,8 @@ public enum TagType {
 
   // *Prop types
   DataProp,
-  GetterProp,         // not supported by Closure Compiler
-  SetterProp,         // not supported by Closure Compiler
+  GetterProp,
+  SetterProp,
 
   // *Patt types
   IdPatt,
