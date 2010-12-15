@@ -184,10 +184,17 @@ public class StrictModeCheckTest extends CompilerTestCase {
   public void testIllegalName8() {
     test("var o = {a__: 3};", null, StrictModeCheck.ILLEGAL_NAME);
     test("var o = {b: 3, a__: 4};", null, StrictModeCheck.ILLEGAL_NAME);
+    test("var o = {b: 3, get a__() {}};", null, StrictModeCheck.ILLEGAL_NAME);
+    test("var o = {b: 3, set a__(c) {}};", null, StrictModeCheck.ILLEGAL_NAME);
   }
 
   public void testIllegalName9() {
     test("a__: while (true) { var b = 3; }", null,
          StrictModeCheck.ILLEGAL_NAME);
+  }
+
+  public void testIllegalName10() {
+    // Validate that number as objlit key
+    testSame("var o = {1: 3, 2: 4};");
   }
 }
