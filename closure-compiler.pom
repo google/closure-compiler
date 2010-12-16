@@ -127,5 +127,11 @@ Closure Compiler is a JavaScript optimizing compiler. It parses your JavaScript,
       <version>4.8.2</version>
     </dependency>
 
+    <dependency>
+      <groupId>caja</groupId>
+      <artifactId>caja</artifactId>
+      <version>r4314</version>
+    </dependency>
+
   </dependencies>
 </project>
