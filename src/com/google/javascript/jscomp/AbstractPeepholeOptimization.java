@@ -83,7 +83,7 @@ abstract class AbstractPeepholeOptimization {
     Preconditions.checkNotNull(currentTraversal);
     Preconditions.checkNotNull(currentTraversal.getCompiler());
 
-    return currentTraversal.getCompiler().isNormalized();
+    return currentTraversal.getCompiler().getLifeCycleStage().isNormalized();
   }
 
   /**

@@ -170,7 +170,7 @@ class UnfoldCompoundAssignments implements Callback, CompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.isNormalized(),
+    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized(),
         "UnfoldCompoundAssignments requires a normalized AST");
     NodeTraversal.traverse(compiler, root, this);
   }

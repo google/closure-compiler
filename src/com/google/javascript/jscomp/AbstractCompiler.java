@@ -36,6 +36,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
       "JSC_READ_ERROR", "Cannot read: {0}");
 
+  private LifeCycleStage stage = LifeCycleStage.RAW;
+
   // TODO(nicksantos): Decide if all of these are really necessary.
   // Many of them are just accessors that should be passed to the
   // CompilerPass's constructor.
@@ -164,9 +166,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   public abstract ReverseAbstractInterpreter getReverseAbstractInterpreter();
 
   /**
-   * @return Whether the normalization pass has been run.
+   * @return The current life-cycle stage of the AST we're working on.
    */
-  abstract boolean isNormalized();
+  LifeCycleStage getLifeCycleStage() {
+    return stage;
+  }
 
   /**
    * Generates unique ids.
@@ -222,16 +226,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract public ErrorManager getErrorManager();
 
   /**
-   * Set if the normalization pass has been done.
-   * Note: non-private to enable test cases that require the Normalize pass.
+   * Set the current life-cycle state.
    */
-  abstract void setNormalized();
-
-  /**
-   * Set once unnormalizing passes have been start.
-   * Note: non-private to enable test cases that require the Normalize pass.
-   */
-  abstract void setUnnormalized();
+  void setLifeCycleStage(LifeCycleStage stage) {
+    this.stage = stage;
+  }
 
   /**
    * Are the nodes equal for the purpose of inlining?
@@ -256,4 +255,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * @return The error level the given error object will be reported at.
    */
   abstract CheckLevel getErrorLevel(JSError error);
+
+  static enum LifeCycleStage {
+    RAW,
+    NORMALIZED;
+
+    boolean isNormalized() {
+      return this == NORMALIZED;
+    }
+  }
 }

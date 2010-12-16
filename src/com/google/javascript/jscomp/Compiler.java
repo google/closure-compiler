@@ -115,12 +115,6 @@ public class Compiler extends AbstractCompiler {
    */
   private int uniqueNameId = 0;
 
-  /**
-   * Whether the optional "normalization" pass has been run.  Passes that
-   * depend on the assumptions made there should check this value.
-   */
-  private boolean normalized = false;
-
   /** Whether to use threads. */
   private boolean useThreads = true;
 
@@ -908,29 +902,6 @@ public class Compiler extends AbstractCompiler {
         return String.valueOf(self.nextUniqueNameId());
       }
     };
-  }
-
-  /**
-   * Set if the normalization pass has been done.
-   * Note: non-private to enable test cases that require the Normalize pass.
-   */
-  @Override
-  void setNormalized() {
-    normalized = true;
-  }
-
-  /**
-   * Set once unnormalizing passes have been start.
-   * Note: non-private to enable test cases that require the Normalize pass.
-   */
-  @Override
-  void setUnnormalized() {
-    normalized = false;
-  }
-
-  @Override
-  boolean isNormalized() {
-    return normalized;
   }
 
   @Override
@@ -1870,7 +1841,7 @@ public class Compiler extends AbstractCompiler {
     private List<JSModule> modules;
     private PassConfig.State passConfigState;
     private JSTypeRegistry typeRegistry;
-    private boolean normalized;
+    private AbstractCompiler.LifeCycleStage lifeCycleStage;
 
     private IntermediateState() {}
   }
@@ -1887,7 +1858,7 @@ public class Compiler extends AbstractCompiler {
     state.modules = modules;
     state.passConfigState = getPassConfig().getIntermediateState();
     state.typeRegistry = typeRegistry;
-    state.normalized = normalized;
+    state.lifeCycleStage = getLifeCycleStage();
 
     return state;
   }
@@ -1905,7 +1876,7 @@ public class Compiler extends AbstractCompiler {
     passes = createPassConfigInternal();
     getPassConfig().setIntermediateState(state.passConfigState);
     typeRegistry = state.typeRegistry;
-    normalized = state.normalized;
+    setLifeCycleStage(state.lifeCycleStage);
   }
 
   @VisibleForTesting

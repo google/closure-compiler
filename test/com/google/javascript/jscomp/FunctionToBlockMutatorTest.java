@@ -18,6 +18,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -216,7 +217,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
         FunctionArgumentInjector.findModifiedParameters(fnNode);
 
     // Fake precondition.
-    compiler.setNormalized();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     // inline tester
     Method tester = new Method() {

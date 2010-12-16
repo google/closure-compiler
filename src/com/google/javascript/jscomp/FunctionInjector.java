@@ -209,7 +209,7 @@ class FunctionInjector {
   Node inline(
       NodeTraversal t, Node callNode, String fnName, Node fnNode,
       InliningMode mode) {
-    Preconditions.checkState(compiler.isNormalized());
+    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
 
     if (mode == InliningMode.DIRECT) {
       return inlineReturnValue(callNode, fnNode);

@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -141,7 +142,7 @@ class Normalize implements CompilerPass {
     new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
 
-    compiler.setNormalized();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
   }
 
   /**

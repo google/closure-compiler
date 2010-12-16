@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -1372,7 +1373,7 @@ public class FunctionInjectorTest extends TestCase {
 
     Normalize normalize = new Normalize(compiler, false);
     normalize.process(externsRoot, mainRoot);
-    compiler.setNormalized();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     final Node fnNode = findFunction(tree, fnName);
     assertNotNull(fnNode);

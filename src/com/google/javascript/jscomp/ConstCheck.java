@@ -51,7 +51,7 @@ class ConstCheck extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.isNormalized());
+    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverse(compiler, root, this);
   }
 

@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 
 /**
  * @author nicksantos@google.com (Nick Santos)
@@ -70,7 +70,7 @@ public class SanityCheckTest extends CompilerTestCase {
   public void testUnnormalized() throws Exception {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
-        getLastCompiler().setNormalized();
+        getLastCompiler().setLifeCycleStage(LifeCycleStage.NORMALIZED);
       }
     };
 
@@ -92,7 +92,7 @@ public class SanityCheckTest extends CompilerTestCase {
         Node name = Node.newString(Token.NAME, "x");
         name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         root.addChildToBack(new Node(Token.EXPR_RESULT, name));
-        getLastCompiler().setNormalized();
+        getLastCompiler().setLifeCycleStage(LifeCycleStage.NORMALIZED);
       }
     };
 

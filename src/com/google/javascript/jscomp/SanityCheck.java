@@ -51,7 +51,7 @@ class SanityCheck implements CompilerPass {
   }
 
   private void sanityCheckVars(Node externs, Node root) {
-    if (compiler.isNormalized()) {
+    if (compiler.getLifeCycleStage().isNormalized()) {
       (new VarCheck(compiler, true)).process(externs, root);
     }
   }
@@ -109,7 +109,7 @@ class SanityCheck implements CompilerPass {
     // Exceptions into Errors so that it is easier to find the root cause
     // when there are cascading issues.
     new PrepareAst(compiler, true).process(null, root);
-    if (compiler.isNormalized()) {
+    if (compiler.getLifeCycleStage().isNormalized()) {
       (new Normalize(compiler, true)).process(externs, root);
 
       boolean checkUserDeclarations = true;

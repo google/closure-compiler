@@ -76,7 +76,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * to foo, rename both variable to foo_bar.
    */
   CoalesceVariableNames(AbstractCompiler compiler, boolean usePseudoNames) {
-    Preconditions.checkState(!compiler.isNormalized());
+    Preconditions.checkState(!compiler.getLifeCycleStage().isNormalized());
 
     this.compiler = compiler;
     colorings = Lists.newLinkedList();

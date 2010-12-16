@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -1689,7 +1690,7 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
       return new CompilerPass() {
         @Override public void process(Node externs, Node root) {
-          compiler.setUnnormalized();
+          compiler.setLifeCycleStage(LifeCycleStage.RAW);
         }
       };
     }

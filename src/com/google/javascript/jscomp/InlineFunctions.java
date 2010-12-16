@@ -104,7 +104,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.isNormalized());
+    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
 
     NodeTraversal.traverse(compiler, root, new FindCandidateFunctions());
     if (fns.isEmpty()) {

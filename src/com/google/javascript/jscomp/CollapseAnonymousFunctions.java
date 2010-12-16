@@ -40,7 +40,7 @@ class CollapseAnonymousFunctions implements CompilerPass {
   private final AbstractCompiler compiler;
 
   public CollapseAnonymousFunctions(AbstractCompiler compiler) {
-    Preconditions.checkArgument(compiler.isNormalized());
+    Preconditions.checkArgument(compiler.getLifeCycleStage().isNormalized());
     this.compiler = compiler;
   }
 
