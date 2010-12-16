@@ -74,10 +74,14 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
         ImmutableSet.of("DEF STRING null -> NUMBER",
                         "USE GETPROP o.a -> [NUMBER]"));
 
+    // TODO(johnlenz): Fix this.
+    checkDefinitionsInJs(
+      "({'a' : 1}); o['a']",
+      ImmutableSet.<String>of("DEF STRING null -> NUMBER"));
+
     checkDefinitionsInJs(
       "({1 : 1}); o[1]",
       ImmutableSet.<String>of());
-
 
     checkDefinitionsInJs(
         "var a = {b : 1}; a.b",
@@ -85,6 +89,23 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
                         "DEF STRING null -> NUMBER",
                         "USE NAME a -> [<null>]",
                         "USE GETPROP a.b -> [NUMBER]"));
+  }
+
+  public void testDefineGet() throws Exception {
+    // TODO(johnlenz): Add support for quoted properties
+    checkDefinitionsInJs(
+      "({get a() {}}); o.a",
+      ImmutableSet.of("DEF GET null -> FUNCTION",
+                      "USE GETPROP o.a -> [FUNCTION]"));
+  }
+
+  public void testDefineSet() throws Exception {
+    // TODO(johnlenz): Add support for quoted properties
+    checkDefinitionsInJs(
+      "({set a(b) {}}); o.a",
+      ImmutableSet.of("DEF NAME b -> <null>",
+                      "DEF SET null -> FUNCTION",
+                      "USE GETPROP o.a -> [FUNCTION]"));
   }
 
   public void testDefineFunction() throws Exception {

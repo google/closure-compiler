@@ -546,28 +546,34 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "var b=function(c,d){return c+d};b(1,2)");
     test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
          "var b=function(c,d){return c+d};b(2)");
-    
+
     // multiple definitions of "b", the parameters can be removed but
     // the call sites are left unmodified for now.
     test("var b=function(c,d){};var b=function(e,f){};b(1,2)",
-         "var b=function(){};var b=function(){};b(1,2)");  
+         "var b=function(){};var b=function(){};b(1,2)");
   }
-  
+
   public void testDoNotOptimizeJSCompiler_renameProperty() {
     this.modifyCallSites = true;
-    
+
     // Only the function definition can be modified, none of the call sites.
     test("function JSCompiler_renameProperty(a) {};" +
          "JSCompiler_renameProperty('a');",
          "function JSCompiler_renameProperty() {};" +
          "JSCompiler_renameProperty('a');");
   }
-  
+
   public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
     this.modifyCallSites = true;
     test("function JSCompiler_ObjectPropertyString(a, b) {};" +
          "JSCompiler_ObjectPropertyString(window,'b');",
          "function JSCompiler_ObjectPropertyString() {};" +
          "JSCompiler_ObjectPropertyString(window,'b');");
-  }  
+  }
+
+  public void testDoNotOptimizeSetters() {
+    // this.removeGlobal = false;
+    // this.modifyCallSites = false;
+    testSame("({set s(a) {}})");
+  }
 }

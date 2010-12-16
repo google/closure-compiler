@@ -437,6 +437,83 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     test(source, expected);
   }
 
+  public void testRewriteImplementedMethod2() throws Exception {
+    String source = newlineJoin(
+        "function a(){}",
+        "a.prototype['foo'] = function(args) {return args};",
+        "var o = new a;",
+        "o.foo()");
+    testSame(source);
+  }
+
+  public void testRewriteImplementedMethod3() throws Exception {
+    String source = newlineJoin(
+        "function a(){}",
+        "a.prototype.foo = function(args) {return args};",
+        "var o = new a;",
+        "o['foo']");
+    testSame(source);
+  }
+
+  public void testRewriteImplementedMethod4() throws Exception {
+    String source = newlineJoin(
+        "function a(){}",
+        "a.prototype['foo'] = function(args) {return args};",
+        "var o = new a;",
+        "o['foo']");
+    testSame(source);
+  }
+
+  public void testRewriteImplementedMethodInObj() throws Exception {
+    // This isn't currently supported, but could be.
+    String source = newlineJoin(
+        "function a(){}",
+        "a.prototype = {foo: function(args) {return args}};",
+        "var o = new a;",
+        "o.foo()");
+    testSame(source);
+  }
+
+  public void testNoRewriteGet1() throws Exception {
+    // Getters and setter require special handling.
+    String source = newlineJoin(
+        "function a(){}",
+        "a.prototype = {get foo(){return f}};",
+        "var o = new a;",
+        "o.foo()");
+    testSame(source);
+  }
+
+  public void testNoRewriteGet2() throws Exception {
+    // Getters and setter require special handling.
+    String source = newlineJoin(
+        "function a(){}",
+        "a.prototype = {get foo(){return 1}};",
+        "var o = new a;",
+        "o.foo");
+    testSame(source);
+  }
+
+  public void testNoRewriteSet1() throws Exception {
+    // Getters and setter require special handling.
+    String source = newlineJoin(
+        "function a(){}",
+        "a.prototype = {set foo(a){}};",
+        "var o = new a;",
+        "o.foo()");
+    testSame(source);
+  }
+
+  public void testNoRewriteSet2() throws Exception {
+    // Getters and setter require special handling.
+    String source = newlineJoin(
+        "function a(){}",
+        "a.prototype = {set foo(a){}};",
+        "var o = new a;",
+        "o.foo = 1");
+    testSame(source);
+  }
+
   public void testNoRewriteNotImplementedMethod() throws Exception {
     testSame(newlineJoin("function a(){}",
                          "var o = new a;",
@@ -577,6 +654,29 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
       NodeTraversal.traverse(compiler, root, new GatherCallback());
     }
 
+    public String getNameString(Node n) {
+      int type = n.getType();
+      if (type == Token.NAME) {
+        return n.getString();
+      } else if (type == Token.GETPROP) {
+        String left = getNameString(n.getFirstChild());
+        if (left == null) {
+          return null;
+        }
+        return left + "." + n.getLastChild().getString();
+      } else if (type == Token.GETELEM) {
+        String left = getNameString(n.getFirstChild());
+        if (left == null) {
+          return null;
+        }
+        return left + "[" + n.getLastChild().getString() + "]";
+      } else if (type == Token.THIS) {
+        return "this";
+      } else {
+        return null;
+      }
+    }
+
     private class GatherCallback extends AbstractPostOrderCallback {
       @Override
       public void visit(NodeTraversal traversal, Node node, Node parent) {
@@ -599,7 +699,7 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
               Joiner.on("").join(
                         Token.name(node.getType()),
                         " ",
-                        nameNode.getQualifiedName(),
+                        getNameString(nameNode),
                         " = ",
                         (type != null) ? type.toString() : "null"));
         }

@@ -315,6 +315,11 @@ class RemoveUnusedVars
 
     Node function = fnScope.getRootNode();
     Preconditions.checkState(function.getType() == Token.FUNCTION);
+    if (NodeUtil.isGetOrSetKey(function.getParent())) {
+      // The parameters object literal setters can not be removed.
+      return;
+    }
+
     Node argList = getFunctionArgList(function);
     boolean modifyCallers = modifyCallSites
         && callSiteOptimizer.canModifyCallers(function);

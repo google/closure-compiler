@@ -1638,6 +1638,21 @@ public final class NodeUtil {
   }
 
   /**
+   * Determines whether a node represents an object literal get or set key
+   * (e.g. key1 in {get key1() {}, set key2(a){}).
+   *
+   * @param node A node
+   */
+  static boolean isGetOrSetKey(Node node) {
+    switch (node.getType()) {
+      case Token.GET:
+      case Token.SET:
+        return true;
+    }
+    return false;
+  }
+
+  /**
    * Converts an operator's token value (see {@link Token}) to a string
    * representation.
    *

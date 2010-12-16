@@ -347,7 +347,10 @@ class DefinitionsRemover {
       // flexibility.
 
       switch (name.getType()) {
+        case Token.SET:
+        case Token.GET:
         case Token.STRING:
+          // TODO(johnlenz): return a GETELEM for quoted strings.
           return new Node(Token.GETPROP,
             new Node(Token.OBJECTLIT),
             name.cloneNode());
@@ -355,10 +358,6 @@ class DefinitionsRemover {
           return new Node(Token.GETELEM,
             new Node(Token.OBJECTLIT),
             name.cloneNode());
-        case Token.SET:
-        case Token.GET:
-          // TODO(johnlenz): revisit. Not sure what to do here.
-          throw new IllegalStateException("not yet implemented");
         default:
           throw new IllegalStateException("unexpected");
       }
