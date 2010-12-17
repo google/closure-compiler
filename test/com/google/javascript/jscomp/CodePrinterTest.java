@@ -1115,4 +1115,11 @@ public class CodePrinterTest extends TestCase {
     //  "var x = {set \"(x)\"() {return 1}}",
     //   "var x={set \"(x)\"(){return 1}}");
   }
+
+  public void testNegCollapse() {
+    // Collapse the negative symbol on numbers at generation time,
+    // to match the Rhino behavior.
+    assertPrint("var x = - - 2;", "var x=2");
+    assertPrint("var x = - (2);", "var x=-2");
+  }
 }

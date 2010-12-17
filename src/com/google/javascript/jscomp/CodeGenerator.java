@@ -223,12 +223,27 @@ class CodeGenerator {
       case Token.VOID:
       case Token.NOT:
       case Token.BITNOT:
-      case Token.POS:
-      case Token.NEG: {
+      case Token.POS: {
         // All of these unary operators are right-associative
         Preconditions.checkState(childCount == 1);
         cc.addOp(NodeUtil.opToStrNoFail(type), false);
         addExpr(first, NodeUtil.precedence(type));
+        break;
+      }
+
+      case Token.NEG: {
+        Preconditions.checkState(childCount == 1);
+
+        // It's important to our sanity checker that the code
+        // we print produces the same AST as the code we parse back.
+        // NEG is a weird case because Rhino parses "- -2" as "2".
+        if (n.getFirstChild().getType() == Token.NUMBER) {
+          cc.addNumber(-n.getFirstChild().getDouble());
+        } else {
+          cc.addOp(NodeUtil.opToStrNoFail(type), false);
+          addExpr(first, NodeUtil.precedence(type));
+        }
+
         break;
       }
 
