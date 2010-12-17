@@ -83,9 +83,7 @@ class SanityCheck implements CompilerPass {
 
     String source2 = compiler.toSource(root2);
     if (!source.equals(source2)) {
-      compiler.report(JSError.make(GENERATED_BAD_CODE,
-              Strings.truncateAtMaxLength(source, 1000, true),
-              Strings.truncateAtMaxLength(source2, 1000, true)));
+      compiler.report(JSError.make(GENERATED_BAD_CODE, source, source2));
 
       // Throw an exception, so that the infrastructure will tell us
       // which pass violated the sanity check.
@@ -112,10 +110,12 @@ class SanityCheck implements CompilerPass {
     if (compiler.getLifeCycleStage().isNormalized()) {
       (new Normalize(compiler, true)).process(externs, root);
 
-      boolean checkUserDeclarations = true;
-      CompilerPass pass = new Normalize.VerifyConstants(
-          compiler, checkUserDeclarations);
-      pass.process(externs, root);
+      if (compiler.getLifeCycleStage().isNormalizedUnobfuscated()) {
+        boolean checkUserDeclarations = true;
+        CompilerPass pass = new Normalize.VerifyConstants(
+            compiler, checkUserDeclarations);
+        pass.process(externs, root);
+      }
     }
 
     compiler.removeChangeHandler(handler);

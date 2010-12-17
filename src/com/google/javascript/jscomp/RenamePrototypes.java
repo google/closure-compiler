@@ -16,10 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import javax.annotation.Nullable;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,6 +31,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import javax.annotation.Nullable;
 
 /**
  * RenamePrototypes renames custom properties (including methods) of custom
@@ -197,6 +200,8 @@ class RenamePrototypes implements CompilerPass {
    * @param root The root of the main code parse tree
    */
   public void process(Node externs, Node root) {
+    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+
     NodeTraversal.traverse(compiler, externs,
                            new ProcessExternedProperties());
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
@@ -253,6 +258,8 @@ class RenamePrototypes implements CompilerPass {
     if (changed) {
       compiler.reportCodeChange();
     }
+
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED_OBFUSCATED);
   }
 
   /**

@@ -36,6 +36,7 @@ public class RenamePropertiesTest extends CompilerTestCase {
 
   public RenamePropertiesTest() {
     super(EXTERNS);
+    enableNormalize();
   }
 
   @Override
@@ -196,10 +197,9 @@ public class RenamePropertiesTest extends CompilerTestCase {
   }
 
   public void testRemoveRenameFunctionStubs2() {
-    test("function() { function JSCompiler_renameProperty(x) {} }" +
-         "var JSCompiler_renameProperty = function(x) { return x; }; " +
+    test("function JSCompiler_renameProperty(x) { return x; }" +
          "var foo = {myProp: 0}; f(foo[JSCompiler_renameProperty('myProp')]);",
-         "function() {} var foo = {a: 0}; f(foo['a']);");
+         "var foo = {a: 0}; f(foo['a']);");
   }
 
   public void testGeneratePseudoNames() {

@@ -142,7 +142,9 @@ class Normalize implements CompilerPass {
     new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
 
-    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+    if (!compiler.getLifeCycleStage().isNormalized()) {
+      compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+    }
   }
 
   /**
@@ -334,7 +336,9 @@ class Normalize implements CompilerPass {
         case Token.STRING:
         case Token.GET:
         case Token.SET:
-          annotateConstantsByConvention(n, parent);
+          if (!compiler.getLifeCycleStage().isNormalizedObfuscated()) {
+            annotateConstantsByConvention(n, parent);
+          }
           break;
       }
     }

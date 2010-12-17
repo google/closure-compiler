@@ -258,10 +258,25 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   static enum LifeCycleStage {
     RAW,
-    NORMALIZED;
+
+    // See constraints put on the tree by Normalize.java
+    NORMALIZED,
+
+    // The normalize pass has put constraints on the tree,
+    // but variables and properties have been renamed so
+    // coding conventions no longer apply.
+    NORMALIZED_OBFUSCATED;
 
     boolean isNormalized() {
+      return this == NORMALIZED || this == NORMALIZED_OBFUSCATED;
+    }
+
+    boolean isNormalizedUnobfuscated() {
       return this == NORMALIZED;
+    }
+
+    boolean isNormalizedObfuscated() {
+      return this == NORMALIZED_OBFUSCATED;
     }
   }
 }

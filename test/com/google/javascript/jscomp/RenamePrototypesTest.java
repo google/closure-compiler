@@ -24,6 +24,7 @@ public class RenamePrototypesTest extends CompilerTestCase {
 
   public RenamePrototypesTest() {
     super(EXTERNS);
+    enableNormalize();
   }
 
   @Override

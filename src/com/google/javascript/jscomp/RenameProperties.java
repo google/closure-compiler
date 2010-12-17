@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -25,6 +25,7 @@ import com.google.javascript.rhino.TokenStream;
 
 import java.util.*;
 
+import javax.annotation.Nullable;
 
 /**
  * RenameProperties renames properties (including methods) of all Javascript
@@ -153,6 +154,8 @@ class RenameProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+
     NodeTraversal.traverse(compiler, externs, new ProcessExterns());
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
@@ -212,6 +215,8 @@ class RenameProperties implements CompilerPass {
     if (changed) {
       compiler.reportCodeChange();
     }
+
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED_OBFUSCATED);
   }
 
   /**
