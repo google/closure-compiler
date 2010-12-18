@@ -1018,8 +1018,9 @@ public class NodeUtilTest extends TestCase {
     assertFalse(testLocalValue("this"));
     assertFalse(testLocalValue("arguments"));
 
-    // new objects are local
-    assertTrue(testLocalValue("new x()"));
+    // We can't know if new objects are local unless we know
+    // that they don't alias themselves.
+    assertFalse(testLocalValue("new x()"));
 
     // property references are assume to be non-local
     assertFalse(testLocalValue("(new x()).y"));

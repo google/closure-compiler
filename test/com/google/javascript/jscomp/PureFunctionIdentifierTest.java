@@ -36,8 +36,11 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
   boolean regExpHaveSideEffects = true;
 
+  private static final boolean BROKEN_NEW = true;
+
   private static String kExterns =
       CompilerTypeTestCase.DEFAULT_EXTERNS +
+      "var window; window.setTimeout;" +
       "/**@nosideeffects*/ function externSENone(){}\n" +
 
       "/**@modifies{this}*/ function externSEThis(){}\n" +
@@ -184,6 +187,38 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     boolean regExpHaveSideEffects = true;
   }
 
+  public void testIssue303() throws Exception {
+    checkMarkedCalls(
+        "/** @constructor */ function F() {" +
+        "  var self = this;" +
+        "  window.setTimeout(function() {" +
+        "    window.location = self.location;" +
+        "  }, 0);" +
+        "}" +
+        "F.prototype.setLocation = function(x) {" +
+        "  this.location = x;" +
+        "};" +
+        "(new F()).setLocation('http://www.google.com/');",
+        ImmutableList.<String>of());
+  }
+
+  public void testIssue303b() throws Exception {
+    checkMarkedCalls(
+        "/** @constructor */ function F() {" +
+        "  var self = this;" +
+        "  window.setTimeout(function() {" +
+        "    window.location = self.location;" +
+        "  }, 0);" +
+        "}" +
+        "F.prototype.setLocation = function(x) {" +
+        "  this.location = x;" +
+        "};" +
+        "function x() {" +
+        "  (new F()).setLocation('http://www.google.com/');" +
+        "} window['x'] = x;",
+        ImmutableList.<String>of());
+  }
+
   public void testAnnotationInExterns_new1() throws Exception {
     checkMarkedCalls("externSENone()",
         ImmutableList.<String>of("externSENone"));
@@ -202,9 +237,13 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testAnnotationInExterns_new4() throws Exception {
     // The entire expression containing "externObjSEThisMethod" is considered
     // side-effect free in this context.
+
     checkMarkedCalls("new externObjSEThis().externObjSEThisMethod('')",
-        ImmutableList.<String>of(
-            "externObjSEThis", "NEW STRING externObjSEThisMethod"));
+        BROKEN_NEW ?
+            ImmutableList.<String>of(
+               "externObjSEThis") :
+            ImmutableList.<String>of(
+               "externObjSEThis", "NEW STRING externObjSEThisMethod"));
   }
 
   public void testAnnotationInExterns_new5() throws Exception {
@@ -223,8 +262,11 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "  new externObjSEThis().externObjSEThisMethod('') " +
         "};" +
         "f();",
-        ImmutableList.<String>of(
-            "externObjSEThis", "NEW STRING externObjSEThisMethod", "f"));
+        BROKEN_NEW ?
+            ImmutableList.<String>of(
+                "externObjSEThis") :
+           ImmutableList.<String>of(
+               "externObjSEThis", "NEW STRING externObjSEThisMethod", "f"));
   }
 
   public void testAnnotationInExterns_new7() throws Exception {
@@ -732,7 +774,9 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var a = new A; a.foo = 1; return a;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("A", "f"));
+                     BROKEN_NEW ?
+                         ImmutableList.<String>of("A") :
+                         ImmutableList.<String>of("A", "f"));
   }
 
   public void testLocalizedSideEffects9() throws Exception {
@@ -743,7 +787,9 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
                      "  var a = new A; a.foo = 1; return a;" +
                      "}" +
                      "f()",
-                     ImmutableList.<String>of("A", "f"));
+                     BROKEN_NEW ?
+                         ImmutableList.<String>of("A") :
+                         ImmutableList.<String>of("A", "f"));
   }
 
   public void testLocalizedSideEffects10() throws Exception {
