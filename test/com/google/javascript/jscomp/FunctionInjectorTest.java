@@ -1357,6 +1357,7 @@ public class FunctionInjectorTest extends TestCase {
     };
 
     CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new GoogleCodingConvention());
     compiler.init(externsInputs, new JSSourceFile[] {
         JSSourceFile.fromCode("code", code) }, options);
     Node parseRoot = compiler.parseInputs();

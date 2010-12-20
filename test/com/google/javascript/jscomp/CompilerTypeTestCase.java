@@ -61,7 +61,12 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
     CompilerOptions options = new CompilerOptions();
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
+    options.setCodingConvention(getCodingConvention());
     return options;
+  }
+
+  protected CodingConvention getCodingConvention() {
+    return new GoogleCodingConvention();
   }
 
   @Override

@@ -343,6 +343,9 @@ public class LiveVariableAnalysisTest extends TestCase {
 
   private static LiveVariablesAnalysis computeLiveness(String src) {
     Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new GoogleCodingConvention());
+    compiler.initOptions(options);
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node n = compiler.parseTestCode(src).removeFirstChild();
     Node script = new Node(Token.SCRIPT, n);

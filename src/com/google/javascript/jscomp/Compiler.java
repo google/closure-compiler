@@ -131,7 +131,7 @@ public class Compiler extends AbstractCompiler {
   private final StringBuilder debugLog = new StringBuilder();
 
   /** Detects Google-specific coding conventions. */
-  CodingConvention defaultCodingConvention = new GoogleCodingConvention();
+  CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
   private JSTypeRegistry typeRegistry;
   private Config parserConfig = null;

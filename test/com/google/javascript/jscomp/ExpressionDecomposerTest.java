@@ -346,7 +346,7 @@ public class ExpressionDecomposerTest extends TestCase {
   // Constant object on LHS of assignment-op.
   public void testExposePlusEquals3() {
     helperExposeExpression(
-        "var XX = {};\n" +
+        "/** @const */ var XX = {};\n" +
         "XX.a += foo() + 1",
         "foo",
         "var XX = {}; var temp_const$$0 = XX.a;" +
@@ -396,10 +396,10 @@ public class ExpressionDecomposerTest extends TestCase {
         "var temp_const$$1 = temp_const$$0.b;" +
         "y = (temp_const$$0.b = temp_const$$1 + foo()) + goo().a");
   }
-  
+
   public void testExposeObjectLit1() {
     // Validate that getter and setters methods are see as side-effect
-    // free and that values can move past them.  We don't need to be 
+    // free and that values can move past them.  We don't need to be
     // concerned with exposing the getter or setter here but the
     // decomposer does not have a method of exposing properties only variables.
     helperMoveExpression(
@@ -579,10 +579,11 @@ public class ExpressionDecomposerTest extends TestCase {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.languageIn = LanguageMode.ECMASCRIPT5;
+    options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
     return compiler;
   }
-  
+
   private static Node findCall(Node n, String name) {
     return findCall(n, name, 1);
   }
