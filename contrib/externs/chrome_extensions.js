@@ -715,7 +715,7 @@ chrome.idle = {};
 /**
  * @param {number} thresholdSeconds Threshold in seconds, used to determine
  *     when a machine is in the idle state.
- * @param {{function(string) : void} callback Callback to handle the state.
+ * @param {function(string) : void} callback Callback to handle the state.
  */
 chrome.idle.queryState = function(thresholdSeconds, callback) {};
 
