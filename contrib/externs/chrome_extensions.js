@@ -708,6 +708,20 @@ chrome.management.onInstalled;
 /** @type {ChromeEvent} */
 chrome.management.onUninstalled;
 
+
+/** @see http://code.google.com/chrome/extensions/idle.html */
+chrome.idle = {};
+
+/**
+ * @param {number} thresholdSeconds Threshold in seconds, used to determine
+ *     when a machine is in the idle state.
+ * @param {{function(string) : void} callback Callback to handle the state.
+ */
+chrome.idle.queryState = function(thresholdSeconds, callback) {};
+
+/** @type {ChromeEvent} */
+chrome.idle.onStateChanged;
+
 // Classes
 
 /**
