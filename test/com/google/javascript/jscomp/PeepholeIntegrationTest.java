@@ -136,7 +136,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public void testFoldReturnsIntegration() {
     // if-then-else duplicate statement removal handles this case:
     fold("function(){if(x)return;else return}",
-         "function(){return}");
+         "function(){}");
   }
 
   public void testBug1059649() {

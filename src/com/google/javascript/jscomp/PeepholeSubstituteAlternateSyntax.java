@@ -57,8 +57,28 @@ public class PeepholeSubstituteAlternateSyntax
   @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
     switch(node.getType()) {
-      case Token.RETURN:
+      case Token.RETURN: {
+        Node result = tryRemoveRedundantExit(node);
+        if (result != node) {
+          return result;
+        }
+        result = tryReplaceExitWithBreak(node);
+        if (result != node) {
+          return result;
+        }
         return tryReduceReturn(node);
+      }
+
+      case Token.THROW: {
+        Node result = tryRemoveRedundantExit(node);
+        if (result != node) {
+          return result;
+        }
+        return tryReplaceExitWithBreak(node);
+      }
+
+      // TODO(johnlenz): Maybe remove redundant BREAK and CONTINUE. Overlaps
+      // with MinimizeExitPoints.
 
       case Token.NOT:
         tryMinimizeCondition(node.getFirstChild());
@@ -105,89 +125,10 @@ public class PeepholeSubstituteAlternateSyntax
   /**
    * Reduce "return undefined" or "return void 0" to simply "return".
    *
-   * Returns the replacement for n, or the original if no change was made.
+   * @return The original node, maybe simplified.
    */
   private Node tryReduceReturn(Node n) {
     Node result = n.getFirstChild();
-
-    boolean possibleException = result != null &&
-        ControlFlowAnalysis.mayThrowException(result);
-
-    // Try to use a substitute that with a break because it is shorter.
-
-    // First lets pretend it is a break with no labels.
-    Node breakTarget = n;
-    boolean safe = true;
-
-    for (;!ControlFlowAnalysis.isBreakTarget(breakTarget, null /* no label */);
-        breakTarget = breakTarget.getParent()) {
-      if (NodeUtil.isFunction(breakTarget) ||
-          breakTarget.getType() == Token.SCRIPT) {
-
-          // We can switch the return to a break if the return value has
-          // side effect and it must encounter a finally.
-
-          // example: return alert('a') -> finally { alert('b') } ->
-          //          return alert('a')
-          // prints a then b. If the first return is a break,
-          // it prints b then a.
-        safe = false;
-        break;
-      }
-    }
-
-    Node follow = ControlFlowAnalysis.computeFollowNode(breakTarget);
-
-    // Skip pass all the finally blocks because both the break and return will
-    // also trigger all the finally blocks. However, the order of execution is
-    // slightly changed. Consider:
-    //
-    // return a() -> finally { b() } -> return a()
-    //
-    // which would call a() first. However, changing the first return to a
-    // break will result in calling b().
-    while (follow != null &&
-        NodeUtil.isTryFinallyNode(follow.getParent(), follow)) {
-      if (result != null &&
-          // TODO(user): Use the new side effects API for more accuracy.
-          (NodeUtil.canBeSideEffected(result) ||
-           NodeUtil.mayHaveSideEffects(result))) {
-        safe = false;
-        break;
-      }
-      follow = ControlFlowAnalysis.computeFollowNode(follow);
-    }
-
-    if (safe) {
-      if (follow == null) {
-        // When follow is null, this mean the follow of a break target is the
-        // end of a function. This means a break is same as return.
-        if (result == null) {
-          n.setType(Token.BREAK);
-          reportCodeChange();
-          return n;
-        }
-
-      } else if (follow.getType() == Token.RETURN &&
-          (result == follow.getFirstChild() ||
-           (result != null && follow.hasChildren() &&
-            result.checkTreeEqualsSilent(follow.getFirstChild())) &&
-            ControlFlowAnalysis.getExceptionHandler(n) ==
-            ControlFlowAnalysis.getExceptionHandler(follow)
-           )) {
-        // When the follow is a return, if both doesn't return anything
-        // or both returns the same thing. This mean we can replace it with a
-        // break.
-        n.removeChildren();
-        n.setType(Token.BREAK);
-        reportCodeChange();
-        return n;
-      }
-      // If any of the above is executed, we must return because n is no longer
-      // a "return" node.
-    }
-
-    // TODO(user): consider cases such as if (x) { return 1} return 1;
 
     if (result != null) {
       switch (result.getType()) {
@@ -205,13 +146,163 @@ public class PeepholeSubstituteAlternateSyntax
             reportCodeChange();
           }
           break;
-        default:
-          //Do nothing
-            break;
       }
     }
 
     return n;
+  }
+
+  /**
+   * Replace duplicate exits in control structures.  If the node following
+   * the exit node expression has the same effect as exit node, the node can
+   * be replaced or removed.
+   * For example:
+   *   "while (a) {return f()} return f();" ==> "while (a) {break} return f();"
+   *   "while (a) {throw 'ow'} throw 'ow';" ==> "while (a) {break} throw 'ow';"
+   *
+   * @param n An follow control exit expression (a THROW or RETURN node)
+   * @return The replacement for n, or the original if no change was made.
+   */
+  private Node tryReplaceExitWithBreak(Node n) {
+    Node result = n.getFirstChild();
+
+    // Find the enclosing control structure, if any, that a "break" would exit
+    // from.
+    Node breakTarget = n;
+    for (;!ControlFlowAnalysis.isBreakTarget(breakTarget, null /* no label */);
+        breakTarget = breakTarget.getParent()) {
+      if (NodeUtil.isFunction(breakTarget) ||
+          breakTarget.getType() == Token.SCRIPT) {
+        // No break target.
+        return n;
+      }
+    }
+
+    Node follow = ControlFlowAnalysis.computeFollowNode(breakTarget);
+
+    // Skip pass all the finally blocks because both the break and return will
+    // also trigger all the finally blocks. However, the order of execution is
+    // slightly changed. Consider:
+    //
+    // return a() -> finally { b() } -> return a()
+    //
+    // which would call a() first. However, changing the first return to a
+    // break will result in calling b().
+
+    Node prefinallyFollows = follow;
+    follow = skipFinallyNodes(follow);
+
+    if (prefinallyFollows != follow) {
+      // There were finally clauses
+      if (!isPure(result)) {
+        // Can't defer the exit
+        return n;
+      }
+    }
+
+    if (follow == null && (n.getType() == Token.THROW || result != null)) {
+      // Can't complete remove a throw here or a return with a result.
+      return n;
+    }
+
+    // When follow is null, this mean the follow of a break target is the
+    // end of a function. This means a break is same as return.
+    if (follow == null || areMatchingExits(n, follow)) {
+      Node replacement = new Node(Token.BREAK);
+      n.getParent().replaceChild(n, replacement);
+      this.reportCodeChange();
+      return replacement;
+    }
+
+    return n;
+  }
+
+  /**
+   * Remove duplicate exits.  If the node following the exit node expression
+   * has the same effect as exit node, the node can be removed.
+   * For example:
+   *   "if (a) {return f()} return f();" ==> "if (a) {} return f();"
+   *   "if (a) {throw 'ow'} throw 'ow';" ==> "if (a) {} throw 'ow';"
+   *
+   * @param n An follow control exit expression (a THROW or RETURN node)
+   * @return The replacement for n, or the original if no change was made.
+   */
+  private Node tryRemoveRedundantExit(Node n) {
+    Node exitExpr = n.getFirstChild();
+
+    Node follow = ControlFlowAnalysis.computeFollowNode(n);
+
+    // Skip pass all the finally blocks because both the fall through and return
+    // will also trigger all the finally blocks.
+    Node prefinallyFollows = follow;
+    follow = skipFinallyNodes(follow);
+    if (prefinallyFollows != follow) {
+      // There were finally clauses
+      if (!isPure(exitExpr)) {
+        // Can't replace the return
+        return n;
+      }
+    }
+
+    if (follow == null && (n.getType() == Token.THROW || exitExpr != null)) {
+      // Can't complete remove a throw here or a return with a result.
+      return n;
+    }
+
+    // When follow is null, this mean the follow of a break target is the
+    // end of a function. This means a break is same as return.
+    if (follow == null || areMatchingExits(n, follow)) {
+      n.detachFromParent();
+      reportCodeChange();
+      return null;
+    }
+
+    return n;
+  }
+
+  /**
+   * @return Whether the expression does not produces and can not be affected
+   * by side-effects.
+   */
+  boolean isPure(Node n) {
+    return n == null
+        || (!NodeUtil.canBeSideEffected(n)
+            && !NodeUtil.mayHaveSideEffects(n));
+  }
+
+  /**
+   * @return n or the node following any following finally nodes.
+   */
+  Node skipFinallyNodes(Node n) {
+    while (n != null && NodeUtil.isTryFinallyNode(n.getParent(), n)) {
+      n = ControlFlowAnalysis.computeFollowNode(n);
+    }
+    return n;
+  }
+
+  /**
+   * Check whether one exit can be replaced with another. Verify:
+   * 1) They are identical expressions
+   * 2) If an exception is possible that the statements, the original
+   * and the potential replacement are in the same exception handler.
+   */
+  boolean areMatchingExits(Node nodeThis, Node nodeThat) {
+    return nodeThis.checkTreeEqualsSilent(nodeThat)
+        && (!isExceptionPossible(nodeThis)
+            || getExceptionHandler(nodeThis) == getExceptionHandler(nodeThat));
+  }
+
+  boolean isExceptionPossible(Node n) {
+    // TODO(johnlenz): maybe use ControlFlowAnalysis.mayThrowException?
+    Preconditions.checkState(n.getType() == Token.RETURN
+        || n.getType() == Token.THROW);
+    return n.getType() == Token.THROW
+        || (n.hasChildren()
+            && !NodeUtil.isLiteralValue(n.getLastChild(), true));
+  }
+
+  Node getExceptionHandler(Node n) {
+    return ControlFlowAnalysis.getExceptionHandler(n);
   }
 
   /**
@@ -512,6 +603,7 @@ public class PeepholeSubstituteAlternateSyntax
       reportCodeChange();
     }
   }
+
   /**
    * @return Whether the node is a block with a single statement that is
    *     an expression.

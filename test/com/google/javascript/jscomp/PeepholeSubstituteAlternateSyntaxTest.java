@@ -179,9 +179,10 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("function(){if(x)return y += 1;else return y += 2}",
          "function(){return x?(y+=1):(y+=2)}");
 
-    // don't touch cases where either side doesn't return a value
-    foldSame("function(){if(x)return;else return 2-x}");
-    foldSame("function(){if(x)return x;else return}");
+    fold("function(){if(x)return;else return 2-x}",
+         "function(){if(x);else return 2-x}");
+    fold("function(){if(x)return x;else return}",
+         "function(){if(x)return x;else;}");
 
     foldSame("function(){for(var x in y) { return x.y; } return k}");
   }
@@ -473,12 +474,12 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("function f(){return false;}");
     foldSame("function f(){return null;}");
     fold("function f(){return void 0;}",
-         "function f(){return}");
+         "function f(){}");
     foldSame("function f(){return void foo();}");
     fold("function f(){return undefined;}",
-         "function f(){return}");
+         "function f(){}");
     fold("function(){if(a()){return undefined;}}",
-         "function(){if(a()){return}}");
+         "function(){if(a()){}}");
   }
 
   public void testFoldStandardConstructors() {
@@ -511,23 +512,23 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("function f() { while(x) { return x}  return x}",
          "function f() { while(x) { break }    return x}");
 
-    fold("function f() { while(x) { if (y) { return }}} ",
-         "function f() { while(x) { if (y) { break  }}} ");
+    fold("function f() { while(x) { if (y) { return }}}",
+         "function f() { while(x) { if (y) { break  }}}");
 
-    fold("function f() { while(x) { if (y) { return }} return} ",
-         "function f() { while(x) { if (y) { break  }} return} ");
+    fold("function f() { while(x) { if (y) { return }} return}",
+         "function f() { while(x) { if (y) { break  }}}");
 
-    fold("function f() { while(x) { if (y) { return 5 }} return 5} ",
-         "function f() { while(x) { if (y) { break    }} return 5} ");
+    fold("function f() { while(x) { if (y) { return 5 }} return 5}",
+         "function f() { while(x) { if (y) { break    }} return 5}");
 
     // It doesn't matter if x is changed between them. We are still returning
     // x at whatever x value current holds. The whole x = 1 is skipped.
-    fold("function f() { while(x) { if (y) { return x } x = 1} return x} ",
-         "function f() { while(x) { if (y) { break    } x = 1} return x} ");
+    fold("function f() { while(x) { if (y) { return x } x = 1} return x}",
+         "function f() { while(x) { if (y) { break    } x = 1} return x}");
 
     // RemoveUnreachableCode would take care of the useless breaks.
     fold("function f() { while(x) { if (y) { return x } return x} return x}",
-         "function f() { while(x) { if (y) { break    } break   } return x}");
+         "function f() { while(x) { if (y) {} break }return x}");
 
     // A break here only breaks out of the inner loop.
     foldSame("function f() { while(x) { while (y) { return } } }");
@@ -561,6 +562,145 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
          );
 
     foldSame("function f() { try{ return a } finally { a = 2 } return a; }");
+
+    fold(
+      "function f() { switch(a){ case 1: return a; default: g();} return a;}",
+      "function f() { switch(a){ case 1: break; default: g();} return a; }");
+  }
+
+  public void testSubsituteBreakForThrow() {
+
+    foldSame("function f() { while(x) { throw Error }}");
+
+    fold("function f() { while(x) { throw Error } throw Error }",
+         "function f() { while(x) { break } throw Error}");
+    foldSame("function f() { while(x) { throw Error(1) } throw Error(2)}");
+    foldSame("function f() { while(x) { throw Error(1) } return Error(2)}");
+
+    foldSame("function f() { while(x) { throw 5 } }");
+
+    foldSame("function f() { a: { throw 5 } }");
+
+    fold("function f() { while(x) { throw 5}  throw 5}",
+         "function f() { while(x) { break }   throw 5}");
+
+    fold("function f() { while(x) { throw x}  throw x}",
+         "function f() { while(x) { break }   throw x}");
+
+    foldSame("function f() { while(x) { if (y) { throw Error }}}");
+
+    fold("function f() { while(x) { if (y) { throw Error }} throw Error}",
+         "function f() { while(x) { if (y) { break }} throw Error}");
+
+    fold("function f() { while(x) { if (y) { throw 5 }} throw 5}",
+         "function f() { while(x) { if (y) { break    }} throw 5}");
+
+    // It doesn't matter if x is changed between them. We are still throwing
+    // x at whatever x value current holds. The whole x = 1 is skipped.
+    fold("function f() { while(x) { if (y) { throw x } x = 1} throw x}",
+         "function f() { while(x) { if (y) { break    } x = 1} throw x}");
+
+    // RemoveUnreachableCode would take care of the useless breaks.
+    fold("function f() { while(x) { if (y) { throw x } throw x} throw x}",
+         "function f() { while(x) { if (y) {} break }throw x}");
+
+    // A break here only breaks out of the inner loop.
+    foldSame("function f() { while(x) { while (y) { throw Error } } }");
+
+    foldSame("function f() { while(1) { throw 7}  throw 5}");
+
+
+    foldSame("function f() {" +
+             "  try { while(x) {throw f()}} catch (e) { } throw f()}");
+
+    foldSame("function f() {" +
+             "  try { while(x) {throw f()}} finally {alert(1)} throw f()}");
+
+
+    // Both throws has the same handler
+    fold("function f() {" +
+         "  try { while(x) { throw f() } throw f() } catch (e) { } }",
+         "function f() {" +
+         "  try { while(x) { break } throw f() } catch (e) { } }");
+
+    // We can't fold this because it'll change the order of when foo is called.
+    foldSame("function f() {" +
+             "  try { while(x) { throw foo() } } finally { alert(1) } "  +
+             "  throw foo()}");
+
+    // This is fine, we have no side effect in the throw value.
+    fold("function f() {" +
+         "  try { while(x) { throw 1 } } finally { alert(1) } throw 1}",
+         "function f() {" +
+         "  try { while(x) { break    } } finally { alert(1) } throw 1}"
+         );
+
+    foldSame("function f() { try{ throw a } finally { a = 2 } throw a; }");
+
+    fold(
+      "function f() { switch(a){ case 1: throw a; default: g();} throw a;}",
+      "function f() { switch(a){ case 1: break; default: g();} throw a; }");
+  }
+
+
+  public void testRemoveDuplicateReturn() {
+    fold("function f() { return; }",
+         "function f(){}");
+    foldSame("function f() { return a; }");
+    fold("function f() { if (x) { return a } return a; }",
+         "function f() { if (x) {} return a; }");
+    foldSame(
+      "function f() { try { if (x) { return a } } catch(e) {} return a; }");
+    foldSame(
+      "function f() { try { if (x) {} } catch(e) {} return 1; }");
+
+    // finally clauses may have side effects
+    foldSame(
+      "function f() { try { if (x) { return a } } finally { a++ } return a; }");
+    // but they don't matter if the result doesn't have side effects and can't
+    // be affect by side-effects.
+    fold("function f() { try { if (x) { return 1 } } finally {} return 1; }",
+         "function f() { try { if (x) {} } finally {} return 1; }");
+
+    fold("function f() { switch(a){ case 1: return a; } return a; }",
+         "function f() { switch(a){ case 1: } return a; }");
+
+    fold("function f() { switch(a){ " +
+         "  case 1: return a; case 2: return a; } return a; }",
+         "function f() { switch(a){ " +
+         "  case 1: break; case 2: } return a; }");
+  }
+
+  public void testRemoveDuplicateThrow() {
+    foldSame("function f() { throw a; }");
+    fold("function f() { if (x) { throw a } throw a; }",
+         "function f() { if (x) {} throw a; }");
+    foldSame(
+      "function f() { try { if (x) {throw a} } catch(e) {} throw a; }");
+    foldSame(
+      "function f() { try { if (x) {throw 1} } catch(e) {f()} throw 1; }");
+    foldSame(
+      "function f() { try { if (x) {throw 1} } catch(e) {f()} throw 1; }");
+    foldSame(
+      "function f() { try { if (x) {throw 1} } catch(e) {throw 1}}");
+    fold(
+      "function f() { try { if (x) {throw 1} } catch(e) {throw 1} throw 1; }",
+      "function f() { try { if (x) {throw 1} } catch(e) {} throw 1; }");
+
+    // finally clauses may have side effects
+    foldSame(
+      "function f() { try { if (x) { throw a } } finally { a++ } throw a; }");
+    // but they don't matter if the result doesn't have side effects and can't
+    // be affect by side-effects.
+    fold("function f() { try { if (x) { throw 1 } } finally {} throw 1; }",
+         "function f() { try { if (x) {} } finally {} throw 1; }");
+
+    fold("function f() { switch(a){ case 1: throw a; } throw a; }",
+         "function f() { switch(a){ case 1: } throw a; }");
+
+    fold("function f() { switch(a){ " +
+             "case 1: throw a; case 2: throw a; } throw a; }",
+         "function f() { switch(a){ case 1: break; case 2: } throw a; }");
   }
 
   public void testIssue291() {
