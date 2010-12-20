@@ -588,4 +588,13 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   public void testNew2() {
     test("1 + new Date;", "");
   }
+  
+  public void testFoldAssign() {
+    test("x=x", "");
+    testSame("x=xy");
+    testSame("x=x + 1");
+    testSame("x.a=x.a");
+    test("var y=(x=x)", "var y=x");
+    test("y=1 + (x=x)", "y=1 + x");
+  }
 }

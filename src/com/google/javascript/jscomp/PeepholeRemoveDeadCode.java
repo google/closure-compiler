@@ -39,6 +39,8 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   @Override
   Node optimizeSubtree(Node subtree) {
     switch(subtree.getType()) {
+      case Token.ASSIGN:
+        return tryFoldAssignment(subtree);
       case Token.COMMA:
         return tryFoldComma(subtree);
       case Token.SCRIPT:
@@ -67,6 +69,25 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         default:
           return subtree;
     }
+  }
+
+  /**
+   * Try removing identity assignments
+   * @return the replacement node, if changed, or the original if not
+   */
+  private Node tryFoldAssignment(Node subtree) {
+    Preconditions.checkState(subtree.getType() == Token.ASSIGN);
+    Node left = subtree.getFirstChild();
+    Node right = subtree.getLastChild();
+    // Only names
+    if (left.getType() == Token.NAME
+        && right.getType() == Token.NAME
+        && left.getString().equals(right.getString())) {
+      subtree.getParent().replaceChild(subtree, right.detachFromParent());
+      reportCodeChange();
+      return right;
+    }
+    return subtree;
   }
 
   /**
