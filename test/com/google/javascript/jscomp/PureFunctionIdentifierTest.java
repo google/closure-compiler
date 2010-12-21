@@ -36,14 +36,13 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
   boolean regExpHaveSideEffects = true;
 
-  private static final boolean BROKEN_NEW = true;
-
   private static String kExterns =
       CompilerTypeTestCase.DEFAULT_EXTERNS +
       "var window; window.setTimeout;" +
       "/**@nosideeffects*/ function externSENone(){}\n" +
 
       "/**@modifies{this}*/ function externSEThis(){}\n" +
+
       "/**@constructor\n" +
       " * @modifies{this}*/\n" +
       "function externObjSEThis(){}\n" +
@@ -239,11 +238,8 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     // side-effect free in this context.
 
     checkMarkedCalls("new externObjSEThis().externObjSEThisMethod('')",
-        BROKEN_NEW ?
-            ImmutableList.<String>of(
-               "externObjSEThis") :
-            ImmutableList.<String>of(
-               "externObjSEThis", "NEW STRING externObjSEThisMethod"));
+        ImmutableList.<String>of(
+           "externObjSEThis", "NEW STRING externObjSEThisMethod"));
   }
 
   public void testAnnotationInExterns_new5() throws Exception {
@@ -257,16 +253,16 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     // While "externObjSEThisMethod" has modifies "this"
     // it does not have global side-effects with "this" is
     // a known local value.
+    // TODO(johnlenz): "f" is side-effect free but we need
+    // to propagate that "externObjSEThisMethod" is modifing
+    // a local object.
     checkMarkedCalls(
         "function f() {" +
         "  new externObjSEThis().externObjSEThisMethod('') " +
         "};" +
         "f();",
-        BROKEN_NEW ?
-            ImmutableList.<String>of(
-                "externObjSEThis") :
-           ImmutableList.<String>of(
-               "externObjSEThis", "NEW STRING externObjSEThisMethod", "f"));
+         ImmutableList.<String>of(
+             "externObjSEThis", "NEW STRING externObjSEThisMethod"));
   }
 
   public void testAnnotationInExterns_new7() throws Exception {
@@ -307,7 +303,6 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
         "f(g);",
         ImmutableList.<String>of("externObjSEThis"));
   }
-
 
   public void testAnnotationInExterns_new10() throws Exception {
     // While "externObjSEThisMethod2" only modifies it arguments
@@ -600,7 +595,6 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     checkLocalityOfMarkedCalls(
         prefix + "return 1; return g" + suffix, notExpected);
 
-
     // local var, not yet.
     checkLocalityOfMarkedCalls(
         prefix + "var a = 1; return a" + suffix, notExpected);
@@ -769,27 +763,25 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testLocalizedSideEffects8() throws Exception {
     // Returning a local object that has been modified
     // is not a global side-effect.
+    // TODO(johnlenz): Not yet. Propagate local object information.
     checkMarkedCalls("/** @constructor A */ function A() {};" +
                      "function f() {" +
                      "  var a = new A; a.foo = 1; return a;" +
                      "}" +
                      "f()",
-                     BROKEN_NEW ?
-                         ImmutableList.<String>of("A") :
-                         ImmutableList.<String>of("A", "f"));
+                     ImmutableList.<String>of("A"));
   }
 
   public void testLocalizedSideEffects9() throws Exception {
     // Returning a local object that has been modified
     // is not a global side-effect.
+    // TODO(johnlenz): Not yet. Propagate local object information.
     checkMarkedCalls("/** @constructor A */ function A() {this.x = 1};" +
                      "function f() {" +
                      "  var a = new A; a.foo = 1; return a;" +
                      "}" +
                      "f()",
-                     BROKEN_NEW ?
-                         ImmutableList.<String>of("A") :
-                         ImmutableList.<String>of("A", "f"));
+                     ImmutableList.<String>of("A"));
   }
 
   public void testLocalizedSideEffects10() throws Exception {

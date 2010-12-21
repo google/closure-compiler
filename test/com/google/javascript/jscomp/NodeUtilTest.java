@@ -205,7 +205,7 @@ public class NodeUtilTest extends TestCase {
     assertEquals("undefined", NodeUtil.getStringValue(getNode("undefined")));
     assertEquals("undefined", NodeUtil.getStringValue(getNode("void 0")));
     assertEquals("undefined", NodeUtil.getStringValue(getNode("void foo()")));
-    
+
     assertEquals("NaN", NodeUtil.getStringValue(getNode("NaN")));
     assertEquals("Infinity", NodeUtil.getStringValue(getNode("Infinity")));
     assertEquals(null, NodeUtil.getStringValue(getNode("x")));
@@ -1108,16 +1108,116 @@ public class NodeUtilTest extends TestCase {
     assertFalse(testLocalValue("o.valueOf()"));
   }
 
-  private boolean testLocalValue(String js) {
-    Node script = parse("var test = " + js +";");
-    Preconditions.checkState(script.getType() == Token.SCRIPT);
-    Node var = script.getFirstChild();
-    Preconditions.checkState(var.getType() == Token.VAR);
-    Node name = var.getFirstChild();
-    Preconditions.checkState(name.getType() == Token.NAME);
-    Node value = name.getFirstChild();
+  public void testLocalValue2() {
+    Node newExpr = getNode("new x()");
+    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
 
-    return NodeUtil.evaluatesToLocalValue(value);
+    Preconditions.checkState(newExpr.getType() == Token.NEW);
+    Node.SideEffectFlags flags = new Node.SideEffectFlags();
+
+    flags.clearAllFlags();
+    newExpr.setSideEffectFlags(flags.valueOf());
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
+
+    flags.clearAllFlags();
+    flags.setMutatesThis();
+    newExpr.setSideEffectFlags(flags.valueOf());
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
+
+    flags.clearAllFlags();
+    flags.setReturnsTainted();
+    newExpr.setSideEffectFlags(flags.valueOf());
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
+
+    flags.clearAllFlags();
+    flags.setThrows();
+    newExpr.setSideEffectFlags(flags.valueOf());
+
+    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+
+    flags.clearAllFlags();
+    flags.setMutatesArguments();
+    newExpr.setSideEffectFlags(flags.valueOf());
+
+    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+
+    flags.clearAllFlags();
+    flags.setMutatesGlobalState();
+    newExpr.setSideEffectFlags(flags.valueOf());
+
+    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+  }
+
+  public void testCallSideEffects() {
+    Node callExpr = getNode("new x().method()");
+    assertTrue(NodeUtil.functionCallHasSideEffects(callExpr));
+
+    Node newExpr = callExpr.getFirstChild().getFirstChild();
+    Preconditions.checkState(newExpr.getType() == Token.NEW);
+    Node.SideEffectFlags flags = new Node.SideEffectFlags();
+
+    // No side effects, local result
+    flags.clearAllFlags();
+    newExpr.setSideEffectFlags(flags.valueOf());
+    flags.clearAllFlags();
+    callExpr.setSideEffectFlags(flags.valueOf());
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
+    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
+    assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
+
+    // Modifies this, local result
+    flags.clearAllFlags();
+    newExpr.setSideEffectFlags(flags.valueOf());
+    flags.clearAllFlags();
+    flags.setMutatesThis();
+    callExpr.setSideEffectFlags(flags.valueOf());
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
+    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
+    assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
+
+    // Modifies this, non-local result
+    flags.clearAllFlags();
+    newExpr.setSideEffectFlags(flags.valueOf());
+    flags.clearAllFlags();
+    flags.setMutatesThis();
+    flags.setReturnsTainted();
+    callExpr.setSideEffectFlags(flags.valueOf());
+
+    assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
+    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
+    assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
+    
+    // No modifications, non-local result
+    flags.clearAllFlags();
+    newExpr.setSideEffectFlags(flags.valueOf());
+    flags.clearAllFlags();
+    flags.setReturnsTainted();
+    callExpr.setSideEffectFlags(flags.valueOf());
+
+    assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
+    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
+    assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
+
+    // The new modifies global state, no side-effect call, non-local result
+    // This call could be removed, but not the new.
+    flags.clearAllFlags();
+    flags.setMutatesGlobalState();
+    newExpr.setSideEffectFlags(flags.valueOf());
+    flags.clearAllFlags();
+    callExpr.setSideEffectFlags(flags.valueOf());
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
+    assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
+    assertTrue(NodeUtil.mayHaveSideEffects(callExpr));
+  }
+
+  private boolean testLocalValue(String js) {
+    return NodeUtil.evaluatesToLocalValue(getNode(js));
   }
 
   public void testValidDefine() {

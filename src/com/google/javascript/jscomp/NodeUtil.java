@@ -719,8 +719,7 @@ public final class NodeUtil {
    *
    * @param callNode - function call node
    */
-  static boolean functionCallHasSideEffects(
-      Node callNode) {
+  static boolean functionCallHasSideEffects(Node callNode) {
     return functionCallHasSideEffects(callNode, null);
   }
 
@@ -795,6 +794,14 @@ public final class NodeUtil {
   static boolean callHasLocalResult(Node n) {
     Preconditions.checkState(n.getType() == Token.CALL);
     return (n.getSideEffectFlags() & Node.FLAG_LOCAL_RESULTS) > 0;
+  }
+
+  /**
+   * @return Whether the new has a local result.
+   */
+  static boolean newHasLocalResult(Node n) {
+    Preconditions.checkState(n.getType() == Token.NEW);
+    return n.isOnlyModifiesThisCall();
   }
 
   /**
@@ -2459,10 +2466,8 @@ public final class NodeUtil {
             || isToStringMethodCall(value)
             || locals.apply(value);
       case Token.NEW:
-        // TODO(nicksantos): This needs to be changed so that it
-        // returns true iff we're sure the value was never aliased from inside
-        // the constructor (similar to callHasLocalResult)
-        return false;
+        return newHasLocalResult(value)
+               || locals.apply(value);
       case Token.FUNCTION:
       case Token.REGEXP:
       case Token.ARRAYLIT:
