@@ -453,7 +453,7 @@ public class RenameVarsTest extends CompilerTestCase {
 
     useGoogleCodingConvention = true;
     test("var x = function($super,duper,$fantastic){}",
-         "var d = function(a,     b,    c        ){}");
+         "var c = function($super,a,b){}");
   }
 
   public void testDollarSignSuperExport2() {
@@ -473,8 +473,8 @@ public class RenameVarsTest extends CompilerTestCase {
     useGoogleCodingConvention = true;
     test("var x = function($super,duper,$fantastic){};" +
             "var y = function($super,duper){};",
-         "var d = function(a,     b,    c         ){};" +
-            "var e = function(     a,    b){};");
+         "var c = function($super,   a,    b         ){};" +
+            "var d = function($super,a){};");
 
     super.disableNormalize();
   }

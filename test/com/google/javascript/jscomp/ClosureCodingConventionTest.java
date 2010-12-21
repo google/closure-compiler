@@ -69,6 +69,10 @@ public class ClosureCodingConventionTest extends TestCase {
     assertFalse(conv.isExported("_a"));
     assertFalse(conv.isExported("_a_"));
     assertFalse(conv.isExported("a"));
+
+    assertFalse(conv.isExported("$super", false));
+    assertTrue(conv.isExported("$super", true));
+    assertTrue(conv.isExported("$super"));
   }
 
   public void testPrivateName() {

@@ -69,6 +69,10 @@ public class GoogleCodingConventionTest extends TestCase {
     assertTrue(conv.isExported("_a"));
     assertTrue(conv.isExported("_a_"));
     assertFalse(conv.isExported("a"));
+
+    assertFalse(conv.isExported("$super", false));
+    assertTrue(conv.isExported("$super", true));
+    assertTrue(conv.isExported("$super"));
   }
 
   public void testPrivateName() {
