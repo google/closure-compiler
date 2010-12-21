@@ -249,6 +249,7 @@ public class IRFactory {
           new JsDocTokenStream(comment.substring(numOpeningChars),
                                lineno,
                                position2charno(position) + numOpeningChars),
+          node,
           sourceName,
           config,
           errorReporter);

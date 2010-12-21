@@ -69,6 +69,16 @@ final public class JSDocInfoBuilder {
     this.parseDocumentation = parseDocumentation;
   }
 
+  /**
+   * Sets the original JSDoc comment string. This is a no-op if the builder
+   * isn't configured to record documentation.
+   */
+  public void recordOriginalCommentString(String sourceComment) {
+    if (parseDocumentation) {
+      currentInfo.setOriginalCommentString(sourceComment);
+    }
+  }
+
   public boolean shouldParseDocumentation() {
     return parseDocumentation;
   }

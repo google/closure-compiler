@@ -104,8 +104,7 @@ public class JSDocInfo implements Serializable {
   }
 
   private static final class LazilyInitializedDocumentation {
-    // TODO(nicksantos): Use UIntProps to clean up all of this. It takes
-    // care of all the lazy-instantiation internally.
+    String sourceComment = null;
     List<Marker> markers = null;
 
     Map<String, String> parameters = null;
@@ -1296,5 +1295,20 @@ public class JSDocInfo implements Serializable {
 
   public boolean hasModifies() {
     return info != null && info.modifies != null;
+  }
+
+  /**
+   * Returns the original JSDoc comment string. Returns null unless
+   * parseJsDocDocumentation is enabled via the ParserConfig.
+   */
+  public String getOriginalCommentString() {
+    return documentation == null ? null : documentation.sourceComment;
+  }
+
+  void setOriginalCommentString(String sourceComment) {
+    if (!lazyInitDocumentation()) {
+      return;
+    }
+    documentation.sourceComment = sourceComment;
   }
 }

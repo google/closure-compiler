@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
+import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -96,12 +97,16 @@ public final class JsDocInfoParser {
   }
 
   JsDocInfoParser(JsDocTokenStream stream,
+                  Comment commentNode,
                   String sourceName,
                   Config config,
                   ErrorReporter errorReporter) {
     this.stream = stream;
     this.sourceName = sourceName;
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
+    if (commentNode != null) {
+      this.jsdocBuilder.recordOriginalCommentString(commentNode.getValue());
+    }
     this.annotationNames = config.annotationNames;
     this.suppressionNames = config.suppressionNames;
 
@@ -120,6 +125,7 @@ public final class JsDocInfoParser {
         false);
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(typeString),
+        null,
         "typeparsing",
         config,
         NullErrorReporter.forNewRhino());

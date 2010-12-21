@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.parsing;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.CompilerEnvirons;
 import com.google.javascript.jscomp.mozilla.rhino.Parser;
+import com.google.javascript.jscomp.mozilla.rhino.Token.CommentType;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
@@ -2300,6 +2301,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @supported */");
   }
 
+  public void testGetOriginalCommentString() throws Exception {
+    String comment = "* @desc This is a comment */";
+    JSDocInfo info = parse(comment);
+    assertNull(info.getOriginalCommentString());
+    info = parse(comment, true /* parseDocumentation */);
+    assertEquals(comment, info.getOriginalCommentString());
+  }
+
   /**
    * Asserts that a documentation field exists on the given marker.
    *
@@ -2477,6 +2486,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         new JsDocInfoParser(
             new JsDocTokenStream(comment.getValue().substring(3),
                 comment.getLineno()),
+            comment,
             script.getSourceName(),
             config,
             testErrorReporter);
@@ -2512,7 +2522,9 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     Config config = new Config(extraAnnotations, extraSuppressions,
         parseDocumentation, false);
-    JsDocInfoParser jsdocParser = new JsDocInfoParser(stream(comment),
+    JsDocInfoParser jsdocParser = new JsDocInfoParser(
+        stream(comment),
+        new Comment(0, 0, CommentType.JSDOC, comment),
         "testcode", config, errorReporter);
 
     if (fileLevelJsDocBuilder != null) {
