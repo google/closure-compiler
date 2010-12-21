@@ -484,9 +484,18 @@ chrome.cookies.remove = function(details) {};
  */
 chrome.cookies.set = function(details) {};
 
-/** @type {ChromeEvent} */
+/**
+ * @see http://http://code.google.com/chrome/extensions/cookies.html#event-onChanged
+ * @type {ChromeEvent}
+ */
 chrome.cookies.onChanged;
 
+/** @constructor */
+function CookieChangeInfo() {}
+/** @type {boolean} */
+CookieChangeInfo.prototype.removed;
+/** @type {Cookie} */
+CookieChangeInfo.prototype.cookie;
 
 /** @see http://code.google.com/chrome/extensions/experimental.html */
 chrome.experimental = {};
