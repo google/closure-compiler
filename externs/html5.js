@@ -577,24 +577,6 @@ function openDatabase(name, version, description, size) {}
  */
 Window.prototype.openDatabase = function(name, version, description, size) {};
 
-//HTML5 LocalFileSystem objects
-/**
- * @constructor
- */
-function LocalFileSystem() {}
-
-/**
- * Get LocalFileSystem object
- * @return {LocalFileSystem}
- */
-function requestFileSystem() {}
-
-/**
- * Get LocalFileSystem object
- * @return {LocalFileSystem}
- */
-Window.prototype.requestFileSystem = function() {};
-
 /**
  * @type {boolean}
  */
