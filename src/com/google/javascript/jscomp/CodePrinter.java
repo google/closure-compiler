@@ -365,6 +365,11 @@ class CodePrinter {
       }
       return true;
     }
+
+    @Override
+    void endFile() {
+      maybeEndStatement();
+    }
   }
 
 
@@ -608,6 +613,7 @@ class CodePrinter {
         ? new TypedCodeGenerator(mcp, outputCharset)
         : new CodeGenerator(mcp, outputCharset);
     cg.add(root);
+    mcp.endFile();
 
     String code = mcp.getCode();
 

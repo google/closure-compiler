@@ -282,4 +282,7 @@ abstract class CodeConsumer {
   boolean breakAfterBlockFor(Node n, boolean statementContext) {
     return statementContext;
   }
+
+  /** Called when we're at the end of a file. */
+  void endFile() {}
 }
