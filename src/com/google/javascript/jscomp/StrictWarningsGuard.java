@@ -23,8 +23,14 @@ package com.google.javascript.jscomp;
  */
 public class StrictWarningsGuard extends WarningsGuard {
 
+  static final DiagnosticType UNRAISABLE_WARNING =
+      DiagnosticType.warning("JSC_UNRAISABLE_WARNING", "{0}");
+
   @Override
   public CheckLevel level(JSError error) {
+    if (error.getType() == UNRAISABLE_WARNING) {
+      return null;
+    }
     return error.level.isOn() ? CheckLevel.ERROR : null;
   }
 
