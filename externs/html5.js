@@ -1331,6 +1331,18 @@ XMLHttpRequest.prototype.upload;
 XMLHttpRequest.prototype.overrideMimeType = function(mimeType) {};
 
 /**
+ * @type {string}
+ * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-responsetype-attribute
+ */
+XMLHttpRequest.prototype.responseType;
+
+/**
+ * @type {*}
+ * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-responsetype-attribute
+ */
+XMLHttpRequest.prototype.response;
+
+/**
  * XMLHttpRequestEventTarget defines events for checking the status of a data
  * transfer between a client and a server. This should be a common base class
  * for XMLHttpRequest and XMLHttpRequestUpload.
