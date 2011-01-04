@@ -438,9 +438,9 @@ public class CodePrinterTest extends TestCase {
   public void testPrettyPrinter() {
     // Ensure that the pretty printer inserts line breaks at appropriate
     // places.
-    assertPrettyPrint("(function(){})();","(function() {\n})();\n");
+    assertPrettyPrint("(function(){})();","(function() {\n})()");
     assertPrettyPrint("var a = (function() {});alert(a);",
-        "var a = function() {\n};\nalert(a);\n");
+        "var a = function() {\n};\nalert(a)");
 
     // Check we correctly handle putting brackets around all if clauses so
     // we can put breakpoints inside statements.
@@ -463,7 +463,7 @@ public class CodePrinterTest extends TestCase {
 
     // Don't add blocks if they weren't there already.
     assertPrettyPrint("label: alert();",
-        "label:alert();\n");
+        "label:alert()");
 
     // But if statements and loops get blocks automagically.
     assertPrettyPrint("if (1) alert();",
@@ -511,7 +511,7 @@ public class CodePrinterTest extends TestCase {
     assertPrettyPrint("do { alert(); } while(true);",
         "do {\n" +
         "  alert()\n" +
-        "}while(true);\n");
+        "}while(true)");
 
     // label?
     assertPrettyPrint("myLabel: { alert();}",
@@ -647,7 +647,7 @@ public class CodePrinterTest extends TestCase {
   public void testTypeAnnotationsAssign() {
     assertTypeAnnotations("/** @constructor */ var Foo = function(){}",
         "/**\n * @return {undefined}\n * @constructor\n */\n"
-        + "var Foo = function() {\n};\n");
+        + "var Foo = function() {\n}");
   }
 
   public void testTypeAnnotationsNamespace() {
@@ -655,7 +655,7 @@ public class CodePrinterTest extends TestCase {
         + "/** @constructor */ a.Foo = function(){}",
         "var a = {};\n"
         + "/**\n * @return {undefined}\n * @constructor\n */\n"
-        + "a.Foo = function() {\n};\n");
+        + "a.Foo = function() {\n}");
   }
 
   public void testTypeAnnotationsMemberSubclass() {
@@ -667,7 +667,7 @@ public class CodePrinterTest extends TestCase {
         + "a.Foo = function() {\n};\n"
         + "/**\n * @return {undefined}\n * @extends {a.Foo}\n"
         + " * @constructor\n */\n"
-        + "a.Bar = function() {\n};\n");
+        + "a.Bar = function() {\n}");
   }
 
   public void testTypeAnnotationsInterface() {
@@ -679,7 +679,7 @@ public class CodePrinterTest extends TestCase {
         + "a.Foo = function() {\n};\n"
         + "/**\n * @extends {a.Foo}\n"
         + " * @interface\n */\n"
-        + "a.Bar = function() {\n};\n");
+        + "a.Bar = function() {\n}");
   }
 
   public void testTypeAnnotationsMember() {
@@ -699,7 +699,7 @@ public class CodePrinterTest extends TestCase {
         + " */\n"
         + "a.Foo.prototype.foo = function(foo) {\n  return 3\n};\n"
         + "/** @type {string} */\n"
-        + "a.Foo.prototype.bar = \"\";\n");
+        + "a.Foo.prototype.bar = \"\"");
   }
 
   public void testTypeAnnotationsImplements() {
@@ -720,7 +720,7 @@ public class CodePrinterTest extends TestCase {
         + "/**\n * @return {undefined}\n * @extends {a.Foo}\n"
         + " * @implements {a.I}\n"
         + " * @implements {a.I2}\n * @constructor\n */\n"
-        + "a.Bar = function() {\n};\n");
+        + "a.Bar = function() {\n}");
   }
 
   public void testTypeAnnotationsDispatcher1() {
@@ -738,7 +738,7 @@ public class CodePrinterTest extends TestCase {
         " * @javadispatch\n" +
         " */\n" +
         "a.Foo = function() {\n" +
-        "};\n");
+        "}");
   }
 
   public void testTypeAnnotationsDispatcher2() {
@@ -765,13 +765,13 @@ public class CodePrinterTest extends TestCase {
         " * @javadispatch\n" +
         " */\n" +
         "a.Foo.prototype.foo = function() {\n" +
-        "};\n");
+        "}");
   }
 
   public void testU2UFunctionTypeAnnotation() {
     assertTypeAnnotations(
         "/** @type {!Function} */ var x = function() {}",
-        "/**\n * @constructor\n */\nvar x = function() {\n};\n");
+        "/**\n * @constructor\n */\nvar x = function() {\n}");
   }
 
   public void testEmitUnknownParamTypesAsAllType() {
@@ -781,7 +781,7 @@ public class CodePrinterTest extends TestCase {
         " * @param {*} x\n" +
         " * @return {undefined}\n" +
         " */\n" +
-        "var a = function(x) {\n};\n");
+        "var a = function(x) {\n}");
   }
 
   public void testOptionalTypesAnnotation() {
@@ -794,7 +794,7 @@ public class CodePrinterTest extends TestCase {
         " * @param {string=} x\n" +
         " * @return {undefined}\n" +
         " */\n" +
-        "var a = function(x) {\n};\n");
+        "var a = function(x) {\n}");
   }
 
   public void testVariableArgumentsTypesAnnotation() {
@@ -807,7 +807,7 @@ public class CodePrinterTest extends TestCase {
         " * @param {...string} x\n" +
         " * @return {undefined}\n" +
         " */\n" +
-        "var a = function(x) {\n};\n");
+        "var a = function(x) {\n}");
   }
 
   public void testTempConstructor() {
@@ -820,7 +820,7 @@ public class CodePrinterTest extends TestCase {
         "function t1() {\n  }\n" +
         "  /**\n * @return {undefined}\n * @constructor\n */\n" +
         "function t2() {\n  }\n" +
-        "  t1.prototype = t2.prototype\n};\n"
+        "  t1.prototype = t2.prototype\n}"
     );
   }
 
@@ -1080,7 +1080,7 @@ public class CodePrinterTest extends TestCase {
         new Node(Token.EXPR_RESULT, Node.newString("f")),
         new Node(Token.EXPR_RESULT, Node.newString("g")));
     String result = new CodePrinter.Builder(ast).setPrettyPrint(true).build();
-    assertEquals("\"f\";\n\"g\";\n", result);
+    assertEquals("\"f\";\n\"g\"", result);
   }
 
   public void testGetter() {
