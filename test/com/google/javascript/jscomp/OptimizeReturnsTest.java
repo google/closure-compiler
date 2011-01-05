@@ -191,7 +191,7 @@ public class OptimizeReturnsTest extends CompilerTestCase {
     String source = newlineJoin(
         "var a = {b:function(){return 1;}}",
         "for(c in a) (a[c])();",
-        "a()");
+        "a.b()");
     testSame(source);
   }
 
@@ -199,17 +199,59 @@ public class OptimizeReturnsTest extends CompilerTestCase {
     String source = newlineJoin(
         "var a = {b:function fn(){return 1;}}",
         "for(c in a) (a[c])();",
-        "a()");
+        "a.b()");
     testSame(source);
   }
 
   public void testNoRewriteArrLit() throws Exception {
     String source = newlineJoin(
         "var a = [function(){return 1;}]",
-        "(a[0])();",
-        "a()");
+        "(a[0])();");
     testSame(source);
   }
+
+  public void testPrototypeMethod1() throws Exception {
+    String source = newlineJoin(
+        "function c(){}",
+        "c.prototype.a = function(){return 1}",
+        "var x = new c;",
+        "x.a()");
+    String result = newlineJoin(
+        "function c(){}",
+        "c.prototype.a = function(){return}",
+        "var x = new c;",
+        "x.a()");
+    test(source, result);
+  }
+  
+  public void testPrototypeMethod2() throws Exception {
+    String source = newlineJoin(
+        "function c(){}",
+        "c.prototype.a = function(){return 1}",
+        "goog.reflect.object({a: 'v'})",
+        "var x = new c;",
+        "x.a()");    
+    testSame(source);
+  }  
+  
+  public void testPrototypeMethod3() throws Exception {
+    String source = newlineJoin(
+        "function c(){}",
+        "c.prototype.a = function(){return 1}",
+        "var x = new c;",
+        "for(var key in goog.reflect.object({a: 'v'})){ x[key](); }",
+        "x.a()");    
+    testSame(source);
+  } 
+  
+  public void testPrototypeMethod4() throws Exception {
+    String source = newlineJoin(
+        "function c(){}",
+        "c.prototype.a = function(){return 1}",
+        "var x = new c;",
+        "for(var key in goog.reflect.object({a: 'v'})){ x[key](); }");    
+    testSame(source);
+  }  
 
   public void testCallOrApply() throws Exception {
     // TODO(johnlenz): Add support for .call and .apply
