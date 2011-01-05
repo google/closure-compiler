@@ -136,7 +136,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
         varsToDeclareInExterns.contains(varName)) {
       createSynthesizedExternVar(varName);
 
-      parent.addSuppression("duplicate");
+      n.addSuppression("duplicate");
     }
 
     // Check that the var has been declared.

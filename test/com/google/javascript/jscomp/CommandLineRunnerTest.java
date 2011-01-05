@@ -20,6 +20,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
@@ -56,7 +57,7 @@ public class CommandLineRunnerTest extends TestCase {
   private List<String> args = Lists.newArrayList();
 
   /** Externs for the test */
-  private final List<JSSourceFile> externs = Lists.newArrayList(
+  private final List<JSSourceFile> DEFAULT_EXTERNS = ImmutableList.of(
     JSSourceFile.fromCode("externs",
         "var arguments;"
         + "/**\n"
@@ -88,9 +89,12 @@ public class CommandLineRunnerTest extends TestCase {
         + "/** @nosideeffects */ function noSideEffects() {}")
   );
 
+  private List<JSSourceFile> externs;
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    externs = DEFAULT_EXTERNS;
     lastCompiler = null;
     outReader = new ByteArrayOutputStream();
     errReader = new ByteArrayOutputStream();
@@ -602,6 +606,23 @@ public class CommandLineRunnerTest extends TestCase {
         "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
         "}\n\n",
         new String(outReader.toByteArray()));
+  }
+
+  public void testSyntheticExterns() {
+    externs = ImmutableList.of(
+        JSSourceFile.fromCode("externs", "myVar.property;"));
+    test("var theirVar = {}; var myVar = {}; var yourVar = {};",
+         VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
+
+    args.add("--jscomp_off=externsValidation");
+    args.add("--warning_level=VERBOSE");
+    test("var theirVar = {}; var myVar = {}; var yourVar = {};",
+         "var theirVar={},myVar={},yourVar={};");
+
+    args.add("--jscomp_off=externsValidation");
+    args.add("--warning_level=VERBOSE");
+    test("var theirVar = {}; var myVar = {}; var myVar = {};",
+         SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   /* Helper functions */
