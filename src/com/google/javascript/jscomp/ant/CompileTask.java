@@ -209,10 +209,9 @@ public final class CompileTask
   private CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
 
+    this.compilationLevel.setOptionsForCompilationLevel(options);
     if (this.debugOptions) {
       this.compilationLevel.setDebugOptionsForCompilationLevel(options);
-    } else {
-      this.compilationLevel.setOptionsForCompilationLevel(options);
     }
 
     options.prettyPrint = this.prettyPrint;
