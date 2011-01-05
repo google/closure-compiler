@@ -115,4 +115,11 @@ public class GenerateExportsTest extends CompilerTestCase {
          "var goog = {}; function F() {}" +
          "function G() {} goog.inherits(G, F); google_exportSymbol('G', G);");
   }
+
+  public void testExportEnum() {
+    // TODO(johnlenz): Issue 310, should the values also be externed?
+    test("/** @enum {string}\n @export */ var E = {A:1, B:2};",
+         "/** @enum {string}\n @export */ var E = {A:1, B:2};" +
+         "google_exportSymbol('E', E);");
+  }
 }

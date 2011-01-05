@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 
+import com.google.common.base.Joiner;
+
 import junit.framework.TestCase;
 
 
@@ -284,6 +286,21 @@ public class ExternExportsPassTest extends TestCase {
         "var externalName = function(a) {\n}");
   }
 
+  /**
+   * Enums are not currently handled.
+   */
+   public void testExportEnum() {
+     compileAndCheck(
+         "/** @enum {string}\n @export */ var E = {A:1, B:2};" +
+         "goog.exportSymbol('E', E);",
+         // TODO(johnlenz): We would like this:
+         // "/**\n" +
+         // " * @enum {string}\n" +
+         //" */\n" +
+         "var E = {}"
+     );
+   }
+
   /** If we export a property with "prototype" as a path component, there
     * is no need to emit the initializer for prototype because every namespace
     * has one automatically.
@@ -443,7 +460,11 @@ public class ExternExportsPassTest extends TestCase {
 
     Result result = compiler.compile(externFiles, inputs, options);
 
-    assertTrue(result.success);
+    if (!result.success) {
+      String msg = "Errors:";
+      msg += Joiner.on("\n").join(result.errors);
+      assertTrue(msg, result.success);
+    }
 
     return result;
   }
