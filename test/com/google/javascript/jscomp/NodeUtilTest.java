@@ -718,6 +718,26 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isFunctionExpression(functionNode));
   }
 
+  public void testRemoveChildBlock() {
+    Compiler compiler = new Compiler();
+
+    Node root = parse("{{x()}}");
+
+    // Test removing the inner block.
+    Node actual = root.cloneTree();
+
+    Node outerBlockNode = actual.getFirstChild();
+    Node innerBlockNode = outerBlockNode.getFirstChild();
+    innerBlockNode.setIsSyntheticBlock(true);
+
+    NodeUtil.removeChild(outerBlockNode, innerBlockNode);
+    String expected = "{{}}";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      assertTrue("Nodes do not match:\n" + difference, false);
+    }
+  }  
+
   public void testRemoveTryChild() {
     Compiler compiler = new Compiler();
 
@@ -768,7 +788,6 @@ public class NodeUtilTest extends TestCase {
     if (difference != null) {
       assertTrue("Nodes do not match:\n" + difference, false);
     }
-
   }
 
   public void testRemoveVarChild() {

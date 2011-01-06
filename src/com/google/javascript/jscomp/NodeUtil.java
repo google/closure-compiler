@@ -1372,10 +1372,15 @@ public final class NodeUtil {
 
   /** Safely remove children while maintaining a valid node structure. */
   static void removeChild(Node parent, Node node) {
-    // Node parent = node.getParent();
-    if (isStatementBlock(parent)
-        || isSwitchCase(node)
-        || isTryFinallyNode(parent, node)) {
+    if (isTryFinallyNode(parent, node)) { // A BLOCK node used as a "finally"
+      // A finally node can simply be removed.
+      parent.removeChild(node);
+    } else if (node.getType() == Token.BLOCK) {
+      // Simply empty the block.  This maintains source location and
+      // "synthetic"-ness.
+      node.detachChildren();
+    } else if (isStatementBlock(parent)
+        || isSwitchCase(node)) {
       // A statement in a block can simply be removed.
       parent.removeChild(node);
     } else if (parent.getType() == Token.VAR) {
@@ -1387,10 +1392,6 @@ public final class NodeUtil {
         // This would leave an empty VAR, remove the VAR itself.
         removeChild(parent.getParent(), parent);
       }
-    } else if (node.getType() == Token.BLOCK) {
-      // Simply empty the block.  This maintains source location and
-      // "synthetic"-ness.
-      node.detachChildren();
     } else if (parent.getType() == Token.LABEL
         && node == parent.getLastChild()) {
       // Remove the node from the parent, so it can be reused.
