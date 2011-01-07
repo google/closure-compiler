@@ -1370,11 +1370,34 @@ public final class NodeUtil {
         && child == parent.getLastChild();
   }
 
+  /** Whether the node is a CATCH container BLOCK. */
+  static boolean isTryCatchNodeContainer(Node n) {
+    Node parent = n.getParent();
+    return parent.getType() == Token.TRY
+        && parent.getFirstChild().getNext() == n;
+  }
+
   /** Safely remove children while maintaining a valid node structure. */
   static void removeChild(Node parent, Node node) {
-    if (isTryFinallyNode(parent, node)) { // A BLOCK node used as a "finally"
-      // A finally node can simply be removed.
-      parent.removeChild(node);
+    if (isTryFinallyNode(parent, node)) {
+      if (NodeUtil.hasCatchHandler(getCatchBlock(parent))) {
+        // A finally can only be removed if there is a catch.
+        parent.removeChild(node);
+      } else {
+        // Otherwise only its children can be removed.
+        node.detachChildren();
+      }
+    } else if (node.getType() == Token.CATCH) {
+      // The CATCH can can only be removed if there is a finally clause.
+      Node tryNode = node.getParent().getParent();
+      Preconditions.checkState(NodeUtil.hasFinally(tryNode));
+      node.detachFromParent();
+    } else if (isTryCatchNodeContainer(node)) {
+      // The container node itself can't be removed, but the contained CATCH
+      // can if there is a 'finally' clause
+      Node tryNode = node.getParent();
+      Preconditions.checkState(NodeUtil.hasFinally(tryNode));
+      node.detachChildren();
     } else if (node.getType() == Token.BLOCK) {
       // Simply empty the block.  This maintains source location and
       // "synthetic"-ness.
@@ -1407,6 +1430,17 @@ public final class NodeUtil {
     } else {
       throw new IllegalStateException("Invalid attempt to remove node: " +
           node.toString() + " of "+ parent.toString());
+    }
+  }
+
+  /**
+   * Add a finally block if one does not exist.
+   */
+  static void maybeAddFinally(Node tryNode) {
+    Preconditions.checkState(tryNode.getType() == Token.TRY);
+    if (!NodeUtil.hasFinally(tryNode)) {
+      tryNode.addChildrenToBack(new Node(Token.BLOCK)
+          .copyInformationFrom(tryNode));
     }
   }
 

@@ -95,22 +95,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     if (n.getType() == Token.FUNCTION || n.getType() == Token.SCRIPT) {
       return;
     }
-    // Removes TRYs that had its CATCH removed and/or empty FINALLY.
-    // TODO(dcc): Move the parts of this that don't require a control flow
-    // graph to PeepholeRemoveDeadCode
-    if (n.getType() == Token.TRY) {
-      Node body = n.getFirstChild();
-      Node catchOrFinallyBlock = body.getNext();
-      Node finallyBlock = catchOrFinallyBlock.getNext();
 
-      if (!catchOrFinallyBlock.hasChildren() &&
-          (finallyBlock == null || !finallyBlock.hasChildren())) {
-        n.removeChild(body);
-        parent.replaceChild(n, body);
-        compiler.reportCodeChange();
-        n = body;
-      }
-    }
     DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
     if (gNode == null) { // Not in CFG.
       return;
@@ -209,27 +194,39 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
             removeDeadExprStatementSafely(n);
             return fallThrough;
           }
-
         }
     }
     return n;
   }
 
   private void removeDeadExprStatementSafely(Node n) {
+    Node parent = n.getParent();
     if (n.getType() == Token.EMPTY ||
         (n.getType() == Token.BLOCK && !n.hasChildren())) {
       // Not always trivial to remove, let FoldContants work its magic later.
       return;
     }
-    // Removing an unreachable DO node is messy because it means we still have
-    // to execute one iteration. If the DO's body has breaks in the middle, it
-    // can get even more trickier and code size might actually increase.
+
     switch (n.getType()) {
+      // Removing an unreachable DO node is messy because it means we still have
+      // to execute one iteration. If the DO's body has breaks in the middle, it
+      // can get even more trickier and code size might actually increase.
       case Token.DO:
-      case Token.TRY:
-      case Token.CATCH:
-      case Token.FINALLY:
         return;
+
+      case Token.BLOCK:
+        // BLOCKs are used in several ways including wrapping CATCH blocks in TRYs
+        if (parent.getType() == Token.TRY) {
+          if (NodeUtil.isTryCatchNodeContainer(n)) {
+            return;
+          }
+        }
+        break;
+
+      case Token.CATCH:
+        Node tryNode = parent.getParent();
+        NodeUtil.maybeAddFinally(tryNode);
+        break;
     }
 
     NodeUtil.redeclareVarsInsideBranch(n);

@@ -684,8 +684,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testIsControlStructureCodeBlock() {
-    Compiler compiler = new Compiler();
-
     Node root = parse("if (x) foo(); else boo();");
     Node ifNode = root.getFirstChild();
 
@@ -699,8 +697,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testIsFunctionExpression1() {
-    Compiler compiler = new Compiler();
-
     Node root = parse("(function foo() {})");
     Node StatementNode = root.getFirstChild();
     assertTrue(NodeUtil.isExpressionNode(StatementNode));
@@ -710,8 +706,6 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testIsFunctionExpression2() {
-    Compiler compiler = new Compiler();
-
     Node root = parse("function foo() {}");
     Node functionNode = root.getFirstChild();
     assertTrue(NodeUtil.isFunction(functionNode));
@@ -719,12 +713,8 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testRemoveChildBlock() {
-    Compiler compiler = new Compiler();
-
-    Node root = parse("{{x()}}");
-
     // Test removing the inner block.
-    Node actual = root.cloneTree();
+    Node actual = parse("{{x()}}");
 
     Node outerBlockNode = actual.getFirstChild();
     Node innerBlockNode = outerBlockNode.getFirstChild();
@@ -736,15 +726,11 @@ public class NodeUtilTest extends TestCase {
     if (difference != null) {
       assertTrue("Nodes do not match:\n" + difference, false);
     }
-  }  
+  }
 
-  public void testRemoveTryChild() {
-    Compiler compiler = new Compiler();
-
-    Node root = parse("try {foo()} catch(e) {} finally {}");
-
+  public void testRemoveTryChild1() {
     // Test removing the finally clause.
-    Node actual = root.cloneTree();
+    Node actual = parse("try {foo()} catch(e) {} finally {}");
 
     Node tryNode = actual.getFirstChild();
     Node tryBlock = tryNode.getFirstChild();
@@ -757,34 +743,72 @@ public class NodeUtilTest extends TestCase {
     if (difference != null) {
       assertTrue("Nodes do not match:\n" + difference, false);
     }
+  }
 
+  public void testRemoveTryChild2() {
     // Test removing the try clause.
-    actual = root.cloneTree();
+    Node actual = parse("try {foo()} catch(e) {} finally {}");
 
-    tryNode = actual.getFirstChild();
-    tryBlock = tryNode.getFirstChild();
-    catchBlocks = tryNode.getFirstChild().getNext();
-    finallyBlock = tryNode.getLastChild();
+    Node tryNode = actual.getFirstChild();
+    Node tryBlock = tryNode.getFirstChild();
+    Node catchBlocks = tryNode.getFirstChild().getNext();
 
     NodeUtil.removeChild(tryNode, tryBlock);
-    expected = "try {} catch(e) {} finally {}";
-    difference = parse(expected).checkTreeEquals(actual);
+    String expected = "try {} catch(e) {} finally {}";
+    String difference = parse(expected).checkTreeEquals(actual);
     if (difference != null) {
       assertTrue("Nodes do not match:\n" + difference, false);
     }
+  }
 
+  public void testRemoveTryChild3() {
     // Test removing the catch clause.
-    actual = root.cloneTree();
+    Node actual = parse("try {foo()} catch(e) {} finally {}");
 
-    tryNode = actual.getFirstChild();
-    tryBlock = tryNode.getFirstChild();
-    catchBlocks = tryNode.getFirstChild().getNext();
+    Node tryNode = actual.getFirstChild();
+    Node tryBlock = tryNode.getFirstChild();
+    Node catchBlocks = tryNode.getFirstChild().getNext();
     Node catchBlock = catchBlocks.getFirstChild();
-    finallyBlock = tryNode.getLastChild();
+    Node finallyBlock = tryNode.getLastChild();
 
     NodeUtil.removeChild(catchBlocks, catchBlock);
-    expected = "try {foo()} finally {}";
-    difference = parse(expected).checkTreeEquals(actual);
+    String expected = "try {foo()} finally {}";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      assertTrue("Nodes do not match:\n" + difference, false);
+    }
+  }
+
+  public void testRemoveTryChild4() {
+    // Test removing the catch clause without a finally.
+    Node actual = parse("try {foo()} catch(e) {} finally {}");
+
+    Node tryNode = actual.getFirstChild();
+    Node tryBlock = tryNode.getFirstChild();
+    Node catchBlocks = tryNode.getFirstChild().getNext();
+    Node catchBlock = catchBlocks.getFirstChild();
+    Node finallyBlock = tryNode.getLastChild();
+
+    NodeUtil.removeChild(tryNode, catchBlocks);
+    String expected = "try {foo()} finally {}";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      assertTrue("Nodes do not match:\n" + difference, false);
+    }
+  }
+
+  public void testRemoveTryChild5() {
+    Node actual = parse("try {foo()} catch(e) {} finally {}");
+
+    Node tryNode = actual.getFirstChild();
+    Node tryBlock = tryNode.getFirstChild();
+    Node catchBlocks = tryNode.getFirstChild().getNext();
+    Node catchBlock = catchBlocks.getFirstChild();
+    Node finallyBlock = tryNode.getLastChild();
+
+    NodeUtil.removeChild(catchBlocks, catchBlock);
+    String expected = "try {foo()} finally {}";
+    String difference = parse(expected).checkTreeEquals(actual);
     if (difference != null) {
       assertTrue("Nodes do not match:\n" + difference, false);
     }
@@ -1210,7 +1234,7 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
     assertFalse(NodeUtil.mayHaveSideEffects(callExpr));
-    
+
     // No modifications, non-local result
     flags.clearAllFlags();
     newExpr.setSideEffectFlags(flags.valueOf());

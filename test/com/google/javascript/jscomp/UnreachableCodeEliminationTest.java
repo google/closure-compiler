@@ -148,15 +148,15 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
   public void testTryCatchFinally() {
     testSame("try {foo()} catch (e) {bar()}");
     testSame("try { try {foo()} catch (e) {bar()}} catch (x) {bar()}");
-    test("try {var x = 1} catch (e) {e()}", "{var x = 1}");
+    test("try {var x = 1} catch (e) {e()}", "try {var x = 1} finally {}");
     test("try {var x = 1} catch (e) {e()} finally {x()}",
         " try {var x = 1}                 finally {x()}");
     test("try {var x = 1} catch (e) {e()} finally {}",
-        "     {var x = 1}");
+        "try {var x = 1} finally {}");
     testSame("try {var x = 1} finally {x()}");
-    test("try {var x = 1} finally {}", "{var x = 1}");
-    test("function f() { return; try{var x = 1}catch(e){} }",
-        "function f() { var x; return; {}}");
+    testSame("try {var x = 1} finally {}");
+    test("function f() {return; try{var x = 1}catch(e){} }",
+         "function f() {var x;}");
   }
 
   public void testRemovalRequiresRedeclaration() {
