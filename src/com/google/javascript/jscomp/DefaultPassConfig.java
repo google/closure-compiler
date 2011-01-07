@@ -564,6 +564,13 @@ public class DefaultPassConfig extends PassConfig {
 
     if (options.coalesceVariableNames) {
       passes.add(coalesceVariableNames);
+
+      // coalesceVariables creates identity assignments and more redundant code
+      // that can be removed, rerun the peephole optimizations to clean them
+      // up.
+      if (options.foldConstants) {
+        passes.add(peepholeOptimizations);
+      }
     }
 
     if (options.collapseVariableDeclarations) {
