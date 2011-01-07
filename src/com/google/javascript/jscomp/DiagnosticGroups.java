@@ -92,29 +92,35 @@ public class DiagnosticGroups {
           new DiagnosticGroup(TypeValidator.INVALID_CAST));
 
   public static DiagnosticGroup FILEOVERVIEW_JSDOC =
-    DiagnosticGroups.registerGroup("fileoverviewTags",
+      DiagnosticGroups.registerGroup("fileoverviewTags",
           new DiagnosticGroup(RhinoErrorReporter.EXTRA_FILEOVERVIEW));
 
   public static DiagnosticGroup STRICT_MODULE_DEP_CHECK =
-    DiagnosticGroups.registerGroup("strictModuleDepCheck",
+      DiagnosticGroups.registerGroup("strictModuleDepCheck",
           new DiagnosticGroup(VarCheck.STRICT_MODULE_DEP_ERROR,
                               CheckGlobalNames.STRICT_MODULE_DEP_QNAME));
 
   public static DiagnosticGroup EXTERNS_VALIDATION =
-    DiagnosticGroups.registerGroup("externsValidation",
+      DiagnosticGroups.registerGroup("externsValidation",
           new DiagnosticGroup(VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
                               VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
 
   public static DiagnosticGroup AMBIGUOUS_FUNCTION_DECL =
-    DiagnosticGroups.registerGroup("ambiguousFunctionDecl",
-          new DiagnosticGroup(VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL));  
+      DiagnosticGroups.registerGroup("ambiguousFunctionDecl",
+          new DiagnosticGroup(VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL));
 
   public static DiagnosticGroup UNKNOWN_DEFINES =
-    DiagnosticGroups.registerGroup("unknownDefines",
+      DiagnosticGroups.registerGroup("unknownDefines",
           new DiagnosticGroup(ProcessDefines.UNKNOWN_DEFINE_WARNING));
 
+  public static DiagnosticGroup TWEAKS =
+      DiagnosticGroups.registerGroup("tweakValidation",
+          new DiagnosticGroup(
+              ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING,
+              ProcessTweaks.UNKNOWN_TWEAK_WARNING));
+
   public static DiagnosticGroup MISSING_PROPERTIES =
-    DiagnosticGroups.registerGroup("missingProperties",
+      DiagnosticGroups.registerGroup("missingProperties",
           new DiagnosticGroup(TypeCheck.INEXISTENT_PROPERTY));
 
   public static DiagnosticGroup UNDEFINED_VARIABLES =
@@ -122,9 +128,9 @@ public class DiagnosticGroups {
           new DiagnosticGroup(VarCheck.UNDEFINED_VAR_ERROR));
 
   public static DiagnosticGroup CHECK_REGEXP =
-    DiagnosticGroups.registerGroup("checkRegExp",
-        new DiagnosticGroup(
-            CheckRegExp.REGEXP_REFERENCE));
+      DiagnosticGroups.registerGroup("checkRegExp",
+          new DiagnosticGroup(
+              CheckRegExp.REGEXP_REFERENCE));
 
   public static DiagnosticGroup CHECK_TYPES =
       DiagnosticGroups.registerGroup("checkTypes",
@@ -133,16 +139,16 @@ public class DiagnosticGroups {
               TypeCheck.ALL_DIAGNOSTICS));
 
   public static DiagnosticGroup CHECK_VARIABLES =
-    DiagnosticGroups.registerGroup("checkVars",
-        new DiagnosticGroup(
-            VarCheck.UNDEFINED_VAR_ERROR,
-            SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR));
+      DiagnosticGroups.registerGroup("checkVars",
+          new DiagnosticGroup(
+              VarCheck.UNDEFINED_VAR_ERROR,
+              SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR));
 
   public static DiagnosticGroup CHECK_USELESS_CODE =
-    DiagnosticGroups.registerGroup("uselessCode",
-        new DiagnosticGroup(
-            CheckSideEffects.USELESS_CODE_ERROR,
-            CheckUnreachableCode.UNREACHABLE_CODE)); 
+      DiagnosticGroups.registerGroup("uselessCode",
+          new DiagnosticGroup(
+              CheckSideEffects.USELESS_CODE_ERROR,
+              CheckUnreachableCode.UNREACHABLE_CODE)); 
 
   /**
    * Adds warning levels by name.
