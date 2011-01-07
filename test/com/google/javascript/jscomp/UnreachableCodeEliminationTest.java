@@ -233,11 +233,42 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   public void testCascadedRemovalOfUnlessUnconditonalJumps() {
     test("switch (a) { case 'a': break; case 'b': break; case 'c': break }",
+         "switch (a) { case 'a': break; case 'b': case 'c': }");
+    // Only one break removed per pass.
+    test("switch (a) { case 'a': break; case 'b': case 'c': }",
          "switch (a) { case 'a': case 'b': case 'c': }");
+
     test("function foo() {" +
-         "  switch (a) { case 'a':return; case 'b':return; case 'c':return }}",
-         "function foo() { switch (a) { case 'a': case 'b': case 'c': }}");
+      "  switch (a) { case 'a':return; case 'b':return; case 'c':return }}",
+      "function foo() { switch (a) { case 'a':return; case 'b': case 'c': }}");
+    test("function foo() {" +
+      "  switch (a) { case 'a':return; case 'b': case 'c': }}",
+      "function foo() { switch (a) { case 'a': case 'b': case 'c': }}");
+
     testSame("function foo() {" +
              "switch (a) { case 'a':return 2; case 'b':return 1}}");
+  }
+
+  public void testIssue311() {
+    test("function a(b) {\n" +
+         "  switch (b.v) {\n" +
+         "    case 'SWITCH':\n" +
+         "      if (b.i >= 0) {\n" +
+         "        return b.o;\n" +
+         "      } else {\n" +
+         "        return;\n" +
+         "      }\n" +
+         "      break;\n" +
+         "  }\n" +
+         "}",
+         "function a(b) {\n" +
+         "  switch (b.v) {\n" +
+         "    case 'SWITCH':\n" +
+         "      if (b.i >= 0) {\n" +
+         "        return b.o;\n" +
+         "      } else {\n" +
+         "      }\n" +
+         "  }\n" +
+         "}");
   }
 }

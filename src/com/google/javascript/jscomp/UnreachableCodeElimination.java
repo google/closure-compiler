@@ -150,27 +150,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       return n;
     }
 
-    // If the parent is null, this mean whatever node it was there is now
-    // useless and it has been removed by other logics in this pass. That node
-    // while no longer exists in the AST, is still in the CFG because we
-    // never update the graph as nodes are removed.
-    if (n.getParent() == null) {
-      List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
-      if (outEdges.size() == 1) {
-        return tryRemoveUnconditionalBranching(
-          outEdges.get(0).getDestination().getValue());
-      }
-    }
-
     switch (n.getType()) {
-      case Token.BLOCK:
-        if (n.hasChildren()) {
-          Node first = n.getFirstChild();
-          return tryRemoveUnconditionalBranching(first);
-        } else {
-          return tryRemoveUnconditionalBranching(
-            ControlFlowAnalysis.computeFollowNode(n));
-        }
       case Token.RETURN:
         if (n.hasChildren()) {
           break;
@@ -183,12 +163,11 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
         // branches to that same node. It is safe to remove it.
         List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
         if (outEdges.size() == 1 &&
-
             // If there is a next node, there is no chance this jump is useless.
             (n.getNext() == null || n.getNext().getType() == Token.FUNCTION)) {
+
           Preconditions.checkState(outEdges.get(0).getValue() == Branch.UNCOND);
-          Node fallThrough = tryRemoveUnconditionalBranching(
-            ControlFlowAnalysis.computeFollowNode(n));
+          Node fallThrough = computeFollowing(n);
           Node nextCfgNode = outEdges.get(0).getDestination().getValue();
           if (nextCfgNode == fallThrough) {
             removeDeadExprStatementSafely(n);
@@ -197,6 +176,18 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
         }
     }
     return n;
+  }
+
+  private Node computeFollowing(Node n) {
+    Node next = ControlFlowAnalysis.computeFollowNode(n);
+    while (next != null && next.getType() == Token.BLOCK) {
+      if (next.hasChildren()) {
+        next = next.getFirstChild();
+      } else {
+        next = computeFollowing(next);
+      }
+    }
+    return next;
   }
 
   private void removeDeadExprStatementSafely(Node n) {
