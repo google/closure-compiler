@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Node;
 
 import java.util.Collections;
 import java.util.Set;
@@ -209,16 +210,22 @@ class ProxyObjectType extends ObjectType {
 
   @Override
   boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, boolean inExterns) {
+      boolean inferred, boolean inExterns, Node propertyNode) {
     return referencedObjType == null ? true :
         referencedObjType.defineProperty(
-            propertyName, type, inferred, inExterns);
+            propertyName, type, inferred, inExterns, propertyNode);
   }
 
   @Override
   public boolean isPropertyTypeDeclared(String propertyName) {
     return referencedObjType == null ? false :
         referencedObjType.isPropertyTypeDeclared(propertyName);
+  }
+
+  @Override
+  public Node getPropertyNode(String propertyName) {
+    return referencedObjType == null ? null :
+        referencedObjType.getPropertyNode(propertyName);
   }
 
   @Override

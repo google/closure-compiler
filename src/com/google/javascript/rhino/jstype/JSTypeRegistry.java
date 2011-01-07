@@ -56,6 +56,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -271,7 +272,7 @@ public class JSTypeRegistry implements Serializable {
             createArrowType(createOptionalParameters(ALL_TYPE), UNKNOWN_TYPE),
             null, null, true, true);
     OBJECT_FUNCTION_TYPE.defineDeclaredProperty(
-        "prototype", TOP_LEVEL_PROTOTYPE, true);
+        "prototype", TOP_LEVEL_PROTOTYPE, true, null);
     registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, OBJECT_FUNCTION_TYPE);
 
     ObjectType OBJECT_PROTOTYPE = OBJECT_FUNCTION_TYPE.getPrototype();
@@ -1245,7 +1246,7 @@ public class JSTypeRegistry implements Serializable {
   /**
    * Creates a record type.
    */
-  public RecordType createRecordType(Map<String, JSType> properties) {
+  public RecordType createRecordType(Map<String, RecordProperty> properties) {
     return new RecordType(this, properties);
   }
 
@@ -1574,7 +1575,7 @@ public class JSTypeRegistry implements Serializable {
       }
 
       // Add the property to the record.
-      builder.addProperty(fieldName, fieldType);
+      builder.addProperty(fieldName, fieldType, fieldNameNode);
     }
 
     return builder.build();

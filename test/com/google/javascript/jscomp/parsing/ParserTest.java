@@ -423,9 +423,9 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertNotNull(info);
 
     assertTypeEquals(createRecordTypeBuilder().
-                     addProperty("x", NUMBER_TYPE).
-                     addProperty("y", STRING_TYPE).
-                     addProperty("z", UNKNOWN_TYPE).
+                     addProperty("x", NUMBER_TYPE, null).
+                     addProperty("y", STRING_TYPE, null).
+                     addProperty("z", UNKNOWN_TYPE, null).
                      build(),
                      info.getType());
 

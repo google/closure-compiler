@@ -45,6 +45,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Node;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -225,12 +226,25 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   boolean defineProperty(String name, JSType type, boolean inferred,
-      boolean inExterns) {
+      boolean inExterns, Node propertyNode) {
     if (hasOwnDeclaredProperty(name)) {
       return false;
     }
-    properties.put(name, new Property(type, inferred, inExterns));
+    properties.put(name, new Property(type, inferred, inExterns, propertyNode));
     return true;
+  }
+
+  @Override
+  public Node getPropertyNode(String propertyName) {
+    Property p = properties.get(propertyName);
+    if (p != null) {
+      return p.propertyNode;
+    }
+    ObjectType implicitPrototype = getImplicitPrototype();
+    if (implicitPrototype != null) {
+      return implicitPrototype.getPropertyNode(propertyName);
+    }
+    return null;
   }
 
   @Override
@@ -251,7 +265,7 @@ class PrototypeObjectType extends ObjectType {
         // was not defined anywhere, then we consider this an explicit
         // declaration of the property.
         defineInferredProperty(propertyName, getPropertyType(propertyName),
-            inExterns);
+            inExterns, null);
       }
 
       // The prototype property is not represented as a normal Property.
@@ -480,13 +494,20 @@ class PrototypeObjectType extends ObjectType {
      */
     private final boolean inExterns;
 
+    /**
+     * The node corresponding to this property, e.g., a GETPROP node that
+     * declares this property.
+     */
+    private final Node propertyNode;
+
     /**  The JSDocInfo for this property. */
     private JSDocInfo docInfo = null;
 
-    private Property(JSType type, boolean inferred, boolean inExterns) {
+    private Property(JSType type, boolean inferred, boolean inExterns, Node propertyNode) {
       this.type = type;
       this.inferred = inferred;
       this.inExterns = inExterns;
+      this.propertyNode = propertyNode;
     }
   }
 

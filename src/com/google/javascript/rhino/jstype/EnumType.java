@@ -43,6 +43,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.Node;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -90,9 +91,15 @@ public class EnumType extends PrototypeObjectType {
     return Collections.unmodifiableSet(elements);
   }
 
-  public boolean defineElement(String name) {
+  /**
+   * Defines a new element on this enum.
+   * @param name the name of the new element
+   * @param definingNode the {@code Node} that defines this new element
+   * @return true iff the new element is added successfully
+   */
+  public boolean defineElement(String name, Node definingNode) {
     elements.add(name);
-    return defineDeclaredProperty(name, elementsType, false);
+    return defineDeclaredProperty(name, elementsType, false, definingNode);
   }
 
   /**

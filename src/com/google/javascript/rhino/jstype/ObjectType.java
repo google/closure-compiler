@@ -45,6 +45,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Node;
 
 import java.util.Set;
 
@@ -240,10 +241,13 @@ public abstract class ObjectType extends JSType {
    *        file. TightenTypes assumes that any function passed to an externs
    *        property could be called, so setting this incorrectly could result
    *        in live code being removed.
+   * @param propertyNode the node corresponding to the declaration of property
+   *        which might later be accessed using {@code getPropertyNode}.
    */
   public final boolean defineDeclaredProperty(String propertyName,
-      JSType type, boolean inExterns) {
-    boolean result = defineProperty(propertyName, type, false, inExterns);
+      JSType type, boolean inExterns, Node propertyNode) {
+    boolean result = defineProperty(propertyName, type, false, inExterns,
+        propertyNode);
 
     // All property definitions go through this method
     // or defineDeclaredProperty. Because the properties defined an an
@@ -262,16 +266,19 @@ public abstract class ObjectType extends JSType {
    *        file. TightenTypes assumes that any function passed to an externs
    *        property could be called, so setting this incorrectly could result
    *        in live code being removed.
+   * @param propertyNode the node corresponding to the inferred definition of
+   *        property that might later be accessed using {@code getPropertyNode}.
    */
   public final boolean defineInferredProperty(String propertyName,
-      JSType type, boolean inExterns) {
+      JSType type, boolean inExterns, Node propertyNode) {
     if (hasProperty(propertyName)) {
       JSType originalType = getPropertyType(propertyName);
       type = originalType == null ? type :
           originalType.getLeastSupertype(type);
     }
 
-    boolean result = defineProperty(propertyName, type, true, inExterns);
+    boolean result = defineProperty(propertyName, type, true, inExterns,
+        propertyNode);
 
     // All property definitions go through this method
     // or defineDeclaredProperty. Because the properties defined an an
@@ -295,11 +302,31 @@ public abstract class ObjectType extends JSType {
    *        file. TightenTypes assumes that any function passed to an externs
    *        property could be called, so setting this incorrectly could result
    *        in live code being removed.
+   * @param propertyNode the node that represents the definition of property.
+   *        Depending on the actual sub-type the node type might be different.
+   *        The general idea is to have an estimate of where in the source code
+   *        this property is defined.
    * @return True if the property was registered successfully, false if this
    *        conflicts with a previous property type declaration.
    */
   abstract boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, boolean inExterns);
+      boolean inferred, boolean inExterns, Node propertyNode);
+
+  /**
+   * Gets the node corresponding to the definition of the specified property.
+   * This could be the node corresponding to declaration of the property or the
+   * node corresponding to the first reference to this property, e.g.,
+   * "this.propertyName" in a constructor. Note this is mainly intended to be
+   * an estimate of where in the source code a property is defined. Sometime
+   * the returned node is not even part of the global AST but in the AST of the
+   * JsDoc that defines a type.
+   *
+   * @param propertyName the name of the property
+   * @return the {@code Node} corresponding to the property or null.
+   */
+  public Node getPropertyNode(String propertyName) {
+    return null;
+  }
 
   /**
    * Gets the docInfo on the specified property on this type.  This should not

@@ -223,7 +223,7 @@ public class ConcreteTypeTest extends TestCase {
     ObjectType objType = typeRegistry.createObjectType(name, null,
         typeRegistry.createObjectType(name + ".prototype", null, null));
     for (int i = 0; i < propNames.length; ++i) {
-      objType.defineDeclaredProperty(propNames[i], unknownType, false);
+      objType.defineDeclaredProperty(propNames[i], unknownType, false, null);
     }
     return new ConcreteInstanceType(factory, objType);
   }

@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.rhino.Node;
 
 /**
  * A builder for record types.
@@ -47,8 +48,8 @@ import com.google.common.collect.ImmutableMap;
  */
 public class RecordTypeBuilder {
   private boolean isEmpty = true;
-  private JSTypeRegistry registry;
-  private final ImmutableMap.Builder<String, JSType> properties =
+  private final JSTypeRegistry registry;
+  private final ImmutableMap.Builder<String, RecordProperty> properties =
       ImmutableMap.builder();
 
   public RecordTypeBuilder(JSTypeRegistry registry) {
@@ -57,12 +58,15 @@ public class RecordTypeBuilder {
 
   /**
    * Adds a property with the given name and type to the record type.
-   *
+   * @param name the name of the new property
+   * @param type the JSType of the new property
+   * @param propertyNode the node that holds this property definition
    * @return The builder itself for chaining purposes.
    */
-  public RecordTypeBuilder addProperty(String name, JSType type) {
+  public RecordTypeBuilder addProperty(String name, JSType type, Node
+      propertyNode) {
     isEmpty = false;
-    properties.put(name, type);
+    properties.put(name, new RecordProperty(type, propertyNode));
     return this;
   }
 
@@ -77,5 +81,23 @@ public class RecordTypeBuilder {
     }
 
     return registry.createRecordType(properties.build());
+  }
+
+  static class RecordProperty {
+    private final JSType type;
+    private final Node propertyNode;
+
+    RecordProperty(JSType type, Node propertyNode) {
+      this.type = type;
+      this.propertyNode = propertyNode;
+    }
+
+    public JSType getType() {
+      return type;
+    }
+
+    public Node getPropertyNode() {
+      return propertyNode;
+    }
   }
 }

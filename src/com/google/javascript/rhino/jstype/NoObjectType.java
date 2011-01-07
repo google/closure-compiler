@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Node;
 
 import java.io.Serializable;
 
@@ -303,7 +304,7 @@ public class NoObjectType extends FunctionType {
 
   @Override
   boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, boolean inExterns) {
+      boolean inferred, boolean inExterns, Node propertyNode) {
     // nothing, all properties are defined
     return true;
   }

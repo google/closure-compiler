@@ -573,14 +573,14 @@ class TypeInference
         if (objectType.hasProperty(propName) ||
             !objectType.isInstanceType()) {
           if ("prototype".equals(propName)) {
-            objectType.defineDeclaredProperty(propName, rightType, false);
+            objectType.defineDeclaredProperty(propName, rightType, false, getprop);
           } else {
-            objectType.defineInferredProperty(propName, rightType, false);
+            objectType.defineInferredProperty(propName, rightType, false, getprop);
           }
         } else {
           if (getprop.getFirstChild().getType() == Token.THIS &&
               getJSType(syntacticScope.getRootNode()).isConstructor()) {
-            objectType.defineInferredProperty(propName, rightType, false);
+            objectType.defineInferredProperty(propName, rightType, false, getprop);
           } else {
             registry.registerPropertyOnType(propName, objectType);
           }
@@ -622,7 +622,7 @@ class TypeInference
              (!objectType.isInstanceType() ||
                  (var.isExtern() && !objectType.isNativeObjectType())))) {
           return objectType.defineDeclaredProperty(
-              propName, var.getType(), var.isExtern());
+              propName, var.getType(), var.isExtern(), getprop);
         }
       }
     }
@@ -704,7 +704,8 @@ class TypeInference
       scope = traverse(value, scope);
       String memberName = NodeUtil.getStringValue(name);
       if (memberName != null) {
-        objectType.defineInferredProperty(memberName, getJSType(value), false);
+        objectType.defineInferredProperty(memberName, getJSType(value), false,
+            name);
       } else {
         n.setJSType(getNativeType(UNKNOWN_TYPE));
         return scope;

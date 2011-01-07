@@ -270,7 +270,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     addMethod(registry, arrayPrototype, "sort", arrayType);
     addMethod(registry, arrayPrototype, "splice", arrayType);
     addMethod(registry, arrayPrototype, "unshift", numberType);
-    arrayType.defineDeclaredProperty("length", numberType, true);
+    arrayType.defineDeclaredProperty("length", numberType, true, null);
 
     ObjectType booleanPrototype = registry
         .getNativeFunctionType(JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE)
@@ -345,11 +345,11 @@ public abstract class BaseJSTypeTestCase extends TestCase {
         registry.createNullableType(arrayType));
     addMethod(registry, regexpPrototype, "test", booleanType);
     addMethod(registry, regexpPrototype, "toString", stringType);
-    regexpType.defineDeclaredProperty("source", stringType, true);
-    regexpType.defineDeclaredProperty("global", booleanType, true);
-    regexpType.defineDeclaredProperty("ignoreCase", booleanType, true);
-    regexpType.defineDeclaredProperty("multiline", booleanType, true);
-    regexpType.defineDeclaredProperty("lastIndex", numberType, true);
+    regexpType.defineDeclaredProperty("source", stringType, true, null);
+    regexpType.defineDeclaredProperty("global", booleanType, true, null);
+    regexpType.defineDeclaredProperty("ignoreCase", booleanType, true, null);
+    regexpType.defineDeclaredProperty("multiline", booleanType, true, null);
+    regexpType.defineDeclaredProperty("lastIndex", numberType, true, null);
 
     ObjectType stringPrototype = registry
         .getNativeFunctionType(JSTypeNative.STRING_OBJECT_FUNCTION_TYPE)
@@ -374,14 +374,14 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     addMethod(registry, stringPrototype, "toLocaleLowerCase", stringType);
     addMethod(registry, stringPrototype, "toUpperCase", stringType);
     addMethod(registry, stringPrototype, "toLocaleUpperCase", stringType);
-    stringObjectType.defineDeclaredProperty("length", numberType, true);
+    stringObjectType.defineDeclaredProperty("length", numberType, true, null);
   }
 
   private static void addMethod(
       JSTypeRegistry registry, ObjectType receivingType, String methodName,
       JSType returnType) {
     receivingType.defineDeclaredProperty(methodName,
-        new FunctionBuilder(registry).withReturnType(returnType).build(), true);
+        new FunctionBuilder(registry).withReturnType(returnType).build(), true, null);
   }
 
   protected JSType createUnionType(JSType... variants) {

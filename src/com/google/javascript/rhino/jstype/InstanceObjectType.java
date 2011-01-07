@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.Node;
 
 /**
  * An object type that is an instance of some function constructor.
@@ -83,12 +84,12 @@ public final class InstanceObjectType extends PrototypeObjectType {
 
   @Override
   boolean defineProperty(String name, JSType type, boolean inferred,
-      boolean inExterns) {
+      boolean inExterns, Node propertyNode) {
     ObjectType proto = getImplicitPrototype();
     if (proto != null && proto.hasOwnDeclaredProperty(name)) {
       return false;
     }
-    return super.defineProperty(name, type, inferred, inExterns);
+    return super.defineProperty(name, type, inferred, inExterns, propertyNode);
   }
 
   @Override

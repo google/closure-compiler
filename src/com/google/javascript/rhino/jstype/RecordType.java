@@ -41,6 +41,8 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.Maps;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 
 import java.util.Map;
 import java.util.Set;
@@ -62,7 +64,7 @@ import java.util.SortedMap;
 public class RecordType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
-  private SortedMap<String, JSType> properties = Maps.newTreeMap();
+  private final SortedMap<String, JSType> properties = Maps.newTreeMap();
   private boolean isFrozen = false;
 
   /**
@@ -70,12 +72,19 @@ public class RecordType extends PrototypeObjectType {
    *
    * @param registry The type registry under which this type lives.
    * @param properties A map of all the properties of this record type.
+   * @throws IllegalStateException if the {@code RecordProperty} associated
+   *         with a property is null.
    */
-  RecordType(JSTypeRegistry registry, Map<String, JSType> properties) {
+  RecordType(JSTypeRegistry registry, Map<String, RecordProperty> properties) {
     super(registry, null, null);
 
     for (String property : properties.keySet()) {
-      defineDeclaredProperty(property, properties.get(property), false);
+      RecordProperty prop = properties.get(property);
+      if (prop == null) {
+        throw new IllegalStateException(
+            "RecordProperty associated with a property should not be null!");
+      }
+      defineDeclaredProperty(property, prop.getType(), false, prop.getPropertyNode());
     }
 
     // Freeze the record type.
@@ -110,7 +119,7 @@ public class RecordType extends PrototypeObjectType {
 
   @Override
   boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, boolean inExterns) {
+      boolean inferred, boolean inExterns, Node propertyNode) {
     if (isFrozen) {
       return false;
     }
@@ -119,7 +128,8 @@ public class RecordType extends PrototypeObjectType {
       properties.put(propertyName, type);
     }
 
-    return super.defineProperty(propertyName, type, inferred, inExterns);
+    return super.defineProperty(propertyName, type, inferred, inExterns,
+        propertyNode);
   }
 
   @Override
@@ -138,7 +148,8 @@ public class RecordType extends PrototypeObjectType {
       if (thatRecord.hasProperty(property) &&
           thatRecord.getPropertyType(property).isEquivalentTo(
               getPropertyType(property))) {
-        builder.addProperty(property, getPropertyType(property));
+        builder.addProperty(property, getPropertyType(property),
+            getPropertyNode(property));
       }
     }
 
@@ -161,12 +172,14 @@ public class RecordType extends PrototypeObjectType {
           return registry.getNativeObjectType(JSTypeNative.NO_TYPE);
         }
 
-        builder.addProperty(property, getPropertyType(property));
+        builder.addProperty(property, getPropertyType(property),
+            getPropertyNode(property));
       }
 
       for (String property : thatRecord.properties.keySet()) {
         if (!hasProperty(property)) {
-          builder.addProperty(property, thatRecord.getPropertyType(property));
+          builder.addProperty(property, thatRecord.getPropertyType(property),
+              thatRecord.getPropertyNode(property));
         }
       }
 

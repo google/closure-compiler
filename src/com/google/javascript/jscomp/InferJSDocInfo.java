@@ -61,7 +61,7 @@ import javax.annotation.Nullable;
 class InferJSDocInfo extends AbstractPostOrderCallback
     implements CompilerPass {
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
   private boolean inExterns;
 
   InferJSDocInfo(AbstractCompiler compiler) {

@@ -47,6 +47,10 @@ public final class JsDocInfoParser {
   private final ErrorReporter errorReporter;
   private final ErrorReporterParser parser = new ErrorReporterParser();
 
+  // Use a template node for properties set on all nodes to minimize the
+  // memory footprint associated with these (similar to IRFactory).
+  private final Node templateNode;
+
   private class ErrorReporterParser {
     void addWarning(String messageId, String messageArg, int lineno,
                     int charno) {
@@ -111,6 +115,7 @@ public final class JsDocInfoParser {
     this.suppressionNames = config.suppressionNames;
 
     this.errorReporter = errorReporter;
+    this.templateNode = this.createTemplateNode();
   }
 
   /**
@@ -2056,15 +2061,27 @@ public final class JsDocInfoParser {
 
   private Node wrapNode(int type, Node n) {
     return n == null ? null :
-        new Node(type, n, stream.getLineno(), stream.getCharno());
+        new Node(type, n, stream.getLineno(),
+            stream.getCharno()).clonePropsFrom(templateNode);
   }
 
   private Node newNode(int type) {
-    return new Node(type, stream.getLineno(), stream.getCharno());
+    return new Node(type, stream.getLineno(),
+        stream.getCharno()).clonePropsFrom(templateNode);
   }
 
   private Node newStringNode(String s) {
-    return Node.newString(s, stream.getLineno(), stream.getCharno());
+    return Node.newString(s, stream.getLineno(),
+        stream.getCharno()).clonePropsFrom(templateNode);
+  }
+
+  // This is similar to IRFactory.createTemplateNode to share common props
+  // e.g., source-name, between all nodes.
+  private Node createTemplateNode() {
+    // The Node type choice is arbitrary.
+    Node templateNode = new Node(Token.SCRIPT);
+    templateNode.putProp(Node.SOURCENAME_PROP, sourceName);
+    return templateNode;
   }
 
   private Node reportTypeSyntaxWarning(String warning) {

@@ -133,7 +133,7 @@ final class TypedScopeCreator implements ScopeCreator {
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
-  private List<ObjectType> delegateProxyPrototypes = Lists.newArrayList();
+  private final List<ObjectType> delegateProxyPrototypes = Lists.newArrayList();
 
   /**
    * Defer attachment of types to nodes until all type names
@@ -891,7 +891,7 @@ final class TypedScopeCreator implements ScopeCreator {
               compiler.report(
                   JSError.make(sourceName, key, ENUM_NOT_CONSTANT, keyName));
             } else {
-              enumType.defineElement(keyName);
+              enumType.defineElement(keyName, key);
             }
             key = key.getNext();
           }
@@ -998,9 +998,9 @@ final class TypedScopeCreator implements ScopeCreator {
                 type == null ?
                     getNativeType(JSTypeNative.NO_TYPE) :
                     type,
-                isExtern);
+                isExtern, n);
           } else {
-            globalThis.defineDeclaredProperty(variableName, type, isExtern);
+            globalThis.defineDeclaredProperty(variableName, type, isExtern, n);
           }
         }
 
@@ -1278,7 +1278,7 @@ final class TypedScopeCreator implements ScopeCreator {
               ((isExtern && !ownerType.isNativeObjectType()) ||
                !ownerType.isInstanceType())) {
             // If the property is undeclared or inferred, declare it now.
-            ownerType.defineDeclaredProperty(propName, valueType, isExtern);
+            ownerType.defineDeclaredProperty(propName, valueType, isExtern, n);
           }
         }
 
@@ -1346,7 +1346,7 @@ final class TypedScopeCreator implements ScopeCreator {
           // If this is a stub for a prototype, just declare it
           // as an unknown type. These are seen often in externs.
           ownerType.defineInferredProperty(
-              propName, unknownType, isExtern);
+              propName, unknownType, isExtern, n);
         } else {
           typeRegistry.registerPropertyOnType(
               propName, ownerType == null ? unknownType : ownerType);
@@ -1402,7 +1402,8 @@ final class TypedScopeCreator implements ScopeCreator {
           thisType.defineDeclaredProperty(
               name.getString(),
               jsType,
-              false /* functions with implementations are not in externs */);
+              false /* functions with implementations are not in externs */,
+              member);
         }
       }
     } // end CollectProperties
