@@ -66,9 +66,34 @@ public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return tryFoldFor(subtree);
       case Token.DO:
         return tryFoldDo(subtree);
-        default:
+      case Token.TRY:
+        return tryFoldTry(subtree);
+      default:
           return subtree;
     }
+  }
+
+  /**
+   * Remove try blocks without catch blocks and with empty or not
+   * existent finally blocks.
+   * @return the replacement node, if changed, or the original if not
+   */
+  private Node tryFoldTry(Node n) {
+    // Removes TRYs that had its CATCH removed and/or empty FINALLY.
+    Preconditions.checkState(n.getType() == Token.TRY);
+    Node body = n.getFirstChild();
+    Node catchBlock = body.getNext();
+    Node finallyBlock = catchBlock.getNext();
+
+    if (!catchBlock.hasChildren() &&
+        (finallyBlock == null || !finallyBlock.hasChildren())) {
+      n.removeChild(body);
+      n.getParent().replaceChild(n, body);
+      reportCodeChange();
+      return body;
+    }
+
+    return n;
   }
 
   /**
