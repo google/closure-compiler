@@ -756,11 +756,45 @@ WebWorker.prototype.onmessage;
  */
 WebWorker.prototype.onerror;
 
-/** @type {WebWorker} */
-var Worker;
+/**
+ * @see http://dev.w3.org/html5/workers/
+ * @constructor
+ * @implements {EventTarget}
+ */
+function Worker(opt_arg0) {}
 
-/** @type {WebWorker} */
-Window.prototype.Worker;
+/** @inheritDoc */
+Worker.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+Worker.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+Worker.prototype.dispatchEvent = function(evt) {};
+
+/**
+ * Stops the worker process
+ */
+Worker.prototype.terminate = function() {};
+
+/**
+ * Posts a message to the worker thread.
+ * @param {*} message
+ * @param {Array.<MessagePort>=} opt_ports
+ */
+Worker.prototype.postMessage = function(message, opt_ports) {};
+
+/**
+ * Sent when the worker thread posts a message to its creator.
+ */
+Worker.prototype.onmessage = function() {};
+
+/**
+ * Sent when the worker thread encounters an error.
+ */
+Worker.prototype.onerror = function() {};
 
 /**
  * @type {boolean}
