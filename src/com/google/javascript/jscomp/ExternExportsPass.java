@@ -411,7 +411,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
    */
   public String getGeneratedExterns() {
     CodePrinter.Builder builder = new CodePrinter.Builder(externsRoot)
-      .setPrettyPrint(false).setOutputTypes(true);
+      .setPrettyPrint(true).setOutputTypes(true);
 
     return builder.build();
   }
