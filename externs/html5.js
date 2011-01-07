@@ -1300,6 +1300,72 @@ History.prototype.pushState = function(data, title, opt_url) {};
 History.prototype.replaceState = function(data, title, opt_url) {};
 
 /**
+ * @see http://www.w3.org/TR/html5/history.html#event-definitions
+ * @constructor
+ * @extends {Event}
+ */
+function PopStateEvent() {}
+
+/**
+ * @type {*}
+ */
+PopStateEvent.prototype.state;
+
+/**
+ * Initializes the event after it has been created with document.createEvent
+ * @param {string} typeArg
+ * @param {boolean} canBubbleArg
+ * @param {boolean} cancelableArg
+ * @param {*} stateArg
+ */
+PopStateEvent.prototype.initPopStateEvent = function(typeArg, canBubbleArg,
+    cancelableArg, stateArg) {};
+
+/**
+ * @see http://www.w3.org/TR/html5/history.html#event-definitions
+ * @constructor
+ * @extends {Event}
+ */
+function HashChangeEvent() {}
+
+/** @type {string} */
+HashChangeEvent.prototype.oldURL;
+
+/** @type {string} */
+HashChangeEvent.prototype.newURL;
+
+/**
+ * Initializes the event after it has been created with document.createEvent
+ * @param {string} typeArg
+ * @param {boolean} canBubbleArg
+ * @param {boolean} cancelableArg
+ * @param {string} oldURLArg
+ * @param {string} newURLArg
+ */
+HashChangeEvent.prototype.initHashChangeEvent = function(typeArg, canBubbleArg,
+    cancelableArg, oldURLArg, newURLArg) {};
+
+/**
+ * @see http://www.w3.org/TR/html5/history.html#event-definitions
+ * @constructor
+ * @extends {Event}
+ */
+function PageTransitionEvent() {}
+
+/** @type {boolean} */
+PageTransitionEvent.prototype.persisted;
+
+/**
+ * Initializes the event after it has been created with document.createEvent
+ * @param {string} typeArg
+ * @param {boolean} canBubbleArg
+ * @param {boolean} cancelableArg
+ * @param {*} persistedArg
+ */
+PageTransitionEvent.prototype.initPageTransitionEvent = function(typeArg,
+    canBubbleArg, cancelableArg, persistedArg) {};
+
+/**
  * @constructor
  */
 function FileList() {}
