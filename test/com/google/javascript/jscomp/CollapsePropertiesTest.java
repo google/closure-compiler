@@ -583,13 +583,9 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAddPropertyToUncollapsibleNamedCtorInLocalScopeDepth1() {
-    // This technically should be collapsed, according to the rules.
-    // We don't collapse named constructors for legacy reasons
-    // (this pass has been around too long, and we don't know who's
-    // depending on this behavior).
     testSame(
-          "/** @constructor */ function a() {} var c = a; " +
-          "(function() {a.b = 0;})(); a.b;");
+          "/** @constructor */ function a() {} var a$b; var c = a; " +
+          "(function() {a$b = 0;})(); a$b;");
   }
 
   public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth1() {
@@ -1264,5 +1260,14 @@ public class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testConstKey() {
     test("var foo = {A: 3};", "var foo$A = 3;");
+  }
+
+  public void testPropertyOnGlobalCtor() {
+    test("/** @constructor */ function Map() {} Map.foo = 3; Map;",
+         "function Map() {} var Map$foo = 3; Map;");
+  }
+
+  public void testPropertyOnGlobalFunction() {
+    testSame("function Map() {} Map.foo = 3; Map;");
   }
 }

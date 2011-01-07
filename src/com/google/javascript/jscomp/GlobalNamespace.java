@@ -481,11 +481,6 @@ class GlobalNamespace {
      *     declaration
      */
     private boolean isConstructorOrEnumDeclaration(Node n, Node parent) {
-      // NOTE(nicksantos): This does not handle named constructors
-      // function a() {}
-      // For legacy reasons, we should not fix this, because we do not
-      // know who's depending on the current behavior.
-
       JSDocInfo info;
       int valueNodeType;
       switch (parent.getType()) {
@@ -502,6 +497,11 @@ class GlobalNamespace {
           valueNodeType = valueNode != null ? valueNode.getType() : Token.VOID;
           break;
         default:
+          if (NodeUtil.isFunctionDeclaration(parent)) {
+            info = parent.getJSDocInfo();
+            valueNodeType = Token.FUNCTION;
+            break;
+          }
           return false;
       }
       // Heed the annotations only if they're sensibly used.
