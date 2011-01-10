@@ -3286,6 +3286,23 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Object");
   }
 
+  public void testGetprop2() throws Exception {
+    testTypes("var x = null; x.alert();",
+        "null has no properties\n" +
+        "found   : null\n" +
+        "required: Object");
+  }
+
+  public void testGetprop3() throws Exception {
+    testTypes(
+        "/** @constructor */ " +
+        "function Foo() { /** @type {?Object} */ this.x = null; }" +
+        "Foo.prototype.initX = function() { this.x = {foo: 1}; };" +
+        "Foo.prototype.bar = function() {" +
+        "  if (this.x == null) { this.initX(); alert(this.x.foo); }" +
+        "};");
+  }
+
   public void testArrayAccess1() throws Exception {
     testTypes("var a = []; var b = a['hi'];");
   }

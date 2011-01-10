@@ -642,11 +642,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           // should match a string context.
           String message = "left side of comparison";
           validator.expectString(t, n, leftType, message);
-          validator.expectNotVoid(
+          validator.expectNotNullOrUndefined(
               t, n, leftType, message, getNativeType(STRING_TYPE));
           message = "right side of comparison";
           validator.expectString(t, n, rightType, message);
-          validator.expectNotVoid(
+          validator.expectNotNullOrUndefined(
               t, n, rightType, message, getNativeType(STRING_TYPE));
         }
         ensureTyped(t, n, BOOLEAN_TYPE);
@@ -1153,8 +1153,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     // TODO(user): remove in favor of flagging every property access on
     // non-object.
-    if (!validator.expectNotVoid(t, n, childType,
-            "undefined has no properties", getNativeType(OBJECT_TYPE))) {
+    if (!validator.expectNotNullOrUndefined(t, n, childType,
+            childType + " has no properties", getNativeType(OBJECT_TYPE))) {
       ensureTyped(t, n);
       return;
     }

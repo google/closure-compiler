@@ -60,6 +60,7 @@ class TypeValidator {
   private final JSTypeRegistry typeRegistry;
   private final JSType allValueTypes;
   private boolean shouldReport = true;
+  private final JSType nullOrUndefined;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -118,6 +119,8 @@ class TypeValidator {
     this.typeRegistry = compiler.getTypeRegistry();
     this.allValueTypes = typeRegistry.createUnionType(
         STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
+    this.nullOrUndefined = typeRegistry.createUnionType(
+        NULL_TYPE, VOID_TYPE);
   }
 
   /**
@@ -220,15 +223,33 @@ class TypeValidator {
   }
 
   /**
-   * Expect the type to be anything but the void type. If the expectation is not
-   * met, issue a warning at the provided node's source code position. Note that
-   * a union type that includes the void type and at least one other type meets
-   * the expectation.
+   * Expect the type to be anything but the null or void type. If the
+   * expectation is not met, issue a warning at the provided node's
+   * source code position. Note that a union type that includes the
+   * void type and at least one other type meets the expectation.
    * @return Whether the expectation was met.
    */
-  boolean expectNotVoid(
+  boolean expectNotNullOrUndefined(
       NodeTraversal t, Node n, JSType type, String msg, JSType expectedType) {
-    if (type.isVoidType()) {
+    if (!type.isNoType() && !type.isUnknownType() &&
+        type.isSubtype(nullOrUndefined)) {
+
+      // There's one edge case right now that we don't handle well, and
+      // that we don't want to warn about.
+      // if (this.x == null) {
+      //   this.initializeX();
+      //   this.x.foo();
+      // }
+      // In this case, we incorrectly type x because of how we
+      // infer properties locally. See issue 109.
+      // http://code.google.com/p/closure-compiler/issues/detail?id=109
+      //
+      // We do not do this inference globally.
+      if (n.getType() == Token.GETPROP &&
+          !t.inGlobalScope() && type.isNullType()) {
+        return true;
+      }
+
       mismatch(t, n, msg, type, expectedType);
       return false;
     }
