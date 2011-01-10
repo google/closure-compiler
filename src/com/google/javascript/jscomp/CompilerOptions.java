@@ -512,6 +512,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Replacements for @defines. Will be Boolean, Numbers, or Strings */
   private Map<String, Object> defineReplacements;
 
+  /** What kind of processing to do for goog.tweak functions. */
+  private TweakProcessing tweakProcessing;
+
+  /** Replacements for tweaks. Will be Boolean, Numbers, or Strings */
+  private Map<String, Object> tweakReplacements;
+
   /** Move top level function declarations to the top */
   public boolean moveFunctionDeclarations;
 
@@ -733,6 +739,8 @@ public class CompilerOptions implements Serializable, Cloneable {
     customPasses = null;
     markNoSideEffectCalls = false;
     defineReplacements = Maps.newHashMap();
+    tweakProcessing = TweakProcessing.OFF;
+    tweakReplacements = Maps.newHashMap();
     moveFunctionDeclarations = false;
     instrumentationTemplate = null;
     appNameStr = "";
@@ -764,8 +772,23 @@ public class CompilerOptions implements Serializable, Cloneable {
    * Returns the map of define replacements.
    */
   public Map<String, Node> getDefineReplacements() {
+    return getReplacementsHelper(defineReplacements);
+  }
+
+  /**
+   * Returns the map of tweak replacements.
+   */
+  public Map<String, Node> getTweakReplacements() {
+    return getReplacementsHelper(tweakReplacements);
+  }
+
+  /**
+   * Creates a map of String->Node from a map of String->Number/String/Boolean.
+   */
+  private static Map<String, Node> getReplacementsHelper(
+      Map<String, Object> source) {
     Map<String, Node> map = Maps.newHashMap();
-    for (Map.Entry<String, Object> entry : defineReplacements.entrySet()) {
+    for (Map.Entry<String, Object> entry : source.entrySet()) {
       String name = entry.getKey();
       Object value = entry.getValue();
       if (value instanceof Boolean) {
@@ -813,6 +836,38 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setDefineToDoubleLiteral(String defineName, double value) {
     defineReplacements.put(defineName, new Double(value));
+  }
+
+  /**
+   * Sets the value of the tweak in JS
+   * to a boolean literal.
+   */
+  public void setTweakToBooleanLiteral(String tweakId, boolean value) {
+    tweakReplacements.put(tweakId, new Boolean(value));
+  }
+
+  /**
+   * Sets the value of the tweak in JS to a
+   * String literal.
+   */
+  public void setTweakToStringLiteral(String tweakId, String value) {
+    tweakReplacements.put(tweakId, value);
+  }
+
+  /**
+   * Sets the value of the tweak in JS to a
+   * number literal.
+   */
+  public void setTweakToNumberLiteral(String tweakId, int value) {
+    tweakReplacements.put(tweakId, new Integer(value));
+  }
+
+  /**
+   * Sets the value of the tweak in JS to a
+   * number literal.
+   */
+  public void setTweakToDoubleLiteral(String tweakId, double value) {
+    tweakReplacements.put(tweakId, new Double(value));
   }
 
   /**
@@ -1011,6 +1066,17 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
+   * Sets how goog.tweak calls are processed.
+   */
+  public void setTweakProcessing(TweakProcessing tweakProcessing) {
+    this.tweakProcessing = tweakProcessing;
+  }
+
+  public TweakProcessing getTweakProcessing() {
+    return tweakProcessing;
+  }
+
+  /**
    * Whether to include "undefined" in the default types.
    *   For example:
    *     "{Object}" is normally "Object|null" becomes "Object|null|undefined"
@@ -1074,6 +1140,20 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     boolean isOn() {
       return this != OFF;
+    }
+  }
+
+  public static enum TweakProcessing {
+    OFF,  // Do not run the ProcessTweaks pass.
+    CHECK, // Run the pass, but do not strip out the calls.
+    STRIP;  // Strip out all calls to goog.tweak.*.
+
+    public boolean isOn() {
+      return this != OFF;
+    }
+
+    public boolean shouldStrip() {
+      return this == STRIP;
     }
   }
 }

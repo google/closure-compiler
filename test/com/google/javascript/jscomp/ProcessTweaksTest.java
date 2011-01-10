@@ -16,18 +16,34 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Maps;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+
+import java.util.Map;
+
 /**
  * @author agrieve@google.com (Andrew Grieve)
  */
 public class ProcessTweaksTest extends CompilerTestCase {
 
+  Map<String, Node> defaultValueOverrides;
+  boolean stripTweaks;
+  
   public ProcessTweaksTest() {
-    super("var externMethod;");
+    super("function alert(arg) {}");
+  }
+  
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    defaultValueOverrides = Maps.newHashMap();
+    stripTweaks = false;
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ProcessTweaks(compiler);
+    return new ProcessTweaks(compiler, stripTweaks, defaultValueOverrides);
   }
 
   @Override
@@ -154,5 +170,99 @@ public class ProcessTweaksTest extends CompilerTestCase {
 
   public void testWithNoTweaks() {
     testSame("var DEF=true;var x={};x.foo={}");
+  }
+  
+  public void testStrippingWithImplicitDefaultValues() {
+    stripTweaks = true;
+    test("goog.tweak.registerNumber('TweakA', 'desc');" +
+        "goog.tweak.registerBoolean('TweakB', 'desc');" +
+        "goog.tweak.registerString('TweakC', 'desc');" +
+        "alert(goog.tweak.getNumber('TweakA'));" +
+        "alert(goog.tweak.getBoolean('TweakB'));" +
+        "alert(goog.tweak.getString('TweakC'));",
+        "void 0; void 0; void 0; alert(0); alert(false); alert('')");
+  }
+  
+  public void testStrippingWithExplicitDefaultValues() {
+    stripTweaks = true;
+    test("goog.tweak.registerNumber('TweakA', 'desc', 5);" +
+        "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
+        "goog.tweak.registerString('TweakC', 'desc', '!');" +
+        "alert(goog.tweak.getNumber('TweakA'));" +
+        "alert(goog.tweak.getBoolean('TweakB'));" +
+        "alert(goog.tweak.getString('TweakC'));",
+        "void 0; void 0; void 0; alert(5); alert(true); alert('!')");
+  }
+
+  public void testStrippingWithInCodeOverrides() {
+    stripTweaks = true;
+    test("goog.tweak.overrideDefaultValue('TweakA', 5);" +
+        "goog.tweak.overrideDefaultValue('TweakB', true);" +
+        "goog.tweak.overrideDefaultValue('TweakC', 'bar');" +
+        "goog.tweak.registerNumber('TweakA', 'desc');" +
+        "goog.tweak.registerBoolean('TweakB', 'desc');" +
+        "goog.tweak.registerString('TweakC', 'desc', 'foo');" +
+        "alert(goog.tweak.getNumber('TweakA'));" +
+        "alert(goog.tweak.getBoolean('TweakB'));" +
+        "alert(goog.tweak.getString('TweakC'));",
+        "void 0; void 0; void 0; void 0; void 0; void 0;" +
+        "alert(5); alert(true); alert('bar');");
+  }
+
+  public void testStrippingWithUnregisteredTweak1() {
+    stripTweaks = true;
+    test("alert(goog.tweak.getNumber('TweakA'));",
+        "alert(0)", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING);
+  }
+  
+  public void testStrippingWithUnregisteredTweak2() {
+    stripTweaks = true;
+    test("alert(goog.tweak.getBoolean('TweakB'))",
+        "alert(false)", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING);
+  }
+  
+  public void testStrippingWithUnregisteredTweak3() {
+    stripTweaks = true;
+    test("alert(goog.tweak.getString('TweakC'))",
+        "alert('')", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING);
+  }
+  
+  public void testOverridesWithStripping() {
+    stripTweaks = true;
+    defaultValueOverrides.put("TweakA", Node.newNumber(1));
+    defaultValueOverrides.put("TweakB", new Node(Token.FALSE));
+    defaultValueOverrides.put("TweakC", Node.newString("!"));
+    test("goog.tweak.overrideDefaultValue('TweakA', 5);" +
+        "goog.tweak.overrideDefaultValue('TweakC', 'bar');" +
+        "goog.tweak.registerNumber('TweakA', 'desc');" +
+        "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
+        "goog.tweak.registerString('TweakC', 'desc', 'foo');" +
+        "alert(goog.tweak.getNumber('TweakA'));" +
+        "alert(goog.tweak.getBoolean('TweakB'));" +
+        "alert(goog.tweak.getString('TweakC'));",
+        "void 0; void 0; void 0; void 0; void 0; " +
+        "alert(1); alert(false); alert('!')");
+  }
+
+  public void testCompilerOverridesNoStripping() {
+    defaultValueOverrides.put("TweakA", Node.newNumber(1));
+    defaultValueOverrides.put("TweakB", new Node(Token.FALSE));
+    defaultValueOverrides.put("TweakC", Node.newString("!"));
+    test("goog.tweak.registerNumber('TweakA', 'desc');" +
+        "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
+        "goog.tweak.registerString('TweakC', 'desc', 'foo')",
+        "var __JSCOMPILER_TWEAK_DEFAULT_VALUE_OVERRIDES =" +
+        "  { 'TweakA': 1, 'TweakB': false, 'TweakC': '!' };" +
+        "goog.tweak.registerNumber('TweakA', 'desc');" +
+        "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
+        "goog.tweak.registerString('TweakC', 'desc', 'foo')");
+  }
+
+  public void testUnknownCompilerOverride() {
+    allowSourcelessWarnings();
+    defaultValueOverrides.put("TweakA", Node.newString("!"));
+    test("",
+        "var __JSCOMPILER_TWEAK_DEFAULT_VALUE_OVERRIDES =" +
+        "  { 'TweakA': '!' };", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING); 
   }
 }

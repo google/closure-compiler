@@ -71,11 +71,18 @@ class StripCode implements CompilerPass {
             Set<String> stripNamePrefixes) {
 
     this.compiler = compiler;
-    this.stripTypes = stripTypes;
-    this.stripNameSuffixes = stripNameSuffixes;
-    this.stripTypePrefixes = stripTypePrefixes;
-    this.stripNamePrefixes = stripNamePrefixes;
+    this.stripTypes = Sets.newHashSet(stripTypes);
+    this.stripNameSuffixes = Sets.newHashSet(stripNameSuffixes);
+    this.stripTypePrefixes = Sets.newHashSet(stripTypePrefixes);
+    this.stripNamePrefixes = Sets.newHashSet(stripNamePrefixes);
     this.varsToRemove = Sets.newHashSet();
+  }
+
+  /**
+   * Enables stripping of goog.tweak functions.
+   */
+  public void enableTweakStripping() {
+    stripTypes.add("goog.tweak");
   }
 
   @Override

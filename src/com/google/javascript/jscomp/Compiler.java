@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
@@ -709,7 +710,8 @@ public class Compiler extends AbstractCompiler {
       removeTryCatchFinally();
     }
 
-    if (!options.stripTypes.isEmpty() ||
+    if (options.getTweakProcessing().shouldStrip() ||
+        !options.stripTypes.isEmpty() ||
         !options.stripNameSuffixes.isEmpty() ||
         !options.stripTypePrefixes.isEmpty() ||
         !options.stripNamePrefixes.isEmpty()) {
@@ -775,6 +777,9 @@ public class Compiler extends AbstractCompiler {
     startPass("stripCode");
     StripCode r = new StripCode(this, stripTypes, stripNameSuffixes,
         stripTypePrefixes, stripNamePrefixes);
+    if (options.getTweakProcessing().shouldStrip()) {
+      r.enableTweakStripping();
+    }
     process(r);
     endPass();
   }

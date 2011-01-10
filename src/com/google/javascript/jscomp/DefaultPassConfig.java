@@ -288,6 +288,10 @@ public class DefaultPassConfig extends PassConfig {
     checks.add(options.messageBundle != null ?
         replaceMessages : createEmptyPass("replaceMessages"));
 
+    if (options.getTweakProcessing().isOn()) {
+      checks.add(processTweaks);
+    }
+
     // Defines in code always need to be processed.
     checks.add(processDefines);
 
@@ -1106,6 +1110,21 @@ public class DefaultPassConfig extends PassConfig {
       return new StrictModeCheck(compiler,
           !options.checkSymbols,  // don't check variables twice
           !options.checkCaja);    // disable eval check if not Caja
+    }
+  };
+
+  /** Process goog.tweak.getTweak() calls. */
+  final PassFactory processTweaks = new PassFactory("processTweaks", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node jsRoot) {
+          new ProcessTweaks(compiler,
+              options.getTweakProcessing().shouldStrip(),
+              options.getTweakReplacements()).process(externs, jsRoot);
+        }
+      };
     }
   };
 
