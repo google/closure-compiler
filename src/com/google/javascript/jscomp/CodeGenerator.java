@@ -978,10 +978,18 @@ class CodeGenerator {
             sb.append(c);
           }
           break;
-        case '<':                       // Break </script into <\/script
+        case '<':
+          // Break </script into <\/script
           final String END_SCRIPT = "/script";
+
+          // Break <!-- into <\!--
+          final String START_COMMENT = "!--";
+
           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
-              END_SCRIPT.length())) {
+                              END_SCRIPT.length())) {
+            sb.append("<\\");
+          } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
+                                     START_COMMENT.length())) {
             sb.append("<\\");
           } else {
             sb.append(c);

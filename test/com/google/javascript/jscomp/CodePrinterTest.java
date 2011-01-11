@@ -146,6 +146,10 @@ public class CodePrinterTest extends TestCase {
 
     assertPrint("/--> <\\/script>/g", "/--\\> <\\/script>/g");
 
+    // Break HTML start comments. Certain versions of Webkit
+    // begin an HTML comment when they see this.
+    assertPrint("'<!-- I am a string -->'", "\"<\\!-- I am a string --\\>\"");
+
     // Precedence
     assertPrint("a ? delete b[0] : 3", "a?delete b[0]:3");
     assertPrint("(delete a[0])/10", "delete a[0]/10");
