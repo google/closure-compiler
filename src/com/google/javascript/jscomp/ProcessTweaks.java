@@ -52,13 +52,6 @@ class ProcessTweaks implements CompilerPass {
   private final boolean stripTweaks;
   private final SortedMap<String, Node> compilerDefaultValueOverrides;
   
-  /**
-   * Var name for the map of tweakId->defaultValue of the compiler-specified
-   * overrides. Added only when stripTweaks == false.
-   */
-  private static final String DEFAULT_VALUES_VAR_NAME =
-      "__JSCOMPILER_TWEAK_DEFAULT_VALUE_OVERRIDES";
-  
   private static final CharMatcher ID_MATCHER = CharMatcher.inRange('a', 'z').
       or(CharMatcher.inRange('A', 'Z')).or(CharMatcher.anyOf("0123456789_."));
 
@@ -115,6 +108,7 @@ class ProcessTweaks implements CompilerPass {
     REGISTER_NUMBER("goog.tweak.registerNumber", "number", Token.NUMBER),
     REGISTER_STRING("goog.tweak.registerString", "string", Token.STRING),
     OVERRIDE_DEFAULT_VALUE("goog.tweak.overrideDefaultValue"),
+    GET_COMPILER_OVERRIDES("goog.tweak.getCompilerOverrides_"),
     GET_BOOLEAN("goog.tweak.getBoolean", REGISTER_BOOLEAN),
     GET_NUMBER("goog.tweak.getNumber", REGISTER_NUMBER),
     GET_STRING("goog.tweak.getString", REGISTER_STRING);
@@ -207,24 +201,33 @@ class ProcessTweaks implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Map<String, TweakInfo> tweakInfos = collectTweaks(root);
-    applyCompilerDefaultValueOverrides(tweakInfos);
+    CollectTweaksResult result = collectTweaks(root);
+    applyCompilerDefaultValueOverrides(result.tweakInfos);
 
     boolean changed = false;
 
     if (stripTweaks) {
-      changed = stripAllCalls(tweakInfos);
+      changed = stripAllCalls(result.tweakInfos);
     } else if (!compilerDefaultValueOverrides.isEmpty()) {
-      // Pass the compiler default value overrides to the JS through a specially
-      // named variable.
-      Node varNode = createCompilerDefaultValueOverridesVarNode(
-          root.getFirstChild());
-      root.getFirstChild().addChildToFront(varNode);
-      changed = true;
+      changed = replaceGetCompilerOverridesCalls(result.getOverridesCalls);
     }
     if (changed) {
       compiler.reportCodeChange();
     }
+  }
+
+  /**
+   * Passes the compiler default value overrides to the JS by replacing calls
+   * to goog.tweak.getCompilerOverrids_ with a map of tweak ID->default value;
+   */
+  private boolean replaceGetCompilerOverridesCalls(
+      List<TweakFunctionCall> calls) {
+    for (TweakFunctionCall call : calls) {
+      Node callNode = call.callNode;
+      Node objNode = createCompilerDefaultValueOverridesVarNode(callNode);
+      callNode.getParent().replaceChild(callNode, objNode);
+    }
+    return !calls.isEmpty();
   }
 
   /**
@@ -263,20 +266,12 @@ class ProcessTweaks implements CompilerPass {
   }
 
   /**
-   * Creates the var __JSCOMPILER_TWEAK_DEFAULT_VALUE_OVERRIDES = { ... };
-   * snippet that is prepended when there are compiler overrides and tweaks
-   * are not stripped.
+   * Creates a JS object that holds a map of tweakId -> default value override. 
    */
   private Node createCompilerDefaultValueOverridesVarNode(
       Node sourceInformationNode) {
-    Node varNode = new Node(Token.VAR)
-        .copyInformationFrom(sourceInformationNode);
-    Node nameNode = Node.newString(Token.NAME, DEFAULT_VALUES_VAR_NAME)
-        .copyInformationFrom(sourceInformationNode);
     Node objNode = new Node(Token.OBJECTLIT)
         .copyInformationFrom(sourceInformationNode);
-    varNode.addChildToBack(nameNode);
-    nameNode.addChildToBack(objNode);
     for (Entry<String, Node> entry : compilerDefaultValueOverrides.entrySet()) {
       Node objKeyNode = Node.newString(entry.getKey())
           .copyInformationFrom(sourceInformationNode);
@@ -285,7 +280,7 @@ class ProcessTweaks implements CompilerPass {
       objKeyNode.addChildToBack(objValueNode);
       objNode.addChildToBack(objKeyNode);
     }
-    return varNode;
+    return objNode;
   }
 
   /** Sets the default values of tweaks based on compiler options. */
@@ -307,7 +302,7 @@ class ProcessTweaks implements CompilerPass {
    * of the calls have issues.
    * @return A map of {@link TweakInfo} structures, keyed by tweak ID.
    */
-  private Map<String, TweakInfo> collectTweaks(Node root) {
+  private CollectTweaksResult collectTweaks(Node root) {
     CollectTweaks pass = new CollectTweaks();
     NodeTraversal.traverse(compiler, root, pass);
     
@@ -315,7 +310,18 @@ class ProcessTweaks implements CompilerPass {
     for (TweakInfo tweakInfo: tweakInfos.values()) {
       tweakInfo.emitAllWarnings();
     }
-    return tweakInfos;
+    return new CollectTweaksResult(tweakInfos, pass.getOverridesCalls);
+  }
+  
+  private final static class CollectTweaksResult {
+    final Map<String, TweakInfo> tweakInfos;
+    final List<TweakFunctionCall> getOverridesCalls;
+    
+    CollectTweaksResult(Map<String, TweakInfo> tweakInfos,
+        List<TweakFunctionCall> getOverridesCalls) {
+      this.tweakInfos = tweakInfos;
+      this.getOverridesCalls = getOverridesCalls;
+    }
   }
 
   /**
@@ -323,6 +329,7 @@ class ProcessTweaks implements CompilerPass {
    */
   private final class CollectTweaks extends AbstractPostOrderCallback {
     final Map<String, TweakInfo> allTweaks = Maps.newHashMap();
+    final List<TweakFunctionCall> getOverridesCalls = Lists.newArrayList();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -333,6 +340,12 @@ class ProcessTweaks implements CompilerPass {
       String callName = n.getFirstChild().getQualifiedName();
       TweakFunction tweakFunc = TWEAK_FUNCTIONS_MAP.get(callName);
       if (tweakFunc == null) {
+        return;
+      }
+      
+      if (tweakFunc == TweakFunction.GET_COMPILER_OVERRIDES) {
+        getOverridesCalls.add(
+            new TweakFunctionCall(t.getSourceName(), tweakFunc, n));
         return;
       }
 

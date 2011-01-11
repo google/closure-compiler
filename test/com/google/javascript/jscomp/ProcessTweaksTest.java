@@ -244,25 +244,39 @@ public class ProcessTweaksTest extends CompilerTestCase {
         "alert(1); alert(false); alert('!')");
   }
 
-  public void testCompilerOverridesNoStripping() {
+  public void testCompilerOverridesNoStripping1() {
     defaultValueOverrides.put("TweakA", Node.newNumber(1));
     defaultValueOverrides.put("TweakB", new Node(Token.FALSE));
     defaultValueOverrides.put("TweakC", Node.newString("!"));
     test("goog.tweak.registerNumber('TweakA', 'desc');" +
         "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
-        "goog.tweak.registerString('TweakC', 'desc', 'foo')",
-        "var __JSCOMPILER_TWEAK_DEFAULT_VALUE_OVERRIDES =" +
-        "  { 'TweakA': 1, 'TweakB': false, 'TweakC': '!' };" +
+        "goog.tweak.registerString('TweakC', 'desc', 'foo');" +
+        "var a = goog.tweak.getCompilerOverrides_()",
         "goog.tweak.registerNumber('TweakA', 'desc');" +
         "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
-        "goog.tweak.registerString('TweakC', 'desc', 'foo')");
+        "goog.tweak.registerString('TweakC', 'desc', 'foo');" +
+        "var a = { 'TweakA': 1, 'TweakB': false, 'TweakC': '!' };");
   }
-
+  
+  public void testCompilerOverridesNoStripping2() {
+    defaultValueOverrides.put("TweakA", Node.newNumber(1));
+    defaultValueOverrides.put("TweakB", new Node(Token.FALSE));
+    defaultValueOverrides.put("TweakC", Node.newString("!"));
+    test("goog.tweak.registerNumber('TweakA', 'desc');" +
+        "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
+        "goog.tweak.registerString('TweakC', 'desc', 'foo');" +
+        "var a = goog.tweak.getCompilerOverrides_();" +
+        "var b = goog.tweak.getCompilerOverrides_()",
+        "goog.tweak.registerNumber('TweakA', 'desc');" +
+        "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
+        "goog.tweak.registerString('TweakC', 'desc', 'foo');" +
+        "var a = { 'TweakA': 1, 'TweakB': false, 'TweakC': '!' };" +
+        "var b = { 'TweakA': 1, 'TweakB': false, 'TweakC': '!' };");
+  }
+  
   public void testUnknownCompilerOverride() {
     allowSourcelessWarnings();
     defaultValueOverrides.put("TweakA", Node.newString("!"));
-    test("",
-        "var __JSCOMPILER_TWEAK_DEFAULT_VALUE_OVERRIDES =" +
-        "  { 'TweakA': '!' };", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING); 
+    testSame("var a", ProcessTweaks.UNKNOWN_TWEAK_WARNING); 
   }
 }
