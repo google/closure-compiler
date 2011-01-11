@@ -192,6 +192,7 @@ public final class NodeUtil {
     switch (n.getType()) {
       case Token.TRUE:
         return 1.0;
+
       case Token.FALSE:
       case Token.NULL:
         return 0.0;
@@ -214,7 +215,41 @@ public final class NodeUtil {
           return Double.POSITIVE_INFINITY;
         }
         return null;
+
+      case Token.NEG:
+        if (n.getChildCount() == 1 && n.getFirstChild().getType() == Token.NAME
+            && n.getFirstChild().getString().equals("Infinity")) {
+          return Double.NEGATIVE_INFINITY;
+        }
+        return null;
+
+      case Token.STRING:
+        // TODO(johnlenz): handle less common string conversion cases:
+        // '-infinity', etc.
+        String s = n.getString();
+
+        if (s.length() == 0) {
+          return 0.0;
+        }
+
+        if (s.length() > 2
+            && s.charAt(0) == '0'
+            && (s.charAt(1) == 'x' || s.charAt(1) == 'X')) {
+            // Attempt to convert hex numbers.
+          try {
+            return Double.valueOf(Integer.parseInt(s.substring(2), 16));
+          } catch (NumberFormatException e) {
+            return null;
+          }
+        }
+
+        try {
+          return Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+          return null;
+        }
     }
+
     return null;
   }
 
@@ -979,6 +1014,96 @@ public final class NodeUtil {
                                Node.tokenToName(type) +
                                " (type " + type + ")");
     }
+  }
+
+  /**
+   * Returns true if the result of node evaluation is always a number
+   */
+  static boolean isNumericResult(Node n) {
+    switch (n.getType()) {
+      // NOTE: ADD is deliberately excluded as it may produce
+      // a string.
+      case Token.BITNOT:
+      case Token.BITOR:
+      case Token.BITXOR:
+      case Token.BITAND:
+      case Token.LSH:
+      case Token.RSH:
+      case Token.URSH:
+      case Token.SUB:
+      case Token.MUL:
+      case Token.MOD:
+      case Token.DIV:
+      case Token.INC:
+      case Token.DEC:
+      case Token.POS:
+      case Token.NEG:
+      case Token.NUMBER:
+        return true;
+      case Token.NAME:
+        String name = n.getString();
+        if (name.equals("NaN")) {
+          return true;
+        }
+        if (name.equals("Infinity")) {
+          return true;
+        }
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * @return Whether the result of node evaluation is always a boolean
+   */
+  static boolean isBooleanResult(Node n) {
+    // TODO(johnlenz): Add a recursive option to recurse into
+    // AND, OR, HOOK, COMMA and ASSIGN, like "getExpressionBooleanValue".
+    switch (n.getType()) {
+      // Primitives
+      case Token.TRUE:
+      case Token.FALSE:
+      // Comparisons
+      case Token.EQ:
+      case Token.NE:
+      case Token.SHEQ:
+      case Token.SHNE:
+      case Token.LT:
+      case Token.GT:
+      case Token.LE:
+      case Token.GE:
+      // Queryies
+      case Token.IN:
+      case Token.INSTANCEOF:
+      // Inversion
+      case Token.NOT:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  static boolean isUndefined(Node n) {
+    switch (n.getType()) {
+      case Token.VOID:
+        return true;
+      case Token.NAME:
+        return n.getString().equals("undefined");
+    }
+    return false;
+  }
+
+  static boolean isNull(Node n) {
+    return n.getType() == Token.NULL;
+  }
+
+  /**
+   * @returns Whether the results is possibly a string.
+   */
+  static boolean mayBeString(Node n) {
+    return !isNumericResult(n) && !isBooleanResult(n)
+        && !isUndefined(n) && !isNull(n);
   }
 
   /**
