@@ -133,6 +133,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.MUL:
       case Token.BITAND:
       case Token.BITOR:
+      case Token.BITXOR:
         Node result = tryFoldArithmeticOp(subtree, left, right);
         if (result != subtree) {
           return result;
@@ -545,6 +546,12 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           return null;
         }
         result = (int)lval | (int)rval;
+        break;
+      case Token.BITXOR:
+        if (!areValidInts(lval, rval)) {
+          return null;
+        }
+        result = (int)lval ^ (int)rval;
         break;
       case Token.ADD:
         result = lval + rval;

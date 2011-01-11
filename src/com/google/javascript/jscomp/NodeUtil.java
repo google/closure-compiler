@@ -1118,6 +1118,7 @@ public final class NodeUtil {
       case Token.AND:
       case Token.OR:
       case Token.BITOR:
+      case Token.BITXOR:
       case Token.BITAND:
         return true;
       default:
@@ -1136,6 +1137,7 @@ public final class NodeUtil {
     switch (type) {
       case Token.MUL:
       case Token.BITOR:
+      case Token.BITXOR:
       case Token.BITAND:
         return true;
       default:

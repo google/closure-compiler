@@ -258,6 +258,11 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 3 | 1", "x = 3");
     fold("x = 3 | 3", "x = 3");
 
+    fold("x = 1 ^ 1", "x = 0");
+    fold("x = 1 ^ 2", "x = 3");
+    fold("x = 3 ^ 1", "x = 2");
+    fold("x = 3 ^ 3", "x = 0");
+
     fold("x = -1 & 0", "x = 0");
     fold("x = 0 & -1", "x = 0");
     fold("x = 1 & 4", "x = 0");
@@ -291,6 +296,13 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 3 | y | 1", "x = y | 3");
     fold("x = y | 3 | 3", "x = y | 3");
     fold("x = 3 | y | 3", "x = y | 3");
+
+    fold("x = y ^ 1 ^ 1", "x = y ^ 0");
+    fold("x = y ^ 1 ^ 2", "x = y ^ 3");
+    fold("x = y ^ 3 ^ 1", "x = y ^ 2");
+    fold("x = 3 ^ y ^ 1", "x = y ^ 2");
+    fold("x = y ^ 3 ^ 3", "x = y ^ 0");
+    fold("x = 3 ^ y ^ 3", "x = y ^ 0");
   }
 
   public void testFoldBitwiseOpStringCompare() {
