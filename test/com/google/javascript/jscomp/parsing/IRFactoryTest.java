@@ -1013,7 +1013,51 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     assertNodePosition(2, 0, bName);
     assertNodePosition(3, 8, fnNode);
     assertNodePosition(3, 8, fnName);
-   }
+  }
+
+  final String INVALID_ASSIGNMENT_TARGET = "invalid assignment target";
+  final String INVALID_INCREMENT_TARGET = "invalid increment target";
+  final String INVALID_DECREMENT_TARGET = "invalid decrement target";
+
+  final String INVALID_INC_OPERAND = "Invalid increment operand";
+  final String INVALID_DEC_OPERAND = "Invalid decrement operand";
+
+  public void testAssignmentValidation() {
+    testNoParseError("x=1");
+    testNoParseError("x.y=1");
+    testNoParseError("f().y=1");
+    testParseError("(x||y)=1", INVALID_ASSIGNMENT_TARGET);
+    testParseError("(x?y:z)=1", INVALID_ASSIGNMENT_TARGET);
+    testParseError("f()=1", INVALID_ASSIGNMENT_TARGET);
+
+    testNoParseError("x+=1");
+    testNoParseError("x.y+=1");
+    testNoParseError("f().y+=1");
+    testParseError("(x||y)+=1", INVALID_ASSIGNMENT_TARGET);
+    testParseError("(x?y:z)+=1", INVALID_ASSIGNMENT_TARGET);
+    testParseError("f()+=1", INVALID_ASSIGNMENT_TARGET);
+
+    testParseError("f()++", INVALID_INCREMENT_TARGET);
+    testParseError("f()--", INVALID_DECREMENT_TARGET);
+    testParseError("++f()", INVALID_INCREMENT_TARGET);
+    testParseError("--f()", INVALID_DECREMENT_TARGET);
+  }
+
+  private void testNoParseError(String string) {
+    testParseError(string, (String)null);
+  }
+  
+  private void testParseError(String string, String error) {
+    testParseError(string, error == null ? null : new String[] { error });
+  }
+  
+  private void testParseError(String string, String[] errors) {
+    Node root = newParse(string, new TestErrorReporter(errors, null));
+    assertTrue("unexpected warnings reported",
+        errorReporter.hasEncounteredAllWarnings());
+    assertTrue("expected error were not reported",
+        errorReporter.hasEncounteredAllErrors());
+  }
 
   private void assertMarkerPosition(Node n, int lineno, int charno) {
     int count = 0;
@@ -1041,6 +1085,10 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   private Node newParse(String string) {
+    return newParse(string, new TestErrorReporter(null, null));
+  }
+
+  private Node newParse(String string, TestErrorReporter errorReporter) {
     CompilerEnvirons environment = new CompilerEnvirons();
 
     environment.setRecordingComments(true);
@@ -1050,8 +1098,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     AstRoot script = p.parse(string, null, 0);
 
     Config config = ParserRunner.createConfig(true, es5mode);
-    Node root = IRFactory.transformTree(script, string, config,
-        new TestErrorReporter(null, null));
+    Node root = IRFactory.transformTree(script, string, config, errorReporter);
 
     return root;
   }

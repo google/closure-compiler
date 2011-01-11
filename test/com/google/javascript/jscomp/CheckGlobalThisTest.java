@@ -85,11 +85,11 @@ public class CheckGlobalThisTest extends CompilerTestCase {
   }
 
   public void testStaticFunction6() {
-    testSame("function a() { return function() { this = 8; } }");
+    testSame("function a() { return function() { this.x = 8; } }");
   }
 
   public void testStaticFunction7() {
-    testSame("var a = function() { return function() { this = 8; } }");
+    testSame("var a = function() { return function() { this.x = 8; } }");
   }
 
   public void testStaticFunction8() {

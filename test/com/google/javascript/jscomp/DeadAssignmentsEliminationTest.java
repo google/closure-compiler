@@ -91,7 +91,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; if(x=1==4&&1){}", "var x; if(1==4&&1) {}");
     inFunction("var x; if(0&&(x=1)){}", "var x; if(0&&1){}");
     inFunction("var x; if((x=2)&&(x=1)){}", "var x; if(2&&1){}");
-    inFunction("var x; x=2; if(0&&x=1){}; x");
+    inFunction("var x; x=2; if(0&&(x=1)){}; x");
 
     inFunction("var x,y; if( (x=1)+(y=2) > 3){}",
         "var x,y; if( 1+2 > 3){}");

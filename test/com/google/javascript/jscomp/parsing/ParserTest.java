@@ -622,7 +622,9 @@ public class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testDestructuringAssignForbidden4() {
-    parseError("[x, y] = foo();", "destructuring assignment forbidden");
+    parseError("[x, y] = foo();",
+        "destructuring assignment forbidden",
+        "invalid assignment target");
   }
 
   public void testLetForbidden() {

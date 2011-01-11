@@ -78,7 +78,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheck2() throws Exception {
-    testTypes("/**@return {void}*/function foo(){ foo()--; }",
+    testTypes("/**@return {void}*/function foo(){ var x=foo(); x--; }",
         "increment/decrement\n" +
         "found   : undefined\n" +
         "required: number");

@@ -1249,9 +1249,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testComplexInlineInExpresssions3() {
-    test("function f(){a()}c=f()=z",
+    test("function f(){a()}c=z=f()",
         "{var JSCompiler_inline_result$$0;a();}" +
-        "c=JSCompiler_inline_result$$0=z");
+        "c=z=JSCompiler_inline_result$$0");
   }
 
   public void testComplexInlineInExpresssions4() {
