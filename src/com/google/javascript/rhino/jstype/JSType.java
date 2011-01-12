@@ -510,7 +510,8 @@ public abstract class JSType implements Serializable {
   }
 
   TernaryValue testForEqualityHelper(JSType aType, JSType bType) {
-    if (bType.isAllType() || bType.isEmptyType() || bType.isUnknownType()) {
+    if (bType.isAllType() || bType.isEmptyType() || bType.isUnknownType() ||
+        aType.isAllType() || aType.isEmptyType() || aType.isUnknownType()) {
       return UNKNOWN;
     }
     if (aType.isFunctionType() || bType.isFunctionType()) {
@@ -521,7 +522,8 @@ public abstract class JSType implements Serializable {
       // In practice, how a function serializes to a string is
       // implementation-dependent, so it does not really make sense to test
       // for equality with a string.
-      if (otherType.isSubtype(getNativeType(JSTypeNative.OBJECT_TYPE))) {
+      if (!otherType.getGreatestSubtype(
+              getNativeType(JSTypeNative.OBJECT_TYPE)).isEmptyType()) {
         return TernaryValue.UNKNOWN;
       } else {
         return TernaryValue.FALSE;

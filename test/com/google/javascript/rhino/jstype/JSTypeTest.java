@@ -3861,6 +3861,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     compare(FALSE, U2U_CONSTRUCTOR_TYPE, NULL_TYPE);
     compare(UNKNOWN, U2U_CONSTRUCTOR_TYPE, OBJECT_TYPE);
     compare(UNKNOWN, U2U_CONSTRUCTOR_TYPE, ALL_TYPE);
+
+    compare(UNKNOWN, NULL_TYPE, subclassOfUnresolvedNamedType);
+
+    JSType functionAndNull = createUnionType(NULL_TYPE, dateMethod);
+    compare(UNKNOWN, functionAndNull, dateMethod);
   }
 
   private void compare(TernaryValue r, JSType t1, JSType t2) {
@@ -4343,6 +4348,24 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         subclassCtor,
         recordType
                               );
+  }
+
+  public void testSymmetryOfTestForEquality() {
+    List<JSType> listA = getTypesToTestForSymmetry();
+    List<JSType> listB = getTypesToTestForSymmetry();
+    for (JSType typeA : listA) {
+      for (JSType typeB : listB) {
+        TernaryValue aOnB = typeA.testForEquality(typeB);
+        TernaryValue bOnA = typeB.testForEquality(typeA);
+        assertTrue(
+            String.format("testForEquality not symmetrical:\n" +
+                "typeA: %s\ntypeB: %s\n" +
+                "a.testForEquality(b): %s\n" +
+                "b.testForEquality(a): %s\n",
+                typeA, typeB, aOnB, bOnA),
+            aOnB == bOnA);
+      }
+    }
   }
 
   /**
