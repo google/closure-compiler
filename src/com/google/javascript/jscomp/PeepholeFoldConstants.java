@@ -336,8 +336,13 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    Node leftChild = right.getFirstChild();
-    if (!areNodesEqualForInlining(left, leftChild)) {
+    Node newRight;
+    if (areNodesEqualForInlining(left, right.getFirstChild())) {
+      newRight = right.getLastChild();
+    } else if (NodeUtil.isCommutative(right.getType()) &&
+          areNodesEqualForInlining(left, right.getLastChild())) {
+      newRight = right.getFirstChild();
+    } else {
       return n;
     }
 
@@ -381,7 +386,7 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     Node newNode = new Node(newType,
-        left.detachFromParent(), right.getLastChild().detachFromParent());
+        left.detachFromParent(), newRight.detachFromParent());
     n.getParent().replaceChild(n, newNode);
 
     reportCodeChange();

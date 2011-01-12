@@ -734,7 +734,18 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public void testAssignOps() {
     fold("x=x+y", "x+=y");
+    foldSame("x=y+x");
     fold("x=x*y", "x*=y");
+    fold("x=y*x", "x*=y");
+    fold("x.y=x.y+z", "x.y+=z");
+    foldSame("next().x = next().x + 1");
+
+    fold("x=x-y", "x-=y");
+    foldSame("x=y-x");
+    fold("x=x|y", "x|=y");
+    fold("x=y|x", "x|=y");
+    fold("x=x*y", "x*=y");
+    fold("x=y*x", "x*=y");
     fold("x.y=x.y+z", "x.y+=z");
     foldSame("next().x = next().x + 1");
   }
