@@ -1294,19 +1294,45 @@ public class NodeUtilTest extends TestCase {
     return NodeUtil.isValidDefineValue(value, defines);
   }
 
-  public void testNumberValue() {
+  public void testGetNumberValue() {
+    // Strings
+    assertEquals(1.0, NodeUtil.getNumberValue(getNode("'\\uFEFF1'")));    
     assertEquals(0.0, NodeUtil.getNumberValue(getNode("''")));
+    assertEquals(0.0, NodeUtil.getNumberValue(getNode("' '")));
+    assertEquals(0.0, NodeUtil.getNumberValue(getNode("' \\t'")));
+    assertEquals(0.0, NodeUtil.getNumberValue(getNode("'+0'")));
+    assertEquals(-0.0, NodeUtil.getNumberValue(getNode("'-0'")));
     assertEquals(2.0, NodeUtil.getNumberValue(getNode("'+2'")));
     assertEquals(-1.6, NodeUtil.getNumberValue(getNode("'-1.6'")));
     assertEquals(16.0, NodeUtil.getNumberValue(getNode("'16'")));
+    assertEquals(16.0, NodeUtil.getNumberValue(getNode("' 16 '")));
+    assertEquals(16.0, NodeUtil.getNumberValue(getNode("' 16 '")));
     assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'123e2'")));
     assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'123E2'")));
     assertEquals(1.23, NodeUtil.getNumberValue(getNode("'123e-2'")));
     assertEquals(1.23, NodeUtil.getNumberValue(getNode("'123E-2'")));
+    assertEquals(-1.23, NodeUtil.getNumberValue(getNode("'-123e-2'")));
+    assertEquals(-1.23, NodeUtil.getNumberValue(getNode("'-123E-2'")));
+    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'+123e-2'")));
+    assertEquals(1.23, NodeUtil.getNumberValue(getNode("'+123E-2'")));
+    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'+123e+2'")));
+    assertEquals(12300.0, NodeUtil.getNumberValue(getNode("'+123E+2'")));
 
-    assertEquals(16.0, NodeUtil.getNumberValue(getNode("'0x10'")), 16.0);
+    assertEquals(15.0, NodeUtil.getNumberValue(getNode("'0xf'")));
+    assertEquals(15.0, NodeUtil.getNumberValue(getNode("'0xF'")));
+    
+    // Chrome and rhino behavior differently from FF and IE. FF and IE
+    // consider a negative hex number to be invalid
+    assertEquals(null, NodeUtil.getNumberValue(getNode("'-0xf'")));
+    assertEquals(null, NodeUtil.getNumberValue(getNode("'-0xF'")));
+    assertEquals(null, NodeUtil.getNumberValue(getNode("'+0xf'")));
+    assertEquals(null, NodeUtil.getNumberValue(getNode("'+0xF'")));    
+
     assertEquals(16.0, NodeUtil.getNumberValue(getNode("'0X10'")));
+    assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'0X10.8'")));
     assertEquals(77.0, NodeUtil.getNumberValue(getNode("'077'")));
+    assertEquals(-77.0, NodeUtil.getNumberValue(getNode("'-077'")));
+    assertEquals(-77.5, NodeUtil.getNumberValue(getNode("'-077.5'")));
     assertEquals(
         Double.NEGATIVE_INFINITY,
         NodeUtil.getNumberValue(getNode("'-Infinity'")));
@@ -1314,12 +1340,27 @@ public class NodeUtilTest extends TestCase {
         Double.POSITIVE_INFINITY,
         NodeUtil.getNumberValue(getNode("'Infinity'")));
     assertEquals(
-        null,
-        NodeUtil.getNumberValue(getNode("'-infinity'")));
+        Double.POSITIVE_INFINITY,
+        NodeUtil.getNumberValue(getNode("'+Infinity'")));
+    // FireFox treats "infinity" as "Infinity", IE treats it as NaN
+    assertEquals(null, NodeUtil.getNumberValue(getNode("'-infinity'")));
     assertEquals(null, NodeUtil.getNumberValue(getNode("'infinity'")));
+    assertEquals(null, NodeUtil.getNumberValue(getNode("'+infinity'")));    
+
     assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'NaN'")));
     assertEquals(
-        null, NodeUtil.getNumberValue(getNode("'some unknown string'")));
+        Double.NaN, NodeUtil.getNumberValue(getNode("'some unknown string'")));
+    assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'123 blah'")));
+
+    // Literals
+    assertEquals(1.0, NodeUtil.getNumberValue(getNode("1")));
+    // "-1" is parsed as a literal
+    assertEquals(-1.0, NodeUtil.getNumberValue(getNode("-1")));
+    // "+1" is parse as an op + literal
+    assertEquals(null, NodeUtil.getNumberValue(getNode("+1")));
+    assertEquals(22.0, NodeUtil.getNumberValue(getNode("22")));
+    assertEquals(18.0, NodeUtil.getNumberValue(getNode("022")));
+    assertEquals(34.0, NodeUtil.getNumberValue(getNode("0x22")));
 
     assertEquals(
         1.0, NodeUtil.getNumberValue(getNode("true")));
@@ -1330,6 +1371,11 @@ public class NodeUtilTest extends TestCase {
     assertEquals(
         Double.NaN, NodeUtil.getNumberValue(getNode("void 0")));
     assertEquals(
+        Double.NaN, NodeUtil.getNumberValue(getNode("void f")));
+    // values with side-effects are ignored.
+    assertEquals(
+        null, NodeUtil.getNumberValue(getNode("void f()")));
+    assertEquals(
         Double.NaN, NodeUtil.getNumberValue(getNode("NaN")));
     assertEquals(
         Double.POSITIVE_INFINITY,
@@ -1337,8 +1383,17 @@ public class NodeUtilTest extends TestCase {
     assertEquals(
         Double.NEGATIVE_INFINITY,
         NodeUtil.getNumberValue(getNode("-Infinity")));
+
+    // "infinity" is not a known name.
     assertEquals(null, NodeUtil.getNumberValue(getNode("infinity")));
     assertEquals(null, NodeUtil.getNumberValue(getNode("-infinity")));
+
+    // getNumberValue only converts literals
+    assertEquals(null, NodeUtil.getNumberValue(getNode("x")));
+    assertEquals(null, NodeUtil.getNumberValue(getNode("x.y")));
+    assertEquals(null, NodeUtil.getNumberValue(getNode("1/2")));
+    assertEquals(null, NodeUtil.getNumberValue(getNode("1-2")));
+    assertEquals(null, NodeUtil.getNumberValue(getNode("+1")));
   }
 
   public void testIsNumbericResult() {
@@ -1378,10 +1433,10 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isNumericResult(getNode("a.b()")));
     assertFalse(NodeUtil.isNumericResult(getNode("a().b()")));
     assertFalse(NodeUtil.isNumericResult(getNode("new a()")));
-    
+
     // Definitely not numberic
     assertFalse(NodeUtil.isNumericResult(getNode("([1,2])")));
-    assertFalse(NodeUtil.isNumericResult(getNode("({a:1})")));    
+    assertFalse(NodeUtil.isNumericResult(getNode("({a:1})")));
 
     // These are number but aren't handled yet, "false" here means "unknown".
     assertFalse(NodeUtil.isNumericResult(getNode("1 && 2")));
@@ -1390,7 +1445,7 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isNumericResult(getNode("a,1")));
     assertFalse(NodeUtil.isNumericResult(getNode("a=1")));
   }
-  
+
   public void testIsBooleanResult() {
     assertFalse(NodeUtil.isBooleanResult(getNode("1")));
     assertTrue(NodeUtil.isBooleanResult(getNode("true")));
@@ -1428,10 +1483,10 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isBooleanResult(getNode("a.b()")));
     assertFalse(NodeUtil.isBooleanResult(getNode("a().b()")));
     assertFalse(NodeUtil.isBooleanResult(getNode("new a()")));
-    
+
     // Definitely not boolean
     assertFalse(NodeUtil.isBooleanResult(getNode("([true,false])")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("({a:true})")));    
+    assertFalse(NodeUtil.isBooleanResult(getNode("({a:true})")));
 
     // These are boolean but aren't handled yet, "false" here means "unknown".
     assertFalse(NodeUtil.isBooleanResult(getNode("true && false")));
@@ -1439,7 +1494,7 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isBooleanResult(getNode("a ? true : false")));
     assertFalse(NodeUtil.isBooleanResult(getNode("a,true")));
     assertFalse(NodeUtil.isBooleanResult(getNode("a=1")));
-  }  
+  }
 
   public void testMayBeString() {
     assertFalse(NodeUtil.mayBeString(getNode("1")));

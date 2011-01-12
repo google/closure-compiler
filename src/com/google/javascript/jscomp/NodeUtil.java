@@ -201,9 +201,14 @@ public final class NodeUtil {
         return n.getDouble();
 
       case Token.VOID:
-        return Double.NaN;
+        if (mayHaveSideEffects(n.getFirstChild())) {
+          return null;
+        } else {
+          return Double.NaN;
+        }
 
       case Token.NAME:
+        // Check for known constants
         String name = n.getString();
         if (name.equals("undefined")) {
           return Double.NaN;
@@ -224,10 +229,8 @@ public final class NodeUtil {
         return null;
 
       case Token.STRING:
-        // TODO(johnlenz): handle less common string conversion cases:
-        // '-infinity', etc.
-        String s = n.getString();
-
+        String s = trimJsWhiteSpace(n.getString());
+        // return ScriptRuntime.toNumber(s);
         if (s.length() == 0) {
           return 0.0;
         }
@@ -235,22 +238,71 @@ public final class NodeUtil {
         if (s.length() > 2
             && s.charAt(0) == '0'
             && (s.charAt(1) == 'x' || s.charAt(1) == 'X')) {
-            // Attempt to convert hex numbers.
+          // Attempt to convert hex numbers.
           try {
             return Double.valueOf(Integer.parseInt(s.substring(2), 16));
           } catch (NumberFormatException e) {
-            return null;
+            return Double.NaN;
           }
+        }
+
+        if (s.length() > 3
+            && (s.charAt(0) == '-' || s.charAt(0) == '+')
+            && s.charAt(1) == '0'
+            && (s.charAt(2) == 'x' || s.charAt(2) == 'X')) {
+          // hex numbers with explicit signs vary between browsers.
+          return null;
+        }
+
+        // FireFox and IE treat the "Infinity" differently. FireFox is case
+        // insensitive, but IE treats "infinity" as NaN.  So leave it alone.
+        if (s.equals("infinity")
+            || s.equals("-infinity")
+            || s.equals("+infinity")) {
+          return null;
         }
 
         try {
           return Double.parseDouble(s);
         } catch (NumberFormatException e) {
-          return null;
+          return Double.NaN;
         }
     }
 
     return null;
+  }
+
+  static String trimJsWhiteSpace(String s) {
+    int start = 0;
+    int end = s.length();
+    while (end > 0 && isStrWhiteSpaceChar(s.charAt(end-1))) {
+      end--;
+    }
+    while (start < end && isStrWhiteSpaceChar(s.charAt(start))) {
+      start++;
+    }
+    return s.substring(start, end);
+  }
+
+  /**
+   * Copied from Rhino's ScriptRuntime
+   */
+  static boolean isStrWhiteSpaceChar(int c) {
+    switch (c) {
+      case ' ': // <SP>
+      case '\n': // <LF>
+      case '\r': // <CR>
+      case '\t': // <TAB>
+      case '\u00A0': // <NBSP>
+      case '\u000C': // <FF>
+      case '\u000B': // <VT>
+      case '\u2028': // <LS>
+      case '\u2029': // <PS>
+      case '\uFEFF': // <BOM>
+        return true;
+      default:
+        return Character.getType(c) == Character.SPACE_SEPARATOR;
+    }
   }
 
   /**
