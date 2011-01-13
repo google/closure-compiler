@@ -150,7 +150,18 @@
   <!-- this includes the generated source class files -->
   <!-- and every jar in the /lib directory            -->
 
-  <path id="classpath.path">
+  <path id="srcclasspath.path">
+    <pathelement location="${classes.dir}" />
+    <fileset dir="${lib.dir}">
+      <include name="args4j.jar"/>
+      <include name="guava.jar"/>
+      <include name="jsr305.jar"/>
+      <include name="libtrunk_rhino_parser_jarjared.jar"/>
+      <include name="protobuf-java.jar"/>
+    </fileset>
+  </path>
+
+  <path id="allclasspath.path">
     <pathelement location="${classes.dir}" />
     <fileset dir="${lib.dir}">
       <include name="*.jar"/>
@@ -167,13 +178,13 @@
            destdir="${classes.dir}"
            excludes=".svn"
            debug="${javac.debug}">
-      <classpath refid="classpath.path" />
+      <classpath refid="srcclasspath.path" />
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
-           excludes=".svn,/jsonml/"
+           excludes=".svn,**/jsonml/**,**/testing/**"
            debug="${javac.debug}">
-      <classpath refid="classpath.path" />
+      <classpath refid="srcclasspath.path" />
     </javac>
 
     <!-- Move Messages.properties where ScriptRuntime.java expects it. -->
@@ -216,7 +227,11 @@
     <jar destfile="${jarfile}" update="true">
       <fileset dir="${classes.dir}" />
       <fileset dir="${build.dir}" includes="externs.zip" />
-      <zipgroupfileset dir="${lib.dir}"/>
+      <zipfileset src="${lib.dir}/args4j.jar"/>
+      <zipfileset src="${lib.dir}/guava.jar"/>
+      <zipfileset src="${lib.dir}/jsr305.jar"/>
+      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar"/>
+      <zipfileset src="${lib.dir}/protobuf-java.jar"/>
 
       <manifest>
         <attribute name="Main-Class"
@@ -229,10 +244,16 @@
           depends="compile"
           description="compile the JUnit tests">
     <mkdir dir="${testClasses.dir}" />
+    <javac srcdir="${src.dir}"
+           destdir="${testClasses.dir}"
+           excludes=".svn"
+           debug="${javac.debug}">
+      <classpath refid="allclasspath.path" />
+    </javac>
     <javac srcdir="${test.dir}"
            destdir="${testClasses.dir}"
            excludes=".svn">
-      <classpath refid="classpath.path" />
+      <classpath refid="allclasspath.path" />
     </javac>
   </target>
 
@@ -240,7 +261,6 @@
           depends="compile,compile-tests"
           description="package the compiler and its tests into one jar">
     <jar destfile="${jarfile}" update="true">
-      <fileset dir="${classes.dir}" />
       <fileset dir="${testClasses.dir}" />
       <zipgroupfileset dir="${lib.dir}"/>
     </jar>
@@ -250,7 +270,7 @@
       depends="compile-tests"
       description="execute JUnit tests without forking the process">
     <junit>
-      <classpath refid="classpath.path" />
+      <classpath refid="allclasspath.path" />
       <classpath>
         <pathelement location="${build.dir}/test" />
       </classpath>
@@ -267,7 +287,7 @@
           depends="compile-tests"
           description="compile and execute JUnit tests">
     <junit printsummary="on" fork="true" forkmode="once" showoutput="true">
-      <classpath refid="classpath.path" />
+      <classpath refid="allclasspath.path" />
       <classpath>
         <pathelement location="${build.dir}/test" />
       </classpath>
@@ -284,7 +304,7 @@
           depends="compile-tests"
           description="compile and execute one JUnit class specified with the -Dtest flag.">
     <junit printsummary="on" fork="true" forkmode="once" showoutput="true">
-      <classpath refid="classpath.path" />
+      <classpath refid="allclasspath.path" />
       <classpath>
         <pathelement location="${build.dir}/test" />
       </classpath>
@@ -324,7 +344,7 @@
         <pathelement location="${src.dir}" />
         <pathelement location="${gen.dir}" />
       </sourcepath>
-      <classpath refid="classpath.path" />
+      <classpath refid="allclasspath.path" />
       <link href="http://java.sun.com/javase/6/docs/api/" />
       <bottom><![CDATA[
         <div id="footer">
