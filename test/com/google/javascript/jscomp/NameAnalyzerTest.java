@@ -1021,6 +1021,47 @@ public class NameAnalyzerTest extends CompilerTestCase {
          "");
   }
 
+  public void testRhsAssignWithHook1() {
+    testSame("function Foo(){} var foo = null;" +
+        "var f = window.a ? " +
+        "    function () {return new Foo()} : function () {return foo}; f()");
+  }
+
+  public void testRhsAssignWithHook2() {
+    test("function Foo(){} var foo = null;" +
+        "var f = window.a ? " +
+        "    function () {return new Foo()} : function () {return foo};",
+        "");
+  }
+
+  public void testRhsAssignWithHook3() {
+    testSame("function Foo(){} var foo = null; var f = {};" +
+        "f.b = window.a ? " +
+        "    function () {return new Foo()} : function () {return foo}; f.b()");
+  }
+
+  public void testRhsAssignWithHook4() {
+    test("function Foo(){} var foo = null; var f = {};" +
+        "f.b = window.a ? " +
+        "    function () {return new Foo()} : function () {return foo};",
+        "");
+  }
+
+  public void testRhsAssignWithHook5() {
+    testSame("function Foo(){} var foo = null; var f = {};" +
+        "f.b = window.a ? function () {return new Foo()} :" +
+        "    window.b ? function () {return foo} :" +
+        "    function() { return Foo }; f.b()");
+  }
+
+  public void testRhsAssignWithHook6() {
+    test("function Foo(){} var foo = null; var f = {};" +
+        "f.b = window.a ? function () {return new Foo()} :" +
+        "    window.b ? function () {return foo} :" +
+        "    function() { return Foo };",
+        "");
+  }
+
   public void testNestedAssign1() {
     test("var a, b = a = 1, c = 2", "");
   }

@@ -1405,6 +1405,12 @@ final class NameAnalyzer implements CompilerPass {
     // declaration or assignment.
     Node parent = function.getParent();
     if (parent != null) {
+      // Account for functions defined in the form:
+      //   var a = cond ? function a() {} : function b() {};
+      while (parent.getType() == Token.HOOK) {
+        parent = parent.getParent();
+      }
+
       if (parent.getType() == Token.NAME) {
         return scopes.get(parent);
       }
