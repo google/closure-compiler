@@ -20,7 +20,9 @@ import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author agrieve@google.com (Andrew Grieve)
@@ -42,8 +44,23 @@ public class ProcessTweaksTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new ProcessTweaks(compiler, stripTweaks, defaultValueOverrides);
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    return new CompilerPass() {     
+      @Override
+      public void process(Node externs, Node root) {
+        ProcessTweaks processTweak =
+            new ProcessTweaks(compiler, stripTweaks, defaultValueOverrides);
+        processTweak.process(externs, root);
+        
+        if (stripTweaks) {
+          Set<String> emptySet = Collections.emptySet();
+          final StripCode stripCode = new StripCode(compiler, emptySet,
+              emptySet, emptySet, emptySet);
+          stripCode.enableTweakStripping();
+          stripCode.process(externs, root);
+        }
+      }
+    };
   }
 
   @Override
@@ -103,14 +120,14 @@ public class ProcessTweaksTest extends CompilerTestCase {
   }
   
   public void testInvalidDefaultValue1() {
-    test("var val = true; goog.tweak.registerBoolean('Foo', 'desc', val)", null,
-         ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_ERROR);
+    testSame("var val = true; goog.tweak.registerBoolean('Foo', 'desc', val)",
+         ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING);
   }
   
   public void testInvalidDefaultValue2() {
-    test("goog.tweak.overrideDefaultValue('Foo', 3 + 1);" +
-        "goog.tweak.registerNumber('Foo', 'desc')", null,
-        ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_ERROR);
+    testSame("goog.tweak.overrideDefaultValue('Foo', 3 + 1);" +
+        "goog.tweak.registerNumber('Foo', 'desc')",
+        ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING);
   }
 
   public void testUnknownGetString() {
@@ -227,6 +244,16 @@ public class ProcessTweaksTest extends CompilerTestCase {
         "alert('')", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING);
   }
   
+  public void testStrippingOfManuallyRegistered1() {
+    stripTweaks = true;
+    test("var reg = goog.tweak.getRegistry();" +
+         "if (reg) {" +
+         "  reg.register(new goog.tweak.BooleanSetting('foo', 'desc'));" +
+         "  reg.getEntry('foo').setDefaultValue(1);" +
+         "}",
+         "if (null);");
+  }
+
   public void testOverridesWithStripping() {
     stripTweaks = true;
     defaultValueOverrides.put("TweakA", Node.newNumber(1));
@@ -278,5 +305,12 @@ public class ProcessTweaksTest extends CompilerTestCase {
     allowSourcelessWarnings();
     defaultValueOverrides.put("TweakA", Node.newString("!"));
     testSame("var a", ProcessTweaks.UNKNOWN_TWEAK_WARNING); 
+  }
+
+  public void testCompilerOverrideWithWrongType() {
+    allowSourcelessWarnings();
+    defaultValueOverrides.put("TweakA", Node.newString("!"));
+    testSame("goog.tweak.registerBoolean('TweakA', 'desc')",
+        ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING); 
   }
 }

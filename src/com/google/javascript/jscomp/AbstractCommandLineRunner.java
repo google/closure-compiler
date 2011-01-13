@@ -25,6 +25,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
@@ -198,7 +199,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     diagnosticGroups.setWarningLevels(
         options, config.jscompOff, CheckLevel.OFF);
 
-    createDefineReplacements(config.define, options);
+    createDefineOrTweakReplacements(config.define, options, false);
+
+    options.setTweakProcessing(config.tweakProcessing);
+    createDefineOrTweakReplacements(config.tweak, options, true);
 
     options.manageClosureDependencies = config.manageClosureDependencies;
     if (config.closureEntryPoints.size() > 0) {
@@ -987,51 +991,61 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *     single-quoted string without single quotes.
    */
   @VisibleForTesting
-  static void createDefineReplacements(List<String> definitions,
-      CompilerOptions options) {
+  static void createDefineOrTweakReplacements(List<String> definitions,
+      CompilerOptions options, boolean tweaks) {
     // Parse the definitions
     for (String override : definitions) {
       String[] assignment = override.split("=", 2);
       String defName = assignment[0];
 
       if (defName.length() > 0) {
-        if (assignment.length == 1) {
-          options.setDefineToBooleanLiteral(defName, true);
-          continue;
-        } else {
-          String defValue = assignment[1];
+        String defValue = assignment.length == 1 ? "true" : assignment[1];
 
-          if (defValue.equals("true")) {
-            options.setDefineToBooleanLiteral(defName, true);
-            continue;
-          } else if (defValue.equals("false")) {
-            options.setDefineToBooleanLiteral(defName, false);
-            continue;
-          } else if (defValue.length() > 1
-              && ((defValue.charAt(0) == '\'' &&
-                  defValue.charAt(defValue.length() - 1) == '\'')
-                  || (defValue.charAt(0) == '\"' &&
-                      defValue.charAt(defValue.length() - 1) == '\"'))) {
-            // If the value starts and ends with a single quote,
-            // we assume that it's a string.
-            String maybeStringVal =
-                defValue.substring(1, defValue.length() - 1);
-            if (maybeStringVal.indexOf(defValue.charAt(0)) == -1) {
-              options.setDefineToStringLiteral(defName, maybeStringVal);
-              continue;
-            }
+        boolean isTrue = defValue.equals("true");
+        boolean isFalse = defValue.equals("false");
+        if (isTrue || isFalse) {
+          if (tweaks) {
+            options.setTweakToBooleanLiteral(defName, isTrue);
           } else {
-            try {
-              options.setDefineToDoubleLiteral(defName,
-                  Double.parseDouble(defValue));
-              continue;
-            } catch (NumberFormatException e) {
-              // do nothing, it will be caught at the end
+            options.setDefineToBooleanLiteral(defName, isTrue);
+          }
+          continue;
+        } else if (defValue.length() > 1
+            && ((defValue.charAt(0) == '\'' &&
+                defValue.charAt(defValue.length() - 1) == '\'')
+                || (defValue.charAt(0) == '\"' &&
+                    defValue.charAt(defValue.length() - 1) == '\"'))) {
+          // If the value starts and ends with a single quote,
+          // we assume that it's a string.
+          String maybeStringVal =
+              defValue.substring(1, defValue.length() - 1);
+          if (maybeStringVal.indexOf(defValue.charAt(0)) == -1) {
+            if (tweaks) {
+              options.setTweakToStringLiteral(defName, maybeStringVal);
+            } else {
+              options.setDefineToStringLiteral(defName, maybeStringVal);
             }
+            continue;
+          }
+        } else {
+          try {
+            double value = Double.parseDouble(defValue);
+            if (tweaks) {
+              options.setTweakToDoubleLiteral(defName, value);
+            } else {
+              options.setDefineToDoubleLiteral(defName, value);
+            }
+            continue;
+          } catch (NumberFormatException e) {
+            // do nothing, it will be caught at the end
           }
         }
       }
 
+      if (tweaks) {
+        throw new RuntimeException(
+            "--tweak flag syntax invalid: " + override);
+      }
       throw new RuntimeException(
           "--define flag syntax invalid: " + override);
     }
@@ -1489,6 +1503,30 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     CommandLineConfig setDefine(List<String> define) {
       this.define.clear();
       this.define.addAll(define);
+      return this;
+    }
+
+    private final List<String> tweak = Lists.newArrayList();
+
+    /**
+     * Override the default value of a registered tweak. The format is
+     * <name>[=<val>], where <name> is the ID of a tweak and <val> is a boolean,
+     * number, or a single-quoted string that contains no single quotes. If
+     * [=<val>] is omitted, then true is assumed.
+     */
+    CommandLineConfig setTweak(List<String> tweak) {
+      this.tweak.clear();
+      this.tweak.addAll(tweak);
+      return this;
+    }
+
+    private TweakProcessing tweakProcessing = TweakProcessing.OFF;
+    
+    /**
+     * Sets the kind of processing to do for goog.tweak functions.
+     */
+    CommandLineConfig setTweakProcessing(TweakProcessing tweakProcessing) {
+      this.tweakProcessing = tweakProcessing;
       return this;
     }
 

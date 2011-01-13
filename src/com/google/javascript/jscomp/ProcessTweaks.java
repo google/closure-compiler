@@ -71,11 +71,11 @@ class ProcessTweaks implements CompilerPass {
           "JSC_NON_LITERAL_TWEAK_ID_ERROR",
           "tweak ID must be a string literal");
   
-  static final DiagnosticType INVALID_TWEAK_DEFAULT_VALUE_ERROR =
-      DiagnosticType.error(
-          "JSC_INVALID_TWEAK_DEFAULT_VALUE_ERROR",
-          "tweak registered with {0} must have a default value that is a " +
-          "literal of type {0}");
+  static final DiagnosticType INVALID_TWEAK_DEFAULT_VALUE_WARNING =
+      DiagnosticType.warning(
+          "JSC_INVALID_TWEAK_DEFAULT_VALUE_WARNING",
+          "tweak {0} registered with {1} must have a default value that is a " +
+          "literal of type {2}");
 
   static final DiagnosticType NON_GLOBAL_TWEAK_INIT_ERROR =
       DiagnosticType.error(
@@ -91,7 +91,7 @@ class ProcessTweaks implements CompilerPass {
   static final DiagnosticType TWEAK_WRONG_GETTER_TYPE_WARNING =
       DiagnosticType.warning(
           "JSC_TWEAK_WRONG_GETTER_TYPE_WARNING",
-          "tweak getter function {0} used for tweak registered using {0}");
+          "tweak getter function {0} used for tweak registered using {1}");
 
   static final DiagnosticType INVALID_TWEAK_ID_ERROR =
       DiagnosticType.error(
@@ -292,7 +292,15 @@ class ProcessTweaks implements CompilerPass {
       if (tweakInfo == null) {
         compiler.report(JSError.make(UNKNOWN_TWEAK_WARNING, tweakId));
       } else {
-        tweakInfo.defaultValueNode = entry.getValue();
+        TweakFunction registerFunc = tweakInfo.registerCall.tweakFunc;
+        Node value = entry.getValue();
+        if (!registerFunc.isValidNodeType(value.getType())) {
+          compiler.report(JSError.make(INVALID_TWEAK_DEFAULT_VALUE_WARNING,
+              tweakId, registerFunc.getName(),
+              registerFunc.getExpectedTypeName()));
+        } else {
+          tweakInfo.defaultValueNode = value;
+        }
       }
     }
   }
@@ -485,8 +493,8 @@ class ProcessTweaks implements CompilerPass {
           // value is a literal of the correct type.
           if (!registerFunc.isValidNodeType(valueNode.getType())) {
             compiler.report(JSError.make(call.sourceName,
-                valueNode, INVALID_TWEAK_DEFAULT_VALUE_ERROR,
-                registerFunc.getName(),
+                valueNode, INVALID_TWEAK_DEFAULT_VALUE_WARNING,
+                tweakId, registerFunc.getName(),
                 registerFunc.getExpectedTypeName()));
           }
         } else if (tweakFunc.isGetterFunction()) {

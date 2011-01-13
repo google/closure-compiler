@@ -116,6 +116,7 @@ public class DiagnosticGroups {
   public static DiagnosticGroup TWEAKS =
       DiagnosticGroups.registerGroup("tweakValidation",
           new DiagnosticGroup(
+              ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING,
               ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING,
               ProcessTweaks.UNKNOWN_TWEAK_WARNING));
 
