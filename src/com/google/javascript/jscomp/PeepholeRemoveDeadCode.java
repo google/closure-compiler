@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
  * guard conditions, comma operator left hand sides with no side effects, etc.
  *
  */
-public class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
+class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
   // TODO(dcc): Some (all) of these can probably be better achieved
   // using the control flow graph (like CheckUnreachableCode).

@@ -38,7 +38,7 @@ import com.google.javascript.rhino.jstype.JSType;
  * 
  * @author dcc@google.com (Devin Coughlin)
  */
-public class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
+class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node subtree) {

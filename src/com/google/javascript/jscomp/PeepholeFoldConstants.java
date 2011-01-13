@@ -28,7 +28,7 @@ import java.util.List;
  * Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
  *
  */
-public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   static final DiagnosticType DIVIDE_BY_0_ERROR = DiagnosticType.error(
       "JSC_DIVIDE_BY_0_ERROR",

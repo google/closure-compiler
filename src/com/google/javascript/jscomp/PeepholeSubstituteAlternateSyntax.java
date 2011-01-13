@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  * with literals, and simplifying returns.
  *
  */
-public class PeepholeSubstituteAlternateSyntax
+class PeepholeSubstituteAlternateSyntax
   extends AbstractPeepholeOptimization {
 
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);

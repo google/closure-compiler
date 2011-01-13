@@ -35,7 +35,7 @@ import java.util.Collection;
  *   - "return !!x" --> "return x"
  * @author johnlenz@google.com (John Lenz)
  */
-public class OptimizeReturns
+class OptimizeReturns
     implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
 
   private AbstractCompiler compiler;

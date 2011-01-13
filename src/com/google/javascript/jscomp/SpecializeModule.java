@@ -83,7 +83,7 @@ import java.util.Set;
  *
  * @author dcc@google.com (Devin Coughlin)
  */
-public class SpecializeModule implements CompilerPass {
+class SpecializeModule implements CompilerPass {
   private AbstractCompiler compiler;
 
   private Map<Node, Node> specializedInputRootsByOriginal;

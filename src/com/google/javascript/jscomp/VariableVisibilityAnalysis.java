@@ -36,7 +36,7 @@ import java.util.Map;
  * 
  * @author dcc@google.com (Devin Coughlin)
  */
-public class VariableVisibilityAnalysis implements CompilerPass {
+class VariableVisibilityAnalysis implements CompilerPass {
 
   enum VariableVisibility {
     

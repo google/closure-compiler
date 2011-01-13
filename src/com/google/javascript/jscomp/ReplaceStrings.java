@@ -43,7 +43,7 @@ import java.util.Set;
  *
  * Based in concept on the work by Jared Jacobs.
  */
-public class ReplaceStrings extends AbstractPostOrderCallback
+class ReplaceStrings extends AbstractPostOrderCallback
     implements CompilerPass {
   static final DiagnosticType BAD_REPLACEMENT_CONFIGURATION =
       DiagnosticType.warning(
