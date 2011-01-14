@@ -203,19 +203,29 @@ google.maps.MapOptions.prototype.mapTypeControlOptions;
 google.maps.MapOptions.prototype.mapTypeId;
 
 /**
- * @type {boolean}
+ * @type {number}
  */
-google.maps.MapOptions.prototype.navigationControl;
+google.maps.MapOptions.prototype.maxZoom;
 
 /**
- * @type {Object.<string, *>}
+ * @type {number}
  */
-google.maps.MapOptions.prototype.navigationControlOptions;
+google.maps.MapOptions.prototype.minZoom;
 
 /**
  * @type {boolean}
  */
 google.maps.MapOptions.prototype.noClear;
+
+/**
+ * @type {boolean}
+ */
+google.maps.MapOptions.prototype.panControl;
+
+/**
+ * @type {Object.<string, *>}
+ */
+google.maps.MapOptions.prototype.panControlOptions;
 
 /**
  * @type {boolean}
@@ -251,6 +261,16 @@ google.maps.MapOptions.prototype.streetViewControlOptions;
  * @type {number}
  */
 google.maps.MapOptions.prototype.zoom;
+
+/**
+ * @type {boolean}
+ */
+google.maps.MapOptions.prototype.zoomControl;
+
+/**
+ * @type {Object.<string, *>}
+ */
+google.maps.MapOptions.prototype.zoomControlOptions;
 
 /**
  * @constructor
@@ -325,45 +345,12 @@ google.maps.MapTypeControlStyle.HORIZONTAL_BAR;
 /**
  * @constructor
  */
-google.maps.NavigationControlOptions = function() {};
+google.maps.PanControlOptions = function() {};
 
 /**
  * @type {google.maps.ControlPosition}
  */
-google.maps.NavigationControlOptions.prototype.position;
-
-/**
- * @type {google.maps.NavigationControlStyle}
- */
-google.maps.NavigationControlOptions.prototype.style;
-
-/**
- * @constructor
- */
-google.maps.NavigationControlStyle = function() {};
-/**
- * @type {string|number}
- * @const
- */
-google.maps.NavigationControlStyle.ANDROID;
-
-/**
- * @type {string|number}
- * @const
- */
-google.maps.NavigationControlStyle.DEFAULT;
-
-/**
- * @type {string|number}
- * @const
- */
-google.maps.NavigationControlStyle.SMALL;
-
-/**
- * @type {string|number}
- * @const
- */
-google.maps.NavigationControlStyle.ZOOM_PAN;
+google.maps.PanControlOptions.prototype.position;
 
 /**
  * @constructor
@@ -399,6 +386,43 @@ google.maps.StreetViewControlOptions = function() {};
  * @type {google.maps.ControlPosition}
  */
 google.maps.StreetViewControlOptions.prototype.position;
+
+/**
+ * @constructor
+ */
+google.maps.ZoomControlOptions = function() {};
+
+/**
+ * @type {google.maps.ControlPosition}
+ */
+google.maps.ZoomControlOptions.prototype.position;
+
+/**
+ * @type {google.maps.ZoomControlStyle}
+ */
+google.maps.ZoomControlOptions.prototype.style;
+
+/**
+ * @constructor
+ */
+google.maps.ZoomControlStyle = function() {};
+/**
+ * @type {string|number}
+ * @const
+ */
+google.maps.ZoomControlStyle.DEFAULT;
+
+/**
+ * @type {string|number}
+ * @const
+ */
+google.maps.ZoomControlStyle.LARGE;
+
+/**
+ * @type {string|number}
+ * @const
+ */
+google.maps.ZoomControlStyle.SMALL;
 
 /**
  * @constructor
@@ -2484,6 +2508,11 @@ google.maps.FusionTablesLayerOptions = function() {};
 /**
  * @type {boolean}
  */
+google.maps.FusionTablesLayerOptions.prototype.clickable;
+
+/**
+ * @type {boolean}
+ */
 google.maps.FusionTablesLayerOptions.prototype.heatmap;
 
 /**
@@ -2583,6 +2612,11 @@ google.maps.KmlLayer.prototype.setMap = function(map) {};
  * @constructor
  */
 google.maps.KmlLayerOptions = function() {};
+
+/**
+ * @type {boolean}
+ */
+google.maps.KmlLayerOptions.prototype.clickable;
 
 /**
  * @type {google.maps.Map}
@@ -2823,12 +2857,12 @@ google.maps.StreetViewPanoramaOptions.prototype.linksControl;
 /**
  * @type {boolean}
  */
-google.maps.StreetViewPanoramaOptions.prototype.navigationControl;
+google.maps.StreetViewPanoramaOptions.prototype.panControl;
 
 /**
  * @type {Object.<string, *>}
  */
-google.maps.StreetViewPanoramaOptions.prototype.navigationControlOptions;
+google.maps.StreetViewPanoramaOptions.prototype.panControlOptions;
 
 /**
  * @type {string}
@@ -2859,6 +2893,16 @@ google.maps.StreetViewPanoramaOptions.prototype.scrollwheel;
  * @type {boolean}
  */
 google.maps.StreetViewPanoramaOptions.prototype.visible;
+
+/**
+ * @type {boolean}
+ */
+google.maps.StreetViewPanoramaOptions.prototype.zoomControl;
+
+/**
+ * @type {Object.<string, *>}
+ */
+google.maps.StreetViewPanoramaOptions.prototype.zoomControlOptions;
 
 /**
  * @constructor
@@ -3351,6 +3395,11 @@ google.maps.MVCObject.prototype.unbindAll = function() {};
 google.maps.MVCArray = function(array) {};
 
 /**
+ * @return {undefined}
+ */
+google.maps.MVCArray.prototype.clear = function() {};
+
+/**
  * @param {function(*, number)} callback
  * @return {undefined}
  */
@@ -3404,3 +3453,65 @@ google.maps.MVCArray.prototype.removeAt = function(i) {};
  * @return {undefined}
  */
 google.maps.MVCArray.prototype.setAt = function(i, elem) {};
+
+google.maps.encoding = function() {};
+
+/**
+ * @param {string} encodedPath
+ * @return {Array.<google.maps.LatLng>}
+ */
+google.maps.encoding.decodePath = function(encodedPath) {};
+
+/**
+ * @param {Array.<google.maps.LatLng>|google.maps.MVCArray.<google.maps.LatLng>} path
+ * @return {string}
+ */
+google.maps.encoding.encodePath = function(path) {};
+
+google.maps.spherical = function() {};
+
+/**
+ * @param {Array.<google.maps.LatLng>} loop
+ * @param {number=} radius
+ * @return {number}
+ */
+google.maps.spherical.computeArea = function(loop, radius) {};
+
+/**
+ * @param {google.maps.LatLng} from
+ * @param {google.maps.LatLng} to
+ * @param {number=} radius
+ * @return {number}
+ */
+google.maps.spherical.computeDistanceBetween = function(from, to, radius) {};
+
+/**
+ * @param {google.maps.LatLng} from
+ * @param {google.maps.LatLng} to
+ * @return {number}
+ */
+google.maps.spherical.computeHeading = function(from, to) {};
+
+/**
+ * @param {Array.<google.maps.LatLng>} path
+ * @param {number=} radius
+ * @return {number}
+ */
+google.maps.spherical.computeLength = function(path, radius) {};
+
+/**
+ * @param {google.maps.LatLng} from
+ * @param {number} distance
+ * @param {number} heading
+ * @param {number=} radius
+ * @return {google.maps.LatLng}
+ */
+google.maps.spherical.computeOffset = function(from, distance, heading, radius) {};
+
+/**
+ * @param {google.maps.LatLng} from
+ * @param {google.maps.LatLng} to
+ * @param {number} fraction
+ * @return {google.maps.LatLng}
+ */
+google.maps.spherical.interpolate = function(from, to, fraction) {};
