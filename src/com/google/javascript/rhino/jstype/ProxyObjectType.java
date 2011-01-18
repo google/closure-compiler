@@ -109,6 +109,21 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean isNoType() {
+    return referencedType.isNoType();
+  }
+
+  @Override
+  public boolean isNoObjectType() {
+    return referencedType.isNoObjectType();
+  }
+
+  @Override
+  public boolean isNoResolvedType() {
+    return referencedType.isNoResolvedType();
+  }
+
+  @Override
   public boolean isUnknownType() {
     return referencedType.isUnknownType();
   }

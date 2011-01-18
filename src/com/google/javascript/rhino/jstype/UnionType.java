@@ -43,6 +43,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
@@ -540,5 +541,13 @@ public class UnionType extends JSType {
       hashCodes.add(a.toDebugHashCodeString());
     }
     return "{(" + Joiner.on(",").join(hashCodes) + ")}";
+  }
+
+  @Override
+  public boolean setValidator(Predicate<JSType> validator) {
+    for (JSType a : alternates) {
+      a.setValidator(validator);
+    }
+    return true;
   }
 }

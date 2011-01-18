@@ -41,90 +41,53 @@ package com.google.javascript.rhino.jstype;
 
 
 /**
- * Bottom type, representing the subclass of any value or object.
+ * An unresolved type that was forward declared. So we know it exists,
+ * but that it wasn't pulled into this binary.
  *
- * Although JavaScript programmers can't explicitly denote the bottom type,
- * it comes up in static analysis. For example, if we have:
- * <code>
- * var x = null;
- * if (x) {
- *   f(x);
- * }
- * </code>
- * We need to be able to assign {@code x} a type within the {@code f(x)}
- * call. Since it has no possible type, we assign {@code x} the NoType,
- * so that {@code f(x)} is legal no matter what the type of {@code f}'s
- * first argument is.
+ * In most cases, it behaves like a bottom type in the type lattice:
+ * no real type should be assigned to a NoResolvedType, but the
+ * NoResolvedType is a subtype of everything. In a few cases, it behaves
+ * like the unknown type: properties of this type are also NoResolved types,
+ * and comparisons to other types always have an unknown result.
  *
- * @see <a href="http://en.wikipedia.org/wiki/Bottom_type">Bottom types</a>
+ * @author nicksantos@google.com (Nick Santos)
  */
-public class NoType extends NoObjectType {
+class NoResolvedType extends NoType {
   private static final long serialVersionUID = 1L;
 
-  NoType(JSTypeRegistry registry) {
+  NoResolvedType(JSTypeRegistry registry) {
     super(registry);
   }
 
   @Override
-  public boolean isNoObjectType() {
-    return false;
+  public boolean isNoResolvedType() {
+    return true;
   }
 
   @Override
   public boolean isNoType() {
-    return true;
-  }
-
-  @Override
-  public boolean isNullable() {
-    return true;
-  }
-
-  @Override
-  public boolean isSubtype(JSType that) {
-    return true;
+    return false;
   }
 
   @Override
   public JSType getLeastSupertype(JSType that) {
-    return that;
+    return that.isNoType() ? this : super.getLeastSupertype(that);
   }
 
   @Override
   public JSType getGreatestSubtype(JSType that) {
-    if (that.isUnknownType()) {
-      return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    }
-    return this;
+    return that.isNoType() ? that :
+        that.isNoObjectType() ? getNativeType(JSTypeNative.NO_TYPE) :
+        super.getGreatestSubtype(that);
   }
 
   @Override
-  public BooleanLiteralSet getPossibleToBooleanOutcomes() {
-    return BooleanLiteralSet.EMPTY;
-  }
-
-  @Override
-  public boolean matchesNumberContext() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesObjectContext() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesStringContext() {
-    return true;
-  }
-
-  @Override
-  public <T> T visit(Visitor<T> visitor) {
-    return visitor.caseNoType();
+  public JSType getPropertyType(String propertyName) {
+    return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
   }
 
   @Override
   public String toString() {
-    return "None";
+    return "NoResolvedType";
   }
 }

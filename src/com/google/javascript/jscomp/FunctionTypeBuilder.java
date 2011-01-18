@@ -139,12 +139,14 @@ final class FunctionTypeBuilder {
       ObjectType objectType = ObjectType.cast(type);
       if (objectType == null) {
         reportWarning(EXTENDS_NON_OBJECT, fnName, type.toString());
-      } else if (objectType.isUnknownType() &&
-          // If this has a supertype that hasn't been resolved yet,
-          // then we can assume this type will be ok once the super
-          // type resolves.
-          (objectType.getImplicitPrototype() == null ||
-           objectType.getImplicitPrototype().isResolved())) {
+      } else if (
+          objectType.isEmptyType() ||
+          (objectType.isUnknownType() &&
+           // If this has a supertype that hasn't been resolved yet,
+           // then we can assume this type will be ok once the super
+           // type resolves.
+           (objectType.getImplicitPrototype() == null ||
+            objectType.getImplicitPrototype().isResolved()))) {
         reportWarning(RESOLVED_TAG_EMPTY, "@extends", fnName);
       } else {
         return true;
@@ -159,12 +161,14 @@ final class FunctionTypeBuilder {
       ObjectType objectType = ObjectType.cast(type);
       if (objectType == null) {
         reportError(BAD_IMPLEMENTED_TYPE, fnName);
-      } else if (objectType.isUnknownType() &&
-          // If this has a supertype that hasn't been resolved yet,
-          // then we can assume this type will be ok once the super
-          // type resolves.
-          (objectType.getImplicitPrototype() == null ||
-           objectType.getImplicitPrototype().isResolved())) {
+      } else if (
+          objectType.isEmptyType() ||
+          (objectType.isUnknownType() &&
+           // If this has a supertype that hasn't been resolved yet,
+           // then we can assume this type will be ok once the super
+           // type resolves.
+           (objectType.getImplicitPrototype() == null ||
+            objectType.getImplicitPrototype().isResolved()))) {
         reportWarning(RESOLVED_TAG_EMPTY, "@implements", fnName);
       } else {
         return true;
