@@ -292,6 +292,7 @@ public class FunctionType extends PrototypeObjectType {
       return false;
     }
 
+    boolean replacedPrototype = prototype != null;
     this.prototype = prototype;
 
     if (isConstructor() || isInterface()) {
@@ -300,6 +301,11 @@ public class FunctionType extends PrototypeObjectType {
         superClass.addSubType(this);
       }
     }
+
+    if (replacedPrototype) {
+      clearCachedValues();
+    }
+
     return true;
   }
 
@@ -851,6 +857,27 @@ public class FunctionType extends PrototypeObjectType {
       subTypes = Lists.newArrayList();
     }
     subTypes.add(subType);
+  }
+
+  @Override
+  void clearCachedValues() {
+    super.clearCachedValues();
+
+    if (subTypes != null) {
+      for (FunctionType subType : subTypes) {
+        subType.clearCachedValues();
+      }
+    }
+
+    if (!isNativeObjectType()) {
+      if (hasInstanceType()) {
+        getInstanceType().clearCachedValues();
+      }
+
+      if (prototype != null) {
+        prototype.clearCachedValues();
+      }
+    }
   }
 
   /**

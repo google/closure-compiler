@@ -494,6 +494,10 @@ public abstract class ObjectType extends JSType {
     return !unknown;
   }
 
+  void clearCachedValues() {
+    unknown = true;
+  }
+
   /** Whether this is a built-in object. */
   public boolean isNativeObjectType() {
     return false;

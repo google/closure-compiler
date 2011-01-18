@@ -5790,6 +5790,40 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals("A", fType.getReferenceName());
   }
 
+  public void testConstructorType8() throws Exception {
+    testTypes(
+        "var ns = {};" +
+        "ns.create = function() { return function() {}; };" +
+        "/** @constructor */ ns.Foo = ns.create();" +
+        "ns.Foo.prototype = {x: 0, y: 0};" +
+        "/**\n" +
+        " * @param {ns.Foo} foo\n" +
+        " * @return {string}\n" +
+        " */\n" +
+        "function f(foo) {" +
+        "  return foo.x;" +
+        "}",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testConstructorType9() throws Exception {
+    testTypes(
+        "var ns = {};" +
+        "ns.create = function() { return function() {}; };" +
+        "ns.extend = function(x) { return x; };" +
+        "/** @constructor */ ns.Foo = ns.create();" +
+        "ns.Foo.prototype = ns.extend({x: 0, y: 0});" +
+        "/**\n" +
+        " * @param {ns.Foo} foo\n" +
+        " * @return {string}\n" +
+        " */\n" +
+        "function f(foo) {" +
+        "  return foo.x;" +
+        "}");
+  }
+
   public void testAnonymousType1() throws Exception {
     testTypes("function f() {}" +
         "/** @constructor */\n" +

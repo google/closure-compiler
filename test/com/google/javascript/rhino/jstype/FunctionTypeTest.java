@@ -161,6 +161,14 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertTrue(objReturnBoolean.canAssignTo(ifaceReturnBoolean));
   }
 
+  public void testCtorWithPrototypeSet() {
+    FunctionType ctor = registry.createConstructorType(
+        "Foo", null, null, null);
+    assertFalse(ctor.getInstanceType().isUnknownType());
+    ctor.defineDeclaredProperty("prototype", UNKNOWN_TYPE, false, null);
+    assertTrue(ctor.getInstanceType().isUnknownType());
+  }
+
   private void assertLeastSupertype(String s, JSType t1, JSType t2) {
     assertEquals(s, t1.getLeastSupertype(t2).toString());
     assertEquals(s, t2.getLeastSupertype(t1).toString());
