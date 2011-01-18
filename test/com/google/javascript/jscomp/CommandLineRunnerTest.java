@@ -43,6 +43,10 @@ public class CommandLineRunnerTest extends TestCase {
   private ByteArrayOutputStream outReader = null;
   private ByteArrayOutputStream errReader = null;
 
+  // If set, this will be appended to the end of the args list.
+  // For testing args parsing.
+  private String lastArg = null;
+
   // If set to true, uses comparison by string instead of by AST.
   private boolean useStringComparison = false;
 
@@ -96,6 +100,7 @@ public class CommandLineRunnerTest extends TestCase {
     super.setUp();
     externs = DEFAULT_EXTERNS;
     lastCompiler = null;
+    lastArg = null;
     outReader = new ByteArrayOutputStream();
     errReader = new ByteArrayOutputStream();
     useStringComparison = false;
@@ -592,6 +597,16 @@ public class CommandLineRunnerTest extends TestCase {
             "Version: "));
   }
 
+  public void testVersionFlag2() {
+    lastArg = "--version";
+    testSame("");
+    assertEquals(
+        0,
+        new String(errReader.toByteArray()).indexOf(
+            "Closure Compiler (http://code.google.com/closure/compiler)\n" +
+            "Version: "));
+  }
+
   public void testPrintAstFlag() {
     args.add("--print_ast=true");
     testSame("");
@@ -721,6 +736,10 @@ public class CommandLineRunnerTest extends TestCase {
         args.add("--module");
         args.add("mod" + i + ":1" + (i > 0 ? ":mod0" : ""));
       }
+    }
+
+    if (lastArg != null) {
+      args.add(lastArg);
     }
 
     String[] argStrings = args.toArray(new String[] {});

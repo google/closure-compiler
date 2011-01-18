@@ -331,7 +331,11 @@ public class CommandLineRunner extends
 
       @Override
       public int parseArguments(Parameters params) throws CmdLineException {
-        String param = params.getParameter(0);
+        String param = null;
+        try {
+          param = params.getParameter(0);
+        } catch (CmdLineException e) {}
+
         if (param == null) {
           setter.addValue(true);
           return 0;
