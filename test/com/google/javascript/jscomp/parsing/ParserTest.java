@@ -740,6 +740,7 @@ public class ParserTest extends BaseJSTypeTestCase {
         "getters are not supported in Internet Explorer");
     this.es5mode = true;
     parse("var x = {get a(){}};");
+    parseError("var x = {get a(b){}};", "getters may not have parameters");
   }
 
   public void testSetter() {
@@ -748,6 +749,8 @@ public class ParserTest extends BaseJSTypeTestCase {
         "setters are not supported in Internet Explorer");
     this.es5mode = true;
     parse("var x = {set a(x){}};");
+    parseError("var x = {set a(){}};",
+        "setters must have exactly one parameter");
   }
 
   public void testLamestWarningEver() {

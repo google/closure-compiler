@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import static com.google.javascript.jscomp.mozilla.rhino.Token.CommentType.JSDOC;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.ast.ArrayLiteral;
@@ -655,16 +656,35 @@ public class IRFactory {
         }
 
         Node key = transformAsString(el.getLeft());
+        Node value = transform(el.getRight());
         if (el.isGetter()) {
           key.setType(Token.GET);
+          Preconditions.checkState(value.getType() == Token.FUNCTION);
+          if (getFnParamNode(value).hasChildren()) {
+            reportGetterParam(el.getLeft());
+          }
         } else if (el.isSetter()) {
           key.setType(Token.SET);
+          Preconditions.checkState(value.getType() == Token.FUNCTION);
+          if (!getFnParamNode(value).hasOneChild()) {
+            reportSetterParam(el.getLeft());
+          }
         }
-        key.addChildToFront(transform(el.getRight()));
+        key.addChildToFront(value);
         node.addChildToBack(key);
       }
       return node;
     }
+
+    /**
+     * @param fnNode The function.
+     * @return The Node containing the Function parameters.
+     */
+   Node getFnParamNode(Node fnNode) {
+     // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
+     Preconditions.checkArgument(fnNode.getType() == Token.FUNCTION);
+     return fnNode.getFirstChild().getNext();
+   }
 
     @Override
     Node processObjectProperty(ObjectProperty propertyNode) {
@@ -894,6 +914,20 @@ public class IRFactory {
     void reportSetter(AstNode node) {
       errorReporter.error(
           "setters are not supported in Internet Explorer",
+          sourceName,
+          node.getLineno(), "", 0);
+    }
+
+    void reportGetterParam(AstNode node) {
+      errorReporter.error(
+          "getters may not have parameters",
+          sourceName,
+          node.getLineno(), "", 0);
+    }
+
+    void reportSetterParam(AstNode node) {
+      errorReporter.error(
+          "setters must have exactly one parameter",
           sourceName,
           node.getLineno(), "", 0);
     }
