@@ -1221,7 +1221,8 @@ public class DefaultPassConfig extends PassConfig {
           ReplaceStrings pass = new ReplaceStrings(
               compiler,
               options.replaceStringsPlaceholderToken,
-              options.replaceStringsFunctionDescriptions);
+              options.replaceStringsFunctionDescriptions,
+              options.replaceStringsReservedStrings);
           pass.process(externs, root);
           stringMap = pass.getStringMap();
         }

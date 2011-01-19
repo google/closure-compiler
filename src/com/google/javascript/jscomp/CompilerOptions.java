@@ -547,6 +547,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Configuration strings */
   List<String> replaceStringsFunctionDescriptions;
   String replaceStringsPlaceholderToken;
+  // A list of strings that should not be used as replacements
+  Set<String> replaceStringsReservedStrings;
 
   //--------------------------------
   // Output options
@@ -751,6 +753,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     idGenerators = Collections.emptySet();
     replaceStringsFunctionDescriptions = Collections.emptyList();
     replaceStringsPlaceholderToken = "";
+    replaceStringsReservedStrings = Collections.emptySet();
 
     // Output
     printInputDelimiter = false;

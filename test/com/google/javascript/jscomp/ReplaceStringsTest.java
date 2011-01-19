@@ -16,11 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
 import com.google.javascript.rhino.Node;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Tests for {@link ReplaceStrings}.
@@ -28,6 +31,7 @@ import java.util.List;
  */
 public class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;
+  private Set<String> reserved;
 
   private final static String EXTERNS =
     "var goog = {};\n" +
@@ -62,6 +66,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
     super.setUp();
     super.enableLineNumberCheck(false);
     super.enableTypeCheck(CheckLevel.OFF);
+    reserved = Collections.emptySet();
   }
 
   @Override
@@ -72,7 +77,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
         "goog.debug.Logger.getLogger(?)",
         "goog.debug.Logger.prototype.info(?)"
         );
-    pass = new ReplaceStrings(compiler, "`", names);
+    pass = new ReplaceStrings(compiler, "`", names, reserved);
 
     return new CompilerPass() {
         public void process(Node externs, Node js) {
@@ -342,6 +347,18 @@ public class ReplaceStringsTest extends CompilerTestCase {
             + "throw Error('c');"
             + "throw Error('b');"
             + "throw Error('a');");
+  }
+
+  public void testReserved() {
+    testDebugStrings(
+        "throw Error('xyz');",
+        "throw Error('a');",
+        (new String[] { "a", "xyz" }));
+    reserved = ImmutableSet.of("a", "b", "c");
+    testDebugStrings(
+        "throw Error('xyz');",
+        "throw Error('d');",
+        (new String[] { "d", "xyz" }));
   }
 
   private void testDebugStrings(String js, String expected,

@@ -61,7 +61,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
   //
   private final Map<String, Config> functions = Maps.newHashMap();
   private final Multimap<String, String> methods = HashMultimap.create();
-  private final NameGenerator nameGenerator = createNameGenerator();
+  private final NameGenerator nameGenerator;
   private final Map<String, Result> results = Maps.newLinkedHashMap();
 
   /**
@@ -122,15 +122,20 @@ class ReplaceStrings extends AbstractPostOrderCallback
    *     function($,,,)
    *   or
    *     class.prototype.method($,,,)
+   * @param reservedNames A set of names that should not be used as replacement
+   *     strings.  Useful to prevent unwanted strings for appearing in the
+   *     final output.
    * where '$' is used to indicate which parameter should be replaced.
    */
   ReplaceStrings(
       AbstractCompiler compiler, String placeholderToken,
-      List<String> functionsToInspect) {
+      List<String> functionsToInspect,
+      Set<String> reservedNames) {
     this.compiler = compiler;
     this.placeholderToken = placeholderToken.isEmpty()
         ? DEFAULT_PLACEHOLDER_TOKEN : placeholderToken;
     this.registry = compiler.getTypeRegistry();
+    this.nameGenerator = createNameGenerator(reservedNames);
 
     // Intialize the map of functions to inspect for renaming canidates.
     parseConfiguration(functionsToInspect);
@@ -456,10 +461,10 @@ class ReplaceStrings extends AbstractPostOrderCallback
    * Use a name generate to create names so the names overlap with the names
    * used for variable and properties.
    */
-  private static NameGenerator createNameGenerator() {
+  private static NameGenerator createNameGenerator(Set<String> reservedNames) {
     final String namePrefix = "";
     final char[] reservedChars = new char[0];
-    final Set<String> reservedNames = ImmutableSet.of();
-    return new NameGenerator(reservedNames, namePrefix, reservedChars);
+    return new NameGenerator(
+        ImmutableSet.copyOf(reservedNames), namePrefix, reservedChars);
   }
 }
