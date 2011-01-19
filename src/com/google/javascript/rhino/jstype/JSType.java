@@ -151,16 +151,12 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
-  public boolean isNoResolvedType() {
-    return false;
-  }
-
   public boolean isNoObjectType() {
     return false;
   }
 
   public final boolean isEmptyType() {
-    return isNoType() || isNoObjectType() || isNoResolvedType();
+    return isNoType() || isNoObjectType();
   }
 
   public boolean isNumberObjectType() {
@@ -514,23 +510,10 @@ public abstract class JSType implements Serializable {
   }
 
   TernaryValue testForEqualityHelper(JSType aType, JSType bType) {
-    if (bType.isAllType() || bType.isUnknownType() ||
-        bType.isNoResolvedType() ||
-        aType.isAllType() || aType.isUnknownType() ||
-        aType.isNoResolvedType()) {
+    if (bType.isAllType() || bType.isEmptyType() || bType.isUnknownType() ||
+        aType.isAllType() || aType.isEmptyType() || aType.isUnknownType()) {
       return UNKNOWN;
     }
-
-    boolean aIsEmpty = aType.isEmptyType();
-    boolean bIsEmpty = bType.isEmptyType();
-    if (aIsEmpty || bIsEmpty) {
-      if (aIsEmpty && bIsEmpty) {
-        return TernaryValue.TRUE;
-      } else {
-        return UNKNOWN;
-      }
-    }
-
     if (aType.isFunctionType() || bType.isFunctionType()) {
       JSType otherType = aType.isFunctionType() ? bType : aType;
       // In theory, functions are comparable to anything except
@@ -595,10 +578,12 @@ public abstract class JSType implements Serializable {
    * getLeastSupertype implementations.
    */
   static JSType getLeastSupertype(JSType thisType, JSType thatType) {
-    if (thatType.isAllType() ||
-        (thatType.isEmptyType() && !thatType.isNamedType())) {
+    if (thatType.isEmptyType() || thatType.isAllType()) {
+      // Defer to the implementations of the end lattice elements when
+      // possible.
       return thatType.getLeastSupertype(thisType);
     }
+
     return thisType.registry.createUnionType(thisType, thatType);
   }
 

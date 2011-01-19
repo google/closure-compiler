@@ -125,9 +125,7 @@ class UnionTypeBuilder implements Serializable {
         while (it.hasNext()) {
           JSType current = it.next();
           if (alternate.isUnknownType() ||
-              current.isUnknownType() ||
-              alternate.isNoResolvedType() ||
-              current.isNoResolvedType()) {
+              current.isUnknownType()) {
             if (alternate.isEquivalentTo(current)) {
               // Alternate is unnecessary.
               return this;

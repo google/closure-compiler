@@ -7138,13 +7138,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testForwardTypeDeclaration2() throws Exception {
-    String f = "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */ function f(x) { }";
-    testClosureTypes(f, null);
-    testClosureTypes(f + "f(3);",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : number\n" +
-        "required: (MyType|null)");
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MyType'], []);" +
+        "/** @param {MyType} x */ function f(x) { }" +
+        "f(3);", null);
   }
 
   public void testForwardTypeDeclaration3() throws Exception {
@@ -7189,38 +7186,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         Lists.newArrayList(
             "Could not resolve type in @implements tag of YourType",
             "property method not defined on any superclass of YourType"));
-  }
-
-  public void testForwardTypeDeclaration7() throws Exception {
-    testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType=} x */" +
-        "function f(x) { return x == undefined; }", null);
-  }
-
-  public void testForwardTypeDeclaration8() throws Exception {
-    testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */" +
-        "function f(x) { return x.name == undefined; }", null);
-  }
-
-  public void testForwardTypeDeclaration9() throws Exception {
-    testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */" +
-        "function f(x) { x.name = 'Bob'; }", null);
-  }
-
-  public void testForwardTypeDeclaration10() throws Exception {
-    String f = "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType|number} x */ function f(x) { }";
-    testClosureTypes(f, null);
-    testClosureTypes(f + "f(3);", null);
-    testClosureTypes(f + "f('3');",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : string\n" +
-        "required: (MyType|null|number)");
   }
 
   public void testMalformedOldTypeDef() throws Exception {

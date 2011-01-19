@@ -331,15 +331,9 @@ class NamedType extends ProxyObjectType {
         t.warning("Unknown type " + reference, sourceName, lineno, null,
             charno);
       } else {
-        if (isForwardDeclared) {
-          setReferencedType(
-              registry.getNativeObjectType(
-                  JSTypeNative.NO_RESOLVED_TYPE));
-        } else {
-          setReferencedType(
-              registry.getNativeObjectType(
-                  JSTypeNative.CHECKED_UNKNOWN_TYPE));
-        }
+        setReferencedType(
+            registry.getNativeObjectType(
+                JSTypeNative.CHECKED_UNKNOWN_TYPE));
 
         if (registry.isLastGeneration() && validator != null) {
           validator.apply(getReferencedType());

@@ -48,7 +48,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.ArrowType;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
@@ -80,7 +79,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private JSType recordType;
   private EnumType enumType;
   private EnumElementType elementsType;
-  private NamedType forwardDeclaredNamedType;
 
   private static final StaticScope<JSType> EMPTY_SCOPE = new EmptyScope();
 
@@ -163,15 +161,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
           public JSType getTypeOfThis() { return null; }
         });
     assertNotNull(namedGoogBar.getImplicitPrototype());
-    forwardDeclaredNamedType =
-        new NamedType(registry, "forwardDeclared", "source", 1, 0);
-    registry.forwardDeclareType("typeA");
-    forwardDeclaredNamedType.resolve(
-        new SimpleErrorReporter(), EMPTY_SCOPE);
 
     types = ImmutableList.of(
         NO_OBJECT_TYPE,
-        NO_RESOLVED_TYPE,
         NO_TYPE,
         BOOLEAN_OBJECT_TYPE,
         BOOLEAN_TYPE,
@@ -199,8 +191,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         enumType,
         elementsType,
         googBar,
-        googSubBar,
-        forwardDeclaredNamedType);
+        googSubBar);
   }
 
   /**
@@ -655,137 +646,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NO_TYPE.getPropertyType("anyProperty"));
 
     Asserts.assertResolvesToSame(NO_TYPE);
-  }
-
-  /**
-   * Tests the behavior of the unresolved Bottom type.
-   */
-  public void testNoResolvedType() throws Exception {
-    // isXxx
-    assertFalse(NO_RESOLVED_TYPE.isNoObjectType());
-    assertFalse(NO_RESOLVED_TYPE.isNoType());
-    assertTrue(NO_RESOLVED_TYPE.isNoResolvedType());
-    assertFalse(NO_RESOLVED_TYPE.isArrayType());
-    assertFalse(NO_RESOLVED_TYPE.isBooleanValueType());
-    assertFalse(NO_RESOLVED_TYPE.isDateType());
-    assertFalse(NO_RESOLVED_TYPE.isEnumElementType());
-    assertFalse(NO_RESOLVED_TYPE.isNullType());
-    assertFalse(NO_RESOLVED_TYPE.isNamedType());
-    assertTrue(NO_RESOLVED_TYPE.isNumber());
-    assertFalse(NO_RESOLVED_TYPE.isNumberObjectType());
-    assertFalse(NO_RESOLVED_TYPE.isNumberValueType());
-    assertTrue(NO_RESOLVED_TYPE.isObject());
-    assertFalse(NO_RESOLVED_TYPE.isFunctionPrototypeType());
-    assertFalse(NO_RESOLVED_TYPE.isRegexpType());
-    assertTrue(NO_RESOLVED_TYPE.isString());
-    assertFalse(NO_RESOLVED_TYPE.isStringObjectType());
-    assertFalse(NO_RESOLVED_TYPE.isStringValueType());
-    assertFalse(NO_RESOLVED_TYPE.isEnumType());
-    assertFalse(NO_RESOLVED_TYPE.isUnionType());
-    assertFalse(NO_RESOLVED_TYPE.isAllType());
-    assertFalse(NO_RESOLVED_TYPE.isVoidType());
-    assertTrue(NO_RESOLVED_TYPE.isConstructor());
-    assertFalse(NO_RESOLVED_TYPE.isInstanceType());
-
-    // canAssignTo
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(NO_RESOLVED_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(NO_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(ARRAY_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(BOOLEAN_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(BOOLEAN_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(DATE_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(EVAL_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(functionType));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(NULL_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(NUMBER_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(NUMBER_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(URI_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(RANGE_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(REFERENCE_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(REGEXP_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(STRING_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(STRING_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(TYPE_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(ALL_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canAssignTo(VOID_TYPE));
-
-    // canTestForEqualityWith
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NO_RESOLVED_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NO_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NO_OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, ARRAY_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, BOOLEAN_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, BOOLEAN_OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, DATE_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, EVAL_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, functionType);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NULL_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NUMBER_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NUMBER_OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, URI_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, RANGE_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, REFERENCE_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, REGEXP_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, STRING_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, STRING_OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, SYNTAX_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, TYPE_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, ALL_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, VOID_TYPE);
-
-    // canTestForShallowEqualityWith
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NO_RESOLVED_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NO_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(ARRAY_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(functionType));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
-
-    // isNullable
-    assertTrue(NO_RESOLVED_TYPE.isNullable());
-
-    // isObject
-    assertTrue(NO_RESOLVED_TYPE.isObject());
-
-    // matchesXxx
-    assertTrue(NO_RESOLVED_TYPE.matchesInt32Context());
-    assertTrue(NO_RESOLVED_TYPE.matchesNumberContext());
-    assertTrue(NO_RESOLVED_TYPE.matchesObjectContext());
-    assertTrue(NO_RESOLVED_TYPE.matchesStringContext());
-    assertTrue(NO_RESOLVED_TYPE.matchesUint32Context());
-
-    // toString
-    assertEquals("NoResolvedType", NO_RESOLVED_TYPE.toString());
-    assertEquals(null, NO_RESOLVED_TYPE.getDisplayName());
-    assertFalse(NO_RESOLVED_TYPE.hasDisplayName());
-
-    // getPropertyType
-    assertTypeEquals(CHECKED_UNKNOWN_TYPE,
-        NO_RESOLVED_TYPE.getPropertyType("anyProperty"));
-
-    Asserts.assertResolvesToSame(NO_RESOLVED_TYPE);
   }
 
   /**
@@ -3954,7 +3814,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     compare(TRUE, NO_OBJECT_TYPE, NO_OBJECT_TYPE);
     compare(UNKNOWN, ALL_TYPE, ALL_TYPE);
     compare(TRUE, NO_TYPE, NO_TYPE);
-    compare(UNKNOWN, NO_RESOLVED_TYPE, NO_RESOLVED_TYPE);
     compare(UNKNOWN, NO_OBJECT_TYPE, NUMBER_TYPE);
     compare(UNKNOWN, ALL_TYPE, NUMBER_TYPE);
     compare(UNKNOWN, NO_TYPE, NUMBER_TYPE);
@@ -4007,12 +3866,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType functionAndNull = createUnionType(NULL_TYPE, dateMethod);
     compare(UNKNOWN, functionAndNull, dateMethod);
-
-    compare(UNKNOWN, NULL_TYPE, NO_TYPE);
-    compare(UNKNOWN, VOID_TYPE, NO_TYPE);
-    compare(UNKNOWN, NULL_TYPE, unresolvedNamedType);
-    compare(UNKNOWN, VOID_TYPE, unresolvedNamedType);
-    compare(TRUE, NO_TYPE, NO_TYPE);
   }
 
   private void compare(TernaryValue r, JSType t1, JSType t2) {
@@ -4477,7 +4330,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ALL_TYPE,
         NO_TYPE,
         NO_OBJECT_TYPE,
-        NO_RESOLVED_TYPE,
         createUnionType(BOOLEAN_TYPE, STRING_TYPE),
         createUnionType(NUMBER_TYPE, STRING_TYPE),
         createUnionType(NULL_TYPE, dateMethod),
@@ -4494,8 +4346,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         namedGoogBar,
         subclassOfUnresolvedNamedType,
         subclassCtor,
-        recordType,
-        forwardDeclaredNamedType);
+        recordType
+                              );
   }
 
   public void testSymmetryOfTestForEquality() {
@@ -4710,9 +4562,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertFalse(a.isEquivalentTo(UNKNOWN_TYPE));
     assertFalse(b.isEquivalentTo(UNKNOWN_TYPE));
-    assertTrue(a.isEmptyType());
-    assertFalse(a.isNoType());
-    assertTrue(a.isNoResolvedType());
   }
 
   public void testForwardDeclaredNamedType() {

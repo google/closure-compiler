@@ -6412,13 +6412,10 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testForwardTypeDeclaration2() throws Exception {
-    String f = "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */ function f(x) { }";
-    testClosureTypes(f, null);
-    testClosureTypes(f + "f(3);",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : number\n" +
-        "required: (MyType|null|undefined)");
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MyType'], []);" +
+        "/** @param {MyType} x */ function f(x) { }" +
+        "f(3);", null);
   }
 
   public void testForwardTypeDeclaration3() throws Exception {

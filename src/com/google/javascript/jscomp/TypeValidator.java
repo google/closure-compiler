@@ -39,7 +39,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.UnionType;
 
 import java.text.MessageFormat;
 import java.util.Iterator;
@@ -173,7 +172,7 @@ class TypeValidator {
    */
   void expectAnyObject(NodeTraversal t, Node n, JSType type, String msg) {
     JSType anyObjectType = getNativeType(NO_OBJECT_TYPE);
-    if (!anyObjectType.isSubtype(type) && !type.isEmptyType()) {
+    if (!anyObjectType.isSubtype(type)) {
       mismatch(t, n, msg, type, anyObjectType);
     }
   }
@@ -233,8 +232,7 @@ class TypeValidator {
   boolean expectNotNullOrUndefined(
       NodeTraversal t, Node n, JSType type, String msg, JSType expectedType) {
     if (!type.isNoType() && !type.isUnknownType() &&
-        type.isSubtype(nullOrUndefined) &&
-        !containsForwardDeclaredUnresolvedName(type)) {
+        type.isSubtype(nullOrUndefined)) {
 
       // There's one edge case right now that we don't handle well, and
       // that we don't want to warn about.
@@ -256,17 +254,6 @@ class TypeValidator {
       return false;
     }
     return true;
-  }
-
-  private boolean containsForwardDeclaredUnresolvedName(JSType type) {
-    if (type instanceof UnionType) {
-      for (JSType alt : ((UnionType) type).getAlternates()) {
-        if (containsForwardDeclaredUnresolvedName(alt)) {
-          return true;
-        }
-      }
-    }
-    return type.isNoResolvedType();
   }
 
   /**

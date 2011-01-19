@@ -300,9 +300,6 @@ public class JSTypeRegistry implements Serializable {
     NoObjectType NO_OBJECT_TYPE = new NoObjectType(this);
     registerNativeType(JSTypeNative.NO_OBJECT_TYPE, NO_OBJECT_TYPE);
 
-    NoObjectType NO_RESOLVED_TYPE = new NoResolvedType(this);
-    registerNativeType(JSTypeNative.NO_RESOLVED_TYPE, NO_RESOLVED_TYPE);
-
     // Array
     FunctionType ARRAY_FUNCTION_TYPE =
       new FunctionType(this, "Array", null,

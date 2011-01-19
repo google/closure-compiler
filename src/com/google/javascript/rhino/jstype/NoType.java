@@ -58,7 +58,7 @@ package com.google.javascript.rhino.jstype;
  *
  * @see <a href="http://en.wikipedia.org/wiki/Bottom_type">Bottom types</a>
  */
-public class NoType extends NoObjectType {
+public final class NoType extends NoObjectType {
   private static final long serialVersionUID = 1L;
 
   NoType(JSTypeRegistry registry) {

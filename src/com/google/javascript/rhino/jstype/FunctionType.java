@@ -609,6 +609,33 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   /**
+   * Given a constructor or an interface type, find out whether the unknown
+   * type is a supertype of the current type.
+   */
+  public boolean hasUnknownSupertype() {
+    Preconditions.checkArgument(isConstructor() || isInterface());
+    Preconditions.checkArgument(!this.isUnknownType());
+    // Potential infinite loop if our type system messes up or someone defines
+    // a bad type. Otherwise the loop should always end.
+    FunctionType ctor = this;
+    while (true) {
+      ObjectType maybeSuperInstanceType =
+          ctor.getPrototype().getImplicitPrototype();
+      if (maybeSuperInstanceType == null) {
+        return false;
+      }
+      if (maybeSuperInstanceType.isUnknownType()) {
+        return true;
+      }
+      ctor = maybeSuperInstanceType.getConstructor();
+      if (ctor == null) {
+        return false;
+      }
+      Preconditions.checkState(ctor.isConstructor() || ctor.isInterface());
+    }
+  }
+
+  /**
    * Given a constructor or an interface type and a property, finds the
    * top-most superclass that has the property defined (including this
    * constructor).

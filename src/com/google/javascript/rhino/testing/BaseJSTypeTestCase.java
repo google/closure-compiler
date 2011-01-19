@@ -58,7 +58,6 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected JSType ALL_TYPE;
   protected ObjectType NO_OBJECT_TYPE;
   protected ObjectType NO_TYPE;
-  protected ObjectType NO_RESOLVED_TYPE;
   protected JSType ARRAY_FUNCTION_TYPE;
   protected ObjectType ARRAY_TYPE;
   protected JSType BOOLEAN_OBJECT_FUNCTION_TYPE;
@@ -124,8 +123,6 @@ public abstract class BaseJSTypeTestCase extends TestCase {
         registry.getNativeObjectType(JSTypeNative.NO_OBJECT_TYPE);
     NO_TYPE =
         registry.getNativeObjectType(JSTypeNative.NO_TYPE);
-    NO_RESOLVED_TYPE =
-        registry.getNativeObjectType(JSTypeNative.NO_RESOLVED_TYPE);
     ARRAY_FUNCTION_TYPE =
         registry.getNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE);
     ARRAY_TYPE =
