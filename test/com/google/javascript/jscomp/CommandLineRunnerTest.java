@@ -266,7 +266,7 @@ public class CommandLineRunnerTest extends TestCase {
          " var a;" +
          " return ((a=b.id) && (a=parseInt(a.substr(1))) && a>0);" +
          "}");
-  }  
+  }
 
   public void testDebugFlag1() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
@@ -638,6 +638,14 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--warning_level=VERBOSE");
     test("var theirVar = {}; var myVar = {}; var myVar = {};",
          SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testGoogAssertStripping() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("goog.asserts.assert(false)",
+         "");
+    args.add("--debug");
+    test("goog.asserts.assert(false)", "goog.$asserts$.$assert$(false)");
   }
 
   /* Helper functions */

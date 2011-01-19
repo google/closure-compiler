@@ -67,6 +67,7 @@ public enum CompilationLevel {
   public void setDebugOptionsForCompilationLevel(CompilerOptions options) {
     options.anonymousFunctionNaming = AnonymousFunctionNamingPolicy.UNMAPPED;
     options.generatePseudoNames = true;
+    options.removeClosureAsserts = false;
   }
 
   /**
@@ -135,6 +136,7 @@ public enum CompilationLevel {
     options.optimizeArgumentsArray = true;
 
     // All the advance optimizations.
+    options.removeClosureAsserts = true;
     options.aliasKeywords = true;
     options.reserveRawExports = true;
     options.variableRenaming = VariableRenamingPolicy.ALL;
