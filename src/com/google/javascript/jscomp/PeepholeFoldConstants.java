@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -77,11 +78,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return tryFoldTypeof(subtree);
 
       case Token.NOT:
+      case Token.POS:
       case Token.NEG:
       case Token.BITNOT:
+        tryReduceOperandsForOp(subtree);
         return tryFoldUnaryOperator(subtree);
 
       default:
+        tryReduceOperandsForOp(subtree);
         return tryFoldBinaryOperator(subtree);
     }
   }
@@ -153,6 +157,98 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       default:
         return subtree;
     }
+  }
+
+  private void tryReduceOperandsForOp(Node n) {
+    switch (n.getType()) {
+      case Token.ADD:
+        Node left = n.getFirstChild();
+        Node right = n.getLastChild();
+        if (!NodeUtil.mayBeString(left) && !NodeUtil.mayBeString(right)) {
+          tryConvertOperandsToNumber(n);
+        }
+        break;
+      case Token.ASSIGN_BITOR:
+      case Token.ASSIGN_BITXOR:
+      case Token.ASSIGN_BITAND:
+        // TODO(johnlenz): convert these to integers.
+      case Token.ASSIGN_LSH:
+      case Token.ASSIGN_RSH:
+      case Token.ASSIGN_URSH:
+      case Token.ASSIGN_SUB:
+      case Token.ASSIGN_MUL:
+      case Token.ASSIGN_MOD:
+      case Token.ASSIGN_DIV:
+        tryConvertToNumber(n.getLastChild());
+        break;
+      case Token.BITNOT:
+      case Token.BITOR:
+      case Token.BITXOR:
+      case Token.BITAND:
+      case Token.LSH:
+      case Token.RSH:
+      case Token.URSH:
+      case Token.SUB:
+      case Token.MUL:
+      case Token.MOD:
+      case Token.DIV:
+      case Token.POS:
+      case Token.NEG:
+        tryConvertOperandsToNumber(n);
+        break;
+    }
+  }
+
+  private void tryConvertOperandsToNumber(Node n) {
+    Node next;
+    for (Node c = n.getFirstChild(); c != null; c = next) {
+      next = c.getNext();
+      tryConvertToNumber(c);
+    }
+  }
+
+  private void tryConvertToNumber(Node n) {
+    switch (n.getType()) {
+      case Token.NUMBER:
+        // Nothing to do
+        return;
+      case Token.AND:
+      case Token.OR:
+      case Token.COMMA:
+        tryConvertToNumber(n.getLastChild());
+        return;
+      case Token.HOOK:
+        tryConvertToNumber(n.getChildAtIndex(1));
+        tryConvertToNumber(n.getLastChild());
+        return;
+      case Token.NAME:
+        if (!NodeUtil.isUndefined(n)) {
+          return;
+        }
+        break;
+    }
+
+    Double result = NodeUtil.getNumberValue(n);
+    if (result == null) {
+      return;
+    }
+
+    double value = result;
+
+    Node replacement;
+    if (Double.isNaN(value)) {
+      replacement = Node.newString(Token.NAME, "NaN");
+    } else if (value == Double.POSITIVE_INFINITY) {
+      replacement = Node.newString(Token.NAME, "Infinity");
+    } else if (value == Double.NEGATIVE_INFINITY) {
+      replacement = new Node(Token.NEG, Node.newString(Token.NAME, "Infinity"));
+      replacement.copyInformationFromForTree(n);
+    } else {
+      replacement = Node.newNumber(value);
+    }
+
+    n.getParent().replaceChild(n, replacement);
+    reportCodeChange();
   }
 
   /**
@@ -234,6 +330,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         parent.replaceChild(n, replacementNode);
         reportCodeChange();
         return replacementNode;
+      case Token.POS:
+        if (NodeUtil.isNumericResult(left)) {
+          // POS does nothing to numeric values.
+          parent.replaceChild(n, left.detachFromParent());
+          reportCodeChange();
+          return left;
+        }
+        return n;
       case Token.NEG:
         try {
           if (left.getType() == Token.NAME) {
@@ -506,6 +610,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldArithmeticOp(Node n, Node left, Node right) {
     Node result = performArithmeticOp(n.getType(), left, right);
     if (result != null) {
+      result.copyInformationFromForTree(n);
       n.getParent().replaceChild(n, result);
       reportCodeChange();
       return result;
@@ -527,6 +632,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     double result;
 
+    // TODO(johnlenz): Handle NaN with unknown value. BIT ops convert NaN
+    // to zero so this is a little akward here.
+
     Double lValObj = NodeUtil.getNumberValue(left);
     if (lValObj == null) {
       return null;
@@ -541,22 +649,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     switch (opType) {
       case Token.BITAND:
-        if (!areValidInts(lval, rval)) {
-          return null;
-        }
-        result = (int)lval & (int)rval;
+        result = ScriptRuntime.toInt32(lval) & ScriptRuntime.toInt32(rval);
         break;
       case Token.BITOR:
-        if (!areValidInts(lval, rval)) {
-          return null;
-        }
-        result = (int)lval | (int)rval;
+        result = ScriptRuntime.toInt32(lval) | ScriptRuntime.toInt32(rval);
         break;
       case Token.BITXOR:
-        if (!areValidInts(lval, rval)) {
-          return null;
-        }
-        result = (int)lval ^ (int)rval;
+        result = ScriptRuntime.toInt32(lval) ^ ScriptRuntime.toInt32(rval);
         break;
       case Token.ADD:
         result = lval + rval;
@@ -607,22 +706,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * @return Whether the double can be precisely represented as a int.
-   */
-  private boolean isValidInt(double val) {
-    return !(val < Integer.MIN_VALUE || val > Integer.MAX_VALUE)
-        && val == (int)val;
-  }
-
-  /**
-   * @return Whether the parameters are doubles can be precisely represented
-   * as a int.
-   */
-  private boolean areValidInts(double val1, double val2) {
-    return isValidInt(val1) && isValidInt(val2);
-  }
-
-  /**
    * Expressions such as [foo() * 10 * 20] generate parse trees
    * where no node has two const children ((foo() * 10) * 20), so
    * performArithmeticOp() won't fold it -- tryFoldLeftChildOp() will.
@@ -633,30 +716,33 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
     int opType = n.getType();
-    // Note: ADD is not associative when used as a string concat operator.
+    // TODO(johnlenz): Add support for ADD in numberic contexts.
     Preconditions.checkState(
       NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType));
-    // TODO(johnlenz): create and use a getNumberValue.
-    if (right.getType() == Token.NUMBER && left.getType() == opType) {
+
+    // Use getNumberValue to handle constants like "NaN" and "Infinity"
+    // other values are converted to numbers elsewhere.
+    Double rightValObj = NodeUtil.getNumberValue(right);
+    if (rightValObj != null && left.getType() == opType) {
       Preconditions.checkState(left.getChildCount() == 2);
 
       Node ll = left.getFirstChild();
       Node lr = ll.getNext();
 
-      Node valueToCombine;
-      if (ll.getType() == Token.NUMBER) {
-        valueToCombine = ll;
-      } else if (lr.getType() == Token.NUMBER) {
-        valueToCombine = lr;
-      } else {
-        // Nothing to do.
-        return n;
-      }
-
+      Node valueToCombine = ll;
       Node replacement = performArithmeticOp(opType, valueToCombine, right);
+      if (replacement == null) {
+        valueToCombine = lr;
+        replacement = performArithmeticOp(opType, valueToCombine, right);
+      }
       if (replacement != null) {
+        // Remove the child that has been combined
         left.removeChild(valueToCombine);
+        // Replace the left op with the remaining child.
         n.replaceChild(left, left.removeFirstChild());
+        // New "-Infinity" node need location info explicitly
+        // added.
+        replacement.copyInformationFromForTree(right);
         n.replaceChild(right, replacement);
         reportCodeChange();
       }

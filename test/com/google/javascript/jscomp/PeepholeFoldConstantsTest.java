@@ -188,6 +188,19 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("a=~~0", "a=0");
     fold("a=~~10", "a=10");
     fold("a=~-7", "a=6");
+
+    fold("a=+true", "a=1");
+    fold("a=+10", "a=10");
+    fold("a=+false", "a=0");
+    foldSame("a=+foo()");
+    foldSame("a=+f");
+    fold("a=+(f?true:false)", "a=+(f?1:0)"); // TODO(johnlenz): foldable
+    fold("a=+0", "a=0");
+    fold("a=+Infinity", "a=Infinity");
+    fold("a=+NaN", "a=NaN");
+    fold("a=+-7", "a=-7");
+    fold("a=+.5", "a=.5");
+
     fold("a=~0x100000000", "a=~0x100000000",
          PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE);
     fold("a=~-0x100000000", "a=~-0x100000000",
@@ -212,7 +225,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 3 || x", "x = 3");
     fold("x = false || 0", "x = 0");
 
-    // surprisingly unfoldable
+    // unfoldable, because the right-side may be the result
     fold("a = x && true", "a=x&&true");
     fold("a = x && false", "a=x&&false");
     fold("a = x || 3", "a=x||3");
@@ -270,16 +283,17 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // make sure we fold only when we are supposed to -- not when doing so would
     // lose information or when it is performed on nonsensical arguments.
-    fold("x = 1 & 1.1", "x = 1&1.1");
-    fold("x = 1.1 & 1", "x = 1.1&1");
-    fold("x = 1 & 3000000000", "x = 1&3000000000");
-    fold("x = 3000000000 & 1", "x = 3000000000&1");
+    fold("x = 1 & 1.1", "x = 1");
+    fold("x = 1.1 & 1", "x = 1");
+    fold("x = 1 & 3000000000", "x = 0");
+    fold("x = 3000000000 & 1", "x = 0");
 
     // Try some cases with | as well
     fold("x = 1 | 4", "x = 5");
     fold("x = 1 | 3", "x = 3");
-    fold("x = 1 | 1.1", "x = 1|1.1");
-    fold("x = 1 | 3000000000", "x = 1|3000000000");
+    fold("x = 1 | 1.1", "x = 1");
+    foldSame("x = 1 | 3E9");
+    fold("x = 1 | 3000000001", "x = -1294967295");
   }
 
   public void testFoldBitwiseOp2() {
@@ -303,6 +317,31 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 3 ^ y ^ 1", "x = y ^ 2");
     fold("x = y ^ 3 ^ 3", "x = y ^ 0");
     fold("x = 3 ^ y ^ 3", "x = y ^ 0");
+
+    fold("x = Infinity | NaN", "x=0");
+    fold("x = 12 | NaN", "x=12");
+  }
+
+  public void testFoldingMixTypes() {
+    fold("x = x + '2'", "x+='2'");
+    fold("x = +x + +'2'", "x = +x + 2");
+    fold("x = x - '2'", "x-=2");
+    fold("x = x ^ '2'", "x^=2");
+    fold("x = '2' ^ x", "x^=2");
+    fold("x = '2' & x", "x&=2");
+    fold("x = '2' | x", "x|=2");
+
+    fold("x = '2' | y", "x=2|y");
+    fold("x = y | '2'", "x=y|2");
+    fold("x = y | (a && '2')", "x=y|(a&&2)");
+    fold("x = y | (a,'2')", "x=y|(a,2)");
+    fold("x = y | (a?'1':'2')", "x=y|(a?1:2)");
+    fold("x = y | ('x'?'1':'2')", "x=y|('x'?1:2)");
+  }
+
+  public void testFoldingAdd() {
+    fold("x = null + true", "x=1");
+    foldSame("x = a + true");
   }
 
   public void testFoldBitwiseOpStringCompare() {
@@ -525,7 +564,13 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = null * undefined", "x = NaN");
     fold("x = null * 1", "x = 0");
     fold("x = (null - 1) * 2", "x = -2");
-    foldSame("x = (null + 1) * 2"); // We don't fold "+" with mixed types yet.
+    fold("x = (null + 1) * 2", "x = 2");
+  }
+
+  public void testFoldArithmeticInfinity() {
+    fold("x=-Infinity-2", "x=-Infinity");
+    fold("x=Infinity-2", "x=Infinity");
+    fold("x=Infinity*5", "x=Infinity");
   }
 
   public void testFoldArithmeticStringComp() {
@@ -655,6 +700,11 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 'abc' + 5 + 10", "x = \"abc510\"");
   }
 
+  public void testFoldLeft() {
+    foldSame("(+x - 1) + 2"); // not yet
+    foldSame("(+x + 1) + 2"); // not yet
+  }
+
   public void testFoldArrayLength() {
     // Can fold
     fold("x = [].length", "x = 0");
@@ -751,7 +801,10 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testFoldAdd1() {
-    foldSame("x=false+1");
+    fold("x=false+1","x=1");
+    fold("x=true+1","x=2");
+    fold("x=1+false","x=1");
+    fold("x=1+true","x=2");
   }
 
   public void testFoldLiteralNames() {
@@ -793,6 +846,60 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("true < false", "false");
   }
 
+  public void testFoldLeftChildConcat() {
+    foldSame("x +5 + \"1\"");
+    fold("x+\"5\" + \"1\"", "x + \"51\"");
+  }
+
+  public void testFoldLeftChildOp() {
+    fold("x * Infinity * 2", "x * Infinity");
+    foldSame("x - Infinity - 2"); // want "x-Infinity"
+    foldSame("x - 1 + Infinity");
+    foldSame("x - 2 + 1");
+    foldSame("x - 2 + 3");
+    foldSame("1 + x - 2 + 1");
+    foldSame("1 + x - 2 + 3");
+    foldSame("1 + x - 2 + 3 - 1");
+    foldSame("f(x)-0");
+    foldSame("x-0-0");
+    foldSame("x+2-2+2");
+    foldSame("x+2-2+2-2");
+    foldSame("x-2+2");
+    foldSame("x-2+2-2");
+    foldSame("x-2+2-2+2");
+
+    foldSame("1+x-0-NaN");
+    foldSame("1+f(x)-0-NaN");
+    foldSame("1+x-0+NaN");
+    foldSame("1+f(x)-0+NaN");
+
+    foldSame("1+x+NaN"); // unfoldable
+    foldSame("x+2-2");   // unfoldable
+    foldSame("x+2");  // nothing to do
+    foldSame("x-2");  // nothing to do
+  }
+
+  public void testFoldSimpleArithmeticOp() {
+    foldSame("x*NaN");
+    foldSame("NaN/y");
+    foldSame("f(x)-0");
+    foldSame("f(x)*1");
+    foldSame("1*f(x)");
+    foldSame("0+a+b");
+    foldSame("0-a-b");
+    foldSame("a+b-0");
+    foldSame("(1+x)*NaN");
+
+    foldSame("(1+f(x))*NaN"); // don't fold side-effects
+  }
+
+  public void testFoldLiteralsAsNumbers() {
+    fold("x/'12'","x/12");
+    fold("x/('12'+'6')", "x/126");
+    fold("true*x", "1*x");
+    fold("x/false", "x/0");  // should we add an error check? :)
+  }
+
   private static final List<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",
@@ -803,11 +910,13 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
           "0",
           "1",
           "''",
+          "'123'",
           "'abc'",
           "'def'",
           "NaN",
           "Infinity"
           // TODO(nicksantos): Add more literals
+          //-Infinity
           //"({})",
           //"[]",
           //"[0]",
