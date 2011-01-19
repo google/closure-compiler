@@ -36,6 +36,8 @@ public class NodeUtilTest extends TestCase {
 
   private static Node parse(String js) {
     Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().languageIn = LanguageMode.ECMASCRIPT5;
     Node n = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
     return n;
@@ -1296,7 +1298,7 @@ public class NodeUtilTest extends TestCase {
 
   public void testGetNumberValue() {
     // Strings
-    assertEquals(1.0, NodeUtil.getNumberValue(getNode("'\\uFEFF1'")));    
+    assertEquals(1.0, NodeUtil.getNumberValue(getNode("'\\uFEFF1'")));
     assertEquals(0.0, NodeUtil.getNumberValue(getNode("''")));
     assertEquals(0.0, NodeUtil.getNumberValue(getNode("' '")));
     assertEquals(0.0, NodeUtil.getNumberValue(getNode("' \\t'")));
@@ -1320,13 +1322,13 @@ public class NodeUtilTest extends TestCase {
 
     assertEquals(15.0, NodeUtil.getNumberValue(getNode("'0xf'")));
     assertEquals(15.0, NodeUtil.getNumberValue(getNode("'0xF'")));
-    
+
     // Chrome and rhino behavior differently from FF and IE. FF and IE
     // consider a negative hex number to be invalid
     assertEquals(null, NodeUtil.getNumberValue(getNode("'-0xf'")));
     assertEquals(null, NodeUtil.getNumberValue(getNode("'-0xF'")));
     assertEquals(null, NodeUtil.getNumberValue(getNode("'+0xf'")));
-    assertEquals(null, NodeUtil.getNumberValue(getNode("'+0xF'")));    
+    assertEquals(null, NodeUtil.getNumberValue(getNode("'+0xF'")));
 
     assertEquals(16.0, NodeUtil.getNumberValue(getNode("'0X10'")));
     assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'0X10.8'")));
@@ -1345,7 +1347,7 @@ public class NodeUtilTest extends TestCase {
     // FireFox treats "infinity" as "Infinity", IE treats it as NaN
     assertEquals(null, NodeUtil.getNumberValue(getNode("'-infinity'")));
     assertEquals(null, NodeUtil.getNumberValue(getNode("'infinity'")));
-    assertEquals(null, NodeUtil.getNumberValue(getNode("'+infinity'")));    
+    assertEquals(null, NodeUtil.getNumberValue(getNode("'+infinity'")));
 
     assertEquals(Double.NaN, NodeUtil.getNumberValue(getNode("'NaN'")));
     assertEquals(
@@ -1553,5 +1555,43 @@ public class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.mayBeString(getNode("(1+{})")));
     assertTrue(NodeUtil.mayBeString(getNode("([]+1)")));
     assertTrue(NodeUtil.mayBeString(getNode("(1+[])")));
+  }
+
+  public void testGetNearestFunctionName() {
+    testFunctionName("function a() {}", "a");
+    testFunctionName("(function a() {})", "a");
+    testFunctionName("({a:function () {}})", "a");
+    testFunctionName("({get a() {}})", "a");
+    testFunctionName("({set a(b) {}})", "a");
+    testFunctionName("({set a(b) {}})", "a");
+    testFunctionName("({1:function () {}})", "1");
+    testFunctionName("var a = function a() {}", "a");
+    testFunctionName("var a;a = function a() {}", "a");
+    testFunctionName("var o;o.a = function a() {}", "o.a");
+    testFunctionName("this.a = function a() {}", "this.a");
+  }
+
+  static void testFunctionName(String js, String expected) {
+    assertEquals(
+        expected,
+        NodeUtil.getNearestFunctionName(getFunctionNode(js)));
+  }
+
+  static Node getFunctionNode(String js) {
+    Node root = parse(js);
+    return getFunctionNode(root);
+  }
+
+  static Node getFunctionNode(Node n) {
+    if (n.getType() == Token.FUNCTION) {
+      return n;
+    }
+    for (Node c : n.children()) {
+      Node result = getFunctionNode(c);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
   }
 }

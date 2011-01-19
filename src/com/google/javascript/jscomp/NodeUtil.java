@@ -364,8 +364,12 @@ public final class NodeUtil {
     // Check for the form { 'x' : function() { } }
     Node parent = n.getParent();
     switch (parent.getType()) {
+      case Token.SET:
+      case Token.GET:
       case Token.STRING:
         // Return the name of the literal's key.
+        return parent.getString();
+      case Token.NUMBER:
         return getStringValue(parent);
     }
 
@@ -2523,9 +2527,9 @@ public final class NodeUtil {
     * @return The Node containing the Function parameters.
     */
   static Node getFnParameters(Node fnNode) {
-   // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
-   Preconditions.checkArgument(fnNode.getType() == Token.FUNCTION);
-   return fnNode.getFirstChild().getNext();
+    // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
+    Preconditions.checkArgument(fnNode.getType() == Token.FUNCTION);
+    return fnNode.getFirstChild().getNext();
   }
 
   /**
