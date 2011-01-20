@@ -86,6 +86,19 @@ public final class NoType extends NoObjectType {
   }
 
   @Override
+  public JSType getLeastSupertype(JSType that) {
+    return that;
+  }
+
+  @Override
+  public JSType getGreatestSubtype(JSType that) {
+    if (that.isUnknownType()) {
+      return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+    return this;
+  }
+
+  @Override
   public BooleanLiteralSet getPossibleToBooleanOutcomes() {
     return BooleanLiteralSet.EMPTY;
   }

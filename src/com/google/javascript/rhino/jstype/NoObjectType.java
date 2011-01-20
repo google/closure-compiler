@@ -43,6 +43,8 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
+import java.io.Serializable;
+
 /**
  * The bottom Object type, representing the subclass of all objects.
  *
@@ -62,6 +64,147 @@ import com.google.javascript.rhino.Node;
  */
 public class NoObjectType extends FunctionType {
   private static final long serialVersionUID = 1L;
+
+  /**
+   * Visitor for {@link NoObjectType#getLeastSupertype(JSType)}.
+   */
+  private final Visitor<JSType> leastSupertypeVisitor =
+      new LeastSupertypeVisitor();
+
+  private class LeastSupertypeVisitor implements Visitor<JSType>, Serializable {
+    private static final long serialVersionUID = 1L;
+
+    public JSType caseNoObjectType() {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    }
+
+    public JSType caseUnknownType() {
+      return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+
+    public JSType caseNoType() {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    }
+
+    public JSType caseBooleanType() {
+      return registry.createUnionType(JSTypeNative.NO_OBJECT_TYPE,
+          JSTypeNative.BOOLEAN_TYPE);
+    }
+
+    public JSType caseFunctionType(FunctionType type) {
+      return type;
+    }
+
+    public JSType caseNullType() {
+      return registry.createUnionType(JSTypeNative.NO_OBJECT_TYPE,
+          JSTypeNative.NULL_TYPE);
+    }
+
+    public JSType caseNumberType() {
+      return registry.createUnionType(JSTypeNative.NO_OBJECT_TYPE,
+          JSTypeNative.NUMBER_TYPE);
+    }
+
+    public JSType caseObjectType(ObjectType type) {
+      return type;
+    }
+
+    public JSType caseStringType() {
+      return registry.createUnionType(JSTypeNative.NO_OBJECT_TYPE,
+          JSTypeNative.STRING_TYPE);
+    }
+
+    public JSType caseUnionType(UnionType type) {
+      return registry.createUnionType(
+          getNativeType(JSTypeNative.NO_OBJECT_TYPE), type);
+    }
+
+    public JSType caseAllType() {
+      return getNativeType(JSTypeNative.ALL_TYPE);
+    }
+
+    public JSType caseVoidType() {
+      return registry.createUnionType(JSTypeNative.NO_OBJECT_TYPE,
+          JSTypeNative.VOID_TYPE);
+    }
+
+    public JSType caseEnumElementType(EnumElementType type) {
+      JSType primitive = type.getPrimitiveType();
+      return primitive.isObject() ? primitive :
+          registry.createUnionType(
+              getNativeType(JSTypeNative.NO_OBJECT_TYPE), type);
+    }
+  }
+
+  /**
+   * Visitor for {@link NoObjectType#getGreatestSubtype(JSType)}.
+   */
+  private final Visitor<JSType> greatestSubtypeVisitor =
+      new GreatestSupertypeVisitor();
+
+  private class GreatestSupertypeVisitor
+      implements Visitor<JSType>, Serializable {
+    private static final long serialVersionUID = 1L;
+
+    public JSType caseNoObjectType() {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    }
+
+    public JSType caseUnknownType() {
+      return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+
+    public JSType caseNoType() {
+      return getNativeType(JSTypeNative.NO_TYPE);
+    }
+
+    public JSType caseBooleanType() {
+      return getNativeType(JSTypeNative.NO_TYPE);
+    }
+
+    public JSType caseFunctionType(FunctionType type) {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    }
+
+    public JSType caseNullType() {
+      return getNativeType(JSTypeNative.NO_TYPE);
+    }
+
+    public JSType caseNumberType() {
+      return getNativeType(JSTypeNative.NO_TYPE);
+    }
+
+    public JSType caseObjectType(ObjectType type) {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    }
+
+    public JSType caseStringType() {
+      return getNativeType(JSTypeNative.NO_TYPE);
+    }
+
+    public JSType caseUnionType(UnionType that) {
+      JSType anyObjectType = getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+      if (anyObjectType.isSubtype(that)) {
+        return anyObjectType;
+      } else if (that.isSubtype(anyObjectType)) {
+        return that;
+      } else {
+        return getNativeType(JSTypeNative.NO_TYPE);
+      }
+    }
+
+    public JSType caseAllType() {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    }
+
+    public JSType caseVoidType() {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    }
+
+    public JSType caseEnumElementType(EnumElementType type) {
+      return type.getPrimitiveType().visit(this);
+    }
+  }
 
   NoObjectType(JSTypeRegistry registry) {
     super(registry, null, null,
@@ -93,6 +236,16 @@ public class NoObjectType extends FunctionType {
   @Override
   public boolean isNoObjectType() {
     return true;
+  }
+
+  @Override
+  public JSType getLeastSupertype(JSType that) {
+    return that.visit(leastSupertypeVisitor);
+  }
+
+  @Override
+  public JSType getGreatestSubtype(JSType that) {
+    return that.visit(greatestSubtypeVisitor);
   }
 
   @Override

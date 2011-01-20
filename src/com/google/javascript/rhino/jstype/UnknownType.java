@@ -111,6 +111,16 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
+  public JSType getLeastSupertype(JSType that) {
+    return this;
+  }
+
+  @Override
+  public JSType getGreatestSubtype(JSType that) {
+    return this;
+  }
+
+  @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseUnknownType();
   }

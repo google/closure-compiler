@@ -578,6 +578,12 @@ public abstract class JSType implements Serializable {
    * getLeastSupertype implementations.
    */
   static JSType getLeastSupertype(JSType thisType, JSType thatType) {
+    if (thatType.isEmptyType() || thatType.isAllType()) {
+      // Defer to the implementations of the end lattice elements when
+      // possible.
+      return thatType.getLeastSupertype(thisType);
+    }
+
     return thisType.registry.createUnionType(thisType, thatType);
   }
 
@@ -606,7 +612,11 @@ public abstract class JSType implements Serializable {
    * getGreatestSubtype implementations.
    */
   static JSType getGreatestSubtype(JSType thisType, JSType thatType) {
-    if (thisType.isUnknownType() || thatType.isUnknownType()) {
+    if (thatType.isEmptyType() || thatType.isAllType()) {
+      // Defer to the implementations of the end lattice elements when
+      // possible.
+      return thatType.getGreatestSubtype(thisType);
+    } else if (thisType.isUnknownType() || thatType.isUnknownType()) {
       // The greatest subtype with any unknown type is the universal
       // unknown type, unless the two types are equal.
       return thisType.isEquivalentTo(thatType) ? thisType :
