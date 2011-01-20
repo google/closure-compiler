@@ -229,6 +229,7 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("var goog = {}; goog.provide('goog.dom');");
   }
 
+
   //////////////////////////////////////////////////////////////////////////////
   // Integration tests
 

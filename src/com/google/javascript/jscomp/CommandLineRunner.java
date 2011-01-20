@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.common.io.LimitInputStream;
 
 import org.kohsuke.args4j.CmdLineException;
@@ -31,6 +32,7 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -38,11 +40,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import java.nio.charset.Charset;
 
 /**
  * CommandLineRunner translates flags into Java API calls on the Compiler.
@@ -314,6 +319,10 @@ public class CommandLineRunner extends
         handler = BooleanOptionHandler.class,
         usage = "Prints the compiler version to stderr.")
     private boolean version = false;
+    
+    @Option(name = "--flagfile",
+        usage = "A file containing additional command-line options.")
+    private String flag_file = "";    
 
     // Our own option parser to be backwards-compatible.
     // It needs to be public because of the crazy reflection that args4j does.
@@ -404,13 +413,14 @@ public class CommandLineRunner extends
     initConfigFromFlags(args, err);
   }
 
-  private void initConfigFromFlags(String[] args, PrintStream err) {
+  private List<String> processArgs(String[] args) {
     // Args4j has a different format that the old command-line parser.
     // So we use some voodoo to get the args into the format that args4j
     // expects.
     Pattern argPattern = Pattern.compile("(--[a-zA-Z_]+)=(.*)");
     Pattern quotesPattern = Pattern.compile("^['\"](.*)['\"]$");
     List<String> processedArgs = Lists.newArrayList();
+    
     for (String arg : args) {
       Matcher matcher = argPattern.matcher(arg);
       if (matcher.matches()) {
@@ -427,13 +437,52 @@ public class CommandLineRunner extends
         processedArgs.add(arg);
       }
     }
+    
+    return processedArgs;
+  }
+  
+  private void processFlagFile(PrintStream err) 
+            throws CmdLineException, IOException {
+    List<String> argsInFile = Lists.newArrayList();
+    File flagFileInput = new File(flags.flag_file);
+    StringTokenizer tokenizer = new StringTokenizer(
+        Files.toString(flagFileInput, Charset.defaultCharset()));
 
+    while (tokenizer.hasMoreTokens()) {
+        argsInFile.add(tokenizer.nextToken());
+    }
+    
+    flags.flag_file = "";
+    List<String> processedFileArgs 
+        = processArgs(argsInFile.toArray(new String[] {}));
+    CmdLineParser parserFileArgs = new CmdLineParser(flags);
+    parserFileArgs.parseArgument(processedFileArgs.toArray(new String[] {}));
+    
+    // Currently we are not supporting this (prevent direct/indirect loops)
+    if (!flags.flag_file.equals("")) {
+      err.println("ERROR - Arguments in the file cannot contain "
+          + "--flagfile option.");
+      isConfigValid = false;
+    }
+  }
+  
+  private void initConfigFromFlags(String[] args, PrintStream err) {
+
+    List<String> processedArgs = processArgs(args);
+    
     CmdLineParser parser = new CmdLineParser(flags);
     isConfigValid = true;
     try {
       parser.parseArgument(processedArgs.toArray(new String[] {}));
+      // For contains --flagfile flag
+      if (!flags.flag_file.equals("")) {
+        processFlagFile(err);
+      }
     } catch (CmdLineException e) {
       err.println(e.getMessage());
+      isConfigValid = false;
+    } catch (IOException ioErr) {
+      err.println("ERROR - " + flags.flag_file + " read error.");
       isConfigValid = false;
     }
 
