@@ -82,6 +82,7 @@ public enum WarningLevel {
     options.checkSuspiciousCode = true;
     options.checkGlobalThisLevel = CheckLevel.WARNING;
     options.checkSymbols = true;
+    options.checkMissingReturn = CheckLevel.WARNING;
 
     // checkTypes has the side-effect of asserting that the
     // correct number of arguments are passed to a function.

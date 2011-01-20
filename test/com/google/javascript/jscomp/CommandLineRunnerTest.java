@@ -648,6 +648,12 @@ public class CommandLineRunnerTest extends TestCase {
     test("goog.asserts.assert(false)", "goog.$asserts$.$assert$(false)");
   }
 
+  public void testMissingReturnCheckOnWithVerbose() {
+    args.add("--warning_level=VERBOSE");
+    test("/** @return {number} */ function f() {f()} f();",
+        CheckMissingReturn.MISSING_RETURN_STATEMENT);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
