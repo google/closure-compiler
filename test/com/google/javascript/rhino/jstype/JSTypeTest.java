@@ -993,7 +993,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(ALL_TYPE));
-    assertTypeEquals(UNKNOWN_TYPE,
+    assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(UNKNOWN_TYPE));
     assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));

@@ -155,14 +155,14 @@ class UnionTypeBuilder implements Serializable {
    * type, return null.
    */
   private JSType reduceAlternatesWithoutUnion() {
-    if (isNativeUnknownType) {
+    if (isAllType) {
+      return registry.getNativeType(ALL_TYPE);
+    } else if (isNativeUnknownType) {
       if (areAllUnknownsChecked) {
         return registry.getNativeType(CHECKED_UNKNOWN_TYPE);
       } else {
         return registry.getNativeType(UNKNOWN_TYPE);
       }
-    } else if (isAllType) {
-      return registry.getNativeType(ALL_TYPE);
     } else {
       int size = alternates.size();
       if (size > MAX_UNION_SIZE) {
