@@ -981,7 +981,14 @@ public class Compiler extends AbstractCompiler {
       getRoot().getLastChild().addChildToBack(newRoot);
     }
 
+    CompilerInput newInput = new CompilerInput(ast);
     inputsByName.put(sourceName, new CompilerInput(ast));
+
+    JSModule module = oldInput.getModule();
+    if (module != null) {
+      module.addAfter(newInput, oldInput);
+      module.remove(oldInput);
+    }
     return true;
   }
 
