@@ -14,13 +14,13 @@
  * limitations under the License.
  */
  
- /**
-  * @fileoverview Definitions for w3c indexed db api
-  *    http://www.w3.org/TR/IndexedDB/.
-  *
-  * @externs
-  * @author guido.tapia@picnet.com.au (Guido Tapia)
-  */
+/**
+ * @fileoverview Definitions for w3c indexed db api
+ *    http://www.w3.org/TR/IndexedDB/.
+ *
+ * @externs
+ * @author guido.tapia@picnet.com.au (Guido Tapia)
+ */
  
 /**
  * @return {!IDBFactory} Provides applications a mechanism for accessing
