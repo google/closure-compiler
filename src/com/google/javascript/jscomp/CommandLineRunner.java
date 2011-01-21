@@ -616,6 +616,7 @@ public class CommandLineRunner extends
     "w3c_css3d.js",
     "w3c_elementtraversal.js",
     "w3c_geolocation.js",
+    "w3c_indexeddb.js",
     "w3c_range.js",
     "w3c_selectors.js",
     "w3c_xml.js",
