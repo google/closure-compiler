@@ -993,6 +993,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(ALL_TYPE));
+    assertTypeEquals(UNKNOWN_TYPE,
+        ALL_TYPE.getLeastSupertype(UNKNOWN_TYPE));
     assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
     assertTypeEquals(ALL_TYPE,
@@ -4335,6 +4337,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         createUnionType(NULL_TYPE, dateMethod),
         createUnionType(UNKNOWN_TYPE, dateMethod),
         createUnionType(namedGoogBar, dateMethod),
+        createUnionType(NULL_TYPE, unresolvedNamedType),
         enumType,
         elementsType,
         dateMethod,

@@ -91,19 +91,6 @@ public final class AllType extends JSType {
   }
 
   @Override
-  public JSType getLeastSupertype(JSType that) {
-    if (that.isUnknownType()) {
-      return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    }
-    return this;
-  }
-
-  @Override
-  public JSType getGreatestSubtype(JSType that) {
-    return that;
-  }
-
-  @Override
   public String toString() {
     return "*";
   }
