@@ -425,7 +425,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      attachLiteralTypes(n);
+      attachLiteralTypes(t, n);
 
       switch (n.getType()) {
         case Token.CALL:
@@ -477,7 +477,7 @@ final class TypedScopeCreator implements ScopeCreator {
       }
     }
 
-    private void attachLiteralTypes(Node n) {
+    private void attachLiteralTypes(NodeTraversal t, Node n) {
       switch (n.getType()) {
         case Token.NULL:
           n.setJSType(getNativeType(NULL_TYPE));
@@ -509,7 +509,7 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
 
         case Token.OBJECTLIT:
-          processObjectLit(n);
+          processObjectLit(t, n);
           break;
 
           // NOTE(nicksantos): If we ever support Array tuples,
@@ -517,7 +517,7 @@ final class TypedScopeCreator implements ScopeCreator {
       }
     }
 
-    private void processObjectLit(Node objectLit) {
+    private void processObjectLit(NodeTraversal t, Node objectLit) {
       JSDocInfo info = objectLit.getJSDocInfo();
       if (info != null &&
           info.getLendsName() != null) {
@@ -544,6 +544,37 @@ final class TypedScopeCreator implements ScopeCreator {
       if (objectLit.getJSType() == null) {
         objectLit.setJSType(typeRegistry.createAnonymousObjectType());
       }
+
+      processObjectLitProperties(
+          t, objectLit, ObjectType.cast(objectLit.getJSType()));
+    }
+
+    /**
+     * Process an object literal and all the types on it.
+     * @param objLit The OBJECTLIT node.
+     * @param objLitType The type of the OBJECTLIT node. This might be a named
+     *     type, because of the lends annotation.
+     */
+    void processObjectLitProperties(
+        NodeTraversal t, Node objLit, ObjectType objLitType) {
+      // TODO(nicksantos): Even if the type of the object literal is null,
+      // we may want to declare its properties in the current scope.
+      if (objLitType == null) {
+        return;
+      }
+
+      for (Node name = objLit.getFirstChild(); name != null;
+           name = name.getNext()) {
+        Node value = name.getFirstChild();
+        String memberName = NodeUtil.getStringValue(name);
+        JSType type = getDeclaredTypeInAnnotation(
+            t, name, name.getJSDocInfo());
+        if (type != null) {
+          boolean isExtern = t.getInput() != null && t.getInput().isExtern();
+          objLitType.defineDeclaredProperty(
+              memberName, type, isExtern, name);
+        }
+      }
     }
 
     /**
@@ -560,8 +591,10 @@ final class TypedScopeCreator implements ScopeCreator {
     JSType getDeclaredTypeInAnnotation(String sourceName,
         Node node, JSDocInfo info) {
       JSType jsType = null;
-      Node objNode = node.getType() == Token.GETPROP ?
-          node.getFirstChild() : null;
+      Node objNode =
+          node.getType() == Token.GETPROP ? node.getFirstChild() :
+          NodeUtil.isObjectLitKey(node, node.getParent()) ? node.getParent() :
+          null;
       if (info != null) {
         if (info.hasType()) {
           jsType = info.getType().evaluate(scope, typeRegistry);

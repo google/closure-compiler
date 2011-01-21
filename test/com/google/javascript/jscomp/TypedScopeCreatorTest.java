@@ -785,6 +785,57 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         globalScope.getVar("ns.foo").getType().toString());
   }
 
+  public void testDeclaredObjectLitProperty1() throws Exception {
+    testSame("var x = {/** @type {number} */ y: 3};");
+    ObjectType xType = ObjectType.cast(globalScope.getVar("x").getType());
+    assertEquals(
+        "number",
+         xType.getPropertyType("y").toString());
+    assertEquals(
+        "{y: number}",
+        xType.toString());
+  }
+
+  public void testDeclaredObjectLitProperty2() throws Exception {
+    // TODO(nicksantos): Fix this so that it infers that the type
+    // of the function is @return void.
+    testSame("var x = {/** @param {number} z */ y: function(z){}};");
+    ObjectType xType = ObjectType.cast(globalScope.getVar("x").getType());
+    assertEquals(
+        "function (number): ?",
+         xType.getPropertyType("y").toString());
+    assertEquals(
+        "{y: function (number): ?}",
+        xType.toString());
+  }
+
+  public void testDeclaredObjectLitProperty3() throws Exception {
+    // TODO(nicksantos): Fix this so that it infers that the type
+    // of the function is function(?): number.
+    testSame("function f() {" +
+        "  var x = {/** @return {number} */ y: function(z){ return 3; }};" +
+        "}");
+    ObjectType xType = ObjectType.cast(lastLocalScope.getVar("x").getType());
+    assertEquals(
+        "function (): number",
+         xType.getPropertyType("y").toString());
+    assertEquals(
+        "{y: function (): number}",
+        xType.toString());
+  }
+
+  public void testDeclaredObjectLitProperty4() throws Exception {
+    testSame("var x = {y: 5, /** @type {number} */ z: 3};");
+    ObjectType xType = ObjectType.cast(globalScope.getVar("x").getType());
+    assertEquals(
+        "number", xType.getPropertyType("y").toString());
+    assertFalse(xType.isPropertyTypeDeclared("y"));
+    assertTrue(xType.isPropertyTypeDeclared("z"));
+    assertEquals(
+        "{y: number, z: number}",
+        xType.toString());
+  }
+
   public void testBadCtorInit1() throws Exception {
     testSame("/** @constructor */ var f;", CTOR_INITIALIZER);
   }
