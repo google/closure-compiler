@@ -982,7 +982,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     CompilerInput newInput = new CompilerInput(ast);
-    inputsByName.put(sourceName, new CompilerInput(ast));
+    inputsByName.put(sourceName, newInput);
 
     JSModule module = oldInput.getModule();
     if (module != null) {
