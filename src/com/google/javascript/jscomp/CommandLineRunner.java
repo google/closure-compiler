@@ -55,7 +55,8 @@ import java.nio.charset.Charset;
  * This class may be extended and used to create other Java classes
  * that behave the same as running the Compiler from the command line. If you
  * want to run the compiler in-process in Java, you should look at this class
- * for hints on what API calls to make, but you should not use this class directly.
+ * for hints on what API calls to make, but you should not use this class
+ * directly.
  *
  * Example:
  * <pre>
@@ -120,7 +121,6 @@ public class CommandLineRunner extends
     private CompilerOptions.DevMode jscomp_dev_mode =
         CompilerOptions.DevMode.OFF;
 
-    // TODO(nicksantos): Make the next 2 flags package-private.
     @Option(name = "--logging_level",
         usage = "The logging level (standard java.util.logging.Level"
         + " values) for Compiler progress. Does not control errors or"
