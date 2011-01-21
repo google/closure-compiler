@@ -312,7 +312,7 @@ XMLHttpRequest.prototype.open = function(method, url, opt_async, opt_user,
 XMLHttpRequest.prototype.setRequestHeader = function(header, value) {};
 
 /**
- * @param {?string=} opt_data
+ * @param {Document|string=} opt_data
  * @return {undefined}
  * @see http://www.w3.org/TR/XMLHttpRequest/#send
  */
