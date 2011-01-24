@@ -804,12 +804,13 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if (parent.getType() == Token.INSTANCEOF &&
-          parent.getLastChild() == n) {
+          parent.getLastChild() == n &&
+          // Don't cover GETELEMs with a global root node.
+          n.isQualifiedName()) {
         JsName checkedClass = getName(nameInfo.name, true);
         refNodes.add(
             new InstanceOfCheckNode(
                 checkedClass, n, parent, parent.getParent()));
-
         return;
       }
 

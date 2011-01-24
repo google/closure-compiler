@@ -916,6 +916,16 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "}; new Bar().func();");
   }
 
+  public void testDoNotChangeInstanceOfGetElem() {
+    testSame("var goog = {};" +
+        "function f(obj, name) {" +
+        "  if (obj instanceof goog[name]) {" +
+        "    return name;" +
+        "  }" +
+        "}" +
+        "window['f'] = f;");
+  }
+
   public void testWeirdnessOnLeftSideOfPrototype() {
     // This checks a bug where 'x' was removed, but the function referencing
     // it was not, causing problems.
