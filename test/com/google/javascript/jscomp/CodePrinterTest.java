@@ -222,7 +222,8 @@ public class CodePrinterTest extends TestCase {
     assertPrint("function f(){}", "function f(){}");
 
     // Make sure we don't treat non-latin character escapes as raw strings.
-    assertPrint("({ 'a': 4, '\\u0100': 4 })", "({a:4,\"\\u0100\":4})");
+    assertPrint("({ 'a': 4, '\\u0100': 4 })", "({\"a\":4,\"\\u0100\":4})");
+    assertPrint("({ a: 4, '\\u0100': 4 })", "({a:4,\"\\u0100\":4})");
 
     // Test if statement and for statements with single statements in body.
     assertPrint("if (true) { alert();}", "if(true)alert()");
@@ -1089,6 +1090,13 @@ public class CodePrinterTest extends TestCase {
     assertEquals("\"f\";\n\"g\";\n", result);
   }
 
+  public void testObjectLit() {
+    assertPrint("({x:1})", "({x:1})");
+    assertPrint("var x=({x:1})", "var x={x:1}");
+    assertPrint("var x={'x':1}", "var x={\"x\":1}");
+    assertPrint("var x={1:1}", "var x={1:1}");
+  }
+
   public void testGetter() {
     assertPrint("var x = {}", "var x={}");
     assertPrint("var x = {get a() {return 1}}", "var x={get a(){return 1}}");
@@ -1128,4 +1136,6 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x = - - 2;", "var x=2");
     assertPrint("var x = - (2);", "var x=-2");
   }
+  
+  
 }

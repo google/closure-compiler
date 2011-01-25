@@ -646,6 +646,7 @@ class CodeGenerator {
             // Object literal property names don't have to be quoted if they are
             // not JavaScript keywords
             if (c.getType() == Token.STRING &&
+                !c.isQuotedString() &&
                 !TokenStream.isKeyword(c.getString()) &&
                 TokenStream.isJSIdentifier(c.getString()) &&
                 // do not encode literally any non-literal characters that were

@@ -156,13 +156,14 @@ public class SourceMapTest extends TestCase {
                    "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
                    "\"count\": 1 }\n" +
 
-                   "[0,0,0,0,1,1,1,1,1,1,1,1,2,2,3,3,0,0]\n" +
+                   "[0,0,1,1,1,0,2,2,2,2,2,2,2,2,3,3,4,4,0,0]\n" +
 
                    "/** Begin file information. **/\n" +
                    "[]\n" +
 
                    "/** Begin mapping definitions. **/\n" +
                    "[\"testcode\",1,1]\n" +
+                   "[\"testcode\",1,3]\n" +
                    "[\"testcode\",1,18,\"q\"]\n" +
                    "[\"testcode\",1,18]\n" +
                    "[\"testcode\",1,21]\n");
