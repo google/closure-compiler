@@ -20,5 +20,14 @@ package com.google.javascript.jscomp;
  * Interface used by {@link ReplaceCssNames} to substitute CSS class names.
  */
 public interface CssRenamingMap {
+  public static enum Style {
+    BY_WHOLE,
+    BY_PART,
+  }
+
   String get(String value);
+
+  // TODO(nicksantos): Uncomment this once all renaming maps implement
+  // this method.
+  //Style getStyle();
 }
