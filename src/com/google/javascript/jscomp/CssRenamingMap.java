@@ -30,4 +30,20 @@ public interface CssRenamingMap {
   // TODO(nicksantos): Uncomment this once all renaming maps implement
   // this method.
   //Style getStyle();
+
+  public static abstract class ByPart {
+    abstract public String get(String value);
+
+    public Style getStyle() {
+      return Style.BY_PART;
+    }
+  }
+
+  public static abstract class ByWhole {
+    abstract public String get(String value);
+
+    public Style getStyle() {
+      return Style.BY_WHOLE;
+    }
+  }
 }
