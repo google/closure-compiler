@@ -949,12 +949,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkDeclaredPropertyInheritance(
       NodeTraversal t, Node n, FunctionType ctorType, String propertyName,
       JSDocInfo info, JSType propertyType) {
-    // TODO(user): We're not 100% confident that type-checking works,
-    // so we return quietly if the unknown type is a superclass of this type.
-    // Remove this check as we become more confident. We should flag a warning
-    // when the unknown type is on the inheritance chain, as it is likely
-    // because of a programmer error.
-    if (ctorType.hasUnknownSupertype()) {
+    // If the supertype doesn't resolve correctly, we've warned about this
+    // already.
+    if (hasUnknownOrEmptySupertype(ctorType)) {
       return;
     }
 
@@ -966,11 +963,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     boolean foundInterfaceProperty = false;
     if (ctorType.isConstructor()) {
       for (JSType implementedInterface : ctorType.getImplementedInterfaces()) {
-        if (implementedInterface.isUnknownType()) {
+        if (implementedInterface.isUnknownType() ||
+            implementedInterface.isEmptyType()) {
           continue;
         }
         FunctionType interfaceType =
             implementedInterface.toObjectType().getConstructor();
+        Preconditions.checkNotNull(interfaceType);
         boolean interfaceHasProperty =
             interfaceType.getPrototype().hasProperty(propertyName);
         foundInterfaceProperty = foundInterfaceProperty || interfaceHasProperty;
@@ -1031,6 +1030,34 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       compiler.report(
           t.makeError(n, UNKNOWN_OVERRIDE,
               propertyName, ctorType.getInstanceType().toString()));
+    }
+  }
+
+  /**
+   * Given a constructor or an interface type, find out whether the unknown
+   * type is a supertype of the current type.
+   */
+  private static boolean hasUnknownOrEmptySupertype(FunctionType ctor) {
+    Preconditions.checkArgument(ctor.isConstructor() || ctor.isInterface());
+    Preconditions.checkArgument(!ctor.isUnknownType());
+
+    // The type system should notice inheritance cycles on its own
+    // and break the cycle.
+    while (true) {
+      ObjectType maybeSuperInstanceType =
+          ctor.getPrototype().getImplicitPrototype();
+      if (maybeSuperInstanceType == null) {
+        return false;
+      }
+      if (maybeSuperInstanceType.isUnknownType() ||
+          maybeSuperInstanceType.isEmptyType()) {
+        return true;
+      }
+      ctor = maybeSuperInstanceType.getConstructor();
+      if (ctor == null) {
+        return false;
+      }
+      Preconditions.checkState(ctor.isConstructor() || ctor.isInterface());
     }
   }
 

@@ -72,16 +72,11 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
-    return that.isEmptyType() ? TernaryValue.TRUE : TernaryValue.UNKNOWN;
-  }
-
-  @Override
   public boolean isSubtype(JSType that) {
     if (JSType.isSubtype(this, that)) {
       return true;
     } else {
-      return that.isObject() && !that.isNoType();
+      return that.isObject() && !that.isNoType() && !that.isNoResolvedType();
     }
   }
 

@@ -124,8 +124,14 @@ class UnionTypeBuilder implements Serializable {
         Iterator<JSType> it = alternates.iterator();
         while (it.hasNext()) {
           JSType current = it.next();
+
+          // Unknown and NoResolved types may just be names that haven't
+          // been resolved yet. So keep these in the union, and just use
+          // equality checking for simple de-duping.
           if (alternate.isUnknownType() ||
-              current.isUnknownType()) {
+              current.isUnknownType() ||
+              alternate.isNoResolvedType() ||
+              current.isNoResolvedType()) {
             if (alternate.isEquivalentTo(current)) {
               // Alternate is unnecessary.
               return this;

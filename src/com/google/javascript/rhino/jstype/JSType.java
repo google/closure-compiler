@@ -151,12 +151,16 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
+  public boolean isNoResolvedType() {
+    return false;
+  }
+
   public boolean isNoObjectType() {
     return false;
   }
 
   public final boolean isEmptyType() {
-    return isNoType() || isNoObjectType();
+    return isNoType() || isNoObjectType() || isNoResolvedType();
   }
 
   public boolean isNumberObjectType() {
@@ -510,10 +514,23 @@ public abstract class JSType implements Serializable {
   }
 
   TernaryValue testForEqualityHelper(JSType aType, JSType bType) {
-    if (bType.isAllType() || bType.isEmptyType() || bType.isUnknownType() ||
-        aType.isAllType() || aType.isEmptyType() || aType.isUnknownType()) {
+    if (bType.isAllType() || bType.isUnknownType() ||
+        bType.isNoResolvedType() ||
+        aType.isAllType() || aType.isUnknownType() ||
+        aType.isNoResolvedType()) {
       return UNKNOWN;
     }
+
+    boolean aIsEmpty = aType.isEmptyType();
+    boolean bIsEmpty = bType.isEmptyType();
+    if (aIsEmpty || bIsEmpty) {
+      if (aIsEmpty && bIsEmpty) {
+        return TernaryValue.TRUE;
+      } else {
+        return UNKNOWN;
+      }
+    }
+
     if (aType.isFunctionType() || bType.isFunctionType()) {
       JSType otherType = aType.isFunctionType() ? bType : aType;
       // In theory, functions are comparable to anything except
@@ -522,11 +539,12 @@ public abstract class JSType implements Serializable {
       // In practice, how a function serializes to a string is
       // implementation-dependent, so it does not really make sense to test
       // for equality with a string.
-      if (!otherType.getGreatestSubtype(
-              getNativeType(JSTypeNative.OBJECT_TYPE)).isEmptyType()) {
-        return TernaryValue.UNKNOWN;
-      } else {
+      JSType meet = otherType.getGreatestSubtype(
+          getNativeType(JSTypeNative.OBJECT_TYPE));
+      if (meet.isNoType() || meet.isNoObjectType()) {
         return TernaryValue.FALSE;
+      } else {
+        return TernaryValue.UNKNOWN;
       }
     }
     if (bType.isEnumElementType() || bType.isUnionType()) {
@@ -578,7 +596,10 @@ public abstract class JSType implements Serializable {
    * getLeastSupertype implementations.
    */
   static JSType getLeastSupertype(JSType thisType, JSType thatType) {
-    return thisType.registry.createUnionType(thisType, thatType);
+    boolean areEquivalent = thisType.isEquivalentTo(thatType);
+    return areEquivalent ? thisType :
+        filterNoResolvedType(
+            thisType.registry.createUnionType(thisType, thatType));
   }
 
   /**
@@ -594,7 +615,7 @@ public abstract class JSType implements Serializable {
    * @return {@code this &#8744; that}
    */
   public JSType getGreatestSubtype(JSType that) {
-     if (that.isRecordType()) {
+    if (that.isRecordType()) {
       // Record types have their own implementation of getGreatestSubtype.
       return that.getGreatestSubtype(this);
     }
@@ -606,15 +627,17 @@ public abstract class JSType implements Serializable {
    * getGreatestSubtype implementations.
    */
   static JSType getGreatestSubtype(JSType thisType, JSType thatType) {
-    if (thisType.isUnknownType() || thatType.isUnknownType()) {
+    if (thisType.isEquivalentTo(thatType)) {
+      return thisType;
+    } else if (thisType.isUnknownType() || thatType.isUnknownType()) {
       // The greatest subtype with any unknown type is the universal
       // unknown type, unless the two types are equal.
       return thisType.isEquivalentTo(thatType) ? thisType :
           thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else if (thisType.isSubtype(thatType)) {
-      return thisType;
+      return filterNoResolvedType(thisType);
     } else if (thatType.isSubtype(thisType)) {
-      return thatType;
+      return filterNoResolvedType(thatType);
     } else if (thisType.isUnionType()) {
       return ((UnionType) thisType).meet(thatType);
     } else if (thatType.isUnionType()) {
@@ -623,6 +646,42 @@ public abstract class JSType implements Serializable {
       return thisType.getNativeType(JSTypeNative.NO_OBJECT_TYPE);
     }
     return thisType.getNativeType(JSTypeNative.NO_TYPE);
+  }
+
+  /**
+   * When computing infimums, we may get a situation like
+   * inf(Type1, Type2)
+   * where both types are unresolved, so they're technically
+   * subtypes of one another.
+   *
+   * If this happens, filter them down to NoResolvedType.
+   */
+  static JSType filterNoResolvedType(JSType type) {
+    if (type.isNoResolvedType()) {
+      // inf(UnresolvedType1, UnresolvedType2) needs to resolve
+      // to the base unresolved type, so that the relation is symmetric.
+      return type.getNativeType(JSTypeNative.NO_RESOLVED_TYPE);
+    } else if (type instanceof UnionType) {
+      UnionType unionType = (UnionType) type;
+      boolean needsFiltering = false;
+      for (JSType alt : unionType.getAlternates()) {
+        if (alt.isNoResolvedType()) {
+          needsFiltering = true;
+          break;
+        }
+      }
+
+      if (needsFiltering) {
+        UnionTypeBuilder builder = new UnionTypeBuilder(type.registry);
+        for (JSType alt : unionType.getAlternates()) {
+          if (!alt.isNoResolvedType()) {
+            builder.addAlternate(alt);
+          }
+        }
+        return builder.build();
+      }
+    }
+    return type;
   }
 
   /**
