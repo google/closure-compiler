@@ -31,7 +31,7 @@ public interface CssRenamingMap {
   // this method.
   //Style getStyle();
 
-  public static abstract class ByPart {
+  public static abstract class ByPart implements CssRenamingMap {
     abstract public String get(String value);
 
     public Style getStyle() {
@@ -39,7 +39,7 @@ public interface CssRenamingMap {
     }
   }
 
-  public static abstract class ByWhole {
+  public static abstract class ByWhole implements CssRenamingMap {
     abstract public String get(String value);
 
     public Style getStyle() {
