@@ -17,6 +17,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
@@ -59,6 +60,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
 
   protected CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
+    options.languageIn = LanguageMode.ECMASCRIPT5;
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setCodingConvention(getCodingConvention());

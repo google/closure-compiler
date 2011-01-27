@@ -492,23 +492,26 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case Token.NUMBER:
-        if (n.getParent().getType() != Token.OBJECTLIT) {
+        // Object literal keys are handled with OBJECTLIT
+        if (!NodeUtil.isObjectLitKey(n, n.getParent())) {
           ensureTyped(t, n, NUMBER_TYPE);
-        } else {
-          typeable = false;
         }
+        break;
+
+      case Token.STRING:
+        // Object literal keys are handled with OBJECTLIT
+        if (!NodeUtil.isObjectLitKey(n, n.getParent())) {
+          ensureTyped(t, n, STRING_TYPE);
+        }
+        break;
+
+      case Token.GET:
+      case Token.SET:
+        // Object literal keys are handled with OBJECTLIT
         break;
 
       case Token.ARRAYLIT:
         ensureTyped(t, n, ARRAY_TYPE);
-        break;
-
-      case Token.STRING:
-        if (n.getParent().getType() != Token.OBJECTLIT) {
-          ensureTyped(t, n, STRING_TYPE);
-        } else {
-          typeable = false;
-        }
         break;
 
       case Token.REGEXP:
@@ -774,6 +777,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             ensureTyped(t, n);
           }
         }
+        if (n.getType() == Token.OBJECTLIT) {
+          for (Node key : n.children()) {
+            visitObjLitKey(t, key, n);
+          }
+        }
         break;
 
       default:
@@ -923,6 +931,64 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ensureTyped(t, assign, rightType);
     } else {
       ensureTyped(t, assign);
+    }
+  }
+
+  /**
+   * Visits an object literal field definition <code>key : value</code>.
+   *
+   * If the <code>lvalue</code> is a prototype modification, we change the
+   * schema of the object type it is referring to.
+   *
+   * @param t the traversal
+   * @param key the assign node
+   */
+  private void visitObjLitKey(NodeTraversal t, Node key, Node objlit) {
+    // TODO(johnlenz): Validate get and set function declarations are valid
+    // as is the functions can have "extraneous" bits.
+
+    // For getter and setter property definitions the
+    // rvalue type != the property type.
+    Node rvalue = key.getFirstChild();
+    JSType rightType = NodeUtil.getObjectLitKeyTypeFromValueType(
+        key, getJSType(rvalue));
+    if (rightType == null) {
+      rightType = getNativeType(UNKNOWN_TYPE);
+    }
+
+    Node owner = objlit;
+
+    // Validate value is assignable to the key type.
+
+    JSType keyType = getJSType(key);
+    boolean valid = validator.expectCanAssignToPropertyOf(t, key,
+        rightType, keyType,
+        owner, NodeUtil.getObjectLitKeyName(key));
+    if (valid) {
+      ensureTyped(t, key, rightType);
+    } else {
+      ensureTyped(t, key);
+    }
+
+    // Validate that the key type is assignable to the object property type.
+    // This is necessary as the objlit may have been cast to a non-literal
+    // object type.
+    // TODO(johnlenz): consider introducing a CAST node to the AST (or
+    // perhaps a parentheses node).
+
+    JSType objlitType = getJSType(objlit);
+    ObjectType type = ObjectType.cast(
+        objlitType.restrictByNotNullOrUndefined());
+    if (type != null) {
+      String property = NodeUtil.getObjectLitKeyName(key);
+      if (type.hasProperty(property) &&
+          !type.isPropertyTypeInferred(property) &&
+          !propertyIsImplicitCast(type, property)) {
+        validator.expectCanAssignToPropertyOf(
+            t, key, keyType,
+            type.getPropertyType(property), owner, property);
+      }
+      return;
     }
   }
 

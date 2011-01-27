@@ -32,6 +32,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
@@ -66,7 +67,9 @@ public class TypeInferenceTest extends TestCase {
   @Override
   public void setUp() {
     compiler = new Compiler();
-    compiler.initOptions(new CompilerOptions());
+    CompilerOptions options = new CompilerOptions();
+    options.languageIn = LanguageMode.ECMASCRIPT5;
+    compiler.initOptions(options);
     registry = compiler.getTypeRegistry();
     assumptions = Maps.newHashMap();
     returnScope = null;
@@ -750,5 +753,31 @@ public class TypeInferenceTest extends TestCase {
     inFunction("var x = 'foo'; "
                + "try { throw new Error(x = 3); } catch (ex) {}");
     verify("x", NUMBER_TYPE);
+  }
+
+  public void testObjectLit() {
+    inFunction("var x = {}; var out = x.a;");
+    verify("out", UNKNOWN_TYPE);  // Shouldn't this be 'undefined'?
+
+    inFunction("var x = {a:1}; var out = x.a;");
+    verify("out", NUMBER_TYPE);
+
+    inFunction("var x = { get a() {return 1} }; var out = x.a;");
+    verify("out", UNKNOWN_TYPE);
+
+    inFunction(
+        "var x = {" +
+        "  /** @return {number} */ get a() {return 1}" +
+        "};" +
+        "var out = x.a;");
+    verify("out", NUMBER_TYPE);
+
+    inFunction("var x = { set a(b) {} }; var out = x.a;");
+    verify("out", UNKNOWN_TYPE);
+
+    inFunction("var x = { " +
+            "/** @param {number} b */ set a(b) {} };" +
+            "var out = x.a;");
+    verify("out", NUMBER_TYPE);
   }
 }

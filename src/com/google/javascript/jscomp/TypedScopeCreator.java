@@ -488,11 +488,17 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
 
         case Token.STRING:
-          n.setJSType(getNativeType(STRING_TYPE));
+          // Defer keys to the Token.OBJECTLIT case
+          if (!NodeUtil.isObjectLitKey(n, n.getParent())) {
+            n.setJSType(getNativeType(STRING_TYPE));
+          }
           break;
 
         case Token.NUMBER:
-          n.setJSType(getNativeType(NUMBER_TYPE));
+          // Defer keys to the Token.OBJECTLIT case
+          if (!NodeUtil.isObjectLitKey(n, n.getParent())) {
+            n.setJSType(getNativeType(NUMBER_TYPE));
+          }
           break;
 
         case Token.TRUE:
@@ -557,22 +563,23 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     void processObjectLitProperties(
         NodeTraversal t, Node objLit, ObjectType objLitType) {
-      // TODO(nicksantos): Even if the type of the object literal is null,
-      // we may want to declare its properties in the current scope.
-      if (objLitType == null) {
-        return;
-      }
-
       for (Node name = objLit.getFirstChild(); name != null;
            name = name.getNext()) {
         Node value = name.getFirstChild();
-        String memberName = NodeUtil.getStringValue(name);
-        JSType type = getDeclaredTypeInAnnotation(
+        String memberName = NodeUtil.getObjectLitKeyName(name);
+        JSType valueType = getDeclaredTypeInAnnotation(
             t, name, name.getJSDocInfo());
-        if (type != null) {
-          boolean isExtern = t.getInput() != null && t.getInput().isExtern();
-          objLitType.defineDeclaredProperty(
-              memberName, type, isExtern, name);
+        JSType keyType = NodeUtil.getObjectLitKeyTypeFromValueType(
+            name, valueType);
+        if (keyType != null) {
+          name.setJSType(keyType);
+          // TODO(nicksantos): Even if the type of the object literal is null,
+          // we may want to declare its properties in the current scope.
+          if (objLitType != null) {
+            boolean isExtern = t.getInput() != null && t.getInput().isExtern();
+            objLitType.defineDeclaredProperty(
+                memberName, keyType, isExtern, name);
+          }
         }
       }
     }
@@ -917,8 +924,11 @@ final class TypedScopeCreator implements ScopeCreator {
           Node key = value.getFirstChild();
           while (key != null) {
             String keyName = NodeUtil.getStringValue(key);
-
-            if (enumType.hasOwnProperty(keyName)) {
+            if (keyName == null) {
+              // GET and SET don't have a String value;
+              compiler.report(
+                  JSError.make(sourceName, key, ENUM_NOT_CONSTANT, keyName));
+            } else if (enumType.hasOwnProperty(keyName)) {
               compiler.report(JSError.make(sourceName, key, ENUM_DUP, keyName));
             } else if (!codingConvention.isValidEnumKey(keyName)) {
               compiler.report(

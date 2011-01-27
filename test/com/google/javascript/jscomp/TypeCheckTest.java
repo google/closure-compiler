@@ -655,6 +655,166 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "return goog.isString(this.a) ? this.a : 'a'; }", null);
   }
 
+  public void testQualifiedNameReduction5a() throws Exception {
+    testTypes("var x = {/** @type {string} */ a:'b' };\n" +
+        "/** @return {string} */ var f = function() {\n" +
+        "return x.a; }");
+  }
+
+  public void testQualifiedNameReduction5b() throws Exception {
+    testTypes(
+        "var x = {/** @type {number} */ a:12 };\n" +
+        "/** @return {string} */\n" +
+        "var f = function() {\n" +
+        "  return x.a;\n" +
+        "}");  // would like this to be an error.
+  }
+
+  public void testQualifiedNameReduction5c() throws Exception {
+    testTypes(
+        "/** @return {string} */ var f = function() {\n" +
+        "var x = {/** @type {number} */ a:0 };\n" +
+        "return (x.a) ? (x.a) : 'a'; }",
+        "inconsistent return type\n" +
+        "found   : (number|string)\n" +
+        "required: string");
+  }
+
+  public void testQualifiedNameReduction6() throws Exception {
+    testTypes(
+        "/** @return {string} */ var f = function() {\n" +
+        "var x = {/** @return {string?} */ get a() {return 'a'}};\n" +
+        "return x.a ? x.a : 'a'; }");
+  }
+
+  public void testQualifiedNameReduction7() throws Exception {
+    testTypes(
+        "/** @return {string} */ var f = function() {\n" +
+        "var x = {/** @return {number} */ get a() {return 12}};\n" +
+        "return x.a; }",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testQualifiedNameReduction7a() throws Exception {
+    // It would be nice to find a way to make this an error.
+    testTypes(
+        "/** @return {string} */ var f = function() {\n" +
+        "var x = {get a() {return 12}};\n" +
+        "return x.a; }");
+  }
+
+  public void testQualifiedNameReduction8() throws Exception {
+    testTypes(
+        "/** @return {string} */ var f = function() {\n" +
+        "var x = {get a() {return 'a'}};\n" +
+        "return x.a ? x.a : 'a'; }");
+  }
+
+  public void testQualifiedNameReduction9() throws Exception {
+    testTypes(
+        "/** @return {string} */ var f = function() {\n" +
+        "var x = { /** @param {string} b */ set a(b) {}};\n" +
+        "return x.a ? x.a : 'a'; }");
+  }
+
+  public void testQualifiedNameReduction10() throws Exception {
+    // TODO(johnlenz): separate setter property types from getter property
+    // types.
+    testTypes(
+        "/** @return {string} */ var f = function() {\n" +
+        "var x = { /** @param {number} b */ set a(b) {}};\n" +
+        "return x.a ? x.a : 'a'; }",
+        "inconsistent return type\n" +
+        "found   : (number|string)\n" +
+        "required: string");
+  }
+
+  public void testObjLitDef1a() throws Exception {
+    testTypes(
+        "var x = {/** @type {number} */ a:12 };\n" +
+        "x.a = 'a';",
+        "assignment to property a of x\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testObjLitDef1b() throws Exception {
+    testTypes(
+        "function f(){" +
+          "var x = {/** @type {number} */ a:12 };\n" +
+          "x.a = 'a';" +
+        "};\n" +
+        "f();",
+        "assignment to property a of x\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testObjLitDef2a() throws Exception {
+    testTypes(
+        "var x = {/** @param {number} b */ set a(b){} };\n" +
+        "x.a = 'a';",
+        "assignment to property a of x\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testObjLitDef2b() throws Exception {
+    testTypes(
+        "function f(){" +
+          "var x = {/** @param {number} b */ set a(b){} };\n" +
+          "x.a = 'a';" +
+        "};\n" +
+        "f();",
+        "assignment to property a of x\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
+  public void testObjLitDef3a() throws Exception {
+    testTypes(
+        "/** @type {string} */ var y;\n" +
+        "var x = {/** @return {number} */ get a(){} };\n" +
+        "y = x.a;",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testObjLitDef3b() throws Exception {
+    testTypes(
+      "/** @type {string} */ var y;\n" +
+        "function f(){" +
+          "var x = {/** @return {number} */ get a(){} };\n" +
+          "y = x.a;" +
+        "};\n" +
+        "f();",
+        "assignment\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testObjLitDef4() throws Exception {
+    testTypes(
+        "var x = {" +
+          "/** @return {number} */ a:12 };\n",
+          "assignment to property a of {a: function (): number}\n" +
+          "found   : number\n" +
+          "required: function (): number");
+  }
+
+  public void testObjLitDef5() throws Exception {
+    testTypes(
+        "var x = {};\n" +
+        "/** @return {number} */ x.a = 12;\n",
+        "assignment to property a of x\n" +
+        "found   : number\n" +
+        "required: function (): number");
+  }
+
+
   public void testInstanceOfReduction1() throws Exception {
     testTypes("/** @constructor */ var T = function() {};\n" +
         "/** @param {T|string} x\n@return {T} */\n" +
@@ -5650,6 +5810,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testCast16() throws Exception {
+    // A type cast should not invalidate the checks on the members
+    testTypes(
+        "for (var i = 0; i < 10; i++) {" +
+          "var x = /** @type {Object|number} */ (" +
+          "  {/** @type {string} */ foo: 3});" +
+        "}",
+        "assignment to property foo of (Object|null|number)\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testCast17() throws Exception {
     // Mostly verifying that rhino actually understands these JsDocs.
     testTypes("/** @constructor */ function Foo() {} \n" +
         "/** @type {Foo} */ var x = /** @type {Foo} */ ({})");

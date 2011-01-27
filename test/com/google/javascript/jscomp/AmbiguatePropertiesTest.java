@@ -249,9 +249,16 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     test(js, output);
   }
 
-  public void testPrototypePropertiesAsObjLitKeys() {
+  public void testPrototypePropertiesAsObjLitKeys1() {
+    test("/** @constructor */ function Bar() {};" +
+             "Bar.prototype = {2: function(){}, getA: function(){}};",
+             "/** @constructor */ function Bar() {};" +
+             "Bar.prototype = {2: function(){}, a: function(){}};");
+  }
+
+  public void testPrototypePropertiesAsObjLitKeys2() {
     testSame("/** @constructor */ function Bar() {};" +
-             "Bar.prototype = {2: function(){}, getA: function(){}};");
+             "Bar.prototype = {2: function(){}, 'getA': function(){}};");
   }
 
   public void testQuotedPrototypeProperty() {

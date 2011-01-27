@@ -702,13 +702,17 @@ class TypeInference
          name = name.getNext()) {
       Node value = name.getFirstChild();
       scope = traverse(value, scope);
-      String memberName = NodeUtil.getStringValue(name);
+      String memberName = NodeUtil.getObjectLitKeyName(name);
       if (memberName != null) {
-        objectType.defineInferredProperty(memberName, getJSType(value), false,
-            name);
+        JSType rawValueType =  name.getFirstChild().getJSType();
+        JSType valueType = NodeUtil.getObjectLitKeyTypeFromValueType(
+            name, rawValueType);
+        if (valueType == null) {
+          valueType = getNativeType(UNKNOWN_TYPE);
+        }
+        objectType.defineInferredProperty(memberName, valueType, false, name);
       } else {
         n.setJSType(getNativeType(UNKNOWN_TYPE));
-        return scope;
       }
     }
     return scope;

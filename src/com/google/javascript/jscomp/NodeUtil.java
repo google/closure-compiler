@@ -25,6 +25,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.Arrays;
@@ -1860,6 +1862,55 @@ public final class NodeUtil {
         return true;
     }
     return false;
+  }
+
+  /**
+   * Get the name of an object literal key.
+   *
+   * @param key A node
+   */
+  static String getObjectLitKeyName(Node key) {
+    switch (key.getType()) {
+      case Token.NUMBER:
+        return NodeUtil.getStringValue(key);
+      case Token.STRING:
+      case Token.GET:
+      case Token.SET:
+        return key.getString();
+    }
+    throw new IllegalStateException("Unexpected node type: " + key);
+  }
+
+  /**
+   * @param key A OBJECTLIT key node.
+   * @return The type expected when using the key.
+   */
+  static JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
+    if (valueType != null) {
+      switch (key.getType()) {
+        case Token.GET:
+          // GET must always return a function type.
+          if (valueType.isFunctionType()) {
+            FunctionType fntype = ((FunctionType) valueType);
+            valueType = fntype.getReturnType();
+          } else {
+            return null;
+          }
+          break;
+        case Token.SET:
+          if (valueType.isFunctionType()) {
+            // SET must always return a function type.
+            FunctionType fntype = ((FunctionType) valueType);
+            Node param = fntype.getParametersNode().getFirstChild();
+            // SET function must always have one parameter.
+            valueType = param.getJSType();
+          } else {
+            return null;
+          }
+          break;
+      }
+    }
+    return valueType;
   }
 
   /**
