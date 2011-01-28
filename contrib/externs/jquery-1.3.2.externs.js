@@ -26,7 +26,7 @@
  */
 
 /**
- * @param {string|Node|Element|Array.<Element>|Function} arg
+ * @param {string|Node|Element|Array.<Element>|Function|Window} arg
  * @param {(jQueryObject|Document)=} opt_arg
  * @return {jQueryObject}
  */

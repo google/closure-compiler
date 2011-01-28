@@ -20,6 +20,11 @@
  *  Created from
  *  http://www.whatwg.org/specs/web-apps/current-work/multipage/index.html
  *
+ *  This also includes ArrayBuffer, from
+ *  http://www.khronos.org/registry/typedarray/specs/latest/#3, which is
+ *  included here so that it can be used by the FileAPI externs without pulling
+ *  in the full WebGL externs.
+ *
  *  This relies on w3c_event.js being included first.
  *
  * @externs
@@ -1488,3 +1493,13 @@ function Image(opt_width, opt_height) {}
  * @const
  */
 HTMLElement.prototype.dataset;
+
+
+/**
+ * @param {number} length The length in bytes
+ * @constructor
+ */
+function ArrayBuffer(length) {}
+
+/** @type {number} */
+ArrayBuffer.prototype.byteLength;

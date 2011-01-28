@@ -70,7 +70,7 @@ BlobBuilder.prototype.getBlob = function(contentType) {};
  * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append1
  * TODO(dbk): Add http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append1,
  *     which involves adding ArrayBuffer.
- * @param {string|Blob} data
+ * @param {string|Blob|ArrayBuffer} data
  * @param {string=} endings
  */
 BlobBuilder.prototype.append = function(data, endings) {};
@@ -400,7 +400,7 @@ FileReader.prototype.readyState;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-result
- * @type {string|Blob}
+ * @type {string|Blob|ArrayBuffer}
  */
 FileReader.prototype.result;
 
