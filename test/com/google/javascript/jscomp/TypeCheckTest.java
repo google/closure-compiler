@@ -7930,6 +7930,27 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "function g(x) { return x.isVisible; }");
   }
 
+  public void testReflectObject1() throws Exception {
+    testClosureTypes(
+        "var goog = {}; goog.reflect = {}; " +
+        "goog.reflect.object = function(x, y){};" +
+        "/** @constructor */ function A() {}" +
+        "goog.reflect.object(A, {x: 3});",
+        null);
+  }
+
+  public void testReflectObject2() throws Exception {
+    testClosureTypes(
+        "var goog = {}; goog.reflect = {}; " +
+        "goog.reflect.object = function(x, y){};" +
+        "/** @param {string} x */ function f(x) {}" +
+        "/** @constructor */ function A() {}" +
+        "goog.reflect.object(A, {x: f(1 + 1)});",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testLends1() throws Exception {
     testTypes(
         "function extend(x, y) {}" +
@@ -8286,7 +8307,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
           Joiner.on(", ").join(compiler.getWarnings()),
           0, compiler.getWarningCount());
     } else {
-      assertEquals(descriptions.size(), compiler.getWarningCount());
+      assertEquals(
+          "unexpected warning(s) : " +
+          Joiner.on(", ").join(compiler.getWarnings()),
+          descriptions.size(), compiler.getWarningCount());
       for (int i = 0; i < descriptions.size(); i++) {
         assertEquals(descriptions.get(i),
             compiler.getWarnings()[i].description);

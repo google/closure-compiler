@@ -681,6 +681,10 @@ class TypeInference
     JSType type = n.getJSType();
     Preconditions.checkNotNull(type);
 
+    for (Node name = n.getFirstChild(); name != null; name = name.getNext()) {
+      scope = traverse(name.getFirstChild(), scope);
+    }
+
     // Object literals can be reflected on other types, or changed with
     // type casts.
     // See CodingConvention#getObjectLiteralCase and goog.object.reflect.
@@ -701,7 +705,6 @@ class TypeInference
     for (Node name = n.getFirstChild(); name != null;
          name = name.getNext()) {
       Node value = name.getFirstChild();
-      scope = traverse(value, scope);
       String memberName = NodeUtil.getObjectLitKeyName(name);
       if (memberName != null) {
         JSType rawValueType =  name.getFirstChild().getJSType();
