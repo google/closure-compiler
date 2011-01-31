@@ -1012,13 +1012,13 @@ function MessageChannel() {}
 
 /**
  * Returns the first port.
- * @type {MessagePort}
+ * @type {!MessagePort}
  */
 MessageChannel.prototype.port1;
 
 /**
  * Returns the second port.
- * @type {MessagePort}
+ * @type {!MessagePort}
  */
 MessageChannel.prototype.port2;
 
