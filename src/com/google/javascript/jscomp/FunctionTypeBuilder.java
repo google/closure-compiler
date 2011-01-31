@@ -396,10 +396,16 @@ final class FunctionTypeBuilder {
    * @param type The type of this.
    */
   FunctionTypeBuilder inferThisType(JSDocInfo info, JSType type) {
-    ObjectType objType = ObjectType.cast(type);
-    if (objType != null && (info == null || !info.hasType())) {
-      thisType = objType;
+    // Look at the @this annotation first.
+    inferThisType(info, (Node) null);
+
+    if (thisType == null) {
+      ObjectType objType = ObjectType.cast(type);
+      if (objType != null && (info == null || !info.hasType())) {
+        thisType = objType;
+      }
     }
+
     return this;
   }
 

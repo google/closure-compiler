@@ -423,8 +423,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var EA=En.A;"
         + "var EB=En.B;"
         + "function Foo(){};"
-        + "Foo.prototype.A=0;"
-        + "Foo.prototype.B=0";
+        + "Foo.prototype.Foo_prototype$A=0;"
+        + "Foo.prototype.Foo_prototype$B=0";
     String ttOutput = ""
         + "var En={A:'first',B:'second'};"
         + "var EA=En.A;"
@@ -432,7 +432,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "function Foo(){};"
         + "Foo.prototype.Foo_prototype$A=0;"
         + "Foo.prototype.Foo_prototype$B=0";
-    testSets(false, js, output, "{}");
+    testSets(false, js, output, "{A=[[Foo.prototype]], B=[[Foo.prototype]]}");
     testSets(true, js, ttOutput, "{A=[[Foo.prototype]], B=[[Foo.prototype]]}");
   }
 

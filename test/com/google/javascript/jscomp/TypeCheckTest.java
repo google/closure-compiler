@@ -3234,6 +3234,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @implements {Disposable}\n * @interface */function f() {}");
   }
 
+  public void testGoodImplements4() throws Exception {
+    testTypes("var goog = {};" +
+        "/** @type {!Function} */" +
+        "goog.abstractMethod = function() {};" +
+        "/** @interface */\n" +
+        "goog.Disposable = goog.abstractMethod;" +
+        "goog.Disposable.prototype.dispose = goog.abstractMethod;" +
+        "/** @implements {goog.Disposable}\n * @constructor */" +
+        "goog.SubDisposable = function() {};" +
+        "/** @inheritDoc */ " +
+        "goog.SubDisposable.prototype.dispose = function() {};");
+  }
+
   public void testBadImplements1() throws Exception {
     testTypes("/** @interface */function Base1() {}\n" +
         "/** @interface */function Base2() {}\n" +
