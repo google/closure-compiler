@@ -497,7 +497,8 @@ FileSaver.prototype.onwritestart;
  */
 FileSaver.prototype.onprogress;
 
-/** @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-onwrite
+/**
+ * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-onwrite
  * @type {?function(!ProgressEvent)}
  */
 FileSaver.prototype.onwrite;
