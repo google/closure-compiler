@@ -199,11 +199,6 @@ public class CommandLineRunner extends
         + " by the marker token %output%. See --output_wrapper_marker")
     private String output_wrapper = "";
 
-    @Option(name = "--output_wrapper_marker",
-        usage = "Use this token as output marker in the value of"
-        + " --output_wrapper")
-    private String output_wrapper_marker = "%output%";
-
     @Option(name = "--module_wrapper",
         usage = "An output wrapper for a javascript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
@@ -520,7 +515,6 @@ public class CommandLineRunner extends
                new ClosureCodingConvention())
           .setSummaryDetailLevel(flags.summary_detail_level)
           .setOutputWrapper(flags.output_wrapper)
-          .setOutputWrapperMarker(flags.output_wrapper_marker)
           .setModuleWrapper(flags.module_wrapper)
           .setModuleOutputPathPrefix(flags.module_output_path_prefix)
           .setCreateSourceMap(flags.create_source_map)

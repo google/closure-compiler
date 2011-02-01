@@ -104,6 +104,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   // Bookkeeping to measure optimal phase orderings.
   private static final int NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER = 100;
 
+  private static final String OUTPUT_WRAPPER_MARKER = "%output%";
+
   private final RunTimeStats runTimeStats = new RunTimeStats();
 
   AbstractCommandLineRunner() {
@@ -640,7 +642,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (result.success) {
       if (modules == null) {
         writeOutput(out, compiler, compiler.toSource(), config.outputWrapper,
-            config.outputWrapperMarker);
+            OUTPUT_WRAPPER_MARKER);
 
         // Output the source map if requested.
         outputSourceMap(options);
@@ -1382,17 +1384,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setOutputWrapper(String outputWrapper) {
       this.outputWrapper = outputWrapper;
-      return this;
-    }
-
-    private String outputWrapperMarker = "";
-
-    /**
-     * Use this token as output marker in the value of
-     *  --output_wrapper
-     */
-    CommandLineConfig setOutputWrapperMarker(String outputWrapperMarker) {
-      this.outputWrapperMarker = outputWrapperMarker;
       return this;
     }
 
