@@ -570,8 +570,8 @@ final class TypedScopeCreator implements ScopeCreator {
            name = name.getNext()) {
         Node value = name.getFirstChild();
         String memberName = NodeUtil.getObjectLitKeyName(name);
-        JSType valueType = getDeclaredTypeInAnnotation(
-            t, name, name.getJSDocInfo());
+        JSType valueType = getDeclaredPropType(
+            t, name.getJSDocInfo(), name, value);
         JSType keyType = NodeUtil.getObjectLitKeyTypeFromValueType(
             name, valueType);
         if (keyType != null) {
@@ -593,12 +593,12 @@ final class TypedScopeCreator implements ScopeCreator {
      * Extracts type information from either the {@code @type} tag or from
      * the {@code @return} and {@code @param} tags.
      */
-    JSType getDeclaredTypeInAnnotation(
+    private JSType getDeclaredTypeInAnnotation(
         NodeTraversal t, Node node, JSDocInfo info) {
       return getDeclaredTypeInAnnotation(t.getSourceName(), node, info);
     }
 
-    JSType getDeclaredTypeInAnnotation(String sourceName,
+    private JSType getDeclaredTypeInAnnotation(String sourceName,
         Node node, JSDocInfo info) {
       JSType jsType = null;
       Node objNode =
@@ -696,17 +696,10 @@ final class TypedScopeCreator implements ScopeCreator {
       // variable's type
       JSType type = null;
 
-      // If a variable is assigned a function in the global scope,
-      // make that a declared type (even if there's no doc info).
-      // There's only one exception to this rule:
-      // if the return type is inferred, and we're in a local
-      // scope, we should assume the whole function is inferred.
-      if (value != null && value.getType() == Token.FUNCTION) {
-        FunctionType valueType = (FunctionType) value.getJSType();
-        if (info != null || scope.isGlobal() ||
-            !valueType.isReturnTypeInferred()) {
-          type = value.getJSType();
-        }
+      if (value != null && value.getType() == Token.FUNCTION &&
+          shouldUseFunctionLiteralType(
+              (FunctionType) value.getJSType(), info, name)) {
+        type = value.getJSType();
       }
 
       if (type == null) {
@@ -734,6 +727,25 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       defineSlot(name, var, type);
+    }
+
+    /**
+     * If a variable is assigned a function literal in the global scope,
+     * make that a declared type (even if there's no doc info).
+     * There's only one exception to this rule:
+     * if the return type is inferred, and we're in a local
+     * scope, we should assume the whole function is inferred.
+     */
+    private boolean shouldUseFunctionLiteralType(
+        FunctionType type, JSDocInfo info, Node lValue) {
+      if (info != null) {
+        return true;
+      }
+      if (lValue != null &&
+          NodeUtil.isObjectLitKey(lValue, lValue.getParent())) {
+        return false;
+      }
+      return scope.isGlobal() || !type.isReturnTypeInferred();
     }
 
     /**
@@ -1102,33 +1114,35 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     /**
-     * Look for a type declaration on a GETPROP node.
+     * Look for a type declaration on a property assignment
+     * (in an ASSIGN or an object literal key).
      *
      * @param info The doc info for this property.
-     * @param n A top-level GETPROP node (it should not be contained inside
-     *     another GETPROP).
-     * @param rhsValue The node that {@code n} is being initialized to,
+     * @param lValue The l-value node.
+     * @param rValue The node that {@code n} is being initialized to,
      *     or {@code null} if this is a stub declaration.
      */
-    private JSType getDeclaredGetPropType(NodeTraversal t, JSDocInfo info,
-        Node n, @Nullable Node rhsValue) {
+    private JSType getDeclaredPropType(NodeTraversal t, JSDocInfo info,
+        Node lValue, @Nullable Node rValue) {
       if (info != null && info.hasType()) {
-        return getDeclaredTypeInAnnotation(t, n, info);
-      } else if (rhsValue != null && rhsValue.getType() == Token.FUNCTION) {
-        return rhsValue.getJSType();
+        return getDeclaredTypeInAnnotation(t, lValue, info);
+      } else if (rValue != null && rValue.getType() == Token.FUNCTION &&
+          shouldUseFunctionLiteralType(
+              (FunctionType) rValue.getJSType(), info, lValue)) {
+        return rValue.getJSType();
       } else if (info != null && info.hasEnumParameterType()) {
-        if (rhsValue != null && rhsValue.getType() == Token.OBJECTLIT) {
-          return rhsValue.getJSType();
+        if (rValue != null && rValue.getType() == Token.OBJECTLIT) {
+          return rValue.getJSType();
         } else {
           return createEnumTypeFromNodes(
-              rhsValue, n.getQualifiedName(), info, n);
+              rValue, lValue.getQualifiedName(), info, lValue);
         }
       } else if (info != null &&
                  (info.isConstructor() || info.isInterface())) {
         return createFunctionTypeFromNodes(
-            rhsValue, n.getQualifiedName(), info, n);
+            rValue, lValue.getQualifiedName(), info, lValue);
       } else {
-        return getDeclaredTypeInAnnotation(t, n, info);
+        return getDeclaredTypeInAnnotation(t, lValue, info);
       }
     }
 
@@ -1288,7 +1302,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // about getting as much type information as possible for them.
 
       // Determining type for #1 + #2 + #3
-      JSType valueType = getDeclaredGetPropType(t, info, n, rhsValue);
+      JSType valueType = getDeclaredPropType(t, info, n, rhsValue);
       if (valueType == null && rhsValue != null) {
         // Determining type for #4
         valueType = rhsValue.getJSType();
@@ -1447,7 +1461,7 @@ final class TypedScopeCreator implements ScopeCreator {
         }
 
         member.getFirstChild().setJSType(thisType);
-        JSType jsType = getDeclaredGetPropType(t, info, member, value);
+        JSType jsType = getDeclaredPropType(t, info, member, value);
         Node name = member.getLastChild();
         if (jsType != null &&
             (name.getType() == Token.NAME || name.getType() == Token.STRING)) {

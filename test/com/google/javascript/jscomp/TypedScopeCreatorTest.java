@@ -974,30 +974,26 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testDeclaredObjectLitProperty2() throws Exception {
-    // TODO(nicksantos): Fix this so that it infers that the type
-    // of the function is @return void.
     testSame("var x = {/** @param {number} z */ y: function(z){}};");
     ObjectType xType = ObjectType.cast(globalScope.getVar("x").getType());
     assertEquals(
-        "function (number): ?",
+        "function (number): undefined",
          xType.getPropertyType("y").toString());
     assertEquals(
-        "{y: function (number): ?}",
+        "{y: function (number): undefined}",
         xType.toString());
   }
 
   public void testDeclaredObjectLitProperty3() throws Exception {
-    // TODO(nicksantos): Fix this so that it infers that the type
-    // of the function is function(?): number.
     testSame("function f() {" +
         "  var x = {/** @return {number} */ y: function(z){ return 3; }};" +
         "}");
     ObjectType xType = ObjectType.cast(lastLocalScope.getVar("x").getType());
     assertEquals(
-        "function (): number",
+        "function (?): number",
          xType.getPropertyType("y").toString());
     assertEquals(
-        "{y: function (): number}",
+        "{y: function (?): number}",
         xType.toString());
   }
 
