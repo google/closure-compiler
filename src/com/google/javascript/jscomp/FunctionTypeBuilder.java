@@ -320,8 +320,7 @@ final class FunctionTypeBuilder {
       while (!worklist.isEmpty()) {
         Node current = worklist.remove(worklist.size() - 1);
         int cType = current.getType();
-        if (cType == Token.RETURN && current.getFirstChild() != null ||
-            cType == Token.THROW) {
+        if (cType == Token.RETURN && current.getFirstChild() != null) {
           hasNonEmptyReturns = true;
           break;
         } else if (NodeUtil.isStatementBlock(current) ||

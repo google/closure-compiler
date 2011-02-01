@@ -923,7 +923,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
   public void testReturnTypeInference4() {
     testSame("function f() { throw Error(); }");
     assertEquals(
-        "function (): ?",
+        "function (): undefined",
         findNameType("f", globalScope).toString());
   }
 
