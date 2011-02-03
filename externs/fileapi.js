@@ -631,7 +631,9 @@ function resolveLocalFileSystemURI(uri, successCallback, errorCallback) {}
 Window.prototype.resolveLocalFileSystemURI = function(uri, successCallback,
     errorCallback) {}
 
-// WindowBlobURIMethods interface, implemented by Window and WorkerGlobalScope
+// WindowBlobURIMethods interface, implemented by Window and WorkerGlobalScope.
+// There are three APIs for this: the old specced API, the new specced API, and
+// the webkit-prefixed API.
 // @see http://www.w3.org/TR/FileAPI/#creating-revoking
 
 /**
@@ -657,3 +659,33 @@ function revokeObjectURL(url) {};
  * @param {string} url
  */
 Window.prototype.revokeObjectURL = function(url) {};
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#URL-object
+ * @constructor
+ */
+function DOMURL() {}
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#
+ * @type {!DOMURL}
+ */
+Window.prototype.URL;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#
+ * @type {!DOMURL}
+ */
+Window.prototype.webkitURL;
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-createObjectURL
+ * @param {!Blob} blob
+ */
+DOMURL.prototype.createObjectURL = function(blob) {};
+
+/**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-revokeObjectURL
+ * @param {string} url
+ */
+DOMURL.prototype.revokeObjectURL = function(url) {};
