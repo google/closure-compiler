@@ -81,13 +81,29 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
       // SubClass.mixin(SuperClass.prototype)
       // goog.mixin(SubClass.prototype, SuperClass.prototype)
       // goog$mixin(SubClass.prototype, SuperClass.prototype)
-      if (callNode.getChildCount() == 2 &&
-          callName.getType() == Token.GETPROP) {
+      boolean isDeprecatedCall = callNode.getChildCount() == 2 &&
+          callName.getType() == Token.GETPROP;
+      if (isDeprecatedCall) {
         // SubClass.inherits(SuperClass)
         subclass = callName.getFirstChild();
       } else if (callNode.getChildCount() == 3) {
         // goog.inherits(SubClass, SuperClass)
         subclass = callName.getNext();
+      }
+
+      if (type == SubclassType.MIXIN) {
+        // Only consider mixins that mix two prototypes as related to inheritance.
+        if (!endsWithPrototype(superclass)) {
+          return null;
+        }
+        if (!isDeprecatedCall) {
+          if (!endsWithPrototype(subclass)) {
+            return null;
+          }
+          // Strip off the prototype from the name.
+          subclass = subclass.getFirstChild();
+        }
+        superclass = superclass.getFirstChild();
       }
 
       // bail out if either of the side of the "inherits"
@@ -97,12 +113,7 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
       if (subclass != null &&
           subclass.isUnscopedQualifiedName() &&
           superclass.isUnscopedQualifiedName()) {
-        // make sure to strip the prototype off of the nodes
-        // to normalize for goog.mixin
-        return new SubclassRelationship(
-            type,
-            stripPrototype(subclass),
-            stripPrototype(superclass));
+        return new SubclassRelationship(type, subclass, superclass);
       }
     }
 
@@ -143,19 +154,14 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
   }
 
   /**
-   * Given a qualified name node, strip "prototype" off the end.
-   *
-   * Examples of this transformation:
-   * a.b.c => a.b.c
-   * a.b.c.prototype => a.b.c
+   * Given a qualified name node, returns whether "prototype" is at the end.
+   * For example:
+   * a.b.c => false
+   * a.b.c.prototype => true
    */
-  private Node stripPrototype(Node qualifiedName) {
-    if (qualifiedName.getType() == Token.GETPROP &&
-        qualifiedName.getLastChild().getString().equals("prototype")) {
-      return qualifiedName.getFirstChild();
-    }
-
-    return qualifiedName;
+  private boolean endsWithPrototype(Node qualifiedName) {
+    return qualifiedName.getType() == Token.GETPROP &&
+        qualifiedName.getLastChild().getString().equals("prototype");
   }
 
   /**
