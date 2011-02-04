@@ -56,7 +56,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Override
   protected int getNumRepetitions() {
     // Reduce this to 2 if we get better expression evaluators.
-    return 2;
+    return 4;
   }
 
   private void foldSame(String js) {
@@ -180,7 +180,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("if(x || 3) z()", "z()");
     fold("if(x || false) z()", "x&&z()");
     test("if(x==y && false) z()", "");
-    fold("if(y() || x || 3) z()", "y();z()");
+    // TODO(user): This can be further optimized.
+    fold("if(y() || x || 3) z()", "(y()||1)&&z()");
   }
 
   public void testFoldBitwiseOpStringCompareIntegration() {
@@ -312,6 +313,6 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("(x && true) && y()", "x && y()");
     fold("(x && false) && y()", "");
     fold("a = x || false ? b : c", "a=x?b:c");
-    fold("do {x()} while((x && false) && y())", "{x()}");
+    fold("do {x()} while((x && false) && y())", "x()");
   }
 }

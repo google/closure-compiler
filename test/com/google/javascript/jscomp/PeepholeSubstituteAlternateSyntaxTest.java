@@ -112,8 +112,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
     // Try it out with properties and methods
     fold("function(){if(x){a.b=1}}", "function(){if(x)a.b=1}");
-    fold("function(){if(x){a.b*=1}}", "function(){if(x)a.b*=1}");
-    fold("function(){if(x){a.b+=1}}", "function(){if(x)a.b+=1}");
+    fold("function(){if(x){a.b*=1}}", "function(){x&&(a.b*=1)}");
+    fold("function(){if(x){a.b+=1}}", "function(){x&&(a.b+=1)}");
     fold("function(){if(x){++a.b}}", "function(){x&&++a.b}");
     fold("function(){if(x){a.foo()}}", "function(){x&&a.foo()}");
 
@@ -136,7 +136,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("function(){if(x){if(y)foo()}}",
          "function(){x&&y&&foo()}");
     fold("function(){if(x){if(y)foo();else bar()}}",
-         "function(){if(x)y?foo():bar()}");
+         "function(){x&&(y?foo():bar())}");
     fold("function(){if(x){if(y)foo()}else bar()}",
          "function(){if(x)y&&foo();else bar()}");
     fold("function(){if(x){if(y)foo();else bar()}else{baz()}}",
@@ -236,12 +236,13 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   public void testNotCond() {
     fold("function(){if(!x)foo()}", "function(){x||foo()}");
     fold("function(){if(!x)b=1}", "function(){x||(b=1)}");
-    fold("if(!x)z=1;else if(y)z=2", "if(x){if(y)z=2}else z=1");
+    fold("if(!x)z=1;else if(y)z=2", "if(x){y&&(z=2)}else z=1");
     foldSame("function(){if(!(x=1))a.b=1}");
   }
 
   public void testAndParenthesesCount() {
-    foldSame("function(){if(x||y)a.foo()}");
+    fold("function(){if(x||y)a.foo()}", "function(){(x||y)&&a.foo()}");
+    foldSame("function(){if(x()||y()){x()||y()}}");
   }
 
   public void testFoldLogicalOpStringCompare() {
@@ -464,7 +465,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("if(x) y=1;else var y=2", "var y=x?1:2");
 
     foldSame("if(x) var y = 1; z = 2");
-    foldSame("if(x) y = 1; var z = 2");
+    foldSame("if(x||y) y = 1; var z = 2");
 
     foldSame("if(x) { var y = 1; print(y)} else y = 2 ");
     foldSame("if(x) var y = 1; else {y = 2; print(y)}");

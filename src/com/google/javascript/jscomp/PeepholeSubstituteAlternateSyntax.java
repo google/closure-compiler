@@ -390,10 +390,13 @@ class PeepholeSubstituteAlternateSyntax
         }
 
         // if(x)foo(); -> x&&foo();
-        if (isLowerPrecedenceInExpression(cond, AND_PRECEDENCE) ||
+        if (isLowerPrecedenceInExpression(cond, AND_PRECEDENCE) &&
             isLowerPrecedenceInExpression(expr.getFirstChild(),
                 AND_PRECEDENCE)) {
-          // One additional set of parentheses isn't worth it.
+          // One additional set of parentheses is worth the change even if
+          // there is no immediate code size win. However, two extra pair of
+          // {}, we would have to think twice. (unless we know for sure the
+          // we can further optimize its parent.
           return n;
         }
 
