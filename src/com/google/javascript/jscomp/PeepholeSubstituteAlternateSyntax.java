@@ -408,6 +408,32 @@ class PeepholeSubstituteAlternateSyntax
         reportCodeChange();
 
         return newExpr;
+      } else {
+
+        // Try to combine two IF-ELSE
+        if (NodeUtil.isStatementBlock(thenBranch) &&
+            thenBranch.hasOneChild()) {
+          Node innerIf = thenBranch.getFirstChild();
+
+          if (innerIf.getType() == Token.IF) {
+            Node innerCond = innerIf.getFirstChild();
+            Node innerThenBranch = innerCond.getNext();
+            Node innerElseBranch = innerThenBranch.getNext();
+
+            if (innerElseBranch == null &&
+                 !(isLowerPrecedenceInExpression(cond, AND_PRECEDENCE) &&
+                   isLowerPrecedenceInExpression(innerCond, AND_PRECEDENCE))) {
+              n.detachChildren();
+              n.addChildToBack(new Node(Token.AND, cond,
+                  innerCond.detachFromParent()).copyInformationFrom(cond));
+              n.addChildrenToBack(innerThenBranch.detachFromParent());
+              reportCodeChange();
+              // Not worth trying to fold the current IF-ELSE into && because
+              // the inner IF-ELSE wasn't able to be folded into && anyways.
+              return n;
+            }
+          }
+        }
       }
 
       return n;

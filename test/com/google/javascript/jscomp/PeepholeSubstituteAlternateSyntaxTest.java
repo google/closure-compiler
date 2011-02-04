@@ -148,7 +148,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("if(e1){with(e2){if(e3){foo()}}}else{bar()}",
          "if(e1)with(e2)e3&&foo();else bar()");
 
-    fold("if(x){if(y){var x;}}", "if(x)if(y)var x");
+    fold("if(a||b){if(c||d){var x;}}", "if(a||b)if(c||d)var x");
     fold("if(x){ if(y){var x;}else{var z;} }",
          "if(x)if(y)var x;else var z");
 
@@ -702,6 +702,14 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("function f() { switch(a){ " +
              "case 1: throw a; case 2: throw a; } throw a; }",
          "function f() { switch(a){ case 1: break; case 2: } throw a; }");
+  }
+
+  public void testNestedIfCombine() {
+    fold("if(x)if(y){while(1){}}", "if(x&&y){while(1){}}");
+    fold("if(x||z)if(y){while(1){}}", "if((x||z)&&y){while(1){}}");
+    fold("if(x)if(y||z){while(1){}}", "if((x)&&(y||z)){while(1){}}");
+    foldSame("if(x||z)if(y||z){while(1){}}");
+    fold("if(x)if(y){if(z){while(1){}}}", "if(x&&y&&z){while(1){}}");
   }
 
   public void testIssue291() {
