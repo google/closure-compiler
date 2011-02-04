@@ -45,19 +45,7 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
       .put("elephant", "e")
       .put("footer", "f")
       .put("goog", "g")
-    .build();
-
-  Map<String, String> replacementMapFull =
-      new ImmutableMap.Builder<String, String>()
-      .put("long-prefix", "h")
-      .put("suffix1", "i")
-      .put("unrelated-word", "k")
-      .put("unrelated", "l")
-      .put("long-suffix", "m")
-      .put("long-prefix-suffix1", "h-i")
       .build();
-
-  CssRenamingMap renamingMap;
 
   Map<String, Integer> cssNames;
 
@@ -68,24 +56,12 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
     return new ReplaceCssNames(compiler, cssNames) {
       @Override
       protected CssRenamingMap getCssRenamingMap() {
-        return useReplacementMap ? renamingMap : null;
-      }
-    };
-  }
-
-  protected CssRenamingMap getPartialMap() {
-    CssRenamingMap map = new CssRenamingMap.ByPart() {
-      @Override public String get(String value) {
-        return replacementMap.get(value);
-      }
-    };
-    return map;
-  }
-
-  protected CssRenamingMap getFullMap() {
-    return new CssRenamingMap.ByWhole() {
-      @Override public String get(String value) {
-        return replacementMapFull.get(value);
+        return useReplacementMap ?
+          new CssRenamingMap() {
+            @Override public String get(String value) {
+              return replacementMap.get(value);
+            }
+          } : null;
       }
     };
   }
@@ -96,7 +72,6 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
     super.enableLineNumberCheck(true);
     cssNames = Maps.newHashMap();
     useReplacementMap = true;
-    renamingMap = getPartialMap();
   }
 
   @Override
@@ -170,19 +145,6 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
     assertEquals(expected, cssNames);
   }
 
-  public void testOneArgWithCompositeClassNamesFull() {
-    renamingMap = getFullMap();
-
-    test("var x = goog.getCssName('long-prefix')",
-         "var x = 'h'");
-    test("var x = goog.getCssName('long-prefix-suffix1')",
-         "var x = 'h-i'");
-    test("var x = goog.getCssName('unrelated')",
-         "var x = 'l'");
-    test("var x = goog.getCssName('unrelated-word')",
-         "var x = 'k'");
-  }
-
   public void testOneArgWithCompositeClassNamesWithUnknownParts() {
     test("var x = goog.getCssName('goog-header-active')",
          "var x = 'goog-header-active'", null, UNKNOWN_SYMBOL_WARNING);
@@ -211,13 +173,6 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
          "el.className = this.getClass() + '-d'");
     test("setClass(goog.getCssName(BASE_CLASS, 'disabled'))",
          "setClass(BASE_CLASS + '-d')");
-  }
-
-  public void testTwoArgsWithVariableFirstArgFull() {
-    renamingMap = getFullMap();
-
-    test("var x = goog.getCssName(baseClass, 'long-suffix')",
-         "var x = baseClass + '-m'");
   }
 
   public void testZeroArguments() {

@@ -41,21 +41,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       "JSC_NULL_ARGUMENT_ERROR",
       "method \"{0}\" called without an argument");
 
-  static final DiagnosticType EXPECTED_OBJECTLIT_ERROR = DiagnosticType.error(
-      "JSC_EXPECTED_OBJECTLIT_ERROR",
-      "method \"{0}\" expected an object literal argument");
-
-  static final DiagnosticType EXPECTED_STRING_ERROR = DiagnosticType.error(
-      "JSC_EXPECTED_STRING_ERROR",
-      "method \"{0}\" expected an object string argument");
-
   static final DiagnosticType INVALID_ARGUMENT_ERROR = DiagnosticType.error(
       "JSC_INVALID_ARGUMENT_ERROR",
-      "method \"{0}\" called with invalid argument");
-
-  static final DiagnosticType INVALID_STYLE_ERROR = DiagnosticType.error(
-      "JSC_INVALID_CSS_NAME_MAP_STYLE_ERROR",
-      "Invalid CSS name map style {0}");
+      "method \"{0}\" called with a non-string argument");
 
   static final DiagnosticType TOO_MANY_ARGUMENTS_ERROR = DiagnosticType.error(
       "JSC_TOO_MANY_ARGUMENTS_ERROR",
@@ -90,10 +78,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       DiagnosticType.error(
           "JSC_NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR",
       "goog.setCssNameMapping only takes an object literal with string values");
-
-  static final DiagnosticType INVALID_CSS_RENAMING_MAP = DiagnosticType.warning(
-      "INVALID_CSS_RENAMING_MAP",
-      "Invalid entries in css renaming map: {0}");
 
   static final DiagnosticType BASE_CLASS_ERROR = DiagnosticType.error(
       "JSC_BASE_CLASS_ERROR",
@@ -519,89 +503,45 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private void processSetCssNameMapping(NodeTraversal t, Node n, Node parent) {
     Node left = n.getFirstChild();
     Node arg = left.getNext();
-    if (verifySetCssNameMapping(t, left, arg)) {
+    if (verifyArgument(t, left, arg, Token.OBJECTLIT)) {
       // Translate OBJECTLIT into SubstitutionMap. All keys and
       // values must be strings, or an error will be thrown.
       final Map<String, String> cssNames = Maps.newHashMap();
-
+      JSError error = null;
       for (Node key = arg.getFirstChild(); key != null;
           key = key.getNext()) {
         Node value = key.getFirstChild();
         if (key.getType() != Token.STRING
             || value == null
             || value.getType() != Token.STRING) {
-          compiler.report(
-              t.makeError(n,
-                  NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR));
-          return;
+          error = t.makeError(n,
+              NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
+        }
+        if (error != null) {
+          compiler.report(error);
+          break;
         }
         cssNames.put(key.getString(), value.getString());
       }
 
-      String styleStr = "BY_PART";
-      if (arg.getNext() != null) {
-        styleStr = arg.getNext().getString();
-      }
-
-      final CssRenamingMap.Style style;
-      try {
-        style = CssRenamingMap.Style.valueOf(styleStr);
-      } catch (IllegalArgumentException e) {
-        compiler.report(
-            t.makeError(n, INVALID_STYLE_ERROR, styleStr));
-        return;
-      }
-
-      if (style == CssRenamingMap.Style.BY_PART) {
-        // Make sure that no keys contain -'s
-        List<String> errors = Lists.newArrayList();
-        for (String key : cssNames.keySet()) {
-          if (key.contains("-")) {
-            errors.add(key);
-          }
-        }
-        if (errors.size() != 0) {
-          compiler.report(
-            t.makeError(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
-        }
-      } else if (style == CssRenamingMap.Style.BY_WHOLE) {
-        // Verifying things is a lot trickier here. We just do a quick
-        // n^2 check over the map which makes sure that if "a-b" in
-        // the map, then map(a-b) = map(a)-map(b).
-        // To speed things up, only consider cases where len(b) <= 10
-        List<String> errors = Lists.newArrayList();
-        for (Map.Entry<String, String> b : cssNames.entrySet()) {
-          if (b.getKey().length() > 10) continue;
-          for (Map.Entry<String, String> a : cssNames.entrySet()) {
-            String combined = cssNames.get(a.getKey() + "-" + b.getKey());
-            if (combined != null &&
-                !combined.equals(a.getValue() + "-" + b.getValue())) {
-              errors.add("map(" + a.getKey() + "-" + b.getKey() +") != map(" +
-                         a.getKey() + ")-map(" + b.getKey() +")");
+      // If there were no errors, create a CssRenamingMap from cssNames, update
+      // the compiler to use it and remove the call to goog.setCssNameMapping().
+      if (error == null) {
+        CssRenamingMap cssRenamingMap = new CssRenamingMap() {
+          public String get(String value) {
+            if (cssNames.containsKey(value)) {
+              return cssNames.get(value);
+            } else {
+              return value;
             }
           }
-        }
-        if (errors.size() != 0) {
-          compiler.report(
-            t.makeError(n, INVALID_CSS_RENAMING_MAP, errors.toString()));
-        }
+        };
+        compiler.setCssRenamingMap(cssRenamingMap);
+        parent.getParent().removeChild(parent);
+        compiler.reportCodeChange();
       }
-
-      CssRenamingMap cssRenamingMap = new CssRenamingMap() {
-        public String get(String value) {
-          return cssNames.get(value);
-        }
-
-        public CssRenamingMap.Style getStyle() {
-          return style;
-        }
-      };
-      compiler.setCssRenamingMap(cssRenamingMap);
-      parent.getParent().removeChild(parent);
-      compiler.reportCodeChange();
     }
   }
-
 
   /**
    * Try to simplify "new Date(goog.now())" to "new Date()".
@@ -676,35 +616,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       diagnostic = INVALID_ARGUMENT_ERROR;
     } else if (arg.getNext() != null) {
       diagnostic = TOO_MANY_ARGUMENTS_ERROR;
-    }
-    if (diagnostic != null) {
-      compiler.report(
-          t.makeError(methodName,
-              diagnostic, methodName.getQualifiedName()));
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Verifies that setCssNameMapping is called with the correct methods.
-   *
-   * @return Whether the arguments checked out okay
-   */
-  private boolean verifySetCssNameMapping(NodeTraversal t, Node methodName,
-      Node firstArg) {
-    DiagnosticType diagnostic = null;
-    if (firstArg == null) {
-      diagnostic = NULL_ARGUMENT_ERROR;
-    } else if (firstArg.getType() != Token.OBJECTLIT) {
-      diagnostic = EXPECTED_OBJECTLIT_ERROR;
-    } else if (firstArg.getNext() != null) {
-      Node secondArg = firstArg.getNext();
-      if (secondArg.getType() != Token.STRING) {
-        diagnostic = EXPECTED_STRING_ERROR;
-      } else if (secondArg.getNext() != null) {
-        diagnostic = TOO_MANY_ARGUMENTS_ERROR;
-      }
     }
     if (diagnostic != null) {
       compiler.report(

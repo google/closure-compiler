@@ -30,23 +30,20 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * ReplaceCssNames replaces occurrences of goog.getCssName('foo') with
- * a shorter version from the passed in renaming map. There are two
- * styles of operation: for 'BY_WHOLE' we look up the whole string in the
- * renaming map. For 'BY_PART', all the class name's components,
- * separated by '-', are renamed individually and then recombined.
+ * ReplaceCssNames replaces occurrences of goog.getCssName('foo') with a shorter
+ * version from the passed in renaming map.
  *
  * Given the renaming map:
  *   {
- *     once:  'a',
- *     upon:  'b',
- *     atime: 'c',
- *     long:  'd',
- *     time:  'e',
- *     ago:   'f'
+ *     once:  a,
+ *     upon:  b,
+ *     atime: c,
+ *     long:  d,
+ *     time:  e
+ *     ago:   f
  *   }
  *
- * The following outputs are expected with the 'BY_PART' renaming style:
+ * The following outputs are expected:
  *
  * goog.getCssName('once') -> 'a'
  * goog.getCssName('once-upon-atime') -> 'a-b-c'
@@ -56,24 +53,6 @@ import javax.annotation.Nullable;
  * ->
  * var baseClass = 'd-e';
  * el.className = baseClass + '-f';
- *
- * However if we have the following renaming map with the 'BY_WHOLE' renaming style:
- *   {
- *     once: 'a',
- *     upon-atime: 'b',
- *     long-time: 'c',
- *     ago: 'd'
- *   }
- *
- * Then we would expect:
- *
- * goog.getCssName('once') -> 'a'
- *
- * var baseClass = goog.getCssName('long-time');
- * el.className = goog.getCssName(baseClass, 'ago');
- * ->
- * var baseClass = 'c';
- * el.className = baseClass + '-d';
  *
  * In addition, the CSS names before replacement can optionally be gathered.
  *
@@ -203,49 +182,29 @@ class ReplaceCssNames implements CompilerPass {
      * @param n The string node to process.
      */
     private void processStringNode(NodeTraversal t, Node n) {
-      String name = n.getString();
-      String[] parts = name.split("-");
-      if (symbolMap != null) {
-        String replacement = null;
-        switch (symbolMap.getStyle()) {
-          case BY_WHOLE:
-            replacement = symbolMap.get(name);
+      if (symbolMap != null || cssNames != null) {
+        String[] parts = n.getString().split("-");
+        for (int i = 0; i < parts.length; i++) {
+          if (cssNames != null) {
+            Integer count = cssNames.get(parts[i]);
+            if (count == null) {
+              count = Integer.valueOf(0);
+            }
+            cssNames.put(parts[i], count.intValue() + 1);
+          }
+          if (symbolMap != null) {
+            String replacement = symbolMap.get(parts[i]);
             if (replacement == null) {
-              compiler.report(
-                  t.makeError(n, UNKNOWN_SYMBOL_WARNING, name, name));
+              // If we can't encode all parts, don't encode any of it.
+              compiler.report(t.makeError(
+                  n, UNKNOWN_SYMBOL_WARNING, parts[i], n.getString()));
               return;
             }
-            break;
-          case BY_PART:
-            String[] replaced = new String[parts.length];
-            for (int i = 0; i < parts.length; i++) {
-              String part = symbolMap.get(parts[i]);
-              if (part == null) {
-                // If we can't encode all parts, don't encode any of it.
-                compiler.report(
-                    t.makeError(n, UNKNOWN_SYMBOL_WARNING, parts[i], name));
-                return;
-              }
-              replaced[i] = part;
-            }
-            replacement = Joiner.on("-").join(replaced);
-            break;
-          default:
-            throw new IllegalStateException(
-              "Unknown replacement style: " + symbolMap.getStyle());
-        }
-        n.setString(replacement);
-      }
-      if (cssNames != null) {
-        // We still want to collect statistics even if we've already
-        // done the full replace. The statistics are collected on a
-        // per-part basis.
-        for (int i = 0; i < parts.length; i++) {
-          Integer count = cssNames.get(parts[i]);
-          if (count == null) {
-            count = Integer.valueOf(0);
+            parts[i] = replacement;
           }
-          cssNames.put(parts[i], count.intValue() + 1);
+        }
+        if (symbolMap != null) {
+          n.setString(Joiner.on("-").join(parts));
         }
       }
     }
