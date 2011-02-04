@@ -20,15 +20,18 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.jscomp.CheckLevel;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.DUPLICATE_NAMESPACE_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJECTLIT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_PROVIDE_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_STYLE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.LATE_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NULL_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.TOO_MANY_ARGUMENTS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CSS_RENAMING_MAP;
 
 /**
  * Tests for {@link ProcessClosurePrimitives}.
@@ -319,18 +322,34 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     assertEquals("baz", map.get("biz"));
   }
 
+  public void testValidSetCssNameMappingWithType() {
+    test("goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_PART');", "");
+    CssRenamingMap map = getLastCompiler().getCssRenamingMap();
+    assertNotNull(map);
+    assertEquals("bar", map.get("foo"));
+    assertEquals("baz", map.get("biz"));
+
+    test("goog.setCssNameMapping({foo:'bar',biz:'baz','biz-foo':'baz-bar'}," +
+        " 'BY_WHOLE');", "");
+    map = getLastCompiler().getCssRenamingMap();
+    assertNotNull(map);
+    assertEquals("bar", map.get("foo"));
+    assertEquals("baz", map.get("biz"));
+    assertEquals("baz-bar", map.get("biz-foo"));
+  }
+
   public void testSetCssNameMappingNonStringValueReturnsError() {
     // Make sure the argument is an object literal.
     test("var BAR = {foo:'bar'}; goog.setCssNameMapping(BAR);", "",
-        INVALID_ARGUMENT_ERROR);
+        EXPECTED_OBJECTLIT_ERROR);
     test("goog.setCssNameMapping([]);", "",
-        INVALID_ARGUMENT_ERROR);
+        EXPECTED_OBJECTLIT_ERROR);
     test("goog.setCssNameMapping(false);", "",
-        INVALID_ARGUMENT_ERROR);
+        EXPECTED_OBJECTLIT_ERROR);
     test("goog.setCssNameMapping(null);", "",
-        INVALID_ARGUMENT_ERROR);
+        EXPECTED_OBJECTLIT_ERROR);
     test("goog.setCssNameMapping(undefined);", "",
-        INVALID_ARGUMENT_ERROR);
+        EXPECTED_OBJECTLIT_ERROR);
 
     // Make sure all values of the object literal are string literals.
     test("var BAR = 'bar'; goog.setCssNameMapping({foo:BAR});", "",
@@ -343,6 +362,20 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
     test("goog.setCssNameMapping({foo:undefined});", "",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
+  }
+
+  public void testSetCssNameMappingValidity() {
+    // Make sure that the keys don't have -'s
+    test("goog.setCssNameMapping({'a': 'b', 'a-a': 'c'})", "", null,
+        INVALID_CSS_RENAMING_MAP);
+
+    // In full mode, we check that map(a-b)=map(a)-map(b)
+    test("goog.setCssNameMapping({'a': 'b', 'a-a': 'c'}, 'BY_WHOLE')", "", null,
+        INVALID_CSS_RENAMING_MAP);
+
+    // Unknown mapping type
+    test("goog.setCssNameMapping({foo:'bar'}, 'UNKNOWN');", "",
+        INVALID_STYLE_ERROR);
   }
 
   public void testBadCrossModuleRequire() {
