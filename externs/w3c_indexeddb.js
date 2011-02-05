@@ -245,26 +245,16 @@ IDBRequest.DONE;
 IDBRequest.prototype.readyState;
 
 /**
- * @type {function(IDBSuccessEvent)}
+ * @type {Function}
  * @const
  */
 IDBRequest.prototype.onsuccess = function() {};
 
 /**
- * @type {function(IDBErrorEvent)}
+ * @type {Function}
  * @const
  */
 IDBRequest.prototype.onerror = function() {};
-
-/**
- * FF4b9 Introduced this property that is not currently in the formal specs.  So
- *    now instead of getting the result from the IDBSuccessEvent of onsuccess
- *    callback we have to get it from the original request (only if successful).
- * 
- * @type {*}
- * @const
- */
-IDBRequest.prototype.result;
 
 /**
  * @constructor
@@ -542,7 +532,6 @@ IDBCursor.prototype.count;
 IDBCursor.prototype.update = function(value) {};
 
 /**
- * Note: Must be quoted to avoid parse error.
  * @param {*=} key Continue enumerating the cursor from the specified key
  *    (or next).
  * @return {boolean} Wether the continue operation was successfull.
@@ -555,16 +544,22 @@ IDBCursor.prototype['continue'] = function(key) {};
 IDBCursor.prototype.remove = function() {};
 
 /**
- * Note: Must be quoted to avoid parse error.
- * @return {!IDBRequest} The IDBRequest object.
- */
-IDBCursor.prototype['delete'] = function() {};
-
-/**
- * @constructor 
+ * @constructor
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBTransaction
  */
 function IDBTransaction() {}
+
+/** @inheritDoc */
+IDBTransaction.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+IDBTransaction.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+IDBTransaction.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @type {IDBTransaction}
@@ -631,10 +626,22 @@ IDBTransaction.prototype.oncomplete = function() {};
 IDBTransaction.prototype.ontimeout = function() {};
 
 /**
- * @constructor 
+ * @constructor
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBDynamicTransaction
  */
 function IDBDynamicTransaction() {}
+
+/** @inheritDoc */
+IDBDynamicTransaction.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+IDBDynamicTransaction.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+IDBDynamicTransaction.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @type {IDBDatabase}
