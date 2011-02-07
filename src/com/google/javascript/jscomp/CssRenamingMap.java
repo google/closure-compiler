@@ -27,9 +27,7 @@ public interface CssRenamingMap {
 
   String get(String value);
 
-  // TODO(nicksantos): Uncomment this once all renaming maps implement
-  // this method.
-  //Style getStyle();
+  Style getStyle();
 
   public static abstract class ByPart implements CssRenamingMap {
     abstract public String get(String value);

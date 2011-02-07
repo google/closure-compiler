@@ -229,6 +229,22 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("var goog = {}; goog.provide('goog.dom');");
   }
 
+  public void testCssNameWiring() throws Exception {
+    String prefix =
+        "var goog = {}; goog.getCssName = function() {};" +
+         "goog.setCssNameMapping = function() {};";
+    test(prefix + "goog.setCssNameMapping({'goog': 'a', 'button': 'b'});" +
+         "var a = goog.getCssName('goog-button');" +
+         "var b = goog.getCssName('css-button');" +
+         "var c = goog.getCssName('goog-menu');" +
+         "var d = goog.getCssName('css-menu');",
+         prefix +
+         "var a = 'a-b'," +
+         "    b = 'css-b'," +
+         "    c = 'a-menu'," +
+         "    d = 'css-menu';");
+  }
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Integration tests
