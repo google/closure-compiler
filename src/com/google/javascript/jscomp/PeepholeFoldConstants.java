@@ -550,11 +550,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *  - The right child is a constant value
    *  - The left child's right child is a STRING constant.
    */
-  private Node tryFoldLeftChildAdd(Node n, Node left, Node right) {
+  private Node tryFoldChildAddString(Node n, Node left, Node right) {
 
     if (NodeUtil.isLiteralValue(right, false) &&
-        left.getType() == Token.ADD &&
-        left.getChildCount() == 2) {
+        left.getType() == Token.ADD) {
 
       Node ll = left.getFirstChild();
       Node lr = ll.getNext();
@@ -562,18 +561,40 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // Left's right child MUST be a string. We would not want to fold
       // foo() + 2 + 'a' because we don't know what foo() will return, and
       // therefore we don't know if left is a string concat, or a numeric add.
-      if (lr.getType() != Token.STRING) {
-        return n;
+      if (lr.getType() == Token.STRING) {
+        String leftString = NodeUtil.getStringValue(lr);
+        String rightString = NodeUtil.getStringValue(right);
+        if (leftString != null && rightString != null) {
+          left.removeChild(ll);
+          String result = leftString + rightString;
+          n.replaceChild(left, ll);
+          n.replaceChild(right, Node.newString(result));
+          reportCodeChange();
+          return n;
+        }
       }
+    }
 
-      String leftString = NodeUtil.getStringValue(lr);
-      String rightString = NodeUtil.getStringValue(right);
-      if (leftString != null && rightString != null) {
-        left.removeChild(ll);
-        String result = leftString + rightString;
-        n.replaceChild(left, ll);
-        n.replaceChild(right, Node.newString(result));
-        reportCodeChange();
+    if (NodeUtil.isLiteralValue(left, false) &&
+        right.getType() == Token.ADD) {
+
+      Node rl = right.getFirstChild();
+      Node rr = right.getLastChild();
+
+      // Left's right child MUST be a string. We would not want to fold
+      // foo() + 2 + 'a' because we don't know what foo() will return, and
+      // therefore we don't know if left is a string concat, or a numeric add.
+      if (rl.getType() == Token.STRING) {
+        String leftString = NodeUtil.getStringValue(left);
+        String rightString = NodeUtil.getStringValue(rl);
+        if (leftString != null && rightString != null) {
+          right.removeChild(rr);
+          String result = leftString + rightString;
+          n.replaceChild(right, rr);
+          n.replaceChild(left, Node.newString(result));
+          reportCodeChange();
+          return n;
+        }
       }
     }
 
@@ -583,10 +604,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   /**
    * Try to fold an ADD node with constant operands
    */
-  private Node tryFoldAddConstant(Node n, Node left, Node right) {
+  private Node tryFoldAddConstantString(Node n, Node left, Node right) {
     if (left.getType() == Token.STRING ||
         right.getType() == Token.STRING) {
-
       // Add strings.
       String leftString = NodeUtil.getStringValue(left);
       String rightString = NodeUtil.getStringValue(right);
@@ -596,10 +616,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         reportCodeChange();
         return newStringNode;
       }
-    } else {
-      // Try arithmetic add
-      return tryFoldArithmeticOp(n, left, right);
     }
+
+
 
     return n;
   }
@@ -625,8 +644,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // Unlike other operations, ADD operands are not always converted
     // to Number.
     if (opType == Token.ADD
-        && (left.getType() != Token.NUMBER
-            || right.getType() != Token.NUMBER)) {
+        && (NodeUtil.mayBeString(left, false)
+            || NodeUtil.mayBeString(right, false))) {
       return null;
     }
 
@@ -716,9 +735,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
     int opType = n.getType();
-    // TODO(johnlenz): Add support for ADD in numberic contexts.
     Preconditions.checkState(
-      NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType));
+        (NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType))
+        || n.getType() == Token.ADD);
+
+    Preconditions.checkState(
+        n.getType() != Token.ADD || !NodeUtil.mayBeString(n));
 
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.
@@ -754,13 +776,22 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldAdd(Node node, Node left, Node right) {
     Preconditions.checkArgument(node.getType() == Token.ADD);
 
-    if (NodeUtil.isLiteralValue(left, false) &&
-        NodeUtil.isLiteralValue(right, false)) {
-      // 6 + 7
-      return tryFoldAddConstant(node, left, right);
+    if (NodeUtil.mayBeString(node, true)) {
+      if (NodeUtil.isLiteralValue(left, false) &&
+          NodeUtil.isLiteralValue(right, false)) {
+        // '6' + 7
+        return tryFoldAddConstantString(node, left, right);
+      } else {
+        // a + 7 or 6 + a
+        return tryFoldChildAddString(node, left, right);
+      }
     } else {
-      // a + 7 or 6 + a
-      return tryFoldLeftChildAdd(node, left, right);
+      // Try arithmetic add
+      Node result = tryFoldArithmeticOp(node, left, right);
+      if (result != node) {
+        return result;
+      }
+      return tryFoldLeftChildOp(node, left, right);
     }
   }
 

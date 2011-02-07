@@ -702,7 +702,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public void testFoldLeft() {
     foldSame("(+x - 1) + 2"); // not yet
-    foldSame("(+x + 1) + 2"); // not yet
+    fold("(+x + 1) + 2", "+x + 3");
   }
 
   public void testFoldArrayLength() {
@@ -849,6 +849,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
   public void testFoldLeftChildConcat() {
     foldSame("x +5 + \"1\"");
     fold("x+\"5\" + \"1\"", "x + \"51\"");
+    // fold("\"a\"+(c+\"b\")","\"a\"+c+\"b\"");
+    fold("\"a\"+(\"b\"+c)","\"ab\"+c");
   }
 
   public void testFoldLeftChildOp() {

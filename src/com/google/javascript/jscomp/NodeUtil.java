@@ -1075,12 +1075,47 @@ public final class NodeUtil {
   }
 
   /**
+   * Apply the supplied predicate against the potential
+   * all possible result of the expression.
+   */
+  static boolean valueCheck(Node n, Predicate<Node> p) {
+    switch (n.getType()) {
+      case Token.ASSIGN:
+      case Token.COMMA:
+        return valueCheck(n.getLastChild(), p);
+      case Token.AND:
+      case Token.OR:
+        return valueCheck(n.getFirstChild(), p)
+            && valueCheck(n.getLastChild(), p);
+      case Token.HOOK:
+        return valueCheck(n.getFirstChild().getNext(), p)
+            && valueCheck(n.getLastChild(), p);
+      default:
+        return p.apply(n);
+    }
+  }
+
+  static class NumbericResultPredicate implements Predicate<Node> {
+    public boolean apply(Node n) {
+      return isNumericResultHelper(n);
+    }
+  }
+
+  static final NumbericResultPredicate NUMBERIC_RESULT_PREDICATE =
+      new NumbericResultPredicate();
+
+  /**
    * Returns true if the result of node evaluation is always a number
    */
   static boolean isNumericResult(Node n) {
+    return valueCheck(n, NUMBERIC_RESULT_PREDICATE);
+  }
+
+  static boolean isNumericResultHelper(Node n) {
     switch (n.getType()) {
-      // NOTE: ADD is deliberately excluded as it may produce
-      // a string.
+      case Token.ADD:
+        return !mayBeString(n.getFirstChild())
+            && !mayBeString(n.getLastChild());
       case Token.BITNOT:
       case Token.BITOR:
       case Token.BITXOR:
@@ -1112,10 +1147,23 @@ public final class NodeUtil {
     }
   }
 
+  static class BooleanResultPredicate implements Predicate<Node> {
+    public boolean apply(Node n) {
+      return isBooleanResultHelper(n);
+    }
+  }
+
+  static final BooleanResultPredicate BOOLEAN_RESULT_PREDICATE =
+      new BooleanResultPredicate();
+
   /**
    * @return Whether the result of node evaluation is always a boolean
    */
   static boolean isBooleanResult(Node n) {
+    return valueCheck(n, BOOLEAN_RESULT_PREDICATE);
+  }
+
+  static boolean isBooleanResultHelper(Node n) {
     // TODO(johnlenz): Add a recursive option to recurse into
     // AND, OR, HOOK, COMMA and ASSIGN, like "getExpressionBooleanValue".
     switch (n.getType()) {
@@ -1156,10 +1204,31 @@ public final class NodeUtil {
     return n.getType() == Token.NULL;
   }
 
+  static class MayBeStringResultPredicate implements Predicate<Node> {
+    public boolean apply(Node n) {
+      return mayBeStringHelper(n);
+    }
+  }
+
+  static final MayBeStringResultPredicate MAY_BE_STRING_PREDICATE =
+      new MayBeStringResultPredicate();
+
   /**
    * @returns Whether the results is possibly a string.
    */
   static boolean mayBeString(Node n) {
+    return mayBeString(n, true);
+  }
+
+  static boolean mayBeString(Node n, boolean recurse) {
+    if (recurse) {
+      return valueCheck(n, MAY_BE_STRING_PREDICATE);
+    } else {
+      return mayBeStringHelper(n);
+    }
+  }
+
+  static boolean mayBeStringHelper(Node n) {
     return !isNumericResult(n) && !isBooleanResult(n)
         && !isUndefined(n) && !isNull(n);
   }

@@ -1440,12 +1440,12 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isNumericResult(getNode("([1,2])")));
     assertFalse(NodeUtil.isNumericResult(getNode("({a:1})")));
 
-    // These are number but aren't handled yet, "false" here means "unknown".
-    assertFalse(NodeUtil.isNumericResult(getNode("1 && 2")));
-    assertFalse(NodeUtil.isNumericResult(getNode("1 || 2")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a ? 2 : 3")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a,1")));
-    assertFalse(NodeUtil.isNumericResult(getNode("a=1")));
+    // Recurse into the expression when necessary.
+    assertTrue(NodeUtil.isNumericResult(getNode("1 && 2")));
+    assertTrue(NodeUtil.isNumericResult(getNode("1 || 2")));
+    assertTrue(NodeUtil.isNumericResult(getNode("a ? 2 : 3")));
+    assertTrue(NodeUtil.isNumericResult(getNode("a,1")));
+    assertTrue(NodeUtil.isNumericResult(getNode("a=1")));
   }
 
   public void testIsBooleanResult() {
@@ -1491,10 +1491,11 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isBooleanResult(getNode("({a:true})")));
 
     // These are boolean but aren't handled yet, "false" here means "unknown".
-    assertFalse(NodeUtil.isBooleanResult(getNode("true && false")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("true || false")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a ? true : false")));
-    assertFalse(NodeUtil.isBooleanResult(getNode("a,true")));
+    assertTrue(NodeUtil.isBooleanResult(getNode("true && false")));
+    assertTrue(NodeUtil.isBooleanResult(getNode("true || false")));
+    assertTrue(NodeUtil.isBooleanResult(getNode("a ? true : false")));
+    assertTrue(NodeUtil.isBooleanResult(getNode("a,true")));
+    assertTrue(NodeUtil.isBooleanResult(getNode("a=true")));
     assertFalse(NodeUtil.isBooleanResult(getNode("a=1")));
   }
 
@@ -1538,15 +1539,15 @@ public class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.mayBeString(getNode("new a()")));
 
     // These can't be strings but they aren't handled yet.
-    assertTrue(NodeUtil.mayBeString(getNode("1 && 2")));
-    assertTrue(NodeUtil.mayBeString(getNode("1 || 2")));
-    assertTrue(NodeUtil.mayBeString(getNode("1 ? 2 : 3")));
-    assertTrue(NodeUtil.mayBeString(getNode("1,2")));
-    assertTrue(NodeUtil.mayBeString(getNode("a=1")));
-    assertTrue(NodeUtil.mayBeString(getNode("1+1")));
-    assertTrue(NodeUtil.mayBeString(getNode("true+true")));
-    assertTrue(NodeUtil.mayBeString(getNode("null+null")));
-    assertTrue(NodeUtil.mayBeString(getNode("NaN+NaN")));
+    assertFalse(NodeUtil.mayBeString(getNode("1 && 2")));
+    assertFalse(NodeUtil.mayBeString(getNode("1 || 2")));
+    assertFalse(NodeUtil.mayBeString(getNode("1 ? 2 : 3")));
+    assertFalse(NodeUtil.mayBeString(getNode("1,2")));
+    assertFalse(NodeUtil.mayBeString(getNode("a=1")));
+    assertFalse(NodeUtil.mayBeString(getNode("1+1")));
+    assertFalse(NodeUtil.mayBeString(getNode("true+true")));
+    assertFalse(NodeUtil.mayBeString(getNode("null+null")));
+    assertFalse(NodeUtil.mayBeString(getNode("NaN+NaN")));
 
     // These are not strings but they aren't primitives either
     assertTrue(NodeUtil.mayBeString(getNode("([1,2])")));
