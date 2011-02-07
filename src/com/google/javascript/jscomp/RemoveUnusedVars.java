@@ -22,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
@@ -70,8 +69,6 @@ class RemoveUnusedVars
 
   private final AbstractCompiler compiler;
 
-  private final CodingConvention codingConvention;
-
   private final boolean removeGlobals;
 
   private boolean preserveFunctionExpressionNames;
@@ -103,12 +100,6 @@ class RemoveUnusedVars
   private final Map<Node, Assign> assignsByNode = Maps.newHashMap();
 
   /**
-   * Subclass name -> inherits call EXPR node.
-   */
-  private final Multimap<Var, Node> inheritsCalls =
-      ArrayListMultimap.create();
-
-  /**
    * Keep track of continuations that are finished iff the variable they're
    * indexed by is referenced.
    */
@@ -125,7 +116,6 @@ class RemoveUnusedVars
       boolean preserveFunctionExpressionNames,
       boolean modifyCallSites) {
     this.compiler = compiler;
-    this.codingConvention = compiler.getCodingConvention();
     this.removeGlobals = removeGlobals;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
     this.modifyCallSites = modifyCallSites;
@@ -136,9 +126,7 @@ class RemoveUnusedVars
    * may occur to ensure all unused variables are removed.
    */
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
     SimpleDefinitionFinder defFinder = null;
-
     if (modifyCallSites) {
       // For testing, allow the SimpleDefinitionFinder to be build now.
       defFinder = new SimpleDefinitionFinder(compiler);
@@ -224,21 +212,6 @@ class RemoveUnusedVars
         }
         break;
 
-      case Token.CALL:
-        // Look for calls to inheritance-defining calls (such as goog.inherits).
-        SubclassRelationship subclassRelationship =
-            codingConvention.getClassesDefinedByCall(n);
-        if (subclassRelationship != null) {
-          Var subclassVar = scope.getVar(subclassRelationship.subclassName);
-          if (!referenced.contains(subclassVar)) {
-            // Save a reference to the EXPR node.
-            inheritsCalls.put(subclassVar, parent);
-            continuations.put(subclassVar, new Continuation(n, scope));
-            return;
-          }
-        }
-        break;
-
       case Token.NAME:
         var = scope.getVar(n.getString());
         if (parent.getType() == Token.VAR) {
@@ -287,7 +260,7 @@ class RemoveUnusedVars
     }
 
     // Exported variables are off-limits.
-    if (codingConvention.isExported(var.getName())) {
+    if (compiler.getCodingConvention().isExported(var.getName())) {
       return false;
     }
 
@@ -728,7 +701,6 @@ class RemoveUnusedVars
    */
   private boolean markReferencedVar(Var var) {
     if (referenced.add(var)) {
-      // If a subclass is referenced, mark its superclasses as referenced.
       for (Continuation c : continuations.get(var)) {
         c.apply();
       }
@@ -739,20 +711,13 @@ class RemoveUnusedVars
 
   /**
    * Removes any vars in the scope that were not referenced. Removes any
-   * assignments to those variables as well.
+   * assigments to those variables as well.
    */
   private void removeUnreferencedVars() {
-    CodingConvention convention = codingConvention;
+    CodingConvention convention = compiler.getCodingConvention();
 
     for (Iterator<Var> it = maybeUnreferenced.iterator(); it.hasNext(); ) {
       Var var = it.next();
-
-      // Remove calls to inheritance-defining functions where the unreferenced
-      // class is the subclass.
-      for (Node exprCallNode : inheritsCalls.get(var)) {
-        NodeUtil.removeChild(exprCallNode.getParent(), exprCallNode);
-        compiler.reportCodeChange();
-      }
 
       // Regardless of what happens to the original declaration,
       // we need to remove all assigns, because they may contain references
