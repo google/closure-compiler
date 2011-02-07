@@ -27,11 +27,17 @@
  */
 function moz_indexedDB() {}
 
+/** @type {IDBFactory} */
+Window.prototype.moz_indexedDB;
+
 /**
  * @return {!IDBFactory} Provides applications a mechanism for accessing
  *    capabilities of indexed databases.
  */
 function mozIndexedDB() {}
+
+/** @type {IDBFactory} */
+Window.prototype.mozIndexedDB;
 
 /**
  * @return {!IDBFactory} Provides applications a mechanism for accessing
@@ -39,11 +45,17 @@ function mozIndexedDB() {}
  */
 function webkitIndexedDB() {}
 
+/** @type {IDBFactory} */
+Window.prototype.webkitIndexedDB;
+
 /**
  * @return {!IDBFactory} Provides applications a mechanism for accessing
  *    capabilities of indexed databases.
  */
 function indexedDB() {}
+
+/** @type {IDBFactory} */
+Window.prototype.indexedDB;
 
 /**
  * @constructor
@@ -161,6 +173,12 @@ function IDBEvent() {}
 IDBEvent.prototype.source;
 
 /**
+ * @type {*}
+ * @const
+ */
+IDBEvent.prototype.target;
+
+/**
  * @constructor
  * @extends {IDBEvent}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBSuccessEvent
@@ -257,6 +275,12 @@ IDBRequest.prototype.onsuccess = function() {};
 IDBRequest.prototype.onerror = function() {};
 
 /**
+ * @type {function(IDBErrorEvent)}
+ * @const
+ */
+IDBRequest.prototype.onfailure = function() {};
+
+/**
  * FF4b9 Introduced this property that is not currently in the formal specs.  So
  *    now instead of getting the result from the IDBSuccessEvent of onsuccess
  *    callback we have to get it from the original request (only if successful).
@@ -298,7 +322,8 @@ IDBDatabase.prototype.objectStoreNames;
 
 /**
  * @param {string} name The name of the object store.
- * @param {string=} keyPath The path to the key property of the documents.
+ * @param {(string|Object.<string, *>)=} keyPath
+ *     The path to the key property of the documents.
  * @param {boolean=} autoIncrement Wether to auto increment the ID.
  * @return {!IDBObjectStore} The created/open object store.
  */
@@ -562,14 +587,32 @@ IDBCursor.prototype['delete'] = function() {};
 
 /**
  * @constructor
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBTransaction
  */
 function IDBTransaction() {}
+
+/** @type {IDBTransaction} */
+Window.prototype.IDBTransaction;
+
+/** @inheritDoc */	
+IDBTransaction.prototype.addEventListener = function(	
+    type, listener, useCapture) {};	
+ 	
+/** @inheritDoc */	
+IDBTransaction.prototype.removeEventListener = function(	
+    type, listener, useCapture) {};	
+	
+/** @inheritDoc */	
+IDBTransaction.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @type {IDBTransaction}
  */
 function webkitIDBTransaction() {}
+
+/** @type {IDBTransaction} */
+Window.prototype.webkitIDBTransaction;
 
 /**
  * @const
@@ -632,9 +675,21 @@ IDBTransaction.prototype.ontimeout = function() {};
 
 /**
  * @constructor
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBDynamicTransaction
  */
 function IDBDynamicTransaction() {}
+
+/** @inheritDoc */	
+IDBDynamicTransaction.prototype.addEventListener = function(	
+    type, listener, useCapture) {};	
+	
+/** @inheritDoc */	
+IDBDynamicTransaction.prototype.removeEventListener = function(	
+    type, listener, useCapture) {};	
+	
+/** @inheritDoc */	
+IDBDynamicTransaction.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @type {IDBDatabase}
@@ -672,10 +727,18 @@ IDBDynamicTransaction.prototype.ontimeout = function() {};
  */
 function IDBKeyRange() {}
 
+/** @type {IDBKeyRange} */
+Window.prototype.IDBKeyRange;
+
+
+
 /**
  * @type {IDBKeyRange}
  */
 function webkitIDBKeyRange() {}
+
+/** @type {IDBKeyRange} */
+Window.prototype.webkitIDBKeyRange;
 
 /**
  * @const
