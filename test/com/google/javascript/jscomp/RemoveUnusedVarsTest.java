@@ -576,4 +576,101 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     // this.modifyCallSites = false;
     testSame("({set s(a) {}})");
   }
+  
+  public void testRemoveInheritedClass1() {
+    test("function goog$inherits(){}" +
+        "/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "goog$inherits(b,a); new a",
+        "function a(){} new a");
+  }
+  
+  public void testRemoveInheritedClass2() {
+    test("function goog$inherits(){}" +
+        "function goog$mixin(){}" +
+        "/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "/**@constructor*/function c(){}" +
+        "goog$inherits(b,a);" +
+        "goog$mixin(c.prototype,b.prototype);",
+        "");
+  }
+
+  public void testRemoveInheritedClass3() {
+    testSame("/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "goog$inherits(b,a); new b");
+  }
+
+  public void testRemoveInheritedClass4() {
+    testSame("function goog$inherits(){}" +
+        "/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "goog$inherits(b,a);" +
+        "/**@constructor*/function c(){}" +
+        "goog$inherits(c,b); new c");
+  }
+
+  public void testRemoveInheritedClass5() {
+    test("function goog$inherits(){}" +
+        "/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "goog$inherits(b,a);" +
+        "/**@constructor*/function c(){}" +
+        "goog$inherits(c,b); new b",
+        "function goog$inherits(){}" +
+        "function a(){}" +
+        "function b(){}" +
+        "goog$inherits(b,a); new b");
+  }
+
+  public void testRemoveInheritedClass6() {
+    test("function goog$mixin(){}" +
+        "/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "/**@constructor*/function c(){}" +
+        "/**@constructor*/function d(){}" +
+        "goog$mixin(b.prototype,a.prototype);" +
+        "goog$mixin(c.prototype,a.prototype); new c;" +
+        "goog$mixin(d.prototype,a.prototype)",
+        "function goog$mixin(){}" +
+        "function a(){}" +
+        "function c(){}" +
+        "goog$mixin(c.prototype,a.prototype); new c");
+  }
+  
+  public void testRemoveInheritedClass7() {
+    test("function goog$mixin(){}" +
+        "/**@constructor*/function a(){alert(goog$mixin(a, a))}" +
+        "/**@constructor*/function b(){}" +
+        "goog$mixin(b.prototype,a.prototype); new a",
+        "function goog$mixin(){}" +
+        "function a(){alert(goog$mixin(a, a))} new a");
+  }
+  
+  public void testRemoveInheritedClass8() {
+    test("/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "/**@constructor*/function c(){}" +
+        "b.inherits(a);c.mixin(b.prototype)",
+        "");
+  }
+
+  public void testRemoveInheritedClass9() {
+    testSame("/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "/**@constructor*/function c(){}" +
+        "b.inherits(a);c.mixin(b.prototype);new c");
+  }
+
+  public void testRemoveInheritedClass10() {
+    test("function goog$inherits(){}" +
+        "/**@constructor*/function a(){}" +
+        "/**@constructor*/function b(){}" +
+        "goog$inherits(b,a); new a;" +
+        "var c = a; var d = a.g; new b",
+        "function goog$inherits(){}" +
+        "function a(){} function b(){} goog$inherits(b,a); new a; new b");
+  }
+  
 }
