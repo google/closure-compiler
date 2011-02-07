@@ -1204,7 +1204,7 @@ google.maps.InfoWindow.prototype.getPosition = function() {};
 google.maps.InfoWindow.prototype.getZIndex = function() {};
 
 /**
- * @param {google.maps.Map|google.maps.StreetViewPanorama} map
+ * @param {google.maps.Map|google.maps.StreetViewPanorama=} map
  * @param {google.maps.MVCObject=} anchor
  * @return {undefined}
  */
@@ -3471,7 +3471,7 @@ google.maps.event.trigger = function(instance, eventName, var_args) {};
 google.maps.spherical = function() {};
 
 /**
- * @param {Array.<google.maps.LatLng>} loop
+ * @param {Array.<google.maps.LatLng>|google.maps.MVCArray.<google.maps.LatLng>} loop
  * @param {number=} radius
  * @return {number}
  */
@@ -3493,7 +3493,7 @@ google.maps.spherical.computeDistanceBetween = function(from, to, radius) {};
 google.maps.spherical.computeHeading = function(from, to) {};
 
 /**
- * @param {Array.<google.maps.LatLng>} path
+ * @param {Array.<google.maps.LatLng>|google.maps.MVCArray.<google.maps.LatLng>} path
  * @param {number=} radius
  * @return {number}
  */
