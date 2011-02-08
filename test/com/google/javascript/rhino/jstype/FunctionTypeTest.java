@@ -169,6 +169,11 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertTrue(ctor.getInstanceType().isUnknownType());
   }
 
+  public void testEmptyFunctionTypes() {
+    assertTrue(LEAST_FUNCTION_TYPE.isEmptyType());
+    assertFalse(GREATEST_FUNCTION_TYPE.isEmptyType());
+  }
+
   private void assertLeastSupertype(String s, JSType t1, JSType t2) {
     assertEquals(s, t1.getLeastSupertype(t2).toString());
     assertEquals(s, t2.getLeastSupertype(t1).toString());

@@ -160,7 +160,9 @@ public abstract class JSType implements Serializable {
   }
 
   public final boolean isEmptyType() {
-    return isNoType() || isNoObjectType() || isNoResolvedType();
+    return isNoType() || isNoObjectType() || isNoResolvedType() ||
+        (registry.getNativeFunctionType(
+             JSTypeNative.LEAST_FUNCTION_TYPE) == this);
   }
 
   public boolean isNumberObjectType() {

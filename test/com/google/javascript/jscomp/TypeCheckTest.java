@@ -4951,6 +4951,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testIssue301() throws Exception {
+    testTypes(
+        "Array.indexOf = function() {};" +
+        "var s = 'hello';" +
+        "alert(s.toLowerCase.indexOf('1'));",
+        "Property indexOf never defined on String.prototype.toLowerCase");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See
