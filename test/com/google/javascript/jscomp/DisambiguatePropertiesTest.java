@@ -74,7 +74,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testOneType() {
+  public void testOneType1() {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;\n"
@@ -83,6 +83,41 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "F.a = 0;";
     testSets(false, js, js, "{a=[[Foo.prototype]]}");
     testSets(true, js, js, "{a=[[Foo.prototype]]}");
+  }
+
+  public void testOneType2() {
+    String js = ""
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype = {a: 0};\n"
+        + "/** @type Foo */\n"
+        + "var F = new Foo;\n"
+        + "F.a = 0;";
+    // TODO(johnlenz): fix this. Doing nothing is safe, but
+    // handling this would be better.
+    String desired = "{a=[[Foo.prototype]]}";
+    String expected = "{}";
+    testSets(false, js, js, expected);
+
+    // Tighten types fails here.
+    // testSets(true, js, js, expected);
+  }
+
+  public void testOneType3() {
+    String js = ""
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype = { get a() {return  0},"
+        + "                  set a(b) {} };\n"
+        + "/** @type Foo */\n"
+        + "var F = new Foo;\n"
+        + "F.a = 0;";
+    // TODO(johnlenz): fix this. Doing nothing is safe, but
+    // handling this would be better.
+    String desired = "{a=[[Foo.prototype]]}";
+    String expected = "{}";
+    testSets(false, js, js, expected);
+
+    // Tighten types fails here.
+    // testSets(true, js, js, expected);
   }
 
   public void testPrototypeAndInstance() {
@@ -96,7 +131,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(true, js, js, "{a=[[Foo.prototype]]}");
   }
 
-  public void testTwoTypes() {
+  public void testTwoTypes1() {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;"
@@ -119,6 +154,70 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "B.Bar_prototype$a=0";
     testSets(false, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
     testSets(true, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+  }
+
+  public void testTwoTypes2() {
+    String js = ""
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype = {a: 0};"
+        + "/** @type Foo */\n"
+        + "var F = new Foo;\n"
+        + "F.a = 0;"
+        + "/** @constructor */ function Bar() {}\n"
+        + "Bar.prototype = {a: 0};"
+        + "/** @type Bar */\n"
+        + "var B = new Bar;\n"
+        + "B.a = 0;";
+
+    String output = ""
+        + "function Foo(){}"
+        + "Foo.prototype = {Foo_prototype$a: 0};"
+        + "var F=new Foo;"
+        + "F.Foo_prototype$a=0;"
+        + "function Bar(){}"
+        + "Bar.prototype = {Bar_prototype$a: 0};"
+        + "var B=new Bar;"
+        + "B.Bar_prototype$a=0";
+
+    // Would like it to be (but doing nothing is safe):
+    // testSets(false, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+    testSets(false, js, js, "{}");
+    // TODO(johnlenz): If tighten types is completed, this needs to be fixed.
+    // testSets(true, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+  }
+
+  public void testTwoTypes3() {
+    String js = ""
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype = { get a() {return  0},"
+        + "                  set a(b) {} };\n"
+        + "/** @type Foo */\n"
+        + "var F = new Foo;\n"
+        + "F.a = 0;"
+        + "/** @constructor */ function Bar() {}\n"
+        + "Bar.prototype = { get a() {return  0},"
+        + "                  set a(b) {} };\n"
+        + "/** @type Bar */\n"
+        + "var B = new Bar;\n"
+        + "B.a = 0;";
+
+    String output = ""
+        + "function Foo(){}"
+        + "Foo.prototype = { get Foo_prototype$a() {return  0},"
+        + "                  set Foo_prototype$a(b) {} };\n"
+        + "var F=new Foo;"
+        + "F.Foo_prototype$a=0;"
+        + "function Bar(){}"
+        + "Bar.prototype = { get Bar_prototype$a() {return  0},"
+        + "                  set Bar_prototype$a(b) {} };\n"
+        + "var B=new Bar;"
+        + "B.Bar_prototype$a=0";
+
+    // Would like it to be (but doing nothing is safe):
+    // testSets(false, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+    testSets(false, js, js, "{}");
+    // TODO(johnlenz): If tighten types is completed, this needs to be fixed.
+    // testSets(true, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
   }
 
   public void testTwoFields() {

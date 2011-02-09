@@ -352,6 +352,7 @@ class DisambiguateProperties<T> implements CompilerPass {
    */
   private class FindExternProperties extends AbstractScopingCallback {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      // TODO(johnlenz): Support object-literal property definitions.
       if (n.getType() == Token.GETPROP) {
         String field = n.getLastChild().getString();
         T type = typeSystem.getType(getScope(), n.getFirstChild(), field);
@@ -411,7 +412,8 @@ class DisambiguateProperties<T> implements CompilerPass {
     private void handleObjectLit(NodeTraversal t, Node n) {
       Node child = n.getFirstChild();
       while (child != null) {
-        if (child.getType() == Token.STRING) {
+        // Maybe STRING, NUMBER, GET, SET
+        if (child.getType() != Token.NUMBER) {
           // We should never see a mix of numbers and strings.
           String name = child.getString();
           T type = typeSystem.getType(getScope(), n, name);
