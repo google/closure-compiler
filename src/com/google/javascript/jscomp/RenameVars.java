@@ -195,8 +195,13 @@ final class RenameVars implements CompilerPass {
       }
 
       // Is this local or Global?
+      // Bleeding functions should be treated as part of their outer
+      // scope, because IE has bugs in how it handles bleeding
+      // functions.
       Scope.Var var = t.getScope().getVar(name);
-      boolean local = (var != null) && var.isLocal();
+      boolean local = (var != null) && var.isLocal() &&
+          (!var.scope.getParent().isGlobal() ||
+           !var.isBleedingFunction());
 
       // Are we renaming global variables?
       if (!local && localRenamingOnly) {

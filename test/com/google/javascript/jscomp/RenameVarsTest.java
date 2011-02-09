@@ -114,7 +114,7 @@ public class RenameVarsTest extends CompilerTestCase {
     test("var walk = function walk(node, aFunction) {" +
          "  walk(node, aFunction);" +
          "};",
-         "var d = function a(b, c) {" +
+         "var a = function a(b, c) {" +
          "  a(b, c);" +
          "};");
 
@@ -123,8 +123,8 @@ public class RenameVarsTest extends CompilerTestCase {
     test("var walk = function walk(node, aFunction) {" +
          "  walk(node, aFunction);" +
          "};",
-         "var walk = function a(b, c) {" +
-         "  a(b, c);" +
+         "var walk = function walk(a, b) {" +
+         "  walk(a, b);" +
          "};");
   }
 
@@ -158,6 +158,29 @@ public class RenameVarsTest extends CompilerTestCase {
          "function a(b, c) { (function(d, e) {}) }");
     test("function f1(v1, v2) { function f2(v3, v4) {} }",
          "function a(b, c) { function d(e, f) {} }");
+  }
+
+  public void testBleedingRecursiveFunctions1() {
+    // On IE, bleeding functions will interfere with each other if
+    // they are in the same scope. In the below example, we want to be
+    // sure that a and b get separate names.
+    test("var x = function a(x) { return x ? 1 : a(1); };" +
+         "var y = function b(x) { return x ? 2 : b(2); };",
+         "var c = function b(a) { return a ? 1 : b(1); };" +
+         "var e = function d(a) { return a ? 2 : d(2); };");
+  }
+
+  public void testBleedingRecursiveFunctions2() {
+    // TODO(nicksantos): Ensure a and b get separate names. Will fix this
+    // in the CL that handles 2nd-level scopes.
+    test("function f() {" +
+         "  var x = function a(x) { return x ? 1 : a(1); };" +
+         "  var y = function b(x) { return x ? 2 : b(2); };" +
+         "}",
+         "function c() {" +
+         "  var d = function a(b) { return b ? 1 : a(1); };" +
+         "  var e = function a(b) { return b ? 2 : a(2); };" +
+         "}");
   }
 
   public void testRenameWithExterns1() {

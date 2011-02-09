@@ -123,6 +123,14 @@ public class Scope implements StaticScope<JSType> {
     }
 
     /**
+     * Whether this is a bleeding function (an anonymous named function
+     * that bleeds into the inner scope.
+     */
+    public boolean isBleedingFunction() {
+      return NodeUtil.isFunctionExpression(getParentNode());
+    }
+
+    /**
      * Gets the scope where this variable is declared.
      */
     Scope getScope() {
