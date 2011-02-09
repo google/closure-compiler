@@ -43,6 +43,12 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   LanguageMode languageIn;
 
+
+  /**
+   * Whether the compiler handles `const' keyword or not.
+   */
+  boolean acceptConstKeyword;
+
   // TODO(johnlenz): Add an language output mode.
 
   /**
@@ -636,6 +642,9 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Accepted language
     languageIn = LanguageMode.ECMASCRIPT3;
 
+    // Language variation
+    acceptConstKeyword = false;
+
     // Checks
     skipAllPasses = false;
     nameAnonymousFunctionsOnly = false;
@@ -994,6 +1003,13 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setChainCalls(boolean value) {
     this.chainCalls = value;
+  }
+
+  /**
+   * If true, accept `const' keyword.
+   */
+  public void setAcceptConstKeyword(boolean value) {
+    this.acceptConstKeyword = value;
   }
 
   /**

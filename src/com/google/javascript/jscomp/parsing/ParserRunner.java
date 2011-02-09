@@ -48,9 +48,17 @@ public class ParserRunner {
     return createConfig(isIdeMode, false);
   }
 
+  @Deprecated
   public static Config createConfig(boolean isIdeMode, boolean isES5Mode) {
+    return createConfig(isIdeMode, isES5Mode, false);
+  }
+
+  public static Config createConfig(boolean isIdeMode,
+                                    boolean isES5Mode,
+                                    boolean acceptConstKeyword) {
     initResourceConfig();
-    return new Config(annotationNames, suppressionNames, isIdeMode, isES5Mode);
+    return new Config(annotationNames, suppressionNames, isIdeMode, isES5Mode,
+                      acceptConstKeyword);
   }
 
   private static synchronized void initResourceConfig() {

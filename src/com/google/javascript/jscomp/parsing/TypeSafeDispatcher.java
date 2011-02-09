@@ -261,6 +261,7 @@ abstract class TypeSafeDispatcher<T> {
         return processThrowStatement((ThrowStatement) node);
       case Token.TRY:
         return processTryStatement((TryStatement) node);
+      case Token.CONST:
       case Token.VAR:
         if (node instanceof VariableDeclaration) {
           return processVariableDeclaration((VariableDeclaration) node);

@@ -310,6 +310,15 @@ public class CommandLineRunner extends
         + "a manifest for each module.")
     private String output_manifest = "";
 
+    @Option(name = "--accept_const_keyword",
+        usage = "Allows usage of const keyword.")
+    private boolean accept_const_keyword = false;
+
+    @Option(name = "--language_in",
+        usage = "Sets what language spec that input sources conform. "
+        + "Options: ECMASCRIPT3 (default), ECMASCRIPT5")
+    private String language_in = "ECMASCRIPT3";
+
     @Option(name = "--version",
         handler = BooleanOptionHandler.class,
         usage = "Prints the compiler version to stderr.")
@@ -525,7 +534,9 @@ public class CommandLineRunner extends
           .setCharset(flags.charset)
           .setManageClosureDependencies(flags.manage_closure_dependencies)
           .setClosureEntryPoints(flags.closure_entry_point)
-          .setOutputManifest(flags.output_manifest);
+          .setOutputManifest(flags.output_manifest)
+          .setAcceptConstKeyword(flags.accept_const_keyword)
+          .setLanguageIn(flags.language_in);
     }
   }
 

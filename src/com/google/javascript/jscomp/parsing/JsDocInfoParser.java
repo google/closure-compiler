@@ -127,6 +127,7 @@ public final class JsDocInfoParser {
         Sets.<String>newHashSet(),
         Sets.<String>newHashSet(),
         false,
+        false,
         false);
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(typeString),

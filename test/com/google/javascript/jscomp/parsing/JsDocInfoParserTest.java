@@ -47,10 +47,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     super.setUp();
     extraAnnotations =
         Sets.newHashSet(
-            ParserRunner.createConfig(true, false).annotationNames.keySet());
+            ParserRunner.createConfig(true, false, false).annotationNames.
+            keySet());
     extraSuppressions =
         Sets.newHashSet(
-            ParserRunner.createConfig(true, false).suppressionNames);
+            ParserRunner.createConfig(true, false, false).suppressionNames);
 
     extraSuppressions.add("x");
     extraSuppressions.add("y");
@@ -2480,7 +2481,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     AstRoot script = p.parse(code, null, 0);
 
     Config config =
-        new Config(extraAnnotations, extraSuppressions, true, false);
+        new Config(extraAnnotations, extraSuppressions, true, false, false);
     for (Comment comment : script.getComments()) {
       JsDocInfoParser jsdocParser =
         new JsDocInfoParser(
@@ -2521,7 +2522,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
     Config config = new Config(extraAnnotations, extraSuppressions,
-        parseDocumentation, false);
+        parseDocumentation, false, false);
     JsDocInfoParser jsdocParser = new JsDocInfoParser(
         stream(comment),
         new Comment(0, 0, CommentType.JSDOC, comment),

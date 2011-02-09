@@ -51,21 +51,27 @@ public class Config {
   final Set<String> suppressionNames;
 
   /**
-   * Recognized names in a {@code @suppress} tag.
+   * Accept ECMAScript5 syntax, such as getter/setter.
    */
   final boolean acceptES5;
+
+  /**
+   * Accept `const' keyword.
+   */
+  final boolean acceptConstKeyword;
 
   /**
    * Annotation names.
    */
 
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
-      boolean isIdeMode, boolean acceptES5) {
+      boolean isIdeMode, boolean acceptES5, boolean acceptConstKeyword) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = isIdeMode;
     this.suppressionNames = suppressionNames;
     this.isIdeMode = isIdeMode;
     this.acceptES5 = acceptES5;
+    this.acceptConstKeyword = acceptConstKeyword;
   }
 
   /**

@@ -1097,7 +1097,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Parser p = new Parser(environment);
     AstRoot script = p.parse(string, null, 0);
 
-    Config config = ParserRunner.createConfig(true, es5mode);
+    Config config = ParserRunner.createConfig(true, es5mode, false);
     Node root = IRFactory.transformTree(script, string, config, errorReporter);
 
     return root;

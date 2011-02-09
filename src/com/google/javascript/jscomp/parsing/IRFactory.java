@@ -853,6 +853,11 @@ public class IRFactory {
 
     @Override
     Node processVariableDeclaration(VariableDeclaration declarationNode) {
+      if (!config.acceptConstKeyword && declarationNode.getType() ==
+          com.google.javascript.jscomp.mozilla.rhino.Token.CONST) {
+        processIllegalToken(declarationNode);
+      }
+
       Node node = newNode(Token.VAR);
       for (VariableInitializer child : declarationNode.getVariables()) {
         node.addChildToBack(transform(child));

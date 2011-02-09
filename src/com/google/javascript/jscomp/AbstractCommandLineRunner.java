@@ -236,6 +236,21 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       options.inputPropertyMapSerialized =
           VariableMap.load(config.propertyMapInputFile).toBytes();
     }
+
+    if (config.languageIn.length() > 0) {
+      if (config.languageIn.equals("ECMASCRIPT5") ||
+          config.languageIn.equals("ES5")) {
+        options.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5;
+      } else if (config.languageIn.equals("ECMASCRIPT3") ||
+                 config.languageIn.equals("ES3")) {
+        options.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT3;
+      } else {
+        throw new FlagUsageException("Unknown language `" + config.languageIn +
+                                     "' specified.");
+      }
+    }
+
+    options.acceptConstKeyword = config.acceptConstKeyword;
   }
 
   final protected A getCompiler() {
@@ -1561,6 +1576,27 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setOutputManifest(String outputManifest) {
       this.outputManifest = outputManifest;
+      return this;
+    }
+
+    private boolean acceptConstKeyword = false;
+
+    /**
+     * Sets whether to accept usage of 'const' keyword.
+     */
+    CommandLineConfig setAcceptConstKeyword(boolean acceptConstKeyword) {
+      this.acceptConstKeyword = acceptConstKeyword;
+      return this;
+    }
+
+    private String languageIn = "";
+
+    /**
+     * Sets whether to accept input files as ECMAScript5 compliant.
+     * Otherwise input files are treated as ECMAScript3 compliant.
+     */
+    CommandLineConfig setLanguageIn(String languageIn) {
+      this.languageIn = languageIn;
       return this;
     }
   }
