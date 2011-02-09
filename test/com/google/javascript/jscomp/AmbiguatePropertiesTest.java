@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 import java.util.Map;
@@ -57,15 +58,33 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions() {
-    return new CompilerOptions(); // no missing properties check
+    // no missing properties check
+    CompilerOptions options = new CompilerOptions();
+    options.languageIn = LanguageMode.ECMASCRIPT5;
+    return options;
   }
 
-  public void testOneVar() {
+  public void testOneVar1() {
     test("/** @constructor */ var Foo = function(){};Foo.prototype.b = 0;",
          "var Foo = function(){};Foo.prototype.a = 0;");
   }
 
-  public void testTwoVar() {
+  public void testOneVar2() {
+    testSame("/** @constructor */ var Foo = function(){};" +
+             "Foo.prototype = {b: 0};");
+  }
+
+  public void testOneVar3() {
+    testSame("/** @constructor */ var Foo = function(){};" +
+             "Foo.prototype = {get b() {return 0}};");
+  }
+
+  public void testOneVar4() {
+    testSame("/** @constructor */ var Foo = function(){};" +
+             "Foo.prototype = {set b(a) {}};");
+  }
+
+  public void testTwoVar1() {
     String js = ""
         + "/** @constructor */ var Foo = function(){};\n"
         + "Foo.prototype.z=0;\n"
@@ -77,6 +96,14 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
         + "Foo.prototype.a=0;\n"
         + "Foo.prototype.b=0;";
     test(js, output);
+  }
+
+  public void testTwoVar2() {
+    String js = ""
+        + "/** @constructor */ var Foo = function(){};\n"
+        + "Foo.prototype={z:0, z:1, x:0};\n";
+    // TODO(johnlenz): It would be nice to handle this type of declaration.
+    testSame(js);
   }
 
   public void testTwoIndependentVar() {
