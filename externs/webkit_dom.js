@@ -44,6 +44,12 @@ Window.prototype.console.log = function(msg) {};
  */
 Window.prototype.console.warn = function(msg) {};
 
+/**
+ * @type {number}
+ * @see http://developer.android.com/reference/android/webkit/WebView.html
+ */
+Window.prototype.devicePixelRatio;
+
 /** @type {Node} */
 Selection.prototype.baseNode;
 
