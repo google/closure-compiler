@@ -53,12 +53,13 @@ public class DiagnosticGroups {
   // A bit a hack to display the available groups on the command-line.
   // New groups should be added to this list if they are public and should
   // be listed on the command-line as an available option.
-  static final String DIAGNOSTIC_GROUP_NAMES = 
+  static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkRegExp," +
       "checkTypes, checkVars, deprecated, " +
-      "externsValidation, fileoverviewTags, invalidCasts, " +
-      "missingProperties, nonStandardJsDocs, strictModuleDepCheck, " +
-      "undefinedVars, unknownDefines, uselessCode, visibility";
+      "externsValidation, fileoverviewTags, internetExplorerChecks, " +
+      "invalidCasts, missingProperties, nonStandardJsDocs, " +
+      "strictModuleDepCheck, undefinedVars, unknownDefines, uselessCode, " +
+      "visibility";
 
   public static DiagnosticGroup DEPRECATED = DiagnosticGroups
       .registerGroup("deprecated",
@@ -124,6 +125,11 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("missingProperties",
           new DiagnosticGroup(TypeCheck.INEXISTENT_PROPERTY));
 
+  // TODO: add more IE specific checks here.
+  public static DiagnosticGroup INTERNET_EXPLORER_CHECKS =
+      DiagnosticGroups.registerGroup("internetExplorerChecks",
+          new DiagnosticGroup(RhinoErrorReporter.TRAILING_COMMA));
+
   public static DiagnosticGroup UNDEFINED_VARIABLES =
       DiagnosticGroups.registerGroup("undefinedVars",
           new DiagnosticGroup(VarCheck.UNDEFINED_VAR_ERROR));
@@ -149,7 +155,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("uselessCode",
           new DiagnosticGroup(
               CheckSideEffects.USELESS_CODE_ERROR,
-              CheckUnreachableCode.UNREACHABLE_CODE)); 
+              CheckUnreachableCode.UNREACHABLE_CODE));
 
   /**
    * Adds warning levels by name.
