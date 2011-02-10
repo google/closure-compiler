@@ -27,9 +27,9 @@ public class AliasKeywordsTest extends CompilerTestCase {
       = ENOUGH_TO_ALIAS_LITERAL - 1;
 
   private static final int ENOUGH_TO_ALIAS_THROW
-    = AliasKeywords.MIN_OCCURRENCES_REQUIRED_TO_ALIAS_THROW;
+      = AliasKeywords.MIN_OCCURRENCES_REQUIRED_TO_ALIAS_THROW;
   private static final int TOO_FEW_TO_ALIAS_THROW
-    = ENOUGH_TO_ALIAS_THROW - 1;
+      = ENOUGH_TO_ALIAS_THROW - 1;
 
   @Override
   public void setUp() {
@@ -103,7 +103,13 @@ public class AliasKeywordsTest extends CompilerTestCase {
     testSame(generateCode("true", TOO_FEW_TO_ALIAS_LITERAL));
     testSame(generateCode("false", TOO_FEW_TO_ALIAS_LITERAL));
     testSame(generateCode("null", TOO_FEW_TO_ALIAS_LITERAL));
+    testSame(generateCode("void 0", TOO_FEW_TO_ALIAS_LITERAL));
     testSame(generatePreProcessThrowCode(TOO_FEW_TO_ALIAS_THROW, "1"));
+
+    // Don't alias void nodes other than "void 0".
+    testSame(generateCode("void 1", ENOUGH_TO_ALIAS_LITERAL));
+    testSame(generateCode("void x", ENOUGH_TO_ALIAS_LITERAL));
+    testSame(generateCode("void f()", ENOUGH_TO_ALIAS_LITERAL));
   }
 
   /**
@@ -122,6 +128,11 @@ public class AliasKeywordsTest extends CompilerTestCase {
     test(generateCode("null", ENOUGH_TO_ALIAS_LITERAL),
          generateCode(AliasKeywords.ALIAS_NULL, ENOUGH_TO_ALIAS_LITERAL,
                       "var JSCompiler_alias_NULL=null;"));
+
+    test(generateCode("void 0", ENOUGH_TO_ALIAS_LITERAL),
+         generateCode(AliasKeywords.ALIAS_VOID, ENOUGH_TO_ALIAS_LITERAL,
+                     "var JSCompiler_alias_VOID=void 0;"));
+
     test(generatePreProcessThrowCode(ENOUGH_TO_ALIAS_THROW, "1"),
          generatePostProcessThrowCode(ENOUGH_TO_ALIAS_THROW, "", "1"));
   }
@@ -131,9 +142,11 @@ public class AliasKeywordsTest extends CompilerTestCase {
     actual.append(generateCode("true", ENOUGH_TO_ALIAS_LITERAL));
     actual.append(generateCode("false", ENOUGH_TO_ALIAS_LITERAL));
     actual.append(generateCode("null", ENOUGH_TO_ALIAS_LITERAL));
+    actual.append(generateCode("void 0", ENOUGH_TO_ALIAS_LITERAL));
 
     StringBuilder expected = new StringBuilder();
     expected.append(
+        "var JSCompiler_alias_VOID=void 0;" +
         "var JSCompiler_alias_TRUE=true;" +
         "var JSCompiler_alias_NULL=null;" +
         "var JSCompiler_alias_FALSE=false;");
@@ -143,6 +156,8 @@ public class AliasKeywordsTest extends CompilerTestCase {
         generateCode(AliasKeywords.ALIAS_FALSE, ENOUGH_TO_ALIAS_LITERAL));
     expected.append(
         generateCode(AliasKeywords.ALIAS_NULL, ENOUGH_TO_ALIAS_LITERAL));
+    expected.append(
+        generateCode(AliasKeywords.ALIAS_VOID, ENOUGH_TO_ALIAS_LITERAL));
 
     test(actual.toString(), expected.toString());
   }
@@ -160,9 +175,9 @@ public class AliasKeywordsTest extends CompilerTestCase {
       testSame("var JSCompiler_alias_TRUE='foo';");
       fail();
     } catch (RuntimeException expected) {
+      // expected exception
       assertTrue(-1 != expected.getMessage().indexOf(
               "Existing alias definition"));
-      // expected
     }
   }
 

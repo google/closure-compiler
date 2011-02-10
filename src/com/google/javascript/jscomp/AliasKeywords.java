@@ -253,10 +253,54 @@ class AliasKeywords implements CompilerPass {
     }
   }
 
+  /** Aliases literal keywords (e.g., null) with variable names. */
+  private class VoidKeywordAliasSpecification extends AliasSpecification {
+    VoidKeywordAliasSpecification(String aliasName, int tokenId) {
+      super(aliasName, tokenId);
+    }
+
+    @Override
+    public void visit(Node n, Node parent) {
+      Node value = n.getFirstChild();
+      if (value.getType() == Token.NUMBER && value.getDouble() == 0) {
+        super.visit(n, parent);
+      }
+    }
+
+    @Override
+    protected int minOccurrencesRequiredToAlias() {
+      return MIN_OCCURRENCES_REQUIRED_TO_ALIAS_LITERAL;
+    }
+
+    @Override
+    protected void aliasNode(Node n, Node parent) {
+      Node aliasNode = NodeUtil.newName(
+          compiler.getCodingConvention(), getAliasName(), n, getAliasName());
+      parent.replaceChild(n, aliasNode);
+    }
+
+    @Override
+    /**
+     * Create the alias declaration (e.g. var $$ALIAS_VOID=void 0;).
+     */
+    protected void insertAliasDeclaration(Node codeRoot) {
+      Node varNode = new Node(Token.VAR);
+      Node value = new Node(Token.VOID, Node.newNumber(0));
+      Node name = NodeUtil.newName(
+          compiler.getCodingConvention(), getAliasName(),
+          varNode, getAliasName());
+      name.addChildToBack(value);
+      varNode.addChildToBack(name);
+      codeRoot.addChildrenToFront(varNode);
+    }
+  }
+
+
   static final String ALIAS_NULL = "JSCompiler_alias_NULL";
   static final String ALIAS_TRUE = "JSCompiler_alias_TRUE";
   static final String ALIAS_FALSE = "JSCompiler_alias_FALSE";
   static final String ALIAS_THROW = "JSCompiler_alias_THROW";
+  static final String ALIAS_VOID = "JSCompiler_alias_VOID";
 
   /**
    * Don't alias a keyword unless it's referenced at least
@@ -404,6 +448,7 @@ class AliasKeywords implements CompilerPass {
     l.add(new KeywordAliasSpecification(ALIAS_FALSE, Token.FALSE));
     l.add(new KeywordAliasSpecification(ALIAS_NULL, Token.NULL));
     l.add(new KeywordAliasSpecification(ALIAS_TRUE, Token.TRUE));
+    l.add(new VoidKeywordAliasSpecification(ALIAS_VOID, Token.VOID));
     // Process throw nodes after literal keyword nodes. This is important when
     // a literal keyword is thrown (e.g., throw true;).
     // KeywordAliasSpecification needs to know what the parent of the node being
