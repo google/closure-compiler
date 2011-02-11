@@ -107,6 +107,11 @@ class PeepholeSubstituteAlternateSyntax
         }
         return node;
 
+
+      case Token.TRUE:
+      case Token.FALSE:
+        return reduceTrueFalse(node);
+
       case Token.NEW:
         node = tryFoldStandardConstructors(node);
         if (node.getType() != Token.CALL) {
@@ -836,6 +841,14 @@ class PeepholeSubstituteAlternateSyntax
               }
             }
             break;
+
+           default:
+             TernaryValue nVal = NodeUtil.getBooleanValue(first);
+             if (nVal != TernaryValue.UNKNOWN) {
+               boolean result = nVal.not().toBoolean(true);
+               int equivalentResult = result ? 1 : 0;
+               return maybeReplaceChildWithNumber(n, parent, equivalentResult);
+             }
         }
         // No need to traverse, tryMinimizeCondition is called on the NOT
         // children in the general case in the main post-order traversal.
@@ -1143,6 +1156,15 @@ class PeepholeSubstituteAlternateSyntax
     }
 
     return n;
+  }
+
+  private Node reduceTrueFalse(Node n) {
+    Node not = new Node(Token.NOT,
+        Node.newNumber(n.getType() == Token.TRUE ? 0 : 1));
+    not.copyInformationFromForTree(n);
+    n.getParent().replaceChild(n, not);
+    reportCodeChange();
+    return not;
   }
 
   private static final Pattern REGEXP_FLAGS_RE = Pattern.compile("^[gmi]*$");

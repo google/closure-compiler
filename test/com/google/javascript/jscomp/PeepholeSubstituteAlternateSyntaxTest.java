@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /**
- * Tests for PeepholeSubstituteAlternateSyntaxTest in isolation.
+ * Tests for {@link PeepholeSubstituteAlternateSyntax} in isolation.
  * Tests for the interaction of multiple peephole passes are in
  * PeepholeIntegrationTest.
  */
@@ -215,12 +215,12 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
          " else  { x = 2; x++; y += 1; z = pi; }",
          "x=(a) ? 1 : 2; x++; y += 1; z = pi;");
     fold("function z() {" +
-         "if (a) { foo(); return true } else { goo(); return true }" +
+         "if (a) { foo(); return !0 } else { goo(); return !0 }" +
          "}",
-         "function z() {(a) ? foo() : goo(); return true}");
+         "function z() {(a) ? foo() : goo(); return !0}");
     fold("function z() {if (a) { foo(); x = true; return true " +
          "} else { goo(); x = true; return true }}",
-         "function z() {(a) ? foo() : goo(); x = true; return true}");
+         "function z() {(a) ? foo() : goo(); x = !0; return !0}");
 
     fold("function z() {" +
          "  if (a) { bar(); foo(); return true }" +
@@ -229,7 +229,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
          "function z() {" +
          "  if (a) { bar(); foo(); }" +
          "    else { bar(); goo(); }" +
-         "  return true;" +
+         "  return !0;" +
          "}");
   }
 
@@ -436,6 +436,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("while(!(!x&&!y)) foo()", "while(x||y) foo()");
     fold("while(x||!!y) foo()", "while(x||y) foo()");
     fold("while(!(!!x&&y)) foo()", "while(!(x&&y)) foo()");
+    fold("while(x&&!0) foo()", "while(x) foo()");
+    fold("while(x||!1) foo()", "while(x) foo()");
   }
 
   public void testMinimizeForCondition() {
@@ -443,7 +445,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     // These could be simplified to "for(;;) ..."
     fold("for(;!!true;) foo()", "for(;1;) foo()");
     // Don't bother with FOR inits as there are normalized out.
-    fold("for(!!true;;) foo()", "for(!!1;;) foo()");
+    fold("for(!!true;;) foo()", "for(!0;;) foo()");
 
     // These test tryMinimizeCondition
     fold("for(;!!x;) foo()", "for(;x;) foo()");
@@ -452,7 +454,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("for(a in b) foo()");
     foldSame("for(a in {}) foo()");
     foldSame("for(a in []) foo()");
-    fold("for(a in !!true) foo()", "for(a in !!1) foo()");
+    fold("for(a in !!true) foo()", "for(a in !0) foo()");
   }
 
   public void testMinimizeCondition_example1() {
@@ -472,7 +474,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   }
 
   public void testFoldReturnResult() {
-    foldSame("function f(){return false;}");
+    fold("function f(){return false;}", "function f(){return !1}");
     foldSame("function f(){return null;}");
     fold("function f(){return void 0;}",
          "function f(){}");
@@ -710,6 +712,11 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("if(x)if(y||z){while(1){}}", "if((x)&&(y||z)){while(1){}}");
     foldSame("if(x||z)if(y||z){while(1){}}");
     fold("if(x)if(y){if(z){while(1){}}}", "if(x&&y&&z){while(1){}}");
+  }
+
+  public void testFoldTrueFalse() {
+    fold("x = true", "x = !0");
+    fold("x = false", "x = !1");
   }
 
   public void testIssue291() {

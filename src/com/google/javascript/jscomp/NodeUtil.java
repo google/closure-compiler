@@ -115,6 +115,9 @@ public final class NodeUtil {
       case Token.NUMBER:
         return TernaryValue.forBoolean(n.getDouble() != 0);
 
+      case Token.NOT:
+        return getBooleanValue(n.getLastChild()).not();
+
       case Token.NULL:
       case Token.FALSE:
       case Token.VOID:
@@ -181,6 +184,13 @@ public final class NodeUtil {
 
       case Token.VOID:
         return "undefined";
+
+      case Token.NOT:
+        TernaryValue child = getBooleanValue(n.getFirstChild());
+        if (child != TernaryValue.UNKNOWN) {
+          return child.toBoolean(true) ? "false" : "true"; // reversed.
+        }
+        break;
     }
     return null;
   }
@@ -229,6 +239,13 @@ public final class NodeUtil {
           return Double.NEGATIVE_INFINITY;
         }
         return null;
+
+      case Token.NOT:
+        TernaryValue child = getBooleanValue(n.getFirstChild());
+        if (child != TernaryValue.UNKNOWN) {
+          return child.toBoolean(true) ? 0.0 : 1.0; // reversed.
+        }
+        break;
 
       case Token.STRING:
         String s = trimJsWhiteSpace(n.getString());
@@ -390,6 +407,8 @@ public final class NodeUtil {
       case Token.TRUE:
       case Token.FALSE:
         return true;
+      case Token.NOT:
+        return isImmutableValue(n.getFirstChild());
       case Token.VOID:
       case Token.NEG:
         return isImmutableValue(n.getFirstChild());

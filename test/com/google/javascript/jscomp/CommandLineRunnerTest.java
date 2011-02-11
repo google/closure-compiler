@@ -188,7 +188,7 @@ public class CommandLineRunnerTest extends TestCase {
          "/** @define {number} */ var BAR = 3;" +
          "/** @define {boolean} */ var CCC = false;" +
          "/** @define {boolean} */ var DDD = false;",
-         "var FOO = true, BAR = 5, CCC = true, DDD = true;");
+         "var FOO = !0, BAR = 5, CCC = !0, DDD = !0;");
   }
 
   public void testDefineFlag2() {
@@ -662,7 +662,7 @@ public class CommandLineRunnerTest extends TestCase {
     test("goog.asserts.assert(false)",
          "");
     args.add("--debug");
-    test("goog.asserts.assert(false)", "goog.$asserts$.$assert$(false)");
+    test("goog.asserts.assert(false)", "goog.$asserts$.$assert$(!1)");
   }
 
   public void testMissingReturnCheckOnWithVerbose() {

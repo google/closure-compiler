@@ -166,12 +166,12 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("function z() {if (a) { return true }" +
          "else if (b) { return true }" +
          "else { return true }}",
-         "function z() {return true;}");
+         "function z() {return !0;}");
 
     fold("function z() {if (a()) { return true }" +
          "else if (b()) { return true }" +
          "else { return true }}",
-         "function z() {a()||b();return true;}");
+         "function z() {a()||b();return !0;}");
   }
 
   public void testFoldLogicalOpIntegration() {
@@ -314,5 +314,15 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("(x && false) && y()", "");
     fold("a = x || false ? b : c", "a=x?b:c");
     fold("do {x()} while((x && false) && y())", "x()");
+  }
+
+  public void testTrueFalseFolding() {
+    fold("x = true", "x = !0");
+    fold("x = false", "x = !1");
+    fold("x = !3", "x = !1");
+    fold("x = true && !0", "x = !0");
+    fold("x = !!!!!!!!!!!!3", "x = !0");
+    fold("if(!3){x()}", "");
+    fold("if(!!3){x()}", "x()");
   }
 }

@@ -27,8 +27,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Tests for PeepholeFoldConstants in isolation. Tests for the interaction of
- * multiple peephole passes are in PeepholeIntegrationTest.
+ * Tests for {@link PeepholeFoldConstants} in isolation. Tests for
+ * the interaction of multiple peephole passes are in
+ * {@link PeepholeIntegrationTest}.
  */
 public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
@@ -751,6 +752,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("'' instanceof String", "false");
     fold("true instanceof Object", "false");
     fold("true instanceof Boolean", "false");
+    fold("!0 instanceof Object", "false");
+    fold("!0 instanceof Boolean", "false");
     fold("false instanceof Object", "false");
     fold("null instanceof Object", "false");
     fold("undefined instanceof Object", "false");
@@ -900,6 +903,19 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x/('12'+'6')", "x/126");
     fold("true*x", "1*x");
     fold("x/false", "x/0");  // should we add an error check? :)
+  }
+
+  public void testNotFoldBackToTrueFalse() {
+    foldSame("!0");
+    foldSame("!1");
+    fold("!3", "false");
+  }
+
+  public void testFoldBangConstants() {
+    fold("1 + !0", "2");
+    fold("1 + !1", "1");
+    fold("'a ' + !1", "'a false'");
+    fold("'a ' + !0", "'a true'");
   }
 
   private static final List<String> LITERAL_OPERANDS =
