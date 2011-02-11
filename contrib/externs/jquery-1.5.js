@@ -58,8 +58,39 @@ jQuery.boxModel;
 /** @type {Object.<string,*>} */
 jQuery.browser;
 
+/**
+ * @type {boolean}
+ * @const
+ */
+jQuery.browser.mozilla;
+
+/**
+ * @type {boolean}
+ * @const
+ */
+jQuery.browser.msie;
+
+/**
+ * @type {boolean}
+ * @const
+ */
+jQuery.browser.opera;
+
+/**
+ * @type {boolean}
+ * @const
+ * @deprecated
+ */
+jQuery.browser.safari;
+
 /** @type {string} */
 jQuery.browser.version;
+
+/**
+ * @type {boolean}
+ * @const
+ */
+jQuery.browser.webkit;
 
 /**
  * @param {Element} container
@@ -67,6 +98,9 @@ jQuery.browser.version;
  * @return {boolean}
  */
 jQuery.contains = function(container, contained) {};
+
+/** @type {Object.<string, *>} */
+jQuery.cssHooks;
 
 /**
  * @param {Element} elem
@@ -114,69 +148,81 @@ jQuery.deferred.prototype.fail = function(failCallbacks) {};
  */
 jQuery.Deferred.prototype.fail = function(failCallbacks) {};
 
-/** @return {jQuery.DeferredObject} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.deferred.prototype.isRejected = function() {};
 
-/** @return {jQuery.DeferredObject} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.Deferred.prototype.isRejected = function() {};
 
-/** @return {jQuery.DeferredObject} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.deferred.prototype.isResolved = function() {};
 
-/** @return {jQuery.DeferredObject} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.Deferred.prototype.isResolved = function() {};
 
 /**
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.deferred.prototype.reject = function(args) {};
+jQuery.deferred.prototype.reject = function(var_args) {};
 
 /**
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.Deferred.prototype.reject = function(args) {};
-
-/**
- * @param {Object} context
- * @param {Object} args
- * @return {jQuery.DeferredObject}
- */
-jQuery.deferred.prototype.rejectWith = function(context, args) {};
+jQuery.Deferred.prototype.reject = function(var_args) {};
 
 /**
  * @param {Object} context
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.Deferred.prototype.rejectWith = function(context, args) {};
-
-/**
- * @param {Object} args
- * @return {jQuery.DeferredObject}
- */
-jQuery.deferred.prototype.resolve = function(args) {};
-
-/**
- * @param {Object} args
- * @return {jQuery.DeferredObject}
- */
-jQuery.Deferred.prototype.resolve = function(args) {};
+jQuery.deferred.prototype.rejectWith = function(context, var_args) {};
 
 /**
  * @param {Object} context
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.deferred.prototype.resolveWith = function(context, args) {};
+jQuery.Deferred.prototype.rejectWith = function(context, var_args) {};
+
+/**
+ * @param {...*} var_args
+ * @return {jQuery.DeferredObject}
+ */
+jQuery.deferred.prototype.resolve = function(var_args) {};
+
+/**
+ * @param {...*} var_args
+ * @return {jQuery.DeferredObject}
+ */
+jQuery.Deferred.prototype.resolve = function(var_args) {};
 
 /**
  * @param {Object} context
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.Deferred.prototype.resolveWith = function(context, args) {};
+jQuery.deferred.prototype.resolveWith = function(context, var_args) {};
+
+/**
+ * @param {Object} context
+ * @param {...*} var_args
+ * @return {jQuery.DeferredObject}
+ */
+jQuery.Deferred.prototype.resolveWith = function(context, var_args) {};
 
 /**
  * @param {function()} doneCallbacks
@@ -212,37 +258,43 @@ jQuery.DeferredObject.prototype.done = function(doneCallbacks) {};
  */
 jQuery.DeferredObject.prototype.fail = function(failCallbacks) {};
 
-/** @return {jQuery.DeferredObject} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.DeferredObject.prototype.isRejected = function() {};
 
-/** @return {jQuery.DeferredObject} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.DeferredObject.prototype.isResolved = function() {};
 
 /**
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.DeferredObject.prototype.reject = function(args) {};
+jQuery.DeferredObject.prototype.reject = function(var_args) {};
 
 /**
  * @param {Object} context
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.DeferredObject.prototype.rejectWith = function(context, args) {};
+jQuery.DeferredObject.prototype.rejectWith = function(context, var_args) {};
 
 /**
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.DeferredObject.prototype.resolve = function(args) {};
+jQuery.DeferredObject.prototype.resolve = function(var_args) {};
 
 /**
  * @param {Object} context
- * @param {Object} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.DeferredObject.prototype.resolveWith = function(context, args) {};
+jQuery.DeferredObject.prototype.resolveWith = function(context, var_args) {};
 
 /**
  * @param {function()} doneCallbacks
@@ -281,13 +333,22 @@ jQuery.event.prototype.currentTarget;
 /** @type {*} */
 jQuery.event.prototype.data;
 
-/** @return {boolean} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.event.prototype.isDefaultPrevented = function() {};
 
-/** @return {boolean} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.event.prototype.isImmediatePropagationStopped = function() {};
 
-/** @return {boolean} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.event.prototype.isPropagationStopped = function() {};
 
 /** @type {string} */
@@ -327,14 +388,16 @@ jQuery.event.prototype.type;
 jQuery.event.prototype.which;
 
 /**
- * @param {(Object|boolean)=} arg1
- * @param {Object=} arg2
- * @param {Object=} arg3
- * @param {Object=} objectN
+ * @param {(Object|boolean)} arg1
+ * @param {...*} var_args
  * @return {Object}
  */
-jQuery.extend = function(arg1, arg2, arg3, objectN) {};
+jQuery.extend = function(arg1, var_args) {};
 
+/** @see http://docs.jquery.com/Plugins/Authoring */
+jQuery.fn;
+
+/** @const */
 jQuery.fx = {};
 
 /** @type {number} */
@@ -355,10 +418,10 @@ jQuery.get = function(url, data, success, dataType) {};
 /**
  * @param {string} url
  * @param {Object.<string,*>=} data
- * @param {function(string,string,XMLHttpRequest)=} callback
- * @return {XMLHttpRequest}
+ * @param {function(string,string,jQuery.jqXHR)=} success
+ * @return {jQuery.jqXHR}
  */
-jQuery.getJSON = function(url, data, callback) {};
+jQuery.getJSON = function(url, data, success) {};
 
 /**
  * @param {string} url
@@ -512,9 +575,9 @@ jQuery.parseXML = function(data) {};
 /**
  * @param {string} url
  * @param {(Object.<string,*>|string)=} data
- * @param {function(string,string,XMLHttpRequest)=} success
+ * @param {function(string,string,jQuery.jqXHR)=} success
  * @param {string=} dataType
- * @return {XMLHttpRequest}
+ * @return {jQuery.jqXHR}
  */
 jQuery.post = function(url, data, success, dataType) {};
 
@@ -577,6 +640,13 @@ jQuery.when = function(deferreds) {};
  * @private
  */
 function jQueryObject() {};
+
+/**
+ * @param {(Object|boolean)} arg1
+ * @param {...*} var_args
+ * @return {Object}
+ */
+jQueryObject.prototype.extend = function(arg1, var_args) {};
 
 /**
  * @param {(jQuerySelector|Array.<Element>|string)} arg1
@@ -996,12 +1066,12 @@ jQueryObject.prototype.last = function() {};
 jQueryObject.prototype.length;
 
 /**
- * @param {string} eventType
- * @param {(function()|Object)} arg2
+ * @param {(string|Object)} arg1
+ * @param {(function()|Object)=} arg2
  * @param {function()=} handler
  * @return {jQueryObject}
  */
-jQueryObject.prototype.live = function(eventType, arg2, handler) {};
+jQueryObject.prototype.live = function(arg1, arg2, handler) {};
 
 /**
  * @param {(function(jQuery.event)|Object|string)=} arg1
