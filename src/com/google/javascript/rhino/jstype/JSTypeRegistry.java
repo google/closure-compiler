@@ -860,6 +860,15 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
+   * Flushes out the current resolved and unresovled Named Types from the type registry.
+   * This is intended to be used ONLY before a compile is run.
+   */
+  public void clearNamedTypes() {
+    resolvedNamedTypes.clear();
+    unresolvedNamedTypes.clear();
+  }
+
+  /**
    * Resolve all the unresolved types in the given scope.
    */
   public void resolveTypesInScope(StaticScope<JSType> scope) {
