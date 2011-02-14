@@ -987,7 +987,7 @@ public class DefaultPassConfig extends PassConfig {
         @Override
         public void process(Node externs, Node root) {
           Preconditions.checkNotNull(topScope);
-          Preconditions.checkNotNull(typedScopeCreator);
+          Preconditions.checkNotNull(getTypedScopeCreator());
 
           makeTypeInference(compiler).process(externs, root);
         }
@@ -1004,7 +1004,7 @@ public class DefaultPassConfig extends PassConfig {
         @Override
         public void process(Node externs, Node root) {
           Preconditions.checkNotNull(topScope);
-          Preconditions.checkNotNull(typedScopeCreator);
+          Preconditions.checkNotNull(getTypedScopeCreator());
 
           TypeCheck check = makeTypeCheck(compiler);
           check.process(externs, root);

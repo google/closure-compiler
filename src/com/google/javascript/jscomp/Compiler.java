@@ -1006,8 +1006,8 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  ScopeCreator getScopeCreator() {
-    return getPassConfig().getScopeCreator();
+  ScopeCreator getTypedScopeCreator() {
+    return getPassConfig().getTypedScopeCreator();
   }
 
   @Override

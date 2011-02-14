@@ -77,12 +77,12 @@ class NameReferenceGraphConstruction implements CompilerPass {
     // Use the MemoizedScopeCreator instance from TypeCheck if available
     // as FunctionTypeBuilder warns about existing types if TypedScopeCreator is
     // ran a second time.
-    ScopeCreator scopeCreator = compiler.getScopeCreator();
+    ScopeCreator scopeCreator = compiler.getTypedScopeCreator();
     if (scopeCreator == null) {
       // The TypedScopeCreator gives us correct handling of namespaces,
       // while the default NodeTraversal only gives us a
       // SyntacticScopeCreator.
-      scopeCreator = new TypedScopeCreator(compiler);
+      scopeCreator = new MemoizedScopeCreator(new TypedScopeCreator(compiler));
     }
     NodeTraversal externsTraversal = new NodeTraversal(compiler,
         new Traversal(true), scopeCreator);
