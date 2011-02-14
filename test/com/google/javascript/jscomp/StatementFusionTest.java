@@ -79,6 +79,10 @@ public class StatementFusionTest extends CompilerTestCase  {
     fuse("a;b;c;switch(x){}", "switch(a,b,c,x){}");
   }
 
+  public void testFuseIntoForIn() {
+    fuse("a;b;c;for(x in y){}", "for(x in a,b,c,y){}");
+  }
+
   public void testNoFuseIntoWhile() {
     fuseSame("a;b;c;while(x){}");
   }

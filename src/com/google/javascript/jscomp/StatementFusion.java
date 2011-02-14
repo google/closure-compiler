@@ -63,7 +63,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
     }
 
     // TODO(user): Support more control statement for fusion.
-    // FOR, FOR-IN
+    // FOR
     switch(last.getType()) {
       case Token.IF:
       case Token.THROW:
@@ -73,6 +73,8 @@ public class StatementFusion extends AbstractPeepholeOptimization {
       case Token.RETURN:
         // We don't want to add a new return value.
         return last.hasChildren();
+      case Token.FOR:
+        return NodeUtil.isForIn(last);
     }
 
     return false;
@@ -104,6 +106,11 @@ public class StatementFusion extends AbstractPeepholeOptimization {
       case Token.EXPR_RESULT:
         fuseExpresssonIntoFirstChild(commaTree, last);
         return;
+      case Token.FOR:
+        if (NodeUtil.isForIn(last)) {
+          fuseExpresssonIntoSecondChild(commaTree, last);
+        }
+        return ;
       default:
         throw new IllegalStateException("Statement fusion missing.");
     }
@@ -136,5 +143,11 @@ public class StatementFusion extends AbstractPeepholeOptimization {
     Node val = stmt.removeFirstChild();
     Node comma = fuseExpressionIntoExpression(exp, val);
     stmt.addChildToFront(comma);
+  }
+
+  private static void fuseExpresssonIntoSecondChild(Node exp, Node stmt) {
+    Node val = stmt.removeChildAfter(stmt.getFirstChild());
+    Node comma = fuseExpressionIntoExpression(exp, val);
+    stmt.addChildAfter(comma, stmt.getFirstChild());
   }
 }
