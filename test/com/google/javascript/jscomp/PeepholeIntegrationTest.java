@@ -251,7 +251,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("x()||!!y()", "x()||y()");
 
     /* This is similar to the !!true case */
-    fold("!(!!x()&&y())", "x()&&y()");
+    fold("!!x()&&y()", "x()&&y()");
   }
 
   public void testBug1509085() {

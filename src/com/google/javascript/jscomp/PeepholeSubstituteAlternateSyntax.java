@@ -36,6 +36,7 @@ class PeepholeSubstituteAlternateSyntax
 
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
   private static final int OR_PRECEDENCE = NodeUtil.precedence(Token.OR);
+  private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
 
   static final DiagnosticType INVALID_REGULAR_EXPRESSION_FLAGS =
     DiagnosticType.error(
@@ -777,6 +778,19 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   /**
+   * Whether the node type has lower precedence than "precedence"
+   */
+  private boolean isLowerPrecedence(Node n, final int precedence) {
+    return NodeUtil.precedence(n.getType()) < precedence;
+  }
+
+  /**
+   * Whether the node type has higher precedence than "precedence"
+   */
+  private boolean isHigherPrecedence(Node n, final int precedence) {
+    return NodeUtil.precedence(n.getType()) > precedence;
+  }
+  /**
    * Does the expression contain a property assignment?
    */
   private boolean isPropertyAssignmentInExpression(Node n) {
@@ -824,23 +838,58 @@ class PeepholeSubstituteAlternateSyntax
             }
           case Token.AND:
           case Token.OR: {
+              // !(!x && !y) --> x || y
+              // !(!x || !y) --> x && y
+              // !(!x && y) --> x || !y
+              // !(!x || y) --> x && !y
+              // !(x && !y) --> !x || y
+              // !(x || !y) --> !x && y
+              // !(x && y) --> !x || !y
+              // !(x || y) --> !x && !y
               Node leftParent = first.getFirstChild();
               Node rightParent = first.getLastChild();
-              if (leftParent.getType() == Token.NOT
-                  && rightParent.getType() == Token.NOT) {
-                Node left = leftParent.removeFirstChild();
-                Node right = rightParent.removeFirstChild();
+              Node left, right;
 
-                int newOp = (first.getType() == Token.AND) ? Token.OR : Token.AND;
-                Node newRoot = new Node(newOp, left, right);
-                parent.replaceChild(n, newRoot);
-                reportCodeChange();
-                // No need to traverse, tryMinimizeCondition is called on the
-                // AND and OR children below.
-                return newRoot;
+              // Check special case when such transformation cannot reduce
+              // due to the added ()
+              // It only occurs when both of expressions are not NOT expressions
+              if (leftParent.getType() != Token.NOT
+                  && rightParent.getType() != Token.NOT) {
+                // If an expression has higher precendence than && or ||,
+                // but lower precedence than NOT, an additional () is needed
+                // Thus we do not preceed
+                int op_precedence = NodeUtil.precedence(first.getType());
+                if ((isLowerPrecedence(leftParent, NOT_PRECEDENCE)
+                    && isHigherPrecedence(leftParent, op_precedence))
+                    || (isLowerPrecedence(rightParent, NOT_PRECEDENCE)
+                    && isHigherPrecedence(rightParent, op_precedence))) {
+                  return n;
+                }
               }
+
+              if (leftParent.getType() == Token.NOT) {
+                left = leftParent.removeFirstChild();
+              } else {
+                leftParent.detachFromParent();
+                left = new Node(Token.NOT, leftParent)
+                  .copyInformationFrom(leftParent);
+              }
+              if (rightParent.getType() == Token.NOT) {
+                right = rightParent.removeFirstChild();
+              } else {
+                rightParent.detachFromParent();
+                right = new Node(Token.NOT, rightParent)
+                  .copyInformationFrom(rightParent);
+              }
+
+              int newOp = (first.getType() == Token.AND) ? Token.OR : Token.AND;
+              Node newRoot = new Node(newOp, left, right);
+              parent.replaceChild(n, newRoot);
+              reportCodeChange();
+              // No need to traverse, tryMinimizeCondition is called on the
+              // AND and OR children below.
+              return newRoot;
             }
-            break;
 
            default:
              TernaryValue nVal = NodeUtil.getBooleanValue(first);

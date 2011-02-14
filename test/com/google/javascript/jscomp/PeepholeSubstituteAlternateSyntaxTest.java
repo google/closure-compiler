@@ -435,9 +435,18 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("while(!!x) foo()", "while(x) foo()");
     fold("while(!(!x&&!y)) foo()", "while(x||y) foo()");
     fold("while(x||!!y) foo()", "while(x||y) foo()");
-    fold("while(!(!!x&&y)) foo()", "while(!(x&&y)) foo()");
+    fold("while(!(!!x&&y)) foo()", "while(!x||!y) foo()");
+    fold("while(!(!x&&y)) foo()", "while(x||!y) foo()");
+    fold("while(!(x||!y)) foo()", "while(!x&&y) foo()");
+    fold("while(!(x||y)) foo()", "while(!x&&!y) foo()");
+    fold("while(!(!x||y-z)) foo()", "while(x&&!(y-z)) foo()");
+    fold("while(!(!(x/y)||z+w)) foo()", "while(x/y&&!(z+w)) foo()");
+    foldSame("while(!(x+y||z)) foo()");
+    foldSame("while(!(x&&y*z)) foo()");
+    fold("while(!(!!x&&y)) foo()", "while(!x||!y) foo()");
     fold("while(x&&!0) foo()", "while(x) foo()");
     fold("while(x||!1) foo()", "while(x) foo()");
+    fold("while(!((x,y)&&z)) foo()", "while(!(x,y)||!z) foo()");
   }
 
   public void testMinimizeForCondition() {
