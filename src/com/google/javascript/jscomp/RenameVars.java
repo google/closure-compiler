@@ -17,9 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -27,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +40,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.annotation.Nullable;
-
 
 /**
  * RenameVars renames all the variables names into short names, to reduce
@@ -78,6 +81,12 @@ final class RenameVars implements CompilerPass {
 
   /** Logs all name assignments */
   private StringBuilder assignmentLog;
+
+  // Logic for bleeding functions, where the name leaks into the outer
+  // scope on IE but not on other browsers.
+  private Set<Var> localBleedingFunctions = Sets.newHashSet();
+  private ArrayListMultimap<Scope, Var> localBleedingFunctionsPerScope =
+      ArrayListMultimap.create();
 
   class Assignment {
     final CompilerInput input;
@@ -174,12 +183,31 @@ final class RenameVars implements CompilerPass {
    * function x(a,b) { ... }
    * function y(a,b,c) { ... }
    */
-  class ProcessVars extends AbstractPostOrderCallback {
+  class ProcessVars extends AbstractPostOrderCallback
+      implements ScopedCallback {
     private final boolean isExternsPass_;
 
     ProcessVars(boolean isExterns) {
       isExternsPass_ = isExterns;
     }
+
+    @Override
+    public void enterScope(NodeTraversal t) {
+      if (t.inGlobalScope()) return;
+
+      Iterator<Var> it = t.getScope().getVars();
+      while (it.hasNext()) {
+        Var current = it.next();
+        if (current.isBleedingFunction()) {
+          localBleedingFunctions.add(current);
+          localBleedingFunctionsPerScope.put(
+              t.getScope().getParent(), current);
+        }
+      }
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {}
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -245,7 +273,7 @@ final class RenameVars implements CompilerPass {
 
       if (local) {
         // Local var: assign a new name
-        String tempName = LOCAL_VAR_PREFIX + var.getLocalVarIndex();
+        String tempName = LOCAL_VAR_PREFIX + getLocalVarIndex(var);
         incCount(tempName, null);
         localNameNodes.add(n);
         n.setString(tempName);
@@ -506,5 +534,34 @@ final class RenameVars implements CompilerPass {
    */
   private boolean okToRenameVar(String name, boolean isLocal) {
     return !compiler.getCodingConvention().isExported(name, isLocal);
+  }
+
+  /**
+   * Returns the index within the scope stack.
+   * e.g. function Foo(a) { var b; function c(d) { } }
+   * a = 0, b = 1, c = 2, d = 3
+   */
+  private int getLocalVarIndex(Var v) {
+    int num = v.index;
+    Scope s = v.scope.getParent();
+    if (s == null) {
+      throw new IllegalArgumentException("Var is not local");
+    }
+
+    boolean isBleedingIntoScope = s.getParent() != null &&
+        localBleedingFunctions.contains(v);
+
+    while (s.getParent() != null) {
+      if (isBleedingIntoScope) {
+        num += localBleedingFunctionsPerScope.get(s).indexOf(v) + 1;
+        isBleedingIntoScope = false;
+      } else {
+        num += localBleedingFunctionsPerScope.get(s).size();
+      }
+
+      num += s.getVarCount();
+      s = s.getParent();
+    }
+    return num;
   }
 }

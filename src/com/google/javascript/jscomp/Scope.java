@@ -51,6 +51,7 @@ import java.util.Map;
 public class Scope implements StaticScope<JSType> {
   private final Map<String, Var> vars = new LinkedHashMap<String, Var>();
   private final Scope parent;
+  private final int depth;
   private final Node rootNode;
 
   /** The type of {@code this} in the current scope. */
@@ -62,10 +63,10 @@ public class Scope implements StaticScope<JSType> {
   /** Stores info about a variable */
   public static class Var implements StaticSlot<JSType> {
     /** name */
-    String name;
+    final String name;
 
     /** Var node */
-    Node nameNode;
+    final Node nameNode;
 
     /**
      * The variable's type.
@@ -75,7 +76,7 @@ public class Scope implements StaticScope<JSType> {
     /**
      * The variable's doc info.
      */
-    private JSDocInfo info = null;
+    private final JSDocInfo info;
 
     /**
      * Whether the variable's type has been inferred or is declared. An inferred
@@ -85,26 +86,36 @@ public class Scope implements StaticScope<JSType> {
     private final boolean typeInferred;
 
     /** Input source */
-    CompilerInput input;
+    final CompilerInput input;
 
     /** Whether the variable is a define */
-    boolean isDefine;
+    final boolean isDefine;
 
     /**
      * The index at which the var is declared. e..g if it's 0, it's the first
      * declared variable in that scope
      */
-    int index;
+    final int index;
 
     /** The enclosing scope */
-    Scope scope;
+    final Scope scope;
 
     /**
      * Creates a variable.
      *
      * @param inferred whether its type is inferred (as opposed to declared)
      */
-    private Var(boolean inferred) {
+    private Var(boolean inferred, String name, Node nameNode, JSType type,
+                Scope scope, int index, CompilerInput input, boolean isDefine,
+                JSDocInfo info) {
+      this.name = name;
+      this.nameNode = nameNode;
+      this.type = type;
+      this.scope = scope;
+      this.index = index;
+      this.input = input;
+      this.isDefine = isDefine;
+      this.info = info;
       this.typeInferred = inferred;
     }
 
@@ -135,24 +146,6 @@ public class Scope implements StaticScope<JSType> {
      */
     Scope getScope() {
       return scope;
-    }
-
-    /**
-     * Returns the index within the scope stack.
-     * e.g. function Foo(a) { var b; function c(d) { } }
-     * a = 0, b = 1, c = 2, d = 3
-     */
-    int getLocalVarIndex() {
-      int num = index;
-      Scope s = scope.getParent();
-      if (s == null) {
-        throw new IllegalArgumentException("Var is not local");
-      }
-      while (s.getParent() != null) {
-        num += s.getVarCount();
-        s = s.getParent();
-      }
-      return num;
     }
 
     /**
@@ -306,6 +299,7 @@ public class Scope implements StaticScope<JSType> {
       thisType = parent.thisType;
     }
     this.isBottom = false;
+    this.depth = parent.depth + 1;
   }
 
 
@@ -318,6 +312,7 @@ public class Scope implements StaticScope<JSType> {
     this.rootNode = rootNode;
     thisType = compiler.getTypeRegistry().getNativeObjectType(GLOBAL_THIS);
     this.isBottom = false;
+    this.depth = 0;
   }
 
   /**
@@ -330,6 +325,12 @@ public class Scope implements StaticScope<JSType> {
     this.rootNode = rootNode;
     this.thisType = thisType;
     this.isBottom = true;
+    this.depth = 0;
+  }
+
+  /** The depth of the scope. The global scope has depth 0. */
+  int getDepth() {
+    return depth;
   }
 
   /** Whether this is the bottom of the lattice. */
@@ -398,20 +399,12 @@ public class Scope implements StaticScope<JSType> {
     // Make sure that it's declared only once
     Preconditions.checkState(vars.get(name) == null);
 
-    Var var = new Var(inferred);
-    var.name = name;
-    var.nameNode = nameNode;
-    var.type = type;
-    var.scope = this;
-    var.index = vars.size();
-    var.input = input;
-
     // native variables do not have a name node.
     // TODO(user): make Var abstract and have NativeVar, NormalVar.
     JSDocInfo info = NodeUtil.getInfoForNameNode(nameNode);
 
-    var.isDefine = info != null && info.isDefine();
-    var.info = info;
+    Var var = new Var(inferred, name, nameNode, type, this, vars.size(), input,
+        info != null && info.isDefine(), info);
 
     vars.put(name, var);
     return var;
