@@ -1290,17 +1290,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldArrayJoin(Node n) {
     Node callTarget = n.getFirstChild();
 
-    if (callTarget == null) {
+    if (callTarget == null || !NodeUtil.isGetProp(callTarget)) {
       return n;
     }
 
     Node right = callTarget.getNext();
-
-    if (right == null) {
-      return n;
-    }
-
-    if (!NodeUtil.isGetProp(callTarget) || !NodeUtil.isImmutableValue(right)) {
+    if (right != null && !NodeUtil.isImmutableValue(right)) {
       return n;
     }
 
@@ -1312,7 +1307,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    String joinString = NodeUtil.getStringValue(right);
+    // TODO(johnlenz): handle sparse arrays
+
+    String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
     List<Node> arrayFoldedChildren = Lists.newLinkedList();
     StringBuilder sb = null;
     int foldedSize = 0;
@@ -1326,7 +1323,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         } else {
           sb.append(joinString);
         }
-        sb.append(NodeUtil.getStringValue(elem));
+        sb.append(NodeUtil.getArrayElementStringValue(elem));
       } else {
         if (sb != null) {
           Preconditions.checkNotNull(prev);
@@ -1513,6 +1510,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Preconditions.checkArgument(n.getType() == Token.GETELEM);
 
     if (left.getType() == Token.ARRAYLIT) {
+      // TODO(johnlenz): handle sparse arrays
 
       if (right.getType() != Token.NUMBER) {
         // Sometimes people like to use complex expressions to index into
@@ -1562,6 +1560,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       int knownLength = -1;
       switch (left.getType()) {
         case Token.ARRAYLIT:
+          // TODO(johnlenz): handle sparse arrays
           if (mayHaveSideEffects(left)) {
             // Nope, can't fold this, without handling the side-effects.
             return n;

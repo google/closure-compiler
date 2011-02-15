@@ -422,7 +422,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = foo() + 'a' + 2", "x = foo()+\"a2\"");
     fold("x = '' + null", "x = \"null\"");
     fold("x = true + '' + false", "x = \"truefalse\"");
-    fold("x = '' + []", "x = \"\"+[]");      // cannot fold (but nice if we can)
+    fold("x = '' + []", "x = ''");      // cannot fold (but nice if we can)
   }
 
   public void testFoldConstructor() {
@@ -505,6 +505,12 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     fold("x = [1,2,3].join('abcdef')",
          "x = '1abcdef2abcdef3'");
+
+    fold("x = [1,2].join()", "x = '1,2'");
+    fold("x = [null,undefined,''].join(',')", "x = ',,'");
+    fold("x = [null,undefined,0].join(',')", "x = ',,0'");
+    // This can be folded but we don't currently.
+    foldSame("x = [[1,2],[3,4]].join()"); // would like: "x = '1,2,3,4'"
   }
 
   public void testStringJoinAdd_b1992789() {
@@ -916,6 +922,11 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("1 + !1", "1");
     fold("'a ' + !1", "'a false'");
     fold("'a ' + !0", "'a true'");
+  }
+
+  public void testFoldMixed() {
+    fold("''+[1]", "'1'");
+    foldSame("false+[]"); // would like: "\"false\""
   }
 
   private static final List<String> LITERAL_OPERANDS =

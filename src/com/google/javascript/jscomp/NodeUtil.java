@@ -152,7 +152,7 @@ public final class NodeUtil {
    * <code>String()</code> JavaScript cast function.
    */
   static String getStringValue(Node n) {
-    // TODO(user): Convert constant array, object, and regex literals as well.
+    // TODO(user): regex literals as well.
     switch (n.getType()) {
       case Token.STRING:
         return n.getString();
@@ -191,8 +191,56 @@ public final class NodeUtil {
           return child.toBoolean(true) ? "false" : "true"; // reversed.
         }
         break;
+
+      case Token.ARRAYLIT:
+        return arrayToString(n);
+
+      case Token.OBJECTLIT:
+        return "[object Object]";
     }
     return null;
+  }
+
+  /**
+   * When converting arrays to string using Array.prototype.toString or
+   * Array.prototype.join, the rules for conversion to String are different
+   * than converting each element individually.  Specifically, "null" and
+   * "undefined" are converted to an empty string.
+   * @param n A node that is a member of an Array.
+   * @return The string representation.
+   */
+  static String getArrayElementStringValue(Node n) {
+    return NodeUtil.isNullOrUndefined(n) ? "" : getStringValue(n);
+  }
+
+  static String arrayToString(Node literal) {
+    Node first = literal.getFirstChild();
+    int[] skipIndexes = (int[]) literal.getProp(Node.SKIP_INDEXES_PROP);
+    StringBuilder result = new StringBuilder();
+    int nextSlot = 0;
+    int nextSkipSlot = 0;
+    for (Node n = first; n != null; n = n.getNext()) {
+      while (skipIndexes != null && nextSkipSlot < skipIndexes.length) {
+        if (nextSlot == skipIndexes[nextSkipSlot]) {
+          result.append(',');
+          nextSlot++;
+          nextSkipSlot++;
+        } else {
+          break;
+        }
+      }
+      String childValue = getArrayElementStringValue(n);
+      if (childValue == null) {
+        return null;
+      }
+      if (n != first) {
+        result.append(',');
+      }
+      result.append(childValue);
+
+      nextSlot++;
+    }
+    return result.toString();
   }
 
   /**
@@ -248,47 +296,56 @@ public final class NodeUtil {
         break;
 
       case Token.STRING:
-        String s = trimJsWhiteSpace(n.getString());
-        // return ScriptRuntime.toNumber(s);
-        if (s.length() == 0) {
-          return 0.0;
-        }
+        return getStringNumberValue(n.getString());
 
-        if (s.length() > 2
-            && s.charAt(0) == '0'
-            && (s.charAt(1) == 'x' || s.charAt(1) == 'X')) {
-          // Attempt to convert hex numbers.
-          try {
-            return Double.valueOf(Integer.parseInt(s.substring(2), 16));
-          } catch (NumberFormatException e) {
-            return Double.NaN;
-          }
-        }
-
-        if (s.length() > 3
-            && (s.charAt(0) == '-' || s.charAt(0) == '+')
-            && s.charAt(1) == '0'
-            && (s.charAt(2) == 'x' || s.charAt(2) == 'X')) {
-          // hex numbers with explicit signs vary between browsers.
-          return null;
-        }
-
-        // FireFox and IE treat the "Infinity" differently. FireFox is case
-        // insensitive, but IE treats "infinity" as NaN.  So leave it alone.
-        if (s.equals("infinity")
-            || s.equals("-infinity")
-            || s.equals("+infinity")) {
-          return null;
-        }
-
-        try {
-          return Double.parseDouble(s);
-        } catch (NumberFormatException e) {
-          return Double.NaN;
-        }
+      case Token.ARRAYLIT:
+      case Token.OBJECTLIT:
+        String value = getStringValue(n);
+        return value != null ? getStringNumberValue(value) : null;
     }
 
     return null;
+  }
+
+  static Double getStringNumberValue(String rawJsString) {
+    String s = trimJsWhiteSpace(rawJsString);
+    // return ScriptRuntime.toNumber(s);
+    if (s.length() == 0) {
+      return 0.0;
+    }
+
+    if (s.length() > 2
+        && s.charAt(0) == '0'
+        && (s.charAt(1) == 'x' || s.charAt(1) == 'X')) {
+      // Attempt to convert hex numbers.
+      try {
+        return Double.valueOf(Integer.parseInt(s.substring(2), 16));
+      } catch (NumberFormatException e) {
+        return Double.NaN;
+      }
+    }
+
+    if (s.length() > 3
+        && (s.charAt(0) == '-' || s.charAt(0) == '+')
+        && s.charAt(1) == '0'
+        && (s.charAt(2) == 'x' || s.charAt(2) == 'X')) {
+      // hex numbers with explicit signs vary between browsers.
+      return null;
+    }
+
+    // FireFox and IE treat the "Infinity" differently. FireFox is case
+    // insensitive, but IE treats "infinity" as NaN.  So leave it alone.
+    if (s.equals("infinity")
+        || s.equals("-infinity")
+        || s.equals("+infinity")) {
+      return null;
+    }
+
+    try {
+      return Double.parseDouble(s);
+    } catch (NumberFormatException e) {
+      return Double.NaN;
+    }
   }
 
   static String trimJsWhiteSpace(String s) {
@@ -1221,6 +1278,10 @@ public final class NodeUtil {
 
   static boolean isNull(Node n) {
     return n.getType() == Token.NULL;
+  }
+
+  static boolean isNullOrUndefined(Node n) {
+    return isNull(n) || isUndefined(n);
   }
 
   static class MayBeStringResultPredicate implements Predicate<Node> {
@@ -2432,7 +2493,6 @@ public final class NodeUtil {
    *   "void 0"
    */
   static Node newUndefinedNode(Node srcReferenceNode) {
-    // TODO(johnlenz): Why this instead of the more common "undefined"?
     Node node = new Node(Token.VOID, Node.newNumber(0));
     if (srcReferenceNode != null) {
         node.copyInformationFromForTree(srcReferenceNode);

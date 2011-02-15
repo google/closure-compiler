@@ -198,8 +198,8 @@ public class NodeUtilTest extends TestCase {
     assertEquals("1", NodeUtil.getStringValue(getNode("1.0")));
     assertEquals("0", NodeUtil.getStringValue(getNode("'0'")));
     assertEquals(null, NodeUtil.getStringValue(getNode("/a/")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("{}")));
-    assertEquals(null, NodeUtil.getStringValue(getNode("[]")));
+    assertEquals("[object Object]", NodeUtil.getStringValue(getNode("{}")));
+    assertEquals("", NodeUtil.getStringValue(getNode("[]")));
     assertEquals("false", NodeUtil.getStringValue(getNode("false")));
     assertEquals("null", NodeUtil.getStringValue(getNode("null")));
     assertEquals("0", NodeUtil.getStringValue(getNode("0")));
@@ -211,6 +211,20 @@ public class NodeUtilTest extends TestCase {
     assertEquals("NaN", NodeUtil.getStringValue(getNode("NaN")));
     assertEquals("Infinity", NodeUtil.getStringValue(getNode("Infinity")));
     assertEquals(null, NodeUtil.getStringValue(getNode("x")));
+  }
+
+  public void testGetArrayStringValue() {
+    assertEquals("", NodeUtil.getStringValue(getNode("[]")));
+    assertEquals("", NodeUtil.getStringValue(getNode("['']")));
+    assertEquals("", NodeUtil.getStringValue(getNode("[null]")));
+    assertEquals("", NodeUtil.getStringValue(getNode("[undefined]")));
+    assertEquals("", NodeUtil.getStringValue(getNode("[void 0]")));
+    assertEquals("NaN", NodeUtil.getStringValue(getNode("[NaN]")));
+    assertEquals(",", NodeUtil.getStringValue(getNode("[,'']")));
+    assertEquals(",,", NodeUtil.getStringValue(getNode("[[''],[''],['']]")));
+    assertEquals("1,2", NodeUtil.getStringValue(getNode("[[1.0],[2.0]]")));
+    assertEquals(null, NodeUtil.getStringValue(getNode("[a]")));
+    assertEquals(null, NodeUtil.getStringValue(getNode("[1,a]")));
   }
 
   public void testIsObjectLiteralKey1() throws Exception {
