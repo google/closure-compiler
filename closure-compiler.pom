@@ -13,7 +13,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xsi:schemaLocation=
+  "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+  >
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.javascript</groupId>
@@ -25,14 +27,25 @@
 
   <url>http://code.google.com/p/closure-compiler/</url>
   <description>
-Closure Compiler is a JavaScript optimizing compiler. It parses your JavaScript, analyzes it, removes dead code and rewrites and minimizes what's left. It also checks syntax, variable references, and types, and warns about common JavaScript pitfalls. It is used in many of Google's JavaScript apps, including Gmail, Google Web Search, Google Maps, and Google Docs.
+    Closure Compiler is a JavaScript optimizing compiler. It parses your
+    JavaScript, analyzes it, removes dead code and rewrites and minimizes
+    what's left. It also checks syntax, variable references, and types, and
+    warns about common JavaScript pitfalls. It is used in many of Google's
+    JavaScript apps, including Gmail, Google Web Search, Google Maps, and
+    Google Docs.
   </description>
   <inceptionYear>2009</inceptionYear>
 
   <scm>
-    <connection>scm:svn:http://closure-compiler.googlecode.com/svn/trunk</connection>
-    <developerConnection>scm:svn:http://closure-compiler.googlecode.com/svn/trunk</developerConnection>
-    <url>http://code.google.com/p/closure-compiler/source/browse/#svn/trunk</url>
+    <connection>
+      scm:svn:http://closure-compiler.googlecode.com/svn/trunk
+    </connection>
+    <developerConnection>
+      scm:svn:http://closure-compiler.googlecode.com/svn/trunk
+    </developerConnection>
+    <url>
+      http://code.google.com/p/closure-compiler/source/browse/#svn/trunk
+    </url>
   </scm>
 
   <issueManagement>
@@ -94,7 +107,7 @@ Closure Compiler is a JavaScript optimizing compiler. It parses your JavaScript,
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>r07</version>
+      <version>r08</version>
     </dependency>
 
     <dependency>
