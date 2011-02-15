@@ -70,6 +70,12 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
   /** A list of exported paths. */
   private final Set<String> alreadyExportedPaths;
 
+  /** A list of function names used to export symbols. */
+  private List<String> exportSymbolFunctionNames;
+
+  /** A list of function names used to export properties. */
+  private List<String> exportPropertyFunctionNames;
+
   private abstract class Export {
     protected final String symbolName;
     protected final Node value;
@@ -285,11 +291,11 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
         return null;
       }
 
-      if (!definitionMap.containsKey(qualifiedName)) {
+      Node definitionParent = definitionMap.get(qualifiedName);
+      if (definitionParent == null) {
         return null;
       }
 
-      Node definitionParent = definitionMap.get(qualifiedName);
       Node definition;
 
       switch(definitionParent.getType()) {
@@ -382,6 +388,24 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     this.externsRoot.setIsSyntheticBlock(true);
     this.alreadyExportedPaths = Sets.newHashSet();
     this.mappedPaths = Maps.newHashMap();
+
+    initExportMethods();
+  }
+
+  private void initExportMethods() {
+    exportSymbolFunctionNames = Lists.newArrayList();
+    exportPropertyFunctionNames = Lists.newArrayList();
+
+    // From Closure:
+    // goog.exportSymbol = function(publicName, symbol)
+    // goog.exportProperty = function(object, publicName, symbol)
+    CodingConvention convention = compiler.getCodingConvention();
+    exportSymbolFunctionNames.add(convention.getExportSymbolFunction());
+    exportPropertyFunctionNames.add(convention.getExportPropertyFunction());
+
+    // Another common one used inside google:
+    exportSymbolFunctionNames.add("google_exportSymbol");
+    exportPropertyFunctionNames.add("google_exportProperty");
   }
 
   @Override
@@ -422,6 +446,11 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
       case Token.NAME:
       case Token.GETPROP:
+        String name = n.getQualifiedName();
+        if (name == null) {
+          return;
+        }
+
         if (parent.getType() == Token.ASSIGN || parent.getType() == Token.VAR) {
           definitionMap.put(n.getQualifiedName(), parent);
         }
@@ -432,24 +461,11 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           return;
         }
 
-        List<String> exportSymbolNames = Lists.newArrayList();
-        List<String> exportPropertyNames = Lists.newArrayList();
-
-        // From Closure:
-        // goog.exportSymbol = function(publicName, symbol)
-        // goog.exportProperty = function(object, publicName, symbol)
-        exportSymbolNames.add("goog.exportSymbol");
-        exportPropertyNames.add("goog.exportProperty");
-
-        // Another common one used inside google:
-        exportSymbolNames.add("google_exportSymbol");
-        exportPropertyNames.add("google_exportProperty");
-
-        if (exportPropertyNames.contains(n.getQualifiedName())) {
+        if (exportPropertyFunctionNames.contains(n.getQualifiedName())) {
           handlePropertyExport(parent);
         }
 
-        if (exportSymbolNames.contains(n.getQualifiedName())) {
+        if (exportSymbolFunctionNames.contains(n.getQualifiedName())) {
           handleSymbolExport(parent);
         }
     }
