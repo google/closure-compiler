@@ -1240,8 +1240,6 @@ public final class NodeUtil {
   }
 
   static boolean isBooleanResultHelper(Node n) {
-    // TODO(johnlenz): Add a recursive option to recurse into
-    // AND, OR, HOOK, COMMA and ASSIGN, like "getExpressionBooleanValue".
     switch (n.getType()) {
       // Primitives
       case Token.TRUE:
@@ -1836,6 +1834,23 @@ public final class NodeUtil {
    */
   static boolean isThis(Node node) {
     return node.getType() == Token.THIS;
+  }
+
+
+  /**
+   * Is this an ARRAYLIT node
+   */
+  static boolean isArrayLiteral(Node node) {
+    return node.getType() == Token.ARRAYLIT;
+  }
+
+  /**
+   * Is this an sparse ARRAYLIT node
+   */
+  static boolean isSparseArray(Node node) {
+    Preconditions.checkArgument(isArrayLiteral(node));
+    int[] skipList = (int[]) node.getProp(Node.SKIP_INDEXES_PROP);
+    return skipList != null && skipList.length > 0;
   }
 
   /**

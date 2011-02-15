@@ -1303,6 +1303,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node functionName = arrayNode.getNext();
 
     if ((arrayNode.getType() != Token.ARRAYLIT) ||
+        NodeUtil.isSparseArray(arrayNode) ||
         !functionName.getString().equals("join")) {
       return n;
     }
@@ -1509,7 +1510,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldGetElem(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.GETELEM);
 
-    if (left.getType() == Token.ARRAYLIT) {
+    if (left.getType() == Token.ARRAYLIT && !NodeUtil.isSparseArray(left)) {
       // TODO(johnlenz): handle sparse arrays
 
       if (right.getType() != Token.NUMBER) {
@@ -1561,7 +1562,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       switch (left.getType()) {
         case Token.ARRAYLIT:
           // TODO(johnlenz): handle sparse arrays
-          if (mayHaveSideEffects(left)) {
+          if (NodeUtil.isSparseArray(left) || mayHaveSideEffects(left)) {
             // Nope, can't fold this, without handling the side-effects.
             return n;
           }

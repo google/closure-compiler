@@ -1126,17 +1126,17 @@ class PeepholeSubstituteAlternateSyntax
       action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
     } else {
       switch (arg.getType()) {
-        case (Token.STRING):
+        case Token.STRING:
           // "Array('a')" --> "['a']"
           action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
           break;
-        case (Token.NUMBER):
+        case Token.NUMBER:
           // "Array(0)" --> "[]"
           if (arg.getDouble() == 0) {
             action = FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS;
           }
           break;
-        case (Token.ARRAYLIT):
+        case Token.ARRAYLIT:
           // "Array([args])" --> "[[args]]"
           action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
           break;

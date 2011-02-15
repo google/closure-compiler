@@ -92,7 +92,8 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
       }
 
       if (type == SubclassType.MIXIN) {
-        // Only consider mixins that mix two prototypes as related to inheritance.
+        // Only consider mixins that mix two prototypes as related to
+        // inheritance.
         if (!endsWithPrototype(superclass)) {
           return null;
         }
@@ -223,7 +224,8 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
     if ("goog.addDependency".equals(callName.getQualifiedName()) &&
         n.getChildCount() >= 3) {
       Node typeArray = callName.getNext().getNext();
-      if (typeArray.getType() == Token.ARRAYLIT) {
+      if (typeArray.getType() == Token.ARRAYLIT
+          && !NodeUtil.isSparseArray(typeArray)) {
         List<String> typeNames = Lists.newArrayList();
         for (Node name = typeArray.getFirstChild(); name != null;
              name = name.getNext()) {
