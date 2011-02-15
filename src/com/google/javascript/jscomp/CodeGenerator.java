@@ -196,7 +196,7 @@ class CodeGenerator {
 
       case Token.ARRAYLIT:
         add("[");
-        addList(first, (int[]) n.getProp(Node.SKIP_INDEXES_PROP));
+        addArrayList(first, (int[]) n.getProp(Node.SKIP_INDEXES_PROP));
         add("]");
         break;
 
@@ -871,7 +871,7 @@ class CodeGenerator {
    * @param skipIndexes If not null, then the array of skipped entries in the
    * array.
    */
-  void addList(Node firstInList, int[] skipIndexes) {
+  void addArrayList(Node firstInList, int[] skipIndexes) {
     int nextSlot = 0;
     int nextSkipSlot = 0;
     for (Node n = firstInList; n != null; n = n.getNext()) {

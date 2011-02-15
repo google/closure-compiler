@@ -310,6 +310,13 @@ public class CodePrinterTest extends TestCase {
     assertPrint("if(x){;;function y(){};;}", "if(x){function y(){}}");
   }
 
+  public void testPrintArray() {
+    assertPrint("[void 0, void 0]", "[void 0,void 0]");
+    assertPrint("[undefined, undefined]", "[undefined,undefined]");
+    assertPrint("[ , , , undefined]", "[,,,undefined]");
+    assertPrint("[ , , , 0]", "[,,,0]");
+  }
+
   public void testHook() {
     assertPrint("a ? b = 1 : c = 2", "a?b=1:c=2");
     assertPrint("x = a ? b = 1 : c = 2", "x=a?b=1:c=2");
@@ -928,18 +935,23 @@ public class CodePrinterTest extends TestCase {
     testReparse("v = (5, 6, 7, 8)");
     testReparse("d = 34.0; x = 0; y = .3; z = -22");
     testReparse("d = -x; t = !x + ~y;");
-    testReparse("'hi'; /* just a test */ stuff(a,b) \n foo(); // and another \n bar();");
+    testReparse("'hi'; /* just a test */ stuff(a,b) \n" +
+            " foo(); // and another \n" +
+            " bar();");
     testReparse("a = b++ + ++c; a = b++-++c; a = - --b; a = - ++b;");
     testReparse("a++; b= a++; b = ++a; b = a--; b = --a; a+=2; b-=5");
     testReparse("a = (2 + 3) * 4;");
     testReparse("a = 1 + (2 + 3) + 4;");
     testReparse("x = a ? b : c; x = a ? (b,3,5) : (foo(),bar());");
-    testReparse("a = b | c || d ^ e && f & !g != h << i <= j < k >>> l > m * n % !o");
-    testReparse("a == b; a != b; a === b; a == b == a; (a == b) == a; a == (b == a);");
+    testReparse("a = b | c || d ^ e " +
+            "&& f & !g != h << i <= j < k >>> l > m * n % !o");
+    testReparse("a == b; a != b; a === b; a == b == a;" +
+            " (a == b) == a; a == (b == a);");
     testReparse("if (a > b) a = b; if (b < 3) a = 3; else c = 4;");
     testReparse("if (a == b) { a++; } if (a == 0) { a++; } else { a --; }");
     testReparse("for (var i in a) b += i;");
-    testReparse("for (var i = 0; i < 10; i++){ b /= 2; if (b == 2)break;else continue;}");
+    testReparse("for (var i = 0; i < 10; i++){ b /= 2;" +
+            " if (b == 2)break;else continue;}");
     testReparse("for (x = 0; x < 10; x++) a /= 2;");
     testReparse("for (;;) a++;");
     testReparse("while(true) { blah(); }while(true) blah();");
@@ -1136,6 +1148,6 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x = - - 2;", "var x=2");
     assertPrint("var x = - (2);", "var x=-2");
   }
-  
-  
+
+
 }
