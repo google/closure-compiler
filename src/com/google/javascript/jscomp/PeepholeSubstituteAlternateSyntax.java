@@ -123,9 +123,28 @@ class PeepholeSubstituteAlternateSyntax
       case Token.CALL:
         return tryFoldLiteralConstructor(node);
 
+      case Token.NAME:
+        return tryReplaceUndefined(node);
+
       default:
         return node; //Nothing changed
     }
+  }
+
+  /**
+   * Use "void 0" in place of "undefined"
+   */
+  private Node tryReplaceUndefined(Node n) {
+    // TODO(johnlenz): consider doing this as a normalization.
+    if (isASTNormalized()
+        && NodeUtil.isUndefined(n)
+        && !NodeUtil.isLhs(n, n.getParent())) {
+      Node replacement = NodeUtil.newUndefinedNode(n);
+      n.getParent().replaceChild(n, replacement);
+      reportCodeChange();
+      return replacement;
+    }
+    return n;
   }
 
   /**

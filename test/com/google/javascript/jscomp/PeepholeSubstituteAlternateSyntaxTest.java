@@ -413,8 +413,10 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("x = Array('a', 1, 2, 'bc', 3, {}, 'abc')");
     foldSame("x = new Array(Array(1, '2', 3, '4'))");
     foldSame("x = Array(Array(1, '2', 3, '4'))");
-    foldSame("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))");
-    foldSame("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))");
+    foldSame("x = new Array(" +
+        "Object(), Array(\"abc\", Object(), Array(Array())))");
+    foldSame("x = new Array(" +
+        "Object(), Array(\"abc\", Object(), Array(Array())))");
   }
 
   public void testMinimizeExprCondition() {
@@ -734,5 +736,15 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("if (f) { f.bar(); } else { f.onchange(); }");
     fold("if (f) { f.bonchange(); }", "f && f.bonchange();");
     foldSame("if (f) { f['x'](); }");
+  }
+
+  public void testUndefined() {
+    foldSame("var x = undefined");
+    foldSame("function (f) {var undefined=2;var x = undefined;}");
+    this.enableNormalize();
+    fold("var x = undefined", "var x=void 0");
+    foldSame(
+        "var undefined = 1;" +
+        "function f() {var undefined=2;var x = undefined;}");
   }
 }

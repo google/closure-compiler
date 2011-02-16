@@ -84,6 +84,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         tryReduceOperandsForOp(subtree);
         return tryFoldUnaryOperator(subtree);
 
+      case Token.VOID:
+        return tryReduceVoid(subtree);
+
       default:
         tryReduceOperandsForOp(subtree);
         return tryFoldBinaryOperator(subtree);
@@ -157,6 +160,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       default:
         return subtree;
     }
+  }
+
+  private Node tryReduceVoid(Node n) {
+    Node child = n.getFirstChild();
+    if (child.getType() != Token.NUMBER || child.getDouble() != 0.0) {
+      if (!mayHaveSideEffects(n)) {
+        n.replaceChild(child, Node.newNumber(0));
+        reportCodeChange();
+      }
+    }
+    return n;
   }
 
   private void tryReduceOperandsForOp(Node n) {

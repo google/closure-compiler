@@ -937,6 +937,13 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("false+[]"); // would like: "\"false\""
   }
 
+  public void testFoldVoid() {
+    foldSame("void 0");
+    fold("void 1", "void 0");
+    fold("void x", "void 0");
+    fold("void x()", "void x()");
+  }
+
   private static final List<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",
