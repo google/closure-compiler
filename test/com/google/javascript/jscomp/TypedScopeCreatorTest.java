@@ -132,7 +132,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(foo.toString(), foo.hasProperty("Bar"));
     assertEquals("number", foo.getPropertyType("Bar").toString());
     assertFalse(foo.isPropertyTypeInferred("Bar"));
-  }  
+  }
 
   public void testInferredProperty2() {
     testSame("var foo = { Bar: 3 };");
@@ -140,7 +140,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(foo.toString(), foo.hasProperty("Bar"));
     assertEquals("number", foo.getPropertyType("Bar").toString());
     assertTrue(foo.isPropertyTypeInferred("Bar"));
-  }  
+  }
 
   public void testInferredProperty2b() {
     testSame("var foo = { /** @type {number} */ Bar: 3 };");
@@ -148,7 +148,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(foo.toString(), foo.hasProperty("Bar"));
     assertEquals("number", foo.getPropertyType("Bar").toString());
     assertFalse(foo.isPropertyTypeInferred("Bar"));
-  }  
+  }
 
   public void testInferredProperty2c() {
     testSame("var foo = { /** @return {number} */ Bar: 3 };");
@@ -156,7 +156,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(foo.toString(), foo.hasProperty("Bar"));
     assertEquals("function (): number", foo.getPropertyType("Bar").toString());
     assertFalse(foo.isPropertyTypeInferred("Bar"));
-  }  
+  }
 
   public void testInferredProperty3() {
     testSame("var foo = { /** @type {number} */ get Bar() { return 3 } };");
@@ -172,7 +172,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(foo.toString(), foo.hasProperty("Bar"));
     assertEquals("?", foo.getPropertyType("Bar").toString());
     assertTrue(foo.isPropertyTypeInferred("Bar"));
-  }  
+  }
 
   public void testInferredProperty5() {
     testSame("var foo = { /** @return {number} */ get Bar() { return 3 } };");
@@ -188,7 +188,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(foo.toString(), foo.hasProperty("Bar"));
     assertEquals("number", foo.getPropertyType("Bar").toString());
     assertFalse(foo.isPropertyTypeInferred("Bar"));
-  }   
+  }
 
   public void testPrototypeInit() {
     testSame("/** @constructor */ var Foo = function() {};" +
@@ -510,12 +510,12 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(iPrototype.isFunctionPrototypeType());
 
     assertEquals("number", iPrototype.getPropertyType("bar").toString());
-    
+
     // should be: "function (this:I): undefined"
     assertEquals("function (): undefined",
         iPrototype.getPropertyType("baz").toString());
 
-    // should not be null 
+    // should not be null
     assertNull(globalScope.getVar("I.prototype"));
     // assertEquals(iPrototype, globalScope.getVar("I.prototype").getType());
   }
@@ -886,7 +886,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertEquals(
         // should be: "function (this:Foo, number): ?"
-        "function (number): ?",  
+        "function (number): ?",
         proto.getPropertyType("bar").toString());
   }
 
@@ -1007,6 +1007,13 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals(
         "{y: number, z: number}",
         xType.toString());
+  }
+
+  public void testDeclaredObjectLitProperty5() throws Exception {
+    testSame("var x = {/** @type {number} */ prop: 3};" +
+             "function f() { var y = x.prop; }");
+    JSType yType = lastLocalScope.getVar("y").getType();
+    assertEquals("number", yType.toString());
   }
 
   public void testBadCtorInit1() throws Exception {

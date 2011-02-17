@@ -566,22 +566,30 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     void processObjectLitProperties(
         NodeTraversal t, Node objLit, ObjectType objLitType) {
-      for (Node name = objLit.getFirstChild(); name != null;
-           name = name.getNext()) {
-        Node value = name.getFirstChild();
-        String memberName = NodeUtil.getObjectLitKeyName(name);
+      for (Node keyNode = objLit.getFirstChild(); keyNode != null;
+           keyNode = keyNode.getNext()) {
+        Node value = keyNode.getFirstChild();
+        String memberName = NodeUtil.getObjectLitKeyName(keyNode);
+        JSDocInfo info = keyNode.getJSDocInfo();
         JSType valueType = getDeclaredPropType(
-            t, name.getJSDocInfo(), name, value);
+            t, info, keyNode, value);
         JSType keyType = NodeUtil.getObjectLitKeyTypeFromValueType(
-            name, valueType);
+            keyNode, valueType);
         if (keyType != null) {
-          name.setJSType(keyType);
-          // TODO(nicksantos): Even if the type of the object literal is null,
-          // we may want to declare its properties in the current scope.
+          // Try to declare this property in the current scope if it
+          // has an authoritative name.
+          String qualifiedName = getBestLValueName(keyNode);
+          if (qualifiedName != null) {
+            defineSlot(keyNode, objLit, qualifiedName, keyType, false);
+          } else {
+            setDeferredType(keyNode, keyType);
+          }
+
           if (objLitType != null) {
+            // Declare this property on its object literal.
             boolean isExtern = t.getInput() != null && t.getInput().isExtern();
             objLitType.defineDeclaredProperty(
-                memberName, keyType, isExtern, name);
+                memberName, keyType, isExtern, keyNode);
           }
         }
       }
@@ -826,7 +834,8 @@ final class TypedScopeCreator implements ScopeCreator {
               ObjectType ownerType = ObjectType.cast(var.getType());
               if (ownerType != null) {
                 String propName = lvalueNode.getLastChild().getString();
-                overriddenPropType = findOverriddenFunction(ownerType, propName);
+                overriddenPropType =
+                    findOverriddenFunction(ownerType, propName);
               }
             }
           }
@@ -988,24 +997,41 @@ final class TypedScopeCreator implements ScopeCreator {
       Preconditions.checkArgument(inferred || type != null);
 
       // Only allow declarations of NAMEs and qualfied names.
-      boolean shouldDeclareOnGlobalThis = false;
+      // Object literal keys will have to compute their names themselves.
       if (n.getType() == Token.NAME) {
         Preconditions.checkArgument(
             parent.getType() == Token.FUNCTION ||
             parent.getType() == Token.VAR ||
             parent.getType() == Token.LP ||
             parent.getType() == Token.CATCH);
-        shouldDeclareOnGlobalThis = scope.isGlobal() &&
-            (parent.getType() == Token.VAR ||
-             parent.getType() == Token.FUNCTION);
       } else {
         Preconditions.checkArgument(
             n.getType() == Token.GETPROP &&
             (parent.getType() == Token.ASSIGN ||
              parent.getType() == Token.EXPR_RESULT));
       }
-      String variableName = n.getQualifiedName();
+      defineSlot(n, parent, n.getQualifiedName(), type, inferred);
+    }
+
+
+    /**
+     * Defines a symbol in the current scope.
+     *
+     * @param n the defining NAME or GETPROP or object literal key node.
+     * @param parent the {@code n}'s parent.
+     * @param name The name that this should be known by.
+     * @param type the variable's type. It may be {@code null} if
+     *     {@code inferred} is {@code true}.
+     * @param inferred Whether the type is inferred or declared.
+     */
+    void defineSlot(Node n, Node parent, String variableName,
+        JSType type, boolean inferred) {
       Preconditions.checkArgument(!variableName.isEmpty());
+
+      boolean shouldDeclareOnGlobalThis =
+          n.getType() == Token.NAME && scope.isGlobal() &&
+          (parent.getType() == Token.VAR ||
+           parent.getType() == Token.FUNCTION);
 
       // If n is a property, then we should really declare it in the
       // scope where the root object appears. This helps out people
@@ -1732,6 +1758,19 @@ final class TypedScopeCreator implements ScopeCreator {
 
   /** Get the name of the given l-value node. */
   private static String getBestLValueName(@Nullable Node lValue) {
-    return lValue == null ? null : lValue.getQualifiedName();
+    if (lValue == null || lValue.getParent() == null) {
+      return null;
+    }
+    if (NodeUtil.isObjectLitKey(lValue, lValue.getParent())) {
+      Node owner = getBestLValue(lValue.getParent());
+      if (owner != null) {
+        String ownerName = getBestLValueName(owner);
+        if (ownerName != null) {
+          return ownerName + "." + NodeUtil.getObjectLitKeyName(lValue);
+        }
+      }
+      return null;
+    }
+    return lValue.getQualifiedName();
   }
 }

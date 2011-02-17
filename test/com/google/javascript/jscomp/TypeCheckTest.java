@@ -667,7 +667,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @return {string} */\n" +
         "var f = function() {\n" +
         "  return x.a;\n" +
-        "}");  // would like this to be an error.
+        "}",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
   }
 
   public void testQualifiedNameReduction5c() throws Exception {
@@ -2012,7 +2015,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {number} x */ goog.foo = function(x) {};" +
         "/** @param {number} x */ goog.foo = function(x) {};",
         "variable goog.foo redefined with type function (number): undefined, " +
-        "original definition at [testcode]:1 with type function (number): undefined");
+        "original definition at [testcode]:1 " +
+        "with type function (number): undefined");
   }
 
   public void testDuplicateStaticMethodDecl2() throws Exception {
@@ -4002,8 +4006,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testConstructorAlias8() throws Exception {
     testTypes(
         "var goog = {};" +
-        "/**\n * @param {number} x \n * @constructor */ goog.Foo = function(x) {};" +
-        "/**\n * @param {number} x \n * @constructor */ goog.FooAlias = goog.Foo;" +
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "goog.Foo = function(x) {};" +
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "goog.FooAlias = goog.Foo;" +
         "/** @return {number} */ function foo() { " +
         "  return new goog.FooAlias(1); }",
         "inconsistent return type\n" +
@@ -4014,7 +4020,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testConstructorAlias9() throws Exception {
     testTypes(
         "var goog = {};" +
-        "/**\n * @param {number} x \n * @constructor */ goog.Foo = function(x) {};" +
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "goog.Foo = function(x) {};" +
         "/** @constructor */ goog.FooAlias = goog.Foo;" +
         "/** @return {number} */ function foo() { " +
         "  return new goog.FooAlias(1); }",
@@ -4025,7 +4032,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testConstructorAlias10() throws Exception {
     testTypes(
-        "/**\n * @param {number} x \n * @constructor */ var Foo = function(x) {};" +
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "var Foo = function(x) {};" +
         "/** @constructor */ var FooAlias = Foo;" +
         "/** @return {number} */ function foo() { " +
         "  return new FooAlias(1); }",
@@ -6699,7 +6707,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @return {number} */ F.prototype.foo = function() {return 3; };" +
         "/** @constructor \n * @extends {F} \n * @implements {I} */ " +
         "function G() {}" +
-        "/** @return {number} \n * @override */ G.prototype.bar = G.prototype.foo;" +
+        "/** @return {number} \n * @override */ " +
+        "G.prototype.bar = G.prototype.foo;" +
         "/** @return {string} */ function f() { return new G().bar(); }",
         "inconsistent return type\n" +
         "found   : number\n" +
