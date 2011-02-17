@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.sourcemap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.JSSourceFile;
+import com.google.javascript.jscomp.Result;
+import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.DetailLevel;
 
 import junit.framework.TestCase;
@@ -38,7 +43,7 @@ import java.util.Map;
  * Tests for {@link SourceMap}.
  *
  */
-public class SourceMapTest extends TestCase {
+public class SourceMapGeneratorV1Test extends TestCase {
   private static final JSSourceFile[] EXTERNS = {
       JSSourceFile.fromCode("externs", "")
   };
@@ -198,8 +203,8 @@ public class SourceMapTest extends TestCase {
                    "[\"testcode\",1,44]\n" +
                    "[\"testcode\",1,51,\"foo\"]\n");
 
-    detailLevel = SourceMap.DetailLevel.SYMBOLS;
 
+    detailLevel = SourceMap.DetailLevel.SYMBOLS;
     checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
 
                    "/** Begin line maps. **/{ \"file\" : \"testcode\", " +
@@ -486,7 +491,7 @@ public class SourceMapTest extends TestCase {
 
   private static class RunResult {
     String generatedSource;
-    SourceMap sourceMap;
+    SourceMapGenerator sourceMap;
     public String sourceMapFileContent;
   }
 

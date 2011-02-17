@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.sourcemap;
 
 /**
  * Represents a position in a source file.
  *
  */
-class Position {
+public class Position {
   private final int lineNumber;
   private final int characterIndex;
 

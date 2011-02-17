@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.sourcemap.Position;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -484,7 +485,8 @@ class CodePrinter {
     private boolean outputTypes = false;
     private int lineLengthThreshold = DEFAULT_LINE_LENGTH_THRESHOLD;
     private SourceMap sourceMap = null;
-    private SourceMap.DetailLevel sourceMapDetailLevel = SourceMap.DetailLevel.ALL;
+    private SourceMap.DetailLevel sourceMapDetailLevel =
+        SourceMap.DetailLevel.ALL;
     // Specify a charset to use when outputting source code.  If null,
     // then just output ASCII.
     private Charset outputCharset = null;

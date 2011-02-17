@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.sourcemap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.JSSourceFile;
+import com.google.javascript.jscomp.Result;
+import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.DetailLevel;
-import com.google.javascript.jscomp.SourceMap2.LineMapDecoder;
-import com.google.javascript.jscomp.SourceMap2.LineMapEncoder;
+import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV2.LineMapDecoder;
+import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV2.LineMapEncoder;
 
 import junit.framework.TestCase;
 
@@ -38,7 +43,7 @@ import java.util.Map;
  * Tests for {@link SourceMap}.
  *
  */
-public class SourceMap2Test extends TestCase {
+public class SourceMapGeneratorV2Test extends TestCase {
   private static final JSSourceFile[] EXTERNS = {
       JSSourceFile.fromCode("externs", "")
   };
@@ -610,7 +615,7 @@ public class SourceMap2Test extends TestCase {
 
     StringBuilder sb = new StringBuilder();
     try {
-      ((SourceMap2)result.sourceMap).validate(true);
+      result.sourceMap.validate(true);
       result.sourceMap.appendTo(sb, "testcode");
     } catch (IOException e) {
       throw new RuntimeException("unexpected exception", e);
@@ -699,8 +704,8 @@ public class SourceMap2Test extends TestCase {
 
         for (int i=0; i< lineMaps.length(); i++) {
           String lineEntry = lineMaps.getString(i);
-          List<Integer> entries = SourceMap2.LineMapDecoder.decodeLine(
-              lineEntry);
+          List<Integer> entries =
+              SourceMapGeneratorV2.LineMapDecoder.decodeLine(lineEntry);
           String msg = "line: " + entries;
           System.err.println(msg);
           characterMap.add(entries);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.sourcemap;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -33,12 +33,8 @@ import java.util.Map.Entry;
  * Collects information mapping the generated (compiled) source back to
  * its original source for debugging purposes.
  *
- * @see CodeConsumer
- * @see CodeGenerator
- * @see CodePrinter
- *
  */
-public class SourceMap2 implements SourceMap {
+public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
   private boolean validate = false;
 
@@ -110,7 +106,7 @@ public class SourceMap2 implements SourceMap {
    * generated source map.
    */
   @VisibleForTesting
-  void validate(boolean validate) {
+  public void validate(boolean validate) {
     this.validate = validate;
   }
 
@@ -161,7 +157,8 @@ public class SourceMap2 implements SourceMap {
    * @param startPosition The position on the starting line
    * @param endPosition The position on the ending line.
    */
-  public void addMapping(Node node, Position startPosition, Position endPosition) {
+  public void addMapping(
+      Node node, Position startPosition, Position endPosition) {
     String sourceFile = (String)node.getProp(Node.SOURCENAME_PROP);
 
     // If the node does not have an associated source file or
@@ -337,7 +334,7 @@ public class SourceMap2 implements SourceMap {
    * Escapes the given string for JSON.
    */
   private static String escapeString(String value) {
-    return CodeGenerator.escapeToDoubleQuotedJsString(value);
+    return Util.escapeString(value);
   }
 
   // Source map field helpers.

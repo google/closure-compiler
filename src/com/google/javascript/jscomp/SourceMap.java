@@ -17,6 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
+import com.google.javascript.jscomp.sourcemap.SourceMapGenerator;
+import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV1;
+import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV2;
+import com.google.javascript.jscomp.sourcemap.Position;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
@@ -30,17 +34,17 @@ import java.io.IOException;
  * @see CodePrinter
  *
  */
-public interface SourceMap {
+public class SourceMap implements SourceMapGenerator {
 
-  enum Format {
+  public static enum Format {
      LEGACY {
        @Override SourceMap getInstance() {
-         return new SourceMapLegacy();
+         return new SourceMap(new SourceMapGeneratorV1());
        }
      },
      EXPERIMENTIAL {
        @Override SourceMap getInstance() {
-         return new SourceMap2();
+         return new SourceMap(new SourceMapGeneratorV2());
        }
      };
      abstract SourceMap getInstance();
@@ -49,7 +53,7 @@ public interface SourceMap {
   /**
    * Source maps can be very large different levels of detail can be specified.
    */
-  public enum DetailLevel implements Predicate<Node> {
+  public static enum DetailLevel implements Predicate<Node> {
     // ALL is best when the fullest details are needed for debugging or for
     // code-origin analysis.
     ALL {
@@ -72,49 +76,40 @@ public interface SourceMap {
     };
   }
 
-  /**
-   * Appends the source map to the given buffer.
-   *
-   * @param out The stream to which the map will be appended.
-   * @param name The name of the generated source file that this source map
-   *   represents.
-   */
-  void appendTo(Appendable out, String name) throws IOException;
+  final SourceMapGenerator generator;
 
-  /**
-   * Resets the source map for reuse. A reset needs to be called between
-   * each generated output file.
-   */
-  void reset();
+  private SourceMap(SourceMapGenerator generator) {
+    this.generator = generator;
+  }
 
-  /**
-   * Adds a mapping for the given node.  Mappings must be added in order.
-   *
-   * @param node The node that the new mapping represents.
-   * @param startPosition The position on the starting line
-   * @param endPosition The position on the ending line.
-   */
-  void addMapping(Node node, Position startPosition, Position endPosition);
+  @Override
+  public void addMapping(
+      Node node, Position startPosition, Position endPosition) {
+    generator.addMapping(node, startPosition, endPosition);
+  }
 
-  /**
-   * Sets the prefix used for wrapping the generated source file before
-   * it is written. This ensures that the source map is adjusted for the
-   * change in character offsets.
-   *
-   * @param prefix The prefix that is added before the generated source code.
-   */
-  void setWrapperPrefix(String prefix);
+  @Override
+  public void appendTo(Appendable out, String name) throws IOException {
+    generator.appendTo(out, name);
+  }
 
-  /**
-   * Sets the source code that exists in the buffer for which the
-   * generated code is being generated. This ensures that the source map
-   * accurately reflects the fact that the source is being appended to
-   * an existing buffer and as such, does not start at line 0, position 0
-   * but rather some other line and position.
-   *
-   * @param offsetLine The index of the current line being printed.
-   * @param offsetIndex The column index of the current character being printed.
-   */
-  void setStartingPosition(int offsetLine, int offsetIndex);
+  @Override
+  public void reset() {
+    generator.reset();
+  }
 
+  @Override
+  public void setStartingPosition(int offsetLine, int offsetIndex) {
+    generator.setStartingPosition(offsetLine, offsetIndex);
+  }
+
+  @Override
+  public void setWrapperPrefix(String prefix) {
+    generator.setWrapperPrefix(prefix);
+  }
+
+
+  public void validate(boolean validate) {
+    generator.validate(validate);
+  }
 }
