@@ -186,7 +186,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testFunction2() {
-    parse("function() {}");
+    parse("(function() {})");
   }
 
   public void testFunction3() {
@@ -194,7 +194,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testFunction4() {
-    parse("function(a) {}");
+    parse("(function(a) {})");
   }
 
   public void testFunction5() {
@@ -202,19 +202,19 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testFunction6() {
-    parse("function(a, b) {}");
+    parse("(function(a, b) {})");
   }
 
   public void testReturn() {
-    parse("function() {return 1;}");
+    parse("(function() {return 1;})");
   }
 
   public void testReturn2() {
-    parse("function() {return;}");
+    parse("function f() {return;}");
   }
 
   public void testReturn3() {
-    parse("function(){return x?1:2}");
+    parse("function f(){return x?1:2}");
   }
 
   public void testThrow() {
@@ -386,7 +386,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testSwitch3() {
-    parse("function(){switch(x){default:case 1:return 2}}");
+    parse("function f(){switch(x){default:case 1:return 2}}");
   }
 
   public void testDebugger() {
@@ -1046,11 +1046,11 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   private void testNoParseError(String string) {
     testParseError(string, (String)null);
   }
-  
+
   private void testParseError(String string, String error) {
     testParseError(string, error == null ? null : new String[] { error });
   }
-  
+
   private void testParseError(String string, String[] errors) {
     Node root = newParse(string, new TestErrorReporter(errors, null));
     assertTrue("unexpected warnings reported",

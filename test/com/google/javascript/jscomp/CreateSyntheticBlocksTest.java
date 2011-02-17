@@ -63,25 +63,25 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
   // TODO(johnlenz): Add tests to the IntegrationTest.
 
   public void testFold1() {
-    test("function() { if (x) return; y(); }",
-         "function(){x||y()}");
+    test("function f() { if (x) return; y(); }",
+         "function f(){x||y()}");
   }
 
   public void testFoldWithMarkers1() {
-    testSame("function(){startMarker();if(x)return;endMarker();y()}");
+    testSame("function f(){startMarker();if(x)return;endMarker();y()}");
   }
 
   public void testFoldWithMarkers1a() {
-    testSame("function(){startMarker();if(x)return;endMarker()}");
+    testSame("function f(){startMarker();if(x)return;endMarker()}");
   }
 
   public void testFold2() {
-    test("function() { if (x) return; y(); if (a) return; b(); }",
-         "function(){if(!x){y();a||b()}}");
+    test("function f() { if (x) return; y(); if (a) return; b(); }",
+         "function f(){if(!x){y();a||b()}}");
   }
 
   public void testFoldWithMarkers2() {
-    testSame("function(){startMarker(\"FOO\");startMarker(\"BAR\");" +
+    testSame("function f(){startMarker(\"FOO\");startMarker(\"BAR\");" +
              "if(x)return;endMarker(\"BAR\");y();if(a)return;" +
              "endMarker(\"FOO\");b()}");
   }

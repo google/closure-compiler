@@ -46,37 +46,37 @@ public class FunctionInjectorTest extends TestCase {
 
   public void testIsSimpleFunction1() {
     assertTrue(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function(){}")));
+        prep("function f(){}")));
   }
 
   public void testIsSimpleFunction2() {
     assertTrue(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function(){return 0;}")));
+        prep("function f(){return 0;}")));
   }
 
   public void testIsSimpleFunction3() {
     assertTrue(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function(){return x ? 0 : 1}")));
+        prep("function f(){return x ? 0 : 1}")));
   }
 
   public void testIsSimpleFunction4() {
     assertFalse(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function(){return;}")));
+        prep("function f(){return;}")));
   }
 
   public void testIsSimpleFunction5() {
     assertFalse(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function(){return 0; return 0;}")));
+        prep("function f(){return 0; return 0;}")));
   }
 
   public void testIsSimpleFunction6() {
     assertFalse(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function(){var x=true;return x ? 0 : 1}")));
+        prep("function f(){var x=true;return x ? 0 : 1}")));
   }
 
   public void testIsSimpleFunction7() {
     assertFalse(getInjector().isDirectCallNodeReplacementPossible(
-        prep("function(){if (x) return 0; else return 1}")));
+        prep("function f(){if (x) return 0; else return 1}")));
   }
 
   public void testCanInlineReferenceToFunction1() {

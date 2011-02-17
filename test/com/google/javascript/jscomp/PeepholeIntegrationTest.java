@@ -79,14 +79,14 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   /** Check that removing blocks with 1 child works */
   public void testFoldOneChildBlocksIntegration() {
-     fold("function(){switch(foo()){default:{break}}}",
-          "function(){foo()}");
+     fold("function f(){switch(foo()){default:{break}}}",
+          "function f(){foo()}");
 
-     fold("function(){switch(x){default:{break}}}",
-          "function(){}");
+     fold("function f(){switch(x){default:{break}}}",
+          "function f(){}");
 
-     fold("function(){switch(x){default:x;case 1:return 2}}",
-          "function(){switch(x){default:case 1:return 2}}");
+     fold("function f(){switch(x){default:x;case 1:return 2}}",
+          "function f(){switch(x){default:case 1:return 2}}");
 
      // ensure that block folding does not break hook ifs
      fold("if(x){if(true){foo();foo()}else{bar();bar()}}",
@@ -135,8 +135,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   /** Try to minimize returns */
   public void testFoldReturnsIntegration() {
     // if-then-else duplicate statement removal handles this case:
-    fold("function(){if(x)return;else return}",
-         "function(){}");
+    fold("function f(){if(x)return;else return}",
+         "function f(){}");
   }
 
   public void testBug1059649() {

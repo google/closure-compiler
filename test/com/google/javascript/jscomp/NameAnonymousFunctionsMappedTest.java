@@ -133,8 +133,8 @@ public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   }
 
   public void testAssignmentToGetElem() {
-    test("function() { win['x' + this.id] = function(a){}; }",
-         "function() { win['x' + this.id] = function $(a){}; }");
+    test("function f() { win['x' + this.id] = function(a){}; }",
+         "function f() { win['x' + this.id] = function $(a){}; }");
 
     // TODO - could probably do a better job encoding these
     assertMapping("$", "win[\"x\"+this.id]");

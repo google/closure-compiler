@@ -75,7 +75,7 @@ public class ExpressionDecomposerTest extends TestCase {
     helperCanExposeExpression(
         DecompositionType.MOVABLE, "switch(foo()){}", "foo");
     helperCanExposeExpression(
-        DecompositionType.MOVABLE, "function (){ return foo();}", "foo");
+        DecompositionType.MOVABLE, "function f(){ return foo();}", "foo");
 
     helperCanExposeExpression(
         DecompositionType.MOVABLE, "x = foo() && 1", "foo");
@@ -113,7 +113,7 @@ public class ExpressionDecomposerTest extends TestCase {
         DecompositionType.DECOMPOSABLE, "switch(x = goo() && foo()){}", "foo");
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE,
-        "function (){ return goo() && foo();}", "foo");
+        "function f(){ return goo() && foo();}", "foo");
   }
 
   public void testCanExposeExpression4() {
@@ -190,9 +190,9 @@ public class ExpressionDecomposerTest extends TestCase {
 
   public void testMoveExpression7() {
     helperMoveExpression(
-        "function (){ return foo();}",
+        "function f(){ return foo();}",
         "foo",
-        "function (){ var temp$$0 = foo(); return temp$$0;}");
+        "function f(){ var temp$$0 = foo(); return temp$$0;}");
   }
 
   public void testMoveExpression8() {
@@ -290,9 +290,9 @@ public class ExpressionDecomposerTest extends TestCase {
 
   public void testExposeExpression10() {
     helperExposeExpression(
-        "function (){ return goo() && foo();}",
+        "function f(){ return goo() && foo();}",
         "foo",
-        "function (){" +
+        "function f(){" +
           "var temp$$0; if (temp$$0 = goo()) temp$$0 = foo();" +
           "return temp$$0;" +
          "}");

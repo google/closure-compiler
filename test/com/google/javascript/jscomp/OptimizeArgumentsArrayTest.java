@@ -42,19 +42,19 @@ public class OptimizeArgumentsArrayTest extends CompilerTestCase {
   }
 
   public void testNoVarArgs() {
-    testSame("function(a,b,c) { alert(a + b + c) }");
+    testSame("function f(a,b,c) { alert(a + b + c) }");
 
-    test("function(a,b,c) { alert(arguments[0]) }",
-         "function(a,b,c) { alert(a) }");
+    test("function f(a,b,c) { alert(arguments[0]) }",
+         "function f(a,b,c) { alert(a) }");
   }
 
   public void testMissingVarArgs() {
-    testSame("function() { alert(arguments[x]) }");
+    testSame("function f() { alert(arguments[x]) }");
   }
 
   public void testArgumentRefOnNamedParameter() {
-    test("function(a,b) { alert(arguments[0]) }",
-         "function(a,b) { alert(a) }");
+    test("function f(a,b) { alert(arguments[0]) }",
+         "function f(a,b) { alert(a) }");
   }
 
   public void testTwoVarArgs() {

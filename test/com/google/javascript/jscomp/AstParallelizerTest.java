@@ -50,31 +50,39 @@ public class AstParallelizerTest extends TestCase {
                    "function foo(x) { foo(1) }");
   }
 
-  public void testSplitAnonFuntion() {
+  // TODO(johnlenz): This test is invalid it relies on allowing
+  // nameless function statements, which does not parse.
+  public void disable_testSplitAnonFuntion() {
     splitFunctions("var foo = function(x) { foo(1) }; foo(1)",
                    "var foo = function " + HOLDER + "() {}; foo(1)",
-                   "function(x) { foo(1) }");
+                   "(function(x) { foo(1) })");
   }
 
-  public void testSplitInplaceCall() {
+  // TODO(johnlenz): This test is invalid it relies on allowing
+  // nameless function statements, which does not parse.
+  public void disable_testSplitInplaceCall() {
     splitFunctions("(function() { print('hi') })()",
                    "(function " + HOLDER + "() {})()",
-                   "function() { print('hi') }");
+                   "(function() { print('hi') })");
   }
 
-  public void testSplitMupltiFuntions() {
+  // TODO(johnlenz): This test is invalid it relies on allowing
+  // nameless function statements, which does not parse.
+  public void disable_testSplitMupltiFuntions() {
     splitFunctions("var foo = function(x) { foo(1) }; foo();" +
                    "var bar = function(x,y) { bar(1,2) }; bar(1,2)",
                    // Output Root
                    "var foo = function " + HOLDER + "() {}; foo();" +
                    "var bar = function " + HOLDER + "() {}; bar(1,2)",
                    // foo
-                   "function(x) { foo(1) }",
+                   "(function(x) { foo(1) })",
                    // bar
-                   "function(x,y) { bar(1,2) }");
+                   "(function(x,y) { bar(1,2) })");
   }
 
-  public void testInnerFunctions() {
+  // TODO(johnlenz): This test is invalid it relies on allowing
+  // nameless function statements, which does not parse.
+  public void disable_testInnerFunctions() {
     splitFunctions("var foo = function() {var bar = function() {}}",
                    "var foo = function " + HOLDER + "() {}",
                    "function() {var bar = function() {}}");

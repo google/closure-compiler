@@ -30,6 +30,8 @@ public class VarCheckTest extends CompilerTestCase {
 
   private CheckLevel externValidationErrorLevel;
 
+  private CompilerPass testSetupPass;
+
   public VarCheckTest() {
     super(EXTERNS);
   }
@@ -40,6 +42,7 @@ public class VarCheckTest extends CompilerTestCase {
     strictModuleDepErrorLevel = CheckLevel.OFF;
     externValidationErrorLevel = null;
     sanityCheck = false;
+    testSetupPass = null;
   }
 
   @Override
@@ -59,6 +62,9 @@ public class VarCheckTest extends CompilerTestCase {
     if (!sanityCheck) {
       return new CompilerPass() {
         @Override public void process(Node externs, Node root) {
+          if (testSetupPass != null) {
+            testSetupPass.process(externs, root);
+          }
           new VarCheck(compiler, false).process(externs, root);
           if (!compiler.hasErrors()) {
             new VarCheck(compiler, true).process(externs, root);
@@ -158,11 +164,31 @@ public class VarCheckTest extends CompilerTestCase {
   }
 
   public void testInvalidFunctionDecl1() {
-    test("function() {};", null, VarCheck.INVALID_FUNCTION_DECL);
-  }
+    final CompilerTestCase testcase = this;
 
-  public void testInvalidFunctionDecl2() {
-    test("if (true) { function() {}; }", null, VarCheck.INVALID_FUNCTION_DECL);
+    // A compiler pass that create invalid function names.
+    testSetupPass = new CompilerPass() {
+
+      void visit(Node n) {
+        if (n.getType() == Token.NAME
+            && !n.getString().isEmpty()
+            && n.getParent().getType() == Token.FUNCTION) {
+          n.setString("");
+          testcase.getLastCompiler().reportCodeChange();
+        }
+        for (Node c : n.children()) {
+          visit(c);
+        }
+      }
+
+      @Override
+      public void process(Node externs, Node root) {
+        visit(root);
+      }
+    };
+
+    test("function f() {};", null, VarCheck.INVALID_FUNCTION_DECL);
+    test("if (true) { function f(){}; }", null, VarCheck.INVALID_FUNCTION_DECL);
   }
 
   public void testValidFunctionExpr() {

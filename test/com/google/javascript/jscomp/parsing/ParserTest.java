@@ -771,12 +771,22 @@ public class ParserTest extends BaseJSTypeTestCase {
         var.getJSDocInfo().getBlockDescription());
   }
 
+  public void testUnnamedFunctionStatement() {
+    // Statements
+    parseError("function() {};", "unnamed function statement");
+    parseError("if (true) { function() {}; }", "unnamed function statement");
+    parse("function f() {};");
+    // Expressions
+    parse("(function f() {});");
+    parse("(function () {});");
+  }
+
   private void parseError(String string, String... errors) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
     Node script = null;
     try {
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(true, es5mode),
+          "input", string, ParserRunner.createConfig(true, es5mode, false),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -792,7 +802,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     Node script = null;
     try {
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(true, es5mode),
+          "input", string, ParserRunner.createConfig(true, es5mode, false),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);

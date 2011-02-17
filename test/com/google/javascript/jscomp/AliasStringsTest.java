@@ -73,12 +73,13 @@ public class AliasStringsTest extends CompilerTestCase {
   public void testSeveral() {
     strings = ImmutableSet.of("", "px", "none", "width");
 
-    test("function() {var styles=['width',100,'px','display','none'].join('')}",
+    test("function f() {" +
+         "var styles=['width',100,'px','display','none'].join('')}",
          "var $$S_width='width';" +
          "var $$S_px='px';" +
          "var $$S_none='none';" +
          "var $$S_='';" +
-         "function() {var styles=[$$S_width,100,$$S_px,'display'," +
+         "function f() {var styles=[$$S_width,100,$$S_px,'display'," +
          "$$S_none].join($$S_)}");
   }
 
@@ -89,22 +90,22 @@ public class AliasStringsTest extends CompilerTestCase {
 
     // string as key
     test("var foo={'px':435}", "var foo={px:435}");
-    test("bar=function(){return {'px':435}}",
-         "bar=function(){return {px:435}}");
+    test("bar=function f(){return {'px':435}}",
+         "bar=function f(){return {px:435}}");
 
-    test("function() {var foo={bar:'!@#$%^&*()'}}",
+    test("function f() {var foo={bar:'!@#$%^&*()'}}",
          "var $$S_$21$40$23$24$25$5e$26$2a$28$29='!@#$%^&*()';" +
-         "function() {var foo={bar:$$S_$21$40$23$24$25$5e$26$2a$28$29}}");
+         "function f() {var foo={bar:$$S_$21$40$23$24$25$5e$26$2a$28$29}}");
 
-    test("function() {var foo={px:435,foo:'px',bar:'baz'}}",
+    test("function f() {var foo={px:435,foo:'px',bar:'baz'}}",
          "var $$S_px='px';" +
-         "function() {var foo={px:435,foo:$$S_px,bar:'baz'}}");
+         "function f() {var foo={px:435,foo:$$S_px,bar:'baz'}}");
   }
 
   public void testGetProp() {
     strings = ImmutableSet.of("px", "width");
 
-    testSame("function(){element.style.px=1234}");
+    testSame("function f(){element.style.px=1234}");
 
     test("function f(){shape.width.units='px'}",
         "var $$S_px='px';function f(){shape.width.units=$$S_px}");
@@ -133,9 +134,9 @@ public class AliasStringsTest extends CompilerTestCase {
   }
 
   public void testBlackList() {
-    test("function(){var f=\'sec ret\';g=\"TOPseCreT\"}",
+    test("(function (){var f=\'sec ret\';g=\"TOPseCreT\"})",
          "var $$S_sec$20ret='sec ret';" +
-         "function(){var f=$$S_sec$20ret;g=\"TOPseCreT\"}");
+         "(function (){var f=$$S_sec$20ret;g=\"TOPseCreT\"})");
   }
 
   public void testLongStableAlias() {

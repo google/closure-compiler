@@ -178,7 +178,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("(function() {}).prototype[f] = function(){};", "");
   }
 
-  public void testUnlessUnconditionalReturn() {
+  public void testUselessUnconditionalReturn() {
     test("function foo() { return }", " function foo() { }");
     test("function foo() { return; return; x=1 }", "function foo() { }");
     test("function foo() { return; return; var x=1}", "function foo() {var x}");
@@ -186,12 +186,13 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
          "function foo() {         function bar() {} }" );
     testSame("function foo() { return 5 }");
 
-
-    test("function() {switch (a) { case 'a': return}}",
-         "function() {switch (a) { case 'a': }}");
-    testSame("function() {switch (a) { case 'a': case foo(): }}");
-    testSame("function() {switch (a) { default: return; case 'a': alert(1)}}");
-    testSame("function() {switch (a) { case 'a': return; default: alert(1)}}");
+    test("function f() {switch (a) { case 'a': return}}",
+         "function f() {switch (a) { case 'a': }}");
+    testSame("function f() {switch (a) { case 'a': case foo(): }}");
+    testSame("function f() {switch (a) {" +
+             " default: return; case 'a': alert(1)}}");
+    testSame("function f() {switch (a) {" +
+             " case 'a': return; default: alert(1)}}");
   }
 
   public void testUnlessUnconditionalContinue() {

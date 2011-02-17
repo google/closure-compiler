@@ -104,8 +104,8 @@ public class NameAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   public void testAssignmentToGetElem() {
-    test("function() { win['x' + this.id] = function(a){}; }",
-         "function() { win['x' + this.id] = function $win$x$this$id$(a){}; }");
+    test("function f() {win['x' + this.id] = function(a){};}",
+         "function f() {win['x' + this.id] = function $win$x$this$id$(a){};}");
   }
 
   public void testGetElemWithDashes() {

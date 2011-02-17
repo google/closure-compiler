@@ -65,10 +65,10 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("{'hi'}", "");
     fold("{x==3}", "");
     fold("{ (function(){x++}) }", "");
-    fold("function(){return;}", "function(){return;}");
-    fold("function(){return 3;}", "function(){return 3}");
-    fold("function(){if(x)return; x=3; return; }",
-         "function(){if(x)return; x=3; return; }");
+    fold("function f(){return;}", "function f(){return;}");
+    fold("function f(){return 3;}", "function f(){return 3}");
+    fold("function f(){if(x)return; x=3; return; }",
+         "function f(){if(x)return; x=3; return; }");
     fold("{x=3;;;y=2;;;}", "x=3;y=2");
 
     // Cases to test for empty block.
@@ -588,7 +588,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   public void testNew2() {
     test("1 + new Date;", "");
   }
-  
+
   public void testFoldAssign() {
     test("x=x", "");
     testSame("x=xy");
@@ -597,7 +597,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test("var y=(x=x)", "var y=x");
     test("y=1 + (x=x)", "y=1 + x");
   }
-  
+
   public void testTryCatchFinally() {
     testSame("try {foo()} catch (e) {bar()}");
     testSame("try { try {foo()} catch (e) {bar()}} catch (x) {bar()}");
@@ -605,5 +605,5 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     testSame("try {var x = 1} finally {x()}");
     test("function f() { return; try{var x = 1}finally{} }",
         "function f() { return; var x = 1; }");
-  }  
+  }
 }

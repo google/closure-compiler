@@ -175,7 +175,7 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testDuplicateParams() {
-    test("function (a, a) {}", RhinoErrorReporter.DUPLICATE_PARAM);
+    test("function f(a, a) {}", RhinoErrorReporter.DUPLICATE_PARAM);
     assertTrue(lastCompiler.hasHaltingErrors());
   }
 
@@ -633,9 +633,12 @@ public class CommandLineRunnerTest extends TestCase {
         "  node0 [label=\"BLOCK\"];\n" +
         "  node1 [label=\"SCRIPT\"];\n" +
         "  node0 -> node1 [weight=1];\n" +
-        "  node1 -> RETURN [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-        "  node0 -> RETURN [label=\"SYN_BLOCK\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-        "  node0 -> node1 [label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+        "  node1 -> RETURN [label=\"UNCOND\", " +
+            "fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+        "  node0 -> RETURN [label=\"SYN_BLOCK\", " +
+            "fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
+        "  node0 -> node1 [label=\"UNCOND\", " +
+            "fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
         "}\n\n",
         new String(outReader.toByteArray()));
   }

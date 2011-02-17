@@ -68,8 +68,8 @@ public class CollapseVariableDeclarationsTest extends CompilerTestCase {
 
     test("a = null; this.foo = null;",
          "this.foo = a = null");
-    test("function(){ a = null; return null; }",
-         "function(){return a = null}");
+    test("function f(){ a = null; return null; }",
+         "function f(){return a = null}");
     test("a = true; if (a) { foo(); }",
          "if (a = true) { foo() }");
     test("a = true; if (a && a) { foo(); }",

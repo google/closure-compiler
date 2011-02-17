@@ -43,31 +43,31 @@ public class FunctionArgumentInjectorTest extends TestCase {
   public void testFindModifiedParameters1() {
     assertEquals(Sets.newHashSet(),
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function (a){ return a==0; }")));
+            parseFunction("function f(a){ return a==0; }")));
   }
 
   public void testFindModifiedParameters2() {
     assertEquals(Sets.newHashSet(),
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function (a){ b=a }")));
+            parseFunction("function f(a){ b=a }")));
   }
 
   public void testFindModifiedParameters3() {
     assertEquals(Sets.newHashSet("a"),
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function (a){ a=0 }")));
+            parseFunction("function f(a){ a=0 }")));
   }
 
   public void testFindModifiedParameters4() {
     assertEquals(Sets.newHashSet("a", "b"),
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function (a,b){ a=0;b=0 }")));
+            parseFunction("function f(a,b){ a=0;b=0 }")));
   }
 
   public void testFindModifiedParameters5() {
     assertEquals(Sets.newHashSet("b"),
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function (a,b){ a; if (a) b=0 }")));
+            parseFunction("function f(a,b){ a; if (a) b=0 }")));
   }
 
   public void testMaybeAddTempsForCallArguments1() {
@@ -191,7 +191,7 @@ public class FunctionArgumentInjectorTest extends TestCase {
         "function foo(a,b){goo();for(;;){a;b;}}; foo(x,y);",
         "foo",
         Sets.newHashSet("a", "b"));
-  }  
+  }
 
   public void testMaybeAddTempsForCallArguments20() {
     // A long string referenced more than once should have a temp.

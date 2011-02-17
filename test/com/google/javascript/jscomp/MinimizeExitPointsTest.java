@@ -88,48 +88,48 @@ public class MinimizeExitPointsTest extends CompilerTestCase {
   }
 
   public void testFunctionReturnOptimization() throws Exception {
-    fold("function(){if(a()){b();if(c())return;}}",
-         "function(){if(a()){b();if(c());}}");
-    fold("function(){if(x)return; x=3; return; }",
-         "function(){if(x); else x=3}");
-    fold("function(){if(true){a();return;}else;b();}",
-         "function(){if(true){a();}else{b();}}");
-    fold("function(){if(false){a();return;}else;b();return;}",
-         "function(){if(false){a();}else{b();}}");
-    fold("function(){if(a()){b();return;}else;c();}",
-         "function(){if(a()){b();}else{c();}}");
-    fold("function(){if(a()){b()}else{c();return;}}",
-         "function(){if(a()){b()}else{c();}}");
-    fold("function(){if(a()){b();return;}else;}",
-         "function(){if(a()){b();}else;}");
-    fold("function(){if(a()){return;}else{return;} return;}",
-         "function(){if(a()){}else{}}");
-    fold("function(){if(a()){return;}else{return;} b();}",
-         "function(){if(a()){}else{return;b()}}");
+    fold("function f(){if(a()){b();if(c())return;}}",
+         "function f(){if(a()){b();if(c());}}");
+    fold("function f(){if(x)return; x=3; return; }",
+         "function f(){if(x); else x=3}");
+    fold("function f(){if(true){a();return;}else;b();}",
+         "function f(){if(true){a();}else{b();}}");
+    fold("function f(){if(false){a();return;}else;b();return;}",
+         "function f(){if(false){a();}else{b();}}");
+    fold("function f(){if(a()){b();return;}else;c();}",
+         "function f(){if(a()){b();}else{c();}}");
+    fold("function f(){if(a()){b()}else{c();return;}}",
+         "function f(){if(a()){b()}else{c();}}");
+    fold("function f(){if(a()){b();return;}else;}",
+         "function f(){if(a()){b();}else;}");
+    fold("function f(){if(a()){return;}else{return;} return;}",
+         "function f(){if(a()){}else{}}");
+    fold("function f(){if(a()){return;}else{return;} b();}",
+         "function f(){if(a()){}else{return;b()}}");
 
-    fold("function(){while(a())return;}",
-         "function(){while(a())return}");
-    foldSame("function(){for(x in a())return}");
+    fold("function f(){while(a())return;}",
+         "function f(){while(a())return}");
+    foldSame("function f(){for(x in a())return}");
 
-    fold("function(){while(a())break;}",
-         "function(){while(a())break}");
-    foldSame("function(){for(x in a())break}");
+    fold("function f(){while(a())break;}",
+         "function f(){while(a())break}");
+    foldSame("function f(){for(x in a())break}");
 
-    fold("function(){try{return;}catch(e){return;}finally{return}}",
-         "function(){try{}catch(e){}finally{}}");
-    fold("function(){try{return;}catch(e){return;}}",
-         "function(){try{}catch(e){}}");
-    fold("function(){try{return;}finally{return;}}",
-         "function(){try{}finally{}}");
-    fold("function(){try{if(a()){return;}else{return;} return;}catch(e){}}",
-         "function(){try{if(a()){}else{}}catch(e){}}");
+    fold("function f(){try{return;}catch(e){return;}finally{return}}",
+         "function f(){try{}catch(e){}finally{}}");
+    fold("function f(){try{return;}catch(e){return;}}",
+         "function f(){try{}catch(e){}}");
+    fold("function f(){try{return;}finally{return;}}",
+         "function f(){try{}finally{}}");
+    fold("function f(){try{if(a()){return;}else{return;} return;}catch(e){}}",
+         "function f(){try{if(a()){}else{}}catch(e){}}");
 
-    fold("function(){g:return}",
-         "function(){}");
-    fold("function(){g:if(a()){return;}else{return;} return;}",
-         "function(){g:if(a()){}else{}}");
-    fold("function(){try{g:if(a()){} return;}finally{return}}",
-         "function(){try{g:if(a()){}}finally{}}");
+    fold("function f(){g:return}",
+         "function f(){}");
+    fold("function f(){g:if(a()){return;}else{return;} return;}",
+         "function f(){g:if(a()){}else{}}");
+    fold("function f(){try{g:if(a()){} return;}finally{return}}",
+         "function f(){try{g:if(a()){}}finally{}}");
   }
 
   public void testWhileContinueOptimization() throws Exception {

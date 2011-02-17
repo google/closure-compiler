@@ -56,9 +56,9 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   public void testCorrectCode() {
     assertNoWarning("function foo(d) { (function() { d.foo(); }); d.bar(); } ");
     assertNoWarning("function foo() { bar(); } function bar() { foo(); } ");
-    assertNoWarning("function(d) { d = 3; }");
+    assertNoWarning("function f(d) { d = 3; }");
     assertNoWarning(VARIABLE_RUN);
-    assertNoWarning("function() { " + VARIABLE_RUN + "}");
+    assertNoWarning("function f() { " + VARIABLE_RUN + "}");
   }
 
   public void testCorrectShadowing() {

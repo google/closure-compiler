@@ -58,7 +58,7 @@ public class RemoveTryCatchTest extends CompilerTestCase {
   }
 
   public void testPreserveTryBlockContainingReturnStatement() {
-    testSame("function(){var a;try{a=1;return}finally{a=2}}");
+    testSame("function f(){var a;try{a=1;return}finally{a=2}}");
   }
 
   public void testPreserveAnnotatedTryBlock() {

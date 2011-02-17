@@ -685,10 +685,10 @@ public class NodeUtilTest extends TestCase {
             parse("foo();")));
     assertNodeNames(Sets.<String>newHashSet(),
         NodeUtil.getVarsDeclaredInBranch(
-            parse("function(){var foo;}")));
+            parse("function f(){var foo;}")));
     assertNodeNames(Sets.newHashSet("goo"),
         NodeUtil.getVarsDeclaredInBranch(
-            parse("var goo;function(){var foo;}")));
+            parse("var goo;function f(){var foo;}")));
   }
 
   private void assertNodeNames(Set<String> nodeNames, Collection<Node> nodes) {

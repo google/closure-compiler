@@ -92,15 +92,15 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   private String wrapInFunction(String s) {
     return "function f(){" + s + "}";
   }
-  
+
   public void testInFunction(String original, String expected) {
     test(wrapInFunction(original), wrapInFunction(expected));
   }
-  
+
   public void testSameInFunction(String original) {
     testSame(wrapInFunction(original));
-  }  
-  
+  }
+
   public void testMakeLocalNamesUniqueWithContext1() {
     // Set the test type
     this.useDefaultRenamer = true;
@@ -214,7 +214,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         "function foo(){var arguments;function bar(){var arguments;}}");
 
     invert = true;
-    
+
     // Don't introduce new references to arguments, it is special.
     test(
         "function foo(){var arguments$$1;}",
@@ -274,14 +274,14 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testSame("function f() { var $$; }");
     test("var CONST = 3; var b = CONST;",
          "var CONST = 3; var b = CONST;");
-    test("function() {var CONST = 3; var ACONST$$1 = 2;}",
-         "function() {var CONST = 3; var ACONST = 2;}");
+    test("function f() {var CONST = 3; var ACONST$$1 = 2;}",
+         "function f() {var CONST = 3; var ACONST = 2;}");
   }
 
   public void testOnlyInversion2() {
     invert = true;
-    test("function () {try { } catch(e) {e;}; try { } catch(e$$0) {e$$0;}}",
-        "function () {try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}}");
+    test("function f() {try { } catch(e) {e;}; try { } catch(e$$0) {e$$0;}}",
+        "function f() {try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}}");
   }
 
   public void testOnlyInversion3() {
@@ -326,8 +326,8 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testConstRemovingRename1() {
     removeConst = true;
-    test("function() {var CONST = 3; var ACONST$$1 = 2;}",
-         "function() {var CONST$$unique_0 = 3; var ACONST$$unique_1 = 2;}");
+    test("(function () {var CONST = 3; var ACONST$$1 = 2;})",
+         "(function () {var CONST$$unique_0 = 3; var ACONST$$unique_1 = 2;})");
   }
 
   public void testConstRemovingRename2() {

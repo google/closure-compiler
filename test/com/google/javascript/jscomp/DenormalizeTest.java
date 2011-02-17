@@ -56,9 +56,9 @@ public class DenormalizeTest extends CompilerTestCase {
          "for(init(); a < 2 ; a++) foo();");
 
     // Other statements are left as is.
-    test("function(){ var a; for(; a < 2 ; a++) foo() }",
-         "function(){ for(var a; a < 2 ; a++) foo() }");
-    testSame("function(){ return; for(; a < 2 ; a++) foo() }");
+    test("function f(){ var a; for(; a < 2 ; a++) foo() }",
+         "function f(){ for(var a; a < 2 ; a++) foo() }");
+    testSame("function f(){ return; for(; a < 2 ; a++) foo() }");
   }
 
   public void testForIn() {
@@ -78,7 +78,7 @@ public class DenormalizeTest extends CompilerTestCase {
     testSame("init(); for(a in b) foo()");
 
     // Other statements are left as is.
-    testSame("function(){ return; for(a in b) foo() }");
+    testSame("function f(){ return; for(a in b) foo() }");
   }
 
   public void testInOperatorNotInsideFor() {
@@ -88,15 +88,16 @@ public class DenormalizeTest extends CompilerTestCase {
     // a for loop, even if it's protected by parentheses.
 
     // Make sure the in operator doesn't get moved into the for loop.
-    testSame("function(){ var a; var i=\"length\" in a;" +
+    testSame("function f(){ var a; var i=\"length\" in a;" +
         "for(; a < 2 ; a++) foo() }");
     // Same, but with parens around the operator.
-    testSame("function(){ var a; var i=(\"length\" in a);" +
+    testSame("function f(){ var a; var i=(\"length\" in a);" +
         "for(; a < 2 ; a++) foo() }");
     // Make sure Normalize yanks the variable initializer out, and
     // Denormalize doesn't put it back.
-    test("function(){var b,a=0; for (var i=(\"length\" in b);a<2; a++) foo()}",
-         "function(){var b; var a=0;var i=(\"length\" in b);" +
+    test("function f(){" +
+         "var b,a=0; for (var i=(\"length\" in b);a<2; a++) foo()}",
+         "function f(){var b; var a=0;var i=(\"length\" in b);" +
          "for (;a<2;a++) foo()}");
   }
 

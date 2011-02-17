@@ -27,9 +27,9 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   // Needed for testFoldLiteralObjectConstructors(),
   // testFoldLiteralArrayConstructors() and testFoldRegExp...()
   private static final String FOLD_CONSTANTS_TEST_EXTERNS =
-      "var Object = function(){};\n" +
-      "var RegExp = function(a){};\n" +
-      "var Array = function(a){};\n";
+      "var Object = function f(){};\n" +
+      "var RegExp = function f(a){};\n" +
+      "var Array = function f(a){};\n";
 
   // TODO(user): Remove this when we no longer need to do string comparison.
   private PeepholeSubstituteAlternateSyntaxTest(boolean compareAsTree) {
@@ -95,52 +95,52 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   /** Check that removing blocks with 1 child works */
   public void testFoldOneChildBlocks() {
-    fold("function(){if(x)a();x=3}",
-        "function(){x&&a();x=3}");
-    fold("function(){if(x){a()}x=3}",
-        "function(){x&&a();x=3}");
-    fold("function(){if(x){return 3}}",
-        "function(){if(x)return 3}");
-    fold("function(){if(x){a()}}",
-        "function(){x&&a()}");
-    fold("function(){if(x){throw 1}}", "function(){if(x)throw 1;}");
+    fold("function f(){if(x)a();x=3}",
+        "function f(){x&&a();x=3}");
+    fold("function f(){if(x){a()}x=3}",
+        "function f(){x&&a();x=3}");
+    fold("function f(){if(x){return 3}}",
+        "function f(){if(x)return 3}");
+    fold("function f(){if(x){a()}}",
+        "function f(){x&&a()}");
+    fold("function f(){if(x){throw 1}}", "function f(){if(x)throw 1;}");
 
     // Try it out with functions
-    fold("function(){if(x){foo()}}", "function(){x&&foo()}");
-    fold("function(){if(x){foo()}else{bar()}}",
-         "function(){x?foo():bar()}");
+    fold("function f(){if(x){foo()}}", "function f(){x&&foo()}");
+    fold("function f(){if(x){foo()}else{bar()}}",
+         "function f(){x?foo():bar()}");
 
     // Try it out with properties and methods
-    fold("function(){if(x){a.b=1}}", "function(){if(x)a.b=1}");
-    fold("function(){if(x){a.b*=1}}", "function(){x&&(a.b*=1)}");
-    fold("function(){if(x){a.b+=1}}", "function(){x&&(a.b+=1)}");
-    fold("function(){if(x){++a.b}}", "function(){x&&++a.b}");
-    fold("function(){if(x){a.foo()}}", "function(){x&&a.foo()}");
+    fold("function f(){if(x){a.b=1}}", "function f(){if(x)a.b=1}");
+    fold("function f(){if(x){a.b*=1}}", "function f(){x&&(a.b*=1)}");
+    fold("function f(){if(x){a.b+=1}}", "function f(){x&&(a.b+=1)}");
+    fold("function f(){if(x){++a.b}}", "function f(){x&&++a.b}");
+    fold("function f(){if(x){a.foo()}}", "function f(){x&&a.foo()}");
 
     // Try it out with throw/catch/finally [which should not change]
-    fold("function(){try{foo()}catch(e){bar(e)}finally{baz()}}",
-         "function(){try{foo()}catch(e){bar(e)}finally{baz()}}");
+    fold("function f(){try{foo()}catch(e){bar(e)}finally{baz()}}",
+         "function f(){try{foo()}catch(e){bar(e)}finally{baz()}}");
 
     // Try it out with switch statements
-    fold("function(){switch(x){case 1:break}}",
-         "function(){switch(x){case 1:break}}");
+    fold("function f(){switch(x){case 1:break}}",
+         "function f(){switch(x){case 1:break}}");
 
     // Do while loops stay in a block if that's where they started
-    fold("function(){if(e1){do foo();while(e2)}else foo2()}",
-         "function(){if(e1){do foo();while(e2)}else foo2()}");
+    fold("function f(){if(e1){do foo();while(e2)}else foo2()}",
+         "function f(){if(e1){do foo();while(e2)}else foo2()}");
     // Test an obscure case with do and while
     fold("if(x){do{foo()}while(y)}else bar()",
          "if(x){do foo();while(y)}else bar()");
 
     // Play with nested IFs
-    fold("function(){if(x){if(y)foo()}}",
-         "function(){x&&y&&foo()}");
-    fold("function(){if(x){if(y)foo();else bar()}}",
-         "function(){x&&(y?foo():bar())}");
-    fold("function(){if(x){if(y)foo()}else bar()}",
-         "function(){if(x)y&&foo();else bar()}");
-    fold("function(){if(x){if(y)foo();else bar()}else{baz()}}",
-         "function(){if(x)y?foo():bar();else baz()}");
+    fold("function f(){if(x){if(y)foo()}}",
+         "function f(){x&&y&&foo()}");
+    fold("function f(){if(x){if(y)foo();else bar()}}",
+         "function f(){x&&(y?foo():bar())}");
+    fold("function f(){if(x){if(y)foo()}else bar()}",
+         "function f(){if(x)y&&foo();else bar()}");
+    fold("function f(){if(x){if(y)foo();else bar()}else{baz()}}",
+         "function f(){if(x)y?foo():bar();else baz()}");
 
     fold("if(e1){while(e2){if(e3){foo()}}}else{bar()}",
          "if(e1)while(e2)e3&&foo();else bar()");
@@ -164,7 +164,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("if(a){if(b){f1();f2();}else if(c){f3();}}else {if(d){f4();}}",
          "if(a)if(b){f1();f2()}else c&&f3();else d&&f4()");
 
-    fold("function(){foo()}", "function(){foo()}");
+    fold("function f(){foo()}", "function f(){foo()}");
     fold("switch(x){case y: foo()}", "switch(x){case y:foo()}");
     fold("try{foo()}catch(ex){bar()}finally{baz()}",
          "try{foo()}catch(ex){bar()}finally{baz()}");
@@ -172,40 +172,40 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   /** Try to minimize returns */
   public void testFoldReturns() {
-    fold("function(){if(x)return 1;else return 2}",
-         "function(){return x?1:2}");
-    fold("function(){if(x)return 1+x;else return 2-x}",
-         "function(){return x?1+x:2-x}");
-    fold("function(){if(x)return y += 1;else return y += 2}",
-         "function(){return x?(y+=1):(y+=2)}");
+    fold("function f(){if(x)return 1;else return 2}",
+         "function f(){return x?1:2}");
+    fold("function f(){if(x)return 1+x;else return 2-x}",
+         "function f(){return x?1+x:2-x}");
+    fold("function f(){if(x)return y += 1;else return y += 2}",
+         "function f(){return x?(y+=1):(y+=2)}");
 
-    fold("function(){if(x)return;else return 2-x}",
-         "function(){if(x);else return 2-x}");
-    fold("function(){if(x)return x;else return}",
-         "function(){if(x)return x;else;}");
+    fold("function f(){if(x)return;else return 2-x}",
+         "function f(){if(x);else return 2-x}");
+    fold("function f(){if(x)return x;else return}",
+         "function f(){if(x)return x;else;}");
 
-    foldSame("function(){for(var x in y) { return x.y; } return k}");
+    foldSame("function f(){for(var x in y) { return x.y; } return k}");
   }
 
   /** Try to minimize assignments */
   public void testFoldAssignments() {
-    fold("function(){if(x)y=3;else y=4;}", "function(){y=x?3:4}");
-    fold("function(){if(x)y=1+a;else y=2+a;}", "function(){y=x?1+a:2+a}");
+    fold("function f(){if(x)y=3;else y=4;}", "function f(){y=x?3:4}");
+    fold("function f(){if(x)y=1+a;else y=2+a;}", "function f(){y=x?1+a:2+a}");
 
     // and operation assignments
-    fold("function(){if(x)y+=1;else y+=2;}", "function(){y+=x?1:2}");
-    fold("function(){if(x)y-=1;else y-=2;}", "function(){y-=x?1:2}");
-    fold("function(){if(x)y%=1;else y%=2;}", "function(){y%=x?1:2}");
-    fold("function(){if(x)y|=1;else y|=2;}", "function(){y|=x?1:2}");
+    fold("function f(){if(x)y+=1;else y+=2;}", "function f(){y+=x?1:2}");
+    fold("function f(){if(x)y-=1;else y-=2;}", "function f(){y-=x?1:2}");
+    fold("function f(){if(x)y%=1;else y%=2;}", "function f(){y%=x?1:2}");
+    fold("function f(){if(x)y|=1;else y|=2;}", "function f(){y|=x?1:2}");
 
     // sanity check, don't fold if the 2 ops don't match
-    foldSame("function(){if(x)y-=1;else y+=2}");
+    foldSame("function f(){if(x)y-=1;else y+=2}");
 
     // sanity check, don't fold if the 2 LHS don't match
-    foldSame("function(){if(x)y-=1;else z-=1}");
+    foldSame("function f(){if(x)y-=1;else z-=1}");
 
     // sanity check, don't fold if there are potential effects
-    foldSame("function(){if(x)y().a=3;else y().a=4}");
+    foldSame("function f(){if(x)y().a=3;else y().a=4}");
   }
 
   public void testRemoveDuplicateStatements() {
@@ -234,15 +234,15 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   }
 
   public void testNotCond() {
-    fold("function(){if(!x)foo()}", "function(){x||foo()}");
-    fold("function(){if(!x)b=1}", "function(){x||(b=1)}");
+    fold("function f(){if(!x)foo()}", "function f(){x||foo()}");
+    fold("function f(){if(!x)b=1}", "function f(){x||(b=1)}");
     fold("if(!x)z=1;else if(y)z=2", "if(x){y&&(z=2)}else z=1");
-    foldSame("function(){if(!(x=1))a.b=1}");
+    foldSame("function f(){if(!(x=1))a.b=1}");
   }
 
   public void testAndParenthesesCount() {
-    fold("function(){if(x||y)a.foo()}", "function(){(x||y)&&a.foo()}");
-    foldSame("function(){if(x()||y()){x()||y()}}");
+    fold("function f(){if(x||y)a.foo()}", "function f(){(x||y)&&a.foo()}");
+    foldSame("function f(){if(x()||y()){x()||y()}}");
   }
 
   public void testFoldLogicalOpStringCompare() {
@@ -353,7 +353,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
     // Cannot fold, the constructor being used is actually a local function
     foldSame("x = " +
-         "(function(){function Object(){this.x=4};return new Object();})();");
+         "(function f(){function Object(){this.x=4};return new Object();})();");
   }
 
   public void testFoldLiteralArrayConstructors() {
@@ -492,8 +492,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("function f(){return void foo();}");
     fold("function f(){return undefined;}",
          "function f(){}");
-    fold("function(){if(a()){return undefined;}}",
-         "function(){if(a()){}}");
+    fold("function f(){if(a()){return undefined;}}",
+         "function f(){if(a()){}}");
   }
 
   public void testFoldStandardConstructors() {
@@ -740,7 +740,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   public void testUndefined() {
     foldSame("var x = undefined");
-    foldSame("function (f) {var undefined=2;var x = undefined;}");
+    foldSame("function f(f) {var undefined=2;var x = undefined;}");
     this.enableNormalize();
     fold("var x = undefined", "var x=void 0");
     foldSame(
