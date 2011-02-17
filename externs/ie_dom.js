@@ -1437,26 +1437,31 @@ function Location() {}
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533775(VS.85).aspx
+ * @type {string}
  */
 Location.prototype.hash;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533784(VS.85).aspx
+ * @type {string}
  */
 Location.prototype.host;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533785(VS.85).aspx
+ * @type {string}
  */
 Location.prototype.hostname;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533867(VS.85).aspx
+ * @type {string}
  */
 Location.prototype.href;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534332(VS.85).aspx
+ * @type {string}
  */
 Location.prototype.pathname;
 
@@ -1467,18 +1472,21 @@ Location.prototype.port;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534353(VS.85).aspx
+ * @type {string}
  */
 Location.prototype.protocol;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534620(VS.85).aspx
+ * @type {string}
  */
 Location.prototype.search;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536342(VS.85).aspx
+ * @param {string} url
  */
-Location.prototype.assign;
+Location.prototype.assign = function(url) {};
 
 /**
  * @param {boolean=} opt_forceReload If true, reloads the page from
@@ -1488,9 +1496,10 @@ Location.prototype.assign;
 Location.prototype.reload = function(opt_forceReload) {};
 
 /**
+ * @param {string} url
  * @see http://msdn.microsoft.com/en-us/library/ms536712(VS.85).aspx
  */
-Location.prototype.replace;
+Location.prototype.replace = function(url) {};
 
 
 // For IE, returns an object representing key-value pairs for all the global
