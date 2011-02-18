@@ -27,6 +27,8 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultimap;
 
 /**
  * A compiler pass that checks that the programmer has obeyed all the access
@@ -96,6 +98,11 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
           "JSC_VISIBILITY_MISMATCH",
           "Overriding {0} property of {1} with {2} property.");
 
+  static final DiagnosticType CONST_PROPERTY_REASSIGNED_VALUE =
+      DiagnosticType.disabled(
+        "JSC_CONSTANT_PROPERTY_REASSIGNED_VALUE",
+        "constant property {0} assigned a value more than once");
+
   private final AbstractCompiler compiler;
   private final TypeValidator validator;
 
@@ -104,9 +111,12 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
   private int methodDepth = 0;
   private JSType currentClass = null;
 
+  private final Multimap<String, String> initializedConstantProperties;
+
   CheckAccessControls(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.validator = compiler.getTypeValidator();
+    this.initializedConstantProperties = HashMultimap.create();
   }
 
   public void process(Node externs, Node root) {
@@ -208,6 +218,7 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
       case Token.GETPROP:
         checkPropertyDeprecation(t, n, parent);
         checkPropertyVisibility(t, n, parent);
+        checkConstantProperty(t, n);
         break;
       case Token.NEW:
         checkConstructorDeprecation(t, n, parent);
@@ -324,6 +335,63 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
           compiler.report(
               t.makeError(name, BAD_PRIVATE_GLOBAL_ACCESS,
                   name.getString(), docInfo.getSourceName()));
+        }
+      }
+    }
+  }
+
+  /**
+   * Determines whether the given property with @const tag got reassigned
+   * @param t The current traversal.
+   * @param getprop The getprop node.
+   */
+  private void checkConstantProperty(NodeTraversal t,
+      Node getprop) {
+    // Check whether the property is modified
+    Node parent = getprop.getParent();
+    if (!(NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == getprop)
+        && (parent.getType() != Token.INC) && (parent.getType() != Token.DEC)) {
+      return;
+    }
+
+    ObjectType objectType =
+      ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
+    String propertyName = getprop.getLastChild().getString();
+
+    // Check whether constant properties are reassigned
+    if (objectType != null) {
+      ObjectType oType = objectType;
+      while (oType != null) {
+        if (oType.hasReferenceName()) {
+          if (initializedConstantProperties.containsEntry(
+                  oType.getReferenceName(), propertyName)) {
+            compiler.report(
+                t.makeError(getprop, CONST_PROPERTY_REASSIGNED_VALUE,
+                    propertyName));
+            break;
+          }
+        }
+        oType = oType.getImplicitPrototype();
+      }
+
+      JSDocInfo info = objectType.getOwnPropertyJSDocInfo(propertyName);
+      if (info != null && info.isConstant()
+          && objectType.hasReferenceName()) {
+        initializedConstantProperties.put(objectType.getReferenceName(),
+            propertyName);
+      }
+
+      // Add the prototype when we're looking at an instance object
+      if (objectType.isInstanceType()) {
+        ObjectType prototype = objectType.getImplicitPrototype();
+        if (prototype != null) {
+          JSDocInfo prototypeInfo
+            = prototype.getOwnPropertyJSDocInfo(propertyName);
+          if (prototypeInfo != null && prototypeInfo.isConstant()
+              && prototype.hasReferenceName()) {
+            initializedConstantProperties.put(prototype.getReferenceName(),
+                propertyName);
+          }
         }
       }
     }

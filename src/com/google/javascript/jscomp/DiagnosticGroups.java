@@ -59,7 +59,8 @@ public class DiagnosticGroups {
       "externsValidation, fileoverviewTags, internetExplorerChecks, " +
       "invalidCasts, missingProperties, nonStandardJsDocs, " +
       "strictModuleDepCheck, undefinedVars, unknownDefines, uselessCode, " +
-      "visibility";
+      "visibility" +
+      "constantProperty";
 
   public static DiagnosticGroup DEPRECATED = DiagnosticGroups
       .registerGroup("deprecated",
@@ -79,6 +80,11 @@ public class DiagnosticGroups {
               CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS,
               CheckAccessControls.PRIVATE_OVERRIDE,
               CheckAccessControls.VISIBILITY_MISMATCH));
+
+  public static DiagnosticGroup CONSTANT_PROPERTY = DiagnosticGroups
+      .registerGroup("constantProperty",
+          new DiagnosticGroup(
+              CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE));
 
   public static DiagnosticGroup NON_STANDARD_JSDOC =
     DiagnosticGroups.registerGroup("nonStandardJsDocs",
