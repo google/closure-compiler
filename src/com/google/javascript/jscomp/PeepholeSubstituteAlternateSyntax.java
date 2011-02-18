@@ -531,21 +531,18 @@ class PeepholeSubstituteAlternateSyntax
 
             return expr;
           }
-        } else if (NodeUtil.isCall(thenOp)) {
-          // if(x)foo();else bar(); -> x?foo():bar()
-          n.removeChild(cond);
-          thenOp.detachFromParent();
-          elseOp.detachFromParent();
-          Node hookNode = new Node(Token.HOOK, cond, thenOp, elseOp)
-                              .copyInformationFrom(n);
-          Node expr = NodeUtil.newExpr(hookNode);
-          parent.replaceChild(n, expr);
-          reportCodeChange();
-
-          return expr;
         }
       }
-      return n;
+      // if(x)foo();else bar(); -> x?foo():bar()
+      n.removeChild(cond);
+      thenOp.detachFromParent();
+      elseOp.detachFromParent();
+      Node hookNode = new Node(Token.HOOK, cond, thenOp, elseOp)
+                          .copyInformationFrom(n);
+      Node expr = NodeUtil.newExpr(hookNode);
+      parent.replaceChild(n, expr);
+      reportCodeChange();
+      return expr;
     }
 
     boolean thenBranchIsVar = isVarBlock(thenBranch);

@@ -100,17 +100,16 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
      fold("if(x()){} else {x()}", "x()||x()");
      fold("if(x){}", ""); // Even the condition has no side effect.
-     fold("if(a()){A()} else if (b()) {} else {C()}",
-          "if(a())A();else b()||C()");
+     fold("if(a()){A()} else if (b()) {} else {C()}", "a()?A():b()||C()");
 
      fold("if(a()){} else if (b()) {} else {C()}",
           "a()||b()||C()");
      fold("if(a()){A()} else if (b()) {} else if (c()) {} else{D()}",
-          "if(a())A();else b()||c()||D()");
+          "a()?A():b()||c()||D()");
      fold("if(a()){} else if (b()) {} else if (c()) {} else{D()}",
           "a()||b()||c()||D()");
      fold("if(a()){A()} else if (b()) {} else if (c()) {} else{}",
-          "if(a())A();else b()||c()");
+          "a()?A():b()||c()");
 
      // Verify that non-global scope works.
      fold("function foo(){if(x()){}}", "function foo(){x()}");

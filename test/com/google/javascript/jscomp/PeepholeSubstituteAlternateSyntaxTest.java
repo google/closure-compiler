@@ -138,9 +138,9 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("function f(){if(x){if(y)foo();else bar()}}",
          "function f(){x&&(y?foo():bar())}");
     fold("function f(){if(x){if(y)foo()}else bar()}",
-         "function f(){if(x)y&&foo();else bar()}");
+         "function f(){x?y&&foo():bar()}");
     fold("function f(){if(x){if(y)foo();else bar()}else{baz()}}",
-         "function f(){if(x)y?foo():bar();else baz()}");
+         "function f(){x?y?foo():bar():baz()}");
 
     fold("if(e1){while(e2){if(e3){foo()}}}else{bar()}",
          "if(e1)while(e2)e3&&foo();else bar()");
@@ -199,13 +199,13 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("function f(){if(x)y|=1;else y|=2;}", "function f(){y|=x?1:2}");
 
     // sanity check, don't fold if the 2 ops don't match
-    foldSame("function f(){if(x)y-=1;else y+=2}");
+    foldSame("function f(){x ? y-=1 : y+=2}");
 
     // sanity check, don't fold if the 2 LHS don't match
-    foldSame("function f(){if(x)y-=1;else z-=1}");
+    foldSame("function f(){x ? y-=1 : z-=1}");
 
     // sanity check, don't fold if there are potential effects
-    foldSame("function f(){if(x)y().a=3;else y().a=4}");
+    foldSame("function f(){x ? y().a=3 : y().a=4}");
   }
 
   public void testRemoveDuplicateStatements() {
@@ -236,7 +236,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   public void testNotCond() {
     fold("function f(){if(!x)foo()}", "function f(){x||foo()}");
     fold("function f(){if(!x)b=1}", "function f(){x||(b=1)}");
-    fold("if(!x)z=1;else if(y)z=2", "if(x){y&&(z=2)}else z=1");
+    fold("if(!x)z=1;else if(y)z=2", "x ? y&&(z=2) : z=1");
     foldSame("function f(){if(!(x=1))a.b=1}");
   }
 
@@ -737,7 +737,6 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("if (f) { f.bonchange(); }", "f && f.bonchange();");
     foldSame("if (f) { f['x'](); }");
   }
-
   public void testUndefined() {
     foldSame("var x = undefined");
     foldSame("function f(f) {var undefined=2;var x = undefined;}");
@@ -746,5 +745,15 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame(
         "var undefined = 1;" +
         "function f() {var undefined=2;var x = undefined;}");
+  }
+
+  public void testFoldIfAfterStatementFusion() {
+    fold("if (x) { a,b,c } else { d,c,e }", "x ? (a,b,c) : (d,c,e)");
+    fold("if (x) { a() && b() } else { c() && d () }",
+         "x ? a() && b() : c() && d () ");
+    fold("if (x) { (a(),a()) && b() } else { d() }",
+         "x ? (a(),a()) && b() : d () ");
+    fold("if (x) { (a(),a()) && b() } else { (c(),c()) && d () }",
+         "x ? (a(),a()) && b() : (c(),c()) && d () ");
   }
 }
