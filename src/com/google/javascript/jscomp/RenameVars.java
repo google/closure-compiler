@@ -42,8 +42,8 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
- * RenameVars renames all the variables names into short names, to reduce
- * code size and also to obfuscate the code.
+ * RenameVars renames all the variables names into short names, to reduce code
+ * size and also to obfuscate the code.
  *
  */
 final class RenameVars implements CompilerPass {
@@ -89,11 +89,12 @@ final class RenameVars implements CompilerPass {
       ArrayListMultimap.create();
 
   class Assignment {
+    // TODO(user): The input seems useless.
     final CompilerInput input;
     final String oldName;
     final int orderOfOccurrence;
     String newName;
-    int count;                          // Number of times this is referenced
+    int count; // Number of times this is referenced
 
     Assignment(String name, CompilerInput input) {
       this.input = input;
@@ -124,21 +125,23 @@ final class RenameVars implements CompilerPass {
   /**
    * Whether function expression names should be preserved. Typically, for
    * debugging purposes.
+   *
    * @see NameAnonymousFunctions
    */
   private boolean preserveFunctionExpressionNames;
+
+  private final boolean shouldShadow;
 
   /** Characters that shouldn't be used in variable names. */
   private final char[] reservedCharacters;
 
   /** A prefix to distinguish temporary local names from global names */
-  private static final String LOCAL_VAR_PREFIX = "L ";
+  // TODO(user): No longer needs to be public when shadowing doesn't use it.
+  public static final String LOCAL_VAR_PREFIX = "L ";
 
-  RenameVars(AbstractCompiler compiler,
-      String prefix,
-      boolean localRenamingOnly,
-      boolean preserveFunctionExpressionNames,
-      boolean generatePseudoNames,
+  RenameVars(AbstractCompiler compiler, String prefix,
+      boolean localRenamingOnly, boolean preserveFunctionExpressionNames,
+      boolean generatePseudoNames, boolean shouldShadow,
       VariableMap prevUsedRenameMap,
       @Nullable char[] reservedCharacters,
       @Nullable Set<String> reservedNames) {
@@ -153,6 +156,7 @@ final class RenameVars implements CompilerPass {
     }
     this.prevUsedRenameMap = prevUsedRenameMap;
     this.reservedCharacters = reservedCharacters;
+    this.shouldShadow = shouldShadow;
     if (reservedNames == null) {
       this.reservedNames = Sets.newHashSet();
     } else {
@@ -238,8 +242,7 @@ final class RenameVars implements CompilerPass {
       }
 
       // Are we renaming function expression names?
-      if (preserveFunctionExpressionNames
-          && var != null
+      if (preserveFunctionExpressionNames && var != null
           && NodeUtil.isFunctionExpression(var.getParentNode())) {
         reservedNames.add(name);
         return;
@@ -249,9 +252,8 @@ final class RenameVars implements CompilerPass {
       if (!okToRenameVar(name, local)) {
         if (local) {
           // Blindly de-uniquify for the Prototype library for issue 103.
-          String newName =
-            MakeDeclaredNamesUnique.ContextualRenameInverter.getOrginalName(
-                name);
+          String newName = MakeDeclaredNamesUnique.ContextualRenameInverter
+              .getOrginalName(name);
           if (!newName.equals(name)) {
             n.setString(newName);
           }
@@ -277,7 +279,7 @@ final class RenameVars implements CompilerPass {
         incCount(tempName, null);
         localNameNodes.add(n);
         n.setString(tempName);
-      } else if (var != null) {  // Not an extern
+      } else if (var != null) { // Not an extern
         // If it's global, increment global count
         incCount(name, var.input);
         globalNameNodes.add(n);
@@ -296,32 +298,31 @@ final class RenameVars implements CompilerPass {
   }
 
   /**
-   * Sorts Assignment objects by their count, breaking ties by their
-   * order of occurrence in the source to ensure a deterministic total
-   * ordering.
+   * Sorts Assignment objects by their count, breaking ties by their order of
+   * occurrence in the source to ensure a deterministic total ordering.
    */
   private static final Comparator<Assignment> FREQUENCY_COMPARATOR =
-    new Comparator<Assignment>() {
-      public int compare(Assignment a1, Assignment a2) {
-        if (a1.count != a2.count) {
-          return a2.count - a1.count;
-        }
-        // Break a tie using the order in which the variable first appears in
-        // the source.
-        return ORDER_OF_OCCURRENCE_COMPARATOR.compare(a1, a2);
+      new Comparator<Assignment>() {
+    public int compare(Assignment a1, Assignment a2) {
+      if (a1.count != a2.count) {
+        return a2.count - a1.count;
       }
-    };
+      // Break a tie using the order in which the variable first appears in
+      // the source.
+      return ORDER_OF_OCCURRENCE_COMPARATOR.compare(a1, a2);
+    }
+  };
 
   /**
    * Sorts Assignment objects by the order the variable name first appears in
    * the source.
    */
   private static final Comparator<Assignment> ORDER_OF_OCCURRENCE_COMPARATOR =
-    new Comparator<Assignment>() {
-      public int compare(Assignment a1, Assignment a2) {
-        return a1.orderOfOccurrence - a2.orderOfOccurrence;
-      }
-    };
+      new Comparator<Assignment>() {
+        public int compare(Assignment a1, Assignment a2) {
+          return a1.orderOfOccurrence - a2.orderOfOccurrence;
+        }
+      };
 
   @Override
   public void process(Node externs, Node root) {
@@ -338,6 +339,12 @@ final class RenameVars implements CompilerPass {
     SortedSet<Assignment> varsByFrequency =
         new TreeSet<Assignment>(FREQUENCY_COMPARATOR);
     varsByFrequency.addAll(assignments.values());
+
+    if (shouldShadow) {
+      new ShadowVariables(
+          compiler, assignments, varsByFrequency, pseudoNameMap).process(
+              externs, root);
+    }
 
     // First try to reuse names from an earlier compilation.
     if (prevUsedRenameMap != null) {
@@ -422,9 +429,9 @@ final class RenameVars implements CompilerPass {
         continue;
       }
 
-      if (a.oldName.startsWith(LOCAL_VAR_PREFIX) ||
-          (!externNames.contains(a.oldName) &&
-           prevNewName.startsWith(prefix))) {
+      if (a.oldName.startsWith(LOCAL_VAR_PREFIX)
+          || (!externNames.contains(a.oldName)
+              && prevNewName.startsWith(prefix))) {
         reservedNames.add(prevNewName);
         finalizeNameAssignment(a, prevNewName);
       }
@@ -439,9 +446,9 @@ final class RenameVars implements CompilerPass {
         new NameGenerator(reservedNames, prefix, reservedCharacters);
 
     // Local variables never need a prefix.
-    NameGenerator localNameGenerator = prefix.isEmpty() ?
-        globalNameGenerator : new NameGenerator(reservedNames, "",
-        reservedCharacters);
+    NameGenerator localNameGenerator =
+        prefix.isEmpty() ? globalNameGenerator : new NameGenerator(
+            reservedNames, "", reservedCharacters);
 
     // Generated names and the assignments for non-local vars.
     List<Assignment> pendingAssignments = new ArrayList<Assignment>();
@@ -493,10 +500,8 @@ final class RenameVars implements CompilerPass {
       // Add k number of Assignment to the set, where k is the number of
       // generated names of the same length.
       int len = generatedNamesForAssignments.get(i).length();
-      for (int j = i;
-           j < numPendingAssignments &&
-               generatedNamesForAssignments.get(j).length() == len;
-           j++) {
+      for (int j = i; j < numPendingAssignments
+          && generatedNamesForAssignments.get(j).length() == len; j++) {
         varsByOrderOfOccurrence.add(pendingAssignments.get(j));
       }
 
@@ -518,8 +523,7 @@ final class RenameVars implements CompilerPass {
     renameMap.put(a.oldName, newName);
 
     // Log the mapping
-    assignmentLog.append(a.oldName).append(" => ").append(newName).
-        append('\n');
+    assignmentLog.append(a.oldName).append(" => ").append(newName).append('\n');
   }
 
   /**

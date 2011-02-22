@@ -28,7 +28,7 @@ public class RenameLocalVarsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RenameVars(
-        compiler, prefix, true, false, false, null, null, null);
+        compiler, prefix, true, false, false, false, null, null, null);
   }
 
   public void testRenameSimple() {
@@ -45,7 +45,7 @@ public class RenameLocalVarsTest extends CompilerTestCase {
          "(function (a, b) {}); (function (a, b) {});");
     test("function f1(v1, v2) {}; function f2(v3, v4) {};",
          "function f1(a, b) {}; function f2(a, b) {};");
-    
+
   }
 
   public void testRenameLocalsClashingWithGlobals() {

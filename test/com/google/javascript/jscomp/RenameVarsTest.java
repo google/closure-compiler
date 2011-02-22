@@ -37,6 +37,7 @@ public class RenameVarsTest extends CompilerTestCase {
   private boolean preserveFunctionExpressionNames = false;
   private boolean useGoogleCodingConvention = true;
   private boolean generatePseudoNames = false;
+  private boolean shouldShadow = false;
 
   @Override
   protected CodingConvention getCodingConvention() {
@@ -54,7 +55,7 @@ public class RenameVarsTest extends CompilerTestCase {
     } else {
       return renameVars = new RenameVars(compiler, prefix,
           localRenamingOnly, preserveFunctionExpressionNames,
-          generatePseudoNames,
+          generatePseudoNames, shouldShadow,
           previouslyUsedMap, null, null);
     }
   }
@@ -73,6 +74,7 @@ public class RenameVarsTest extends CompilerTestCase {
     localRenamingOnly = false;
     preserveFunctionExpressionNames = false;
     generatePseudoNames = false;
+    shouldShadow = false;
 
     // TODO(johnlenz): Enable Normalize during these tests.
   }
@@ -584,7 +586,7 @@ public class RenameVarsTest extends CompilerTestCase {
           new ProcessClosurePrimitives(compiler, CheckLevel.WARNING, true);
       closurePass.process(externs, root);
       renameVars = new RenameVars(compiler, prefix,
-          false, false, false, previouslyUsedMap, null,
+          false, false, false, false, previouslyUsedMap, null,
           closurePass.getExportedVariableNames());
       renameVars.process(externs, root);
     }
