@@ -18,6 +18,10 @@
  * @fileoverview Definitions for WebKit's custom CSS properties. Copied from:
  * http://trac.webkit.org/browser/trunk/WebCore/css/CSSPropertyNames.in
  *
+ * If you make changes to this file, notice that every property appears
+ * twice: once as an uppercase name and once as a lowercase name.
+ * Webkit allows both. The uppercase version is preferred.
+ *
  * @externs
  * @author nicksantos@google.com (Nick Santos)
  */
@@ -98,3 +102,81 @@ CSSProperties.prototype.WebkitMatchNearestMailBlockquoteColor;
 /** @type {string} */ CSSProperties.prototype.WebkitUserModify;
 /** @type {string} */ CSSProperties.prototype.WebkitUserSelect;
 
+// Webkit also adds bindings for the lowercase versions of these properties.
+// The uppercase version is preferred.
+
+/** @type {string} */ CSSProperties.prototype.webkitAppearance;
+/** @type {string} */ CSSProperties.prototype.webkitBackgroundClip;
+/** @type {string} */ CSSProperties.prototype.webkitBackgroundComposite;
+/** @type {string} */ CSSProperties.prototype.webkitBackgroundOrigin;
+/** @type {string} */ CSSProperties.prototype.webkitBackgroundSize;
+/** @type {string} */ CSSProperties.prototype.webkitBinding;
+/** @type {string} */ CSSProperties.prototype.webkitBorderBottomLeftRadius;
+/** @type {string} */ CSSProperties.prototype.webkitBorderBottomRightRadius;
+/** @type {string} */ CSSProperties.prototype.webkitBorderFit;
+/** @type {string} */ CSSProperties.prototype.webkitBorderHorizontalSpacing;
+/** @type {string} */ CSSProperties.prototype.webkitBorderImage;
+/** @type {string} */ CSSProperties.prototype.webkitBorderRadius;
+/** @type {string} */ CSSProperties.prototype.webkitBorderTopLeftRadius;
+/** @type {string} */ CSSProperties.prototype.webkitBorderTopRightRadius;
+/** @type {string} */ CSSProperties.prototype.webkitBorderVerticalSpacing;
+/** @type {string} */ CSSProperties.prototype.webkitBoxAlign;
+/** @type {string} */ CSSProperties.prototype.webkitBoxDirection;
+/** @type {string} */ CSSProperties.prototype.webkitBoxFlex;
+/** @type {string} */ CSSProperties.prototype.webkitBoxFlexGroup;
+/** @type {string} */ CSSProperties.prototype.webkitBoxLines;
+/** @type {string} */ CSSProperties.prototype.webkitBoxOrdinalGroup;
+/** @type {string} */ CSSProperties.prototype.webkitBoxOrient;
+/** @type {string} */ CSSProperties.prototype.webkitBoxPack;
+/** @type {string} */ CSSProperties.prototype.webkitBoxShadow;
+/** @type {string} */ CSSProperties.prototype.webkitBoxSizing;
+/** @type {string} */ CSSProperties.prototype.webkitColumnBreakAfter;
+/** @type {string} */ CSSProperties.prototype.webkitColumnBreakBefore;
+/** @type {string} */ CSSProperties.prototype.webkitColumnBreakInside;
+/** @type {string} */ CSSProperties.prototype.webkitColumnCount;
+/** @type {string} */ CSSProperties.prototype.webkitColumnGap;
+/** @type {string} */ CSSProperties.prototype.webkitColumnRule;
+/** @type {string} */ CSSProperties.prototype.webkitColumnRuleColor;
+/** @type {string} */ CSSProperties.prototype.webkitColumnRuleStyle;
+/** @type {string} */ CSSProperties.prototype.webkitColumnRuleWidth;
+/** @type {string} */ CSSProperties.prototype.webkitColumnWidth;
+/** @type {string} */ CSSProperties.prototype.webkitColumns;
+/** @type {string} */ CSSProperties.prototype.webkitDashboardRegion;
+/** @type {string} */ CSSProperties.prototype.webkitFontSizeDelta;
+/** @type {string} */ CSSProperties.prototype.webkitHighlight;
+/** @type {string} */ CSSProperties.prototype.webkitLineBreak;
+/** @type {string} */ CSSProperties.prototype.webkitLineClamp;
+/** @type {string} */ CSSProperties.prototype.webkitMarginBottomCollapse;
+/** @type {string} */ CSSProperties.prototype.webkitMarginCollapse;
+/** @type {string} */ CSSProperties.prototype.webkitMarginStart;
+/** @type {string} */ CSSProperties.prototype.webkitMarginTopCollapse;
+/** @type {string} */ CSSProperties.prototype.webkitMarquee;
+/** @type {string} */ CSSProperties.prototype.webkitMarqueeDirection;
+/** @type {string} */ CSSProperties.prototype.webkitMarqueeIncrement;
+/** @type {string} */ CSSProperties.prototype.webkitMarqueeRepetition;
+/** @type {string} */ CSSProperties.prototype.webkitMarqueeSpeed;
+/** @type {string} */ CSSProperties.prototype.webkitMarqueeStyle;
+/** @type {string} */
+CSSProperties.prototype.webkitMatchNearestMailBlockquoteColor;
+/** @type {string} */ CSSProperties.prototype.webkitNbspMode;
+/** @type {string} */ CSSProperties.prototype.webkitPaddingStart;
+/** @type {string} */ CSSProperties.prototype.webkitRtlOrdering;
+/** @type {string} */ CSSProperties.prototype.webkitTextDecorationsInEffect;
+/** @type {string} */ CSSProperties.prototype.webkitTextFillColor;
+/** @type {string} */ CSSProperties.prototype.webkitTextSecurity;
+/** @type {string} */ CSSProperties.prototype.webkitTextSizeAdjust;
+/** @type {string} */ CSSProperties.prototype.webkitTextStroke;
+/** @type {string} */ CSSProperties.prototype.webkitTextStrokeColor;
+/** @type {string} */ CSSProperties.prototype.webkitTextStrokeWidth;
+/** @type {string} */ CSSProperties.prototype.webkitTransform;
+/** @type {string} */ CSSProperties.prototype.webkitTransformOrigin;
+/** @type {string} */ CSSProperties.prototype.webkitTransformOriginX;
+/** @type {string} */ CSSProperties.prototype.webkitTransformOriginY;
+/** @type {string} */ CSSProperties.prototype.webkitTransition;
+/** @type {string} */ CSSProperties.prototype.webkitTransitionDuration;
+/** @type {string} */ CSSProperties.prototype.webkitTransitionProperty;
+/** @type {string} */ CSSProperties.prototype.webkitTransitionRepeatCount;
+/** @type {string} */ CSSProperties.prototype.webkitTransitionTimingFunction;
+/** @type {string} */ CSSProperties.prototype.webkitUserDrag;
+/** @type {string} */ CSSProperties.prototype.webkitUserModify;
+/** @type {string} */ CSSProperties.prototype.webkitUserSelect;
