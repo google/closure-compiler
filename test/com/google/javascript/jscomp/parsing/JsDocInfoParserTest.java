@@ -108,6 +108,30 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
+  public void testParseNamedType5() throws Exception {
+    JSDocInfo info = parse("@type {!goog.\nBar}*/");
+    assertTypeEquals(
+        registry.createNamedType("goog.Bar", null, -1, -1),
+        info.getType());
+  }
+
+  public void testParseNamedType6() throws Exception {
+    JSDocInfo info = parse("@type {!goog.\n * Bar.\n * Baz}*/");
+    assertTypeEquals(
+        registry.createNamedType("goog.Bar.Baz", null, -1, -1),
+        info.getType());
+  }
+
+  public void testParseNamedTypeError1() throws Exception {
+    // To avoid parsing ambiguities, type names must end in a '.' to
+    // get the continuation behavior.
+    parse("@type {!goog\n * .Bar} */", "expected closing }");
+  }
+
+  public void testParseNamedTypeError2() throws Exception {
+    parse("@type {!goog.\n * Bar\n * .Baz} */", "expected closing }");
+  }
+
   public void testTypedefType1() throws Exception {
     JSDocInfo info = parse("@typedef string */");
     assertTrue(info.hasTypedefType());
@@ -141,7 +165,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseBooleanType2() throws Exception {
-    assertTypeEquals(BOOLEAN_OBJECT_TYPE, parse("@type {!Boolean}*/").getType());
+    assertTypeEquals(
+        BOOLEAN_OBJECT_TYPE, parse("@type {!Boolean}*/").getType());
   }
 
   public void testParseNumberType1() throws Exception {
@@ -193,8 +218,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(REFERENCE_ERROR_TYPE,
         parse("@type {!ReferenceError}*/").getType());
     assertTypeEquals(TYPE_ERROR_TYPE, parse("@type {!TypeError}*/").getType());
-    assertTypeEquals(RANGE_ERROR_TYPE, parse("@type {!RangeError}*/").getType());
-    assertTypeEquals(SYNTAX_ERROR_TYPE, parse("@type {!SyntaxError}*/").getType());
+    assertTypeEquals(
+        RANGE_ERROR_TYPE, parse("@type {!RangeError}*/").getType());
+    assertTypeEquals(
+        SYNTAX_ERROR_TYPE, parse("@type {!SyntaxError}*/").getType());
   }
 
   public void testParseUndefinedType1() throws Exception {

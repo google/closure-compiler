@@ -334,7 +334,8 @@ public final class JsDocInfoParser {
                     type = createJSTypeExpression(newStringNode("number"));
                   }
                   if (!jsdocBuilder.recordEnumParameterType(type)) {
-                    parser.addWarning("msg.jsdoc.incompat.type", lineno, charno);
+                    parser.addWarning(
+                        "msg.jsdoc.incompat.type", lineno, charno);
                   }
                   token = eatTokensUntilEOL(token);
                   continue retry;
@@ -582,8 +583,9 @@ public final class JsDocInfoParser {
                     if (isBracketedParam) {
                       token = next();
 
-                      // Throw out JsDocToolkit's "default" parameter annotation.
-                      // It makes no sense under our type system.
+                      // Throw out JsDocToolkit's "default" parameter
+                      // annotation.  It makes no sense under our type
+                      // system.
                       if (JsDocToken.EQUALS == token) {
                         token = next();
                         if (JsDocToken.STRING == token) {
@@ -1661,13 +1663,24 @@ public final class JsDocInfoParser {
       return reportGenericTypeSyntaxWarning();
     }
 
-    Node typeName = newStringNode(stream.getString());
+    String typeName = stream.getString();
+    while (match(JsDocToken.EOL) &&
+        typeName.charAt(typeName.length() - 1) == '.') {
+      skipEOLs();
+      if (match(JsDocToken.STRING)) {
+        next();
+        typeName += stream.getString();
+      }
+    }
+
+    Node typeNameNode = newStringNode(typeName);
+
     if (match(JsDocToken.LT)) {
       next();
       skipEOLs();
       Node memberType = parseTypeExpressionList(next());
       if (memberType != null) {
-        typeName.addChildToFront(memberType);
+        typeNameNode.addChildToFront(memberType);
 
         skipEOLs();
         if (!match(JsDocToken.GT)) {
@@ -1677,7 +1690,7 @@ public final class JsDocInfoParser {
         next();
       }
     }
-    return typeName;
+    return typeNameNode;
   }
 
   /**
