@@ -237,6 +237,34 @@ public class CheckPathsBetweenNodesTest extends TestCase {
         .somePathsSatisfyPredicate());
   }
 
+  public void testSomePathRevisiting() {
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
+    g.createDirectedGraphNode("1");
+    g.createDirectedGraphNode("2a");
+    g.createDirectedGraphNode("2b");
+    g.createDirectedGraphNode("3");
+    g.createDirectedGraphNode("4a");
+    g.createDirectedGraphNode("4b");
+    g.createDirectedGraphNode("5");
+    g.connect("1", "-", "2a");
+    g.connect("1", "-", "2b");
+    g.connect("2a", "-", "3");
+    g.connect("2b", "-", "3");
+    g.connect("3", "-", "4a");
+    g.connect("3", "-", "4b");
+    g.connect("4a", "-", "5");
+    g.connect("4b", "-", "5");
+
+    CountingPredicate<String> p =
+      new CountingPredicate<String>(Predicates.equalTo("4a"));
+
+    assertTrue(createTest(g, "1", "5", p, ALL_EDGE)
+        .somePathsSatisfyPredicate());
+
+    // Make sure we are not doing more traversals than we have to.
+    assertEquals(4, p.count);
+  }
+
   public void testNonInclusive() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = LinkedDirectedGraph.create();
@@ -292,5 +320,21 @@ public class CheckPathsBetweenNodesTest extends TestCase {
         return input.getValue().equals(val);
       }
     };
+  }
+
+  private static class CountingPredicate<T> implements Predicate<T> {
+
+    private int count = 0;
+    private final Predicate<T> delegate;
+
+    private CountingPredicate(Predicate<T> delegate) {
+      this.delegate = delegate;
+    }
+    @Override
+    public boolean apply(T input) {
+      count ++;
+      return delegate.apply(input);
+    }
+
   }
 }
