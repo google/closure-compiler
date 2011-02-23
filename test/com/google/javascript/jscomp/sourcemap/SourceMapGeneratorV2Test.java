@@ -469,7 +469,7 @@ public class SourceMapGeneratorV2Test extends TestCase {
 
   private static class Token {
     String tokenName;
-    Position position;
+    FilePosition position;
   }
 
   /**
@@ -513,7 +513,7 @@ public class SourceMapGeneratorV2Test extends TestCase {
           Token token = new Token();
           token.tokenName = tokenName;
           int currentPosition = i - positionOffset;
-          token.position = new Position(currentLine, currentPosition);
+          token.position = new FilePosition(currentLine, currentPosition);
           tokens.put(tokenName, token);
         }
 
@@ -554,8 +554,8 @@ public class SourceMapGeneratorV2Test extends TestCase {
     // input source and ensure that the map is correct.
     for (Token token : resultTokens.values()) {
       OriginalMapping mapping = reader.getMappingForLine(
-          token.position.getLineNumber() + 1,
-          token.position.getCharacterIndex() + 1);
+          token.position.getLine() + 1,
+          token.position.getColumn() + 1);
 
       assertNotNull(mapping);
 
@@ -565,8 +565,8 @@ public class SourceMapGeneratorV2Test extends TestCase {
 
       // Ensure that the map correctly points to the token (we add 1
       // to normalize versus the Rhino line number indexing scheme).
-      assertEquals(mapping.position.getLineNumber(),
-                   inputToken.position.getLineNumber() + 1);
+      assertEquals(mapping.position.getLine(),
+                   inputToken.position.getLine() + 1);
 
       // Ensure that if the token name does not being with an 'STR' (meaning a
       // string) it has an original name.
@@ -642,12 +642,12 @@ public class SourceMapGeneratorV2Test extends TestCase {
 
   public static class OriginalMapping {
     public final String srcfile;
-    public final Position position;
+    public final FilePosition position;
     public final String originalName;
 
     OriginalMapping(String srcfile, int line, int column, String name) {
       this.srcfile = srcfile;
-      this.position = new Position(line, column);
+      this.position = new FilePosition(line, column);
       this.originalName = name;
     }
   }

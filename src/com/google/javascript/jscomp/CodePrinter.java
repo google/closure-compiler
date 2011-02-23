@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.sourcemap.Position;
+import com.google.javascript.jscomp.sourcemap.FilePosition;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -77,8 +77,8 @@ class CodePrinter {
      */
     private static class Mapping {
       Node node;
-      Position start;
-      Position end;
+      FilePosition start;
+      FilePosition end;
     }
 
     /**
@@ -98,7 +98,7 @@ class CodePrinter {
         Preconditions.checkState(line >= 0);
         Mapping mapping = new Mapping();
         mapping.node = node;
-        mapping.start = new Position(line, index);
+        mapping.start = new FilePosition(line, index);
         mappings.push(mapping);
         allMappings.add(mapping);
       }
@@ -115,7 +115,7 @@ class CodePrinter {
         int line = getCurrentLineIndex();
         int index = getCurrentCharIndex();
         Preconditions.checkState(line >= 0);
-        mapping.end = new Position(line, index);
+        mapping.end = new FilePosition(line, index);
       }
     }
 
@@ -160,14 +160,15 @@ class CodePrinter {
      *
      * @return The normalized position.
      */
-    private Position convertPosition(Position position, int lineIndex,
+    private FilePosition convertPosition(FilePosition position, int lineIndex,
                                      int characterPosition) {
-      int originalLine = position.getLineNumber();
-      int originalChar = position.getCharacterIndex();
+      int originalLine = position.getLine();
+      int originalChar = position.getColumn();
       if (originalLine == lineIndex && originalChar >= characterPosition) {
         // If the position falls on the line itself, then normalize it
         // if it falls at or after the place the newline was inserted.
-        return new Position(originalLine + 1, originalChar - characterPosition);
+        return new FilePosition(
+            originalLine + 1, originalChar - characterPosition);
       } else {
         return position;
       }

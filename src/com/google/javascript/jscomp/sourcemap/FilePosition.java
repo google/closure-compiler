@@ -20,27 +20,30 @@ package com.google.javascript.jscomp.sourcemap;
  * Represents a position in a source file.
  *
  */
-public class Position {
-  private final int lineNumber;
-  private final int characterIndex;
+/**
+ * Represents a position in a source file.
+ */
+public class FilePosition {
+  private final int line;
+  private final int column;
 
-  public Position(int lineNumber, int characterIndex) {
-    this.lineNumber = lineNumber;
-    this.characterIndex = characterIndex;
+  public FilePosition(int line, int column) {
+    this.line = line;
+    this.column = column;
   }
 
   /**
    * Returns the line number of this postion.
    */
-  public int getLineNumber() {
-    return lineNumber;
+  public int getLine() {
+    return line;
   }
 
   /**
    * Returns the character index on the line
    * of this position.
    */
-  public int getCharacterIndex() {
-    return characterIndex;
+  public int getColumn() {
+    return column;
   }
 }

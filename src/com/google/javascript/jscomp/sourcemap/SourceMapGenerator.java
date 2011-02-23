@@ -16,9 +16,11 @@
 
 package com.google.javascript.jscomp.sourcemap;
 
-import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * Collects information mapping the generated (compiled) source back to
@@ -28,18 +30,20 @@ import java.io.IOException;
  */
 public interface SourceMapGenerator {
 
-  enum Format {
+  public enum Format {
      LEGACY {
-       @Override SourceMapGenerator getInstance() {
+       @Override
+       public SourceMapGenerator getInstance() {
          return new SourceMapGeneratorV1();
        }
      },
      EXPERIMENTIAL {
-       @Override SourceMapGenerator getInstance() {
+       @Override
+       public SourceMapGenerator getInstance() {
          return new SourceMapGeneratorV2();
        }
      };
-     abstract SourceMapGenerator getInstance();
+     public abstract SourceMapGenerator getInstance();
   }
 
   /**
@@ -59,12 +63,19 @@ public interface SourceMapGenerator {
 
   /**
    * Adds a mapping for the given node.  Mappings must be added in order.
-   *
-   * @param node The node that the new mapping represents.
-   * @param startPosition The position on the starting line
-   * @param endPosition The position on the ending line.
+   * @param sourceName The file name to use in the generate source map
+   *     to represent this source.
+   * @param symbolName The symbol name associated with this position in the
+   *     source map.
+   * @param sourceStartPosition The starting position in the original source for
+   *     represented range outputStartPosition to outputEndPosition in the
+   *     generated file.
+   * @param outputStartPosition The position on the starting line
+   * @param outputEndPosition The position on the ending line.
    */
-  void addMapping(Node node, Position startPosition, Position endPosition);
+  void addMapping(String sourceName, @Nullable String symbolName,
+           FilePosition sourceStartPosition,
+           FilePosition outputStartPosition, FilePosition outputEndPosition);
 
   /**
    * Sets the prefix used for wrapping the generated source file before
@@ -93,4 +104,13 @@ public interface SourceMapGenerator {
    */
   void validate(boolean validate);
 
+  /**
+   * @param out
+   * @param name
+   * @param appSections
+   * @throws IOException
+   */
+  void writeMetaMap(
+      Appendable out, String name, List<SourceMapSection> appSections)
+      throws IOException;
 }

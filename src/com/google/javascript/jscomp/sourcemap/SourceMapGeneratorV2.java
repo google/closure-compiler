@@ -20,14 +20,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.javascript.rhino.Node;
-
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+
+import javax.annotation.Nullable;
 
 /**
  * Collects information mapping the generated (compiled) source back to
@@ -57,7 +57,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
   /**
    * A map of source names to source name index
    */
-  private LinkedHashMap<String, Integer> source_file_map =
+  private LinkedHashMap<String, Integer> sourceFileMap =
       Maps.newLinkedHashMap();
 
   /**
@@ -79,14 +79,14 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * The position that the current source map is offset in the
    * buffer being used to generated the compiled source file.
    */
-  private Position offsetPosition = new Position(0, 0);
+  private FilePosition offsetPosition = new FilePosition(0, 0);
 
   /**
    * The position that the current source map is offset in the
    * generated the compiled source file by the addition of a
    * an output wrapper prefix.
    */
-  private Position prefixPosition = new Position(0, 0);
+  private FilePosition prefixPosition = new FilePosition(0, 0);
 
   /**
    * {@inheritDoc}
@@ -94,11 +94,11 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
   public void reset() {
     mappings.clear();
     lastMapping = null;
-    source_file_map.clear();
+    sourceFileMap.clear();
     lastSourceFile = null;
     lastSourceFileIndex = -1;
-    offsetPosition = new Position(0, 0);
-    prefixPosition = new Position(0, 0);
+    offsetPosition = new FilePosition(0, 0);
+    prefixPosition = new FilePosition(0, 0);
   }
 
   /**
@@ -131,7 +131,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       }
     }
 
-    prefixPosition = new Position(prefixLine, prefixIndex);
+    prefixPosition = new FilePosition(prefixLine, prefixIndex);
   }
 
   /**
@@ -147,89 +147,84 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
   public void setStartingPosition(int offsetLine, int offsetIndex) {
     Preconditions.checkState(offsetLine >= 0);
     Preconditions.checkState(offsetIndex >= 0);
-    offsetPosition = new Position(offsetLine, offsetIndex);
+    offsetPosition = new FilePosition(offsetLine, offsetIndex);
   }
 
   /**
    * Adds a mapping for the given node.  Mappings must be added in order.
-   *
-   * @param node The node that the new mapping represents.
    * @param startPosition The position on the starting line
    * @param endPosition The position on the ending line.
    */
   public void addMapping(
-      Node node, Position startPosition, Position endPosition) {
-    String sourceFile = (String)node.getProp(Node.SOURCENAME_PROP);
+      String sourceName, @Nullable String symbolName,
+      FilePosition sourceStartPosition,
+      FilePosition startPosition, FilePosition endPosition) {
 
-    // If the node does not have an associated source file or
-    // its line number is -1, then the node does not have sufficient
-    // information for a mapping to be useful.
-    if (sourceFile == null || node.getLineno() < 0) {
+    // Don't bother if there is not sufficient information to be useful.
+    if (sourceName == null || sourceStartPosition.getLine() < 0) {
       return;
     }
 
-    if (sourceFile != lastSourceFile) {
-      lastSourceFile = sourceFile;
-      Integer index = source_file_map.get(sourceFile);
+    if (sourceName != lastSourceFile) {
+      lastSourceFile = sourceName;
+      Integer index = sourceFileMap.get(sourceName);
       if (index != null) {
         lastSourceFileIndex = index;
       } else {
-        lastSourceFileIndex = source_file_map.size();
-        source_file_map.put(sourceFile, lastSourceFileIndex);
+        lastSourceFileIndex = sourceFileMap.size();
+        sourceFileMap.put(sourceName, lastSourceFileIndex);
       }
+    }
+
+    FilePosition adjustedStart = startPosition;
+    FilePosition adjustedEnd = endPosition;
+
+    if (offsetPosition.getLine() != 0
+        || offsetPosition.getColumn() != 0) {
+      // If the mapping is found on the first line, we need to offset
+      // its character position by the number of characters found on
+      // the *last* line of the source file to which the code is
+      // being generated.
+      int offsetLine = offsetPosition.getLine();
+      int startOffsetPosition = offsetPosition.getColumn();
+      int endOffsetPosition = offsetPosition.getColumn();
+
+      if (startPosition.getLine() > 0) {
+        startOffsetPosition = 0;
+      }
+
+      if (endPosition.getLine() > 0) {
+        endOffsetPosition = 0;
+      }
+
+      adjustedStart = new FilePosition(
+          startPosition.getLine() + offsetLine,
+          startPosition.getColumn() + startOffsetPosition);
+
+      adjustedEnd = new FilePosition(
+          endPosition.getLine() + offsetLine,
+          endPosition.getColumn() + endOffsetPosition);
     }
 
     // Create the new mapping.
     Mapping mapping = new Mapping();
     mapping.sourceFile = lastSourceFileIndex;
-    mapping.originalPosition = new Position(node.getLineno(), node.getCharno());
-
-    String originalName = (String)node.getProp(Node.ORIGINALNAME_PROP);
-    if (originalName != null) {
-      mapping.originalName = originalName;
-    }
-
-    if (offsetPosition.getLineNumber() == 0
-        && offsetPosition.getCharacterIndex() == 0) {
-      mapping.startPosition = startPosition;
-      mapping.endPosition = endPosition;
-    } else {
-      // If the mapping is found on the first line, we need to offset
-      // its character position by the number of characters found on
-      // the *last* line of the source file to which the code is
-      // being generated.
-      int offsetLine = offsetPosition.getLineNumber();
-      int startOffsetPosition = offsetPosition.getCharacterIndex();
-      int endOffsetPosition = offsetPosition.getCharacterIndex();
-
-      if (startPosition.getLineNumber() > 0) {
-        startOffsetPosition = 0;
-      }
-
-      if (endPosition.getLineNumber() > 0) {
-        endOffsetPosition = 0;
-      }
-
-      mapping.startPosition =
-          new Position(startPosition.getLineNumber() + offsetLine,
-                       startPosition.getCharacterIndex() + startOffsetPosition);
-
-      mapping.endPosition =
-          new Position(endPosition.getLineNumber() + offsetLine,
-                       endPosition.getCharacterIndex() + endOffsetPosition);
-    }
+    mapping.originalPosition = sourceStartPosition;
+    mapping.originalName = symbolName;
+    mapping.startPosition = adjustedStart;
+    mapping.endPosition = adjustedEnd;
 
     // Validate the mappings are in a proper order.
     if (lastMapping != null) {
-      int lastLine = lastMapping.startPosition.getLineNumber();
-      int lastColumn = lastMapping.startPosition.getCharacterIndex();
-      int nextLine = mapping.startPosition.getLineNumber();
-      int nextColumn = mapping.startPosition.getCharacterIndex();
+      int lastLine = lastMapping.startPosition.getLine();
+      int lastColumn = lastMapping.startPosition.getColumn();
+      int nextLine = mapping.startPosition.getLine();
+      int nextColumn = mapping.startPosition.getColumn();
       Preconditions.checkState(nextLine > lastLine
           || (nextLine == lastLine && nextColumn >= lastColumn),
           "Incorrect source mappings order, previous : (%s,%s)\n"
           + "new : (%s,%s)\nnode : %s",
-          lastLine, lastColumn, nextLine, nextColumn, node);
+          lastLine, lastColumn, nextLine, nextColumn);
     }
 
     lastMapping = mapping;
@@ -318,7 +313,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    */
   private void addSourceNameMap(Appendable out) throws IOException {
     int i = 0;
-    for (Entry<String, Integer> entry : source_file_map.entrySet()) {
+    for (Entry<String, Integer> entry : sourceFileMap.entrySet()) {
       String key = entry.getKey();
       if (i != 0) {
         out.append(",");
@@ -339,7 +334,8 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
   // Source map field helpers.
 
-  private void appendFirstField(Appendable out, String name, String value)
+  private static void appendFirstField(
+      Appendable out, String name, String value)
       throws IOException {
     out.append("\"");
     out.append(name);
@@ -348,7 +344,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     out.append(value);
   }
 
-  private void appendField(Appendable out, String name, String value)
+  private static void appendField(Appendable out, String name, String value)
       throws IOException {
     out.append(",\n");
     out.append("\"");
@@ -358,13 +354,13 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     out.append(value);
   }
 
-  private void appendFieldStart(Appendable out, String name)
+  private static void appendFieldStart(Appendable out, String name)
       throws IOException {
     appendField(out, name, "");
   }
 
   @SuppressWarnings("unused")
-  private void appendFieldEnd(Appendable out)
+  private static void appendFieldEnd(Appendable out)
      throws IOException {
   }
 
@@ -381,13 +377,13 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     for (Mapping m : mappings) {
       if (m.used) {
         m.id = id++;
-        int endPositionLine = m.endPosition.getLineNumber();
+        int endPositionLine = m.endPosition.getLine();
         maxLine = Math.max(maxLine, endPositionLine);
       }
     }
 
     // Adjust for the prefix.
-    return maxLine + prefixPosition.getLineNumber();
+    return maxLine + prefixPosition.getLine();
   }
 
   /**
@@ -410,19 +406,19 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
      * the line number and the character index are indexed by
      * 1 for legacy reasons via the Rhino Node class.
      */
-    Position originalPosition;
+    FilePosition originalPosition;
 
     /**
      * The starting position of the code in the generated source
      * file which this mapping represents. Indexed by 0.
      */
-    Position startPosition;
+    FilePosition startPosition;
 
     /**
      * The ending position of the code in the generated source
      * file which this mapping represents. Indexed by 0.
      */
-    Position endPosition;
+    FilePosition endPosition;
 
     /**
      * The original name of the token found at the position
@@ -453,7 +449,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       out.append(String.valueOf(m.sourceFile));
       out.append(",");
 
-      int line = m.originalPosition.getLineNumber();
+      int line = m.originalPosition.getLine();
       if (line != lastLine) {
         lastLineString = String.valueOf(line);
       }
@@ -463,7 +459,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
       out.append(",");
       out.append(String.valueOf(
-          m.originalPosition.getCharacterIndex()));
+          m.originalPosition.getColumn()));
 
       if (m.originalName != null) {
         out.append(",");
@@ -571,7 +567,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
   }
 
   @VisibleForTesting
-  static class LineMapEncoder {
+  public static class LineMapEncoder {
     /**
      * The source map line map is consists of a series of entries each
      * representing a map entry and a repetition count of that entry.
@@ -583,7 +579,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
      * @param reps The number of times the id is repeated in the map.
      * @throws IOException
      */
-    static void encodeEntry(Appendable out, int id, int lastId, int reps)
+    public static void encodeEntry(Appendable out, int id, int lastId, int reps)
         throws IOException {
       Preconditions.checkState(reps > 0);
       int relativeIdLength = getRelativeMappingIdLength(id, lastId);
@@ -628,7 +624,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
      * @return A value relative to the the lastId.  Negative value are
      * represented as a two-complement value.
      */
-    static int getRelativeMappingId(int id, int idLength, int lastId) {
+    public static int getRelativeMappingId(int id, int idLength, int lastId) {
       int base = 1 << (idLength *6);
       int relativeId = id - lastId;
       return (relativeId < 0) ? relativeId + base : relativeId;
@@ -637,7 +633,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     /**
      * @return The length of the base64 number needed to include the id.
      */
-    static int getRelativeMappingIdLength(int rawId, int lastId) {
+    public static int getRelativeMappingIdLength(int rawId, int lastId) {
       Preconditions.checkState(rawId >= 0 || rawId == UNMAPPED);
       int relativeId = rawId - lastId;
       int id = (relativeId < 0 ? Math.abs(relativeId) -1 : relativeId) << 1;
@@ -680,7 +676,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * A line mapping decoder class used for testing and validation.
    */
   @VisibleForTesting
-  static class LineMapDecoder {
+  public static class LineMapDecoder {
     private static LineEntry decodeLineEntry(String in, int lastId) {
       return decodeLineEntry(new StringParser(in), lastId);
     }
@@ -731,21 +727,21 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       return new LineEntry(mappingId, reps);
     }
 
-    static List<Integer> decodeLine(String lineSource) {
+    public static List<Integer> decodeLine(String lineSource) {
       return decodeLine(new StringParser(lineSource));
     }
 
     static private List<Integer> decodeLine(StringParser reader) {
       List<Integer> result = Lists.newArrayListWithCapacity(512);
       int lastId = 0;
-      do {
+      while (reader.hasNext()) {
         LineEntry entry = decodeLineEntry(reader, lastId);
         lastId = entry.id;
 
         for (int i=0; i < entry.reps; i++) {
           result.add(entry.id);
         }
-      } while(reader.hasNext());
+      }
 
       return result;
     }
@@ -760,7 +756,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     /**
      * @return the id from the relative id.
      */
-    static int getIdFromRelativeId(int rawId, int digits, int lastId) {
+    public static int getIdFromRelativeId(int rawId, int digits, int lastId) {
       // The value range depends on the number of digits
       int base = 1 << (digits * 6);
       return ((rawId >= base/2) ? rawId - base : rawId) + lastId;
@@ -879,19 +875,19 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     /**
      * @return The line adjusted for the prefix position.
      */
-    private int getAdjustedLine(Position p) {
-      return p.getLineNumber() + prefixPosition.getLineNumber();
+    private int getAdjustedLine(FilePosition p) {
+      return p.getLine() + prefixPosition.getLine();
     }
 
     /**
      * @return The column adjusted for the prefix position.
      */
-    private int getAdjustedCol(Position p) {
-      int rawLine = p.getLineNumber();
-      int rawCol = p.getCharacterIndex();
+    private int getAdjustedCol(FilePosition p) {
+      int rawLine = p.getLine();
+      int rawCol = p.getColumn();
       // Only the first line needs the character position adjusted.
       return (rawLine != 0)
-          ? rawCol : rawCol + prefixPosition.getCharacterIndex();
+          ? rawCol : rawCol + prefixPosition.getColumn();
     }
 
     /**
@@ -899,10 +895,10 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
      */
     private boolean isOverlapped(Mapping m1, Mapping m2) {
       // No need to use adjusted values here, relative positions are sufficient.
-      int l1 = m1.endPosition.getLineNumber();
-      int l2 = m2.startPosition.getLineNumber();
-      int c1 = m1.endPosition.getCharacterIndex();
-      int c2 = m2.startPosition.getCharacterIndex();
+      int l1 = m1.endPosition.getLine();
+      int l2 = m2.startPosition.getLine();
+      int c1 = m1.endPosition.getColumn();
+      int c2 = m2.startPosition.getColumn();
 
       return (l1 == l2 && c1 >= c2) || l1 > l2;
     }
@@ -956,5 +952,44 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       line = nextLine;
       col = nextCol;
     }
+  }
+
+  /**
+   * To facilitate incremental compiles, create a source map that is built
+   * piecemeal from other source maps.
+   * @throws IOException
+   */
+  @Override
+  public void writeMetaMap(
+      Appendable out, String name, List<SourceMapSection> appSections)
+      throws IOException {
+    // Add the header fields.
+    out.append("{\n");
+    appendFirstField(out, "version", "2");
+    appendField(out, "file", escapeString(name));
+
+    // Add the line character maps.
+    appendFieldStart(out, "sections");
+    out.append("[\n");
+    boolean first = true;
+    Long offset = new Long(0);
+    for (SourceMapSection section : appSections) {
+      if (first) {
+        first = false;
+      } else {
+        out.append(",\n");
+      }
+      out.append("{\n");
+      appendFirstField(out, "offset", offset.toString());
+      appendField(out, "file", escapeString(section.getSectionUrl()));
+      out.append("\n}");
+
+      offset += section.getLength();
+    }
+
+    out.append("\n]");
+    appendFieldEnd(out);
+
+    out.append("\n}\n");
   }
 }

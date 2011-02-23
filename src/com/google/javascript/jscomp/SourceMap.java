@@ -20,7 +20,7 @@ import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.sourcemap.SourceMapGenerator;
 import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV1;
 import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV2;
-import com.google.javascript.jscomp.sourcemap.Position;
+import com.google.javascript.jscomp.sourcemap.FilePosition;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ import java.io.IOException;
  * @see CodePrinter
  *
  */
-public class SourceMap implements SourceMapGenerator {
+public class SourceMap {
 
   public static enum Format {
      LEGACY {
@@ -82,32 +82,41 @@ public class SourceMap implements SourceMapGenerator {
     this.generator = generator;
   }
 
-  @Override
   public void addMapping(
-      Node node, Position startPosition, Position endPosition) {
-    generator.addMapping(node, startPosition, endPosition);
+      Node node,
+      FilePosition outputStartPosition,
+      FilePosition outputEndPosition) {
+    String sourceFile = (String) node.getProp(Node.SOURCENAME_PROP);
+    // If the node does not have an associated source file or
+    // its line number is -1, then the node does not have sufficient
+    // information for a mapping to be useful.
+    if (sourceFile == null || node.getLineno() < 0) {
+      return;
+    }
+
+    String originalName = (String) node.getProp(Node.ORIGINALNAME_PROP);
+
+    generator.addMapping(
+        sourceFile, originalName,
+        new FilePosition(node.getLineno(), node.getCharno()),
+        outputStartPosition, outputEndPosition);
   }
 
-  @Override
   public void appendTo(Appendable out, String name) throws IOException {
     generator.appendTo(out, name);
   }
 
-  @Override
   public void reset() {
     generator.reset();
   }
 
-  @Override
   public void setStartingPosition(int offsetLine, int offsetIndex) {
     generator.setStartingPosition(offsetLine, offsetIndex);
   }
 
-  @Override
   public void setWrapperPrefix(String prefix) {
     generator.setWrapperPrefix(prefix);
   }
-
 
   public void validate(boolean validate) {
     generator.validate(validate);
