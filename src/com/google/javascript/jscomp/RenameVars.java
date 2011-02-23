@@ -89,15 +89,12 @@ final class RenameVars implements CompilerPass {
       ArrayListMultimap.create();
 
   class Assignment {
-    // TODO(user): The input seems useless.
-    final CompilerInput input;
     final String oldName;
     final int orderOfOccurrence;
     String newName;
     int count; // Number of times this is referenced
 
-    Assignment(String name, CompilerInput input) {
-      this.input = input;
+    Assignment(String name) {
       this.oldName = name;
       this.newName = null;
       this.count = 0;
@@ -276,21 +273,21 @@ final class RenameVars implements CompilerPass {
       if (local) {
         // Local var: assign a new name
         String tempName = LOCAL_VAR_PREFIX + getLocalVarIndex(var);
-        incCount(tempName, null);
+        incCount(tempName);
         localNameNodes.add(n);
         n.setString(tempName);
       } else if (var != null) { // Not an extern
         // If it's global, increment global count
-        incCount(name, var.input);
+        incCount(name);
         globalNameNodes.add(n);
       }
     }
 
     // Increment count of an assignment
-    void incCount(String name, CompilerInput input) {
+    void incCount(String name) {
       Assignment s = assignments.get(name);
       if (s == null) {
-        s = new Assignment(name, input);
+        s = new Assignment(name);
         assignments.put(name, s);
       }
       s.count++;
