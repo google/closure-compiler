@@ -1845,7 +1845,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testAbstractMethodHandling5() throws Exception {
     testTypes(
-        "/** @type {Function} */ var abstractFn = function() {};" +
+        "/** @type {!Function} */ var abstractFn = function() {};" +
         "/** @param {number} x */ var f = abstractFn;" +
         "f('x');",
         "actual parameter 1 of f does not match formal parameter\n" +
@@ -2196,13 +2196,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStubFunctionDeclaration8() throws Exception {
-    /** TODO(user): This is not exactly correct yet. The var
-            itself is nullable. */
     testFunctionType(
         "/** @type {Function} */ var f = function() {}; ",
         "f",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).
-          restrictByNotNullOrUndefined().toString());
+        createNullableType(U2U_CONSTRUCTOR_TYPE).toString());
   }
 
   public void testStubFunctionDeclaration9() throws Exception {

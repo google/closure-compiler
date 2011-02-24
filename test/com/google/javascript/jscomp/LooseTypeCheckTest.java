@@ -1683,7 +1683,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testAbstractMethodHandling5() throws Exception {
     testTypes(
-        "/** @type {Function} */ var abstractFn = function() {};" +
+        "/** @type {!Function} */ var abstractFn = function() {};" +
         "/** @param {number} x */ var f = abstractFn;" +
         "f('x');",
         "actual parameter 1 of f does not match formal parameter\n" +
@@ -2037,13 +2037,11 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStubFunctionDeclaration8() throws Exception {
-    /** TODO(user): This is not exactly correct yet. The var
-            itself is nullable. */
     testFunctionType(
         "/** @type {Function} */ var f = function() {}; ",
         "f",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).
-          restrictByNotNullOrUndefined().toString());
+        createOptionalType(createNullableType(U2U_CONSTRUCTOR_TYPE))
+            .toString());
   }
 
   public void testStubFunctionDeclaration9() throws Exception {
@@ -3585,8 +3583,10 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testConstructorAlias8() throws Exception {
     testTypes(
         "var goog = {};" +
-        "/**\n * @param {number} x \n * @constructor */ goog.Foo = function(x) {};" +
-        "/**\n * @param {number} x \n * @constructor */ goog.FooAlias = goog.Foo;" +
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "goog.Foo = function(x) {};" +
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "goog.FooAlias = goog.Foo;" +
         "/** @return {number} */ function foo() { " +
         "  return new goog.FooAlias(1); }",
         "inconsistent return type\n" +
@@ -3597,7 +3597,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testConstructorAlias9() throws Exception {
     testTypes(
         "var goog = {};" +
-        "/**\n * @param {number} x \n * @constructor */ goog.Foo = function(x) {};" +
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "goog.Foo = function(x) {};" +
         "/** @constructor */ goog.FooAlias = goog.Foo;" +
         "/** @return {number} */ function foo() { " +
         "  return new goog.FooAlias(1); }",
@@ -3608,7 +3609,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testConstructorAlias10() throws Exception {
     testTypes(
-        "/**\n * @param {number} x \n * @constructor */ var Foo = function(x) {};" +
+        "/**\n * @param {number} x \n * @constructor */ " +
+        "var Foo = function(x) {};" +
         "/** @constructor */ var FooAlias = Foo;" +
         "/** @return {number} */ function foo() { " +
         "  return new FooAlias(1); }",
