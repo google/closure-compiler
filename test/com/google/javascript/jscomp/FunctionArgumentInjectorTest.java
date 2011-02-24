@@ -309,46 +309,6 @@ public class FunctionArgumentInjectorTest extends TestCase {
         Sets.newHashSet("b"));
   }
 
-  public void testMaybeAddTempsForCallArguments28() {
-    // true/false are don't need temps
-    testNeededTemps(
-        "function foo(a){a;a;}; foo(true);",
-        "foo",
-        EMPTY_STRING_SET);
-  }
-
-  public void testMaybeAddTempsForCallArguments29() {
-    // true/false are don't need temps
-    testNeededTemps(
-        "function foo(a){a;a;}; foo(false);",
-        "foo",
-        EMPTY_STRING_SET);
-  }
-
-  public void testMaybeAddTempsForCallArguments30() {
-    // true/false are don't need temps
-    testNeededTemps(
-        "function foo(a){a;a;}; foo(!0);",
-        "foo",
-        EMPTY_STRING_SET);
-  }
-
-  public void testMaybeAddTempsForCallArguments31() {
-    // true/false are don't need temps
-    testNeededTemps(
-        "function foo(a){a;a;}; foo(!1);",
-        "foo",
-        EMPTY_STRING_SET);
-  }
-
-  public void testMaybeAddTempsForCallArguments32() {
-    // void 0 doesn't need a temp
-    testNeededTemps(
-        "function foo(a){a;a;}; foo(void 0);",
-        "foo",
-        EMPTY_STRING_SET);
-  }
-
   public void testMaybeAddTempsForCallArgumentsInLoops() {
     // A mutable parameter referenced in loop needs a
     // temporary.
