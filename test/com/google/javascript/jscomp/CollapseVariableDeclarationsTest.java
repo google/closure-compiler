@@ -46,6 +46,24 @@ public class CollapseVariableDeclarationsTest extends CompilerTestCase {
     testSame("if (x) var a = 1; else var a = 2;");
   }
 
+  public void testExprExploitationTypes() {
+    test("a = true; b = true",
+         "b = a = true");
+    test("a = !0; b = !0",
+         "b = a = !0");
+    test("a = !1; b = !1",
+         "b = a = !1");
+    test("a = void 0; b = void 0",
+         "b = a = void 0");
+    test("a = -Infinity; b = -Infinity",
+         "b = a = -Infinity");
+  }
+
+  public void testExprExploitationTypes2() {
+    test("a = !0; b = !0",
+         "b = a = !0");
+  }
+
   public void testExprExploitation() {
     test("a = null; b = null; var c = b",
          "var c = b = a = null");
@@ -70,12 +88,21 @@ public class CollapseVariableDeclarationsTest extends CompilerTestCase {
          "this.foo = a = null");
     test("function f(){ a = null; return null; }",
          "function f(){return a = null}");
+
     test("a = true; if (a) { foo(); }",
          "if (a = true) { foo() }");
     test("a = true; if (a && a) { foo(); }",
          "if ((a = true) && a) { foo() }");
     test("a = false; if (a) { foo(); }",
          "if (a = false) { foo() }");
+
+    test("a = !0; if (a) { foo(); }",
+        "if (a = !0) { foo() }");
+    test("a = !0; if (a && a) { foo(); }",
+        "if ((a = !0) && a) { foo() }");
+    test("a = !1; if (a) { foo(); }",
+        "if (a = !1) { foo() }");
+
     testSame("a = this.foo; a();");
     test("a = b; b = a;",
          "b = a = b");

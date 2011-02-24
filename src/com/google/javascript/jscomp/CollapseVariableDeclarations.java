@@ -163,15 +163,11 @@ class CollapseVariableDeclarations implements CompilerPass {
           return !isLValue || value.getFirstChild().getType() == Token.THIS;
 
         case Token.NAME:
-        case Token.NUMBER:
-        case Token.TRUE:
-        case Token.FALSE:
-        case Token.NULL:
-        case Token.STRING:
           return true;
-      }
 
-      return false;
+        default:
+          return NodeUtil.isImmutableValue(value);
+      }
     }
 
     /**
@@ -238,28 +234,6 @@ class CollapseVariableDeclarations implements CompilerPass {
             }
             return false;
 
-          case Token.NUMBER:
-          case Token.TRUE:
-          case Token.FALSE:
-          case Token.NULL:
-          case Token.STRING:
-            if (value.getType() == next.getType()) {
-              if ((next.getType() == Token.STRING ||
-                      next.getType() == Token.NUMBER) &&
-                  !next.isEquivalentTo(value)) {
-                return false;
-              }
-
-              // If the r-value of the expr assign is an immutable value,
-              // and the value is used again shortly, then we can exploit
-              // the assign here.
-              exprParent.removeChild(expr);
-              expr.removeChild(assign);
-              parent.replaceChild(next, assign);
-              return true;
-            }
-            return false;
-
           case Token.ASSIGN:
             // Assigns are really tricky. In lots of cases, we want to inline
             // into the right side of the assign. But the left side of the
@@ -286,6 +260,16 @@ class CollapseVariableDeclarations implements CompilerPass {
             }
 
           default:
+            if (NodeUtil.isImmutableValue(next)
+                && next.isEquivalentTo(value)) {
+              // If the r-value of the expr assign is an immutable value,
+              // and the value is used again shortly, then we can exploit
+              // the assign here.
+              exprParent.removeChild(expr);
+              expr.removeChild(assign);
+              parent.replaceChild(next, assign);
+              return true;
+            }
             // Return without inlining a thing
             return false;
         }
