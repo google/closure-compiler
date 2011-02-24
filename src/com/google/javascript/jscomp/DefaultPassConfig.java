@@ -483,8 +483,6 @@ public class DefaultPassConfig extends PassConfig {
           CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
     }
 
-// TODO(user): Fix Checkpath between nodes.
-/*
     if (options.flowSensitiveInlineVariables) {
       passes.add(flowSensitiveInlineVariables);
 
@@ -494,7 +492,6 @@ public class DefaultPassConfig extends PassConfig {
         passes.add(removeUnusedVars);
       }
     }
-*/
 
     if (options.collapseAnonymousFunctions) {
       passes.add(collapseAnonymousFunctions);
@@ -1030,13 +1027,10 @@ public class DefaultPassConfig extends PassConfig {
         callbacks.add(
             new CheckUnreachableCode(compiler, options.checkUnreachableCode));
       }
-// TODO(user): Fix Checkpath between nodes.
-/*
       if (options.checkMissingReturn.isOn() && options.checkTypes) {
         callbacks.add(
             new CheckMissingReturn(compiler, options.checkMissingReturn));
       }
-*/
       return combineChecks(compiler, callbacks);
     }
   };

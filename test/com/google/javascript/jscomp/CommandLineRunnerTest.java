@@ -669,10 +669,9 @@ public class CommandLineRunnerTest extends TestCase {
   }
 
   public void testMissingReturnCheckOnWithVerbose() {
-    // TODO(user): Fix path checking.
-    //args.add("--warning_level=VERBOSE");
-    //test("/** @return {number} */ function f() {f()} f();",
-    //    CheckMissingReturn.MISSING_RETURN_STATEMENT);
+    args.add("--warning_level=VERBOSE");
+    test("/** @return {number} */ function f() {f()} f();",
+        CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
   /* Helper functions */
