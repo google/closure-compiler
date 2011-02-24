@@ -115,8 +115,10 @@ public class CommandLineRunner extends
         + " and exits")
     private boolean print_pass_graph = false;
 
+    // Turn on (very slow) extra sanity checks for use when modifying the
+    // compiler.
     @Option(name = "--jscomp_dev_mode",
-        usage = "Turns on extra sanity checks",
+        // hidden, no usage
         aliases = {"--dev_mode"})
     private CompilerOptions.DevMode jscomp_dev_mode =
         CompilerOptions.DevMode.OFF;
@@ -323,10 +325,10 @@ public class CommandLineRunner extends
         handler = BooleanOptionHandler.class,
         usage = "Prints the compiler version to stderr.")
     private boolean version = false;
-    
+
     @Option(name = "--flagfile",
         usage = "A file containing additional command-line options.")
-    private String flag_file = "";    
+    private String flag_file = "";
 
     // Our own option parser to be backwards-compatible.
     // It needs to be public because of the crazy reflection that args4j does.
@@ -424,7 +426,7 @@ public class CommandLineRunner extends
     Pattern argPattern = Pattern.compile("(--[a-zA-Z_]+)=(.*)");
     Pattern quotesPattern = Pattern.compile("^['\"](.*)['\"]$");
     List<String> processedArgs = Lists.newArrayList();
-    
+
     for (String arg : args) {
       Matcher matcher = argPattern.matcher(arg);
       if (matcher.matches()) {
@@ -441,11 +443,11 @@ public class CommandLineRunner extends
         processedArgs.add(arg);
       }
     }
-    
+
     return processedArgs;
   }
-  
-  private void processFlagFile(PrintStream err) 
+
+  private void processFlagFile(PrintStream err)
             throws CmdLineException, IOException {
     List<String> argsInFile = Lists.newArrayList();
     File flagFileInput = new File(flags.flag_file);
@@ -455,13 +457,13 @@ public class CommandLineRunner extends
     while (tokenizer.hasMoreTokens()) {
         argsInFile.add(tokenizer.nextToken());
     }
-    
+
     flags.flag_file = "";
-    List<String> processedFileArgs 
+    List<String> processedFileArgs
         = processArgs(argsInFile.toArray(new String[] {}));
     CmdLineParser parserFileArgs = new CmdLineParser(flags);
     parserFileArgs.parseArgument(processedFileArgs.toArray(new String[] {}));
-    
+
     // Currently we are not supporting this (prevent direct/indirect loops)
     if (!flags.flag_file.equals("")) {
       err.println("ERROR - Arguments in the file cannot contain "
@@ -469,11 +471,11 @@ public class CommandLineRunner extends
       isConfigValid = false;
     }
   }
-  
+
   private void initConfigFromFlags(String[] args, PrintStream err) {
 
     List<String> processedArgs = processArgs(args);
-    
+
     CmdLineParser parser = new CmdLineParser(flags);
     isConfigValid = true;
     try {
