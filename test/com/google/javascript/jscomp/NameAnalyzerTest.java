@@ -585,7 +585,8 @@ public class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testDo() {
-    test("var cond = false;do {var a = 1} while (cond)", "var cond = false;do {} while (cond)");
+    test("var cond = false;do {var a = 1} while (cond)",
+         "var cond = false;do {} while (cond)");
   }
 
   public void testSetterInForStruct1() {
@@ -1410,11 +1411,29 @@ public class NameAnalyzerTest extends CompilerTestCase {
 
   // TODO(user): Make NameAnalyzer handle this. The OR subexpressions may
   // modify global state.
-  // public void testConditionallyDefinedFunction2() {
-  //   test("var a = {};" +
-  //        "rand() % 2 || a.f = function() { externfoo = 1; } || alert();",
-  //        "rand() % 2 || function() { externfoo = 1; } || alert();");
+  // public void disable_testConditionallyDefinedFunction3() {
+  //    test("var a = {};" +
+  //         "rand() % 2 || (a.f = function() { externfoo = 1; } || alert());",
+  //         "rand() % 2 || function() { externfoo = 1; } || alert();");
   // }
+
+  public void testNoRemoveWindowPropertyAlias1() {
+     testSame(
+         "var self_ = window.gbar;\n" +
+         "self_.qs = function() {};");
+  }
+
+  public void testNoRemoveWindowPropertyAlias2() {
+    testSame(
+        "var self_ = window;\n" +
+        "self_.qs = function() {};");
+  }
+
+  public void testNoRemoveWindowPropertyAlias3() {
+    testSame(
+        "var self_ = window;\n" +
+        "self_['qs'] = function() {};");
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

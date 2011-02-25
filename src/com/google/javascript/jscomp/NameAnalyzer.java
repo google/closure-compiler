@@ -830,8 +830,8 @@ final class NameAnalyzer implements CompilerPass {
       // reference to it from the global scope (a.k.a. window).
       String name = nameInfo.name;
       if (nameInfo.isExternallyReferenceable) {
-        recordReference(WINDOW, name,
-                        RefType.REGULAR);
+        recordReference(WINDOW, name, RefType.REGULAR);
+        maybeRecordAlias(name, parent, referring, referringName);
         return;
       }
 
@@ -852,11 +852,7 @@ final class NameAnalyzer implements CompilerPass {
           recordReference(WINDOW, name, RefType.REGULAR);
         }
       } else if (referring != null) {
-        if ((parent.getType() == Token.NAME ||
-             parent.getType() == Token.ASSIGN) &&
-            scopes.get(parent) == referring) {
-          recordAlias(referringName, name);
-        } else {
+        if (!maybeRecordAlias(name, parent, referring, referringName)) {
           RefType depType = referring.onlyAffectsClassDef ?
               RefType.INHERITANCE : RefType.REGULAR;
           recordReference(referringName, name, depType);
@@ -874,6 +870,22 @@ final class NameAnalyzer implements CompilerPass {
           }
         }
       }
+    }
+
+    /**
+     * @return Whether the alias was recorded.
+     */
+    private boolean maybeRecordAlias(
+        String name, Node parent,
+        NameInformation referring, String referringName) {
+      if ((parent.getType() == Token.NAME ||
+          parent.getType() == Token.ASSIGN) &&
+          referring != null &&
+          scopes.get(parent) == referring) {
+        recordAlias(referringName, name);
+        return true;
+      }
+      return false;
     }
 
     /**
