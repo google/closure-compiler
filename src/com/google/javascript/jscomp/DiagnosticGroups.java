@@ -59,8 +59,7 @@ public class DiagnosticGroups {
       "externsValidation, fileoverviewTags, internetExplorerChecks, " +
       "invalidCasts, missingProperties, nonStandardJsDocs, " +
       "strictModuleDepCheck, undefinedVars, unknownDefines, uselessCode, " +
-      "visibility" +
-      "constantProperty";
+      "visibility, constantProperty";
 
   public static DiagnosticGroup DEPRECATED = DiagnosticGroups
       .registerGroup("deprecated",

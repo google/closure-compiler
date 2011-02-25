@@ -257,8 +257,9 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     // CheckAccessControls only works if check types is on.
-    if (options.enables(DiagnosticGroups.ACCESS_CONTROLS)
-        && options.checkTypes) {
+    if (options.checkTypes &&
+        (options.enables(DiagnosticGroups.ACCESS_CONTROLS)
+         || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
       checks.add(checkAccessControls);
     }
 

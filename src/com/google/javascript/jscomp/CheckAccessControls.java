@@ -99,7 +99,7 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
           "Overriding {0} property of {1} with {2} property.");
 
   static final DiagnosticType CONST_PROPERTY_REASSIGNED_VALUE =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
         "JSC_CONSTANT_PROPERTY_REASSIGNED_VALUE",
         "constant property {0} assigned a value more than once");
 
