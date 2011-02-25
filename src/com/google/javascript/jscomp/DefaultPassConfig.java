@@ -1839,7 +1839,7 @@ public class DefaultPassConfig extends PassConfig {
         options.variableRenaming == VariableRenamingPolicy.LOCAL,
         preserveAnonymousFunctionNames,
         options.generatePseudoNames,
-        /** Shadowing */ false,
+        options.shadowVariables,
         prevVariableMap,
         reservedChars,
         exportedNames);

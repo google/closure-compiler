@@ -381,6 +381,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Reserve property names on the global this object. */
   public boolean reserveRawExports;
 
+  /** Should shadow variable names in outer scope. */
+  boolean shadowVariables;
+
   /**
    * Generate pseudo names for variables and properties for debugging purposes.
    */
@@ -718,6 +721,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     propertyRenaming = PropertyRenamingPolicy.OFF;
     labelRenaming = false;
     generatePseudoNames = false;
+    shadowVariables = false;
     renamePrefix = null;
     aliasKeywords = false;
     collapseProperties = false;
@@ -936,6 +940,12 @@ public class CompilerOptions implements Serializable, Cloneable {
       PropertyRenamingPolicy newPropertyPolicy) {
     this.variableRenaming = newVariablePolicy;
     this.propertyRenaming = newPropertyPolicy;
+  }
+
+
+  /** Should shadow outer scope variable name during renaming. */
+  public void setShadowVariables(boolean shadow) {
+    this.shadowVariables = shadow;
   }
 
   /**
