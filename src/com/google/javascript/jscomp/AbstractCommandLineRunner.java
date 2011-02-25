@@ -304,10 +304,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * An exception thrown when command-line flags are used incorrectly.
    */
-  protected static class FlagUsageException extends Exception {
+  public static class FlagUsageException extends Exception {
     private static final long serialVersionUID = 1L;
 
-    FlagUsageException(String message) {
+    public FlagUsageException(String message) {
       super(message);
     }
   }
@@ -315,12 +315,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Creates inputs from a list of files.
    *
+   * Can be overridden by subclasses who want to pull files from different
+   * places.
+   *
    * @param files A list of filenames
    * @param allowStdIn Whether '-' is allowed appear as a filename to represent
    *        stdin. If true, '-' is only allowed to appear once.
    * @return An array of inputs
    */
-  private List<JSSourceFile> createInputs(List<String> files,
+  protected List<JSSourceFile> createInputs(List<String> files,
       boolean allowStdIn) throws FlagUsageException, IOException {
     List<JSSourceFile> inputs = new ArrayList<JSSourceFile>(files.size());
     boolean usingStdin = false;
@@ -411,12 +414,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
       // Parse module name.
       String name = parts[0];
-      if (!TokenStream.isJSIdentifier(name)) {
-        throw new FlagUsageException("Invalid module name: '" + name + "'");
-      }
+      checkModuleName(name);
       if (modulesByName.containsKey(name)) {
-        throw new FlagUsageException("Duplicate module name: " + name);
-      }
+              throw new FlagUsageException("Duplicate module name: " + name);
+          }
       JSModule module = new JSModule(name);
 
       // Parse module inputs.
@@ -470,6 +471,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     return Lists.newArrayList(modulesByName.values());
+  }
+
+  /**
+   * Validates the module name. Can be overridden by subclasses.
+   * @param name The module name
+   * @throws FlagUsageException if the validation fails
+   */
+  protected void checkModuleName(String name)
+      throws FlagUsageException {
+    if (!TokenStream.isJSIdentifier(name)) {
+      throw new FlagUsageException("Invalid module name: '" + name + "'");
+    }
   }
 
   /**
@@ -688,8 +701,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
             compiler.getSourceMap().reset();
           }
 
-          writeOutput(writer, compiler, compiler.toSource(m), moduleWrappers.get(
-              m.getName()), "%s");
+          writeOutput(writer, compiler, compiler.toSource(m),
+              moduleWrappers.get(m.getName()), "%s");
 
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().appendTo(mapOut, m.getName());
@@ -817,7 +830,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *
    * 1) Single js output, single extra output: sub in jsOutputPath.
    * 2) Multiple js output, single extra output: sub in the base module name.
-   * 3) Multiple js output, multiple extra output: sub in the module output file.
+   * 3) Multiple js output, multiple extra output: sub in the module output
+   *    file.
    *
    * Passing a JSModule to this function automatically triggers case #3.
    * Otherwise, we'll use strategy #1 or #2 based on the current output mode.
@@ -854,7 +868,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Converts a file name into a Writer.
+   * Converts a file name into a Writer taking in account the output charset.
    * Returns null if the file name is null.
    */
   private Writer fileNameToOutputWriter(String fileName) throws IOException {
@@ -864,7 +878,20 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (testMode) {
       return new StringWriter();
     }
-    return streamToOutputWriter(new FileOutputStream(fileName));
+
+    return streamToOutputWriter(filenameToOutputStream(fileName));
+  }
+
+  /**
+   * Converts a file name into a Ouputstream.
+   * Returns null if the file name is null.
+   */
+  protected OutputStream filenameToOutputStream(String fileName)
+      throws IOException {
+    if (fileName == null){
+      return null;
+    }
+    return new FileOutputStream(fileName);
   }
 
   /**
@@ -988,8 +1015,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (functionInformationMapOutputPath != null) {
       if (compiler.getFunctionalInformationMap() != null) {
-        FileOutputStream file =
-            new FileOutputStream(functionInformationMapOutputPath);
+        OutputStream file =
+            filenameToOutputStream(functionInformationMapOutputPath);
         CodedOutputStream outputStream = CodedOutputStream.newInstance(file);
         compiler.getFunctionalInformationMap().writeTo(outputStream);
         outputStream.flush();
@@ -1527,7 +1554,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     private TweakProcessing tweakProcessing = TweakProcessing.OFF;
-    
+
     /**
      * Sets the kind of processing to do for goog.tweak functions.
      */
