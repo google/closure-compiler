@@ -86,9 +86,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
 
   /** move the code accordingly */
   private void moveCode() {
-    for (Map.Entry<Var, NamedInfo> e : namedInfo.entrySet()) {
-      NamedInfo info = e.getValue();
-
+    for (NamedInfo info : namedInfo.values()) {
       JSModule deepestDependency = info.deepestModule;
 
       // Only move if all are true:
@@ -243,25 +241,29 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
 
       // CASE #1:
       String scopeFuncName = rootNode.getFirstChild().getString();
+      Node scopeFuncParent = rootNode.getParent();
       if (scopeFuncName.equals(name)) {
         recursive = true;
-      }
-
-      // CASE #2:
-
-
-      // Suppose name is Foo, we keep look up the scope stack to look for
-      // a scope with "Foo.prototype.bar = function() { ..... "
-      for  (Scope s = t.getScope(); s.getParent() != null; s = s.getParent()) {
-        Node curRoot = s.getRootNode();
-        if (curRoot.getParent().getType() == Token.ASSIGN) {
-          Node owner = curRoot.getParent().getFirstChild();
-          while (owner.getType() == Token.GETPROP) {
-            owner = owner.getFirstChild();
-          }
-          if (owner.getType() == Token.NAME && owner.getString().equals(name)) {
-            recursive = true;
-            break;
+      } else if (scopeFuncParent.getType() == Token.NAME &&
+          scopeFuncParent.getString().equals(name)) {
+        recursive = true;
+      } else {
+        // CASE #2:
+        // Suppose name is Foo, we keep look up the scope stack to look for
+        // a scope with "Foo.prototype.bar = function() { ..... "
+        for (Scope s = t.getScope();
+             s.getParent() != null; s = s.getParent()) {
+          Node curRoot = s.getRootNode();
+          if (curRoot.getParent().getType() == Token.ASSIGN) {
+            Node owner = curRoot.getParent().getFirstChild();
+            while (owner.getType() == Token.GETPROP) {
+              owner = owner.getFirstChild();
+            }
+            if (owner.getType() == Token.NAME &&
+                owner.getString().equals(name)) {
+              recursive = true;
+              break;
+            }
           }
         }
       }
