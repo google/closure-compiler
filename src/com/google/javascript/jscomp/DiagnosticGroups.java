@@ -50,16 +50,17 @@ public class DiagnosticGroups {
     return groupsByName.get(name);
   }
 
-  // A bit a hack to display the available groups on the command-line.
+  // A bit of a hack to display the available groups on the command-line.
   // New groups should be added to this list if they are public and should
   // be listed on the command-line as an available option.
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkRegExp," +
-      "checkTypes, checkVars, deprecated, " +
+      "checkTypes, checkVars, constantProperty, deprecated, " +
       "externsValidation, fileoverviewTags, internetExplorerChecks, " +
       "invalidCasts, missingProperties, nonStandardJsDocs, " +
-      "strictModuleDepCheck, undefinedVars, unknownDefines, uselessCode, " +
-      "visibility, constantProperty";
+      "strictModuleDepCheck, typeInvalidation, " +
+      "undefinedVars, unknownDefines, uselessCode, " +
+      "visibility";
 
   public static DiagnosticGroup DEPRECATED = DiagnosticGroups
       .registerGroup("deprecated",
@@ -161,6 +162,11 @@ public class DiagnosticGroups {
           new DiagnosticGroup(
               CheckSideEffects.USELESS_CODE_ERROR,
               CheckUnreachableCode.UNREACHABLE_CODE));
+
+  public static DiagnosticGroup TYPE_INVALIDATION =
+    DiagnosticGroups.registerGroup("typeInvalidation",
+        new DiagnosticGroup(
+            DisambiguateProperties.Warnings.INVALIDATION));
 
   /**
    * Adds warning levels by name.

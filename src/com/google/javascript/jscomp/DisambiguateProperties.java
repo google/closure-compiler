@@ -77,13 +77,14 @@ class DisambiguateProperties<T> implements CompilerPass {
   private static final Logger logger = Logger.getLogger(
       DisambiguateProperties.class.getName());
 
-  // TODO(user): add a flag to allow enabling of this once apps start
-  // using it.
-  static final DiagnosticType INVALIDATION = DiagnosticType.warning(
-      "JSC_INVALIDATION",
-      "Property disambiguator skipping all instances of property {0} "
-      + "because of type {1} node {2}");
-  private final boolean showInvalidationWarnings = false;
+  static class Warnings {
+    static final DiagnosticType INVALIDATION = DiagnosticType.disabled(
+        "JSC_INVALIDATION",
+        "Property disambiguator skipping all instances of property {0} "
+        + "because of type {1} node {2}");
+  }
+
+  private final boolean showInvalidationWarnings;
 
   private final AbstractCompiler compiler;
   private final TypeSystem<T> typeSystem;
@@ -272,6 +273,8 @@ class DisambiguateProperties<T> implements CompilerPass {
                                  TypeSystem<T> typeSystem) {
     this.compiler = compiler;
     this.typeSystem = typeSystem;
+    this.showInvalidationWarnings = compiler.getErrorLevel(
+        JSError.make("", 0, 0, Warnings.INVALIDATION)) != CheckLevel.OFF;
   }
 
   public void process(Node externs, Node root) {
@@ -400,7 +403,7 @@ class DisambiguateProperties<T> implements CompilerPass {
                                  processProperty(t, prop, type, null))) {
         if (showInvalidationWarnings) {
           compiler.report(JSError.make(
-              t.getSourceName(), n, INVALIDATION, name,
+              t.getSourceName(), n, Warnings.INVALIDATION, name,
               (type == null ? "null" : type.toString()), n.toString()));
         }
       }
@@ -423,7 +426,7 @@ class DisambiguateProperties<T> implements CompilerPass {
                                      processProperty(t, prop, type, null))) {
             if (showInvalidationWarnings) {
               compiler.report(JSError.make(
-                  t.getSourceName(), child, INVALIDATION, name,
+                  t.getSourceName(), child, Warnings.INVALIDATION, name,
                   (type == null ? "null" : type.toString()), n.toString()));
             }
           }
