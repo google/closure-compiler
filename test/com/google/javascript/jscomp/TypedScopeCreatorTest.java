@@ -1016,6 +1016,44 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("number", yType.toString());
   }
 
+  public void testDeclaredConstType1() throws Exception {
+    testSame(
+        "/** @const */ var x = 3;" +
+        "function f() { var y = x; }");
+    JSType yType = lastLocalScope.getVar("y").getType();
+    assertEquals("number", yType.toString());
+  }
+
+  public void testDeclaredConstType2() throws Exception {
+    testSame(
+        "/** @const */ var x = {};" +
+        "function f() { var y = x; }");
+    JSType yType = lastLocalScope.getVar("y").getType();
+    assertEquals("{}", yType.toString());
+  }
+
+  public void testDeclaredConstType3() throws Exception {
+    testSame(
+        "/** @const */ var x = {};" +
+        "/** @const */ x.z = 'hi';" +
+        "function f() { var y = x.z; }");
+    JSType yType = lastLocalScope.getVar("y").getType();
+    assertEquals("string", yType.toString());
+  }
+
+  public void testDeclaredConstType4() throws Exception {
+    testSame(
+        "/** @constructor */ function Foo() {}" +
+        "/** @const */ Foo.prototype.z = 'hi';" +
+        "function f() { var y = (new Foo()).z; }");
+    JSType yType = lastLocalScope.getVar("y").getType();
+    assertEquals("string", yType.toString());
+
+    ObjectType fooType =
+        ((FunctionType) globalScope.getVar("Foo").getType()).getInstanceType();
+    assertTrue(fooType.isPropertyTypeDeclared("z"));
+  }
+
   public void testBadCtorInit1() throws Exception {
     testSame("/** @constructor */ var f;", CTOR_INITIALIZER);
   }

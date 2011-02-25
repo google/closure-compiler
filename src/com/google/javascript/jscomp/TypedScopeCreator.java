@@ -1127,20 +1127,25 @@ final class TypedScopeCreator implements ScopeCreator {
           shouldUseFunctionLiteralType(
               (FunctionType) rValue.getJSType(), info, lValue)) {
         return rValue.getJSType();
-      } else if (info != null && info.hasEnumParameterType()) {
-        if (rValue != null && rValue.getType() == Token.OBJECTLIT) {
-          return rValue.getJSType();
-        } else {
-          return createEnumTypeFromNodes(
+      } else if (info != null) {
+        if (info.hasEnumParameterType()) {
+          if (rValue != null && rValue.getType() == Token.OBJECTLIT) {
+            return rValue.getJSType();
+          } else {
+            return createEnumTypeFromNodes(
+                rValue, lValue.getQualifiedName(), info, lValue);
+          }
+        } else if (info.isConstructor() || info.isInterface()) {
+          return createFunctionTypeFromNodes(
               rValue, lValue.getQualifiedName(), info, lValue);
+        } else if (info.isConstant() && rValue != null
+            && rValue.getJSType() != null
+            && !rValue.getJSType().isUnknownType()) {
+          return rValue.getJSType();
         }
-      } else if (info != null &&
-                 (info.isConstructor() || info.isInterface())) {
-        return createFunctionTypeFromNodes(
-            rValue, lValue.getQualifiedName(), info, lValue);
-      } else {
-        return getDeclaredTypeInAnnotation(sourceName, lValue, info);
       }
+
+      return getDeclaredTypeInAnnotation(sourceName, lValue, info);
     }
 
     /**
@@ -1290,18 +1295,19 @@ final class TypedScopeCreator implements ScopeCreator {
       // 1) @type annnotation / @enum annotation
       // 2) ASSIGN to FUNCTION literal
       // 3) @param/@return annotation (with no function literal)
-      // 4) ASSIGN to anything else
+      // 4) ASSIGN to something marked @const
+      // 5) ASSIGN to anything else
       //
-      // 1 and 3 are declarations, 4 is inferred, and 2 is a declaration iff
+      // 1, 3, and 4 are declarations, 5 is inferred, and 2 is a declaration iff
       // the function has not been declared before.
       //
       // FUNCTION literals are special because TypedScopeCreator is very smart
       // about getting as much type information as possible for them.
 
-      // Determining type for #1 + #2 + #3
+      // Determining type for #1 + #2 + #3 + #4
       JSType valueType = getDeclaredType(t.getSourceName(), info, n, rhsValue);
       if (valueType == null && rhsValue != null) {
-        // Determining type for #4
+        // Determining type for #5
         valueType = rhsValue.getJSType();
       }
 
@@ -1318,9 +1324,12 @@ final class TypedScopeCreator implements ScopeCreator {
 
       boolean inferred = true;
       if (info != null) {
-        // Determining declaration for #1 + #3
-        inferred = !(info.hasType() || info.hasEnumParameterType() ||
-            FunctionTypeBuilder.isFunctionTypeDeclaration(info));
+        // Determining declaration for #1 + #3 + #4
+        inferred = !(info.hasType()
+            || info.hasEnumParameterType()
+            || (info.isConstant() && valueType != null
+                && !valueType.isUnknownType())
+            || FunctionTypeBuilder.isFunctionTypeDeclaration(info));
       }
 
       if (inferred) {
