@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.5.1
+ * @fileoverview Externs for jQuery 1.5.
  *
  * Note that some functions use different return types depending on the number
  * of parameters passed in. In these cases, you may need to annotate the type
@@ -31,8 +31,7 @@
 var jQuerySelector;
 
 /**
- * @param {(jQuerySelector|Element|Array.<Element>|jQueryObject|string|
- *     function())=} arg1
+ * @param {(jQuerySelector|Element|Array|jQueryObject|string|function())=} arg1
  * @param {(Element|jQueryObject|Document|
  *     Object.<string, (string|function(jQuery.event=))>)=} arg2
  * @return {jQueryObject}
@@ -40,8 +39,7 @@ var jQuerySelector;
 function $(arg1, arg2) {};
 
 /**
- * @param {(jQuerySelector|Element|Array.<Element>|jQueryObject|string|
- *     function())=} arg1
+ * @param {(jQuerySelector|Element|Array|jQueryObject|string|function())=} arg1
  * @param {(Element|jQueryObject|Document|
  *     Object.<string, (string|function(jQuery.event=))>)=} arg2
  * @return {jQueryObject}
@@ -198,17 +196,17 @@ jQuery.Deferred.prototype.reject = function(var_args) {};
 
 /**
  * @param {Object} context
- * @param {Array.<*>=} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.deferred.prototype.rejectWith = function(context, args) {};
+jQuery.deferred.prototype.rejectWith = function(context, var_args) {};
 
 /**
  * @param {Object} context
- * @param {Array.<*>=} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.Deferred.prototype.rejectWith = function(context, args) {};
+jQuery.Deferred.prototype.rejectWith = function(context, var_args) {};
 
 /**
  * @param {...*} var_args
@@ -224,17 +222,17 @@ jQuery.Deferred.prototype.resolve = function(var_args) {};
 
 /**
  * @param {Object} context
- * @param {Array.<*>=} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.deferred.prototype.resolveWith = function(context, args) {};
+jQuery.deferred.prototype.resolveWith = function(context, var_args) {};
 
 /**
  * @param {Object} context
- * @param {Array.<*>=} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.Deferred.prototype.resolveWith = function(context, args) {};
+jQuery.Deferred.prototype.resolveWith = function(context, var_args) {};
 
 /**
  * @param {function()} doneCallbacks
@@ -293,10 +291,10 @@ jQuery.DeferredObject.prototype.reject = function(var_args) {};
 
 /**
  * @param {Object} context
- * @param {Array.<*>=} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.DeferredObject.prototype.rejectWith = function(context, args) {};
+jQuery.DeferredObject.prototype.rejectWith = function(context, var_args) {};
 
 /**
  * @param {...*} var_args
@@ -306,10 +304,10 @@ jQuery.DeferredObject.prototype.resolve = function(var_args) {};
 
 /**
  * @param {Object} context
- * @param {Array.<*>=} args
+ * @param {...*} var_args
  * @return {jQuery.DeferredObject}
  */
-jQuery.DeferredObject.prototype.resolveWith = function(context, args) {};
+jQuery.DeferredObject.prototype.resolveWith = function(context, var_args) {};
 
 /**
  * @param {function()} doneCallbacks
@@ -449,10 +447,10 @@ jQuery.getScript = function(url, success) {};
 jQuery.globalEval = function(code) {};
 
 /**
- * @param {Array.<*>} arr
+ * @param {Array} arr
  * @param {function(*,number)} fnc
  * @param {boolean=} invert
- * @return {Array.<*>}
+ * @return {Array}
  */
 jQuery.grep = function(arr, fnc, invert) {};
 
@@ -465,7 +463,7 @@ jQuery.hasData = function(elem) {};
 
 /**
  * @param {*} value
- * @param {Array.<*>} arr
+ * @param {Array} arr
  * @return {number}
  * @nosideeffects
  */
@@ -580,21 +578,21 @@ jQuery.jqXHR.prototype.then = function(doneCallbacks, failCallbacks) {};
 
 /**
  * @param {*} obj
- * @return {Array.<*>}
+ * @return {Array}
  */
 jQuery.makeArray = function(obj) {};
 
 /**
- * @param {Array.<*>} arr
+ * @param {Array} arr
  * @param {function(*,number)} callback
- * @return {Array.<*>}
+ * @return {Array}
  */
 jQuery.map = function(arr, callback) {};
 
 /**
- * @param {Array.<*>} first
- * @param {Array.<*>} second
- * @return {Array.<*>}
+ * @param {Array} first
+ * @param {Array} second
+ * @return {Array}
  */
 jQuery.merge = function(first, second) {};
 
@@ -692,8 +690,8 @@ jQuery.proxy = function(arg1, arg2) {};
 /**
  * @param {Element} elem
  * @param {string=} queueName
- * @param {(Array.<function(this:jQueryObject)>|function())=} arg3
- * @return {(Array.<Element>|jQueryObject)}
+ * @param {(Array|function())=} arg3
+ * @return {(Array|jQueryObject)}
  */
 jQuery.queue = function(elem, queueName, arg3) {};
 
@@ -710,7 +708,7 @@ jQuery.removeData = function(elem, name) {};
  */
 jQuery.sub = function() {};
 
-/** @type {Object.<string, *>} */
+/** @const */
 jQuery.support;
 
 /** @type {boolean} */
@@ -764,14 +762,14 @@ jQuery.trim = function(str) {};
 jQuery.type = function(obj) {};
 
 /**
- * @param {Array.<Element>} arr
- * @return {Array.<Element>}
+ * @param {Array} arr
+ * @return {Array}
  */
 jQuery.unique = function(arr) {};
 
 /**
  * @param {jQuery.DeferredObject} deferreds
- * @return {jQuery.Promise}
+ * @return {jQuery.DeferredObject}
  */
 jQuery.when = function(deferreds) {};
 
@@ -804,7 +802,7 @@ jQueryObject.prototype.addClass = function(arg1) {};
 
 /**
  * @param {(string|Element|jQueryObject|function(number))} arg1
- * @param {(string|Element|Array.<Element>|jQueryObject)=} content
+ * @param {(string|Element|Array|jQueryObject)=} content
  * @return {jQueryObject}
  */
 jQueryObject.prototype.after = function(arg1, content) {};
@@ -863,7 +861,7 @@ jQueryObject.prototype.animate
 
 /**
  * @param {(string|Element|jQueryObject|function(number,string))} arg1
- * @param {(string|Element|Array.<Element>|jQueryObject)=} content
+ * @param {(string|Element|Array|jQueryObject)=} content
  * @return {jQueryObject}
  */
 jQueryObject.prototype.append = function(arg1, content) {};
@@ -883,7 +881,7 @@ jQueryObject.prototype.attr = function(arg1, arg2) {};
 
 /**
  * @param {(string|Element|jQueryObject|function())} arg1
- * @param {(string|Element|Array.<Element>|jQueryObject)=} content
+ * @param {(string|Element|Array|jQueryObject)=} content
  * @return {jQueryObject}
  */
 jQueryObject.prototype.before = function(arg1, content) {};
@@ -939,9 +937,9 @@ jQueryObject.prototype.clone
     = function(withDataAndEvents, deepWithDataAndEvents) {};
 
 /**
- * @param {(jQuerySelector|string|Array.<string>)} arg1
+ * @param {(jQuerySelector|Array)} arg1
  * @param {Element=} context
- * @return {(jQueryObject|Array.<Element>)}
+ * @return {(jQueryObject|Array)}
  * @nosideeffects
  */
 jQueryObject.prototype.closest = function(arg1, context) {};
@@ -1116,7 +1114,7 @@ jQueryObject.prototype.focusout = function(arg1, handler) {};
 
 /**
  * @param {number=} index
- * @return {(Element|Array.<Element>)}
+ * @return {(Element|Array)}
  * @nosideeffects
  */
 jQueryObject.prototype.get = function(index) {};
@@ -1427,17 +1425,17 @@ jQueryObject.prototype.prevAll = function(selector) {};
 jQueryObject.prototype.prevUntil = function(selector) {};
 
 /**
- * @param {Array.<Element>} elements
+ * @param {Array} elements
  * @param {string=} name
- * @param {Array.<*>=} args
+ * @param {Array=} args
  * @return {jQueryObject}
  */
 jQueryObject.prototype.pushStack = function(elements, name, args) {};
 
 /**
  * @param {string=} queueName
- * @param {(Array.<function(this:jQueryObject)>|function(function()))=} arg2
- * @return {(Array.<Element>|jQueryObject)}
+ * @param {(Array|function(function()))=} arg2
+ * @return {(Array|jQueryObject)}
  */
 jQueryObject.prototype.queue = function(queueName, arg2) {};
 
@@ -1526,7 +1524,7 @@ jQueryObject.prototype.selector;
 jQueryObject.prototype.serialize = function() {};
 
 /**
- * @return {Array.<Object.<string, *>>}
+ * @return {Array}
  * @nosideeffects
  */
 jQueryObject.prototype.serializeArray = function() {};
@@ -1605,7 +1603,7 @@ jQueryObject.prototype.submit = function(arg1, handler) {};
 jQueryObject.prototype.text = function(arg1) {};
 
 /**
- * @return {Array.<Element>}
+ * @return {Array}
  * @nosideeffects
  */
 jQueryObject.prototype.toArray = function() {};
@@ -1627,14 +1625,14 @@ jQueryObject.prototype.toggleClass = function(arg1, flag) {};
 
 /**
  * @param {(string|jQuery.event)} arg1
- * @param {Array.<*>=} extraParameters
+ * @param {Array=} extraParameters
  * @return {jQueryObject}
  */
 jQueryObject.prototype.trigger = function(arg1, extraParameters) {};
 
 /**
  * @param {string} eventType
- * @param {Array.<*>} extraParameters
+ * @param {Array} extraParameters
  * @return {*}
  */
 jQueryObject.prototype.triggerHandler = function(eventType, extraParameters) {};
@@ -1666,7 +1664,7 @@ jQueryObject.prototype.unwrap = function() {};
 
 /**
  * @param {(string|function(number,*))=} arg1
- * @return {(string|Array.<string>|jQueryObject)}
+ * @return {(string|Array|jQueryObject)}
  */
 jQueryObject.prototype.val = function(arg1) {};
 

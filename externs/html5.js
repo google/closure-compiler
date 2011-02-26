@@ -36,12 +36,6 @@
  */
 function HTMLCanvasElement() {}
 
-/** @type {number} */
-HTMLCanvasElement.prototype.width;
-
-/** @type {number} */
-HTMLCanvasElement.prototype.height;
-
 /**
  * @param {string=} opt_type
  * @return {string}
