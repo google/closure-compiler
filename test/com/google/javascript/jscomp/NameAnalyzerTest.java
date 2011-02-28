@@ -25,7 +25,9 @@ import com.google.javascript.rhino.Node;
 public class NameAnalyzerTest extends CompilerTestCase {
 
   private static String kExterns =
-      "var window, top; var Function; var externfoo; methods.externfoo;";
+      "var window, top;" +
+      "var document;" +
+      "var Function; var externfoo; methods.externfoo;";
 
   public NameAnalyzerTest() {
     super(kExterns);
@@ -1032,40 +1034,62 @@ public class NameAnalyzerTest extends CompilerTestCase {
          "");
   }
 
-  public void testRhsAssignWithHook1() {
+  public void testAssignWithOr1() {
+    testSame("var foo = null;" +
+        "var f = window.a || function () {return foo}; f()");
+  }
+
+  public void testAssignWithOr2() {
+    test("var foo = null;" +
+        "var f = window.a || function () {return foo};",
+        "var foo = null"); // why is this left?
+  }
+
+  public void testAssignWithAnd1() {
+    testSame("var foo = null;" +
+        "var f = window.a && function () {return foo}; f()");
+  }
+
+  public void testAssignWithAnd2() {
+    test("var foo = null;" +
+        "var f = window.a && function () {return foo};",
+        "var foo = null;");  // why is this left?
+  }
+
+  public void testAssignWithHook1() {
     testSame("function Foo(){} var foo = null;" +
         "var f = window.a ? " +
         "    function () {return new Foo()} : function () {return foo}; f()");
   }
 
-  public void testRhsAssignWithHook2() {
+  public void testAssignWithHook2() {
     test("function Foo(){} var foo = null;" +
         "var f = window.a ? " +
         "    function () {return new Foo()} : function () {return foo};",
         "");
   }
 
-  public void testRhsAssignWithHook3() {
+  public void testAssignWithHook3() {
     testSame("function Foo(){} var foo = null; var f = {};" +
         "f.b = window.a ? " +
         "    function () {return new Foo()} : function () {return foo}; f.b()");
   }
 
-  public void testRhsAssignWithHook4() {
+  public void testAssignWithHook4() {
     test("function Foo(){} var foo = null; var f = {};" +
         "f.b = window.a ? " +
         "    function () {return new Foo()} : function () {return foo};",
         "");
   }
 
-  public void testRhsAssignWithHook5() {
+  public void testAssignWithHook5() {
     testSame("function Foo(){} var foo = null; var f = {};" +
         "f.b = window.a ? function () {return new Foo()} :" +
         "    window.b ? function () {return foo} :" +
         "    function() { return Foo }; f.b()");
   }
 
-  public void testRhsAssignWithHook6() {
+  public void testAssignWithHook6() {
     test("function Foo(){} var foo = null; var f = {};" +
         "f.b = window.a ? function () {return new Foo()} :" +
         "    window.b ? function () {return foo} :" +
@@ -1411,7 +1435,7 @@ public class NameAnalyzerTest extends CompilerTestCase {
 
   // TODO(user): Make NameAnalyzer handle this. The OR subexpressions may
   // modify global state.
-  // public void disable_testConditionallyDefinedFunction3() {
+  // public void testConditionallyDefinedFunction3() {
   //    test("var a = {};" +
   //         "rand() % 2 || (a.f = function() { externfoo = 1; } || alert());",
   //         "rand() % 2 || function() { externfoo = 1; } || alert();");
@@ -1433,6 +1457,55 @@ public class NameAnalyzerTest extends CompilerTestCase {
     testSame(
         "var self_ = window;\n" +
         "self_['qs'] = function() {};");
+  }
+
+  public void testNoRemoveAlias0() {
+    testSame(
+        "var x = {}; function f() { return x; }; " +
+        "f().style.display = 'block';" +
+        "alert(x.style)");
+  }
+
+  public void testNoRemoveAlias1() {
+    testSame(
+        "var x = {}; function f() { return x; };" +
+        "var map = f();\n" +
+        "map.style.display = 'block';" +
+        "alert(x.style)");
+  }
+
+  public void testNoRemoveAlias2() {
+    testSame(
+        "var x = {};" +
+        "var map = (function () { return x; })();\n" +
+        "map.style = 'block';" +
+        "alert(x.style)");
+  }
+
+  public void testNoRemoveAlias3() {
+    testSame(
+        "var x = {}; function f() { return x; };" +
+        "var map = {}\n" +
+        "map[1] = f();\n" +
+        "map[1].style.display = 'block';");
+  }
+
+  public void testNoRemoveAliasOfExternal0() {
+    testSame(
+        "document.getElementById('foo').style.display = 'block';");
+  }
+
+  public void testNoRemoveAliasOfExternal1() {
+    testSame(
+        "var map = document.getElementById('foo');\n" +
+        "map.style.display = 'block';");
+  }
+
+  public void testNoRemoveAliasOfExternal2() {
+    testSame(
+        "var map = {}\n" +
+        "map[1] = document.getElementById('foo');\n" +
+        "map[1].style.display = 'block';");
   }
 
   @Override

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -674,6 +675,20 @@ final class NameAnalyzer implements CompilerPass {
     }
   }
 
+  private static final Predicate<Node> NON_LOCAL_RESULT_PREDICATE =
+      new Predicate<Node>() {
+        @Override
+        public boolean apply(Node input) {
+          if (input.getType() == Token.CALL) {
+            return false;
+          }
+          // TODO(johnlenz): handle NEW calls that record their 'this'
+          // in global scope and effectly return an alias.
+          // Other non-local references are handled by this pass.
+          return true;
+        }
+      };
+
   /**
    * <p>Identifies all references between global names.
    *
@@ -826,9 +841,18 @@ final class NameAnalyzer implements CompilerPass {
                       : referring.name;
       }
 
+      String name = nameInfo.name;
+
+      // A value whose result is the return value of a function call
+      // can be an alias to global object.
+      // Here we add a alias to the general "global" object
+      // to act as a placeholder for the actual (unnamed) value.
+      if (maybeHiddenAlias(name, n)) {
+        recordAlias(name, WINDOW);
+      }
+
       // An externally referenceable name must always be defined, so we add a
       // reference to it from the global scope (a.k.a. window).
-      String name = nameInfo.name;
       if (nameInfo.isExternallyReferenceable) {
         recordReference(WINDOW, name, RefType.REGULAR);
         maybeRecordAlias(name, parent, referring, referringName);
@@ -870,6 +894,23 @@ final class NameAnalyzer implements CompilerPass {
           }
         }
       }
+    }
+
+    /**
+     * A value whose result is the return value of a function call
+     * can be an alias to global object. The dependency on the call target will
+     * prevent the removal of the function and its dependent values, but won't
+     * prevent the alias' removal.
+     */
+    private boolean maybeHiddenAlias(String name, Node n) {
+      Node parent = n.getParent();
+      if (NodeUtil.isLhs(n, parent)) {
+        Node rhs = (parent.getType() == Token.VAR)
+            ? n.getFirstChild() : parent.getLastChild();
+        return (rhs != null && !NodeUtil.evaluatesToLocalValue(
+            rhs, NON_LOCAL_RESULT_PREDICATE));
+      }
+      return false;
     }
 
     /**
