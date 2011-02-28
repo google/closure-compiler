@@ -658,6 +658,12 @@ Window.prototype.showModalDialog;
 Window.prototype.showModelessDialog;
 
 /**
+ * @see http://msdn.microsoft.com/en-us/library/ms535246%28v=vs.85%29.aspx
+ * @const
+ */
+Window.prototype.external;
+
+/**
  * @constructor
  */
 function History() { };
