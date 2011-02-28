@@ -30,13 +30,11 @@ class PeepholeOptimizationsPass extends AbstractPostOrderCallback
     implements CompilerPass {
   private AbstractCompiler compiler;
 
-  private ImmutableSet<AbstractPeepholeOptimization> peepholeOptimizations;
+  // Use an array here for faster iteration compared to ImmutableSet
+  // TODO should sort based on likelihood that a given optimzation can
+  // modify something.
+  private final AbstractPeepholeOptimization[] peepholeOptimizations;
 
-  PeepholeOptimizationsPass(AbstractCompiler compiler,
-      ImmutableSet<AbstractPeepholeOptimization> optimizations) {
-    this.compiler = compiler;
-    this.peepholeOptimizations = optimizations;
-  }
 
   /**
    * Creates a peephole optimization pass that runs the given
@@ -44,7 +42,8 @@ class PeepholeOptimizationsPass extends AbstractPostOrderCallback
    */
   PeepholeOptimizationsPass(AbstractCompiler compiler,
       AbstractPeepholeOptimization... optimizations) {
-    this(compiler, ImmutableSet.copyOf(optimizations));
+    this.compiler = compiler;
+    this.peepholeOptimizations = optimizations;
   }
 
   public AbstractCompiler getCompiler() {
