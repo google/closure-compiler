@@ -4817,7 +4817,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
              "Element.prototype.innerHTML;" +
              "/** @constructor \n @extends Element */" +
              "function DIVElement() {};",
-             "(new DIVElement).innerHTML = new Array();", null, false);
+             "(new DIVElement).innerHTML = new Array();",
+             null, false);
   }
 
   public void testImplicitCastNotInExterns() throws Exception {
@@ -6710,6 +6711,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "inconsistent return type\n" +
         "found   : number\n" +
         "required: string");
+  }
+
+  public void testInterfaceInheritanceCheck12() throws Exception {
+    testTypes(
+        "/** @interface */ function I() {};\n" +
+        "/** @type {string} */ I.prototype.foobar;\n" +
+        "/** \n * @constructor \n * @implements {I} */\n" +
+        "function C() {\n" +
+        "/** \n * @type {number} */ this.foobar = 2;};\n" +
+        "/** @type {I} */ \n var test = new C(); alert(test.foobar);",
+        "mismatch of the foobar property type and the type of the property" +
+        " it overrides from interface I\n" +
+        "original: string\n" +
+        "override: number");
   }
 
   public void testInterfacePropertyNotImplemented() throws Exception {

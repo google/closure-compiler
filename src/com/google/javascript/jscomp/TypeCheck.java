@@ -182,14 +182,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "original: {2}\n" +
           "override: {3}");
 
-  static final DiagnosticType HIDDEN_INTERFACE_PROPERTY_MISMATCH =
-      DiagnosticType.warning(
-          "JSC_HIDDEN_INTERFACE_PROPERTY_MISMATCH",
-          "mismatch of the {0} property type and the type " +
-          "of the property it overrides from interface {1}\n" +
-          "original: {2}\n" +
-          "override: {3}");
-
   static final DiagnosticType UNKNOWN_OVERRIDE =
       DiagnosticType.warning(
           "JSC_UNKNOWN_OVERRIDE",
@@ -240,7 +232,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       HIDDEN_SUPERCLASS_PROPERTY,
       HIDDEN_INTERFACE_PROPERTY,
       HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
-      HIDDEN_INTERFACE_PROPERTY_MISMATCH,
       UNKNOWN_OVERRIDE,
       INTERFACE_METHOD_OVERRIDE,
       UNKNOWN_EXPR_TYPE,
@@ -1047,17 +1038,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               HIDDEN_INTERFACE_PROPERTY, propertyName,
               interfaceType.getTopMostDefiningType(propertyName).toString()));
         }
-        // Check that it is ok
-        if (interfaceHasProperty) {
-          JSType interfacePropType =
-              interfaceType.getPrototype().getPropertyType(propertyName);
-          if (!propertyType.canAssignTo(interfacePropType)) {
-            compiler.report(t.makeError(n,
-                HIDDEN_INTERFACE_PROPERTY_MISMATCH, propertyName,
-                interfaceType.getTopMostDefiningType(propertyName).toString(),
-                interfacePropType.toString(), propertyType.toString()));
-          }
-        }
       }
     }
 
@@ -1441,7 +1421,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
       }
       if (functionType.isConstructor()) {
-        validator.expectAllInterfacePropertiesImplemented(functionType);
+        validator.expectAllInterfaceProperties(t, n, functionType);
       }
     }
   }
