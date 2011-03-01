@@ -2768,6 +2768,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testEnum41() throws Exception {
+    testTypes(
+        "/** @enum {number} */ var MyEnum = {/** @const */ FOO: 1};" +
+        "/** @return {string} */" +
+        "function f() { return MyEnum.FOO; }",
+        "inconsistent return type\n" +
+        "found   : MyEnum.<number>\n" +
+        "required: string");
+  }
+
   public void testAliasedEnum1() throws Exception {
     testTypes(
         "/** @enum */ var YourEnum = {FOO: 3};" +
