@@ -59,6 +59,7 @@ public final class CompileTask
   private boolean manageDependencies;
   private boolean prettyPrint;
   private boolean printInputDelimiter;
+  private boolean generateExports;
   private File outputFile;
   private final List<FileList> externFileLists;
   private final List<FileList> sourceFileLists;
@@ -71,6 +72,7 @@ public final class CompileTask
     this.manageDependencies = false;
     this.prettyPrint = false;
     this.printInputDelimiter = false;
+    this.generateExports = false;
     this.externFileLists = Lists.newLinkedList();
     this.sourceFileLists = Lists.newLinkedList();
   }
@@ -165,6 +167,13 @@ public final class CompileTask
   }
 
   /**
+   * Set generateExports option
+   */
+  public void setGenerateExports(boolean generateExports) {
+   this.generateExports = generateExports;
+  }
+
+  /**
    * Sets the externs file.
    */
   public void addExterns(FileList list) {
@@ -216,6 +225,7 @@ public final class CompileTask
 
     options.prettyPrint = this.prettyPrint;
     options.printInputDelimiter = this.printInputDelimiter;
+    options.generateExports = this.generateExports;
 
     this.warningLevel.setOptionsForWarningLevel(options);
     options.setManageClosureDependencies(manageDependencies);
