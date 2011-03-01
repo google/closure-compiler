@@ -1165,6 +1165,8 @@ public class NodeUtilTest extends TestCase {
     assertTrue(testLocalValue("o.toString()"));
 
     assertFalse(testLocalValue("o.valueOf()"));
+
+    assertTrue(testLocalValue("delete a.b"));
   }
 
   public void testLocalValue2() {
@@ -1499,6 +1501,7 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isBooleanResult(getNode("a.b()")));
     assertFalse(NodeUtil.isBooleanResult(getNode("a().b()")));
     assertFalse(NodeUtil.isBooleanResult(getNode("new a()")));
+    assertTrue(NodeUtil.isBooleanResult(getNode("delete a")));
 
     // Definitely not boolean
     assertFalse(NodeUtil.isBooleanResult(getNode("([true,false])")));
