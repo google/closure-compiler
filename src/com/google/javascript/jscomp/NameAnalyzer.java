@@ -767,7 +767,8 @@ final class NameAnalyzer implements CompilerPass {
 
       if (parent.getType() == Token.VAR ||
           parent.getType() == Token.EXPR_RESULT ||
-          parent.getType() == Token.RETURN) {
+          parent.getType() == Token.RETURN ||
+          parent.getType() == Token.THROW) {
         addSimplifiedExpression(n, parent);
       }
 

@@ -1508,6 +1508,18 @@ public class NameAnalyzerTest extends CompilerTestCase {
         "map[1].style.display = 'block';");
   }
 
+  public void testNoRemoveThrowReference1() {
+    testSame(
+      "var e = {}\n" +
+      "throw e;");
+  }
+
+  public void testNoRemoveThrowReference2() {
+    testSame(
+      "function e() {}\n" +
+      "throw new e();");
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new MarkNoSideEffectCallsAndNameAnalyzerRunner(compiler);
