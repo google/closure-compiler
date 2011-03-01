@@ -674,6 +674,13 @@ public class CommandLineRunnerTest extends TestCase {
         CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
+  public void testGenerateExports() {
+    args.add("--generate_exports=true");
+    test("/** @export */ foo.prototype.x = function() {};",
+        "foo.prototype.x=function(){};"+
+        "goog.exportSymbol(\"foo.prototype.x\",foo.prototype.x);");
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {

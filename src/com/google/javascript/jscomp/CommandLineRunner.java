@@ -272,6 +272,11 @@ public class CommandLineRunner extends
         usage = "Enable debugging options")
     private boolean debug = false;
 
+    @Option(name = "--generate_exports",
+        handler = BooleanOptionHandler.class,
+        usage = "Generates export code for those marked with @export")
+    private boolean generate_exports = false;
+
     @Option(name = "--formatting",
         usage = "Specifies which formatting options, if any, should be "
         + "applied to the output JS. Options: "
@@ -550,6 +555,10 @@ public class CommandLineRunner extends
     level.setOptionsForCompilationLevel(options);
     if (flags.debug) {
       level.setDebugOptionsForCompilationLevel(options);
+    }
+
+    if(flags.generate_exports) {
+      options.setGenerateExports(flags.generate_exports);
     }
 
     WarningLevel wLevel = flags.warning_level;

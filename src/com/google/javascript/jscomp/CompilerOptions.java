@@ -1037,6 +1037,10 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.runtimeTypeCheck = false;
   }
 
+  public void setGenerateExports(boolean generateExports) {
+    this.generateExports = generateExports;
+  }
+
   public void setCodingConvention(CodingConvention codingConvention) {
     this.codingConvention = codingConvention;
   }
