@@ -381,6 +381,11 @@ public class NormalizeTest extends CompilerTestCase {
          "}");
   }
 
+  public void testIssue() {
+    super.allowExternsChanges(true);
+    test("var a,b,c; var a,b", "a(), b()", "a(), b()", null, null);
+  }
+
   public void testNormalizeSyntheticCode() {
     Compiler compiler = new Compiler();
     compiler.init(
@@ -428,7 +433,7 @@ public class NormalizeTest extends CompilerTestCase {
 
   public void testGetterPropertyIsConstant() throws Exception {
     testSame("var a = { get CONST() {return 3} }; " +
-    		 "var b = a.CONST;");
+             "var b = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);

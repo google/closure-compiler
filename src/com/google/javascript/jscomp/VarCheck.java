@@ -218,6 +218,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
     getSynthesizedExternsRoot().addChildToBack(
         new Node(Token.VAR, nameNode));
     varsToDeclareInExterns.remove(varName);
+    compiler.reportCodeChange();
   }
 
   /**

@@ -117,8 +117,9 @@ class Normalize implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root,
-        new NormalizeStatements(compiler, assertOnChange));
+    new NodeTraversal(
+        compiler, new NormalizeStatements(compiler, assertOnChange))
+        .traverseRoots(externs, root);
     if (MAKE_LOCAL_NAMES_UNIQUE) {
       MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
       NodeTraversal t = new NodeTraversal(compiler, renamer);
@@ -348,7 +349,7 @@ class Normalize implements CompilerPass {
      */
     private void annotateConstantsByConvention(Node n, Node parent) {
       Preconditions.checkState(
-          n.getType() == Token.NAME 
+          n.getType() == Token.NAME
           || n.getType() == Token.STRING
           || n.getType() == Token.GET
           || n.getType() == Token.SET);

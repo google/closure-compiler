@@ -39,6 +39,7 @@ public class VarCheckTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    super.allowExternsChanges(true);
     strictModuleDepErrorLevel = CheckLevel.OFF;
     externValidationErrorLevel = null;
     sanityCheck = false;

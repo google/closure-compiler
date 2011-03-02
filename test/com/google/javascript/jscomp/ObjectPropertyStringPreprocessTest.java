@@ -31,6 +31,11 @@ public class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
     return 1;
   }
 
+  @Override
+  protected void setUp() {
+    super.allowExternsChanges(true);
+  }
+
   public void testDeclaration() {
     test("goog.testing.ObjectPropertyString = function() {}",
          "JSCompiler_ObjectPropertyString = function() {}");
