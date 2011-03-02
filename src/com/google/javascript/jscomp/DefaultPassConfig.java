@@ -494,6 +494,12 @@ public class DefaultPassConfig extends PassConfig {
       }
     }
 
+    // Running this pass again is required to have goog.events compile down to
+    // nothing when compiled on its own.
+    if (options.smartNameRemoval) {
+      passes.add(smartNamePass2);
+    }
+
     if (options.collapseAnonymousFunctions) {
       passes.add(collapseAnonymousFunctions);
     }
@@ -1461,6 +1467,24 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
+  /**
+   * Process smart name processing - removes unused classes and does referencing
+   * starting with minimum set of names.
+   */
+  private final PassFactory smartNamePass2 =
+      new PassFactory("smartNamePass", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node root) {
+          NameAnalyzer na = new NameAnalyzer(compiler, false);
+          na.process(externs, root);
+          na.removeUnreferenced();
+        }
+      };
+    }
+  };
 
   /** Inlines simple methods, like getters */
   private PassFactory inlineSimpleMethods =
