@@ -255,19 +255,14 @@ class FunctionArgumentInjector {
             String name = cArg.getString();
             safe = !(convention.isExported(name));
             break;
-          case Token.NULL:
-          case Token.VOID:
           case Token.THIS:
-          case Token.FALSE:
-          case Token.TRUE:
-          case Token.NUMBER:
             safe = true;
             break;
           case Token.STRING:
             safe = (cArg.getString().length() < 2);
             break;
           default:
-            safe = false;
+            safe = NodeUtil.isImmutableValue(cArg);
             break;
         }
       }
