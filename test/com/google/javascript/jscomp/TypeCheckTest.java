@@ -2487,6 +2487,29 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "right: boolean");
   }
 
+  public void testDeleteOperator1() throws Exception {
+    testTypes(
+        "var x = {};" +
+        "/** @return {string} */ function f() { return delete x['a']; }",
+        "inconsistent return type\n" +
+        "found   : boolean\n" +
+        "required: string");
+  }
+
+  public void testDeleteOperator2() throws Exception {
+    testTypes(
+        "var obj = {};" +
+        "/** \n" +
+        " * @param {string} x\n" +
+        " * @return {Object} */ function f(x) { return obj; }" +
+        "/** @param {?number} x */ function g(x) {" +
+        "  if (x) { delete f(x)['a']; }" +
+        "}",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testEnumStaticMethod1() throws Exception {
     testTypes(
         "/** @enum */ var Foo = {AAA: 1};" +

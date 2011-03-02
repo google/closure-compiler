@@ -405,6 +405,7 @@ class TypeInference
         n.setJSType(getNativeType(STRING_TYPE));
         break;
 
+      case Token.DELPROP:
       case Token.LT:
       case Token.LE:
       case Token.GT:
@@ -573,14 +574,17 @@ class TypeInference
         if (objectType.hasProperty(propName) ||
             !objectType.isInstanceType()) {
           if ("prototype".equals(propName)) {
-            objectType.defineDeclaredProperty(propName, rightType, false, getprop);
+            objectType.defineDeclaredProperty(
+                propName, rightType, false, getprop);
           } else {
-            objectType.defineInferredProperty(propName, rightType, false, getprop);
+            objectType.defineInferredProperty(
+                propName, rightType, false, getprop);
           }
         } else {
           if (getprop.getFirstChild().getType() == Token.THIS &&
               getJSType(syntacticScope.getRootNode()).isConstructor()) {
-            objectType.defineInferredProperty(propName, rightType, false, getprop);
+            objectType.defineInferredProperty(
+                propName, rightType, false, getprop);
           } else {
             registry.registerPropertyOnType(propName, objectType);
           }
@@ -952,7 +956,8 @@ class TypeInference
                         registry.createFunctionTypeWithNewThisType(
                             jArgumentFnType, (ObjectType) iArgumentType));
                   }
-                  // Warn if the anonymous function literal does not reference this.
+                  // Warn if the anonymous function literal does not
+                  // reference this.
                   if (!NodeUtil.referencesThis(
                           NodeUtil.getFunctionBody(jArgument))) {
                     compiler.report(JSError.make(NodeUtil.getSourceName(n), n,
@@ -1238,8 +1243,8 @@ class TypeInference
     }
 
     /**
-     * Gets the safe estimated scope without knowing if all of the subexpressions
-     * will be evaluated.
+     * Gets the safe estimated scope without knowing if all of the
+     * subexpressions will be evaluated.
      */
     FlowScope getJoinedFlowScope() {
       if (joinedScope == null) {
