@@ -101,9 +101,9 @@ public class AliasStringsTest extends CompilerTestCase {
     test("var foo={px:435}", "var foo={px:435}");
 
     // string as key
-    test("var foo={'px':435}", "var foo={px:435}");
+    test("var foo={'px':435}", "var foo={'px':435}");
     test("bar=function f(){return {'px':435}}",
-         "bar=function f(){return {px:435}}");
+         "bar=function f(){return {'px':435}}");
 
     test("function f() {var foo={bar:'!@#$%^&*()'}}",
          "var $$S_$21$40$23$24$25$5e$26$2a$28$29='!@#$%^&*()';" +

@@ -261,8 +261,8 @@ public class Node implements Cloneable, Serializable {
     }
 
     @Override
-    public boolean isEquivalentTo(Node node) {
-      return (node instanceof NumberNode
+    boolean isEquivalentTo(Node node, boolean recurse) {
+      return (super.isEquivalentTo(node, recurse)
           && getDouble() == ((NumberNode) node).getDouble());
     }
 
@@ -311,9 +311,9 @@ public class Node implements Cloneable, Serializable {
     }
 
     @Override
-    public boolean isEquivalentTo(Node node) {
-      return (node instanceof StringNode &&
-         this.str.equals(((StringNode) node).str));
+    boolean isEquivalentTo(Node node, boolean recurse) {
+      return (super.isEquivalentTo(node, recurse)
+          && this.str.equals(((StringNode) node).str));
     }
 
     /**
@@ -1402,14 +1402,7 @@ public class Node implements Cloneable, Serializable {
    * testing. Returns null if the nodes are equivalent.
    */
   NodeMismatch checkTreeEqualsImpl(Node node2) {
-    boolean eq = false;
-
-    if (type == node2.getType() && getChildCount() == node2.getChildCount()
-        && getNodeClass(this) == getNodeClass(node2)) {
-      eq = this.isEquivalentTo(node2);
-    }
-
-    if (!eq) {
+    if (!isEquivalentTo(node2, false)) {
       return new NodeMismatch(this, node2);
     }
 
@@ -1418,6 +1411,9 @@ public class Node implements Cloneable, Serializable {
     for (n = first, n2 = node2.first;
          res == null && n != null;
          n = n.next, n2 = n2.next) {
+      if (node2 == null) {
+        throw new IllegalStateException();
+      }
       res = n.checkTreeEqualsImpl(n2);
       if (res != null) {
         return res;
@@ -1441,15 +1437,10 @@ public class Node implements Cloneable, Serializable {
    * testing. Returns null if the nodes are equivalent.
    */
   NodeMismatch checkTreeTypeAwareEqualsImpl(Node node2) {
-    boolean eq = false;
+    // Do a non-recursive equivalents check.
+    boolean eq = this.isEquivalentTo(node2, false);
 
-    if (type == node2.getType()
-        && getChildCount() == node2.getChildCount()
-        && getClass() == node2.getClass()
-        && JSType.isEquivalent(jsType, node2.getJSType())) {
-
-      eq = this.isEquivalentTo(node2);
-    }
+    eq = eq && JSType.isEquivalent(jsType, node2.getJSType());
 
     if (!eq) {
       return new NodeMismatch(this, node2);
@@ -1593,6 +1584,17 @@ public class Node implements Cloneable, Serializable {
 
   /** Returns true if this node is equivalent semantically to another */
   public boolean isEquivalentTo(Node node) {
+    return isEquivalentTo(node, true);
+  }
+
+  /** Returns true if this node is equivalent semantically to another */
+  boolean isEquivalentTo(Node node, boolean recurse) {
+    if (type != node.getType()
+        || getChildCount() != node.getChildCount()
+        || getNodeClass(this) != getNodeClass(node)) {
+      return false;
+    }
+
     if (type == Token.ARRAYLIT) {
       try {
         int[] indices1 = (int[]) getProp(Node.SKIP_INDEXES_PROP);
@@ -1628,6 +1630,18 @@ public class Node implements Cloneable, Serializable {
         return false;
       }
     }
+
+    if (recurse) {
+      Node n, n2;
+      for (n = first, n2 = node.first;
+           n != null;
+           n = n.next, n2 = n2.next) {
+        if (!n.isEquivalentTo(n2, true)) {
+          return false;
+        }
+      }
+    }
+
     return true;
   }
 

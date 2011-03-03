@@ -57,34 +57,34 @@ public class RenamePrototypesTest extends CompilerTestCase {
          "Bar.prototype['a']=function(){};Bar.a(b);" +
          "Bar.prototype['b']=function(){}");
     test("Bar.prototype={'getFoo':function(){},2:function(){}}",
-         "Bar.prototype={a:function(){},2:function(){}}");
+         "Bar.prototype={'a':function(){},2:function(){}}");
     test("Bar.prototype={'getFoo':function(){}," +
          "'getBar':function(){}};b.getFoo()",
-         "Bar.prototype={a:function(){}," +
-         "b:function(){}};b.a()");
+         "Bar.prototype={'a':function(){}," +
+         "'b':function(){}};b.a()");
 
     test("Bar.prototype={'B':function(){}," +
          "'getBar':function(){}};b.getBar()",
-         "Bar.prototype={b:function(){}," +
-         "a:function(){}};b.a()");
+         "Bar.prototype={'b':function(){}," +
+         "'a':function(){}};b.a()");
 
     // overlap
     test("Bar.prototype={'a':function(){}," +
          "'b':function(){}};b.b()",
-         "Bar.prototype={b:function(){}," +
-         "a:function(){}};b.a()");
+         "Bar.prototype={'b':function(){}," +
+         "'a':function(){}};b.a()");
 
     // don't rename anything with a leading underscore
     test("Bar.prototype={'_getFoo':function(){}," +
          "'getBar':function(){}};b._getFoo()",
-         "Bar.prototype={_getFoo:function(){}," +
-         "a:function(){}};b._getFoo()");
+         "Bar.prototype={'_getFoo':function(){}," +
+         "'a':function(){}};b._getFoo()");
 
     // Externed methods
     test("Bar.prototype={'toString':function(){}," +
          "'getBar':function(){}};b.toString()",
-         "Bar.prototype={toString:function(){}," +
-         "a:function(){}};b.toString()");
+         "Bar.prototype={'toString':function(){}," +
+         "'a':function(){}};b.toString()");
 
     // don't rename a method to an existing (unrenamed) property
     test("Bar.prototype.foo=function(){}" +
@@ -114,7 +114,7 @@ public class RenamePrototypesTest extends CompilerTestCase {
          "Bar.prototype={set a(x){}}");
     test("Bar.prototype={set getFoo(x){}}; a.getFoo;",
          "Bar.prototype={set a(x){}}; a.a;");
-    
+
     // overlap
     test("Bar.prototype={get a(){}," +
          "get b(){}};b.b()",
@@ -209,32 +209,33 @@ public class RenamePrototypesTest extends CompilerTestCase {
     testStable(
         "Bar.prototype={'getFoo':function(){}," +
         "'getBar':function(){}};b.getFoo()",
-        "Bar.prototype={a:function(){}, b:function(){}};b.a()",
+        "Bar.prototype={'a':function(){}, 'b':function(){}};b.a()",
         "Bar.prototype={'getFoo':function(){}," +
         "'getBaz':function(){},'getBar':function(){}};b.getFoo()",
-        "Bar.prototype={a:function(){}, c:function(){}, b:function(){}};b.a()");
+        "Bar.prototype={'a':function(){}, " +
+        "'c':function(){}, 'b':function(){}};b.a()");
   }
 
   public void testStableOverlap() {
     testStable(
         "Bar.prototype={'a':function(){},'b':function(){}};b.b()",
-        "Bar.prototype={b:function(){},a:function(){}};b.a()",
+        "Bar.prototype={'b':function(){},'a':function(){}};b.a()",
         "Bar.prototype={'a':function(){},'b':function(){}};b.b()",
-        "Bar.prototype={b:function(){},a:function(){}};b.a()");
+        "Bar.prototype={'b':function(){},'a':function(){}};b.a()");
   }
 
   public void testStableTrickyExternedMethods() {
     test("Bar.prototype={'toString':function(){}," +
          "'getBar':function(){}};b.toString()",
-         "Bar.prototype={toString:function(){}," +
-         "a:function(){}};b.toString()");
+         "Bar.prototype={'toString':function(){}," +
+         "'a':function(){}};b.toString()");
     prevUsedRenameMap = renamePrototypes.getPropertyMap();
     String externs = EXTERNS + "prop.a;";
     test(externs,
          "Bar.prototype={'toString':function(){}," +
          "'getBar':function(){}};b.toString()",
-         "Bar.prototype={toString:function(){}," +
-         "b:function(){}};b.toString()", null, null);
+         "Bar.prototype={'toString':function(){}," +
+         "'b':function(){}};b.toString()", null, null);
   }
 
   public void testStable(String input1, String expected1,

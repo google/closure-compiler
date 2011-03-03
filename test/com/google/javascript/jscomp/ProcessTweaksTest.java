@@ -31,11 +31,11 @@ public class ProcessTweaksTest extends CompilerTestCase {
 
   Map<String, Node> defaultValueOverrides;
   boolean stripTweaks;
-  
+
   public ProcessTweaksTest() {
     super("function alert(arg) {}");
   }
-  
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
@@ -45,13 +45,13 @@ public class ProcessTweaksTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CompilerPass() {     
+    return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
         ProcessTweaks processTweak =
             new ProcessTweaks(compiler, stripTweaks, defaultValueOverrides);
         processTweak.process(externs, root);
-        
+
         if (stripTweaks) {
           Set<String> emptySet = Collections.emptySet();
           final StripCode stripCode = new StripCode(compiler, emptySet,
@@ -108,7 +108,7 @@ public class ProcessTweaksTest extends CompilerTestCase {
     test("goog.tweak.getBoolean('a' + 'b')", null,
          ProcessTweaks.NON_LITERAL_TWEAK_ID_ERROR);
   }
-  
+
   public void testNonLiteralId3() {
     test("var CONST = 'foo'; goog.tweak.overrideDefaultValue(CONST, 3)", null,
         ProcessTweaks.NON_LITERAL_TWEAK_ID_ERROR);
@@ -118,12 +118,12 @@ public class ProcessTweaksTest extends CompilerTestCase {
     test("goog.tweak.registerBoolean('Some ID', 'a')", null,
         ProcessTweaks.INVALID_TWEAK_ID_ERROR);
   }
-  
+
   public void testInvalidDefaultValue1() {
     testSame("var val = true; goog.tweak.registerBoolean('Foo', 'desc', val)",
          ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING);
   }
-  
+
   public void testInvalidDefaultValue2() {
     testSame("goog.tweak.overrideDefaultValue('Foo', 3 + 1);" +
         "goog.tweak.registerNumber('Foo', 'desc')",
@@ -134,12 +134,12 @@ public class ProcessTweaksTest extends CompilerTestCase {
     testSame("goog.tweak.getString('huh')",
         ProcessTweaks.UNKNOWN_TWEAK_WARNING);
   }
-  
+
   public void testUnknownGetNumber() {
     testSame("goog.tweak.getNumber('huh')",
         ProcessTweaks.UNKNOWN_TWEAK_WARNING);
   }
-  
+
   public void testUnknownGetBoolean() {
     testSame("goog.tweak.getBoolean('huh')",
         ProcessTweaks.UNKNOWN_TWEAK_WARNING);
@@ -172,13 +172,13 @@ public class ProcessTweaksTest extends CompilerTestCase {
         "goog.tweak.getString('TweakA')",
         ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING);
   }
-  
+
   public void testWrongGetter2() {
     testSame("goog.tweak.registerString('TweakA', 'desc');" +
         "goog.tweak.getNumber('TweakA')",
         ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING);
   }
-  
+
   public void testWrongGetter3() {
     testSame("goog.tweak.registerNumber('TweakA', 'desc');" +
         "goog.tweak.getBoolean('TweakA')",
@@ -188,7 +188,7 @@ public class ProcessTweaksTest extends CompilerTestCase {
   public void testWithNoTweaks() {
     testSame("var DEF=true;var x={};x.foo={}");
   }
-  
+
   public void testStrippingWithImplicitDefaultValues() {
     stripTweaks = true;
     test("goog.tweak.registerNumber('TweakA', 'desc');" +
@@ -199,7 +199,7 @@ public class ProcessTweaksTest extends CompilerTestCase {
         "alert(goog.tweak.getString('TweakC'));",
         "void 0; void 0; void 0; alert(0); alert(false); alert('')");
   }
-  
+
   public void testStrippingWithExplicitDefaultValues() {
     stripTweaks = true;
     test("goog.tweak.registerNumber('TweakA', 'desc', 5);" +
@@ -231,19 +231,19 @@ public class ProcessTweaksTest extends CompilerTestCase {
     test("alert(goog.tweak.getNumber('TweakA'));",
         "alert(0)", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING);
   }
-  
+
   public void testStrippingWithUnregisteredTweak2() {
     stripTweaks = true;
     test("alert(goog.tweak.getBoolean('TweakB'))",
         "alert(false)", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING);
   }
-  
+
   public void testStrippingWithUnregisteredTweak3() {
     stripTweaks = true;
     test("alert(goog.tweak.getString('TweakC'))",
         "alert('')", null, ProcessTweaks.UNKNOWN_TWEAK_WARNING);
   }
-  
+
   public void testStrippingOfManuallyRegistered1() {
     stripTweaks = true;
     test("var reg = goog.tweak.getRegistry();" +
@@ -282,9 +282,9 @@ public class ProcessTweaksTest extends CompilerTestCase {
         "goog.tweak.registerNumber('TweakA', 'desc');" +
         "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
         "goog.tweak.registerString('TweakC', 'desc', 'foo');" +
-        "var a = { 'TweakA': 1, 'TweakB': false, 'TweakC': '!' };");
+        "var a = { TweakA: 1, TweakB: false, TweakC: '!' };");
   }
-  
+
   public void testCompilerOverridesNoStripping2() {
     defaultValueOverrides.put("TweakA", Node.newNumber(1));
     defaultValueOverrides.put("TweakB", new Node(Token.FALSE));
@@ -297,20 +297,20 @@ public class ProcessTweaksTest extends CompilerTestCase {
         "goog.tweak.registerNumber('TweakA', 'desc');" +
         "goog.tweak.registerBoolean('TweakB', 'desc', true);" +
         "goog.tweak.registerString('TweakC', 'desc', 'foo');" +
-        "var a = { 'TweakA': 1, 'TweakB': false, 'TweakC': '!' };" +
-        "var b = { 'TweakA': 1, 'TweakB': false, 'TweakC': '!' };");
+        "var a = { TweakA: 1, TweakB: false, TweakC: '!' };" +
+        "var b = { TweakA: 1, TweakB: false, TweakC: '!' };");
   }
-  
+
   public void testUnknownCompilerOverride() {
     allowSourcelessWarnings();
     defaultValueOverrides.put("TweakA", Node.newString("!"));
-    testSame("var a", ProcessTweaks.UNKNOWN_TWEAK_WARNING); 
+    testSame("var a", ProcessTweaks.UNKNOWN_TWEAK_WARNING);
   }
 
   public void testCompilerOverrideWithWrongType() {
     allowSourcelessWarnings();
     defaultValueOverrides.put("TweakA", Node.newString("!"));
     testSame("goog.tweak.registerBoolean('TweakA', 'desc')",
-        ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING); 
+        ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING);
   }
 }

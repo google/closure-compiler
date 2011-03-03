@@ -144,7 +144,7 @@ public class RenamePropertiesTest extends CompilerTestCase {
   public void testIncorrectAttemptToAccessQuotedProperty() {
     // The correct way to call the quoted 'getFoo' method is: bar['getFoo']().
     test("Bar.prototype = {'B': 0, 'getFoo': function(){}}; bar.getFoo();",
-         "Bar.prototype = {B: 0, getFoo: function(){}}; bar.a();");
+         "Bar.prototype = {'B': 0, 'getFoo': function(){}}; bar.a();");
   }
 
   public void testSetQuotedPropertyOfThis() {
