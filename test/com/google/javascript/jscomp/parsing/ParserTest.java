@@ -581,10 +581,14 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testTrailingCommaWarning3() {
     parse("var a = ['foo', 'bar',];", TRAILING_COMMA_MESSAGE);
+    es5mode = true;
+    parse("var a = ['foo', 'bar',];");
   }
 
   public void testTrailingCommaWarning4() {
     parse("var a = [,];", TRAILING_COMMA_MESSAGE);
+    es5mode = true;
+    parse("var a = [,];");
   }
 
   public void testTrailingCommaWarning5() {
@@ -593,6 +597,8 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testTrailingCommaWarning6() {
     parse("var a = {'foo': 'bar',};", TRAILING_COMMA_MESSAGE);
+    es5mode = true;
+    parse("var a = {'foo': 'bar',};");
   }
 
   public void testTrailingCommaWarning7() {

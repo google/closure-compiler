@@ -102,7 +102,9 @@ public class ParserRunner {
     compilerEnv.initFromContext(cx);
     compilerEnv.setRecordingComments(true);
     compilerEnv.setRecordingLocalJsDocComments(true);
-    compilerEnv.setWarnTrailingComma(true);
+    // ES5 specifically allows trailing commas
+    compilerEnv.setWarnTrailingComma(!config.acceptES5);
+
     if (config.isIdeMode) {
       compilerEnv.setReservedKeywordAsIdentifier(true);
       compilerEnv.setAllowMemberExprAsFunctionName(true);
