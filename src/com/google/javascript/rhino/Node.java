@@ -261,8 +261,8 @@ public class Node implements Cloneable, Serializable {
     }
 
     @Override
-    boolean isEquivalentTo(Node node, boolean recurse) {
-      return (super.isEquivalentTo(node, recurse)
+    boolean isEquivalentTo(Node node, boolean compareJsType, boolean recurse) {
+      return (super.isEquivalentTo(node, compareJsType, recurse)
           && getDouble() == ((NumberNode) node).getDouble());
     }
 
@@ -311,8 +311,8 @@ public class Node implements Cloneable, Serializable {
     }
 
     @Override
-    boolean isEquivalentTo(Node node, boolean recurse) {
-      return (super.isEquivalentTo(node, recurse)
+    boolean isEquivalentTo(Node node, boolean compareJsType, boolean recurse) {
+      return (super.isEquivalentTo(node, compareJsType, recurse)
           && this.str.equals(((StringNode) node).str));
     }
 
@@ -1376,14 +1376,6 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * If this is a compilation pass and not a test, do not construct error
-   * strings. Instead return true if the trees are equal.
-   */
-  public boolean checkTreeEqualsSilent(Node node2) {
-    return checkTreeEqualsImpl(node2) == null;
-  }
-
-  /**
    * Helper function to ignore differences in Node subclasses that are no longer
    * used.
    */
@@ -1402,7 +1394,7 @@ public class Node implements Cloneable, Serializable {
    * testing. Returns null if the nodes are equivalent.
    */
   NodeMismatch checkTreeEqualsImpl(Node node2) {
-    if (!isEquivalentTo(node2, false)) {
+    if (!isEquivalentTo(node2, false, false)) {
       return new NodeMismatch(this, node2);
     }
 
@@ -1423,26 +1415,13 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * Checks if the subtree under this node is the same as another subtree
-   * including types. Returns null if it's equal, or a message describing the
-   * differences.
-   */
-  public boolean checkTreeTypeAwareEqualsSilent(Node node2) {
-    return checkTreeTypeAwareEqualsImpl(node2) == null;
-  }
-
-  /**
    * Compare this node to node2 recursively and return the first pair of nodes
    * that differs doing a preorder depth-first traversal. Package private for
    * testing. Returns null if the nodes are equivalent.
    */
   NodeMismatch checkTreeTypeAwareEqualsImpl(Node node2) {
     // Do a non-recursive equivalents check.
-    boolean eq = this.isEquivalentTo(node2, false);
-
-    eq = eq && JSType.isEquivalent(jsType, node2.getJSType());
-
-    if (!eq) {
+    if (!isEquivalentTo(node2, true, false)) {
       return new NodeMismatch(this, node2);
     }
 
@@ -1584,14 +1563,31 @@ public class Node implements Cloneable, Serializable {
 
   /** Returns true if this node is equivalent semantically to another */
   public boolean isEquivalentTo(Node node) {
-    return isEquivalentTo(node, true);
+    return isEquivalentTo(node, false, true);
   }
 
-  /** Returns true if this node is equivalent semantically to another */
-  boolean isEquivalentTo(Node node, boolean recurse) {
+  /**
+   * Returns true if this node is equivalent semantically to another and
+   * the types are equivalent.
+   */
+  public boolean isEquivalentToTyped(Node node) {
+    return isEquivalentTo(node, true, true);
+  }
+
+  /**
+   * @param compareJsType Whether to compare the JSTypes of the nodes.
+   * @param recurse Whether to compare the children of the current node, if
+   *    not only the the count of the children are compared.
+   * @return Whether this node is equivalent semantically to the provided node.
+   */
+  boolean isEquivalentTo(Node node, boolean compareJsType, boolean recurse) {
     if (type != node.getType()
         || getChildCount() != node.getChildCount()
         || getNodeClass(this) != getNodeClass(node)) {
+      return false;
+    }
+
+    if (compareJsType && !JSType.isEquivalent(jsType, node.getJSType())) {
       return false;
     }
 
@@ -1636,7 +1632,7 @@ public class Node implements Cloneable, Serializable {
       for (n = first, n2 = node.first;
            n != null;
            n = n.next, n2 = n2.next) {
-        if (!n.isEquivalentTo(n2, true)) {
+        if (!n.isEquivalentTo(n2, compareJsType, true)) {
           return false;
         }
       }

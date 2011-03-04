@@ -269,7 +269,7 @@ class OptimizeParameters
    */
   private boolean nodesAreEqual(Node n1, Node n2) {
     return NodeUtil.isImmutableValue(n1) && NodeUtil.isImmutableValue(n2) &&
-        n1.checkTreeEqualsSilent(n2);
+        n1.isEquivalentTo(n2);
   }
 
   /**

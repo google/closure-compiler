@@ -312,7 +312,7 @@ class PeepholeSubstituteAlternateSyntax
    * and the potential replacement are in the same exception handler.
    */
   boolean areMatchingExits(Node nodeThis, Node nodeThat) {
-    return nodeThis.checkTreeEqualsSilent(nodeThat)
+    return nodeThis.isEquivalentTo(nodeThat)
         && (!isExceptionPossible(nodeThis)
             || getExceptionHandler(nodeThis) == getExceptionHandler(nodeThat));
   }

@@ -104,7 +104,7 @@ public final class JSTypeExpression implements Serializable {
   @Override
   public boolean equals(Object other) {
     return other instanceof JSTypeExpression &&
-        ((JSTypeExpression) other).root.checkTreeEqualsSilent(root);
+        ((JSTypeExpression) other).root.isEquivalentTo(root);
   }
 
   @Override

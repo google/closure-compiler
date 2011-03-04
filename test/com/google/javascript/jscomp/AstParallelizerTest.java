@@ -114,7 +114,7 @@ public class AstParallelizerTest extends TestCase {
     }
 
     parallelizer.join();
-    assertTrue(orginal.checkTreeEqualsSilent(root));
+    assertTrue(orginal.isEquivalentTo(root));
   }
 
   private void splitFiles(String[] input) {
@@ -142,6 +142,6 @@ public class AstParallelizerTest extends TestCase {
     }
 
     parallelizer.join();
-    assertTrue(orginal.checkTreeEqualsSilent(root));
+    assertTrue(orginal.isEquivalentTo(root));
   }
 }

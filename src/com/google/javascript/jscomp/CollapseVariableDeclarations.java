@@ -261,7 +261,7 @@ class CollapseVariableDeclarations implements CompilerPass {
 
           default:
             if (NodeUtil.isImmutableValue(next)
-                && next.checkTreeEqualsSilent(value)) {
+                && next.isEquivalentTo(value)) {
               // If the r-value of the expr assign is an immutable value,
               // and the value is used again shortly, then we can exploit
               // the assign here.

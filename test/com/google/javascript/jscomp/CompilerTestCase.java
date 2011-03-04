@@ -816,9 +816,8 @@ public abstract class CompilerTestCase extends TestCase  {
         normalizeActualCode(compiler, externsRootClone, mainRootClone);
       }
 
-      boolean codeChange = !mainRootClone.checkTreeEqualsSilent(mainRoot);
-      boolean externsChange = !externsRootClone
-          .checkTreeEqualsSilent(externsRoot);
+      boolean codeChange = !mainRootClone.isEquivalentTo(mainRoot);
+      boolean externsChange = !externsRootClone.isEquivalentTo(externsRoot);
 
       // Generally, externs should not be change by the compiler passes.
       if (externsChange && !allowExternsChanges) {

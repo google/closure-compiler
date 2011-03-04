@@ -95,7 +95,7 @@ class AstChangeProxy {
 
     int size = replacements.size();
 
-    if ((size == 1) && node.checkTreeEqualsSilent(replacements.get(0))) {
+    if ((size == 1) && node.isEquivalentTo(replacements.get(0))) {
       // trees are equal... don't replace
       return;
     }

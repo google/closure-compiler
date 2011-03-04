@@ -915,9 +915,9 @@ public class Compiler extends AbstractCompiler {
         options.disambiguateProperties) {
       // The type based optimizations require that type information is preserved
       // during other optimizations.
-      return n1.checkTreeTypeAwareEqualsSilent(n2);
+      return n1.isEquivalentToTyped(n2);
     } else {
-      return n1.checkTreeEqualsSilent(n2);
+      return n1.isEquivalentTo(n2);
     }
   }
 
