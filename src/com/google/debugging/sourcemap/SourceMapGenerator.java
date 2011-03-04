@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.sourcemap;
+package com.google.debugging.sourcemap;
 
 
 import java.io.IOException;

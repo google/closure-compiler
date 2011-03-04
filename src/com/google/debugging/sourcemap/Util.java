@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp.sourcemap;
+package com.google.debugging.sourcemap;
 
 import java.io.IOException;
 import java.nio.charset.CharsetEncoder;

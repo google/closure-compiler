@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.sourcemap;
+package com.google.debugging.sourcemap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedListMultimap;

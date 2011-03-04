@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.sourcemap;
+package com.google.debugging.sourcemap;
 
 /**
  * Represents a position in a source file.

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.sourcemap;
+package com.google.debugging.sourcemap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.debugging.sourcemap.SourceMapGeneratorV2.LineMapDecoder;
+import com.google.debugging.sourcemap.SourceMapGeneratorV2.LineMapEncoder;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.JSSourceFile;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.DetailLevel;
-import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV2.LineMapDecoder;
-import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV2.LineMapEncoder;
 
 import junit.framework.TestCase;
 

@@ -17,10 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
-import com.google.javascript.jscomp.sourcemap.SourceMapGenerator;
-import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV1;
-import com.google.javascript.jscomp.sourcemap.SourceMapGeneratorV2;
-import com.google.javascript.jscomp.sourcemap.FilePosition;
+import com.google.debugging.sourcemap.FilePosition;
+import com.google.debugging.sourcemap.SourceMapGenerator;
+import com.google.debugging.sourcemap.SourceMapGeneratorV1;
+import com.google.debugging.sourcemap.SourceMapGeneratorV2;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
