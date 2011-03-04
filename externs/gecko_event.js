@@ -52,6 +52,9 @@
 /** @type {number} */ Event.prototype.which;
 /** @type {Object} */ Event.prototype.state;
 
+/** @constructor */ function nsIDOMPageTransitionEvent() {}
+/** @type {boolean} */ nsIDOMPageTransitionEvent.prototype.persisted;
+
 //Methods
 Event.prototype.initEvent;
 Event.prototype.initKeyEvent;

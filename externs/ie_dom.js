@@ -1379,6 +1379,12 @@ Element.prototype.isContentEditable;
 
 /**
  * @type {?function(Event)}
+ * @see http://msdn.microsoft.com/en-us/library/ms536903(v=vs.85).aspx
+ */
+Element.prototype.onbeforedeactivate;
+
+/**
+ * @type {?function(Event)}
  * @see http://msdn.microsoft.com/en-us/library/ms536945(VS.85).aspx
  */
 Element.prototype.onmouseenter;
