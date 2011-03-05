@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.EvaluatorException;
 import com.google.javascript.jscomp.mozilla.rhino.Parser;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
+import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
@@ -45,19 +46,15 @@ public class ParserRunner {
 
   @Deprecated
   public static Config createConfig(boolean isIdeMode) {
-    return createConfig(isIdeMode, false);
-  }
-
-  @Deprecated
-  public static Config createConfig(boolean isIdeMode, boolean isES5Mode) {
-    return createConfig(isIdeMode, isES5Mode, false);
+    return createConfig(isIdeMode, LanguageMode.ECMASCRIPT3, false);
   }
 
   public static Config createConfig(boolean isIdeMode,
-                                    boolean isES5Mode,
+                                    LanguageMode languageMode,
                                     boolean acceptConstKeyword) {
     initResourceConfig();
-    return new Config(annotationNames, suppressionNames, isIdeMode, isES5Mode,
+    return new Config(annotationNames, suppressionNames,
+                      isIdeMode, languageMode,
                       acceptConstKeyword);
   }
 
@@ -103,10 +100,15 @@ public class ParserRunner {
     compilerEnv.setRecordingComments(true);
     compilerEnv.setRecordingLocalJsDocComments(true);
     // ES5 specifically allows trailing commas
-    compilerEnv.setWarnTrailingComma(!config.acceptES5);
+    compilerEnv.setWarnTrailingComma(
+        config.languageMode == LanguageMode.ECMASCRIPT3);
+
+    if (config.isIdeMode || config.languageMode != LanguageMode.ECMASCRIPT3) {
+      // Do our own identifier check for ECMASCRIPT 5
+      compilerEnv.setReservedKeywordAsIdentifier(true);
+    }
 
     if (config.isIdeMode) {
-      compilerEnv.setReservedKeywordAsIdentifier(true);
       compilerEnv.setAllowMemberExprAsFunctionName(true);
     }
 

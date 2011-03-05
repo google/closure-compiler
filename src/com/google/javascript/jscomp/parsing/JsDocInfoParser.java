@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
+import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -127,7 +128,7 @@ public final class JsDocInfoParser {
         Sets.<String>newHashSet(),
         Sets.<String>newHashSet(),
         false,
-        false,
+        LanguageMode.ECMASCRIPT3,
         false);
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(typeString),

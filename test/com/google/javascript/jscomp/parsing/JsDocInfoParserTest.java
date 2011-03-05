@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.mozilla.rhino.Parser;
 import com.google.javascript.jscomp.mozilla.rhino.Token.CommentType;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
+import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -47,11 +48,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     super.setUp();
     extraAnnotations =
         Sets.newHashSet(
-            ParserRunner.createConfig(true, false, false).annotationNames.
-            keySet());
+            ParserRunner.createConfig(true, LanguageMode.ECMASCRIPT3, false)
+                .annotationNames.keySet());
     extraSuppressions =
         Sets.newHashSet(
-            ParserRunner.createConfig(true, false, false).suppressionNames);
+            ParserRunner.createConfig(true, LanguageMode.ECMASCRIPT3, false)
+                .suppressionNames);
 
     extraSuppressions.add("x");
     extraSuppressions.add("y");
@@ -2508,7 +2510,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     AstRoot script = p.parse(code, null, 0);
 
     Config config =
-        new Config(extraAnnotations, extraSuppressions, true, false, false);
+        new Config(extraAnnotations, extraSuppressions,
+            true, LanguageMode.ECMASCRIPT3, false);
     for (Comment comment : script.getComments()) {
       JsDocInfoParser jsdocParser =
         new JsDocInfoParser(
@@ -2549,7 +2552,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
     Config config = new Config(extraAnnotations, extraSuppressions,
-        parseDocumentation, false, false);
+        parseDocumentation, LanguageMode.ECMASCRIPT3, false);
     JsDocInfoParser jsdocParser = new JsDocInfoParser(
         stream(comment),
         new Comment(0, 0, CommentType.JSDOC, comment),

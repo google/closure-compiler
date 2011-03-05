@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.CompilerEnvirons;
 import com.google.javascript.jscomp.mozilla.rhino.Parser;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
+import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -30,12 +31,12 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
  */
 public class IRFactoryTest extends BaseJSTypeTestCase {
 
-  private boolean es5mode = false;
+  private LanguageMode mode = LanguageMode.ECMASCRIPT3;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    es5mode = false;
+    mode = LanguageMode.ECMASCRIPT3;
   }
 
   public void testScript() throws Exception {
@@ -348,7 +349,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testGetter() {
-    this.es5mode = true;
+    mode = LanguageMode.ECMASCRIPT5;
     testNewParser("({get a() {}})",
       "SCRIPT 0\n" +
       "    EXPR_RESULT 0\n" +
@@ -361,7 +362,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testSetter() {
-    this.es5mode = true;
+    mode = LanguageMode.ECMASCRIPT5;
     testNewParser("({set a(x) {}})",
       "SCRIPT 0\n" +
       "    EXPR_RESULT 0\n" +
@@ -1097,7 +1098,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Parser p = new Parser(environment);
     AstRoot script = p.parse(string, null, 0);
 
-    Config config = ParserRunner.createConfig(true, es5mode, false);
+    Config config = ParserRunner.createConfig(true, mode, false);
     Node root = IRFactory.transformTree(script, string, config, errorReporter);
 
     return root;

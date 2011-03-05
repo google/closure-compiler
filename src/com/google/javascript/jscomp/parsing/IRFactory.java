@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.parsing;
 import static com.google.javascript.jscomp.mozilla.rhino.Token.CommentType.JSDOC;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.ast.ArrayLiteral;
@@ -64,6 +65,7 @@ import com.google.javascript.jscomp.mozilla.rhino.ast.VariableDeclaration;
 import com.google.javascript.jscomp.mozilla.rhino.ast.VariableInitializer;
 import com.google.javascript.jscomp.mozilla.rhino.ast.WhileLoop;
 import com.google.javascript.jscomp.mozilla.rhino.ast.WithStatement;
+import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -84,6 +86,19 @@ public class IRFactory {
 
   // non-static for thread safety
   private final Set<String> ALLOWED_DIRECTIVES = Sets.newHashSet("use strict");
+
+  private static final Set<String> ES5_RESERVED_KEYWORDS =
+      ImmutableSet.of(
+          // From Section 7.6.1.2
+          "class", "const", "enum", "export", "extends", "import", "super");
+  private static final Set<String> ES5_STRICT_RESERVED_KEYWORDS =
+      ImmutableSet.of(
+          // From Section 7.6.1.2
+          "class", "const", "enum", "export", "extends", "import", "super",
+          "implements", "interface", "let", "package", "private", "protected",
+          "public", "static", "yield");
+
+  private final Set<String> reservedKeywords;
 
   // @license text gets appended onto the fileLevelJsDocBuilder as found,
   // and stored in JSDocInfo for placeholder node.
@@ -109,6 +124,21 @@ public class IRFactory {
     this.transformDispatcher = new TransformDispatcher();
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
+
+    switch (config.languageMode) {
+      case ECMASCRIPT3:
+        // Reserved words are handled by the Rhino parser.
+        reservedKeywords = null;
+        break;
+      case ECMASCRIPT5:
+        reservedKeywords = ES5_RESERVED_KEYWORDS;
+        break;
+      case ECMASCRIPT5_STRICT:
+        reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
+        break;
+      default:
+        throw new IllegalStateException("unknown language mode");
+    }
   }
 
   // Create a template node to use as a source of common attributes, this allows
@@ -631,7 +661,20 @@ public class IRFactory {
 
     @Override
     Node processName(Name nameNode) {
+      if (isReservedKeyword(nameNode.getIdentifier())) {
+        errorReporter.error(
+          "identifier is a reserved word",
+          sourceName,
+          nameNode.getLineno(), "", 0);
+      }
       return newStringNode(Token.NAME, nameNode.getIdentifier());
+    }
+
+    /**
+     * @return Whether the
+     */
+    private boolean isReservedKeyword(String identifier) {
+      return reservedKeywords != null && reservedKeywords.contains(identifier);
     }
 
     @Override
@@ -652,7 +695,7 @@ public class IRFactory {
 
       Node node = newNode(Token.OBJECTLIT);
       for (ObjectProperty el : literalNode.getElements()) {
-        if (!config.acceptES5) {
+        if (config.languageMode == LanguageMode.ECMASCRIPT3) {
           if (el.isGetter()) {
             reportGetter(el);
             continue;

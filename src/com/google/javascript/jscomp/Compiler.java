@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
@@ -1639,8 +1638,22 @@ public class Compiler extends AbstractCompiler {
   @Override
   Config getParserConfig() {
     if (parserConfig == null) {
+      Config.LanguageMode mode;
+      switch (options.languageIn) {
+        case ECMASCRIPT3:
+          mode = Config.LanguageMode.ECMASCRIPT3;
+          break;
+        case ECMASCRIPT5:
+          mode = Config.LanguageMode.ECMASCRIPT5;
+          break;
+        default:
+          throw new IllegalStateException("unexpected language mode");
+      }
+
       parserConfig = ParserRunner.createConfig(
-        isIdeMode(), acceptEcmaScript5(), acceptConstKeyword());
+        isIdeMode(),
+        mode,
+        acceptConstKeyword());
     }
     return parserConfig;
   }

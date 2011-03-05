@@ -29,6 +29,12 @@ import java.util.Set;
  */
 public class Config {
 
+  public enum LanguageMode {
+    ECMASCRIPT3,
+    ECMASCRIPT5,
+    ECMASCRIPT5_STRICT,
+  }
+
   /**
    * Whether to parse the descriptions of jsdoc comments.
    */
@@ -53,7 +59,7 @@ public class Config {
   /**
    * Accept ECMAScript5 syntax, such as getter/setter.
    */
-  final boolean acceptES5;
+  final LanguageMode languageMode;
 
   /**
    * Accept `const' keyword.
@@ -65,12 +71,13 @@ public class Config {
    */
 
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
-      boolean isIdeMode, boolean acceptES5, boolean acceptConstKeyword) {
+      boolean isIdeMode, LanguageMode languageMode,
+      boolean acceptConstKeyword) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = isIdeMode;
     this.suppressionNames = suppressionNames;
     this.isIdeMode = isIdeMode;
-    this.acceptES5 = acceptES5;
+    this.languageMode = languageMode;
     this.acceptConstKeyword = acceptConstKeyword;
   }
 

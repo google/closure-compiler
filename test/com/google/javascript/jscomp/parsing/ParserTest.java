@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime;
+import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -40,12 +41,14 @@ public class ParserTest extends BaseJSTypeTestCase {
       com.google.javascript.rhino.ScriptRuntime.getMessage0(
           "msg.jsdoc.missing.gt");
 
-  private boolean es5mode;
+  private Config.LanguageMode mode;
+  private boolean isIdeMode = false;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    es5mode = false;
+    mode = LanguageMode.ECMASCRIPT3;
+    isIdeMode = false;
   }
 
   public void testLinenoCharnoAssign1() throws Exception {
@@ -581,13 +584,13 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testTrailingCommaWarning3() {
     parse("var a = ['foo', 'bar',];", TRAILING_COMMA_MESSAGE);
-    es5mode = true;
+    mode = LanguageMode.ECMASCRIPT5;
     parse("var a = ['foo', 'bar',];");
   }
 
   public void testTrailingCommaWarning4() {
     parse("var a = [,];", TRAILING_COMMA_MESSAGE);
-    es5mode = true;
+    mode = LanguageMode.ECMASCRIPT5;
     parse("var a = [,];");
   }
 
@@ -597,7 +600,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testTrailingCommaWarning6() {
     parse("var a = {'foo': 'bar',};", TRAILING_COMMA_MESSAGE);
-    es5mode = true;
+    mode = LanguageMode.ECMASCRIPT5;
     parse("var a = {'foo': 'bar',};");
   }
 
@@ -741,19 +744,19 @@ public class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testGetter() {
-    this.es5mode = false;
+    mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {get a(){}};",
         "getters are not supported in Internet Explorer");
-    this.es5mode = true;
+    mode = LanguageMode.ECMASCRIPT5;
     parse("var x = {get a(){}};");
     parseError("var x = {get a(b){}};", "getters may not have parameters");
   }
 
   public void testSetter() {
-    this.es5mode = false;
+    mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {set a(x){}};",
         "setters are not supported in Internet Explorer");
-    this.es5mode = true;
+    mode = LanguageMode.ECMASCRIPT5;
     parse("var x = {set a(x){}};");
     parseError("var x = {set a(){}};",
         "setters must have exactly one parameter");
@@ -787,12 +790,39 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("(function () {});");
   }
 
+  public void testReservedKeywords() {
+    boolean isIdeMode = false;
+    parseError("var boolean;", "missing variable name");
+    parseError("function boolean() {};",
+        "missing ( before function parameters.");
+    parseError("boolean = 1;", "identifier is a reserved word");
+    parseError("class = 1;", "identifier is a reserved word");
+    parseError("public = 2;", "identifier is a reserved word");
+
+    mode = LanguageMode.ECMASCRIPT5;
+
+    parse("var boolean;");
+    parse("function boolean() {};");
+    parse("boolean = 1;");
+    parseError("class = 1;", "identifier is a reserved word");
+    parse("public = 2;");
+
+    mode = LanguageMode.ECMASCRIPT5_STRICT;
+
+    parse("var boolean;");
+    parse("function boolean() {};");
+    parse("boolean = 1;");
+    parseError("class = 1;", "identifier is a reserved word");
+    parseError("public = 2;", "identifier is a reserved word");
+
+  }
+
   private void parseError(String string, String... errors) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
     Node script = null;
     try {
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(true, es5mode, false),
+          "input", string, ParserRunner.createConfig(isIdeMode, mode, false),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -808,7 +838,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     Node script = null;
     try {
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(true, es5mode, false),
+          "input", string, ParserRunner.createConfig(true, mode, false),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);
