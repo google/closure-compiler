@@ -255,11 +255,17 @@ function FileError() {}
  */
 FileError.prototype.NOT_FOUND_ERR = 1;
 
+/** @type {number} */
+FileError.NOT_FOUND_ERR = 1;
+
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-SECURITY_ERR
  * @type {number}
  */
 FileError.prototype.SECURITY_ERR = 2;
+
+/** @type {number} */
+FileError.SECURITY_ERR = 2;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-ABORT_ERR
@@ -267,11 +273,17 @@ FileError.prototype.SECURITY_ERR = 2;
  */
 FileError.prototype.ABORT_ERR = 3;
 
+/** @type {number} */
+FileError.ABORT_ERR = 3;
+
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-NOT_READABLE_ERR
  * @type {number}
  */
 FileError.prototype.NOT_READABLE_ERR = 4;
+
+/** @type {number} */
+FileError.NOT_READABLE_ERR = 4;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-ENCODING_ERR
@@ -279,11 +291,17 @@ FileError.prototype.NOT_READABLE_ERR = 4;
  */
 FileError.prototype.ENCODING_ERR = 5;
 
+/** @type {number} */
+FileError.ENCODING_ERR = 5;
+
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileError-NO_MODIFICATION_ALLOWED_ERR
  * @type {number}
  */
 FileError.prototype.NO_MODIFICATION_ALLOWED_ERR = 6;
+
+/** @type {number} */
+FileError.NO_MODIFICATION_ALLOWED_ERR = 6;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-INVALID_STATE_ERR
@@ -291,11 +309,17 @@ FileError.prototype.NO_MODIFICATION_ALLOWED_ERR = 6;
  */
 FileError.prototype.INVALID_STATE_ERR = 7;
 
+/** @type {number} */
+FileError.INVALID_STATE_ERR = 7;
+
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileException-SYNTAX_ERR
  * @type {number}
  */
 FileError.prototype.SYNTAX_ERR = 8;
+
+/** @type {number} */
+FileError.SYNTAX_ERR = 8;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileError-INVALID_MODIFICATION_ERR
@@ -303,11 +327,17 @@ FileError.prototype.SYNTAX_ERR = 8;
  */
 FileError.prototype.INVALID_MODIFICATION_ERR = 9;
 
+/** @type {number} */
+FileError.INVALID_MODIFICATION_ERR = 9;
+
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileError-QUOTA_EXCEEDED_ERR
  * @type {number}
  */
 FileError.prototype.QUOTA_EXCEEDED_ERR = 10;
+
+/** @type {number} */
+FileError.QUOTA_EXCEEDED_ERR = 10;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-TYPE_MISMATCH_ERR
@@ -315,11 +345,17 @@ FileError.prototype.QUOTA_EXCEEDED_ERR = 10;
  */
 FileError.prototype.TYPE_MISMATCH_ERR = 11;
 
+/** @type {number} */
+FileError.TYPE_MISMATCH_ERR = 11;
+
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileException-PATH_EXISTS_ERR
  * @type {number}
  */
 FileError.prototype.PATH_EXISTS_ERR = 12;
+
+/** @type {number} */
+FileError.PATH_EXISTS_ERR = 12;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-code-exception
