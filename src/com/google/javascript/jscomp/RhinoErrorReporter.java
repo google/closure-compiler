@@ -35,6 +35,9 @@ class RhinoErrorReporter {
   static final DiagnosticType PARSE_ERROR =
       DiagnosticType.error("JSC_PARSE_ERROR", "Parse error. {0}");
 
+  static final DiagnosticType TYPE_PARSE_ERROR =
+      DiagnosticType.warning("JSC_TYPE_PARSE_ERROR", "{0}");
+
   // A special-cased error, so that it can be configured via the
   // warnings API.
   static final DiagnosticType EXTRA_FILEOVERVIEW =
@@ -53,7 +56,7 @@ class RhinoErrorReporter {
     DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
 
   // A map of Rhino messages to their DiagnosticType.
-  private final Map<String, DiagnosticType> typeMap;
+  private final Map<Pattern, DiagnosticType> typeMap;
 
   private final AbstractCompiler compiler;
 
@@ -62,9 +65,9 @@ class RhinoErrorReporter {
    * holder {0} with a wild card that matches all possible strings.
    * Also put the any non-place-holder in quotes for regex matching later.
    */
-  private String replacePlaceHolders(String s) {
+  private Pattern replacePlaceHolders(String s) {
     s = Pattern.quote(s);
-    return s.replaceAll("\\{\\d+\\}", "\\\\E.*\\\\Q");
+    return Pattern.compile(s.replaceAll("\\{\\d+\\}", "\\\\E.*\\\\Q"));
   }
 
   private RhinoErrorReporter(AbstractCompiler compiler) {
@@ -90,7 +93,11 @@ class RhinoErrorReporter {
 
         // Unknown @annotations.
         replacePlaceHolders(ScriptRuntime.getMessage0("msg.bad.jsdoc.tag")),
-        BAD_JSDOC_ANNOTATION);
+        BAD_JSDOC_ANNOTATION,
+
+        // Type annotation errors.
+        Pattern.compile("^Bad type annotation.*"),
+        TYPE_PARSE_ERROR);
   }
 
   public static com.google.javascript.jscomp.mozilla.rhino.ErrorReporter
@@ -119,8 +126,8 @@ class RhinoErrorReporter {
 
     // Try to see if the message is one of the rhino errors we want to
     // expose as DiagnosticType by matching it with the regex key.
-    for (Entry<String, DiagnosticType> entry : typeMap.entrySet()) {
-      if (message.matches(entry.getKey())) {
+    for (Entry<Pattern, DiagnosticType> entry : typeMap.entrySet()) {
+      if (entry.getKey().matcher(message).matches()) {
         return JSError.make(
             sourceName, line, lineOffset, entry.getValue(), message);
       }

@@ -372,8 +372,8 @@ class NamedType extends ProxyObjectType {
           registry.isForwardDeclaredType(reference);
       boolean beForgiving = forgiving || isForwardDeclared;
       if (!beForgiving && registry.isLastGeneration()) {
-        t.warning("Unknown type " + reference, sourceName, lineno, null,
-            charno);
+        t.warning("Bad type annotation. Unknown type " + reference,
+            sourceName, lineno, null, charno);
       } else {
         if (isForwardDeclared) {
           setReferencedType(

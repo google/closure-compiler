@@ -238,6 +238,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       UNRESOLVED_TYPE,
       WRONG_ARGUMENT_COUNT,
       ILLEGAL_IMPLICIT_CAST,
+      RhinoErrorReporter.TYPE_PARSE_ERROR,
       TypedScopeCreator.UNKNOWN_LENDS,
       TypedScopeCreator.LENDS_ON_NON_OBJECT,
       TypedScopeCreator.CTOR_INITIALIZER,

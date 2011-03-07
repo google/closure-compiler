@@ -38,6 +38,7 @@ public class ParserTest extends BaseJSTypeTestCase {
       ScriptRuntime.getMessage0("msg.bad.prop");
 
   private static final String MISSING_GT_MESSAGE =
+      "Bad type annotation. " +
       com.google.javascript.rhino.ScriptRuntime.getMessage0(
           "msg.jsdoc.missing.gt");
 
@@ -503,8 +504,8 @@ public class ParserTest extends BaseJSTypeTestCase {
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
         parse("/** @param {bool!*%E$} */" +
             "C.prototype.say=function(nums) {alert(nums.join(','));};",
-              "expected closing }",
-              "expecting a variable name in a @param tag"));
+            "Bad type annotation. expected closing }",
+            "Bad type annotation. expecting a variable name in a @param tag"));
   }
 
   public void testIncorrectJSDocDoesNotAlterJSParsing7() throws Exception {

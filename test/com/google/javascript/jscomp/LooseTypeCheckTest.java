@@ -382,8 +382,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOptionalArgFunctionParamError() throws Exception {
-    String expectedWarning = "Parse error. variable length argument must be " +
-        "last";
+    String expectedWarning =
+        "Bad type annotation. variable length argument must be last";
     testTypes("/** @param {function(...[number], number=)} a */" +
               "function f(a) {};", expectedWarning, false);
   }
@@ -2734,7 +2734,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testBadExtends1() throws Exception {
     testTypes("/** @constructor */function base() {}\n" +
         "/** @constructor\n * @extends {not_base} */function derived() {}\n",
-        "Parse error. Unknown type not_base");
+        "Bad type annotation. Unknown type not_base");
   }
 
   public void testBadExtends2() throws Exception {
@@ -2872,7 +2872,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         " * @implements {nonExistent}\n" +
         " * @implements {Base2}\n" +
         " */ function derived() {}",
-        "Parse error. Unknown type nonExistent");
+        "Bad type annotation. Unknown type nonExistent");
   }
 
   public void testBadImplements2() throws Exception {
@@ -2891,7 +2891,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testBadInterfaceExtends1() throws Exception {
     testTypes("/** @interface \n * @extends {nonExistent} */function A() {}",
-        "Parse error. Unknown type nonExistent");
+        "Bad type annotation. Unknown type nonExistent");
   }
 
   public void testBadInterfaceExtends2() throws Exception {
@@ -4779,7 +4779,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @type {some.unknown.type} */var f1;" +
         "var f2 = opt_f || f1;" +
         "f2();",
-        "Parse error. Unknown type some.unknown.type");
+        "Bad type annotation. Unknown type some.unknown.type");
   }
 
   public void testCall4() throws Exception {
@@ -4949,36 +4949,36 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
 
   public void testCast7() throws Exception {
     testTypes("var x = /** @type {foo} */ (new Object());",
-        "Parse error. Unknown type foo");
+        "Bad type annotation. Unknown type foo");
   }
 
   public void testCast8() throws Exception {
     testTypes("function f() { return /** @type {foo} */ (new Object()); }",
-        "Parse error. Unknown type foo");
+        "Bad type annotation. Unknown type foo");
   }
 
   public void testCast9() throws Exception {
     testTypes("var foo = {};" +
         "function f() { return /** @type {foo} */ (new Object()); }",
-        "Parse error. Unknown type foo");
+        "Bad type annotation. Unknown type foo");
   }
 
   public void testCast10() throws Exception {
     testTypes("var foo = function() {};" +
         "function f() { return /** @type {foo} */ (new Object()); }",
-        "Parse error. Unknown type foo");
+        "Bad type annotation. Unknown type foo");
   }
 
   public void testCast11() throws Exception {
     testTypes("var goog = {}; goog.foo = {};" +
         "function f() { return /** @type {goog.foo} */ (new Object()); }",
-        "Parse error. Unknown type goog.foo");
+        "Bad type annotation. Unknown type goog.foo");
   }
 
   public void testCast12() throws Exception {
     testTypes("var goog = {}; goog.foo = function() {};" +
         "function f() { return /** @type {goog.foo} */ (new Object()); }",
-        "Parse error. Unknown type goog.foo");
+        "Bad type annotation. Unknown type goog.foo");
   }
 
   public void testCast13() throws Exception {
@@ -4988,7 +4988,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "goog.addDependency('zzz.js', ['goog.foo'], []);" +
         "goog.foo = function() {};" +
         "function f() { return /** @type {goog.foo} */ (new Object()); }",
-        "Parse error. Unknown type goog.foo");
+        "Bad type annotation. Unknown type goog.foo");
   }
 
   public void testCast14() throws Exception {
@@ -5686,7 +5686,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "var goog = {};\n" +
         "/** @constructor\n @extends {goog.Missing} */function Sub() {};" +
         "/** @override */Sub.prototype.foo = function() {};",
-        "Parse error. Unknown type goog.Missing");
+        "Bad type annotation. Unknown type goog.Missing");
   }
 
   public void testInheritanceCheck14() throws Exception {
@@ -5696,7 +5696,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "goog.Super = function() {};\n" +
         "/** @constructor\n @extends {goog.Super} */function Sub() {};" +
         "/** @override */Sub.prototype.foo = function() {};",
-        "Parse error. Unknown type goog.Missing");
+        "Bad type annotation. Unknown type goog.Missing");
   }
 
   // TODO(user): We should support this way of declaring properties as it is
@@ -5813,7 +5813,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor\n @implements {Super} */function Sub() {};" +
         "/** @override */Sub.prototype.foo = function() {};",
         new String[] {
-          "Parse error. Unknown type Super",
+          "Bad type annotation. Unknown type Super",
           "property foo not defined on any superclass of Sub"
         });
   }
@@ -6393,7 +6393,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   public void testNoForwardTypeDeclaration() throws Exception {
     testTypes(
         "/** @param {MyType} x */ function f(x) {}",
-        "Parse error. Unknown type MyType");
+        "Bad type annotation. Unknown type MyType");
   }
 
   public void testNoForwardTypeDeclarationAndNoBraces() throws Exception {

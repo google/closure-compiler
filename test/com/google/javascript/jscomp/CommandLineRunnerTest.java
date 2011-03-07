@@ -124,6 +124,18 @@ public class CommandLineRunnerTest extends TestCase {
     test("function f(x) { return x; } f();", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
+  public void testTypeParsingOffByDefault() {
+    testSame("/** @return {number */ function f(a) { return a; }");
+  }
+
+  public void testTypeParsingOnWithVerbose() {
+    args.add("--warning_level=VERBOSE");
+    test("/** @return {number */ function f(a) { return a; }",
+         RhinoErrorReporter.TYPE_PARSE_ERROR);
+    test("/** @return {n} */ function f(a) { return a; }",
+         RhinoErrorReporter.TYPE_PARSE_ERROR);
+  }
+
   public void testTypeCheckOverride1() {
     args.add("--warning_level=VERBOSE");
     args.add("--jscomp_off=checkTypes");
@@ -216,10 +228,10 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testQuietMode() {
     args.add("--warning_level=DEFAULT");
-    test("/** @type { not a type name } */ var x;",
+    test("/** @const \n * @const */ var x;",
          RhinoErrorReporter.PARSE_ERROR);
     args.add("--warning_level=QUIET");
-    testSame("/** @type { not a type name } */ var x;");
+    testSame("/** @const \n * @const */ var x;");
   }
 
   public void testProcessClosurePrimitives() {
@@ -508,7 +520,7 @@ public class CommandLineRunnerTest extends TestCase {
            "var beer = {}; function f() {}",
            ""
          },
-         RhinoErrorReporter.PARSE_ERROR);
+         RhinoErrorReporter.TYPE_PARSE_ERROR);
   }
 
   public void testSourceMapExpansion1() {

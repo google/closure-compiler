@@ -127,11 +127,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseNamedTypeError1() throws Exception {
     // To avoid parsing ambiguities, type names must end in a '.' to
     // get the continuation behavior.
-    parse("@type {!goog\n * .Bar} */", "expected closing }");
+    parse("@type {!goog\n * .Bar} */",
+        "Bad type annotation. expected closing }");
   }
 
   public void testParseNamedTypeError2() throws Exception {
-    parse("@type {!goog.\n * Bar\n * .Baz} */", "expected closing }");
+    parse("@type {!goog.\n * Bar\n * .Baz} */",
+        "Bad type annotation. expected closing }");
   }
 
   public void testTypedefType1() throws Exception {
@@ -347,15 +349,18 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseUnionType10() throws Exception {
-    parse("@type {string|}*/", "type not recognized due to syntax error");
+    parse("@type {string|}*/",
+        "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testParseUnionType11() throws Exception {
-    parse("@type {(string,)}*/", "type not recognized due to syntax error");
+    parse("@type {(string,)}*/",
+        "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testParseUnionType12() throws Exception {
-    parse("@type {()}*/", "type not recognized due to syntax error");
+    parse("@type {()}*/",
+        "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testParseUnionType13() throws Exception {
@@ -390,7 +395,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseUnionTypeError1() throws Exception {
     parse("@type {(string,|number)} */",
-        "type not recognized due to syntax error");
+        "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testParseUnknownType1() throws Exception {
@@ -501,25 +506,28 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseFunctionalTypeError1() throws Exception {
-    parse("@type {function number):string}*/", "missing opening (");
+    parse("@type {function number):string}*/",
+        "Bad type annotation. missing opening (");
   }
 
   public void testParseFunctionalTypeError2() throws Exception {
-    parse("@type {function( number}*/", "missing closing )");
+    parse("@type {function( number}*/",
+        "Bad type annotation. missing closing )");
   }
 
   public void testParseFunctionalTypeError3() throws Exception {
     parse("@type {function(...[number], string)}*/",
-        "variable length argument must be last");
+        "Bad type annotation. variable length argument must be last");
   }
 
   public void testParseFunctionalTypeError4() throws Exception {
     parse("@type {function(string, ...[number], boolean):string}*/",
-        "variable length argument must be last");
+        "Bad type annotation. variable length argument must be last");
   }
 
   public void testParseFunctionalTypeError5() throws Exception {
-    parse("@type {function (thi:Array)}*/", "missing closing )");
+    parse("@type {function (thi:Array)}*/",
+        "Bad type annotation. missing closing )");
   }
 
   public void testParseFunctionalTypeError6() throws Exception {
@@ -528,23 +536,28 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseFunctionalTypeError7() throws Exception {
-    parse("@type {function(...[number)}*/", "missing closing ]");
+    parse("@type {function(...[number)}*/",
+        "Bad type annotation. missing closing ]");
   }
 
   public void testParseFunctionalTypeError8() throws Exception {
-    parse("@type {function(...number])}*/", "missing opening [");
+    parse("@type {function(...number])}*/",
+        "Bad type annotation. missing opening [");
   }
 
   public void testParseFunctionalTypeError9() throws Exception {
-    parse("@type {function (new:Array, this:Object)} */", "missing closing )");
+    parse("@type {function (new:Array, this:Object)} */",
+        "Bad type annotation. missing closing )");
   }
 
   public void testParseFunctionalTypeError10() throws Exception {
-    parse("@type {function (this:Array, new:Object)} */", "missing closing )");
+    parse("@type {function (this:Array, new:Object)} */",
+        "Bad type annotation. missing closing )");
   }
 
   public void testParseFunctionalTypeError11() throws Exception {
-    parse("@type {function (Array, new:Object)} */", "missing closing )");
+    parse("@type {function (Array, new:Object)} */",
+        "Bad type annotation. missing closing )");
   }
 
   public void testParseFunctionalTypeError12() throws Exception {
@@ -565,20 +578,23 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseArrayTypeError1() throws Exception {
-    parse("@type {[number}*/", "missing closing ]");
+    parse("@type {[number}*/",
+        "Bad type annotation. missing closing ]");
   }
 
   public void testParseArrayTypeError2() throws Exception {
-    parse("@type {number]}*/", "expected closing }");
+    parse("@type {number]}*/",
+        "Bad type annotation. expected closing }");
   }
 
   public void testParseArrayTypeError3() throws Exception {
-    parse("@type {[(number,boolean,Object?])]}*/", "missing closing )");
+    parse("@type {[(number,boolean,Object?])]}*/",
+        "Bad type annotation. missing closing )");
   }
 
   public void testParseArrayTypeError4() throws Exception {
     parse("@type {(number,boolean,[Object?)]}*/",
-        "missing closing ]");
+        "Bad type annotation. missing closing ]");
   }
 
   private void testParseType(String type) throws Exception {
@@ -728,7 +744,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseThisType3() throws Exception {
     parse("@type {number}\n@this goog.foo.Bar*/",
-        "type annotation incompatible with other annotations");
+        "Bad type annotation. type annotation incompatible " +
+        "with other annotations");
   }
 
   public void testParseThisType4() throws Exception {
@@ -801,15 +818,18 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseParam9() throws Exception {
     parse("@param {...number=} index */",
-        "expected closing }", "expecting a variable name in a @param tag");
+        "Bad type annotation. expected closing }",
+        "Bad type annotation. expecting a variable name in a @param tag");
   }
 
   public void testParseParam10() throws Exception {
-    parse("@param {...number index */", "expected closing }");
+    parse("@param {...number index */",
+        "Bad type annotation. expected closing }");
   }
 
   public void testParseParam11() throws Exception {
-    parse("@param {number= index */", "expected closing }");
+    parse("@param {number= index */",
+        "Bad type annotation. expected closing }");
   }
 
   public void testParseParam12() throws Exception {
@@ -837,7 +857,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseParam15() throws Exception {
-    JSDocInfo info = parse("@param {string} [index */", "missing closing ]");
+    JSDocInfo info = parse("@param {string} [index */",
+        "Bad type annotation. missing closing ]");
     assertEquals(1, info.getParameterCount());
     assertTypeEquals(STRING_TYPE, info.getParameterType("index"));
   }
@@ -943,12 +964,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseRecordType11() throws Exception {
     parseFull("/** @param {{a : b} n\n*/",
-              "expected closing }");
+              "Bad type annotation. expected closing }");
   }
 
   public void testParseRecordType12() throws Exception {
     parseFull("/** @param {{!hello : hey}} n\n*/",
-              "type not recognized due to syntax error");
+              "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testParseRecordType13() throws Exception {
@@ -997,27 +1018,27 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseParamError1() throws Exception {
     parseFull("/** @param\n*/",
-        "expecting a variable name in a @param tag");
+        "Bad type annotation. expecting a variable name in a @param tag");
   }
 
   public void testParseParamError2() throws Exception {
     parseFull("/** @param {Number}*/",
-        "expecting a variable name in a @param tag");
+        "Bad type annotation. expecting a variable name in a @param tag");
   }
 
   public void testParseParamError3() throws Exception {
     parseFull("/** @param {Number}\n*/",
-        "expecting a variable name in a @param tag");
+        "Bad type annotation. expecting a variable name in a @param tag");
   }
 
   public void testParseParamError4() throws Exception {
     parseFull("/** @param {Number}\n* * num */",
-        "expecting a variable name in a @param tag");
+        "Bad type annotation. expecting a variable name in a @param tag");
   }
 
   public void testParseParamError5() throws Exception {
     parse("@param {number} x \n * @param {string} x */",
-        "duplicate variable name \"x\"");
+        "Bad type annotation. duplicate variable name \"x\"");
   }
 
   public void testParseExtends1() throws Exception {
@@ -1059,7 +1080,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseExtends5() throws Exception {
     assertTypeEquals(STRING_OBJECT_TYPE,
-        parse("@extends {String*/", "expected closing }").getBaseType());
+        parse("@extends {String*/",
+              "Bad type annotation. expected closing }").getBaseType());
   }
 
   public void testParseExtends6() throws Exception {
@@ -1079,11 +1101,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseExtendsNullable1() throws Exception {
-    parse("@extends {Base?} */", "expected closing }");
+    parse("@extends {Base?} */", "Bad type annotation. expected closing }");
   }
 
   public void testParseExtendsNullable2() throws Exception {
-    parse("@extends Base? */", "expected end of line or comment");
+    parse("@extends Base? */",
+        "Bad type annotation. expected end of line or comment");
   }
 
   public void testParseEnum1() throws Exception {
@@ -1195,25 +1218,27 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseLends3() throws Exception {
-    parse("@lends {name */", "expected closing }");
+    parse("@lends {name */", "Bad type annotation. expected closing }");
   }
 
   public void testParseLends4() throws Exception {
-    parse("@lends {} */", "missing object name in @lends tag");
+    parse("@lends {} */",
+        "Bad type annotation. missing object name in @lends tag");
   }
 
   public void testParseLends5() throws Exception {
-    parse("@lends } */", "missing object name in @lends tag");
+    parse("@lends } */",
+        "Bad type annotation. missing object name in @lends tag");
   }
 
   public void testParseLends6() throws Exception {
     parse("@lends {string} \n * @lends {string} */",
-        "@lends tag incompatible with other annotations");
+        "Bad type annotation. @lends tag incompatible with other annotations");
   }
 
   public void testParseLends7() throws Exception {
     parse("@type {string} \n * @lends {string} */",
-        "@lends tag incompatible with other annotations");
+        "Bad type annotation. @lends tag incompatible with other annotations");
   }
 
   public void testParsePreserve() throws Exception {
@@ -1248,7 +1273,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseDefine2() throws Exception {
     assertTypeEquals(STRING_TYPE,
-        parse("@define {string*/", "expected closing }").getType());
+        parse("@define {string*/",
+              "Bad type annotation. expected closing }").getType());
   }
 
   public void testParseDefine3() throws Exception {
@@ -1273,6 +1299,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseDefineErrors2() throws Exception {
     parse("@define {string}\n @enum {string} */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
@@ -1294,6 +1321,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseDefineErrors8() throws Exception {
     parse("@define {string}\n @type string */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
@@ -1310,7 +1338,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseOverride2() throws Exception {
-    parse("@override\n@override*/", "extra @override/@inheritDoc tag");
+    parse("@override\n@override*/",
+        "Bad type annotation. extra @override/@inheritDoc tag");
   }
 
   public void testParseInheritDoc1() throws Exception {
@@ -1318,11 +1347,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseInheritDoc2() throws Exception {
-    parse("@override\n@inheritDoc*/", "extra @override/@inheritDoc tag");
+    parse("@override\n@inheritDoc*/",
+        "Bad type annotation. extra @override/@inheritDoc tag");
   }
 
   public void testParseInheritDoc3() throws Exception {
-    parse("@inheritDoc\n@inheritDoc*/", "extra @override/@inheritDoc tag");
+    parse("@inheritDoc\n@inheritDoc*/",
+        "Bad type annotation. extra @override/@inheritDoc tag");
   }
 
   public void testParseNoAlias1() throws Exception {
@@ -1650,13 +1681,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testFullRegression1() throws Exception {
     parseFull("/** @param (string,number) foo*/function bar(foo){}",
-        "expecting a variable name in a @param tag");
+        "Bad type annotation. expecting a variable name in a @param tag");
   }
 
   public void testFullRegression2() throws Exception {
     parseFull("/** @param {string,number) foo*/function bar(foo){}",
-        "expected closing }",
-        "expecting a variable name in a @param tag");
+        "Bad type annotation. expected closing }",
+        "Bad type annotation. expecting a variable name in a @param tag");
   }
 
   public void testFullRegression3() throws Exception {
@@ -1665,17 +1696,17 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testBug907488() throws Exception {
     parse("@type {number,null} */",
-        "expected closing }");
+        "Bad type annotation. expected closing }");
   }
 
   public void testBug907494() throws Exception {
     parse("@return {Object,undefined} */",
-        "expected closing }");
+        "Bad type annotation. expected closing }");
   }
 
   public void testBug909468() throws Exception {
     parse("@extends {(x)}*/",
-        "expecting a type name");
+        "Bad type annotation. expecting a type name");
   }
 
   public void testParseInterface() throws Exception {
@@ -1692,7 +1723,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseDuplicateImplicitCast() throws Exception {
     parse("@type {string} \n * @implicitCast \n * @implicitCast*/",
-          "extra @implicitCast tag");
+          "Bad type annotation. extra @implicitCast tag");
   }
 
   public void testParseInterfaceDoubled() throws Exception {
@@ -1700,6 +1731,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "* @interface\n" +
         "* @interface\n" +
         "*/",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
@@ -1730,25 +1762,26 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "* @implements {Smth}\n" +
         "* @implements {Smth}\n" +
         "*/",
-        "duplicate @implements tag");
+        "Bad type annotation. duplicate @implements tag");
   }
 
   public void testParseImplementsNoName() throws Exception {
     parse("* @implements {} */",
-        "expecting a type name");
+        "Bad type annotation. expecting a type name");
   }
 
   public void testParseImplementsMissingRC() throws Exception {
     parse("* @implements {Smth */",
-        "expected closing }");
+        "Bad type annotation. expected closing }");
   }
 
   public void testParseImplementsNullable1() throws Exception {
-    parse("@implements {Base?} */", "expected closing }");
+    parse("@implements {Base?} */", "Bad type annotation. expected closing }");
   }
 
   public void testParseImplementsNullable2() throws Exception {
-    parse("@implements Base? */", "expected end of line or comment");
+    parse("@implements Base? */",
+        "Bad type annotation. expected end of line or comment");
   }
 
   public void testInterfaceExtends() throws Exception {
@@ -1762,14 +1795,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testBadExtendsWithNullable() throws Exception {
     JSDocInfo jsdoc = parse("@constructor\n * @extends {Object?} */",
-        "expected closing }");
+        "Bad type annotation. expected closing }");
     assertTrue(jsdoc.isConstructor());
     assertTypeEquals(OBJECT_TYPE, jsdoc.getBaseType());
   }
 
   public void testBadImplementsWithNullable() throws Exception {
   JSDocInfo jsdoc = parse("@implements {Disposable?}\n * @constructor */",
-      "expected closing }");
+      "Bad type annotation. expected closing }");
     assertTrue(jsdoc.isConstructor());
     assertTypeEquals(registry.createNamedType("Disposable", null, -1, -1),
         jsdoc.getImplementedInterfaces().get(0));
@@ -1777,13 +1810,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testBadTypeDefInterfaceAndConstructor1() throws Exception {
     JSDocInfo jsdoc = parse("@interface\n@constructor*/",
-        "cannot be both an interface and a constructor");
+        "Bad type annotation. cannot be both an interface and a constructor");
     assertTrue(jsdoc.isInterface());
   }
 
   public void testBadTypeDefInterfaceAndConstructor2() throws Exception {
     JSDocInfo jsdoc = parse("@constructor\n@interface*/",
-        "cannot be both an interface and a constructor");
+        "Bad type annotation. cannot be both an interface and a constructor");
     assertTrue(jsdoc.isConstructor());
   }
 
@@ -2181,75 +2214,88 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testTypeTagConflict1() throws Exception {
     parse("@constructor \n * @constructor */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict2() throws Exception {
     parse("@interface \n * @interface */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict3() throws Exception {
     parse("@constructor \n * @interface */",
-        "cannot be both an interface and a constructor");
+        "Bad type annotation. cannot be both an interface and a constructor");
   }
 
   public void testTypeTagConflict4() throws Exception {
     parse("@interface \n * @constructor */",
-        "cannot be both an interface and a constructor");
+        "Bad type annotation. cannot be both an interface and a constructor");
   }
 
   public void testTypeTagConflict5() throws Exception {
     parse("@interface \n * @type {string} */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict6() throws Exception {
     parse("@typedef {string} \n * @type {string} */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict7() throws Exception {
     parse("@typedef {string} \n * @constructor */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict8() throws Exception {
     parse("@typedef {string} \n * @return {boolean} */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict9() throws Exception {
     parse("@enum {string} \n * @return {boolean} */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict10() throws Exception {
     parse("@this {Object} \n * @enum {boolean} */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict11() throws Exception {
     parse("@param {Object} x \n * @type {boolean} */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict12() throws Exception {
     parse("@typedef {boolean} \n * @param {Object} x */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
   public void testTypeTagConflict13() throws Exception {
     parse("@typedef {boolean} \n * @extends {Object} */",
+        "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
 
-  public void testParserWithTemplateTypeNameMisisng() {
-    parse("@template */", "@template tag missing type name");
+  public void testParserWithTemplateTypeNameMissing() {
+    parse("@template */",
+        "Bad type annotation. @template tag missing type name");
   }
 
-  public void testParserWithTemplateTypeNameMissing() {
-    parse("@template T\n@template V */", "@template tag at most once");
+  public void testParserWithTemplateDuplicated() {
+    parse("@template T\n@template V */",
+        "Bad type annotation. @template tag at most once");
   }
 
   public void testWhitelistedNewAnnotations() {

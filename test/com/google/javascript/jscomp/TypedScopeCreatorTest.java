@@ -352,7 +352,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "function Foo() {}" +
         "Foo.prototype.bar = 1;" +
         "var x = new Foo();",
-        RhinoErrorReporter.PARSE_ERROR);
+        RhinoErrorReporter.TYPE_PARSE_ERROR);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Foo", x.toString());
     assertTrue(x.getImplicitPrototype().hasOwnProperty("bar"));
@@ -367,7 +367,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "function Foo() {}" +
         "Foo.prototype = {bar: 1};" +
         "var x = new Foo();",
-        RhinoErrorReporter.PARSE_ERROR);
+        RhinoErrorReporter.TYPE_PARSE_ERROR);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Foo", x.toString());
     // Should be true
