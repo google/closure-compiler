@@ -2994,6 +2994,9 @@ TypedArray.prototype.subarray = function(begin, opt_end) {};
  */
 function Int8Array(length, opt_byteOffset, opt_length) {}
 
+/** @type {number} */
+Int8Array.BYTES_PER_ELEMENT;
+
 
 /**
  * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
@@ -3005,6 +3008,8 @@ function Int8Array(length, opt_byteOffset, opt_length) {}
  */
 function Uint8Array(length, opt_byteOffset, opt_length) {}
 
+/** @type {number} */
+Uint8Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
@@ -3016,6 +3021,8 @@ function Uint8Array(length, opt_byteOffset, opt_length) {}
  */
 function Int16Array(length, opt_byteOffset, opt_length) {}
 
+/** @type {number} */
+Int16Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
@@ -3027,6 +3034,8 @@ function Int16Array(length, opt_byteOffset, opt_length) {}
  */
 function Uint16Array(length, opt_byteOffset, opt_length) {}
 
+/** @type {number} */
+Uint16Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
@@ -3037,6 +3046,9 @@ function Uint16Array(length, opt_byteOffset, opt_length) {}
  * @constructor
  */
 function Int32Array(length, opt_byteOffset, opt_length) {}
+
+/** @type {number} */
+Int32Array.BYTES_PER_ELEMENT;
 
 
 /**
@@ -3049,6 +3061,9 @@ function Int32Array(length, opt_byteOffset, opt_length) {}
  */
 function Uint32Array(length, opt_byteOffset, opt_length) {}
 
+/** @type {number} */
+Uint32Array.BYTES_PER_ELEMENT;
+
 
 /**
  * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
@@ -3060,6 +3075,9 @@ function Uint32Array(length, opt_byteOffset, opt_length) {}
  */
 function Float32Array(length, opt_byteOffset, opt_length) {}
 
+/** @type {number} */
+Float32Array.BYTES_PER_ELEMENT;
+
 
 /**
  * @param {number|TypedArray|Array.<number>|ArrayBuffer} length or array
@@ -3070,6 +3088,9 @@ function Float32Array(length, opt_byteOffset, opt_length) {}
  * @constructor
  */
 function Float64Array(length, opt_byteOffset, opt_length) {}
+
+/** @type {number} */
+Float64Array.BYTES_PER_ELEMENT;
 
 
 /**
