@@ -94,5 +94,7 @@ public enum WarningLevel {
     options.aggressiveVarCheck = CheckLevel.WARNING;
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.DEPRECATED, CheckLevel.WARNING);
   }
 }

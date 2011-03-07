@@ -681,6 +681,12 @@ public class CommandLineRunnerTest extends TestCase {
         "goog.exportSymbol(\"foo.prototype.x\",foo.prototype.x);");
   }
 
+  public void testDepreciationWithVerbose() {
+    args.add("--warning_level=VERBOSE");
+    test("/** @deprecated */ function f() {}; f()",
+       CheckAccessControls.DEPRECATED_NAME);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
