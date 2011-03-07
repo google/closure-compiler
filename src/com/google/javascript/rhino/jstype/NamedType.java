@@ -41,7 +41,11 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.Node;
+
+import java.util.List;
 
 /**
  * A {@code NamedType} is a named reference to some other type.  This provides
@@ -101,6 +105,11 @@ class NamedType extends ProxyObjectType {
   private boolean forgiving = false;
 
   /**
+   * Property-defining continuations.
+   */
+  private List<PropertyContinuation> propertyContinuations = null;
+
+  /**
    * Create a named type based on the reference.
    */
   NamedType(JSTypeRegistry registry, String reference,
@@ -117,6 +126,37 @@ class NamedType extends ProxyObjectType {
   @Override
   void forgiveUnknownNames() {
     forgiving = true;
+  }
+
+  @Override
+  boolean defineProperty(String propertyName, JSType type,
+      boolean inferred, boolean inExterns, Node propertyNode) {
+    if (!isResolved()) {
+      // If this is an unresolved object type, we need to save all its
+      // properties and define them when it is resolved.
+      if (propertyContinuations == null) {
+        propertyContinuations = Lists.newArrayList();
+      }
+      propertyContinuations.add(
+          new PropertyContinuation(
+              propertyName, type, inferred, inExterns, propertyNode));
+      return true;
+    } else {
+      return super.defineProperty(
+          propertyName, type, inferred, inExterns, propertyNode);
+    }
+  }
+
+  private void finishPropertyContinuations() {
+    ObjectType referencedObjType = getReferencedObjTypeInternal();
+    if (referencedObjType != null && !referencedObjType.isUnknownType()) {
+      if (propertyContinuations != null) {
+        for (PropertyContinuation c : propertyContinuations) {
+          c.commit(this);
+        }
+      }
+    }
+    propertyContinuations = null;
   }
 
   /** Returns the type to which this refers (which is unknown if unresolved). */
@@ -194,6 +234,7 @@ class NamedType extends ProxyObjectType {
 
     if (resolved) {
       super.resolveInternal(t, enclosing);
+      finishPropertyContinuations();
       return registry.isLastGeneration() ?
           getReferencedType() : this;
     }
@@ -204,6 +245,9 @@ class NamedType extends ProxyObjectType {
     }
 
     super.resolveInternal(t, enclosing);
+    if (isResolved()) {
+      finishPropertyContinuations();
+    }
     return registry.isLastGeneration() ?
         getReferencedType() : this;
   }
@@ -371,6 +415,33 @@ class NamedType extends ProxyObjectType {
     } else {
       this.validator = validator;
       return true;
+    }
+  }
+
+  /** Store enough information to define a property at a later time. */
+  private static final class PropertyContinuation {
+    private final String propertyName;
+    private final JSType type;
+    private final boolean inferred;
+    private final boolean inExterns;
+    private final Node propertyNode;
+
+    private PropertyContinuation(
+        String propertyName,
+        JSType type,
+        boolean inferred,
+        boolean inExterns,
+        Node propertyNode) {
+      this.propertyName = propertyName;
+      this.type = type;
+      this.inferred = inferred;
+      this.inExterns = inExterns;
+      this.propertyNode = propertyNode;
+    }
+
+    void commit(ObjectType target) {
+      target.defineProperty(
+          propertyName, type, inferred, inExterns, propertyNode);
     }
   }
 }

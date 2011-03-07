@@ -69,6 +69,10 @@ class ProxyObjectType extends ObjectType {
     return referencedType;
   }
 
+  ObjectType getReferencedObjTypeInternal() {
+    return referencedObjType;
+  }
+
   void setReferencedType(JSType referencedType) {
     this.referencedType = referencedType;
     if (referencedType instanceof ObjectType) {

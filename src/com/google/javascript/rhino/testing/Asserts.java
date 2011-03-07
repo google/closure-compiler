@@ -59,7 +59,7 @@ public class Asserts {
 
   /** @return The resolved type */
   public static JSType assertValidResolve(JSType type) {
-    return assertValidResolve(type, new EmptyScope());
+    return assertValidResolve(type, MapBasedScope.emptyScope());
   }
 
   /** @return The resolved type */

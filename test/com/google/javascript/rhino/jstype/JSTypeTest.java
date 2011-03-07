@@ -55,7 +55,7 @@ import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-import com.google.javascript.rhino.testing.EmptyScope;
+import com.google.javascript.rhino.testing.MapBasedScope;
 
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +82,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private EnumElementType elementsType;
   private NamedType forwardDeclaredNamedType;
 
-  private static final StaticScope<JSType> EMPTY_SCOPE = new EmptyScope();
+  private static final StaticScope<JSType> EMPTY_SCOPE =
+      MapBasedScope.emptyScope();
 
   /**
    * A non exhaustive list of representative types used to test simple
@@ -740,26 +741,33 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, VOID_TYPE);
 
     // canTestForShallowEqualityWith
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NO_RESOLVED_TYPE));
+    assertTrue(
+        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NO_RESOLVED_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NO_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(ARRAY_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
+    assertTrue(
+        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(functionType));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
+    assertTrue(
+        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
+    assertTrue(
+        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
+    assertTrue(
+        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
+    assertTrue(
+        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertTrue(
+        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
@@ -1337,7 +1345,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_OBJECT_TYPE.isNumberValueType());
     assertTrue(NUMBER_OBJECT_TYPE.isObject());
     assertFalse(NUMBER_OBJECT_TYPE.isFunctionPrototypeType());
-    assertTrue(NUMBER_OBJECT_TYPE.getImplicitPrototype().isFunctionPrototypeType());
+    assertTrue(
+        NUMBER_OBJECT_TYPE.getImplicitPrototype().isFunctionPrototypeType());
     assertFalse(NUMBER_OBJECT_TYPE.isRegexpType());
     assertFalse(NUMBER_OBJECT_TYPE.isString());
     assertFalse(NUMBER_OBJECT_TYPE.isStringObjectType());
@@ -2104,7 +2113,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_OBJECT_TYPE.isNumberObjectType());
     assertFalse(STRING_OBJECT_TYPE.isNumberValueType());
     assertFalse(STRING_OBJECT_TYPE.isFunctionPrototypeType());
-    assertTrue(STRING_OBJECT_TYPE.getImplicitPrototype().isFunctionPrototypeType());
+    assertTrue(
+        STRING_OBJECT_TYPE.getImplicitPrototype().isFunctionPrototypeType());
     assertFalse(STRING_OBJECT_TYPE.isRegexpType());
     assertTrue(STRING_OBJECT_TYPE.isString());
     assertTrue(STRING_OBJECT_TYPE.isStringObjectType());
@@ -5334,7 +5344,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * {@link JSTypeRegistry#createRecordType}.
    */
   public void testCreateRecordType() throws Exception {
-    Map<String, RecordProperty> properties = new HashMap<String, RecordProperty>();
+    Map<String, RecordProperty> properties =
+        new HashMap<String, RecordProperty>();
     properties.put("hello", new RecordProperty(NUMBER_TYPE, null));
 
     JSType recordType = registry.createRecordType(properties);
@@ -5605,21 +5616,5 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   private ArrowType createArrowType(Node params) {
     return registry.createArrowType(params);
-  }
-
-  private void assertTypeEquals(JSType a, JSType b) {
-    Asserts.assertTypeEquals(a, b);
-  }
-
-  private void assertTypeEquals(String msg, JSType a, JSType b) {
-    Asserts.assertTypeEquals(msg, a, b);
-  }
-
-  private void assertTypeNotEquals(JSType a, JSType b) {
-    Asserts.assertTypeNotEquals(a, b);
-  }
-
-  private void assertTypeNotEquals(String msg, JSType a, JSType b) {
-    Asserts.assertTypeNotEquals(msg, a, b);
   }
 }

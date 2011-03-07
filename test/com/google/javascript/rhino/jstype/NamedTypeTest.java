@@ -38,30 +38,25 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.Node;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-
+import com.google.javascript.rhino.testing.MapBasedScope;
 
 /**
- * Tests for FunctionParamBuilder.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class FunctionParamBuilderTest extends BaseJSTypeTestCase {
+public class NamedTypeTest extends BaseJSTypeTestCase {
+  public void testNamedTypeProperties() {
+    NamedType namedA = new NamedType(registry, "TypeA", "source", 1, 0);
+    FunctionType ctorA = registry.createConstructorType(
+        "TypeA", null, null, null);
+    ObjectType typeA = ctorA.getInstanceType();
 
-  public void testBuild() throws Exception {
-    FunctionParamBuilder builder = new FunctionParamBuilder(registry);
-    assertTrue(builder.addRequiredParams(NUMBER_TYPE));
-    assertTrue(builder.addOptionalParams(BOOLEAN_TYPE));
-    assertTrue(builder.addVarArgs(STRING_TYPE));
-
-    Node params = builder.build();
-    assertTypeEquals(NUMBER_TYPE, params.getFirstChild().getJSType());
-    assertTypeEquals(registry.createOptionalType(BOOLEAN_TYPE),
-        params.getFirstChild().getNext().getJSType());
-    assertTypeEquals(registry.createOptionalType(STRING_TYPE),
-        params.getLastChild().getJSType());
-
-    assertTrue(params.getFirstChild().getNext().isOptionalArg());
-    assertTrue(params.getLastChild().isVarArgs());
+    namedA.defineDeclaredProperty("foo", NUMBER_TYPE, false, null);
+    namedA.resolve(
+        null,
+        new MapBasedScope(
+            ImmutableMap.of("TypeA", ctorA)));
+    assertTypeEquals(NUMBER_TYPE, typeA.getPropertyType("foo"));
   }
 }

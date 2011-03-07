@@ -43,6 +43,7 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode;
 import com.google.javascript.rhino.testing.Asserts;
+import com.google.javascript.rhino.testing.MapBasedScope;
 
 import junit.framework.TestCase;
 
@@ -206,7 +207,7 @@ public class JSTypeRegistryTest extends TestCase {
     immediateRegistry.setResolveMode(ResolveMode.IMMEDIATE);
 
     Node expr = new Node(Token.QMARK, Node.newString("foo"));
-    StaticScope<JSType> empty = new EmptyScope();
+    StaticScope<JSType> empty = MapBasedScope.emptyScope();
 
     JSType type = lazyExprRegistry.createFromTypeNodes(
         expr, "source.js", empty);
@@ -237,7 +238,7 @@ public class JSTypeRegistryTest extends TestCase {
     lazyExprRegistry.setResolveMode(ResolveMode.LAZY_EXPRESSIONS);
 
     Node expr = new Node(Token.QMARK, Node.newString("foo"));
-    StaticScope<JSType> empty = new EmptyScope();
+    StaticScope<JSType> empty = MapBasedScope.emptyScope();
 
     JSType type = lazyExprRegistry.createFromTypeNodes(
         expr, "source.js", empty);
@@ -253,18 +254,11 @@ public class JSTypeRegistryTest extends TestCase {
 
     Node expr = new Node(Token.STAR);
     JSType type = lazyExprRegistry.createFromTypeNodes(
-        expr, "source.js", new EmptyScope());
+        expr, "source.js", MapBasedScope.emptyScope());
     assertTrue(type instanceof AllType);
   }
 
   private void assertTypeEquals(JSType a, JSType b) {
     Asserts.assertTypeEquals(a, b);
-  }
-
-  private static class EmptyScope implements StaticScope<JSType> {
-    public StaticSlot<JSType> getSlot(final String name) { return null; }
-    public StaticSlot<JSType> getOwnSlot(String name) { return null; }
-    public StaticScope<JSType> getParentScope() { return null; }
-    public JSType getTypeOfThis() { return null; }
   }
 }

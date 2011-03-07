@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -36,7 +36,7 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 package com.google.javascript.rhino.testing;
 
 import com.google.javascript.rhino.JSTypeExpression;
@@ -384,7 +384,8 @@ public abstract class BaseJSTypeTestCase extends TestCase {
       JSTypeRegistry registry, ObjectType receivingType, String methodName,
       JSType returnType) {
     receivingType.defineDeclaredProperty(methodName,
-        new FunctionBuilder(registry).withReturnType(returnType).build(), true, null);
+        new FunctionBuilder(registry).withReturnType(returnType).build(),
+        true, null);
   }
 
   protected JSType createUnionType(JSType... variants) {
@@ -567,4 +568,20 @@ public abstract class BaseJSTypeTestCase extends TestCase {
       + " * @constructor\n"
       + " */\n"
       + "function ActiveXObject(progId, opt_location) {}\n";
+
+  protected final void assertTypeEquals(JSType a, JSType b) {
+    Asserts.assertTypeEquals(a, b);
+  }
+
+  protected final void assertTypeEquals(String msg, JSType a, JSType b) {
+    Asserts.assertTypeEquals(msg, a, b);
+  }
+
+  protected final void assertTypeNotEquals(JSType a, JSType b) {
+    Asserts.assertTypeNotEquals(a, b);
+  }
+
+  protected final void assertTypeNotEquals(String msg, JSType a, JSType b) {
+    Asserts.assertTypeNotEquals(msg, a, b);
+  }
 }

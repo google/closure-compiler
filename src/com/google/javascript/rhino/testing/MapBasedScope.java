@@ -38,15 +38,34 @@
 
 package com.google.javascript.rhino.testing;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
 
+import java.util.Map;
+
 /**
- * An empty scope implementation.
+ * A scope based on a simple hashmap.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class EmptyScope implements StaticScope<JSType> {
+public class MapBasedScope implements StaticScope<JSType> {
+  private final Map<String, StaticSlot<JSType>> slots = Maps.newHashMap();
+
+  public MapBasedScope(Map<String, ? extends JSType> namesToTypes) {
+    for (Map.Entry<String, ? extends JSType> entry : namesToTypes.entrySet()) {
+      slots.put(
+          entry.getKey(),
+          new SimpleSlot(entry.getKey(), entry.getValue(), false));
+    }
+  }
+
+  public static MapBasedScope emptyScope() {
+    return new MapBasedScope(ImmutableMap.<String, JSType>of());
+  }
+
   @Override
   public StaticScope<JSType> getParentScope() {
     return null;
@@ -54,12 +73,12 @@ public class EmptyScope implements StaticScope<JSType> {
 
   @Override
   public StaticSlot<JSType> getSlot(String name) {
-    return null;
+    return slots.get(name);
   }
 
   @Override
   public StaticSlot<JSType> getOwnSlot(String name) {
-    return null;
+    return slots.get(name);
   }
 
   @Override
