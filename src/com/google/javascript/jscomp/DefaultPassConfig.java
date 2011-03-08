@@ -612,6 +612,10 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(renameLabels);
     }
 
+    if (options.foldConstants) {
+      passes.add(latePeepholeOptimizations);
+    }
+
     if (options.anonymousFunctionNaming ==
         AnonymousFunctionNamingPolicy.UNMAPPED) {
       passes.add(nameUnmappedAnonymousFunctions);
@@ -907,8 +911,21 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new PeepholeOptimizationsPass(compiler,
-            new PeepholeSubstituteAlternateSyntax(),
+            new PeepholeSubstituteAlternateSyntax(true),
             new PeepholeRemoveDeadCode(),
+            new PeepholeFoldConstants());
+    }
+  };
+
+  /** Same as peepholeOptimizations but aggreesively merges code together */
+  private final PassFactory latePeepholeOptimizations =
+      new PassFactory("peepholeOptimizations", false) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new PeepholeOptimizationsPass(compiler,
+            new StatementFusion(),
+            new PeepholeRemoveDeadCode(),
+            new PeepholeSubstituteAlternateSyntax(false),
             new PeepholeFoldConstants());
     }
   };

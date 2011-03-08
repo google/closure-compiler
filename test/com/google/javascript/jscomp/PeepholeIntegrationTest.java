@@ -21,6 +21,8 @@ package com.google.javascript.jscomp;
  */
 public class PeepholeIntegrationTest extends CompilerTestCase {
 
+  private boolean doCommaSplitting = true;
+
   // TODO(user): Remove this when we no longer need to do string comparison.
   private PeepholeIntegrationTest(boolean compareAsTree) {
     super("", compareAsTree);
@@ -33,7 +35,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-
+    this.doCommaSplitting = true;
     enableLineNumberCheck(true);
 
     // TODO(nicksantos): Turn this on. There are some normalizations
@@ -45,7 +47,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
       new PeepholeOptimizationsPass(compiler,
-        new PeepholeSubstituteAlternateSyntax(),
+        new PeepholeSubstituteAlternateSyntax(doCommaSplitting),
         new PeepholeRemoveDeadCode(),
         new PeepholeFoldConstants()
       );
@@ -323,5 +325,16 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("x = !!!!!!!!!!!!3", "x = !0");
     fold("if(!3){x()}", "");
     fold("if(!!3){x()}", "x()");
+  }
+
+  public void testCommaSplitingConstantCondition() {
+    fold("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
+    fold("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
+  }
+
+  public void testAvoidCommaSplitting() {
+    fold("x(),y(),z()", "x();y();z()");
+    doCommaSplitting = false;
+    foldSame("x(),y(),z()");
   }
 }

@@ -426,7 +426,6 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
   private Node tryFoldComma(Node n) {
     // If the left side does nothing replace the comma with the result.
-
     Node parent = n.getParent();
     Node left = n.getFirstChild();
     Node right = left.getNext();
@@ -438,25 +437,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       parent.replaceChild(n, right);
       reportCodeChange();
       return right;
-    } else {
-      if (parent.getType() == Token.EXPR_RESULT
-          && parent.getParent().getType() != Token.LABEL) {
-        // split comma
-        n.detachChildren();
-        // Replace the original expression with the left operand.
-        parent.replaceChild(n, left);
-        // Add the right expression afterward.
-        Node newStatement = new Node(Token.EXPR_RESULT, right);
-        newStatement.copyInformationFrom(n);
-
-        //This modifies outside the subtree, which is not
-        //desirable in a peephole optimization.
-        parent.getParent().addChildAfter(newStatement, parent);
-        reportCodeChange();
-        return left;
-      }
     }
-
     return n;
   }
 

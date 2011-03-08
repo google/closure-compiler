@@ -108,8 +108,8 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("a() ? b() : true", "a() && b()");
     fold("a() ? true : b()", "a() || b()");
 
-    fold("(a = true) ? b() : c()", "a = true; b()");
-    fold("(a = false) ? b() : c()", "a = false; c()");
+    fold("(a = true) ? b() : c()", "a = true, b()");
+    fold("(a = false) ? b() : c()", "a = false, c()");
     fold("do {f()} while((a = true) ? b() : c())",
          "do {f()} while((a = true) , b())");
     fold("do {f()} while((a = false) ? b() : c())",
@@ -137,14 +137,14 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("var b=/ab/;if(b)x=1;", "var b=/ab/;x=1");
     foldSame("var b=f();if(b)x=1;");
     foldSame("b=b++;if(b)x=b;");
-    fold("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
+    fold("(b=0,b=1);if(b)x=b;", "b=0,b=1;if(b)x=b;");
     fold("b=1;if(foo,b)x=b;","b=1;x=b;");
     foldSame("b=1;if(foo=1,b)x=b;");
   }
 
   public void testConstantConditionWithSideEffect2() {
-    fold("(b=true)?x=1:x=2;", "b=true;x=1");
-    fold("(b=false)?x=1:x=2;", "b=false;x=2");
+    fold("(b=true)?x=1:x=2;", "b=true,x=1");
+    fold("(b=false)?x=1:x=2;", "b=false,x=2");
     fold("if (b=/ab/) x=1;", "b=/ab/;x=1");
     fold("var b;b=/ab/;(b)?x=1:x=2;", "var b;b=/ab/;x=1");
     foldSame("var b;b=f();(b)?x=1:x=2;");
@@ -216,21 +216,6 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("(1 + 2 + ''), foo()", "foo()");
   }
 
-  public void testSplitCommaExpressions() {
-    // Don't try to split in expressions.
-    foldSame("while (foo(), true) boo()");
-    foldSame("var a = (foo(), true);");
-    foldSame("a = (foo(), true);");
-
-    // Don't try to split COMMA under LABELs.
-    foldSame("a:a(),b()");
-
-    fold("(x=2), foo()", "x=2; foo()");
-    fold("foo(), boo();", "foo(); boo()");
-    fold("(a(), b()), (c(), d());", "a(); b(); c(); d();");
-    fold("foo(), true", "foo();");
-    fold("function x(){foo(), true}", "function x(){foo();}");
-  }
 
   public void testRemoveUselessOps() {
     // There are four place where expression results are discarded:
@@ -242,8 +227,8 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     // Known side-effect free functions calls are removed.
     fold("Math.random()", "");
-    fold("Math.random(f() + g())", "f(); g();");
-    fold("Math.random(f(),g(),h())", "f();g();h();");
+    fold("Math.random(f() + g())", "f(),g();");
+    fold("Math.random(f(),g(),h())", "f(),g(),h();");
 
     // Calls to functions with unknown side-effects are are left.
     foldSame("f();");
@@ -260,7 +245,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("a=(+f(),g())", "a=(f(),g())");
     fold("a=(true,g())", "a=g()");
     fold("f(),true", "f()");
-    fold("f() + g()", "f();g()");
+    fold("f() + g()", "f(),g()");
 
     fold("for(;;+f()){}", "for(;;f()){}");
     fold("for(+f();;g()){}", "for(f();;g()){}");
@@ -392,7 +377,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   public void testNoRemoveCall2() {
-    test("a()+b()", "a();b()");
+    test("a()+b()", "a(),b()");
   }
 
   public void testNoRemoveCall3() {
@@ -484,26 +469,6 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testShortCircuit4() {
     testSame("a() && 1 && b()");
-  }
-
-  public void testComma1() {
-    test("1, 2", "");
-  }
-
-  public void testComma2() {
-    test("1, a()", "a()");
-  }
-
-  public void testComma3() {
-    test("1, a(), b()", "a();b()");
-  }
-
-  public void testComma4() {
-    test("a(), b()", "a();b()");
-  }
-
-  public void testComma5() {
-    test("a(), b(), 1", "a();b()");
   }
 
   public void testComplex1() {

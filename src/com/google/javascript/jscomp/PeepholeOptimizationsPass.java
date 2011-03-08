@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -25,6 +24,7 @@ import com.google.javascript.rhino.Node;
  * some useless code removal, some minimizations).
  *
  * @author dcc@google.com (Devin Coughlin)
+ * @author acleung@google.com (Alan Leung)(
  */
 class PeepholeOptimizationsPass extends AbstractPostOrderCallback
     implements CompilerPass {
@@ -34,7 +34,6 @@ class PeepholeOptimizationsPass extends AbstractPostOrderCallback
   // TODO should sort based on likelihood that a given optimzation can
   // modify something.
   private final AbstractPeepholeOptimization[] peepholeOptimizations;
-
 
   /**
    * Creates a peephole optimization pass that runs the given

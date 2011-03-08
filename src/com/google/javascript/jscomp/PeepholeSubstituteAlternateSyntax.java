@@ -38,6 +38,8 @@ class PeepholeSubstituteAlternateSyntax
   private static final int OR_PRECEDENCE = NodeUtil.precedence(Token.OR);
   private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
 
+  private final boolean doCommaSpliting;
+
   static final DiagnosticType INVALID_REGULAR_EXPRESSION_FLAGS =
     DiagnosticType.error(
         "JSC_INVALID_REGULAR_EXPRESSION_FLAGS",
@@ -50,6 +52,10 @@ class PeepholeSubstituteAlternateSyntax
       return input.getType() != Token.FUNCTION;
     }
   };
+
+  PeepholeSubstituteAlternateSyntax(boolean doCommaSpliting) {
+    this.doCommaSpliting = doCommaSpliting;
+  }
 
   /**
    * Tries apply our various peephole minimizations on the passed in node.
@@ -123,11 +129,42 @@ class PeepholeSubstituteAlternateSyntax
       case Token.CALL:
         return tryFoldLiteralConstructor(node);
 
+      case Token.COMMA:
+        return tryFoldComma(node);
+
       case Token.NAME:
         return tryReplaceUndefined(node);
 
       default:
         return node; //Nothing changed
+    }
+  }
+
+  private Node tryFoldComma(Node n) {
+    if (!doCommaSpliting) {
+      return n;
+    }
+    Node parent = n.getParent();
+    Node left = n.getFirstChild();
+    Node right = n.getLastChild();
+
+    if (parent.getType() == Token.EXPR_RESULT
+        && parent.getParent().getType() != Token.LABEL) {
+      // split comma
+      n.detachChildren();
+      // Replace the original expression with the left operand.
+      parent.replaceChild(n, left);
+      // Add the right expression afterward.
+      Node newStatement = new Node(Token.EXPR_RESULT, right);
+      newStatement.copyInformationFrom(n);
+
+      //This modifies outside the subtree, which is not
+      //desirable in a peephole optimization.
+      parent.getParent().addChildAfter(newStatement, parent);
+      reportCodeChange();
+      return left;
+    } else {
+      return n;
     }
   }
 

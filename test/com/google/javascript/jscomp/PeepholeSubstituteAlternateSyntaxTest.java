@@ -31,6 +31,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
       "var RegExp = function f(a){};\n" +
       "var Array = function f(a){};\n";
 
+  private boolean doCommaSplitting = true;
+
   // TODO(user): Remove this when we no longer need to do string comparison.
   private PeepholeSubstituteAlternateSyntaxTest(boolean compareAsTree) {
     super(FOLD_CONSTANTS_TEST_EXTERNS, compareAsTree);
@@ -42,8 +44,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   @Override
   public void setUp() throws Exception {
+    doCommaSplitting = true;
     super.setUp();
-
     enableLineNumberCheck(true);
   }
 
@@ -51,7 +53,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass =
       new PeepholeOptimizationsPass(compiler,
-          new PeepholeSubstituteAlternateSyntax());
+          new PeepholeSubstituteAlternateSyntax(doCommaSplitting));
 
     return peepholePass;
   }
@@ -747,13 +749,49 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
         "function f() {var undefined=2;var x = undefined;}");
   }
 
-  public void testFoldIfAfterStatementFusion() {
-    fold("if (x) { a,b,c } else { d,c,e }", "x ? (a,b,c) : (d,c,e)");
-    fold("if (x) { a() && b() } else { c() && d () }",
-         "x ? a() && b() : c() && d () ");
-    fold("if (x) { (a(),a()) && b() } else { d() }",
-         "x ? (a(),a()) && b() : d () ");
-    fold("if (x) { (a(),a()) && b() } else { (c(),c()) && d () }",
-         "x ? (a(),a()) && b() : (c(),c()) && d () ");
+  public void testSplitCommaExpressions() {
+    // Don't try to split in expressions.
+    foldSame("while (foo(), !0) boo()");
+    foldSame("var a = (foo(), !0);");
+    foldSame("a = (foo(), !0);");
+
+    // Don't try to split COMMA under LABELs.
+    foldSame("a:a(),b()");
+
+    fold("(x=2), foo()", "x=2; foo()");
+    fold("foo(), boo();", "foo(); boo()");
+    fold("(a(), b()), (c(), d());", "a(); b(); c(); d();");
+    fold("foo(), true", "foo();1");
+    fold("function x(){foo(), !0}", "function x(){foo(); 1}");
+  }
+
+  public void testComma1() {
+    fold("1, 2", "1; 1");
+    doCommaSplitting = false;
+    foldSame("1, 2");
+  }
+
+  public void testComma2() {
+    test("1, a()", "1; a()");
+    doCommaSplitting = false;
+    foldSame("1, a()");
+  }
+
+  public void testComma3() {
+    test("1, a(), b()", "1; a(); b()");
+    doCommaSplitting = false;
+    foldSame("1, a(), b()");
+  }
+
+  public void testComma4() {
+    test("a(), b()", "a();b()");
+    doCommaSplitting = false;
+    foldSame("a(), b()");
+  }
+
+  public void testComma5() {
+    test("a(), b(), 1", "a();b();1");
+    doCommaSplitting = false;
+    foldSame("a(), b(), 1");
   }
 }
