@@ -944,6 +944,22 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("void x()", "void x()");
   }
 
+  public void testJoinBug() {
+    fold("var x = [].join();", "var x = '';");
+    fold("var x = [x].join();", "var x = '' + x;");
+    foldSame("var x = [x,y].join();");
+    foldSame("var x = [x,y,z].join();");
+
+    foldSame("shape['matrix'] = [\n" +
+            "    Number(headingCos2).toFixed(4),\n" +
+            "    Number(-headingSin2).toFixed(4),\n" +
+            "    Number(headingSin2 * yScale).toFixed(4),\n" +
+            "    Number(headingCos2 * yScale).toFixed(4),\n" +
+            "    0,\n" +
+            "    0\n" +
+            "  ].join()");
+  }
+
   private static final List<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",

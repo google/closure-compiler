@@ -1382,7 +1382,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           // If the Node is not a string literal, ensure that
           // it is coerced to a string.
           Node replacement = new Node(Token.ADD,
-              Node.newString("").copyInformationFrom(right),
+              Node.newString("").copyInformationFrom(n),
               foldedStringNode);
           foldedStringNode = replacement;
         }
@@ -1396,7 +1396,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         }
         int kJoinOverhead = "[].join()".length();
         foldedSize += kJoinOverhead;
-        foldedSize += InlineCostEstimator.getCost(right);
+        foldedSize += (right != null) ? InlineCostEstimator.getCost(right) : 0;
         if (foldedSize > originalSize) {
           return n;
         }
