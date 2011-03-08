@@ -1054,6 +1054,18 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(fooType.isPropertyTypeDeclared("z"));
   }
 
+  public void testDeclaredConstType5() throws Exception {
+    testSame(
+        "/** @const */ var goog = goog || {};" +
+        "/** @const */ var foo = goog || {};" +
+        "function f() { var y = goog; var z = foo; }");
+    JSType yType = lastLocalScope.getVar("y").getType();
+    assertEquals("{}", yType.toString());
+
+    JSType zType = lastLocalScope.getVar("z").getType();
+    assertEquals("?", zType.toString());
+  }
+
   public void testBadCtorInit1() throws Exception {
     testSame("/** @constructor */ var f;", CTOR_INITIALIZER);
   }

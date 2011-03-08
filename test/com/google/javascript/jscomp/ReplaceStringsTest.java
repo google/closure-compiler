@@ -278,10 +278,14 @@ public class ReplaceStringsTest extends CompilerTestCase {
 
   public void testLoggerOnThis() {
     testDebugStrings(
-        "this.logger_ = goog.debug.Logger.getLogger('foo');" +
-        "this.logger_.info('Some message');",
-        "this.logger_ = goog.debug.Logger.getLogger('a');" +
-        "this.logger_.info('b');",
+        "function f() {" +
+        "  this.logger_ = goog.debug.Logger.getLogger('foo');" +
+        "  this.logger_.info('Some message');" +
+        "}",
+        "function f() {" +
+        "  this.logger_ = goog.debug.Logger.getLogger('a');" +
+        "  this.logger_.info('b');" +
+        "}",
         new String[] {
             "a", "foo",
             "b", "Some message"});

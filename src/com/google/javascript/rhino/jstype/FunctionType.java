@@ -790,7 +790,10 @@ public class FunctionType extends PrototypeObjectType {
     return typeOfThis;
   }
 
-  /** Sets the instance type. This should only be used for special native types. */
+  /**
+   * Sets the instance type. This should only be used for special
+   * native types.
+   */
   void setInstanceType(ObjectType instanceType) {
     typeOfThis = instanceType;
   }
@@ -833,7 +836,7 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   @Override
-  void clearCachedValues() {
+  public void clearCachedValues() {
     super.clearCachedValues();
 
     if (subTypes != null) {

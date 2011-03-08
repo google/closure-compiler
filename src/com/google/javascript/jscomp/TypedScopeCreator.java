@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.DATE_FUNCTION_TYPE
 import static com.google.javascript.rhino.jstype.JSTypeNative.ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.EVAL_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
@@ -995,7 +996,7 @@ final class TypedScopeCreator implements ScopeCreator {
      *
      * @param n the defining NAME or GETPROP or object literal key node.
      * @param parent the {@code n}'s parent.
-     * @param name The name that this should be known by.
+     * @param variableName The name that this should be known by.
      * @param type the variable's type. It may be {@code null} if
      *     {@code inferred} is {@code true}.
      * @param inferred Whether the type is inferred or declared.
@@ -1004,8 +1005,9 @@ final class TypedScopeCreator implements ScopeCreator {
         JSType type, boolean inferred) {
       Preconditions.checkArgument(!variableName.isEmpty());
 
+      boolean isGlobalVar = n.getType() == Token.NAME && scope.isGlobal();
       boolean shouldDeclareOnGlobalThis =
-          n.getType() == Token.NAME && scope.isGlobal() &&
+          isGlobalVar &&
           (parent.getType() == Token.VAR ||
            parent.getType() == Token.FUNCTION);
 
@@ -1040,7 +1042,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
         if (shouldDeclareOnGlobalThis) {
           ObjectType globalThis =
-              typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
+              typeRegistry.getNativeObjectType(GLOBAL_THIS);
           if (inferred) {
             globalThis.defineInferredProperty(variableName,
                 type == null ?
@@ -1099,6 +1101,16 @@ final class TypedScopeCreator implements ScopeCreator {
           }
         }
       }
+
+      if (isGlobalVar && "Window".equals(variableName)
+          && type instanceof FunctionType) {
+        FunctionType globalThisCtor =
+            typeRegistry.getNativeObjectType(GLOBAL_THIS).getConstructor();
+        globalThisCtor.getInstanceType().clearCachedValues();
+        globalThisCtor.getPrototype().clearCachedValues();
+        globalThisCtor
+            .setPrototypeBasedOn(((FunctionType) type).getInstanceType());
+      }
     }
 
     /**
@@ -1143,10 +1155,31 @@ final class TypedScopeCreator implements ScopeCreator {
         } else if (info.isConstructor() || info.isInterface()) {
           return createFunctionTypeFromNodes(
               rValue, lValue.getQualifiedName(), info, lValue);
-        } else if (info.isConstant() && rValue != null
-            && rValue.getJSType() != null
-            && !rValue.getJSType().isUnknownType()) {
-          return rValue.getJSType();
+        } else {
+          // Check if this is constant, and if it has a known type.
+          if (info.isConstant()) {
+            JSType knownType = null;
+            if (rValue != null) {
+              if (rValue.getJSType() != null
+                  && !rValue.getJSType().isUnknownType()) {
+                return rValue.getJSType();
+              } else if (rValue.getType() == Token.OR) {
+                // Check for a very specific JS idiom:
+                // var x = x || TYPE;
+                // This is used by Closure's base namespace for esoteric
+                // reasons.
+                Node firstClause = rValue.getFirstChild();
+                Node secondClause = firstClause.getNext();
+                boolean namesMatch = firstClause.getType() == Token.NAME
+                    && lValue.getType() == Token.NAME
+                    && firstClause.getString().equals(lValue.getString());
+                if (namesMatch && secondClause.getJSType() != null
+                    && !secondClause.getJSType().isUnknownType()) {
+                  return secondClause.getJSType();
+                }
+              }
+            }
+          }
         }
       }
 

@@ -494,7 +494,11 @@ public abstract class ObjectType extends JSType {
     return !unknown;
   }
 
-  void clearCachedValues() {
+  /**
+   * Clear cached values. Should be called before making changes to a prototype
+   * that may have been changed since creation.
+   */
+  public void clearCachedValues() {
     unknown = true;
   }
 

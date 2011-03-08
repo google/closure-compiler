@@ -324,7 +324,8 @@ public class JSTypeRegistry implements Serializable {
             null, null, true, true);
     ObjectType booleanPrototype = BOOLEAN_OBJECT_FUNCTION_TYPE.getPrototype();
     registerNativeType(
-        JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE, BOOLEAN_OBJECT_FUNCTION_TYPE);
+        JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE,
+        BOOLEAN_OBJECT_FUNCTION_TYPE);
 
     ObjectType BOOLEAN_OBJECT_TYPE =
         BOOLEAN_OBJECT_FUNCTION_TYPE.getInstanceType();
@@ -376,7 +377,8 @@ public class JSTypeRegistry implements Serializable {
         new ErrorFunctionType(this, "ReferenceError");
     REFERENCE_ERROR_FUNCTION_TYPE.setPrototypeBasedOn(ERROR_TYPE);
     registerNativeType(
-        JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE, REFERENCE_ERROR_FUNCTION_TYPE);
+        JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE,
+        REFERENCE_ERROR_FUNCTION_TYPE);
 
     ObjectType REFERENCE_ERROR_TYPE =
         REFERENCE_ERROR_FUNCTION_TYPE.getInstanceType();
@@ -528,8 +530,11 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.LEAST_FUNCTION_TYPE, LEAST_FUNCTION_TYPE);
 
     // the 'this' object in the global scope
-    ObjectType GLOBAL_THIS = createObjectType("global this", null,
-        UNKNOWN_TYPE /* to be resolved later */);
+    FunctionType GLOBAL_THIS_CTOR =
+        new FunctionType(this, "global this", null,
+            createArrowType(createParameters(false, ALL_TYPE), NUMBER_TYPE),
+            null, null, true, true);
+    ObjectType GLOBAL_THIS = GLOBAL_THIS_CTOR.getInstanceType();
     registerNativeType(JSTypeNative.GLOBAL_THIS, GLOBAL_THIS);
 
     // greatest function type, i.e. (NoType...) -> All
@@ -860,8 +865,9 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Flushes out the current resolved and unresovled Named Types from the type registry.
-   * This is intended to be used ONLY before a compile is run.
+   * Flushes out the current resolved and unresovled Named Types from
+   * the type registry.  This is intended to be used ONLY before a
+   * compile is run.
    */
   public void clearNamedTypes() {
     resolvedNamedTypes.clear();

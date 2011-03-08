@@ -3843,11 +3843,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @param {string} msg */ " +
         "Bindow.prototype.alert = function(msg) {};" +
         "this.alert = 3;" +
-        "(new Bindow()).alert(this.alert)",
-        "actual parameter 1 of Bindow.prototype.alert " +
-        "does not match formal parameter\n" +
-        "found   : number\n" +
-        "required: string");
+        "(new Bindow()).alert(this.alert)");
   }
 
   public void testGlobalThis3() throws Exception {
@@ -3855,7 +3851,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @param {string} msg */ " +
         "function alert(msg) {};" +
         "this.alert(3);",
-        "actual parameter 1 of this.alert " +
+        "actual parameter 1 of global this.alert " +
         "does not match formal parameter\n" +
         "found   : number\n" +
         "required: string");
@@ -3866,7 +3862,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @param {string} msg */ " +
         "var alert = function(msg) {};" +
         "this.alert(3);",
-        "actual parameter 1 of this.alert " +
+        "actual parameter 1 of global this.alert " +
         "does not match formal parameter\n" +
         "found   : number\n" +
         "required: string");
@@ -3879,7 +3875,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "  var alert = function(msg) {};" +
         "}" +
         "this.alert(3);",
-        "Property alert never defined on this");
+        "Property alert never defined on global this");
   }
 
   public void testGlobalThis6() throws Exception {

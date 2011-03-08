@@ -4526,11 +4526,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGlobalThis2() throws Exception {
+    // this.alert = 3 doesn't count as a declaration, so this isn't a warning.
     testTypes("/** @constructor */ function Bindow() {}" +
         "/** @param {string} msg */ " +
         "Bindow.prototype.alert = function(msg) {};" +
         "this.alert = 3;" +
-        "(new Bindow()).alert(this.alert)",
+        "(new Bindow()).alert(this.alert)");
+  }
+
+
+  public void testGlobalThis2b() throws Exception {
+    testTypes("/** @constructor */ function Bindow() {}" +
+        "/** @param {string} msg */ " +
+        "Bindow.prototype.alert = function(msg) {};" +
+        "/** @return {number} */ this.alert = function() { return 3; };" +
+        "(new Bindow()).alert(this.alert())",
         "actual parameter 1 of Bindow.prototype.alert " +
         "does not match formal parameter\n" +
         "found   : number\n" +
@@ -4542,7 +4552,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {string} msg */ " +
         "function alert(msg) {};" +
         "this.alert(3);",
-        "actual parameter 1 of this.alert " +
+        "actual parameter 1 of global this.alert " +
         "does not match formal parameter\n" +
         "found   : number\n" +
         "required: string");
@@ -4553,7 +4563,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {string} msg */ " +
         "var alert = function(msg) {};" +
         "this.alert(3);",
-        "actual parameter 1 of this.alert " +
+        "actual parameter 1 of global this.alert " +
         "does not match formal parameter\n" +
         "found   : number\n" +
         "required: string");
@@ -4566,7 +4576,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "  var alert = function(msg) {};" +
         "}" +
         "this.alert(3);",
-        "Property alert never defined on this");
+        "Property alert never defined on global this");
   }
 
   public void testGlobalThis6() throws Exception {
@@ -4576,6 +4586,25 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var x = 3;" +
         "x = 'msg';" +
         "this.alert(this.x);");
+  }
+
+  public void testGlobalThis7() throws Exception {
+    testTypes(
+        "/** @constructor */ function Window() {}" +
+        "/** @param {Window} msg */ " +
+        "var foo = function(msg) {};" +
+        "foo(this);");
+  }
+
+  public void testGlobalThis8() throws Exception {
+    testTypes(
+        "/** @constructor */ function Window() {}" +
+        "/** @param {number} msg */ " +
+        "var foo = function(msg) {};" +
+        "foo(this);",
+        "actual parameter 1 of foo does not match formal parameter\n" +
+        "found   : global this\n" +
+        "required: number");
   }
 
   public void testControlFlowRestrictsType1() throws Exception {
