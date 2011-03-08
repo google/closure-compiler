@@ -93,6 +93,7 @@ public enum CompilationLevel {
     // skipAllCompilerPasses() cannot be easily undone.
     options.closurePass = true;
     options.variableRenaming = VariableRenamingPolicy.LOCAL;
+    options.shadowVariables = true;
     options.inlineLocalVariables = true;
     options.flowSensitiveInlineVariables = true;
     options.inlineLocalFunctions = true;
@@ -140,6 +141,7 @@ public enum CompilationLevel {
     options.aliasKeywords = true;
     options.reserveRawExports = true;
     options.variableRenaming = VariableRenamingPolicy.ALL;
+    options.shadowVariables = true;
     options.propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
     options.removeUnusedPrototypeProperties = true;
     options.removeUnusedPrototypePropertiesInExterns = true;
