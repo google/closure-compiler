@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -265,7 +266,9 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkSuspiciousProperties);
     }
 
-    if (options.checkCaja || options.checkEs5Strict) {
+    if (options.languageIn == LanguageMode.ECMASCRIPT5_STRICT
+        || options.checkCaja
+        || options.checkEs5Strict) {
       checks.add(checkStrictMode);
     }
 

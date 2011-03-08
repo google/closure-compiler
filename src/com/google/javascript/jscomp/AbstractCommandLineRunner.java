@@ -238,7 +238,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (config.languageIn.length() > 0) {
-      if (config.languageIn.equals("ECMASCRIPT5") ||
+      if (config.languageIn.equals("ECMASCRIPT5_STRICT") ||
+          config.languageIn.equals("ES5_STRICT")) {
+        options.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5;
+      } else if (config.languageIn.equals("ECMASCRIPT5") ||
           config.languageIn.equals("ES5")) {
         options.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5;
       } else if (config.languageIn.equals("ECMASCRIPT3") ||

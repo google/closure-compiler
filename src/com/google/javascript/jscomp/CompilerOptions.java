@@ -1141,6 +1141,11 @@ public class CompilerOptions implements Serializable, Cloneable {
      * Shiny new JavaScript
      */
     ECMASCRIPT5,
+
+    /**
+     * Nitpicky, shiny new JavaScript
+     */
+    ECMASCRIPT5_STRICT,
   }
 
   /** When to do the extra sanity checks */

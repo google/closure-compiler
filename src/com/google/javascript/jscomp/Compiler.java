@@ -1646,6 +1646,10 @@ public class Compiler extends AbstractCompiler {
     return options.languageIn == LanguageMode.ECMASCRIPT5;
   }
 
+  public LanguageMode LanguageMode() {
+    return options.languageIn;
+  }
+
   @Override
   public boolean acceptConstKeyword() {
     return options.acceptConstKeyword;
@@ -1661,6 +1665,9 @@ public class Compiler extends AbstractCompiler {
           break;
         case ECMASCRIPT5:
           mode = Config.LanguageMode.ECMASCRIPT5;
+          break;
+        case ECMASCRIPT5_STRICT:
+          mode = Config.LanguageMode.ECMASCRIPT5_STRICT;
           break;
         default:
           throw new IllegalStateException("unexpected language mode");

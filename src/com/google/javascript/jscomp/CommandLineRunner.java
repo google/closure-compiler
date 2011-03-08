@@ -323,7 +323,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--language_in",
         usage = "Sets what language spec that input sources conform. "
-        + "Options: ECMASCRIPT3 (default), ECMASCRIPT5")
+        + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT")
     private String language_in = "ECMASCRIPT3";
 
     @Option(name = "--version",
