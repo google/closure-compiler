@@ -470,7 +470,8 @@ class RemoveUnusedVars
       // Check all the call sites.
       for (UseSite site : defFinder.getUseSites(definition)) {
         if (isModifableCallSite(site)) {
-          Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex);
+          Node arg = NodeUtil.getArgumentForCallOrNew(
+              site.node.getParent(), argIndex);
           // TODO(johnlenz): try to remove parameters with side-effects by
           // decomposing the call expression.
           if (arg != null && NodeUtil.mayHaveSideEffects(arg, compiler)) {
@@ -494,7 +495,8 @@ class RemoveUnusedVars
 
       for (UseSite site : defFinder.getUseSites(definition)) {
         if (isModifableCallSite(site)) {
-          Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex);
+          Node arg = NodeUtil.getArgumentForCallOrNew(
+              site.node.getParent(), argIndex);
           if (arg != null) {
             Node argParent = arg.getParent();
             // Even if we can't change the signature in general we can always
@@ -528,7 +530,9 @@ class RemoveUnusedVars
         if (!isModifableCallSite(site)) {
           continue;
         }
-        Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex);
+
+        Node arg = NodeUtil.getArgumentForCallOrNew(
+            site.node.getParent(), argIndex);
         while (arg != null) {
           Node next = arg.getNext();
           if (next != null && !NodeUtil.mayHaveSideEffects(next)) {
@@ -539,20 +543,6 @@ class RemoveUnusedVars
           }
         }
       }
-    }
-
-    /**
-     * Returns the nth argument node given a usage site for a direct function
-     * call or for a func.call() node.
-     */
-    private static Node getArgumentForCallOrNewOrDotCall(UseSite site,
-        final int argIndex) {
-      int adjustedArgIndex = argIndex;
-      Node parent = site.node.getParent();
-      if (NodeUtil.isFunctionObjectCall(parent)) {
-        adjustedArgIndex++;
-      }
-      return NodeUtil.getArgumentForCallOrNew(parent, adjustedArgIndex);
     }
 
     /**
@@ -606,7 +596,7 @@ class RemoveUnusedVars
      */
     private static boolean isModifableCallSite(UseSite site) {
       return SimpleDefinitionFinder.isCallOrNewSite(site)
-          && !NodeUtil.isFunctionObjectApply(site.node.getParent());
+          && !NodeUtil.isFunctionObjectCallOrApply(site.node.getParent());
     }
 
     /**
@@ -615,29 +605,18 @@ class RemoveUnusedVars
      */
     private boolean canChangeSignature(Node function) {
       Definition definition = getFunctionDefinition(function);
-      CodingConvention convention = compiler.getCodingConvention();
 
       Preconditions.checkState(!definition.isExtern());
 
       Collection<UseSite> useSites = defFinder.getUseSites(definition);
       for (UseSite site : useSites) {
-        Node parent = site.node.getParent();
-
-        // Ignore references within goog.inherits calls.
-        if (NodeUtil.isCall(parent) &&
-            convention.getClassesDefinedByCall(parent) != null) {
-          continue;
-        }
-
         // Accessing the property directly prevents rewrite.
         if (!SimpleDefinitionFinder.isCallOrNewSite(site)) {
-          if (!(NodeUtil.isGetProp(parent) &&
-              NodeUtil.isFunctionObjectCall(parent.getParent()))) {
-            return false;
-          }
+          return false;
         }
 
-        if (NodeUtil.isFunctionObjectApply(parent)) {
+        // TODO(johnlenz): support .call signature changes.
+        if (NodeUtil.isFunctionObjectCallOrApply(site.node.getParent())) {
           return false;
         }
 
