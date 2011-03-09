@@ -652,7 +652,7 @@ public class CodePrinterTest extends TestCase {
         + "function f(a){};\n",
         "goog.java.Long;\n"
         + "/**\n"
-        + " * @param {Array} a\n"
+        + " * @param {(Array|null)} a\n"
         + " * @return {undefined}\n"
         + " */\n"
         + "function f(a) {\n}\n");

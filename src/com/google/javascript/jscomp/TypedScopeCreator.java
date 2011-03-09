@@ -420,8 +420,24 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // We do want to traverse the name of a named function, but we don't
       // want to traverse the arguments or body.
-      return parent == null || parent.getType() != Token.FUNCTION ||
+      boolean descend = parent == null || parent.getType() != Token.FUNCTION ||
           n == parent.getFirstChild() || parent == scope.getRootNode();
+
+      if (descend) {
+        // Handle hoisted functions on pre-order traversal, so that they
+        // get hit before other things in the scope.
+        if (NodeUtil.isStatementParent(n)) {
+          for (Node child = n.getFirstChild();
+               child != null;
+               child = child.getNext()) {
+            if (NodeUtil.isHoistedFunctionDeclaration(child)) {
+              defineFunctionLiteral(child, n);
+            }
+          }
+        }
+      }
+
+      return descend;
     }
 
     @Override
@@ -438,7 +454,10 @@ final class TypedScopeCreator implements ScopeCreator {
             nonExternFunctions.add(n);
           }
 
-          defineFunctionLiteral(n, parent);
+          // Hoisted functions are handled during pre-traversal.
+          if (!NodeUtil.isHoistedFunctionDeclaration(n)) {
+            defineFunctionLiteral(n, parent);
+          }
           break;
 
         case Token.ASSIGN:

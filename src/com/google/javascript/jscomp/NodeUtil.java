@@ -1665,7 +1665,10 @@ public final class NodeUtil {
    * @return Whether the node is used as a statement.
    */
   static boolean isStatement(Node n) {
-    Node parent = n.getParent();
+    return isStatementParent(n.getParent());
+  }
+
+  static boolean isStatementParent(Node parent) {
     // It is not possible to determine definitely if a node is a statement
     // or not if it is not part of the AST.  A FUNCTION node can be
     // either part of an expression or a statement.
