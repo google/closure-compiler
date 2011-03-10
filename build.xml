@@ -15,6 +15,10 @@
 -->
 <project name="compiler" basedir="." default="jar" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
+  <!-- Force java 6 -->
+  <property name="ant.build.javac.source" value="1.6" />
+  <property name="ant.build.javac.target" value="1.6" />
+
   <!-- define other variables -->
   <property name="src.dir" value="${basedir}/src" />
   <property name="gen.dir" value="${basedir}/gen" />
@@ -76,8 +80,8 @@
     <artifact:pom id="project" file="${build.dir}/pom.xml" />
   </target>
 
-  <target name="mvn-install" 
-          depends="jar-nodeps,jar-javadoc,jar-sources,pom" 
+  <target name="mvn-install"
+          depends="jar-nodeps,jar-javadoc,jar-sources,pom"
           description="Install closure-compiler artifacts into the local maven repo">
     <artifact:install file="${jarfile-nodeps}">
       <pom refid="project"/>
