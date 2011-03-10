@@ -152,7 +152,6 @@ public class OptimizeReturnsTest extends CompilerTestCase {
         "function c() { return b() }",
         "c();");
 
-    // TODO(johnlenz): It would be better if we do some kind of fixed point.
     String expected = newlineJoin(
         "function a() { return 1 }",
         "function b() { return a() }",
@@ -168,9 +167,26 @@ public class OptimizeReturnsTest extends CompilerTestCase {
         "function b() { return a() }",
         "function a() { return 1 }");
 
-
-    // TODO(johnlenz): It would be better if we do some kind of fixed point.
+    // Iteration 1.
     String expected = newlineJoin(
+        "c();",
+        "function c() { b(); return }",
+        "function b() { return a() }",
+        "function a() { return 1 }");
+    test(source, expected);
+
+    // Iteration 2.
+    source = expected;
+    expected = newlineJoin(
+        "c();",
+        "function c() { b(); return }",
+        "function b() { a(); return }",
+        "function a() { return 1 }");
+    test(source, expected);
+
+    // Iteration 3.
+    source = expected;
+    expected = newlineJoin(
         "c();",
         "function c() { b(); return }",
         "function b() { a(); return }",
@@ -223,35 +239,35 @@ public class OptimizeReturnsTest extends CompilerTestCase {
         "x.a()");
     test(source, result);
   }
-  
+
   public void testPrototypeMethod2() throws Exception {
     String source = newlineJoin(
         "function c(){}",
         "c.prototype.a = function(){return 1}",
         "goog.reflect.object({a: 'v'})",
         "var x = new c;",
-        "x.a()");    
+        "x.a()");
     testSame(source);
-  }  
-  
+  }
+
   public void testPrototypeMethod3() throws Exception {
     String source = newlineJoin(
         "function c(){}",
         "c.prototype.a = function(){return 1}",
         "var x = new c;",
         "for(var key in goog.reflect.object({a: 'v'})){ x[key](); }",
-        "x.a()");    
+        "x.a()");
     testSame(source);
-  } 
-  
+  }
+
   public void testPrototypeMethod4() throws Exception {
     String source = newlineJoin(
         "function c(){}",
         "c.prototype.a = function(){return 1}",
         "var x = new c;",
-        "for(var key in goog.reflect.object({a: 'v'})){ x[key](); }");    
+        "for(var key in goog.reflect.object({a: 'v'})){ x[key](); }");
     testSame(source);
-  }  
+  }
 
   public void testCallOrApply() throws Exception {
     // TODO(johnlenz): Add support for .call and .apply

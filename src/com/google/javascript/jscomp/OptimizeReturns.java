@@ -18,12 +18,14 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A compiler pass for optimize function return results.  Currently this
@@ -55,34 +57,17 @@ class OptimizeReturns
   @Override
   public void process(
       Node externs, Node root, SimpleDefinitionFinder definitions) {
-    // Create a snapshot of the definition sites to iterate over
-    // as they can be removed during processing.
-    for (DefinitionSite defSite :
-        definitions.getDefinitionSites().toArray(new DefinitionSite[0])) {
-      if (definitions.getDefinitionSites().contains(defSite)) {
-        optimizeResultsIfEligible(defSite, definitions);
+    // Find all function nodes whose callers ignore the return values.
+    List<Node> toOptimize = Lists.newArrayList();
+    for (DefinitionSite defSite : definitions.getDefinitionSites()) {
+      if (!defSite.inExterns && !callResultsMaybeUsed(definitions, defSite)) {
+        toOptimize.add(defSite.definition.getRValue());
       }
     }
-  }
-
-  /**
-   * Rewrites method results sites if the method results are never used.
-   *
-   * Definition and use site information is provided by the
-   * {@link SimpleDefinitionFinder} passed in as an argument.
-   *
-   * @param defSite definition site to process.
-   * @param defFinder structure that hold Node -> Definition and
-   * Definition -> [UseSite] maps.
-   */
-  private void optimizeResultsIfEligible(
-      DefinitionSite defSite, SimpleDefinitionFinder defFinder) {
-
-    if (defSite.inExterns || callResultsMaybeUsed(defFinder, defSite)) {
-      return;
+    // Optimize the return statements.
+    for (Node node : toOptimize) {
+      rewriteReturns(definitions, node);
     }
-
-    rewriteReturns(defFinder, defSite.definition.getRValue());
   }
 
   /**
@@ -113,15 +98,15 @@ class OptimizeReturns
     }
 
     Collection<UseSite> useSites = defFinder.getUseSites(definition);
-    
+
     // Don't modify unused definitions for two reasons:
     // 1) It causes unnecessary churn
     // 2) Other definitions might be used to reflect on this one using
     //    goog.reflect.object (the check for definitions with uses is below).
     if (useSites.isEmpty()) {
       return true;
-    }    
-    
+    }
+
     for (UseSite site : useSites) {
       // This catches the case where an object literal in goog.reflect.object
       // and a prototype method have the same property name.
