@@ -113,22 +113,21 @@ DirectoryEntry.prototype.removeRecursively = function(successCallback,
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#the-entry-interface
- * TODO(dbk): add http://www.w3.org/TR/file-system-api/#widl-Entry-getMetadata
  * @constructor
  */
 function Entry() {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-isFile
- * @return {boolean}
+ * @type {boolean}
  */
-Entry.prototype.isFile = function() {};
+Entry.prototype.isFile;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-isDirectory
- * @return {boolean}
+ * @type {boolean}
  */
-Entry.prototype.isDirectory = function() {};
+Entry.prototype.isDirectory;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-name
@@ -181,6 +180,13 @@ Entry.prototype.toURI = function(mimeType) {};
  * @param {function(!FileError)=} errorCallback
  */
 Entry.prototype.remove = function(successCallback, errorCallback) {};
+
+/**
+ * @see http://www.w3.org/TR/file-system-api/#widl-Entry-getMetadata
+ * @param {function(!Metadata)} successCallback
+ * @param {function(!FileError)=} errorCallback
+ */
+Entry.prototype.getMetadata = function(successCallback, errorCallback) {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-getParent
@@ -618,6 +624,19 @@ FileWriter.prototype.truncate = function(size) {};
  * @constructor
  */
 function LocalFileSystem() {}
+
+/**
+ * Metadata interface.
+ * @see http://www.w3.org/TR/file-system-api/#idl-def-Metadata
+ * @constructor
+ */
+function Metadata() {}
+
+/**
+ * @see http://www.w3.org/TR/file-system-api/#widl-Metadata-modificationTime
+ * @type {!Date}
+ */
+Metadata.prototype.modificationTime;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystem-TEMPORARY
