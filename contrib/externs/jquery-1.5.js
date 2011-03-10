@@ -32,7 +32,7 @@ var jQuerySelector;
 
 /**
  * @param {(jQuerySelector|Element|Array.<Element>|jQueryObject|string|
- *     function())=} arg1
+ *     function()|Object)=} arg1
  * @param {(Element|jQueryObject|Document|
  *     Object.<string, (string|function(jQuery.event=))>)=} arg2
  * @return {jQueryObject}
@@ -41,7 +41,7 @@ function $(arg1, arg2) {};
 
 /**
  * @param {(jQuerySelector|Element|Array.<Element>|jQueryObject|string|
- *     function())=} arg1
+ *     function()|Object)=} arg1
  * @param {(Element|jQueryObject|Document|
  *     Object.<string, (string|function(jQuery.event=))>)=} arg2
  * @return {jQueryObject}
