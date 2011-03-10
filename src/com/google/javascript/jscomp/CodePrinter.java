@@ -491,6 +491,7 @@ class CodePrinter {
     // Specify a charset to use when outputting source code.  If null,
     // then just output ASCII.
     private Charset outputCharset = null;
+    private boolean tagAsStrict;
 
     /**
      * Sets the root node from which to generate the source code.
@@ -568,6 +569,14 @@ class CodePrinter {
     }
 
     /**
+     * Set whether the output should be tags as ECMASCRIPT 5 Strict.
+     */
+    Builder setTagAsStrict(boolean tagAsStrict) {
+      this.tagAsStrict = tagAsStrict;
+      return this;
+    }
+
+    /**
      * Generates the source code and returns it.
      */
     String build() {
@@ -583,7 +592,7 @@ class CodePrinter {
               : Format.COMPACT;
 
       return toSource(root, outputFormat, lineBreak, lineLengthThreshold,
-          sourceMap, sourceMapDetailLevel, outputCharset);
+          sourceMap, sourceMapDetailLevel, outputCharset, tagAsStrict);
     }
   }
 
@@ -600,7 +609,8 @@ class CodePrinter {
                                  boolean lineBreak,  int lineLengthThreshold,
                                  SourceMap sourceMap,
                                  SourceMap.DetailLevel sourceMapDetailLevel,
-                                 Charset outputCharset) {
+                                 Charset outputCharset,
+                                 boolean tagAsStrict) {
     Preconditions.checkState(sourceMapDetailLevel != null);
 
     boolean createSourceMap = (sourceMap != null);
@@ -615,6 +625,11 @@ class CodePrinter {
         outputFormat == Format.TYPED
         ? new TypedCodeGenerator(mcp, outputCharset)
         : new CodeGenerator(mcp, outputCharset);
+
+    if (tagAsStrict) {
+      cg.tagAsStrict();
+    }
+
     cg.add(root);
     mcp.endFile();
 

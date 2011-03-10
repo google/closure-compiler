@@ -60,7 +60,7 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     // no missing properties check
     CompilerOptions options = new CompilerOptions();
-    options.languageIn = LanguageMode.ECMASCRIPT5;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     return options;
   }
 

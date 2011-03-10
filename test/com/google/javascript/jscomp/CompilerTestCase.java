@@ -151,7 +151,7 @@ public abstract class CompilerTestCase extends TestCase  {
     CompilerOptions options = new CompilerOptions();
 
     if (this.acceptES5) {
-      options.languageIn = LanguageMode.ECMASCRIPT5;
+      options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     }
 
     // This doesn't affect whether checkSymbols is run--it just affects
@@ -397,7 +397,7 @@ public abstract class CompilerTestCase extends TestCase  {
     CompilerOptions options = getOptions();
 
     if (this.acceptES5) {
-      options.languageIn = LanguageMode.ECMASCRIPT5;
+      options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     }
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.

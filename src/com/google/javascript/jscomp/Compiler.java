@@ -1443,6 +1443,8 @@ public class Compiler extends AbstractCompiler {
     builder.setLineBreak(options.lineBreak);
     builder.setSourceMap(sourceMap);
     builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
+    builder.setTagAsStrict(
+        options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT);
 
     Charset charset = options.outputCharset != null ?
         Charset.forName(options.outputCharset) : null;
@@ -1643,11 +1645,11 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   public boolean acceptEcmaScript5() {
-    return options.languageIn == LanguageMode.ECMASCRIPT5;
+    return options.getLanguageIn() == LanguageMode.ECMASCRIPT5;
   }
 
-  public LanguageMode LanguageMode() {
-    return options.languageIn;
+  public LanguageMode languageMode() {
+    return options.getLanguageIn();
   }
 
   @Override
@@ -1659,7 +1661,7 @@ public class Compiler extends AbstractCompiler {
   Config getParserConfig() {
     if (parserConfig == null) {
       Config.LanguageMode mode;
-      switch (options.languageIn) {
+      switch (options.getLanguageIn()) {
         case ECMASCRIPT3:
           mode = Config.LanguageMode.ECMASCRIPT3;
           break;

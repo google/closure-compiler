@@ -266,7 +266,7 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkSuspiciousProperties);
     }
 
-    if (options.languageIn == LanguageMode.ECMASCRIPT5_STRICT
+    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT
         || options.checkCaja
         || options.checkEs5Strict) {
       checks.add(checkStrictMode);

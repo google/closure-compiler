@@ -68,7 +68,7 @@ public class TypeInferenceTest extends TestCase {
   public void setUp() {
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.languageIn = LanguageMode.ECMASCRIPT5;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.initOptions(options);
     registry = compiler.getTypeRegistry();
     assumptions = Maps.newHashMap();

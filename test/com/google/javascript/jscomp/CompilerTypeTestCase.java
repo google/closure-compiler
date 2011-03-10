@@ -60,7 +60,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
 
   protected CompilerOptions getOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.languageIn = LanguageMode.ECMASCRIPT5;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setCodingConvention(getCodingConvention());

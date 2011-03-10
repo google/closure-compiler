@@ -60,6 +60,13 @@ class CodeGenerator {
     this(consumer, null);
   }
 
+  /**
+   * Insert a ECMASCRIPT 5 strict annotation.
+   */
+  public void tagAsStrict() {
+    add("'use strict';");
+  }
+
   void add(String str) {
     cc.add(str);
   }

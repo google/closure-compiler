@@ -41,8 +41,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   /**
    * The JavaScript language version accepted.
    */
-  LanguageMode languageIn;
+  private LanguageMode languageIn;
 
+  /**
+   * The JavaScript language version accepted.
+   */
+  private LanguageMode languageOut;
 
   /**
    * Whether the compiler handles `const' keyword or not.
@@ -1107,6 +1111,22 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public TweakProcessing getTweakProcessing() {
     return tweakProcessing;
+  }
+
+  /**
+   * Sets how goog.tweak calls are processed.
+   */
+  public void setLanguageIn(LanguageMode languageIn) {
+    this.languageIn = languageIn;
+    this.languageOut = languageIn;
+  }
+
+  public LanguageMode getLanguageIn() {
+    return languageIn;
+  }
+
+  public LanguageMode getLanguageOut() {
+    return languageOut;
   }
 
   /**

@@ -578,7 +578,7 @@ public class ExpressionDecomposerTest extends TestCase {
   private static Compiler getCompiler() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.languageIn = LanguageMode.ECMASCRIPT5;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
     return compiler;

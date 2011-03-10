@@ -30,7 +30,8 @@ public class CodePrinterTest extends TestCase {
   static Node parse(String js, boolean checkTypes) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.languageIn = LanguageMode.ECMASCRIPT5; // Allow getters and setters.
+    // Allow getters and setters.
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.initOptions(options);
     Node n = compiler.parseTestCode(js);
 
@@ -79,8 +80,20 @@ public class CodePrinterTest extends TestCase {
       int lineThreshold, boolean outputTypes) {
     return new CodePrinter.Builder(parse(js, true)).setPrettyPrint(prettyprint)
         .setOutputTypes(outputTypes)
-        .setLineLengthThreshold(lineThreshold).setLineBreak(lineBreak).build();
+        .setLineLengthThreshold(lineThreshold).setLineBreak(lineBreak)
+        .build();
   }
+
+  String parsePrint(String js, boolean prettyprint, boolean lineBreak,
+                    int lineThreshold, boolean outputTypes,
+                    boolean tagAsStrict) {
+    return new CodePrinter.Builder(parse(js, true)).setPrettyPrint(prettyprint)
+        .setOutputTypes(outputTypes)
+        .setLineLengthThreshold(lineThreshold).setLineBreak(lineBreak)
+        .setTagAsStrict(tagAsStrict)
+        .build();
+  }
+
 
   String printNode(Node n) {
     return new CodePrinter.Builder(n).setLineLengthThreshold(
@@ -1149,5 +1162,8 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x = - (2);", "var x=-2");
   }
 
-
+  public void testStrict() {
+    String result = parsePrint("var x", false, false, 0, false, true);
+    assertEquals("'use strict';var x", result);
+  }
 }

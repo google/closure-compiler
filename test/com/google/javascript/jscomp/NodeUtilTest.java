@@ -37,7 +37,7 @@ public class NodeUtilTest extends TestCase {
   private static Node parse(String js) {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
-    compiler.getOptions().languageIn = LanguageMode.ECMASCRIPT5;
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT5);
     Node n = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
     return n;
@@ -249,7 +249,7 @@ public class NodeUtilTest extends TestCase {
   private Node parseExpr(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.languageIn = LanguageMode.ECMASCRIPT5;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.initOptions(options);
     Node root = compiler.parseTestCode(js);
     return root.getFirstChild().getFirstChild();
