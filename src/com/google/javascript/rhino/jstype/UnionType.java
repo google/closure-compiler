@@ -93,13 +93,6 @@ public class UnionType extends JSType {
     return alternates;
   }
 
-  @Override
-  void forgiveUnknownNames() {
-    for (JSType type : getAlternates()) {
-      type.forgiveUnknownNames();
-    }
-  }
-
   /**
    * This predicate is used to test whether a given type can appear in a
    * numeric context, such as an operand of a multiply operator.

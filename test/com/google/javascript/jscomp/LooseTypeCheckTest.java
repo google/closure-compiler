@@ -6393,9 +6393,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNoForwardTypeDeclarationAndNoBraces() throws Exception {
-    // To better support third-party code, we do not warn when
-    // there are no braces around an unknown type name.
-    testTypes("/** @return The result. */ function f() {}");
+    testTypes("/** @return The result. */ function f() {}",
+        "Bad type annotation. Unknown type The");
   }
 
   public void testForwardTypeDeclaration1() throws Exception {

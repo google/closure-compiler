@@ -5255,7 +5255,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testScopedConstructors2() throws Exception {
     testTypes(
         "/** @param {Function} f */" +
-        "function foo1(f) { " +
+        "function foo1(f) {" +
         "  /** @param {Function} g */" +
         "  f.prototype.bar = function(g) {};" +
         "}");
@@ -7414,9 +7414,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNoForwardTypeDeclarationAndNoBraces() throws Exception {
-    // To better support third-party code, we do not warn when
-    // there are no braces around an unknown type name.
-    testTypes("/** @return The result. */ function f() {}");
+    testTypes("/** @return The result. */ function f() {}",
+        "Bad type annotation. Unknown type The");
   }
 
   public void testForwardTypeDeclaration1() throws Exception {

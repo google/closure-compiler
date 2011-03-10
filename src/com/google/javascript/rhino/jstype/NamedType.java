@@ -93,18 +93,6 @@ class NamedType extends ProxyObjectType {
   private Predicate<JSType> validator;
 
   /**
-   * If true, don't warn about unresolveable type names.
-   *
-   * NOTE(nicksantos): A lot of third-party code doesn't use our type syntax.
-   * They have code like
-   * {@code @return} the bus.
-   * and they clearly don't mean that "the" is a type. In these cases, we're
-   * forgiving and try to guess whether or not "the" is a type when it's not
-   * clear.
-   */
-  private boolean forgiving = false;
-
-  /**
    * Property-defining continuations.
    */
   private List<PropertyContinuation> propertyContinuations = null;
@@ -121,11 +109,6 @@ class NamedType extends ProxyObjectType {
     this.sourceName = sourceName;
     this.lineno = lineno;
     this.charno = charno;
-  }
-
-  @Override
-  void forgiveUnknownNames() {
-    forgiving = true;
   }
 
   @Override
@@ -370,20 +353,13 @@ class NamedType extends ProxyObjectType {
       boolean isForwardDeclared =
           ignoreForwardReferencedTypes &&
           registry.isForwardDeclaredType(reference);
-      boolean beForgiving = forgiving || isForwardDeclared;
-      if (!beForgiving && registry.isLastGeneration()) {
+      if (!isForwardDeclared && registry.isLastGeneration()) {
         t.warning("Bad type annotation. Unknown type " + reference,
             sourceName, lineno, null, charno);
       } else {
-        if (isForwardDeclared) {
-          setReferencedType(
-              registry.getNativeObjectType(
-                  JSTypeNative.NO_RESOLVED_TYPE));
-        } else {
-          setReferencedType(
-              registry.getNativeObjectType(
-                  JSTypeNative.CHECKED_UNKNOWN_TYPE));
-        }
+        setReferencedType(
+            registry.getNativeObjectType(
+                JSTypeNative.NO_RESOLVED_TYPE));
 
         if (registry.isLastGeneration() && validator != null) {
           validator.apply(getReferencedType());

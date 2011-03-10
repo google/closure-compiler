@@ -434,12 +434,15 @@ final class FunctionTypeBuilder {
       // /** @type {Function} */ x.prototype.y;
       // then we should not give it a @this type.
       String ownerTypeName = owner.getQualifiedName();
-      ObjectType ownerType = ObjectType.cast(
-          typeRegistry.getForgivingType(
-              scope, ownerTypeName, sourceName,
-              owner.getLineno(), owner.getCharno()));
-      if (ownerType != null) {
-        thisType = ownerType;
+      Var ownerVar = scope.getVar(ownerTypeName);
+      JSType ownerType = ownerVar == null ? null : ownerVar.getType();
+      FunctionType ownerFnType = ownerType instanceof FunctionType ?
+          (FunctionType) ownerType : null;
+      ObjectType instType =
+          ownerFnType == null || ownerFnType.isOrdinaryFunction() ?
+          null : ownerFnType.getInstanceType();
+      if (instType != null) {
+        thisType = instType;
       }
     }
 

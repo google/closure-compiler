@@ -140,13 +140,6 @@ public abstract class JSType implements Serializable {
     return displayName != null && !displayName.isEmpty();
   }
 
-  /**
-   * If we see a type name without braces, it might be legacy jsdoc.
-   * So we shouldn't emit warnings about it. This method is how we skip
-   * those warnings.
-   */
-  void forgiveUnknownNames() {}
-
   public boolean isNoType() {
     return false;
   }

@@ -446,11 +446,13 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   public void testUnresolvedType() {
+    // NOTE(nicksantos): This behavior seems very wrong to me.
     String js = ""
         + "var g = {};"
-        + "/** @constructor \n @extends g.NotHere */ var Foo = function() {}\n"
+        + "/** @constructor \n @extends {?} */ "
+        + "var Foo = function() {};\n"
         + "Foo.prototype.a = 0;"
-        + "/** @constructor */ var Bar = function() {}\n"
+        + "/** @constructor */ var Bar = function() {};\n"
         + "Bar.prototype.a = 0;";
     String output = ""
         + "var g={};"
@@ -459,12 +461,9 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var Bar=function(){};"
         + "Bar.prototype.Bar_prototype$a=0;";
     testSets(false, BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES,
-        js, js, "{}", FunctionTypeBuilder.RESOLVED_TAG_EMPTY,
-        "Could not resolve type in @extends tag of Foo");
+        js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
     testSets(true, BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES,
-        js, output, "{a=[[Bar.prototype], [Foo.prototype]]}",
-        FunctionTypeBuilder.RESOLVED_TAG_EMPTY,
-        "Could not resolve type in @extends tag of Foo");
+        js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
   }
 
   public void testNamedType() {

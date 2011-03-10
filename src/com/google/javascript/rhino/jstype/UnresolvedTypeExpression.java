@@ -36,7 +36,7 @@
  * file under either the MPL or the GPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;
@@ -62,28 +62,15 @@ class UnresolvedTypeExpression extends UnknownType {
   private final String sourceName;
 
   /**
-   * If true, don't warn about unresolveable type names.
-   *
-   * NOTE(nicksantos): A lot of third-party code doesn't use our type syntax.
-   * They have code like
-   * {@code @return} the bus.
-   * and they clearly don't mean that "the" is a type. In these cases, we're
-   * forgiving and try to guess whether or not "the" is a type when it's not
-   * clear.
-   */
-  private boolean forgiving = false;
-
-  /**
    * Create a named type based on the reference.
    */
   UnresolvedTypeExpression(JSTypeRegistry registry, Node typeExpr,
-      String sourceName, boolean forgiving) {
+      String sourceName) {
     super(registry, false);
 
     Preconditions.checkNotNull(typeExpr);
     this.typeExpr = typeExpr;
     this.sourceName = sourceName;
-    this.forgiving = forgiving;
   }
 
   /**
@@ -91,7 +78,6 @@ class UnresolvedTypeExpression extends UnknownType {
    */
   @Override
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> enclosing) {
-    return registry.createFromTypeNodes(typeExpr, sourceName, enclosing,
-        forgiving);
+    return registry.createFromTypeNodes(typeExpr, sourceName, enclosing);
   }
 }
