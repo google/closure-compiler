@@ -161,7 +161,7 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
       "function twoArg(arg1, arg2) {};" +
       "Foo.prototype.prototypeMethod = twoArg;" +
       "Foo.staticMethod = twoArg;";
-    
+
     // Prototype method with too many arguments.
     testSame(METHOD_DEFS +
         "var f = new Foo();f.prototypeMethod(1, 2, 3);",

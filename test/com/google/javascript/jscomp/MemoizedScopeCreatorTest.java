@@ -35,7 +35,7 @@ public class MemoizedScopeCreatorTest extends TestCase {
     // Wow, is there really a circular dependency between JSCompiler and
     // SyntacticScopeCreator?
     Compiler compiler = new Compiler();
-    compiler.initOptions(new CompilerOptions());    
+    compiler.initOptions(new CompilerOptions());
     ScopeCreator creator = new MemoizedScopeCreator(
         new SyntacticScopeCreator(compiler));
     Scope scopeA = creator.createScope(trueNode, null);

@@ -106,7 +106,7 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
   public Set<Var> getReferencedVariables() {
     return referenceMap.keySet();
   }
-  
+
   /**
    * Gets the reference collection for the given variable.
    */

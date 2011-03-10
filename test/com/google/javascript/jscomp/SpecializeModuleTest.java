@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
 
 /**
  * Tests for {@link SpecializeModule}.
- * 
+ *
  * @author dcc@google.com (Devin Coughlin)
  */
 public class SpecializeModuleTest extends CompilerTestCase {
@@ -42,7 +42,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
           compiler.getUniqueNameIdSupplier(), true, false, true);
     }
   };
-  
+
   private PassFactory removeUnusedPrototypeProperties =
     new PassFactory("removeUnusedPrototypeProperties", true) {
     @Override
@@ -50,7 +50,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
       return new RemoveUnusedPrototypeProperties(compiler, false, false);
     }
   };
-  
+
   private PassFactory devirtualizePrototypeMethods =
     new PassFactory("devirtualizePrototypeMethods", true) {
     @Override
@@ -58,20 +58,20 @@ public class SpecializeModuleTest extends CompilerTestCase {
       return new DevirtualizePrototypeMethods(compiler);
     }
   };
-  
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     final SpecializeModule specializeModule = new SpecializeModule(compiler,
-        devirtualizePrototypeMethods, inlineFunctions, 
+        devirtualizePrototypeMethods, inlineFunctions,
         removeUnusedPrototypeProperties);
 
-    return new CompilerPass() {     
+    return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
         specializeModule.process(externs, root);
 
         /* Make sure variables are declared before used */
-        new VarCheck(compiler).process(externs, root);       
+        new VarCheck(compiler).process(externs, root);
       }
     };
   }
@@ -87,9 +87,9 @@ public class SpecializeModuleTest extends CompilerTestCase {
     JSModule[] modules = createModuleStar(
         // m1
         /* Recursion in A() prevents inline of A*/
-        "var A = function() {alert(B());A()};" + 
+        "var A = function() {alert(B());A()};" +
         "var B = function() {return 6};" +
-        "A();",       
+        "A();",
         // m2
         "A();" +
         "B();" +
@@ -100,9 +100,9 @@ public class SpecializeModuleTest extends CompilerTestCase {
 
     test(modules, new String[] {
         // m1
-        "var A = function() {alert(6);A()};" + /* Specialized A */    
+        "var A = function() {alert(6);A()};" + /* Specialized A */
         "A();" +
-        "var B;",    
+        "var B;",
         // m2
         "A = function() {alert(B());A()};" + /* Unspecialized A */
         "B = function() {return 6};" + /* Removed from m1, so add to m2 */
@@ -113,24 +113,24 @@ public class SpecializeModuleTest extends CompilerTestCase {
         "B();"
     });
   }
-  
+
   public void testSpecializeCascadedInline() {
     JSModule[] modules = createModuleStar(
         // m1
         /* Recursion in A() prevents inline of A*/
-        "var A = function() {alert(B());A()};" + 
+        "var A = function() {alert(B());A()};" +
         "var B = function() {return C()};" +
         "var C = function() {return 6};" +
-        "A();",       
+        "A();",
         // m2
         "B = function() {return 7};" +
     "A();");
 
     test(modules, new String[] {
         // m1
-        "var A = function() {alert(6);A()};" + /* Specialized A */    
+        "var A = function() {alert(6);A()};" + /* Specialized A */
         "A();" +
-        "var B, C;",    
+        "var B, C;",
         // m2
         "A = function() {alert(B());A()};" + /* Unspecialized A */
         "B = function() {return C()};" + /* Removed from m1, so add to m2 */
@@ -144,9 +144,9 @@ public class SpecializeModuleTest extends CompilerTestCase {
     JSModule[] modules = createModuleStar(
         // m1
         /* Recursion in A() prevents inline of A*/
-        "var A = function() {alert(B());A()};" + 
+        "var A = function() {alert(B());A()};" +
         "var B = function() {return 6};" +
-        "A();",       
+        "A();",
         // m2
         "B = function() {return 7};" +
         "A();",
@@ -156,9 +156,9 @@ public class SpecializeModuleTest extends CompilerTestCase {
 
     test(modules, new String[] {
         // m1
-        "var A = function() {alert(6);A()};" + /* Specialized A */    
+        "var A = function() {alert(6);A()};" + /* Specialized A */
         "A();" +
-        "var B;",    
+        "var B;",
         // m2
         "A = function() {alert(B());A()};" + /* Unspecialized A */
         "B = function() {return 6};" + /* Removed from m1, so add to m2 */
@@ -176,9 +176,9 @@ public class SpecializeModuleTest extends CompilerTestCase {
         // m1
         "var ns = {};" +
         /* Recursion in A() prevents inline of A*/
-        "ns.A = function() {alert(B());ns.A()};" + 
+        "ns.A = function() {alert(B());ns.A()};" +
         "var B = function() {return 6};" +
-        "ns.A();",       
+        "ns.A();",
         // m2
         "B = function() {return 7};" +
     "ns.A();");
@@ -186,9 +186,9 @@ public class SpecializeModuleTest extends CompilerTestCase {
     test(modules, new String[] {
         // m1
         "var ns = {};" +
-        "ns.A = function() {alert(6);ns.A()};" + /* Specialized A */    
+        "ns.A = function() {alert(6);ns.A()};" + /* Specialized A */
         "ns.A();" +
-        "var B;",    
+        "var B;",
         // m2
         "ns.A = function() {alert(B());ns.A()};" + /* Unspecialized A */
         "B = function() {return 6};" + /* Removed from m1, so add to m2 */
@@ -201,18 +201,18 @@ public class SpecializeModuleTest extends CompilerTestCase {
     JSModule[] modules = createModuleStar(
         // m1
         /* Recursion in A() prevents inline of A*/
-        "function A() {alert(B());A()}" + 
+        "function A() {alert(B());A()}" +
         "function B() {return 6}" +
-        "A();",       
+        "A();",
         // m2
         "B = function() {return 7};" +
     "A();");
 
     test(modules, new String[] {
         // m1
-        "function A() {alert(6);A()}" + /* Specialized A */    
+        "function A() {alert(6);A()}" + /* Specialized A */
         "A();" +
-        "var B;",    
+        "var B;",
         // m2
         "A = function() {alert(B());A()};" + /* Unspecialized A */
         "B = function() {return 6};" + /* Removed from m1, so add to m2 */
@@ -229,14 +229,14 @@ public class SpecializeModuleTest extends CompilerTestCase {
     JSModule[] modules = createModuleStar(
         // m1
         "(function(){var noSpecialize = " +
-            "function() {alert(6)};noSpecialize()})()",       
+            "function() {alert(6)};noSpecialize()})()",
         // m2
         "");
 
     test(modules, new String[] {
         // m1
         "(function(){var noSpecialize = " +
-            "function() {alert(6)};noSpecialize()})()", 
+            "function() {alert(6)};noSpecialize()})()",
         // m2
         ""
     });
@@ -246,19 +246,19 @@ public class SpecializeModuleTest extends CompilerTestCase {
     JSModule[] modules = createModuleStar(
         // m1
         /* Recursion in A() prevents inline of A*/
-        "var A = function() {alert(B() + C());A()};" + 
+        "var A = function() {alert(B() + C());A()};" +
         "var B = function() {return 6};" +
         "var C = function() {return 8};" +
-        "A();",       
+        "A();",
         // m2
         "" +
     "A();");
 
     test(modules, new String[] {
         // m1
-        "var A = function() {alert(6 + 8);A()};" + /* Specialized A */    
+        "var A = function() {alert(6 + 8);A()};" + /* Specialized A */
         "A();" +
-        "var B, C;",    
+        "var B, C;",
         // m2
         "A = function() {alert(B() + C());A()};" + /* Unspecialized A */
         "B = function() {return 6};" + /* Removed from m1, so add to m2 */
@@ -272,12 +272,12 @@ public class SpecializeModuleTest extends CompilerTestCase {
         // m1
         /* Recursion in A() prevents inline of A*/
         "var Foo = function(){};" + /* constructor */
-        "Foo.prototype.a = function() {this.a()};" + 
+        "Foo.prototype.a = function() {this.a()};" +
         "Foo.prototype.b = function() {return 6};" +
         "Foo.prototype.c = function() {return 7};" +
         "var aliasA = Foo.prototype.a;" + // Prevents devirtualization of a
         "var x = new Foo();" +
-        "x.a();",       
+        "x.a();",
         // m2
         "");
 
@@ -287,21 +287,21 @@ public class SpecializeModuleTest extends CompilerTestCase {
         "Foo.prototype.a = function() {this.a()};" +
         "var aliasA = Foo.prototype.a;" +
         "var x = new Foo();" +
-        "x.a();", 
+        "x.a();",
         // m2
         "Foo.prototype.b = function() {return 6};" +
-        "Foo.prototype.c = function() {return 7};"        
+        "Foo.prototype.c = function() {return 7};"
     });
   }
-  
+
   public void testDontSpecializeAliasedFunctions_inline() {
     JSModule[] modules = createModuleStar(
         // m1
         /* Recursion in A() prevents inline of A*/
-        "function A() {alert(B());A()}" + 
+        "function A() {alert(B());A()}" +
         "function B() {return 6}" +
         "var aliasA = A;" +
-        "A();",       
+        "A();",
         // m2
         "B = function() {return 7};" +
         "B();");
@@ -309,10 +309,10 @@ public class SpecializeModuleTest extends CompilerTestCase {
     test(modules, new String[] {
         // m1
         /* Recursion in A() prevents inline of A*/
-        "function A() {alert(B());A()}" + 
+        "function A() {alert(B());A()}" +
         "function B() {return 6}" +
         "var aliasA = A;" +
-        "A();",       
+        "A();",
         // m2
         "B = function() {return 7};" +
         "B();"
@@ -323,7 +323,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
     JSModule[] modules = createModuleStar(
         // m1
         "var Foo = function(){};" + /* constructor */
-        "Foo.prototype.a = function() {this.a()};" + 
+        "Foo.prototype.a = function() {this.a()};" +
         "Foo.prototype.b = function() {return 6};" +
         "var aliasB = Foo.prototype.b;" +
         "Foo.prototype.c = function() {return 7};" +
@@ -331,7 +331,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
         "var aliasA = Foo.prototype.a;" + // Prevents devirtualization of a
         "var x = new Foo();" +
         "x.a();" +
-        "var aliasC = (new Foo).c",       
+        "var aliasC = (new Foo).c",
         // m2
         "");
 
@@ -345,12 +345,12 @@ public class SpecializeModuleTest extends CompilerTestCase {
         "var aliasA = Foo.prototype.a;" + // Prevents devirtualization of a
         "var x = new Foo();" +
         "x.a();" +
-        "var aliasC = (new Foo).c", 
+        "var aliasC = (new Foo).c",
         // m2
-        "Foo.prototype.d = function() {return 7};"        
+        "Foo.prototype.d = function() {return 7};"
     });
   }
-  
+
   public void testSpecializeDevirtualizePrototypeMethods() {
     JSModule[] modules = createModuleStar(
         // m1
@@ -367,7 +367,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
         // m1
         "var Foo = function(){};" + /* constructor */
         "var JSCompiler_StaticMethods_a =" +
-              "function(JSCompiler_StaticMethods_a$self) {" + 
+              "function(JSCompiler_StaticMethods_a$self) {" +
            "JSCompiler_StaticMethods_a(JSCompiler_StaticMethods_a$self);" +
            "return 7" +
         "};" +
@@ -378,7 +378,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
         "Foo.prototype.b = function() {this.a()};"
     });
   }
-  
+
   public void testSpecializeDevirtualizePrototypeMethodsWithInline() {
     JSModule[] modules = createModuleStar(
         // m1
@@ -399,107 +399,107 @@ public class SpecializeModuleTest extends CompilerTestCase {
         "Foo.prototype.a = function() {return 7};"
     });
   }
-  
+
   /**
    * Tests for {@link SpecializeModule.SpecializationState}.
    */
-  public static class SpecializeModuleSpecializationStateTest 
+  public static class SpecializeModuleSpecializationStateTest
       extends CompilerTestCase {
-    
+
     Compiler lastCompiler;
-    
+
     SpecializationState lastState;
-    
+
     @Override
     public CompilerPass getProcessor(final Compiler compiler) {
       lastCompiler = compiler;
-      
+
       return new CompilerPass() {
-        
+
         @Override
-        public void process(Node externs, Node root) {         
-          SimpleDefinitionFinder defFinder = 
+        public void process(Node externs, Node root) {
+          SimpleDefinitionFinder defFinder =
               new SimpleDefinitionFinder(compiler);
-          
+
           defFinder.process(externs, root);
-          
-          SimpleFunctionAliasAnalysis functionAliasAnalysis = 
+
+          SimpleFunctionAliasAnalysis functionAliasAnalysis =
               new SimpleFunctionAliasAnalysis();
-          
-          functionAliasAnalysis.analyze(defFinder); 
-          
-          lastState = new SpecializationState(functionAliasAnalysis);       
+
+          functionAliasAnalysis.analyze(defFinder);
+
+          lastState = new SpecializationState(functionAliasAnalysis);
         }
       };
     }
-      
+
     public void testRemovedFunctions() {
       testSame("function F(){}\nvar G = function(a){};");
-      
+
       assertEquals(ImmutableSet.of(), lastState.getRemovedFunctions());
-      
+
       Node functionF = findFunction("F");
-      
+
       lastState.reportRemovedFunction(functionF, functionF.getParent());
       assertEquals(ImmutableSet.of(functionF), lastState.getRemovedFunctions());
 
       Node functionG = findFunction("F");
-      
+
       lastState.reportRemovedFunction(functionG, functionF.getParent());
       assertEquals(ImmutableSet.of(functionF, functionG),
           lastState.getRemovedFunctions());
-      
+
       assertEquals(ImmutableSet.of(), lastState.getSpecializedFunctions());
     }
-    
+
     public void testSpecializedFunctions() {
       testSame("function F(){}\nvar G = function(a){};");
-      
+
       assertEquals(ImmutableSet.of(), lastState.getSpecializedFunctions());
-      
+
       Node functionF = findFunction("F");
-      
+
       lastState.reportSpecializedFunction(functionF);
       assertEquals(ImmutableSet.of(functionF),
           lastState.getSpecializedFunctions());
 
       Node functionG = findFunction("F");
-      
+
       lastState.reportSpecializedFunction(functionG);
       assertEquals(ImmutableSet.of(functionF, functionG),
           lastState.getSpecializedFunctions());
-      
+
       assertEquals(ImmutableSet.of(), lastState.getRemovedFunctions());
     }
-    
+
     public void testCanFixupFunction() {
       testSame("function F(){}\n" +
                "var G = function(a){};\n" +
                "var ns = {};" +
-               "ns.H = function(){};" + 
+               "ns.H = function(){};" +
                "var ns2 = {I : function anon1(){}};" +
                "(function anon2(){})();");
-      
+
       assertTrue(lastState.canFixupFunction(findFunction("F")));
       assertTrue(lastState.canFixupFunction(findFunction("G")));
       assertTrue(lastState.canFixupFunction(findFunction("ns.H")));
       assertFalse(lastState.canFixupFunction(findFunction("anon1")));
       assertFalse(lastState.canFixupFunction(findFunction("anon2")));
-      
+
       // Can't guarantee safe fixup for aliased functions
       testSame("function A(){}\n" +
           "var aliasA = A;\n");
 
       assertFalse(lastState.canFixupFunction(findFunction("A")));
     }
-    
+
     private Node findFunction(String name) {
       FunctionFinder f = new FunctionFinder(name);
       new NodeTraversal(lastCompiler, f).traverse(lastCompiler.jsRoot);
       assertNotNull("Couldn't find " + name, f.found);
       return f.found;
     }
-    
+
     /**
      * Quick Traversal to find a given function in the AST.
      */
@@ -510,7 +510,7 @@ public class SpecializeModuleTest extends CompilerTestCase {
       FunctionFinder(String target) {
         this.target = target;
       }
-      
+
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
         if (NodeUtil.isFunction(n)
@@ -518,6 +518,6 @@ public class SpecializeModuleTest extends CompilerTestCase {
           found = n;
         }
       }
-    }   
+    }
   }
 }

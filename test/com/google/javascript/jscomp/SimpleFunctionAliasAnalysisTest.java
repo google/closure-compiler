@@ -20,35 +20,35 @@ import com.google.javascript.rhino.Node;
 
 /**
  * Tests for {@link SimpleFunctionAliasAnalysis}.
- * 
+ *
  * @author dcc@google.com (Devin Coughlin)
  */
 public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
-  
+
   private SimpleFunctionAliasAnalysis analysis;
-  
+
   private Compiler lastCompiler;
-  
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
       return new CompilerPass() {
-        
+
         @Override
         public void process(Node externs, Node root) {
           SimpleDefinitionFinder finder = new SimpleDefinitionFinder(compiler);
           finder.process(externs, root);
-          
+
           analysis = new SimpleFunctionAliasAnalysis();
-          
-          analysis.analyze(finder);  
-          
+
+          analysis.analyze(finder);
+
           lastCompiler = compiler;
         }
       };
   }
 
-  public void testFunctionGetIsAliased() { 
-    // Aliased by VAR assignment   
+  public void testFunctionGetIsAliased() {
+    // Aliased by VAR assignment
     String source =
         "function A(){};\n" +
         "var ns = {};\n" +
@@ -59,15 +59,15 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
         "var aliasB = ns.B;\n" +
         "var aliasC = C;\n" +
         "D();";
-      
+
     compileAndRun(source);
-  
+
     assertFunctionAliased(true, "A");
     assertFunctionAliased(true, "ns.B");
     assertFunctionAliased(true, "C");
     assertFunctionAliased(false, "D");
-    
-    // Aliased by normal assignment   
+
+    // Aliased by normal assignment
     source =
         "function A(){};\n" +
         "var ns = {};\n" +
@@ -81,15 +81,15 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
         "var aliasC;\n" +
         "aliasC = C;\n" +
         "ns.D();";
-      
+
     compileAndRun(source);
-  
+
     assertFunctionAliased(true, "A");
     assertFunctionAliased(true, "ns.B");
     assertFunctionAliased(true, "C");
     assertFunctionAliased(false, "ns.D");
-    
-    // Aliased by passing as parameter  
+
+    // Aliased by passing as parameter
     source =
         "function A(){};\n" +
         "var ns = {};\n" +
@@ -101,14 +101,14 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
         "foo(ns.B)\n" +
         "foo(C);\n" +
         "D();";
-      
+
     compileAndRun(source);
-  
+
     assertFunctionAliased(true, "A");
     assertFunctionAliased(true, "ns.B");
     assertFunctionAliased(true, "C");
     assertFunctionAliased(false, "D");
-    
+
     // Not aliased by being target of call
     source =
         "function A(){};\n" +
@@ -118,13 +118,13 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
         "A();\n" +
         "ns.B();\n" +
         "C();\n";
-        
+
     compileAndRun(source);
-    
+
     assertFunctionAliased(false, "A");
     assertFunctionAliased(false, "ns.B");
     assertFunctionAliased(false, "C");
-    
+
     // Not aliased by GET{PROP,ELEM}
     source =
         "function A(){};\n" +
@@ -134,15 +134,15 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
         "A.foo;\n" +
         "ns.B.prototype;\n" +
         "C[0];\n";
-        
+
     compileAndRun(source);
-    
+
     assertFunctionAliased(false, "A");
     assertFunctionAliased(false, "ns.B");
     assertFunctionAliased(false, "C");
   }
-  
-  public void testFunctionGetIsExposedToCallOrApply() { 
+
+  public void testFunctionGetIsExposedToCallOrApply() {
     // Exposed to call
     String source =
         "function A(){};\n" +
@@ -152,13 +152,13 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
         "A.call(x);\n" +
         "B.apply(x);\n" +
         "C();\n";
-    
+
     compileAndRun(source);
-  
+
     assertFunctionExposedToCallOrApply(true, "A");
     assertFunctionExposedToCallOrApply(true, "B");
     assertFunctionExposedToCallOrApply(false, "C");
-    
+
     source =
       "var ns = {};" +
       "ns.A = function(){};\n" +
@@ -168,39 +168,39 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
       "ns.A.call(x);\n" +
       "ns.B.apply(x);\n" +
       "ns.C();\n";
-  
+
     compileAndRun(source);
 
     assertFunctionExposedToCallOrApply(true, "ns.A");
     assertFunctionExposedToCallOrApply(true, "ns.B");
     assertFunctionExposedToCallOrApply(false, "ns.C");
   }
-  
+
   private void assertFunctionAliased(boolean aliasStatus,
       String functionName) {
     Node function = findFunction(functionName);
-    
+
     assertEquals(aliasStatus, analysis.isAliased(function));
   }
-  
+
   private void assertFunctionExposedToCallOrApply(boolean exposure,
       String functionName) {
     Node function = findFunction(functionName);
-    
+
     assertEquals(exposure, analysis.isExposedToCallOrApply(function));
   }
-  
+
   private void compileAndRun(String source) {
     testSame(source, source, null);
   }
-  
+
   private Node findFunction(String name) {
     FunctionFinder f = new FunctionFinder(name);
     new NodeTraversal(lastCompiler, f).traverse(lastCompiler.jsRoot);
     assertNotNull("Couldn't find " + name, f.found);
     return f.found;
   }
-  
+
   /**
    * Quick Traversal to find a given function in the AST.
    */
@@ -211,7 +211,7 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
     FunctionFinder(String target) {
       this.target = target;
     }
-    
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isFunction(n)
@@ -219,5 +219,5 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
         found = n;
       }
     }
-  }  
+  }
 }

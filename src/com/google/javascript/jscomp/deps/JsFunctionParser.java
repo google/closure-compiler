@@ -29,23 +29,24 @@ import java.util.regex.Pattern;
 
 /**
  * A parser that can extract dependency information from a .js file.
- * 
+ *
  * @author agrieve@google.com (Andrew Grieve)
  * @author ielashi@google.com (Islam El-Ashi)
  */
 public class JsFunctionParser extends JsFileLineParser {
-  
+
   public static class SymbolInfo {
     public final String functionName;
     public final String symbol;
-    
+
     private SymbolInfo(String functionName, String symbol) {
       this.functionName = functionName;
       this.symbol = symbol;
     }
   }
 
-  private static Logger logger = Logger.getLogger(JsFunctionParser.class.getName());
+  private static Logger logger =
+      Logger.getLogger(JsFunctionParser.class.getName());
 
   /** Pattern for matching functions. */
   private Pattern pattern;
@@ -55,7 +56,7 @@ public class JsFunctionParser extends JsFileLineParser {
 
   /** Symbols parsed. */
   private Collection<SymbolInfo> symbols;
-  
+
   /** Functions to parse */
   private Collection<String> functionsToParse;
 
@@ -65,7 +66,8 @@ public class JsFunctionParser extends JsFileLineParser {
    * @param functions Functions to parse.
    * @param errorManager Handles parse errors.
    */
-  public JsFunctionParser(Collection<String> functions, ErrorManager errorManager) {
+  public JsFunctionParser(
+      Collection<String> functions, ErrorManager errorManager) {
     super(errorManager);
     functionsToParse = functions;
     pattern = getPattern(functions);
@@ -74,24 +76,24 @@ public class JsFunctionParser extends JsFileLineParser {
 
   /**
    * Constructs a pattern to extract the arguments of the given functions.
-   * 
+   *
    * @param functions Functions to parse.
    * @return A pattern to extract {@code functions}' arguments.
    */
   private Pattern getPattern(Collection<String> functions) {
     StringBuilder sb = new StringBuilder("(?:^|;)\\s*(");
-    
+
     for (String function : functions) {
       sb.append(Pattern.quote(function) + "|");
     }
-    
+
     // remove last '|'
     sb.deleteCharAt(sb.length() - 1);
     sb.append(")\\s*\\((.*?)\\)");
-    
+
     return Pattern.compile(sb.toString());
   }
-  
+
   /**
    * Parses the given file and returns the dependency information that it
    * contained.
@@ -101,11 +103,13 @@ public class JsFunctionParser extends JsFileLineParser {
    * @return A collection containing all symbols found in the
    *     file.
    */
-  public Collection<SymbolInfo> parseFile(String filePath, String fileContents) {
+  public Collection<SymbolInfo> parseFile(
+      String filePath, String fileContents) {
     return parseReader(filePath, new StringReader(fileContents));
   }
 
-  private Collection<SymbolInfo> parseReader(String filePath, Reader fileContents) {
+  private Collection<SymbolInfo> parseReader(
+      String filePath, Reader fileContents) {
     symbols = Lists.newArrayList();
 
     logger.fine("Parsing Source: " + filePath);
@@ -113,7 +117,7 @@ public class JsFunctionParser extends JsFileLineParser {
 
     return symbols;
   }
-  
+
   /**
    * Parses a line of javascript, extracting dependency information.
    */
@@ -130,13 +134,13 @@ public class JsFunctionParser extends JsFileLineParser {
         break;
       }
     }
-    
+
     if (parseLine) {
       matcher.reset(line);
       while (matcher.find()) {
         hasFunctions = true;
         String functionName = matcher.group(1);
-        String arg = parseJsString(matcher.group(2)); // Parse the param.  
+        String arg = parseJsString(matcher.group(2)); // Parse the param.
         symbols.add(new SymbolInfo(functionName, arg));
       }
     }

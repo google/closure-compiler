@@ -565,7 +565,7 @@ public class JsonMLValidationTest extends TestCase {
             "['DataProp',{'name':'y'}," +
                 "['LiteralExpr',{'type':'number','value':2}]]]");
     // wrong types of children
-    TagType[] tags = 
+    TagType[] tags =
         {TagType.DataProp, TagType.GetterProp, TagType.SetterProp };
     testWrongChildTypeValidation("" +
         "['ObjectExpr',{}," +

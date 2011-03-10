@@ -206,7 +206,8 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
         return;
 
       case Token.BLOCK:
-        // BLOCKs are used in several ways including wrapping CATCH blocks in TRYs
+        // BLOCKs are used in several ways including wrapping CATCH
+        // blocks in TRYs
         if (parent.getType() == Token.TRY) {
           if (NodeUtil.isTryCatchNodeContainer(n)) {
             return;

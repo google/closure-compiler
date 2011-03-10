@@ -9,47 +9,47 @@ public  final class Instrumentation extends
     initFields();
   }
   private Instrumentation(boolean noInit) {}
-  
+
   private static final Instrumentation defaultInstance;
   public static Instrumentation getDefaultInstance() {
     return defaultInstance;
   }
-  
+
   public Instrumentation getDefaultInstanceForType() {
     return defaultInstance;
   }
-  
+
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
     return com.google.javascript.jscomp.InstrumentationTemplate.internal_static_jscomp_Instrumentation_descriptor;
   }
-  
+
   protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internalGetFieldAccessorTable() {
     return com.google.javascript.jscomp.InstrumentationTemplate.internal_static_jscomp_Instrumentation_fieldAccessorTable;
   }
-  
+
   // optional string report_defined = 1;
   public static final int REPORT_DEFINED_FIELD_NUMBER = 1;
   private boolean hasReportDefined;
   private java.lang.String reportDefined_ = "";
   public boolean hasReportDefined() { return hasReportDefined; }
   public java.lang.String getReportDefined() { return reportDefined_; }
-  
+
   // optional string report_call = 2;
   public static final int REPORT_CALL_FIELD_NUMBER = 2;
   private boolean hasReportCall;
   private java.lang.String reportCall_ = "";
   public boolean hasReportCall() { return hasReportCall; }
   public java.lang.String getReportCall() { return reportCall_; }
-  
+
   // optional string report_exit = 6;
   public static final int REPORT_EXIT_FIELD_NUMBER = 6;
   private boolean hasReportExit;
   private java.lang.String reportExit_ = "";
   public boolean hasReportExit() { return hasReportExit; }
   public java.lang.String getReportExit() { return reportExit_; }
-  
+
   // repeated string declaration_to_remove = 3;
   public static final int DECLARATION_TO_REMOVE_FIELD_NUMBER = 3;
   private java.util.List<java.lang.String> declarationToRemove_ =
@@ -61,7 +61,7 @@ public  final class Instrumentation extends
   public java.lang.String getDeclarationToRemove(int index) {
     return declarationToRemove_.get(index);
   }
-  
+
   // repeated string init = 4;
   public static final int INIT_FIELD_NUMBER = 4;
   private java.util.List<java.lang.String> init_ =
@@ -73,20 +73,20 @@ public  final class Instrumentation extends
   public java.lang.String getInit(int index) {
     return init_.get(index);
   }
-  
+
   // optional string app_name_setter = 5;
   public static final int APP_NAME_SETTER_FIELD_NUMBER = 5;
   private boolean hasAppNameSetter;
   private java.lang.String appNameSetter_ = "";
   public boolean hasAppNameSetter() { return hasAppNameSetter; }
   public java.lang.String getAppNameSetter() { return appNameSetter_; }
-  
+
   private void initFields() {
   }
   public final boolean isInitialized() {
     return true;
   }
-  
+
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
     getSerializedSize();
@@ -110,12 +110,12 @@ public  final class Instrumentation extends
     }
     getUnknownFields().writeTo(output);
   }
-  
+
   private int memoizedSerializedSize = -1;
   public int getSerializedSize() {
     int size = memoizedSerializedSize;
     if (size != -1) return size;
-  
+
     size = 0;
     if (hasReportDefined()) {
       size += com.google.protobuf.CodedOutputStream
@@ -155,7 +155,7 @@ public  final class Instrumentation extends
     memoizedSerializedSize = size;
     return size;
   }
-  
+
   public static com.google.javascript.jscomp.Instrumentation parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -222,31 +222,31 @@ public  final class Instrumentation extends
     return newBuilder().mergeFrom(input, extensionRegistry)
              .buildParsed();
   }
-  
+
   public static Builder newBuilder() { return Builder.create(); }
   public Builder newBuilderForType() { return newBuilder(); }
   public static Builder newBuilder(com.google.javascript.jscomp.Instrumentation prototype) {
     return newBuilder().mergeFrom(prototype);
   }
   public Builder toBuilder() { return newBuilder(this); }
-  
+
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> {
     private com.google.javascript.jscomp.Instrumentation result;
-    
+
     // Construct using com.google.javascript.jscomp.Instrumentation.newBuilder()
     private Builder() {}
-    
+
     private static Builder create() {
       Builder builder = new Builder();
       builder.result = new com.google.javascript.jscomp.Instrumentation();
       return builder;
     }
-    
+
     protected com.google.javascript.jscomp.Instrumentation internalGetResult() {
       return result;
     }
-    
+
     public Builder clear() {
       if (result == null) {
         throw new IllegalStateException(
@@ -255,20 +255,20 @@ public  final class Instrumentation extends
       result = new com.google.javascript.jscomp.Instrumentation();
       return this;
     }
-    
+
     public Builder clone() {
       return create().mergeFrom(result);
     }
-    
+
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
       return com.google.javascript.jscomp.Instrumentation.getDescriptor();
     }
-    
+
     public com.google.javascript.jscomp.Instrumentation getDefaultInstanceForType() {
       return com.google.javascript.jscomp.Instrumentation.getDefaultInstance();
     }
-    
+
     public boolean isInitialized() {
       return result.isInitialized();
     }
@@ -278,7 +278,7 @@ public  final class Instrumentation extends
       }
       return buildPartial();
     }
-    
+
     private com.google.javascript.jscomp.Instrumentation buildParsed()
         throws com.google.protobuf.InvalidProtocolBufferException {
       if (!isInitialized()) {
@@ -287,7 +287,7 @@ public  final class Instrumentation extends
       }
       return buildPartial();
     }
-    
+
     public com.google.javascript.jscomp.Instrumentation buildPartial() {
       if (result == null) {
         throw new IllegalStateException(
@@ -305,7 +305,7 @@ public  final class Instrumentation extends
       result = null;
       return returnMe;
     }
-    
+
     public Builder mergeFrom(com.google.protobuf.Message other) {
       if (other instanceof com.google.javascript.jscomp.Instrumentation) {
         return mergeFrom((com.google.javascript.jscomp.Instrumentation)other);
@@ -314,7 +314,7 @@ public  final class Instrumentation extends
         return this;
       }
     }
-    
+
     public Builder mergeFrom(com.google.javascript.jscomp.Instrumentation other) {
       if (other == com.google.javascript.jscomp.Instrumentation.getDefaultInstance()) return this;
       if (other.hasReportDefined()) {
@@ -344,7 +344,7 @@ public  final class Instrumentation extends
       this.mergeUnknownFields(other.getUnknownFields());
       return this;
     }
-    
+
     public Builder mergeFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -393,8 +393,8 @@ public  final class Instrumentation extends
         }
       }
     }
-    
-    
+
+
     // optional string report_defined = 1;
     public boolean hasReportDefined() {
       return result.hasReportDefined();
@@ -415,7 +415,7 @@ public  final class Instrumentation extends
       result.reportDefined_ = getDefaultInstance().getReportDefined();
       return this;
     }
-    
+
     // optional string report_call = 2;
     public boolean hasReportCall() {
       return result.hasReportCall();
@@ -436,7 +436,7 @@ public  final class Instrumentation extends
       result.reportCall_ = getDefaultInstance().getReportCall();
       return this;
     }
-    
+
     // optional string report_exit = 6;
     public boolean hasReportExit() {
       return result.hasReportExit();
@@ -457,7 +457,7 @@ public  final class Instrumentation extends
       result.reportExit_ = getDefaultInstance().getReportExit();
       return this;
     }
-    
+
     // repeated string declaration_to_remove = 3;
     public java.util.List<java.lang.String> getDeclarationToRemoveList() {
       return java.util.Collections.unmodifiableList(result.declarationToRemove_);
@@ -497,7 +497,7 @@ public  final class Instrumentation extends
       result.declarationToRemove_ = java.util.Collections.emptyList();
       return this;
     }
-    
+
     // repeated string init = 4;
     public java.util.List<java.lang.String> getInitList() {
       return java.util.Collections.unmodifiableList(result.init_);
@@ -537,7 +537,7 @@ public  final class Instrumentation extends
       result.init_ = java.util.Collections.emptyList();
       return this;
     }
-    
+
     // optional string app_name_setter = 5;
     public boolean hasAppNameSetter() {
       return result.hasAppNameSetter();
@@ -558,16 +558,16 @@ public  final class Instrumentation extends
       result.appNameSetter_ = getDefaultInstance().getAppNameSetter();
       return this;
     }
-    
+
     // @@protoc_insertion_point(builder_scope:jscomp.Instrumentation)
   }
-  
+
   static {
     defaultInstance = new Instrumentation(true);
     com.google.javascript.jscomp.InstrumentationTemplate.internalForceInit();
     defaultInstance.initFields();
   }
-  
+
   // @@protoc_insertion_point(class_scope:jscomp.Instrumentation)
 }
 

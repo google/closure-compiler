@@ -409,7 +409,7 @@ public class TokenStreamTest extends TestCase {
     testJSDocTokenStream("@param { Object = }*/", tokens, strings);
     testJSDocTokenStream("@param {Object=  }*/", tokens, strings);
   }
-  
+
   public void testJSDocLinenoCharno1() throws Exception {
     TokenStream stream = stream(" * @type {string}\n  *   @private");
     testNextJSDocTokenPosition(stream, STAR, 0, 1);

@@ -23,19 +23,19 @@ import com.google.javascript.rhino.jstype.JSType;
 
 /**
  * Performs type-aware peephole optimizations.
- * 
+ *
  * These peephole optimizations are in their own class because
  * type information may not always be available (such as during pre-processing)
  * or may not be turned on.
- * 
+ *
  * Currently only Token.TYPEOF is folded -- in the future it may be possible to
  * fold Token.INSTANCEOF as well. Another possibility is folding when
  * non-nullable objects are used in boolean logic, such as:
  * "if (x) {" or "(!x) ? a : b" or "x && foo()"
- * 
+ *
  * TODO(dcc): Support folding Token.INSTANCEOF and non-nullable objects
  * in boolean logic.
- * 
+ *
  * @author dcc@google.com (Devin Coughlin)
  */
 class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
@@ -49,11 +49,11 @@ class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
         return subtree;
     }
   }
-  
+
   /**
    * Folds "typeof expression" based on the JSType of "expression" if the
    * expression  has no side effects.
-   * 
+   *
    * <p>E.g.,
    * <pre>
    * var x = 6;
@@ -66,24 +66,24 @@ class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
    * if ("number" == "number") {
    * }
    * </pre>
-   * 
+   *
    * <p>This method doesn't fold literal values -- we leave that to
    * PeepholeFoldConstants.
    */
   private Node tryFoldTypeof(Node typeofNode) {
     Preconditions.checkArgument(typeofNode.getType() == Token.TYPEOF);
     Preconditions.checkArgument(typeofNode.getFirstChild() != null);
-    
+
     Node argumentNode = typeofNode.getFirstChild();
-    
+
     // We'll let PeepholeFoldConstants handle folding literals
     // and we can't remove arguments with possible side effects.
     if (!NodeUtil.isLiteralValue(argumentNode, true) &&
         !mayHaveSideEffects(argumentNode)) {
       JSType argumentType = argumentNode.getJSType();
-            
+
       String typeName = null;
-      
+
       if (argumentType != null) {
         // typeof null is "object" in JavaScript
         if (argumentType.isObject() || argumentType.isNullType()) {
@@ -102,16 +102,16 @@ class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
           // in the future.
           typeName = null;
         }
-               
+
         if (typeName != null) {
           Node newNode = Node.newString(typeName);
           typeofNode.getParent().replaceChild(typeofNode, newNode);
           reportCodeChange();
-          
+
           return newNode;
         }
-      }     
-    }  
+      }
+    }
     return typeofNode;
   }
 }

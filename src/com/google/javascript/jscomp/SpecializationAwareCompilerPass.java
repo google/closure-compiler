@@ -17,9 +17,9 @@ package com.google.javascript.jscomp;
 
 /**
  * Interface indicating a CompilerPass is specialization aware.
- * 
+ *
  * See {@link SpecializeModule} for details of module specialization.
- * 
+ *
  * @author dcc@google.com (Devin Coughlin)
  *
  */

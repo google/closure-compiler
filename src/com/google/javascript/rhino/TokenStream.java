@@ -193,24 +193,43 @@ public class TokenStream
                 else if (c=='o') { if (s.charAt(0)=='d') {id=Id_do; break L0;} }
                 break L;
             case 3: switch (s.charAt(0)) {
-                case 'f': if (s.charAt(2)=='r' && s.charAt(1)=='o') {id=Id_for; break L0;} break L;
-                case 'i': if (s.charAt(2)=='t' && s.charAt(1)=='n') {id=Id_int; break L0;} break L;
-                case 'n': if (s.charAt(2)=='w' && s.charAt(1)=='e') {id=Id_new; break L0;} break L;
-                case 't': if (s.charAt(2)=='y' && s.charAt(1)=='r') {id=Id_try; break L0;} break L;
-                case 'v': if (s.charAt(2)=='r' && s.charAt(1)=='a') {id=Id_var; break L0;} break L;
+                case 'f':
+                  if (s.charAt(2)=='r' && s.charAt(1)=='o') {
+                    id=Id_for; break L0;
+                  } break L;
+                case 'i':
+                  if (s.charAt(2)=='t' && s.charAt(1)=='n') {
+                    id=Id_int; break L0;
+                  } break L;
+                case 'n':
+                  if (s.charAt(2)=='w' && s.charAt(1)=='e') {
+                    id=Id_new; break L0;
+                  } break L;
+                case 't':
+                  if (s.charAt(2)=='y' && s.charAt(1)=='r') {
+                    id=Id_try; break L0;
+                  } break L;
+                case 'v':
+                  if (s.charAt(2)=='r' && s.charAt(1)=='a') {
+                    id=Id_var; break L0;
+                  } break L;
                 } break L;
             case 4: switch (s.charAt(0)) {
                 case 'b': X="byte";id=Id_byte; break L;
                 case 'c': c=s.charAt(3);
                     if (c=='e') { if (s.charAt(2)=='s' && s.charAt(1)=='a') {
                             id=Id_case; break L0;} }
-                    else if (c=='r') { if (s.charAt(2)=='a' && s.charAt(1)=='h') {
-                            id=Id_char; break L0;} }
+                    else if (c=='r') {
+                      if (s.charAt(2)=='a' && s.charAt(1)=='h') {
+                        id=Id_char; break L0;
+                      }
+                    }
                     break L;
                 case 'e': c=s.charAt(3);
                     if (c=='e') { if (s.charAt(2)=='s' && s.charAt(1)=='l') {
                             id=Id_else; break L0;} }
-                    else if (c=='m') { if (s.charAt(2)=='u' && s.charAt(1)=='n') {
+                    else if (c=='m') {
+                      if (s.charAt(2)=='u' && s.charAt(1)=='n') {
                             id=Id_enum; break L0;} }
                     break L;
                 case 'g': X="goto";id=Id_goto; break L;
@@ -219,7 +238,8 @@ public class TokenStream
                 case 't': c=s.charAt(3);
                     if (c=='e') { if (s.charAt(2)=='u' && s.charAt(1)=='r') {
                             id=Id_true; break L0;} }
-                    else if (c=='s') { if (s.charAt(2)=='i' && s.charAt(1)=='h') {
+                    else if (c=='s') {
+                      if (s.charAt(2)=='i' && s.charAt(1)=='h') {
                             id=Id_this; break L0;} }
                     break L;
                 case 'v': X="void";id=Id_void; break L;

@@ -13,7 +13,7 @@ public final class InstrumentationTemplate {
   static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_jscomp_Instrumentation_fieldAccessorTable;
-  
+
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
     return descriptor;
@@ -50,8 +50,8 @@ public final class InstrumentationTemplate {
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
   }
-  
+
   public static void internalForceInit() {}
-  
+
   // @@protoc_insertion_point(outer_class_scope)
 }

@@ -428,7 +428,7 @@ public class JSDocInfoTest extends TestCase {
     info = new JSDocInfo(true);
     info.setModifies(Sets.newHashSet("arguments"));
     assertEquals(Sets.newHashSet("arguments"), info.getModifies());
-  }  
+  }
 
   /** Gets the type expression for a simple type name. */
   private JSTypeExpression fromString(String s) {

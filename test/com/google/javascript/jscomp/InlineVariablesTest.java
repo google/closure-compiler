@@ -283,7 +283,7 @@ public class InlineVariablesTest extends CompilerTestCase {
             "(function() { a++; })(); var z = x;"});
     test(
         new String[] { "var x = a;", "",
-            "function cow() { a++; }; cow(); var z = x;"}, 
+            "function cow() { a++; }; cow(); var z = x;"},
         new String[] { "var x = a;", "",
             ";(function cow(){ a++; })(); var z = x;"});
     testSame(

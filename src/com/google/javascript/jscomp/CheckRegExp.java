@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Look for references to the global RegExp object that would cause
  * regular expressions to be unoptimizable.
- * 
+ *
  * @author johnlenz@google.com (John Lenz)
  */
 class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
@@ -54,7 +54,7 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
       String name = n.getString();
       if (name.equals("RegExp") && t.getScope().getVar(name) == null) {
         int parentType = parent.getType();
-        boolean first = (n == parent.getFirstChild()); 
+        boolean first = (n == parent.getFirstChild());
         if (!((parentType == Token.NEW && first)
                || (parentType == Token.CALL && first)
                || (parentType == Token.INSTANCEOF && !first))) {

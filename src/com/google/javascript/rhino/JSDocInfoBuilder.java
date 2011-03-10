@@ -159,8 +159,8 @@ final public class JSDocInfoBuilder {
   /**
    * Adds a textual block to the current marker.
    */
-  public void markText(String text, int startLineno, int startCharno, int endLineno,
-                int endCharno) {
+  public void markText(String text, int startLineno, int startCharno,
+      int endLineno, int endCharno) {
     if (currentMarker != null) {
       currentMarker.description = new JSDocInfo.StringPosition();
       currentMarker.description.setItem(text);
@@ -172,8 +172,8 @@ final public class JSDocInfoBuilder {
   /**
    * Adds a type declaration to the current marker.
    */
-  public void markTypeNode(Node typeNode, int lineno, int startCharno, int endCharno,
-                    boolean hasLC) {
+  public void markTypeNode(Node typeNode, int lineno, int startCharno,
+      int endCharno, boolean hasLC) {
     if (currentMarker != null) {
       currentMarker.type = new JSDocInfo.TypePosition();
       currentMarker.type.setItem(typeNode);
@@ -243,7 +243,8 @@ final public class JSDocInfoBuilder {
    * @return {@code true} if the parameter's description was recorded and
    *     {@code false} if a parameter with the same name was already defined
    */
-  public boolean recordParameterDescription(String parameterName, String description) {
+  public boolean recordParameterDescription(
+      String parameterName, String description) {
     if (currentInfo.documentParam(parameterName, description)) {
       populated = true;
       return true;
@@ -285,7 +286,8 @@ final public class JSDocInfoBuilder {
    * @return {@code true} if the type's description was recorded and
    *     {@code false} if a description with the same type was already defined
    */
-  public boolean recordThrowDescription(JSTypeExpression type, String description) {
+  public boolean recordThrowDescription(
+      JSTypeExpression type, String description) {
     if (currentInfo.documentThrows(type, description)) {
       populated = true;
       return true;

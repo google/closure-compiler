@@ -121,23 +121,6 @@ import javax.annotation.Nullable;
  * several useful statistics such as cpu time, wait time, and memory usage.
  * If you add your own tracing statistics, the output is not quite as pretty,
  * but includes additional useful information.
- * <pre>
- *    31.980 Start        [LockManager] Waiting for user lock
- *   9 31.989 Done    9 ms    0ms cpu;  5944bytes;  [LockManager] Waiting for user lock
- *   0 31.989 Start        [CssClientImpl] ThreadGet (1 thread)
- *   5 31.994 Done    5 ms    0ms cpu;  2832bytes;  [CssClientImpl] ThreadGet (1 thread)
- *   0 31.994 Start        [MessageSorter] sort
- *   0 31.994 Done    0 ms    0ms cpu;   600bytes;  [MessageSorter] sort
- *   0 31.994 Start        [ConversationView] getMessageSummaries
- *   0 31.994 Start        [ConversationView] creating message summary 0
- *   1 31.995 Done    1 ms    0ms cpu;  5800bytes;  [ConversationView] creating message summary 0
- *   0 31.995 Start        [ConversationView] creating message summary 1
- *   0 31.995 Done    0 ms    0ms cpu;  5464bytes;  [ConversationView] creating message summary 1
- *   . . .
- * TOTAL NameDetector 3 (0 ms; 0 ms cpu;  784 bytes)
- * TOTAL Format 4 (1 ms; 0 ms cpu; 7344 bytes)
- * TOTAL ConversationView 5 (4 ms; 0 ms cpu; 55456 bytes)
- </pre>
 
  * <p>If a Trace is given a type (the first argument to the constructor) and
  * multiple Traces are done on that type then a "TOTAL line will be
@@ -186,8 +169,9 @@ final class Tracer {
    */
   private static volatile boolean defaultPrettyPrint;
 
-  /* This list is guaranteed to only increase in length.  It contains a list of additional
-   * statistics that the user wants to keep track of.
+  /* This list is guaranteed to only increase in length.  It contains
+   * a list of additional statistics that the user wants to keep track
+   * of.
    */
   private static List<TracingStatistic> extraTracingStatistics =
       new CopyOnWriteArrayList<TracingStatistic>();
@@ -390,7 +374,8 @@ final class Tracer {
     if (tracingStatistic.enable()) {
       // No synchronization needed, since this is a copy-on-write array.
       extraTracingStatistics.add(tracingStatistic);
-      // 99.9% of the time, this will be O(1) and return extraTracingStatistics.length - 1
+      // 99.9% of the time, this will be O(1) and return
+      // extraTracingStatistics.length - 1
       return extraTracingStatistics.lastIndexOf(tracingStatistic);
     } else {
       return -1;
@@ -398,8 +383,9 @@ final class Tracer {
   }
 
   /**
-   * For testing purposes only.  These removes all current tracers.  Severe errors can occur
-   * if there are any active tracers going on when this is called.
+   * For testing purposes only.  These removes all current tracers.
+   * Severe errors can occur if there are any active tracers going on
+   * when this is called.
    *
    * The test suite uses this to remove any tracers that it has added.
    */
@@ -428,8 +414,9 @@ final class Tracer {
 
     stopTimeMs = clock.currentTimeMillis();
     if (extraTracingValues != null) {
-      // We use extraTracingValues.length rather than extraTracingStatistics.size() because
-      // a new statistic may have been added
+      // We use extraTracingValues.length rather than
+      // extraTracingStatistics.size() because a new statistic may
+      // have been added
       for (int i = 0; i < extraTracingValues.length; i++) {
         long value = extraTracingStatistics.get(i).stop(startThread);
         extraTracingValues[i] = value - extraTracingValues[i];
@@ -680,7 +667,8 @@ final class Tracer {
       if (prevEventTime == -1) {
         appendSpaces(sb, digitsColWidth);
       } else {
-        sb.append(longToPaddedString(eventTime() - prevEventTime, digitsColWidth));
+        sb.append(longToPaddedString(
+            eventTime() - prevEventTime, digitsColWidth));
       }
 
       sb.append(' ');
@@ -835,10 +823,12 @@ final class Tracer {
         }
 
         if (stat.extraInfo != null && t.extraTracingValues != null) {
-          int overlapLength = Math.min(stat.extraInfo.length, t.extraTracingValues.length);
+          int overlapLength =
+              Math.min(stat.extraInfo.length, t.extraTracingValues.length);
           for (int i = 0; i < overlapLength; i++) {
             stat.extraInfo[i] += t.extraTracingValues[i];
-            AtomicTracerStatMap map = extraTracingStatistics.get(i).getTracingStat();
+            AtomicTracerStatMap map =
+                extraTracingStatistics.get(i).getTracingStat();
             if (map != null) {
               map.incrementBy(t.type, t.extraTracingValues[i]);
             }
@@ -958,7 +948,8 @@ final class Tracer {
   }
 
   /** Holds the ThreadTrace for each thread.  */
-  private static ThreadLocal<ThreadTrace> traces = new ThreadLocal<ThreadTrace>();
+  private static ThreadLocal<ThreadTrace> traces =
+      new ThreadLocal<ThreadTrace>();
 
   /**
    * Get the ThreadTrace for the current thread, creating one if necessary.
@@ -979,36 +970,42 @@ final class Tracer {
   }
 
   /**
-   * A TracingStatistic allows the program to add additional optional statistics to the trace
-   * output.
+   * A TracingStatistic allows the program to add additional optional
+   * statistics to the trace output.
    *
-   * The class {@link com.google.monitoring.tracing.TracingStatistics} contains several
-   * useful tracing statistics
+   * The class {@link com.google.monitoring.tracing.TracingStatistics}
+   * contains several useful tracing statistics
    *
    */
   static interface TracingStatistic {
     /**
-     * This method is called at the start of the trace.  It should return a numeric result
-     * indicating the amount of the specific resource in use before the call started
+     * This method is called at the start of the trace.  It should
+     * return a numeric result indicating the amount of the specific
+     * resource in use before the call started
      * @param thread  The current thread
-     * @return   A numeric value indicating the amount of the resource already used.
+     * @return A numeric value indicating the amount of the resource
+     * already used.
      */
     long start(Thread thread);
 
     /**
-     * This method is called at the end of the trace.  It should return a numeric result
-     * indicating the amount of the specific resource in use after the call ends. The actual
-     * reported result will be the result end() - start()
+     * This method is called at the end of the trace.  It should
+     * return a numeric result indicating the amount of the specific
+     * resource in use after the call ends. The actual reported result
+     * will be the result end() - start()
      * @param thread  The current thread
-     * @return   A numeric value indicating the amount of the resource currently used.
+     * @return A numeric value indicating the amount of the resource
+     * currently used.
      */
     long stop(Thread thread);
 
     /**
-     * Called when this tracing statistic is first enabled.  A return value of True indicates that
-     * this statistic can successfully run in the current JVM.
+     * Called when this tracing statistic is first enabled.  A return
+     * value of True indicates that this statistic can successfully
+     * run in the current JVM.
      *
-     * @return  An indication of whether this statistic can be implemented in the current JVM.
+     * @return An indication of whether this statistic can be
+     * implemented in the current JVM.
      */
     boolean enable();
 
@@ -1018,7 +1015,8 @@ final class Tracer {
      */
     AtomicTracerStatMap getTracingStat();
 
-    /** A string that should be appended to the numeric output indicating what this is.
+    /** A string that should be appended to the numeric output
+     * indicating what this is.
      *
      * @return  A string indicating the units of this statistic and what it is.
      */
@@ -1031,7 +1029,8 @@ final class Tracer {
    *
    */
   static final class AtomicTracerStatMap {
-    private ConcurrentMap<String, Long> map = new ConcurrentHashMap<String, Long>();
+    private ConcurrentMap<String, Long> map =
+        new ConcurrentHashMap<String, Long>();
 
     /**
      * Atomically increment the specified field by the specified amount.
@@ -1039,7 +1038,8 @@ final class Tracer {
      * @param key      the name of the field
      * @param delta    the amount by which to increment the field
      */
-    // Nullness checker is not powerful enough to prove null-safety of this method
+    // Nullness checker is not powerful enough to prove null-safety of
+    // this method
     @SuppressWarnings("nullness")
         void incrementBy(String key, long delta) {
       // We use a compareAndSet strategy to update the map, which is much
@@ -1054,7 +1054,8 @@ final class Tracer {
           // The slot was still empty when we set it
           return;
         } else {
-          // Someone filled in the slot behind our back.  oldValue has its current value
+          // Someone filled in the slot behind our back.  oldValue has
+          // its current value
         }
       }
       while (true) {

@@ -28,22 +28,22 @@ import java.util.List;
  *   - optimize parameters
  *   - optimize returns
  *   - devirtualize prototype methods
- * 
+ *
  * @author johnlenz@google.com (John Lenz)
  */
 class OptimizeCalls implements CompilerPass {
   List<CallGraphCompilerPass> passes = Lists.newArrayList();
   private AbstractCompiler compiler;
-  
+
   OptimizeCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
-  
+
   OptimizeCalls addPass(CallGraphCompilerPass pass) {
     passes.add(pass);
     return this;
   }
-  
+
   interface CallGraphCompilerPass {
     void process(Node externs, Node root, SimpleDefinitionFinder definitions);
   }

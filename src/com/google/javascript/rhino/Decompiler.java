@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -747,7 +747,7 @@ public class Decompiler
             case Token.CONST:
                 result.append("const ");
                 break;
-            
+
             case Token.NOT:
                 result.append('!');
                 break;

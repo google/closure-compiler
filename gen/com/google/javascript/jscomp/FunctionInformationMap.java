@@ -9,26 +9,26 @@ public  final class FunctionInformationMap extends
     initFields();
   }
   private FunctionInformationMap(boolean noInit) {}
-  
+
   private static final FunctionInformationMap defaultInstance;
   public static FunctionInformationMap getDefaultInstance() {
     return defaultInstance;
   }
-  
+
   public FunctionInformationMap getDefaultInstanceForType() {
     return defaultInstance;
   }
-  
+
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
     return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_descriptor;
   }
-  
+
   protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internalGetFieldAccessorTable() {
     return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_fieldAccessorTable;
   }
-  
+
   public static final class Entry extends
       com.google.protobuf.GeneratedMessage {
     // Use Entry.newBuilder() to construct.
@@ -36,75 +36,75 @@ public  final class FunctionInformationMap extends
       initFields();
     }
     private Entry(boolean noInit) {}
-    
+
     private static final Entry defaultInstance;
     public static Entry getDefaultInstance() {
       return defaultInstance;
     }
-    
+
     public Entry getDefaultInstanceForType() {
       return defaultInstance;
     }
-    
+
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Entry_descriptor;
     }
-    
+
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Entry_fieldAccessorTable;
     }
-    
+
     // required int32 id = 2;
     public static final int ID_FIELD_NUMBER = 2;
     private boolean hasId;
     private int id_ = 0;
     public boolean hasId() { return hasId; }
     public int getId() { return id_; }
-    
+
     // required string source_name = 3;
     public static final int SOURCE_NAME_FIELD_NUMBER = 3;
     private boolean hasSourceName;
     private java.lang.String sourceName_ = "";
     public boolean hasSourceName() { return hasSourceName; }
     public java.lang.String getSourceName() { return sourceName_; }
-    
+
     // required int32 line_number = 4;
     public static final int LINE_NUMBER_FIELD_NUMBER = 4;
     private boolean hasLineNumber;
     private int lineNumber_ = 0;
     public boolean hasLineNumber() { return hasLineNumber; }
     public int getLineNumber() { return lineNumber_; }
-    
+
     // required string module_name = 5;
     public static final int MODULE_NAME_FIELD_NUMBER = 5;
     private boolean hasModuleName;
     private java.lang.String moduleName_ = "";
     public boolean hasModuleName() { return hasModuleName; }
     public java.lang.String getModuleName() { return moduleName_; }
-    
+
     // required int32 size = 6;
     public static final int SIZE_FIELD_NUMBER = 6;
     private boolean hasSize;
     private int size_ = 0;
     public boolean hasSize() { return hasSize; }
     public int getSize() { return size_; }
-    
+
     // required string name = 7;
     public static final int NAME_FIELD_NUMBER = 7;
     private boolean hasName;
     private java.lang.String name_ = "";
     public boolean hasName() { return hasName; }
     public java.lang.String getName() { return name_; }
-    
+
     // required string compiled_source = 8;
     public static final int COMPILED_SOURCE_FIELD_NUMBER = 8;
     private boolean hasCompiledSource;
     private java.lang.String compiledSource_ = "";
     public boolean hasCompiledSource() { return hasCompiledSource; }
     public java.lang.String getCompiledSource() { return compiledSource_; }
-    
+
     private void initFields() {
     }
     public final boolean isInitialized() {
@@ -117,7 +117,7 @@ public  final class FunctionInformationMap extends
       if (!hasCompiledSource) return false;
       return true;
     }
-    
+
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
@@ -144,12 +144,12 @@ public  final class FunctionInformationMap extends
       }
       getUnknownFields().writeTo(output);
     }
-    
+
     private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
       int size = memoizedSerializedSize;
       if (size != -1) return size;
-    
+
       size = 0;
       if (hasId()) {
         size += com.google.protobuf.CodedOutputStream
@@ -183,7 +183,7 @@ public  final class FunctionInformationMap extends
       memoizedSerializedSize = size;
       return size;
     }
-    
+
     public static com.google.javascript.jscomp.FunctionInformationMap.Entry parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -250,31 +250,31 @@ public  final class FunctionInformationMap extends
       return newBuilder().mergeFrom(input, extensionRegistry)
                .buildParsed();
     }
-    
+
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder(com.google.javascript.jscomp.FunctionInformationMap.Entry prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
-    
+
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder> {
       private com.google.javascript.jscomp.FunctionInformationMap.Entry result;
-      
+
       // Construct using com.google.javascript.jscomp.FunctionInformationMap.Entry.newBuilder()
       private Builder() {}
-      
+
       private static Builder create() {
         Builder builder = new Builder();
         builder.result = new com.google.javascript.jscomp.FunctionInformationMap.Entry();
         return builder;
       }
-      
+
       protected com.google.javascript.jscomp.FunctionInformationMap.Entry internalGetResult() {
         return result;
       }
-      
+
       public Builder clear() {
         if (result == null) {
           throw new IllegalStateException(
@@ -283,20 +283,20 @@ public  final class FunctionInformationMap extends
         result = new com.google.javascript.jscomp.FunctionInformationMap.Entry();
         return this;
       }
-      
+
       public Builder clone() {
         return create().mergeFrom(result);
       }
-      
+
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return com.google.javascript.jscomp.FunctionInformationMap.Entry.getDescriptor();
       }
-      
+
       public com.google.javascript.jscomp.FunctionInformationMap.Entry getDefaultInstanceForType() {
         return com.google.javascript.jscomp.FunctionInformationMap.Entry.getDefaultInstance();
       }
-      
+
       public boolean isInitialized() {
         return result.isInitialized();
       }
@@ -306,7 +306,7 @@ public  final class FunctionInformationMap extends
         }
         return buildPartial();
       }
-      
+
       private com.google.javascript.jscomp.FunctionInformationMap.Entry buildParsed()
           throws com.google.protobuf.InvalidProtocolBufferException {
         if (!isInitialized()) {
@@ -315,7 +315,7 @@ public  final class FunctionInformationMap extends
         }
         return buildPartial();
       }
-      
+
       public com.google.javascript.jscomp.FunctionInformationMap.Entry buildPartial() {
         if (result == null) {
           throw new IllegalStateException(
@@ -325,7 +325,7 @@ public  final class FunctionInformationMap extends
         result = null;
         return returnMe;
       }
-      
+
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.google.javascript.jscomp.FunctionInformationMap.Entry) {
           return mergeFrom((com.google.javascript.jscomp.FunctionInformationMap.Entry)other);
@@ -334,7 +334,7 @@ public  final class FunctionInformationMap extends
           return this;
         }
       }
-      
+
       public Builder mergeFrom(com.google.javascript.jscomp.FunctionInformationMap.Entry other) {
         if (other == com.google.javascript.jscomp.FunctionInformationMap.Entry.getDefaultInstance()) return this;
         if (other.hasId()) {
@@ -361,7 +361,7 @@ public  final class FunctionInformationMap extends
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
-      
+
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -414,8 +414,8 @@ public  final class FunctionInformationMap extends
           }
         }
       }
-      
-      
+
+
       // required int32 id = 2;
       public boolean hasId() {
         return result.hasId();
@@ -433,7 +433,7 @@ public  final class FunctionInformationMap extends
         result.id_ = 0;
         return this;
       }
-      
+
       // required string source_name = 3;
       public boolean hasSourceName() {
         return result.hasSourceName();
@@ -454,7 +454,7 @@ public  final class FunctionInformationMap extends
         result.sourceName_ = getDefaultInstance().getSourceName();
         return this;
       }
-      
+
       // required int32 line_number = 4;
       public boolean hasLineNumber() {
         return result.hasLineNumber();
@@ -472,7 +472,7 @@ public  final class FunctionInformationMap extends
         result.lineNumber_ = 0;
         return this;
       }
-      
+
       // required string module_name = 5;
       public boolean hasModuleName() {
         return result.hasModuleName();
@@ -493,7 +493,7 @@ public  final class FunctionInformationMap extends
         result.moduleName_ = getDefaultInstance().getModuleName();
         return this;
       }
-      
+
       // required int32 size = 6;
       public boolean hasSize() {
         return result.hasSize();
@@ -511,7 +511,7 @@ public  final class FunctionInformationMap extends
         result.size_ = 0;
         return this;
       }
-      
+
       // required string name = 7;
       public boolean hasName() {
         return result.hasName();
@@ -532,7 +532,7 @@ public  final class FunctionInformationMap extends
         result.name_ = getDefaultInstance().getName();
         return this;
       }
-      
+
       // required string compiled_source = 8;
       public boolean hasCompiledSource() {
         return result.hasCompiledSource();
@@ -553,19 +553,19 @@ public  final class FunctionInformationMap extends
         result.compiledSource_ = getDefaultInstance().getCompiledSource();
         return this;
       }
-      
+
       // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap.Entry)
     }
-    
+
     static {
       defaultInstance = new Entry(true);
       com.google.javascript.jscomp.FunctionInfo.internalForceInit();
       defaultInstance.initFields();
     }
-    
+
     // @@protoc_insertion_point(class_scope:jscomp.FunctionInformationMap.Entry)
   }
-  
+
   public static final class Module extends
       com.google.protobuf.GeneratedMessage {
     // Use Module.newBuilder() to construct.
@@ -573,40 +573,40 @@ public  final class FunctionInformationMap extends
       initFields();
     }
     private Module(boolean noInit) {}
-    
+
     private static final Module defaultInstance;
     public static Module getDefaultInstance() {
       return defaultInstance;
     }
-    
+
     public Module getDefaultInstanceForType() {
       return defaultInstance;
     }
-    
+
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Module_descriptor;
     }
-    
+
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Module_fieldAccessorTable;
     }
-    
+
     // required string name = 102;
     public static final int NAME_FIELD_NUMBER = 102;
     private boolean hasName;
     private java.lang.String name_ = "";
     public boolean hasName() { return hasName; }
     public java.lang.String getName() { return name_; }
-    
+
     // required string compiled_source = 103;
     public static final int COMPILED_SOURCE_FIELD_NUMBER = 103;
     private boolean hasCompiledSource;
     private java.lang.String compiledSource_ = "";
     public boolean hasCompiledSource() { return hasCompiledSource; }
     public java.lang.String getCompiledSource() { return compiledSource_; }
-    
+
     private void initFields() {
     }
     public final boolean isInitialized() {
@@ -614,7 +614,7 @@ public  final class FunctionInformationMap extends
       if (!hasCompiledSource) return false;
       return true;
     }
-    
+
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
@@ -626,12 +626,12 @@ public  final class FunctionInformationMap extends
       }
       getUnknownFields().writeTo(output);
     }
-    
+
     private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
       int size = memoizedSerializedSize;
       if (size != -1) return size;
-    
+
       size = 0;
       if (hasName()) {
         size += com.google.protobuf.CodedOutputStream
@@ -645,7 +645,7 @@ public  final class FunctionInformationMap extends
       memoizedSerializedSize = size;
       return size;
     }
-    
+
     public static com.google.javascript.jscomp.FunctionInformationMap.Module parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -712,31 +712,31 @@ public  final class FunctionInformationMap extends
       return newBuilder().mergeFrom(input, extensionRegistry)
                .buildParsed();
     }
-    
+
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder(com.google.javascript.jscomp.FunctionInformationMap.Module prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
-    
+
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder> {
       private com.google.javascript.jscomp.FunctionInformationMap.Module result;
-      
+
       // Construct using com.google.javascript.jscomp.FunctionInformationMap.Module.newBuilder()
       private Builder() {}
-      
+
       private static Builder create() {
         Builder builder = new Builder();
         builder.result = new com.google.javascript.jscomp.FunctionInformationMap.Module();
         return builder;
       }
-      
+
       protected com.google.javascript.jscomp.FunctionInformationMap.Module internalGetResult() {
         return result;
       }
-      
+
       public Builder clear() {
         if (result == null) {
           throw new IllegalStateException(
@@ -745,20 +745,20 @@ public  final class FunctionInformationMap extends
         result = new com.google.javascript.jscomp.FunctionInformationMap.Module();
         return this;
       }
-      
+
       public Builder clone() {
         return create().mergeFrom(result);
       }
-      
+
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return com.google.javascript.jscomp.FunctionInformationMap.Module.getDescriptor();
       }
-      
+
       public com.google.javascript.jscomp.FunctionInformationMap.Module getDefaultInstanceForType() {
         return com.google.javascript.jscomp.FunctionInformationMap.Module.getDefaultInstance();
       }
-      
+
       public boolean isInitialized() {
         return result.isInitialized();
       }
@@ -768,7 +768,7 @@ public  final class FunctionInformationMap extends
         }
         return buildPartial();
       }
-      
+
       private com.google.javascript.jscomp.FunctionInformationMap.Module buildParsed()
           throws com.google.protobuf.InvalidProtocolBufferException {
         if (!isInitialized()) {
@@ -777,7 +777,7 @@ public  final class FunctionInformationMap extends
         }
         return buildPartial();
       }
-      
+
       public com.google.javascript.jscomp.FunctionInformationMap.Module buildPartial() {
         if (result == null) {
           throw new IllegalStateException(
@@ -787,7 +787,7 @@ public  final class FunctionInformationMap extends
         result = null;
         return returnMe;
       }
-      
+
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof com.google.javascript.jscomp.FunctionInformationMap.Module) {
           return mergeFrom((com.google.javascript.jscomp.FunctionInformationMap.Module)other);
@@ -796,7 +796,7 @@ public  final class FunctionInformationMap extends
           return this;
         }
       }
-      
+
       public Builder mergeFrom(com.google.javascript.jscomp.FunctionInformationMap.Module other) {
         if (other == com.google.javascript.jscomp.FunctionInformationMap.Module.getDefaultInstance()) return this;
         if (other.hasName()) {
@@ -808,7 +808,7 @@ public  final class FunctionInformationMap extends
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
-      
+
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -841,8 +841,8 @@ public  final class FunctionInformationMap extends
           }
         }
       }
-      
-      
+
+
       // required string name = 102;
       public boolean hasName() {
         return result.hasName();
@@ -863,7 +863,7 @@ public  final class FunctionInformationMap extends
         result.name_ = getDefaultInstance().getName();
         return this;
       }
-      
+
       // required string compiled_source = 103;
       public boolean hasCompiledSource() {
         return result.hasCompiledSource();
@@ -884,19 +884,19 @@ public  final class FunctionInformationMap extends
         result.compiledSource_ = getDefaultInstance().getCompiledSource();
         return this;
       }
-      
+
       // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap.Module)
     }
-    
+
     static {
       defaultInstance = new Module(true);
       com.google.javascript.jscomp.FunctionInfo.internalForceInit();
       defaultInstance.initFields();
     }
-    
+
     // @@protoc_insertion_point(class_scope:jscomp.FunctionInformationMap.Module)
   }
-  
+
   // repeated group Entry = 1 {
   public static final int ENTRY_FIELD_NUMBER = 1;
   private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> entry_ =
@@ -908,7 +908,7 @@ public  final class FunctionInformationMap extends
   public com.google.javascript.jscomp.FunctionInformationMap.Entry getEntry(int index) {
     return entry_.get(index);
   }
-  
+
   // repeated group Module = 101 {
   public static final int MODULE_FIELD_NUMBER = 101;
   private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> module_ =
@@ -920,7 +920,7 @@ public  final class FunctionInformationMap extends
   public com.google.javascript.jscomp.FunctionInformationMap.Module getModule(int index) {
     return module_.get(index);
   }
-  
+
   private void initFields() {
   }
   public final boolean isInitialized() {
@@ -932,7 +932,7 @@ public  final class FunctionInformationMap extends
     }
     return true;
   }
-  
+
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
     getSerializedSize();
@@ -944,12 +944,12 @@ public  final class FunctionInformationMap extends
     }
     getUnknownFields().writeTo(output);
   }
-  
+
   private int memoizedSerializedSize = -1;
   public int getSerializedSize() {
     int size = memoizedSerializedSize;
     if (size != -1) return size;
-  
+
     size = 0;
     for (com.google.javascript.jscomp.FunctionInformationMap.Entry element : getEntryList()) {
       size += com.google.protobuf.CodedOutputStream
@@ -963,7 +963,7 @@ public  final class FunctionInformationMap extends
     memoizedSerializedSize = size;
     return size;
   }
-  
+
   public static com.google.javascript.jscomp.FunctionInformationMap parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1030,31 +1030,31 @@ public  final class FunctionInformationMap extends
     return newBuilder().mergeFrom(input, extensionRegistry)
              .buildParsed();
   }
-  
+
   public static Builder newBuilder() { return Builder.create(); }
   public Builder newBuilderForType() { return newBuilder(); }
   public static Builder newBuilder(com.google.javascript.jscomp.FunctionInformationMap prototype) {
     return newBuilder().mergeFrom(prototype);
   }
   public Builder toBuilder() { return newBuilder(this); }
-  
+
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> {
     private com.google.javascript.jscomp.FunctionInformationMap result;
-    
+
     // Construct using com.google.javascript.jscomp.FunctionInformationMap.newBuilder()
     private Builder() {}
-    
+
     private static Builder create() {
       Builder builder = new Builder();
       builder.result = new com.google.javascript.jscomp.FunctionInformationMap();
       return builder;
     }
-    
+
     protected com.google.javascript.jscomp.FunctionInformationMap internalGetResult() {
       return result;
     }
-    
+
     public Builder clear() {
       if (result == null) {
         throw new IllegalStateException(
@@ -1063,20 +1063,20 @@ public  final class FunctionInformationMap extends
       result = new com.google.javascript.jscomp.FunctionInformationMap();
       return this;
     }
-    
+
     public Builder clone() {
       return create().mergeFrom(result);
     }
-    
+
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
       return com.google.javascript.jscomp.FunctionInformationMap.getDescriptor();
     }
-    
+
     public com.google.javascript.jscomp.FunctionInformationMap getDefaultInstanceForType() {
       return com.google.javascript.jscomp.FunctionInformationMap.getDefaultInstance();
     }
-    
+
     public boolean isInitialized() {
       return result.isInitialized();
     }
@@ -1086,7 +1086,7 @@ public  final class FunctionInformationMap extends
       }
       return buildPartial();
     }
-    
+
     private com.google.javascript.jscomp.FunctionInformationMap buildParsed()
         throws com.google.protobuf.InvalidProtocolBufferException {
       if (!isInitialized()) {
@@ -1095,7 +1095,7 @@ public  final class FunctionInformationMap extends
       }
       return buildPartial();
     }
-    
+
     public com.google.javascript.jscomp.FunctionInformationMap buildPartial() {
       if (result == null) {
         throw new IllegalStateException(
@@ -1113,7 +1113,7 @@ public  final class FunctionInformationMap extends
       result = null;
       return returnMe;
     }
-    
+
     public Builder mergeFrom(com.google.protobuf.Message other) {
       if (other instanceof com.google.javascript.jscomp.FunctionInformationMap) {
         return mergeFrom((com.google.javascript.jscomp.FunctionInformationMap)other);
@@ -1122,7 +1122,7 @@ public  final class FunctionInformationMap extends
         return this;
       }
     }
-    
+
     public Builder mergeFrom(com.google.javascript.jscomp.FunctionInformationMap other) {
       if (other == com.google.javascript.jscomp.FunctionInformationMap.getDefaultInstance()) return this;
       if (!other.entry_.isEmpty()) {
@@ -1140,7 +1140,7 @@ public  final class FunctionInformationMap extends
       this.mergeUnknownFields(other.getUnknownFields());
       return this;
     }
-    
+
     public Builder mergeFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1177,8 +1177,8 @@ public  final class FunctionInformationMap extends
         }
       }
     }
-    
-    
+
+
     // repeated group Entry = 1 {
     public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> getEntryList() {
       return java.util.Collections.unmodifiableList(result.entry_);
@@ -1229,7 +1229,7 @@ public  final class FunctionInformationMap extends
       result.entry_ = java.util.Collections.emptyList();
       return this;
     }
-    
+
     // repeated group Module = 101 {
     public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> getModuleList() {
       return java.util.Collections.unmodifiableList(result.module_);
@@ -1280,16 +1280,16 @@ public  final class FunctionInformationMap extends
       result.module_ = java.util.Collections.emptyList();
       return this;
     }
-    
+
     // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap)
   }
-  
+
   static {
     defaultInstance = new FunctionInformationMap(true);
     com.google.javascript.jscomp.FunctionInfo.internalForceInit();
     defaultInstance.initFields();
   }
-  
+
   // @@protoc_insertion_point(class_scope:jscomp.FunctionInformationMap)
 }
 

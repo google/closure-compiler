@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 /**
  * Tests for {@link ExternExportsPass}.
- * 
+ *
  * @author dcc@google.com (Devin Coughlin)
  */
 public class PeepholeFoldWithTypesTest extends CompilerTestCase {
@@ -27,58 +27,58 @@ public class PeepholeFoldWithTypesTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     return new PeepholeOptimizationsPass(compiler, new PeepholeFoldWithTypes());
   }
-  
+
   @Override
   public void setUp() {
     enableTypeCheck(CheckLevel.WARNING);
   }
-  
+
   public void testFoldTypeofObject() {
     test("var x = {};typeof x",
          "var x = {};\"object\"");
-    
+
     test("var x = [];typeof x",
          "var x = [];\"object\"");
-    
+
     // typeof null is "object" in JavaScript
     test("var x = null;typeof x",
          "var x = null;\"object\"");
   }
-  
+
   public void testFoldTypeofString() {
     test("var x = \"foo\";typeof x",
          "var x = \"foo\";\"string\"");
-    
+
     test("var x = new String(\"foo\");typeof x",
          "var x = new String(\"foo\");\"object\"");
   }
-  
+
   public void testFoldTypeofNumber() {
     test("var x = 10;typeof x",
          "var x = 10;\"number\"");
-    
+
     test("var x = new Number(6);typeof x",
          "var x = new Number(6);\"object\"");
   }
-  
+
   public void testFoldTypeofBoolean() {
     test("var x = false;typeof x",
          "var x = false;\"boolean\"");
-    
+
     test("var x = new Boolean(true);typeof x",
          "var x = new Boolean(true);\"object\"");
   }
-  
+
   public void testFoldTypeofUndefined() {
     test("var x = undefined;typeof x",
-         "var x = undefined;\"undefined\""); 
+         "var x = undefined;\"undefined\"");
   }
-  
+
   public void testDontFoldTypeofUnionTypes() {
     // For now we don't do anything with union types
     testSame("var x = (unknown ? {} : null);typeof x");
   }
-  
+
   public void testDontFoldTypeofSideEffects() {
     // Shouldn't fold if argument to typeof has side effects
     testSame("var x = 6 ;typeof (x++)");

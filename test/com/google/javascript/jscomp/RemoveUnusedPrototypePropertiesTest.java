@@ -362,7 +362,7 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
 
       "function Foo() {}" +
       "Foo.prototype = {};");
-    
+
     anchorUnusedVars = true;
     test(
         "function Foo() {}" +

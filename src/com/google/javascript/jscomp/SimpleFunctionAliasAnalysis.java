@@ -26,85 +26,85 @@ import java.util.Set;
 /**
  * Uses {@link SimpleDefinitionFinder} to determine if a function has been
  * aliased or exposed to .call() or .apply().
- * 
+ *
  * @author dcc@google.com (Devin Coughlin)
  */
 class SimpleFunctionAliasAnalysis {
   private Set<Node> aliasedFunctions;
-  
+
   private Set<Node> functionsExposedToCallOrApply;
-  
+
   /**
    * Returns true if the function is aliased.
-   * 
+   *
    * Must only be called after {@link #analyze(SimpleDefinitionFinder)}
    * has been called.
    */
   public boolean isAliased(Node functionNode) {
     Preconditions.checkNotNull(aliasedFunctions);
     Preconditions.checkArgument(NodeUtil.isFunction(functionNode));
-    
+
     return aliasedFunctions.contains(functionNode);
   }
-  
+
   /**
    * Returns true if the function ever exposed to .call() or .apply().
-   * 
+   *
    * Must only be called after {@link #analyze(SimpleDefinitionFinder)}
    * has been called.
    */
   public boolean isExposedToCallOrApply(Node functionNode) {
     Preconditions.checkNotNull(functionsExposedToCallOrApply);
     Preconditions.checkArgument(NodeUtil.isFunction(functionNode));
-    
+
     return functionsExposedToCallOrApply.contains(functionNode);
   }
-  
+
   /**
    * Uses the provided {@link SimpleDefinitionFinder} to determine
    * which functions are aliased or exposed to .call() or .apply().
    */
   public void analyze(SimpleDefinitionFinder finder) {
     Preconditions.checkState(aliasedFunctions == null);
-    
+
     aliasedFunctions = Sets.newHashSet();
     functionsExposedToCallOrApply = Sets.newHashSet();
-    
+
     for (DefinitionSite definitionSite : finder.getDefinitionSites()) {
       Definition definition = definitionSite.definition;
-      
+
       if (!definition.isExtern()) {
         Node rValue = definition.getRValue();
-        
+
         if (rValue != null && NodeUtil.isFunction(rValue)) {
           // rValue is a Token.FUNCTION from a definition
-          
+
           for (UseSite useSite : finder.getUseSites(definition)) {
             updateFunctionForUse(rValue, useSite.node);
-          }          
-        }     
+          }
+        }
       }
-    }   
+    }
   }
-  
+
   /**
    * Updates alias and exposure information based a site where the function is
    * used.
-   * 
+   *
    * Note: this method may be called multiple times per Function, each time
    * with a different useNode.
    */
   private void updateFunctionForUse(Node function, Node useNode) {
     Node useParent = useNode.getParent();
     int parentType = useParent.getType();
-    
+
     if ((parentType == Token.CALL || parentType == Token.NEW)
         && useParent.getFirstChild() == useNode) {
       // Regular call sites don't count as aliases
     } else if (NodeUtil.isGet(useParent)) {
       // GET{PROP,ELEM} don't count as aliases
       // but we have to check for using them in .call and .apply.
-      
+
       if (NodeUtil.isGetProp(useParent)) {
         Node gramps = useParent.getParent();
         if (NodeUtil.isFunctionObjectApply(gramps) ||

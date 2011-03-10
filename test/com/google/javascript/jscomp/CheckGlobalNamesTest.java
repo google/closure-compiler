@@ -57,7 +57,7 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
     STRICT_MODULE_DEP_QNAME.level = CheckLevel.WARNING;
   }
 
-  private static final String GET_NAMES = 
+  private static final String GET_NAMES =
       "var a = {get d() {return 1}}; a.b = 3; a.c = {get e() {return 5}};";
   private static final String SET_NAMES =
       "var a = {set d(x) {}}; a.b = 3; a.c = {set e(y) {}};";
@@ -113,12 +113,12 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
     testSame(GET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
     testSame(SET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
   }
-  
+
   public void testRefToUndefinedProperty4() {
     testSame(NAMES + "alert(a.d.x);");
     testSame(GET_NAMES + "alert(a.d.x);");
     testSame(SET_NAMES + "alert(a.d.x);");
-  }  
+  }
 
   public void testRefToDescendantOfUndefinedProperty1() {
     testSame(NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);

@@ -65,7 +65,7 @@ public class CheckRegExpTest extends CompilerTestCase {
 
     // No RegExp reference is ok
     testReference("var x;", false);
-    
+
     // Local RegExp is ok
     testReference("function f() {var RegExp; RegExp.test();}", false);
   }

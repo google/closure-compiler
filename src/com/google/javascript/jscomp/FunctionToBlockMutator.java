@@ -272,7 +272,7 @@ class FunctionToBlockMutator {
 
         Node newRoot = new Node(Token.BLOCK).copyInformationFrom(block);
         newRoot.addChildrenToBack(label);
-        
+
 
         // The label is now the root.
         root = newRoot;

@@ -47,7 +47,7 @@ interface JoinOp<L extends LatticeElement> extends Function<List<L>, L> {
             apply(values.subList(mid, size)));
       }
     }
-    
+
     /**
      * Creates a new lattice that will be the join of two input lattices.
      *

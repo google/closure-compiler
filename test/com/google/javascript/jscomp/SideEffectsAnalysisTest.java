@@ -24,47 +24,47 @@ import com.google.javascript.rhino.Token;
 
 /**
  * Tests for {@link SideEffectsAnalysis}.
- * 
+ *
  * @author dcc@google.com (Devin Coughlin)
  *
  */
 public class SideEffectsAnalysisTest extends CompilerTestCase {
 
   private static final String SHARED_EXTERNS = "var arguments = [];";
-  
+
   LocationAbstractionMode currentLocationAbstractionIdentifier;
-  
+
   SideEffectsAnalysis currentAnalysis = null;
-  
+
   Compiler currentCompiler = null;
-  
+
   Node currentJsRoot = null;
-  
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    currentCompiler = compiler;   
-   
+    currentCompiler = compiler;
+
     currentAnalysis = new SideEffectsAnalysis(compiler,
         currentLocationAbstractionIdentifier);
-    
+
     return new CompilerPass() {
-      
+
       @Override
       public void process(Node externs, Node root) {
-        
-        if (currentLocationAbstractionIdentifier == 
+
+        if (currentLocationAbstractionIdentifier ==
           LocationAbstractionMode.VISIBILITY_BASED) {
-          
+
           // Run var when using the visibility abstraction
           // because it is unsound if it fails.
-          
+
           final VarCheck varCheck = new VarCheck(compiler);
-          
+
           varCheck.process(externs, root);
         }
-        
+
         currentAnalysis.process(externs, root);
-        
+
       }
     };
   }
@@ -72,43 +72,43 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    
+
     currentAnalysis = null;
     currentCompiler = null;
   }
-  
-  public void testDegenerateSafeMoves() {      
+
+  public void testDegenerateSafeMoves() {
     // Env is empty
     assertSafeMoveDegenerate("src: 1; env: ; dest: 3;");
-    
+
     // Src and env pure
     assertSafeMoveDegenerate("src: 1; env: 2; dest: 3;");
-    
+
     // Only refs
     assertSafeMoveDegenerate("src: 1; env: x; dest: 3;");
     assertSafeMoveDegenerate("src: x; env: 1; dest: 3;");
-    
+
     // Only mods
     assertSafeMoveDegenerate("src: 1; env: x++; dest: 3;");
-    
+
     assertSafeMoveDegenerate("src: x++; env: 1; dest: 3;");
   }
-  
-  public void testVisibilitySafeMoves() {      
+
+  public void testVisibilitySafeMoves() {
     // Env is empty
     assertSafeMoveVisibility("src: 1; env: ; dest: 3;");
-    
+
     // Src and env pure
     assertSafeMoveVisibility("src: 1; env: 2; dest: 3;");
-    
+
     // Only refs
     assertSafeMoveVisibility("var x; src: 1; env: x; dest: 3;");
     assertSafeMoveVisibility("var x; src: x; env: 1; dest: 3;");
-    
+
     // Only mods
     assertSafeMoveVisibility("var x; src: 1; env: x++; dest: 3;");
     assertSafeMoveVisibility("var x; src: x++; env: 1; dest: 3;");
-    
+
     // Source references global, env changes local
     assertSafeMoveVisibility(
         "var x;" +
@@ -118,7 +118,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y++;" +
           "dest: 3;" +
           "}");
-    
+
     // Source changes global, env refs local
     assertSafeMoveVisibility(
         "var x;" +
@@ -128,7 +128,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y;" +
           "dest: 3;" +
           "}");
-    
+
     // Source references global, env changes local with shadowing
     assertSafeMoveVisibility(
         "var x;" +
@@ -139,7 +139,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y++;" +
           "dest: 3;" +
           "}");
-    
+
     // Source changes global, env refs local with shadowing
     assertSafeMoveVisibility(
         "var x;" +
@@ -150,8 +150,8 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y;" +
           "dest: 3;" +
           "}");
-    
-    
+
+
     // Source references captured local, env changes local
     assertSafeMoveVisibility(
         "function f(){" +
@@ -164,7 +164,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
             "x" +
           "}" +
          "}");
-    
+
     // Source changes captured local, env refs local
     assertSafeMoveVisibility(
         "function f(){" +
@@ -177,7 +177,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
             "x" +
           "}" +
         "}");
-    
+
     // Source references heap, env changes local
     assertSafeMoveVisibility(
         "var x = {};" +
@@ -187,7 +187,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y++;" +
           "dest: 3;" +
           "}");
-    
+
     // Source changes heap, env refs local
     assertSafeMoveVisibility(
         "var x = {};" +
@@ -197,7 +197,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y;" +
           "dest: 3;" +
           "}");
-    
+
     // MOD in function expressions shouldn't count
     assertSafeMoveVisibility(
         "var x = {};" +
@@ -206,7 +206,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "x.a++;" +
         "});" +
         "dest: 3;");
-    
+
     // REF in function expressions shouldn't count
     assertSafeMoveVisibility(
         "var x = {};" +
@@ -215,31 +215,31 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "x.a;" +
         "});" +
         "dest: 3;");
-    
+
   }
-  
+
   public void testDegenerateUnsafeMoves() {
-    
+
     // Unsafe to move increment across read
     assertUnsafeMoveDegenerate("src: x++; env: foo(y); dest: 3;");
-   
+
     // Unsafe to move read across increment
     assertUnsafeMoveDegenerate("src: foo(y); env: x++; dest: 3;");
-    
+
     // Unsafe to move write across write
     assertUnsafeMoveDegenerate("src: x = 7; env: y = 3; dest:3;");
   }
-    
+
   public void testVisibilityUnsafeMoves() {
-    
+
     // Unsafe to move increment across read for global variables
     assertUnsafeMoveVisibility("var x,y; src: x++; env: y; dest: 3;");
-    
+
     // Unsafe to move increment across read for local variables
     assertUnsafeMoveVisibility("function f() {" +
         "var x,y; src: x++; env: y; dest: 3;" +
         "}");
-    
+
     // Unsafe to move increment across read for captured local variables
     assertUnsafeMoveVisibility(
         "function f() {" +
@@ -248,18 +248,18 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
             "x; y;" +
           "}" +
          "}");
-            
+
     // Unsafe to move increment across read for heap locations
     assertUnsafeMoveVisibility("var x,y; src: x.a++; env: y.b; dest: 3;");
-     
+
     // Unsafe to move read across increment of for global variables
     assertUnsafeMoveVisibility("var x,y; src: y; env: x++; dest: 3;");
-    
+
     // Unsafe to move read across increment for local variables
     assertUnsafeMoveVisibility("function f() {" +
         "var x,y; src: x; env: y++; dest: 3;" +
         "}");
-    
+
     // Unsafe to move read across increment for captured local variables
     assertUnsafeMoveVisibility(
         "function f() {" +
@@ -268,18 +268,18 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
             "x; y;" +
           "}" +
          "}");
-    
+
     // Unsafe to move read across increment for heap locations
     assertUnsafeMoveVisibility("var x,y; src: x.a; env: y.b++; dest: 3;");
-    
+
     // Unsafe to move write across write for globals
     assertUnsafeMoveVisibility("var x,y; src: x = 7; env: y = 3; dest: 3;");
-    
+
     // Unsafe to move write across write for local variables
     assertUnsafeMoveVisibility("function f() {" +
         "var x,y; src: x = 7; env: y = 3; dest: 3;" +
         "}");
-    
+
     // Unsafe to move write across write for captured local variables
     assertUnsafeMoveVisibility(
         "function f() {" +
@@ -288,18 +288,18 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
             "x; y;" +
           "}" +
          "}");
-    
+
     // Unsafe to move write across write for heap locations
     assertUnsafeMoveVisibility("var x,y; src: x.a = 7; env: y.b = 3; dest: 3;");
   }
-  
+
   public void testVisibilityMoveCalls() {
     // Interprocedural side effect analysis isn't implemented yet, so any calls
     // should make movement unsafe, since we don't know what those calls are
     // doing.
-    
+
     // TODO(dcc): implement interprocedural side effect analysis.
-    
+
     // Source makes call, env refs global
     assertUnsafeMoveVisibility(
         "var x = {};" +
@@ -310,7 +310,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: x;" +
           "dest: 3;" +
           "}");
-    
+
     // Source makes refs global, env makes call
     assertUnsafeMoveVisibility(
         "var x = {};" +
@@ -322,12 +322,12 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "dest: 3;" +
           "}");
   }
-  
+
   public void testVisibilityMergesParametersWithHeap() {
     // For now, we expect the visibility based location abstraction
     // to merge parameter variable locations with heap locations because
     // parameters can be references and modified via the arguments object.
-    
+
     // Source changes heap, env refs parameter
     assertUnsafeMoveVisibility(
         "var x = {};" +
@@ -336,7 +336,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y;" +
           "dest: 3;" +
           "}");
-    
+
     // Source refs heap, env changes parameters
     assertUnsafeMoveVisibility(
         "var x = {};" +
@@ -345,7 +345,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y++;" +
           "dest: 3;" +
           "}");
-    
+
     // Source changes arguments explicitly, env refs parameter
     assertUnsafeMoveVisibility(
         "var x = {};" +
@@ -354,7 +354,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "env: y;" +
           "dest: 3;" +
           "}");
-    
+
     // Source refs arguments explicitly, env changes parameter
     assertUnsafeMoveVisibility(
         "var x = {};" +
@@ -362,11 +362,11 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "src: arguments[0];" +
           "env: y++;" +
           "dest: 3;" +
-          "}");   
+          "}");
   }
-  
+
   public void testMovedSideEffectsMustHaveSameControlFlow() {
-    
+
     // Safe to move within IF block
     assertSafeMoveVisibility(
         "var a;" +
@@ -379,7 +379,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "}" +
         "}"
     );
-    
+
     // Unsafe to move between two IF blocks
     assertUnsafeMoveVisibility(
         "var a;" +
@@ -394,7 +394,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "}" +
         "}"
     );
-    
+
     // Unsafe to move between then/else of same IF block
     assertUnsafeMoveVisibility(
         "var a;" +
@@ -408,7 +408,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "}" +
         "}"
     );
-    
+
     // Safe to move within WHILE block
     assertSafeMoveVisibility(
         "var a;" +
@@ -421,7 +421,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "}" +
         "}"
     );
-    
+
     // Unsafe to move within WHILE block with BREAK
     assertUnsafeMoveVisibility(
         "var a;" +
@@ -435,7 +435,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "}" +
         "}"
     );
-    
+
     // Unsafe to move within WHILE block with continue
     assertUnsafeMoveVisibility(
         "var a;" +
@@ -449,7 +449,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "}" +
         "}"
     );
-    
+
     // Unsafe to move within WHILE block with continue
     assertUnsafeMoveVisibility(
         "var a;" +
@@ -463,7 +463,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "}" +
         "}"
     );
-    
+
     // Safe to move within DO
     assertSafeMoveVisibility(
         "var a;" +
@@ -476,7 +476,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "} while(l)" +
         "}"
     );
-    
+
     // Unsafe to move outside DO
     assertUnsafeMoveVisibility(
         "var a;" +
@@ -489,7 +489,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "dest: 3;" +
         "}"
     );
-    
+
     // It should be safe to move within CASE
     // but we disallow for now because analyzing
     // CASE fall-through and BREAKs is complicated.
@@ -506,7 +506,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
           "}" +
         "}"
     );
-    
+
     // Unsafe to move between CASEs
     assertUnsafeMoveVisibility(
         "var a;" +
@@ -517,13 +517,13 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
               "src: a++;" +
               "env: 3;" +
             "break;" +
-            "case 18:" + 
+            "case 18:" +
               "dest: 3;" +
             "break;" +
           "}" +
         "}"
     );
-    
+
     // Unsafe to move between FUNCTIONs
     assertUnsafeMoveVisibility(
         "var a;" +
@@ -536,74 +536,74 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"
     );
   }
-    
+
   private SideEffectsAnalysis.AbstractMotionEnvironment environment(
       Node ...nodes) {
-    
+
     return new SideEffectsAnalysis.RawMotionEnvironment(
         ImmutableSet.copyOf(nodes));
   }
-  
+
   private void assertMove(LocationAbstractionMode abstraction,
       String src,
       boolean expected) {
     SideEffectsAnalysis analysis = compileAndRun(src, abstraction);
-    
+
     Node sourceNode = findLabeledStatement("src");
     Node environmentNode = findLabeledStatement("env");
     Node destinationNode = findLabeledStatement("dest");
-     
+
     boolean result = analysis.safeToMoveBefore(sourceNode,
         environment(environmentNode), destinationNode);
-    
+
     if (expected) {
       assertTrue(result);
     } else {
       assertFalse(result);
-    }   
+    }
   }
-  
+
   private void assertSafeMoveDegenerate(String src) {
     assertMove(LocationAbstractionMode.DEGENERATE, src, true);
   }
-  
+
   private void assertUnsafeMoveDegenerate(String src) {
     assertMove(LocationAbstractionMode.DEGENERATE, src, false);
   }
-  
+
   private void assertSafeMoveVisibility(String src) {
     assertMove(LocationAbstractionMode.VISIBILITY_BASED, src, true);
   }
-  
+
   private void assertUnsafeMoveVisibility(String src) {
     assertMove(LocationAbstractionMode.VISIBILITY_BASED, src, false);
   }
-  
+
   private SideEffectsAnalysis compileAndRun(String js,
       LocationAbstractionMode locationAbstractionIdentifier) {
-    
+
     currentLocationAbstractionIdentifier = locationAbstractionIdentifier;
-    
+
     testSame(SHARED_EXTERNS, js, null);
-    
+
     currentJsRoot = currentCompiler.jsRoot;
-    
+
     return currentAnalysis;
-  } 
-  
+  }
+
   // Shamelessly stolen from NameReferenceGraphConstructionTest
   private Node findLabeledStatement(String label) {
     LabeledStatementSearcher s = new LabeledStatementSearcher(label);
-      
+
     new NodeTraversal(currentCompiler, s).traverse(currentCompiler.jsRoot);
     assertNotNull("Label " + label + " should be in the source code", s.found);
-    
+
     return s.found;
   }
-  
+
   /**
    * Quick traversal to find a given labeled statement in the AST.
-   * 
+   *
    * Given "foo", finds the statement a = x in
    * foo: a = x;
    */
@@ -618,7 +618,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.LABEL &&
           target.equals(n.getFirstChild().getString())) {
-        
+
         found = n.getLastChild();
       }
     }

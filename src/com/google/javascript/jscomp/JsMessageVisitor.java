@@ -247,12 +247,12 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     JsMessage extractedMessage = builder.build(idGenerator);
 
     // If asked to check named internal messages.
-    if (needToCheckDuplications 
-        && !isUnnamedMsg 
+    if (needToCheckDuplications
+        && !isUnnamedMsg
         && !extractedMessage.isExternal()) {
       checkIfMessageDuplicated(traversal.getSourceName(), messageKey, msgNode);
-    }    
-    
+    }
+
     if (extractedMessage.isEmpty()) {
       // value of the message is an empty string. Translators do not like it.
       compiler.report(traversal.makeError(node, MESSAGE_HAS_NO_TEXT,

@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0
@@ -44,9 +44,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
-Implementation of resizable array with focus on minimizing memory usage by storing few initial array elements in object fields. Can also be used as a stack.
-*/
-
+ * Implementation of resizable array with focus on minimizing memory
+ * usage by storing few initial array elements in object fields. Can also
+ * be used as a stack.
+ */
 public class ObjArray implements Serializable
 {
     static final long serialVersionUID = 4174889037736658296L;

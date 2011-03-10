@@ -328,7 +328,7 @@ class MakeDeclaredNamesUnique
         nameMap.remove(name);
       }
     }
- 
+
     /**
      * Find a name usable in the local scope.
      */
@@ -337,7 +337,7 @@ class MakeDeclaredNamesUnique
       String newName = original;
       int i = 0;
       while (!isValidName(newName)) {
-        newName = original + 
+        newName = original +
             ContextualRenamer.UNIQUE_ID_SEPARATOR + String.valueOf(i++);
       }
       return newName;
@@ -549,7 +549,7 @@ class MakeDeclaredNamesUnique
   static class BoilerplateRenamer extends ContextualRenamer {
     private final Supplier<String> uniqueIdSupplier;
     private final String idPrefix;
-    
+
     BoilerplateRenamer(
         Supplier<String> uniqueIdSupplier,
         String idPrefix) {

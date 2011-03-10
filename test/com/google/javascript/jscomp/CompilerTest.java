@@ -57,11 +57,11 @@ public class CompilerTest extends TestCase {
 
     assertEquals(0, cb.getLineIndex());
     assertEquals(12, cb.getColumnIndex());
-    
+
     // newline reset the column index
     cb.append("blah();\ngoo();");
 
     assertEquals(1, cb.getLineIndex());
-    assertEquals(6, cb.getColumnIndex());    
+    assertEquals(6, cb.getColumnIndex());
   }
 }

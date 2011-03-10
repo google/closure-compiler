@@ -1040,8 +1040,9 @@ public class Parser
                     decompiler.addEOL(Token.LC);
 
                     nf.addChildToBack(catchblocks,
-                        nf.createCatch(varName, nameLineno, nameCharno, catchCond,
-                             statements(), catchLineno, catchCharno));
+                        nf.createCatch(
+                            varName, nameLineno, nameCharno, catchCond,
+                            statements(), catchLineno, catchCharno));
 
                     mustMatchToken(Token.RC, "msg.no.brace.after.body");
                     decompiler.addEOL(Token.RC);
@@ -1514,7 +1515,8 @@ public class Parser
             int lineno = ts.getLineno();
             int charno = ts.getCharno();
             decompiler.addToken(Token.BITXOR);
-            pn = nf.createBinary(Token.BITXOR, pn, bitAndExpr(inForInit), lineno,
+            pn = nf.createBinary(
+                Token.BITXOR, pn, bitAndExpr(inForInit), lineno,
                 charno);
         }
         return pn;
@@ -1880,9 +1882,11 @@ public class Parser
              * do we claim to support?
              */
 
-            /* Experimental syntax:  allow an object literal to follow a new expression,
-             * which will mean a kind of anonymous class built with the JavaAdapter.
-             * the object literal will be passed as an additional argument to the constructor.
+            /* Experimental syntax: allow an object literal to follow
+             * a new expression, which will mean a kind of anonymous
+             * class built with the JavaAdapter.  the object literal
+             * will be passed as an additional argument to the
+             * constructor.
              */
             tt = peekToken();
             if (tt == Token.LC) {
@@ -1941,7 +1945,8 @@ public class Parser
                             // Dot's position
                             lineno, charno,
                             // Name's position
-                            ts.getLineno(), ts.getCharno());                        break;
+                            ts.getLineno(), ts.getCharno());
+                        break;
 
                       // handles: *, *::name, *::*, *::[expr]
                       case Token.MUL:

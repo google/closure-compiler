@@ -528,8 +528,8 @@ public class JsMessageVisitorTest extends TestCase {
         "var MSG_EXTERNAL_2 = goog.getMsg('a')})" +
         "(function () {/** @desc Hello2 */ " +
         "var MSG_EXTERNAL_2 = goog.getMsg('a')})");
-  }  
-  
+  }
+
   private void extractMessagesSafely(String input) {
     extractMessages(input);
     JSError[] errors = compiler.getErrors();

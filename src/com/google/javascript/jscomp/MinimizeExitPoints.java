@@ -205,7 +205,7 @@ class MinimizeExitPoints
 
   /**
    * Look for exits (returns, breaks, or continues, depending on the context) at
-   * the end of a block and removes them by moving the if node's siblings, 
+   * the end of a block and removes them by moving the if node's siblings,
    * if any, into the opposite condition block.
    *
    * @param srcBlock The block to inspect.
