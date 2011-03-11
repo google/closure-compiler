@@ -59,6 +59,15 @@ Blob.prototype.slice = function(start, length) {};
 function BlobBuilder() {}
 
 /**
+ * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append0
+ * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append1
+ * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append2
+ * @param {string|Blob|ArrayBuffer} data
+ * @param {string=} endings
+ */
+BlobBuilder.prototype.append = function(data, endings) {};
+
+/**
  * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-getBlob
  * @param {string=} contentType
  * @return {!Blob}
@@ -66,22 +75,17 @@ function BlobBuilder() {}
 BlobBuilder.prototype.getBlob = function(contentType) {};
 
 /**
- * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append0
- * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append1
- * TODO(dbk): Add http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append1,
- *     which involves adding ArrayBuffer.
- * @param {string|Blob|ArrayBuffer} data
- * @param {string=} endings
- */
-BlobBuilder.prototype.append = function(data, endings) {};
-
-/**
  * @see http://www.w3.org/TR/file-system-api/#the-directoryentry-interface
- * TODO(dbk): Add http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-createReader
  * @constructor
  * @extends {Entry}
  */
 function DirectoryEntry() {};
+
+/**
+ * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-createReader
+ * @return {!DirectoryReader}
+ */
+DirectoryEntry.prototype.createReader = function() {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-getFile
@@ -109,6 +113,20 @@ DirectoryEntry.prototype.getDirectory = function(path, options, successCallback,
  * @param {function(!FileError)=} errorCallback
  */
 DirectoryEntry.prototype.removeRecursively = function(successCallback,
+    errorCallback) {};
+
+/**
+ * @see http://www.w3.org/TR/file-system-api/#the-directoryreader-interface
+ * @constructor
+ */
+function DirectoryReader() {};
+
+/**
+ * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryReader-readEntries
+ * @param {function(!Array.<!Entry>)} successCallback
+ * @param {function(!FileError)=} errorCallback
+ */
+DirectoryReader.prototype.readEntries = function(successCallback,
     errorCallback) {};
 
 /**
