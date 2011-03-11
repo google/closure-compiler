@@ -275,7 +275,8 @@ class InlineVariables implements CompilerPass {
           Node nameNode = refs.get(i).getNameNode();
           if (aliasCandidates.containsKey(nameNode)) {
             AliasCandidate candidate = aliasCandidates.get(nameNode);
-            if (!staleVars.contains(candidate.alias)) {
+            if (!staleVars.contains(candidate.alias) &&
+                !isVarInlineForbidden(candidate.alias)) {
               Reference aliasInit;
               aliasInit = candidate.refInfo.getInitializingReference();
               Node value = aliasInit.getAssignedValue();
