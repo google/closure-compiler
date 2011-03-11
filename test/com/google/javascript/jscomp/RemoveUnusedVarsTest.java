@@ -498,7 +498,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     testSame("var b=function(){return};b()");
     testSame("var b=function(c){return c};b(1)");
     test("var b=function(c){};b.call(null, x)",
-         "var b=function(){};b.call(null, x)");
+         "var b=function(){};b.call(null)");
     test("var b=function(c){};b.apply(null, x)",
          "var b=function(){};b.apply(null, x)");
 
@@ -551,6 +551,33 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     // the call sites are left unmodified for now.
     test("var b=function(c,d){};var b=function(e,f){};b(1,2)",
          "var b=function(){};var b=function(){};b(1,2)");
+  }
+
+  public void testCallSiteInteraction_contructors() {
+    this.modifyCallSites = true;
+    // The third level tests that the functions which have already been looked
+    // at get re-visited if they are changed by a call site removal.
+    test("var Ctor1=function(a,b){return a};" +
+        "var Ctor2=function(a,b){Ctor1.call(this,a,b)};" +
+        "goog$inherits(Ctor2, Ctor1);" +
+        "new Ctor2(1,2)",
+        "var Ctor1=function(a){return a};" +
+        "var Ctor2=function(a){Ctor1.call(this,a)};" +
+        "goog$inherits(Ctor2, Ctor1);" +
+        "new Ctor2(1)");
+  }
+
+  public void testFunctionArgRemovalCausingInconsistency() {
+    this.modifyCallSites = true;
+    // Test the case where an unused argument is removed and the argument
+    // contains a call site in its subtree (will cause the call site's parent
+    // pointer to be null).
+    test("var a=function(x,y){};" +
+        "var b=function(z){};" +
+        "a(new b, b)",
+        "var a=function(){};" +
+        "var b=function(){};" +
+        "a(new b)");
   }
 
   public void testDoNotOptimizeJSCompiler_renameProperty() {
