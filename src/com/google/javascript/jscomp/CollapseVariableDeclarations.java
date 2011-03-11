@@ -101,9 +101,11 @@ class CollapseVariableDeclarations implements CompilerPass {
     collapses.clear();
     nodesToCollapse.clear();
 
-    NodeTraversal.traverse(compiler, root,
-        new CombinedCompilerPass(compiler,
-            new ExploitAssigns(), new GatherCollapses()));
+    // TODO(user): I would like to void exploit assign output this and make
+    // both peephole optimization.
+    NodeTraversal.traverse(compiler, root, new ExploitAssigns());
+    NodeTraversal.traverse(compiler, root, new GatherCollapses());
+
     if (!collapses.isEmpty()) {
       applyCollapses();
       compiler.reportCodeChange();
