@@ -425,14 +425,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(devirtualizePrototypeMethods);
     }
 
-    // Running "optimizeCalls" after devirtualization is useful for removing
-    // unneeded "this" values.
-    if (options.optimizeCalls
-        || options.optimizeParameters
-        || options.optimizeReturns) {
-      passes.add(optimizeCalls);
-    }
-
     if (options.customPasses != null) {
       passes.add(getCustomPasses(
           CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP));
@@ -645,11 +637,20 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(inlineFunctions);
     }
 
+    boolean runOptimizeCalls = options.optimizeCalls
+        || options.optimizeParameters
+        || options.optimizeReturns;
+
     if (options.removeUnusedVars || options.removeUnusedLocalVars) {
       if (options.deadAssignmentElimination) {
         passes.add(deadAssignmentsElimination);
       }
-      passes.add(removeUnusedVars);
+      if (!runOptimizeCalls) {
+        passes.add(removeUnusedVars);
+      }
+    }
+    if (runOptimizeCalls) {
+      passes.add(optimizeCallsAndRemoveUnusedVars);
     }
     assertAllLoopablePasses(passes);
     return passes;
@@ -1328,11 +1329,11 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /**
-   * Rewrite instance methods as static methods, to make them easier
-   * to inline.
+   * Optimizes unused function arguments, unused return values, and inlines
+   * constant parameters. Also runs RemoveUnusedVars.
    */
-  private final PassFactory optimizeCalls =
-      new PassFactory("optimizeCalls", true) {
+  private final PassFactory optimizeCallsAndRemoveUnusedVars =
+      new PassFactory("optimizeCalls_and_removeUnusedVars", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       OptimizeCalls passes = new OptimizeCalls(compiler);
@@ -1347,7 +1348,14 @@ public class DefaultPassConfig extends PassConfig {
       }
 
       if (options.optimizeCalls) {
-        passes.addPass(new RemoveUnusedVars(compiler, false, true, true));
+        boolean removeOnlyLocals = options.removeUnusedLocalVars
+            && !options.removeUnusedVars;
+        boolean preserveAnonymousFunctionNames =
+            options.anonymousFunctionNaming !=
+            AnonymousFunctionNamingPolicy.OFF;
+        passes.addPass(
+            new RemoveUnusedVars(compiler, !removeOnlyLocals,
+                preserveAnonymousFunctionNames, true));
       }
       return passes;
     }
