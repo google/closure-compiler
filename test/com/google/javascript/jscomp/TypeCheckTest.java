@@ -4607,6 +4607,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testGlobalThis9() throws Exception {
+    testTypes(
+        // Window is not marked as a constructor, so the
+        // inheritance doesn't happen.
+        "function Window() {}" +
+        "Window.prototype.alert = function() {};" +
+        "this.alert();",
+        "Property alert never defined on global this");
+  }
+
   public void testControlFlowRestrictsType1() throws Exception {
     testTypes("/** @return {String?} */ function f() { return null; }" +
         "/** @type {String?} */ var a = f();" +

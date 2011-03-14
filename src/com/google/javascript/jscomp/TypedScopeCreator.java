@@ -1122,7 +1122,8 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       if (isGlobalVar && "Window".equals(variableName)
-          && type instanceof FunctionType) {
+          && type instanceof FunctionType
+          && type.isConstructor()) {
         FunctionType globalThisCtor =
             typeRegistry.getNativeObjectType(GLOBAL_THIS).getConstructor();
         globalThisCtor.getInstanceType().clearCachedValues();
