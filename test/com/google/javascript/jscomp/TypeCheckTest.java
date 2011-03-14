@@ -1215,7 +1215,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNumericComparison6() throws Exception {
-    testTypes("/**@return void*/ function foo() { if (3 >= foo()) return; }",
+    testTypes("/**@return {void} */ function foo() { if (3 >= foo()) return; }",
         "right side of numeric comparison\n" +
         "found   : undefined\n" +
         "required: number");
@@ -1244,7 +1244,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStringComparison6() throws Exception {
-    testTypes("/**@return void*/ function foo() { if ('a' >= foo()) return; }",
+    testTypes("/**@return {void} */ " +
+        "function foo() { if ('a' >= foo()) return; }",
         "right side of comparison\n" +
         "found   : undefined\n" +
         "required: string");
@@ -1410,7 +1411,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // named function expressions create a binding in their body only
     // the return is wrong but the assignment is ok since the type of b is ?
     testTypes(
-        "/** @return number */var a = function b(){ return b };",
+        "/** @return {number} */var a = function b(){ return b };",
         "inconsistent return type\n" +
         "found   : function (): number\n" +
         "required: number");
@@ -1418,28 +1419,28 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testFunctionArguments1() throws Exception {
     testFunctionType(
-        "/** @param {number} a\n@return string */" +
+        "/** @param {number} a\n@return {string} */" +
         "function f(a) {}",
         "function (number): string");
   }
 
   public void testFunctionArguments2() throws Exception {
     testFunctionType(
-        "/** @param {number} opt_a\n@return string */" +
+        "/** @param {number} opt_a\n@return {string} */" +
         "function f(opt_a) {}",
         "function ((number|undefined)): string");
   }
 
   public void testFunctionArguments3() throws Exception {
     testFunctionType(
-        "/** @param {number} b\n@return string */" +
+        "/** @param {number} b\n@return {string} */" +
         "function f(a,b) {}",
         "function (?, number): string");
   }
 
   public void testFunctionArguments4() throws Exception {
     testFunctionType(
-        "/** @param {number} opt_a\n@return string */" +
+        "/** @param {number} opt_a\n@return {string} */" +
         "function f(a,opt_a) {}",
         "function (?, (number|undefined)): string");
   }
@@ -1458,7 +1459,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testFunctionArguments7() throws Exception {
     testTypes(
-        "/** @param {number} opt_a\n@return string */" +
+        "/** @param {number} opt_a\n@return {string} */" +
         "function a(a,opt_a,var_args) {}");
   }
 
@@ -1497,7 +1498,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // verifying that the argument type have inferable types
     testTypes(
         "/** @return {boolean} */ function u() { return true; }" +
-        "/** @param {boolean} b\n@return boolean */" +
+        "/** @param {boolean} b\n@return {boolean} */" +
         "function f(b) { if (u()) { b = null; } return b; }",
         "inconsistent return type\n" +
         "found   : (boolean|null)\n" +
@@ -1578,13 +1579,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testFunctionInference5() throws Exception {
     testFunctionType(
-        "/** @this Date\n@return string */function f(a) {}",
+        "/** @this Date\n@return {string} */function f(a) {}",
         "function (this:Date, ?): string");
   }
 
   public void testFunctionInference6() throws Exception {
     testFunctionType(
-        "/** @this Date\n@return string */function f(opt_a) {}",
+        "/** @this Date\n@return {string} */function f(opt_a) {}",
         "function (this:Date, ?): string");
   }
 
@@ -1608,7 +1609,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testFunctionInference10() throws Exception {
     testFunctionType(
-        "/** @this Date\n@param {boolean} b\n@return string */" +
+        "/** @this Date\n@param {boolean} b\n@return {string} */" +
         "var f = function(a,b) {};",
         "function (this:Date, ?, boolean): string");
   }
@@ -1616,7 +1617,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testFunctionInference11() throws Exception {
     testFunctionType(
         "var goog = {};" +
-        "/** @return number*/goog.f = function(){};",
+        "/** @return {number}*/goog.f = function(){};",
         "goog.f",
         "function (): number");
   }
@@ -4174,7 +4175,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testReturn6() throws Exception {
     testTypes(
-        "/** @param {number} opt_a\n@return string */" +
+        "/** @param {number} opt_a\n@return {string} */" +
         "function a(opt_a) { return opt_a }",
         "inconsistent return type\n" +
         "found   : (number|undefined)\n" +
@@ -4409,7 +4410,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testThis1() throws Exception {
     testTypes("var goog = {};" +
         "/** @constructor */goog.A = function(){};" +
-        "/** @return number */goog.A.prototype.n = function() { return this };",
+        "/** @return {number} */" +
+        "goog.A.prototype.n = function() { return this };",
         "inconsistent return type\n" +
         "found   : goog.A\n" +
         "required: number");
@@ -4420,7 +4422,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */goog.A = function(){" +
         "  this.foo = null;" +
         "};" +
-        "/** @return number */" +
+        "/** @return {number} */" +
         "goog.A.prototype.n = function() { return this.foo };",
         "inconsistent return type\n" +
         "found   : null\n" +
@@ -4440,7 +4442,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */goog.A = function(){" +
         "  /** @type {string?} */this.foo = null;" +
         "};" +
-        "/** @return number */goog.A.prototype.n = function() {" +
+        "/** @return {number} */goog.A.prototype.n = function() {" +
         "  return this.foo };",
         "inconsistent return type\n" +
         "found   : (null|string)\n" +
@@ -4448,7 +4450,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testThis5() throws Exception {
-    testTypes("/** @this Date\n@return number*/function h() { return this }",
+    testTypes("/** @this Date\n@return {number}*/function h() { return this }",
         "inconsistent return type\n" +
         "found   : Date\n" +
         "required: number");
@@ -4456,7 +4458,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testThis6() throws Exception {
     testTypes("var goog = {};" +
-        "/** @constructor\n@return !Date */" +
+        "/** @constructor\n@return {!Date} */" +
         "goog.A = function(){ return this };",
         "inconsistent return type\n" +
         "found   : goog.A\n" +
@@ -4465,7 +4467,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testThis7() throws Exception {
     testTypes("/** @constructor */function A(){};" +
-        "/** @return number */A.prototype.n = function() { return this };",
+        "/** @return {number} */A.prototype.n = function() { return this };",
         "inconsistent return type\n" +
         "found   : A\n" +
         "required: number");
@@ -4475,7 +4477,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @constructor */function A(){" +
         "  /** @type {string?} */this.foo = null;" +
         "};" +
-        "/** @return number */A.prototype.n = function() {" +
+        "/** @return {number} */A.prototype.n = function() {" +
         "  return this.foo };",
         "inconsistent return type\n" +
         "found   : (null|string)\n" +
@@ -5101,7 +5103,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testBug909000() throws Exception {
     testTypes("/** @constructor */function A(){}\n" +
         "/** @param {!A} a\n" +
-        "@return boolean*/\n" +
+        "@return {boolean}*/\n" +
         "function y(a) { return a }",
         "inconsistent return type\n" +
         "found   : A\n" +
@@ -5411,7 +5413,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     Node n = parseAndTypeCheck(
         "/** @constructor */function A() {}\n" +
         "/** @constructor \n @extends A */ function B() {}\n" +
-        "/** @return number */\n" +
+        "/** @return {number} */\n" +
         "B.prototype.p = function() { return 1; }\n" +
         "/** @param {A} a\n @param {B} b */\n" +
         "function f(a, b) {\n" +
@@ -6172,7 +6174,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testUnknownConstructorInstanceType1() throws Exception {
-    testTypes("/** @return Array */ function g(f) { return new f(); }");
+    testTypes("/** @return {Array} */ function g(f) { return new f(); }");
   }
 
   public void testUnknownConstructorInstanceType2() throws Exception {
@@ -6531,14 +6533,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */function Super() {};" +
         "Super.prototype.foo = function() { return 3; };" +
         "/** @constructor\n @extends {Super} */function Sub() {};" +
-        "/** @override\n @return number */Sub.prototype.foo =\n" +
+        "/** @override\n @return {number} */Sub.prototype.foo =\n" +
         "function() { return 1; };");
   }
 
   public void testInheritanceCheck9_2() throws Exception {
     testTypes(
         "/** @constructor */function Super() {};" +
-        "/** @return number */Super.prototype.foo = function() { return 1; };" +
+        "/** @return {number} */" +
+        "Super.prototype.foo = function() { return 1; };" +
         "/** @constructor\n @extends {Super} */function Sub() {};" +
         "/** @override */Sub.prototype.foo =\n" +
         "function() {};");
@@ -6547,9 +6550,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInheritanceCheck9_3() throws Exception {
     testTypes(
         "/** @constructor */function Super() {};" +
-        "/** @return number */Super.prototype.foo = function() { return 1; };" +
+        "/** @return {number} */" +
+        "Super.prototype.foo = function() { return 1; };" +
         "/** @constructor\n @extends {Super} */function Sub() {};" +
-        "/** @override\n @return string */Sub.prototype.foo =\n" +
+        "/** @override\n @return {string} */Sub.prototype.foo =\n" +
         "function() { return \"some string\" };",
         "mismatch of the foo property type and the type of the property it " +
         "overrides from superclass Super\n" +
@@ -6563,14 +6567,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Root.prototype.foo = function() { return 3; };" +
         "/** @constructor\n @extends {Root} */function Super() {};" +
         "/** @constructor\n @extends {Super} */function Sub() {};" +
-        "/** @override\n @return number */Sub.prototype.foo =\n" +
+        "/** @override\n @return {number} */Sub.prototype.foo =\n" +
         "function() { return 1; };");
   }
 
   public void testInheritanceCheck10_2() throws Exception {
     testTypes(
         "/** @constructor */function Root() {};" +
-        "/** @return number */Root.prototype.foo = function() { return 1; };" +
+        "/** @return {number} */" +
+        "Root.prototype.foo = function() { return 1; };" +
         "/** @constructor\n @extends {Root} */function Super() {};" +
         "/** @constructor\n @extends {Super} */function Sub() {};" +
         "/** @override */Sub.prototype.foo =\n" +
@@ -6580,10 +6585,11 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInheritanceCheck10_3() throws Exception {
     testTypes(
         "/** @constructor */function Root() {};" +
-        "/** @return number */Root.prototype.foo = function() { return 1; };" +
+        "/** @return {number} */" +
+        "Root.prototype.foo = function() { return 1; };" +
         "/** @constructor\n @extends {Root} */function Super() {};" +
         "/** @constructor\n @extends {Super} */function Sub() {};" +
-        "/** @override\n @return string */Sub.prototype.foo =\n" +
+        "/** @override\n @return {string} */Sub.prototype.foo =\n" +
         "function() { return \"some string\" };",
         "mismatch of the foo property type and the type of the property it " +
         "overrides from superclass Root\n" +
@@ -6707,9 +6713,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfaceInheritanceCheck5() throws Exception {
     testTypes(
         "/** @interface */function Super() {};" +
-        "/** @return string */Super.prototype.foo = function() {};" +
+        "/** @return {string} */Super.prototype.foo = function() {};" +
         "/** @constructor\n @implements {Super} */function Sub() {};" +
-        "/** @override\n @return number */Sub.prototype.foo =\n" +
+        "/** @override\n @return {number} */Sub.prototype.foo =\n" +
         "function() { return 1; };",
         "mismatch of the foo property type and the type of the property it " +
         "overrides from interface Super\n" +
@@ -6720,10 +6726,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfaceInheritanceCheck6() throws Exception {
     testTypes(
         "/** @interface */function Root() {};" +
-        "/** @return string */Root.prototype.foo = function() {};" +
+        "/** @return {string} */Root.prototype.foo = function() {};" +
         "/** @interface\n @extends {Root} */function Super() {};" +
         "/** @constructor\n @implements {Super} */function Sub() {};" +
-        "/** @override\n @return number */Sub.prototype.foo =\n" +
+        "/** @override\n @return {number} */Sub.prototype.foo =\n" +
         "function() { return 1; };",
         "mismatch of the foo property type and the type of the property it " +
         "overrides from interface Root\n" +
@@ -7424,8 +7430,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNoForwardTypeDeclarationAndNoBraces() throws Exception {
-    testTypes("/** @return The result. */ function f() {}",
-        "Bad type annotation. Unknown type The");
+    testTypes("/** @return The result. */ function f() {}");
   }
 
   public void testForwardTypeDeclaration1() throws Exception {

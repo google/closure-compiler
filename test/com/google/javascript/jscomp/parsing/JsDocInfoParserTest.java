@@ -2288,6 +2288,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "type annotation incompatible with other annotations");
   }
 
+  public void testTypeTagConflict14() throws Exception {
+    parse("@return x \n * @return y */",
+        "Bad type annotation. " +
+        "type annotation incompatible with other annotations");
+  }
+
   public void testParserWithTemplateTypeNameMissing() {
     parse("@template */",
         "Bad type annotation. @template tag missing type name");

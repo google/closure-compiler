@@ -497,7 +497,7 @@ public class TightenTypesTest extends CompilerTestCase {
   public void testExternType() {
     testSame("/** @constructor */ function T() {};\n"
              + "/** @constructor */ function Ext() {};\n"
-             + "/** @return T */\n"
+             + "/** @return {T} */\n"
              + "Ext.prototype.getT = function() {};\n"
              + "/** @type T */ Ext.prototype.prop;\n"
              + "/** @type Ext */ var ext;",
@@ -518,8 +518,8 @@ public class TightenTypesTest extends CompilerTestCase {
              + "/** @type A */ Ext.prototype.a;\n"
              + "/** @type B */ Ext.prototype.b;\n"
              + "/** @type D */ Ext.prototype.d;\n"
-             + "/** @return A */ Ext.prototype.getA = function() {};\n"
-             + "/** @return B */ Ext.prototype.getB = function() {};\n",
+             + "/** @return {A} */ Ext.prototype.getA = function() {};\n"
+             + "/** @return {B} */ Ext.prototype.getB = function() {};\n",
              "var a = (new Ext).a;\n"
              + "var a2 = (new Ext).getA();\n"
              + "var b = (new Ext).b;\n"
@@ -578,7 +578,7 @@ public class TightenTypesTest extends CompilerTestCase {
     testSame("/** @constructor */ function Element() {};\n"
              + "/** @type {?function(Event)} */Element.prototype.onclick;\n"
              + "/** @constructor */ function Event() {};"
-             + "/** @return Event */ Event.prototype.erv;",
+             + "/** @return {Event} */ Event.prototype.erv;",
              " function foo(evt) { return bar(evt); };\n"
              + "function bar(a) { return a.type() }\n"
              + "/** @type Object */ var ar = new Element;\n"

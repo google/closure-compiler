@@ -366,6 +366,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertNotNull(info);
     assertFalse(info.hasParameter("index"));
     assertTrue(info.hasReturnType());
+    assertTypeEquals(UNKNOWN_TYPE, info.getReturnType());
   }
 
   public void testJSDocAttachment7() {

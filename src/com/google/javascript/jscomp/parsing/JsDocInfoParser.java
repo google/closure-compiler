@@ -786,7 +786,15 @@ public final class JsDocInfoParser {
 
                   token = next();
 
-                  Node typeNode = parseAndRecordTypeNode(token, lineno, charno);
+                  Node typeNode = null;
+                  if (annotation == Annotation.RETURN &&
+                      token != JsDocToken.LC) {
+                    // If RETURN doesn't have a type annotation, record
+                    // it as the unknown type.
+                    typeNode = newNode(Token.QMARK);
+                  } else {
+                    typeNode = parseAndRecordTypeNode(token, lineno, charno);
+                  }
 
                   if (annotation == Annotation.THIS) {
                     typeNode = wrapNode(Token.BANG, typeNode);

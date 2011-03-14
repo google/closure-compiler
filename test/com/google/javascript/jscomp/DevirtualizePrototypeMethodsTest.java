@@ -75,9 +75,9 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     static final String INPUT = newlineJoin(
         "/** @constructor */",
         "function a(){ this.x = 3; }",
-        "/** @return number */",
+        "/** @return {number} */",
         "a.prototype.foo = function() {return this.x};",
-        "/** @param {number} p\n@return number */",
+        "/** @param {number} p\n@return {number} */",
         "a.prototype.bar = function(p) {return this.x};",
         "a.prototype.baz = function() {};",
         "var o = new a;",
@@ -246,7 +246,8 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     static final String CALL = "o.foo()";
 
     static final String SINGLE_DEFINITION_EXPECTED =
-        "var JSCompiler_StaticMethods_foo = function(JSCompiler_StaticMethods_foo$self) {};" +
+        "var JSCompiler_StaticMethods_foo = " +
+        "  function(JSCompiler_StaticMethods_foo$self) {};" +
         "JSCompiler_StaticMethods_foo(o)";
 
     private NoRewriteMultipleDefinitionTestInput() {}
