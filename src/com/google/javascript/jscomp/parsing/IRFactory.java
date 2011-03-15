@@ -238,7 +238,21 @@ public class IRFactory {
     if (jsDocInfo != null) {
       irNode.setJSDocInfo(jsDocInfo);
     }
+    setSourceInfo(irNode, node);
+    return irNode;
+  }
 
+  private Node transformNameAsString(Name node) {
+    JSDocInfo jsDocInfo = handleJsDoc(node);
+    Node irNode = transformDispatcher.processName(node, true);
+    if (jsDocInfo != null) {
+      irNode.setJSDocInfo(jsDocInfo);
+    }
+    setSourceInfo(irNode, node);
+    return irNode;
+  }
+
+  private void setSourceInfo(Node irNode, AstNode node) {
     // If we have a named function, set the position to that of the name.
     if (irNode.getType() == Token.FUNCTION &&
         irNode.getFirstChild().getLineno() != -1) {
@@ -255,7 +269,6 @@ public class IRFactory {
         irNode.setCharno(charno);
       }
     }
-    return irNode;
   }
 
   /**
@@ -324,11 +337,16 @@ public class IRFactory {
      * unquoted.
      */
     private Node transformAsString(AstNode n) {
-      Node ret = transform(n);
-      if (ret.getType() == Token.STRING) {
-        ret.putBooleanProp(Node.QUOTED_PROP, true);
-      } else if (ret.getType() == Token.NAME) {
-        ret.setType(Token.STRING);
+      Node ret;
+      if (n instanceof Name) {
+        ret = transformNameAsString((Name)n);
+      } else {
+        ret = transform(n);
+        Preconditions.checkState(ret.getType() == Token.NUMBER
+            || ret.getType() == Token.STRING);
+        if (ret.getType() == Token.STRING) {
+          ret.putBooleanProp(Node.QUOTED_PROP, true);
+        }
       }
       return ret;
     }
@@ -642,13 +660,21 @@ public class IRFactory {
 
     @Override
     Node processName(Name nameNode) {
-      if (isReservedKeyword(nameNode.getIdentifier())) {
-        errorReporter.error(
-          "identifier is a reserved word",
-          sourceName,
-          nameNode.getLineno(), "", 0);
+      return processName(nameNode, false);
+    }
+
+    Node processName(Name nameNode, boolean asString) {
+      if (asString) {
+        return newStringNode(Token.STRING, nameNode.getIdentifier());
+      } else {
+        if (isReservedKeyword(nameNode.getIdentifier())) {
+          errorReporter.error(
+            "identifier is a reserved word",
+            sourceName,
+            nameNode.getLineno(), "", 0);
+        }
+        return newStringNode(Token.NAME, nameNode.getIdentifier());
       }
-      return newStringNode(Token.NAME, nameNode.getIdentifier());
     }
 
     /**

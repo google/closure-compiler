@@ -794,6 +794,9 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testReservedKeywords() {
     boolean isIdeMode = false;
+
+    mode = LanguageMode.ECMASCRIPT3;
+
     parseError("var boolean;", "missing variable name");
     parseError("function boolean() {};",
         "missing ( before function parameters.");
@@ -816,7 +819,67 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("boolean = 1;");
     parseError("class = 1;", "identifier is a reserved word");
     parseError("public = 2;", "identifier is a reserved word");
+  }
 
+  public void testKeywordsAsProperties() {
+    boolean isIdeMode = false;
+
+    mode = LanguageMode.ECMASCRIPT3;
+
+    parseError("var x = {function: 1};", "invalid property id");
+    parseError("x.function;", "missing name after . operator");
+    parseError("var x = {get x(){} };",
+        "getters are not supported in Internet Explorer");
+    parseError("var x = {get function(){} };", "invalid property id");
+    parseError("var x = {get 'function'(){} };",
+        "getters are not supported in Internet Explorer");
+    parseError("var x = {get 1(){} };",
+        "getters are not supported in Internet Explorer");
+    parseError("var x = {set function(a){} };", "invalid property id");
+    parseError("var x = {set 'function'(a){} };",
+        "setters are not supported in Internet Explorer");
+    parseError("var x = {set 1(a){} };",
+        "setters are not supported in Internet Explorer");
+    parseError("var x = {class: 1};", "invalid property id");
+    parseError("x.class;", "missing name after . operator");
+    parse("var x = {let: 1};");
+    parse("x.let;");
+    parse("var x = {yield: 1};");
+    parse("x.yield;");
+
+    mode = LanguageMode.ECMASCRIPT5;
+
+    parse("var x = {function: 1};");
+    parse("x.function;");
+    parse("var x = {get function(){} };");
+    parse("var x = {get 'function'(){} };");
+    parse("var x = {get 1(){} };");
+    parse("var x = {set function(a){} };");
+    parse("var x = {set 'function'(a){} };");
+    parse("var x = {set 1(a){} };");
+    parse("var x = {class: 1};");
+    parse("x.class;");
+    parse("var x = {let: 1};");
+    parse("x.let;");
+    parse("var x = {yield: 1};");
+    parse("x.yield;");
+
+    mode = LanguageMode.ECMASCRIPT5_STRICT;
+
+    parse("var x = {function: 1};");
+    parse("x.function;");
+    parse("var x = {get function(){} };");
+    parse("var x = {get 'function'(){} };");
+    parse("var x = {get 1(){} };");
+    parse("var x = {set function(a){} };");
+    parse("var x = {set 'function'(a){} };");
+    parse("var x = {set 1(a){} };");
+    parse("var x = {class: 1};");
+    parse("x.class;");
+    parse("var x = {let: 1};");
+    parse("x.let;");
+    parse("var x = {yield: 1};");
+    parse("x.yield;");
   }
 
   private void parseError(String string, String... errors) {

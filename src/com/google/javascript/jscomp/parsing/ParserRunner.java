@@ -106,6 +106,7 @@ public class ParserRunner {
     if (config.isIdeMode || config.languageMode != LanguageMode.ECMASCRIPT3) {
       // Do our own identifier check for ECMASCRIPT 5
       compilerEnv.setReservedKeywordAsIdentifier(true);
+      compilerEnv.setAllowKeywordAsObjectPropertyName(true);
     }
 
     if (config.isIdeMode) {
