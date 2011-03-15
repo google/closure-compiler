@@ -721,4 +721,14 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     testSame("/** @constructor */ function Foo() { this.prop = 1;}" +
         "/** @const */ Foo.prototype.prop;");
   }
+
+  public void testSuppressConstantProperty() {
+    testSame("/** @constructor */ function A() {" +
+        "/** @const */ this.bar = 3;}" +
+        "/**\n" +
+        " * @suppress {constantProperty}\n" +
+        " * @constructor\n" +
+        " */ function B() {" +
+        "/** @const */ this.bar = 3;this.bar += 4;}");
+  }
 }
