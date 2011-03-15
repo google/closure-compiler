@@ -960,6 +960,18 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
             "  ].join()");
   }
 
+  public void testToUpper() {
+    fold("'a'.toUpperCase()", "'A'");
+    fold("'A'.toUpperCase()", "'A'");
+    fold("'aBcDe'.toUpperCase()", "'ABCDE'");
+  }
+
+  public void testToLower() {
+    fold("'A'.toLowerCase()", "'a'");
+    fold("'a'.toLowerCase()", "'a'");
+    fold("'aBcDe'.toLowerCase()", "'abcde'");
+  }
+
   private static final List<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",

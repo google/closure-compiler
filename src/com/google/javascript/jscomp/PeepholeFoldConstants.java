@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
@@ -64,6 +65,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       "Fractional bitwise operand: {0}");
 
   private static final double MAX_FOLD_NUMBER = Math.pow(2, 53);
+
+  // The LOCALE independent "locale"
+  private static final Locale ROOT_LOCALE = new Locale("");
 
   @Override
   Node optimizeSubtree(Node subtree) {
@@ -1228,13 +1232,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return subtree;
     }
 
-    Node firstArg = callTarget.getNext();
-    if (firstArg == null) {
-      return subtree;
-    }
-
-    if (!NodeUtil.isGet(callTarget) ||
-        !NodeUtil.isImmutableValue(firstArg)) {
+    if (!NodeUtil.isGet(callTarget)) {
       return subtree;
     }
 
@@ -1247,18 +1245,52 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     String functionNameString = functionName.getString();
-    if (functionNameString.equals("indexOf") ||
-        functionNameString.equals("lastIndexOf")) {
-      subtree = tryFoldStringIndexOf(subtree, functionNameString,
-          stringNode, firstArg);
-    } else if (functionNameString.equals("substr")) {
-      subtree = tryFoldStringSubstr(subtree, stringNode, firstArg);
-    } else if (functionNameString.equals("substring")) {
-      subtree = tryFoldStringSubstring(subtree, stringNode, firstArg);
+    Node firstArg = callTarget.getNext();
+    if (firstArg == null) {
+      if (functionNameString.equals("toLowerCase")) {
+        subtree = tryFoldStringToLowerCase(subtree, stringNode);
+      } else if (functionNameString.equals("toUpperCase")) {
+        subtree = tryFoldStringToUpperCase(subtree, stringNode);
+      }
+      return subtree;
+    } else if (NodeUtil.isImmutableValue(firstArg)) {
+      if (functionNameString.equals("indexOf") ||
+          functionNameString.equals("lastIndexOf")) {
+        subtree = tryFoldStringIndexOf(subtree, functionNameString,
+            stringNode, firstArg);
+      } else if (functionNameString.equals("substr")) {
+        subtree = tryFoldStringSubstr(subtree, stringNode, firstArg);
+      } else if (functionNameString.equals("substring")) {
+        subtree = tryFoldStringSubstring(subtree, stringNode, firstArg);
+      }
     }
 
     return subtree;
- }
+  }
+
+  /**
+   * @return The lowered string Node.
+   */
+  private Node tryFoldStringToLowerCase(Node subtree, Node stringNode) {
+    // From Rhino, NativeString.java. See ECMA 15.5.4.11
+    String lowered = stringNode.getString().toLowerCase(ROOT_LOCALE);
+    Node replacement = Node.newString(lowered);
+    subtree.getParent().replaceChild(subtree, replacement);
+    reportCodeChange();
+    return replacement;
+  }
+
+  /**
+   * @return The uppered string Node.
+   */
+  private Node tryFoldStringToUpperCase(Node subtree, Node stringNode) {
+    // From Rhino, NativeString.java. See ECMA 15.5.4.12
+    String uppered = stringNode.getString().toUpperCase(ROOT_LOCALE);
+    Node replacement = Node.newString(uppered);
+    subtree.getParent().replaceChild(subtree, replacement);
+    reportCodeChange();
+    return replacement;
+  }
 
   /**
    * Try to evaluate String.indexOf/lastIndexOf:
