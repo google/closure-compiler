@@ -59,7 +59,8 @@ class CodePrinter {
         boolean createSrcMap,
         SourceMap.DetailLevel sourceMapDetailLevel) {
       Preconditions.checkState(sourceMapDetailLevel != null);
-      this.lineLengthThreshold = lineLengthThreshold;
+      this.lineLengthThreshold = lineLengthThreshold <= 0 ? Integer.MAX_VALUE :
+        lineLengthThreshold;
       this.createSrcMap = createSrcMap;
       this.sourceMapDetailLevel = sourceMapDetailLevel;
       this.mappings = createSrcMap ? new ArrayDeque<Mapping>() : null;

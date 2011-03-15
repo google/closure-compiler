@@ -1445,6 +1445,7 @@ public class Compiler extends AbstractCompiler {
     builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
     builder.setTagAsStrict(
         options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT);
+    builder.setLineLengthThreshold(options.lineLengthThreshold);
 
     Charset charset = options.outputCharset != null ?
         Charset.forName(options.outputCharset) : null;

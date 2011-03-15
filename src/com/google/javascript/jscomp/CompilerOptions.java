@@ -594,6 +594,8 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   int summaryDetailLevel = 1;
 
+  int lineLengthThreshold = CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD;
+
   //--------------------------------
   // Special Output Options
   //--------------------------------
@@ -1002,6 +1004,10 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setNameAnonymousFunctionsOnly(boolean value) {
     this.nameAnonymousFunctionsOnly = value;
+  }
+
+  public void lineLengthThreshold(int value) {
+    this.lineLengthThreshold = value;
   }
 
   public void setColorizeErrorOutput(boolean colorizeErrorOutput) {
