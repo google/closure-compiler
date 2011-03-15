@@ -581,6 +581,7 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (options.collapseVariableDeclarations) {
+      passes.add(exploitAssign);
       passes.add(collapseVariableDeclarations);
     }
 
@@ -1602,6 +1603,19 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new CoalesceVariableNames(compiler, options.generatePseudoNames);
+    }
+  };
+
+  /**
+   * Some simple, local collapses (e.g., {@code var x; var y;} becomes
+   * {@code var x,y;}.
+   */
+  private final PassFactory exploitAssign =
+      new PassFactory("expointAssign", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new PeepholeOptimizationsPass(compiler,
+          new ExploitAssigns());
     }
   };
 
