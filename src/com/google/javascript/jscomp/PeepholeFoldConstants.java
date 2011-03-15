@@ -1317,12 +1317,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node functionName = arrayNode.getNext();
 
     if ((arrayNode.getType() != Token.ARRAYLIT) ||
-        NodeUtil.isSparseArray(arrayNode) ||
         !functionName.getString().equals("join")) {
       return n;
     }
-
-    // TODO(johnlenz): handle sparse arrays
 
     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
     List<Node> arrayFoldedChildren = Lists.newLinkedList();
@@ -1332,7 +1329,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node elem = arrayNode.getFirstChild();
     // Merges adjacent String nodes.
     while (elem != null) {
-      if (NodeUtil.isImmutableValue(elem)) {
+      if (NodeUtil.isImmutableValue(elem) || elem.getType() == Token.EMPTY) {
         if (sb == null) {
           sb = new StringBuilder();
         } else {
@@ -1524,9 +1521,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldGetElem(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.GETELEM);
 
-    if (left.getType() == Token.ARRAYLIT && !NodeUtil.isSparseArray(left)) {
-      // TODO(johnlenz): handle sparse arrays
-
+    if (left.getType() == Token.ARRAYLIT) {
       if (right.getType() != Token.NUMBER) {
         // Sometimes people like to use complex expressions to index into
         // arrays, or strings to index into array methods.
@@ -1555,8 +1550,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return n;
       }
 
+      if (elem.getType() == Token.EMPTY) {
+        elem = NodeUtil.newUndefinedNode(elem);
+      } else {
+        left.removeChild(elem);
+      }
+
       // Replace the entire GETELEM with the value
-      left.removeChild(elem);
       n.getParent().replaceChild(n, elem);
       reportCodeChange();
       return elem;
@@ -1575,8 +1575,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       int knownLength = -1;
       switch (left.getType()) {
         case Token.ARRAYLIT:
-          // TODO(johnlenz): handle sparse arrays
-          if (NodeUtil.isSparseArray(left) || mayHaveSideEffects(left)) {
+          if (mayHaveSideEffects(left)) {
             // Nope, can't fold this, without handling the side-effects.
             return n;
           }

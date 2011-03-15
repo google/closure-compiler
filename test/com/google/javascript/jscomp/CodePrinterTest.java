@@ -1166,4 +1166,12 @@ public class CodePrinterTest extends TestCase {
     String result = parsePrint("var x", false, false, 0, false, true);
     assertEquals("'use strict';var x", result);
   }
+
+  public void testArrayLiteral() {
+    assertPrint("var x = [,];","var x=[,]");
+    assertPrint("var x = [,,];","var x=[,,]");
+    assertPrint("var x = [,s,,];","var x=[,s,,]");
+    assertPrint("var x = [,s];","var x=[,s]");
+    assertPrint("var x = [s,];","var x=[s]");
+  }
 }

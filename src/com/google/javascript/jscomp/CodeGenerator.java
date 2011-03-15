@@ -203,7 +203,7 @@ class CodeGenerator {
 
       case Token.ARRAYLIT:
         add("[");
-        addArrayList(first, (int[]) n.getProp(Node.SKIP_INDEXES_PROP));
+        addArrayList(first);
         add("]");
         break;
 
@@ -875,27 +875,19 @@ class CodeGenerator {
    * slot.
    * @param firstInList The first in the node list (chained through the next
    * property).
-   * @param skipIndexes If not null, then the array of skipped entries in the
-   * array.
    */
-  void addArrayList(Node firstInList, int[] skipIndexes) {
-    int nextSlot = 0;
-    int nextSkipSlot = 0;
+  void addArrayList(Node firstInList) {
+    boolean lastWasEmpty = false;
     for (Node n = firstInList; n != null; n = n.getNext()) {
-      while (skipIndexes != null && nextSkipSlot < skipIndexes.length) {
-        if (nextSlot == skipIndexes[nextSkipSlot]) {
-          cc.listSeparator();
-          nextSlot++;
-          nextSkipSlot++;
-        } else {
-          break;
-        }
-      }
       if (n != firstInList) {
         cc.listSeparator();
       }
       addExpr(n, 1);
-      nextSlot++;
+      lastWasEmpty = n.getType() == Token.EMPTY;
+    }
+
+    if (lastWasEmpty) {
+      cc.listSeparator();
     }
   }
 

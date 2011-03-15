@@ -224,8 +224,7 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
     if ("goog.addDependency".equals(callName.getQualifiedName()) &&
         n.getChildCount() >= 3) {
       Node typeArray = callName.getNext().getNext();
-      if (typeArray.getType() == Token.ARRAYLIT
-          && !NodeUtil.isSparseArray(typeArray)) {
+      if (typeArray.getType() == Token.ARRAYLIT) {
         List<String> typeNames = Lists.newArrayList();
         for (Node name = typeArray.getFirstChild(); name != null;
              name = name.getNext()) {

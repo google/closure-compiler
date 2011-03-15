@@ -82,7 +82,7 @@ public class JsonMLConversionTest extends CompilerTestCase {
 
     String explanation = resultAstRoot.checkTreeEquals(astRoot);
     assertNull("JsonML -> AST converter returned incorect result for " + js
-        + "\n" + explanation, explanation);
+       + "\n" + explanation, explanation);
   }
 
   private void testAstToJsonMLConverstion(Node astRoot, JsonML jsonmlRoot,
@@ -103,6 +103,7 @@ public class JsonMLConversionTest extends CompilerTestCase {
   }
 
   public void testArray() throws Exception {
+    testConversion("[,]");
     testConversion("[]");
     testConversion("[function (x) {}]");
     testConversion("[[], [a, [], [[[]], 1], f([a])], 1];");
@@ -110,6 +111,10 @@ public class JsonMLConversionTest extends CompilerTestCase {
     testConversion("var x = [1, 2, 3]");
     testConversion("[, 1, Object(), , , 2]");
     testConversion("[{x: 'abc', y: 1}]");
+  }
+
+  public void testArray1() throws Exception {
+    testConversion("[,]");
   }
 
   public void testAssignOperators() throws Exception {

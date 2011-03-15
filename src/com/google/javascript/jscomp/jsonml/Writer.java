@@ -303,22 +303,8 @@ public class Writer {
     JsonML element = new JsonML(TagType.ArrayExpr);
     currentParent.appendChild(element);
     Iterator<Node> it = node.children().iterator();
-    int[] skipIndexes = (int[]) node.getProp(Node.SKIP_INDEXES_PROP);
-    int i = 0;  // next index in new array to process
-    int j = 0;  // next index in skip array
-    int nextToSkip = 0;
     while (it.hasNext()) {
-      while (skipIndexes != null && j < skipIndexes.length) {
-        if (i == skipIndexes[j]) {
-          element.appendChild(new JsonML(TagType.Empty));
-          ++i;
-          ++j;
-        } else {
-          break;
-        }
-      }
       processNode(it.next(), element);
-      ++i;
     }
   }
 
@@ -432,7 +418,12 @@ public class Writer {
   }
 
   private void processEmpty(Node node, JsonML currentParent) {
-    currentParent.appendChild(new JsonML(TagType.EmptyStmt));
+    if (currentParent.getType() == TagType.ArrayExpr) {
+      // Empty expression are only found in Array literals
+      currentParent.appendChild(new JsonML(TagType.Empty));
+    } else {
+      currentParent.appendChild(new JsonML(TagType.EmptyStmt));
+    }
   }
 
   private void processExprResult(Node node, JsonML currentParent) {

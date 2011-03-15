@@ -59,7 +59,13 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testArrayLiteral2() throws Exception {
-    parse("[a, , b]");
+    testNewParser("[a, , b]",
+      "SCRIPT 0\n" +
+      "    EXPR_RESULT 0\n" +
+      "        ARRAYLIT 0\n" +
+      "            NAME a 0\n" +
+      "            EMPTY 0\n" +
+      "            NAME b 0\n");
   }
 
   public void testArrayLiteral3() throws Exception {
@@ -67,7 +73,16 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   }
 
   public void testArrayLiteral4() throws Exception {
-    parse("[,,,a,,b]");
+    testNewParser("[,,,a,,b]",
+      "SCRIPT 0\n" +
+      "    EXPR_RESULT 0\n" +
+      "        ARRAYLIT 0\n" +
+      "            EMPTY 0\n" +
+      "            EMPTY 0\n" +
+      "            EMPTY 0\n" +
+      "            NAME a 0\n" +
+      "            EMPTY 0\n" +
+      "            NAME b 0\n");
   }
 
   public void testAssignment() throws Exception {

@@ -210,25 +210,16 @@ public final class NodeUtil {
    * @return The string representation.
    */
   static String getArrayElementStringValue(Node n) {
-    return NodeUtil.isNullOrUndefined(n) ? "" : getStringValue(n);
+    return (NodeUtil.isNullOrUndefined(n) || n.getType() == Token.EMPTY)
+        ? "" : getStringValue(n);
   }
 
   static String arrayToString(Node literal) {
     Node first = literal.getFirstChild();
-    int[] skipIndexes = (int[]) literal.getProp(Node.SKIP_INDEXES_PROP);
     StringBuilder result = new StringBuilder();
     int nextSlot = 0;
     int nextSkipSlot = 0;
     for (Node n = first; n != null; n = n.getNext()) {
-      while (skipIndexes != null && nextSkipSlot < skipIndexes.length) {
-        if (nextSlot == skipIndexes[nextSkipSlot]) {
-          result.append(',');
-          nextSlot++;
-          nextSkipSlot++;
-        } else {
-          break;
-        }
-      }
       String childValue = getArrayElementStringValue(n);
       if (childValue == null) {
         return null;
@@ -506,6 +497,15 @@ public final class NodeUtil {
   static boolean isLiteralValue(Node n, boolean includeFunctions) {
     switch (n.getType()) {
       case Token.ARRAYLIT:
+        for (Node child = n.getFirstChild(); child != null;
+             child = child.getNext()) {
+          if (child.getType() != Token.EMPTY
+              && !isLiteralValue(child, includeFunctions)) {
+            return false;
+          }
+        }
+        return true;
+
       case Token.REGEXP:
         // Return true only if all children are const.
         for (Node child = n.getFirstChild(); child != null;
@@ -1847,15 +1847,6 @@ public final class NodeUtil {
    */
   static boolean isArrayLiteral(Node node) {
     return node.getType() == Token.ARRAYLIT;
-  }
-
-  /**
-   * Is this an sparse ARRAYLIT node
-   */
-  static boolean isSparseArray(Node node) {
-    Preconditions.checkArgument(isArrayLiteral(node));
-    int[] skipList = (int[]) node.getProp(Node.SKIP_INDEXES_PROP);
-    return skipList != null && skipList.length > 0;
   }
 
   /**

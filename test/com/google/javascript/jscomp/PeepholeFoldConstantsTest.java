@@ -468,7 +468,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testStringJoinAddSparse() {
-    foldSame("x = [,,'a'].join(',')"); // Could be: x = ',,a'
+    fold("x = [,,'a'].join(',')", "x = ',,a'");
   }
 
   public void testStringJoinAdd() {
@@ -695,7 +695,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   public void testFoldGetElem() {
-    foldSame("x = [,10][0]"); // Should be "x = void 0";
+    fold("x = [,10][0]", "x = void 0");
     fold("x = [10, 20][0]", "x = 10");
     fold("x = [10, 20][1]", "x = 20");
     fold("x = [10, 20][0.5]", "",
@@ -724,7 +724,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = [a,b].length", "x = 2");
 
     // Not handled yet
-    foldSame("x = [,,1].length"); // Should be "x = 3"
+    fold("x = [,,1].length", "x = 3");
 
     // Cannot fold
     fold("x = [foo(), 0].length", "x = [foo(),0].length");

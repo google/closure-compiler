@@ -340,28 +340,9 @@ public class IRFactory {
       }
 
       Node node = newNode(Token.ARRAYLIT);
-      int skipCount = 0;
       for (AstNode child : literalNode.getElements()) {
         Node c = transform(child);
-        if (c.getType() == Token.EMPTY) {
-          skipCount++;
-        }
         node.addChildToBack(c);
-
-      }
-      if (skipCount > 0) {
-        int[] skipIndexes = new int[skipCount];
-        int i = 0;
-        int j = 0;
-        for (Node child : node.children()) {
-          if (child.getType() == Token.EMPTY) {
-            node.removeChild(child);
-            skipIndexes[j] = i;
-            j++;
-          }
-          i++;
-        }
-        node.putProp(Node.SKIP_INDEXES_PROP, skipIndexes);
       }
       return node;
     }
