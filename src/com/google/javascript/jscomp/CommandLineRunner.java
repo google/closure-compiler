@@ -637,7 +637,8 @@ public class CommandLineRunner extends
     "w3c_selectors.js",
     "w3c_xml.js",
     "window.js",
-    "webkit_notifications.js");
+    "webkit_notifications.js",
+    "webgl.js");
 
   /**
    * @return a mutable list
