@@ -155,6 +155,9 @@ class RemoveUnusedVars
       callSiteOptimizer = new CallSiteOptimizer(compiler, defFinder);
     }
     traverseAndRemoveUnusedReferences(root);
+    if (callSiteOptimizer != null) {
+      callSiteOptimizer.applyChanges();
+    }
   }
 
   /**
@@ -346,6 +349,7 @@ class RemoveUnusedVars
     // TODO(johnlenz): Update type registry for function signature changes.
 
     Node function = fnScope.getRootNode();
+
     Preconditions.checkState(function.getType() == Token.FUNCTION);
     if (NodeUtil.isGetOrSetKey(function.getParent())) {
       // The parameters object literal setters can not be removed.
@@ -384,6 +388,8 @@ class RemoveUnusedVars
   private static class CallSiteOptimizer {
     private final AbstractCompiler compiler;
     private final SimpleDefinitionFinder defFinder;
+    private final List<Node> toRemove = Lists.newArrayList();
+    private final List<Node> toReplaceWithZero = Lists.newArrayList();
 
     CallSiteOptimizer(
         AbstractCompiler compiler,
@@ -400,9 +406,23 @@ class RemoveUnusedVars
       // In this path we try to modify all the call sites to remove unused
       // function parameters.
       boolean changeCallSignature = canChangeSignature(function);
-      removeUnreferencedFunctionArgs(
+      markUnreferencedFunctionArgs(
           fnScope, function, referenced,
           argList.getFirstChild(), 0, changeCallSignature);
+    }
+
+    /**
+     * Applies optimizations to all previously marked nodes.
+     */
+    public void applyChanges() {
+      for (Node n : toRemove) {
+        n.getParent().removeChild(n);
+        compiler.reportCodeChange();
+      }
+      for (Node n : toReplaceWithZero) {
+        n.getParent().replaceChild(n, Node.newNumber(0).copyInformationFrom(n));
+        compiler.reportCodeChange();
+      }
     }
 
     /**
@@ -418,13 +438,13 @@ class RemoveUnusedVars
      * @param canChangeSignature Whether function signature can be change.
      * @return Whether there is a following function parameter.
      */
-    private boolean removeUnreferencedFunctionArgs(
+    private boolean markUnreferencedFunctionArgs(
         Scope scope, Node function, Set<Var> referenced,
         Node param, int paramIndex,
         boolean canChangeSignature) {
       if (param != null) {
         // Take care of the following siblings first.
-        boolean hasFollowing = removeUnreferencedFunctionArgs(
+        boolean hasFollowing = markUnreferencedFunctionArgs(
             scope, function, referenced, param.getNext(), paramIndex+1,
             canChangeSignature);
 
@@ -445,8 +465,7 @@ class RemoveUnusedVars
           // Remove an unused function parameter if all the call sites can
           // be modified to remove it, or if it is the last parameter.
           if (modifyAllCallSites || !hasFollowing) {
-            getFunctionArgList(function).removeChild(param);
-            compiler.reportCodeChange();
+            toRemove.add(param);
             return hasFollowing;
           }
         }
@@ -502,16 +521,12 @@ class RemoveUnusedVars
             if (canModifyAllSites
                 || (arg.getNext() == null
                     && !NodeUtil.mayHaveSideEffects(arg, compiler))) {
-              // Remove the arg completely
-              argParent.removeChild(arg);
-              compiler.reportCodeChange();
+              toRemove.add(arg);
             } else {
               // replace the node in the arg with 0
               if (!NodeUtil.mayHaveSideEffects(arg, compiler)
                   && (arg.getType() != Token.NUMBER || arg.getDouble() != 0)) {
-                argParent.replaceChild(
-                    arg, Node.newNumber(0).copyInformationFrom(arg));
-                compiler.reportCodeChange();
+                toReplaceWithZero.add(arg);
               }
             }
           }
@@ -528,15 +543,12 @@ class RemoveUnusedVars
         if (!isModifableCallSite(site)) {
           continue;
         }
-        Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex);
+        Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex + 1);
         while (arg != null) {
-          Node next = arg.getNext();
-          if (next != null && !NodeUtil.mayHaveSideEffects(next)) {
-            arg.getParent().removeChildAfter(arg);
-            compiler.reportCodeChange();
-          } else {
-            arg = next;
+          if (!NodeUtil.mayHaveSideEffects(arg)) {
+            toRemove.add(arg);
           }
+          arg = arg.getNext();
         }
       }
     }
@@ -622,11 +634,6 @@ class RemoveUnusedVars
       Collection<UseSite> useSites = defFinder.getUseSites(definition);
       for (UseSite site : useSites) {
         Node parent = site.node.getParent();
-
-        // Check if the reference has already been removed.
-        if (parent == null) {
-          continue;
-        }
 
         // Ignore references within goog.inherits calls.
         if (NodeUtil.isCall(parent) &&

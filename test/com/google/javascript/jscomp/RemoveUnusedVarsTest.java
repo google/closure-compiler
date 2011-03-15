@@ -19,9 +19,9 @@ package com.google.javascript.jscomp;
 
 public class RemoveUnusedVarsTest extends CompilerTestCase {
 
-  private boolean removeGlobal = true;
-  private boolean preserveFunctionExpressionNames = false;
-  private boolean modifyCallSites = false;
+  private boolean removeGlobal;
+  private boolean preserveFunctionExpressionNames;
+  private boolean modifyCallSites;
 
   public RemoveUnusedVarsTest() {
     super("function alert() {}");
@@ -32,7 +32,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   public void setUp() {
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
-    modifyCallSites = true;
+    modifyCallSites = false;
   }
 
   @Override
@@ -148,7 +148,6 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testFunctionArgRemoval() {
-    this.modifyCallSites = false;
     // remove all function arguments
     test("var b=function(c,d){return};b(1,2)",
          "var b=function(){return};b(1,2)");
@@ -469,7 +468,6 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testLocalVarReferencesGlobalVar2() {
-    this.modifyCallSites = false;
     test("var a=3;function f(b, c){b=a; alert(c);} f();",
          "function f(b, c) { alert(c); } f();");
     this.modifyCallSites = true;
@@ -580,6 +578,15 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
         "a(new b)");
   }
 
+  public void testRemoveUnusedVarsPossibleNpeCase() {
+    this.modifyCallSites = true;
+    test("var a = [];" +
+        "var register = function(callback) {a[0] = callback};" +
+        "register(function(transformer) {});" +
+        "register(function(transformer) {});",
+        "var register=function(){};register();register()");
+  }
+
   public void testDoNotOptimizeJSCompiler_renameProperty() {
     this.modifyCallSites = true;
 
@@ -599,8 +606,6 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testDoNotOptimizeSetters() {
-    // this.removeGlobal = false;
-    // this.modifyCallSites = false;
     testSame("({set s(a) {}})");
   }
 
