@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /**
- * Unit tests for {@link ShadowVariableTest}.
+ * Unit tests for {@link ShadowVariables}.
  *
  *
  */
@@ -227,6 +227,15 @@ public class ShadowVariablesTest extends CompilerTestCase{
          "function c() {var d=function a(){a()}; var e=function b(){b()}}");
     test("function f(x) { return x ? function(y){} : function(z) {} }",
          "function b(a) { return a ? function(a){} : function(a) {} }");
+  }
 
+  public void testExportedLocal1() {
+    test("function f(a) { a();a();a(); return function($super){} }",
+         "function b(a) { a();a();a(); return function($super){} }");
+  }
+
+  public void testExportedLocal2() {
+    test("function f($super) { $super();$super(); return function(a){} }",
+         "function a($super) { $super();$super(); return function(b){} }");
   }
 }

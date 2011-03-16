@@ -184,6 +184,11 @@ class ShadowVariables implements CompilerPass {
           continue;
         }
 
+        // Don't shadow an exported local.
+        if (compiler.getCodingConvention().isExported(var.name, s.isLocal())) {
+          continue;
+        }
+
         // Try to look for the best shadow for the current candidate.
         Assignment bestShadow = findBestShadow(s, var);
         if (bestShadow == null) {
@@ -223,7 +228,7 @@ class ShadowVariables implements CompilerPass {
      */
     private Assignment findBestShadow(Scope curScope, Var candidate) {
       // Search for the candidate starting from the most used local.
-      TARGET: for (Assignment assignment : varsByFrequency) {
+      for (Assignment assignment : varsByFrequency) {
         if (assignment.oldName.startsWith(RenameVars.LOCAL_VAR_PREFIX)) {
           if (!scopeUpRefMap.get(curScope.getRootNode()).contains(
               assignment.oldName)) {
