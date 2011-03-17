@@ -736,6 +736,18 @@ public class CrossModuleCodeMotionTest extends CompilerTestCase {
          });
   }
 
+  public void testBug4118005() {
+    testSame(createModuleChain(
+             // m1
+             "var m = 1;\n" +
+             "(function () {\n" +
+             " var x = 1;\n" +
+             " m = function() { return x };\n" +
+             "})();\n",
+             // m2
+             "m();"));
+  }
+
   public void testEmptyModule() {
     // When the dest module is empty, it might try to move the code to the
     // one of the modules that the empty module depends on. In some cases

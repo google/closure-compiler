@@ -208,6 +208,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
         case Token.IF:
         case Token.SWITCH:
         case Token.WHILE:
+        case Token.FUNCTION:
           return true;
       }
     }
@@ -297,7 +298,12 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
     NamedInfo info = getNamedInfo(v);
     if (info.allowMove) {
       if (maybeProcessDeclaration(t, n, parent, info)) {
-        if (hasConditionalAncestor(n)) {
+        // Check to see if the declaration is conditional starting at the
+        // grandparent of the name node. Since a function declaration
+        // is considered conditional (the function might not be called)
+        // we would need to skip the parent in this check as the name could
+        // just be a function itself.
+        if (hasConditionalAncestor(parent.getParent())) {
           info.allowMove = false;
         }
       } else {
