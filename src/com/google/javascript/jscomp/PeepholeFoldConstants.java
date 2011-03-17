@@ -32,10 +32,6 @@ import java.util.Locale;
  */
 class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
-  static final DiagnosticType DIVIDE_BY_0_ERROR = DiagnosticType.error(
-      "JSC_DIVIDE_BY_0_ERROR",
-      "Divide by 0");
-
   static final DiagnosticType INVALID_GETELEM_INDEX_ERROR =
       DiagnosticType.error(
           "JSC_INVALID_GETELEM_INDEX_ERROR",
@@ -712,14 +708,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         break;
       case Token.MOD:
         if (rval == 0) {
-          error(DIVIDE_BY_0_ERROR, right);
           return null;
         }
         result = lval % rval;
         break;
       case Token.DIV:
         if (rval == 0) {
-          error(DIVIDE_BY_0_ERROR, right);
           return null;
         }
         result = lval / rval;
