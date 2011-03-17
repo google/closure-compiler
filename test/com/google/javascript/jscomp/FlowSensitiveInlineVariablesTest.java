@@ -381,6 +381,10 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
          "function f(x, y) { if (y) { print(1) }}");
   }
 
+  public void testInvalidInlineArguments() {
+    testSame("function f(x, y) { x = 1; arguments[0] = 2; print(x) }");
+  }
+
   private void noInline(String input) {
     inline(input, input);
   }

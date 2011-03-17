@@ -272,26 +272,46 @@ final class MustBeReachingVariableDef extends
         return;
 
       default:
-        if (NodeUtil.isAssignmentOp(n) && NodeUtil.isName(n.getFirstChild())) {
-          Node name = n.getFirstChild();
-          computeMustDef(name.getNext(), cfgNode, output, conditional);
-          addToDefIfLocal(name.getString(), conditional ? null : cfgNode,
+        if (NodeUtil.isAssignmentOp(n)) {
+          if (NodeUtil.isName(n.getFirstChild())) {
+            Node name = n.getFirstChild();
+            computeMustDef(name.getNext(), cfgNode, output, conditional);
+            addToDefIfLocal(name.getString(), conditional ? null : cfgNode,
               n.getLastChild(), output);
-        } else {
+            return;
+          } else if (NodeUtil.isGet(n.getFirstChild())) {
 
-          // DEC and INC actually defines the variable.
-          if (n.getType() == Token.DEC || n.getType() == Token.INC) {
-            Node target = n.getFirstChild();
-            if (NodeUtil.isName(target)) {
-              addToDefIfLocal(target.getString(),
-                  conditional ? null : cfgNode, null, output);
-              return;
+            // Treat all assignments to arguments as redefining the
+            // parameters itself.
+            Node obj = n.getFirstChild().getFirstChild();
+            // TODO(user): More accuracy can be introduced
+            // ie: We know exactly what arguments[x] is if x is a constant
+            // number.
+            if (NodeUtil.isName(obj) && "arguments".equals(obj.getString())) {
+              for (Iterator<Var> i = jsScope.getVars(); i.hasNext();) {
+                Var v = i.next();
+                if (v.getParentNode().getType() == Token.LP) {
+                  // Assume we no longer know where the parameter comes from
+                  // anymore.
+                  output.reachingDef.put(v, null);
+                }
+              }
             }
           }
+        }
 
-          for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-            computeMustDef(c, cfgNode, output, conditional);
+        // DEC and INC actually defines the variable.
+        if (n.getType() == Token.DEC || n.getType() == Token.INC) {
+          Node target = n.getFirstChild();
+          if (NodeUtil.isName(target)) {
+            addToDefIfLocal(target.getString(),
+                conditional ? null : cfgNode, null, output);
+            return;
           }
+        }
+
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          computeMustDef(c, cfgNode, output, conditional);
         }
     }
   }

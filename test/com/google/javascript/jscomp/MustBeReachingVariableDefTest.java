@@ -135,6 +135,11 @@ public class MustBeReachingVariableDefTest extends TestCase {
     assertNotSame(def, defUse.getDef("param1", use));
   }
 
+  public void testArgumentsObjectModifications() {
+    computeDefUse("D: param1 = 1; arguments[0] = 2; U: param1");
+    assertNotSame(def, defUse.getDef("param1", use));
+  }
+
   /**
    * The use of x at U: is the definition of x at D:.
    */
