@@ -377,6 +377,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "};");
   }
 
+  public void testInlineFunctions30() {
+    // As simple a test as we can get.
+    testSame("function foo(){ return eval() }" +
+        "foo();");
+  }
+
   public void testMixedModeInlining1() {
     // Base line tests, direct inlining
     test("function foo(){return 1}" +
@@ -1401,7 +1407,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(){a=1;return 1} var x = 1; x += f()",
         "var x = 1;" +
         "var JSCompiler_temp_const$$0 = x;" +
-        "{var JSCompiler_inline_result$$1; a=1; JSCompiler_inline_result$$1=1}" +
+        "{var JSCompiler_inline_result$$1; a=1;" +
+        " JSCompiler_inline_result$$1=1}" +
         "x = JSCompiler_temp_const$$0 + JSCompiler_inline_result$$1;");
   }
 

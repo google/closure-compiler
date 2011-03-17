@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
@@ -110,29 +112,33 @@ class FunctionInjector {
    * inlining.
    */
   boolean doesFunctionMeetMinimumRequirements(
-      String fnName, Node fnNode) {
+      final String fnName, Node fnNode) {
     Node block = NodeUtil.getFunctionBody(fnNode);
 
-    // Don't inline recursive functions, nor functions that contain
-    // 'this', 'arguments' references.
-    if (NodeUtil.isNameReferenced(block, fnName)) {
-      return false;
-    }
+    // Basic restrictions on functions that can be inlined:
+    // 1) It contains a reference to itself.
+    // 2) It uses its parameters indirectly using "arguments" (it isn't
+    //    handled yet.
+    // 3) It references "eval". Inline a function containing eval can have
+    //    large performance implications.
 
-    String fnRecursionName = fnNode.getFirstChild().getString();
-    if (fnRecursionName != null
-        && !fnRecursionName.isEmpty()
-        && !fnRecursionName.equals(fnName)
-        && NodeUtil.isNameReferenced(block, fnRecursionName)) {
-      return false;
-    }
+    final String fnRecursionName = fnNode.getFirstChild().getString();
+    Preconditions.checkState(fnRecursionName != null);
 
-    // nor functions that contain 'arguments' references.
-    if (NodeUtil.isNameReferenced(block, "arguments")) {
-      return false;
-    }
+    Predicate<Node> p = new Predicate<Node>(){
+      public boolean apply(Node n) {
+        if (n.getType() == Token.NAME) {
+          return n.getString().equals("arguments")
+            || n.getString().equals("eval")
+            || n.getString().equals(fnName)
+            || (!fnRecursionName.isEmpty()
+                && n.getString().equals(fnRecursionName));
+        }
+        return false;
+      }
+    };
 
-    return true;
+    return !NodeUtil.has(block, p, Predicates.<Node>alwaysTrue());
   }
 
   /**
