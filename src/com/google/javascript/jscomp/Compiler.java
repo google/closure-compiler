@@ -232,27 +232,6 @@ public class Compiler extends AbstractCompiler {
       }
     }
 
-    // DiagnosticGroups override the plain checkTypes option.
-    if (options.enables(DiagnosticGroups.CHECK_TYPES)) {
-      options.checkTypes = true;
-    } else if (options.disables(DiagnosticGroups.CHECK_TYPES)) {
-      options.checkTypes = false;
-    } else if (!options.checkTypes) {
-      // If DiagnosticGroups did not override the plain checkTypes
-      // option, and checkTypes is enabled, then turn off the
-      // parser type warnings.
-      options.setWarningLevel(
-          DiagnosticGroup.forType(
-              RhinoErrorReporter.TYPE_PARSE_ERROR),
-          CheckLevel.OFF);
-    }
-
-    if (options.checkGlobalThisLevel.isOn()) {
-      options.setWarningLevel(
-          DiagnosticGroups.GLOBAL_THIS,
-          options.checkGlobalThisLevel);
-    }
-
     // Initialize the warnings guard.
     List<WarningsGuard> guards = Lists.newArrayList();
     guards.add(
@@ -275,6 +254,21 @@ public class Compiler extends AbstractCompiler {
           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
     }
 
+    // DiagnosticGroups override the plain checkTypes option.
+    if (options.enables(DiagnosticGroups.CHECK_TYPES)) {
+      options.checkTypes = true;
+    } else if (options.disables(DiagnosticGroups.CHECK_TYPES)) {
+      options.checkTypes = false;
+    } else if (!options.checkTypes) {
+      // If DiagnosticGroups did not override the plain checkTypes
+      // option, and checkTypes is enabled, then turn off the
+      // parser type warnings.
+      guards.add(
+          new DiagnosticGroupWarningsGuard(
+              DiagnosticGroup.forType(
+                  RhinoErrorReporter.TYPE_PARSE_ERROR),
+              CheckLevel.OFF));
+    }
     this.warningsGuard = new ComposeWarningsGuard(guards);
   }
 

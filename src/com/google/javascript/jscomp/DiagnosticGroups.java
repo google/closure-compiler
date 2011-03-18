@@ -53,22 +53,14 @@ public class DiagnosticGroups {
   // A bit of a hack to display the available groups on the command-line.
   // New groups should be added to this list if they are public and should
   // be listed on the command-line as an available option.
-  //
-  // If a group is suppressable on a per-file basis, it should be added
-  // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkRegExp," +
       "checkTypes, checkVars, constantProperty, deprecated, " +
-      "externsValidation, fileoverviewTags, globalThis, " +
-      "internetExplorerChecks, nvalidCasts, missingProperties, " +
-      "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
+      "externsValidation, fileoverviewTags, internetExplorerChecks, " +
+      "invalidCasts, missingProperties, nonStandardJsDocs, " +
+      "strictModuleDepCheck, typeInvalidation, " +
       "undefinedVars, unknownDefines, uselessCode, " +
       "visibility";
-
-  public static DiagnosticGroup GLOBAL_THIS = DiagnosticGroups
-      .registerGroup("globalThis",
-          new DiagnosticGroup(
-              CheckGlobalThis.GLOBAL_THIS));
 
   public static DiagnosticGroup DEPRECATED = DiagnosticGroups
       .registerGroup("deprecated",

@@ -181,7 +181,7 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (options.checkSuspiciousCode ||
-        options.enables(DiagnosticGroups.GLOBAL_THIS)) {
+        options.checkGlobalThisLevel.isOn()) {
       checks.add(suspiciousCode);
     }
 
@@ -699,8 +699,10 @@ public class DefaultPassConfig extends PassConfig {
         sharedCallbacks.add(new CheckSideEffects(CheckLevel.WARNING));
       }
 
-      if (options.enables(DiagnosticGroups.GLOBAL_THIS)) {
-        sharedCallbacks.add(new CheckGlobalThis(compiler));
+      CheckLevel checkGlobalThisLevel = options.checkGlobalThisLevel;
+      if (checkGlobalThisLevel.isOn()) {
+        sharedCallbacks.add(
+            new CheckGlobalThis(compiler, checkGlobalThisLevel));
       }
       return combineChecks(compiler, sharedCallbacks);
     }

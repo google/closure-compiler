@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CheckLevel;
+
 /**
  * Tests {@link CheckGlobalThis}.
  */
@@ -27,11 +29,11 @@ public class CheckGlobalThisTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CombinedCompilerPass(
-        compiler, new CheckGlobalThis(compiler));
+        compiler, new CheckGlobalThis(compiler, CheckLevel.ERROR));
   }
 
   private void testFailure(String js) {
-    testSame(js, CheckGlobalThis.GLOBAL_THIS);
+    test(js, null, CheckGlobalThis.GLOBAL_THIS);
   }
 
   public void testGlobalThis1() throws Exception {
@@ -234,11 +236,5 @@ public class CheckGlobalThisTest extends CompilerTestCase {
     testSame("/** @constructor */ function F() {}" +
         "dojo.declare(F, /** @lends {F.prototype} */ (" +
         "    {foo: function() { return this.foo; }}));");
-  }
-
-  public void testSuppressWarning() {
-    testFailure("var x = function() { this.complex = 5; };");
-    testSame("/** @suppress {globalThis} */" +
-        "var x = function() { this.complex = 5; };");
   }
 }
