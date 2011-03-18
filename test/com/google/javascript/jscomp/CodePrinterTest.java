@@ -1174,4 +1174,10 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x = [,s];","var x=[,s]");
     assertPrint("var x = [s,];","var x=[s]");
   }
+
+  public void testZero() {
+    assertPrint("var x ='\\0';", "var x=\"\\0\"");
+    assertPrint("var x ='\\x00';", "var x=\"\\0\"");
+    assertPrint("var x ='\\u0000';", "var x=\"\\0\"");
+  }
 }
