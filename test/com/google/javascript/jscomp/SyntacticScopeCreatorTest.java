@@ -106,6 +106,13 @@ public class SyntacticScopeCreatorTest extends TestCase {
     assertEquals(0, errors);
   }
 
+  public void testRedeclaration3() {
+    String js = " /** @suppress {duplicate} */ var a; var a; ";
+    int errors = createGlobalScopeHelper(js);
+    assertEquals(0, errors);
+  }
+
+
   public void testFunctionScopeArguments() {
     // A var declaration doesn't mask arguments
     testScopes("function f() {var arguments}", 0);

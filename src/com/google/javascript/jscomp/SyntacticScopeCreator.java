@@ -203,6 +203,14 @@ class SyntacticScopeCreator implements ScopeCreator {
         allowDupe =
             info != null && info.getSuppressions().contains("duplicate");
 
+        info = origVar.nameNode.getJSDocInfo();
+        if (info == null) {
+          info = origParent.getJSDocInfo();
+        }
+
+        allowDupe |=
+            info != null && info.getSuppressions().contains("duplicate");
+
         if (!allowDupe) {
           compiler.report(
               JSError.make(sourceName, n,
