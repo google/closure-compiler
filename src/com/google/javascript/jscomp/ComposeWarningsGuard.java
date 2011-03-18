@@ -17,9 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CheckLevel;
 
 import java.util.*;
+import java.util.Map;
+import java.util.TreeSet;
 
 /**
  * WarningsGuard that represents just a chain of other guards. For example we
@@ -34,17 +37,31 @@ import java.util.*;
  */
 public class ComposeWarningsGuard extends WarningsGuard {
 
-  private final List<WarningsGuard> guards;
-  private static final Comparator<WarningsGuard> guardComparator =
+  // The order that the guards were added in.
+  private final Map<WarningsGuard, Integer> orderOfAddition = Maps.newHashMap();
+  private int numberOfAdds = 0;
+
+  private final Comparator<WarningsGuard> guardComparator =
       new Comparator<WarningsGuard>() {
     @Override
     public int compare(WarningsGuard a, WarningsGuard b) {
-      return a.getPriority() - b.getPriority();
+      int priorityDiff = a.getPriority() - b.getPriority();
+      if (priorityDiff != 0) {
+        return priorityDiff;
+      }
+
+      // If the warnings guards have the same priority, the one that
+      // was added last wins.
+      return orderOfAddition.get(b).intValue() -
+          orderOfAddition.get(a).intValue();
     }
   };
 
+  // The order that the guards are applied in.
+  private final TreeSet<WarningsGuard> guards =
+      new TreeSet<WarningsGuard>(guardComparator);
+
   public ComposeWarningsGuard(List<WarningsGuard> guards) {
-    this.guards = Lists.newArrayList();
     addGuards(guards);
   }
 
@@ -55,13 +72,12 @@ public class ComposeWarningsGuard extends WarningsGuard {
   void addGuard(WarningsGuard guard) {
     if (guard instanceof ComposeWarningsGuard) {
       // Reverse the guards, so that they have the same order in the result.
-      addGuards(Lists.reverse(((ComposeWarningsGuard) guard).guards));
+      addGuards(((ComposeWarningsGuard) guard).guards.descendingSet());
     } else {
-      int index = Collections.binarySearch(this.guards, guard, guardComparator);
-      if (index < 0) {
-        index = -index - 1;
-      }
-      this.guards.add(index, guard);
+      numberOfAdds++;
+      orderOfAddition.put(guard, numberOfAdds);
+      guards.remove(guard);
+      guards.add(guard);
     }
   }
 
@@ -120,6 +136,6 @@ public class ComposeWarningsGuard extends WarningsGuard {
   }
 
   List<WarningsGuard> getGuards() {
-    return Collections.unmodifiableList(guards);
+    return Collections.unmodifiableList(Lists.newArrayList(guards));
   }
 }
