@@ -2737,6 +2737,16 @@ WebGLRenderingContext.prototype.vertexAttribPointer = function(
  */
 WebGLRenderingContext.prototype.viewport = function(x, y, width, height) {};
 
+/**
+ * @return {Array.<string>}
+ */
+WebGLRenderingContext.prototype.getSupportedExtensions = function() {};
+
+/**
+ * @param {string} name
+ * @return {Object}
+ */
+WebGLRenderingContext.prototype.getExtension = function(name) {};
 
 /**
  * @constructor
