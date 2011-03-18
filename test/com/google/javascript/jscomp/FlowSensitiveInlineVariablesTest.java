@@ -383,6 +383,9 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   public void testInvalidInlineArguments() {
     testSame("function f(x, y) { x = 1; arguments[0] = 2; print(x) }");
+    testSame("function f(x, y) { x = 1; var z = arguments;" +
+        "z[0] = 2; z[1] = 3; print(x)}");
+    testSame("function g(a){a[0]=2} function f(x){x=1;g(arguments);print(x)}");
   }
 
   private void noInline(String input) {

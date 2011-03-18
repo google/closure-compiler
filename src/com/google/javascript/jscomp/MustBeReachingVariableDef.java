@@ -280,24 +280,20 @@ final class MustBeReachingVariableDef extends
               n.getLastChild(), output);
             return;
           } else if (NodeUtil.isGet(n.getFirstChild())) {
-
             // Treat all assignments to arguments as redefining the
             // parameters itself.
             Node obj = n.getFirstChild().getFirstChild();
-            // TODO(user): More accuracy can be introduced
-            // ie: We know exactly what arguments[x] is if x is a constant
-            // number.
             if (NodeUtil.isName(obj) && "arguments".equals(obj.getString())) {
-              for (Iterator<Var> i = jsScope.getVars(); i.hasNext();) {
-                Var v = i.next();
-                if (v.getParentNode().getType() == Token.LP) {
-                  // Assume we no longer know where the parameter comes from
-                  // anymore.
-                  output.reachingDef.put(v, null);
-                }
-              }
+              // TODO(user): More accuracy can be introduced
+              // ie: We know exactly what arguments[x] is if x is a constant
+              // number.
+              escapeParameters(output);
             }
           }
+        }
+
+        if (NodeUtil.isName(n) && "arguments".equals(n.getString())) {
+          escapeParameters(output);
         }
 
         // DEC and INC actually defines the variable.
@@ -352,6 +348,17 @@ final class MustBeReachingVariableDef extends
           computeDependence(definition, rValue);
         }
         def.reachingDef.put(var, definition);
+      }
+    }
+  }
+
+  private void escapeParameters(MustDef output) {
+    for (Iterator<Var> i = jsScope.getVars(); i.hasNext();) {
+      Var v = i.next();
+      if (v.getParentNode().getType() == Token.LP) {
+        // Assume we no longer know where the parameter comes from
+        // anymore.
+        output.reachingDef.put(v, null);
       }
     }
   }
