@@ -290,18 +290,47 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
   private boolean isVariableStillLiveWithinExpression(
       Node n, Node exprRoot, String variable) {
     while (n != exprRoot) {
-      for(Node sibling = n.getNext(); sibling != null;
-          sibling = sibling.getNext()) {
-        if (!ControlFlowGraph.isEnteringNewCfgNode(sibling)) {
-          VariableLiveness state = isVariableReadBeforeKill(sibling, variable);
-
-          // If we see a READ or KILL there is no need to continue.
-          if (state == VariableLiveness.READ) {
-            return true;
-          } else if (state == VariableLiveness.KILL) {
-            return false;
+      VariableLiveness state = VariableLiveness.MAYBE_LIVE;
+      switch (n.getParent().getType()) {
+        case Token.OR:
+        case Token.AND:
+          // If the currently node is the first child of
+          // AND/OR, be conservative only consider the READs
+          // of the second operand.
+          if (n.getNext() != null) {
+            state = isVariableReadBeforeKill(
+                n.getNext(), variable);
+            if (state == VariableLiveness.KILL) {
+              state = VariableLiveness.MAYBE_LIVE;
+            }
           }
-        }
+          break;
+
+        case Token.HOOK:
+          // If current node is the condition, check each following
+          // branch, otherwise it is a conditional branch and the
+          // other branch can be ignored.
+          if (n.getNext() != null && n.getNext().getNext() != null) {
+            state = checkHookBranchReadBeforeKill(
+                n.getNext(), n.getNext().getNext(), variable);
+          }
+          break;
+
+        default:
+          for(Node sibling = n.getNext(); sibling != null;
+              sibling = sibling.getNext()) {
+            state = isVariableReadBeforeKill(sibling, variable);
+            if (state != VariableLiveness.MAYBE_LIVE) {
+              break;
+            }
+          }
+      }
+
+      // If we see a READ or KILL there is no need to continue.
+      if (state == VariableLiveness.READ) {
+        return true;
+      } else if (state == VariableLiveness.KILL) {
+        return false;
       }
       n = n.getParent();
     }
@@ -322,6 +351,10 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
    */
   private VariableLiveness isVariableReadBeforeKill(
       Node n, String variable) {
+    if (ControlFlowGraph.isEnteringNewCfgNode(n)) { // Not a FUNCTION
+      return VariableLiveness.MAYBE_LIVE;
+    }
+
     if (NodeUtil.isName(n) && variable.equals(n.getString())) {
       if (NodeUtil.isLhs(n, n.getParent())) {
         Preconditions.checkState(n.getParent().getType() == Token.ASSIGN);
@@ -339,16 +372,61 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       }
     }
 
-    // Expressions are evaluated left-right, depth first.
-    for (Node child = n.getFirstChild();
-        child != null; child = child.getNext()) {
-      if (!ControlFlowGraph.isEnteringNewCfgNode(child)) { // Not a FUNCTION
-        VariableLiveness state = isVariableReadBeforeKill(child, variable);
-        if (state != VariableLiveness.MAYBE_LIVE) {
-          return state;
+    switch (n.getType()) {
+      // Conditionals
+      case Token.OR:
+      case Token.AND:
+        VariableLiveness v1 = isVariableReadBeforeKill(
+          n.getFirstChild(), variable);
+        VariableLiveness v2 = isVariableReadBeforeKill(
+          n.getLastChild(), variable);
+        // With a AND/OR the first branch always runs, but the second is
+        // may not.
+        if (v1 != VariableLiveness.MAYBE_LIVE) {
+          return v1;
+        } else if (v2 == VariableLiveness.READ) {
+          return VariableLiveness.READ;
+        } else {
+          return VariableLiveness.MAYBE_LIVE;
         }
-      }
+      case Token.HOOK:
+        VariableLiveness first = isVariableReadBeforeKill(
+            n.getFirstChild(), variable);
+        if (first != VariableLiveness.MAYBE_LIVE) {
+          return first;
+        }
+        return checkHookBranchReadBeforeKill(
+            n.getFirstChild().getNext(), n.getLastChild(), variable);
+
+      default:
+        // Expressions are evaluated left-right, depth first.
+        for (Node child = n.getFirstChild();
+            child != null; child = child.getNext()) {
+          VariableLiveness state = isVariableReadBeforeKill(child, variable);
+          if (state != VariableLiveness.MAYBE_LIVE) {
+            return state;
+          }
+        }
     }
+
     return VariableLiveness.MAYBE_LIVE;
+  }
+
+  private VariableLiveness checkHookBranchReadBeforeKill(
+      Node trueCase, Node falseCase, String variable) {
+    VariableLiveness v1 = isVariableReadBeforeKill(
+      trueCase, variable);
+    VariableLiveness v2 = isVariableReadBeforeKill(
+      falseCase, variable);
+    // With a hook it is unknown which branch will run, so
+    // we must be conservative.  A read by either is a READ, and
+    // a KILL is only considered if both KILL.
+    if (v1 == VariableLiveness.READ || v2 == VariableLiveness.READ) {
+      return VariableLiveness.READ;
+    } else if (v1 == VariableLiveness.KILL && v2 == VariableLiveness.KILL) {
+      return VariableLiveness.KILL;
+    } else {
+      return VariableLiveness.MAYBE_LIVE;
+    }
   }
 }

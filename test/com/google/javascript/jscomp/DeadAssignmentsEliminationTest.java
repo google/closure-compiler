@@ -445,11 +445,76 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
 
-  public void testInExpression() {
+  public void testInExpression1() {
     inFunction("var a; return a=(a=(a=3));", "var a; return 3;");
     inFunction("var a; return a=(a=(a=a));", "var a; return a;");
     inFunction("var a; return a=(a=(a=a+1)+1);", "var a; return a+1+1;");
     inFunction("var a; return a=(a=(a=f(a)+1)+1);", "var a; return f(a)+1+1;");
     inFunction("var a; return a=f(a=f(a=f(a)));", "var a; return f(f(f(a)));");
+  }
+
+  public void testInExpression2() {
+    // This can be improved.  "a = 1" is dead but "a" is read in the following
+    // expression.
+    inFunction(
+        "var a; a = 1; if ((a = 2) || (a = 3) || (a)) {}",
+        "var a; a = 1; if ((    2) || (a = 3) || (a)) {}");
+
+    inFunction(
+        "var a; (a = 1) || (a = 2)",
+        "var a; 1 || 2");
+
+    inFunction("var a; (a = 1) || (a = 2); return a");
+
+    inFunction(
+        "var a; a = 1; a ? a = 2 : a;",
+        "var a; a = 1; a ?     2 : a;");
+
+    inFunction("var a; a = 1; a ? a = 2 : a; return a");
+
+    inFunction(
+        "var a; a = 1; a ? a : a = 2;",
+        "var a; a = 1; a ? a : 2;");
+
+    inFunction("var a; a = 1; a ? a : a =2; return a");
+
+    inFunction(
+        "var a; (a = 1) ? a = 2 : a = 3;",
+        "var a;      1  ?     2 :     3;");
+
+    // This can be improved.  "a = 1" is dead but "a" is read in the following
+    // expression.
+    inFunction("var a; (a = 1) ? a = 2 : a = 3; return a");
+  }
+
+  public void testIssue384a() {
+    inFunction(
+            " var a, b;\n" +
+            " if (f(b = true) || f(b = false))\n" +
+            "   a = b;\n" +
+            " else\n" +
+            "   a = null;\n" +
+            " return a;");
+  }
+
+  public void testIssue384b() {
+    inFunction(
+            " var a, b;\n" +
+            " (f(b = true) || f(b = false)) ? (a = b) : (a = null);\n" +
+            " return a;");
+  }
+
+  public void testIssue384c() {
+    inFunction(
+            " var a, b;\n" +
+            " (a ? f(b = true) : f(b = false)) && (a = b);\n" +
+            " return a;");
+  }
+
+  public void testIssue384d() {
+    inFunction(
+            " var a, b;\n" +
+            " (f(b = true) || f(b = false)) && (a = b);\n" +
+            " return a;");
   }
 }
