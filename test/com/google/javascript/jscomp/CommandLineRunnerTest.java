@@ -114,6 +114,20 @@ public class CommandLineRunnerTest extends TestCase {
     super.tearDown();
   }
 
+  public void testCheckGlobalThisOffByDefault() {
+    testSame("function f() { this.a = 3; }");
+  }
+
+  public void testCheckGlobalThisOnWithAdvancedMode() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
+  }
+
+  public void testCheckGlobalThisOnWithErrorFlag() {
+    args.add("--jscomp_error=globalThis");
+    test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
+  }
+
   public void testTypeCheckingOffByDefault() {
     test("function f(x) { return x; } f();",
          "function f(a) { return a; } f();");

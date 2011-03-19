@@ -506,7 +506,8 @@ class TypeValidator {
   void expectUndeclaredVariable(String sourceName, Node n, Node parent, Var var,
       String variableName, JSType newType) {
     boolean allowDupe = false;
-    if (n.getType() == Token.GETPROP) {
+    if (n.getType() == Token.GETPROP ||
+        NodeUtil.isObjectLitKey(n, parent)) {
       JSDocInfo info = n.getJSDocInfo();
       if (info == null) {
         info = parent.getJSDocInfo();

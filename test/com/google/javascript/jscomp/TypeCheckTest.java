@@ -6879,6 +6879,52 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "f({foo: function() {}});");
   }
 
+  public void testObjectLiteralDeclaration4() throws Exception {
+    testClosureTypesMultipleWarnings(
+        "var x = {" +
+        "  /** @param {boolean} x */ abc: function(x) {}" +
+        "};" +
+        "/**\n" +
+        " * @param {string} x\n" +
+        " * @suppress {duplicate}\n" +
+        " */ x.abc = function(x) {};",
+        Lists.newArrayList(
+            "variable x.abc redefined with type " +
+            "function (string): undefined, " +
+            "original definition at  [testcode] :1 with type " +
+            "function (boolean): undefined",
+            "assignment to property abc of x\n" +
+            "found   : function (string): undefined\n" +
+            "required: function (boolean): undefined"));
+  }
+
+  public void testObjectLiteralDeclaration5() throws Exception {
+    testTypes(
+        "var x = {" +
+        "  /** @param {boolean} x */ abc: function(x) {}" +
+        "};" +
+        "/**\n" +
+        " * @param {boolean} x\n" +
+        " * @suppress {duplicate}\n" +
+        " */ x.abc = function(x) {};");
+  }
+
+  public void testObjectLiteralDeclaration6() throws Exception {
+    testTypes(
+        "var x = {};" +
+        "/**\n" +
+        " * @param {boolean} x\n" +
+        " * @suppress {duplicate}\n" +
+        " */ x.abc = function(x) {};" +
+        "x = {" +
+        "  /**\n" +
+        "   * @param {boolean} x\n" +
+        "   * @suppress {duplicate}\n" +
+        "   */" +
+        "  abc: function(x) {}" +
+        "};");
+  }
+
   public void testCallDateConstructorAsFunction() throws Exception {
     // ECMA-262 15.9.2: When Date is called as a function rather than as a
     // constructor, it returns a string.
