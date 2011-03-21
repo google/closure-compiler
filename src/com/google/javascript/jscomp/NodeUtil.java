@@ -1138,7 +1138,6 @@ public final class NodeUtil {
       case Token.NUMBER:
       case Token.OBJECTLIT:
       case Token.REGEXP:
-      case Token.RETURN:
       case Token.STRING:
       case Token.THIS:
       case Token.TRUE:

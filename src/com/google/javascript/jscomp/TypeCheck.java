@@ -1449,20 +1449,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (childType instanceof FunctionType) {
       FunctionType functionType = (FunctionType) childType;
 
-      boolean isExtern = false;
-      JSDocInfo functionJSDocInfo = functionType.getJSDocInfo();    
-      if(functionJSDocInfo != null) {
-        String sourceName = functionJSDocInfo.getSourceName();
-        CompilerInput functionSource = compiler.getInput(sourceName);
-        isExtern = functionSource.isExtern();
-      }
-
-      // Non-native constructors should not be called directly
-      // unless they specify a return type and are defined
-      // in an extern.
+      // Non-native constructors should never be called directly.
       if (functionType.isConstructor() &&
-          !functionType.isNativeObjectType() &&
-          (functionType.getReturnType().isUnknownType() || !isExtern)) {
+          !functionType.isNativeObjectType()) {
         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
       }
 
