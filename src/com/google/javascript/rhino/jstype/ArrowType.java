@@ -175,8 +175,7 @@ final class ArrowType extends JSType {
       return false;
     }
     ArrowType that = (ArrowType) object;
-    if (!returnType.isEquivalentTo(that.returnType) ||
-        returnTypeInferred != that.returnTypeInferred) {
+    if (!returnType.isEquivalentTo(that.returnType)) {
       return false;
     }
     return hasEqualParameters(that);

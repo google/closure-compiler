@@ -6925,6 +6925,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testObjectLiteralDeclaration7() throws Exception {
+    testTypes(
+        "var x = {};" +
+        "/**\n" +
+        " * @type {function(boolean): undefined}\n" +
+        " */ x.abc = function(x) {};" +
+        "x = {" +
+        "  /**\n" +
+        "   * @param {boolean} x\n" +
+        "   * @suppress {duplicate}\n" +
+        "   */" +
+        "  abc: function(x) {}" +
+        "};");
+  }
+
   public void testCallDateConstructorAsFunction() throws Exception {
     // ECMA-262 15.9.2: When Date is called as a function rather than as a
     // constructor, it returns a string.
