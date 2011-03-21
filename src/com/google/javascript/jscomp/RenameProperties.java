@@ -17,27 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.jscomp.graph.Graph.GraphEdge;
-import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
-import com.google.javascript.jscomp.graph.UndiGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import javax.annotation.Nullable;
 
@@ -77,16 +63,6 @@ class RenameProperties implements CompilerPass {
   private final Map<String, Property> propertyMap =
       new HashMap<String, Property>();
 
-  /**
-   * A graph of property affinity information.
-   *
-   * Suppose property X and Y are access in the same function N times.
-   *
-   * The graph would have X -> Y with the edge of N.
-   */
-  private final UndiGraph<Property, PropertyAffinity> affinityGraph =
-      LinkedUndirectedGraph.createWithoutAnnotations();
-
   // Property names that don't get renamed
   private final Set<String> externedNames = new HashSet<String>(
       Arrays.asList("prototype"));
@@ -94,32 +70,19 @@ class RenameProperties implements CompilerPass {
   // Names to which properties shouldn't be renamed, to avoid name conflicts
   private final Set<String> quotedNames = new HashSet<String>();
 
+  /**
+   * Sorts Property objects by their count, breaking ties alphabetically to
+   * ensure a deterministic total ordering.
+   */
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
-    new Comparator<Property>() {
-      public int compare(Property p1, Property p2) {
-
-        /**
-         * First a frequently used names would always be picked first.
-         */
-        if (p1.numOccurrences != p2.numOccurrences) {
-          return p2.numOccurrences - p1.numOccurrences;
-
-        /**
-         * If both properties are used equally frequent. We'll let the property
-         * with a high affinity score get a name first.
-         *
-         * see #computeAffinityScores() for how the score is computed.
-         */
-        } else if (p1.affinityScore != p2.affinityScore) {
-          return p2.affinityScore - p1.affinityScore;
+      new Comparator<Property>() {
+        public int compare(Property p1, Property p2) {
+          if (p1.numOccurrences != p2.numOccurrences) {
+            return p2.numOccurrences - p1.numOccurrences;
+          }
+          return p1.oldName.compareTo(p2.oldName);
         }
-
-        /**
-         * Finally, for determinism, we compare them based on the old name.
-         */
-        return p1.oldName.compareTo(p2.oldName);
-       }
-    };
+      };
 
   /**
    * The name of a special function that this pass replaces. It takes one
@@ -208,7 +171,6 @@ class RenameProperties implements CompilerPass {
     }
 
     compiler.addToDebugLog("JS property assignments:");
-    computeAffinityScores();
 
     // Assign names, sorted by descending frequency to minimize code size.
     Set<Property> propsByFreq = new TreeSet<Property>(FREQUENCY_COMPARATOR);
@@ -283,31 +245,6 @@ class RenameProperties implements CompilerPass {
   }
 
   /**
-   * A X property gets an affinity score:
-   *
-   * score = sum (# of times X appears Y * frequency(Y)) for all Y where
-   *   frequency(Y) > frequency (X).
-   *
-   * This way a property would have a name closer to all high frequency names.
-   * Also two property of the same frequency would have very close names if
-   * they always appear together.
-   */
-  private void computeAffinityScores() {
-    for (Property p : propertyMap.values()) {
-      for (Property other : propertyMap.values()) {
-        if (p != other && p.numOccurrences < other.numOccurrences) {
-          List<GraphEdge<Property,PropertyAffinity>> edges =
-              affinityGraph.getEdges(p, other);
-          if (!edges.isEmpty()) {
-            p.affinityScore += edges.get(0)
-                .getValue().affinity + other.numOccurrences;
-          }
-        }
-      }
-    }
-  }
-
-  /**
    * Generates new names for properties.
    *
    * @param props Properties to generate new names for
@@ -326,7 +263,9 @@ class RenameProperties implements CompilerPass {
           p.newName = nameGen.generateNextName();
         }
       }
+
       reservedNames.add(p.newName);
+
       compiler.addToDebugLog(p.oldName + " => " + p.newName);
     }
   }
@@ -375,17 +314,13 @@ class RenameProperties implements CompilerPass {
     }
   }
 
-
   // -------------------------------------------------------------------------
 
   /**
    * A traversal callback that collects property names and counts how
    * frequently each property name occurs.
    */
-  private class ProcessProperties extends AbstractPostOrderCallback implements
-      ScopedCallback {
-
-    private Set<Property> currentHighAffinityProperties = null;
+  private class ProcessProperties extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -507,39 +442,8 @@ class RenameProperties implements CompilerPass {
       if (prop == null) {
         prop = new Property(name);
         propertyMap.put(name, prop);
-        affinityGraph.createNode(prop);
       }
       prop.numOccurrences++;
-      if (currentHighAffinityProperties != null) {
-        currentHighAffinityProperties.add(prop);
-      }
-    }
-
-    @Override
-    public void enterScope(NodeTraversal t) {
-      if (!t.inGlobalScope() && t.getScope().getParent().isGlobal()) {
-        currentHighAffinityProperties = Sets.newHashSet();
-      }
-    }
-
-    @Override
-    public void exitScope(NodeTraversal t) {
-      if (!t.inGlobalScope() && t.getScope().getParent().isGlobal()) {
-        for (Property p1 : currentHighAffinityProperties) {
-          for (Property p2 : currentHighAffinityProperties) {
-            if (p1.oldName.compareTo(p2.oldName) < 0) {
-              List<GraphEdge<Property,PropertyAffinity>> edges =
-                  affinityGraph.getEdges(p1, p2);
-              if (edges.isEmpty()) {
-                affinityGraph.connect(p1, new PropertyAffinity(1), p2);
-              } else {
-                edges.get(0).getValue().increase();
-              }
-            }
-          }
-        }
-        currentHighAffinityProperties = null;
-      }
     }
   }
 
@@ -552,22 +456,9 @@ class RenameProperties implements CompilerPass {
     final String oldName;
     String newName;
     int numOccurrences;
-    int affinityScore = 0;
 
     Property(String name) {
       this.oldName = name;
-    }
-  }
-
-  private class PropertyAffinity {
-    private int affinity = 0;
-
-    private PropertyAffinity(int affinity) {
-      this.affinity = affinity;
-    }
-
-    private void increase() {
-      affinity++;
     }
   }
 }
