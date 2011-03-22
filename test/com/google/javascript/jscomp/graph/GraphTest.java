@@ -203,6 +203,30 @@ public class GraphTest extends TestCase {
     assertFalse(graph.isConnected("a", "b"));
   }
 
+  public void testDirectedGetFirstEdge() {
+    DiGraph<String, String> graph =
+      LinkedDirectedGraph.create();
+    graph.createNode("a");
+    graph.createNode("b");
+    graph.createNode("c");
+    graph.connect("a", "-", "b");
+    assertEquals(graph.getFirstEdge("a", "b").getValue(), "-");
+    assertEquals(graph.getFirstEdge("b", "a").getValue(), "-");
+    assertNull(graph.getFirstEdge("a", "c"));
+  }
+
+  public void testUndirectedGetFirstEdge() {
+    UndiGraph<String, String> graph =
+      LinkedUndirectedGraph.create();
+    graph.createNode("a");
+    graph.createNode("b");
+    graph.createNode("c");
+    graph.connect("a", "-", "b");
+    assertEquals(graph.getFirstEdge("a", "b").getValue(), "-");
+    assertEquals(graph.getFirstEdge("b", "a").getValue(), "-");
+    assertNull(graph.getFirstEdge("a", "c"));
+  }
+
   public void testNodeAnnotations() {
     Graph<String, String> graph = LinkedUndirectedGraph.create();
     GraphNode<String, String> a = graph.createNode("a");

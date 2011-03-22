@@ -170,6 +170,16 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
   public abstract List<GraphEdge<N, E>> getEdges(N n1, N n2);
 
   /**
+   * Retrieves any edge from the graph.
+   *
+   * @param n1 Node one.
+   * @param n2 Node two.
+   * @return The first edges between those two values in the graph. null if
+   *    there are none.
+   */
+  public abstract GraphEdge<N, E> getFirstEdge(N n1, N n2);
+
+  /**
    * Checks whether the node exists in the graph ({@link #createNode(Object)}
    * has been called with that value).
    *

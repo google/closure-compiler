@@ -21,6 +21,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.graph.Graph.GraphEdge;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -152,6 +153,23 @@ public class LinkedDirectedGraph<N, E>
     edges.addAll(forwardEdges);
     edges.addAll(backwardEdges);
     return edges;
+  }
+
+  @Override
+  public GraphEdge<N, E> getFirstEdge(N n1, N n2) {
+    DiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
+    DiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
+    for (DiGraphEdge<N, E> outEdge : dNode1.getOutEdges()) {
+      if (outEdge.getDestination() == dNode2) {
+        return outEdge;
+      }
+    }
+    for (DiGraphEdge<N, E> outEdge : dNode2.getOutEdges()) {
+      if (outEdge.getDestination() == dNode1) {
+        return outEdge;
+      }
+    }
+    return null;
   }
 
   @Override
