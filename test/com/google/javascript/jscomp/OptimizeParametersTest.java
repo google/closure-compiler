@@ -29,7 +29,6 @@ public class OptimizeParametersTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    super.enableNormalize();
     super.enableLineNumberCheck(false);
   }
 
@@ -245,17 +244,11 @@ public class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testAliasMethodsDontGetOptimize4() {
-    // Don't change the call to baz as it has been aliased.
-
-    test(
-      "function foo(bar) {};" +
-      "baz = function(a) {};" +
-      "baz(1);" +
-      "foo(baz);",
-      "function foo() {var bar = baz};" +
-      "baz = function(a) {};" +
-      "baz(1);" +
-      "foo();");
+    String src = "function foo(bar) {};" +
+        "baz = function(a) {};" +
+        "baz(1);" +
+        "foo(baz);"; // Baz should be aliased.
+    testSame(src);
   }
 
   public void testMethodsDefinedInArraysDontGetOptimized() {
@@ -477,131 +470,4 @@ public class OptimizeParametersTest extends CompilerTestCase {
     testSame("function JSCompiler_ObjectPropertyString(a, b) {return a[b]};" +
              "JSCompiler_renameProperty(window,'b');");
   }
-
-  public void testMutableValues1() {
-    test("function foo(p1) {} foo()",
-         "function foo() {var p1} foo()");
-    test("function foo(p1) {} foo(1)",
-         "function foo() {var p1=1} foo()");
-    test("function foo(p1) {} foo([])",
-         "function foo() {var p1=[]} foo()");
-    test("function foo(p1) {} foo({})",
-         "function foo() {var p1={}} foo()");
-    test("var x;function foo(p1) {} foo(x)",
-         "var x;function foo() {var p1=x} foo()");
-    test("var x;function foo(p1) {} foo(x())",
-         "var x;function foo() {var p1=x()} foo()");
-    test("var x;function foo(p1) {} foo(new x())",
-         "var x;function foo() {var p1=new x()} foo()");
-    test("var x;function foo(p1) {} foo('' + x)",
-         "var x;function foo() {var p1='' + x} foo()");
-
-    testSame("function foo(p1) {} foo(this)");
-    testSame("function foo(p1) {} foo(arguments)");
-    testSame("function foo(p1) {} foo(function(){})");
-    testSame("function foo(p1) {} (function () {var x;foo(x)})()");
-  }
-
-  public void testMutableValues2() {
-    test("function foo(p1, p2) {} foo(1, 2)",
-         "function foo() {var p1=1; var p2 = 2} foo()");
-    test("var x; var y; function foo(p1, p2) {} foo(x(), y())",
-         "var x; var y; function foo() {var p1=x(); var p2 = y()} foo()");
-  }
-
-  public void testMutableValues3() {
-    test(
-        "var x; var y; var z;" +
-        "function foo(p1, p2) {}" +
-        "foo(x(), y()); foo(x(),y())",
-        "var x; var y; var z;" +
-        "function foo() {var p1=x(); var p2=y()}" +
-        "foo(); foo()");
-  }
-
-  public void testMutableValues4() {
-    // Preserve the ordering of side-effects.
-    // If z(), can't be moved into the function then z() may change the value
-    // of x and y.
-    testSame(
-        "var x; var y; var z;" +
-        "function foo(p1, p2, p3) {}" +
-        "foo(x(), y(), z()); foo(x(),y(),3)");
-
-    // If z(), can't be moved into the function then z() may change the value
-    // of x and y.
-    testSame(
-        "var x; var y; var z;" +
-        "function foo(p1, p2, p3) {}" +
-        "foo(x, y(), z()); foo(x,y(),3)");
-
-    // Mutable object that can not be effect by side-effects are movable,
-    // however.
-    test(
-        "var x; var y; var z;" +
-        "function foo(p1, p2, p3) {}" +
-        "foo([], y(), z()); foo([],y(),3)",
-        "var x; var y; var z;" +
-        "function foo(p2, p3) {var p1=[]}" +
-        "foo(y(), z()); foo(y(),3)");
-  }
-
-  public void testMutableValues5() {
-    test(
-        "var x; var y; var z;" +
-        "function foo(p1, p2) {}" +
-        "new foo(new x(), y()); new foo(new x(),y())",
-        "var x; var y; var z;" +
-        "function foo() {var p1=new x(); var p2=y()}" +
-        "new foo(); new foo()");
-
-    test(
-        "var x; var y; var z;" +
-        "function foo(p1, p2) {}" +
-        "new foo(x(), y()); new foo(x(),y())",
-        "var x; var y; var z;" +
-        "function foo() {var p1=x(); var p2=y()}" +
-        "new foo(); new foo()");
-
-    testSame(
-        "var x; var y; var z;" +
-        "function foo(p1, p2, p3) {}" +
-        "new foo(x(), y(), z()); new foo(x(),y(),3)");
-
-    testSame(
-        "var x; var y; var z;" +
-        "function foo(p1, p2, p3) {}" +
-        "new foo(x, y(), z()); new foo(x,y(),3)");
-
-    test(
-        "var x; var y; var z;" +
-        "function foo(p1, p2, p3) {}" +
-        "new foo([], y(), z()); new foo([],y(),3)",
-        "var x; var y; var z;" +
-        "function foo(p2, p3) {var p1=[]}" +
-        "new foo(y(), z()); new foo(y(),3)");
-  }
-
-  public void testShadows() {
-    testSame("function foo(a) {}" +
-             "var x;" +
-             "function f() {" +
-             "  var x;" +
-             "  function g() {" +
-             "    foo(x());" +
-             "  }" +
-             "};" +
-             "foo(x())");
-  }
-
-  public void testCrash() {
-    test(
-        "function foo(a) {}" +
-        "foo({o:1});" +
-        "foo({o:1})",
-        "function foo() {var a = {o:1}}" +
-        "foo();" +
-        "foo()");
-  }
-
 }

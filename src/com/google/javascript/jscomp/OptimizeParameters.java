@@ -19,9 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -44,17 +42,19 @@ class OptimizeParameters
     implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
 
   private final AbstractCompiler compiler;
-  private List<Node> removedNodes = Lists.newArrayList();
 
   OptimizeParameters(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
+  // TODO(johnlenz): Remove this.
+  OptimizeParameters(AbstractCompiler compiler, NameReferenceGraph unused) {
+    this(compiler);
+  }
+
   @Override
   @VisibleForTesting
   public void process(Node externs, Node root) {
-    Preconditions.checkState(
-        compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
     SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
     defFinder.process(externs, root);
     process(externs, root, defFinder);
@@ -68,12 +68,6 @@ class OptimizeParameters
         tryEliminateConstantArgs(defSite, definitions);
         tryEliminateOptionalArgs(defSite, definitions);
       }
-    }
-
-    // Remove any references or definitions that have been removed to keep it
-    // in a consistent state for the next pass.
-    for (Node n : removedNodes) {
-      definitions.removeReferences(n);
     }
   }
 
@@ -189,7 +183,6 @@ class OptimizeParameters
     // Build a list of parameters to remove
     Definition definition = defSite.definition;
     Collection<UseSite> useSites = defFinder.getUseSites(definition);
-    boolean continueLooking = false;
     for (UseSite site : useSites) {
       Preconditions.checkState(SimpleDefinitionFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
@@ -198,19 +191,11 @@ class OptimizeParameters
       if (firstCall) {
         // Use the first call to construct a list of parameters of the
         // function.
-        continueLooking = buildParameterList(parameters, cur, site.scope);
+        buildParameterList(parameters, cur);
         firstCall = false;
       } else {
-        continueLooking= findFixedParameters(parameters, cur);
+        findConstantParameters(parameters, cur);
       }
-      if (!continueLooking) {
-        return;
-      }
-    }
-
-    continueLooking = adjustForSideEffects(parameters);
-    if (!continueLooking) {
-      return;
     }
 
     // Remove the constant parameters in all the calls
@@ -218,7 +203,7 @@ class OptimizeParameters
       Preconditions.checkState(SimpleDefinitionFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
-      optimizeCallSite(defFinder, parameters, call);
+      optimizeCallSite(parameters, call);
     }
 
     // Remove the constant parameters in the definitions and add it as a local
@@ -229,148 +214,29 @@ class OptimizeParameters
     }
   }
 
-  /**
-   * Adjust the parameters to move based on the side-effects seen.
-   * @return Whether there are any movable parameters.
-   */
-  private boolean adjustForSideEffects(List<Parameter> parameters) {
-    // If a parameter is moved, that has side-effect no parameters that
-    // can be effected by side-effects can be left.
-
-    // A parameter can be moved if it can't be side-effected (immutable),
-    // or there are no following side-effects, that aren't moved.
-
-    boolean anyMovable = false;
-    boolean seenUnmovableSideEffects = false;
-    boolean seenUnmoveableSideEfffected = false;
-    for (int i = parameters.size() - 1; i >= 0; i--) {
-      Parameter current = parameters.get(i);
-
-      // Preserve side-effect ordering, don't move this parameter if:
-      // * the current parameter has side-effects and a following
-      // parameters that will not be move can be effected.
-      // * the current parameter can be effected and a following
-      // parameter that will not be moved has side-effects
-
-      if (current.shouldRemove
-          && ((seenUnmovableSideEffects && current.canBeSideEffected())
-          || (seenUnmoveableSideEfffected && current.hasSideEffects()))) {
-        current.shouldRemove = false;
-      }
-
-      if (current.shouldRemove) {
-        anyMovable = true;
-      } else {
-        if (current.canBeSideEffected) {
-          seenUnmoveableSideEfffected = true;
-        }
-
-        if (current.hasSideEffects) {
-          seenUnmovableSideEffects = true;
-        }
-      }
-    }
-    return anyMovable;
-  }
-
-  /**
-   * Detemine which parameter use the same expression.
-   * @return Whether any parameter was found that can be updated.
-   */
-  private boolean findFixedParameters(List<Parameter> parameters, Node cur) {
-    boolean anyMovable = false;
+  private void findConstantParameters(List<Parameter> parameters, Node cur) {
     int index = 0;
     while ((cur = cur.getNext()) != null) {
-      Parameter p;
       if (index >= parameters.size()) {
-        p = new Parameter(cur, false);
-        parameters.add(p);
-      } else {
-        p = parameters.get(index);
-        if (p.shouldRemove()) {
-          Node value = p.getArg();
-          if (!cur.isEquivalentTo(value)) {
-            p.setShouldRemove(false);
-          } else {
-            anyMovable = true;
-          }
+        parameters.add(new Parameter(cur, false));
+      } else if (parameters.get(index).shouldRemove()) {
+        Node value = parameters.get(index).getArg();
+        if (!nodesAreEqual(cur, value)) {
+          parameters.get(index).setShouldRemove(false);
         }
       }
-
-      setParameterSideEffectInfo(p, cur);
       index++;
     }
 
     for (;index < parameters.size(); index++) {
       parameters.get(index).setShouldRemove(false);
     }
-
-    return anyMovable;
   }
 
-  /**
-   * @return Whether any parameter was movable.
-   */
-  private boolean buildParameterList(
-      List<Parameter> parameters, Node cur, Scope s) {
-    boolean anyMovable = false;
+  private void buildParameterList(List<Parameter> parameters, Node cur) {
     while ((cur = cur.getNext()) != null) {
-      boolean movable = isMovableValue(cur, s);
-      Parameter p = new Parameter(cur, movable);
-      setParameterSideEffectInfo(p, cur);
-      parameters.add(p);
-      if (movable) {
-        anyMovable = true;
-      }
+      parameters.add(new Parameter(cur, NodeUtil.isLiteralValue(cur, false)));
     }
-    return anyMovable;
-  }
-
-  private void setParameterSideEffectInfo(Parameter p, Node value) {
-    if (!p.hasSideEffects()) {
-      p.setHasSideEffects(NodeUtil.mayHaveSideEffects(value, compiler));
-    }
-
-    if (!p.canBeSideEffected()) {
-      p.setCanBeSideEffected(NodeUtil.canBeSideEffected(value));
-    }
-  }
-
-
-  /**
-   * @return Whether the expression can be safely moved to another function
-   *   in another scope.
-   */
-  private boolean isMovableValue(Node n, Scope s) {
-    // Things that can change value or are inaccessible can't be moved, these
-    // are "this", "arguments", local names, and functions that capture local
-    // values.
-    switch (n.getType()) {
-      case Token.THIS:
-        return false;
-      case Token.FUNCTION:
-        // Don't move function closures.
-        // TODO(johnlenz): Closure that only contain global reference can be
-        // moved.
-        return false;
-      case Token.NAME:
-        if (n.getString().equals("arguments")) {
-          return false;
-        } else {
-          Var v = s.getVar(n.getString());
-          if (v != null && v.isLocal()) {
-            return false;
-          }
-        }
-        break;
-    }
-
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (!isMovableValue(c, s)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private void optimizeFunctionDefinition(List<Parameter> parameters,
@@ -386,14 +252,24 @@ class OptimizeParameters
     }
   }
 
-  private void optimizeCallSite(
-      SimpleDefinitionFinder defFinder, List<Parameter> parameters, Node call) {
+  private void optimizeCallSite(List<Parameter> parameters, Node call) {
     for (int index = parameters.size() - 1; index >= 0; index--) {
-      Parameter p = parameters.get(index);
-      if (p.shouldRemove()) {
-        eliminateCallParamAt(defFinder, p, call, index);
+      if (parameters.get(index).shouldRemove()) {
+        eliminateCallParamAt(call, index);
       }
     }
+  }
+
+  /**
+   * Node equality as intended by the this pass.
+   * @param n1 A node
+   * @param n2 A node
+   * @return true if both node are considered equal for the purposes of this
+   * class, false otherwise.
+   */
+  private boolean nodesAreEqual(Node n1, Node n2) {
+    return NodeUtil.isImmutableValue(n1) && NodeUtil.isImmutableValue(n2) &&
+        n1.isEquivalentTo(n2);
   }
 
   /**
@@ -403,8 +279,6 @@ class OptimizeParameters
   private static class Parameter {
     private final Node arg;
     private boolean shouldRemove;
-    private boolean hasSideEffects;
-    private boolean canBeSideEffected;
 
     public Parameter(Node arg, boolean shouldRemove) {
       this.shouldRemove = shouldRemove;
@@ -422,22 +296,6 @@ class OptimizeParameters
     public void setShouldRemove(boolean value) {
       shouldRemove = value;
     }
-
-    public void setHasSideEffects(boolean hasSideEffects) {
-      this.hasSideEffects = hasSideEffects;
-    }
-
-    public boolean hasSideEffects() {
-      return hasSideEffects;
-    }
-
-    public void setCanBeSideEffected(boolean canBeSideEffected) {
-      this.canBeSideEffected = canBeSideEffected;
-    }
-
-    public boolean canBeSideEffected() {
-      return canBeSideEffected;
-    }
   }
 
   /**
@@ -454,8 +312,8 @@ class OptimizeParameters
     Preconditions.checkArgument(block.getType() == Token.BLOCK,
         "Node must be a block.");
 
-    Preconditions.checkState(value.getParent() == null);
-    Node newVar = NodeUtil.newVarNode(varName.getString(), value);
+    Node newVar = NodeUtil.newVarNode(varName.getQualifiedName(),
+        value.cloneTree());
     block.addChildToFront(newVar);
     compiler.reportCodeChange();
   }
@@ -510,14 +368,11 @@ class OptimizeParameters
 
   /**
    * Eliminates the parameter from a function call.
-   * @param defFinder
-   * @param p
    * @param call The function call node
    * @param argIndex The index of the the argument to remove.
    * @return The Node of the argument removed.
    */
-  private Node eliminateCallParamAt(
-      SimpleDefinitionFinder defFinder, Parameter p, Node call, int argIndex) {
+  private Node eliminateCallParamAt(Node call, int argIndex) {
     Preconditions.checkArgument(
         NodeUtil.isCallOrNew(call), "Node must be a call or new.");
 
@@ -526,12 +381,6 @@ class OptimizeParameters
 
     if (formalArgPtr != null) {
       call.removeChild(formalArgPtr);
-      // The value in the parameter object is the one that is being moved into
-      // function definition leave that one's references.  For everthing else,
-      // remove any references.
-      if (p.getArg() != formalArgPtr) {
-        removedNodes.add(formalArgPtr);
-      }
       compiler.reportCodeChange();
     }
     return formalArgPtr;
