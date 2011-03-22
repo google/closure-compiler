@@ -2668,7 +2668,7 @@ WebGLRenderingContext.prototype.vertexAttrib1f = function(index, value) {};
 
 /**
  * @param {number} index
- * @param {WebGLFloatArray|Float32Array} values
+ * @param {WebGLFloatArray|Float32Array|Array.<number>} values
  */
 WebGLRenderingContext.prototype.vertexAttrib1fv = function(index, values) {};
 
@@ -2682,7 +2682,7 @@ WebGLRenderingContext.prototype.vertexAttrib2f = function(
 
 /**
  * @param {number} index
- * @param {WebGLFloatArray|Float32Array} values
+ * @param {WebGLFloatArray|Float32Array|Array.<number>} values
  */
 WebGLRenderingContext.prototype.vertexAttrib2fv = function(
     index, values) {};
@@ -2698,7 +2698,7 @@ WebGLRenderingContext.prototype.vertexAttrib3f = function(
 
 /**
  * @param {number} index
- * @param {WebGLFloatArray|Float32Array} values
+ * @param {WebGLFloatArray|Float32Array|Array.<number>} values
  */
 WebGLRenderingContext.prototype.vertexAttrib3fv = function(index, values) {};
 
@@ -2714,7 +2714,7 @@ WebGLRenderingContext.prototype.vertexAttrib4f = function(
 
 /**
  * @param {number} index
- * @param {WebGLFloatArray|Float32Array} values
+ * @param {WebGLFloatArray|Float32Array|Array.<number>} values
  */
 WebGLRenderingContext.prototype.vertexAttrib4fv = function(index, values) {};
 
