@@ -916,12 +916,11 @@ public class DefaultPassConfig extends PassConfig {
       return new PeepholeOptimizationsPass(compiler,
             new PeepholeSubstituteAlternateSyntax(true),
             new PeepholeRemoveDeadCode(),
-            new PeepholeFoldConstants(),
-            new PeepholeCollectPropertyAssignments());
+            new PeepholeFoldConstants());
     }
   };
 
-  /** Same as peepholeOptimizations but aggressively merges code together */
+  /** Same as peepholeOptimizations but aggreesively merges code together */
   private final PassFactory latePeepholeOptimizations =
       new PassFactory("peepholeOptimizations", false) {
     @Override
@@ -1230,6 +1229,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("replaceStrings", true) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      VariableMap map = null;
       return new CompilerPass() {
         @Override public void process(Node externs, Node root) {
           ReplaceStrings pass = new ReplaceStrings(

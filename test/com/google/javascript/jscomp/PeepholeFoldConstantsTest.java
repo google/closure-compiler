@@ -1076,7 +1076,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   private void assertSameResultsOrUncollapsed(String exprA, String exprB) {
     String resultA = process(exprA);
-    String resultB = process(exprB);  // TODO: why is nothing done with this?
+    String resultB = process(exprB);
     if (resultA.equals(print(exprA))) {
       foldSame(exprA);
       foldSame(exprB);

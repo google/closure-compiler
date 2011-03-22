@@ -250,22 +250,22 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testProcessClosurePrimitives() {
     test("var goog = {}; goog.provide('goog.dom');",
-         "var goog = {dom:{}};");
+         "var goog = {}; goog.dom = {};");
     args.add("--process_closure_primitives=false");
     testSame("var goog = {}; goog.provide('goog.dom');");
   }
 
   public void testCssNameWiring() throws Exception {
-    test("var goog = {}; goog.getCssName = function() {};" +
-         "goog.setCssNameMapping = function() {};" +
-         "goog.setCssNameMapping({'goog': 'a', 'button': 'b'});" +
+    String prefix =
+        "var goog = {}; goog.getCssName = function() {};" +
+         "goog.setCssNameMapping = function() {};";
+    test(prefix + "goog.setCssNameMapping({'goog': 'a', 'button': 'b'});" +
          "var a = goog.getCssName('goog-button');" +
          "var b = goog.getCssName('css-button');" +
          "var c = goog.getCssName('goog-menu');" +
          "var d = goog.getCssName('css-menu');",
-         "var goog = { getCssName: function() {}," +
-         "             setCssNameMapping: function() {} }," +
-         "    a = 'a-b'," +
+         prefix +
+         "var a = 'a-b'," +
          "    b = 'css-b'," +
          "    c = 'a-menu'," +
          "    d = 'css-menu';");
