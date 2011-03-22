@@ -285,7 +285,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       Preconditions.checkNotNull(name);
       nameUseSiteMultimap.put(
           name,
-          new UseSite(node, traversal.getModule()));
+          new UseSite(node, traversal.getScope(), traversal.getModule()));
     }
   }
 
@@ -422,7 +422,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       }
       String name = getSimplifiedName(useSite);
       if (name != null) {
-        this.nameUseSiteMultimap.remove(name, new UseSite(useSite, null));
+        this.nameUseSiteMultimap.remove(name, new UseSite(useSite, null, null));
       }
     }
 

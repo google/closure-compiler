@@ -27,10 +27,12 @@ import com.google.javascript.rhino.Node;
 
 class UseSite {
   final Node node;
+  final Scope scope;
   final JSModule module;
 
-  UseSite(Node node, JSModule module) {
+  UseSite(Node node, Scope scope, JSModule module) {
     this.node = node;
+    this.scope = scope;
     this.module = module;
   }
 
