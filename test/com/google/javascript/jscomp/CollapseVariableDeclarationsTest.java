@@ -43,7 +43,27 @@ public class CollapseVariableDeclarationsTest extends CompilerTestCase {
   }
 
   public void testIfElseVarDeclarations() throws Exception {
-    testSame("if (x) var a = 1; else var a = 2;");
+    testSame("if (x) var a = 1; else var b = 2;");
+  }
+
+  public void testAggressiveRedeclaration() {
+    test("var x = 2; foo(x);     x = 3; var y = 2;",
+         "var x = 2; foo(x); var x = 3,     y = 2;");
+
+    test("var x = 2; foo(x);     x = 3; x = 1; var y = 2;",
+         "var x = 2; foo(x); var x = 3, x = 1,     y = 2;");
+
+    test("var x = 2; foo(x);     x = 3; x = 1; var y = 2; var z = 4",
+         "var x = 2; foo(x); var x = 3, x = 1,     y = 2,     z = 4");
+
+    test("var x = 2; foo(x);     x = 3; x = 1; var y = 2; var z = 4; x = 5",
+         "var x = 2; foo(x); var x = 3, x = 1,     y = 2,     z = 4, x = 5");
+  }
+
+  public void testAggressiveRedeclarationInFor() {
+    testSame("for(var x = 1; x = 2; x = 3) {x = 4}");
+    testSame("for(var x = 1; y = 2; z = 3) {var a = 4}");
+    testSame("var x; for(x = 1; x = 2; z = 3) {x = 4}");
   }
 
   @Override

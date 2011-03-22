@@ -541,7 +541,7 @@ public class JSDocInfo implements Serializable {
   /**
    * Add a suppressed warning.
    */
-  void addSuppression(String suppression) {
+  public void addSuppression(String suppression) {
     lazyInitInfo();
 
     if (info.suppressions == null) {
