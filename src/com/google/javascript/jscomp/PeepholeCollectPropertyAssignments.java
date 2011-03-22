@@ -1,0 +1,244 @@
+/*
+ * Copyright 2011 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.Node;
+
+/**
+ * A pass that looks for assignments to properties of an object or array
+ * immediately following its creation using the abbreviated syntax.
+ * <p>
+ * E.g. {@code var a = [];a[0] = 0} is optimized to {@code var a = [0]} and
+ * similarly for the object constructor.
+ *
+ */
+public class PeepholeCollectPropertyAssignments
+    extends AbstractPeepholeOptimization {
+
+  @Override
+  Node optimizeSubtree(Node subtree) {
+    if (subtree.getType() != Token.SCRIPT
+        && subtree.getType() != Token.BLOCK) {
+      return subtree;
+    }
+
+    boolean codeChanged = false;
+
+    // Look for variable declarations and start processing there.
+    for (Node child = subtree.getFirstChild();
+         child != null; child = child.getNext()) {
+      if (child.getType() != Token.VAR) {
+        continue;
+      }
+      if (!isPropertyAssignmentToVar(child.getNext())) {
+        // Quick check to see if there's anything to collapse.
+        continue;
+      }
+
+      Preconditions.checkState(child.hasOneChild());
+      Node var = child.getFirstChild();
+      Node varValue = var.getFirstChild();
+      if (varValue == null) {  // No initializer.
+        continue;
+      }
+
+      Node propertyCandidate;
+      while ((propertyCandidate = child.getNext()) != null) {
+        // This does not infinitely loop because collectProperty always
+        // removes propertyCandidate from its parent when it returns true.
+        if (!collectProperty(propertyCandidate, var)) {
+          break;
+        }
+        codeChanged = true;
+      }
+    }
+
+    if (codeChanged) {
+      reportCodeChange();
+    }
+    return subtree;
+  }
+
+  private boolean isPropertyAssignmentToVar(Node propertyCandidate) {
+    if (propertyCandidate == null) { return false; }
+    // Must be an assignment...
+    if (!NodeUtil.isExprAssign(propertyCandidate)) {
+      return false;
+    }
+
+    Node expr = propertyCandidate.getFirstChild();
+
+    // to a property...
+    Node lhs = expr.getFirstChild();
+    if (lhs.getType() != Token.GETELEM && lhs.getType() != Token.GETPROP) {
+      return false;
+    }
+
+    // of a variable.
+    Node obj = lhs.getFirstChild();
+    if (obj.getType() != Token.NAME) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean collectProperty(Node propertyCandidate, Node var) {
+    if (!isPropertyAssignmentToVar(propertyCandidate)) {
+      return false;
+    }
+
+    String varName = var.getString();
+
+    Node lhs = propertyCandidate.getFirstChild().getFirstChild();
+    // Must be an assignment to the recent variable...
+    if (!varName.equals(lhs.getFirstChild().getString())) {
+      return false;
+    }
+
+    Node rhs = lhs.getNext();
+    // with a value that cannot change the values of the variables,
+    if (NodeUtil.mayHaveSideEffects(rhs)
+        || NodeUtil.canBeSideEffected(rhs)) {
+      return false;
+    }
+    // and does not have a reference to a variable initialized after it.
+    if (mightContainForwardReference(rhs, varName)) {
+      return false;
+    }
+
+    // Either collect it as an array property or an object property based on
+    // the type of the variable initializer.
+    Node varValue = var.getFirstChild();
+    switch (varValue.getType()) {
+      case Token.ARRAYLIT:
+        if (!collectArrayProperty(varValue, propertyCandidate)) {
+          return false;
+        }
+        break;
+      case Token.OBJECTLIT:
+        if (!collectObjectProperty(varValue, propertyCandidate)) {
+          return false;
+        }
+        break;
+      default: return false;
+    }
+    return true;
+  }
+
+
+  private boolean collectArrayProperty(
+      Node arrayLiteral, Node propertyCandidate) {
+    Node assignment = propertyCandidate.getFirstChild();
+    final int sizeOfArrayAtStart = arrayLiteral.getChildCount();
+    int maxIndexAssigned = sizeOfArrayAtStart - 1;
+
+    Node lhs = assignment.getFirstChild();
+    Node rhs = lhs.getNext();
+    if (lhs.getType() != Token.GETELEM) {
+      return false;
+    }
+    Node obj = lhs.getFirstChild();
+    Node property = obj.getNext();
+    // The left hand side must have a numeric index
+    if (property.getType() != Token.NUMBER) {
+      return false;
+    }
+    // that is a valid array index
+    double dindex = property.getDouble();
+    if (!(dindex >= 0)  // Handles NaN and negatives.
+        || Double.isInfinite(dindex) || dindex > 0x7fffffffL) {
+      return false;
+    }
+    int index = (int) dindex;
+    if (dindex != index) {
+      return false;
+    }
+    // that would not make the array so sparse that they take more space
+    // when rendered than x[9]=1.
+    if (maxIndexAssigned + 4 < index) {
+      return false;
+    }
+    while (maxIndexAssigned < index - 1) {
+      // Pad the array if it is sparse.
+      // So if array is [0] and integer 3 is assigned at index is 2, then
+      // we want to produce [0,,2].
+      Node emptyNode = new Node(Token.EMPTY)
+          .copyInformationFrom(arrayLiteral);
+      arrayLiteral.addChildToBack(emptyNode);
+      ++maxIndexAssigned;
+    }
+    arrayLiteral.addChildToBack(rhs.detachFromParent());
+    ++maxIndexAssigned;
+
+    propertyCandidate.detachFromParent();
+    return true;
+  }
+
+  private boolean collectObjectProperty(
+      Node objectLiteral, Node propertyCandidate) {
+    Node assignment = propertyCandidate.getFirstChild();
+    Node lhs = assignment.getFirstChild(), rhs = lhs.getNext();
+    Node obj = lhs.getFirstChild();
+    Node property = obj.getNext();
+
+    // The property must be statically known.
+    if (lhs.getType() == Token.GETELEM
+        && (property.getType() != Token.STRING
+            && property.getType() != Token.NUMBER)) {
+      return false;
+    }
+
+    String propertyName;
+    if (property.getType() == Token.NUMBER) {
+      propertyName = NodeUtil.getStringValue(property);
+    } else {
+      propertyName = property.getString();
+    }
+
+    Node newProperty = Node.newString(propertyName)
+        .copyInformationFrom(property);
+    // Preserve the quotedness of a property reference
+    if (lhs.getType() == Token.GETELEM) {
+      newProperty.setQuotedString();
+    }
+    Node newValue = rhs.detachFromParent();
+    newProperty.addChildToBack(newValue);
+    objectLiteral.addChildToBack(newProperty);
+
+    propertyCandidate.detachFromParent();
+    return true;
+  }
+
+
+  private static boolean mightContainForwardReference(
+      Node node, String varName) {
+    if (node.getType() == Token.NAME) {
+      return varName.equals(node.getString());
+    }
+    for (Node child = node.getFirstChild(); child != null;
+         child = child.getNext()) {
+      if (mightContainForwardReference(child, varName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+}
