@@ -189,11 +189,11 @@ public class AliasStringsTest extends CompilerTestCase {
 
          "var $$S_Antidisestablishment_0="     +
          "  'Antidisestablishmentarianism';"   +
-         "f($$S_Antidisestablishment_0);"      +
-         "f($$S_Antidisestablishment_0);"      +
-
          "var $$S_Antidisestablishment_0_1="   +
          "  'Antidisestablishmentarianismo';"  +
+
+         "f($$S_Antidisestablishment_0);"      +
+         "f($$S_Antidisestablishment_0);"      +
          "f($$S_Antidisestablishment_0_1);"    +
          "f($$S_Antidisestablishment_0_1);");
   }
@@ -224,8 +224,8 @@ public class AliasStringsTest extends CompilerTestCase {
     // Same string is in a global object literal (as key) and local in a
     // function
     test("var foo={'foo': 'bar'};function bar() {return 'foo';}",
-        "var foo={'foo': 'bar'};" +
-        "var $$S_foo='foo';function bar() {return $$S_foo;}");
+        "var $$S_foo='foo';var foo={'foo': 'bar'};" +
+        "function bar() {return $$S_foo;}");
 
     // Same string is in a global object literal (as value) and local in a
     // function
@@ -243,7 +243,7 @@ public class AliasStringsTest extends CompilerTestCase {
     // common parent module m1
 
     JSModule[] modules =
-        createModules(
+        createModuleBush(
             // m0
             "function f(a) { alert('f:' + a); }" +
             "function g() { alert('ciao'); }",
@@ -259,55 +259,86 @@ public class AliasStringsTest extends CompilerTestCase {
             "f('-------hi-------'); alert('------adios------');" +
             "h('-----peaches-----'); h('-----peaches-----');");
 
-    modules[1].addDependency(modules[0]);
-    modules[2].addDependency(modules[1]);
-    modules[3].addDependency(modules[1]);
-
     moduleGraph = new JSModuleGraph(modules);
 
     test(modules,
          new String[] {
              // m1
+             "var $$S_ciao = 'ciao';" +
              "var $$S_f$3a = 'f:';" +
              "function f(a) { alert($$S_f$3a + a); }" +
-             "var $$S_ciao = 'ciao';" +
              "function g() { alert($$S_ciao); }",
              // m2
              "var $$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d" +
              " = '-------hi-------';" +
              "var $$S_$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d" +
              " = '------adios------'; " +
+             "var $$S_h$3a = 'h:';" +
              "f($$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d);" +
              "f('bye');" +
-             "var $$S_h$3a = 'h:';" +
              "function h(a) { alert($$S_h$3a + a); }",
              // m3
+             "var $$S_zzz = 'zzz';" +
              "f($$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d);" +
              "h($$S_ciao + $$S_$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d);" +
-             "var $$S_zzz = 'zzz';" +
              "(function() { alert($$S_zzz) })();",
              // m4
-             "f($$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d);" +
-             "alert($$S_$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d);" +
              "var $$S_$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d" +
              " = '-----peaches-----';" +
+             "f($$S_$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d);" +
+             "alert($$S_$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d);" +
              "h($$S_$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d);" +
              "h($$S_$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d);",
          });
     moduleGraph = null;
   }
 
+  public void testStringsInModules2() {
+    strings = ALL_STRINGS;
+
+    // Aliases must be placed in the correct module. The alias for
+    // '------adios------' must be lifted from m2 and m3 and go in the
+    // common parent module m1
+
+    JSModule[] modules =
+        createModuleBush(
+            // m0
+            "function g() { alert('ciao'); }",
+            // m1
+            "function h(a) { alert('h:' + a); }",
+            // m2
+            "h('ciao' + 'adios');",
+            // m3
+            "g();");
+
+    moduleGraph = new JSModuleGraph(modules);
+
+    test(modules,
+         new String[] {
+             // m1
+             "var $$S_ciao = 'ciao';" +
+             "function g() { alert($$S_ciao); }",
+             // m2
+             "var $$S_h$3a = 'h:';" +
+             "function h(a) { alert($$S_h$3a + a); }",
+             // m3
+             "h($$S_ciao + 'adios');",
+             // m4
+             "g();",
+         });
+    moduleGraph = null;
+  }
+
+
   public void testEmptyModules() {
     JSModule[] modules =
-      createModules(
+      createModuleStar(
           // m0
           "",
           // m1
           "function foo() { f('good') }",
           // m2
           "function foo() { f('good') }");
-    modules[1].addDependency(modules[0]);
-    modules[2].addDependency(modules[0]);
 
     moduleGraph = new JSModuleGraph(modules);
     test(modules,

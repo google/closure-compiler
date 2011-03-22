@@ -156,27 +156,11 @@ class AliasStrings extends AbstractPostOrderCallback
           info.numOccurrencesInfrequentlyExecuted++;
         }
 
-        if (info.numOccurrences == 1) {
-
-          info.moduleToContainDecl = t.getModule();
-
-          // Take note of the optimal place to insert the var declaration.
-          // We'll insert it as the previous sibling of our first ancestor
-          // in global scope that has a SCRIPT parent.
-          Node prev = n;
-          for (Node ancestor : n.getAncestors()) {
-            if (ancestor.getType() == Token.SCRIPT) {
-              info.parentForNewVarDecl = ancestor;
-              info.siblingToInsertVarDeclBefore = prev;
-              break;
-            }
-            prev = ancestor;
-          }
-        } else {
-
+        // The current module.
+        JSModule module = t.getModule();
+        if (info.numOccurrences != 1) {
           // Check whether the current module depends on the module containing
           // the declaration.
-          JSModule module = t.getModule();
           if (module != null &&
               info.moduleToContainDecl != null &&
               module != info.moduleToContainDecl &&
@@ -185,16 +169,19 @@ class AliasStrings extends AbstractPostOrderCallback
             // module dependency graph that both of these modules depend on.
             module = moduleGraph.getDeepestCommonDependency(
                 module, info.moduleToContainDecl);
-            Node varParent = moduleVarParentMap.get(module);
-            if (varParent == null) {
-              varParent = compiler.getNodeForCodeInsertion(module);
-              moduleVarParentMap.put(module, varParent);
-            }
-            info.moduleToContainDecl = module;
-            info.parentForNewVarDecl = varParent;
-            info.siblingToInsertVarDeclBefore = varParent.getFirstChild();
+          } else {
+            // use the previously saved insertion location.
+            return;
           }
         }
+        Node varParent = moduleVarParentMap.get(module);
+        if (varParent == null) {
+          varParent = compiler.getNodeForCodeInsertion(module);
+          moduleVarParentMap.put(module, varParent);
+        }
+        info.moduleToContainDecl = module;
+        info.parentForNewVarDecl = varParent;
+        info.siblingToInsertVarDeclBefore = varParent.getFirstChild();
       }
     }
   }
