@@ -160,7 +160,10 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
       // Methods defined in a separate functions and then added via assignment
       "function twoArg(arg1, arg2) {};" +
       "Foo.prototype.prototypeMethod = twoArg;" +
-      "Foo.staticMethod = twoArg;";
+      "Foo.staticMethod = twoArg;" +
+      // Constructor that specifies a return type
+      "/**\n * @constructor\n * @return {Bar}\n */\n" +
+      "function Bar() {}";
 
     // Prototype method with too many arguments.
     testSame(METHOD_DEFS +
@@ -179,6 +182,15 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
     testSame(METHOD_DEFS +
         "Foo.staticMethod(1);",
         TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    // Constructor calls require new keyword
+    testSame(METHOD_DEFS + "Bar();", TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
+
+    // Extern constructor calls require new keyword
+    testSame(METHOD_DEFS, "Foo();", TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
+
+    // Extern constructor call without new keyword
+    testSame(METHOD_DEFS, "Bar();", null);
   }
 
   public void assertOk(String params, String arguments) {
