@@ -448,7 +448,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // Remove any useless children
     for (Node c = n.getFirstChild(); c != null; ) {
       Node next = c.getNext();  // save c.next, since 'c' may be removed
-      if (!mayHaveSideEffects(c)) {
+      if (!mayHaveSideEffects(c) && !c.isSyntheticBlock()) {
         // TODO(johnlenz): determine what this is actually removing. Candidates
         //    include: EMPTY nodes, control structures without children
         //    (removing infinite loops), empty try blocks.  What else?
