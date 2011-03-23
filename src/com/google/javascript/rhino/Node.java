@@ -935,7 +935,9 @@ public class Node implements Cloneable, Serializable {
         // In the case of JsDoc trees, the first child is often not a string
         // which causes exceptions to be thrown when calling toString or
         // toStringTree.
-        if (first.getType() == Token.STRING) {
+        if (first == null || first.getType() != Token.NAME) {
+          sb.append("<invalid>");
+        } else {
           sb.append(first.getString());
         }
       } else if (this instanceof ScriptOrFnNode) {
