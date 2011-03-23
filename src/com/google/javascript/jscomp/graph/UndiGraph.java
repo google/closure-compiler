@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.graph;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -34,7 +35,7 @@ public abstract class UndiGraph<N, E> extends Graph<N, E> {
 
   abstract UndiGraphNode<N, E> createUndirectedGraphNode(N nodeValue);
 
-  abstract UndiGraphNode<N, E> getUndirectedGraphNode(N nodeValue);
+  public abstract UndiGraphNode<N, E> getUndirectedGraphNode(N nodeValue);
 
   abstract List<UndiGraphEdge<N, E>> getUndirectedGraphEdges(N n1, N n2);
 
@@ -45,7 +46,8 @@ public abstract class UndiGraph<N, E> extends Graph<N, E> {
    * @param <E> Value type that the graph edge stores.
    */
   public static interface UndiGraphNode<N, E> extends GraphNode<N, E> {
-    List<UndiGraphEdge<N, E>> getNeighborEdges();
+    public List<UndiGraphEdge<N, E>> getNeighborEdges();
+    public Iterator<UndiGraphEdge<N, E>> getNeighborEdgesIterator();
   }
 
   /**
