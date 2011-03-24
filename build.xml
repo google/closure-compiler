@@ -159,6 +159,7 @@
     <fileset dir="${lib.dir}">
       <include name="args4j.jar"/>
       <include name="guava.jar"/>
+      <include name="json.jar"/>
       <include name="jsr305.jar"/>
       <include name="libtrunk_rhino_parser_jarjared.jar"/>
       <include name="protobuf-java.jar"/>
@@ -273,13 +274,13 @@
   <target name="test-forkless"
       depends="compile-tests"
       description="execute JUnit tests without forking the process">
-    <junit>
+    <junit showoutput="true">
       <classpath refid="allclasspath.path" />
       <classpath>
         <pathelement location="${build.dir}/test" />
       </classpath>
       <formatter type="plain" usefile="false" />
-      <batchtest>
+      <batchtest haltonfailure="true">
         <fileset dir="${build.dir}/test">
           <include name="**/*Test.class" />
         </fileset>
@@ -410,7 +411,7 @@
   </target>
 
    <target name="jsonml-jar"
-           description="package the compiler and JsonML clsses"
+           description="package the compiler and JsonML classes"
            depends="jsonml-compile, compile">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
     <jar destfile="${jsonml-jarfile}" update="true">
