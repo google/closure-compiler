@@ -18,9 +18,9 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
 import com.google.debugging.sourcemap.FilePosition;
+import com.google.debugging.sourcemap.SourceMapFormat;
 import com.google.debugging.sourcemap.SourceMapGenerator;
-import com.google.debugging.sourcemap.SourceMapGeneratorV1;
-import com.google.debugging.sourcemap.SourceMapGeneratorV2;
+import com.google.debugging.sourcemap.SourceMapGeneratorFactory;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
@@ -39,17 +39,20 @@ public class SourceMap {
   public static enum Format {
      LEGACY {
        @Override SourceMap getInstance() {
-         return new SourceMap(new SourceMapGeneratorV1());
+         return new SourceMap(
+           SourceMapGeneratorFactory.getInstance(SourceMapFormat.V1));
        }
      },
      DEFAULT {
        @Override SourceMap getInstance() {
-         return new SourceMap(new SourceMapGeneratorV2());
+         return new SourceMap(
+           SourceMapGeneratorFactory.getInstance(SourceMapFormat.DEFAULT));
        }
      },
      EXPERIMENTIAL {
        @Override SourceMap getInstance() {
-         return new SourceMap(new SourceMapGeneratorV2());
+         return new SourceMap(
+           SourceMapGeneratorFactory.getInstance(SourceMapFormat.V2));
        }
      };
      abstract SourceMap getInstance();

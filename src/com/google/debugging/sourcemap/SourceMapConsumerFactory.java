@@ -33,7 +33,7 @@ public class SourceMapConsumerFactory {
   public static SourceMapping parse(String contents)
       throws SourceMapParseException {
     SourceMapConsumer consumer = null;
-    SourceMapGenerator.Format format = detectVersion(contents);
+    SourceMapFormat format = detectVersion(contents);
     consumer = createForVerion(detectVersion(contents));
     consumer.parse(contents);
     return consumer;
@@ -44,12 +44,12 @@ public class SourceMapConsumerFactory {
    * @return The best guess of the source map version.
    * @throws SourceMapParseException
    */
-  private static SourceMapGenerator.Format detectVersion(String contents)
+  private static SourceMapFormat detectVersion(String contents)
       throws SourceMapParseException {
     if (contents.startsWith("/** Begin line maps. **/")) {
-      return SourceMapGenerator.Format.LEGACY;
+      return SourceMapFormat.V1;
     } else if (contents.startsWith("{")){
-      return SourceMapGenerator.Format.EXPERIMENTIAL;
+      return SourceMapFormat.V2;
     } else {
       throw new SourceMapParseException("unable to detect source map format");
     }
@@ -60,12 +60,12 @@ public class SourceMapConsumerFactory {
    * @throws SourceMapParseException
    */
   private static SourceMapConsumer createForVerion(
-      SourceMapGenerator.Format format)
+      SourceMapFormat format)
       throws SourceMapParseException {
     switch (format) {
-      case LEGACY:
+      case V1:
         return new SourceMapConsumerV1();
-      case EXPERIMENTIAL:
+      case V2:
         return new SourceMapConsumerV2();
       default:
         throw new SourceMapParseException("unsupported source map format");

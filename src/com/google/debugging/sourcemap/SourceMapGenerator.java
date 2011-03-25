@@ -30,22 +30,6 @@ import javax.annotation.Nullable;
  */
 public interface SourceMapGenerator {
 
-  public enum Format {
-     LEGACY {
-       @Override
-       public SourceMapGenerator getInstance() {
-         return new SourceMapGeneratorV1();
-       }
-     },
-     EXPERIMENTIAL {
-       @Override
-       public SourceMapGenerator getInstance() {
-         return new SourceMapGeneratorV2();
-       }
-     };
-     public abstract SourceMapGenerator getInstance();
-  }
-
   /**
    * Appends the source map to the given buffer.
    *
