@@ -219,6 +219,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public void testFoldLogicalOp() {
     fold("x = true && x", "x = x");
+    foldSame("x = [foo()] && x");
+
     fold("x = false && x", "x = false");
     fold("x = true || x", "x = true");
     fold("x = false || x", "x = x");
@@ -970,6 +972,20 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("'A'.toLowerCase()", "'a'");
     fold("'a'.toLowerCase()", "'a'");
     fold("'aBcDe'.toLowerCase()", "'abcde'");
+  }
+
+  public void testObjectLiteral() {
+    test("(!{})", "false");
+    test("(!{a:1})", "false");
+    testSame("(!{a:foo()})");
+    testSame("(!{'a':foo()})");
+  }
+
+  public void testArrayLiteral() {
+    test("(![])", "false");
+    test("(![1])", "false");
+    test("(![a])", "false");
+    testSame("(![foo()])");
   }
 
   private static final List<String> LITERAL_OPERANDS =

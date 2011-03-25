@@ -794,4 +794,18 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     doCommaSplitting = false;
     foldSame("a(), b(), 1");
   }
+
+  public void testObjectLiteral() {
+    test("({})", "1");
+    test("({a:1})", "1");
+    testSame("({a:foo()})");
+    testSame("({'a':foo()})");
+  }
+
+  public void testArrayLiteral() {
+    test("([])", "1");
+    test("([1])", "1");
+    test("([a])", "1");
+    testSame("([foo()])");
+  }
 }

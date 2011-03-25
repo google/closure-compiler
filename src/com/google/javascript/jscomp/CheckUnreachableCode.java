@@ -103,7 +103,7 @@ class CheckUnreachableCode implements ScopedCallback {
       // TODO(user): Handle more complicated expression like true == true,
       // etc....
       if (condition != null) {
-        TernaryValue val = NodeUtil.getBooleanValue(condition);
+        TernaryValue val = NodeUtil.getImpureBooleanValue(condition);
         if (val != TernaryValue.UNKNOWN) {
           return val.toBoolean(true) == (branch == Branch.ON_TRUE);
         }

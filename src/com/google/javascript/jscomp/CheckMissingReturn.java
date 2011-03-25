@@ -68,7 +68,7 @@ class CheckMissingReturn implements ScopedCallback {
         // type system that can evaluate some impressions' boolean value but
         // for now we will keep this pass lightweight.
         if (condition != null) {
-          TernaryValue val = NodeUtil.getBooleanValue(condition);
+          TernaryValue val = NodeUtil.getImpureBooleanValue(condition);
           if (val != TernaryValue.UNKNOWN) {
             return val.toBoolean(true) == (Branch.ON_TRUE == branch);
           }

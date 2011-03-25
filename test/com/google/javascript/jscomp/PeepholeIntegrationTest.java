@@ -337,4 +337,18 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     doCommaSplitting = false;
     foldSame("x(),y(),z()");
   }
+
+  public void testObjectLiteral() {
+    test("({})", "");
+    test("({a:1})", "");
+    test("({a:foo()})", "foo()");
+    test("({'a':foo()})", "foo()");
+  }
+
+  public void testArrayLiteral() {
+    test("([])", "");
+    test("([1])", "");
+    test("([a])", "");
+    test("([foo()])", "foo()");
+  }
 }

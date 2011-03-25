@@ -66,7 +66,7 @@ class MinimizeExitPoints
             NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
 
         Node cond = NodeUtil.getConditionExpression(n);
-        if (NodeUtil.getBooleanValue(cond) == TernaryValue.FALSE) {
+        if (NodeUtil.getImpureBooleanValue(cond) == TernaryValue.FALSE) {
           // Normally, we wouldn't be able to optimize BREAKs inside a loop
           // but as we know the condition will always false, we can treat them
           // as we would a CONTINUE.

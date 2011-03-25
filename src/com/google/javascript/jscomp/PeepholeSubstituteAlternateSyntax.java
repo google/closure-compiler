@@ -945,7 +945,7 @@ class PeepholeSubstituteAlternateSyntax
             }
 
            default:
-             TernaryValue nVal = NodeUtil.getBooleanValue(first);
+             TernaryValue nVal = NodeUtil.getPureBooleanValue(first);
              if (nVal != TernaryValue.UNKNOWN) {
                boolean result = nVal.not().toBoolean(true);
                int equivalentResult = result ? 1 : 0;
@@ -972,8 +972,8 @@ class PeepholeSubstituteAlternateSyntax
         //   x || true  --> true
         //   x && true --> x
         //   x && false  --> false
-        TernaryValue rightVal = NodeUtil.getBooleanValue(right);
-        if (NodeUtil.getBooleanValue(right) != TernaryValue.UNKNOWN) {
+        TernaryValue rightVal = NodeUtil.getPureBooleanValue(right);
+        if (NodeUtil.getPureBooleanValue(right) != TernaryValue.UNKNOWN) {
           int type = n.getType();
           Node replacement = null;
           boolean rval = rightVal.toBoolean(true);
@@ -1014,21 +1014,23 @@ class PeepholeSubstituteAlternateSyntax
         //   x ? true : y     --> x || y
         //   x ? y : false    --> x && y
         Node replacement = null;
-        if (NodeUtil.getBooleanValue(trueNode) == TernaryValue.TRUE
-            && NodeUtil.getBooleanValue(falseNode) == TernaryValue.FALSE) {
+        TernaryValue trueNodeVal = NodeUtil.getPureBooleanValue(trueNode);
+        TernaryValue falseNodeVal = NodeUtil.getPureBooleanValue(falseNode);
+        if (trueNodeVal == TernaryValue.TRUE
+            && falseNodeVal == TernaryValue.FALSE) {
           // Remove useless conditionals, keep the condition
           condition.detachFromParent();
           replacement = condition;
-        } else if (NodeUtil.getBooleanValue(trueNode) == TernaryValue.FALSE
-            && NodeUtil.getBooleanValue(falseNode) == TernaryValue.TRUE) {
+        } else if (trueNodeVal == TernaryValue.FALSE
+            && falseNodeVal == TernaryValue.TRUE) {
           // Remove useless conditionals, keep the condition
           condition.detachFromParent();
           replacement = new Node(Token.NOT, condition);
-        } else if (NodeUtil.getBooleanValue(trueNode) == TernaryValue.TRUE) {
+        } else if (trueNodeVal == TernaryValue.TRUE) {
           // Remove useless true case.
           n.detachChildren();
           replacement = new Node(Token.OR, condition, falseNode);
-        } else if (NodeUtil.getBooleanValue(falseNode) == TernaryValue.FALSE) {
+        } else if (falseNodeVal == TernaryValue.FALSE) {
           // Remove useless false case
           n.detachChildren();
           replacement = new Node(Token.AND, condition, trueNode);
@@ -1045,7 +1047,7 @@ class PeepholeSubstituteAlternateSyntax
 
       default:
         // while(true) --> while(1)
-        TernaryValue nVal = NodeUtil.getBooleanValue(n);
+        TernaryValue nVal = NodeUtil.getPureBooleanValue(n);
         if (nVal != TernaryValue.UNKNOWN) {
           boolean result = nVal.toBoolean(true);
           int equivalentResult = result ? 1 : 0;

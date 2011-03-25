@@ -194,10 +194,12 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("do { foo() } while(true);", "do { foo() } while(true);");
     fold("do { var a = 0; } while(false);", "var a=0");
 
+    fold("do { var a = 0; } while(!{a:foo()});", "var a=0;foo()");
+
     // Can't fold with break or continues.
     foldSame("do { foo(); continue; } while(0)");
     foldSame("do { foo(); break; } while(0)");
-    }
+  }
 
   public void testMinimizeWhileConstantCondition() {
     fold("while(true) foo()", "while(true) foo()");
@@ -570,5 +572,19 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     testSame("try {var x = 1} finally {x()}");
     test("function f() { return; try{var x = 1}finally{} }",
         "function f() { return; var x = 1; }");
+  }
+
+  public void testObjectLiteral() {
+    test("({})", "");
+    test("({a:1})", "");
+    test("({a:foo()})", "foo()");
+    test("({'a':foo()})", "foo()");
+  }
+
+  public void testArrayLiteral() {
+    test("([])", "");
+    test("([1])", "");
+    test("([a])", "");
+    test("([foo()])", "foo()");
   }
 }

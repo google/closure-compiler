@@ -69,45 +69,52 @@ public final class NodeUtil {
    * Note: unlike getBooleanValue this function does not return UNKNOWN
    * for expressions with side-effects.
    */
-  static TernaryValue getExpressionBooleanValue(Node n) {
+  static TernaryValue getImpureBooleanValue(Node n) {
     switch (n.getType()) {
       case Token.ASSIGN:
       case Token.COMMA:
         // For ASSIGN and COMMA the value is the value of the RHS.
-        return getExpressionBooleanValue(n.getLastChild());
+        return getImpureBooleanValue(n.getLastChild());
       case Token.NOT:
-        TernaryValue value = getExpressionBooleanValue(n.getLastChild());
+        TernaryValue value = getImpureBooleanValue(n.getLastChild());
         return value.not();
       case Token.AND: {
-        TernaryValue lhs = getExpressionBooleanValue(n.getFirstChild());
-        TernaryValue rhs = getExpressionBooleanValue(n.getLastChild());
+        TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
+        TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
         return lhs.and(rhs);
       }
       case Token.OR:  {
-        TernaryValue lhs = getExpressionBooleanValue(n.getFirstChild());
-        TernaryValue rhs = getExpressionBooleanValue(n.getLastChild());
+        TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
+        TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
         return lhs.or(rhs);
       }
       case Token.HOOK:  {
-        TernaryValue trueValue = getExpressionBooleanValue(
+        TernaryValue trueValue = getImpureBooleanValue(
             n.getFirstChild().getNext());
-        TernaryValue falseValue = getExpressionBooleanValue(n.getLastChild());
+        TernaryValue falseValue = getImpureBooleanValue(n.getLastChild());
         if (trueValue.equals(falseValue)) {
           return trueValue;
         } else {
           return TernaryValue.UNKNOWN;
         }
       }
+      case Token.ARRAYLIT:
+      case Token.OBJECTLIT:
+        // ignoring side-effects
+        return TernaryValue.TRUE;
+
       default:
-        return getBooleanValue(n);
+        return getPureBooleanValue(n);
     }
   }
 
   /**
    * Gets the boolean value of a node that represents a literal. This method
-   * effectively emulates the <code>Boolean()</code> JavaScript cast function.
+   * effectively emulates the <code>Boolean()</code> JavaScript cast function
+   * except it return UNKNOWN for known values with side-effects, use
+   * getExpressionBooleanValue if you don't care about side-effects.
    */
-  static TernaryValue getBooleanValue(Node n) {
+  static TernaryValue getPureBooleanValue(Node n) {
     switch (n.getType()) {
       case Token.STRING:
         return TernaryValue.forBoolean(n.getString().length() > 0);
@@ -116,7 +123,7 @@ public final class NodeUtil {
         return TernaryValue.forBoolean(n.getDouble() != 0);
 
       case Token.NOT:
-        return getBooleanValue(n.getLastChild()).not();
+        return getPureBooleanValue(n.getLastChild()).not();
 
       case Token.NULL:
       case Token.FALSE:
@@ -136,10 +143,14 @@ public final class NodeUtil {
         break;
 
       case Token.TRUE:
-      case Token.ARRAYLIT:
-      case Token.OBJECTLIT:
       case Token.REGEXP:
         return TernaryValue.TRUE;
+
+      case Token.ARRAYLIT:
+      case Token.OBJECTLIT:
+        if (!mayHaveSideEffects(n)) {
+          return TernaryValue.TRUE;
+        }
     }
 
     return TernaryValue.UNKNOWN;
@@ -186,7 +197,7 @@ public final class NodeUtil {
         return "undefined";
 
       case Token.NOT:
-        TernaryValue child = getBooleanValue(n.getFirstChild());
+        TernaryValue child = getPureBooleanValue(n.getFirstChild());
         if (child != TernaryValue.UNKNOWN) {
           return child.toBoolean(true) ? "false" : "true"; // reversed.
         }
@@ -280,7 +291,7 @@ public final class NodeUtil {
         return null;
 
       case Token.NOT:
-        TernaryValue child = getBooleanValue(n.getFirstChild());
+        TernaryValue child = getPureBooleanValue(n.getFirstChild());
         if (child != TernaryValue.UNKNOWN) {
           return child.toBoolean(true) ? 0.0 : 1.0; // reversed.
         }

@@ -509,7 +509,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       if (NodeUtil.isName(lhsAssign) && NodeUtil.isName(condition)
           && lhsAssign.getString().equals(condition.getString())) {
         Node rhsAssign = getSimpleAssignmentValue(n);
-        TernaryValue value = NodeUtil.getExpressionBooleanValue(rhsAssign);
+        TernaryValue value = NodeUtil.getImpureBooleanValue(rhsAssign);
         if (value != TernaryValue.UNKNOWN) {
           int replacementConditionNodeType =
             (value.toBoolean(true)) ? Token.TRUE : Token.FALSE;
@@ -647,7 +647,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     // Try transforms that apply to both IF and HOOK.
-    TernaryValue condValue = NodeUtil.getExpressionBooleanValue(cond);
+    TernaryValue condValue = NodeUtil.getImpureBooleanValue(cond);
     if (condValue == TernaryValue.UNKNOWN) {
       return n;  // We can't remove branches otherwise!
     }
@@ -714,7 +714,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node thenBody = cond.getNext();
     Node elseBody = thenBody.getNext();
 
-    TernaryValue condValue = NodeUtil.getExpressionBooleanValue(cond);
+    TernaryValue condValue = NodeUtil.getImpureBooleanValue(cond);
     if (condValue == TernaryValue.UNKNOWN) {
       return n;  // We can't remove branches otherwise!
     }
@@ -742,7 +742,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   Node tryFoldWhile(Node n) {
     Preconditions.checkArgument(n.getType() == Token.WHILE);
     Node cond = NodeUtil.getConditionExpression(n);
-    if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
+    if (NodeUtil.getPureBooleanValue(cond) != TernaryValue.FALSE) {
       return n;
     }
     NodeUtil.redeclareVarsInsideBranch(n);
@@ -779,12 +779,18 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
+    if (NodeUtil.getImpureBooleanValue(cond) != TernaryValue.FALSE) {
       return n;
     }
 
     NodeUtil.redeclareVarsInsideBranch(n);
-    NodeUtil.removeChild(n.getParent(), n);
+    if (!mayHaveSideEffects(cond)) {
+      NodeUtil.removeChild(n.getParent(), n);
+    } else {
+      Node statement = new Node(Token.EXPR_RESULT, cond.detachFromParent())
+          .copyInformationFrom(cond);
+      n.getParent().replaceChild(n, statement);
+    }
     reportCodeChange();
     return null;
   }
@@ -798,7 +804,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Preconditions.checkArgument(n.getType() == Token.DO);
 
     Node cond = NodeUtil.getConditionExpression(n);
-    if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
+    if (NodeUtil.getImpureBooleanValue(cond) != TernaryValue.FALSE) {
       return n;
     }
 
@@ -812,7 +818,13 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         NodeUtil.isControlStructureCodeBlock(n, n.getFirstChild()));
     Node block = n.removeFirstChild();
 
-    n.getParent().replaceChild(n, block);
+    Node parent =  n.getParent();
+    parent.replaceChild(n, block);
+    if (mayHaveSideEffects(cond)) {
+      Node condStatement = new Node(Token.EXPR_RESULT, cond.detachFromParent())
+          .copyInformationFrom(cond);
+      parent.addChildAfter(condStatement, block);
+    }
     reportCodeChange();
 
     return n;
@@ -837,7 +849,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Remove always true loop conditions.
    */
   private void tryFoldForCondition(Node forCondition) {
-    if (NodeUtil.getBooleanValue(forCondition) == TernaryValue.TRUE) {
+    if (NodeUtil.getPureBooleanValue(forCondition) == TernaryValue.TRUE) {
       forCondition.getParent().replaceChild(forCondition,
           new Node(Token.EMPTY));
       reportCodeChange();
