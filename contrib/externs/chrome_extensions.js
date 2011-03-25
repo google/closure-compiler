@@ -130,7 +130,7 @@ chrome.tabs.executeScript = function(tabId, details, opt_callback) {};
 
 /**
  * @param {number} tabId Tab id.
- * @param {function(Array.<Tab>) : void} callback Callback.
+ * @param {function(Tab) : void} callback Callback.
  */
 chrome.tabs.get = function(tabId, callback) {};
 
