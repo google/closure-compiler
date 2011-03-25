@@ -1484,7 +1484,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     private SourceMap.Format sourceMapFormat =
-      SourceMap.Format.LEGACY;
+      SourceMap.Format.DEFAULT;
 
     /**
      * The detail supplied in the source map file, if generated.

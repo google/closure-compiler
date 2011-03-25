@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.JSSourceFile;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.DetailLevel;
+import com.google.javascript.jscomp.SourceMap.Format;
 
 import junit.framework.TestCase;
 
@@ -619,6 +620,7 @@ public class SourceMapGeneratorV1Test extends TestCase {
       String fileName2) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.sourceMapFormat = Format.LEGACY;
     options.sourceMapOutputPath = "testcode_source_map.out";
     options.sourceMapDetailLevel = detailLevel;
 

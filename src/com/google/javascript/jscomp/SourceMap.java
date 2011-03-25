@@ -42,6 +42,11 @@ public class SourceMap {
          return new SourceMap(new SourceMapGeneratorV1());
        }
      },
+     DEFAULT {
+       @Override SourceMap getInstance() {
+         return new SourceMap(new SourceMapGeneratorV2());
+       }
+     },
      EXPERIMENTIAL {
        @Override SourceMap getInstance() {
          return new SourceMap(new SourceMapGeneratorV2());

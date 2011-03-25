@@ -628,7 +628,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** The source map file format */
   public SourceMap.Format sourceMapFormat =
-      SourceMap.Format.LEGACY;
+      SourceMap.Format.DEFAULT;
 
   /**
    * Charset to use when generating code.  If null, then output ASCII.

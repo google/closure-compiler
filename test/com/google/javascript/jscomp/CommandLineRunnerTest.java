@@ -572,7 +572,7 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
     testSame("var x = 3;");
-    assertEquals(SourceMap.Format.LEGACY,
+    assertEquals(SourceMap.Format.DEFAULT,
         lastCompiler.getOptions().sourceMapFormat);
   }
 
