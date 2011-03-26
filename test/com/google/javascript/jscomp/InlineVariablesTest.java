@@ -910,4 +910,146 @@ public class InlineVariablesTest extends CompilerTestCase {
   public void testInlineNamedFunction() {
     test("function f() {} f();", "(function f(){})()");
   }
+
+  public void testIssue378ModifiedArguments1() {
+    testSame(
+        "function g(callback) {\n" +
+        "  var f = callback;\n" +
+        "  arguments[0] = this;\n" +
+        "  f.apply(this, arguments);\n" +
+        "}");
+  }
+
+  public void testIssue378ModifiedArguments2() {
+    testSame(
+        "function g(callback) {\n" +
+        "  /** @const */\n" +
+        "  var f = callback;\n" +
+        "  arguments[0] = this;\n" +
+        "  f.apply(this, arguments);\n" +
+        "}");
+  }
+
+  public void testIssue378EscapedArguments1() {
+    testSame(
+        "function g(callback) {\n" +
+        "  var f = callback;\n" +
+        "  h(arguments,this);\n" +
+        "  f.apply(this, arguments);\n" +
+        "}\n" +
+        "function h(a,b) {\n" +
+        "  a[0] = b;" +
+        "}");
+  }
+
+  public void testIssue378EscapedArguments2() {
+    testSame(
+        "function g(callback) {\n" +
+        "  /** @const */\n" +
+        "  var f = callback;\n" +
+        "  h(arguments,this);\n" +
+        "  f.apply(this);\n" +
+        "}\n" +
+        "function h(a,b) {\n" +
+        "  a[0] = b;" +
+        "}");
+  }
+
+  public void testIssue378EscapedArguments3() {
+    test(
+        "function g(callback) {\n" +
+        "  var f = callback;\n" +
+        "  f.apply(this, arguments);\n" +
+        "}\n",
+        "function g(callback) {\n" +
+        "  callback.apply(this, arguments);\n" +
+        "}\n");
+  }
+
+  public void testIssue378EscapedArguments4() {
+    testSame(
+        "function g(callback) {\n" +
+        "  var f = callback;\n" +
+        "  h(arguments[0],this);\n" +
+        "  f.apply(this, arguments);\n" +
+        "}\n" +
+        "function h(a,b) {\n" +
+        "  a[0] = b;" +
+        "}");
+  }
+
+  public void testIssue378ArgumentsRead1() {
+    test(
+        "function g(callback) {\n" +
+        "  var f = callback;\n" +
+        "  var g = arguments[0];\n" +
+        "  f.apply(this, arguments);\n" +
+        "}",
+        "function g(callback) {\n" +
+        "  var g = arguments[0];\n" +
+        "  callback.apply(this, arguments);\n" +
+        "}");
+  }
+
+  public void testIssue378ArgumentsRead2() {
+    test(
+        "function g(callback) {\n" +
+        "  var f = callback;\n" +
+        "  h(arguments[0],this);\n" +
+        "  f.apply(this, arguments[0]);\n" +
+        "}\n" +
+        "function h(a,b) {\n" +
+        "  a[0] = b;" +
+        "}",
+        "function g(callback) {\n" +
+        "  h(arguments[0],this);\n" +
+        "  callback.apply(this, arguments[0]);\n" +
+        "}\n" +
+        "function h(a,b) {\n" +
+        "  a[0] = b;" +
+        "}");
+  }
+
+  public void testArgumentsModifiedInOuterFunction() {
+    test(
+      "function g(callback) {\n" +
+      "  var f = callback;\n" +
+      "  arguments[0] = this;\n" +
+      "  f.apply(this, arguments);\n" +
+      "  function inner(callback) {" +
+      "    var x = callback;\n" +
+      "    x.apply(this);\n" +
+      "  }" +
+      "}",
+      "function g(callback) {\n" +
+      "  var f = callback;\n" +
+      "  arguments[0] = this;\n" +
+      "  f.apply(this, arguments);\n" +
+      "  function inner(callback) {" +
+      "    callback.apply(this);\n" +
+      "  }" +
+      "}");
+  }
+
+  public void testArgumentsModifiedInInnerFunction() {
+    test(
+      "function g(callback) {\n" +
+      "  var f = callback;\n" +
+      "  f.apply(this, arguments);\n" +
+      "  function inner(callback) {" +
+      "    var x = callback;\n" +
+      "    arguments[0] = this;\n" +
+      "    x.apply(this);\n" +
+      "  }" +
+      "}",
+      "function g(callback) {\n" +
+      "  callback.apply(this, arguments);\n" +
+      "  function inner(callback) {" +
+      "    var x = callback;\n" +
+      "    arguments[0] = this;\n" +
+      "    x.apply(this);\n" +
+      "  }" +
+      "}");
+  }
+
 }

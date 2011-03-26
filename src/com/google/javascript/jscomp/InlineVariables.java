@@ -196,6 +196,8 @@ class InlineVariables implements CompilerPass {
     private void doInlinesForScope(NodeTraversal t,
         Map<Var, ReferenceCollection> referenceMap) {
 
+      boolean maybeModifiedArguments =
+          maybeEscapedOrModifiedArguments(t.getScope(), referenceMap);
       for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
         Var v = it.next();
 
@@ -217,13 +219,44 @@ class InlineVariables implements CompilerPass {
           // inlining heuristics. See InlineConstantsTest.
           continue;
         } else {
-          inlineNonConstants(v, referenceInfo);
+          inlineNonConstants(v, referenceInfo, maybeModifiedArguments);
         }
       }
     }
 
+    private boolean maybeEscapedOrModifiedArguments(
+        Scope scope, Map<Var, ReferenceCollection> referenceMap) {
+      if (scope.isLocal()) {
+        Var arguments = scope.getArgumentsVar();
+        ReferenceCollection refs = referenceMap.get(arguments);
+        if (refs != null && !refs.references.isEmpty()) {
+          for (Reference ref : refs.references) {
+            Node refNode = ref.getNameNode();
+            Node refParent = ref.getParent();
+            // Any reference that is not a read of the arguments property
+            // consider a escape of the arguments object.
+            if (!(NodeUtil.isGet(refParent)
+                && refNode == ref.getParent().getFirstChild()
+                && !isLValue(refParent))) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    private boolean isLValue(Node n) {
+      Node parent = n.getParent();
+      return (parent.getType() == Token.INC
+          || parent.getType() == Token.DEC
+          || (NodeUtil.isAssignmentOp(parent)
+          && parent.getFirstChild() == n));
+    }
+
     private void inlineNonConstants(
-        Var v, ReferenceCollection referenceInfo) {
+        Var v, ReferenceCollection referenceInfo,
+        boolean maybeModifiedArguments) {
       int refCount = referenceInfo.references.size();
       Reference declaration = referenceInfo.references.get(0);
       Reference init = referenceInfo.getInitializingReference();
@@ -268,7 +301,8 @@ class InlineVariables implements CompilerPass {
       // inline an alias of it. (If the variable was inlined, then the
       // reference data is out of sync. We're better off just waiting for
       // the next pass.)
-      if (!staleVars.contains(v) && referenceInfo.isWellDefined() &&
+      if (!maybeModifiedArguments &&
+          !staleVars.contains(v) && referenceInfo.isWellDefined() &&
           referenceInfo.isAssignedOnceInLifetime()) {
         List<Reference> refs = referenceInfo.references;
         for (int i = 1 /* start from a read */; i < refs.size(); i++) {

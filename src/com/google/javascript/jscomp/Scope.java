@@ -60,6 +60,8 @@ public class Scope implements StaticScope<JSType> {
   /** Whether this is a bottom scope for the purposes of type inference. */
   private final boolean isBottom;
 
+  private Var arguments;
+
   /** Stores info about a variable */
   public static class Var implements StaticSlot<JSType> {
     /** name */
@@ -174,7 +176,7 @@ public class Scope implements StaticScope<JSType> {
      * based on the value reported by {@code NodeUtil}.
      */
     public boolean isConst() {
-      return NodeUtil.isConstantName(nameNode);
+      return nameNode != null && NodeUtil.isConstantName(nameNode);
     }
 
     /**
@@ -278,6 +280,41 @@ public class Scope implements StaticScope<JSType> {
     @Override
     public String toString() {
       return "Scope.Var " + name;
+    }
+  }
+
+  /**
+   * A special subclass of Var used to distinguish "arguments" in the current
+   * scope.
+   */
+  // TODO(johnlenz): Include this the list of Vars for the scope.
+  public static class Arguments extends Var {
+    Arguments(Scope scope) {
+      super(
+        false, // no inferred
+        "arguments", // always arguments
+        null,  // no declaration node
+        // TODO(johnlenz): provide the type of "Arguments".
+        null,  // no type info
+        scope,
+        -1,    // no variable index
+        null,  // input,
+        false, // not a define
+        null   // no jsdoc
+        );
+    }
+
+    @Override public boolean equals(Object other) {
+      if (!(other instanceof Arguments)) {
+        return false;
+      }
+
+      Arguments otherVar = (Arguments) other;
+      return otherVar.scope.getRootNode() == scope.getRootNode();
+    }
+
+    @Override public int hashCode() {
+      return System.identityHashCode(this);
     }
   }
 
@@ -440,6 +477,16 @@ public class Scope implements StaticScope<JSType> {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Get a unique VAR object to represents "arguments" within this scope
+   */
+  public Var getArgumentsVar() {
+    if (arguments == null) {
+      arguments = new Arguments(this);
+    }
+    return arguments;
   }
 
   /**
