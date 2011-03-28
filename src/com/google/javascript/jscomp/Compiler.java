@@ -1086,6 +1086,12 @@ public class Compiler extends AbstractCompiler {
     jsRoot = new Node(Token.BLOCK);
     jsRoot.setIsSyntheticBlock(true);
 
+    externsRoot = new Node(Token.BLOCK);
+    externsRoot.setIsSyntheticBlock(true);
+
+    externAndJsRoot = new Node(Token.BLOCK, externsRoot, jsRoot);
+    externAndJsRoot.setIsSyntheticBlock(true);
+
     if (options.tracer.isOn()) {
       tracker = new PerformanceTracker(jsRoot,
           options.tracer == TracerMode.ALL);
@@ -1096,8 +1102,6 @@ public class Compiler extends AbstractCompiler {
 
     try {
       // Parse externs sources.
-      externsRoot = new Node(Token.BLOCK);
-      externsRoot.setIsSyntheticBlock(true);
       for (CompilerInput input : externs) {
         Node n = input.getAstRoot(this);
         if (hasErrors()) {
@@ -1199,9 +1203,6 @@ public class Compiler extends AbstractCompiler {
 
         jsRoot.addChildToBack(n);
       }
-
-      externAndJsRoot = new Node(Token.BLOCK, externsRoot, jsRoot);
-      externAndJsRoot.setIsSyntheticBlock(true);
 
       return externAndJsRoot;
     } finally {

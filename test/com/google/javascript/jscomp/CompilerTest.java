@@ -64,4 +64,23 @@ public class CompilerTest extends TestCase {
     assertEquals(1, cb.getLineIndex());
     assertEquals(6, cb.getColumnIndex());
   }
+
+  public void testCyclicalDependencyInInputs() {
+    JSSourceFile[] inputs = {
+        JSSourceFile.fromCode(
+            "gin", "goog.provide('gin'); goog.require('tonic'); var gin = {};"),
+        JSSourceFile.fromCode("tonic",
+            "goog.provide('tonic'); goog.require('gin'); var tonic = {};"),
+        JSSourceFile.fromCode(
+            "mix", "goog.require('gin'); goog.require('tonic');")};
+    CompilerOptions options = new CompilerOptions();
+    options.ideMode = true;
+    options.manageClosureDependencies = true;
+    Compiler compiler = new Compiler();
+    compiler.init(new JSSourceFile[0], inputs, options);
+    compiler.parseInputs();
+    assertEquals(compiler.externAndJsRoot, compiler.jsRoot.getParent());
+    assertEquals(compiler.externAndJsRoot, compiler.externsRoot.getParent());
+    assertNotNull(compiler.externAndJsRoot);
+  }
 }
