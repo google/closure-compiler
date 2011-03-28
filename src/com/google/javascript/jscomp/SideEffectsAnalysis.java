@@ -44,7 +44,7 @@ import java.util.Set;
  * See:
  *
  * Banning, John. “An efficient way to find the side effects of procedure
- *      calls and the aliases of variables.” POPL ‘79.
+ *      calls and the aliases of variables.” POPL '79.
  *
  * For an introduction to MOD and REF sets.
  *
