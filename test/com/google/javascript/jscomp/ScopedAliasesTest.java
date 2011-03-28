@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -378,7 +377,8 @@ public class ScopedAliasesTest extends CompilerTestCase {
 
   @Override
   protected ScopedAliases getProcessor(Compiler compiler) {
-    return new ScopedAliases(compiler);
+    return new ScopedAliases(
+        compiler, CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER);
   }
 
   private static class TypeVerifyingPass

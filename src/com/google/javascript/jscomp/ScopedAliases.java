@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -79,7 +80,8 @@ class ScopedAliases implements CompilerPass {
       "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
       "The local variable {0} is in a goog.scope and is not an alias.");
 
-  ScopedAliases(AbstractCompiler compiler) {
+  ScopedAliases(
+      AbstractCompiler compiler, AliasTransformationHandler codeChanges) {
     this.compiler = compiler;
   }
 

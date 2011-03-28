@@ -642,6 +642,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean looseTypes;
 
   /**
+   * Data holder Alias Transformation information accumulated during a compile.
+   */
+  private transient AliasTransformationHandler aliasHandler;
+
+  /**
    * Initializes compiler options. All options are disabled by default.
    *
    * Command-line frontends to the compiler should set these properties
@@ -788,6 +793,9 @@ public class CompilerOptions implements Serializable, Cloneable {
     externExports = false;
     nameReferenceReportPath = null;
     nameReferenceGraphPath = null;
+
+    // Debugging
+    aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
   }
 
   /**
@@ -1153,6 +1161,15 @@ public class CompilerOptions implements Serializable, Cloneable {
     return clone;
   }
 
+  public void setAliasTransformationHandler(
+      AliasTransformationHandler changes) {
+    this.aliasHandler = changes;
+  }
+
+  public AliasTransformationHandler getAliasTransformationHandler() {
+    return this.aliasHandler;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   // Enums
 
@@ -1218,6 +1235,90 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     public boolean shouldStrip() {
       return this == STRIP;
+    }
+  }
+
+  /**
+   * A Role Specific Interface for JsCompiler that represents a data holder
+   * object which is used to store goog.scope alias code changes to code made
+   * during a compile. There is no guarantee that individual alias changes are
+   * invoked in the order they occur during compilation, so implementations
+   * should not assume any relevance to the order changes arrive.
+   * <p>
+   * Calls to the mutators are expected to resolve very quickly, so
+   * implementations should not perform expensive operations in the mutator
+   * methods.
+   *
+   */
+  public interface AliasTransformationHandler {
+
+    /**
+     * Builds an AliasCodeChange implementation and returns it to the caller.
+     * <p>
+     * Callers are allowed to request multiple AliasTransformation instances for
+     * the same file, though it is expected that the first and last char values
+     * for multiple instances will not overlap.
+     * <p>
+     * This method is expected to have a side-effect of storing off the created
+     * AliasTransformation, which guarantees that invokers of this interface
+     * cannot leak AliasTransformation to this implementation that the
+     * implementor did not create
+     *
+     * @param sourceFile the source file the aliases re contained in.
+     * @param firstChar the first character in the file to which the aliases are
+     *        mapped.
+     * @param lastChar the last character in the file to which the aliases are
+     *        mapped.
+     */
+    public AliasTransformation logAliasChangeSet(
+        String sourceFile, int firstChar, int lastChar);
+  }
+
+  /**
+   * A Role Specific Interface for the JsCompiler to report aliases used to
+   * change the code during a compile.
+   * <p>
+   * While aliases defined by goog.scope are expected to by only 1 per file, and
+   * the only top level structure in the file, this is not enforced.
+   */
+  public interface AliasTransformation {
+
+    /**
+     * Adds an alias definition to the AliasTransformation instance.
+     * <p>
+     * Last definition for a given alias is kept if an alias is inserted
+     * multiple times (since this is generally the behavior in JavaScript code).
+     *
+     * @param alias the name of the alias.
+     * @param definition the definition of the alias.
+     */
+    void addAlias(String alias, String definition);
+  }
+
+  /**
+   * A Null implementation of the CodeChanges interface which performs all
+   * operations as a No-Op
+   */
+  static final AliasTransformationHandler NULL_ALIAS_TRANSFORMATION_HANDLER =
+      new NullAliasTransformationHandler();
+
+  private static class NullAliasTransformationHandler
+      implements AliasTransformationHandler, Serializable {
+
+    private static final AliasTransformation NULL_ALIAS_TRANSFORMATION =
+        new NullAliasTransformation();
+
+    @Override
+    public AliasTransformation logAliasChangeSet(
+        String sourceFile, int firstChar, int lastChar) {
+      return NULL_ALIAS_TRANSFORMATION;
+    }
+
+    private static class NullAliasTransformation
+        implements AliasTransformation, Serializable {
+      @Override
+      public void addAlias(String alias, String definition) {
+      }
     }
   }
 }

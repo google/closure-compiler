@@ -853,7 +853,8 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("processGoogScopeAliases", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new ScopedAliases(compiler);
+      return new ScopedAliases(
+              compiler, options.getAliasTransformationHandler());
     }
   };
 
