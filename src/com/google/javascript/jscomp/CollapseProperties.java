@@ -452,8 +452,8 @@ class CollapseProperties implements CompilerPass {
     boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames();
 
     // Handle this name first so that nested object literals get unrolled.
-    if (n.canCollapse() && canCollapseChildNames) {
-      updateObjLitOrFunctionDeclaration(n, alias);
+    if (n.canCollapse()) {
+      updateObjLitOrFunctionDeclaration(n, alias, canCollapseChildNames);
     }
 
     if (n.props != null) {
@@ -557,21 +557,44 @@ class CollapseProperties implements CompilerPass {
    * This involves flattening the global name (if it's not just a global
    * variable name already), collapsing object literal keys into global
    * variables, declaring stub global variables for properties added later
-   * in a local scope, and eliminating the global name entirely (if possible).
+   * in a local scope.
+   *
+   * It may seem odd that this function also takes care of declaring stubs
+   * for direct children. The ultimate goal of this function is to eliminate
+   * the global name entirely (when possible), so that "middlemen" namespaces
+   * disappear, and to do that we need to make sure that all the direct children
+   * will be collapsed as well.
    *
    * @param n An object representing a global name (e.g. "a", "a.b.c")
    * @param alias The flattened name for {@code n} (e.g. "a", "a$b$c")
+   * @param canCollapseChildNames Whether it's possible to collapse children of
+   *     this name. (This is mostly passed for convenience; it's equivalent to
+   *     n.canCollapseChildNames()).
    */
-  private void updateObjLitOrFunctionDeclaration(Name n, String alias) {
+  private void updateObjLitOrFunctionDeclaration(
+      Name n, String alias, boolean canCollapseChildNames) {
+    if (n.declaration == null) {
+      // Some names do not have declarations, because they
+      // are only defined in local scopes.
+      return;
+    }
+
+    if (n.declaration.getTwin() != null) {
+      // Twin declarations will get handled when normal references
+      // are handled.
+      return;
+    }
+
     switch (n.declaration.node.getParent().getType()) {
       case Token.ASSIGN:
-        updateObjLitOrFunctionDeclarationAtAssignNode(n, alias);
+        updateObjLitOrFunctionDeclarationAtAssignNode(
+            n, alias, canCollapseChildNames);
         break;
       case Token.VAR:
-        updateObjLitOrFunctionDeclarationAtVarNode(n);
+        updateObjLitOrFunctionDeclarationAtVarNode(n, canCollapseChildNames);
         break;
       case Token.FUNCTION:
-        updateFunctionDeclarationAtFunctionNode(n);
+        updateFunctionDeclarationAtFunctionNode(n, canCollapseChildNames);
         break;
     }
   }
@@ -585,7 +608,7 @@ class CollapseProperties implements CompilerPass {
    * @param alias The flattened name for {@code n} (e.g. "a", "a$b$c")
    */
   private void updateObjLitOrFunctionDeclarationAtAssignNode(
-      Name n, String alias) {
+      Name n, String alias, boolean canCollapseChildNames) {
     // NOTE: It's important that we don't add additional nodes
     // (e.g. a var node before the exprstmt) because the exprstmt might be
     // the child of an if statement that's not inside a block).
@@ -596,13 +619,16 @@ class CollapseProperties implements CompilerPass {
     Node varParent = ref.node.getAncestor(3);
     Node gramps = ref.node.getAncestor(2);
     boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+    boolean insertedVarNode = false;
 
     if (isObjLit && n.canEliminate()) {
       // Eliminate the object literal altogether.
       varParent.replaceChild(gramps, varNode);
       ref.node = null;
+      insertedVarNode = true;
 
-    } else {
+    } else if (!n.isSimpleName()) {
+      // Create a VAR node to declare the name.
       if (rvalue.getType() == Token.FUNCTION) {
         checkForHosedThisReferences(rvalue, n.docInfo, n);
       }
@@ -623,21 +649,25 @@ class CollapseProperties implements CompilerPass {
 
       // Update the node ancestry stored in the reference.
       ref.node = nameNode;
+      insertedVarNode = true;
     }
 
-    if (isObjLit) {
-      declareVarsForObjLitValues(
-          n, alias, rvalue,
-          varNode, varParent.getChildBefore(varNode), varParent);
+    if (canCollapseChildNames) {
+      if (isObjLit) {
+        declareVarsForObjLitValues(
+            n, alias, rvalue,
+            varNode, varParent.getChildBefore(varNode), varParent);
+      }
+
+      addStubsForUndeclaredProperties(n, alias, varParent, varNode);
     }
 
-    addStubsForUndeclaredProperties(n, alias, varParent, varNode);
-
-    if (!varNode.hasChildren()) {
-      varParent.removeChild(varNode);
+    if (insertedVarNode) {
+      if (!varNode.hasChildren()) {
+        varParent.removeChild(varNode);
+      }
+      compiler.reportCodeChange();
     }
-
-    compiler.reportCodeChange();
   }
 
   /**
@@ -670,7 +700,12 @@ class CollapseProperties implements CompilerPass {
    *
    * @param n An object representing a global name (e.g. "a")
    */
-  private void updateObjLitOrFunctionDeclarationAtVarNode(Name n) {
+  private void updateObjLitOrFunctionDeclarationAtVarNode(
+      Name n, boolean canCollapseChildNames) {
+    if (!canCollapseChildNames) {
+      return;
+    }
+
     Ref ref = n.declaration;
     String name = ref.node.getString();
     Node rvalue = ref.node.getFirstChild();
@@ -712,7 +747,12 @@ class CollapseProperties implements CompilerPass {
    *
    * @param n An object representing a global name (e.g. "a")
    */
-  private void updateFunctionDeclarationAtFunctionNode(Name n) {
+  private void updateFunctionDeclarationAtFunctionNode(
+      Name n, boolean canCollapseChildNames) {
+    if (!canCollapseChildNames) {
+      return;
+    }
+
     Ref ref = n.declaration;
     String fnName = ref.node.getString();
     addStubsForUndeclaredProperties(
@@ -832,6 +872,7 @@ class CollapseProperties implements CompilerPass {
    */
   private int addStubsForUndeclaredProperties(
       Name n, String alias, Node parent, Node addAfter) {
+    Preconditions.checkState(n.canCollapseUnannotatedChildNames());
     Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
     Preconditions.checkNotNull(addAfter);
     int numStubs = 0;

@@ -1270,4 +1270,75 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   public void testPropertyOnGlobalFunction() {
     testSame("function Map() {} Map.foo = 3; Map;");
   }
+
+  public void testIssue389() {
+    test(
+        "function alias() {}" +
+        "var dojo = {};" +
+        "dojo.gfx = {};" +
+        "dojo.declare = function() {};" +
+        "/** @constructor */" +
+        "dojo.gfx.Shape = function() {};" +
+        "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');" +
+        "alias(dojo);",
+        "function alias() {}" +
+        "var dojo = {};" +
+        "dojo.gfx = {};" +
+        "dojo.declare = function() {};" +
+        "/** @constructor */" +
+        "var dojo$gfx$Shape = function() {};" +
+        "dojo$gfx$Shape = dojo.declare('dojo.gfx.Shape');" +
+        "alias(dojo);",
+        null,
+        CollapseProperties.UNSAFE_NAMESPACE_WARNING);
+  }
+
+  public void testAliasedTopLevelName() {
+    testSame(
+        "function alias() {}" +
+        "var dojo = {};" +
+        "dojo.gfx = {};" +
+        "dojo.declare = function() {};" +
+        "dojo.gfx.Shape = {SQUARE: 2};" +
+        "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');" +
+        "alias(dojo);" +
+        "alias(dojo$gfx$Shape$SQUARE);");
+  }
+
+  public void testAliasedTopLevelEnum() {
+    test(
+        "function alias() {}" +
+        "var dojo = {};" +
+        "dojo.gfx = {};" +
+        "dojo.declare = function() {};" +
+        "/** @enum {number} */" +
+        "dojo.gfx.Shape = {SQUARE: 2};" +
+        "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');" +
+        "alias(dojo);" +
+        "alias(dojo.gfx.Shape.SQUARE);",
+        "function alias() {}" +
+        "var dojo = {};" +
+        "dojo.gfx = {};" +
+        "dojo.declare = function() {};" +
+        "/** @constructor */" +
+        "var dojo$gfx$Shape = {SQUARE: 2};" +
+        "dojo$gfx$Shape = dojo.declare('dojo.gfx.Shape');" +
+        "alias(dojo);" +
+        "alias(dojo$gfx$Shape.SQUARE);",
+        null,
+        CollapseProperties.UNSAFE_NAMESPACE_WARNING);
+  }
+
+  public void testAssignFunctionBeforeDefinition() {
+    testSame(
+        "f = function() {};" +
+        "var f = null;");
+  }
+
+  public void testObjectLitBeforeDefinition() {
+    testSame(
+        "a = {b: 3};" +
+        "var a = null;" +
+        "this.c = a.b;");
+  }
 }
