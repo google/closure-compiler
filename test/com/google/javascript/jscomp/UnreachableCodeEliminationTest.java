@@ -272,4 +272,180 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
          "  }\n" +
          "}");
   }
+
+  public void testIssue4177428a() {
+    test(
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "      break a\n" +  // Remove this...
+        "    }\n" +
+        "  }\n" +
+        "  alert(action)\n" + // but not this.
+        "};",
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "    }\n" +
+        "  }\n" +
+        "  alert(action)\n" +  // but not this.
+        "};"
+        );
+  }
+
+  public void testIssue4177428b() {
+    test(
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "      break a\n" +  // Remove this...
+        "    }\n" +
+        "    } finally {\n" +
+        "    }\n" +
+        "  }\n" +
+        "  alert(action)\n" + // but not this.
+        "};",
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "      break a\n" +  // Remove this...
+        "    }\n" +
+        "    } finally {\n" +
+        "    }\n" +
+        "  }\n" +
+        "  alert(action)\n" +  // but not this.
+        "};"
+        );
+  }
+
+  public void testIssue4177428c() {
+    test(
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "    } finally {\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "      break a\n" +  // Remove this...
+        "    }\n" +
+        "    }\n" +
+        "  }\n" +
+        "  alert(action)\n" + // but not this.
+        "};",
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "    } finally {\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "    }\n" +
+        "    }\n" +
+        "  }\n" +
+        "  alert(action)\n" +  // but not this.
+        "};"
+        );
+  }
+
+  public void testIssue4177428_continue() {
+    test(
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: do {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "      continue a\n" +  // Remove this...
+        "    }\n" +
+        "  } while(false)\n" +
+        "  alert(action)\n" + // but not this.
+        "};",
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: do {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "    }\n" +
+        "  } while (false)\n" +
+        "  alert(action)\n" +
+        "};"
+        );
+  }
+
+  public void testIssue4177428_return() {
+    test(
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "      return\n" +  // Remove this...
+        "    }\n" +
+        "  }\n" +
+        "  alert(action)\n" + // and this.
+        "};",
+        "f = function() {\n" +
+        "  var action;\n" +
+        "  a: {\n" +
+        "    var proto = null;\n" +
+        "    try {\n" +
+        "      proto = new Proto\n" +
+        "    } finally {\n" +
+        "      action = proto;\n" +
+        "    }\n" +
+        "  }\n" +
+        "};"
+        );
+  }
+
+  public void testIssue4177428_multifinally() {
+    testSame(
+        "a: {\n" +
+        " try {\n" +
+        " try {\n" +
+        " } finally {\n" +
+        "   break a;\n" +
+        " }\n" +
+        " } finally {\n" +
+        "   x = 1;\n" +
+        " }\n" +
+        "}");
+  }
 }

@@ -553,6 +553,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       label = node.getFirstChild().getString();
     }
     Node cur;
+    Node previous = null;
     Node lastJump;
     Node parent = node.getParent();
     /*
@@ -567,7 +568,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     for (cur = node, lastJump = node;
         !isBreakTarget(cur, label);
         cur = parent, parent = parent.getParent()) {
-      if (cur.getType() == Token.TRY && NodeUtil.hasFinally(cur)) {
+      if (cur.getType() == Token.TRY && NodeUtil.hasFinally(cur)
+          && cur.getLastChild() != previous) {
         if (lastJump == node) {
           createEdge(lastJump, Branch.UNCOND, computeFallThrough(
               cur.getLastChild()));
@@ -577,6 +579,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         lastJump = cur;
       }
       Preconditions.checkState(parent != null, "Cannot find break target.");
+      previous = cur;
     }
     if (lastJump == node) {
       createEdge(lastJump, Branch.UNCOND, computeFollowNode(cur, this));
@@ -591,13 +594,16 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       label = node.getFirstChild().getString();
     }
     Node cur;
+    Node previous = null;
     Node lastJump;
+
     // Similar to handBreak's logic with a few minor variation.
     Node parent = node.getParent();
     for (cur = node, lastJump = node;
         !isContinueTarget(cur, parent, label);
         cur = parent, parent = parent.getParent()) {
-      if (cur.getType() == Token.TRY && NodeUtil.hasFinally(cur)) {
+      if (cur.getType() == Token.TRY && NodeUtil.hasFinally(cur)
+          && cur.getLastChild() != previous) {
         if (lastJump == node) {
           createEdge(lastJump, Branch.UNCOND, cur.getLastChild());
         } else {
@@ -606,6 +612,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         lastJump = cur;
       }
       Preconditions.checkState(parent != null, "Cannot find continue target.");
+      previous = cur;
     }
     Node iter = cur;
     if (cur.getChildCount() == 4) {
