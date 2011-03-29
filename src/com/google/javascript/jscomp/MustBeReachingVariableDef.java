@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Token;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -355,12 +356,29 @@ final class MustBeReachingVariableDef extends
   private void escapeParameters(MustDef output) {
     for (Iterator<Var> i = jsScope.getVars(); i.hasNext();) {
       Var v = i.next();
-      if (v.getParentNode().getType() == Token.LP) {
+      if (isParameter(v)) {
         // Assume we no longer know where the parameter comes from
         // anymore.
         output.reachingDef.put(v, null);
       }
     }
+
+    // Also, assume we no longer know anything that depends on a parameter.
+    for (Entry<Var, Definition> pair: output.reachingDef.entrySet()) {
+      Definition value = pair.getValue();
+      if (value == null) {
+        continue;
+      }
+      for (Var dep : value.depends) {
+        if (isParameter(dep)) {
+          output.reachingDef.put(pair.getKey(), null);
+        }
+      }
+    }
+  }
+
+  private boolean isParameter(Var v) {
+    return v.getParentNode().getType() == Token.LP;
   }
 
   /**
