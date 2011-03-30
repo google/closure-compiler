@@ -1848,8 +1848,8 @@ public class DefaultPassConfig extends PassConfig {
 
       case ALL_UNQUOTED:
         RenameProperties rprop = new RenameProperties(
-            compiler, options.generatePseudoNames, prevPropertyMap,
-            reservedChars);
+            compiler, options.propertyAffinity, options.generatePseudoNames,
+            prevPropertyMap, reservedChars);
         rprop.process(externs, root);
         return rprop.getPropertyMap();
 

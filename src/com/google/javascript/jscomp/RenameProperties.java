@@ -87,8 +87,7 @@ class RenameProperties implements CompilerPass {
    *
    * The graph would have X -> Y with the edge of N.
    */
-  private final UndiGraph<Property, PropertyAffinity> affinityGraph =
-      LinkedUndirectedGraph.createWithoutAnnotations();
+  private final UndiGraph<Property, PropertyAffinity> affinityGraph;
 
   // Property names that don't get renamed
   private final Set<String> externedNames = new HashSet<String>(
@@ -149,32 +148,35 @@ class RenameProperties implements CompilerPass {
    * Creates an instance.
    *
    * @param compiler The JSCompiler
+   * @param affinity Optimize for affinity information.
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
    */
-  RenameProperties(AbstractCompiler compiler,
+  RenameProperties(AbstractCompiler compiler, boolean affinity,
       boolean generatePseudoNames) {
-    this(compiler, generatePseudoNames, null, null);
+    this(compiler, affinity, generatePseudoNames, null, null);
   }
 
   /**
    * Creates an instance.
    *
    * @param compiler The JSCompiler.
+   * @param affinity Optimize for affinity information.
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
    * @param prevUsedPropertyMap The property renaming map used in a previous
    *        compilation.
    */
-  RenameProperties(AbstractCompiler compiler,
+  RenameProperties(AbstractCompiler compiler, boolean affinity,
       boolean generatePseudoNames, VariableMap prevUsedPropertyMap) {
-    this(compiler, generatePseudoNames, prevUsedPropertyMap, null);
+    this(compiler, affinity, generatePseudoNames, prevUsedPropertyMap, null);
   }
 
   /**
    * Creates an instance.
    *
    * @param compiler The JSCompiler.
+   * @param affinity Optimize for affinity information.
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
    * @param prevUsedPropertyMap The property renaming map used in a previous
@@ -183,6 +185,7 @@ class RenameProperties implements CompilerPass {
    *   generated names
    */
   RenameProperties(AbstractCompiler compiler,
+      boolean affinity,
       boolean generatePseudoNames,
       VariableMap prevUsedPropertyMap,
       @Nullable char[] reservedCharacters) {
@@ -190,6 +193,11 @@ class RenameProperties implements CompilerPass {
     this.generatePseudoNames = generatePseudoNames;
     this.prevUsedPropertyMap = prevUsedPropertyMap;
     this.reservedCharacters = reservedCharacters;
+    if (affinity) {
+      this.affinityGraph = LinkedUndirectedGraph.createWithoutAnnotations();
+    } else {
+      this.affinityGraph = null;
+    }
   }
 
   @Override
@@ -211,7 +219,9 @@ class RenameProperties implements CompilerPass {
     }
 
     compiler.addToDebugLog("JS property assignments:");
-    computeAffinityScores();
+    if (affinityGraph != null) {
+      computeAffinityScores();
+    }
 
     // Assign names, sorted by descending frequency to minimize code size.
     Set<Property> propsByFreq = new TreeSet<Property>(FREQUENCY_COMPARATOR);
@@ -513,7 +523,9 @@ class RenameProperties implements CompilerPass {
       if (prop == null) {
         prop = new Property(name);
         propertyMap.put(name, prop);
-        affinityGraph.createNode(prop);
+        if (affinityGraph != null) {
+          affinityGraph.createNode(prop);
+        }
       }
       prop.numOccurrences++;
       if (currentHighAffinityProperties != null) {
@@ -530,6 +542,9 @@ class RenameProperties implements CompilerPass {
 
     @Override
     public void exitScope(NodeTraversal t) {
+      if (affinityGraph == null) {
+        return;
+      }
       if (!t.inGlobalScope() && t.getScope().getParent().isGlobal()) {
         for (Property p1 : currentHighAffinityProperties) {
           for (Property p2 : currentHighAffinityProperties) {
@@ -566,6 +581,7 @@ class RenameProperties implements CompilerPass {
   }
 
   private class PropertyAffinity {
+    // This will forever be zero if no affinity information was gathered.
     private int affinity = 0;
 
     private PropertyAffinity(int affinity) {
