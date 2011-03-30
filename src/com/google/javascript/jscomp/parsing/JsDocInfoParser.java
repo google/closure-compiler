@@ -780,19 +780,18 @@ public final class JsDocInfoParser {
                 case THIS:
                 case TYPE:
                 case TYPEDEF:
-                  skipEOLs();
                   lineno = stream.getLineno();
                   charno = stream.getCharno();
 
-                  token = next();
-
                   Node typeNode = null;
-                  if (annotation == Annotation.RETURN &&
-                      token != JsDocToken.LC) {
+                  if (!lookAheadForTypeAnnotation() &&
+                      annotation == Annotation.RETURN) {
                     // If RETURN doesn't have a type annotation, record
                     // it as the unknown type.
                     typeNode = newNode(Token.QMARK);
                   } else {
+                    skipEOLs();
+                    token = next();
                     typeNode = parseAndRecordTypeNode(token, lineno, charno);
                   }
 
@@ -822,9 +821,6 @@ public final class JsDocInfoParser {
                               "msg.jsdoc.incompat.type", lineno, charno);
                           break;
                         }
-
-                        // *Update* the token to that after the type annotation.
-                        token = current();
 
                         // Find the return's description (if applicable).
                         if (jsdocBuilder.shouldParseDocumentation()) {
@@ -1281,7 +1277,6 @@ public final class JsDocInfoParser {
 
     // Read the content from the first line.
     String line = stream.getRemainingJSDocLine();
-
     if (option != WhitespaceOption.PRESERVE) {
       line = line.trim();
     }
@@ -2243,5 +2238,31 @@ public final class JsDocInfoParser {
    */
   JSDocInfo getFileOverviewJSDocInfo() {
     return fileOverviewJSDocInfo;
+  }
+
+  /**
+   * Look ahead for a type annotation by advancing the character stream.
+   * Does not modify the token stream.
+   * This is kind of a hack, and is only necessary because we use the token
+   * stream to parse types, but need the underlying character stream to get
+   * JsDoc descriptions.
+   * @return Whether we found a type annotation.
+   */
+  private boolean lookAheadForTypeAnnotation() {
+    boolean matchedLc = false;
+    int c;
+    while (true) {
+      c = stream.getChar();
+      if (c == ' ') {
+        continue;
+      } else if (c == '{') {
+        matchedLc = true;
+        break;
+      } else {
+        break;
+      }
+    }
+    stream.ungetChar(c);
+    return matchedLc;
   }
 }

@@ -250,7 +250,7 @@ class JsDocTokenStream {
     stringBufferTop = N + 1;
   }
 
-  private void ungetChar(int c) {
+  void ungetChar(int c) {
     // can not unread past across line boundary
     assert(!(ungetCursor != 0 && ungetBuffer[ungetCursor - 1] == '\n'));
     ungetBuffer[ungetCursor++] = c;
