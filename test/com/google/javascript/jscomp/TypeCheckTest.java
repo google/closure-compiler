@@ -8430,6 +8430,24 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type { {impossibleProperty} } */ var y = new ActiveXObject();");
   }
 
+  public void testDuplicateRecordFields1() throws Exception {
+    testTypes("/**"
+         + "* @param {{x:string, x:number}} a"
+         + "*/"
+         + "function f(a) {};",
+         "Parse error. Duplicate record field x");
+  }
+
+  public void testDuplicateRecordFields2() throws Exception {
+    testTypes("/**"
+         + "* @param {{name:string,number:x,number:y}} a"
+         + " */"
+         + "function f(a) {};",
+         new String[] { "Parse error. Duplicate record field number",
+           "Bad type annotation. Unknown type x",
+           "Bad type annotation. Unknown type y"});
+  }
+
   private void checkObjectType(ObjectType objectType, String propertyName,
         JSType expectedType) {
     assertTrue("Expected " + objectType.getReferenceName() +

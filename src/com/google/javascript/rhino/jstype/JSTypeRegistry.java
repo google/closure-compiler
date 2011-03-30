@@ -1565,7 +1565,13 @@ public class JSTypeRegistry implements Serializable {
       }
 
       // Add the property to the record.
-      builder.addProperty(fieldName, fieldType, fieldNameNode);
+      if (builder.addProperty(fieldName, fieldType, fieldNameNode) == null) {
+        // Duplicate field name, warning and skip
+        reporter.warning(
+            "Duplicate record field " + fieldName,
+            sourceName,
+            n.getLineno(), "", n.getCharno());
+      }
     }
 
     return builder.build();
