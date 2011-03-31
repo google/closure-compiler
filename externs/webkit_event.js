@@ -27,3 +27,22 @@ Event.prototype.wheelDeltaX;
 
 /** @type {number} */
 Event.prototype.wheelDeltaY;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @see http://developer.apple.com/library/safari/documentation/AudioVideo/Reference/WebKitAnimationEventClassReference/WebKitAnimationEvent/WebKitAnimationEvent.html
+ */
+function WebKitAnimationEvent() {}
+
+/**
+ * @type {string}
+ * @const
+ */
+WebKitAnimationEvent.prototype.animationName;
+
+/**
+ * @type {number}
+ * @const
+ */
+WebKitAnimationEvent.prototype.elapsedTime;
