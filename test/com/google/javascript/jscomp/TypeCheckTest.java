@@ -8443,8 +8443,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
          + "* @param {{name:string,number:x,number:y}} a"
          + " */"
          + "function f(a) {};",
-         new String[] { "Parse error. Duplicate record field number",
-           "Bad type annotation. Unknown type x",
+         new String[] {"Bad type annotation. Unknown type x",
+           "Parse error. Duplicate record field number",
            "Bad type annotation. Unknown type y"});
   }
 

@@ -1570,7 +1570,7 @@ public class JSTypeRegistry implements Serializable {
         reporter.warning(
             "Duplicate record field " + fieldName,
             sourceName,
-            n.getLineno(), "", n.getCharno());
+            n.getLineno(), "", fieldNameNode.getCharno());
       }
     }
 
