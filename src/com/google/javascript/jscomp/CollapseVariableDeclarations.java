@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -125,10 +126,17 @@ class CollapseVariableDeclarations implements CompilerPass {
    */
   private class GatherCollapses extends AbstractPostOrderCallback {
 
-    // TODO(user): This is purely a subtree peep hole optimization. We
-    // can rewrite this so it no longer have a sperate gather and merge stage.
+    // If a VAR is declared like
+    // var x;
+    // then we should not create new VAR nodes for it later in the tree.
+    // This is a workaround for a bug in Firefox.
+    private final Set<Var> blacklistedVars = Sets.newHashSet();
 
     public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.getType() == Token.VAR) {
+        blacklistStubVars(t, n);
+      }
+
       // Only care about var nodes
       if (n.getType() != Token.VAR && !canBeRedeclared(n, t.getScope())) return;
 
@@ -152,6 +160,7 @@ class CollapseVariableDeclarations implements CompilerPass {
           (n.getType() == Token.VAR || canBeRedeclared(n, t.getScope()))) {
 
         if (NodeUtil.isVar(n)) {
+          blacklistStubVars(t, n);
           hasVar = true;
         }
 
@@ -166,20 +175,31 @@ class CollapseVariableDeclarations implements CompilerPass {
         collapses.add(new Collapse(varNode, n, parent));
       }
     }
-  }
 
-  private boolean canBeRedeclared(Node n, Scope s) {
-    if (!NodeUtil.isExprAssign(n)) {
-      return false;
-    }
-    Node assign = n.getFirstChild();
-    Node lhs = assign.getFirstChild();
-
-    if (!NodeUtil.isName(lhs)) {
-      return false;
+    private void blacklistStubVars(NodeTraversal t, Node varNode) {
+      for (Node child = varNode.getFirstChild();
+           child != null; child = child.getNext()) {
+        if (child.getFirstChild() == null) {
+          blacklistedVars.add(t.getScope().getVar(child.getString()));
+        }
+      }
     }
 
-    return s.isDeclared(lhs.getString(), false);
+    private boolean canBeRedeclared(Node n, Scope s) {
+      if (!NodeUtil.isExprAssign(n)) {
+        return false;
+      }
+      Node assign = n.getFirstChild();
+      Node lhs = assign.getFirstChild();
+
+      if (!NodeUtil.isName(lhs)) {
+        return false;
+      }
+
+      Var var = s.getVar(lhs.getString());
+      return var != null &&
+          var.getScope() == s && !blacklistedVars.contains(var);
+    }
   }
 
   private void applyCollapses() {

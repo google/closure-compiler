@@ -66,6 +66,16 @@ public class CollapseVariableDeclarationsTest extends CompilerTestCase {
     testSame("var x; for(x = 1; x = 2; z = 3) {x = 4}");
   }
 
+  public void testIssue397() {
+    test("var x; var y = 3; x = 5;",
+         "var x, y = 3; x = 5;");
+    testSame("var x; x = 5; var z = 7;");
+    test("var x; var y = 3; x = 5; var z = 7;",
+         "var x, y = 3; x = 5; var z = 7;");
+    test("var a = 1; var x; var y = 3; x = 5;",
+         "var a = 1, x, y = 3; x = 5;");
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CollapseVariableDeclarations(compiler);
