@@ -46,7 +46,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    */
   private static final String BASE64_MAP =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-      "abcdefghijklmnopqrstuvwzyz" +
+      "abcdefghijklmnopqrstuvwxyz" +
       "0123456789+/";
 
   /**
