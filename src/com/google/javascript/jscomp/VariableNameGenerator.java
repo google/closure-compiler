@@ -17,9 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.Scope.Var;
 
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -30,15 +28,16 @@ import java.util.Set;
  */
 class VariableNameGenerator {
   private final NameGenerator names;
+  private final Scope scope;
   VariableNameGenerator(Scope scope) {
+    this.scope = scope;
     Set<String> usedNames = Sets.newHashSet();
-    for (Iterator<Var> i = scope.getVars(); i.hasNext();) {
-      usedNames.add(i.next().getName());
-    }
     names = new NameGenerator(usedNames, "", null);
   }
 
-  String getNameNewName() {
-    return names.generateNextName();
+  String getNextNewName() {
+    String name = null;
+    while (scope.isDeclared(name = names.generateNextName(), true)) {}
+    return name;
   }
 }

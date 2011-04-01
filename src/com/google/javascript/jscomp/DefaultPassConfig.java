@@ -617,6 +617,10 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(nameUnmappedAnonymousFunctions);
     }
 
+    if (options.operaCompoundAssignFix) {
+      passes.add(operaCompoundAssignFix);
+    }
+
     // Safety check
     if (options.checkSymbols) {
       passes.add(sanityCheckVars);
@@ -1707,6 +1711,14 @@ public class DefaultPassConfig extends PassConfig {
           anonymousFunctionNameMap = naf.getFunctionMap();
         }
       };
+    }
+  };
+
+  private final PassFactory operaCompoundAssignFix =
+      new PassFactory("operaCompoundAssignFix", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new OperaCompoundAssignFix(compiler);
     }
   };
 

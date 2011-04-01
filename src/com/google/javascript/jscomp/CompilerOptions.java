@@ -566,6 +566,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   // A list of strings that should not be used as replacements
   Set<String> replaceStringsReservedStrings;
 
+  // Fixes open source issue: 390
+  boolean operaCompoundAssignFix;
+
   //--------------------------------
   // Output options
   //--------------------------------
@@ -800,6 +803,8 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     // Debugging
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
+
+    operaCompoundAssignFix = true;
   }
 
   /**
