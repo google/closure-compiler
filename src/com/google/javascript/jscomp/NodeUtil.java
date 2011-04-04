@@ -1438,7 +1438,8 @@ public final class NodeUtil {
    * Returns true if the shallow scope contains references to 'this' keyword
    */
   static boolean referencesThis(Node n) {
-    return containsType(n, Token.THIS, new MatchNotFunction());
+    Node start = (isFunction(n)) ? n.getLastChild() : n;
+    return containsType(start, Token.THIS, new MatchNotFunction());
   }
 
   /**

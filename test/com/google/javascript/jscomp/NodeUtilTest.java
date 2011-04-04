@@ -618,15 +618,21 @@ public class NodeUtilTest extends TestCase {
   public void testReferencesThis() {
     assertTrue(NodeUtil.referencesThis(
         parse("this")));
-    assertTrue(NodeUtil.referencesThis(
-        parse("function foo(){}(this)")));
+    // Don't descend into functions (starts at the script node)
+    assertFalse(NodeUtil.referencesThis(
+        parse("function foo(){this}")));
+    // But starting with a function properly check for 'this'
+    Node n = parse("function foo(){this}").getFirstChild();
+    assertEquals(n.getType(), Token.FUNCTION);
+    assertTrue(NodeUtil.referencesThis(n));
     assertTrue(NodeUtil.referencesThis(
         parse("b?this:null")));
 
     assertFalse(NodeUtil.referencesThis(
         parse("a")));
-    assertFalse(NodeUtil.referencesThis(
-        parse("function foo(){}")));
+    n = parse("function foo(){}").getFirstChild();
+    assertEquals(n.getType(), Token.FUNCTION);
+    assertFalse(NodeUtil.referencesThis(n));
     assertFalse(NodeUtil.referencesThis(
         parse("(b?foo():null)")));
   }

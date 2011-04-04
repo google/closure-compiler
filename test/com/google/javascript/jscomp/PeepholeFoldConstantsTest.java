@@ -988,6 +988,53 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("(![foo()])");
   }
 
+  public void testFoldObjectLiteralRef() {
+    // Leave extra side-effects in place
+    testSame("var x = ({a:foo(),b:bar()}).a");
+    testSame("var x = ({a:1,b:bar()}).a");
+    testSame("function f() { return {b:foo(), a:2}.a; }");
+
+    // on the LHS the object act as a temporary leave it in place.
+    testSame("({a:x}).a = 1");
+    testSame("({a:x}).a += 1");
+    testSame("({a:x}).a ++");
+    testSame("({a:x}).a --");
+
+    // functions can't reference the object through 'this'.
+    testSame("({a:function(){return this}}).a");
+    testSame("({get a() {return this}}).a");
+    testSame("({set a(b) {return this}}).a");
+
+    // Leave unknown props alone, the might be on the prototype
+    testSame("({}).a");
+
+    // setters by themselves don't provide a definition
+    testSame("({}).a");
+    testSame("({set a(b) {}}).a");
+    // sets don't hide other definitions.
+    test("({a:1,set a(b) {}}).a", "1");
+
+    // get is transformed to a call (gets don't have self referential names)
+    test("({get a() {}}).a", "(function (){})()");
+    // sets don't hide other definitions.
+    test("({get a() {},set a(b) {}}).a", "(function (){})()");
+
+    // a function remains a function not a call.
+    test("var x = ({a:function(){return 1}}).a",
+         "var x = function(){return 1}");
+
+    test("var x = ({a:1}).a", "var x = 1");
+    test("var x = ({a:1, a:2}).a", "var x = 2");
+    test("var x = ({a:1, a:foo()}).a", "var x = foo()");
+    test("var x = ({a:foo()}).a", "var x = foo()");
+
+    test("function f() { return {a:1, b:2}.a; }",
+         "function f() { return 1; }");
+
+    // GETELEM is handled the same way.
+    test("var x = ({'a':1})['a']", "var x = 1");
+  }
+
   public void testIEString() {
     testSame("!+'\\v1'");
   }

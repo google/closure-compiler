@@ -1547,6 +1547,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldGetElem(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.GETELEM);
 
+    if (left.getType() == Token.OBJECTLIT) {
+      return tryFoldObjectPropAccess(n, left, right);
+    }
+
     if (left.getType() == Token.ARRAYLIT) {
       if (right.getType() != Token.NUMBER) {
         // Sometimes people like to use complex expressions to index into
@@ -1596,6 +1600,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldGetProp(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.GETPROP);
 
+    if (left.getType() == Token.OBJECTLIT) {
+      return tryFoldObjectPropAccess(n, left, right);
+    }
+
     if (right.getType() == Token.STRING &&
         right.getString().equals("length")) {
       int knownLength = -1;
@@ -1623,6 +1631,71 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return lengthNode;
     }
 
+    return n;
+  }
+
+  private Node tryFoldObjectPropAccess(Node n, Node left, Node right) {
+    Preconditions.checkArgument(NodeUtil.isGet(n));
+
+    if (left.getType() != Token.OBJECTLIT || right.getType() != Token.STRING) {
+      return n;
+    }
+
+    Node parent = n.getParent();
+    if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
+        || parent.getType() == Token.INC
+        || parent.getType() == Token.DEC) {
+      // If GETPROP/GETELEM is used as assignment target the object literal is
+      // acting as a temporary we can't fold it here:
+      //    "{a:x}.a += 1" is not "x += 1"
+      return n;
+    }
+
+    // find the last definition in the object literal
+    Node key = null;
+    Node value = null;
+    for (Node c = left.getFirstChild(); c != null; c = c.getNext()) {
+      if (c.getString().equals(right.getString())) {
+        switch (c.getType()) {
+          case Token.SET:
+            continue;
+          case Token.GET:
+          case Token.STRING:
+            if (value != null && mayHaveSideEffects(value)) {
+              // The previously found value had side-effects
+              return n;
+            }
+            key = c;
+            value = key.getFirstChild();
+            break;
+          default:
+            throw new IllegalStateException();
+        }
+      } else if (mayHaveSideEffects(c.getFirstChild())) {
+        // We don't handle the side-effects here as they might need a temporary
+        // or need to be reordered.
+        return n;
+      }
+    }
+
+    // Didn't find a definition of the name in the object literal, it might
+    // be coming from the Object prototype
+    if (value == null) {
+      return n;
+    }
+
+    if (value.getType() == Token.FUNCTION && NodeUtil.referencesThis(value)) {
+      // 'this' may refer to the object we are trying to remove
+      return n;
+    }
+
+    Node replacement = value.detachFromParent();
+    if (key.getType() == Token.GET){
+      replacement = new Node(Token.CALL, replacement);
+    }
+
+    n.getParent().replaceChild(n, replacement);
+    reportCodeChange();
     return n;
   }
 }
