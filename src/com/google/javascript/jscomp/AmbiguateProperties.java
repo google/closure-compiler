@@ -433,10 +433,8 @@ class AmbiguateProperties implements CompilerPass {
           for (Node child = n.getFirstChild();
                child != null;
                child = child.getNext()) {
-            if (child.getType() != Token.NUMBER) {
-              // Everything else are names: STRING, GET, SET
-              externedNames.add(child.getString());
-            }
+            // names: STRING, GET, SET
+            externedNames.add(child.getString());
           }
           break;
       }
@@ -458,18 +456,15 @@ class AmbiguateProperties implements CompilerPass {
           // are the children of the keys.
           for (Node key = n.getFirstChild(); key != null;
                key = key.getNext()) {
-            // We only want keys that are strings (not numbers), and only keys
-            // that were unquoted.
-            if (key.getType() != Token.NUMBER) {
-              // Everything else are names: STRING, GET, SET
-              if (!key.isQuotedString()) {
-                JSType jstype = getJSType(n.getFirstChild());
-                maybeMarkCandidate(key, jstype, t);
-              } else {
-                // Ensure that we never rename some other property in a way
-                // that could conflict with this quoted key.
-                quotedNames.add(key.getString());
-              }
+            // We only want keys that were unquoted.
+            // Keys are STRING, GET, SET
+            if (!key.isQuotedString()) {
+              JSType jstype = getJSType(n.getFirstChild());
+              maybeMarkCandidate(key, jstype, t);
+            } else {
+              // Ensure that we never rename some other property in a way
+              // that could conflict with this quoted key.
+              quotedNames.add(key.getString());
             }
           }
           break;

@@ -219,10 +219,7 @@ class CodeGenerator {
         break;
 
       case Token.NUMBER:
-        Preconditions.checkState(
-            childCount ==
-            ((n.getParent() != null &&
-              n.getParent().getType() == Token.OBJECTLIT) ? 1 : 0));
+        Preconditions.checkState(childCount == 0);
         cc.addNumber(n.getDouble());
         break;
 

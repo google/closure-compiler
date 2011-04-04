@@ -112,8 +112,7 @@ class AnonymousFunctionNamingCallback
          keyNode = keyNode.getNext()) {
       Node valueNode = keyNode.getFirstChild();
 
-      // Object literal keys may be STRING, GET, SET or NUMBER.  Numbers are
-      // skipped because name tokens may not start with a number. Get and Set
+      // Object literal keys may be STRING, GET, SET. Get and Set
       // are skipped because they can not be named.
       if (keyNode.getType() == Token.STRING) {
         // concatenate the context and key name to get a new qualified name.

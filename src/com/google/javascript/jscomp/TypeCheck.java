@@ -484,10 +484,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case Token.NUMBER:
-        // Object literal keys are handled with OBJECTLIT
-        if (!NodeUtil.isObjectLitKey(n, n.getParent())) {
-          ensureTyped(t, n, NUMBER_TYPE);
-        }
+        ensureTyped(t, n, NUMBER_TYPE);
         break;
 
       case Token.STRING:

@@ -103,8 +103,7 @@ final class CheckGlobalThis implements Callback {
             pType == Token.ASSIGN ||
 
             // object literal keys
-            pType == Token.STRING ||
-            pType == Token.NUMBER)) {
+            pType == Token.STRING)) {
         return false;
       }
 

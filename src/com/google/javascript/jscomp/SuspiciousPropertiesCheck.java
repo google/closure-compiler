@@ -155,9 +155,7 @@ class SuspiciousPropertiesCheck implements CompilerPass {
           for (Node child = n.getFirstChild();
                child != null;
                child = child.getNext()) {
-            if (child.getType() != Token.NUMBER) {
-              externPropertyNames.add(child.getString());
-            }
+            externPropertyNames.add(child.getString());
           }
           break;
         case Token.NAME:
@@ -210,9 +208,7 @@ class SuspiciousPropertiesCheck implements CompilerPass {
           for (Node child = n.getFirstChild();
                child != null;
                child = child.getNext()) {
-            if (child.getType() != Token.NUMBER) {
-              addWrite(child, t, true);
-            }
+            addWrite(child, t, true);
           }
           break;
         case Token.CALL:

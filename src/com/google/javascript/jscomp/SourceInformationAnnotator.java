@@ -81,12 +81,9 @@ class SourceInformationAnnotator extends
       case Token.OBJECTLIT:
         for (Node key = n.getFirstChild(); key != null;
              key = key.getNext()) {
-           // We only want keys that are strings (not numbers), and only keys
-           // that were unquoted.
-           if (key.getType() != Token.NUMBER) {
-             if (!key.isQuotedString()) {
-               key.putProp(Node.ORIGINALNAME_PROP, key.getString());
-             }
+           // We only want keys were unquoted.
+           if (!key.isQuotedString()) {
+             key.putProp(Node.ORIGINALNAME_PROP, key.getString());
            }
          }
         break;

@@ -506,10 +506,7 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
 
         case Token.NUMBER:
-          // Defer keys to the Token.OBJECTLIT case
-          if (!NodeUtil.isObjectLitKey(n, n.getParent())) {
-            n.setJSType(getNativeType(NUMBER_TYPE));
-          }
+          n.setJSType(getNativeType(NUMBER_TYPE));
           break;
 
         case Token.TRUE:

@@ -239,9 +239,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
         // should count as a use of property a and b.
         for (Node propNameNode = n.getFirstChild(); propNameNode != null;
              propNameNode = propNameNode.getNext()) {
-          // May be NUMBER, STRING, GET, or SET, but NUMBER isn't interesting.
-          if (propNameNode.getType() != Token.NUMBER &&
-              !propNameNode.isQuotedString()) {
+          // May be STRING, GET, or SET, but NUMBER isn't interesting.
+          if (!propNameNode.isQuotedString()) {
             addSymbolUse(propNameNode.getString(), t.getModule(), PROPERTY);
           }
         }
@@ -390,14 +389,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
           if (map.getType() == Token.OBJECTLIT) {
             for (Node key = map.getFirstChild();
                  key != null; key = key.getNext()) {
-              // May be NUMBER, STRING, GET, or SET,
-              // but NUMBER isn't interesting.
-              if (key.getType() != Token.NUMBER) {
-                String name = key.getString();
-                Property prop = new LiteralProperty(
-                    key, key.getFirstChild(), map, n, t.getModule());
-                getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
-              }
+              // May be STRING, GET, or SET,
+              String name = key.getString();
+              Property prop = new LiteralProperty(
+                  key, key.getFirstChild(), map, n, t.getModule());
+              getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
             }
           }
           break;

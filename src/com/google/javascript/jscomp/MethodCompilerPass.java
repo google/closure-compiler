@@ -156,18 +156,16 @@ abstract class MethodCompilerPass implements CompilerPass {
 
         case Token.OBJECTLIT: {
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            if (key.getType() != Token.NUMBER) {
-              Node value = key.getFirstChild();
-              String name = key.getString();
-              if (key.getType() == Token.STRING
-                  && value.getType() == Token.FUNCTION) {
-                addSignature(name, value, t.getSourceName());
-              } else {
-                getSignatureStore().removeSignature(name);
-                externMethodsWithoutSignatures.add(name);
-              }
-              externMethods.add(name);
+            Node value = key.getFirstChild();
+            String name = key.getString();
+            if (key.getType() == Token.STRING
+                && value.getType() == Token.FUNCTION) {
+              addSignature(name, value, t.getSourceName());
+            } else {
+              getSignatureStore().removeSignature(name);
+              externMethodsWithoutSignatures.add(name);
             }
+            externMethods.add(name);
           }
         } break;
       }
@@ -214,9 +212,6 @@ abstract class MethodCompilerPass implements CompilerPass {
               case Token.SET:
               case Token.GET:
                 nonMethodProperties.add(key.getString());
-                break;
-              case Token.NUMBER:
-                // Ignore numberic keys.
                 break;
               default:
                 throw new IllegalStateException(

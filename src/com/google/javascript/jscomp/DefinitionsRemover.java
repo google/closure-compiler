@@ -354,10 +354,6 @@ class DefinitionsRemover {
           return new Node(Token.GETPROP,
             new Node(Token.OBJECTLIT),
             name.cloneNode());
-        case Token.NUMBER:
-          return new Node(Token.GETELEM,
-            new Node(Token.OBJECTLIT),
-            name.cloneNode());
         default:
           throw new IllegalStateException("unexpected");
       }

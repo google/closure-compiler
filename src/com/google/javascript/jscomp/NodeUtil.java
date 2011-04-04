@@ -2037,7 +2037,6 @@ public final class NodeUtil {
    */
   static boolean isObjectLitKey(Node node, Node parent) {
     switch (node.getType()) {
-      case Token.NUMBER:
       case Token.STRING:
         return parent.getType() == Token.OBJECTLIT;
       case Token.GET:
@@ -2054,8 +2053,6 @@ public final class NodeUtil {
    */
   static String getObjectLitKeyName(Node key) {
     switch (key.getType()) {
-      case Token.NUMBER:
-        return NodeUtil.getStringValue(key);
       case Token.STRING:
       case Token.GET:
       case Token.SET:

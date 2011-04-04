@@ -415,20 +415,19 @@ class DisambiguateProperties<T> implements CompilerPass {
     private void handleObjectLit(NodeTraversal t, Node n) {
       Node child = n.getFirstChild();
       while (child != null) {
-        // Maybe STRING, NUMBER, GET, SET
-        if (child.getType() != Token.NUMBER) {
-          // We should never see a mix of numbers and strings.
-          String name = child.getString();
-          T type = typeSystem.getType(getScope(), n, name);
+        // Maybe STRING, GET, SET
 
-          Property prop = getProperty(name);
-          if (!prop.scheduleRenaming(child,
-                                     processProperty(t, prop, type, null))) {
-            if (showInvalidationWarnings) {
-              compiler.report(JSError.make(
-                  t.getSourceName(), child, Warnings.INVALIDATION, name,
-                  (type == null ? "null" : type.toString()), n.toString()));
-            }
+        // We should never see a mix of numbers and strings.
+        String name = child.getString();
+        T type = typeSystem.getType(getScope(), n, name);
+
+        Property prop = getProperty(name);
+        if (!prop.scheduleRenaming(child,
+                                   processProperty(t, prop, type, null))) {
+          if (showInvalidationWarnings) {
+            compiler.report(JSError.make(
+                t.getSourceName(), child, Warnings.INVALIDATION, name,
+                (type == null ? "null" : type.toString()), n.toString()));
           }
         }
 
