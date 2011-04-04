@@ -988,6 +988,10 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("(![foo()])");
   }
 
+  public void testIEString() {
+    testSame("!+'\\v1'");
+  }
+
   private static final List<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",

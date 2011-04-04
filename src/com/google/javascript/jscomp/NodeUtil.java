@@ -310,6 +310,11 @@ public final class NodeUtil {
   }
 
   static Double getStringNumberValue(String rawJsString) {
+    if (rawJsString.contains("\u000b")) {
+      // vertical tab is not always whitespace
+      return null;
+    }
+
     String s = trimJsWhiteSpace(rawJsString);
     // return ScriptRuntime.toNumber(s);
     if (s.length() == 0) {
@@ -353,10 +358,12 @@ public final class NodeUtil {
   static String trimJsWhiteSpace(String s) {
     int start = 0;
     int end = s.length();
-    while (end > 0 && isStrWhiteSpaceChar(s.charAt(end-1))) {
+    while (end > 0
+        && isStrWhiteSpaceChar(s.charAt(end - 1)) == TernaryValue.TRUE) {
       end--;
     }
-    while (start < end && isStrWhiteSpaceChar(s.charAt(start))) {
+    while (start < end
+        && isStrWhiteSpaceChar(s.charAt(start)) == TernaryValue.TRUE) {
       start++;
     }
     return s.substring(start, end);
@@ -365,21 +372,23 @@ public final class NodeUtil {
   /**
    * Copied from Rhino's ScriptRuntime
    */
-  static boolean isStrWhiteSpaceChar(int c) {
+  static TernaryValue isStrWhiteSpaceChar(int c) {
     switch (c) {
+      case '\u000B': // <VT>
+        return TernaryValue.UNKNOWN;  // IE says "no", EcmaScript says "yes"
       case ' ': // <SP>
       case '\n': // <LF>
       case '\r': // <CR>
       case '\t': // <TAB>
       case '\u00A0': // <NBSP>
       case '\u000C': // <FF>
-      case '\u000B': // <VT>
       case '\u2028': // <LS>
       case '\u2029': // <PS>
       case '\uFEFF': // <BOM>
-        return true;
+        return TernaryValue.TRUE;
       default:
-        return Character.getType(c) == Character.SPACE_SEPARATOR;
+        return (Character.getType(c) == Character.SPACE_SEPARATOR)
+            ? TernaryValue.TRUE : TernaryValue.FALSE;
     }
   }
 
