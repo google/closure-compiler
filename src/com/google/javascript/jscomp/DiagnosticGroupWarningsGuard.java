@@ -55,4 +55,9 @@ public class DiagnosticGroupWarningsGuard extends WarningsGuard {
 
     return false;
   }
+
+  @Override
+  public String toString() {
+    return group + "(" + level + ")";
+  }
 }

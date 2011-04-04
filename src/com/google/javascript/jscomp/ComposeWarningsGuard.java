@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CheckLevel;
@@ -137,5 +138,10 @@ public class ComposeWarningsGuard extends WarningsGuard {
 
   List<WarningsGuard> getGuards() {
     return Collections.unmodifiableList(Lists.newArrayList(guards));
+  }
+
+  @Override
+  public String toString() {
+    return Joiner.on(", ").join(guards);
   }
 }

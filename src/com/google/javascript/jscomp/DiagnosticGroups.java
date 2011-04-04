@@ -40,6 +40,20 @@ public class DiagnosticGroups {
     return group;
   }
 
+  static DiagnosticGroup registerGroup(String name,
+      DiagnosticType ... types) {
+    DiagnosticGroup group = new DiagnosticGroup(name, types);
+    groupsByName.put(name, group);
+    return group;
+  }
+
+  static DiagnosticGroup registerGroup(String name,
+      DiagnosticGroup ... groups) {
+    DiagnosticGroup group = new DiagnosticGroup(name, groups);
+    groupsByName.put(name, group);
+    return group;
+  }
+
   /** Get the registered diagnostic groups, indexed by name. */
   protected Map<String, DiagnosticGroup> getRegisteredGroups() {
     return ImmutableMap.copyOf(groupsByName);
@@ -67,114 +81,104 @@ public class DiagnosticGroups {
 
   public static DiagnosticGroup GLOBAL_THIS = DiagnosticGroups
       .registerGroup("globalThis",
-          new DiagnosticGroup(
-              CheckGlobalThis.GLOBAL_THIS));
+          CheckGlobalThis.GLOBAL_THIS);
 
   public static DiagnosticGroup DEPRECATED = DiagnosticGroups
       .registerGroup("deprecated",
-          new DiagnosticGroup(
-              CheckAccessControls.DEPRECATED_NAME,
-              CheckAccessControls.DEPRECATED_NAME_REASON,
-              CheckAccessControls.DEPRECATED_PROP,
-              CheckAccessControls.DEPRECATED_PROP_REASON,
-              CheckAccessControls.DEPRECATED_CLASS,
-              CheckAccessControls.DEPRECATED_CLASS_REASON));
+          CheckAccessControls.DEPRECATED_NAME,
+          CheckAccessControls.DEPRECATED_NAME_REASON,
+          CheckAccessControls.DEPRECATED_PROP,
+          CheckAccessControls.DEPRECATED_PROP_REASON,
+          CheckAccessControls.DEPRECATED_CLASS,
+          CheckAccessControls.DEPRECATED_CLASS_REASON);
 
   public static DiagnosticGroup VISIBILITY = DiagnosticGroups
       .registerGroup("visibility",
-          new DiagnosticGroup(
-              CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS,
-              CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS,
-              CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS,
-              CheckAccessControls.PRIVATE_OVERRIDE,
-              CheckAccessControls.VISIBILITY_MISMATCH));
+          CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS,
+          CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS,
+          CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS,
+          CheckAccessControls.PRIVATE_OVERRIDE,
+          CheckAccessControls.VISIBILITY_MISMATCH);
 
   public static DiagnosticGroup CONSTANT_PROPERTY = DiagnosticGroups
       .registerGroup("constantProperty",
-          new DiagnosticGroup(
-              CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE));
+          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
   public static DiagnosticGroup NON_STANDARD_JSDOC =
-    DiagnosticGroups.registerGroup("nonStandardJsDocs",
-          new DiagnosticGroup(RhinoErrorReporter.BAD_JSDOC_ANNOTATION));
+      DiagnosticGroups.registerGroup("nonStandardJsDocs",
+          RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
 
   public static DiagnosticGroup ACCESS_CONTROLS =
       DiagnosticGroups.registerGroup("accessControls",
-          new DiagnosticGroup(DEPRECATED, VISIBILITY));
+          DEPRECATED, VISIBILITY);
 
   public static DiagnosticGroup INVALID_CASTS = DiagnosticGroups
       .registerGroup("invalidCasts",
-          new DiagnosticGroup(TypeValidator.INVALID_CAST));
+          TypeValidator.INVALID_CAST);
 
   public static DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerGroup("fileoverviewTags",
-          new DiagnosticGroup(RhinoErrorReporter.EXTRA_FILEOVERVIEW));
+          RhinoErrorReporter.EXTRA_FILEOVERVIEW);
 
   public static DiagnosticGroup STRICT_MODULE_DEP_CHECK =
       DiagnosticGroups.registerGroup("strictModuleDepCheck",
-          new DiagnosticGroup(VarCheck.STRICT_MODULE_DEP_ERROR,
-                              CheckGlobalNames.STRICT_MODULE_DEP_QNAME));
+          VarCheck.STRICT_MODULE_DEP_ERROR,
+          CheckGlobalNames.STRICT_MODULE_DEP_QNAME);
 
   public static DiagnosticGroup EXTERNS_VALIDATION =
       DiagnosticGroups.registerGroup("externsValidation",
-          new DiagnosticGroup(VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
-                              VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
+          VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
+          VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
   public static DiagnosticGroup AMBIGUOUS_FUNCTION_DECL =
       DiagnosticGroups.registerGroup("ambiguousFunctionDecl",
-          new DiagnosticGroup(VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL));
+          VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL);
 
   public static DiagnosticGroup UNKNOWN_DEFINES =
       DiagnosticGroups.registerGroup("unknownDefines",
-          new DiagnosticGroup(ProcessDefines.UNKNOWN_DEFINE_WARNING));
+          ProcessDefines.UNKNOWN_DEFINE_WARNING);
 
   public static DiagnosticGroup TWEAKS =
       DiagnosticGroups.registerGroup("tweakValidation",
-          new DiagnosticGroup(
-              ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING,
-              ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING,
-              ProcessTweaks.UNKNOWN_TWEAK_WARNING));
+          ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING,
+          ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING,
+          ProcessTweaks.UNKNOWN_TWEAK_WARNING);
 
   public static DiagnosticGroup MISSING_PROPERTIES =
       DiagnosticGroups.registerGroup("missingProperties",
-          new DiagnosticGroup(TypeCheck.INEXISTENT_PROPERTY));
+          TypeCheck.INEXISTENT_PROPERTY);
 
   // TODO: add more IE specific checks here.
   public static DiagnosticGroup INTERNET_EXPLORER_CHECKS =
       DiagnosticGroups.registerGroup("internetExplorerChecks",
-          new DiagnosticGroup(RhinoErrorReporter.TRAILING_COMMA));
+          RhinoErrorReporter.TRAILING_COMMA);
 
   public static DiagnosticGroup UNDEFINED_VARIABLES =
       DiagnosticGroups.registerGroup("undefinedVars",
-          new DiagnosticGroup(VarCheck.UNDEFINED_VAR_ERROR));
+          VarCheck.UNDEFINED_VAR_ERROR);
 
   public static DiagnosticGroup CHECK_REGEXP =
       DiagnosticGroups.registerGroup("checkRegExp",
-          new DiagnosticGroup(
-              CheckRegExp.REGEXP_REFERENCE));
+          CheckRegExp.REGEXP_REFERENCE);
 
   public static DiagnosticGroup CHECK_TYPES =
       DiagnosticGroups.registerGroup("checkTypes",
-          new DiagnosticGroup(
-              TypeValidator.ALL_DIAGNOSTICS,
-              TypeCheck.ALL_DIAGNOSTICS));
+          TypeValidator.ALL_DIAGNOSTICS,
+          TypeCheck.ALL_DIAGNOSTICS);
 
   public static DiagnosticGroup CHECK_VARIABLES =
       DiagnosticGroups.registerGroup("checkVars",
-          new DiagnosticGroup(
-              VarCheck.UNDEFINED_VAR_ERROR,
-              SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR));
+          VarCheck.UNDEFINED_VAR_ERROR,
+          SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
 
   public static DiagnosticGroup CHECK_USELESS_CODE =
       DiagnosticGroups.registerGroup("uselessCode",
-          new DiagnosticGroup(
-              CheckSideEffects.USELESS_CODE_ERROR,
-              CheckUnreachableCode.UNREACHABLE_CODE));
+          CheckSideEffects.USELESS_CODE_ERROR,
+          CheckUnreachableCode.UNREACHABLE_CODE);
 
   public static DiagnosticGroup TYPE_INVALIDATION =
     DiagnosticGroups.registerGroup("typeInvalidation",
-        new DiagnosticGroup(
-            DisambiguateProperties.Warnings.INVALIDATION));
+        DisambiguateProperties.Warnings.INVALIDATION);
 
   /**
    * Adds warning levels by name.

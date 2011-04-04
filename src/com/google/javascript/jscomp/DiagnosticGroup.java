@@ -35,17 +35,29 @@ public class DiagnosticGroup {
   // The set of types represented by this group, hashed by key.
   private final Set<DiagnosticType> types;
 
+  // A human-readable name for the group.
+  private final String name;
+
+  /**
+   * Create a group that matches all errors of the given types.
+   */
+  DiagnosticGroup(String name, DiagnosticType ...types) {
+    this.name = name;
+    this.types = ImmutableSet.copyOf(Arrays.asList(types));
+  }
+
   /**
    * Create a group that matches all errors of the given types.
    */
   public DiagnosticGroup(DiagnosticType ...types) {
-    this.types = ImmutableSet.copyOf(Arrays.asList(types));
+    this(null, types);
   }
 
   /**
    * Create a diagnostic group with no name that only matches the given type.
    */
   private DiagnosticGroup(DiagnosticType type) {
+    this.name = null;
     this.types = ImmutableSet.of(type);
   }
 
@@ -65,12 +77,20 @@ public class DiagnosticGroup {
    * Create a composite group.
    */
   public DiagnosticGroup(DiagnosticGroup ...groups) {
+    this(null, groups);
+  }
+
+  /**
+   * Create a composite group.
+   */
+  public DiagnosticGroup(String name, DiagnosticGroup ...groups) {
     Set<DiagnosticType> set = Sets.newHashSet();
 
     for (DiagnosticGroup group : groups) {
       set.addAll(group.types);
     }
 
+    this.name = name;
     this.types = ImmutableSet.copyOf(set);
   }
 
@@ -106,5 +126,9 @@ public class DiagnosticGroup {
    */
   Collection<DiagnosticType> getTypes() {
     return types;
+  }
+
+  public String toString() {
+    return name == null ? super.toString() : "DiagnosticGroup<" + name + ">";
   }
 }
