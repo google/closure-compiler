@@ -16,8 +16,8 @@
 
 /**
  * @fileoverview Definitions for WebKit's custom CSS properties. Copied from:
- * @see
- * http://trac.webkit.org/browser/trunk/Source/WebCore/css/CSSPropertyNames.in
+ * {@link
+ * http://trac.webkit.org/browser/trunk/Source/WebCore/css/CSSPropertyNames.in}
  *
  * If you make changes to this file, notice that every property appears
  * twice: once as an uppercase name and once as a lowercase name.
