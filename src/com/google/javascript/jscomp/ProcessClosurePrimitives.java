@@ -909,20 +909,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      */
     private Node createDeclarationNode() {
       if (namespace.indexOf('.') == -1) {
-        return makeVarDeclNode(namespace, firstNode);
+        return makeVarDeclNode();
       } else {
-        return makeAssignmentExprNode(namespace, firstNode);
+        return makeAssignmentExprNode();
       }
     }
 
     /**
      * Creates a simple namespace variable declaration
      * (e.g. <code>var foo = {};</code>).
-     *
-     * @param namespace A simple namespace (must be a valid js identifier)
-     * @param sourceNode The node to get source information from.
      */
-    private Node makeVarDeclNode(String namespace, Node sourceNode) {
+    private Node makeVarDeclNode() {
       Node name = Node.newString(Token.NAME, namespace);
       name.addChildToFront(createNamespaceLiteral());
 
@@ -935,7 +932,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       }
 
       Preconditions.checkState(isNamespacePlaceholder(decl));
-      decl.copyInformationFromForTree(sourceNode);
+      decl.copyInformationFromForTree(getSourceInfoNode());
       return decl;
     }
 
@@ -954,20 +951,31 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     /**
      * Creates a dotted namespace assignment expression
      * (e.g. <code>foo.bar = {};</code>).
-     *
-     * @param namespace A dotted namespace
-     * @param node A node from which to copy source info.
      */
-    private Node makeAssignmentExprNode(String namespace, Node node) {
+    private Node makeAssignmentExprNode() {
+      Node sourceInfoNode = getSourceInfoNode();
       Node decl = new Node(Token.EXPR_RESULT,
           new Node(Token.ASSIGN,
               NodeUtil.newQualifiedNameNode(
-                  compiler.getCodingConvention(), namespace, node, namespace),
+                  compiler.getCodingConvention(), namespace,
+                  sourceInfoNode, namespace),
               createNamespaceLiteral()));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
       Preconditions.checkState(isNamespacePlaceholder(decl));
-      decl.copyInformationFromForTree(node);
+      decl.copyInformationFromForTree(sourceInfoNode);
       return decl;
+    }
+
+    /**
+     * Get the node to pull source info from.
+     * On incremental compiles, this may not be the original goog.provde node.
+     * It may be a node that's in the process of being modified.
+     */
+    private Node getSourceInfoNode() {
+      return (firstNode.getFirstChild() != null &&
+              NodeUtil.isExprCall(firstNode)) ?
+          firstNode.getFirstChild().getLastChild() :
+          firstNode;
     }
   }
 
