@@ -46,7 +46,12 @@ public class RenamePrototypesTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testRenamePrototypes() {
+  public void testRenamePrototypes1() {
+    test("Bar.prototype={'getFoo':function(){},2:function(){}}",
+         "Bar.prototype={'a':function(){},2:function(){}}");
+  }
+
+  public void testRenamePrototypes2() {
     // Simple
     test("Bar.prototype.getFoo=function(){};Bar.getFoo(b);" +
          "Bar.prototype.getBaz=function(){}",

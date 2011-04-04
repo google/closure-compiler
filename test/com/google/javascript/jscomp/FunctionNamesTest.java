@@ -86,8 +86,8 @@ public class FunctionNamesTest extends CompilerTestCase {
     expectedMap.put(11, "recliteral.l1.l2");
     expectedMap.put(12, "litnamed");
     expectedMap.put(13, "reclitnamed");
-    expectedMap.put(14, "<anonymous>");
-    expectedMap.put(15, "<anonymous>");
+    expectedMap.put(14, "numliteral.__2");
+    expectedMap.put(15, "recnumliteral.__3.a");
     assertEquals("Function id/name mismatch",
                  expectedMap, idNameMap);
   }

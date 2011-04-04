@@ -81,7 +81,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
 
     checkDefinitionsInJs(
       "({1 : 1}); o[1]",
-      ImmutableSet.<String>of());
+      ImmutableSet.<String>of("DEF STRING null -> NUMBER"));
 
     checkDefinitionsInJs(
         "var a = {b : 1}; a.b",

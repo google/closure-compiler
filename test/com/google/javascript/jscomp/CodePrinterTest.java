@@ -1122,6 +1122,27 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x={1:1}", "var x={1:1}");
   }
 
+  public void testObjectLit2() {
+    assertPrint("var x={1:1}", "var x={1:1}");
+    assertPrint("var x={'1':1}", "var x={1:1}");
+    assertPrint("var x={'1.0':1}", "var x={\"1.0\":1}");
+    assertPrint("var x={1.5:1}", "var x={\"1.5\":1}");
+
+  }
+
+  public void testObjectLit3() {
+    assertPrint("var x={3E9:1}",
+                "var x={3E9:1}");
+    assertPrint("var x={'3000000000':1}", // More than 31 bits
+                "var x={3E9:1}");
+    assertPrint("var x={'3000000001':1}",
+                "var x={3000000001:1}");
+    assertPrint("var x={'6000000001':1}",  // More than 32 bits
+                "var x={6000000001:1}");
+    assertPrint("var x={\"12345678901234567\":1}",  // More than 53 bits
+                "var x={\"12345678901234567\":1}");
+  }
+
   public void testGetter() {
     assertPrint("var x = {}", "var x={}");
     assertPrint("var x = {get a() {return 1}}", "var x={get a(){return 1}}");
@@ -1129,30 +1150,36 @@ public class CodePrinterTest extends TestCase {
       "var x = {get a() {}, get b(){}}",
       "var x={get a(){},get b(){}}");
 
-    // Valid ES5 but Rhino doesn't accept this yet.
-    // assertPrint(
-    //  "var x = {get 1() {return 1}}",
-    //  "var x={get \"1\"(){return 1}}");
+    assertPrint(
+      "var x = {get 'a'() {return 1}}",
+      "var x={get \"a\"(){return 1}}");
 
-    // Valid ES5 but Rhino doesn't accept this yet.
-    // assertPrint(
-    //  "var x = {get \"()\"() {return 1}}",
-    //   "var x={get \"()\"(){return 1}}");
+    assertPrint(
+      "var x = {get 1() {return 1}}",
+      "var x={get 1(){return 1}}");
+
+    assertPrint(
+      "var x = {get \"()\"() {return 1}}",
+      "var x={get \"()\"(){return 1}}");
   }
 
   public void testSetter() {
     assertPrint("var x = {}", "var x={}");
-    assertPrint("var x = {set a(x) {return 1}}", "var x={set a(x){return 1}}");
+    assertPrint(
+       "var x = {set a(y) {return 1}}",
+       "var x={set a(y){return 1}}");
 
-    // Valid ES5 but Rhino doesn't accept this yet.
-    // assertPrint(
-    //  "var x = {set 1(x) {return 1}}",
-    //  "var x={set \"1\"(x){return 1}}");
+    assertPrint(
+      "var x = {get 'a'() {return 1}}",
+      "var x={get \"a\"(){return 1}}");
 
-    // Valid ES5 but Rhino doesn't accept this yet.
-    // assertPrint(
-    //  "var x = {set \"(x)\"() {return 1}}",
-    //   "var x={set \"(x)\"(){return 1}}");
+    assertPrint(
+      "var x = {set 1(y) {return 1}}",
+      "var x={set 1(y){return 1}}");
+
+    assertPrint(
+      "var x = {set \"(x)\"(y) {return 1}}",
+      "var x={set \"(x)\"(y){return 1}}");
   }
 
   public void testNegCollapse() {

@@ -147,7 +147,6 @@ public class Node implements Cloneable, Serializable {
       DIRECT_EVAL        = 48,    // ES5 distinguishes between direct and
                                   // indirect calls to eval.
       FREE_CALL          = 49,    // A CALL without an explicit "this" value.
-                                  //
       LAST_PROP          = 49;
 
   // values of ISNUMBER_PROP to specify
@@ -218,9 +217,9 @@ public class Node implements Cloneable, Serializable {
         case QUOTED_PROP:        return "quoted";
 
         case SYNTHETIC_BLOCK_PROP: return "synthetic";
-        case EMPTY_BLOCK: return "empty_block";
-        case ORIGINALNAME_PROP: return "originalname";
-        case SIDE_EFFECT_FLAGS: return "side_effect_flags";
+        case EMPTY_BLOCK:        return "empty_block";
+        case ORIGINALNAME_PROP:  return "originalname";
+        case SIDE_EFFECT_FLAGS:  return "side_effect_flags";
 
         case IS_CONSTANT_NAME:   return "is_constant_name";
         case IS_OPTIONAL_PARAM:  return "is_optional_param";

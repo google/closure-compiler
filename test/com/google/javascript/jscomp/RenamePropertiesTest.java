@@ -68,24 +68,18 @@ public class RenamePropertiesTest extends CompilerTestCase {
   }
 
   public void testPrototypePropertiesAsObjLitKeys2() {
-    // TODO(johnlenz): Add tests when Rhino supports numbers and quoted strings
-    // for get and set.
+    testSame("Bar.prototype = {get 2(){}}; bar[2];");
 
-    // testSame("Bar.prototype = {get 2(){}}; bar[2];");
-
-    // testSame("Bar.prototype = {get 'a'(){}}; bar['a'];");
+    testSame("Bar.prototype = {get 'a'(){}}; bar['a'];");
 
     test("Bar.prototype = {get getA(){}}; bar.getA;",
          "Bar.prototype = {get a(){}}; bar.a;");
   }
 
   public void testPrototypePropertiesAsObjLitKeys3() {
-    // TODO(johnlenz): Add tests when Rhino supports numbers and quoted strings
-    // for get and set.
+    testSame("Bar.prototype = {set 2(x){}}; bar[2];");
 
-    // testSame("Bar.prototype = {set 2(x){}}; bar[2];");
-
-    // testSame("Bar.prototype = {set 'a'(x){}}; bar['a'];");
+    testSame("Bar.prototype = {set 'a'(x){}}; bar['a'];");
 
     test("Bar.prototype = {set getA(x){}}; bar.getA;",
          "Bar.prototype = {set a(x){}}; bar.a;");

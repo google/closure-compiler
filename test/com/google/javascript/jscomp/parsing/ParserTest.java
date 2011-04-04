@@ -737,7 +737,7 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertEquals(Token.OBJECTLIT, objectLit.getType());
 
     Node number = objectLit.getFirstChild();
-    assertEquals(Token.NUMBER, number.getType());
+    assertEquals(Token.STRING, number.getType());
     assertNotNull(number.getJSDocInfo());
   }
 
@@ -747,18 +747,30 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testGetter() {
     mode = LanguageMode.ECMASCRIPT3;
+    parseError("var x = {get 1(){}};",
+        "getters are not supported in Internet Explorer");
+    parseError("var x = {get 'a'(){}};",
+        "getters are not supported in Internet Explorer");
     parseError("var x = {get a(){}};",
         "getters are not supported in Internet Explorer");
     mode = LanguageMode.ECMASCRIPT5;
+    parse("var x = {get 1(){}};");
+    parse("var x = {get 'a'(){}};");
     parse("var x = {get a(){}};");
     parseError("var x = {get a(b){}};", "getters may not have parameters");
   }
 
   public void testSetter() {
     mode = LanguageMode.ECMASCRIPT3;
+    parseError("var x = {set 1(x){}};",
+        "setters are not supported in Internet Explorer");
+    parseError("var x = {set 'a'(x){}};",
+        "setters are not supported in Internet Explorer");
     parseError("var x = {set a(x){}};",
         "setters are not supported in Internet Explorer");
     mode = LanguageMode.ECMASCRIPT5;
+    parse("var x = {set 1(x){}};");
+    parse("var x = {set 'a'(x){}};");
     parse("var x = {set a(x){}};");
     parseError("var x = {set a(){}};",
         "setters must have exactly one parameter");

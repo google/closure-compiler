@@ -252,6 +252,27 @@ public class IRFactory {
     return irNode;
   }
 
+  private Node transformNumberAsString(NumberLiteral literalNode) {
+    JSDocInfo jsDocInfo = handleJsDoc(literalNode);
+    Node irNode = newStringNode(getStringValue(literalNode.getNumber()));
+    if (jsDocInfo != null) {
+      irNode.setJSDocInfo(jsDocInfo);
+    }
+    setSourceInfo(irNode, literalNode);
+    return irNode;
+  }
+
+  private static String getStringValue(double value) {
+    long longValue = (long) value;
+
+    // Return "1" instead of "1.0"
+    if (longValue == value) {
+      return Long.toString(longValue);
+    } else {
+      return Double.toString(value);
+    }
+  }
+
   private void setSourceInfo(Node irNode, AstNode node) {
     // If we have a named function, set the position to that of the name.
     if (irNode.getType() == Token.FUNCTION &&
@@ -340,14 +361,14 @@ public class IRFactory {
       Node ret;
       if (n instanceof Name) {
         ret = transformNameAsString((Name)n);
+      } else if (n instanceof NumberLiteral) {
+        ret = transformNumberAsString((NumberLiteral)n);
+        ret.putBooleanProp(Node.QUOTED_PROP, true);
       } else {
         ret = transform(n);
-        Preconditions.checkState(ret.getType() == Token.NUMBER
-            || ret.getType() == Token.STRING);
-        if (ret.getType() == Token.STRING) {
-          ret.putBooleanProp(Node.QUOTED_PROP, true);
-        }
+        ret.putBooleanProp(Node.QUOTED_PROP, true);
       }
+      Preconditions.checkState(ret.getType() == Token.STRING);
       return ret;
     }
 

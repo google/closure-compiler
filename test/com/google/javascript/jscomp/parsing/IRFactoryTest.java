@@ -261,6 +261,45 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     newParse("var o = {'a': 'a'}");
   }
 
+  public void testObjectLiteral6() {
+    testNewParser("({1: true})",
+      "SCRIPT 0\n" +
+      "    EXPR_RESULT 0\n" +
+      "        OBJECTLIT 0 [parenthesized: true]\n" +
+      "            STRING 1 0 [quoted: 1]\n" +
+      "                TRUE 0\n");
+  }
+
+  public void testObjectLiteral7() {
+    mode = LanguageMode.ECMASCRIPT5;
+
+    testNewParser("({get 1() {}})",
+      "SCRIPT 0\n" +
+      "    EXPR_RESULT 0\n" +
+      "        OBJECTLIT 0 [parenthesized: true]\n" +
+      "            GET 1 0 [quoted: 1]\n" +
+      "                FUNCTION  0\n" +
+      "                    NAME  0\n" +
+      "                    LP 0\n" +
+      "                    BLOCK 0\n");
+  }
+
+  public void testObjectLiteral8() {
+    mode = LanguageMode.ECMASCRIPT5;
+
+    testNewParser("({set 1(a) {}})",
+      "SCRIPT 0\n" +
+      "    EXPR_RESULT 0\n" +
+      "        OBJECTLIT 0 [parenthesized: true]\n" +
+      "            SET 1 0 [quoted: 1]\n" +
+      "                FUNCTION  0\n" +
+      "                    NAME  0\n" +
+      "                    LP 0\n" +
+      "                        NAME a 0\n" +
+      "                    BLOCK 0\n");
+  }
+
+
   public void testKeywordLiteral() {
     parse("true");
   }

@@ -45,6 +45,8 @@ import javax.annotation.Nullable;
  */
 public final class NodeUtil {
 
+  static final long MAX_POSITIVE_INTEGER_NUMBER = (long)Math.pow(2, 53);
+
   final static String JSC_PROPERTY_NAME_FN = "JSCompiler_renameProperty";
 
   // TODO(user): Eliminate this class and make all of the static methods
@@ -156,7 +158,6 @@ public final class NodeUtil {
     return TernaryValue.UNKNOWN;
   }
 
-
   /**
    * Gets the value of a node as a String, or null if it cannot be converted.
    * When it returns a non-null String, this method effectively emulates the
@@ -178,15 +179,7 @@ public final class NodeUtil {
         break;
 
       case Token.NUMBER:
-        double value = n.getDouble();
-        long longValue = (long) value;
-
-        // Return "1" instead of "1.0"
-        if (longValue == value) {
-          return Long.toString(longValue);
-        } else {
-          return Double.toString(n.getDouble());
-        }
+        return getStringValue(n.getDouble());
 
       case Token.FALSE:
       case Token.TRUE:
@@ -210,6 +203,17 @@ public final class NodeUtil {
         return "[object Object]";
     }
     return null;
+  }
+
+  static String getStringValue(double value) {
+    long longValue = (long) value;
+
+    // Return "1" instead of "1.0"
+    if (longValue == value) {
+      return Long.toString(longValue);
+    } else {
+      return Double.toString(value);
+    }
   }
 
   /**

@@ -340,13 +340,20 @@ class CodeGenerator {
         Node body = fn.getLastChild();
 
         // Add the property name.
-        if (TokenStream.isJSIdentifier(name) &&
+        if (!n.isQuotedString() &&
+            TokenStream.isJSIdentifier(name) &&
             // do not encode literally any non-literal characters that were
             // unicode escaped.
             NodeUtil.isLatin(name)) {
           add(name);
         } else {
-          add(jsString(n.getString(), outputCharsetEncoder));
+          // Determine if the string is a simple number.
+          double d = getSimpleNumber(name);
+          if (!Double.isNaN(d)) {
+            cc.addNumber(d);
+          } else {
+            add(jsString(n.getString(), outputCharsetEncoder));
+          }
         }
 
         add(parameters);
@@ -650,18 +657,25 @@ class CodeGenerator {
           if (c.getType() == Token.GET || c.getType() == Token.SET) {
             add(c);
           } else {
-            // Object literal property names don't have to be quoted if they are
-            // not JavaScript keywords
-            if (c.getType() == Token.STRING &&
-                !c.isQuotedString() &&
-                !TokenStream.isKeyword(c.getString()) &&
-                TokenStream.isJSIdentifier(c.getString()) &&
-                // do not encode literally any non-literal characters that were
-                // unicode escaped.
-                NodeUtil.isLatin(c.getString())) {
-              add(c.getString());
+            Preconditions.checkState(c.getType() == Token.STRING);
+            String key = c.getString();
+            // Object literal property names don't have to be quoted if they
+            // are not JavaScript keywords
+            if (!c.isQuotedString() &&
+                !TokenStream.isKeyword(key) &&
+                TokenStream.isJSIdentifier(key) &&
+                // do not encode literally any non-literal characters that
+                // were unicode escaped.
+                NodeUtil.isLatin(key)) {
+              add(key);
             } else {
-              addExpr(c, 1);
+              // Determine if the string is a simple number.
+              double d = getSimpleNumber(key);
+              if (!Double.isNaN(d)) {
+                cc.addNumber(d);
+              } else {
+                addExpr(c, 1);
+              }
             }
             add(":");
             addExpr(c.getFirstChild(), 1);
@@ -717,6 +731,27 @@ class CodeGenerator {
     }
 
     cc.endSourceMapping(n);
+  }
+
+  static boolean isSimpleNumber(String s) {
+    int len = s.length();
+    for (int index = 0; index < len; index++) {
+      char c = s.charAt(index);
+      if (c < '0' || c > '9') {
+        return false;
+      }
+    }
+    return len > 0;
+  }
+
+  static double getSimpleNumber(String s) {
+    if (isSimpleNumber(s)) {
+      long l = Long.parseLong(s);
+      if (l < NodeUtil.MAX_POSITIVE_INTEGER_NUMBER) {
+        return l;
+      }
+    }
+    return Double.NaN;
   }
 
   /**

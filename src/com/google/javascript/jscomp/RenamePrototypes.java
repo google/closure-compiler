@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TokenStream;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -332,7 +333,7 @@ class RenamePrototypes implements CompilerPass {
                  child != null;
                  child = child.getNext()) {
 
-              if (child.getType() != Token.NUMBER) {
+              if (TokenStream.isJSIdentifier(child.getString())) {
                 markObjLitPropertyCandidate(child, t.getInput());
               }
             }
@@ -373,7 +374,8 @@ class RenamePrototypes implements CompilerPass {
 
             for (Node key = map.getFirstChild();
                  key != null; key = key.getNext()) {
-              if (key.getType() != Token.NUMBER) { // May be STRING, GET, or SET
+              if (TokenStream.isJSIdentifier(key.getString())) {
+               // May be STRING, GET, or SET
                 markPrototypePropertyCandidate(key, input);
               }
             }
