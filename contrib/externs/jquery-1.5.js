@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.5.2
+ * @fileoverview Externs for jQuery 1.5.1
  *
  * Note that some functions use different return types depending on the number
  * of parameters passed in. In these cases, you may need to annotate the type
@@ -308,7 +308,6 @@ jQuery.deferred = function(opt_fn) {};
  * @constructor
  * @extends {jQuery.deferred}
  * @param {function()=} opt_fn
- * @return {jQuery.Deferred}
  */
 jQuery.Deferred = function(opt_fn) {};
 
@@ -381,12 +380,12 @@ jQuery.prototype.delay = function(duration, queueName) {};
 
 /**
  * @param {string} selector
- * @param {(string|Object.<string,*>)} arg2
- * @param {(function()|Object.<string, *>)=} arg3
+ * @param {string} eventType
+ * @param {(function()|Object.<string, *>)} arg3
  * @param {function()=} handler
  * @return {jQuery}
  */
-jQuery.prototype.delegate = function(selector, arg2, arg3, handler) {};
+jQuery.prototype.delegate = function(selector, eventType, arg3, handler) {};
 
 /**
  * @param {Element} elem
@@ -408,11 +407,11 @@ jQuery.prototype.dequeue = function(queueName) {};
 jQuery.prototype.detach = function(selector) {};
 
 /**
- * @param {(string|Object.<string,*>)=} arg1
+ * @param {string=} eventType
  * @param {string=} handler
  * @return {jQuery}
  */
-jQuery.prototype.die = function(arg1, handler) {};
+jQuery.prototype.die = function(eventType, handler) {};
 
 /**
  * @param {Object} collection
@@ -463,7 +462,6 @@ jQuery.event = function(eventType) {};
  * @constructor
  * @extends {jQuery.event}
  * @param {string} eventType
- * @return {jQuery.Event}
  */
 jQuery.Event = function(eventType) {};
 
@@ -493,9 +491,6 @@ jQuery.event.prototype.isPropagationStopped = function() {};
 
 /** @type {string} */
 jQuery.event.prototype.namespace;
-
-/** @type {Event} */
-jQuery.event.prototype.originalEvent;
 
 /** @type {number} */
 jQuery.event.prototype.pageX;
@@ -1513,11 +1508,11 @@ jQuery.prototype.unbind = function(arg1, arg2) {};
 
 /**
  * @param {string=} selector
- * @param {(string|Object.<string,*>)=} arg2
+ * @param {string=} eventType
  * @param {function()=} handler
  * @return {jQuery}
  */
-jQuery.prototype.undelegate = function(selector, arg2, handler) {};
+jQuery.prototype.undelegate = function(selector, eventType, handler) {};
 
 /**
  * @param {Array.<Element>} arr

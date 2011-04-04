@@ -1651,6 +1651,20 @@ public class InlineFunctionsTest extends CompilerTestCase {
              "JSCompiler_renameProperty('foo')");
   }
 
+  public void testReplacePropertyFunction() {
+    // baseline: an alias doesn't prevents declaration removal, but not
+    // inlining.
+    test("function f(x) {return x} " +
+         "foo(window, f); f(1)",
+         "function f(x) {return x} " +
+         "foo(window, f); 1");
+    // a reference passed to JSCompiler_ObjectPropertyString prevents inlining
+    // as well.
+    testSame("function f(x) {return x} " +
+             "new JSCompiler_ObjectPropertyString(window, f); f(1)");
+  }
+
+
   // Inline a single reference function into deeper modules
   public void testCrossModuleInlining1() {
     test(createModuleChain(

@@ -538,6 +538,19 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
         return;
       }
 
+      // Unlike normal call/new parameters, references passed to
+      // JSCompiler_ObjectPropertyString are not aliases of a value, but
+      // a reference to the name itself, as such the value of the name is
+      // unknown and can not be inlined.
+      if (parent.getType() == Token.NEW) {
+        Node target = parent.getFirstChild();
+        if (target.getType() == Token.NAME && target.getString().equals(
+            ObjectPropertyStringPreprocess.EXTERN_OBJECT_PROPERTY_STRING)) {
+          // This method is going to be replaced so don't inline it anywhere.
+          fs.setInline(false);
+        }
+      }
+
       // If the name is being assigned to it can not be inlined.
       if (parent.getType() == Token.ASSIGN && parent.getFirstChild() == n) {
         // e.g. bar = something; <== we can't inline "bar"
