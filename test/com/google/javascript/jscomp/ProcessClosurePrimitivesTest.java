@@ -823,4 +823,26 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test("goog.require('goog');",
          "", MISSING_PROVIDE_ERROR);
   }
+
+  public void testSourcePositionPreservation() {
+    test("goog.provide('foo.bar.baz');",
+         "var foo = {};" +
+         "foo.bar = {};" +
+         "foo.bar.baz = {};");
+
+    Node root = getLastCompiler().getRoot();
+
+    Node fooDecl = findQualifiedNameNode("foo", root);
+    Node fooBarDecl = findQualifiedNameNode("foo.bar", root);
+    Node fooBarBazDecl = findQualifiedNameNode("foo.bar.baz", root);
+
+    assertEquals(1, fooDecl.getLineno());
+    assertEquals(14, fooDecl.getCharno());
+
+    assertEquals(1, fooBarDecl.getLineno());
+    assertEquals(18, fooBarDecl.getCharno());
+
+    assertEquals(1, fooBarBazDecl.getLineno());
+    assertEquals(22, fooBarBazDecl.getCharno());
+  }
 }

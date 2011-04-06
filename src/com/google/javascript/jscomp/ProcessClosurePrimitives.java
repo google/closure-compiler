@@ -932,7 +932,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       }
 
       Preconditions.checkState(isNamespacePlaceholder(decl));
-      decl.copyInformationFromForTree(getSourceInfoNode());
+      setSourceInfo(decl);
       return decl;
     }
 
@@ -953,29 +953,56 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * (e.g. <code>foo.bar = {};</code>).
      */
     private Node makeAssignmentExprNode() {
-      Node sourceInfoNode = getSourceInfoNode();
       Node decl = new Node(Token.EXPR_RESULT,
           new Node(Token.ASSIGN,
               NodeUtil.newQualifiedNameNode(
                   compiler.getCodingConvention(), namespace,
-                  sourceInfoNode, namespace),
+                  firstNode /* real source info will be filled in below */,
+                  namespace),
               createNamespaceLiteral()));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
       Preconditions.checkState(isNamespacePlaceholder(decl));
-      decl.copyInformationFromForTree(sourceInfoNode);
+      setSourceInfo(decl);
       return decl;
     }
 
     /**
-     * Get the node to pull source info from.
-     * On incremental compiles, this may not be the original goog.provde node.
-     * It may be a node that's in the process of being modified.
+     * Copy source info to the new node.
      */
-    private Node getSourceInfoNode() {
+    private void setSourceInfo(Node newNode) {
+      Node provideStringNode = getProvideStringNode();
+      int offset = getSourceInfoOffset(provideStringNode);
+      Node sourceInfoNode = provideStringNode == null
+          ? firstNode : provideStringNode;
+      newNode.copyInformationFromForTree(sourceInfoNode);
+      if (offset != 0) {
+        newNode.setSourcePositionForTree(
+            newNode.getSourcePosition() + offset);
+      }
+    }
+
+    /**
+     * Get the offset into the provide node where the symbol appears.
+     */
+    private int getSourceInfoOffset(Node provideStringNode) {
+      if (provideStringNode == null) {
+        return 0;
+      }
+
+      int indexOfLastDot = namespace.lastIndexOf('.');
+
+      // +1 for the opening quote
+      // +1 for the dot
+      // if there's no dot, then the -1 index cancels it out
+      // so elegant!
+      return 2 + indexOfLastDot;
+    }
+
+    private Node getProvideStringNode() {
       return (firstNode.getFirstChild() != null &&
               NodeUtil.isExprCall(firstNode)) ?
           firstNode.getFirstChild().getLastChild() :
-          firstNode;
+          null;
     }
   }
 

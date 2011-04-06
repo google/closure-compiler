@@ -862,6 +862,10 @@ public class Node implements Cloneable, Serializable {
     return extractCharno(sourcePosition);
   }
 
+  public int getSourcePosition() {
+    return sourcePosition;
+  }
+
   /** Can only be called when <tt>getType() == TokenStream.NUMBER</tt> */
   public double getDouble() throws UnsupportedOperationException {
     if (this.getType() == Token.NUMBER) {
@@ -1136,6 +1140,15 @@ public class Node implements Cloneable, Serializable {
 
   public void setCharno(int charno) {
       sourcePosition = mergeLineCharNo(getLineno(), charno);
+  }
+
+  public void setSourcePositionForTree(int sourcePosition) {
+    this.sourcePosition = sourcePosition;
+
+    for (Node child = getFirstChild();
+         child != null; child = child.getNext()) {
+      child.setSourcePositionForTree(sourcePosition);
+    }
   }
 
   /**
@@ -1902,7 +1915,7 @@ public class Node implements Cloneable, Serializable {
 
     if (getProp(SOURCENAME_PROP) == null) {
         putProp(SOURCENAME_PROP, other.getProp(SOURCENAME_PROP));
-        sourcePosition = other.sourcePosition;
+      sourcePosition = other.sourcePosition;
     }
 
     return this;
