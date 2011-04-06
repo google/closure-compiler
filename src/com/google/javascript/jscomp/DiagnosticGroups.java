@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -183,12 +182,10 @@ public class DiagnosticGroups {
   /**
    * Adds warning levels by name.
    */
-  void setWarningLevels(CompilerOptions options,
-      List<String> diagnosticGroups, CheckLevel level) {
-    for (String name : diagnosticGroups) {
-      DiagnosticGroup group = forName(name);
-      Preconditions.checkNotNull(group, "No warning class for name: " + name);
-      options.setWarningLevel(group, level);
-    }
+  void setWarningLevel(CompilerOptions options,
+      String name, CheckLevel level) {
+    DiagnosticGroup group = forName(name);
+    Preconditions.checkNotNull(group, "No warning class for name: " + name);
+    options.setWarningLevel(group, level);
   }
 }

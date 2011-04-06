@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.LimitInputStream;
+import com.google.javascript.jscomp.AbstractCommandLineRunner.WarningGuardSpec;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -31,11 +32,13 @@ import org.kohsuke.args4j.OptionDef;
 import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
+import org.kohsuke.args4j.spi.StringOptionHandler;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -46,8 +49,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import java.nio.charset.Charset;
 
 /**
  * CommandLineRunner translates flags into Java API calls on the Compiler.
@@ -81,12 +82,19 @@ import java.nio.charset.Charset;
  *   }
  * }
  * </pre>
+ *
+ * This class is totally not thread-safe.
+ *
  * @author bolinfest@google.com (Michael Bolin)
  */
 public class CommandLineRunner extends
     AbstractCommandLineRunner<Compiler, CompilerOptions> {
-
+  // I don't really care about unchecked warnings in this class.
+  @SuppressWarnings("unchecked")
   private static class Flags {
+    private static final WarningGuardSpec warningGuardSpec =
+        new WarningGuardSpec();
+
     @Option(name = "--help",
         handler = BooleanOptionHandler.class,
         usage = "Displays this message")
@@ -223,16 +231,19 @@ public class CommandLineRunner extends
     private String create_source_map = "";
 
     @Option(name = "--jscomp_error",
+        handler = WarningGuardErrorOptionHandler.class,
         usage = "Make the named class of warnings an error. Options:" +
         DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
     private List<String> jscomp_error = Lists.newArrayList();
 
     @Option(name = "--jscomp_warning",
+        handler = WarningGuardWarningOptionHandler.class,
         usage = "Make the named class of warnings a normal warning. " +
         "Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
-    private List<String> jscomp_warning =  Lists.newArrayList();
+    private List<String> jscomp_warning = Lists.newArrayList();
 
     @Option(name = "--jscomp_off",
+        handler = WarningGuardOffOptionHandler.class,
         usage = "Turn off the named class of warnings. Options:" +
         DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
     private List<String> jscomp_off = Lists.newArrayList();
@@ -378,6 +389,55 @@ public class CommandLineRunner extends
         return null;
       }
     }
+
+    // Our own parser for warning guards that preserves the original order
+    // of the flags.
+    public static class WarningGuardErrorOptionHandler
+        extends StringOptionHandler {
+      public WarningGuardErrorOptionHandler(
+          CmdLineParser parser, OptionDef option,
+          Setter<? super String> setter) {
+        super(parser, option, new WarningGuardSetter(setter, CheckLevel.ERROR));
+      }
+    }
+
+    public static class WarningGuardWarningOptionHandler
+        extends StringOptionHandler {
+      public WarningGuardWarningOptionHandler(
+          CmdLineParser parser, OptionDef option,
+          Setter<? super String> setter) {
+        super(parser, option,
+            new WarningGuardSetter(setter, CheckLevel.WARNING));
+      }
+    }
+
+    public static class WarningGuardOffOptionHandler
+        extends StringOptionHandler {
+      public WarningGuardOffOptionHandler(
+          CmdLineParser parser, OptionDef option,
+          Setter<? super String> setter) {
+        super(parser, option, new WarningGuardSetter(setter, CheckLevel.OFF));
+      }
+    }
+
+    private static class WarningGuardSetter implements Setter {
+      private final Setter proxy;
+      private final CheckLevel level;
+
+      private WarningGuardSetter(Setter proxy, CheckLevel level) {
+        this.proxy = proxy;
+        this.level = level;
+      }
+
+      @Override public boolean isMultiValued() { return proxy.isMultiValued(); }
+
+      @Override public Class getType() { return proxy.getType(); }
+
+      @Override public void addValue(Object value) throws CmdLineException {
+        proxy.addValue((String) value);
+        warningGuardSpec.add(level, (String) value);
+      }
+    }
   }
 
   /**
@@ -467,6 +527,7 @@ public class CommandLineRunner extends
     List<String> processedFileArgs
         = processArgs(argsInFile.toArray(new String[] {}));
     CmdLineParser parserFileArgs = new CmdLineParser(flags);
+    Flags.warningGuardSpec.clear();
     parserFileArgs.parseArgument(processedFileArgs.toArray(new String[] {}));
 
     // Currently we are not supporting this (prevent direct/indirect loops)
@@ -482,6 +543,7 @@ public class CommandLineRunner extends
     List<String> processedArgs = processArgs(args);
 
     CmdLineParser parser = new CmdLineParser(flags);
+    Flags.warningGuardSpec.clear();
     isConfigValid = true;
     try {
       parser.parseArgument(processedArgs.toArray(new String[] {}));
@@ -534,9 +596,7 @@ public class CommandLineRunner extends
           .setModuleWrapper(flags.module_wrapper)
           .setModuleOutputPathPrefix(flags.module_output_path_prefix)
           .setCreateSourceMap(flags.create_source_map)
-          .setJscompError(flags.jscomp_error)
-          .setJscompWarning(flags.jscomp_warning)
-          .setJscompOff(flags.jscomp_off)
+          .setWarningGuardSpec(Flags.warningGuardSpec)
           .setDefine(flags.define)
           .setCharset(flags.charset)
           .setManageClosureDependencies(flags.manage_closure_dependencies)

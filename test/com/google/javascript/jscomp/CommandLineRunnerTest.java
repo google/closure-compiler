@@ -114,6 +114,30 @@ public class CommandLineRunnerTest extends TestCase {
     super.tearDown();
   }
 
+  public void testWarningGuardOrdering1() {
+    args.add("--jscomp_error=globalThis");
+    args.add("--jscomp_off=globalThis");
+    testSame("function f() { this.a = 3; }");
+  }
+
+  public void testWarningGuardOrdering2() {
+    args.add("--jscomp_off=globalThis");
+    args.add("--jscomp_error=globalThis");
+    test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
+  }
+
+  public void testWarningGuardOrdering3() {
+    args.add("--jscomp_warning=globalThis");
+    args.add("--jscomp_off=globalThis");
+    testSame("function f() { this.a = 3; }");
+  }
+
+  public void testWarningGuardOrdering4() {
+    args.add("--jscomp_off=globalThis");
+    args.add("--jscomp_warning=globalThis");
+    test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
+  }
+
   public void testCheckGlobalThisOffByDefault() {
     testSame("function f() { this.a = 3; }");
   }
