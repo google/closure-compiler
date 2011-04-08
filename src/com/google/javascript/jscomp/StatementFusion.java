@@ -74,7 +74,9 @@ public class StatementFusion extends AbstractPeepholeOptimization {
         // We don't want to add a new return value.
         return last.hasChildren();
       case Token.FOR:
-        return NodeUtil.isForIn(last);
+        return NodeUtil.isForIn(last) &&
+            // Avoid cases where we have for(var x = foo() in a) { ....
+            !NodeUtil.mayHaveSideEffects(last.getFirstChild());
     }
 
     return false;
