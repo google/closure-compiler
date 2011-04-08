@@ -38,6 +38,10 @@ public class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCase {
     testSame("var a; a.b = []; a.b[0] = 1; a.b[1] = 2; a.b[2] = 3;");
   }
 
+  public final void testCompoundAssignment() {
+    testSame("var x, a; a = []; a[0] *= x;");
+  }
+
   public final void testNegativeArrayIndex1() {
     testSame("var a = []; a[-1] = 1;");
   }
