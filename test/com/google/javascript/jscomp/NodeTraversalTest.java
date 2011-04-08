@@ -35,7 +35,9 @@ public class NodeTraversalTest extends TestCase {
     PruningCallback include =
       new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), true);
 
-    assertTrue(include.shouldTraverse(null, new Node(Token.SCRIPT), null));
+    Node script = new Node(Token.SCRIPT);
+    script.setIsSyntheticBlock(true);
+    assertTrue(include.shouldTraverse(null, script, null));
     assertTrue(include.shouldTraverse(null, new Node(Token.VAR), null));
     assertFalse(include.shouldTraverse(null, new Node(Token.NAME), null));
     assertFalse(include.shouldTraverse(null, new Node(Token.ADD), null));
@@ -45,7 +47,9 @@ public class NodeTraversalTest extends TestCase {
     PruningCallback include =
       new PruningCallback(ImmutableSet.of(Token.SCRIPT, Token.VAR), false);
 
-    assertFalse(include.shouldTraverse(null, new Node(Token.SCRIPT), null));
+    Node script = new Node(Token.SCRIPT);
+    script.setIsSyntheticBlock(true);
+    assertFalse(include.shouldTraverse(null, script, null));
     assertFalse(include.shouldTraverse(null, new Node(Token.VAR), null));
     assertTrue(include.shouldTraverse(null, new Node(Token.NAME), null));
     assertTrue(include.shouldTraverse(null, new Node(Token.ADD), null));
@@ -53,8 +57,7 @@ public class NodeTraversalTest extends TestCase {
 
   /**
    * Concrete implementation of AbstractPrunedCallback to test the
-   * {@link AbstractNodeTypePruningCallback#shouldTraverse(NodeTraversal, Node, Node)}
-   * method.
+   * AbstractNodeTypePruningCallback shouldTraverse method.
    */
   static class PruningCallback extends AbstractNodeTypePruningCallback {
     public PruningCallback(Set<Integer> nodeTypes, boolean include) {

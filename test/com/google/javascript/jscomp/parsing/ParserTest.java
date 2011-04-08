@@ -572,6 +572,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   private Node createScript(Node n) {
     Node script = new Node(Token.SCRIPT);
+    script.setIsSyntheticBlock(true);
     script.addChildToBack(n);
     return script;
   }

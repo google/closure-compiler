@@ -563,6 +563,7 @@ public class NodeUtilTest extends TestCase {
     Node function = NodeUtil.newFunctionNode(
         "foo", params, body, -1, -1);
     Node actual = new Node(Token.SCRIPT);
+    actual.setIsSyntheticBlock(true);
     actual.addChildToFront(function);
     String difference = expected.checkTreeEquals(actual);
     if (difference != null) {

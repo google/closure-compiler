@@ -45,6 +45,7 @@ class SyntheticAst implements SourceAst {
   @Override
   public void clearAst() {
     root = new Node(Token.SCRIPT);
+    root.setIsSyntheticBlock(true);
     root.putProp(Node.SOURCENAME_PROP, sourceName);
   }
 
