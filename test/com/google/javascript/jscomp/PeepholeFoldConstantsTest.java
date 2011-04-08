@@ -616,7 +616,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = -1 >= 9", "x = false");
 
     fold("x = true == true", "x = true");
-    fold("x = true == true", "x = true");
+    fold("x = false == false", "x = true");
     fold("x = false == null", "x = false");
     fold("x = false == true", "x = false");
     fold("x = true == null", "x = false");
@@ -666,7 +666,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = y === y", "x = y===y");
 
     fold("x = true === true", "x = true");
-    fold("x = true === true", "x = true");
+    fold("x = false === false", "x = true");
     fold("x = false === null", "x = false");
     fold("x = false === true", "x = false");
     fold("x = true === null", "x = false");
@@ -694,6 +694,32 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("false === null", "false");
     fold("false === true", "false");
     fold("true === null", "false");
+  }
+
+  public void testFoldComparison3() {
+    fold("x = !1 == !0", "x = false");
+
+    fold("x = !0 == !0", "x = true");
+    fold("x = !1 == !1", "x = true");
+    fold("x = !1 == null", "x = false");
+    fold("x = !1 == !0", "x = false");
+    fold("x = !0 == null", "x = false");
+
+    fold("!0 == !0", "true");
+    fold("!1 == null", "false");
+    fold("!1 == !0", "false");
+    fold("!0 == null", "false");
+
+    fold("x = !0 === !0", "x = true");
+    fold("x = !1 === !1", "x = true");
+    fold("x = !1 === null", "x = false");
+    fold("x = !1 === !0", "x = false");
+    fold("x = !0 === null", "x = false");
+
+    fold("!0 === !0", "true");
+    fold("!1 === null", "false");
+    fold("!1 === !0", "false");
+    fold("!0 === null", "false");
   }
 
   public void testFoldGetElem() {
@@ -1046,6 +1072,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
           "void 0",
           "true",
           "false",
+          "!0",
+          "!1",
           "0",
           "1",
           "''",
@@ -1055,9 +1083,9 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
           "NaN",
           "Infinity"
           // TODO(nicksantos): Add more literals
-          //-Infinity
+          // "-Infinity",
           //"({})",
-          //"[]",
+          // "[]"
           //"[0]",
           //"Object",
           //"(function() {})"

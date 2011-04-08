@@ -904,8 +904,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           && right.getString().equals("undefined"))
           || (Token.VOID == right.getType()
               && NodeUtil.isLiteralValue(right.getFirstChild(), false)));
-
-    switch (left.getType()) {
+    int lhType = getNormalizedNodeType(left);
+    int rhType = getNormalizedNodeType(right);
+    switch (lhType) {
       case Token.VOID:
         if (!NodeUtil.isLiteralValue(left.getFirstChild(), false)) {
           return n;
@@ -923,7 +924,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           result = compareToUndefined(left, op);
           break;
         }
-        int rhType = right.getType();
         if (rhType != Token.TRUE &&
             rhType != Token.FALSE &&
             rhType != Token.NULL) {
@@ -932,12 +932,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         switch (op) {
           case Token.SHEQ:
           case Token.EQ:
-            result = left.getType() == right.getType();
+            result = lhType == rhType;
             break;
 
           case Token.SHNE:
           case Token.NE:
-            result = left.getType() != right.getType();
+            result = lhType != rhType;
             break;
 
           case Token.GE:
@@ -1066,6 +1066,23 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     reportCodeChange();
 
     return newNode;
+  }
+
+  /**
+   * @return Translate NOT expressions into TRUE or FALSE when possible.
+   */
+  private int getNormalizedNodeType(Node n) {
+    int type = n.getType();
+    if (type == Token.NOT) {
+      TernaryValue value = NodeUtil.getPureBooleanValue(n);
+      switch (value) {
+        case TRUE:
+          return Token.TRUE;
+        case FALSE:
+          return Token.FALSE;
+      }
+    }
+    return type;
   }
 
   /**
