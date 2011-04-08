@@ -125,7 +125,7 @@ public class NormalizeTest extends CompilerTestCase {
          "init(); for(; a < 2 ; a++) foo()");
   }
 
-  public void testForIn() {
+  public void testForIn1() {
     // Verify nothing happens with simple for-in
     testSame("for(a in b) foo();");
 
@@ -143,6 +143,12 @@ public class NormalizeTest extends CompilerTestCase {
     // Verify block are properly introduced for ifs.
     test("if (x) for(var a in b) foo()",
          "if (x) { var a; for(a in b) foo() }");
+  }
+
+  public void testForIn2() {
+    // Verify vars are extracted from the FOR-IN node.
+    test("for(var a = foo() in b) foo()",
+         "var a = foo(); for(a in b) foo()");
   }
 
   public void testWhile() {
