@@ -133,7 +133,13 @@ class GroupVariableDeclarations implements CompilerPass, ScopedCallback {
     // we will be modifying the groupVar subtree so get its parent
     Node groupVarParent = groupVar.getParent();
 
+
     if (initializedName != null) {
+      if (NodeUtil.isForIn(groupVarParent)) {
+        // The target of the for-in expression must be an assignable expression.
+        return;
+      }
+
       // we have an initialized var in the VAR node. We will replace the
       // VAR node with an assignment.
 

@@ -105,7 +105,7 @@ public class GroupVariableDeclarationsTest extends CompilerTestCase {
     test("var a; for (var z in a = [1, 2, 3, 4]) {alert(z);} var y, x = 5;",
          "var a, z, y, x; for (z in a = [1, 2, 3, 4]) {alert(z);} x = 5;");
     test("var a; for (var z = 1 in a = [1, 2, 3, 4]) {alert(z);} var y, x = 5;",
-         "var a, z, y, x; for (z = 1 in a = [1, 2, 3, 4]) {alert(z);} x = 5;");
+         "var a, y, x; for (var z = 1 in a = [1, 2, 3, 4]) {alert(z);} x = 5;");
     test("var a, z; for (z in a = [1, 2, 3, 4]) {alert(z);} var y, x = 5;",
          "var a, z, y, x; for (z in a = [1, 2, 3, 4]) {alert(z);} x = 5;");
   }
