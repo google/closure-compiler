@@ -40,21 +40,27 @@ public class PeepholeCollectPropertyAssignments
 
     boolean codeChanged = false;
 
-    // Look for variable declarations and start processing there.
+    // Look for variable declarations or simple assignments
+    // and start processing there.
     for (Node child = subtree.getFirstChild();
          child != null; child = child.getNext()) {
-      if (child.getType() != Token.VAR) {
+      if (child.getType() != Token.VAR && !NodeUtil.isExprAssign(child)) {
         continue;
       }
-      if (!isPropertyAssignmentToVar(child.getNext())) {
+      if (!isPropertyAssignmentToName(child.getNext())) {
         // Quick check to see if there's anything to collapse.
         continue;
       }
 
       Preconditions.checkState(child.hasOneChild());
-      Node var = child.getFirstChild();
-      Node varValue = var.getFirstChild();
-      if (varValue == null) {  // No initializer.
+      Node name = getName(child);
+      if (name.getType() != Token.NAME) {
+        // The assignment target is not a simple name.
+        continue;
+      }
+      Node value = getValue(child);
+      if (value == null || !isInterestingValue(value)) {
+        // No initializer or not an Object or Array literal.
         continue;
       }
 
@@ -62,7 +68,7 @@ public class PeepholeCollectPropertyAssignments
       while ((propertyCandidate = child.getNext()) != null) {
         // This does not infinitely loop because collectProperty always
         // removes propertyCandidate from its parent when it returns true.
-        if (!collectProperty(propertyCandidate, var)) {
+        if (!collectProperty(propertyCandidate, name.getString(), value)) {
           break;
         }
         codeChanged = true;
@@ -75,7 +81,29 @@ public class PeepholeCollectPropertyAssignments
     return subtree;
   }
 
-  private boolean isPropertyAssignmentToVar(Node propertyCandidate) {
+  private Node getName(Node n) {
+    if (n.getType() == Token.VAR) {
+      return n.getFirstChild();
+    } else if (NodeUtil.isExprAssign(n)) {
+      return n.getFirstChild().getFirstChild();
+    }
+    throw new IllegalStateException();
+  }
+
+  private Node getValue(Node n) {
+    if (n.getType() == Token.VAR) {
+      return n.getFirstChild().getFirstChild();
+    } else if (NodeUtil.isExprAssign(n)) {
+      return n.getFirstChild().getLastChild();
+    }
+    throw new IllegalStateException();
+  }
+
+  boolean isInterestingValue(Node n) {
+    return n.getType() == Token.OBJECTLIT || n.getType() == Token.ARRAYLIT;
+  }
+
+  private boolean isPropertyAssignmentToName(Node propertyCandidate) {
     if (propertyCandidate == null) { return false; }
     // Must be an assignment...
     if (!NodeUtil.isExprAssign(propertyCandidate)) {
@@ -99,16 +127,15 @@ public class PeepholeCollectPropertyAssignments
     return true;
   }
 
-  private boolean collectProperty(Node propertyCandidate, Node var) {
-    if (!isPropertyAssignmentToVar(propertyCandidate)) {
+  private boolean collectProperty(
+      Node propertyCandidate, String name, Node value) {
+    if (!isPropertyAssignmentToName(propertyCandidate)) {
       return false;
     }
 
-    String varName = var.getString();
-
     Node lhs = propertyCandidate.getFirstChild().getFirstChild();
     // Must be an assignment to the recent variable...
-    if (!varName.equals(lhs.getFirstChild().getString())) {
+    if (!name.equals(lhs.getFirstChild().getString())) {
       return false;
     }
 
@@ -119,25 +146,23 @@ public class PeepholeCollectPropertyAssignments
       return false;
     }
     // and does not have a reference to a variable initialized after it.
-    if (mightContainForwardReference(rhs, varName)) {
+    if (mightContainForwardReference(rhs, name)) {
       return false;
     }
 
-    // Either collect it as an array property or an object property based on
-    // the type of the variable initializer.
-    Node varValue = var.getFirstChild();
-    switch (varValue.getType()) {
+    switch (value.getType()) {
       case Token.ARRAYLIT:
-        if (!collectArrayProperty(varValue, propertyCandidate)) {
+        if (!collectArrayProperty(value, propertyCandidate)) {
           return false;
         }
         break;
       case Token.OBJECTLIT:
-        if (!collectObjectProperty(varValue, propertyCandidate)) {
+        if (!collectObjectProperty(value, propertyCandidate)) {
           return false;
         }
         break;
-      default: return false;
+      default:
+        throw new IllegalStateException();
     }
     return true;
   }
