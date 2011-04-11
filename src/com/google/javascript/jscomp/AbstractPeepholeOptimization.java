@@ -119,6 +119,16 @@ abstract class AbstractPeepholeOptimization {
   }
 
   /**
+   * @return Whether the source code version is EcmaScript 5 or later.
+   *     Workarounds for quirks in browsers that do not support ES5 can be
+   *     ignored when this is true.
+   */
+  boolean isEcmaScript5OrGreater() {
+    return currentTraversal != null
+        && currentTraversal.getCompiler().acceptEcmaScript5();
+  }
+
+  /**
    * Check if the specified node is null or is still in the AST.
    */
   @VisibleForTesting

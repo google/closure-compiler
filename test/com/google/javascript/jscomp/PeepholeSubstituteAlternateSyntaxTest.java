@@ -283,12 +283,6 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("x = new RegExp(\"foobar\", \"bogus\")",
          "x = RegExp(\"foobar\",\"bogus\")",
          PeepholeSubstituteAlternateSyntax.INVALID_REGULAR_EXPRESSION_FLAGS);
-    // Don't fold if the flags contain 'g'
-    fold("x = new RegExp(\"foobar\", \"g\")",
-         "x = RegExp(\"foobar\",\"g\")");
-    fold("x = new RegExp(\"foobar\", \"ig\")",
-         "x = RegExp(\"foobar\",\"ig\")");
-
     // Can Fold
     fold("x = new RegExp(\"foobar\")",        "x = /foobar/");
     fold("x = RegExp(\"foobar\")",            "x = /foobar/");
@@ -296,12 +290,11 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     // Make sure that escaping works
     fold("x = new RegExp(\"\\\\.\", \"i\")",  "x = /\\./i");
     fold("x = new RegExp(\"/\", \"\")",       "x = /\\//");
+    fold("x = new RegExp(\"[/]\", \"\")",     "x = /[/]/");
     fold("x = new RegExp(\"///\", \"\")",     "x = /\\/\\/\\//");
     fold("x = new RegExp(\"\\\\\\/\", \"\")", "x = /\\//");
-    // Don't fold things that crash older versions of Safari and that don't work
-    // as regex literals on recent versions of Safari
-    fold("x = new RegExp(\"\\u2028\")", "x = RegExp(\"\\u2028\")");
-    fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
+    fold("x = new RegExp(\"\\n\")",           "x = /\\n/");
+    fold("x = new RegExp('\\\\\\r')",         "x = /\\r/");
 
     // Don't fold really long regexp literals, because Opera 9.2's
     // regexp parser will explode.
@@ -314,6 +307,31 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     disableNormalize();
 
     foldSame("x = new RegExp(\"foobar\")");
+  }
+
+  public void testVersionSpecificRegExpQuirks() {
+    enableNormalize();
+
+    // Don't fold if the flags contain 'g'
+    enableEcmaScript5(false);
+    fold("x = new RegExp(\"foobar\", \"g\")",
+         "x = RegExp(\"foobar\",\"g\")");
+    fold("x = new RegExp(\"foobar\", \"ig\")",
+         "x = RegExp(\"foobar\",\"ig\")");
+    // ... unless in EcmaScript 5 mode per section 7.8.5 of EcmaScript 5.
+    enableEcmaScript5(true);
+    fold("x = new RegExp(\"foobar\", \"ig\")",
+         "x = /foobar/ig");
+    // Don't fold things that crash older versions of Safari and that don't work
+    // as regex literals on other old versions of Safari
+    enableEcmaScript5(false);
+    fold("x = new RegExp(\"\\u2028\")", "x = RegExp(\"\\u2028\")");
+    fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
+    // Sunset Safari exclusions for EcmaScript 5 and later.
+    enableEcmaScript5(true);
+    fold("x = new RegExp(\"\\u2028\\u2029\")", "x = /\\u2028\\u2029/");
+    fold("x = new RegExp(\"\\\\u2028\")", "x = /\\u2028/");
+    fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
   }
 
   public void testFoldRegExpConstructorStringCompare() {

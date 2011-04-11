@@ -1100,8 +1100,8 @@ class PeepholeSubstituteAlternateSyntax
       if (n.getFirstChild().getType() == Token.NAME) {
         String className = n.getFirstChild().getString();
         if (STANDARD_OBJECT_CONSTRUCTORS.contains(className)) {
-            n.setType(Token.CALL);
-            reportCodeChange();
+          n.setType(Token.CALL);
+          reportCodeChange();
         }
       }
     }
@@ -1207,13 +1207,6 @@ class PeepholeSubstituteAlternateSyntax
     Node pattern = constructor.getNext();  // e.g.  ^foobar$
     Node flags = null != pattern ? pattern.getNext() : null;  // e.g. gi
 
-    // Only run on normalized AST to make sure RegExp() is actually
-    // the RegExp we expect (if the AST has been normalized then
-    // other RegExp's will have been renamed to something like RegExp$1)
-    if (!isASTNormalized()) {
-      return n;
-    }
-
     if (null == pattern || (null != flags && null != flags.getNext())) {
       // too few or too many arguments
       return n;
@@ -1231,9 +1224,12 @@ class PeepholeSubstituteAlternateSyntax
         && (null == flags || flags.getType() == Token.STRING)
         // don't escape patterns with unicode escapes since Safari behaves badly
         // (read can't parse or crashes) on regex literals with unicode escapes
-        && !containsUnicodeEscape(pattern.getString())) {
+        && (isEcmaScript5OrGreater()
+            || !containsUnicodeEscape(pattern.getString()))) {
 
-      // Make sure that / is escaped, so that it will fit safely in /brackets/.
+      // Make sure that / is escaped, so that it will fit safely in /brackets/
+      // and make sure that no LineTerminatorCharacters appear literally inside
+      // the pattern.
       // pattern is a string value with \\ and similar already escaped
       pattern = makeForwardSlashBracketSafe(pattern);
 
@@ -1291,9 +1287,17 @@ class PeepholeSubstituteAlternateSyntax
    * property contains the state of last execution, so replacing
    * 'new RegExp('foobar','g')' with '/foobar/g' may change the behavior of
    * the program if the RegExp is used inside a loop, for example.
+   * <p>
+   * EmcaScript 5 explicitly disallows pooling of regular expression literals so
+   * in EcmaScript 5, {@code /foo/g} and {@code new RegExp('foo', 'g')} are
+   * equivalent.
+   * From section 7.8.5:
+   * "Then each time the literal is evaluated, a new object is created as if by
+   * the expression new RegExp(Pattern, Flags) where RegExp is the standard
+   * built-in constructor with that name."
    */
-  private static boolean areSafeFlagsToFold(String flags) {
-    return flags.indexOf('g') < 0;
+  private boolean areSafeFlagsToFold(String flags) {
+    return isEcmaScript5OrGreater() || flags.indexOf('g') < 0;
   }
 
   /**
@@ -1304,20 +1308,62 @@ class PeepholeSubstituteAlternateSyntax
     // sb contains everything in s[0:pos]
     StringBuilder sb = null;
     int pos = 0;
+    boolean isEscaped = false, inCharset = false;
     for (int i = 0; i < s.length(); ++i) {
-      switch (s.charAt(i)) {
-        case '\\':  // skip over the next char after a '\\'.
-          ++i;
+      char ch = s.charAt(i);
+      switch (ch) {
+        case '\\':
+          isEscaped = !isEscaped;
+          continue;
+        case '/':
+          // Escape a literal forward slash if it is not already escaped and is
+          // not inside a character set.
+          //     new RegExp('/') -> /\//
+          // but the following do not need extra escaping
+          //     new RegExp('\\/') -> /\//
+          //     new RegExp('[/]') -> /[/]/
+          if (!isEscaped && !inCharset) {
+            if (null == sb) { sb = new StringBuilder(s.length() + 16); }
+            sb.append(s, pos, i).append('\\');
+            pos = i;
+          }
           break;
-        case '/':  // escape it
+        case '[':
+          if (!isEscaped) {
+            inCharset = true;
+          }
+          break;
+        case ']':
+          if (!isEscaped) {
+            inCharset = false;
+          }
+          break;
+        case '\r': case '\n': case '\u2028': case '\u2029':
+          // LineTerminators cannot appear raw inside a regular
+          // expression literal.
+          // They can't appear legally in a quoted string, but when
+          // the quoted string from
+          //     new RegExp('\n')
+          // reaches here, the quoting has been removed.
+          // Requote just these code-points.
           if (null == sb) { sb = new StringBuilder(s.length() + 16); }
-          sb.append(s, pos, i).append('\\');
-          pos = i;
+          if (isEscaped) {
+            sb.append(s, pos, i - 1);
+          } else {
+            sb.append(s, pos, i);
+          }
+          switch (ch) {
+            case '\r': sb.append("\\r"); break;
+            case '\n': sb.append("\\n"); break;
+            case '\u2028': sb.append("\\u2028"); break;
+            case '\u2029': sb.append("\\u2029"); break;
+          }
+          pos = i + 1;
           break;
       }
+      isEscaped = false;
     }
 
-    // don't discard useful line-number info if there were no changes
     if (null == sb) { return n.cloneTree(); }
 
     sb.append(s, pos, s.length());
