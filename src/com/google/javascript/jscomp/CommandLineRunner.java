@@ -105,12 +105,6 @@ public class CommandLineRunner extends
         usage = "Prints out the parse tree and exits")
     private boolean print_tree = false;
 
-    @Option(name = "--compute_phase_ordering",
-        handler = BooleanOptionHandler.class,
-        usage = "Runs the compile job many times, then prints out the " +
-        "best phase ordering from this run")
-    private boolean compute_phase_ordering = false;
-
     @Option(name = "--print_ast",
         handler = BooleanOptionHandler.class,
         usage = "Prints a dot file describing the internal abstract syntax"
@@ -574,7 +568,6 @@ public class CommandLineRunner extends
     } else {
       getCommandLineConfig()
           .setPrintTree(flags.print_tree)
-          .setComputePhaseOrdering(flags.compute_phase_ordering)
           .setPrintAst(flags.print_ast)
           .setPrintPassGraph(flags.print_pass_graph)
           .setJscompDevMode(flags.jscomp_dev_mode)
