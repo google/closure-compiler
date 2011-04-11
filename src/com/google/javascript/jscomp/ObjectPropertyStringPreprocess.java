@@ -65,10 +65,20 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
   }
 
   public void process(Node externs, Node root) {
-    externs.addChildToBack(
+    addExternDeclaration(externs,
         new Node(Token.VAR,
             Node.newString(Token.NAME, EXTERN_OBJECT_PROPERTY_STRING)));
     NodeTraversal.traverse(compiler, root, new Callback());
+  }
+
+  private void addExternDeclaration(Node externs, Node declarationStmt) {
+    Node script = externs.getLastChild();
+    if (script == null || script.getType() != Token.SCRIPT) {
+      script = new Node(Token.SCRIPT);
+      script.setIsSyntheticBlock(true);
+      externs.addChildToBack(script);
+    }
+    script.addChildToBack(declarationStmt);
   }
 
   private class Callback extends AbstractPostOrderCallback {
