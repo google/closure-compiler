@@ -1147,16 +1147,14 @@ public final class NodeUtil {
       case Token.POS:
       case Token.NEG:    return 13;
 
-      case Token.ARRAYLIT:
       case Token.CALL:
-      case Token.EMPTY:
-      case Token.FALSE:
-      case Token.FUNCTION:
       case Token.GETELEM:
       case Token.GETPROP:
-      case Token.GET_REF:
-      case Token.IF:
-      case Token.LP:
+      // Data values
+      case Token.ARRAYLIT:
+      case Token.EMPTY:  // TODO(johnlenz): remove this.
+      case Token.FALSE:
+      case Token.FUNCTION:
       case Token.NAME:
       case Token.NULL:
       case Token.NUMBER:
