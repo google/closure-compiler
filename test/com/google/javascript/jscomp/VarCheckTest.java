@@ -39,7 +39,9 @@ public class VarCheckTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    // Setup value set by individual tests to the appropriate defaults.
     super.allowExternsChanges(true);
+    super.enableAstValidation(true);
     strictModuleDepErrorLevel = CheckLevel.OFF;
     externValidationErrorLevel = null;
     sanityCheck = false;
@@ -165,6 +167,9 @@ public class VarCheckTest extends CompilerTestCase {
   }
 
   public void testInvalidFunctionDecl1() {
+    // This test deliberately sets up an invalid AST.
+    super.enableAstValidation(false);
+
     final CompilerTestCase testcase = this;
 
     // A compiler pass that create invalid function names.

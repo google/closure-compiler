@@ -94,6 +94,11 @@ public abstract class CompilerTestCase extends TestCase  {
   private boolean allowExternsChanges = false;
 
   /**
+   * Whether the AST should be validated.
+   */
+  private boolean astValidationEnabled = true;
+
+  /**
    * Constructs a test.
    *
    * @param externs Externs JS as a string
@@ -270,6 +275,13 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   void enableMarkNoSideEffects() {
     markNoSideEffects  = true;
+  }
+
+  /**
+   * Whether to allow Validate the AST after each run of the pass.
+   */
+  protected void enableAstValidation(boolean validate) {
+    astValidationEnabled = validate;
   }
 
   /** Returns a newly created TypeCheck. */
@@ -705,6 +717,9 @@ public abstract class CompilerTestCase extends TestCase  {
     assertTrue("Unexpected parse error(s): " +
         Joiner.on("\n").join(compiler.getErrors()), root != null);
 
+    if (astValidationEnabled) {
+      (new AstValidator()).validateRoot(root);
+    }
     Node externsRoot = root.getFirstChild();
     Node mainRoot = root.getLastChild();
 
@@ -748,6 +763,9 @@ public abstract class CompilerTestCase extends TestCase  {
         recentChange.reset();
 
         getProcessor(compiler).process(externsRoot, mainRoot);
+        if (astValidationEnabled) {
+          (new AstValidator()).validateRoot(root);
+        }
         if (checkLineNumbers) {
           (new LineNumberCheck(compiler)).process(externsRoot, mainRoot);
         }
