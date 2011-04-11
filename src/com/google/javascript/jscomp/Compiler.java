@@ -1653,7 +1653,12 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   public boolean acceptEcmaScript5() {
-    return options.getLanguageIn() == LanguageMode.ECMASCRIPT5;
+    switch (options.getLanguageIn()) {
+      case ECMASCRIPT5:
+      case ECMASCRIPT5_STRICT:
+        return true;
+    }
+    return false;
   }
 
   public LanguageMode languageMode() {
