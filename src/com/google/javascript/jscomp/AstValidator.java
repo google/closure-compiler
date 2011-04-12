@@ -33,17 +33,17 @@ public class AstValidator implements CompilerPass {
   // * optionally verify every node has an assigned JSType
   //
 
-  interface ViolationHandler {
+  public interface ViolationHandler {
     void handleViolation(String message, Node n);
   }
 
   private final ViolationHandler violationHandler;
 
-  AstValidator(ViolationHandler handler) {
+  public AstValidator(ViolationHandler handler) {
     this.violationHandler = handler;
   }
 
-  AstValidator() {
+  public AstValidator() {
     this.violationHandler = new ViolationHandler() {
       @Override
       public void handleViolation(String message, Node n) {
@@ -138,6 +138,10 @@ public class AstValidator implements CompilerPass {
         validateContinue(n);
         return;
       case Token.EMPTY:
+        validateChildless(n);
+        return;
+      case Token.DEBUGGER:
+        validateChildless(n);
         return;
       default:
         violation("Expected statement but was "
