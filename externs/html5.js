@@ -749,7 +749,7 @@ WebWorker.prototype.dispatchEvent = function(evt) {};
  */
 WebWorker.prototype.terminate = function() {};
 
-/*
+/**
  * Posts a message to the worker thread.
  * @param {string} message
  */
