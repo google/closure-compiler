@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.jsonml;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.SourceAst;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.Node;
@@ -96,6 +97,7 @@ public class JsonMLAst implements SourceAst {
     translator.setRootElement(jsonml);
     try {
       root = translator.parse(compiler);
+      new AstValidator().validateScript(root);
     } catch (JsonMLException e) {
       // compiler should already have JSErrors
     }

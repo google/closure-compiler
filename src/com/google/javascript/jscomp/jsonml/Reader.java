@@ -137,8 +137,9 @@ public class Reader {
     Node root = new Node(Token.BLOCK);
     nodeIndex = -1;
 
+    Preconditions.checkState(rootElement.getType() == TagType.Program);
     transformElement(rootElement, root);
-    return root;
+    return root.removeFirstChild();
   }
 
   /**
@@ -631,6 +632,7 @@ public class Reader {
 
     // always insert an extra BLOCK node
     Node block = new Node(Token.BLOCK);
+    block.setIsSyntheticBlock(true);
     node.addChildToBack(block);
 
     transformAllChildrenFromIndex(element, block, 1, true);
@@ -754,6 +756,7 @@ public class Reader {
 
     // the first child represent body
     Node block = new Node(Token.BLOCK);
+    block.setIsSyntheticBlock(true);
     node.addChildToBack(block);
 
     transformAllChildren(element, block, true);

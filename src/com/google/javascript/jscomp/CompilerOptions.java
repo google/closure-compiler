@@ -1261,6 +1261,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * implementations should not perform expensive operations in the mutator
    * methods.
    *
+   * @author tylerg@google.com (Tyler Goodwin)
    */
   public interface AliasTransformationHandler {
 

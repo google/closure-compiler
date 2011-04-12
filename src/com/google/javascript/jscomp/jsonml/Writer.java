@@ -37,16 +37,22 @@ public class Writer {
    */
   public JsonML processAst(Node root) {
     Preconditions.checkNotNull(root);
-    Preconditions.checkArgument(root.getType() == Token.BLOCK);
+    Preconditions.checkArgument(
+      root.getType() == Token.BLOCK || root.getType() == Token.SCRIPT);
 
     JsonML rootElement = new JsonML(TagType.BlockStmt);
-    Node child = root.getFirstChild();
-    while (child != null) {
-      processNode(child, rootElement);
-      child = child.getNext();
+    if (root.getType() == Token.SCRIPT) {
+      processNode(root, rootElement);
+      return rootElement.getChild(0);
+    } else {
+      Node child = root.getFirstChild();
+      while (child != null) {
+        processNode(child, rootElement);
+        child = child.getNext();
+      }
+      // TODO(johnlenz): Add support for multiple scripts.
+      return rootElement.getChild(0);
     }
-
-    return rootElement.getChild(0);
   }
 
   /**
