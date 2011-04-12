@@ -18,10 +18,12 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
 
 import java.util.List;
@@ -48,6 +50,7 @@ class ScopedAliases implements CompilerPass {
   static final String SCOPING_METHOD_NAME = "goog.scope";
 
   private final AbstractCompiler compiler;
+  private final AliasTransformationHandler transformationHandler;
 
   // Errors
   static final DiagnosticType GOOG_SCOPE_USED_IMPROPERLY = DiagnosticType.error(
@@ -80,9 +83,10 @@ class ScopedAliases implements CompilerPass {
       "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
       "The local variable {0} is in a goog.scope and is not an alias.");
 
-  ScopedAliases(
-      AbstractCompiler compiler, AliasTransformationHandler codeChanges) {
+  ScopedAliases(AbstractCompiler compiler,
+      AliasTransformationHandler transformationHandler) {
     this.compiler = compiler;
+    this.transformationHandler = transformationHandler;
   }
 
   @Override
@@ -91,6 +95,7 @@ class ScopedAliases implements CompilerPass {
     NodeTraversal.traverse(compiler, root, traversal);
 
     if (!traversal.hasErrors()) {
+
       // Apply the aliases.
       for (AliasUsage aliasUsage : traversal.getAliasUsages()) {
         aliasUsage.applyAlias();
@@ -174,6 +179,8 @@ class ScopedAliases implements CompilerPass {
 
     private boolean hasErrors = false;
 
+    private AliasTransformation transformation = null;
+
     List<Node> getAliasDefinitions() {
       return aliasDefinitions;
     }
@@ -197,12 +204,18 @@ class ScopedAliases implements CompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
+      Node n = t.getCurrentNode().getParent();
+      if (n != null && isCallToScopeMethod(n)) {
+        transformation = transformationHandler.logAliasTransformation(
+            n.getProp(Node.SOURCENAME_PROP).toString(), getSourceRegion(n));
+      }
     }
 
     @Override
     public void exitScope(NodeTraversal t) {
       if (t.getScopeDepth() == 2) {
         aliases.clear();
+        transformation = null;
       }
     }
 
@@ -215,6 +228,23 @@ class ScopedAliases implements CompilerPass {
         }
       }
       return true;
+    }
+
+    private SourcePosition<AliasTransformation> getSourceRegion(Node n) {
+      Node testNode = n;
+      Node next = null;
+      for (; next != null || testNode.getType() == Token.SCRIPT;) {
+        next = testNode.getNext();
+        testNode = testNode.getParent();
+      }
+
+      int endLine = next == null ? Integer.MAX_VALUE : next.getLineno();
+      int endChar = next == null ? Integer.MAX_VALUE : next.getCharno();
+      SourcePosition<AliasTransformation> pos =
+          new SourcePosition<AliasTransformation>() {};
+      pos.setPositionInformation(
+          n.getLineno(), n.getCharno(), endLine, endChar);
+      return pos;
     }
 
     private void report(NodeTraversal t, Node n, DiagnosticType error,
@@ -245,14 +275,18 @@ class ScopedAliases implements CompilerPass {
         }
       }
 
+
       if (t.getScopeDepth() == 2) {
         int type = n.getType();
         if (type == Token.NAME && parent.getType() == Token.VAR) {
           if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
-            aliases.put(n.getString(), t.getScope().getVar(n.getString()));
+            String name = n.getString();
+            Var aliasVar = t.getScope().getVar(name);
+            aliases.put(name, aliasVar);
             aliasDefinitions.add(n);
-
-            // If we found an alias, we are done.
+            String qualifiedName =
+                aliasVar.getInitialValue().getQualifiedName();
+            transformation.addAlias(name, qualifiedName);
             return;
           } else {
             // TODO(robbyw): Support using locals for private variables.

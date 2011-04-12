@@ -17,10 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
+import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SourcePosition;
+
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tests for {@link ScopedAliases}
@@ -29,14 +35,22 @@ import java.util.List;
  */
 public class ScopedAliasesTest extends CompilerTestCase {
 
+  private static final String GOOG_SCOPE_START_BLOCK =
+      "goog.scope(function() {";
+  private static final String GOOG_SCOPE_END_BLOCK = "});";
+  private static final int GOOG_SCOPE_LEN = "goog.scope".length();
+
   private static String EXTERNS = "var window;";
+
+  AliasTransformationHandler transformationHandler =
+      CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER;
 
   public ScopedAliasesTest() {
     super(EXTERNS);
   }
 
   private void testScoped(String code, String expected) {
-    test("goog.scope(function() {" + code + "});", expected);
+    test(GOOG_SCOPE_START_BLOCK + code + GOOG_SCOPE_END_BLOCK, expected);
   }
 
   private void testScopedNoChanges(String aliases, String code) {
@@ -96,7 +110,6 @@ public class ScopedAliasesTest extends CompilerTestCase {
     test(
         "goog.scope(function() {var g = goog;g.method()});" +
         "goog.scope(function() {g.method();});",
-
         "goog.method();g.method();");
   }
 
@@ -375,10 +388,147 @@ public class ScopedAliasesTest extends CompilerTestCase {
         ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
   }
 
+  // Alias Recording Tests
+  // TODO(tylerg) : update these to EasyMock style tests once available
+  public void testNoGoogScope() {
+    String fullJsCode =
+        "var g = goog;\n g.dom.createElement(g.dom.TagName.DIV);";
+    TransformationHandlerSpy spy = new TransformationHandlerSpy();
+    transformationHandler = spy;
+    test(fullJsCode, fullJsCode);
+
+    assertTrue(spy.observedPositions.isEmpty());
+  }
+
+  public void testRecordOneAlias() {
+    String fullJsCode = GOOG_SCOPE_START_BLOCK
+        + "var g = goog;\n g.dom.createElement(g.dom.TagName.DIV);\n"
+        + GOOG_SCOPE_END_BLOCK;
+    String expectedJsCode = "goog.dom.createElement(goog.dom.TagName.DIV);\n";
+
+    TransformationHandlerSpy spy = new TransformationHandlerSpy();
+    transformationHandler = spy;
+    test(fullJsCode, expectedJsCode);
+
+    assertTrue(spy.observedPositions.containsKey("testcode"));
+    List<SourcePosition<AliasTransformation>> positions =
+        spy.observedPositions.get("testcode");
+    assertEquals(1, positions.size());
+    verifyAliasTransformationPosition(
+        1, GOOG_SCOPE_LEN, 2, 1, positions.get(0));
+
+    assertEquals(1, spy.constructedAliases.size());
+    AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
+    assertEquals("goog", aliasSpy.observedDefinitions.get("g"));
+  }
+
+  public void testRecordMultipleAliases() {
+    String fullJsCode = GOOG_SCOPE_START_BLOCK
+        + "var g = goog;\n var b= g.bar;\n var f = goog.something.foo;"
+        + "g.dom.createElement(g.dom.TagName.DIV);\n b.foo();"
+        + GOOG_SCOPE_END_BLOCK;
+    String expectedJsCode =
+        "goog.dom.createElement(goog.dom.TagName.DIV);\n goog.bar.foo();";
+    TransformationHandlerSpy spy = new TransformationHandlerSpy();
+    transformationHandler = spy;
+    test(fullJsCode, expectedJsCode);
+
+    assertTrue(spy.observedPositions.containsKey("testcode"));
+    List<SourcePosition<AliasTransformation>> positions =
+        spy.observedPositions.get("testcode");
+    assertEquals(1, positions.size());
+    verifyAliasTransformationPosition(
+        1, GOOG_SCOPE_LEN, 3, 1, positions.get(0));
+
+    assertEquals(1, spy.constructedAliases.size());
+    AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
+    assertEquals("goog", aliasSpy.observedDefinitions.get("g"));
+    assertEquals("g.bar", aliasSpy.observedDefinitions.get("b"));
+    assertEquals("goog.something.foo", aliasSpy.observedDefinitions.get("f"));
+  }
+
+  public void testRecordAliasFromMultipleGoogScope() {
+    String firstGoogScopeBlock = GOOG_SCOPE_START_BLOCK
+        + "\n var g = goog;\n g.dom.createElement(g.dom.TagName.DIV);\n"
+        + GOOG_SCOPE_END_BLOCK;
+    String fullJsCode = firstGoogScopeBlock + "\n\nvar l = abc.def;\n\n"
+        + GOOG_SCOPE_START_BLOCK
+        + "\n var z = namespace.Zoo;\n z.getAnimals(l);\n"
+        + GOOG_SCOPE_END_BLOCK;
+
+    String expectedJsCode = "goog.dom.createElement(goog.dom.TagName.DIV);\n"
+        + "\n\nvar l = abc.def;\n\n" + "\n namespace.Zoo.getAnimals(l);\n";
+
+    TransformationHandlerSpy spy = new TransformationHandlerSpy();
+    transformationHandler = spy;
+    test(fullJsCode, expectedJsCode);
+
+
+    assertTrue(spy.observedPositions.containsKey("testcode"));
+    List<SourcePosition<AliasTransformation>> positions =
+        spy.observedPositions.get("testcode");
+    assertEquals(2, positions.size());
+
+    verifyAliasTransformationPosition(
+        1, GOOG_SCOPE_LEN, 6, 0, positions.get(0));
+
+    verifyAliasTransformationPosition(
+        8, GOOG_SCOPE_LEN, 11, 4, positions.get(1));
+
+    assertEquals(2, spy.constructedAliases.size());
+    AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
+    assertEquals("goog", aliasSpy.observedDefinitions.get("g"));
+
+    aliasSpy = (AliasSpy) spy.constructedAliases.get(1);
+    assertEquals("namespace.Zoo", aliasSpy.observedDefinitions.get("z"));
+  }
+
+  private void verifyAliasTransformationPosition(int startLine, int startChar,
+      int endLine, int endChar, SourcePosition<AliasTransformation> pos) {
+    assertEquals(startLine, pos.getStartLine());
+    assertEquals(startChar, pos.getPositionOnStartLine());
+    assertTrue(
+        "expected endline >= " + endLine + ".  Found " + pos.getEndLine(),
+        pos.getEndLine() >= endLine);
+    assertTrue("expected endChar >= " + endChar + ".  Found "
+        + pos.getPositionOnEndLine(), pos.getPositionOnEndLine() >= endChar);
+  }
+
   @Override
   protected ScopedAliases getProcessor(Compiler compiler) {
-    return new ScopedAliases(
-        compiler, CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER);
+    return new ScopedAliases(compiler, transformationHandler);
+  }
+
+  private static class TransformationHandlerSpy
+      implements AliasTransformationHandler {
+
+    private final Map<String, List<SourcePosition<AliasTransformation>>>
+        observedPositions = Maps.newHashMap();
+
+    public final List<AliasTransformation> constructedAliases =
+        Lists.newArrayList();
+
+    @Override
+    public AliasTransformation logAliasTransformation(
+        String sourceFile, SourcePosition<AliasTransformation> position) {
+      if(!observedPositions.containsKey(sourceFile)) {
+        observedPositions.put(sourceFile,
+            Lists.<SourcePosition<AliasTransformation>> newArrayList());
+      }
+      observedPositions.get(sourceFile).add(position);
+      AliasTransformation spy = new AliasSpy();
+      constructedAliases.add(spy);
+      return spy;
+    }
+  }
+
+  private static class AliasSpy implements AliasTransformation {
+    public final Map<String, String> observedDefinitions = Maps.newHashMap();
+
+    @Override
+    public void addAlias(String alias, String definition) {
+      observedDefinitions.put(alias, definition);
+    }
   }
 
   private static class TypeVerifyingPass

@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
 
 import java.io.Serializable;
@@ -1266,7 +1267,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   public interface AliasTransformationHandler {
 
     /**
-     * Builds an AliasCodeChange implementation and returns it to the caller.
+     * Builds an AliasTransformation implementation and returns it to the
+     * caller.
      * <p>
      * Callers are allowed to request multiple AliasTransformation instances for
      * the same file, though it is expected that the first and last char values
@@ -1278,13 +1280,12 @@ public class CompilerOptions implements Serializable, Cloneable {
      * implementor did not create
      *
      * @param sourceFile the source file the aliases re contained in.
-     * @param firstChar the first character in the file to which the aliases are
-     *        mapped.
-     * @param lastChar the last character in the file to which the aliases are
-     *        mapped.
+     * @param position the region of the source file associated with the
+     *        goog.scope call. The item of the SourcePosition is the returned
+     *        AliasTransformation
      */
-    public AliasTransformation logAliasChangeSet(
-        String sourceFile, int firstChar, int lastChar);
+    public AliasTransformation logAliasTransformation(
+        String sourceFile, SourcePosition<AliasTransformation> position);
   }
 
   /**
@@ -1322,8 +1323,9 @@ public class CompilerOptions implements Serializable, Cloneable {
         new NullAliasTransformation();
 
     @Override
-    public AliasTransformation logAliasChangeSet(
-        String sourceFile, int firstChar, int lastChar) {
+    public AliasTransformation logAliasTransformation(
+        String sourceFile, SourcePosition<AliasTransformation> position) {
+      position.setItem(NULL_ALIAS_TRANSFORMATION);
       return NULL_ALIAS_TRANSFORMATION;
     }
 
