@@ -61,21 +61,19 @@ class SourceInformationAnnotator extends
     // Annotate the original name.
     switch (n.getType()) {
       case Token.GETPROP:
-        Node propNode = n.getFirstChild().getNext();
-        if (propNode.getType() == Token.STRING) {
-          n.putProp(Node.ORIGINALNAME_PROP, propNode.getString());
-        }
+        Node propNode = n.getLastChild();
+        setOriginalName(n, propNode.getString());
         break;
 
       case Token.FUNCTION:
         String functionName = NodeUtil.getNearestFunctionName(n);
         if (functionName != null) {
-          n.putProp(Node.ORIGINALNAME_PROP, functionName);
+          setOriginalName(n, functionName);
         }
         break;
 
       case Token.NAME:
-        n.putProp(Node.ORIGINALNAME_PROP, n.getString());
+        setOriginalName(n, n.getString());
         break;
 
       case Token.OBJECTLIT:
@@ -83,10 +81,16 @@ class SourceInformationAnnotator extends
              key = key.getNext()) {
            // We only want keys were unquoted.
            if (!key.isQuotedString()) {
-             key.putProp(Node.ORIGINALNAME_PROP, key.getString());
+             setOriginalName(key, key.getString());
            }
          }
         break;
+    }
+  }
+
+  void setOriginalName(Node n, String name) {
+    if (!name.isEmpty() && n.getProp(Node.ORIGINALNAME_PROP) == null) {
+      n.putProp(Node.ORIGINALNAME_PROP, name);
     }
   }
 }
