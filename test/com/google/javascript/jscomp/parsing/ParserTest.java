@@ -31,6 +31,9 @@ import java.util.List;
 
 
 public class ParserTest extends BaseJSTypeTestCase {
+  private static final String SUSPICIOUS_COMMENT_WARNING =
+      IRFactory.SUSPICIOUS_COMMENT_WARNING;
+
   private static final String TRAILING_COMMA_MESSAGE =
       ScriptRuntime.getMessage0("msg.extra.trailing.comma");
 
@@ -609,6 +612,14 @@ public class ParserTest extends BaseJSTypeTestCase {
 
   public void testTrailingCommaWarning7() {
     parseError("var a = {,};", BAD_PROPERTY_MESSAGE);
+  }
+
+  public void testSuspiciousBlockCommentWarning1() {
+    parse("/* @type {number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
+  }
+
+  public void testSuspiciousBlockCommentWarning2() {
+    parse("/* \n * @type {number} */ var x = 3;", SUSPICIOUS_COMMENT_WARNING);
   }
 
   public void testCatchClauseForbidden() {

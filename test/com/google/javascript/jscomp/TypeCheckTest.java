@@ -5948,7 +5948,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "* @return {boolean|undefined}\n" +
         "*/\n" +
         "function g(b) { return b ? true : undefined; }\n" +
-        "/* @return {T} */\n" +
+        "/** @return {T} */\n" +
         "function h() {\n" +
         "return /** @type {T} */ (f(/** @type {boolean} */ (g(true))));\n" +
         "}");

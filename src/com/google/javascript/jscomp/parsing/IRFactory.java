@@ -16,12 +16,11 @@
 
 package com.google.javascript.jscomp.parsing;
 
-import static com.google.javascript.jscomp.mozilla.rhino.Token.CommentType.JSDOC;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
+import com.google.javascript.jscomp.mozilla.rhino.Token.CommentType;
 import com.google.javascript.jscomp.mozilla.rhino.ast.ArrayLiteral;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Assignment;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstNode;
@@ -77,6 +76,10 @@ import java.util.Set;
  *
  */
 public class IRFactory {
+
+  static final String SUSPICIOUS_COMMENT_WARNING =
+      "Non-JSDoc comment has annotations. " +
+      "Did you mean to start it with '/**'?";
 
   private final String sourceString;
   private final String sourceName;
@@ -161,8 +164,11 @@ public class IRFactory {
 
     if (node.getComments() != null) {
       for (Comment comment : node.getComments()) {
-        if (comment.getCommentType() == JSDOC && !comment.isParsed()) {
+        if (comment.getCommentType() == CommentType.JSDOC &&
+            !comment.isParsed()) {
           irFactory.handlePossibleFileOverviewJsDoc(comment);
+        } else if (comment.getCommentType() == CommentType.BLOCK) {
+          irFactory.handleBlockComment(comment);
         }
       }
     }
@@ -200,6 +206,20 @@ public class IRFactory {
       }
     }
     return irNode;
+  }
+
+  /**
+   * Check to see if the given block comment looks like it should be JSDoc.
+   */
+  private void handleBlockComment(Comment comment) {
+    String value = comment.getValue();
+    if (value.indexOf("/* @") != -1 ||
+        value.indexOf("\n * @") != -1) {
+      errorReporter.warning(
+          SUSPICIOUS_COMMENT_WARNING,
+          sourceName,
+          comment.getLineno(), "", 0);
+    }
   }
 
   /**
