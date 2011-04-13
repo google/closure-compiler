@@ -26,6 +26,7 @@
  *
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html
  * @see http://www.w3.org/TR/XMLHttpRequest/
+ * @see http://www.w3.org/TR/XMLHttpRequest2/
  *
  * @externs
  */
@@ -312,7 +313,7 @@ XMLHttpRequest.prototype.open = function(method, url, opt_async, opt_user,
 XMLHttpRequest.prototype.setRequestHeader = function(header, value) {};
 
 /**
- * @param {Document|string=} opt_data
+ * @param {Document|FormData|string=} opt_data
  * @return {undefined}
  * @see http://www.w3.org/TR/XMLHttpRequest/#send
  */
@@ -372,3 +373,20 @@ XMLHttpRequest.prototype.statusText;
  * @see http://www.w3.org/TR/XMLHttpRequest/#onreadystatechange
  */
 XMLHttpRequest.prototype.onreadystatechange;
+
+/**
+ * The FormData object represents an ordered collection of entries. Each entry
+ * has a name and value.
+ *
+ * @constructor
+ * @see http://www.w3.org/TR/XMLHttpRequest2/#the-formdata-interface
+ */
+function FormData() {}
+
+/**
+ * @param {string} name
+ * @param {Blob|string} value
+ */
+FormData.prototype.append = function(name, value) {};
+
+
