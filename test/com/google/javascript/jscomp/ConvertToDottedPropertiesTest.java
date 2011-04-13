@@ -61,4 +61,11 @@ public class ConvertToDottedPropertiesTest extends CompilerTestCase {
     // only allow simple Latin (aka ASCII) to be converted.
     test("a['\u00d1StuffAfter']", "a['\u00d1StuffAfter']");
   }
+
+
+  public void testQuotedProps() {
+    testSame("({'':0})");
+    testSame("({'1.0':0})");
+    testSame("({'\u1d17A':0})");
+  }
 }

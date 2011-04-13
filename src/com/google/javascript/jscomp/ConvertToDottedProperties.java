@@ -46,7 +46,8 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
       case Token.GET:
       case Token.SET:
       case Token.STRING:
-        if (NodeUtil.isObjectLitKey(n, parent)) {
+        if (NodeUtil.isObjectLitKey(n, parent) &&
+            NodeUtil.isValidPropertyName(n.getString())) {
           n.putBooleanProp(Node.QUOTED_PROP, false);
         }
         break;
