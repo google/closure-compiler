@@ -19,7 +19,6 @@ package com.google.debugging.sourcemap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.debugging.sourcemap.SourceMapGeneratorV2.LineMapDecoder;
 import com.google.debugging.sourcemap.SourceMapGeneratorV2.LineMapEncoder;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -381,7 +380,8 @@ public class SourceMapGeneratorV2Test extends TestCase {
   private int getRelativeId(int id, int lastId) {
     int length = LineMapEncoder.getRelativeMappingIdLength(id, lastId);
     int result = LineMapEncoder.getRelativeMappingId(id, length, lastId);
-    int inverse = LineMapDecoder.getIdFromRelativeId(result, length, lastId);
+    int inverse = SourceMapLineDecoder.getIdFromRelativeId(
+                      result, length, lastId);
     assertEquals(id, inverse);
     return result;
   }
@@ -705,7 +705,7 @@ public class SourceMapGeneratorV2Test extends TestCase {
         for (int i=0; i< lineMaps.length(); i++) {
           String lineEntry = lineMaps.getString(i);
           List<Integer> entries =
-              SourceMapGeneratorV2.LineMapDecoder.decodeLine(lineEntry);
+              SourceMapLineDecoder.decodeLine(lineEntry);
           String msg = "line: " + entries;
           System.err.println(msg);
           characterMap.add(entries);

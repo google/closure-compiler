@@ -26,8 +26,6 @@ import java.util.List;
  * @author johnlenz@google.com (John Lenz)
  * @author jschorr@google.com (Joseph Schorr)
  */
-// NOTE : Copied from the JSC to avoid a dependency.
-// TODO(user): Move this into a central shared location.
 class SourceMapLineDecoder {
   /**
    *  A map used to convert integer values in the range 0-63 to their base64
@@ -47,7 +45,7 @@ class SourceMapLineDecoder {
 
   private SourceMapLineDecoder() {}
 
-  private static LineEntry decodeLineEntry(String in, int lastId) {
+  static LineEntry decodeLineEntry(String in, int lastId) {
     return decodeLineEntry(new StringParser(in), lastId);
   }
 
@@ -122,7 +120,7 @@ class SourceMapLineDecoder {
   /**
    * @return the id from the relative id.
    */
-  private static int getIdFromRelativeId(int rawId, int digits, int lastId) {
+  static int getIdFromRelativeId(int rawId, int digits, int lastId) {
     // The value range depends on the number of digits
     int base = 1 << (digits * 6);
     return ((rawId >= base/2) ? rawId - base : rawId) + lastId;
