@@ -40,14 +40,25 @@ class SanityCheck implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
+  private final AstValidator astValidator = new AstValidator();
+
   SanityCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
   public void process(Node externs, Node root) {
+    sanityCheckAst(externs, root);
     sanityCheckNormalization(externs, root);
     sanityCheckCodeGeneration(root);
     sanityCheckVars(externs, root);
+  }
+
+  /**
+   * Sanity check the AST is structurally accurate.
+   */
+  private void sanityCheckAst(Node externs, Node root) {
+    astValidator.validateCodeRoot(externs);
+    astValidator.validateCodeRoot(root);
   }
 
   private void sanityCheckVars(Node externs, Node root) {

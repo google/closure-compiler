@@ -60,7 +60,7 @@ public class SanityCheckTest extends CompilerTestCase {
     try {
       test("var x = 3;", "var x=3;0;0");
     } catch (IllegalStateException e) {
-      assertEquals("normalizeNodeType constraints violated",
+      assertEquals("Expected script but was expr_void Reference node EXPR_VOID",
           e.getMessage());
       exceptionCaught = true;
     }
@@ -91,7 +91,7 @@ public class SanityCheckTest extends CompilerTestCase {
         getLastCompiler().reportCodeChange();
         Node name = Node.newString(Token.NAME, "x");
         name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        root.addChildToBack(new Node(Token.EXPR_RESULT, name));
+        root.getFirstChild().addChildToBack(new Node(Token.EXPR_RESULT, name));
         getLastCompiler().setLifeCycleStage(LifeCycleStage.NORMALIZED);
       }
     };
