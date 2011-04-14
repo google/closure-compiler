@@ -411,6 +411,45 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     }
   }
 
+  /**
+   * @return Whether the name is used in a way that might be a candidate
+   *   for inlining.
+   */
+  static boolean isCandidateUsage(Node name) {
+    Node parent = name.getParent();
+    Preconditions.checkState(name.getType() == Token.NAME);
+    if (parent.getType() == Token.VAR || parent.getType() == Token.FUNCTION) {
+      // This is a declaration.  Duplicate declarations are handle during
+      // function candidate gathering.
+      return true;
+    }
+
+    if (parent.getType() == Token.CALL && parent.getFirstChild() == name) {
+      // This is a normal reference to the function.
+      return true;
+    }
+
+    // Check for a ".call" to the named function:
+    //   CALL
+    //     GETPROP/GETELEM
+    //       NAME
+    //       STRING == "call"
+    //     This-Value
+    //     Function-parameter-1
+    //     ...
+    if (NodeUtil.isGet(parent)
+         && name == parent.getFirstChild()
+         && name.getNext().getType() == Token.STRING
+         && name.getNext().getString().equals("call")) {
+      Node gramps = name.getAncestor(2);
+      if (gramps.getType() == Token.CALL
+          && gramps.getFirstChild() == parent) {
+        // Yep, a ".call".
+        return true;
+      }
+    }
+    return false;
+  }
 
   /**
    * Find references to functions that are inlinable.
@@ -500,35 +539,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     private void checkNameUsage(NodeTraversal t, Node n, Node parent) {
       Preconditions.checkState(n.getType() == Token.NAME);
 
-      if (parent.getType() == Token.VAR || parent.getType() == Token.FUNCTION) {
-        // This is a declaration.  Duplicate declarations are handle during
-        // function candidate gathering.
+      if (isCandidateUsage(n)) {
         return;
-      }
-
-      if (parent.getType() == Token.CALL && parent.getFirstChild() == n) {
-        // This is a normal reference to the function.
-        return;
-      }
-
-      // Check for a ".call" to the named function:
-      //   CALL
-      //     GETPROP/GETELEM
-      //       NAME
-      //       STRING == "call"
-      //     This-Value
-      //     Function-parameter-1
-      //     ...
-      if (NodeUtil.isGet(parent)
-           && n == parent.getFirstChild()
-           && n.getNext().getType() == Token.STRING
-           && n.getNext().getString().equals("call")) {
-        Node gramps = n.getAncestor(2);
-        if (gramps.getType() == Token.CALL
-            && gramps.getFirstChild() == parent) {
-          // Yep, a ".call".
-          return;
-        }
       }
 
       // Other refs to a function name remove its candidacy for inlining
@@ -751,7 +763,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
    */
   private Set<String> findCalledFunctions(Node node) {
     Set<String> changed = Sets.newHashSet();
-    findCalledFunctions(node, changed);
+    findCalledFunctions(NodeUtil.getFunctionBody(node), changed);
     return changed;
   }
 
@@ -762,11 +774,9 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       Node node, Set<String> changed) {
     Preconditions.checkArgument(changed != null);
     // For each referenced function, add a new reference
-    if (node.getType() == Token.CALL) {
-      Node child = node.getFirstChild();
-      if (child.getType() == Token.NAME) {
-        String name = child.getString();
-        changed.add(name);
+    if (node.getType() == Token.NAME) {
+      if (isCandidateUsage(node)) {
+        changed.add(node.getString());
       }
     }
 
