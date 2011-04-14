@@ -621,7 +621,8 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(operaCompoundAssignFix);
     }
 
-    // Safety check
+    // Safety checks
+    passes.add(sanityCheckAst);
     if (options.checkSymbols) {
       passes.add(sanityCheckVars);
     }
@@ -1932,6 +1933,15 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new ConvertToDottedProperties(compiler);
+    }
+  };
+
+  /** Checks that all variables are defined. */
+  private final PassFactory sanityCheckAst =
+      new PassFactory("sanityCheckAst", true) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new AstValidator();
     }
   };
 
