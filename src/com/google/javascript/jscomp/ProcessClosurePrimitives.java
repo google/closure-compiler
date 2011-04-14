@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -211,18 +210,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           }
         }
         break;
-
       case Token.ASSIGN:
       case Token.NAME:
         // If this is an assignment to a provided name, remove the provided
         // object.
         handleCandidateProvideDefinition(t, n, parent);
         break;
-
-      case Token.EXPR_RESULT:
-        handleTypedefDefinition(t, n, parent);
-        break;
-
       case Token.FUNCTION:
         // If this is a declaration of a provided named function, this is an
         // error. Hosited functions will explode if the're provided.
@@ -313,24 +306,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         registerAnyProvidedPrefixes(ns, parent, t.getModule());
         providedNames.put(
             ns, new ProvidedName(ns, parent, t.getModule(), true));
-      }
-    }
-  }
-
-  /**
-   * Handles a typedef definition for a goog.provided name.
-   * @param An EXPR_RESULT node.
-   */
-  private void handleTypedefDefinition(
-      NodeTraversal t, Node n, Node parent) {
-    JSDocInfo info = n.getFirstChild().getJSDocInfo();
-    if (t.inGlobalScope() && info != null && info.hasTypedefType()) {
-      String name = n.getFirstChild().getQualifiedName();
-      if (name != null) {
-        ProvidedName pn = providedNames.get(name);
-        if (pn != null) {
-          pn.addDefinition(n, t.getModule());
-        }
       }
     }
   }
@@ -879,8 +854,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
         // Does this need a VAR keyword?
         replacementNode = candidateDefinition;
-        if (NodeUtil.isExpressionNode(candidateDefinition) &&
-            !candidateDefinition.getFirstChild().isQualifiedName()) {
+        if (NodeUtil.isExpressionNode(candidateDefinition)) {
           candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
           Node assignNode = candidateDefinition.getFirstChild();
           Node nameNode = assignNode.getFirstChild();

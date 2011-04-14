@@ -845,18 +845,4 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     assertEquals(1, fooBarBazDecl.getLineno());
     assertEquals(22, fooBarBazDecl.getCharno());
   }
-
-  public void testNoStubForProvidedTypedef() {
-    test("goog.provide('x'); /** @typedef {number} */ var x;", "var x;");
-  }
-
-  public void testNoStubForProvidedTypedef2() {
-    test("goog.provide('x.y'); /** @typedef {number} */ x.y;",
-         "var x = {}; x.y;");
-  }
-
-  public void testNoStubForProvidedTypedef4() {
-    test("goog.provide('x.y.z'); /** @typedef {number} */ x.y.z;",
-         "var x = {}; x.y = {}; x.y.z;");
-  }
 }
