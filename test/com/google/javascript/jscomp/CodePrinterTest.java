@@ -1208,4 +1208,10 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x ='\\x00';", "var x=\"\\0\"");
     assertPrint("var x ='\\u0000';", "var x=\"\\0\"");
   }
+
+  public void testUnicode() {
+    assertPrint("var x ='\\x0f';", "var x=\"\\u000f\"");
+    assertPrint("var x ='\\x68';", "var x=\"h\"");
+    assertPrint("var x ='\\x7f';", "var x=\"\\u007f\"");
+  }
 }
