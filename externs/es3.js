@@ -1678,11 +1678,12 @@ String.prototype.quote = function() {};
  * Finds a match between a regular expression and a string, and replaces the
  * matched substring with a new substring.
  *
+ * This may have side-effects if the replacement function has side-effects.
+ *
  * @param {RegExp|string} regex
  * @param {string|Function} str
  * @param {string=} opt_flags
  * @return {string}
- * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/replace
  */
 String.prototype.replace = function(regex, str, opt_flags) {};
