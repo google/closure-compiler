@@ -623,9 +623,7 @@ public class DefaultPassConfig extends PassConfig {
 
     // Safety checks
     passes.add(sanityCheckAst);
-    if (options.checkSymbols) {
-      passes.add(sanityCheckVars);
-    }
+    passes.add(sanityCheckVars);
 
     return passes;
   }
