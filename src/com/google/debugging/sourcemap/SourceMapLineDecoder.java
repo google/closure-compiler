@@ -33,7 +33,7 @@ class SourceMapLineDecoder {
    */
   private static final String BASE64_MAP =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-      "abcdefghijklmnopqrstuvwzyz" +
+      "abcdefghijklmnopqrstuvwxyz" +
       "0123456789+/";
 
   /**
