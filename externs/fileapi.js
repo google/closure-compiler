@@ -53,6 +53,24 @@ Blob.prototype.type;
 Blob.prototype.slice = function(start, length) {};
 
 /**
+ * This replaces Blob.slice in Chrome.
+ * @see http://lists.w3.org/Archives/Public/public-webapps/2011AprJun/0222.html
+ * @param {number} start
+ * @param {number} end
+ * @return {Blob}
+ */
+Blob.prototype.webkitSlice = function(start, end) {};
+
+/**
+ * This replaces Blob.slice in Firefox.
+ * @see http://lists.w3.org/Archives/Public/public-webapps/2011AprJun/0222.html
+ * @param {number} start
+ * @param {number} end
+ * @return {Blob}
+ */
+Blob.prototype.mozSlice = function(start, end) {};
+
+/**
  * @see http://www.w3.org/TR/file-writer-api/#the-blobbuilder-interface
  * @constructor
  */
@@ -73,6 +91,29 @@ BlobBuilder.prototype.append = function(data, endings) {};
  * @return {!Blob}
  */
 BlobBuilder.prototype.getBlob = function(contentType) {};
+
+/**
+ * This replaces BlobBuilder in Chrome.
+ * @see http://lists.w3.org/Archives/Public/public-webapps/2011AprJun/0222.html
+ * @constructor
+ */
+function WebKitBlobBuilder() {}
+
+/**
+ * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append0
+ * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append1
+ * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append2
+ * @param {string|Blob|ArrayBuffer} data
+ * @param {string=} endings
+ */
+WebKitBlobBuilder.prototype.append = function(data, endings) {};
+
+/**
+ * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-getBlob
+ * @param {string=} contentType
+ * @return {!Blob}
+ */
+WebKitBlobBuilder.prototype.getBlob = function(contentType) {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#the-directoryentry-interface
