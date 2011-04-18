@@ -743,9 +743,13 @@ class CodeGenerator {
 
   static double getSimpleNumber(String s) {
     if (isSimpleNumber(s)) {
-      long l = Long.parseLong(s);
-      if (l < NodeUtil.MAX_POSITIVE_INTEGER_NUMBER) {
-        return l;
+      try {
+        long l = Long.parseLong(s);
+        if (l < NodeUtil.MAX_POSITIVE_INTEGER_NUMBER) {
+          return l;
+        }
+      } catch (NumberFormatException e) {
+        // The number was too long to parse. Fall through to NaN.
       }
     }
     return Double.NaN;

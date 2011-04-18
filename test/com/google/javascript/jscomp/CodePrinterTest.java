@@ -1144,6 +1144,13 @@ public class CodePrinterTest extends TestCase {
                 "var x={\"12345678901234567\":1}");
   }
 
+  public void testObjectLit4() {
+    // More than 128 bits.
+    assertPrint(
+        "var x={\"123456789012345671234567890123456712345678901234567\":1}",
+        "var x={\"123456789012345671234567890123456712345678901234567\":1}");
+  }
+
   public void testGetter() {
     assertPrint("var x = {}", "var x={}");
     assertPrint("var x = {get a() {return 1}}", "var x={get a(){return 1}}");
