@@ -68,12 +68,13 @@ public class SourceMapGeneratorV2Test extends TestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAkBEBEB\"],\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9,\"__BASIC__\"],\n" +
-                   "[0,1,9,\"__BASIC__\"],\n" +
+                   "\"mappings\":[[0,1,9,0],\n" +
+                   "[0,1,9,0],\n" +
                    "[0,1,18],\n" +
                    "[0,1,21],\n" +
-                   "]\n" +
+                   "],\n" +
+                   "\"sources\":[\"testcode\"],\n" +
+                   "\"names\":[\"__BASIC__\"]\n" +
                    "}\n");
   }
 
@@ -93,17 +94,20 @@ public class SourceMapGeneratorV2Test extends TestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAkBABkBA/kCA+ADMBcBgBA9\"],\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9,\"__BASIC__\"],\n" +
-                   "[0,1,9,\"__BASIC__\"],\n" +
+                   "\"mappings\":[[0,1,9,0],\n" +
+                   "[0,1,9,0],\n" +
                    "[0,1,18],\n" +
-                   "[0,1,19,\"__PARAM1__\"],\n" +
-                   "[0,1,31,\"__PARAM2__\"],\n" +
+                   "[0,1,19,1],\n" +
+                   "[0,1,31,2],\n" +
                    "[0,1,43],\n" +
                    "[0,1,45],\n" +
-                   "[0,1,49,\"__VAR__\"],\n" +
+                   "[0,1,49,3],\n" +
                    "[0,1,59],\n" +
-                   "]\n" +
+                   "],\n" +
+                   "\"sources\":[\"testcode\"],\n" +
+                   "\"names\":[" +
+                       "\"__BASIC__\",\"__PARAM1__\",\"__PARAM2__\"," +
+                       "\"__VAR__\"]\n" +
                    "}\n");
   }
 
@@ -135,38 +139,40 @@ public class SourceMapGeneratorV2Test extends TestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"\"],\n" +
+                   "\"mappings\":[],\n" +
                    "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[]\n" +
+                   "\"names\":[]\n" +
                    "}\n");
   }
 
   public void testGoldenOutput1() throws Exception {
     detailLevel = SourceMap.DetailLevel.ALL;
 
-    checkSourceMap("function f(foo, bar) { foo = foo + bar + 2; return foo; }",
+    checkSourceMap(
+        "function f(foo, bar) { foo = foo + bar + 2; return foo; }",
 
-                   "{\n" +
-                   "\"version\":2,\n" +
-                   "\"file\":\"testcode\",\n" +
-                   "\"lineCount\":1,\n" +
-                   "\"lineMaps\":" +
-                       "[\"cAEBABIBA/ICA+ADICA/ICA+IDA9AEYBMBA5\"],\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9,\"f\"],\n" +
-                   "[0,1,9,\"f\"],\n" +
-                   "[0,1,10],\n" +
-                   "[0,1,11,\"foo\"],\n" +
-                   "[0,1,16,\"bar\"],\n" +
-                   "[0,1,21],\n" +
-                   "[0,1,23],\n" +
-                   "[0,1,23,\"foo\"],\n" +
-                   "[0,1,29,\"foo\"],\n" +
-                   "[0,1,35,\"bar\"],\n" +
-                   "[0,1,41],\n" +
-                   "[0,1,44],\n" +
-                   "[0,1,51,\"foo\"],\n" +
-                   "]\n" +
-                   "}\n");
+        "{\n" +
+        "\"version\":2,\n" +
+        "\"file\":\"testcode\",\n" +
+        "\"lineCount\":1,\n" +
+        "\"lineMaps\":[\"cAEBABIBA/ICA+ADICA/ICA+IDA9AEYBMBA5\"],\n" +
+        "\"mappings\":[[0,1,9,0],\n" +
+        "[0,1,9,0],\n" +
+        "[0,1,10],\n" +
+        "[0,1,11,1],\n" +
+        "[0,1,16,2],\n" +
+        "[0,1,21],\n" +
+        "[0,1,23],\n" +
+        "[0,1,23,1],\n" +
+        "[0,1,29,1],\n" +
+        "[0,1,35,2],\n" +
+        "[0,1,41],\n" +
+        "[0,1,44],\n" +
+        "[0,1,51,1],\n" +
+        "],\n" +
+        "\"sources\":[\"testcode\"],\n" +
+        "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
+        "}\n");
 
     detailLevel = SourceMap.DetailLevel.SYMBOLS;
 
@@ -177,16 +183,17 @@ public class SourceMapGeneratorV2Test extends TestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAEBA/ICA+IDE9IEA8IFA7IGg6MHA5\"],\n" +
+                   "\"mappings\":[[0,1,9,0],\n" +
+                   "[0,1,9,0],\n" +
+                   "[0,1,11,1],\n" +
+                   "[0,1,16,2],\n" +
+                   "[0,1,23,1],\n" +
+                   "[0,1,29,1],\n" +
+                   "[0,1,35,2],\n" +
+                   "[0,1,51,1],\n" +
+                   "],\n" +
                    "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9,\"f\"],\n" +
-                   "[0,1,9,\"f\"],\n" +
-                   "[0,1,11,\"foo\"],\n" +
-                   "[0,1,16,\"bar\"],\n" +
-                   "[0,1,23,\"foo\"],\n" +
-                   "[0,1,29,\"foo\"],\n" +
-                   "[0,1,35,\"bar\"],\n" +
-                   "[0,1,51,\"foo\"],\n" +
-                   "]\n" +
+                   "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
                    "}\n");
   }
 
@@ -198,23 +205,24 @@ public class SourceMapGeneratorV2Test extends TestCase {
                    "\"version\":2,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"lineMaps\":" +
-                       "[\"cAEBABIBA/ICA+ADICA/ICA+IDA9IEYBMBA5\"],\n" +
-                   "\"sources\":[\"testcode\"],\n" +
-                   "\"mappings\":[[0,1,9,\"f\"],\n" +
-                   "[0,1,9,\"f\"],\n" +
+                   "\"lineMaps\":[" +
+                       "\"cAEBABIBA/ICA+ADICA/ICA+IDA9IEYBMBA5\"],\n" +
+                   "\"mappings\":[[0,1,9,0],\n" +
+                   "[0,1,9,0],\n" +
                    "[0,1,10],\n" +
-                   "[0,1,11,\"foo\"],\n" +
-                   "[0,1,16,\"bar\"],\n" +
+                   "[0,1,11,1],\n" +
+                   "[0,1,16,2],\n" +
                    "[0,1,21],\n" +
                    "[0,5,0],\n" +
-                   "[0,5,0,\"foo\"],\n" +
-                   "[0,5,6,\"foo\"],\n" +
-                   "[0,5,12,\"bar\"],\n" +
-                   "[0,5,18,\"foo\"],\n" +
+                   "[0,5,0,1],\n" +
+                   "[0,5,6,1],\n" +
+                   "[0,5,12,2],\n" +
+                   "[0,5,18,1],\n" +
                    "[0,6,0],\n" +
-                   "[0,6,7,\"foo\"],\n" +
-                   "]\n" +
+                   "[0,6,7,1],\n" +
+                   "],\n" +
+                   "\"sources\":[\"testcode\"],\n" +
+                   "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
                    "}\n");
   }
 
@@ -227,9 +235,10 @@ public class SourceMapGeneratorV2Test extends TestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"IA\"],\n" +
-                   "\"sources\":[\"c:\\myfile.js\"],\n" +
-                   "\"mappings\":[[0,1,0,\"foo\"],\n" +
-                   "]\n" +
+                   "\"mappings\":[[0,1,0,0],\n" +
+                   "],\n" +
+                   "\"sources\":[\"c:\\\\myfile.js\"],\n" +
+                   "\"names\":[\"foo\"]\n" +
                    "}\n");
   }
 
@@ -242,11 +251,12 @@ public class SourceMapGeneratorV2Test extends TestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"IAMBMB\"],\n" +
-                   "\"sources\":[\"c:\\myfile.js\"],\n" +
-                   "\"mappings\":[[0,1,0,\"foo\"],\n" +
-                   "[0,1,7,\"boo\"],\n" +
-                   "[0,1,14,\"goo\"],\n" +
-                   "]\n" +
+                   "\"mappings\":[[0,1,0,0],\n" +
+                   "[0,1,7,1],\n" +
+                   "[0,1,14,2],\n" +
+                   "],\n" +
+                   "\"sources\":[\"c:\\\\myfile.js\"],\n" +
+                   "\"names\":[\"foo\",\"boo\",\"goo\"]\n" +
                    "}\n");
   }
 
@@ -295,15 +305,16 @@ public class SourceMapGeneratorV2Test extends TestCase {
                    "\"\",\n" +
                    "\"MAMBABA/!!AUSC\",\n" +
                    "\"AEA9AEA8AF\"],\n" +
-                   "\"sources\":[\"c:\\myfile.js\"],\n" +
                    "\"mappings\":[[0,4,0],\n" +
-                   "[0,4,4,\"foo\"],\n" +
-                   "[0,4,8,\"a\"],\n" +
+                   "[0,4,4,0],\n" +
+                   "[0,4,8,1],\n" +
                    "[0,4,12],\n" +
-                   "[0,4,1314,\"c\"],\n" +
-                   "[0,4,1318,\"d\"],\n" +
-                   "[0,4,1322,\"e\"],\n" +
-                   "]\n" +
+                   "[0,4,1314,2],\n" +
+                   "[0,4,1318,3],\n" +
+                   "[0,4,1322,4],\n" +
+                   "],\n" +
+                   "\"sources\":[\"c:\\\\myfile.js\"],\n" +
+                   "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +
                    "}\n");
 
     detailLevel = SourceMap.DetailLevel.SYMBOLS;
@@ -350,13 +361,14 @@ public class SourceMapGeneratorV2Test extends TestCase {
         "\"\",\n" +
         "\"M/MBAB\",\n" +
         "\"ACA+ADA9AE\"],\n" +
-        "\"sources\":[\"c:\\myfile.js\"],\n" +
-        "\"mappings\":[[0,4,4,\"foo\"],\n" +
-        "[0,4,8,\"a\"],\n" +
-        "[0,4,1314,\"c\"],\n" +
-        "[0,4,1318,\"d\"],\n" +
-        "[0,4,1322,\"e\"],\n" +
-        "]\n" +
+        "\"mappings\":[[0,4,4,0],\n" +
+        "[0,4,8,1],\n" +
+        "[0,4,1314,2],\n" +
+        "[0,4,1318,3],\n" +
+        "[0,4,1322,4],\n" +
+        "],\n" +
+        "\"sources\":[\"c:\\\\myfile.js\"],\n" +
+        "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +
         "}\n");
   }
 

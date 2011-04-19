@@ -26,6 +26,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
@@ -59,6 +60,12 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * A map of source names to source name index
    */
   private LinkedHashMap<String, Integer> sourceFileMap =
+      Maps.newLinkedHashMap();
+
+  /**
+   * A map of symbol names to symbol name index
+   */
+  private LinkedHashMap<String, Integer> originalNameMap =
       Maps.newLinkedHashMap();
 
   /**
@@ -96,6 +103,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     mappings.clear();
     lastMapping = null;
     sourceFileMap.clear();
+    originalNameMap.clear();
     lastSourceFile = null;
     lastSourceFileIndex = -1;
     offsetPosition = new FilePosition(0, 0);
@@ -166,17 +174,6 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       return;
     }
 
-    if (sourceName != lastSourceFile) {
-      lastSourceFile = sourceName;
-      Integer index = sourceFileMap.get(sourceName);
-      if (index != null) {
-        lastSourceFileIndex = index;
-      } else {
-        lastSourceFileIndex = sourceFileMap.size();
-        sourceFileMap.put(sourceName, lastSourceFileIndex);
-      }
-    }
-
     FilePosition adjustedStart = startPosition;
     FilePosition adjustedEnd = endPosition;
 
@@ -209,7 +206,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
     // Create the new mapping.
     Mapping mapping = new Mapping();
-    mapping.sourceFile = lastSourceFileIndex;
+    mapping.sourceFile = getSourceId(sourceName);
     mapping.originalPosition = sourceStartPosition;
     mapping.originalName = symbolName;
     mapping.startPosition = adjustedStart;
@@ -292,6 +289,13 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     out.append("]");
     appendFieldEnd(out);
 
+    // Add the mappings themselves.
+    appendFieldStart(out, "mappings");
+    out.append("[");
+    (new MappingWriter()).appendMappings(out);
+    out.append("]");
+    appendFieldEnd(out);
+
     // Files names
     appendFieldStart(out, "sources");
     out.append("[");
@@ -299,10 +303,10 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     out.append("]");
     appendFieldEnd(out);
 
-    // Add the mappings themselves.
-    appendFieldStart(out, "mappings");
+    // Files names
+    appendFieldStart(out, "names");
     out.append("[");
-    (new MappingWriter()).appendMappings(out);
+    addOriginalNameMap(out);
     out.append("]");
     appendFieldEnd(out);
 
@@ -313,15 +317,28 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * Writes the source name map to 'out'.
    */
   private void addSourceNameMap(Appendable out) throws IOException {
+    addMap(out, sourceFileMap);
+  }
+
+  /**
+   * Writes the original name map to 'out'.
+   */
+  private void addOriginalNameMap(Appendable out) throws IOException {
+    addMap(out, originalNameMap);
+  }
+
+  /**
+   * Writes the source name map to 'out'.
+   */
+  private void addMap(Appendable out, Map<String,Integer> map)
+      throws IOException {
     int i = 0;
-    for (Entry<String, Integer> entry : sourceFileMap.entrySet()) {
+    for (Entry<String, Integer> entry : map.entrySet()) {
       String key = entry.getKey();
       if (i != 0) {
         out.append(",");
       }
-      out.append("\"");
-      out.append(key);
-      out.append("\"");
+      out.append(escapeString(key));
       i++;
     }
   }
@@ -385,6 +402,42 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
     // Adjust for the prefix.
     return maxLine + prefixPosition.getLine();
+  }
+
+  /**
+   * Pools source names.
+   * @param sourceName The source location to index.
+   * @return The id to represent the source name in the output.
+   */
+  private int getSourceId(String sourceName) {
+    if (sourceName != lastSourceFile) {
+      lastSourceFile = sourceName;
+      Integer index = sourceFileMap.get(sourceName);
+      if (index != null) {
+        lastSourceFileIndex = index;
+      } else {
+        lastSourceFileIndex = sourceFileMap.size();
+        sourceFileMap.put(sourceName, lastSourceFileIndex);
+      }
+    }
+    return lastSourceFileIndex;
+  }
+
+  /**
+   * Pools symbol names
+   * @param symbolName The symbol name to index.
+   * @return The id to represent the symbol name in the output.
+   */
+  private int getNameId(String symbolName) {
+    int originalNameIndex;
+    Integer index = originalNameMap.get(symbolName);
+    if (index != null) {
+      originalNameIndex = index;
+    } else {
+      originalNameIndex = originalNameMap.size();
+      originalNameMap.put(symbolName, originalNameIndex);
+    }
+    return originalNameIndex;
   }
 
   /**
@@ -459,12 +512,11 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       out.append(lineValue);
 
       out.append(",");
-      out.append(String.valueOf(
-          m.originalPosition.getColumn()));
+      out.append(String.valueOf(m.originalPosition.getColumn()));
 
       if (m.originalName != null) {
         out.append(",");
-        out.append(escapeString(m.originalName));
+        out.append(String.valueOf(getNameId(m.originalName)));
       }
 
       out.append("],\n");

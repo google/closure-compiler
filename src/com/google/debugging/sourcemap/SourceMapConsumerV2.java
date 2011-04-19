@@ -58,7 +58,19 @@ public class SourceMapConsumerV2 implements SourceMapConsumer {
    */
   public void parse(String contents) throws SourceMapParseException {
     try {
-      parseInternal(contents);
+      JSONObject sourceMapRoot = new JSONObject(contents);
+      parse(sourceMapRoot);
+    } catch (JSONException ex) {
+      throw new SourceMapParseException("JSON parse exception: " + ex);
+    }
+  }
+
+  /**
+   * Parses the given contents containing a source map.
+   */
+  public void parse(JSONObject sourceMapRoot) throws SourceMapParseException {
+    try {
+      parseInternal(sourceMapRoot);
     } catch (JSONException ex) {
       throw new SourceMapParseException("JSON parse exception: " + ex);
     }
@@ -67,9 +79,8 @@ public class SourceMapConsumerV2 implements SourceMapConsumer {
   /**
    * Parses the given contents as version 2 of a SourceMap.
    */
-  private void parseInternal(String contents)
+  private void parseInternal(JSONObject sourceMapRoot)
       throws JSONException, SourceMapParseException {
-    JSONObject sourceMapRoot = new JSONObject(contents);
 
     // Check basic assertions about the format.
     int version = sourceMapRoot.getInt("version");
