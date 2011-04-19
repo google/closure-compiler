@@ -845,6 +845,18 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Records an extended interface type.
+   */
+  public boolean recordExtendedInterface(JSTypeExpression interfaceType) {
+    if (currentInfo.addExtendedInterface(interfaceType)) {
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records that we're lending to another name.
    */
   public boolean recordLends(String name) {
@@ -867,6 +879,7 @@ final public class JSDocInfoBuilder {
         currentInfo.getParameterCount() > 0 ||
         currentInfo.hasReturnType() ||
         currentInfo.hasBaseType() ||
+        currentInfo.getExtendedInterfacesCount() > 0 ||
         currentInfo.getLendsName() != null ||
         currentInfo.hasThisType() ||
         hasAnySingletonTypeTags();

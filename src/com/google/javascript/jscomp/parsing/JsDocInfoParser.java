@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
@@ -33,6 +34,7 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 
 /**
  * A parser for JSDoc comments.
@@ -175,6 +177,8 @@ public final class JsDocInfoParser {
     skipEOLs();
 
     JsDocToken token = next();
+
+    List<ExtendedTypeInfo> extendedTypes = Lists.newArrayList();
 
     // Always record that we have a comment.
     if (jsdocBuilder.shouldParseDocumentation()) {
@@ -408,10 +412,9 @@ public final class JsDocInfoParser {
                     type = createJSTypeExpression(typeNode);
 
                     if (annotation == Annotation.EXTENDS) {
-                      if (!jsdocBuilder.recordBaseType(type)) {
-                        parser.addTypeWarning(
-                            "msg.jsdoc.incompat.type", lineno, charno);
-                      }
+                      // record the extended type, check later
+                      extendedTypes.add(new ExtendedTypeInfo(
+                          type, stream.getLineno(), stream.getCharno()));
                     } else {
                       Preconditions.checkState(
                           annotation == Annotation.IMPLEMENTS);
@@ -875,7 +878,7 @@ public final class JsDocInfoParser {
           if (hasParsedFileOverviewDocInfo()) {
             fileOverviewJSDocInfo = retrieveAndResetParsedJSDocInfo();
           }
-
+          checkExtendedTypes(extendedTypes);
           return true;
 
         case EOF:
@@ -883,6 +886,7 @@ public final class JsDocInfoParser {
           jsdocBuilder.build(null);
           parser.addParserWarning("msg.unexpected.eof",
               stream.getLineno(), stream.getCharno());
+          checkExtendedTypes(extendedTypes);
           return false;
 
         case EOL:
@@ -905,6 +909,27 @@ public final class JsDocInfoParser {
 
       // next token
       token = next();
+    }
+  }
+
+  private void checkExtendedTypes(List<ExtendedTypeInfo> extendedTypes) {
+    for (ExtendedTypeInfo typeInfo : extendedTypes) {
+      // If interface, record the multiple extended interfaces
+      if (jsdocBuilder.isInterfaceRecorded()) {
+        if (!jsdocBuilder.recordExtendedInterface(typeInfo.type)) {
+          parser.addParserWarning("msg.jsdoc.extends.duplicate",
+              typeInfo.lineno, typeInfo.charno);
+        }
+      }
+
+      // For interfaces, still record the first extended type as base type
+      // It's the temporary setting and will be changed when multiple
+      // extends for interfaces are done
+      if (!jsdocBuilder.recordBaseType(typeInfo.type) &&
+          !jsdocBuilder.isInterfaceRecorded()) {
+        parser.addTypeWarning("msg.jsdoc.incompat.type",
+            typeInfo.lineno, typeInfo.charno);
+      }
     }
   }
 
@@ -1203,6 +1228,21 @@ public final class JsDocInfoParser {
     public ExtractionInfo(String string, JsDocToken token) {
       this.string = string;
       this.token = token;
+    }
+  }
+
+  /**
+   * Tuple for recording extended types
+   */
+  private static class ExtendedTypeInfo {
+    final JSTypeExpression type;
+    final int lineno;
+    final int charno;
+
+    public ExtendedTypeInfo(JSTypeExpression type, int lineno, int charno) {
+      this.type = type;
+      this.lineno = lineno;
+      this.charno = charno;
     }
   }
 

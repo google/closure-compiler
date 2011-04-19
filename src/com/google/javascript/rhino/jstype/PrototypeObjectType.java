@@ -503,7 +503,8 @@ class PrototypeObjectType extends ObjectType {
     /**  The JSDocInfo for this property. */
     private JSDocInfo docInfo = null;
 
-    private Property(JSType type, boolean inferred, boolean inExterns, Node propertyNode) {
+    private Property(JSType type, boolean inferred, boolean inExterns,
+        Node propertyNode) {
       this.type = type;
       this.inferred = inferred;
       this.inExterns = inExterns;

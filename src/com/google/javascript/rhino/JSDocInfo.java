@@ -88,6 +88,7 @@ public class JSDocInfo implements Serializable {
 
     // Function information
     JSTypeExpression baseType = null;
+    List<JSTypeExpression> extendedInterfaces = null;
     List<JSTypeExpression> implementedInterfaces = null;
     Map<String, JSTypeExpression> parameters = null;
     List<JSTypeExpression> thrownTypes = null;
@@ -1126,6 +1127,46 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
+   * Adds an extended interface (for interface only).
+   * Returns whether the type was added.
+   * if the type was already present in the list, it won't get added again.
+   */
+  boolean addExtendedInterface(JSTypeExpression type) {
+    lazyInitInfo();
+    if (info.extendedInterfaces == null) {
+      info.extendedInterfaces = Lists.newArrayListWithCapacity(2);
+    }
+    if (info.extendedInterfaces.contains(type)) {
+      return false;
+    }
+    info.extendedInterfaces.add(type);
+    return true;
+  }
+
+  /**
+   * Returns the interfaces extended by an interface
+   *
+   * @return An immutable list of JSTypeExpression objects that can
+   *    be resolved to types.
+   */
+  public List<JSTypeExpression> getExtendedInterfaces() {
+    if (info == null || info.extendedInterfaces == null) {
+      return ImmutableList.of();
+    }
+    return Collections.unmodifiableList(info.extendedInterfaces);
+  }
+
+  /**
+   * Gets the number of extended interfaces specified
+   */
+  public int getExtendedInterfacesCount() {
+    if (info == null || info.extendedInterfaces == null) {
+      return 0;
+    }
+    return info.extendedInterfaces.size();
+  }
+
+  /**
    * Returns the deprecation reason or null if none specified.
    */
   public String getDeprecationReason() {
@@ -1265,6 +1306,12 @@ public class JSDocInfo implements Serializable {
     if (info != null) {
       if (info.baseType != null) {
         nodes.add(info.baseType.getRoot());
+      }
+
+      if (info.extendedInterfaces != null) {
+        for (JSTypeExpression interfaceType : info.extendedInterfaces) {
+          nodes.add(interfaceType.getRoot());
+        }
       }
 
       if (info.implementedInterfaces != null) {

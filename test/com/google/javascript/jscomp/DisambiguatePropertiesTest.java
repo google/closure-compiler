@@ -964,7 +964,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @interface */ function I() {};\n"
         + "I.prototype.a;\n"
-        + "/** @interface \n @implements I */ function I2() {};\n"
+        + "/** @interface \n @extends I */ function I2() {};\n"
         + "/** @constructor \n @implements I2 */"
         + "function Foo() {};\n"
         + "Foo.prototype.a = 0;\n"
