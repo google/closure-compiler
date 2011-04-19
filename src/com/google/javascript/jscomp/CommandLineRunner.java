@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.LimitInputStream;
-import com.google.javascript.jscomp.AbstractCommandLineRunner.WarningGuardSpec;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -224,18 +223,24 @@ public class CommandLineRunner extends
         "corresponds to.")
     private String create_source_map = "";
 
+    // Used to define the flag, values are stored by the handler.
+    @SuppressWarnings("unused")
     @Option(name = "--jscomp_error",
         handler = WarningGuardErrorOptionHandler.class,
         usage = "Make the named class of warnings an error. Options:" +
         DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
     private List<String> jscomp_error = Lists.newArrayList();
 
+    // Used to define the flag, values are stored by the handler.
+    @SuppressWarnings("unused")
     @Option(name = "--jscomp_warning",
         handler = WarningGuardWarningOptionHandler.class,
         usage = "Make the named class of warnings a normal warning. " +
         "Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
     private List<String> jscomp_warning = Lists.newArrayList();
 
+    // Used to define the flag, values are stored by the handler.
+    @SuppressWarnings("unused")
     @Option(name = "--jscomp_off",
         handler = WarningGuardOffOptionHandler.class,
         usage = "Turn off the named class of warnings. Options:" +
