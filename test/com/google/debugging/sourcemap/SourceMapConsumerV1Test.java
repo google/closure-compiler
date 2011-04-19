@@ -69,6 +69,9 @@ public class SourceMapConsumerV1Test extends TestCase {
     assertEquals(15, mapping.getLineNumber());
     assertEquals(16, mapping.getColumnPosition());
     assertEquals("yo!", mapping.getIdentifier());
+
+    assertNull(sourceMap.getMappingForLine(Integer.MAX_VALUE, 1));
+    assertNotNull(sourceMap.getMappingForLine(1, Integer.MAX_VALUE));
   }
 
   public void testLineEdges() throws Exception {

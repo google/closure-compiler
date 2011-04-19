@@ -150,6 +150,9 @@ public class SourceMapConsumerV2 implements SourceMapConsumer {
       return null;
     }
 
+    Preconditions.checkState(lineNumber >= 0, "Line number must be >= 0");
+    Preconditions.checkState(columnIndex >= 0, "Column index must be >= 0");
+
     if (!characterMap.containsKey(lineNumber)) {
       // Parse the line map entry and place it into the character map.
       try {
@@ -167,6 +170,9 @@ public class SourceMapConsumerV2 implements SourceMapConsumer {
     }
 
     int index = map.get(columnIndex);
+    if (index == -1) {
+      return null;
+    }
     Preconditions.checkState(index < mappings.size(),
         "Invalid mapping reference");
     return mappings.get(index);

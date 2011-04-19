@@ -97,6 +97,9 @@ public class SourceMapConsumerV2Test extends TestCase {
     assertEquals(1, mapping.getLineNumber());
     assertEquals(51, mapping.getColumnPosition());
     assertEquals("foo", mapping.getIdentifier());
+
+    assertNull(sourceMap.getMappingForLine(Integer.MAX_VALUE, 1));
+    assertNull(sourceMap.getMappingForLine(1, Integer.MAX_VALUE));
   }
 
   public void testGetMappingForLineWithNameIndex() throws Exception {

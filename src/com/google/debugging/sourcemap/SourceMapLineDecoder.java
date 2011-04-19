@@ -98,14 +98,14 @@ class SourceMapLineDecoder {
   private static List<Integer> decodeLine(StringParser reader) {
     List<Integer> result = Lists.newArrayListWithCapacity(512);
     int lastId = 0;
-    do {
+    while (reader.hasNext()) {
       LineEntry entry = decodeLineEntry(reader, lastId);
       lastId = entry.id;
 
       for (int i=0; i < entry.reps; i++) {
         result.add(entry.id);
       }
-    } while(reader.hasNext());
+    }
 
     return result;
   }
