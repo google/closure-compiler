@@ -620,7 +620,7 @@ public class SourceMapGeneratorV1Test extends TestCase {
       String fileName2) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.sourceMapFormat = Format.LEGACY;
+    options.sourceMapFormat = Format.V1;
     options.sourceMapOutputPath = "testcode_source_map.out";
     options.sourceMapDetailLevel = detailLevel;
 

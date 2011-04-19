@@ -37,7 +37,7 @@ import java.io.IOException;
 public class SourceMap {
 
   public static enum Format {
-     LEGACY {
+     V1 {
        @Override SourceMap getInstance() {
          return new SourceMap(
            SourceMapGeneratorFactory.getInstance(SourceMapFormat.V1));
@@ -49,7 +49,7 @@ public class SourceMap {
            SourceMapGeneratorFactory.getInstance(SourceMapFormat.DEFAULT));
        }
      },
-     EXPERIMENTIAL {
+     V2 {
        @Override SourceMap getInstance() {
          return new SourceMap(
            SourceMapGeneratorFactory.getInstance(SourceMapFormat.V2));

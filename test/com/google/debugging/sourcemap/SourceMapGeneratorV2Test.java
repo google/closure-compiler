@@ -594,7 +594,7 @@ public class SourceMapGeneratorV2Test extends TestCase {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.sourceMapOutputPath = "testcode_source_map.out";
-    options.sourceMapFormat = SourceMap.Format.EXPERIMENTIAL;
+    options.sourceMapFormat = SourceMap.Format.V2;
     options.sourceMapDetailLevel = detailLevel;
 
     // Turn on IDE mode to get rid of optimizations.
