@@ -3266,7 +3266,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testGoodImplements3() throws Exception {
     testTypes("/** @interface */function Disposable() {}\n" +
-        "/** @implements {Disposable}\n * @interface */function f() {}");
+        "/** @constructor \n @implements {Disposable} */function f() {}");
   }
 
   public void testGoodImplements4() throws Exception {
@@ -3306,6 +3306,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Disposable.prototype.method = goog.abstractMethod;" +
         "/** @implements {Disposable}\n * @constructor */function f() {}",
         "property method on interface Disposable is not implemented by type f");
+  }
+
+  public void testBadImplements4() throws Exception {
+    testTypes("/** @interface */function Disposable() {}\n" +
+        "/** @implements {Disposable}\n * @interface */function f() {}",
+        "f cannot implement this type; an interface can only extend, " +
+        "but not implement interfaces");
   }
 
   public void testInterfaceExtends() throws Exception {

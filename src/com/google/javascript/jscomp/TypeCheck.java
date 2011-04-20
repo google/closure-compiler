@@ -158,6 +158,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "a constructor can only extend objects " +
           "and an interface can only extend interfaces");
 
+  static final DiagnosticType CONFLICTING_IMPLEMENTED_TYPE =
+    DiagnosticType.warning(
+        "JSC_CONFLICTING_IMPLEMENTED_TYPE",
+        "{0} cannot implement this type; " +
+        "an interface can only extend, but not implement interfaces");
+
   static final DiagnosticType BAD_IMPLEMENTED_TYPE =
       DiagnosticType.warning(
           "JSC_IMPLEMENTS_NON_INTERFACE",
@@ -228,6 +234,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       INVALID_INTERFACE_MEMBER_DECLARATION,
       INTERFACE_FUNCTION_NOT_EMPTY,
       CONFLICTING_EXTENDED_TYPE,
+      CONFLICTING_IMPLEMENTED_TYPE,
       BAD_IMPLEMENTED_TYPE,
       HIDDEN_SUPERCLASS_PROPERTY,
       HIDDEN_INTERFACE_PROPERTY,
@@ -1401,21 +1408,28 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             t.makeError(n, CONFLICTING_EXTENDED_TYPE, functionPrivateName));
       }
 
-      for (JSType baseInterface : functionType.getImplementedInterfaces()) {
-        boolean badImplementedType = false;
-        ObjectType baseInterfaceObj = ObjectType.cast(baseInterface);
-        if (baseInterfaceObj != null) {
-          FunctionType interfaceConstructor =
+      if (functionType.isInterface()) {
+        if (functionType.hasImplementedInterfaces()) {
+          compiler.report(t.makeError(n,
+              CONFLICTING_IMPLEMENTED_TYPE, functionPrivateName));
+        }
+      } else {
+        for (JSType baseInterface : functionType.getImplementedInterfaces()) {
+          boolean badImplementedType = false;
+          ObjectType baseInterfaceObj = ObjectType.cast(baseInterface);
+          if (baseInterfaceObj != null) {
+            FunctionType interfaceConstructor =
               baseInterfaceObj.getConstructor();
-          if (interfaceConstructor != null &&
-              !interfaceConstructor.isInterface()) {
+            if (interfaceConstructor != null &&
+                !interfaceConstructor.isInterface()) {
+              badImplementedType = true;
+            }
+          } else {
             badImplementedType = true;
           }
-        } else {
-          badImplementedType = true;
-        }
-        if (badImplementedType) {
-          report(t, n, BAD_IMPLEMENTED_TYPE, functionPrivateName);
+          if (badImplementedType) {
+            report(t, n, BAD_IMPLEMENTED_TYPE, functionPrivateName);
+          }
         }
       }
       if (functionType.isConstructor()) {

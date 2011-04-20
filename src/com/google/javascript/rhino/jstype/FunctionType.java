@@ -192,6 +192,18 @@ public class FunctionType extends PrototypeObjectType {
     return true;
   }
 
+  public boolean hasImplementedInterfaces() {
+    if (!implementedInterfaces.isEmpty()){
+      return true;
+    }
+    FunctionType superCtor = isConstructor() ?
+        getSuperClassConstructor() : null;
+    if (superCtor != null) {
+      return superCtor.hasImplementedInterfaces();
+    }
+    return false;
+  }
+
   public Iterable<Node> getParameters() {
     Node n = getParametersNode();
     if (n != null) {

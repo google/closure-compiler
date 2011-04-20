@@ -2861,11 +2861,6 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         " */ function derived() {}");
   }
 
-  public void testGoodImplements3() throws Exception {
-    testTypes("/** @interface */function Disposable() {}\n" +
-        "/** @implements {Disposable}\n * @interface */function f() {}");
-  }
-
   public void testBadImplements1() throws Exception {
     testTypes("/** @interface */function Base1() {}\n" +
         "/** @interface */function Base2() {}\n" +
@@ -2880,6 +2875,13 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @interface */function Disposable() {}\n" +
         "/** @implements {Disposable}\n */function f() {}",
         "@implements used without @constructor or @interface for f");
+  }
+
+  public void testBadImplements3() throws Exception {
+    testTypes("/** @interface */function Disposable() {}\n" +
+        "/** @implements {Disposable}\n * @interface */function f() {}",
+        "f cannot implement this type; an interface can only extend, " +
+        "but not implement interfaces");
   }
 
   public void testInterfaceExtends() throws Exception {
