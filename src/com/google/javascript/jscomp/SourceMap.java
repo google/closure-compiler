@@ -53,7 +53,13 @@ public class SourceMap {
        @Override SourceMap getInstance() {
          return new SourceMap(
            SourceMapGeneratorFactory.getInstance(SourceMapFormat.V2));
-       }
+        }
+     },
+     V3 {
+       @Override SourceMap getInstance() {
+         return new SourceMap(
+           SourceMapGeneratorFactory.getInstance(SourceMapFormat.V3));
+        }
      };
      abstract SourceMap getInstance();
   }

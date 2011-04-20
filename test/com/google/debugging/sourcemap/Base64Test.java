@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.debugging.sourcemap;
 
+import junit.framework.TestCase;
+
 /**
- * A list of currently support SourceMap format revisions.
  * @author johnlenz@google.com (John Lenz)
  */
-public enum SourceMapFormat {
-   /** The latest "stable" format */
-   DEFAULT,
+public class Base64Test extends TestCase {
+  public void testBase64() {
+    for (int i = 0; i < 64; i++) {
+      testValue(i);
+    }
+  }
 
-   /** V1: The original Closure Inspector format */
-   V1,
-
-   /** V2: A more compact format */
-   V2,
-
-   /** V3: An even more compact format */
-   V3;
+  private void testValue(int value) {
+    assertEquals(value, Base64.fromBase64(Base64.toBase64(value)));
+  }
 }

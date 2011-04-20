@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 The Closure Compiler Authors.
+ * Copyright 2011 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.google.debugging.sourcemap;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -35,12 +34,12 @@ import javax.annotation.Nullable;
  * Collects information mapping the generated (compiled) source back to
  * its original source for debugging purposes.
  *
+ * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapGeneratorV2 implements SourceMapGenerator {
-
-  private boolean validate = false;
+public class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   private final static int UNMAPPED = -1;
+
 
   /**
    * A pre-order traversal ordered list of mappings stored in this map.
@@ -54,7 +53,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       Maps.newLinkedHashMap();
 
   /**
-   * A map of symbol names to symbol name index
+   * A map of source names to source name index
    */
   private LinkedHashMap<String, Integer> originalNameMap =
       Maps.newLinkedHashMap();
@@ -87,6 +86,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    */
   private FilePosition prefixPosition = new FilePosition(0, 0);
 
+
   /**
    * {@inheritDoc}
    */
@@ -105,9 +105,8 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * @param validate Whether to perform (potentially costly) validation on the
    * generated source map.
    */
-  @VisibleForTesting
   public void validate(boolean validate) {
-    this.validate = validate;
+    // Nothing currently.
   }
 
   /**
@@ -197,7 +196,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
     // Create the new mapping.
     Mapping mapping = new Mapping();
-    mapping.sourceFile = getSourceId(sourceName);
+    mapping.sourceFile = sourceName;
     mapping.originalPosition = sourceStartPosition;
     mapping.originalName = symbolName;
     mapping.startPosition = adjustedStart;
@@ -225,7 +224,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * reference only and are not part of the format):
    *
    * 1.  {
-   * 2.    version: 2,
+   * 2.    version: 3,
    * 3.    file: "out.js"
    * 4.    lineCount: 2
    * 5.    lineMaps: [
@@ -235,10 +234,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * 9.    sourceRoot: "",
    * 10.   sources: ["foo.js", "bar.js"],
    * 11.   names: ["src", "maps", "are", "fun"],
-   * 12.   mappings: [
-   * 13.       [1, 1, 2, 4],
-   * 14.       [2, 1, 2, "yack"],
-   * 15.   ],
+   * 12.   mappings: "a;;abcde,abcd,a;"
    * 16.  }
    *
    * Line 1: The entire file is a single JSON object
@@ -256,35 +252,21 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * Line 11: A list of symbol names used by the "mapping" entry.  This list
    *     may be incomplete.
    * Line 12: The mappings field.
-   * Line 13: Each entry represent a block of text in the original source, and
-   *     consists four fields:
-   *     The source file name
-   *     The line in the source file the text begins
-   *     The column in the line that the text begins
-   *     An optional name (from the original source) that this entry represents.
-   *     This can either be an string or index into the "names" field.
    */
   public void appendTo(Appendable out, String name) throws IOException {
     int maxLine = prepMappings();
 
     // Add the header fields.
     out.append("{\n");
-    appendFirstField(out, "version", "2");
+    appendFirstField(out, "version", "3");
     appendField(out, "file", escapeString(name));
     appendField(out, "lineCount", String.valueOf(maxLine + 1));
 
-    // Add the line character maps.
-    appendFieldStart(out, "lineMaps");
-    out.append("[");
-    (new LineMapper(out)).appendLineMappings();
-    out.append("]");
-    appendFieldEnd(out);
-
     // Add the mappings themselves.
     appendFieldStart(out, "mappings");
-    out.append("[");
-    (new MappingWriter()).appendMappings(out);
-    out.append("]");
+    // out.append("[");
+    (new LineMapper(out)).appendLineMappings();
+    // out.append("]");
     appendFieldEnd(out);
 
     // Files names
@@ -297,7 +279,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     // Files names
     appendFieldStart(out, "names");
     out.append("[");
-    addOriginalNameMap(out);
+    addSymbolNameMap(out);
     out.append("]");
     appendFieldEnd(out);
 
@@ -308,20 +290,17 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * Writes the source name map to 'out'.
    */
   private void addSourceNameMap(Appendable out) throws IOException {
-    addMap(out, sourceFileMap);
-  }
-
-  /**
-   * Writes the original name map to 'out'.
-   */
-  private void addOriginalNameMap(Appendable out) throws IOException {
-    addMap(out, originalNameMap);
+    addNameMap(out, sourceFileMap);
   }
 
   /**
    * Writes the source name map to 'out'.
    */
-  private void addMap(Appendable out, Map<String,Integer> map)
+  private void addSymbolNameMap(Appendable out) throws IOException {
+    addNameMap(out, originalNameMap);
+  }
+
+  private void addNameMap(Appendable out, Map<String, Integer> map)
       throws IOException {
     int i = 0;
     for (Entry<String, Integer> entry : map.entrySet()) {
@@ -383,6 +362,8 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     // Renumber used mappings and keep track of the last line.
     int id = 0;
     int maxLine = 0;
+    int sourceId = 0;
+    int nameId = 0;
     for (Mapping m : mappings) {
       if (m.used) {
         m.id = id++;
@@ -393,42 +374,6 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
     // Adjust for the prefix.
     return maxLine + prefixPosition.getLine();
-  }
-
-  /**
-   * Pools source names.
-   * @param sourceName The source location to index.
-   * @return The id to represent the source name in the output.
-   */
-  private int getSourceId(String sourceName) {
-    if (sourceName != lastSourceFile) {
-      lastSourceFile = sourceName;
-      Integer index = sourceFileMap.get(sourceName);
-      if (index != null) {
-        lastSourceFileIndex = index;
-      } else {
-        lastSourceFileIndex = sourceFileMap.size();
-        sourceFileMap.put(sourceName, lastSourceFileIndex);
-      }
-    }
-    return lastSourceFileIndex;
-  }
-
-  /**
-   * Pools symbol names
-   * @param symbolName The symbol name to index.
-   * @return The id to represent the symbol name in the output.
-   */
-  private int getNameId(String symbolName) {
-    int originalNameIndex;
-    Integer index = originalNameMap.get(symbolName);
-    if (index != null) {
-      originalNameIndex = index;
-    } else {
-      originalNameIndex = originalNameMap.size();
-      originalNameMap.put(symbolName, originalNameIndex);
-    }
-    return originalNameIndex;
   }
 
   /**
@@ -444,7 +389,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     /**
      * The source file index.
      */
-    int sourceFile;
+    String sourceFile;
 
     /**
      * The position of the code in the input source file. Both
@@ -475,245 +420,6 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
      * Whether the mapping is actually used by the source map.
      */
     boolean used = false;
-  }
-
-  private class MappingWriter {
-    /**
-     * Cache of escaped source file name.
-     */
-    private int lastLine = 0;
-    private String lastLineString = String.valueOf(0);
-
-    /**
-     * Appends the mapping to the given buffer.
-     */
-    private void appendMappingTo(
-        Mapping m, Appendable out) throws IOException {
-      out.append("[");
-
-      out.append(String.valueOf(m.sourceFile));
-      out.append(",");
-
-      int line = m.originalPosition.getLine();
-      if (line != lastLine) {
-        lastLineString = String.valueOf(line);
-      }
-      String lineValue = lastLineString;
-
-      out.append(lineValue);
-
-      out.append(",");
-      out.append(String.valueOf(m.originalPosition.getColumn()));
-
-      if (m.originalName != null) {
-        out.append(",");
-        out.append(String.valueOf(getNameId(m.originalName)));
-      }
-
-      out.append("],\n");
-    }
-
-    /**
-     * Add used mappings to the supplied Appendable.
-     */
-    void appendMappings(Appendable out) throws IOException {
-      for (Mapping m : mappings) {
-        if (m.used) {
-          appendMappingTo(m, out);
-        }
-      }
-    }
-  }
-
-  private class LineMapper implements MappingVisitor {
-    // The destination.
-    private final Appendable out;
-
-    // Whether the current line has had a value written yet.
-    private int lastId = UNMAPPED;
-
-    LineMapper(Appendable out) {
-      this.out = out;
-    }
-
-    /**
-     * As each segment is visited write out the appropriate line mapping.
-     */
-    public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
-      throws IOException {
-
-      int id = (m != null) ? m.id : UNMAPPED;
-
-      for (int i = line; i <= nextLine; i++) {
-        if (i == nextLine) {
-          closeEntry(id, nextCol-col);
-          break;
-        }
-
-        closeLine(false);
-        openLine();
-
-        // Set the starting location for the next line.
-        col = 0;
-      }
-    }
-
-    // Append the line mapping entries.
-    void appendLineMappings() throws IOException {
-      // Start the first line.
-      openLine();
-
-      (new MappingTraversal()).traverse(this);
-
-      // And close the final line.
-      closeLine(true);
-    }
-
-    /**
-     * Begin the entry for a new line.
-     */
-    private void openLine() throws IOException {
-      out.append("\"");
-      // The first id of the line is not relative.
-      this.lastId = 0;
-    }
-
-    /**
-     * End the entry for a line.
-     */
-    private void closeLine(boolean finalEntry) throws IOException {
-      if (finalEntry) {
-        out.append("\"");
-      } else {
-        out.append("\",\n");
-      }
-    }
-
-    private void closeEntry(int id, int reps) throws IOException {
-      if (reps == 0) {
-        return;
-      }
-
-      StringBuilder sb = new StringBuilder();
-      LineMapEncoder.encodeEntry(sb, id, lastId, reps);
-
-      if (validate) {
-        SourceMapLineDecoder.LineEntry entry =
-            SourceMapLineDecoder.decodeLineEntry(sb.toString(), lastId);
-        Preconditions.checkState(entry.id == id && entry.reps == reps,
-            "expected (%s,%s) but got (%s,%s)",
-            id, reps, entry.id, entry.reps);
-      }
-
-      out.append(sb);
-      lastId = id;
-    }
-  }
-
-  @VisibleForTesting
-  public static class LineMapEncoder {
-    /**
-     * The source map line map is consists of a series of entries each
-     * representing a map entry and a repetition count of that entry.
-     *
-     * @param out The entry destination.
-     * @param id  The id for the entry.
-     * @param lastId The previous id written, used to generate a relative
-     *     map id.
-     * @param reps The number of times the id is repeated in the map.
-     * @throws IOException
-     */
-    public static void encodeEntry(Appendable out, int id, int lastId, int reps)
-        throws IOException {
-      Preconditions.checkState(reps > 0);
-      int relativeIdLength = getRelativeMappingIdLength(id, lastId);
-      int relativeId = getRelativeMappingId(id, relativeIdLength, lastId);
-
-      String relativeIdString = valueToBase64(relativeId, relativeIdLength);
-
-      // If we can, we use a single base64 digit to encode both the id length
-      // and the repetition count.  The current best division of the base64
-      // digit (which has 6 bits) is 2 bits for the id length (1-4 digits) and
-      // 4 bit for the repetition count (1-16 repetitions).  If either of these
-      // two values are exceeded a "!" is written (a non-base64 character) to
-      // signal the a full base64 character is used for repetition count and
-      // the mapping id length.  As the repetition count can exceed 64, we
-      // allow the "escape" ("!") to be repeated to signal additional
-      // repetition count length characters.  It is extremely unlikely that
-      // mapping id length will exceed 64 base64 characters in length so
-      // additional "!" don't signal additional id length characters.
-      if (reps > 16 || relativeIdLength > 4) {
-        String repsString = valueToBase64(reps -1, 1);
-        for (int i = 0; i < repsString.length(); i++) {
-          // TODO(johnlenz): update this to whatever is agreed to.
-          out.append('!');
-        }
-        String sizeId = valueToBase64(relativeIdString.length() -1, 1);
-
-        out.append(sizeId);
-        out.append(repsString);
-      } else {
-        int prefix = ((reps -1) << 2) + (relativeIdString.length() -1);
-        Preconditions.checkState(prefix < 64 && prefix >= 0,
-            "prefix (%s) reps(%s) map id size(%s)",
-            prefix, reps, relativeIdString.length());
-        out.append(valueToBase64(prefix, 1));
-      }
-      out.append(relativeIdString);
-    }
-
-    /**
-     * @param idLength the length relative id, when encoded in as a base64
-     *     value. @see #getRelativeMappingIdLength
-     * @return A value relative to the the lastId.  Negative value are
-     * represented as a two-complement value.
-     */
-    public static int getRelativeMappingId(int id, int idLength, int lastId) {
-      int base = 1 << (idLength *6);
-      int relativeId = id - lastId;
-      return (relativeId < 0) ? relativeId + base : relativeId;
-    }
-
-    /**
-     * @return The length of the base64 number needed to include the id.
-     */
-    public static int getRelativeMappingIdLength(int rawId, int lastId) {
-      Preconditions.checkState(rawId >= 0 || rawId == UNMAPPED);
-      int relativeId = rawId - lastId;
-      int id = (relativeId < 0 ? Math.abs(relativeId) -1 : relativeId) << 1;
-      int digits = 1;
-      int base = 64;
-      while (id >= base) {
-        digits++;
-        base *= 64;
-      }
-      return digits;
-    }
-
-    /**
-     * @return return the base64 number encoding the provided value,
-     *    padded if necessary to create a number with the given minimum length.
-     */
-    static String valueToBase64(int value, int minimumSize) {
-      int size = 0;
-      char chars[] = new char[4];
-      do {
-        int charValue = value & 63; // base64 chars
-        value = value >>> 6; // get the next value;
-        chars[size++] = Base64.toBase64(charValue);
-      } while (value > 0);
-
-      StringBuilder sb = new StringBuilder(size);
-
-      while (minimumSize > size) {
-        sb.append(Base64.toBase64(0));
-        minimumSize--;
-      }
-      while (size > 0) {
-        sb.append(chars[--size]);
-      }
-      return sb.toString();
-    }
   }
 
   /**
@@ -883,7 +589,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       throws IOException {
     // Add the header fields.
     out.append("{\n");
-    appendFirstField(out, "version", "2");
+    appendFirstField(out, "version", "3");
     appendField(out, "file", escapeString(name));
 
     // Add the line character maps.
@@ -899,7 +605,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       }
       out.append("{\n");
       appendFirstField(out, "offset", offset.toString());
-      appendField(out, "file", escapeString(section.getSectionUrl()));
+      appendField(out, "url", escapeString(section.getSectionUrl()));
       out.append("\n}");
 
       offset += section.getLength();
@@ -910,4 +616,144 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
     out.append("\n}\n");
   }
+
+  private int getSourceId(String sourceName) {
+    if (sourceName != lastSourceFile) {
+      lastSourceFile = sourceName;
+      Integer index = sourceFileMap.get(sourceName);
+      if (index != null) {
+        lastSourceFileIndex = index;
+      } else {
+        lastSourceFileIndex = sourceFileMap.size();
+        sourceFileMap.put(sourceName, lastSourceFileIndex);
+      }
+    }
+    return lastSourceFileIndex;
+  }
+
+  private int getNameId(String symbolName) {
+    int originalNameIndex;
+    Integer index = originalNameMap.get(symbolName);
+    if (index != null) {
+      originalNameIndex = index;
+    } else {
+      originalNameIndex = originalNameMap.size();
+      originalNameMap.put(symbolName, originalNameIndex);
+    }
+    return originalNameIndex;
+  }
+
+  private class LineMapper implements MappingVisitor {
+    // The destination.
+    private final Appendable out;
+
+    private int previousLine = -1;
+    private int previousColumn = 0;
+
+    // Previous values used for storing relative ids.
+    private int previousSourceFileId;
+    private int previousSourceLine;
+    private int previousSourceColumn;
+    private int previousNameId;
+
+    LineMapper(Appendable out) {
+      this.out = out;
+    }
+
+    /**
+     * As each segment is visited write out the appropriate line mapping.
+     */
+    public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
+      throws IOException {
+
+      int id = (m != null) ? m.id : UNMAPPED;
+
+      if (previousLine != line) {
+        previousColumn = 0;
+      }
+
+      if (line != nextLine || col != nextCol) {
+        if (previousLine == line) { // not the first entry for the line
+          out.append(',');
+        }
+        writeEntry(m, col);
+        previousLine = line;
+        previousColumn = col;
+      }
+
+      for (int i = line; i <= nextLine; i++) {
+        if (i == nextLine) {
+          break;
+        }
+
+        closeLine(false);
+        openLine(false);
+      }
+    }
+
+    /**
+     * Writes an entry for the given column (of the generated text) and
+     * associated mapping.
+     * The values are stored as relative to the last seen values for each
+     * field and encoded as Base64VLQs.
+     */
+    void writeEntry(Mapping m, int column) throws IOException {
+      // The relative generated column number
+      Base64VLQ.encode(out, column - previousColumn);
+      previousColumn = column;
+      if (m != null) {
+        // The relative source file id
+        int sourceId = getSourceId(m.sourceFile);
+        Base64VLQ.encode(out, sourceId - previousSourceFileId);
+        previousSourceFileId = sourceId;
+
+        // The relative source file line and column
+        int srcline = m.originalPosition.getLine();
+        int srcColumn = m.originalPosition.getColumn();
+        Base64VLQ.encode(out, srcline - previousSourceLine);
+        previousSourceLine = srcline;
+
+        Base64VLQ.encode(out, srcColumn - previousSourceColumn);
+        previousSourceColumn = srcColumn;
+
+        if (m.originalName != null) {
+          // The relative id for the associated symbol name
+          int nameId = getNameId(m.originalName);
+          Base64VLQ.encode(out, (nameId - previousNameId));
+          previousNameId = nameId;
+        }
+      }
+    }
+
+    // Append the line mapping entries.
+    void appendLineMappings() throws IOException {
+      // Start the first line.
+      openLine(true);
+
+      (new MappingTraversal()).traverse(this);
+
+      // And close the final line.
+      closeLine(true);
+    }
+
+    /**
+     * Begin the entry for a new line.
+     */
+    private void openLine(boolean firstEntry) throws IOException {
+      if (firstEntry) {
+        out.append('\"');
+      }
+    }
+
+    /**
+     * End the entry for a line.
+     */
+    private void closeLine(boolean finalEntry) throws IOException {
+      out.append(';');
+      if (finalEntry) {
+        out.append('\"');
+      }
+    }
+  }
+
 }

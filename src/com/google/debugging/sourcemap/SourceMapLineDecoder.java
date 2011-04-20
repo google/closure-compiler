@@ -27,14 +27,6 @@ import java.util.List;
  * @author jschorr@google.com (Joseph Schorr)
  */
 class SourceMapLineDecoder {
-  /**
-   *  A map used to convert integer values in the range 0-63 to their base64
-   *  values.
-   */
-  private static final String BASE64_MAP =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-      "abcdefghijklmnopqrstuvwxyz" +
-      "0123456789+/";
 
   /**
    * Decodes a line in a character map into a list of mapping IDs.
@@ -114,7 +106,7 @@ class SourceMapLineDecoder {
    * Build base64 number a digit at a time, most significant digit first.
    */
   private static int addBase64Digit(char digit, int previousValue) {
-    return (previousValue * 64) + BASE64_MAP.indexOf(digit);
+    return (previousValue * 64) + Base64.fromBase64(digit);
   }
 
   /**

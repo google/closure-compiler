@@ -16,6 +16,9 @@
 
 package com.google.debugging.sourcemap;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * Detect and parse the provided source map.
  * @author johnlenz@google.com (John Lenz)
@@ -32,43 +35,37 @@ public class SourceMapConsumerFactory {
    */
   public static SourceMapping parse(String contents)
       throws SourceMapParseException {
-    SourceMapConsumer consumer = null;
-    SourceMapFormat format = detectVersion(contents);
-    consumer = createForVerion(detectVersion(contents));
-    consumer.parse(contents);
-    return consumer;
-  }
-
-  /**
-   * @param contents
-   * @return The best guess of the source map version.
-   * @throws SourceMapParseException
-   */
-  private static SourceMapFormat detectVersion(String contents)
-      throws SourceMapParseException {
+    // Version 1, starts with a magic string
     if (contents.startsWith("/** Begin line maps. **/")) {
-      return SourceMapFormat.V1;
+      SourceMapConsumerV1 consumer =  new SourceMapConsumerV1();
+      consumer.parse(contents);
+      return consumer;
     } else if (contents.startsWith("{")){
-      return SourceMapFormat.V2;
-    } else {
-      throw new SourceMapParseException("unable to detect source map format");
+      try {
+        // Revision 2 and 3, are JSON Objects
+        JSONObject sourceMapRoot = new JSONObject(contents);
+        // Check basic assertions about the format.
+        int version = sourceMapRoot.getInt("version");
+        switch (version) {
+          case 2: {
+            SourceMapConsumerV2 consumer =  new SourceMapConsumerV2();
+            consumer.parse(sourceMapRoot);
+            return consumer;
+          }
+          case 3: {
+            SourceMapConsumerV3 consumer =  new SourceMapConsumerV3();
+            consumer.parse(sourceMapRoot);
+            return consumer;
+          }
+          default:
+            throw new SourceMapParseException(
+                "Unknown source map version:" + version);
+        }
+      } catch (JSONException ex) {
+        throw new SourceMapParseException("JSON parse exception: " + ex);
+      }
     }
-  }
 
-  /**
-   * @return The appropriate source map object for the given source map format.
-   * @throws SourceMapParseException
-   */
-  private static SourceMapConsumer createForVerion(
-      SourceMapFormat format)
-      throws SourceMapParseException {
-    switch (format) {
-      case V1:
-        return new SourceMapConsumerV1();
-      case V2:
-        return new SourceMapConsumerV2();
-      default:
-        throw new SourceMapParseException("unsupported source map format");
-    }
+    throw new SourceMapParseException("unable to detect source map format");
   }
 }

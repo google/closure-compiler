@@ -37,6 +37,8 @@ public class SourceMapGeneratorFactory {
       case DEFAULT:
       case V2:
         return new SourceMapGeneratorV2();
+      case V3:
+        return new SourceMapGeneratorV3();
       default:
         throw new IllegalStateException("unsupported source map format");
     }
