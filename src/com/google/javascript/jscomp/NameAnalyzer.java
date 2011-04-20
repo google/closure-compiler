@@ -265,19 +265,20 @@ final class NameAnalyzer implements CompilerPass {
    * Class for nodes that reference a fully-qualified JS name. Fully qualified
    * names are of form A or A.B (A.B.C, etc.). References can get the value or
    * set the value of the JS name.
-   *
-   * TODO(user) Create an interface with a remove() method that is
-   * implemented differently by type of parent node
    */
   private class JsNameRefNode implements RefNode {
     /** JsName node for this reference */
     JsName name;
 
-    /** Top GETPROP or NAME node defining the name of this node */
+    /**
+     * Top GETPROP or NAME or STRING [objlit key] node defining the name of
+     * this node
+     */
     Node node;
 
     /**
-     * Parent node of the name access (ASSIGN, VAR, FUNCTION, or CALL)
+     * Parent node of the name access
+     * (ASSIGN, VAR, FUNCTION, OBJECTLIT, or CALL)
      */
     Node parent;
 
@@ -286,7 +287,7 @@ final class NameAnalyzer implements CompilerPass {
      * Create a node that refers to a name
      *
      * @param name The name
-     * @param node The top node representing the name (GETPROP, NAME)
+     * @param node The top node representing the name (GETPROP, NAME, STRING)
      */
     JsNameRefNode(JsName name, Node node) {
       this.name = name;
@@ -316,6 +317,11 @@ final class NameAnalyzer implements CompilerPass {
           } else {
             replaceWithRhs(containingNode, parent);
           }
+          break;
+        case Token.OBJECTLIT:
+          // TODO(nicksantos): Come up with a way to remove this.
+          // If we remove object lit keys, then we will need to also
+          // create dependency scopes for them.
           break;
       }
     }
@@ -587,6 +593,11 @@ final class NameAnalyzer implements CompilerPass {
             JsName nameInfo = getName(nameNode.getString(), true);
             recordSet(nameInfo.name, nameNode);
           }
+        } else if (NodeUtil.isObjectLitKey(n, parent)) {
+          NameInformation ns = createNameInformation(t, n, parent);
+          if (ns != null) {
+            recordSet(ns.name, n);
+          }
         }
       }
 
@@ -619,7 +630,8 @@ final class NameAnalyzer implements CompilerPass {
      * Records the assignment of a value to a global name.
      *
      * @param name Fully qualified name
-     * @param node The top node representing the name (GETPROP, NAME)
+     * @param node The top node representing the name (GETPROP, NAME, or STRING
+     * [objlit key])
      */
     private void recordSet(String name, Node node) {
       JsName jsn = getName(name, true);
@@ -1291,16 +1303,39 @@ final class NameAnalyzer implements CompilerPass {
     String name = "";
     Node rootNameNode = n;
     boolean bNameWasShortened = false;
-    while (NodeUtil.isGet(rootNameNode)) {
-      Node prop = rootNameNode.getLastChild();
-      if (rootNameNode.getType() == Token.GETPROP) {
-        name = "." + prop.getString() + name;
+    while (true) {
+      if (NodeUtil.isGet(rootNameNode)) {
+        Node prop = rootNameNode.getLastChild();
+        if (rootNameNode.getType() == Token.GETPROP) {
+          name = "." + prop.getString() + name;
+        } else {
+          // We consider the name to be "a.b" in a.b['c'] or a.b[x].d.
+          bNameWasShortened = true;
+          name = "";
+        }
+        rootNameNode = rootNameNode.getFirstChild();
+      } else if (NodeUtil.isObjectLitKey(
+          rootNameNode, rootNameNode.getParent())) {
+        name = "." + rootNameNode.getString() + name;
+
+        // Check if this is an object literal assigned to something.
+        Node objLit = rootNameNode.getParent();
+        Node objLitParent = objLit.getParent();
+        if (objLitParent.getType() == Token.ASSIGN) {
+          // This must be the right side of the assign.
+          rootNameNode = objLitParent.getFirstChild();
+        } else if (objLitParent.getType() == Token.NAME) {
+          // This must be a VAR initialization.
+          rootNameNode = objLitParent;
+        } else if (objLitParent.getType() == Token.STRING) {
+          // This must be a object literal key initialization.
+          rootNameNode = objLitParent;
+        } else {
+          return null;
+        }
       } else {
-        // We consider the name to be "a.b" in a.b['c'] or a.b[x].d.
-        bNameWasShortened = true;
-        name = "";
+        break;
       }
-      rootNameNode = rootNameNode.getFirstChild();
     }
 
     // Check whether this is a class-defining call. Classes may only be defined
