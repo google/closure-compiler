@@ -305,11 +305,45 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     return NodeUtil.isCallOrNew(call) && call.getFirstChild() == use.node;
   }
 
+  boolean canModifyDefinition(Definition definition) {
+    if (isExported(definition)) {
+      return false;
+    }
+
+    // Don't modify unused definitions for two reasons:
+    // 1) It causes unnecessary churn
+    // 2) Other definitions might be used to reflect on this one using
+    //    goog.reflect.object (the check for definitions with uses is below).
+    Collection<UseSite> useSites = getUseSites(definition);
+    if (useSites.isEmpty()) {
+      return false;
+    }
+
+    for (UseSite site : useSites) {
+      // This catches the case where an object literal in goog.reflect.object
+      // and a prototype method have the same property name.
+
+      // NOTE(nicksantos): Maps and trogedit both do this by different
+      // mechanisms.
+
+      Node nameNode = site.node;
+      Collection<Definition> singleSiteDefinitions =
+          getDefinitionsReferencedAt(nameNode);
+      if (singleSiteDefinitions.size() > 1) {
+        return false;
+      }
+
+      Preconditions.checkState(!singleSiteDefinitions.isEmpty());
+      Preconditions.checkState(singleSiteDefinitions.contains(definition));
+    }
+
+    return true;
+  }
+
   /**
    * @return Whether the definition is directly exported.
    */
-  static boolean maybeExported(
-      AbstractCompiler compiler, Definition definition) {
+  private boolean isExported(Definition definition) {
     // Assume an exported method result is used.
     Node lValue = definition.getLValue();
     if (lValue == null) {

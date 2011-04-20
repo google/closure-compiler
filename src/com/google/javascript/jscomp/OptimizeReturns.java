@@ -92,36 +92,12 @@ class OptimizeReturns
       return true;
     }
 
-    // Assume an exported method result is used.
-    if (SimpleDefinitionFinder.maybeExported(compiler, definition)) {
+    if (!defFinder.canModifyDefinition(definition)) {
       return true;
     }
 
     Collection<UseSite> useSites = defFinder.getUseSites(definition);
-
-    // Don't modify unused definitions for two reasons:
-    // 1) It causes unnecessary churn
-    // 2) Other definitions might be used to reflect on this one using
-    //    goog.reflect.object (the check for definitions with uses is below).
-    if (useSites.isEmpty()) {
-      return true;
-    }
-
     for (UseSite site : useSites) {
-      // This catches the case where an object literal in goog.reflect.object
-      // and a prototype method have the same property name.
-
-      // TODO(johnlenz): The keys of one object can be used to reflect on
-      // another using "goog.reflect.object" or similar.  It seems like this
-      // should be prohibited but TrogEdit uses this.
-
-      Node nameNode = site.node;
-      Collection<Definition> singleSiteDefinitions =
-          defFinder.getDefinitionsReferencedAt(nameNode);
-      if (singleSiteDefinitions.size() > 1) {
-        return true;
-      }
-
       // Assume indirect definitions references use the result
       Node useNodeParent = site.node.getParent();
       if (isCall(site)) {

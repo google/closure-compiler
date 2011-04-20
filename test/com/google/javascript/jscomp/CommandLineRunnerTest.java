@@ -157,6 +157,22 @@ public class CommandLineRunnerTest extends TestCase {
          "function f(a) { return a; } f();");
   }
 
+  public void testReflectedMethods() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test(
+        "/** @constructor */" +
+        "function Foo() {}" +
+        "Foo.prototype.handle = function(x, y) { alert(y); };" +
+        "var x = goog.reflect.object(Foo, {handle: 1});" +
+        "for (var i in x) { x[i].call(x); }" +
+        "window['Foo'] = Foo;",
+        "function a() {}" +
+        "a.prototype.a = function(e, d) { alert(d); };" +
+        "var b = goog.c.b(a, {a: 1}),c;" +
+        "for (c in b) { b[c].call(b); }" +
+        "window.Foo = a;");
+  }
+
   public void testTypeCheckingOnWithVerbose() {
     args.add("--warning_level=VERBOSE");
     test("function f(x) { return x; } f();", TypeCheck.WRONG_ARGUMENT_COUNT);

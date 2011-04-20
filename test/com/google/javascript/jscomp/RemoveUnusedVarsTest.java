@@ -719,4 +719,15 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
         "var b = {};" +
         "goog$inherits(b.foo, a)");
   }
+
+  public void testReflectedMethods() {
+    this.modifyCallSites = true;
+    testSame(
+        "/** @constructor */" +
+        "function Foo() {}" +
+        "Foo.prototype.handle = function(x, y) { alert(y); };" +
+        "var x = goog.reflect.object(Foo, {handle: 1});" +
+        "for (var i in x) { x[i].call(x); }" +
+        "window['Foo'] = Foo;");
+  }
 }

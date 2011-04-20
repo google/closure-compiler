@@ -109,7 +109,7 @@ class OptimizeParameters
     }
 
     // Assume an exported method result is used.
-    if (SimpleDefinitionFinder.maybeExported(compiler, definition)) {
+    if (!defFinder.canModifyDefinition(definition)) {
       return false;
     }
 
