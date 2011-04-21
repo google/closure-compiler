@@ -40,6 +40,7 @@ function mozIndexedDB() {}
 Window.prototype.mozIndexedDB;
 
 /**
+ * This has replaced indexedDB in Chrome since WebKit revision 69933.
  * @return {!IDBFactory} Provides applications a mechanism for accessing
  *    capabilities of indexed databases.
  */
@@ -607,6 +608,7 @@ IDBTransaction.prototype.removeEventListener = function(
 IDBTransaction.prototype.dispatchEvent = function(evt) {};
 
 /**
+ * This has replaced IDBTransaction in Chrome since WebKit revision 69933.
  * @type {IDBTransaction}
  */
 function webkitIDBTransaction() {}
@@ -731,6 +733,7 @@ function IDBKeyRange() {}
 Window.prototype.IDBKeyRange;
 
 /**
+ * This has replaced IDBKeyRange in Chrome since WebKit revision 69933.
  * @type {IDBKeyRange}
  */
 function webkitIDBKeyRange() {}
