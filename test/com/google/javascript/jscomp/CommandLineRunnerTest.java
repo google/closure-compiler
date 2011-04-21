@@ -753,6 +753,16 @@ public class CommandLineRunnerTest extends TestCase {
        CheckAccessControls.DEPRECATED_NAME);
   }
 
+  public void testTwoParseErrors() {
+    // If parse errors are reported in different files, make
+    // sure all of them are reported.
+    Compiler compiler = compile(new String[] {
+      "var a b;",
+      "var b c;"
+    });
+    assertEquals(2, compiler.getErrors().length);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {

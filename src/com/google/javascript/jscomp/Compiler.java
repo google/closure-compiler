@@ -1158,9 +1158,6 @@ public class Compiler extends AbstractCompiler {
       boolean staleInputs = false;
       for (CompilerInput input : inputs) {
         Node n = input.getAstRoot(this);
-        if (hasErrors()) {
-          return null;
-        }
 
         // Inputs can have a null AST during initial parse.
         if (n == null) {
@@ -1220,6 +1217,9 @@ public class Compiler extends AbstractCompiler {
         jsRoot.addChildToBack(n);
       }
 
+      if (hasErrors()) {
+        return null;
+      }
       return externAndJsRoot;
     } finally {
       stopTracer(tracer, "parseInputs");
