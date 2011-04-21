@@ -1511,7 +1511,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Inlines simple methods, like getters */
-  private PassFactory inlineSimpleMethods =
+  private final PassFactory inlineSimpleMethods =
       new PassFactory("inlineSimpleMethods", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
@@ -1520,7 +1520,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Kills dead assignments. */
-  private PassFactory deadAssignmentsElimination =
+  private final PassFactory deadAssignmentsElimination =
       new PassFactory("deadAssignmentsElimination", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
@@ -1529,7 +1529,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Inlines function calls. */
-  private PassFactory inlineFunctions =
+  private final PassFactory inlineFunctions =
       new PassFactory("inlineFunctions", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
@@ -1544,7 +1544,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Removes variables that are never used. */
-  private PassFactory removeUnusedVars =
+  private final PassFactory removeUnusedVars =
       new PassFactory("removeUnusedVars", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
@@ -1563,7 +1563,7 @@ public class DefaultPassConfig extends PassConfig {
   /**
    * Move global symbols to a deeper common module
    */
-  private PassFactory crossModuleCodeMotion =
+  private final PassFactory crossModuleCodeMotion =
       new PassFactory("crossModuleCodeMotion", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
@@ -1574,7 +1574,7 @@ public class DefaultPassConfig extends PassConfig {
   /**
    * Move methods to a deeper common module
    */
-  private PassFactory crossModuleMethodMotion =
+  private final PassFactory crossModuleMethodMotion =
       new PassFactory("crossModuleMethodMotion", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
@@ -1589,7 +1589,7 @@ public class DefaultPassConfig extends PassConfig {
   /**
    * Specialize the initial module at the cost of later modules
    */
-  private PassFactory specializeInitialModule =
+  private final PassFactory specializeInitialModule =
       new PassFactory("specializeInitialModule", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {

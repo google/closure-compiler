@@ -31,7 +31,11 @@ import java.util.Set;
  * that cross module boundaries respect declared module dependencies.
  *
  */
-class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
+class VarCheck extends AbstractPostOrderCallback implements CompilerPass,
+    HotSwapCompilerPass {
+
+  /** Name of the synthetic script that holds undefined variables. */
+  static final String SYNTHETIC_VARS_DECLAR = "{SyntheticVarsDeclar}";
 
   static final DiagnosticType UNDEFINED_VAR_ERROR = DiagnosticType.error(
       "JSC_UNDEFINED_VARIABLE",
@@ -72,7 +76,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
   // Vars that still need to be declared in externs. These will be declared
   // at the end of the pass, or when we see the equivalent var declared
   // in the normal code.
-  private Set<String> varsToDeclareInExterns = Sets.newHashSet();
+  private final Set<String> varsToDeclareInExterns = Sets.newHashSet();
 
   private final AbstractCompiler compiler;
 
@@ -80,7 +84,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
   private final boolean sanityCheck;
 
   // Whether extern checks emit error.
-  private boolean strictExternCheck;
+  private final boolean strictExternCheck;
 
   VarCheck(AbstractCompiler compiler) {
     this(compiler, false);
@@ -107,6 +111,16 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
     for (String varName : varsToDeclareInExterns) {
       createSynthesizedExternVar(varName);
     }
+  }
+
+  @Override
+  public void hotSwapScript(Node root, Scope globalScope) {
+    Preconditions.checkState(root.getType() == Token.SCRIPT);
+    NodeTraversal t = new NodeTraversal(compiler, this);
+    // Note we use the global scope to prevent wrong "undefined-var errors" on
+    // variables that are defined in other js files.
+    t.traverseWithScope(root, globalScope);
+    // TODO(bashir) Check if we need to createSynthesizedExternVar like process.
   }
 
   @Override
@@ -262,7 +276,7 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
   private CompilerInput getSynthesizedExternsInput() {
     if (synthesizedExternsInput == null) {
       synthesizedExternsInput =
-          compiler.newExternInput("{SyntheticVarsDeclar}");
+          compiler.newExternInput(SYNTHETIC_VARS_DECLAR);
     }
     return synthesizedExternsInput;
   }

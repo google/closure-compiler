@@ -954,6 +954,22 @@ public class Compiler extends AbstractCompiler {
     return inputsByName.get(name);
   }
 
+  /**
+   * Removes an input file from AST.
+   * @param name The name of the file to be removed.
+   */
+  protected void removeInput(String name) {
+    CompilerInput input = getInput(name);
+    if (input == null) {
+      return;
+    }
+    inputsByName.remove(name);
+    Node root = input.getAstRoot(this);
+    if (root != null) {
+      root.detachFromParent();
+    }
+  }
+
   @Override
   public CompilerInput newExternInput(String name) {
     if (inputsByName.containsKey(name)) {
