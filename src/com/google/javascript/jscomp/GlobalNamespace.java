@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -26,11 +28,9 @@ import com.google.javascript.rhino.TokenStream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 
 /**
  * Builds a global namespace of all the objects and their properties in
@@ -775,8 +775,13 @@ class GlobalNamespace {
     final String name;
     final Name parent;
     List<Name> props;
+
+    /** The first global assignment to a name. */
     Ref declaration;
-    List<Ref> refs;
+
+    /** All references to a name. This must contain {@code declaration}. */
+    private List<Ref> refs;
+
     Type type;
     private boolean isClassOrEnum = false;
     private boolean hasClassOrEnumDescendant = false;
@@ -811,9 +816,8 @@ class GlobalNamespace {
           if (declaration == null) {
             declaration = ref;
             docInfo = getDocInfoForDeclaration(ref);
-          } else {
-            addRefInternal(ref);
           }
+          addRefInternal(ref);
           globalSets++;
           break;
         case SET_FROM_LOCAL:
@@ -841,15 +845,13 @@ class GlobalNamespace {
     }
 
     void removeRef(Ref ref) {
-      if (ref == declaration ||
-          (refs != null && refs.remove(ref))) {
+      if (refs != null && refs.remove(ref)) {
         if (ref == declaration) {
           declaration = null;
           if (refs != null) {
             for (Ref maybeNewDecl : refs) {
               if (maybeNewDecl.type == Ref.Type.SET_FROM_GLOBAL) {
                 declaration = maybeNewDecl;
-                refs.remove(declaration);
                 break;
               }
             }
@@ -881,9 +883,13 @@ class GlobalNamespace {
       }
     }
 
+    List<Ref> getRefs() {
+      return refs == null ? ImmutableList.<Ref>of() : refs;
+    }
+
     void addRefInternal(Ref ref) {
       if (refs == null) {
-        refs = new LinkedList<Ref>();
+        refs = Lists.newArrayList();
       }
       refs.add(ref);
     }
@@ -1030,9 +1036,8 @@ class GlobalNamespace {
 
     Node node;
     final Type type;
-    final String sourceName;
+    final CompilerInput source;
     final Scope scope;
-    final JSModule module;
 
     /**
      * Certain types of references are actually double-refs. For example,
@@ -1048,25 +1053,30 @@ class GlobalNamespace {
      */
     Ref(NodeTraversal t, Node name, Type type) {
       this.node = name;
-      this.sourceName = t.getSourceName();
+      this.source = t.getInput();
       this.type = type;
       this.scope = t.getScope();
-      this.module = t.getModule();
     }
 
     private Ref(Ref original, Type type) {
       this.node = original.node;
-      this.sourceName = original.sourceName;
+      this.source = original.source;
       this.type = type;
       this.scope = original.scope;
-      this.module = original.module;
     }
 
     private Ref(Type type) {
       this.type = type;
-      this.sourceName = "source";
+      this.source = null;
       this.scope = null;
-      this.module = null;
+    }
+
+    JSModule getModule() {
+      return source == null ? null : source.getModule();
+    }
+
+    String getSourceName() {
+      return source == null ? "" : source.getName();
     }
 
     Ref getTwin() {

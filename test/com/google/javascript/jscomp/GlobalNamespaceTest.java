@@ -38,13 +38,13 @@ public class GlobalNamespaceTest extends TestCase {
 
     assertEquals(set1, n.declaration);
     assertEquals(2, n.globalSets);
-    assertEquals(1, n.refs.size());
+    assertEquals(2, n.getRefs().size());
 
     n.removeRef(set1);
 
     assertEquals(set2, n.declaration);
     assertEquals(1, n.globalSets);
-    assertEquals(0, n.refs.size());
+    assertEquals(1, n.getRefs().size());
   }
 
   public void testRemoveDeclaration2() {
@@ -58,7 +58,7 @@ public class GlobalNamespaceTest extends TestCase {
     assertEquals(set1, n.declaration);
     assertEquals(1, n.globalSets);
     assertEquals(1, n.localSets);
-    assertEquals(1, n.refs.size());
+    assertEquals(2, n.getRefs().size());
 
     n.removeRef(set1);
 

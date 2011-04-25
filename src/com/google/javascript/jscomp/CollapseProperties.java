@@ -171,7 +171,7 @@ class CollapseProperties implements CompilerPass {
           name.aliasingGets > 0) {
         // {@code name} meets condition (b). Find all of its local aliases
         // and try to inline them.
-        List<Ref> refs = Lists.newArrayList(name.refs);
+        List<Ref> refs = Lists.newArrayList(name.getRefs());
         for (Ref ref : refs) {
           if (ref.type == Type.ALIASING_GET && ref.scope.isLocal()) {
             // {@code name} meets condition (c). Try to inline it.
@@ -247,10 +247,14 @@ class CollapseProperties implements CompilerPass {
    */
   private void checkNamespaces() {
     for (Name name : nameMap.values()) {
-      if (name.isNamespace() && name.refs != null &&
+      if (name.isNamespace() &&
           (name.aliasingGets > 0 || name.localSets + name.globalSets > 1)) {
         boolean initialized = name.declaration != null;
-        for (Ref ref : name.refs) {
+        for (Ref ref : name.getRefs()) {
+          if (ref == name.declaration) {
+            continue;
+          }
+
           if (ref.type == Ref.Type.SET_FROM_GLOBAL ||
               ref.type == Ref.Type.SET_FROM_LOCAL) {
             if (initialized) {
@@ -274,7 +278,7 @@ class CollapseProperties implements CompilerPass {
    */
   private void warnAboutNamespaceAliasing(Name nameObj, Ref ref) {
     compiler.report(
-        JSError.make(ref.sourceName, ref.node,
+        JSError.make(ref.getSourceName(), ref.node,
                      UNSAFE_NAMESPACE_WARNING, nameObj.fullName()));
   }
 
@@ -286,7 +290,7 @@ class CollapseProperties implements CompilerPass {
    */
   private void warnAboutNamespaceRedefinition(Name nameObj, Ref ref) {
     compiler.report(
-        JSError.make(ref.sourceName, ref.node,
+        JSError.make(ref.getSourceName(), ref.node,
                      NAMESPACE_REDEFINED_WARNING, nameObj.fullName()));
   }
 
@@ -320,20 +324,23 @@ class CollapseProperties implements CompilerPass {
    * @param alias The flattened name (e.g. "a$b" or "a$b$c$d")
    */
   private void flattenReferencesTo(Name n, String alias) {
-    if (n.refs != null) {
-      String originalName = n.fullName();
-      for (Ref r : n.refs) {
-        Node rParent = r.node.getParent();
+    String originalName = n.fullName();
+    for (Ref r : n.getRefs()) {
+      if (r == n.declaration) {
+        // Declarations are handled separately.
+        continue;
+      }
 
-        // There are two cases when we shouldn't flatten a reference:
-        // 1) Object literal keys, because duplicate keys show up as refs.
-        // 2) References inside a complex assign. (a = x.y = 0). These are
-        //    called TWIN references, because they show up twice in the
-        //    reference list. Only collapse the set, not the alias.
-        if (!NodeUtil.isObjectLitKey(r.node, rParent) &&
-            (r.getTwin() == null || r.isSet())) {
-          flattenNameRef(alias, r.node, rParent, originalName);
-        }
+      Node rParent = r.node.getParent();
+
+      // There are two cases when we shouldn't flatten a reference:
+      // 1) Object literal keys, because duplicate keys show up as refs.
+      // 2) References inside a complex assign. (a = x.y = 0). These are
+      //    called TWIN references, because they show up twice in the
+      //    reference list. Only collapse the set, not the alias.
+      if (!NodeUtil.isObjectLitKey(r.node, rParent) &&
+          (r.getTwin() == null || r.isSet())) {
+        flattenNameRef(alias, r.node, rParent, originalName);
       }
     }
 
@@ -365,14 +372,16 @@ class CollapseProperties implements CompilerPass {
       flattenNameRefAtDepth(alias, n.declaration.node, depth, originalName);
     }
 
-    if (n.refs != null) {
-      for (Ref r : n.refs) {
+    for (Ref r : n.getRefs()) {
+      if (r == n.declaration) {
+        // Declarations are handled separately.
+        continue;
+      }
 
-        // References inside a complex assign (a = x.y = 0)
-        // have twins. We should only flatten one of the twins.
-        if (r.getTwin() == null || r.isSet()) {
-          flattenNameRefAtDepth(alias, r.node, depth, originalName);
-        }
+      // References inside a complex assign (a = x.y = 0)
+      // have twins. We should only flatten one of the twins.
+      if (r.getTwin() == null || r.isSet()) {
+        flattenNameRefAtDepth(alias, r.node, depth, originalName);
       }
     }
 
@@ -685,7 +694,7 @@ class CollapseProperties implements CompilerPass {
             public void visit(NodeTraversal t, Node n, Node parent) {
               if (n.getType() == Token.THIS) {
                 compiler.report(
-                    JSError.make(name.declaration.sourceName, n,
+                    JSError.make(name.declaration.getSourceName(), n,
                         UNSAFE_THIS, name.fullName()));
               }
             }
@@ -890,8 +899,8 @@ class CollapseProperties implements CompilerPass {
 
           // Determine if this is a constant var by checking the first
           // reference to it. Don't check the declaration, as it might be null.
-          if (p.refs.get(0).node.getLastChild().getBooleanProp(
-                Node.IS_CONSTANT_NAME)) {
+          if (p.getRefs().get(0).node.getLastChild().getBooleanProp(
+                  Node.IS_CONSTANT_NAME)) {
             nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
           }
         }

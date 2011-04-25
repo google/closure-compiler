@@ -112,17 +112,20 @@ class CheckGlobalNames implements CompilerPass {
       }
     }
 
-    if (name.refs != null) {
-      JSModuleGraph moduleGraph = compiler.getModuleGraph();
-      for (Ref ref : name.refs) {
-        if (!isDefined) {
-          reportRefToUndefinedName(name, ref);
-        } else {
-          if (declaration != null &&
-              ref.module != declaration.module &&
-              !moduleGraph.dependsOn(ref.module, declaration.module)) {
-            reportBadModuleReference(name, ref);
-          }
+    JSModuleGraph moduleGraph = compiler.getModuleGraph();
+    for (Ref ref : name.getRefs()) {
+      if (ref == name.declaration) {
+        continue;
+      }
+
+      if (!isDefined) {
+        reportRefToUndefinedName(name, ref);
+      } else {
+        if (declaration != null &&
+            ref.getModule() != declaration.getModule() &&
+            !moduleGraph.dependsOn(
+                ref.getModule(), declaration.getModule())) {
+          reportBadModuleReference(name, ref);
         }
       }
     }
@@ -130,8 +133,9 @@ class CheckGlobalNames implements CompilerPass {
 
   private void reportBadModuleReference(Name name, Ref ref) {
     compiler.report(
-        JSError.make(ref.sourceName, ref.node, STRICT_MODULE_DEP_QNAME,
-                     ref.module.getName(), name.declaration.module.getName(),
+        JSError.make(ref.source.getName(), ref.node, STRICT_MODULE_DEP_QNAME,
+                     ref.getModule().getName(),
+                     name.declaration.getModule().getName(),
                      name.fullName()));
   }
 
@@ -152,8 +156,8 @@ class CheckGlobalNames implements CompilerPass {
     }
 
     compiler.report(
-        JSError.make(ref.sourceName, ref.node, level, UNDEFINED_NAME_WARNING,
-            name.fullName()));
+        JSError.make(ref.getSourceName(), ref.node, level,
+            UNDEFINED_NAME_WARNING, name.fullName()));
   }
 
   /**

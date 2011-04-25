@@ -180,13 +180,18 @@ class ProcessDefines implements CompilerPass {
           allDefines.add(name);
         } else {
           JSError error = JSError.make(
-              name.declaration.sourceName,
+              name.declaration.getSourceName(),
               name.declaration.node,
               INVALID_DEFINE_TYPE_ERROR);
           compiler.report(error);
         }
-      } else if (name.refs != null) {
-        for (Ref ref : name.refs) {
+      } else {
+        for (Ref ref : name.getRefs()) {
+          if (ref == name.declaration) {
+            // Declarations were handled above.
+            continue;
+          }
+
           Node n = ref.node;
           Node parent = ref.node.getParent();
           JSDocInfo info = n.getJSDocInfo();
@@ -243,12 +248,15 @@ class ProcessDefines implements CompilerPass {
           allRefInfo.put(name.declaration.node,
                          new RefInfo(name.declaration, name));
         }
-        if (name.refs != null) {
-          for (Ref ref : name.refs) {
-            // If there's a TWIN def, only put one of the twins in.
-            if (ref.getTwin() == null || !ref.getTwin().isSet()) {
-              allRefInfo.put(ref.node, new RefInfo(ref, name));
-            }
+        for (Ref ref : name.getRefs()) {
+          if (ref == name.declaration) {
+            // Declarations were handled above.
+            continue;
+          }
+
+          // If there's a TWIN def, only put one of the twins in.
+          if (ref.getTwin() == null || !ref.getTwin().isSet()) {
+            allRefInfo.put(ref.node, new RefInfo(ref, name));
           }
         }
       }
