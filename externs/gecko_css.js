@@ -16,7 +16,7 @@
 
 /**
  * @fileoverview Definitions for Gecko's custom CSS properties. Copied from:
- * http://lxr.mozilla.org/mozilla1.8.0/source/dom/public/idl/css/nsIDOMCSS2Properties.idl
+ * http://mxr.mozilla.org/mozilla2.0/source/dom/interfaces/css/nsIDOMCSS2Properties.idl
  *
  * @externs
  * @author nicksantos@google.com (Nick Santos)
@@ -29,43 +29,68 @@
 /** @type {string} */ CSSProperties.prototype.MozBackgroundOrigin;
 /** @type {string} */ CSSProperties.prototype.MozBinding;
 /** @type {string} */ CSSProperties.prototype.MozBorderBottomColors;
+/** @type {string} */ CSSProperties.prototype.MozBorderEnd;
+/** @type {string} */ CSSProperties.prototype.MozBorderEndColor;
+/** @type {string} */ CSSProperties.prototype.MozBorderEndStyle;
+/** @type {string} */ CSSProperties.prototype.MozBorderEndWidth;
+/** @type {string} */ CSSProperties.prototype.MozBorderImage;
 /** @type {string} */ CSSProperties.prototype.MozBorderLeftColors;
-/** @type {string} */ CSSProperties.prototype.MozBorderRightColors;
-/** @type {string} */ CSSProperties.prototype.MozBorderTopColors;
 /** @type {string} */ CSSProperties.prototype.MozBorderRadius;
 /** @type {string} */ CSSProperties.prototype.MozBorderRadiusTopleft;
 /** @type {string} */ CSSProperties.prototype.MozBorderRadiusTopright;
 /** @type {string} */ CSSProperties.prototype.MozBorderRadiusBottomleft;
 /** @type {string} */ CSSProperties.prototype.MozBorderRadiusBottomright;
+/** @type {string} */ CSSProperties.prototype.MozBorderRightColors;
+/** @type {string} */ CSSProperties.prototype.MozBorderStart;
+/** @type {string} */ CSSProperties.prototype.MozBorderStartColor;
+/** @type {string} */ CSSProperties.prototype.MozBorderStartStyle;
+/** @type {string} */ CSSProperties.prototype.MozBorderStartWidth;
+/** @type {string} */ CSSProperties.prototype.MozBorderTopColors;
 /** @type {string} */ CSSProperties.prototype.MozBoxAlign;
 /** @type {string} */ CSSProperties.prototype.MozBoxDirection;
 /** @type {string} */ CSSProperties.prototype.MozBoxFlex;
-/** @type {string} */ CSSProperties.prototype.MozBoxOrient;
 /** @type {string} */ CSSProperties.prototype.MozBoxOrdinalGroup;
+/** @type {string} */ CSSProperties.prototype.MozBoxOrient;
 /** @type {string} */ CSSProperties.prototype.MozBoxPack;
 /** @type {string} */ CSSProperties.prototype.MozBoxSizing;
 /** @type {string} */ CSSProperties.prototype.MozColumnCount;
-/** @type {string} */ CSSProperties.prototype.MozColumnWidth;
 /** @type {string} */ CSSProperties.prototype.MozColumnGap;
+/** @type {string} */ CSSProperties.prototype.MozColumnRule;
+/** @type {string} */ CSSProperties.prototype.MozColumnRuleColor;
+/** @type {string} */ CSSProperties.prototype.MozColumnRuleStyle;
+/** @type {string} */ CSSProperties.prototype.MozColumnRuleWidth;
+/** @type {string} */ CSSProperties.prototype.MozColumnWidth;
 /** @type {string} */ CSSProperties.prototype.MozFloatEdge;
+/** @type {string} */ CSSProperties.prototype.MozFontFeatureSettings;
+/** @type {string} */ CSSProperties.prototype.MozFontLanguageOverride;
 /** @type {string} */ CSSProperties.prototype.MozForceBrokenImageIcon;
 /** @type {string} */ CSSProperties.prototype.MozImageRegion;
 /** @type {string} */ CSSProperties.prototype.MozMarginEnd;
 /** @type {string} */ CSSProperties.prototype.MozMarginStart;
-/** @type {string|number} */ CSSProperties.prototype.MozOpacity;
+/** @type {number|string} */ CSSProperties.prototype.MozOpacity;
 /** @type {string} */ CSSProperties.prototype.MozOutline;
 /** @type {string} */ CSSProperties.prototype.MozOutlineColor;
+/** @type {string} */ CSSProperties.prototype.MozOutlineOffset;
 /** @type {string} */ CSSProperties.prototype.MozOutlineRadius;
-/** @type {string} */ CSSProperties.prototype.MozOutlineRadiusTopleft;
-/** @type {string} */ CSSProperties.prototype.MozOutlineRadiusTopright;
 /** @type {string} */ CSSProperties.prototype.MozOutlineRadiusBottomleft;
 /** @type {string} */ CSSProperties.prototype.MozOutlineRadiusBottomright;
+/** @type {string} */ CSSProperties.prototype.MozOutlineRadiusTopleft;
+/** @type {string} */ CSSProperties.prototype.MozOutlineRadiusTopright;
 /** @type {string} */ CSSProperties.prototype.MozOutlineStyle;
 /** @type {string} */ CSSProperties.prototype.MozOutlineWidth;
-/** @type {string} */ CSSProperties.prototype.MozOutlineOffset;
 /** @type {string} */ CSSProperties.prototype.MozPaddingEnd;
 /** @type {string} */ CSSProperties.prototype.MozPaddingStart;
+/** @type {string} */ CSSProperties.prototype.MozStackSizing;
+/** @type {string} */ CSSProperties.prototype.MozTabSize;
+/** @type {string} */ CSSProperties.prototype.MozTransform;
+/** @type {string} */ CSSProperties.prototype.MozTransformOrigin;
+/** @type {string} */ CSSProperties.prototype.MozTransition;
+/** @type {string} */ CSSProperties.prototype.MozTransitionDelay;
+/** @type {string} */ CSSProperties.prototype.MozTransitionDuration;
+/** @type {string} */ CSSProperties.prototype.MozTransitionProperty;
+/** @type {string} */ CSSProperties.prototype.MozTransitionTimingFunction;
 /** @type {string} */ CSSProperties.prototype.MozUserFocus;
 /** @type {string} */ CSSProperties.prototype.MozUserInput;
 /** @type {string} */ CSSProperties.prototype.MozUserModify;
 /** @type {string} */ CSSProperties.prototype.MozUserSelect;
+/** @type {string} */ CSSProperties.prototype.MozWindowShadow;
