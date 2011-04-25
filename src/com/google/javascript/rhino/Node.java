@@ -114,40 +114,39 @@ public class Node implements Cloneable, Serializable {
       SPECIALCALL_PROP  = 27,
       DEBUGSOURCE_PROP  = 28,
       JSDOC_INFO_PROP   = 29,     // contains a TokenStream.JSDocInfo object
-      VAR_ARGS_NAME     = 29,     // the name node is a variable length
-                                  // argument placeholder. It can never be
-                                  // used in conjunction with JSDOC_INFO_PROP.
-      SKIP_INDEXES_PROP  = 30,    // array of skipped indexes of array literal
-      INCRDECR_PROP      = 31,    // pre or post type of increment/decrement
-      MEMBER_TYPE_PROP   = 32,    // type of element access operation
-      NAME_PROP          = 33,    // property name
-      PARENTHESIZED_PROP = 34,    // expression is parenthesized
-      QUOTED_PROP        = 35,    // set to indicate a quoted object lit key
-      OPT_ARG_NAME       = 36,    // The name node is an optional argument.
-      SYNTHETIC_BLOCK_PROP = 37,  // A synthetic block. Used to make
+      VAR_ARGS_NAME     = 30,     // the name node is a variable length
+                                  // argument placeholder.
+      SKIP_INDEXES_PROP  = 31,    // array of skipped indexes of array literal
+      INCRDECR_PROP      = 32,    // pre or post type of increment/decrement
+      MEMBER_TYPE_PROP   = 33,    // type of element access operation
+      NAME_PROP          = 34,    // property name
+      PARENTHESIZED_PROP = 35,    // expression is parenthesized
+      QUOTED_PROP        = 36,    // set to indicate a quoted object lit key
+      OPT_ARG_NAME       = 37,    // The name node is an optional argument.
+      SYNTHETIC_BLOCK_PROP = 38,  // A synthetic block. Used to make
                                   // processing simpler, and does not
                                   // represent a real block in the source.
-      EMPTY_BLOCK        = 38,    // Used to indicate BLOCK that replaced
+      EMPTY_BLOCK        = 39,    // Used to indicate BLOCK that replaced
                                   // EMPTY nodes.
-      ORIGINALNAME_PROP  = 39,    // The original name of the node, before
+      ORIGINALNAME_PROP  = 40,    // The original name of the node, before
                                   // renaming.
-      BRACELESS_TYPE     = 40,    // The type syntax without curly braces.
-      SIDE_EFFECT_FLAGS  = 41,    // Function or constructor call side effect
+      BRACELESS_TYPE     = 41,    // The type syntax without curly braces.
+      SIDE_EFFECT_FLAGS  = 42,    // Function or constructor call side effect
                                   // flags
       // Coding convention props
-      IS_CONSTANT_NAME   = 42,    // The variable or property is constant.
-      IS_OPTIONAL_PARAM  = 43,    // The parameter is optional.
-      IS_VAR_ARGS_PARAM  = 44,    // The parameter is a var_args.
-      IS_NAMESPACE       = 45,    // The variable creates a namespace.
-      IS_DISPATCHER      = 46,    // The function is a dispatcher function,
+      IS_CONSTANT_NAME   = 43,    // The variable or property is constant.
+      IS_OPTIONAL_PARAM  = 44,    // The parameter is optional.
+      IS_VAR_ARGS_PARAM  = 45,    // The parameter is a var_args.
+      IS_NAMESPACE       = 46,    // The variable creates a namespace.
+      IS_DISPATCHER      = 47,    // The function is a dispatcher function,
                                   // probably generated from Java code, and
                                   // should be resolved to the proper
                                   // overload if possible.
-      DIRECTIVES         = 47,    // The ES5 directives on this node.
-      DIRECT_EVAL        = 48,    // ES5 distinguishes between direct and
+      DIRECTIVES         = 48,    // The ES5 directives on this node.
+      DIRECT_EVAL        = 49,    // ES5 distinguishes between direct and
                                   // indirect calls to eval.
-      FREE_CALL          = 49,    // A CALL without an explicit "this" value.
-      LAST_PROP          = 49;
+      FREE_CALL          = 50,    // A CALL without an explicit "this" value.
+      LAST_PROP          = 50;
 
   // values of ISNUMBER_PROP to specify
   // which of the children are Number types
