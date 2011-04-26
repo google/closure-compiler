@@ -71,6 +71,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   public boolean ideMode;
 
   /**
+   * Even if checkTypes is disabled, clients might want to still infer types.
+   * This is mostly used when ideMode is enabled.
+   */
+  boolean inferTypes;
+
+  /**
    * Configures the compiler to skip as many passes as possible.
    */
   boolean skipAllPasses;
@@ -1181,6 +1187,22 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public AliasTransformationHandler getAliasTransformationHandler() {
     return this.aliasHandler;
+  }
+
+  /**
+   * If true, enables type inference. If checkTypes is enabled, this flag has
+   * no effect.
+   */
+  public void setInferTypes(boolean enable) {
+    inferTypes = enable;
+  }
+
+  /**
+   * Gets the inferTypes flag. Note that if checkTypes is enabled, this flag
+   * is ignored when configuring the compiler.
+   */
+  public boolean getInferTypes() {
+    return inferTypes;
   }
 
   //////////////////////////////////////////////////////////////////////////////

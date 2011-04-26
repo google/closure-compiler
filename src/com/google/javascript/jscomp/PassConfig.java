@@ -135,6 +135,10 @@ public abstract class PassConfig {
         topScope, typedScopeCreator);
   }
 
+  final InferJSDocInfo makeInferJsDocInfo(AbstractCompiler compiler) {
+    return new InferJSDocInfo(compiler);
+  }
+
   /**
    * Create a type-checking pass.
    */

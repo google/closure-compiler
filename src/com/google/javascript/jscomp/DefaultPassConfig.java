@@ -239,10 +239,14 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(objectPropertyStringPreprocess);
     }
 
-    if (options.checkTypes) {
+    if (options.checkTypes || options.inferTypes) {
       checks.add(resolveTypes.makeOneTimePass());
       checks.add(inferTypes.makeOneTimePass());
-      checks.add(checkTypes.makeOneTimePass());
+      if (options.checkTypes) {
+        checks.add(checkTypes.makeOneTimePass());
+      } else {
+        checks.add(inferJsDocInfo.makeOneTimePass());
+      }
     }
 
     if (options.checkUnreachableCode.isOn() ||
@@ -1003,7 +1007,7 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Rusn type inference. */
+  /** Run type inference. */
   final PassFactory inferTypes =
       new PassFactory("inferTypes", false) {
     @Override
@@ -1019,6 +1023,22 @@ public class DefaultPassConfig extends PassConfig {
       };
     }
   };
+
+  final PassFactory inferJsDocInfo =
+    new PassFactory("inferJsDocInfo", false) {
+  @Override
+  protected CompilerPass createInternal(final AbstractCompiler compiler) {
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        Preconditions.checkNotNull(topScope);
+        Preconditions.checkNotNull(getTypedScopeCreator());
+
+        makeInferJsDocInfo(compiler).process(externs, root);
+      }
+    };
+  }
+};
 
   /** Checks type usage */
   private final PassFactory checkTypes =
