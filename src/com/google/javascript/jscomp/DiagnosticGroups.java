@@ -73,7 +73,7 @@ public class DiagnosticGroups {
       "accessControls, ambiguousFunctionDecl, checkRegExp," +
       "checkTypes, checkVars, constantProperty, deprecated, " +
       "externsValidation, fileoverviewTags, globalThis, " +
-      "internetExplorerChecks, nvalidCasts, missingProperties, " +
+      "internetExplorerChecks, invalidCasts, missingProperties, " +
       "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
       "undefinedVars, unknownDefines, uselessCode, " +
       "visibility";
