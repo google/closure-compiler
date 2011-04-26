@@ -467,6 +467,14 @@ public class ParserTest extends BaseJSTypeTestCase {
     assertNull(varNode.getJSDocInfo());
   }
 
+  public void testJSDocAttachment16() {
+    Node exprCall =
+        parse("/** @private */ x(); function f() {};").getFirstChild();
+    assertEquals(Token.EXPR_RESULT, exprCall.getType());
+    assertNull(exprCall.getNext().getJSDocInfo());
+    assertNotNull(exprCall.getFirstChild().getJSDocInfo());
+  }
+
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),

@@ -104,6 +104,19 @@ public class ControlStructureCheckTest extends CompilerTestCase {
              "with(a){}");
   }
 
+  public void testUseOfWith3() {
+    testSame(
+        "function f(expr, context) {\n" +
+        "  try {\n" +
+        "    /** @suppress{with} */ with (context) {\n" +
+        "      return eval('[' + expr + '][0]');\n" +
+        "    }\n" +
+        "  } catch (e) {\n" +
+        "    return null;\n" +
+        "  }\n" +
+        "};\n");
+  }
+
   private void assertNoError(String js) {
     testSame(js);
   }

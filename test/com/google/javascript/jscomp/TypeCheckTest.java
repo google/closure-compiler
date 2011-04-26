@@ -5046,6 +5046,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Property indexOf never defined on String.prototype.toLowerCase");
   }
 
+  public void testIssue380() throws Exception {
+    testTypes(
+        "/** @type { function(string): {innerHTML: string} } */" +
+        "document.getElementById;" +
+        "var list = /** @type {!Array.<string>} */ ['hello', 'you'];\n" +
+        "list.push('?');\n" +
+        "document.getElementById('node').innerHTML = list.toString();");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See
