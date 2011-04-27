@@ -408,12 +408,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(smartNamePass);
     }
 
-    // This needs to come after the inline constants pass, which is run within
-    // the code removing passes.
-    if (options.closurePass) {
-      passes.add(closureOptimizePrimitives);
-    }
-
     // TODO(user): This forces a first crack at crossModuleCodeMotion
     // before devirtualization. Once certain functions are devirtualized,
     // it confuses crossModuleCodeMotion ability to recognized that
@@ -1290,15 +1284,6 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
       return new ClosureCodeRemoval(compiler, options.removeAbstractMethods,
           options.removeClosureAsserts);
-    }
-  };
-
-  /** Special case optimizations for closure functions. */
-  private final PassFactory closureOptimizePrimitives =
-      new PassFactory("closureOptimizePrimitives", true) {
-    @Override
-    protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      return new ClosureOptimizePrimitives(compiler);
     }
   };
 
