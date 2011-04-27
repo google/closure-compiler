@@ -258,10 +258,7 @@ public class Compiler extends AbstractCompiler {
     guards.add(
         new SuppressDocWarningsGuard(
             getDiagnosticGroups().getRegisteredGroups()));
-    WarningsGuard warningsGuard = options.getWarningsGuard();
-    if (warningsGuard != null) {
-      guards.add(options.getWarningsGuard());
-    }
+    guards.add(options.getWarningsGuard());
 
     // All passes must run the variable check. This synthesizes
     // variables later so that the compiler doesn't crash. It also
@@ -1748,12 +1745,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   public CheckLevel getErrorLevel(JSError error) {
     Preconditions.checkNotNull(options);
-    WarningsGuard guards = options.getWarningsGuard();
-    if (guards == null) {
-      return error.level;
-    } else {
-      return guards.level(error);
-    }
+    return warningsGuard.level(error);
   }
 
   /**

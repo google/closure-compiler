@@ -192,7 +192,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * If you want to ignore the flags API, or intepret flags your own way,
    * then you should override this method.
    */
-  final protected void setRunOptions(CompilerOptions options)
+  protected void setRunOptions(CompilerOptions options)
       throws FlagUsageException, IOException {
     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 

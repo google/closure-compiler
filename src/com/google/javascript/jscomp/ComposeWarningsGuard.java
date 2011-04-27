@@ -140,6 +140,32 @@ public class ComposeWarningsGuard extends WarningsGuard {
     return Collections.unmodifiableList(Lists.newArrayList(guards));
   }
 
+  /**
+   * Make a warnings guard that's the same as this one but with
+   * all escalating guards turned down.
+   */
+  ComposeWarningsGuard makeEmergencyFailSafeGuard() {
+    ComposeWarningsGuard safeGuard = new ComposeWarningsGuard();
+    for (WarningsGuard guard : guards.descendingSet()) {
+      if (guard instanceof StrictWarningsGuard) {
+        continue;
+      } else if (guard instanceof DiagnosticGroupWarningsGuard) {
+        DiagnosticGroupWarningsGuard dgGuard =
+            (DiagnosticGroupWarningsGuard) guard;
+        if (dgGuard.level == CheckLevel.ERROR) {
+          safeGuard.addGuard(
+              new DiagnosticGroupWarningsGuard(
+                  dgGuard.group, CheckLevel.WARNING));
+        } else {
+        safeGuard.addGuard(guard);
+        }
+      } else {
+        safeGuard.addGuard(guard);
+      }
+    }
+    return safeGuard;
+  }
+
   @Override
   public String toString() {
     return Joiner.on(", ").join(guards);

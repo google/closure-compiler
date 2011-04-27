@@ -603,7 +603,8 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public String jsOutputFile;
 
-  private transient ComposeWarningsGuard warningsGuard;
+  private transient ComposeWarningsGuard warningsGuard =
+      new ComposeWarningsGuard();
 
   int summaryDetailLevel = 1;
 
@@ -801,7 +802,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     tracer = TracerMode.OFF;
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.SINGLELINE;
-    warningsGuard = null;
     debugFunctionSideEffectsPath = null;
     jsOutputFile = "";
     externExports = false;
@@ -928,7 +928,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * group of warnings.
    */
   boolean enables(DiagnosticGroup type) {
-    return warningsGuard != null && warningsGuard.enables(type);
+    return warningsGuard.enables(type);
   }
 
   /**
@@ -936,7 +936,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * group of warnings.
    */
   boolean disables(DiagnosticGroup type) {
-    return warningsGuard != null && warningsGuard.disables(type);
+    return warningsGuard.disables(type);
   }
 
   /**
@@ -951,14 +951,18 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
+   * The emergency fail safe removes all strict and ERROR-escalating
+   * warnings guards.
+   */
+  void useEmergencyFailSafe() {
+    warningsGuard = warningsGuard.makeEmergencyFailSafeGuard();
+  }
+
+  /**
    * Add a guard to the set of warnings guards.
    */
   public void addWarningsGuard(WarningsGuard guard) {
-    if (warningsGuard == null) {
-      warningsGuard = new ComposeWarningsGuard(guard);
-    } else {
-      warningsGuard.addGuard(guard);
-    }
+    warningsGuard.addGuard(guard);
   }
 
   /**
