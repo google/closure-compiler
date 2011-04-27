@@ -92,6 +92,13 @@ BlobBuilder.prototype.append = function(data, endings) {};
  */
 BlobBuilder.prototype.getBlob = function(contentType) {};
 
+
+/**
+ * @see http://www.w3.org/TR/file-writer-api/#the-blobbuilder-interface
+ * @type {function(new:BlobBuilder)}
+ */
+Window.prototype.BlobBuilder;
+
 /**
  * This has replaced BlobBuilder in Chrome since WebKit revision 84008.
  * @see http://lists.w3.org/Archives/Public/public-webapps/2011AprJun/0222.html
@@ -114,6 +121,14 @@ WebKitBlobBuilder.prototype.append = function(data, endings) {};
  * @return {!Blob}
  */
 WebKitBlobBuilder.prototype.getBlob = function(contentType) {};
+
+
+/**
+ * @see http://www.w3.org/TR/file-writer-api/#the-blobbuilder-interface
+ * @type {function(new:WebKitBlobBuilder)}
+ */
+Window.prototype.WebKitBlobBuilder;
+
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#the-directoryentry-interface
