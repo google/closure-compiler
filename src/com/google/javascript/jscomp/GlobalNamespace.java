@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -45,6 +44,13 @@ class GlobalNamespace {
   private boolean inExterns;
   private Scope externsScope;
   private boolean generated = false;
+
+  /**
+   * Each reference has an index in post-order.
+   * Notice that some nodes are represented by 2 Ref objects, so
+   * this index is not necessarily unique.
+   */
+  private int currentPreOrderIndex = 0;
 
   /** Global namespace tree */
   private List<Name> globalNames = new ArrayList<Name>();
@@ -211,7 +217,7 @@ class GlobalNamespace {
   /**
    * Builds a tree representation of the global namespace. Omits prototypes.
    */
-  private class BuildGlobalNamespace extends AbstractPostOrderCallback {
+  private class BuildGlobalNamespace implements NodeTraversal.Callback {
 
     private final Predicate<Node> nodeFilter;
 
@@ -228,7 +234,16 @@ class GlobalNamespace {
     }
 
     @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    public void visit(NodeTraversal t, Node n, Node parent) {}
+
+    /** Collect the references in pre-order. */
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      collect(t, n, parent);
+      return true;
+    }
+
+    public void collect(NodeTraversal t, Node n, Node parent) {
       if (nodeFilter != null && !nodeFilter.apply(n)) {
         return;
       }
@@ -456,12 +471,14 @@ class GlobalNamespace {
       Name nameObj = getOrCreateName(name);
       nameObj.type = type;
 
-      Ref set = new Ref(t, n, Ref.Type.SET_FROM_GLOBAL);
+      Ref set = new Ref(t, n, Ref.Type.SET_FROM_GLOBAL,
+          currentPreOrderIndex++);
       nameObj.addRef(set);
 
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
-        Ref get = new Ref(t, n, Ref.Type.ALIASING_GET);
+        Ref get = new Ref(t, n, Ref.Type.ALIASING_GET,
+            currentPreOrderIndex++);
         nameObj.addRef(get);
         Ref.markTwins(set, get);
       } else if (isConstructorOrEnumDeclaration(n, parent)) {
@@ -524,12 +541,12 @@ class GlobalNamespace {
       if (maybeHandlePrototypePrefix(t, n, parent, name)) return;
 
       Name node = getOrCreateName(name);
-      Ref set = new Ref(t, n, Ref.Type.SET_FROM_LOCAL);
+      Ref set = new Ref(t, n, Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
       node.addRef(set);
 
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
-        Ref get = new Ref(t, n, Ref.Type.ALIASING_GET);
+        Ref get = new Ref(t, n, Ref.Type.ALIASING_GET, currentPreOrderIndex++);
         node.addRef(get);
         Ref.markTwins(set, get);
       }
@@ -663,7 +680,7 @@ class GlobalNamespace {
       Name node = getOrCreateName(name);
 
       // No need to look up additional ancestors, since they won't be used.
-      node.addRef(new Ref(t, n, type));
+      node.addRef(new Ref(t, n, type, currentPreOrderIndex++));
     }
 
     /**
@@ -1038,6 +1055,7 @@ class GlobalNamespace {
     final Type type;
     final CompilerInput source;
     final Scope scope;
+    final int preOrderIndex;
 
     /**
      * Certain types of references are actually double-refs. For example,
@@ -1051,24 +1069,27 @@ class GlobalNamespace {
     /**
      * Creates a reference at the current node.
      */
-    Ref(NodeTraversal t, Node name, Type type) {
+    Ref(NodeTraversal t, Node name, Type type, int index) {
       this.node = name;
       this.source = t.getInput();
       this.type = type;
       this.scope = t.getScope();
+      this.preOrderIndex = index;
     }
 
-    private Ref(Ref original, Type type) {
+    private Ref(Ref original, Type type, int index) {
       this.node = original.node;
       this.source = original.source;
       this.type = type;
       this.scope = original.scope;
+      this.preOrderIndex = index;
     }
 
-    private Ref(Type type) {
+    private Ref(Type type, int index) {
       this.type = type;
       this.source = null;
       this.scope = null;
+      this.preOrderIndex = index;
     }
 
     JSModule getModule() {
@@ -1101,11 +1122,11 @@ class GlobalNamespace {
      * a different class.
      */
     Ref cloneAndReclassify(Type type) {
-      return new Ref(this, type);
+      return new Ref(this, type, this.preOrderIndex);
     }
 
     static Ref createRefForTesting(Type type) {
-      return new Ref(type);
+      return new Ref(type, -1);
     }
   }
 }

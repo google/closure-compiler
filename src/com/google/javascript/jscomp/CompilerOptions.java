@@ -1344,6 +1344,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   private static class NullAliasTransformationHandler
       implements AliasTransformationHandler, Serializable {
+    private static final long serialVersionUID = 0L;
 
     private static final AliasTransformation NULL_ALIAS_TRANSFORMATION =
         new NullAliasTransformation();
@@ -1357,6 +1358,8 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     private static class NullAliasTransformation
         implements AliasTransformation, Serializable {
+      private static final long serialVersionUID = 0L;
+
       @Override
       public void addAlias(String alias, String definition) {
       }

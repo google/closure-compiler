@@ -40,6 +40,11 @@ class CheckGlobalNames implements CompilerPass {
       "JSC_UNDEFINED_NAME",
       "{0} is never defined");
 
+  static final DiagnosticType NAME_DEFINED_LATE_WARNING =
+      DiagnosticType.warning(
+          "JSC_NAME_DEFINED_LATE",
+          "{0} is not defined yet, so properties cannot be defined on it");
+
   static final DiagnosticType STRICT_MODULE_DEP_QNAME =
       DiagnosticType.disabled(
           "JSC_STRICT_MODULE_DEP_QNAME",
@@ -106,18 +111,20 @@ class CheckGlobalNames implements CompilerPass {
     // If the name is not defined, emit warnings for each reference. While
     // we're looking through each reference, check all the module dependencies.
     Ref declaration = name.declaration;
-    if (!isDefined) {
-      if (declaration != null) {
-        reportRefToUndefinedName(name, declaration);
-      }
+    Name parent = name.parent;
+    if (isDefined &&
+        declaration != null &&
+        parent != null &&
+        parent.declaration != null &&
+        parent.localSets == 0 &&
+        parent.declaration.preOrderIndex > declaration.preOrderIndex) {
+      compiler.report(
+          JSError.make(declaration.source.getName(), declaration.node,
+              NAME_DEFINED_LATE_WARNING, parent.fullName()));
     }
 
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
     for (Ref ref : name.getRefs()) {
-      if (ref == name.declaration) {
-        continue;
-      }
-
       if (!isDefined) {
         reportRefToUndefinedName(name, ref);
       } else {

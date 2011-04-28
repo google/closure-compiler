@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CheckGlobalNames.NAME_DEFINED_LATE_WARNING;
 import static com.google.javascript.jscomp.CheckGlobalNames.UNDEFINED_NAME_WARNING;
 import static com.google.javascript.jscomp.CheckGlobalNames.STRICT_MODULE_DEP_QNAME;
 
@@ -200,5 +201,40 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         "var c = a.xxx;",
         NAMES
     ), UNDEFINED_NAME_WARNING);
+  }
+
+  public void testLateDefinedName1() {
+    testSame("x.y = {}; var x = {};", NAME_DEFINED_LATE_WARNING);
+  }
+
+  public void testLateDefinedName2() {
+    testSame("var x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
+  }
+
+  public void testLateDefinedName3() {
+    testSame("var x = {}; x.y.z = {}; x.y = {z: {}};",
+        NAME_DEFINED_LATE_WARNING);
+  }
+
+  public void testLateDefinedName4() {
+    testSame("var x = {}; x.y.z.bar = {}; x.y = {z: {}};",
+        NAME_DEFINED_LATE_WARNING);
+  }
+
+  public void testOkLateDefinedName1() {
+    testSame("function f() { x.y = {}; } var x = {};");
+  }
+
+  public void testOkLateDefinedName2() {
+    testSame("var x = {}; function f() { x.y.z = {}; } x.y = {};");
+  }
+
+  public void testPathologicalCaseThatsOkAnyway() {
+    testSame(
+        "var x = {};" +
+        "switch (x) { " +
+        "  default: x.y.z = {}; " +
+        "  case (x.y = {}): break;" +
+        "}", NAME_DEFINED_LATE_WARNING);
   }
 }
