@@ -303,10 +303,10 @@ jQueryObject.prototype.end = function() {};
 jQueryObject.prototype.append = function(content) {};
 
 /**
- * @param {string} selector
+ * @param {string|Node|Element|jQueryObject} target
  * @return {jQueryObject}
  */
-jQueryObject.prototype.appendTo = function(selector) {};
+jQueryObject.prototype.appendTo = function(target) {};
 
 /**
  * @param {string|Node|Element|jQueryObject} content
@@ -315,10 +315,10 @@ jQueryObject.prototype.appendTo = function(selector) {};
 jQueryObject.prototype.prepend = function(content) {};
 
 /**
- * @param {string} selector
+ * @param {string|Node|Element|jQueryObject} target
  * @return {jQueryObject}
  */
-jQueryObject.prototype.prependTo = function(selector) {};
+jQueryObject.prototype.prependTo = function(target) {};
 
 /**
  * @param {string|Node|Element|jQueryObject} content
@@ -333,16 +333,16 @@ jQueryObject.prototype.after = function(content) {};
 jQueryObject.prototype.before = function(content) {};
 
 /**
- * @param {string} selector
+ * @param {string|Node|Element|jQueryObject} target
  * @return {jQueryObject}
  */
-jQueryObject.prototype.insertAfter = function(selector) {};
+jQueryObject.prototype.insertAfter = function(target) {};
 
 /**
- * @param {string} selector
+ * @param {string|Node|Element|jQueryObject} target
  * @return {jQueryObject}
  */
-jQueryObject.prototype.insertBefore = function(selector) {};
+jQueryObject.prototype.insertBefore = function(target) {};
 
 /**
  * @param {string|Element} arg
