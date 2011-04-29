@@ -179,45 +179,15 @@ google.maps.ControlPosition = {
 /**
  * @constructor
  */
-google.maps.DirectionsDistance = function() {};
-
-/**
- * @type {string}
- */
-google.maps.DirectionsDistance.prototype.text;
-
-/**
- * @type {number}
- */
-google.maps.DirectionsDistance.prototype.value;
-
-/**
- * @constructor
- */
-google.maps.DirectionsDuration = function() {};
-
-/**
- * @type {string}
- */
-google.maps.DirectionsDuration.prototype.text;
-
-/**
- * @type {number}
- */
-google.maps.DirectionsDuration.prototype.value;
-
-/**
- * @constructor
- */
 google.maps.DirectionsLeg = function() {};
 
 /**
- * @type {google.maps.DirectionsDistance}
+ * @type {google.maps.Distance}
  */
 google.maps.DirectionsLeg.prototype.distance;
 
 /**
- * @type {google.maps.DirectionsDuration}
+ * @type {google.maps.Duration}
  */
 google.maps.DirectionsLeg.prototype.duration;
 
@@ -428,12 +398,12 @@ google.maps.DirectionsRequest.prototype.provideRouteAlternatives;
 google.maps.DirectionsRequest.prototype.region;
 
 /**
- * @type {google.maps.DirectionsTravelMode}
+ * @type {google.maps.TravelMode}
  */
 google.maps.DirectionsRequest.prototype.travelMode;
 
 /**
- * @type {google.maps.DirectionsUnitSystem}
+ * @type {google.maps.UnitSystem}
  */
 google.maps.DirectionsRequest.prototype.unitSystem;
 
@@ -519,12 +489,12 @@ google.maps.DirectionsStatus = {
 google.maps.DirectionsStep = function() {};
 
 /**
- * @type {google.maps.DirectionsDistance}
+ * @type {google.maps.Distance}
  */
 google.maps.DirectionsStep.prototype.distance;
 
 /**
- * @type {google.maps.DirectionsDuration}
+ * @type {google.maps.Duration}
  */
 google.maps.DirectionsStep.prototype.duration;
 
@@ -549,26 +519,9 @@ google.maps.DirectionsStep.prototype.path;
 google.maps.DirectionsStep.prototype.start_location;
 
 /**
- * @type {google.maps.DirectionsTravelMode}
+ * @type {google.maps.TravelMode}
  */
 google.maps.DirectionsStep.prototype.travel_mode;
-
-/**
- * @enum {string}
- */
-google.maps.DirectionsTravelMode = {
-  WALKING: '',
-  DRIVING: '',
-  BICYCLING: ''
-};
-
-/**
- * @enum {string}
- */
-google.maps.DirectionsUnitSystem = {
-  METRIC: '',
-  IMPERIAL: ''
-};
 
 /**
  * @constructor
@@ -584,6 +537,36 @@ google.maps.DirectionsWaypoint.prototype.location;
  * @type {boolean}
  */
 google.maps.DirectionsWaypoint.prototype.stopover;
+
+/**
+ * @constructor
+ */
+google.maps.Distance = function() {};
+
+/**
+ * @type {string}
+ */
+google.maps.Distance.prototype.text;
+
+/**
+ * @type {number}
+ */
+google.maps.Distance.prototype.value;
+
+/**
+ * @constructor
+ */
+google.maps.Duration = function() {};
+
+/**
+ * @type {string}
+ */
+google.maps.Duration.prototype.text;
+
+/**
+ * @type {number}
+ */
+google.maps.Duration.prototype.value;
 
 /**
  * @constructor
@@ -3203,6 +3186,23 @@ google.maps.TrafficLayer.prototype.getMap = function() {};
 google.maps.TrafficLayer.prototype.setMap = function(map) {};
 
 /**
+ * @enum {string}
+ */
+google.maps.TravelMode = {
+  WALKING: '',
+  DRIVING: '',
+  BICYCLING: ''
+};
+
+/**
+ * @enum {string}
+ */
+google.maps.UnitSystem = {
+  METRIC: '',
+  IMPERIAL: ''
+};
+
+/**
  * @constructor
  */
 google.maps.ZoomControlOptions = function() {};
@@ -3467,6 +3467,13 @@ google.maps.geometry.spherical.computeLength = function(path, opt_radius) {};
  * @return {google.maps.LatLng}
  */
 google.maps.geometry.spherical.computeOffset = function(from, distance, heading, opt_radius) {};
+
+/**
+ * @param {Array.<google.maps.LatLng>|google.maps.MVCArray.<google.maps.LatLng>} loop
+ * @param {number=} opt_radius
+ * @return {number}
+ */
+google.maps.geometry.spherical.computeSignedArea = function(loop, opt_radius) {};
 
 /**
  * @param {google.maps.LatLng} from
