@@ -221,6 +221,11 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         NAME_DEFINED_LATE_WARNING);
   }
 
+  public void testLateDefinedName5() {
+    testSame("var x = {}; /** @typedef {number} */ x.y.z; x.y = {};",
+        NAME_DEFINED_LATE_WARNING);
+  }
+
   public void testOkLateDefinedName1() {
     testSame("function f() { x.y = {}; } var x = {};");
   }
