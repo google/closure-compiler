@@ -258,7 +258,7 @@ public interface CodingConvention extends Serializable {
     final String subclassName;
     final String superclassName;
 
-    SubclassRelationship(SubclassType type,
+    public SubclassRelationship(SubclassType type,
         Node subclassNode, Node superclassNode) {
       this.type = type;
       this.subclassName = subclassNode.getQualifiedName();
