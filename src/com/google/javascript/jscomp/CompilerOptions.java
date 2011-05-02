@@ -959,6 +959,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
+   * Reset the warnings guard.
+   */
+  public void resetWarningsGuard() {
+    warningsGuard = new ComposeWarningsGuard();
+  }
+
+  /**
    * The emergency fail safe removes all strict and ERROR-escalating
    * warnings guards.
    */
