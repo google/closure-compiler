@@ -140,12 +140,30 @@ class FunctionToBlockMutator {
    * @param fnNode A mutable instance of the function to be inlined.
    */
   private void makeLocalNamesUnique(Node fnNode, boolean isCallInLoop) {
+    Supplier<String> idSupplier = compiler.getUniqueNameIdSupplier();
+    // Make variable names unique to this instance.
     NodeTraversal.traverse(
         compiler, fnNode, new MakeDeclaredNamesUnique(
             new InlineRenamer(
-                compiler.getUniqueNameIdSupplier(),
+                idSupplier,
                 "inline_",
                 isCallInLoop)));
+    // Make label names unique to this instance.
+    new RenameLabels(compiler, new LabelNameSupplier(idSupplier), false)
+        .process(null, fnNode);
+  }
+
+  static class LabelNameSupplier implements Supplier<String> {
+    final Supplier<String> idSupplier;
+
+    LabelNameSupplier(Supplier<String> idSupplier) {
+      this.idSupplier = idSupplier;
+    }
+
+    @Override
+    public String get() {
+        return "JSCompiler_inline_label_" + idSupplier.get();
+    }
   }
 
   /**

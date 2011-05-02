@@ -383,6 +383,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "foo();");
   }
 
+  public void testInlineFunctions31() {
+    // Don't introduce a duplicate label in the same scope
+    test("function foo(){ lab:{4;} }" +
+        "lab:{foo();}",
+        "lab:{{JSCompiler_inline_label_0:{4}}}");
+  }
+
   public void testMixedModeInlining1() {
     // Base line tests, direct inlining
     test("function foo(){return 1}" +

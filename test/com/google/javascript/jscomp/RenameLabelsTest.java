@@ -85,4 +85,8 @@ public class RenameLabelsTest extends CompilerTestCase {
          "a(); while (1) break;");
   }
 
+  public void testRenameReused() {
+    test("foo:{break foo}; foo:{break foo}", "a:{break a};a:{break a}");
+  }
+
 }

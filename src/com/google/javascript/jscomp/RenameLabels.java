@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
@@ -69,9 +70,31 @@ import java.util.Map;
  */
 final class RenameLabels implements CompilerPass {
   private final AbstractCompiler compiler;
+  private final Supplier<String> nameSupplier;
+  private final boolean removeUnused;
 
   RenameLabels(AbstractCompiler compiler) {
+    this(compiler, new DefaultNameSupplier(), true);
+  }
+
+  RenameLabels(
+      AbstractCompiler compiler,
+      Supplier<String> supplier,
+      boolean removeUnused) {
     this.compiler = compiler;
+    this.nameSupplier = supplier;
+    this.removeUnused = removeUnused;
+  }
+
+  static class DefaultNameSupplier implements Supplier<String> {
+    // NameGenerator is used to create safe label names.
+    final NameGenerator nameGenerator =
+        new NameGenerator(new HashSet<String>(), "", null);
+
+    @Override
+    public String get() {
+      return nameGenerator.generateNextName();
+    }
   }
 
   /**
@@ -87,10 +110,6 @@ final class RenameLabels implements CompilerPass {
     // A stack of labels namespaces. Labels in an outer scope aren't part of an
     // inner scope, so a new namespace is created each time a scope is entered.
     final Deque<LabelNamespace> namespaceStack = Lists.newLinkedList();
-
-    // NameGenerator is used to create safe label names.
-    final NameGenerator nameGenerator =
-        new NameGenerator(new HashSet<String>(), "", null);
 
     // The list of generated names. Typically, the first name will be "a",
     // the second "b", etc.
@@ -129,7 +148,7 @@ final class RenameLabels implements CompilerPass {
 
         // Create a new name, if needed, for this depth.
         if (names.size() < currentDepth) {
-          names.add(nameGenerator.generateNextName());
+          names.add(nameSupplier.get());
         }
 
         String newName = getNameForId(currentDepth);
@@ -193,7 +212,7 @@ final class RenameLabels implements CompilerPass {
       String name = nameNode.getString();
       LabelInfo li = getLabelInfo(name);
       // This is a label...
-      if (li.referenced) {
+      if (li.referenced || !removeUnused) {
         String newName = getNameForId(li.id);
         if (!name.equals(newName)) {
           // ... and it is used, give it the short name.
