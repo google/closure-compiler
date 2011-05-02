@@ -852,6 +852,14 @@ public class CompilerOptions implements Serializable, Cloneable {
     return map;
   }
 
+  void initDeserializedProperties() {
+    // If this object was initialized by deserialization, initialize
+    // transient fields now. This is a temporary hack.
+    if (warningsGuard == null) {
+      warningsGuard = new ComposeWarningsGuard();
+    }
+  }
+
   /**
    * Sets the value of the {@code @define} variable in JS
    * to a boolean literal.

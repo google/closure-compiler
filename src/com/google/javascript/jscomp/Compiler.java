@@ -220,6 +220,7 @@ public class Compiler extends AbstractCompiler {
    */
   public void initOptions(CompilerOptions options) {
     this.options = options;
+    this.options.initDeserializedProperties();
     if (errorManager == null) {
       if (outStream == null) {
         setErrorManager(
