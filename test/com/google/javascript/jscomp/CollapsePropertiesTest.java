@@ -1341,4 +1341,17 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         "var a = null;" +
         "this.c = a.b;");
   }
+
+  public void testTypedef1() {
+    test("var foo = {};" +
+         "/** @typedef {number} */ foo.Baz;",
+         "var foo = {}; var foo$Baz;");
+  }
+
+  public void testTypedef2() {
+    test("var foo = {};" +
+         "/** @typedef {number} */ foo.Bar.Baz;" +
+         "foo.Bar = function() {};",
+         "var foo$Bar$Baz; var foo$Bar = function(){};");
+  }
 }

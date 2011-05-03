@@ -926,6 +926,18 @@ class GlobalNamespace {
       return true;
     }
 
+    boolean isSimpleStubDeclaration() {
+      if (getRefs().size() == 1) {
+        Ref ref = refs.get(0);
+        JSDocInfo info = ref.node.getJSDocInfo();
+        if (ref.node.getParent() != null &&
+            ref.node.getParent().getType() == Token.EXPR_RESULT) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     boolean canCollapse() {
       return !inExterns && !isGetOrSetDefinition() && (isClassOrEnum ||
           (parent == null || parent.canCollapseUnannotatedChildNames()) &&

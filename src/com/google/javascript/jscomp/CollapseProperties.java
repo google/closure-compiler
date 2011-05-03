@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -310,11 +311,34 @@ class CollapseProperties implements CompilerPass {
 
       if (p.canCollapse()) {
         flattenReferencesTo(p, propAlias);
+      } else if (p.isSimpleStubDeclaration()) {
+        flattenSimpleStubDeclaration(p, propAlias);
       }
 
       flattenReferencesToCollapsibleDescendantNames(p, propAlias);
     }
   }
+
+
+  /**
+   * Flattens a stub declaration.
+   * This is mostly a hack to support legacy users.
+   */
+  private void flattenSimpleStubDeclaration(Name name, String alias) {
+    Ref ref = Iterables.getOnlyElement(name.getRefs());
+    Node nameNode = NodeUtil.newName(
+        compiler.getCodingConvention(), alias, ref.node,
+        name.fullName());
+    Node varNode = new Node(Token.VAR, nameNode).copyInformationFrom(nameNode);
+
+    Preconditions.checkState(
+        ref.node.getParent().getType() == Token.EXPR_RESULT);
+    Node parent = ref.node.getParent();
+    Node gramps = parent.getParent();
+    gramps.replaceChild(parent, varNode);
+    compiler.reportCodeChange();
+  }
+
 
   /**
    * Flattens all references to a collapsible property of a global name except
