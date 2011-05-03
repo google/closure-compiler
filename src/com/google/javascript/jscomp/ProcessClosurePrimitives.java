@@ -36,7 +36,7 @@ import java.util.Set;
  *
  */
 class ProcessClosurePrimitives extends AbstractPostOrderCallback
-    implements CompilerPass {
+    implements HotSwapCompilerPass {
 
   static final DiagnosticType NULL_ARGUMENT_ERROR = DiagnosticType.error(
       "JSC_NULL_ARGUMENT_ERROR",
@@ -156,6 +156,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             r.inputName, r.requireNode, requiresLevel, error, r.namespace));
       }
     }
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+    // TODO(bashir): Implement a real hot-swap version instead and make it fully
+    // consistent with the full version.
+    this.compiler.process(this);
   }
 
   @Override

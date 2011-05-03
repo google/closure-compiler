@@ -752,6 +752,7 @@ public class Compiler extends AbstractCompiler {
     endPass();
   }
 
+  @Override
   void process(CompilerPass p) {
     p.process(externsRoot, jsRoot);
   }

@@ -284,4 +284,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
       return this == NORMALIZED_OBFUSCATED;
     }
   }
+
+  /**
+   * Runs a given compiler-pass by calling its {@code process()} method.
+   * @param pass The pass to be run.
+   */
+  abstract void process(CompilerPass pass);
+
 }

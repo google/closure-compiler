@@ -72,6 +72,10 @@ public abstract class PassFactory {
       protected CompilerPass createInternal(AbstractCompiler compiler) {
         return self.createInternal(compiler);
       }
+      @Override
+      HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
+        return self.getHotSwapPass(compiler);
+      }
     };
   }
 
@@ -89,4 +93,17 @@ public abstract class PassFactory {
    * Creates a new compiler pass to be run.
    */
   abstract protected CompilerPass createInternal(AbstractCompiler compiler);
+
+  /**
+   * Any factory whose CompilerPass has a corresponding hot-swap version should
+   * override this.
+   *
+   * @param compiler The compiler that can has been used to do the full compile.
+   */
+  HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
+    // TODO(bashir): If in future most of PassFactory's in DefaultPassConfig
+    // turns out to be DefaultPassConfig.HotSwapPassFactory, we should probably
+    // change the implementaion here by the one in HotSwapPassFactory.
+    return null;
+  }
 }

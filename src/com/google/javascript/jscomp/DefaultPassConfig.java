@@ -822,20 +822,24 @@ public class DefaultPassConfig extends PassConfig {
 
   /** Closure pre-processing pass. */
   @SuppressWarnings("deprecation")
-  final PassFactory closurePrimitives =
-      new PassFactory("processProvidesAndRequires", false) {
+  final HotSwapPassFactory closurePrimitives =
+      new HotSwapPassFactory("processProvidesAndRequires", false) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(
           compiler,
           options.brokenClosureRequiresLevel,
           options.rewriteNewDateGoogNow);
 
-      return new CompilerPass() {
+      return new HotSwapCompilerPass() {
         @Override
         public void process(Node externs, Node root) {
           pass.process(externs, root);
           exportedNames = pass.getExportedVariableNames();
+        }
+        @Override
+        public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+          pass.hotSwapScript(scriptRoot, globalScope);
         }
       };
     }
@@ -949,10 +953,10 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Checks that all variables are defined. */
-  private final PassFactory checkVars =
-      new PassFactory("checkVars", true) {
+  private final HotSwapPassFactory checkVars =
+      new HotSwapPassFactory("checkVars", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       return new VarCheck(compiler);
     }
   };
@@ -1013,18 +1017,27 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Run type inference. */
-  final PassFactory inferTypes =
-      new PassFactory("inferTypes", false) {
+  /** Runs type inference. */
+  final HotSwapPassFactory inferTypes =
+      new HotSwapPassFactory("inferTypes", false) {
     @Override
-    protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      return new CompilerPass() {
+    protected HotSwapCompilerPass createInternal(final AbstractCompiler
+        compiler) {
+      return new HotSwapCompilerPass() {
         @Override
         public void process(Node externs, Node root) {
           Preconditions.checkNotNull(topScope);
           Preconditions.checkNotNull(getTypedScopeCreator());
 
           makeTypeInference(compiler).process(externs, root);
+        }
+        @Override
+        public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+          // TODO(bashir): Extra warnings about undefined types are reported
+          // when doing inferTypes from scriptRoot. One solution is to do
+          // inferTypes from the AST root instead of scriptRoot but that
+          // approach is very slow!
+          makeTypeInference(compiler).inferTypes(scriptRoot);
         }
       };
     }
@@ -1047,11 +1060,12 @@ public class DefaultPassConfig extends PassConfig {
 };
 
   /** Checks type usage */
-  private final PassFactory checkTypes =
-      new PassFactory("checkTypes", false) {
+  private final HotSwapPassFactory checkTypes =
+      new HotSwapPassFactory("checkTypes", false) {
     @Override
-    protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      return new CompilerPass() {
+    protected HotSwapCompilerPass createInternal(final AbstractCompiler
+        compiler) {
+      return new HotSwapCompilerPass() {
         @Override
         public void process(Node externs, Node root) {
           Preconditions.checkNotNull(topScope);
@@ -1060,6 +1074,10 @@ public class DefaultPassConfig extends PassConfig {
           TypeCheck check = makeTypeCheck(compiler);
           check.process(externs, root);
           compiler.getErrorManager().setTypedPercent(check.getTypedPercent());
+        }
+        @Override
+        public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+          makeTypeCheck(compiler).check(scriptRoot, false);
         }
       };
     }
@@ -2133,4 +2151,24 @@ public class DefaultPassConfig extends PassConfig {
       };
     }
   };
+
+  /**
+   * A pass-factory that is good for {@code HotSwapCompilerPass} passes.
+   */
+  abstract static class HotSwapPassFactory extends PassFactory {
+
+    HotSwapPassFactory(String name, boolean isOneTimePass) {
+      super(name, isOneTimePass);
+    }
+
+    @Override
+    protected abstract HotSwapCompilerPass createInternal(AbstractCompiler
+        compiler);
+
+    @Override
+    HotSwapCompilerPass getHotSwapPass(AbstractCompiler compiler) {
+      return this.createInternal(compiler);
+    }
+  }
+
 }

@@ -21,7 +21,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Interface for compiler passes that can be used in a hot-swap fashion.
  *
- * <p>The only method is {@code hotSwapScript} which runs this pass on
+ * <p>The additional method is {@code hotSwapScript} which runs this pass on
  * a subtree of the AST. Each pass that is intended to support hot-swap
  * style should implement this interface.
  *
@@ -32,15 +32,15 @@ import com.google.javascript.rhino.Node;
  *
  * @author bashir@google.com (Bashir Sadjad)
  */
-public interface HotSwapCompilerPass {
+public interface HotSwapCompilerPass extends CompilerPass {
 
   /**
    * Process the JS with root node root. This is supposed to be significantly
    * faster compared to corresponding full-compiler passes.
-   * @param root Root node corresponding to the file that is modified, should be
-   *     of type {@code Token.SCRIPT}.
+   * @param scriptRoot Root node corresponding to the file that is modified,
+   *     should be of type {@code Token.SCRIPT}.
    * @param globalScope The global scope which is not necessarily types.
    */
-  void hotSwapScript(Node root, Scope globalScope);
+  void hotSwapScript(Node scriptRoot, Scope globalScope);
 
 }

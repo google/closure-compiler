@@ -31,9 +31,8 @@ import java.util.Set;
  * that cross module boundaries respect declared module dependencies.
  *
  */
-class VarCheck extends AbstractPostOrderCallback implements CompilerPass,
+class VarCheck extends AbstractPostOrderCallback implements
     HotSwapCompilerPass {
-
   /** Name of the synthetic script that holds undefined variables. */
   static final String SYNTHETIC_VARS_DECLAR = "{SyntheticVarsDeclar}";
 
@@ -114,12 +113,12 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass,
   }
 
   @Override
-  public void hotSwapScript(Node root, Scope globalScope) {
-    Preconditions.checkState(root.getType() == Token.SCRIPT);
+  public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+    Preconditions.checkState(scriptRoot.getType() == Token.SCRIPT);
     NodeTraversal t = new NodeTraversal(compiler, this);
     // Note we use the global scope to prevent wrong "undefined-var errors" on
     // variables that are defined in other js files.
-    t.traverseWithScope(root, globalScope);
+    t.traverseWithScope(scriptRoot, globalScope);
     // TODO(bashir) Check if we need to createSynthesizedExternVar like process.
   }
 
