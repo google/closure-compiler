@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CheckLevel;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.Map;
 import java.util.TreeSet;
@@ -38,12 +39,24 @@ import java.util.TreeSet;
  */
 public class ComposeWarningsGuard extends WarningsGuard {
 
+  private static final long serialVersionUID = 1L;
+
   // The order that the guards were added in.
   private final Map<WarningsGuard, Integer> orderOfAddition = Maps.newHashMap();
   private int numberOfAdds = 0;
 
   private final Comparator<WarningsGuard> guardComparator =
-      new Comparator<WarningsGuard>() {
+      new GuardComparator(orderOfAddition);
+
+  private static class GuardComparator
+      implements Comparator<WarningsGuard>, Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private final Map<WarningsGuard, Integer> orderOfAddition;
+    private GuardComparator(Map<WarningsGuard, Integer> orderOfAddition) {
+      this.orderOfAddition = orderOfAddition;
+    }
+
     @Override
     public int compare(WarningsGuard a, WarningsGuard b) {
       int priorityDiff = a.getPriority() - b.getPriority();
@@ -56,7 +69,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
       return orderOfAddition.get(b).intValue() -
           orderOfAddition.get(a).intValue();
     }
-  };
+  }
 
   // The order that the guards are applied in.
   private final TreeSet<WarningsGuard> guards =

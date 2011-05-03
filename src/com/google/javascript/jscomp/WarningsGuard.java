@@ -17,6 +17,8 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CheckLevel;
 
+import java.io.Serializable;
+
 /**
  * Class that allows to flexibly manage what to do with a reported
  * warning/error.
@@ -40,7 +42,7 @@ import com.google.javascript.jscomp.CheckLevel;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
-public abstract class WarningsGuard {
+public abstract class WarningsGuard implements Serializable {
 
   public static enum Priority {
     MAX(1),

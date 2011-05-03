@@ -28,6 +28,8 @@ import java.util.Map;
  * @author nicksantos@google.com (Nick Santos)
  */
 class SuppressDocWarningsGuard extends WarningsGuard {
+  private static final long serialVersionUID = 1L;
+
   /** Warnings guards for each suppressable warnings group, indexed by name. */
   private final Map<String, DiagnosticGroupWarningsGuard> suppressors =
       Maps.newHashMap();

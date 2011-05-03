@@ -25,6 +25,8 @@ import com.google.common.base.Preconditions;
  * @author anatol@google.com (Anatol Pomazau)
  */
 public class ShowByPathWarningsGuard extends WarningsGuard {
+  private static final long serialVersionUID = 1L;
+
   /**
    * Controls whether warnings should be restricted to a specified path or
    * suppressed within the specified path.

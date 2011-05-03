@@ -17,13 +17,17 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CheckLevel;
 
+import java.io.Serializable;
 import java.text.MessageFormat;
 
 /**
  * The type of a compile or analysis error.
  *
  */
-public class DiagnosticType implements Comparable<DiagnosticType> {
+public class DiagnosticType
+    implements Comparable<DiagnosticType>, Serializable {
+  private static final long serialVersionUID = 1;
+
   /**
    * The error type. Used as the BugPattern and BugInstance types by
    * BugBot's XML
@@ -104,6 +108,17 @@ public class DiagnosticType implements Comparable<DiagnosticType> {
    */
   String format(Object ... arguments) {
     return format.format(arguments);
+  }
+
+  @Override
+  public boolean equals(Object type) {
+    return type instanceof DiagnosticType &&
+        ((DiagnosticType) type).key.equals(key);
+  }
+
+  @Override
+  public int hashCode() {
+    return key.hashCode();
   }
 
   @Override

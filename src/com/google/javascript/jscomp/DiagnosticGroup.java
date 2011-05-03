@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -30,7 +31,8 @@ import java.util.Set;
  * be toggled on and off as one unit.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class DiagnosticGroup {
+public class DiagnosticGroup implements Serializable {
+  private static final long serialVersionUID = 1;
 
   // The set of types represented by this group, hashed by key.
   private final Set<DiagnosticType> types;
