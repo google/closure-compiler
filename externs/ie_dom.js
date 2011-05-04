@@ -290,6 +290,9 @@ ClipboardData.prototype.getData = function(type) { };
  */
 function Window() {}
 
+/** @type {function(new:ActiveXObject, string, string=)} */
+Window.prototype.ActiveXObject;
+
 /** @inheritDoc */
 Window.prototype.addEventListener = function(type, listener, useCapture) {};
 
