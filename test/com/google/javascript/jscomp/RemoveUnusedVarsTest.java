@@ -182,6 +182,12 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "var b=function(c,d){return c+d};b(2)");
   }
 
+  public void testFunctionsDeadButEscaped() {
+    testSame("function b(a) { a = 1; print(arguments[0]) }; b(6)");
+    testSame("function b(a) { a = 1; arguments=1; }; b(6)");
+    testSame("function b(a) { var c = 2; a = c; print(arguments[0]) }; b(6)");
+  }
+
   public void testVarInControlStructure() {
     test("if (true) var b = 3;", "if(true);");
     test("if (true) var b = 3; else var c = 5;", "if(true);else;");
@@ -527,8 +533,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var b=function(c,d){b(1,2);return d};b(3,4);b(5,6)",
          "var b=function(d){b(2);return d};b(4);b(6)");
 
-    test("var b=function(c){return arguments};b(1,2);b(3,4)",
-         "var b=function(){return arguments};b(1,2);b(3,4)");
+    testSame("var b=function(c){return arguments};b(1,2);b(3,4)");
 
     // remove all function arguments
     test("var b=function(c,d){return};b(1,2)",

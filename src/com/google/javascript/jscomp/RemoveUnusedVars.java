@@ -260,6 +260,16 @@ class RemoveUnusedVars
             return;
           }
         } else {
+
+          // If arguments is escaped, we just assume the worst and continue
+          // on all the parameters.
+          if ("arguments".equals(n.getString()) && scope.isLocal()) {
+            Node lp = scope.getRootNode().getFirstChild().getNext();
+            for (Node a = lp.getFirstChild(); a != null; a = a.getNext()) {
+              markReferencedVar(scope.getVar(a.getString()));
+            }
+          }
+
           // All name references that aren't declarations or assigns
           // are references to other vars.
           if (var != null) {
