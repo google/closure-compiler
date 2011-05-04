@@ -24,7 +24,6 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -328,11 +327,6 @@ public class ReplaceMessagesTest extends TestCase {
     @Override
     public JsMessage.IdGenerator idGenerator() {
       return null;
-    }
-
-    @Override
-    public Locale getLocale() {
-      return Locale.getDefault();
     }
   }
 }

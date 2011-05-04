@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import java.util.Locale;
-
 /**
  * An interface for providing alterative values for user-visible messages in
  * javascript code.
@@ -49,10 +47,4 @@ public interface MessageBundle {
    * @return all messages from this bundle.
    */
   public Iterable<JsMessage> getAllMessages();
-
-  /**
-   * Returns bundle locale.
-   * @return locale for bundle's messages.
-   */
-  public Locale getLocale();
 }
