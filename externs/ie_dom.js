@@ -1529,3 +1529,45 @@ function RuntimeObject(opt_str) {}
  * @see http://msdn.microsoft.com/en-us/library/dd347030(VS.85).aspx
  */
 HTMLStyleElement.prototype.styleSheet;
+
+
+/**
+ * IE implements Cross Origin Resource Sharing (cross-domain XMLHttpRequests)
+ * via the XDomainRequest object.
+ *
+ * @constructor
+ * @see http://msdn.microsoft.com/en-us/library/cc288060(v=vs.85).aspx
+ * @see http://www.w3.org/TR/cors/
+ */
+function XDomainRequest() {}
+
+/**
+ * @see http://msdn.microsoft.com/en-us/library/cc288129(v=vs.85).aspx
+ */
+XDomainRequest.prototype.abort = function() {};
+
+/**
+ * @param {string} bstrMethod
+ * @param {string} bstrUrl
+ * @see http://msdn.microsoft.com/en-us/library/cc288168(v=vs.85).aspx
+ */
+XDomainRequest.prototype.open = function(bstrMethod, bstrUrl) {};
+
+/**
+ * @param {string} varBody
+ * @see http://msdn.microsoft.com/en-us/library/cc288207(v=vs.85).aspx
+ */
+XDomainRequest.prototype.send = function(varBody) {};
+
+/**
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/cc196986(v=vs.85).aspx
+ */
+XDomainRequest.prototype.contentType;
+
+/**
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/cc287956(v=vs.85).aspx
+ */
+XDomainRequest.prototype.responseText;
+
