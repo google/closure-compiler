@@ -1571,3 +1571,9 @@ XDomainRequest.prototype.contentType;
  */
 XDomainRequest.prototype.responseText;
 
+
+/**
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/ms533542(v=vs.85).aspx
+ */
+Navigator.prototype.browserLanguage;
