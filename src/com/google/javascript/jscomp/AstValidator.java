@@ -82,7 +82,6 @@ public class AstValidator implements CompilerPass {
   public void validateScript(Node n) {
     validateNodeType(Token.SCRIPT, n);
     validateIsSynthetic(n);
-    validateHasSourceName(n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateStatement(c);
     }
@@ -290,13 +289,6 @@ public class AstValidator implements CompilerPass {
   private void validateIsSynthetic(Node n) {
     if (!n.getBooleanProp(Node.SYNTHETIC_BLOCK_PROP)) {
       violation("Missing 'synthetic block' annotation.", n);
-    }
-  }
-
-  private void validateHasSourceName(Node n) {
-    String sourceName = (String) n.getProp(Node.SOURCENAME_PROP);
-    if (sourceName == null || sourceName.isEmpty()) {
-      violation("Missing 'source name' annotation.", n);
     }
   }
 

@@ -77,9 +77,6 @@ public abstract class SourceFile {
    *     appear in warning messages emitted by the compiler.
    */
   SourceFile(String fileName) {
-    if (fileName == null || fileName.isEmpty()) {
-      throw new IllegalArgumentException("a source must have a name");
-    }
     this.fileName = fileName;
     // Starting point: offset 0 is at line 1.
     this.lastOffset = 0;
