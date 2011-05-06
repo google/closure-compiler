@@ -97,6 +97,7 @@ public class JsonMLAst implements SourceAst {
     translator.setRootElement(jsonml);
     try {
       root = translator.parse(compiler);
+      root.putProp(Node.SOURCENAME_PROP, getSourceName());
       new AstValidator().validateScript(root);
     } catch (JsonMLException e) {
       // compiler should already have JSErrors
