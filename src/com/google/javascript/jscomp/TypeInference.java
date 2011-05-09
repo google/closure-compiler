@@ -136,22 +136,18 @@ class TypeInference
       }
     }
 
-    Iterator<Var> varIt = functionScope.getVars();
+    // For each local variable declared with the VAR keyword, the entry
+    // type is VOID.
+    Iterator<Var> varIt =
+        functionScope.getDeclarativelyUnboundVarsWithoutTypes();
     while (varIt.hasNext()) {
       Var var = varIt.next();
       if (this.unflowableVarNames.contains(var.getName())) {
         continue;
       }
 
-      // For each local variable declared with the VAR keyword, the entry
-      // type is VOID.
-      if (var.getParentNode() != null &&
-          var.getType() == null && // no declared type
-          var.getParentNode().getType() == Token.VAR &&
-          !var.isExtern()) {
-        this.functionScope.inferSlotType(
-            var.getName(), getNativeType(VOID_TYPE));
-      }
+      this.functionScope.inferSlotType(
+          var.getName(), getNativeType(VOID_TYPE));
     }
 
     this.bottomScope = LinkedFlowScope.createEntryLattice(

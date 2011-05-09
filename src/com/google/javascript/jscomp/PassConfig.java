@@ -17,11 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,9 +56,31 @@ public abstract class PassConfig {
    * Regenerates the top scope.
    */
   void regenerateGlobalTypedScope(AbstractCompiler compiler, Node root) {
+    MemoizedScopeCreator oldScopeCreator = typedScopeCreator;
     typedScopeCreator =
         new MemoizedScopeCreator(new TypedScopeCreator(compiler));
     topScope = typedScopeCreator.createScope(root, null);
+
+    if (oldScopeCreator != null) {
+      Scope oldTopScope = oldScopeCreator.getScopeIfMemoized(root);
+      if (oldTopScope != null) {
+        // For each variable declared with the VAR keyword, we want to grab
+        // its old inferred type.
+        //
+        // This is purely a heuristic. There are probably better ones we
+        // can use to increase the accuracy (like checking if a variable
+        // has been modified in the current script).
+        Iterator<Var> varIt =
+            topScope.getDeclarativelyUnboundVarsWithoutTypes();
+        while (varIt.hasNext()) {
+          Var newVar = varIt.next();
+          Var oldVar = oldTopScope.getVar(newVar.getName());
+          if (oldVar != null) {
+            newVar.setType(oldVar.getType());
+          }
+        }
+      }
+    }
   }
 
   /**

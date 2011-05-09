@@ -57,4 +57,8 @@ class MemoizedScopeCreator implements ScopeCreator {
     }
     return scope;
   }
+
+  public Scope getScopeIfMemoized(Node n) {
+    return scopes.get(n);
+  }
 }

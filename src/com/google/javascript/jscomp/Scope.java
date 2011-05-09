@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterators;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -61,6 +63,16 @@ public class Scope implements StaticScope<JSType> {
   private final boolean isBottom;
 
   private Var arguments;
+
+  private static final Predicate<Var> DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES =
+      new Predicate<Var>() {
+    @Override public boolean apply(Var var) {
+      return var.getParentNode() != null &&
+          var.getType() == null && // no declared type
+          var.getParentNode().getType() == Token.VAR &&
+          !var.isExtern();
+    }
+  };
 
   /** Stores info about a variable */
   public static class Var implements StaticSlot<JSType> {
@@ -203,7 +215,7 @@ public class Scope implements StaticScope<JSType> {
 
     /**
      * Gets this variable's type. To know whether this type has been inferred,
-     * see {@code #isInferred()}.
+     * see {@code #isTypeInferred()}.
      */
     public JSType getType() {
       return type;
@@ -279,7 +291,7 @@ public class Scope implements StaticScope<JSType> {
 
     @Override
     public String toString() {
-      return "Scope.Var " + name;
+      return "Scope.Var " + name + "{" + type + "}";
     }
   }
 
@@ -529,5 +541,13 @@ public class Scope implements StaticScope<JSType> {
    */
   public boolean isLocal() {
     return !isGlobal();
+  }
+
+  /**
+   * Gets all variables declared with "var" but without declared types attached.
+   */
+  public Iterator<Var> getDeclarativelyUnboundVarsWithoutTypes() {
+    return Iterators.filter(
+        getVars(), DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES);
   }
 }
