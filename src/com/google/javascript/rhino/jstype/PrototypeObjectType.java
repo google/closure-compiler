@@ -146,11 +146,6 @@ class PrototypeObjectType extends ObjectType {
     if (implicitPrototype != null) {
       return implicitPrototype.hasProperty(propertyName);
     }
-    for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
-      if (interfaceType.hasProperty(propertyName)) {
-        return true;
-      }
-    }
     return false;
   }
 
@@ -460,19 +455,6 @@ class PrototypeObjectType extends ObjectType {
         if (thisInterface.isSubtype(that)) {
           return true;
         }
-      }
-    }
-
-    if (getConstructor() != null && getConstructor().isInterface()) {
-      for (ObjectType thisInterface : getCtorExtendedInterfaces()) {
-        if (thisInterface.isSubtype(that)) {
-          return true;
-        }
-      }
-      // interface is a subtype of OBJECT_TYPE
-      if (that.isEquivalentTo(
-          registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE))) {
-        return true;
       }
     }
 

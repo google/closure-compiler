@@ -473,12 +473,6 @@ public abstract class ObjectType extends JSType {
       if (implicitProto == null ||
           implicitProto.isNativeObjectType()) {
         unknown = false;
-        for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
-          if (interfaceType.isUnknownType()) {
-            unknown = true;
-            break;
-          }
-        }
       } else {
         unknown = implicitProto.isUnknownType();
       }
@@ -525,14 +519,6 @@ public abstract class ObjectType extends JSType {
    * Intended to be overridden by subclasses.
    */
   public Iterable<ObjectType> getCtorImplementedInterfaces() {
-    return ImmutableSet.of();
-  }
-
-  /**
-   * Gets the interfaces extended by the interface associated with this type.
-   * Intended to be overriden by subclasses.
-   */
-  public Iterable<ObjectType> getCtorExtendedInterfaces() {
     return ImmutableSet.of();
   }
 }

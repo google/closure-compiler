@@ -1801,7 +1801,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         " * @extends {Extended1} \n" +
         " * @extends {Extended2} */");
     assertTrue(jsdoc.isInterface());
-    assertNull(jsdoc.getBaseType());
     assertEquals(2, jsdoc.getExtendedInterfacesCount());
     List<JSTypeExpression> types = jsdoc.getExtendedInterfaces();
     assertTypeEquals(registry.createNamedType("Extended1", null, -1, -1),
@@ -1817,7 +1816,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         " * @extends {Extended2} \n" +
         " * @extends {Extended3} */");
     assertTrue(jsdoc.isInterface());
-    assertNull(jsdoc.getBaseType());
     assertEquals(3, jsdoc.getExtendedInterfacesCount());
     List<JSTypeExpression> types = jsdoc.getExtendedInterfaces();
     assertTypeEquals(registry.createNamedType("Extended1", null, -1, -1),

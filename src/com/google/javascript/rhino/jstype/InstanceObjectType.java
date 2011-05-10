@@ -177,11 +177,6 @@ public class InstanceObjectType extends PrototypeObjectType {
     return getConstructor().getImplementedInterfaces();
   }
 
-  @Override
-  public Iterable<ObjectType> getCtorExtendedInterfaces() {
-    return getConstructor().getExtendedInterfaces();
-  }
-
   // The owner will always be a resolved type, so there's no need to set
   // the constructor in resolveInternal.
   // (it would lead to infinite loops if we did).

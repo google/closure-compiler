@@ -920,11 +920,15 @@ public final class JsDocInfoParser {
           parser.addParserWarning("msg.jsdoc.extends.duplicate",
               typeInfo.lineno, typeInfo.charno);
         }
-      } else {
-        if (!jsdocBuilder.recordBaseType(typeInfo.type)) {
-          parser.addTypeWarning("msg.jsdoc.incompat.type",
-              typeInfo.lineno, typeInfo.charno);
-        }
+      }
+
+      // For interfaces, still record the first extended type as base type
+      // It's the temporary setting and will be changed when multiple
+      // extends for interfaces are done
+      if (!jsdocBuilder.recordBaseType(typeInfo.type) &&
+          !jsdocBuilder.isInterfaceRecorded()) {
+        parser.addTypeWarning("msg.jsdoc.incompat.type",
+            typeInfo.lineno, typeInfo.charno);
       }
     }
   }

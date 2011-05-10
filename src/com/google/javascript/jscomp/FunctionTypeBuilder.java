@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
@@ -75,7 +76,6 @@ final class FunctionTypeBuilder {
   private JSType returnType = null;
   private boolean returnTypeInferred = false;
   private List<ObjectType> implementedInterfaces = null;
-  private List<ObjectType> extendedInterfaces = null;
   private ObjectType baseType = null;
   private ObjectType thisType = null;
   private boolean isConstructor = false;
@@ -139,20 +139,19 @@ final class FunctionTypeBuilder {
       ObjectType objectType = ObjectType.cast(type);
       if (objectType == null) {
         reportWarning(EXTENDS_NON_OBJECT, fnName, type.toString());
-        return false;
-      } else if (objectType.isEmptyType()) {
+      } else if (
+          objectType.isEmptyType() ||
+          (objectType.isUnknownType() &&
+           // If this has a supertype that hasn't been resolved yet,
+           // then we can assume this type will be ok once the super
+           // type resolves.
+           (objectType.getImplicitPrototype() == null ||
+            objectType.getImplicitPrototype().isResolved()))) {
         reportWarning(RESOLVED_TAG_EMPTY, "@extends", fnName);
-        return false;
-      } else if (objectType.isUnknownType()) {
-        if (hasMoreTagsToResolve(objectType)) {
-          return true;
-        } else {
-          reportWarning(RESOLVED_TAG_EMPTY, "@extends", fnName);
-          return false;
-        }
       } else {
         return true;
       }
+      return false;
     }
   }
 
@@ -162,20 +161,19 @@ final class FunctionTypeBuilder {
       ObjectType objectType = ObjectType.cast(type);
       if (objectType == null) {
         reportError(BAD_IMPLEMENTED_TYPE, fnName);
-        return false;
-      } else if (objectType.isEmptyType()) {
+      } else if (
+          objectType.isEmptyType() ||
+          (objectType.isUnknownType() &&
+           // If this has a supertype that hasn't been resolved yet,
+           // then we can assume this type will be ok once the super
+           // type resolves.
+           (objectType.getImplicitPrototype() == null ||
+            objectType.getImplicitPrototype().isResolved()))) {
         reportWarning(RESOLVED_TAG_EMPTY, "@implements", fnName);
-        return false;
-      } else if (objectType.isUnknownType()) {
-        if (hasMoreTagsToResolve(objectType)) {
-          return true;
-        } else {
-          reportWarning(RESOLVED_TAG_EMPTY, "@implements", fnName);
-          return false;
-        }
       } else {
         return true;
       }
+      return false;
     }
   }
 
@@ -353,7 +351,7 @@ final class FunctionTypeBuilder {
 
       // base type
       if (info.hasBaseType()) {
-        if (isConstructor) {
+        if (isConstructor || isInterface) {
           JSType maybeBaseType =
               info.getBaseType().evaluate(scope, typeRegistry);
           if (maybeBaseType != null &&
@@ -375,20 +373,17 @@ final class FunctionTypeBuilder {
             implementedInterfaces.add((ObjectType) maybeInterType);
           }
         }
-      } else if (info.getImplementedInterfaceCount() > 0) {
-        reportWarning(IMPLEMENTS_WITHOUT_CONSTRUCTOR, fnName);
-      }
-
-      // extended interfaces (for interface only)
-      if (isInterface) {
-        extendedInterfaces = Lists.newArrayList();
-        for (JSTypeExpression t : info.getExtendedInterfaces()) {
-          JSType maybeInterfaceType = t.evaluate(scope, typeRegistry);
-          if (maybeInterfaceType != null &&
-              maybeInterfaceType.setValidator(new ExtendedTypeValidator())) {
-            extendedInterfaces.add((ObjectType) maybeInterfaceType);
+        if (baseType != null) {
+          JSType maybeFunctionType = baseType.getConstructor();
+          if (maybeFunctionType instanceof FunctionType) {
+            FunctionType functionType = baseType.getConstructor();
+            Iterables.addAll(
+                implementedInterfaces,
+                functionType.getImplementedInterfaces());
           }
         }
+      } else if (info.getImplementedInterfaceCount() > 0) {
+        reportWarning(IMPLEMENTS_WITHOUT_CONSTRUCTOR, fnName);
       }
     }
 
@@ -662,17 +657,13 @@ final class FunctionTypeBuilder {
       fnType.setImplementedInterfaces(implementedInterfaces);
     }
 
-    if (extendedInterfaces != null) {
-      fnType.setExtendedInterfaces(extendedInterfaces);
-    }
-
     typeRegistry.clearTemplateTypeName();
 
     return fnType;
   }
 
   private void maybeSetBaseType(FunctionType fnType) {
-    if (!fnType.isInterface() && baseType != null) {
+    if (baseType != null) {
       fnType.setPrototypeBasedOn(baseType);
     }
   }
@@ -762,35 +753,5 @@ final class FunctionTypeBuilder {
       }
     }
     return scope;
-  }
-
-  /**
-   * Check whether a type is resolvable in the future
-   * If this has a supertype that hasn't been resolved yet, then we can assume
-   * this type will be ok once the super type resolves.
-   * @param objectType
-   * @return true if objectType is resolvable in the future
-   */
-  private static boolean hasMoreTagsToResolve(ObjectType objectType) {
-    Preconditions.checkArgument(objectType.isUnknownType());
-    if (objectType.getImplicitPrototype() != null) {
-      // constructor extends class
-      if (objectType.getImplicitPrototype().isResolved()) {
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      // interface extends interfaces
-      FunctionType ctor = objectType.getConstructor();
-      if (ctor != null) {
-        for (ObjectType interfaceType : ctor.getExtendedInterfaces()) {
-          if (!interfaceType.isResolved()) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
   }
 }
