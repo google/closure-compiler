@@ -1105,10 +1105,10 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Checks access controls. Depends on type-inference. */
-  private final PassFactory checkAccessControls =
-      new PassFactory("checkAccessControls", true) {
+  private final HotSwapPassFactory checkAccessControls =
+      new HotSwapPassFactory("checkAccessControls", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       return new CheckAccessControls(compiler);
     }
   };

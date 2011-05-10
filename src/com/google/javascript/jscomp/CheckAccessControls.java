@@ -47,7 +47,7 @@ import com.google.common.collect.HashMultimap;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class CheckAccessControls implements ScopedCallback, CompilerPass {
+class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
   static final DiagnosticType DEPRECATED_NAME = DiagnosticType.disabled(
       "JSC_DEPRECATED_VAR",
@@ -119,8 +119,14 @@ class CheckAccessControls implements ScopedCallback, CompilerPass {
     this.initializedConstantProperties = HashMultimap.create();
   }
 
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   public void enterScope(NodeTraversal t) {

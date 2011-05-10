@@ -247,7 +247,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    */
   protected void initialize() {
     // TODO(user): Calling clear doesn't deallocate the memory in a
-    // LinkedHashSet. Consider creating a new work set if we plan to repeatly
+    // LinkedHashSet. Consider creating a new work set if we plan to repeatedly
     // call analyze.
     orderedWorkSet.clear();
     for (DiGraphNode<N, Branch> node : cfg.getDirectedGraphNodes()) {

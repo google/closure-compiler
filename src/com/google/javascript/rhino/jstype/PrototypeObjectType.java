@@ -230,7 +230,14 @@ class PrototypeObjectType extends ObjectType {
     if (hasOwnDeclaredProperty(name)) {
       return false;
     }
-    properties.put(name, new Property(type, inferred, inExterns, propertyNode));
+    Property newProp = new Property(type, inferred, inExterns, propertyNode);
+    Property oldProp = properties.get(name);
+    if (oldProp != null) {
+      // This is to keep previously inferred jsdoc info, e.g., in a
+      // replaceScript scenario.
+      newProp.docInfo = oldProp.docInfo;
+    }
+    properties.put(name, newProp);
     return true;
   }
 
