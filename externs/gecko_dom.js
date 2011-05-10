@@ -880,7 +880,10 @@ Element.prototype.textContent;
  */
 Element.prototype.appendChild = function(child) {};
 
-/** @override */
+/**
+ * @override
+ * @return {Element}
+ */
 Element.prototype.cloneNode = function(deep) {};
 
 /** @override */
