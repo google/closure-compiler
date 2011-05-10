@@ -518,7 +518,7 @@ final class NameAnalyzer implements CompilerPass {
               recordDepScope(nameNode, ns);
             }
           } else {
-            recordDepScope(parent, ns);
+            recordDepScope(n, ns);
           }
         }
       } else if (NodeUtil.isVarDeclaration(n)) {
@@ -1506,10 +1506,7 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if (parent.getType() == Token.ASSIGN) {
-        Node gramp = parent.getParent();
-        if (gramp != null && gramp.getType() == Token.EXPR_RESULT) {
-          return scopes.get(gramp);
-        }
+        return scopes.get(parent);
       }
     }
 

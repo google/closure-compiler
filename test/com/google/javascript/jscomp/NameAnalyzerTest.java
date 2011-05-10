@@ -27,7 +27,9 @@ public class NameAnalyzerTest extends CompilerTestCase {
   private static String kExterns =
       "var window, top;" +
       "var document;" +
-      "var Function; var externfoo; methods.externfoo;";
+      "var Function;" +
+      "var Array;" +
+      "var externfoo; methods.externfoo;";
 
   public NameAnalyzerTest() {
     super(kExterns);
@@ -750,8 +752,8 @@ public class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNestedAssigns() {
-    // TODO(nicksantos): Make NameAnalyzer smarter, so that we can eliminate x.
-    testSame("var x = 0; var y = x = 3; window.alert(y);");
+    test("var x = 0; var y = x = 3; window.alert(y);",
+         "var y = 3; window.alert(y);");
   }
 
   public void testComplexNestedAssigns1() {
@@ -1102,15 +1104,18 @@ public class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNestedAssign2() {
-    testSame("var a, b = a = 1; foo(b)");
+    test("var a, b = a = 1; foo(b)",
+         "var b = 1; foo(b)");
   }
 
   public void testNestedAssign3() {
-    testSame("var a, b = a = 1; a = b = 2; foo(b)");
+    test("var a, b = a = 1; a = b = 2; foo(b)",
+         "var b = 1; b = 2; foo(b)");
   }
 
   public void testNestedAssign4() {
-    testSame("var a, b = a = 1; b = a = 2; foo(b)");
+    test("var a, b = a = 1; b = a = 2; foo(b)",
+         "var b = 1; b = 2; foo(b)");
   }
 
   public void testNestedAssign5() {
@@ -1562,6 +1567,24 @@ public class NameAnalyzerTest extends CompilerTestCase {
       "var data = {Foo: function() { this.x = ref; }," +
       "            Bar: function() {}};" +
       "window.Bar = data.Bar;");
+  }
+
+  public void testArrayExt() {
+    testSame(
+      "Array.prototype.foo = function() { return 1 };" +
+      "var y = [];" +
+      "switch (y.foo()) {" +
+      "}");
+  }
+
+  public void testArrayAliasExt() {
+    testSame(
+      "Array$X = Array;" +
+      "Array$X.prototype.foo = function() { return 1 };" +
+      "function Array$X() {}" +
+      "var y = [];" +
+      "switch (y.foo()) {" +
+      "}");
   }
 
   @Override
