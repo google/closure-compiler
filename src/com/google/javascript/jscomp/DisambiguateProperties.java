@@ -756,12 +756,22 @@ class DisambiguateProperties<T> implements CompilerPass {
       // like references to the initial property, so they are renamed alike.
       ObjectType foundType = null;
       ObjectType objType = ObjectType.cast(type);
-      while (objType != null && objType.getImplicitPrototype() != objType) {
-        if (objType.hasOwnProperty(field)) {
-          foundType = objType;
+      if (objType != null && objType.getConstructor() != null
+          && objType.getConstructor().isInterface()) {
+        ObjectType topInterface = FunctionType.getTopDefiningInterface(
+            objType, field);
+        if (topInterface != null && topInterface.getConstructor() != null) {
+          foundType = topInterface.getConstructor().getPrototype();
         }
-        objType = objType.getImplicitPrototype();
+      } else {
+        while (objType != null && objType.getImplicitPrototype() != objType) {
+          if (objType.hasOwnProperty(field)) {
+            foundType = objType;
+          }
+          objType = objType.getImplicitPrototype();
+        }
       }
+
       // If the property does not exist on the referenced type but the original
       // type is an object type, see if any subtype has the property.
       if (foundType == null) {

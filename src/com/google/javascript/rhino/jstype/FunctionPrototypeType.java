@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 /**
@@ -88,6 +89,15 @@ public class FunctionPrototypeType extends PrototypeObjectType {
   @Override
   public Iterable<ObjectType> getCtorImplementedInterfaces() {
     return getOwnerFunction().getImplementedInterfaces();
+  }
+
+  @Override
+  public Iterable<ObjectType> getCtorExtendedInterfaces() {
+    if (getOwnerFunction() != null) {
+      return getOwnerFunction().getExtendedInterfaces();
+    } else {
+      return ImmutableSet.of();
+    }
   }
 
   // The owner will always be a resolved type, so there's no need to set
