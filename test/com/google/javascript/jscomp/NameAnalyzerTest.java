@@ -1587,6 +1587,53 @@ public class NameAnalyzerTest extends CompilerTestCase {
       "}");
   }
 
+  public void testExternalAliasInstanceof1() {
+    test(
+      "Array$X = Array;" +
+      "function Array$X() {}" +
+      "var y = [];" +
+      "if (y instanceof Array) {}",
+      "var y = [];" +
+      "if (y instanceof Array) {}"
+      );
+  }
+
+  public void testExternalAliasInstanceof2() {
+    testSame(
+      "Array$X = Array;" +
+      "function Array$X() {}" +
+      "var y = [];" +
+      "if (y instanceof Array$X) {}");
+  }
+
+  public void testExternalAliasInstanceof3() {
+    testSame(
+      "var b = Array;" +
+      "var y = [];" +
+      "if (y instanceof b) {}");
+  }
+
+  public void testAliasInstanceof4() {
+    testSame(
+      "function Foo() {};" +
+      "var b = Foo;" +
+      "var y = new Foo();" +
+      "if (y instanceof b) {}");
+  }
+
+  public void testAliasInstanceof5() {
+    // TODO(johnlenz): fix this. "b" should remain.
+    test(
+      "function Foo() {}" +
+      "function Bar() {}" +
+      "var b = x ? Foo : Bar;" +
+      "var y = new Foo();" +
+      "if (y instanceof b) {}",
+      "function Foo() {}" +
+      "var y = new Foo;" +
+      "if (false){}");
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new MarkNoSideEffectCallsAndNameAnalyzerRunner(compiler);

@@ -161,7 +161,7 @@ final class NameAnalyzer implements CompilerPass {
   }
 
   /**
-   * Callback that propagates side effect information across call sites.
+   * Callback that propagates reference information.
    */
   private static class ReferencePropagationCallback
       implements EdgeCallback<JsName, RefType> {
@@ -222,6 +222,9 @@ final class NameAnalyzer implements CompilerPass {
 
     /** Whether the name has descendants that are written to. */
     boolean hasWrittenDescendants = false;
+
+    /** Whether the name is used in a instanceof check */
+    boolean hasInstanceOfReference = false;
 
     /**
      * Output the node as a string
@@ -839,6 +842,7 @@ final class NameAnalyzer implements CompilerPass {
         refNodes.add(
             new InstanceOfCheckNode(
                 checkedClass, n, parent, parent.getParent()));
+        checkedClass.hasInstanceOfReference = true;
         return;
       }
 
@@ -1247,11 +1251,15 @@ final class NameAnalyzer implements CompilerPass {
    * directional reference from the original name to the alias. For example,
    * in this case, the assign to {@code a.foo} triggers a reference from
    * {@code b} to {@code a}, but NOT from a to b.
+   *
+   * Similarly, "instanceof" checks do not prevent the removal
+   * of a unaliased name but an instanceof check on an alias can only be removed
+   * if the other aliases are also removed, so we add a connection here.
    */
   private void referenceAliases() {
     for (Map.Entry<String, AliasSet> entry : aliases.entrySet()) {
       JsName name = getName(entry.getKey(), false);
-      if (name.hasWrittenDescendants) {
+      if (name.hasWrittenDescendants || name.hasInstanceOfReference) {
         for (String alias : entry.getValue().names) {
           recordReference(alias, entry.getKey(), RefType.REGULAR);
         }
