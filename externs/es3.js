@@ -1998,11 +1998,24 @@ function Error(opt_message, opt_file, opt_line) {}
 
 
 /**
- * A magical v8 property for altering the maximum depth of the stack trace.
+ * Chrome/v8 specific, altering the maximum depth of the stack trace
+ * (10 by default).
  * @type {number}
- * @see http://code.google.com/p/chromium/issues/detail?id=38958
+ * @see http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi
  */
 Error.stackTraceLimit;
+
+
+/**
+ * Chrome/v8 specific, adds a stack trace to the error object. The optional
+ * constructorOpt parameter allows you to pass in a function value. When
+ * collecting the stack trace all frames above the topmost call to this
+ * function, including that call, will be left out of the stack trace.
+ * @param {Object} error The object to add the stack trace to.
+ * @param {Function=} opt_constructor A function in the stack trace
+ * @see http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi
+ */
+Error.captureStackTrace = function(error, opt_constructor){};
 
 
 /**
