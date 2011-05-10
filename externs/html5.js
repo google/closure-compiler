@@ -808,6 +808,37 @@ Worker.prototype.onmessage = function() {};
 Worker.prototype.onerror = function() {};
 
 /**
+ * @see http://dev.w3.org/html5/workers/
+ * @param {string} scriptURL The URL of the script to run in the SharedWorker.
+ * @param {string=} opt_name A name that can later be used to obtain a
+ *     reference to the same SharedWorker.
+ * @constructor
+ * @implements {EventTarget}
+ */
+function SharedWorker(scriptURL, opt_name) {}
+
+/** @inheritDoc */
+SharedWorker.prototype.addEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+SharedWorker.prototype.removeEventListener = function(
+    type, listener, useCapture) {};
+
+/** @inheritDoc */
+SharedWorker.prototype.dispatchEvent = function(evt) {};
+
+/**
+ * @type {!MessagePort}
+ */
+SharedWorker.prototype.port;
+
+/**
+ * Called on network errors for loading the initial script.
+ */
+SharedWorker.prototype.onerror = function() {};
+
+/**
  * @type {boolean}
  */
 HTMLElement.prototype.draggable;
