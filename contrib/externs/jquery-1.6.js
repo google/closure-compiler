@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.5.2
+ * @fileoverview Externs for jQuery 1.6
  *
  * Note that some functions use different return types depending on the number
  * of parameters passed in. In these cases, you may need to annotate the type
@@ -292,7 +292,7 @@ jQuery.prototype.click = function(arg1, handler) {};
 jQuery.prototype.clone = function(withDataAndEvents, deepWithDataAndEvents) {};
 
 /**
- * @param {(jQuerySelector|string|Array.<string>)} arg1
+ * @param {(jQuerySelector|jQuery|Element|string|Array.<string>)} arg1
  * @param {Element=} context
  * @return {(jQuery|Array.<Element>)}
  * @nosideeffects
@@ -396,8 +396,11 @@ $.deferred = function(opt_fn) {};
  */
 $.Deferred = function(opt_fn) {};
 
-/** @return {jQuery.deferred} */
-jQuery.deferred.prototype.always = function() {};
+/**
+ * @param {function()} alwaysCallbacks
+ * @return {jQuery.deferred}
+ */
+jQuery.deferred.prototype.always = function(alwaysCallbacks) {};
 
 /**
  * @param {function()} doneCallbacks
@@ -425,8 +428,12 @@ jQuery.deferred.prototype.isRejected = function() {};
  */
 jQuery.deferred.prototype.isResolved = function() {};
 
-/** @return {jQuery.Promise} */
-jQuery.deferred.prototype.pipe = function() {};
+/**
+ * @param {function()=} doneFilter
+ * @param {function()=} failFilter
+ * @return {jQuery.Promise}
+ */
+jQuery.deferred.prototype.pipe = function(doneFilter, failFilter) {};
 
 /**
  * @param {Object=} target
@@ -721,11 +728,11 @@ jQuery.prototype.fadeToggle = function(duration, easing, callback) {};
 jQuery.prototype.filter = function(arg1) {};
 
 /**
- * @param {jQuerySelector} selector
+ * @param {(jQuerySelector|jQuery|Element)} arg1
  * @return {jQuery}
  * @nosideeffects
  */
-jQuery.prototype.find = function(selector) {};
+jQuery.prototype.find = function(arg1) {};
 
 /**
  * @return {jQuery}
@@ -899,11 +906,17 @@ jQuery.prototype.height = function(arg1) {};
  */
 jQuery.prototype.hide = function(duration, arg2, callback) {};
 
-/** @return {boolean} */
-jQuery.holdReady = function() {};
+/**
+ * @param {boolean} hold
+ * @return {boolean}
+ */
+jQuery.holdReady = function(hold) {};
 
-/** @return {boolean} */
-$.holdReady = function() {};
+/**
+ * @param {boolean} hold
+ * @return {boolean}
+ */
+$.holdReady = function(hold) {};
 
 /**
  * @param {function(jQuery.event)} arg1
@@ -965,11 +978,10 @@ jQuery.prototype.insertAfter = function(target) {};
 jQuery.prototype.insertBefore = function(target) {};
 
 /**
- * @param {jQuerySelector} selector
+ * @param {(jQuerySelector|function(number)|jQuery|Element)} arg1
  * @return {boolean}
- * @nosideeffects
  */
-jQuery.prototype.is = function(selector) {};
+jQuery.prototype.is = function(arg1) {};
 
 /**
  * @param {*} obj
@@ -1186,11 +1198,11 @@ jQuery.makeArray = function(obj) {};
 $.makeArray = function(obj) {};
 
 /**
- * @param {Array.<*>} arr
- * @param {function(*,number)} callback
+ * @param {(Array.<*>|Object.<string, *>)} arg1
+ * @param {(function(*,number)|function(*,(string|number)))} callback
  * @return {Array.<*>}
  */
-jQuery.map = function(arr, callback) {};
+jQuery.map = function(arg1, callback) {};
 
 /**
  * @param {function(number,Element)} callback
@@ -1199,11 +1211,11 @@ jQuery.map = function(arr, callback) {};
 jQuery.prototype.map = function(callback) {};
 
 /**
- * @param {Array.<*>} arr
- * @param {function(*,number)} callback
+ * @param {(Array.<*>|Object.<string, *>)} arg1
+ * @param {(function(*,number)|function(*,(string|number)))} callback
  * @return {Array.<*>}
  */
-$.map = function(arr, callback) {};
+$.map = function(arg1, callback) {};
 
 /**
  * @param {Array.<*>} first
@@ -1485,8 +1497,12 @@ jQuery.prototype.prevAll = function(selector) {};
  */
 jQuery.prototype.prevUntil = function(selector) {};
 
-/** @return {jQuery.Promise} */
-jQuery.prototype.promise = function() {};
+/**
+ * @param {(string|Object)=} type
+ * @param {Object=} target
+ * @return {jQuery.Promise}
+ */
+jQuery.prototype.promise = function(type, target) {};
 
 /**
  * @interface
@@ -1526,8 +1542,12 @@ jQuery.Promise.prototype.isResolved = function() {};
  */
 jQuery.Promise.prototype.then = function(doneCallbacks, failCallbacks) {};
 
-/** @return {(string|jQuery)} */
-jQuery.prototype.prop = function() {};
+/**
+ * @param {(string|Object.<string,*>)} arg1
+ * @param {(string|number|boolean|function(number,String))=} arg2
+ * @return {(string|jQuery)}
+ */
+jQuery.prototype.prop = function(arg1, arg2) {};
 
 /**
  * @param {(function()|Object)} arg1
@@ -1618,8 +1638,12 @@ jQuery.removeData = function(elem, name) {};
  */
 $.removeData = function(elem, name) {};
 
-/** @return {jQuery} */
-jQuery.prototype.removeProp = function() {};
+/**
+ * @param {string} propertyName
+ * @param {(string|number|boolean)} value
+ * @return {jQuery}
+ */
+jQuery.prototype.removeProp = function(propertyName, value) {};
 
 /**
  * @param {jQuerySelector} target
@@ -1886,12 +1910,12 @@ $.type = function(obj) {};
 jQuery.prototype.unbind = function(arg1, arg2) {};
 
 /**
- * @param {string=} selector
+ * @param {string=} arg1
  * @param {(string|Object.<string,*>)=} arg2
  * @param {function()=} handler
  * @return {jQuery}
  */
-jQuery.prototype.undelegate = function(selector, arg2, handler) {};
+jQuery.prototype.undelegate = function(arg1, arg2, handler) {};
 
 /**
  * @param {Array.<Element>} arr
@@ -1956,6 +1980,3 @@ jQuery.prototype.wrapAll = function(wrappingElement) {};
  * @return {jQuery}
  */
 jQuery.prototype.wrapInner = function(arg1) {};
-
-/** @typedef {jQuery} */
-var jQueryObject;
