@@ -24,6 +24,17 @@
 
 
 // Standard Methods.
+
+/**
+ * Call a Flash function exported by ExternalInterface.
+ * @param {string} xmlString The XML string passed to Flash. The outer element
+ *     should be {@code <invoke>}. A sample invocation string:
+ *     {@code <invoke name="function_name" returntype="javascript">
+ *     <string>test</string></invoke>}
+ * @return {string} The serialized return value from Flash that you can eval.
+ */
+HTMLObjectElement.prototype.CallFunction = function(xmlString) {};
+
 /**
  * Returns the value of the Flash variable specified by varName or null if the
  * variable does not exist.
