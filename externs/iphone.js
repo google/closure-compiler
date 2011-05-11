@@ -204,3 +204,27 @@ Window.prototype.onorientationchange = function(e) {};
  * @see http://developer.apple.com/safari/library/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html#//apple_ref/doc/uid/TP40006511-SW16
  */
 Window.prototype.orientation;
+
+/**
+ * @implicitCast
+ * @type {boolean}
+ */
+HTMLInputElement.prototype.autocorrect;
+
+/**
+ * @implicitCast
+ * @type {boolean}
+ */
+HTMLInputElement.prototype.autocapitalize;
+
+/**
+ * @implicitCast
+ * @type {boolean}
+ */
+HTMLTextAreaElement.prototype.autocorrect;
+
+/**
+ * @implicitCast
+ * @type {boolean}
+ */
+HTMLTextAreaElement.prototype.autocapitalize;
