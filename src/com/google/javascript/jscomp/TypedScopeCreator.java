@@ -415,7 +415,7 @@ final class TypedScopeCreator implements ScopeCreator {
         Node parent) {
       if (n.getType() == Token.FUNCTION ||
           n.getType() == Token.SCRIPT) {
-        sourceName = (String) n.getProp(Node.SOURCENAME_PROP);
+        sourceName = NodeUtil.getSourceName(n);
       }
 
       // We do want to traverse the name of a named function, but we don't
