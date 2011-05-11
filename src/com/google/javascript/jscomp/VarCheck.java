@@ -113,12 +113,19 @@ class VarCheck extends AbstractPostOrderCallback implements
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+  public void hotSwapScript(Node scriptRoot) {
     Preconditions.checkState(scriptRoot.getType() == Token.SCRIPT);
     NodeTraversal t = new NodeTraversal(compiler, this);
     // Note we use the global scope to prevent wrong "undefined-var errors" on
     // variables that are defined in other js files.
-    t.traverseWithScope(scriptRoot, globalScope);
+    //
+    // TODO(bashir) Currently VarCheck is the only pass that its hotSwapScript
+    // needs a global scope and cannot use global typed scope. If other passes
+    // in future need a similar top scope we have to refactor the next scope
+    // generation and generate such global scope only once.
+    Scope scope = new SyntacticScopeCreator(compiler).createScope(
+        compiler.getRoot(), null);
+    t.traverseWithScope(scriptRoot, scope);
     // TODO(bashir) Check if we need to createSynthesizedExternVar like process.
   }
 

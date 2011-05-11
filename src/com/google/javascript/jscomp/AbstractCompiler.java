@@ -291,4 +291,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract void process(CompilerPass pass);
 
+  /**
+   * Returns the root node of the AST, which includes both externs and source.
+   */
+  abstract Node getRoot();
 }

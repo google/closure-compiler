@@ -838,8 +838,8 @@ public class DefaultPassConfig extends PassConfig {
           exportedNames = pass.getExportedVariableNames();
         }
         @Override
-        public void hotSwapScript(Node scriptRoot, Scope globalScope) {
-          pass.hotSwapScript(scriptRoot, globalScope);
+        public void hotSwapScript(Node scriptRoot) {
+          pass.hotSwapScript(scriptRoot);
         }
       };
     }
@@ -1009,10 +1009,10 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Creates a typed scope and adds types to the type registry. */
-  final PassFactory resolveTypes =
-      new PassFactory("resolveTypes", false) {
+  final HotSwapPassFactory resolveTypes =
+      new HotSwapPassFactory("resolveTypes", false) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       return new GlobalTypeResolver(compiler);
     }
   };
@@ -1032,7 +1032,7 @@ public class DefaultPassConfig extends PassConfig {
           makeTypeInference(compiler).process(externs, root);
         }
         @Override
-        public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+        public void hotSwapScript(Node scriptRoot) {
           // TODO(bashir): Extra warnings about undefined types are reported
           // when doing inferTypes from scriptRoot. One solution is to do
           // inferTypes from the AST root instead of scriptRoot but that
@@ -1076,7 +1076,7 @@ public class DefaultPassConfig extends PassConfig {
           compiler.getErrorManager().setTypedPercent(check.getTypedPercent());
         }
         @Override
-        public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+        public void hotSwapScript(Node scriptRoot) {
           makeTypeCheck(compiler).check(scriptRoot, false);
         }
       };
@@ -1122,7 +1122,7 @@ public class DefaultPassConfig extends PassConfig {
   }
 
   /** A compiler pass that resolves types in the global scope. */
-  private class GlobalTypeResolver implements CompilerPass {
+  private class GlobalTypeResolver implements HotSwapCompilerPass {
     private final AbstractCompiler compiler;
 
     GlobalTypeResolver(AbstractCompiler compiler) {
@@ -1136,6 +1136,14 @@ public class DefaultPassConfig extends PassConfig {
       } else {
         compiler.getTypeRegistry().resolveTypesInScope(topScope);
       }
+    }
+    @Override
+    public void hotSwapScript(Node scriptRoot) {
+      // We have to rebuild the global scope.
+      // If this is not fast enough, we'll need to change the interface
+      // of ScopeCreator so that it can patch new variables into an existing
+      // scope (right now it can only create new scopes).
+      regenerateGlobalTypedScope(compiler, compiler.getRoot());
     }
   }
 

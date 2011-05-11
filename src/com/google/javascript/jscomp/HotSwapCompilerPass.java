@@ -27,8 +27,7 @@ import com.google.javascript.rhino.Node;
  *
  * <p>It is assumed that {@code Node} argument of {@code hotSwapScript} is the
  * root of a sub-tree in AST that represents a js file and so is of type
- * {@code Token.SCRIPT}. Also the global-scope is supposed to be updated based
- * on new js file prior to this call.
+ * {@code Token.SCRIPT}.
  *
  * @author bashir@google.com (Bashir Sadjad)
  */
@@ -39,8 +38,7 @@ public interface HotSwapCompilerPass extends CompilerPass {
    * faster compared to corresponding full-compiler passes.
    * @param scriptRoot Root node corresponding to the file that is modified,
    *     should be of type {@code Token.SCRIPT}.
-   * @param globalScope The global scope which is not necessarily types.
    */
-  void hotSwapScript(Node scriptRoot, Scope globalScope);
+  void hotSwapScript(Node scriptRoot);
 
 }

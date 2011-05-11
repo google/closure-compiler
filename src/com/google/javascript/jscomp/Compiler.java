@@ -896,9 +896,7 @@ public class Compiler extends AbstractCompiler {
     return errorManager.getWarnings();
   }
 
-  /**
-   * Returns the root node of the AST, which includes both externs and source.
-   */
+  @Override
   public Node getRoot() {
     return externAndJsRoot;
   }

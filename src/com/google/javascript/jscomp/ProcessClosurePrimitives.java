@@ -159,7 +159,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot, Scope globalScope) {
+  public void hotSwapScript(Node scriptRoot) {
     // TODO(bashir): Implement a real hot-swap version instead and make it fully
     // consistent with the full version.
     this.compiler.process(this);
