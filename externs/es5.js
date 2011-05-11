@@ -93,3 +93,120 @@ String.prototype.trimLeft = function() {};
  * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/TrimRight
  */
 String.prototype.trimRight = function() {};
+
+
+/**
+ * @param {Object} proto
+ * @param {Object=} opt_properties
+ * @return {!Object}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/create
+ */ 
+Object.create = function(proto, opt_properties) {};
+
+
+/**
+ * @param {!Object} obj
+ * @param {string} prop
+ * @param {!Object} descriptor
+ * @return {!Object}
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/defineProperty
+ */ 
+Object.defineProperty = function(obj, prop, descriptor) {};
+
+
+/**
+ * @param {!Object} obj
+ * @param {!Object} props
+ * @return {!Object}
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/defineProperties
+ */ 
+Object.defineProperties = function(obj, props) {};
+
+
+/**
+ * @param {!Object} obj
+ * @param {string} prop
+ * @return {Object}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
+ */ 
+Object.getOwnPropertyDescriptor = function(obj, prop) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {Array.<string>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/keys
+ */ 
+Object.keys = function(obj) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {Array.<string>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames
+ */ 
+Object.getOwnPropertyNames = function(obj) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {Object}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/GetPrototypeOf
+ */ 
+Object.getPrototypeOf = function(obj) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {void}
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/preventExtensions
+ */ 
+Object.preventExtensions = function(obj) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {void}
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/seal
+ */ 
+Object.seal = function(obj) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {void}
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/freeze
+ */ 
+Object.freeze = function(obj) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/isExtensible
+ */ 
+Object.isExtensible = function(obj) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/isSealed
+ */ 
+Object.isSealed = function(obj) {};
+
+
+/**
+ * @param {!Object} obj
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/isFrozen
+ */ 
+Object.isFrozen = function(obj) {};
