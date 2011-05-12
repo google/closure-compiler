@@ -405,7 +405,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
       "/** @constructor \n * @extends {Foo} */ " +
       "function SubFoo() {};" +
       "SubFoo.prototype.bar_ = function() {};"
-    }, null, PRIVATE_OVERRIDE);
+    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties7() {
@@ -419,6 +419,14 @@ public class CheckAccessControlsTest extends CompilerTestCase {
       "SubFoo.prototype.bar_ = function() {};",
       "SubFoo.prototype.baz = function() { this.bar_(); }"
     }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  public void testNoPrivateAccessForProperties8() {
+    test(new String[] {
+      "/** @constructor */ function Foo() { /** @private */ this.bar_ = 3; }",
+      "/** @constructor \n * @extends {Foo} */ " +
+      "function SubFoo() { /** @private */ this.bar_ = 3; };"
+    }, null, PRIVATE_OVERRIDE);
   }
 
   public void testProtectedAccessForProperties1() {

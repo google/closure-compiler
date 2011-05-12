@@ -35,15 +35,11 @@ import com.google.common.collect.HashMultimap;
  * control restrictions indicated by JSDoc annotations, like
  * {@code @private} and {@code @deprecated}.
  *
- * There are two parts to this pass:
- * 1) JSDoc Inference: Attaching the appropriate JSDoc to
- *    all programmer-defined types and properties.
- * 2) Access Control Enforcement: Emitting warnings when the code does not
- *    obey the restrictions attached to JSTypes in step 1.
- *
  * Because access control restrictions are attached to type information,
- * it's important that TypeCheck runs before this pass, so that all types
- * are correctly resolved and propagated before this pass runs.
+ * it's important that TypedScopeCreator, TypeInference, and InferJSDocInfo
+ * all run before this pass. TypedScopeCreator creates and resolves types,
+ * TypeInference propagates those types across the AST, and InferJSDocInfo
+ * propagates JSDoc across the types.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
@@ -417,7 +413,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     if (objectType != null) {
       // Is this a normal property access, or are we trying to override
       // an existing property?
-      boolean isOverride = t.inGlobalScope() &&
+      boolean isOverride = parent.getJSDocInfo() != null &&
           parent.getType() == Token.ASSIGN &&
           parent.getFirstChild() == getprop;
 
