@@ -384,7 +384,6 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Preconditions.checkState(block.getType() == Token.BLOCK);
       if (block.hasChildren()) {
         for (Node blockChild : block.children()) {
-          int type = blockChild.getType();
           // If this is a block with a labelless break, it is useless.
           switch (blockChild.getType()) {
             case Token.BREAK:

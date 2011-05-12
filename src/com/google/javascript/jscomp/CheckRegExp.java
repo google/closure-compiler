@@ -16,12 +16,14 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.regex.RegExpTree;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.Node;
 
 /**
  * Look for references to the global RegExp object that would cause
- * regular expressions to be unoptimizable.
+ * regular expressions to be unoptimizable, and checks that regular expressions
+ * are syntactically valid.
  *
  * @author johnlenz@google.com (John Lenz)
  */
@@ -31,6 +33,9 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
     DiagnosticType.warning("JSC_REGEXP_REFERENCE",
         "References to the global RegExp object prevents " +
         "optimization of regular expressions.");
+  static final DiagnosticType MALFORMED_REGEXP = DiagnosticType.warning(
+        "JSC_MALFORMED_REGEXP",
+        "Malformed Regular Expression: {0}");
 
   private final AbstractCompiler compiler;
   private boolean globalRegExpPropertiesUsed = false;
@@ -61,6 +66,17 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
           t.report(n, REGEXP_REFERENCE);
           globalRegExpPropertiesUsed = true;
         }
+      }
+
+    // Check the syntax of regular expression patterns.
+    } else if (n.getType() == Token.REGEXP) {
+      String pattern = n.getFirstChild().getString();
+      String flags = n.getChildCount() == 2
+          ? n.getLastChild().getString() : "";
+      try {
+        RegExpTree.parseRegExp(pattern, flags);
+      } catch (IllegalArgumentException ex) {
+        t.report(n, MALFORMED_REGEXP, ex.getMessage());
       }
     }
   }

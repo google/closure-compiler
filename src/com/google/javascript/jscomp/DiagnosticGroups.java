@@ -158,7 +158,8 @@ public class DiagnosticGroups {
 
   public static DiagnosticGroup CHECK_REGEXP =
       DiagnosticGroups.registerGroup("checkRegExp",
-          CheckRegExp.REGEXP_REFERENCE);
+          CheckRegExp.REGEXP_REFERENCE,
+          CheckRegExp.MALFORMED_REGEXP);
 
   public static DiagnosticGroup CHECK_TYPES =
       DiagnosticGroups.registerGroup("checkTypes",
