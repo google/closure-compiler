@@ -21,12 +21,12 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * Check for invalid breaks and continues in the program.
+ * Check for usage of 'with'.
  *
  */
-class ControlStructureCheck implements CompilerPass {
+class ControlStructureCheck implements HotSwapCompilerPass {
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
   private String sourceName = null;
 
@@ -41,6 +41,11 @@ class ControlStructureCheck implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     check(root);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot) {
+    check(scriptRoot);
   }
 
   /**

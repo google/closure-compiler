@@ -701,11 +701,12 @@ public class DefaultPassConfig extends PassConfig {
    * Checks for code that is probably wrong (such as stray expressions).
    */
   // TODO(bolinfest): Write a CompilerPass for this.
-  final PassFactory suspiciousCode =
-      new PassFactory("suspiciousCode", true) {
+  final HotSwapPassFactory suspiciousCode =
+      new HotSwapPassFactory("suspiciousCode", true) {
 
     @Override
-    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(final AbstractCompiler
+        compiler) {
       List<Callback> sharedCallbacks = Lists.newArrayList();
       if (options.checkSuspiciousCode) {
         sharedCallbacks.add(new CheckAccidentalSemicolon(CheckLevel.WARNING));
@@ -735,10 +736,10 @@ public class DefaultPassConfig extends PassConfig {
   }
 
   /** Checks for validity of the control structures. */
-  private final PassFactory checkControlStructures =
-      new PassFactory("checkControlStructures", true) {
+  private final HotSwapPassFactory checkControlStructures =
+      new HotSwapPassFactory("checkControlStructures", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       return new ControlStructureCheck(compiler);
     }
   };
@@ -1087,10 +1088,10 @@ public class DefaultPassConfig extends PassConfig {
    * Checks possible execution paths of the program for problems: missing return
    * statements and dead code.
    */
-  private final PassFactory checkControlFlow =
-      new PassFactory("checkControlFlow", true) {
+  private final HotSwapPassFactory checkControlFlow =
+      new HotSwapPassFactory("checkControlFlow", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       List<Callback> callbacks = Lists.newArrayList();
       if (options.checkUnreachableCode.isOn()) {
         callbacks.add(
@@ -1114,7 +1115,7 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Executes the given callbacks with a {@link CombinedCompilerPass}. */
-  private static CompilerPass combineChecks(AbstractCompiler compiler,
+  private static HotSwapCompilerPass combineChecks(AbstractCompiler compiler,
       List<Callback> callbacks) {
     Preconditions.checkArgument(callbacks.size() > 0);
     Callback[] array = callbacks.toArray(new Callback[callbacks.size()]);

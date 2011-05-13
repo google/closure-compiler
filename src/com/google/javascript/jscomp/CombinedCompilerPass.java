@@ -45,7 +45,8 @@ import java.util.List;
  * passes are doing.</p>
  *
  */
-final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
+final class CombinedCompilerPass implements HotSwapCompilerPass,
+    ScopedCallback {
 
   /** The callbacks that this pass combines. */
   private final CallbackWrapper[] callbacks;
@@ -151,6 +152,11 @@ final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
   @Override
   public final void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot) {
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override
