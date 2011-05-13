@@ -2328,7 +2328,7 @@ public final class NodeUtil {
   /**
    * Gets the root node of a qualified name. Must be either NAME or THIS.
    */
-  static Node getRootOfQualifiedName(Node qName) {
+  public static Node getRootOfQualifiedName(Node qName) {
     for (Node current = qName; true;
          current = current.getFirstChild()) {
       int type = current.getType();
@@ -2755,7 +2755,7 @@ public final class NodeUtil {
     * @param fnNode The function.
     * @return The Node containing the Function parameters.
     */
-  static Node getFnParameters(Node fnNode) {
+  public static Node getFnParameters(Node fnNode) {
     // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
     Preconditions.checkArgument(fnNode.getType() == Token.FUNCTION);
     return fnNode.getFirstChild().getNext();
@@ -2819,7 +2819,7 @@ public final class NodeUtil {
   /**
    * Get the JSDocInfo for a function.
    */
-  static JSDocInfo getFunctionInfo(Node n) {
+  public static JSDocInfo getFunctionInfo(Node n) {
     Preconditions.checkState(n.getType() == Token.FUNCTION);
     JSDocInfo fnInfo = n.getJSDocInfo();
     if (fnInfo == null && NodeUtil.isFunctionExpression(n)) {
@@ -2840,7 +2840,7 @@ public final class NodeUtil {
    * @param n The node.
    * @return The source name property on the node or its ancestors.
    */
-  static String getSourceName(Node n) {
+  public static String getSourceName(Node n) {
     String sourceName = null;
     while (sourceName == null && n != null) {
       sourceName = (String) n.getProp(Node.SOURCENAME_PROP);
