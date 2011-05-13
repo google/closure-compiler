@@ -28,6 +28,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
+import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -354,6 +355,19 @@ public class JSModuleGraph {
     }
 
     return result;
+  }
+
+  LinkedDirectedGraph<JSModule, String> toGraphvizGraph() {
+    LinkedDirectedGraph<JSModule, String> graphViz =
+        LinkedDirectedGraph.create();
+    for (JSModule module : getAllModulesInDependencyOrder()) {
+      graphViz.createNode(module);
+      for (JSModule dep : module.getDependencies()) {
+        graphViz.createNode(dep);
+        graphViz.connect(module, "->", dep);
+      }
+    }
+    return graphViz;
   }
 
   /**
