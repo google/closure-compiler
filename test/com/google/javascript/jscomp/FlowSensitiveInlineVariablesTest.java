@@ -393,6 +393,11 @@ public class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
              "f.apply(this, arguments); return this;}");
   }
 
+  public void testNotOkToSkipCheckPathBetweenNodes() {
+    noInline("var x; for(x = 1; foo(x);) {}");
+    noInline("var x; for(; x = 1;foo(x)) {}");
+  }
+
   private void noInline(String input) {
     inline(input, input);
   }
