@@ -135,6 +135,9 @@ class PeepholeSubstituteAlternateSyntax
       case Token.NAME:
         return tryReplaceUndefined(node);
 
+      case Token.BLOCK:
+        return tryReplaceIf(node);
+
       default:
         return node; //Nothing changed
     }
@@ -166,6 +169,48 @@ class PeepholeSubstituteAlternateSyntax
     } else {
       return n;
     }
+  }
+
+  /**
+   * Use "return x?1:2;" in place of "if(x)return 1;return 2;"
+   */
+  private Node tryReplaceIf(Node n) {
+
+    for (Node child = n.getFirstChild();
+         child != null; child = child.getNext()){
+      if (child.getType() == Token.IF){
+
+        Node cond = child.getFirstChild();
+        Node thenBranch = cond.getNext();
+        Node elseBranch = thenBranch.getNext();
+        Node nextNode = child.getNext();
+
+        if (nextNode != null && elseBranch == null &&
+            isReturnBlock(thenBranch) && isReturnExpression(nextNode)) {
+          Node thenExpr = null;
+          // if(x)return; return 1 -> return x?void 0:1
+          if (isReturnExpressBlock(thenBranch)) {
+            thenExpr = getBlockReturnExpression(thenBranch);
+            thenExpr.detachFromParent();
+          } else {
+            thenExpr = NodeUtil.newUndefinedNode(child);
+          }
+
+          Node elseExpr = nextNode.getFirstChild();
+
+          cond.detachFromParent();
+          elseExpr.detachFromParent();
+
+          Node hookNode = new Node(Token.HOOK, cond, thenExpr, elseExpr)
+                              .copyInformationFrom(child);
+          Node returnNode = new Node(Token.RETURN, hookNode);
+          n.replaceChild(child, returnNode);
+          n.removeChild(nextNode);
+          reportCodeChange();
+        }
+      }
+    }
+    return n;
   }
 
   /**
@@ -739,6 +784,21 @@ class PeepholeSubstituteAlternateSyntax
 
   /**
    * @return Whether the node is a block with a single statement that is
+   *     an return with or without an expression.
+   */
+  private boolean isReturnBlock(Node n) {
+    if (n.getType() == Token.BLOCK) {
+      if (n.hasOneChild()) {
+        Node first = n.getFirstChild();
+        return first.getType() == Token.RETURN;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * @return Whether the node is a block with a single statement that is
    *     an return.
    */
   private boolean isReturnExpressBlock(Node n) {
@@ -751,6 +811,16 @@ class PeepholeSubstituteAlternateSyntax
       }
     }
 
+    return false;
+  }
+
+  /**
+   * @return Whether the node is a single return statement.
+   */
+  private boolean isReturnExpression(Node n) {
+    if (n.getType() == Token.RETURN) {
+      return n.hasOneChild();
+    }
     return false;
   }
 
