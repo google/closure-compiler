@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeUtil.MatchNotFunction;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -26,6 +27,7 @@ import com.google.javascript.rhino.TokenStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.util.Map;
 
 /**
  * CodeGenerator generates codes from a parse tree, sending it to the specified
@@ -33,6 +35,8 @@ import java.nio.charset.CharsetEncoder;
  *
  */
 class CodeGenerator {
+  // A memoizer for formatting strings as JS strings.
+  private final Map<String, String> ESCAPED_JS_STRINGS = Maps.newHashMap();
 
   private static final char[] HEX_CHARS
       = { '0', '1', '2', '3', '4', '5', '6', '7',
@@ -349,7 +353,7 @@ class CodeGenerator {
           if (!Double.isNaN(d)) {
             cc.addNumber(d);
           } else {
-            add(jsString(n.getString(), outputCharsetEncoder));
+            addJsString(n.getString());
           }
         }
 
@@ -631,7 +635,7 @@ class CodeGenerator {
           throw new IllegalStateException(
               "Unexpected String children: " + n.getParent().toStringTree());
         }
-        add(jsString(n.getString(), outputCharsetEncoder));
+        addJsString(n.getString());
         break;
 
       case Token.DELPROP:
@@ -940,7 +944,16 @@ class CodeGenerator {
   }
 
   /** Outputs a js string, using the optimal (single/double) quote character */
-  static String jsString(String s, CharsetEncoder outputCharsetEncoder) {
+  void addJsString(String s) {
+    String cached = ESCAPED_JS_STRINGS.get(s);
+    if (cached == null) {
+      cached = jsString(s);
+      ESCAPED_JS_STRINGS.put(s, cached);
+    }
+    add(cached);
+  }
+
+  String jsString(String s) {
     int singleq = 0, doubleq = 0;
 
     // could count the quotes and pick the optimal quote character
