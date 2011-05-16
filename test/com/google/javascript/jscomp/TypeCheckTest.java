@@ -7111,6 +7111,19 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "override: string");
   }
 
+  public void testDataPropertyOnInterface4() throws Exception {
+    testTypes("/** @interface */ function T() {};\n" +
+        "/** @type {number} */T.prototype.x;\n" +
+        "/** @constructor \n" +
+        " *  @implements {T} \n" +
+        " */\n" +
+        "function C() { /** @type {string} */ \n this.x = 'foo'; }\n",
+        "mismatch of the x property type and the type of the property it " +
+        "overrides from interface T\n" +
+        "original: number\n" +
+        "override: string");
+  }
+
   public void testWarnDataPropertyOnInterface3() throws Exception {
     testTypes("/** @interface */ u.T = function () {};\n" +
         "/** @type {number} */u.T.prototype.x = 1;",
