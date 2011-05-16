@@ -327,7 +327,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   /**
    * Handles a typedef definition for a goog.provided name.
-   * @param An EXPR_RESULT node.
+   * @param n EXPR_RESULT node.
    */
   private void handleTypedefDefinition(
       NodeTraversal t, Node n, Node parent) {

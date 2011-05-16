@@ -745,19 +745,19 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Checks that all constructed classes are goog.require()d. */
-  private final PassFactory checkRequires =
-      new PassFactory("checkRequires", true) {
+  private final HotSwapPassFactory checkRequires =
+      new HotSwapPassFactory("checkRequires", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       return new CheckRequiresForConstructors(compiler, options.checkRequires);
     }
   };
 
   /** Makes sure @constructor is paired with goog.provides(). */
-  private final PassFactory checkProvides =
-      new PassFactory("checkProvides", true) {
+  private final HotSwapPassFactory checkProvides =
+      new HotSwapPassFactory("checkProvides", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       return new CheckProvides(compiler, options.checkProvides);
     }
   };

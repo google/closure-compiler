@@ -35,7 +35,7 @@ import java.util.Set;
  * warning for each discrepancy.
  *
  */
-class CheckRequiresForConstructors implements CompilerPass {
+class CheckRequiresForConstructors implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private final CodingConvention codingConvention;
   private final CheckLevel level;
@@ -60,6 +60,13 @@ class CheckRequiresForConstructors implements CompilerPass {
   public void process(Node externs, Node root) {
     Callback callback = new CheckRequiresForConstructorsCallback();
     new NodeTraversal(compiler, callback).traverseRoots(externs, root);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot) {
+    Callback callback = new CheckRequiresForConstructorsCallback();
+    new NodeTraversal(compiler, callback).traverseWithScope(scriptRoot,
+        SyntacticScopeCreator.generateUntypedTopScope(compiler));
   }
 
   /**

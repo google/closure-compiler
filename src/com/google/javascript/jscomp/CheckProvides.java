@@ -29,7 +29,7 @@ import java.util.Map;
  * Insures '@constructor X' has a 'goog.provide("X")' .
  *
  */
-class CheckProvides implements CompilerPass {
+class CheckProvides implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private final CheckLevel checkLevel;
   private final CodingConvention codingConvention;
@@ -46,9 +46,14 @@ class CheckProvides implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    hotSwapScript(root);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot) {
     CheckProvidesCallback callback =
-      new CheckProvidesCallback(codingConvention);
-    new NodeTraversal(compiler, callback).traverse(root);
+        new CheckProvidesCallback(codingConvention);
+    new NodeTraversal(compiler, callback).traverse(scriptRoot);
   }
 
   private class CheckProvidesCallback extends AbstractShallowCallback {

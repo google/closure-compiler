@@ -234,7 +234,6 @@ class SyntacticScopeCreator implements ScopeCreator {
    * Declares a variable.
    *
    * @param n The node corresponding to the variable name.
-   * @param declaredType The variable's type, according to JSDoc
    */
   private void declareVar(Node n) {
     Preconditions.checkState(n.getType() == Token.NAME);
@@ -249,4 +248,19 @@ class SyntacticScopeCreator implements ScopeCreator {
       scope.declare(name, n, null, input);
     }
   }
+
+
+  /**
+   * Generates an untyped global scope from the root of AST of compiler (which
+   * includes externs).
+   *
+   * @param compiler The compiler for which the scope is generated.
+   * @return The new untyped global scope generated as a result of this call.
+   */
+  static Scope generateUntypedTopScope(AbstractCompiler compiler) {
+    return new SyntacticScopeCreator(compiler).createScope(compiler.getRoot(),
+        null);
+  }
+
+
 }
