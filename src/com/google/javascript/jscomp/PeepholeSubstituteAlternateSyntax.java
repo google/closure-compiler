@@ -220,7 +220,7 @@ class PeepholeSubstituteAlternateSyntax
     // TODO(johnlenz): consider doing this as a normalization.
     if (isASTNormalized()
         && NodeUtil.isUndefined(n)
-        && !NodeUtil.isLhs(n, n.getParent())) {
+        && !NodeUtil.isLValue(n)) {
       Node replacement = NodeUtil.newUndefinedNode(n);
       n.getParent().replaceChild(n, replacement);
       reportCodeChange();

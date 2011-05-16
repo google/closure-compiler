@@ -775,6 +775,11 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame(
         "var undefined = 1;" +
         "function f() {var undefined=2;var x = undefined;}");
+    foldSame("function f(undefined) {}");
+    foldSame("try {} catch(undefined) {}");
+    foldSame("for (undefined in {}) {}");
+    foldSame("undefined++;");
+    fold("undefined += undefined;", "undefined += void 0;");
   }
 
   public void testSplitCommaExpressions() {

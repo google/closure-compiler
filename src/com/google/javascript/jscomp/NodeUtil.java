@@ -2022,9 +2022,38 @@ public final class NodeUtil {
    * @param parent Parent of the node
    * @return True if n is the left hand of an assign
    */
-  static boolean isLhs(Node n, Node parent) {
+  static boolean isVarOrSimpleAssignLhs(Node n, Node parent) {
     return (parent.getType() == Token.ASSIGN && parent.getFirstChild() == n) ||
            parent.getType() == Token.VAR;
+  }
+
+  /**
+   * Determines whether this node is used as an L-value. Notice that sometimes
+   * names are used as both L-values and R-values.
+   *
+   * We treat "var x;" as a pseudo-L-value, which kind of makes sense if you
+   * treat it as "assignment to 'undefined' at the top of the scope". But if
+   * we're honest with ourselves, it doesn't make sense, and we only do this
+   * because it makes sense to treat this as synactically similar to
+   * "var x = 0;".
+   *
+   * @param node The node
+   * @return True if n is an L-value.
+   */
+  static boolean isLValue(Node node) {
+    int nType = node.getType();
+    Preconditions.checkArgument(nType == Token.NAME || nType == Token.GETPROP ||
+        nType == Token.GETELEM);
+    Node parent = node.getParent();
+    return (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == node)
+        || (NodeUtil.isForIn(parent) && parent.getFirstChild() == node)
+        || NodeUtil.isVar(parent)
+        || (parent.getType() == Token.FUNCTION &&
+            parent.getFirstChild() == node)
+        || parent.getType() == Token.DEC
+        || parent.getType() == Token.INC
+        || parent.getType() == Token.LP
+        || parent.getType() == Token.CATCH;
   }
 
   /**

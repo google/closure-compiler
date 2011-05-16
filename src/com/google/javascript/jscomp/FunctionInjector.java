@@ -336,7 +336,7 @@ class FunctionInjector {
       // This is a simple call?  Example: "foo();".
       return CallSiteType.SIMPLE_CALL;
     } else if (NodeUtil.isExprAssign(grandParent)
-        && !NodeUtil.isLhs(callNode, parent)
+        && !NodeUtil.isVarOrSimpleAssignLhs(callNode, parent)
         && parent.getFirstChild().getType() == Token.NAME
         && !NodeUtil.isConstantName(parent.getFirstChild())) {
       // This is a simple assignment.  Example: "x = foo();"

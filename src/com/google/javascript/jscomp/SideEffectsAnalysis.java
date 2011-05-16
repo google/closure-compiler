@@ -879,14 +879,7 @@ import java.util.Set;
      */
     private static boolean storageNodeIsLValue(Node node) {
       Preconditions.checkArgument(isStorageNode(node));
-
-      Node parent = node.getParent();
-
-      return (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == node)
-          || (NodeUtil.isForIn(parent) && parent.getFirstChild() == node)
-          || NodeUtil.isVar(parent)
-          || parent.getType() == Token.DEC
-          || parent.getType() == Token.INC;
+      return NodeUtil.isLValue(node);
     }
 
     /**

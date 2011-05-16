@@ -83,4 +83,23 @@ public class CompilerTest extends TestCase {
     assertEquals(compiler.externAndJsRoot, compiler.externsRoot.getParent());
     assertNotNull(compiler.externAndJsRoot);
   }
+
+  public void testLocalUndefined() throws Exception {
+    // Some javascript libraries like to create a local instance of "undefined",
+    // to ensure that other libraries don't try to overwrite it.
+    //
+    // Most of the time, this is ok, because normalization will rename
+    // that variable to undefined$$1. But this won't happen if they don't
+    // include the default externs.
+    //
+    // This test is just to make sure that the compiler doesn't crash.
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
+        options);
+    Compiler compiler = new Compiler();
+    JSSourceFile externs = JSSourceFile.fromCode("externs.js", "");
+    JSSourceFile input = JSSourceFile.fromCode("input.js",
+        "(function (undefined) { alert(undefined); })();");
+    compiler.compile(externs, input, options);
+  }
 }
