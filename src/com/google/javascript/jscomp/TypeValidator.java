@@ -697,8 +697,15 @@ class TypeValidator {
       ObjectType objectType = getJSType(n.getFirstChild()).dereference();
       if (objectType != null) {
         String propName = n.getLastChild().getString();
-        while (objectType != null && !objectType.hasOwnProperty(propName)) {
-          objectType = objectType.getImplicitPrototype();
+        if (objectType.getConstructor() != null &&
+            objectType.getConstructor().isInterface()) {
+          objectType = FunctionType.getTopDefiningInterface(
+              objectType, propName);
+        } else {
+          // classes
+          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+            objectType = objectType.getImplicitPrototype();
+          }
         }
 
         // Don't show complex function names or anonymous types.

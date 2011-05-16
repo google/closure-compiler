@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.Lists;
+
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 
@@ -172,6 +174,28 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testEmptyFunctionTypes() {
     assertTrue(LEAST_FUNCTION_TYPE.isEmptyType());
     assertFalse(GREATEST_FUNCTION_TYPE.isEmptyType());
+  }
+
+  public void testInterfacePrototypeChain1() {
+    FunctionType iface = registry.createInterfaceType("I", null);
+    assertTypeEquals(
+        iface.getPrototype(),
+        iface.getInstanceType().getImplicitPrototype());
+    assertTypeEquals(
+        OBJECT_TYPE,
+        iface.getPrototype().getImplicitPrototype());
+  }
+
+  public void testInterfacePrototypeChain2() {
+    FunctionType iface = registry.createInterfaceType("I", null);
+    FunctionType subIface = registry.createInterfaceType("SubI", null);
+    subIface.setExtendedInterfaces(Lists.<ObjectType>newArrayList(iface));
+    assertTypeEquals(
+        subIface.getPrototype(),
+        subIface.getInstanceType().getImplicitPrototype());
+    assertTypeEquals(
+        OBJECT_TYPE,
+        subIface.getPrototype().getImplicitPrototype());
   }
 
   private void assertLeastSupertype(String s, JSType t1, JSType t2) {

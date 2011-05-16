@@ -129,6 +129,12 @@ class TypedCodeGenerator extends CodeGenerator {
         }
       }
 
+      if (funType.isInterface()) {
+        for (ObjectType interfaceType : funType.getExtendedInterfaces()) {
+          sb.append(" * @extends {" + interfaceType + "}\n");
+        }
+      }
+
       // Avoid duplicates, add implemented type to a set first
       Set<String> interfaces = Sets.newTreeSet();
       for (ObjectType interfaze : funType.getImplementedInterfaces()) {

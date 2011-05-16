@@ -77,6 +77,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private FunctionType subclassCtor;
   private FunctionType interfaceType;
   private ObjectType interfaceInstType;
+  private FunctionType subInterfaceType;
+  private ObjectType subInterfaceInstType;
   private JSType recordType;
   private EnumType enumType;
   private EnumElementType elementsType;
@@ -123,6 +125,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     interfaceType = FunctionType.forInterface(registry, "Interface", null);
     interfaceInstType = interfaceType.getInstanceType();
+
+    subInterfaceType = FunctionType.forInterface(
+        registry, "SubInterface", null);
+    subInterfaceType.setExtendedInterfaces(
+        Lists.<ObjectType>newArrayList(interfaceInstType));
+    subInterfaceInstType = subInterfaceType.getInstanceType();
 
     googBar = registry.createConstructorType("goog.Bar", null, null, null);
     googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE, true,
@@ -4972,6 +4980,23 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     verifySubtypeChain(typeChain);
   }
 
+  public void testInterfaceInheritanceSubtypeChain() throws Exception {
+    FunctionType tempType =
+      registry.createConstructorType("goog.TempType", null, null, null);
+    tempType.setImplementedInterfaces(
+        Lists.<ObjectType>newArrayList(subInterfaceInstType));
+    List<JSType> typeChain = Lists.newArrayList(
+        ALL_TYPE,
+        OBJECT_TYPE,
+        interfaceInstType,
+        subInterfaceInstType,
+        tempType.getPrototype(),
+        tempType.getInstanceType(),
+        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        registry.getNativeType(JSTypeNative.NO_TYPE));
+    verifySubtypeChain(typeChain);
+  }
+
   /**
    * Tests that the given chain of types has a total ordering defined
    * by the subtype relationship, with types at the top of the lattice
@@ -5496,6 +5521,23 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(namedGoogBar.hasProperty("base"));
     assertTrue(namedGoogBar.hasOwnProperty("sub"));
     assertTrue(namedGoogBar.hasProperty("sub"));
+  }
+
+  public void testInterfaceHasOwnProperty() throws Exception {
+    interfaceInstType.defineProperty("base", null, false, false, null);
+    subInterfaceInstType.defineProperty("sub", null, false, false, null);
+
+    assertTrue(interfaceInstType.hasProperty("base"));
+    assertFalse(interfaceInstType.hasProperty("sub"));
+    assertTrue(interfaceInstType.hasOwnProperty("base"));
+    assertFalse(interfaceInstType.hasOwnProperty("sub"));
+    assertFalse(interfaceInstType.hasOwnProperty("none"));
+
+    assertTrue(subInterfaceInstType.hasProperty("base"));
+    assertTrue(subInterfaceInstType.hasProperty("sub"));
+    assertFalse(subInterfaceInstType.hasOwnProperty("base"));
+    assertTrue(subInterfaceInstType.hasOwnProperty("sub"));
+    assertFalse(subInterfaceInstType.hasOwnProperty("none"));
   }
 
   public void testGetPropertyNames() throws Exception {

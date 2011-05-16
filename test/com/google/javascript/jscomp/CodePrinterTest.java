@@ -710,6 +710,23 @@ public class CodePrinterTest extends TestCase {
         + "a.Bar = function() {\n};\n");
   }
 
+  public void testTypeAnnotationsMultipleInterface() {
+    assertTypeAnnotations("var a = {};"
+        + "/** @interface */ a.Foo1 = function(){};"
+        + "/** @interface */ a.Foo2 = function(){};"
+        + "/** @interface \n @extends {a.Foo1} \n @extends {a.Foo2} */"
+        + "a.Bar = function(){}",
+        "var a = {};\n"
+        + "/**\n * @interface\n */\n"
+        + "a.Foo1 = function() {\n};\n"
+        + "/**\n * @interface\n */\n"
+        + "a.Foo2 = function() {\n};\n"
+        + "/**\n * @extends {a.Foo1}\n"
+        + " * @extends {a.Foo2}\n"
+        + " * @interface\n */\n"
+        + "a.Bar = function() {\n};\n");
+  }
+
   public void testTypeAnnotationsMember() {
     assertTypeAnnotations("var a = {};"
         + "/** @constructor */ a.Foo = function(){}"

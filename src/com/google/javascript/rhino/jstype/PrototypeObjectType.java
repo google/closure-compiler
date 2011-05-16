@@ -144,7 +144,14 @@ class PrototypeObjectType extends ObjectType {
     }
     ObjectType implicitPrototype = getImplicitPrototype();
     if (implicitPrototype != null) {
-      return implicitPrototype.hasProperty(propertyName);
+      if (implicitPrototype.hasProperty(propertyName)) {
+        return true;
+      }
+    }
+    for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
+      if (interfaceType.hasProperty(propertyName)) {
+        return true;
+      }
     }
     return false;
   }
@@ -452,6 +459,14 @@ class PrototypeObjectType extends ObjectType {
     if (thatCtor != null && thatCtor.isInterface()) {
       Iterable<ObjectType> thisInterfaces = getCtorImplementedInterfaces();
       for (ObjectType thisInterface : thisInterfaces) {
+        if (thisInterface.isSubtype(that)) {
+          return true;
+        }
+      }
+    }
+
+    if (getConstructor() != null && getConstructor().isInterface()) {
+      for (ObjectType thisInterface : getCtorExtendedInterfaces()) {
         if (thisInterface.isSubtype(that)) {
           return true;
         }

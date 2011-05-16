@@ -3442,7 +3442,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfaceAssignment8() throws Exception {
     testTypes("/** @interface */var I = function() {};\n" +
         "/** @type {I} */var i;\n" +
-        "/** @type {Object} */var o = i;");
+        "/** @type {Object} */var o = i;\n" +
+        "new Object().prototype = i.prototype;");
   }
 
   public void testInterfaceAssignment9() throws Exception {
@@ -6821,6 +6822,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "override: number");
   }
 
+  public void testInterfaceInheritanceCheck13() throws Exception {
+    testTypes(
+        "function abstractMethod() {};\n" +
+        "/** @interface */var base = function() {};\n" +
+        "/** @extends {base} \n @interface */ var Int = function() {}\n" +
+        "/** @type {{bar : !Function}} */ var x; \n" +
+        "/** @type {!Function} */ base.prototype.bar = abstractMethod; \n" +
+        "/** @type {Int} */ foo;\n" +
+        "foo.bar();");
+  }
+
   public void testInterfacePropertyNotImplemented() throws Exception {
     testTypes(
         "/** @interface */function Int() {};" +
@@ -8475,6 +8487,125 @@ public class TypeCheckTest extends CompilerTypeTestCase {
          new String[] {"Bad type annotation. Unknown type x",
            "Parse error. Duplicate record field number",
            "Bad type annotation. Unknown type y"});
+  }
+
+  public void testMultipleExtendsInterface1() throws Exception {
+    testTypes("/** @interface */ function base1() {}\n"
+        + "/** @interface */ function base2() {}\n"
+        + "/** @interface\n"
+        + "* @extends {base1}\n"
+        + "* @extends {base2}\n"
+        + "*/\n"
+        + "function derived() {}");
+  }
+
+  public void testMultipleExtendsInterface2() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @desc description */Int0.prototype.foo = function() {};" +
+        "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
+        "function Int2() {};" +
+        "/** @constructor\n @implements {Int2} */function Foo() {};",
+        "property foo on interface Int0 is not implemented by type Foo");
+  }
+
+  public void testMultipleExtendsInterface3() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @desc description */Int1.prototype.foo = function() {};" +
+        "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
+        "function Int2() {};" +
+        "/** @constructor\n @implements {Int2} */function Foo() {};",
+        "property foo on interface Int1 is not implemented by type Foo");
+  }
+
+  public void testMultipleExtendsInterface4() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @interface \n @extends {Int0} \n @extends {Int1} \n" +
+        " @extends {number} */" +
+        "function Int2() {};" +
+        "/** @constructor\n @implements {Int2} */function Foo() {};",
+        "Int2 @extends non-object type number");
+  }
+
+  public void testMultipleExtendsInterface5() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @constructor */function Int1() {};" +
+        "/** @desc description @ return {string} x */" +
+        "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
+        "function Int2() {};",
+        "Int2 cannot extend this type; a constructor can only extend " +
+        "objects and an interface can only extend interfaces");
+  }
+
+  public void testMultipleExtendsInterface6() throws Exception {
+    testTypes(
+        "/** @interface */function Super1() {};" +
+        "/** @interface */function Super2() {};" +
+        "/** @param {number} bar */Super2.prototype.foo = function(bar) {};" +
+        "/** @interface\n @extends {Super1}\n " +
+        "@extends {Super2} */function Sub() {};" +
+        "/** @override\n @param {string} bar */Sub.prototype.foo =\n" +
+        "function(bar) {};",
+        "mismatch of the foo property type and the type of the property it " +
+        "overrides from superclass Super2\n" +
+        "original: function (this:Super2, number): undefined\n" +
+        "override: function (this:Sub, string): undefined");
+  }
+
+  public void testMultipleExtendsInterfaceAssignment() throws Exception {
+    testTypes("/** @interface */var I1 = function() {};\n" +
+        "/** @interface */ var I2 = function() {}\n" +
+        "/** @interface\n@extends {I1}\n@extends {I2}*/" +
+        "var I3 = function() {};\n" +
+        "/** @constructor\n@implements {I3}*/var T = function() {};\n" +
+        "var t = new T();\n" +
+         "/** @type {I1} */var i1 = t;\n" +
+         "/** @type {I2} */var i2 = t;\n" +
+         "/** @type {I3} */var i3 = t;\n" +
+         "i1 = i3;\n" +
+         "i2 = i3;\n");
+  }
+
+  public void testMultipleExtendsInterfaceParamPass() throws Exception {
+    testTypes("/** @interface */var I1 = function() {};\n" +
+        "/** @interface */ var I2 = function() {}\n" +
+        "/** @interface\n@extends {I1}\n@extends {I2}*/" +
+        "var I3 = function() {};\n" +
+        "/** @constructor\n@implements {I3}*/var T = function() {};\n" +
+        "var t = new T();\n" +
+        "/** @param x I1 \n@param y I2\n@param z I3*/function foo(x,y,z){};\n" +
+        "foo(t,t,t)\n");
+  }
+
+  public void testBadMultipleExtendsClass() throws Exception {
+    testTypes("/** @constructor */ function base1() {}\n"
+        + "/** @constructor */ function base2() {}\n"
+        + "/** @constructor\n"
+        + "* @extends {base1}\n"
+        + "* @extends {base2}\n"
+        + "*/\n"
+        + "function derived() {}",
+        "Bad type annotation. type annotation incompatible "
+        + "with other annotations");
+  }
+
+  public void testInterfaceExtendsResolution() throws Exception {
+    testTypes("/** @interface \n @extends {A} */ function B() {};\n" +
+        "/** @constructor \n @implements {B} */ function C() {};\n" +
+        "/** @interface */ function A() {};");
+  }
+
+  public void testPropertyCanBeDefinedInObject() throws Exception {
+    testTypes("/** @interface */ function I() {};" +
+        "I.prototype.bar = function() {};" +
+        "/** @type {Object} */ var foo;" +
+        "foo.bar();");
   }
 
   private void checkObjectType(ObjectType objectType, String propertyName,
