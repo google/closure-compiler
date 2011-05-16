@@ -276,26 +276,6 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         return false;
       }
 
-      // We can skip the side effect check along the paths of two nodes if
-      // they are just next to each other.
-      if (NodeUtil.isStatementBlock(defCfgNode.getParent()) &&
-          defCfgNode.getNext() != useCfgNode) {
-        // Similar side effect check as above but this time the side effect is
-        // else where along the path.
-        // x = readProp(b); while(modifyProp(b)) {}; print(x);
-        CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>
-          pathCheck = new CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>(
-                 cfg,
-                 cfg.getDirectedGraphNode(defCfgNode),
-                 cfg.getDirectedGraphNode(useCfgNode),
-                 SIDE_EFFECT_PREDICATE,
-                 Predicates.
-                     <DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue(),
-                 false);
-        if (pathCheck.somePathsSatisfyPredicate()) {
-          return false;
-        }
-      }
 
       // TODO(user): Side-effect is ok sometimes. As long as there are no
       // side-effect function down all paths to the use. Once we have all the
@@ -315,6 +295,13 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
       // Make sure that the name is not within a loop
       if (NodeUtil.isWithinLoop(use)) {
+        return false;
+      }
+
+
+      Collection<Node> uses = reachingUses.getUses(varName, defCfgNode);
+
+      if (uses.size() != 1) {
         return false;
       }
 
@@ -351,10 +338,25 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         return false;
       }
 
-      Collection<Node> uses = reachingUses.getUses(varName, defCfgNode);
-
-      if (uses.size() != 1) {
-        return false;
+      // We can skip the side effect check along the paths of two nodes if
+      // they are just next to each other.
+      if (NodeUtil.isStatementBlock(defCfgNode.getParent()) &&
+          defCfgNode.getNext() != useCfgNode) {
+        // Similar side effect check as above but this time the side effect is
+        // else where along the path.
+        // x = readProp(b); while(modifyProp(b)) {}; print(x);
+        CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>
+          pathCheck = new CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>(
+                 cfg,
+                 cfg.getDirectedGraphNode(defCfgNode),
+                 cfg.getDirectedGraphNode(useCfgNode),
+                 SIDE_EFFECT_PREDICATE,
+                 Predicates.
+                     <DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue(),
+                 false);
+        if (pathCheck.somePathsSatisfyPredicate()) {
+          return false;
+        }
       }
 
       return true;
