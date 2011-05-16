@@ -267,7 +267,7 @@ class ScopedAliases implements CompilerPass {
           Node anonymousFnNode = n.getChildAtIndex(1);
           if (!NodeUtil.isFunction(anonymousFnNode) ||
               NodeUtil.getFunctionName(anonymousFnNode) != null ||
-              NodeUtil.getFnParameters(anonymousFnNode).hasChildren()) {
+              NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
             report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
           } else {
             scopeCalls.add(n);

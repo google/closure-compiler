@@ -97,7 +97,7 @@ class FunctionArgumentInjector {
       }
     }
 
-    for (Node fnArg : NodeUtil.getFnParameters(fnNode).children()) {
+    for (Node fnArg : NodeUtil.getFunctionParameters(fnNode).children()) {
       if (cArg != null) {
         argMap.put(fnArg.getString(), cArg);
         cArg = cArg.getNext();
@@ -451,7 +451,7 @@ class FunctionArgumentInjector {
    */
   private static Set<String> getFunctionParameterSet(Node fnNode) {
     Set<String> set = Sets.newHashSet();
-    for (Node n : NodeUtil.getFnParameters(fnNode).children()) {
+    for (Node n : NodeUtil.getFunctionParameters(fnNode).children()) {
       set.add(n.getString());
     }
     return set;

@@ -200,7 +200,8 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      */
     private Node createExternFunction(Node exportedFunction) {
       List<Node> externParameters = Lists.newLinkedList();
-      for (Node param : NodeUtil.getFnParameters(exportedFunction).children()) {
+      for (Node param :
+          NodeUtil.getFunctionParameters(exportedFunction).children()) {
         externParameters.add(param.cloneNode());
       }
 
@@ -248,7 +249,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
        * in lock step getting parameter names from the first and types from the
        * second.
        */
-      Node astParameterIterator = NodeUtil.getFnParameters(function)
+      Node astParameterIterator = NodeUtil.getFunctionParameters(function)
         .getFirstChild();
 
       Node typeParameterIterator = functionType.getParametersNode()

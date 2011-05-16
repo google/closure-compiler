@@ -2755,7 +2755,7 @@ public final class NodeUtil {
     * @param fnNode The function.
     * @return The Node containing the Function parameters.
     */
-  public static Node getFnParameters(Node fnNode) {
+  public static Node getFunctionParameters(Node fnNode) {
     // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
     Preconditions.checkArgument(fnNode.getType() == Token.FUNCTION);
     return fnNode.getFirstChild().getNext();
@@ -2819,7 +2819,7 @@ public final class NodeUtil {
   /**
    * Get the JSDocInfo for a function.
    */
-  public static JSDocInfo getFunctionInfo(Node n) {
+  public static JSDocInfo getFunctionJSDocInfo(Node n) {
     Preconditions.checkState(n.getType() == Token.FUNCTION);
     JSDocInfo fnInfo = n.getJSDocInfo();
     if (fnInfo == null && NodeUtil.isFunctionExpression(n)) {

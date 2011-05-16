@@ -232,7 +232,7 @@ class PrepareAst implements CompilerPass {
      * Annotate optional and var_arg function parameters.
      */
     private void annotateFunctions(Node n, Node parent) {
-      JSDocInfo fnInfo = NodeUtil.getFunctionInfo(n);
+      JSDocInfo fnInfo = NodeUtil.getFunctionJSDocInfo(n);
 
       // Compute which function parameters are optional and
       // which are var_args.

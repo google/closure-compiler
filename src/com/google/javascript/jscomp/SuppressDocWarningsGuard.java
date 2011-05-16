@@ -63,7 +63,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
         // dependency on the exact structure of our AST, and that seems like
         // a bad idea.
         if (type == Token.FUNCTION) {
-          info = NodeUtil.getFunctionInfo(current);
+          info = NodeUtil.getFunctionJSDocInfo(current);
         } else if (type == Token.SCRIPT) {
           info = current.getJSDocInfo();
         }

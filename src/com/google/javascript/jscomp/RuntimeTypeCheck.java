@@ -235,7 +235,7 @@ class RuntimeTypeCheck implements CompilerPass {
     private void visitFunction(NodeTraversal t, Node n) {
       FunctionType funType = (FunctionType) n.getJSType();
       Node block = n.getLastChild();
-      Node paramName = NodeUtil.getFnParameters(n).getFirstChild();
+      Node paramName = NodeUtil.getFunctionParameters(n).getFirstChild();
       Node insertionPoint = null;
 
       // To satisfy normalization constraints, the type checking must be

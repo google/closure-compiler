@@ -305,7 +305,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
    */
   private boolean hasLocalNames(Node fnNode) {
     Node block = NodeUtil.getFunctionBody(fnNode);
-    return NodeUtil.getFnParameters(fnNode).hasChildren()
+    return NodeUtil.getFunctionParameters(fnNode).hasChildren()
         || NodeUtil.has(
              block,
              new NodeUtil.MatchDeclaration(),

@@ -641,7 +641,7 @@ class FunctionInjector {
     }
 
     // FUNCTION NODE -> LP NODE: [ ARG1, ARG2, ... ]
-    Node fnParam = NodeUtil.getFnParameters(fnNode).getFirstChild();
+    Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
     while (cArg != null || fnParam != null) {
       // For each named parameter check if a mutable argument use more than one.
       if (fnParam != null) {
@@ -782,7 +782,7 @@ class FunctionInjector {
    * @param referencesThis
    */
   private static int estimateCallCost(Node fnNode, boolean referencesThis) {
-    Node argsNode = NodeUtil.getFnParameters(fnNode);
+    Node argsNode = NodeUtil.getFunctionParameters(fnNode);
     int numArgs = argsNode.getChildCount();
 
     int callCost = NAME_COST_ESTIMATE + PAREN_COST;
@@ -809,7 +809,7 @@ class FunctionInjector {
       Node fnNode, Set<String> namesToAlias, InliningMode mode) {
     // The part of the function that is never inlined:
     //    "function xx(xx,xx){}" (15 + (param count * 3) -1;
-    int paramCount = NodeUtil.getFnParameters(fnNode).getChildCount();
+    int paramCount = NodeUtil.getFunctionParameters(fnNode).getChildCount();
     int commaCount = (paramCount > 1) ? paramCount - 1 : 0;
     int costDeltaFunctionOverhead = 15 + commaCount +
         (paramCount * InlineCostEstimator.ESTIMATED_IDENTIFIER_COST);
