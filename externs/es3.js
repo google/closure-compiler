@@ -590,7 +590,7 @@ Array.prototype.reduce = function(callback, opt_initialValue) {};
 Array.prototype.reduceRight = function(callback, opt_initialValue) {};
 
 /**
- * Mozilla 1.6+ only.
+ * Available in EcmaScript 5, Mozilla 1.6+.
  * @param {Function} callback
  * @param {Object=} opt_thisobj
  * @return {boolean}
@@ -600,7 +600,7 @@ Array.prototype.reduceRight = function(callback, opt_initialValue) {};
 Array.prototype.every = function(callback, opt_thisobj) {};
 
 /**
- * Mozilla 1.6+ only.
+ * Available in EcmaScript 5, Mozilla 1.6+.
  * @param {Function} callback
  * @param {Object=} opt_thisobj
  * @return {!Array}
@@ -610,7 +610,7 @@ Array.prototype.every = function(callback, opt_thisobj) {};
 Array.prototype.filter = function(callback, opt_thisobj) {};
 
 /**
- * Mozilla 1.6+ only.
+ * Available in EcmaScript 5, Mozilla 1.6+.
  * @param {Function} callback
  * @param {Object=} opt_thisobj
  * @this {Object}
@@ -619,7 +619,7 @@ Array.prototype.filter = function(callback, opt_thisobj) {};
 Array.prototype.forEach = function(callback, opt_thisobj) {};
 
 /**
- * Mozilla 1.6+ only.
+ * Available in EcmaScript 5, Mozilla 1.6+.
  * @param {*} obj
  * @param {number=} opt_fromIndex
  * @return {number}
@@ -630,7 +630,7 @@ Array.prototype.forEach = function(callback, opt_thisobj) {};
 Array.prototype.indexOf = function(obj, opt_fromIndex) {};
 
 /**
- * Mozilla 1.6+ only.
+ * Available in EcmaScript 5, Mozilla 1.6+.
  * @param {*} obj
  * @param {number=} opt_fromIndex
  * @return {number}
@@ -641,7 +641,7 @@ Array.prototype.indexOf = function(obj, opt_fromIndex) {};
 Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
 
 /**
- * Mozilla 1.6+ only.
+ * Available in EcmaScript 5, Mozilla 1.6+.
  * @param {Function} callback
  * @param {Object=} opt_thisobj
  * @return {!Array}
@@ -651,7 +651,7 @@ Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
 Array.prototype.map = function(callback, opt_thisobj) {};
 
 /**
- * Mozilla 1.6+ only.
+ * Available in EcmaScript 5, Mozilla 1.6+.
  * @param {Function} callback
  * @param {Object=} opt_thisobj
  * @return {boolean}
