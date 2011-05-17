@@ -867,10 +867,10 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Applies aliases and inlines goog.scope. */
-  final PassFactory closureGoogScopeAliases =
-      new PassFactory("processGoogScopeAliases", true) {
+  final HotSwapPassFactory closureGoogScopeAliases =
+      new HotSwapPassFactory("processGoogScopeAliases", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       return new ScopedAliases(
               compiler, options.getAliasTransformationHandler());
     }

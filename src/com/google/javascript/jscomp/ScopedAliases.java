@@ -45,7 +45,7 @@ import java.util.Map;
  *
  * @author robbyw@google.com (Robby Walker)
  */
-class ScopedAliases implements CompilerPass {
+class ScopedAliases implements HotSwapCompilerPass {
   /** Name used to denote an scoped function block used for aliasing. */
   static final String SCOPING_METHOD_NAME = "goog.scope";
 
@@ -91,6 +91,11 @@ class ScopedAliases implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    hotSwapScript(root);
+  }
+
+  @Override
+  public void hotSwapScript(Node root) {
     Traversal traversal = new Traversal();
     NodeTraversal.traverse(compiler, root, traversal);
 
@@ -168,14 +173,14 @@ class ScopedAliases implements CompilerPass {
 
   private class Traversal implements NodeTraversal.ScopedCallback {
     // The job of this class is to collect these three data sets.
-    private List<Node> aliasDefinitions = Lists.newArrayList();
+    private final List<Node> aliasDefinitions = Lists.newArrayList();
 
-    private List<Node> scopeCalls = Lists.newArrayList();
+    private final List<Node> scopeCalls = Lists.newArrayList();
 
-    private List<AliasUsage> aliasUsages = Lists.newArrayList();
+    private final List<AliasUsage> aliasUsages = Lists.newArrayList();
 
     // This map is temporary and cleared for each scope.
-    private Map<String, Var> aliases = Maps.newHashMap();
+    private final Map<String, Var> aliases = Maps.newHashMap();
 
     private boolean hasErrors = false;
 
