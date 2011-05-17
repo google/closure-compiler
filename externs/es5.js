@@ -96,8 +96,36 @@ String.prototype.trimRight = function() {};
 
 
 /**
+ * A object property discriptor used by Object.create, Object.defineProperty,
+ * Object.defineProperties, Object.getOwnPropertyDescriptor.
+ *
+ * Note: not a real constructor.
+ * @constructor
+ */
+var ObjectPropertyDescriptor = function(){};
+
+/** @type {*} */
+ObjectPropertyDescriptor.prototype.value;
+
+/** @type {(function():?)||undefined} */
+ObjectPropertyDescriptor.prototype.get;
+
+/** @type {(function(?):void)||undefined} */
+ObjectPropertyDescriptor.prototype.set;
+
+/** @type {boolean|undefined} */
+ObjectPropertyDescriptor.prototype.writable;
+
+/** @type {boolean|undefined} */
+ObjectPropertyDescriptor.prototype.enumerable;
+
+/** @type {boolean|undefined} */
+ObjectPropertyDescriptor.prototype.configurable;
+
+
+/**
  * @param {Object} proto
- * @param {Object=} opt_properties
+ * @param {Object=} opt_properties  A map of ObjectPropertyDescriptors.
  * @return {!Object}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/create
@@ -108,7 +136,7 @@ Object.create = function(proto, opt_properties) {};
 /**
  * @param {!Object} obj
  * @param {string} prop
- * @param {!Object} descriptor
+ * @param {!Object} descriptor A ObjectPropertyDescriptor.
  * @return {!Object}
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/defineProperty
  */ 
@@ -117,7 +145,7 @@ Object.defineProperty = function(obj, prop, descriptor) {};
 
 /**
  * @param {!Object} obj
- * @param {!Object} props
+ * @param {!Object} props A map of ObjectPropertyDescriptors.
  * @return {!Object}
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/defineProperties
  */ 
@@ -127,7 +155,7 @@ Object.defineProperties = function(obj, props) {};
 /**
  * @param {!Object} obj
  * @param {string} prop
- * @return {Object}
+ * @return {Object.<ObjectPropertyDescriptor>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
  */ 
