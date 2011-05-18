@@ -8619,6 +8619,164 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         expectedType, objectType.getPropertyType(propertyName));
   }
 
+  public void testExtendedInterfacePropertiesCompatibility1() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @type {number} */" +
+        "Int0.prototype.foo;" +
+        "/** @type {string} */" +
+        "Int1.prototype.foo;" +
+        "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
+        "function Int2() {};",
+        "Interface Int2 has a property foo with incompatible types in its " +
+        "super interfaces Int0 and Int1");
+  }
+
+  public void testExtendedInterfacePropertiesCompatibility2() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @interface */function Int2() {};" +
+        "/** @type {number} */" +
+        "Int0.prototype.foo;" +
+        "/** @type {string} */" +
+        "Int1.prototype.foo;" +
+        "/** @type {Object} */" +
+        "Int2.prototype.foo;" +
+        "/** @interface \n @extends {Int0} \n @extends {Int1} \n" +
+        "@extends {Int2}*/" +
+        "function Int3() {};",
+        new String[] {
+            "Interface Int3 has a property foo with incompatible types in " +
+            "its super interfaces Int0 and Int1",
+            "Interface Int3 has a property foo with incompatible types in " +
+            "its super interfaces Int1 and Int2"
+        });
+  }
+
+  public void testExtendedInterfacePropertiesCompatibility3() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @type {number} */" +
+        "Int0.prototype.foo;" +
+        "/** @type {string} */" +
+        "Int1.prototype.foo;" +
+        "/** @interface \n @extends {Int1} */ function Int2() {};" +
+        "/** @interface \n @extends {Int0} \n @extends {Int2} */" +
+        "function Int3() {};",
+        "Interface Int3 has a property foo with incompatible types in its " +
+        "super interfaces Int0 and Int1");
+  }
+
+  public void testExtendedInterfacePropertiesCompatibility4() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface \n @extends {Int0} */ function Int1() {};" +
+        "/** @type {number} */" +
+        "Int0.prototype.foo;" +
+        "/** @interface */function Int2() {};" +
+        "/** @interface \n @extends {Int2} */ function Int3() {};" +
+        "/** @type {string} */" +
+        "Int2.prototype.foo;" +
+        "/** @interface \n @extends {Int1} \n @extends {Int3} */" +
+        "function Int4() {};",
+        "Interface Int4 has a property foo with incompatible types in its " +
+        "super interfaces Int0 and Int2");
+  }
+
+  public void testExtendedInterfacePropertiesCompatibility5() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @type {number} */" +
+        "Int0.prototype.foo;" +
+        "/** @type {string} */" +
+        "Int1.prototype.foo;" +
+        "/** @interface \n @extends {Int1} */ function Int2() {};" +
+        "/** @interface \n @extends {Int0} \n @extends {Int2} */" +
+        "function Int3() {};" +
+        "/** @interface */function Int4() {};" +
+        "/** @type {number} */" +
+        "Int4.prototype.foo;" +
+        "/** @interface \n @extends {Int3} \n @extends {Int4} */" +
+        "function Int5() {};",
+        new String[] {
+            "Interface Int3 has a property foo with incompatible types in its" +
+            " super interfaces Int0 and Int1",
+            "Interface Int5 has a property foo with incompatible types in its" +
+            " super interfaces Int1 and Int4"});
+  }
+
+  public void testExtendedInterfacePropertiesCompatibility6() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @type {number} */" +
+        "Int0.prototype.foo;" +
+        "/** @type {string} */" +
+        "Int1.prototype.foo;" +
+        "/** @interface \n @extends {Int1} */ function Int2() {};" +
+        "/** @interface \n @extends {Int0} \n @extends {Int2} */" +
+        "function Int3() {};" +
+        "/** @interface */function Int4() {};" +
+        "/** @type {string} */" +
+        "Int4.prototype.foo;" +
+        "/** @interface \n @extends {Int3} \n @extends {Int4} */" +
+        "function Int5() {};",
+        "Interface Int3 has a property foo with incompatible types in its" +
+        " super interfaces Int0 and Int1");
+  }
+
+  public void testExtendedInterfacePropertiesCompatibility7() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @type {number} */" +
+        "Int0.prototype.foo;" +
+        "/** @type {string} */" +
+        "Int1.prototype.foo;" +
+        "/** @interface \n @extends {Int1} */ function Int2() {};" +
+        "/** @interface \n @extends {Int0} \n @extends {Int2} */" +
+        "function Int3() {};" +
+        "/** @interface */function Int4() {};" +
+        "/** @type {Object} */" +
+        "Int4.prototype.foo;" +
+        "/** @interface \n @extends {Int3} \n @extends {Int4} */" +
+        "function Int5() {};",
+        new String[] {
+            "Interface Int3 has a property foo with incompatible types in its" +
+            " super interfaces Int0 and Int1",
+            "Interface Int5 has a property foo with incompatible types in its" +
+            " super interfaces Int1 and Int4"});
+  }
+
+  public void testExtendedInterfacePropertiesCompatibility8() throws Exception {
+    testTypes(
+        "/** @interface */function Int0() {};" +
+        "/** @interface */function Int1() {};" +
+        "/** @type {number} */" +
+        "Int0.prototype.foo;" +
+        "/** @type {string} */" +
+        "Int1.prototype.bar;" +
+        "/** @interface \n @extends {Int1} */ function Int2() {};" +
+        "/** @interface \n @extends {Int0} \n @extends {Int2} */" +
+        "function Int3() {};" +
+        "/** @interface */function Int4() {};" +
+        "/** @type {Object} */" +
+        "Int4.prototype.foo;" +
+        "/** @type {Null} */" +
+        "Int4.prototype.bar;" +
+        "/** @interface \n @extends {Int3} \n @extends {Int4} */" +
+        "function Int5() {};",
+        new String[] {
+            "Interface Int5 has a property bar with incompatible types in its" +
+            " super interfaces Int1 and Int4",
+            "Interface Int5 has a property foo with incompatible types in its" +
+            " super interfaces Int0 and Int4"});
+  }
+
   private void testTypes(String js) throws Exception {
     testTypes(js, (String) null);
   }

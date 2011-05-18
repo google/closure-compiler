@@ -43,6 +43,8 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.Iterator;
+import java.util.Set;
+import java.util.HashMap;
 
 /**
  * <p>Checks the types of JS expressions against any declared type
@@ -218,6 +220,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Illegal annotation on {0}. @implicitCast may only be used in " +
           "externs.");
 
+  static final DiagnosticType INCOMPATIBLE_EXTENDED_PROPERTY_TYPE =
+      DiagnosticType.warning(
+          "JSC_INCOMPATIBLE_EXTENDED_PROPERTY_TYPE",
+          "Interface {0} has a property {1} with incompatible types in " +
+          "its super interfaces {2} and {3}");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DETERMINISTIC_TEST,
       DETERMINISTIC_TEST_NO_RESULT,
@@ -245,6 +253,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       UNRESOLVED_TYPE,
       WRONG_ARGUMENT_COUNT,
       ILLEGAL_IMPLICIT_CAST,
+      INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
       RhinoErrorReporter.TYPE_PARSE_ERROR,
       TypedScopeCreator.UNKNOWN_LENDS,
       TypedScopeCreator.LENDS_ON_NON_OBJECT,
@@ -1413,6 +1422,42 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
+   * Check whether there's any property conflict for for a particular super
+   * interface
+   * @param t The node traversal object that supplies context
+   * @param n The node being visited
+   * @param functionName The function name being checked
+   * @param properties The property names in the super interfaces that have
+   * been visited
+   * @param currentProperties The property names in the super interface
+   * that have been visited
+   * @param interfaceType The super interface that is being visited
+   */
+  private void checkInterfaceConflictProperties(NodeTraversal t, Node n,
+      String functionName, HashMap<String, ObjectType> properties,
+      HashMap<String, ObjectType> currentProperties,
+      ObjectType interfaceType) {
+    Set<String> currentPropertyNames = interfaceType.getPropertyNames();
+    for (String name : currentPropertyNames) {
+      ObjectType oType = properties.get(name);
+      if (oType != null) {
+        if (!interfaceType.getPropertyType(name).isEquivalentTo(
+            oType.getPropertyType(name))) {
+          compiler.report(
+              t.makeError(n, INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
+                  functionName, name, oType.toString(),
+                  interfaceType.toString()));
+        }
+      }
+      currentProperties.put(name, interfaceType);
+    }
+    for (ObjectType iType : interfaceType.getCtorExtendedInterfaces()) {
+      checkInterfaceConflictProperties(t, n, functionName, properties,
+          currentProperties, iType);
+    }
+  }
+
+  /**
    * Visits a {@link Token#FUNCTION} node.
    *
    * @param t The node traversal object that supplies context, such as the
@@ -1465,6 +1510,20 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (functionType.hasImplementedInterfaces()) {
         compiler.report(t.makeError(n,
             CONFLICTING_IMPLEMENTED_TYPE, functionPrivateName));
+      }
+      // Check whether the extended interfaces have any conflicts
+      if (functionType.getExtendedInterfacesCount() > 1) {
+        // Only check when extending more than one interfaces
+        HashMap<String, ObjectType> properties
+            = new HashMap<String, ObjectType>();
+        HashMap<String, ObjectType> currentProperties
+            = new HashMap<String, ObjectType>();
+        for (ObjectType interfaceType : functionType.getExtendedInterfaces()) {
+          currentProperties.clear();
+          checkInterfaceConflictProperties(t, n, functionPrivateName,
+              properties, currentProperties, interfaceType);
+          properties.putAll(currentProperties);
+        }
       }
     }
   }

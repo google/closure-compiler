@@ -419,6 +419,11 @@ public class FunctionType extends PrototypeObjectType {
     return extendedInterfaces;
   }
 
+  /** Returns the number of interfaces directly extended by an interface */
+  public int getExtendedInterfacesCount() {
+    return extendedInterfaces.size();
+  }
+
   public void setExtendedInterfaces(List<ObjectType> extendedInterfaces)
     throws UnsupportedOperationException {
     if (isInterface()) {
