@@ -18,10 +18,12 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -763,6 +765,22 @@ public class CommandLineRunnerTest extends TestCase {
     assertEquals(2, compiler.getErrors().length);
   }
 
+  public void testES3ByDefault() {
+    test("var x = f.function", RhinoErrorReporter.PARSE_ERROR);
+  }
+
+  public void testES5() {
+    args.add("--language_in=ECMASCRIPT5");
+    test("var x = f.function", "var x = f.function");
+    test("var let", "var let");
+  }
+
+  public void testES5Strict() {
+    args.add("--language_in=ECMASCRIPT5_STRICT");
+    test("var x = f.function", "'use strict';var x = f.function");
+    test("var let", RhinoErrorReporter.PARSE_ERROR);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
@@ -920,8 +938,13 @@ public class CommandLineRunnerTest extends TestCase {
     for (int i = 0; i < original.length; i++) {
       inputs.add(JSSourceFile.fromCode("input" + i, original[i]));
     }
-    compiler.init(externs, inputs, new CompilerOptions());
+    CompilerOptions options = new CompilerOptions();
+    // ECMASCRIPT5 is the most forgiving.
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
+    compiler.init(externs, inputs, options);
     Node all = compiler.parseInputs();
+    Preconditions.checkState(compiler.getErrorCount() == 0);
+    Preconditions.checkNotNull(all);
     Node n = all.getLastChild();
     return n;
   }
