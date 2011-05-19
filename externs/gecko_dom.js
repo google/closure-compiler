@@ -432,7 +432,6 @@ Window.prototype.getSelection = function() {};
 Window.prototype.home = function() {};
 
 Window.prototype.openDialog;
-Window.prototype.postMessage;
 Window.prototype.releaseEvents;
 Window.prototype.scrollByLines;
 Window.prototype.scrollByPages;

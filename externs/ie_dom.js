@@ -580,11 +580,6 @@ Window.prototype.open = function(opt_url, opt_windowName, opt_windowFeatures,
                                  opt_replace) {};
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/cc197015(VS.85).aspx
- */
-Window.prototype.postMessage;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536672(VS.85).aspx
  */
 Window.prototype.print = function() {};
