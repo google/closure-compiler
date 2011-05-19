@@ -19,6 +19,7 @@ package com.google.debugging.sourcemap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.debugging.sourcemap.SourceMapConsumerV3.EntryVisitor;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -217,6 +218,26 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
 
     lastMapping = mapping;
     mappings.add(mapping);
+  }
+
+  class ConsumerEntryVisitor implements EntryVisitor {
+
+    @Override
+    public void visit(
+        String sourceName, String symbolName,
+        FilePosition sourceStartPosition,
+        FilePosition startPosition, FilePosition endPosition) {
+      addMapping(sourceName, symbolName,
+          sourceStartPosition, startPosition, endPosition);
+    }
+  }
+
+  public void mergeMapSection(int line, int column, String mapSectionContents)
+      throws SourceMapParseException {
+     setStartingPosition(line, column);
+     SourceMapConsumerV3 section = new SourceMapConsumerV3();
+     section.parse(mapSectionContents);
+     section.visitMappings(new ConsumerEntryVisitor());
   }
 
   /**

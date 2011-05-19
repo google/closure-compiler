@@ -28,7 +28,9 @@ import com.google.javascript.jscomp.SourceMap.DetailLevel;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * @author johnlenz@google.com (John Lenz)
@@ -50,8 +52,14 @@ public abstract class SourceMapTestCase extends TestCase {
     }
 
   protected static class Token {
-      String tokenName;
-      FilePosition position;
+      final String tokenName;
+      final String inputName;
+      final FilePosition position;
+      Token(String tokenName, String inputName, FilePosition position) {
+        this.tokenName = tokenName;
+        this.inputName = inputName;
+        this.position = position;
+      }
     }
 
   @Override
@@ -85,8 +93,34 @@ public abstract class SourceMapTestCase extends TestCase {
    * Finds the all the __XX__ tokens in the given Javascript
    * string.
    */
-  private Map<String, Token> findTokens(String js) {
+  private Map<String, Token> findTokens(Map<String, String> inputs) {
     Map<String, Token> tokens = Maps.newLinkedHashMap();
+
+    for (Entry<String, String> entry : inputs.entrySet()) {
+      findTokens(tokens, entry.getKey(), entry.getValue());
+    }
+
+    return tokens;
+  }
+
+  /**
+   * Finds the all the __XX__ tokens in the given Javascript
+   * string.
+   */
+  private Map<String, Token> findTokens(String src) {
+    Map<String, Token> tokens = Maps.newLinkedHashMap();
+
+    findTokens(tokens, "", src);
+
+    return tokens;
+  }
+
+  /**
+   * Finds the all the __XX__ tokens in the given Javascript
+   * string.
+   */
+  private Map<String, Token> findTokens(
+    Map<String, Token> tokens, String inputName, String js) {
 
     int currentLine = 0;
     int positionOffset = 0;
@@ -119,10 +153,10 @@ public abstract class SourceMapTestCase extends TestCase {
         }
 
         if (tokenName.length() > 0) {
-          Token token = new Token();
-          token.tokenName = tokenName;
           int currentPosition = i - positionOffset;
-          token.position = new FilePosition(currentLine, currentPosition);
+          Token token = new Token(
+              tokenName, inputName,
+              new FilePosition(currentLine, currentPosition));
           tokens.put(tokenName, token);
         }
 
@@ -138,15 +172,29 @@ public abstract class SourceMapTestCase extends TestCase {
   abstract SourceMapConsumer getSourceMapConsumer();
 
   protected void compileAndCheck(String js) {
-    RunResult result = compile(js);
+    String inputName = "testcode";
+    RunResult result = compile(js, inputName);
+    check(inputName, js, result.generatedSource, result.sourceMapFileContent);
+  }
 
+  protected void check(
+      String inputName, String input, String output,
+      String sourceMapFileContent) {
+    Map<String, String> inputMap = new LinkedHashMap<String,String>();
+    inputMap.put(inputName, input);
+    check(inputMap, output, sourceMapFileContent);
+  }
+
+  protected void check(
+      Map<String,String> originalInputs, String generatedSource,
+      String sourceMapFileContent) {
     // Find all instances of the __XXX__ pattern in the original
     // source code.
-    Map<String, Token> originalTokens = findTokens(js);
+    Map<String, Token> originalTokens = findTokens(originalInputs);
 
     // Find all instances of the __XXX__ pattern in the generated
     // source code.
-    Map<String, Token> resultTokens = findTokens(result.generatedSource);
+    Map<String, Token> resultTokens = findTokens(generatedSource);
 
     // Ensure that the generated instances match via the source map
     // to the original source code.
@@ -156,7 +204,7 @@ public abstract class SourceMapTestCase extends TestCase {
 
     SourceMapConsumer reader = getSourceMapConsumer();
     try {
-      reader.parse(result.sourceMapFileContent);
+      reader.parse(sourceMapFileContent);
     } catch (SourceMapParseException e) {
       throw new RuntimeException("unexpected exception", e);
     }
@@ -173,6 +221,7 @@ public abstract class SourceMapTestCase extends TestCase {
       // Find the associated token in the input source.
       Token inputToken = originalTokens.get(token.tokenName);
       assertNotNull(inputToken);
+      assertEquals(mapping.getOriginalFile(), inputToken.inputName);
 
       // Ensure that the map correctly points to the token (we add 1
       // to normalize versus the Rhino line number indexing scheme).
@@ -194,11 +243,7 @@ public abstract class SourceMapTestCase extends TestCase {
     }
   }
 
-  private RunResult compile(String js) {
-    return compile(js, "testcode");
-  }
-
-  private RunResult compile(String js, String fileName) {
+  protected RunResult compile(String js, String fileName) {
     return compile(js, fileName, null, null);
   }
 

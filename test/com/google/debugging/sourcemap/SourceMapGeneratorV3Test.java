@@ -16,8 +16,12 @@
 
 package com.google.debugging.sourcemap;
 
+import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.Format;
+
+import java.io.IOException;
+import java.util.LinkedHashMap;
 
 
 /**
@@ -303,5 +307,43 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertEquals(files1, files2);
   }
 
+  public void testSourceMapMerging() throws Exception {
+    final String INPUT1 = "file1";
+    final String INPUT2 = "file2";
+    LinkedHashMap<String, String> inputs = Maps.newLinkedHashMap();
+    inputs.put(INPUT1, "var __FOO__ = 1;");
+    inputs.put(INPUT2, "var __BAR__ = 2;");
+    RunResult result1 = compile(inputs.get(INPUT1), INPUT1);
+    RunResult result2 = compile(inputs.get(INPUT2), INPUT2);
+
+    StringBuilder output = new StringBuilder();
+    FilePosition offset = appendAndCount(output, result1.generatedSource);
+    output.append(result2.generatedSource);
+
+    SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
+
+    generator.mergeMapSection(0, 0, result1.sourceMapFileContent);
+    generator.mergeMapSection(offset.getLine(), offset.getColumn(),
+        result2.sourceMapFileContent);
+
+    StringBuilder mapContents = new StringBuilder();
+    generator.appendTo(mapContents, "out.js");
+
+    check(inputs, output.toString(), mapContents.toString());
+  }
+
+  FilePosition appendAndCount(Appendable out, String js) throws IOException {
+    int line = 0, column = 0;
+    for (int i = 0; i < js.length(); i++) {
+      if (js.charAt(i) == '\n') {
+        line++;
+        column = 0;
+      } else {
+        column++;
+      }
+    }
+    out.append(js);
+    return new FilePosition(line, column);
+  }
 
 }

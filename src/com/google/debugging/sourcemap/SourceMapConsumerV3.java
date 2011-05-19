@@ -27,7 +27,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Class for parsing version 3 of the SourceMap format, as produced by the
@@ -42,7 +41,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer {
   private String[] names;
   private int lineCount;
   // Slots in the lines list will be null if the line does not have any entries.
-  private List<ArrayList<Entry>> lines = null;
+  private ArrayList<ArrayList<Entry>> lines = null;
 
   public SourceMapConsumerV3() {
 
@@ -476,6 +475,55 @@ public class SourceMapConsumerV3 implements SourceMapConsumer {
     @Override
     public int getNameId() {
       return name;
+    }
+  }
+
+  static interface EntryVisitor {
+    void visit(String sourceName,
+               String symbolName,
+               FilePosition sourceStartPosition,
+               FilePosition startPosition,
+               FilePosition endPosition);
+  }
+
+  public void visitMappings(EntryVisitor visitor) {
+    boolean pending = false;
+    String sourceName = null;
+    String symbolName = null;
+    FilePosition sourceStartPosition = null;
+    FilePosition startPosition = null;
+
+    final int lineCount = lines.size();
+    for (int i = 0; i < lineCount; i++) {
+      ArrayList<Entry> line = lines.get(i);
+      if (line != null) {
+        final int entryCount = line.size();
+        for (int j = 0; j < entryCount; j++) {
+          Entry entry = line.get(j);
+          if (pending) {
+            FilePosition endPosition = new FilePosition(
+                i, entry.getGeneratedColumn());
+            visitor.visit(
+                sourceName,
+                symbolName,
+                sourceStartPosition,
+                startPosition,
+                endPosition);
+            pending = false;
+          }
+
+          if (entry.getSourceFileId() != UNMAPPED) {
+            pending = true;
+            sourceName = sources[entry.getSourceFileId()];
+            symbolName = (entry.getNameId() != UNMAPPED)
+                ? names[entry.getNameId()] : null;
+            sourceStartPosition = new FilePosition(
+                entry.getSourceLine(), entry.getSourceColumn());
+            startPosition = new FilePosition(
+                i, entry.getGeneratedColumn());
+          }
+        }
+      }
     }
   }
 }
