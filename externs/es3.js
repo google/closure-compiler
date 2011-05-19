@@ -572,7 +572,7 @@ Array.prototype.unshift = function(var_args) {};
  * left-to-right) as to reduce it to a single value.
  *
  * @param {function(*=, *=, number=, Array=) : *} callback
- * @param {Object=} opt_initialValue
+ * @param {*=} opt_initialValue
  * @this {Object}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reduce
  */
@@ -583,7 +583,7 @@ Array.prototype.reduce = function(callback, opt_initialValue) {};
  * right-to-left) as to reduce it to a single value.
  *
  * @param {function(*=, *=, number=, Array=) : *} callback
- * @param {Object=} opt_initialValue
+ * @param {*=} opt_initialValue
  * @this {Object}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reduceRight
  */
