@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
  */
 public class SourceMapGeneratorV3 implements SourceMapGenerator {
 
-  private final static int UNMAPPED = -1;
+  private static final int UNMAPPED = -1;
 
 
   /**
@@ -344,7 +344,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
   // Source map field helpers.
 
   private static void appendFirstField(
-      Appendable out, String name, String value)
+      Appendable out, String name, CharSequence value)
       throws IOException {
     out.append("\"");
     out.append(name);
@@ -353,7 +353,8 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     out.append(value);
   }
 
-  private static void appendField(Appendable out, String name, String value)
+  private static void appendField(
+      Appendable out, String name, CharSequence value)
       throws IOException {
     out.append(",\n");
     out.append("\"");
@@ -621,7 +622,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     appendFieldStart(out, "sections");
     out.append("[\n");
     boolean first = true;
-    Long offset = new Long(0);
+    int line = 0, column = 0;
     for (SourceMapSection section : sections) {
       if (first) {
         first = false;
@@ -629,17 +630,25 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
         out.append(",\n");
       }
       out.append("{\n");
-      appendFirstField(out, "offset", offset.toString());
+      appendFirstField(out, "offset",
+          offsetValue(section.getLine(), section.getColumn()));
       appendField(out, "url", escapeString(section.getSectionUrl()));
       out.append("\n}");
-
-      offset += section.getLength();
     }
 
     out.append("\n]");
     appendFieldEnd(out);
 
     out.append("\n}\n");
+  }
+
+  private CharSequence offsetValue(int line, int column) throws IOException {
+    StringBuilder out = new StringBuilder();
+    out.append("{\n");
+    appendFirstField(out, "line", String.valueOf(line));
+    appendField(out, "column", String.valueOf(column));
+    out.append("\n}");
+    return out;
   }
 
   private int getSourceId(String sourceName) {

@@ -40,7 +40,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
   private boolean validate = false;
 
-  private final static int UNMAPPED = -1;
+  private static final int UNMAPPED = -1;
 
   /**
    * A pre-order traversal ordered list of mappings stored in this map.
@@ -321,7 +321,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
   /**
    * Writes the source name map to 'out'.
    */
-  private void addMap(Appendable out, Map<String,Integer> map)
+  private void addMap(Appendable out, Map<String, Integer> map)
       throws IOException {
     int i = 0;
     for (Entry<String, Integer> entry : map.entrySet()) {
@@ -344,7 +344,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
   // Source map field helpers.
 
   private static void appendFirstField(
-      Appendable out, String name, String value)
+      Appendable out, String name, CharSequence value)
       throws IOException {
     out.append("\"");
     out.append(name);
@@ -353,7 +353,8 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     out.append(value);
   }
 
-  private static void appendField(Appendable out, String name, String value)
+  private static void appendField(
+      Appendable out, String name, CharSequence value)
       throws IOException {
     out.append(",\n");
     out.append("\"");
@@ -546,7 +547,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
       for (int i = line; i <= nextLine; i++) {
         if (i == nextLine) {
-          closeEntry(id, nextCol-col);
+          closeEntry(id, nextCol - col);
           break;
         }
 
@@ -643,17 +644,17 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
       // mapping id length will exceed 64 base64 characters in length so
       // additional "!" don't signal additional id length characters.
       if (reps > 16 || relativeIdLength > 4) {
-        String repsString = valueToBase64(reps -1, 1);
+        String repsString = valueToBase64(reps - 1, 1);
         for (int i = 0; i < repsString.length(); i++) {
           // TODO(johnlenz): update this to whatever is agreed to.
           out.append('!');
         }
-        String sizeId = valueToBase64(relativeIdString.length() -1, 1);
+        String sizeId = valueToBase64(relativeIdString.length() - 1, 1);
 
         out.append(sizeId);
         out.append(repsString);
       } else {
-        int prefix = ((reps -1) << 2) + (relativeIdString.length() -1);
+        int prefix = ((reps - 1) << 2) + (relativeIdString.length() - 1);
         Preconditions.checkState(prefix < 64 && prefix >= 0,
             "prefix (%s) reps(%s) map id size(%s)",
             prefix, reps, relativeIdString.length());
@@ -669,7 +670,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
      * represented as a two-complement value.
      */
     public static int getRelativeMappingId(int id, int idLength, int lastId) {
-      int base = 1 << (idLength *6);
+      int base = 1 << (idLength * 6);
       int relativeId = id - lastId;
       return (relativeId < 0) ? relativeId + base : relativeId;
     }
@@ -680,7 +681,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     public static int getRelativeMappingIdLength(int rawId, int lastId) {
       Preconditions.checkState(rawId >= 0 || rawId == UNMAPPED);
       int relativeId = rawId - lastId;
-      int id = (relativeId < 0 ? Math.abs(relativeId) -1 : relativeId) << 1;
+      int id = (relativeId < 0 ? Math.abs(relativeId) - 1 : relativeId) << 1;
       int digits = 1;
       int base = 64;
       while (id >= base) {
@@ -874,35 +875,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
 
   @Override
   public void appendIndexMapTo(
-      Appendable out, String name, List<SourceMapSection> appSections)
-      throws IOException {
-    // Add the header fields.
-    out.append("{\n");
-    appendFirstField(out, "version", "2");
-    appendField(out, "file", escapeString(name));
-
-    // Add the line character maps.
-    appendFieldStart(out, "sections");
-    out.append("[\n");
-    boolean first = true;
-    Long offset = new Long(0);
-    for (SourceMapSection section : appSections) {
-      if (first) {
-        first = false;
-      } else {
-        out.append(",\n");
-      }
-      out.append("{\n");
-      appendFirstField(out, "offset", offset.toString());
-      appendField(out, "file", escapeString(section.getSectionUrl()));
-      out.append("\n}");
-
-      offset += section.getLength();
-    }
-
-    out.append("\n]");
-    appendFieldEnd(out);
-
-    out.append("\n}\n");
+      Appendable out, String name, List<SourceMapSection> appSections) {
+    throw new UnsupportedOperationException();
   }
 }

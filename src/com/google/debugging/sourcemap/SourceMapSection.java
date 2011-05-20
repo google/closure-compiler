@@ -27,29 +27,40 @@ public class SourceMapSection {
    * source file such as when multiple files are concatenated together.
    */
   private final String sectionUrl;
-  private final long representedLength;
+  private final int line;
+  private final int column;
 
   /**
    * @param sectionUrl The url for the partial sourcemap
-   * @param length The number of character represented by the source
-   * map section.
+   * @param line The number of lines into the file where the represented section
+   *    starts.
+   * @param column The number of characters into the line where the represented
+   *    section starts.
    */
-  public SourceMapSection(String sectionUrl, long length) {
+  public SourceMapSection(String sectionUrl, int line, int column) {
     this.sectionUrl = sectionUrl;
-    this.representedLength = length;
+    this.line = line;
+    this.column = column;
   }
 
   /**
-   * @return the name
+   * @return the name of the map
    */
   public String getSectionUrl() {
     return sectionUrl;
   }
 
   /**
-   * @return the length
+   * @return the starting line for this section
    */
-  public long getLength() {
-    return representedLength;
+  public int getLine() {
+    return line;
+  }
+
+  /**
+   * @return the column for this section
+   */
+  public int getColumn() {
+    return column;
   }
 }
