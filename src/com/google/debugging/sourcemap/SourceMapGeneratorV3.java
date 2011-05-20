@@ -600,13 +600,17 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * To facilitate incremental compiles, create a source map that is built
-   * piecemeal from other source maps.
+   * Appends the index source map to the given buffer.
+   *
+   * @param out The stream to which the map will be appended.
+   * @param name The name of the generated source file that this source map
+   *   represents.
+   * @param sections An ordered list of map sections to include in the index.
    * @throws IOException
    */
   @Override
-  public void writeMetaMap(
-      Appendable out, String name, List<SourceMapSection> appSections)
+  public void appendIndexMapTo(
+      Appendable out, String name, List<SourceMapSection> sections)
       throws IOException {
     // Add the header fields.
     out.append("{\n");
@@ -618,7 +622,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     out.append("[\n");
     boolean first = true;
     Long offset = new Long(0);
-    for (SourceMapSection section : appSections) {
+    for (SourceMapSection section : sections) {
       if (first) {
         first = false;
       } else {

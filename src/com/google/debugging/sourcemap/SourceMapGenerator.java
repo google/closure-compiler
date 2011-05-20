@@ -40,6 +40,19 @@ public interface SourceMapGenerator {
   void appendTo(Appendable out, String name) throws IOException;
 
   /**
+   * Appends the index source map to the given buffer.
+   *
+   * @param out The stream to which the map will be appended.
+   * @param name The name of the generated source file that this source map
+   *   represents.
+   * @param sections An ordered list of map sections to include in the index.
+   * @throws IOException
+   */
+  void appendIndexMapTo(
+      Appendable out, String name, List<SourceMapSection> sections)
+      throws IOException;
+
+  /**
    * Resets the source map for reuse. A reset needs to be called between
    * each generated output file.
    */
@@ -87,14 +100,4 @@ public interface SourceMapGenerator {
    * @param validate
    */
   void validate(boolean validate);
-
-  /**
-   * @param out
-   * @param name
-   * @param appSections
-   * @throws IOException
-   */
-  void writeMetaMap(
-      Appendable out, String name, List<SourceMapSection> appSections)
-      throws IOException;
 }

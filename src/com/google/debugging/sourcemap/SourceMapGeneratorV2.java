@@ -872,13 +872,8 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     }
   }
 
-  /**
-   * To facilitate incremental compiles, create a source map that is built
-   * piecemeal from other source maps.
-   * @throws IOException
-   */
   @Override
-  public void writeMetaMap(
+  public void appendIndexMapTo(
       Appendable out, String name, List<SourceMapSection> appSections)
       throws IOException {
     // Add the header fields.

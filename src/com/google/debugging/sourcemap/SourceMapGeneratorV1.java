@@ -633,7 +633,7 @@ public class SourceMapGeneratorV1 implements SourceMapGenerator {
   }
 
   @Override
-  public void writeMetaMap(
+  public void appendIndexMapTo(
       Appendable out, String name, List<SourceMapSection> appSections) {
     throw new UnsupportedOperationException();
   }
