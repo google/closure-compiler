@@ -5374,7 +5374,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     properties.put("hello", new RecordProperty(NUMBER_TYPE, null));
 
     JSType recordType = registry.createRecordType(properties);
-    assertEquals("{ hello : number }", recordType.toString());
+    assertEquals("{hello: number}", recordType.toString());
   }
 
   /**

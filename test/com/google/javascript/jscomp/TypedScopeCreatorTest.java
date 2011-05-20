@@ -680,7 +680,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("number", globalScope.getVar("a.name").getType().toString());
 
     ObjectType a = (ObjectType) (globalScope.getVar("a").getType());
-    assertEquals("{ foo : number }", a.toString());
+    assertEquals("{foo: number}", a.toString());
     assertFalse(a.hasProperty("name"));
   }
 

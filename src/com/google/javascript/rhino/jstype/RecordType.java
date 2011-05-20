@@ -286,7 +286,7 @@ public class RecordType extends PrototypeObjectType {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("{ ");
+    sb.append("{");
 
     int i = 0;
 
@@ -296,13 +296,13 @@ public class RecordType extends PrototypeObjectType {
       }
 
       sb.append(property);
-      sb.append(" : ");
+      sb.append(": ");
       sb.append(properties.get(property).toString());
 
       ++i;
     }
 
-    sb.append(" }");
+    sb.append("}");
     return sb.toString();
   }
 
