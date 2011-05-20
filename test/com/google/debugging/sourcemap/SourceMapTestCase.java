@@ -180,14 +180,20 @@ public abstract class SourceMapTestCase extends TestCase {
   protected void check(
       String inputName, String input, String output,
       String sourceMapFileContent) {
-    Map<String, String> inputMap = new LinkedHashMap<String,String>();
+    Map<String, String> inputMap = new LinkedHashMap<String, String>();
     inputMap.put(inputName, input);
     check(inputMap, output, sourceMapFileContent);
   }
 
   protected void check(
-      Map<String,String> originalInputs, String generatedSource,
+      Map<String, String> originalInputs, String generatedSource,
       String sourceMapFileContent) {
+    check(originalInputs, generatedSource, sourceMapFileContent, null);
+  }
+
+  protected void check(
+      Map<String, String> originalInputs, String generatedSource,
+      String sourceMapFileContent, SourceMapSupplier supplier) {
     // Find all instances of the __XXX__ pattern in the original
     // source code.
     Map<String, Token> originalTokens = findTokens(originalInputs);
@@ -202,9 +208,9 @@ public abstract class SourceMapTestCase extends TestCase {
     // Ensure the token counts match.
     assertEquals(originalTokens.size(), resultTokens.size());
 
-    SourceMapConsumer reader = getSourceMapConsumer();
+    SourceMapping reader;
     try {
-      reader.parse(sourceMapFileContent);
+      reader = SourceMapConsumerFactory.parse(sourceMapFileContent, supplier);
     } catch (SourceMapParseException e) {
       throw new RuntimeException("unexpected exception", e);
     }

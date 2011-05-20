@@ -16,12 +16,15 @@
 
 package com.google.debugging.sourcemap;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.Format;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 
 /**
@@ -307,6 +310,84 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertEquals(files1, files2);
   }
 
+  public void testWriteMetaMap() throws IOException {
+    StringWriter out = new StringWriter();
+    String name = "./app.js";
+    List<SourceMapSection> appSections = Lists.newArrayList(
+        new SourceMapSection("src1", 0, 0),
+        new SourceMapSection("src2", 100, 10),
+        new SourceMapSection("src3", 150, 5));
+
+    SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
+    generator.appendIndexMapTo(out, name, appSections);
+
+    assertEquals(
+            "{\n" +
+            "\"version\":3,\n" +
+            "\"file\":\"./app.js\",\n" +
+            "\"sections\":[\n" +
+            "{\n" +
+            "\"offset\":{\n" +
+            "\"line\":0,\n" +
+            "\"column\":0\n" +
+            "},\n" +
+            "\"url\":\"src1\"\n" +
+            "},\n" +
+            "{\n" +
+            "\"offset\":{\n" +
+            "\"line\":100,\n" +
+            "\"column\":10\n" +
+            "},\n" +
+            "\"url\":\"src2\"\n" +
+            "},\n" +
+            "{\n" +
+            "\"offset\":{\n" +
+            "\"line\":150,\n" +
+            "\"column\":5\n" +
+            "},\n" +
+            "\"url\":\"src3\"\n" +
+            "}\n" +
+            "]\n" +
+            "}\n",
+            out.toString());
+  }
+
+  public void testParseSourceMetaMap() throws Exception {
+    final String INPUT1 = "file1";
+    final String INPUT2 = "file2";
+    LinkedHashMap<String, String> inputs = Maps.newLinkedHashMap();
+    inputs.put(INPUT1, "var __FOO__ = 1;");
+    inputs.put(INPUT2, "var __BAR__ = 2;");
+    RunResult result1 = compile(inputs.get(INPUT1), INPUT1);
+    RunResult result2 = compile(inputs.get(INPUT2), INPUT2);
+
+    final String MAP1 = "map1";
+    final String MAP2 = "map2";
+    final LinkedHashMap<String, String> maps = Maps.newLinkedHashMap();
+    maps.put(MAP1, result1.sourceMapFileContent);
+    maps.put(MAP2, result2.sourceMapFileContent);
+
+    List<SourceMapSection> sections = Lists.newArrayList();
+
+    StringBuilder output = new StringBuilder();
+    FilePosition offset = appendAndCount(output, result1.generatedSource);
+    sections.add(new SourceMapSection(MAP1, 0, 0));
+    output.append(result2.generatedSource);
+    sections.add(
+         new SourceMapSection(MAP2, offset.getLine(), offset.getColumn()));
+
+    SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
+    StringBuilder mapContents = new StringBuilder();
+    generator.appendIndexMapTo(mapContents, "out.js", sections);
+
+    check(inputs, output.toString(), mapContents.toString(),
+      new SourceMapSupplier() {
+        @Override
+        public String getSourceMap(String url){
+          return maps.get(url);
+      }});
+  }
+
   public void testSourceMapMerging() throws Exception {
     final String INPUT1 = "file1";
     final String INPUT2 = "file2";
@@ -332,7 +413,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     check(inputs, output.toString(), mapContents.toString());
   }
 
-  FilePosition appendAndCount(Appendable out, String js) throws IOException {
+  FilePosition count(String js) {
     int line = 0, column = 0;
     for (int i = 0; i < js.length(); i++) {
       if (js.charAt(i) == '\n') {
@@ -342,8 +423,11 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
         column++;
       }
     }
-    out.append(js);
     return new FilePosition(line, column);
   }
 
+  FilePosition appendAndCount(Appendable out, String js) throws IOException {
+    out.append(js);
+    return count(js);
+  }
 }

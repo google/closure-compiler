@@ -35,6 +35,17 @@ public class SourceMapConsumerFactory {
    */
   public static SourceMapping parse(String contents)
       throws SourceMapParseException {
+     return parse(contents, null);
+  }
+
+  /**
+   * @param contents The string representing the source map file contents.
+   * @param supplier A supplier for any referenced maps.
+   * @return The parsed source map.
+   * @throws SourceMapParseException
+   */
+  public static SourceMapping parse(String contents, SourceMapSupplier supplier)
+      throws SourceMapParseException {
     // Version 1, starts with a magic string
     if (contents.startsWith("/** Begin line maps. **/")) {
       SourceMapConsumerV1 consumer =  new SourceMapConsumerV1();
@@ -54,7 +65,7 @@ public class SourceMapConsumerFactory {
           }
           case 3: {
             SourceMapConsumerV3 consumer =  new SourceMapConsumerV3();
-            consumer.parse(sourceMapRoot);
+            consumer.parse(sourceMapRoot, supplier);
             return consumer;
           }
           default:
