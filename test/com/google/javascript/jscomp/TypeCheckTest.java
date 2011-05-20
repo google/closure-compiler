@@ -1417,6 +1417,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testScoping12() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "/** @type {number} */ F.prototype.bar = 3;" +
+        "/** @param {!F} f */ function g(f) {" +
+        "  /** @return {string} */" +
+        "  function h() {" +
+        "    return f.bar;" +
+        "  }" +
+        "}",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
   public void testFunctionArguments1() throws Exception {
     testFunctionType(
         "/** @param {number} a\n@return {string} */" +
@@ -1495,13 +1510,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionArguments13() throws Exception {
-    // verifying that the argument type have inferable types
+    // verifying that the argument type have non-inferrable types
     testTypes(
         "/** @return {boolean} */ function u() { return true; }" +
-        "/** @param {boolean} b\n@return {boolean} */" +
+        "/** @param {boolean} b\n@return {?boolean} */" +
         "function f(b) { if (u()) { b = null; } return b; }",
-        "inconsistent return type\n" +
-        "found   : (boolean|null)\n" +
+        "assignment\n" +
+        "found   : null\n" +
         "required: boolean");
   }
 
@@ -2129,11 +2144,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDuplicateLocalVarDecl() throws Exception {
-    testTypes(
+    testClosureTypesMultipleWarnings(
         "/** @param {number} x */\n" +
         "function f(x) { /** @type {string} */ var x = ''; }",
-        "variable x redefined with type string, " +
-        "original definition at [testcode]:2 with type number");
+        Lists.newArrayList(
+            "variable x redefined with type string, original definition" +
+            " at  [testcode] :2 with type number",
+            "initializing variable\n" +
+            "found   : string\n" +
+            "required: number"));
   }
 
   public void testStubFunctionDeclaration1() throws Exception {
