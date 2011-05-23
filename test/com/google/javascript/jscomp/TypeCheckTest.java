@@ -8490,6 +8490,61 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type { {impossibleProperty} } */ var y = new ActiveXObject();");
   }
 
+  public void testRecordType1() throws Exception {
+    testTypes(
+        "/** @param {{prop: number}} x */" +
+        "function f(x) {}" +
+        "f({});",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : {prop: (number|undefined)}\n" +
+        "required: {prop: number}");
+  }
+
+  public void testRecordType2() throws Exception {
+    testTypes(
+        "/** @param {{prop: (number|undefined)}} x */" +
+        "function f(x) {}" +
+        "f({});");
+  }
+
+  public void testRecordType3() throws Exception {
+    testTypes(
+        "/** @param {{prop: number}} x */" +
+        "function f(x) {}" +
+        "f({prop: 'x'});",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : {prop: (number|string)}\n" +
+        "required: {prop: number}");
+  }
+
+  public void testRecordType4() throws Exception {
+    // Notice that we do not do flow-based inference on the object type:
+    // We don't try to prove that x.prop may not be string until x
+    // gets passed to g.
+    testClosureTypesMultipleWarnings(
+        "/** @param {{prop: (number|undefined)}} x */" +
+        "function f(x) {}" +
+        "/** @param {{prop: (string|undefined)}} x */" +
+        "function g(x) {}" +
+        "var x = {}; f(x); g(x);",
+        Lists.newArrayList(
+            "actual parameter 1 of f does not match formal parameter\n" +
+            "found   : {prop: (number|string|undefined)}\n" +
+            "required: {prop: (number|undefined)}",
+            "actual parameter 1 of g does not match formal parameter\n" +
+            "found   : {prop: (number|string|undefined)}\n" +
+            "required: {prop: (string|undefined)}"));
+  }
+
+  public void testRecordType5() throws Exception {
+    testTypes(
+        "/** @param {{prop: (number|undefined)}} x */" +
+        "function f(x) {}" +
+        "/** @param {{otherProp: (string|undefined)}} x */" +
+        "function g(x) {}" +
+        "var x = {}; f(x); g(x);");
+  }
+
   public void testDuplicateRecordFields1() throws Exception {
     testTypes("/**"
          + "* @param {{x:string, x:number}} a"

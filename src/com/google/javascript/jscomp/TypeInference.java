@@ -803,7 +803,7 @@ class TypeInference
       if (functionType instanceof FunctionType) {
         FunctionType fnType = (FunctionType) functionType;
         n.setJSType(fnType.getReturnType());
-        updateTypeOfParametersOnClosure(n, fnType);
+        updateTypeOfParameters(n, fnType);
         updateTypeOfThisOnClosure(n, fnType);
       } else if (functionType.equals(getNativeType(CHECKED_UNKNOWN_TYPE))) {
         n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
@@ -864,20 +864,23 @@ class TypeInference
    * For functions with function parameters, type inference will set the type of
    * a function literal argument from the function parameter type.
    */
-  private void updateTypeOfParametersOnClosure(Node n, FunctionType fnType) {
+  private void updateTypeOfParameters(Node n, FunctionType fnType) {
     int i = 0;
     int childCount = n.getChildCount();
     for (Node iParameter : fnType.getParameters()) {
+      if (i + 1 >= childCount) {
+        // TypeCheck#visitParametersList will warn so we bail.
+        return;
+      }
+
       JSType iParameterType = iParameter.getJSType();
+      Node iArgument = n.getChildAtIndex(i + 1);
+      JSType iArgumentType = getJSType(iArgument);
+      inferPropertyTypesToMatchConstraint(iArgumentType, iParameterType);
+
       if (iParameterType instanceof FunctionType) {
         FunctionType iParameterFnType = (FunctionType) iParameterType;
 
-        if (i + 1 >= childCount) {
-          // TypeCheck#visitParametersList will warn so we bail.
-          return;
-        }
-        Node iArgument = n.getChildAtIndex(i + 1);
-        JSType iArgumentType = getJSType(iArgument);
         if (iArgument.getType() == Token.FUNCTION &&
             iArgumentType instanceof FunctionType &&
             iArgument.getJSDocInfo() == null) {
@@ -1042,6 +1045,40 @@ class TypeInference
         getPropertyType(
             objNode.getJSType(), property.getString(), n, scope));
     return dereferencePointer(n.getFirstChild(), scope);
+  }
+
+  /**
+   * Suppose X is an object with inferred properties.
+   * Suppose also that X is used in a way where it would only type-check
+   * correctly if some of those properties are widened.
+   * Then we should be polite and automatically widen X's properties for him.
+   *
+   * For a concrete example, consider:
+   * param x {{prop: (number|undefined)}}
+   * function f(x) {}
+   * f({});
+   *
+   * If we give the anonymous object an inferred property of (number|undefined),
+   * then this code will type-check appropriately.
+   */
+  private void inferPropertyTypesToMatchConstraint(
+      JSType type, JSType constraint) {
+    ObjectType constraintObj =
+        ObjectType.cast(constraint.restrictByNotNullOrUndefined());
+    if (constraintObj != null && constraintObj.isRecordType()) {
+      ObjectType objType = ObjectType.cast(type.restrictByNotNullOrUndefined());
+      for (String prop : constraintObj.getOwnPropertyNames()) {
+        JSType propType = constraintObj.getPropertyType(prop);
+        if (objType != null && !objType.isPropertyTypeDeclared(prop)) {
+          JSType typeToInfer = propType;
+          if (!objType.hasProperty(prop)) {
+            typeToInfer = registry.createUnionType(
+                getNativeType(VOID_TYPE), propType);
+          }
+          objType.defineInferredProperty(prop, typeToInfer, false, null);
+        }
+      }
+    }
   }
 
   /**
