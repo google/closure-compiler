@@ -2755,21 +2755,34 @@ WebGLRenderingContext.prototype.getExtension = function(name) {};
 function WebGLContextAttributes() {}
 
 /**
- * @param {string} name
- * @return {string}
+ * @type {boolean}
  */
-WebGLContextAttributes.prototype.get = function(name) {};
+WebGLContextAttributes.prototype.alpha;
 
 /**
- * @param {string} name
- * @param {string} value
+ * @type {boolean}
  */
-WebGLContextAttributes.prototype.set = function(name, value) {};
+WebGLContextAttributes.prototype.depth;
 
 /**
- * @param {string} name
+ * @type {boolean}
  */
-WebGLContextAttributes.prototype.remove = function(name) {};
+WebGLContextAttributes.prototype.stencil;
+
+/**
+ * @type {boolean}
+ */
+WebGLContextAttributes.prototype.antialias;
+
+/**
+ * @type {boolean}
+ */
+WebGLContextAttributes.prototype.premultipliedAlpha;
+
+/**
+ * @type {boolean}
+ */
+WebGLContextAttributes.prototype.preserveDrawingBuffer;
 
 
 /**
