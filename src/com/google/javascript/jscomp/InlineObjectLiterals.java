@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -80,8 +81,7 @@ class InlineObjectLiterals implements CompilerPass {
     private final Set<Var> staleVars = Sets.newHashSet();
 
     @Override
-    public void afterExitScope(NodeTraversal t,
-        Map<Var, ReferenceCollection> referenceMap) {
+    public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
       for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
         Var v = it.next();
 
@@ -89,7 +89,7 @@ class InlineObjectLiterals implements CompilerPass {
             continue;
         }
 
-        ReferenceCollection referenceInfo = referenceMap.get(v);
+        ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
         if (isInlinableObject(referenceInfo.references)) {
             // Blacklist the object itself, as well as any other values

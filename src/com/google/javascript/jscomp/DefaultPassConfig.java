@@ -991,10 +991,10 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Checks that references to variables look reasonable. */
-  private final PassFactory checkVariableReferences =
-      new PassFactory("checkVariableReferences", true) {
+  private final HotSwapPassFactory checkVariableReferences =
+      new HotSwapPassFactory("checkVariableReferences", true) {
     @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
       return new VariableReferenceCheck(
           compiler, options.aggressiveVarCheck);
     }

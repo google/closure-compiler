@@ -17,12 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Supplier;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * An abstract compiler, to help remove the circular dependency of
@@ -295,4 +299,29 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Returns the root node of the AST, which includes both externs and source.
    */
   abstract Node getRoot();
+
+  // TODO(bashir) It would be good to extract a single dumb data object with
+  // only getters and setters that keeps all global information we keep for a
+  // compiler instance. Then move some of the functions of this class there.
+
+  /**
+   * Updates the list of references for variables in global scope.
+   *
+   * @param refMapPatch Maps each variable to all of its references; may contain
+   *     references collected from the whole AST or only a SCRIPT sub-tree.
+   * @param collectionRoot The root of sub-tree in which reference collection
+   *     has been done. This should either be a SCRIPT node (if collection is
+   *     done on a single file) or it is assumed that collection is on full AST.
+   */
+  abstract void updateGlobalVarReferences(Map<Var, ReferenceCollection>
+      refMapPatch, Node collectionRoot);
+
+  /**
+   * This can be used to get the list of all references to all global variables
+   * based on all previous calls to {@code updateGlobalVarReferences}.
+   *
+   * @return The reference collection map associated to global scope variable.
+   */
+  abstract ReferenceMap getGlobalVarReferences();
+
 }

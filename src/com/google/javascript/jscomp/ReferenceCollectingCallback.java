@@ -42,7 +42,8 @@ import java.util.Set;
  *
  * @author kushal@google.com (Kushal Dave)
  */
-class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
+class ReferenceCollectingCallback implements ScopedCallback,
+    HotSwapCompilerPass {
 
   /**
    * Maps a given variable to a collection of references to that name. Note that
@@ -96,8 +97,17 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
    * Convenience method for running this pass over a tree with this
    * class as a callback.
    */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
+  }
+
+  /**
+   * Same as process but only runs on a part of AST associated to one script.
+   */
+  @Override
+  public void hotSwapScript(Node scriptRoot) {
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   /**
@@ -151,7 +161,13 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
    */
   public void exitScope(NodeTraversal t) {
     blockStack.pop();
-    behavior.afterExitScope(t, referenceMap);
+    if (t.getScope().isGlobal()) {
+      // Update global scope reference lists when we are done with it.
+      compiler.updateGlobalVarReferences(referenceMap, t.getScopeRoot());
+      behavior.afterExitScope(t, compiler.getGlobalVarReferences());
+    } else {
+      behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
+    }
   }
 
   /**
@@ -213,6 +229,23 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     referenceInfo.add(reference, t, v);
   }
 
+  interface ReferenceMap {
+    ReferenceCollection getReferences(Var var);
+  }
+
+  private static class ReferenceMapWrapper implements ReferenceMap {
+    private final Map<Var, ReferenceCollection> referenceMap;
+
+    public ReferenceMapWrapper(Map<Var, ReferenceCollection> referenceMap) {
+      this.referenceMap = referenceMap;
+    }
+
+    @Override
+    public ReferenceCollection getReferences(Var var) {
+      return referenceMap.get(var);
+    }
+  }
+
   /**
    * Way for callers to add specific behavior during traversal that
    * utilizes the built-up reference information.
@@ -221,14 +254,12 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     /**
      * Called after we finish with a scope.
      */
-    void afterExitScope(NodeTraversal t,
-        Map<Var, ReferenceCollection> referenceMap);
+    void afterExitScope(NodeTraversal t, ReferenceMap referenceMap);
   }
 
   static Behavior DO_NOTHING_BEHAVIOR = new Behavior() {
     @Override
-    public void afterExitScope(NodeTraversal t,
-        Map<Var, ReferenceCollection> referenceMap) {}
+    public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {}
   };
 
   /**
@@ -597,6 +628,18 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
     }
 
     /**
+     * Determines whether this block is equivalent to the very first block that
+     * is created when reference collection traversal enters global scope. Note
+     * that when traversing a single script in a hot-swap fashion a new instance
+     * of {@code BasicBlock} is created.
+     *
+     * @return true if this is global scope block.
+     */
+    boolean isGlobalScopeBlock() {
+      return getParent() == null;
+    }
+
+    /**
      * Determines whether this block is guaranteed to begin executing before
      * the given block does.
      */
@@ -612,7 +655,13 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
         }
       }
 
-      return currentBlock == this;
+      if (currentBlock == this) {
+        return true;
+      }
+      if (isGlobalScopeBlock() && thatBlock.isGlobalScopeBlock()) {
+        return true;
+      }
+      return false;
     }
   }
 }

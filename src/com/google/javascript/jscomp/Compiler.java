@@ -24,6 +24,9 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
@@ -169,6 +172,8 @@ public class Compiler extends AbstractCompiler {
       Logger.getLogger("com.google.javascript.jscomp");
 
   private final PrintStream outStream;
+
+  private GlobalVarReferenceMap globalRefMap = null;
 
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
@@ -1983,4 +1988,21 @@ public class Compiler extends AbstractCompiler {
   void setHasRegExpGlobalReferences(boolean references) {
     hasRegExpGlobalReferences = references;
   }
+
+  @Override
+  void updateGlobalVarReferences(Map<Var, ReferenceCollection> refMapPatch,
+      Node collectionRoot) {
+    Preconditions.checkState(collectionRoot.getType() == Token.SCRIPT
+        || collectionRoot.getType() == Token.BLOCK);
+    if (globalRefMap == null) {
+      globalRefMap = new GlobalVarReferenceMap(getInputsInOrder());
+    }
+    globalRefMap.updateGlobalVarReferences(refMapPatch, collectionRoot);
+  }
+
+  @Override
+  ReferenceMap getGlobalVarReferences() {
+    return globalRefMap;
+  }
+
 }

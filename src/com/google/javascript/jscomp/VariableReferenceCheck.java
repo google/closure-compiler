@@ -21,14 +21,13 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -39,7 +38,7 @@ import java.util.Set;
  *
  * @author kushal@google.com (Kushal Dave)
  */
-class VariableReferenceCheck implements CompilerPass {
+class VariableReferenceCheck implements HotSwapCompilerPass {
 
   static final DiagnosticType UNDECLARED_REFERENCE = DiagnosticType.warning(
       "JSC_REFERENCE_BEFORE_DECLARE",
@@ -53,12 +52,12 @@ class VariableReferenceCheck implements CompilerPass {
     DiagnosticType.disabled("AMBIGUOUS_FUNCTION_DECL",
         "Ambiguous use of a named function: {0}.");
 
-  private AbstractCompiler compiler;
-  private CheckLevel checkLevel;
+  private final AbstractCompiler compiler;
+  private final CheckLevel checkLevel;
 
   // NOTE(nicksantos): It's a lot faster to use a shared Set that
   // we clear after each method call, because the Set never gets too big.
-  private Set<BasicBlock> blocksWithDeclarations = Sets.newHashSet();
+  private final Set<BasicBlock> blocksWithDeclarations = Sets.newHashSet();
 
   public VariableReferenceCheck(AbstractCompiler compiler,
       CheckLevel checkLevel) {
@@ -73,6 +72,13 @@ class VariableReferenceCheck implements CompilerPass {
     callback.process(externs, root);
   }
 
+  @Override
+  public void hotSwapScript(Node scriptRoot) {
+    ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
+        compiler, new ReferenceCheckingBehavior());
+    callback.hotSwapScript(scriptRoot);
+  }
+
   /**
    * Behavior that checks variables for redeclaration or early references
    * just after they go out of scope.
@@ -80,13 +86,15 @@ class VariableReferenceCheck implements CompilerPass {
   private class ReferenceCheckingBehavior implements Behavior {
 
     @Override
-    public void afterExitScope(NodeTraversal t,
-        Map<Var, ReferenceCollection> referenceMap) {
+    public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
+      // TODO(bashir) In hot-swap version this means that for global scope we
+      // only go through all global variables accessed in the modified file not
+      // all global variables. This should be fixed.
 
       // Check all vars after finishing a scope
       for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
         Var v = it.next();
-        checkVar(t, v, referenceMap.get(v).references);
+        checkVar(t, v, referenceMap.getReferences(v).references);
       }
     }
 

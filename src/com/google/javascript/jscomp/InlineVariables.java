@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
+import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -156,8 +157,7 @@ class InlineVariables implements CompilerPass {
     final Map<Node, AliasCandidate> aliasCandidates = Maps.newHashMap();
 
     @Override
-    public void afterExitScope(NodeTraversal t,
-        Map<Var, ReferenceCollection> referenceMap) {
+    public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
       collectAliasCandidates(t, referenceMap);
       doInlinesForScope(t, referenceMap);
     }
@@ -167,11 +167,11 @@ class InlineVariables implements CompilerPass {
      * mark them as aliasing candidates.
      */
     private void collectAliasCandidates(NodeTraversal t,
-        Map<Var, ReferenceCollection> referenceMap) {
+        ReferenceMap referenceMap) {
       if (mode != Mode.CONSTANTS_ONLY) {
         for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
           Var v = it.next();
-          ReferenceCollection referenceInfo = referenceMap.get(v);
+          ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
           // NOTE(nicksantos): Don't handle variables that are never used.
           // The tests are much easier to write if you don't, and there's
@@ -193,15 +193,14 @@ class InlineVariables implements CompilerPass {
      * For all variables in this scope, see if they are only used once.
      * If it looks safe to do so, inline them.
      */
-    private void doInlinesForScope(NodeTraversal t,
-        Map<Var, ReferenceCollection> referenceMap) {
+    private void doInlinesForScope(NodeTraversal t, ReferenceMap referenceMap) {
 
       boolean maybeModifiedArguments =
           maybeEscapedOrModifiedArguments(t.getScope(), referenceMap);
       for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
         Var v = it.next();
 
-        ReferenceCollection referenceInfo = referenceMap.get(v);
+        ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
         // referenceInfo will be null if we're in constants-only mode
         // and the variable is not a constant.
@@ -225,10 +224,10 @@ class InlineVariables implements CompilerPass {
     }
 
     private boolean maybeEscapedOrModifiedArguments(
-        Scope scope, Map<Var, ReferenceCollection> referenceMap) {
+        Scope scope, ReferenceMap referenceMap) {
       if (scope.isLocal()) {
         Var arguments = scope.getArgumentsVar();
-        ReferenceCollection refs = referenceMap.get(arguments);
+        ReferenceCollection refs = referenceMap.getReferences(arguments);
         if (refs != null && !refs.references.isEmpty()) {
           for (Reference ref : refs.references) {
             Node refNode = ref.getNameNode();
