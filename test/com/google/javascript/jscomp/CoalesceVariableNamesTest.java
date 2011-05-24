@@ -166,7 +166,10 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   public void testDeadAssignment() {
-    inFunction("var x = 6; var y; y = 4; x");
+    inFunction("var x = 6; var y; y = 4 ; x");
+    inFunction("var y = 3; var y; y += 4; x");
+    inFunction("var y = 3; var y; y ++  ; x");
+    inFunction("y = 3; var x; var y = 1 ; x");
   }
 
   public void testParameter() {
