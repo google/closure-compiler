@@ -1067,15 +1067,17 @@ class TypeInference
         ObjectType.cast(constraint.restrictByNotNullOrUndefined());
     if (constraintObj != null && constraintObj.isRecordType()) {
       ObjectType objType = ObjectType.cast(type.restrictByNotNullOrUndefined());
-      for (String prop : constraintObj.getOwnPropertyNames()) {
-        JSType propType = constraintObj.getPropertyType(prop);
-        if (objType != null && !objType.isPropertyTypeDeclared(prop)) {
-          JSType typeToInfer = propType;
-          if (!objType.hasProperty(prop)) {
-            typeToInfer = registry.createUnionType(
-                getNativeType(VOID_TYPE), propType);
+      if (objType != null) {
+        for (String prop : constraintObj.getOwnPropertyNames()) {
+          JSType propType = constraintObj.getPropertyType(prop);
+          if (!objType.isPropertyTypeDeclared(prop)) {
+            JSType typeToInfer = propType;
+            if (!objType.hasProperty(prop)) {
+              typeToInfer =
+                  getNativeType(VOID_TYPE).getLeastSupertype(propType);
+            }
+            objType.defineInferredProperty(prop, typeToInfer, false, null);
           }
-          objType.defineInferredProperty(prop, typeToInfer, false, null);
         }
       }
     }
