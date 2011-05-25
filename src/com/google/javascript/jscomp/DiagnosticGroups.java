@@ -176,6 +176,11 @@ public class DiagnosticGroups {
           CheckSideEffects.USELESS_CODE_ERROR,
           CheckUnreachableCode.UNREACHABLE_CODE);
 
+  public static DiagnosticGroup CONST =
+      DiagnosticGroups.registerGroup("const",
+          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
+          ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+
   public static DiagnosticGroup TYPE_INVALIDATION =
     DiagnosticGroups.registerGroup("typeInvalidation",
         DisambiguateProperties.Warnings.INVALIDATION);

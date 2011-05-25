@@ -145,6 +145,14 @@ public class ConstCheckTest extends CompilerTestCase {
     testError("/** @const */ var xyz = 1; xyz = 3;");
   }
 
+  public void testConstSuppression() {
+    testSame("/**\n" +
+             " * @fileoverview\n" +
+             " * @suppress {const}\n" +
+             " */\n" +
+             "/** @const */ var xyz = 1; xyz = 3;");
+  }
+
   private void testError(String js) {
     test(js, null, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
