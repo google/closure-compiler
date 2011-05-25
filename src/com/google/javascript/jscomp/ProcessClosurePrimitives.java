@@ -964,7 +964,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       if (compiler.getCodingConvention().isConstant(namespace)) {
         name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      name.setJSDocInfo(createConstantJsDoc());
+      if (candidateDefinition == null) {
+        name.setJSDocInfo(createConstantJsDoc());
+      }
 
       Preconditions.checkState(isNamespacePlaceholder(decl));
       setSourceInfo(decl);
@@ -996,7 +998,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                   namespace),
               createNamespaceLiteral()));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
-      decl.getFirstChild().setJSDocInfo(createConstantJsDoc());
+      if (candidateDefinition == null) {
+        decl.getFirstChild().setJSDocInfo(createConstantJsDoc());
+      }
       Preconditions.checkState(isNamespacePlaceholder(decl));
       setSourceInfo(decl);
       return decl;
