@@ -43,7 +43,8 @@ _gat._anonymizeIp = function() {};
 var _gaq = {};
 
 /**
- * @param {Array.<Object>|function()} commandArray
+ * @see http://code.google.com/apis/analytics/docs/gaJS/gaJSApi_gaq.html#_gaq.push
+ * @param {...(function()|Array.<Object>)} commandArray
  * @return {number}
  */
 _gaq.push = function(commandArray) {};
