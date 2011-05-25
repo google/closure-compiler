@@ -1543,6 +1543,7 @@ HTMLElement.prototype.dataset;
 /**
  * @param {number} length The length in bytes
  * @constructor
+ * @noalias
  */
 function ArrayBuffer(length) {}
 
