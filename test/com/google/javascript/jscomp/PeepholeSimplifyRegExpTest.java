@@ -162,6 +162,8 @@ public class PeepholeSimplifyRegExpTest extends CompilerTestCase {
     testSame("/a?/");
     testSame("/a{6}/");
     testSame("/a{4,}/");
+    test("/a{3,}/",
+         "/aaa+/");
     testSame("/a{4,6}/");
     testSame("/a{4,6}?/");
     test("/(?:a?)?/", "/a?/");
@@ -170,17 +172,33 @@ public class PeepholeSimplifyRegExpTest extends CompilerTestCase {
     test("/a(?:a*)?/", "/a+/");
     test("/(?:a{2,3}){3,4}/", "/a{6,12}/");
     test("/a{2,3}a{3,4}/", "/a{5,7}/");
-    testSame("/a{2,3}b{3,4}/");
+    testSame("/a{5,7}b{5,6}/");
+    test("/a{2,3}b{3,4}/",
+         "/aaa?bbbb?/");
+    test("/a{3}b{3,4}/",
+         "/aaabbbb?/");
+    testSame("/[a-z]{1,2}/");
+    test("/\\d{1,2}/",
+         "/\\d\\d?/");
     test("/a*a*/", "/a*/");
-    test("/a+a+/", "/a{2,}/");
+    test("/a+a+/", "/aa+/");
     test("/a+a*/", "/a+/");
-    // In partial repetitions the open curly is treated literally.
-    test("/a{/", "/a\\{/");
-    test("/a{}/", "/a\\{}/");
-    test("/a{,3}/", "/a\\{,3}/");
-    test("/a{x}/", "/a\\{x}/");
-    test("/a{-1}/", "/a\\{-1}/");
-    test("/a{3,1}/", "/a\\{3,1}/");
+    // We don't conflate literal curly brackets with repetitions.
+    testSame("/a\\{3,1}/");
+    test("/a(?:{3,1})/", "/a\\{3,1}/");
+    test("/a{3\\,1}/", "/a\\{3,1}/");
+    testSame("/a\\{3}/");
+    testSame("/a\\{3,}/");
+    testSame("/a\\{1,3}/");
+    // We don't over-escape curly brackets.
+    testSame("/a{/");
+    testSame("/a{}/");
+    testSame("/a{x}/");
+    testSame("/a{-1}/");
+    testSame("/a{,3}/");
+    testSame("/{{[a-z]+}}/");
+    testSame("/{\\{0}}/");
+    testSame("/{\\{0?}}/");
   }
 
   public final void testMoreCharsets() {

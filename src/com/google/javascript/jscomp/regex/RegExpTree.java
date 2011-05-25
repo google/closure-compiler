@@ -738,7 +738,12 @@ public abstract class RegExpTree {
       this.text = text;
     }
 
-    static void escapeRegularCharOnto(char ch, StringBuilder sb) {
+    /**
+     * @param ch The code-unit to escape.
+     * @param next The next code-unit or -1 if indeterminable.
+     */
+    private static void escapeRegularCharOnto(
+        char ch, int next, StringBuilder sb) {
       switch (ch) {
         case '$':
         case '^':
@@ -746,13 +751,20 @@ public abstract class RegExpTree {
         case '(':
         case ')':
         case '+':
-        case '{':
         case '[':
         case '|':
         case '.':
         case '/':
         case '?':
           sb.append('\\').append(ch);
+          break;
+        case '{':
+          // If possibly part of a repetition, then escape.
+          // Concatenation is handled by the digitsMightBleed check.
+          if ('0' <= next && next <= '9') {
+            sb.append('\\');
+          }
+          sb.append(ch);
           break;
         default:
           escapeCharOnto(ch, sb);
@@ -787,7 +799,7 @@ public abstract class RegExpTree {
     @Override
     protected void appendSourceCode(StringBuilder sb) {
       for (int i = 0, n = text.length(); i < n; ++i) {
-        escapeRegularCharOnto(text.charAt(i), sb);
+        escapeRegularCharOnto(text.charAt(i), i + 1 < n ? text.charAt(i + 1) : -1, sb);
       }
     }
 
@@ -866,8 +878,7 @@ public abstract class RegExpTree {
       return ImmutableList.of(body);
     }
 
-    @Override
-    protected void appendSourceCode(StringBuilder sb) {
+    private void appendBodySourceCode(StringBuilder sb) {
       if (body instanceof Alternation || body instanceof Concatenation
           || body instanceof Repetition
           || (body instanceof Text && ((Text) body).text.length() > 1)) {
@@ -877,6 +888,79 @@ public abstract class RegExpTree {
       } else {
         body.appendSourceCode(sb);
       }
+    }
+
+    private static int suffixLen(int min, int max) {
+      // This mirrors the branches that renders a suffix in appendSourceCode below.
+      if (max == Integer.MAX_VALUE) {
+        switch (min) {
+          case 0: return 1;  // *
+          case 1: return 1;  // +
+          default: return 3 + numDecimalDigits(min);  // {3,}
+        }
+      }
+      if (min == 0 && max == 1) {
+        return 1;  // ?
+      }
+      if (min == max) {
+        if (min == 1) {
+          return 0;  // No suffix needed for {1}.
+        }
+        return 2 + numDecimalDigits(min);  // {4}
+      }
+      return 3 + numDecimalDigits(min) + numDecimalDigits(max);  // {2,7}
+    }
+
+    private static int numDecimalDigits(int n) {
+      if (n < 0) {
+        // Negative values should not be passed in.
+        throw new AssertionError();
+        // If changing this code to support negative values,
+        // Integer.MIN_VALUE is a corner-case..
+      }
+      int nDigits = 1;
+      while (n >= 10) {
+        ++nDigits;
+        n /= 10;
+      }
+      return nDigits;
+    }
+
+    @Override
+    protected void appendSourceCode(StringBuilder sb) {
+      int bodyStart = sb.length();
+      appendBodySourceCode(sb);
+      int bodyEnd = sb.length();
+      int bodyLen = bodyEnd - bodyStart;
+      int min = this.min;
+      int max = this.max;
+      if (min >= 2 && max == Integer.MAX_VALUE || max - min <= 1) {
+        int expanded =
+           // If min == max then we want to try expanding to the limit and
+           // attach the empty suffix, which is equivalent to min = max = 1,
+           // i.e. /a/ vs /a{1}/.
+           min == max
+           // Give aa+ preference over aaa*.
+           || max == Integer.MAX_VALUE
+           ? min - 1
+           : min;
+        int expandedMin = min - expanded;
+        int expandedMax = max == Integer.MAX_VALUE ? max : max - expanded;
+        int suffixLen = suffixLen(min, max);
+        int expandedSuffixLen = suffixLen(expandedMin, expandedMax);
+        if (bodyLen * expanded + expandedSuffixLen < suffixLen
+            && !body.hasCapturingGroup()) {
+          // a{2} -> aa
+          // a{2,} -> aa+
+          // a{2,3} -> aaa?
+          while (--expanded >= 0) {
+            sb.append(sb, bodyStart, bodyEnd);
+          }
+          min = expandedMin;
+          max = expandedMax;
+        }
+      }
+
       if (max == Integer.MAX_VALUE) {
         switch (min) {
           case 0: sb.append('*'); break;
@@ -887,7 +971,9 @@ public abstract class RegExpTree {
       } else if (min == 0 && max == 1) {
         sb.append('?');
       } else if (min == max) {
-        sb.append('{').append(min).append('}');
+        if (min != 1) {
+          sb.append('{').append(min).append('}');
+        }
       } else {
         sb.append('{').append(min).append(',').append(max).append('}');
       }
@@ -1668,31 +1754,49 @@ public abstract class RegExpTree {
 
     @Override
     protected void appendSourceCode(StringBuilder sb) {
+      // True if the last content written might consume
+      // decimal digits written subsequently.
       boolean digitsMightBleed = false;
       for (RegExpTree element : elements) {
         boolean parenthesize = false;
         if (element instanceof Alternation
             || element instanceof Concatenation) {
           parenthesize = true;
-        } else {
-          digitsMightBleed = element instanceof Text;
-          if (digitsMightBleed) {
-            Text text = (Text) element;
-            if (text.text.length() != 0) {
-              char first = text.text.charAt(0);
-              parenthesize = '0' <= first && first <= '9';
-            }
-          }
         }
         if (parenthesize) {
           sb.append("(?:");
           element.appendSourceCode(sb);
           sb.append(')');
         } else {
+          int start = sb.length();
           element.appendSourceCode(sb);
+          if (digitsMightBleed && sb.length() > start) {
+            char firstChar = sb.charAt(start);
+            if ('0' <= firstChar && firstChar <= '9') {
+              // Bleeding happened.
+              // If the last character would be ambiguous
+              // with a repetition, escape it.
+              if (sb.charAt(start - 1) == '{') {
+                // Concatenation from optimization of
+                // /{(?:0,}/ -> /\{0,}/
+                sb.insert(start - 1, '\\');
+              } else {
+                // Or parenthesize otherwise.
+                // Concatenation from optimization of
+                // /(.)\1(?:0)/ -> /(.)\1(?:0)/.
+                sb.insert(start, "(?:").append(')');
+              }
+            }
+          }
         }
-        digitsMightBleed = element instanceof BackReference
-            && ((BackReference) element).groupIndex < 10;
+        digitsMightBleed = (
+            // \1(?:0) bleeds if there are 10 or more
+            // capturing groups preceding.
+            (element instanceof BackReference
+             && ((BackReference) element).groupIndex < 10)
+            // foo{(?:10}) bleeds.
+            || (element instanceof Text
+                && ((Text) element).text.endsWith("{")));
       }
     }
 
