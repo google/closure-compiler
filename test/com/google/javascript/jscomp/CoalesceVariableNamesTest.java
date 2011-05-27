@@ -351,6 +351,36 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
         "   this.load();");
   }
 
+  public void testCannotReuseAnyParamsBug() {
+    testSame("function handleKeyboardShortcut(e, key, isModifierPressed) {\n" +
+        "  if (!isModifierPressed) {\n" +
+        "    return false;\n" +
+        "  }\n" +
+        "  var command;\n" +
+        "  switch (key) {\n" +
+        "    case 'b': // Ctrl+B\n" +
+        "      command = COMMAND.BOLD;\n" +
+        "      break;\n" +
+        "    case 'i': // Ctrl+I\n" +
+        "      command = COMMAND.ITALIC;\n" +
+        "      break;\n" +
+        "    case 'u': // Ctrl+U\n" +
+        "      command = COMMAND.UNDERLINE;\n" +
+        "      break;\n" +
+        "    case 's': // Ctrl+S\n" +
+        "      return true;\n" +
+        "  }\n" +
+        "\n" +
+        "  if (command) {\n" +
+        "    this.fieldObject.execCommand(command);\n" +
+        "    return true;\n" +
+        "  }\n" +
+        "\n" +
+        "  return false;\n" +
+        "};");
+  }
+
+
   public void testUsePseduoNames() {
     usePseudoName = true;
     inFunction("var x   = 0; print(x  ); var   y = 1; print(  y)",

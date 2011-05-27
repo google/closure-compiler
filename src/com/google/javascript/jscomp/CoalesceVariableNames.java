@@ -200,36 +200,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       NodeTraversal t, ControlFlowGraph<Node> cfg, Set<Var> escaped) {
     UndiGraph<Var, Void> interferenceGraph =
         LinkedUndirectedGraph.create();
-
-    // For all variables V not in unsafeCrossRange,
-    // LiveRangeChecker(V, X) and LiveRangeChecker(Y, V) will never add a edge
-    // to the interferenceGraph. In other words, we don't need to use
-    // LiveRangeChecker on variable pair (A, B) if both A and B are not
-    // in the unsafeCrossRangeSet. See PrescreenCrossLiveRange for details.
-    Set<Var> unsafeCrossRangeSet = Sets.newHashSet();
     Scope scope = t.getScope();
-
-    for (DiGraphNode<Node, Branch> cfgNode : cfg.getDirectedGraphNodes()) {
-      if (cfg.isImplicitReturn(cfgNode)) {
-        continue;
-      }
-
-      for (Iterator<Var> i = scope.getVars(); i.hasNext();) {
-        final Var v = i.next();
-
-        if (!unsafeCrossRangeSet.contains(v)) {
-          FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
-          PrescreenCrossLiveRange check =
-              new PrescreenCrossLiveRange(v, state.getOut());
-
-          NodeTraversal.traverse(compiler, cfgNode.getValue(), check);
-
-          if (!check.isSafe()) {
-            unsafeCrossRangeSet.add(v);
-          }
-        }
-      }
-    }
 
     // First create a node for each non-escaped variable.
     for (Iterator<Var> i = scope.getVars(); i.hasNext();) {
@@ -295,16 +266,12 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         // v1 and v2 might not have an edge between them! woohoo. there's
         // one last sanity check that we have to do: we have to check
         // if there's a collision *within* the cfg node.
-        if (!unsafeCrossRangeSet.contains(v1) &&
-            !unsafeCrossRangeSet.contains(v2)) {
-          continue NEXT_VAR_PAIR;
-        }
-
         NEXT_INTRA_CFG_NODE:
         for (DiGraphNode<Node, Branch> cfgNode : cfg.getDirectedGraphNodes()) {
           if (cfg.isImplicitReturn(cfgNode)) {
             continue NEXT_INTRA_CFG_NODE;
           }
+
           FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
           boolean v1OutLive = state.getOut().isLive(v1);
           boolean v2OutLive = state.getOut().isLive(v2);
@@ -460,52 +427,6 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return name != null && NodeUtil.isName(name) &&
           var.getName().equals(name.getString()) &&
           !NodeUtil.isVarOrSimpleAssignLhs(name, name.getParent());
-    }
-  }
-
-  /**
-   * The crossed live range check is pretty traversal happy and it needs to
-   * live range crossing between all coalescing candidate x and y at each
-   * CFG node. Since this type of live range crossing within a CFG node happens
-   * rarely, we can pre-screen the variables' usages and eliminate the
-   * cross live range check if it can never cross another variable's live range
-   * within a CFG node.
-   */
-  private static class PrescreenCrossLiveRange
-      extends AbstractCfgNodeTraversalCallback {
-    private int count;
-    private final LiveVariableLattice lattice;
-    private final Var var;
-
-    // Dead assignments has a strange effect on variable name coalescing.
-    // Consider y = 3; x = 2; print(y)
-    // Since x is never live, it would appear x and y's live range never
-    // intersects. However, merging x and y means the = 2 assignment suddenly
-    // becomes live so we need to do the live range check when that happens.
-    private boolean hasDeadAssignment = false;
-
-    public PrescreenCrossLiveRange(Var var, LiveVariableLattice lattice) {
-      this.lattice = lattice;
-      this.var = var;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!NodeUtil.isName(n) || !var.name.equals(n.getString())) {
-        return;
-      }
-      count++;
-      if (// is a=b or var a=b
-          ((NodeUtil.isAssign(parent) && parent.getFirstChild() == n) ||
-          (NodeUtil.isVar(parent) && n.hasChildren()))
-
-          && !lattice.isLive(var)) {
-        hasDeadAssignment = true;
-      }
-    }
-
-    private boolean isSafe() {
-      return count < 2 && !hasDeadAssignment;
     }
   }
 }
