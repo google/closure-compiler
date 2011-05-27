@@ -1013,6 +1013,52 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("(![a])", "false");
     testSame("(![foo()])");
   }
+  
+  public void testFoldParseNumbers() {
+    enableNormalize();
+    enableEcmaScript5(true);
+    
+    fold("x = parseInt('123')", "x = 123");
+    fold("x = parseInt(' 123')", "x = 123");
+    fold("x = parseInt('123', 10)", "x = 123");
+    fold("x = parseInt('0xA')", "x = 10");
+    fold("x = parseInt('0xA', 16)", "x = 10");
+    fold("x = parseInt('07', 8)", "x = 7");
+    fold("x = parseInt('08')", "x = 8");
+    fold("x = parseFloat('1.23')", "x = 1.23");
+    fold("x = parseFloat('1.2300')", "x = 1.23");
+    fold("x = parseFloat(' 0.3333')", "x = 0.3333");
+    
+    //Mozilla Dev Center test cases
+    fold("x = parseInt(' 0xF', 16)", "x = 15");
+    fold("x = parseInt(' F', 16)", "x = 15");
+    fold("x = parseInt('17', 8)", "x = 15");
+    fold("x = parseInt('015', 10)", "x = 15");
+    fold("x = parseInt('1111', 2)", "x = 15");
+    fold("x = parseInt('12', 13)", "x = 15");
+    fold("x = parseInt(021, 8)", "x = 15");
+    fold("x = parseInt(15.99, 10)", "x = 15");
+    fold("x = parseFloat('3.14')", "x = 3.14");
+    fold("x = parseFloat(3.14)", "x = 3.14");
+    
+    //Valid calls - unable to fold
+    foldSame("x = parseInt('FXX123', 16)");
+    foldSame("x = parseInt('15*3', 10)");
+    foldSame("x = parseInt('15e2', 10)");
+    foldSame("x = parseInt('15px', 10)");
+    foldSame("x = parseInt('-0x08')");
+    foldSame("x = parseInt('1', -1)");
+    foldSame("x = parseFloat('3.14more non-digit characters')");
+    foldSame("x = parseFloat('314e-2')");
+    foldSame("x = parseFloat('0.0314E+2')");
+    foldSame("x = parseFloat('3.333333333333333333333333')");
+    
+    //Invalid calls
+    foldSame("x = parseInt('0xa', 10)");
+    
+    enableEcmaScript5(false);
+    foldSame("x = parseInt('08')");
+  }
 
   public void testFoldObjectLiteralRef() {
     // Leave extra side-effects in place
