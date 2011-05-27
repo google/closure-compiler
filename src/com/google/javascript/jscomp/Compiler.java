@@ -265,19 +265,20 @@ public class Compiler extends AbstractCompiler {
             getDiagnosticGroups().getRegisteredGroups()));
     guards.add(options.getWarningsGuard());
 
+    ComposeWarningsGuard composedGuards = new ComposeWarningsGuard(guards);
+
     // All passes must run the variable check. This synthesizes
     // variables later so that the compiler doesn't crash. It also
     // checks the externs file for validity. If you don't want to warn
     // about missing variable declarations, we shut that specific
     // error off.
     if (!options.checkSymbols &&
-        (warningsGuard == null || !warningsGuard.disables(
-            DiagnosticGroups.CHECK_VARIABLES))) {
-      guards.add(new DiagnosticGroupWarningsGuard(
+        !composedGuards.enables(DiagnosticGroups.CHECK_VARIABLES)) {
+      composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
     }
 
-    this.warningsGuard = new ComposeWarningsGuard(guards);
+    this.warningsGuard = composedGuards;
   }
 
   /**
