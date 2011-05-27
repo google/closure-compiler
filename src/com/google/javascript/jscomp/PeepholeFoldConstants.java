@@ -1217,20 +1217,30 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   private Node tryFoldKnownMethods(Node subtree) {
-    // For now we only support .join(),
+    // For now we only support string methods .join(),
     // .indexOf(), .substring() and .substr()
+    // and numeric methods parseInt() and parseFloat().
 
     subtree = tryFoldArrayJoin(subtree);
 
     if (subtree.getType() == Token.CALL) {
-      subtree = tryFoldKnownStringMethods(subtree);
+      Node callTarget = subtree.getFirstChild();
+      if (callTarget == null) {
+        return subtree;
+      }
+
+      if (NodeUtil.isGet(callTarget)) {
+        subtree = tryFoldKnownStringMethods(subtree);
+      } else {
+        subtree = tryFoldKnownNumericMethods(subtree);
+      }
     }
 
     return subtree;
   }
 
   /**
-   * Try to eveluate known String methods
+   * Try to evaluate known String methods
    *    .indexOf(), .substr(), .substring()
    */
   private Node tryFoldKnownStringMethods(Node subtree) {
@@ -1250,8 +1260,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node stringNode = callTarget.getFirstChild();
     Node functionName = stringNode.getNext();
 
-    if ((stringNode.getType() != Token.STRING) || (
-        (functionName.getType() != Token.STRING))) {
+    if ((stringNode.getType() != Token.STRING) ||
+        (functionName.getType() != Token.STRING)) {
       return subtree;
     }
 
@@ -1280,6 +1290,37 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
+   * Try to evaluate known Numeric methods
+   *    .parseInt(), parseFloat()
+   */
+  private Node tryFoldKnownNumericMethods(Node subtree) {
+    Preconditions.checkArgument(subtree.getType() == Token.CALL);
+
+    if (isASTNormalized()) {
+      // check if this is a call on a string method
+      // then dispatch to specific folding method.
+      Node callTarget = subtree.getFirstChild();
+
+      if (!NodeUtil.isName(callTarget)) {
+        return subtree;
+      }
+
+      String functionNameString = callTarget.getString();
+      Node firstArgument = callTarget.getNext();
+      if ((firstArgument != null) &&
+          (firstArgument.getType() == Token.STRING ||
+           firstArgument.getType() == Token.NUMBER)) {
+        if (functionNameString.equals("parseInt") ||
+            functionNameString.equals("parseFloat")) {
+          subtree = tryFoldParseNumber(subtree, functionNameString,
+              firstArgument);
+        }
+      }
+    }
+    return subtree;
+  }
+
+  /**
    * @return The lowered string Node.
    */
   private Node tryFoldStringToLowerCase(Node subtree, Node stringNode) {
@@ -1301,6 +1342,156 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     subtree.getParent().replaceChild(subtree, replacement);
     reportCodeChange();
     return replacement;
+  }
+
+  /**
+   * @param input string representation of a number
+   * @return string with leading and trailing zeros removed
+   */
+  private String normalizeNumericString(String input) {
+    if (input == null || input.length() == 0) {
+      return input;
+    }
+
+    int startIndex = 0, endIndex = input.length() - 1;
+    while (startIndex < input.length() && input.charAt(startIndex) == '0') {
+      startIndex++;
+    }
+    while (endIndex >= 0 && input.charAt(endIndex) == '0') {
+      endIndex--;
+    }
+    if (startIndex >= endIndex) {
+      return input;
+    }
+
+    return input.substring(startIndex, endIndex + 1);
+  }
+
+  /**
+   * Try to evaluate parseInt, parseFloat:
+   *     parseInt("1") -> 1
+   *     parseInt("1", 10) -> 1
+   *     parseFloat("1.11") -> 1.11
+   */
+  private Node tryFoldParseNumber(
+      Node n, String functionName, Node firstArg) {
+    Preconditions.checkArgument(n.getType() == Token.CALL);
+
+    boolean isParseInt = functionName.equals("parseInt");
+    Node secondArg = firstArg.getNext();
+
+    // Second argument is only used as the radix for parseInt
+    int radix = 0;
+    if (secondArg != null) {
+      if (!isParseInt) {
+        return n;
+      }
+
+      // Third-argument and non-numeric second arg are problematic. Discard.
+      if ((secondArg.getNext() != null) ||
+          (secondArg.getType() != Token.NUMBER)) {
+        return n;
+      } else {
+        double tmpRadix = secondArg.getDouble();
+        if (tmpRadix != (int)tmpRadix)
+          return n;
+        radix = (int)tmpRadix;
+        if (radix < 0 || radix == 1 || radix > 36) {
+          return n;
+        }
+      }
+    }
+
+    // stringVal must be a valid string.
+    String stringVal = null;
+    Double checkVal;
+    if (firstArg.getType() == Token.NUMBER) {
+      checkVal = NodeUtil.getNumberValue(firstArg);
+      if (!(radix == 0 || radix == 10) && isParseInt) {
+        //Convert a numeric first argument to a different base
+        stringVal = String.valueOf(checkVal.intValue());
+      } else {
+        // If parseFloat is called with a numeric argument,
+        // replace it with just the number.
+        // If parseInt is called with a numeric first argument and the radix
+        // is 10 or omitted, just replace it with the number
+        Node numericNode;
+        if (isParseInt) {
+          numericNode = Node.newNumber(checkVal.intValue());
+        } else {
+          numericNode = Node.newNumber(checkVal);
+        }
+        n.getParent().replaceChild(n, numericNode);
+        reportCodeChange();
+        return numericNode;
+      }
+    } else {
+      stringVal = NodeUtil.getStringValue(firstArg);
+      if (stringVal == null) {
+        return n;
+      }
+
+      //Check that the string is in a format we can recognize
+      checkVal = NodeUtil.getStringNumberValue(stringVal);
+      if (checkVal == null || checkVal == Double.NaN) {
+        return n;
+      }
+
+      stringVal = NodeUtil.trimJsWhiteSpace(stringVal);
+    }
+
+    Node newNode;
+    if (isParseInt) {
+      if (radix == 0 || radix == 16) {
+        if (stringVal.length() > 1 &&
+            stringVal.substring(0, 2).equalsIgnoreCase("0x")) {
+          radix = 16;
+          stringVal = stringVal.substring(2);
+        } else if (radix == 0) {
+          // if a radix is not specified or is 0 and the most
+          // significant digit is "0", the string will parse
+          // with a radix of 8 on some browsers, so leave
+          // this case alone. This check does not apply in
+          // script mode ECMA5 or greater
+          if (!isEcmaScript5OrGreater() &&
+              stringVal.substring(0, 1).equals("0")) {
+            return n;
+          }
+
+          radix = 10;
+        }
+      }
+      int newVal = 0;
+      try {
+        newVal = Integer.parseInt(stringVal, radix);
+      } catch (NumberFormatException e) {
+        return n;
+      }
+
+      newNode = Node.newNumber(newVal);
+    } else {
+      String normalizedNewVal = "0";
+      try {
+        double newVal = Double.parseDouble(stringVal);
+        newNode = Node.newNumber(newVal);
+        normalizedNewVal = normalizeNumericString(String.valueOf(newVal));
+      }
+      catch(NumberFormatException e) {
+        return n;
+      }
+      // Make sure that the parsed number matches the original string
+      // This prevents rounding differences between the java implementation
+      // and native script.
+      if (!normalizeNumericString(stringVal).equals(normalizedNewVal)) {
+        return n;
+      }
+    }
+
+    n.getParent().replaceChild(n, newNode);
+
+    reportCodeChange();
+
+    return newNode;
   }
 
   /**
