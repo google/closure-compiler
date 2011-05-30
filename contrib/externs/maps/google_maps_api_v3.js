@@ -3848,7 +3848,7 @@ google.maps.panoramio.PanoramioMouseEvent.prototype.pixelOffset;
 google.maps.places = {};
 
 /**
- * @param {google.maps.HTMLInputElement} inputField
+ * @param {HTMLInputElement} inputField
  * @param {(google.maps.places.AutocompleteOptions|Object.<string, *>)=} opt_opts
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -4020,7 +4020,7 @@ google.maps.places.PlaceSearchRequest.prototype.radius;
 google.maps.places.PlaceSearchRequest.prototype.types;
 
 /**
- * @param {google.maps.HTMLDivElement|google.maps.Map} attrContainer
+ * @param {HTMLDivElement|google.maps.Map} attrContainer
  * @constructor
  */
 google.maps.places.PlacesService = function(attrContainer) {};
