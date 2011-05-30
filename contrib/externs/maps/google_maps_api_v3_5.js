@@ -2189,12 +2189,14 @@ google.maps.MapTypeStyle.prototype.stylers;
  * @enum {string}
  */
 google.maps.MapTypeStyleElementType = {
+
 };
 
 /**
  * @enum {string}
  */
 google.maps.MapTypeStyleFeatureType = {
+
 };
 
 /**

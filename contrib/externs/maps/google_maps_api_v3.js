@@ -2188,12 +2188,16 @@ google.maps.MapTypeStyle.prototype.stylers;
 /**
  * @enum {string}
  */
-google.maps.MapTypeStyleElementType = {};
+google.maps.MapTypeStyleElementType = {
+
+};
 
 /**
  * @enum {string}
  */
-google.maps.MapTypeStyleFeatureType = {};
+google.maps.MapTypeStyleFeatureType = {
+
+};
 
 /**
  * @constructor
