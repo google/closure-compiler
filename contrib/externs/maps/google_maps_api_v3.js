@@ -2188,24 +2188,12 @@ google.maps.MapTypeStyle.prototype.stylers;
 /**
  * @enum {string}
  */
-google.maps.MapTypeStyleElementType = {
-  geometry: '',
-  all: '',
-  labels: ''
-};
+google.maps.MapTypeStyleElementType = {};
 
 /**
  * @enum {string}
  */
-google.maps.MapTypeStyleFeatureType = {
-  all: '',
-  transit: '',
-  water: '',
-  landscape: '',
-  poi: '',
-  administrative: '',
-  road: ''
-};
+google.maps.MapTypeStyleFeatureType = {};
 
 /**
  * @constructor
