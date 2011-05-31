@@ -4543,6 +4543,45 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testThisTypeOfFunction1() throws Exception {
+    testTypes(
+        "/** @type {function(this:Object)} */ function f() {}" +
+        "f();");
+  }
+
+  public void testThisTypeOfFunction2() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "/** @type {function(this:F)} */ function f() {}" +
+        "f();",
+        "\"function (this:F): ?\" must be called with a \"this\" type");
+  }
+
+  public void testThisTypeOfFunction3() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "F.prototype.bar = function() {};" +
+        "var f = (new F()).bar; f();",
+        "\"function (this:F): undefined\" must be called with a \"this\" type");
+  }
+
+  public void testThisTypeOfFunction4() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "F.prototype.moveTo = function(x, y) {};" +
+        "F.prototype.lineTo = function(x, y) {};" +
+        "function demo() {" +
+        "  var path = new F();" +
+        "  var points = [[1,1], [2,2]];" +
+        "  for (var i = 0; i < points.length; i++) {" +
+        "    (i == 0 ? path.moveTo : path.lineTo)(" +
+        "       points[i][0], points[i][1]);" +
+        "  }" +
+        "}",
+        "\"function (this:F, ?, ?): undefined\" " +
+        "must be called with a \"this\" type");
+  }
+
   public void testGlobalThis1() throws Exception {
     testTypes("/** @constructor */ function Window() {}" +
         "/** @param {string} msg */ " +

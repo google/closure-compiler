@@ -128,7 +128,11 @@ public class RemoveUnusedNamesTest extends CompilerTestCase {
   }
 
   public void testStatement() {
-    test("/** @constructor */ \n" +
+    test("/**\n" +
+         " * @fileoverview\n" +
+         " * @notypecheck\n" +
+         " */ \n" +
+         "/** @constructor */" +
         "function e(){}" +
            "var x = e.prototype.method1 = function(){};" +
            "var y = new e; x()",
