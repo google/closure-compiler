@@ -448,13 +448,31 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     parse("debugger;");
   }
 
-  public void testCommentPositions() {
+  public void testCommentPositions1() {
     Node root = newParse("/** @param {string} x */function a(x) {};" +
         "/** @param {string} x */function b(x) {}");
     Node a = root.getFirstChild();
     Node b = root.getLastChild();
     assertMarkerPosition(a, 0, 4);
     assertMarkerPosition(b, 0, 45);
+  }
+
+  public void testCommentPositions2() {
+    Node root = newParse(
+        "/* foo \n" +
+        "   bar \n" +
+        "*/\n" +
+        "/** @param {string} x */\n" +
+        "function a(x) {};\n" +
+        "\n" +
+        "/* bar \n" +
+        "   foo \n" +
+        "   foo */\n" +
+        "\n" +
+        "/**   @param {string} x */\n" +
+        "function b(x) {};");
+    assertMarkerPosition(root.getFirstChild(), 3, 4);
+    assertMarkerPosition(root.getFirstChild().getNext().getNext(), 10, 6);
   }
 
    public void testLiteralLocation() {
