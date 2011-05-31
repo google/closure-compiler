@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -483,6 +484,18 @@ class ReferenceCollectingCallback implements ScopedCallback,
         BasicBlock basicBlock, Node func) {
       return new Reference(func.getFirstChild(), func, func.getParent(),
           basicBlock, t.getScope(), t.getSourceName());
+    }
+
+    /**
+     * Creates a variable reference in a given script file name, used in tests.
+     *
+     * @param sourceName The name of the script file.
+     * @return The created reference.
+     */
+    @VisibleForTesting
+    static Reference createRefForTest(String sourceName) {
+      return new Reference(new Node(Token.NAME), null, null, null, null,
+          sourceName);
     }
 
     private Reference(Node nameNode, Node parent, Node grandparent,
