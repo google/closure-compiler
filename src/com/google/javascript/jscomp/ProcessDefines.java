@@ -67,7 +67,7 @@ class ProcessDefines implements CompilerPass {
   // Errors
   static final DiagnosticType INVALID_DEFINE_TYPE_ERROR =
     DiagnosticType.error(
-        "JSC_INVALID_DEFINE_INIT_ERROR",
+        "JSC_INVALID_DEFINE_TYPE_ERROR",
         "@define tag only permits literal types");
 
   static final DiagnosticType INVALID_DEFINE_INIT_ERROR =
@@ -82,8 +82,8 @@ class ProcessDefines implements CompilerPass {
 
   static final DiagnosticType DEFINE_NOT_ASSIGNABLE_ERROR =
       DiagnosticType.error(
-          "@define variable cannot be assigned here",
-          "@define variable {0} cannot be assigned due to unsafe code at {1}.");
+          "JSC_DEFINE_NOT_ASSIGNABLE_ERROR",
+          "@define variable {0} cannot be reassigned due to code at {1}.");
 
   private static final MessageFormat REASON_DEFINE_NOT_ASSIGNABLE =
       new MessageFormat("line {0} of {1}");
