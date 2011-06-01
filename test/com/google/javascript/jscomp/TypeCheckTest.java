@@ -2930,15 +2930,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testBackwardsTypedefUse5() throws Exception {
-    testTypes(
-        "/** @return {MyTypedef} */ function f() { return null; }" +
-        "/** @type {string} */ var MyTypedef = goog.typedef;",
-        "inconsistent return type\n" +
-        "found   : null\n" +
-        "required: string");
-  }
-
   public void testBackwardsTypedefUse6() throws Exception {
     testTypes(
         "/** @return {goog.MyTypedef} */ function f() { return null; }" +
@@ -7688,68 +7679,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "actual parameter 1 of f does not match formal parameter\n" +
         "found   : string\n" +
         "required: (MyType|null|number)");
-  }
-
-  public void testMalformedOldTypeDef() throws Exception {
-    testTypes(
-        "var goog = {}; goog.typedef = true;" +
-        "goog.Bar = goog.typedef",
-        "Typedef for goog.Bar does not have any type information");
-  }
-
-  public void testMalformedOldTypeDef2() throws Exception {
-    testTypes(
-        "var goog = {}; goog.typedef = true;" +
-        "/** @typedef {boolean} */ goog.Bar = goog.typedef",
-        "Typedef for goog.Bar does not have any type information");
-  }
-
-  public void testDuplicateOldTypeDef() throws Exception {
-    testTypes(
-        "var goog = {}; goog.typedef = true;" +
-        "/** @constructor */ goog.Bar = function() {};" +
-        "/** @type {number} */ goog.Bar = goog.typedef",
-        "variable goog.Bar redefined with type number, " +
-        "original definition at [testcode]:1 " +
-        "with type function (new:goog.Bar): undefined");
-  }
-
-  public void testOldTypeDef1() throws Exception {
-    testTypes(
-        "var goog = {}; goog.typedef = true;" +
-        "/** @type {number} */ goog.Bar = goog.typedef;" +
-        "/** @param {goog.Bar} x */ function f(x) {}" +
-        "f(3);");
-  }
-
-  public void testOldTypeDef2() throws Exception {
-    testTypes(
-        "var goog = {}; goog.typedef = true;" +
-        "/** @type {number} */ goog.Bar = goog.typedef;" +
-        "/** @param {goog.Bar} x */ function f(x) {}" +
-        "f('3');",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : string\n" +
-        "required: number");
-  }
-
-  public void testOldTypeDef3() throws Exception {
-    testTypes(
-        "var goog = {}; goog.typedef = true;" +
-        "/** @type {number} */ var Bar = goog.typedef;" +
-        "/** @param {Bar} x */ function f(x) {}" +
-        "f('3');",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : string\n" +
-        "required: number");
-  }
-
-  public void testCircularOldTypeDef() throws Exception {
-    testTypes(
-        "var goog = {}; goog.typedef = true;" +
-        "/** @type {number|Array.<goog.Bar>} */ goog.Bar = goog.typedef;" +
-        "/** @param {goog.Bar} x */ function f(x) {}" +
-        "f(3); f([3]); f([[3]]);");
   }
 
   public void testDuplicateTypeDef() throws Exception {

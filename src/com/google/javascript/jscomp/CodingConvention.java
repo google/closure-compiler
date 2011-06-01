@@ -159,12 +159,6 @@ public interface CodingConvention extends Serializable {
   public List<String> identifyTypeDeclarationCall(Node n);
 
   /**
-   * Checks if the given ASSIGN node is a typedef, and returns the
-   * name of the type if it is.
-   */
-  public String identifyTypeDefAssign(Node n);
-
-  /**
    * In many JS libraries, the function that produces inheritance also
    * adds properties to the superclass and/or subclass.
    */

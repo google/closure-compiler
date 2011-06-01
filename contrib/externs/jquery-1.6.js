@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for jQuery 1.6.1
+ * @fileoverview Externs for jQuery 1.6
  *
  * Note that some functions use different return types depending on the number
  * of parameters passed in. In these cases, you may need to annotate the type
@@ -1690,6 +1690,9 @@ jQuery.prototype.scrollTop = function(value) {};
  */
 jQuery.prototype.select = function(arg1, handler) {};
 
+/** @type {string} */
+jQuery.prototype.selector;
+
 /**
  * @return {string}
  * @nosideeffects
@@ -1859,7 +1862,7 @@ jQuery.prototype.toggleClass = function(arg1, flag) {};
 
 /**
  * @param {(string|jQuery.event)} arg1
- * @param {Object=} extraParameters
+ * @param {Array.<*>=} extraParameters
  * @return {jQuery}
  */
 jQuery.prototype.trigger = function(arg1, extraParameters) {};
@@ -1938,7 +1941,7 @@ jQuery.prototype.unwrap = function() {};
 
 /**
  * @param {(string|function(number,*))=} arg1
- * @return {(string|number|Array.<string>|jQuery)}
+ * @return {(string|Array.<string>|jQuery)}
  */
 jQuery.prototype.val = function(arg1) {};
 

@@ -39,8 +39,6 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
 
   private static final long serialVersionUID = 1L;
 
-  private static final String TYPEDEF_NAME = "goog.typedef";
-
   static final DiagnosticType OBJECTLIT_EXPECTED = DiagnosticType.warning(
       "JSC_REFLECT_OBJECTLIT_EXPECTED",
       "Object literal expected as second argument");
@@ -235,24 +233,6 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
         return typeNames;
       }
     }
-    return null;
-  }
-
-  @Override
-  public String identifyTypeDefAssign(Node n) {
-    Node firstChild = n.getFirstChild();
-    int type = n.getType();
-    if (type == Token.ASSIGN) {
-      if (TYPEDEF_NAME.equals(n.getLastChild().getQualifiedName())) {
-        return firstChild.getQualifiedName();
-      }
-    } else if (type == Token.VAR && firstChild.hasChildren()) {
-      if (TYPEDEF_NAME.equals(
-              firstChild.getFirstChild().getQualifiedName())) {
-        return firstChild.getString();
-      }
-    }
-
     return null;
   }
 

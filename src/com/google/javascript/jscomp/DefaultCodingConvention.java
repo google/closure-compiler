@@ -114,11 +114,6 @@ public class DefaultCodingConvention implements CodingConvention {
   }
 
   @Override
-  public String identifyTypeDefAssign(Node n) {
-    return null;
-  }
-
-  @Override
   public void applySubclassRelationship(FunctionType parentCtor,
       FunctionType childCtor, SubclassType type) {
     // do nothing

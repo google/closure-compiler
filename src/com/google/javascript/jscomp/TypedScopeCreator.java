@@ -92,8 +92,6 @@ final class TypedScopeCreator implements ScopeCreator {
   static final String DELEGATE_PROXY_SUFFIX =
       ObjectType.createDelegateSuffix("Proxy");
 
-  private static final String LEGACY_TYPEDEF = "goog.typedef";
-
   static final DiagnosticType MALFORMED_TYPEDEF =
       DiagnosticType.warning(
           "JSC_MALFORMED_TYPEDEF",
@@ -250,11 +248,6 @@ final class TypedScopeCreator implements ScopeCreator {
     declareNativeFunctionType(s, URI_ERROR_FUNCTION_TYPE);
     declareNativeValueType(s, "undefined", VOID_TYPE);
 
-    // The typedef construct needs the any type, so that it can be assigned
-    // to anything. This is kind of a hack, and an artifact of the typedef
-    // syntax we've chosen.
-    declareNativeValueType(s, LEGACY_TYPEDEF, NO_TYPE);
-
     // ActiveXObject is unqiuely special, because it can be used to construct
     // any type (the type that it creates is related to the arguments you
     // pass to it).
@@ -322,11 +315,6 @@ final class TypedScopeCreator implements ScopeCreator {
           } else if (info.hasTypedefType()) {
             registry.identifyNonNullableName(nameNode.getQualifiedName());
           }
-        }
-
-        if (valueNode != null &&
-            LEGACY_TYPEDEF.equals(valueNode.getQualifiedName())) {
-          registry.identifyNonNullableName(nameNode.getQualifiedName());
         }
       }
     }
@@ -1574,15 +1562,9 @@ final class TypedScopeCreator implements ScopeCreator {
 
       switch (n.getType()) {
 
-        case Token.ASSIGN:
-          // Handle typedefs.
-          checkForOldStyleTypedef(t, n);
-          break;
-
         case Token.VAR:
           // Handle typedefs.
           if (n.hasOneChild()) {
-            checkForOldStyleTypedef(t, n);
             checkForTypedef(t, n.getFirstChild(), n.getJSDocInfo());
           }
           break;
@@ -1630,40 +1612,6 @@ final class TypedScopeCreator implements ScopeCreator {
       if (candidate.getType() == Token.GETPROP) {
         defineSlot(candidate, candidate.getParent(),
             getNativeType(NO_TYPE), false);
-      }
-    }
-
-    /**
-     * Handle typedefs.
-     * @param t The current traversal.
-     * @param candidate An ASSIGN or VAR node.
-     */
-    // TODO(nicksantos): Kill this.
-    private void checkForOldStyleTypedef(NodeTraversal t, Node candidate) {
-      // old-style typedefs
-      String typedef = codingConvention.identifyTypeDefAssign(candidate);
-      if (typedef != null) {
-        // TODO(nicksantos|user): This is a terrible, terrible hack
-        // to bail out on recusive typedefs. We'll eventually need
-        // to handle these properly.
-        typeRegistry.declareType(typedef, getNativeType(UNKNOWN_TYPE));
-
-        JSDocInfo info = candidate.getJSDocInfo();
-        JSType realType = null;
-        if (info != null && info.getType() != null) {
-          realType = info.getType().evaluate(scope, typeRegistry);
-        }
-
-        if (realType == null) {
-          compiler.report(
-              JSError.make(
-                  t.getSourceName(), candidate, MALFORMED_TYPEDEF, typedef));
-        }
-
-        typeRegistry.overwriteDeclaredType(typedef, realType);
-
-        // Duplicate typedefs get handled when we try to register
-        // this typedef in the scope.
       }
     }
   } // end GlobalScopeBuilder
