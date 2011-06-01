@@ -2171,9 +2171,41 @@ google.maps.MapTypeRegistry.prototype.set = function(id, mapType) {};
 google.maps.MapTypeStyle = function() {};
 
 /**
+ * @type {google.maps.MapTypeStyleElementType}
+ */
+google.maps.MapTypeStyle.prototype.elementType;
+
+/**
+ * @type {google.maps.MapTypeStyleFeatureType}
+ */
+google.maps.MapTypeStyle.prototype.featureType;
+
+/**
  * @type {Array.<google.maps.MapTypeStyler>}
  */
 google.maps.MapTypeStyle.prototype.stylers;
+
+/**
+ * @enum {string}
+ */
+google.maps.MapTypeStyleElementType = {
+  geometry: '',
+  all: '',
+  labels: ''
+};
+
+/**
+ * @enum {string}
+ */
+google.maps.MapTypeStyleFeatureType = {
+  all: '',
+  transit: '',
+  water: '',
+  landscape: '',
+  poi: '',
+  administrative: '',
+  road: ''
+};
 
 /**
  * @constructor
