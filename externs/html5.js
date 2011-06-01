@@ -735,6 +735,18 @@ var applicationCache;
 Window.prototype.applicationCache;
 
 /**
+ * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
+ * @param {...string} var_args
+ */
+Window.prototype.importScripts = function(var_args) {};
+
+/**
+ * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
+ * @param {...string} var_args
+ */
+var importScripts = function(var_args) {};
+
+/**
  * @see http://dev.w3.org/html5/workers/
  * @constructor
  * @implements {EventTarget}
