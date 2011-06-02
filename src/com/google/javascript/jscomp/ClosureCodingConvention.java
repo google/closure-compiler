@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -288,7 +288,7 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
     Preconditions.checkArgument(callNode.getType() == Token.CALL);
     Node callName = callNode.getFirstChild();
     if (!"goog.reflect.object".equals(callName.getQualifiedName()) ||
-        callName.getChildCount() != 2) {
+        callNode.getChildCount() != 3) {
       return null;
     }
 
@@ -299,6 +299,7 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
 
     Node objectNode = typeNode.getNext();
     if (objectNode.getType() != Token.OBJECTLIT) {
+      // TODO(johnlenz): The coding convention should not be performing checks.
       t.getCompiler().report(JSError.make(t.getSourceName(), callNode,
                                           OBJECTLIT_EXPECTED));
       return null;

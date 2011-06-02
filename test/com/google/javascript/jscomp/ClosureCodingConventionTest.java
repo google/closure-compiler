@@ -150,6 +150,23 @@ public class ClosureCodingConventionTest extends TestCase {
     assertNotClassDefining("goog$inherits(A);");
   }
 
+  public void testObjectLiteralCast() {
+    assertNotObjectLiteralCast("goog.reflect.object();");
+    assertNotObjectLiteralCast("goog.reflect.object(A);");
+    assertNotObjectLiteralCast("goog.reflect.object(1, {});");
+    assertObjectLiteralCast("goog.reflect.object(A, {});");
+  }
+
+  private void assertNotObjectLiteralCast(String code) {
+    Node n = parseTestCode(code);
+    assertNull(conv.getObjectLiteralCast(null, n.getFirstChild()));
+  }
+
+  private void assertObjectLiteralCast(String code) {
+    Node n = parseTestCode(code);
+    assertNotNull(conv.getObjectLiteralCast(null, n.getFirstChild()));
+  }
+
   private void assertNotClassDefining(String code) {
     Node n = parseTestCode(code);
     assertNull(conv.getClassesDefinedByCall(n.getFirstChild()));
