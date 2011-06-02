@@ -1140,11 +1140,7 @@ public class DefaultPassConfig extends PassConfig {
     }
     @Override
     public void hotSwapScript(Node scriptRoot) {
-      // We have to rebuild the global scope.
-      // If this is not fast enough, we'll need to change the interface
-      // of ScopeCreator so that it can patch new variables into an existing
-      // scope (right now it can only create new scopes).
-      regenerateGlobalTypedScope(compiler, compiler.getRoot());
+      patchGlobalTypedScope(compiler, scriptRoot);
     }
   }
 

@@ -16,14 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +44,11 @@ public abstract class PassConfig {
    */
   private MemoizedScopeCreator typedScopeCreator;
 
+  /**
+   * This is the scope creator that {@code TypedScopeCreator} delegates to.
+   */
+  private TypedScopeCreator internalScopeCreator;
+
   /** The global typed scope. */
   Scope topScope = null;
 
@@ -53,34 +57,27 @@ public abstract class PassConfig {
   }
 
   /**
-   * Regenerates the top scope.
+   * Regenerates the top scope from scratch.
+   *
+   * @param compiler The compiler for which the global scope is regenerated.
+   * @param root The root of the AST.
    */
   void regenerateGlobalTypedScope(AbstractCompiler compiler, Node root) {
-    MemoizedScopeCreator oldScopeCreator = typedScopeCreator;
-    typedScopeCreator =
-        new MemoizedScopeCreator(new TypedScopeCreator(compiler));
+    internalScopeCreator = new TypedScopeCreator(compiler);
+    typedScopeCreator = new MemoizedScopeCreator(internalScopeCreator);
     topScope = typedScopeCreator.createScope(root, null);
+  }
 
-    if (oldScopeCreator != null) {
-      Scope oldTopScope = oldScopeCreator.getScopeIfMemoized(root);
-      if (oldTopScope != null) {
-        // For each variable declared with the VAR keyword, we want to grab
-        // its old inferred type.
-        //
-        // This is purely a heuristic. There are probably better ones we
-        // can use to increase the accuracy (like checking if a variable
-        // has been modified in the current script).
-        Iterator<Var> varIt =
-            topScope.getDeclarativelyUnboundVarsWithoutTypes();
-        while (varIt.hasNext()) {
-          Var newVar = varIt.next();
-          Var oldVar = oldTopScope.getVar(newVar.getName());
-          if (oldVar != null) {
-            newVar.setType(oldVar.getType());
-          }
-        }
-      }
-    }
+  /**
+   * Regenerates the top scope potentially only for a sub-tree of AST and then
+   * copies information for the old global scope.
+   *
+   * @param compiler The compiler for which the global scope is generated.
+   * @param scriptRoot The root of the AST used to generate global scope.
+   */
+  void patchGlobalTypedScope(AbstractCompiler compiler, Node scriptRoot) {
+    Preconditions.checkNotNull(internalScopeCreator);
+    internalScopeCreator.patchGlobalScope(topScope, scriptRoot);
   }
 
   /**
