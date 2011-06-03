@@ -446,7 +446,7 @@ public final class NodeUtil {
    * @param n a node whose type is {@link Token#FUNCTION}
    * @return the function's name, or {@code null} if it has no name
    */
-  static String getNearestFunctionName(Node n) {
+  public static String getNearestFunctionName(Node n) {
     String name = getFunctionName(n);
     if (name != null) {
       return name;
