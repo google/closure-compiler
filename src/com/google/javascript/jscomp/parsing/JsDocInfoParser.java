@@ -865,9 +865,9 @@ public final class JsDocInfoParser {
                         }
                         break;
                     }
-
-                    token = eatTokensUntilEOL();
                   }
+
+                  token = eatTokensUntilEOL();
                   continue retry;
               }
             }
@@ -1706,6 +1706,7 @@ public final class JsDocInfoParser {
       }
     }
 
+    restoreLookAhead(token);
     return reportGenericTypeSyntaxWarning();
   }
 
@@ -1758,6 +1759,7 @@ public final class JsDocInfoParser {
     // NOTE(nicksantos): We're not implementing generics at the moment, so
     // just throw out TypeParameters.
     if (token != JsDocToken.LP) {
+      restoreLookAhead(token);
       return reportTypeSyntaxWarning("msg.jsdoc.missing.lp");
     }
 

@@ -505,6 +505,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@type {function(Object, string, *)|null} */");
   }
 
+  public void testIssue477() throws Exception {
+    parse("@type function */",
+        "Bad type annotation. missing opening (");
+  }
+
+  public void testMalformedThisAnnotation() throws Exception {
+    parse("@this */",
+        "Bad type annotation. type not recognized due to syntax error");
+  }
+
   public void testParseFunctionalTypeError1() throws Exception {
     parse("@type {function number):string}*/",
         "Bad type annotation. missing opening (");
