@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -59,7 +60,7 @@ import javax.annotation.Nullable;
  * @author nicksantos@google.com (Nick Santos)
  */
 class InferJSDocInfo extends AbstractPostOrderCallback
-    implements CompilerPass {
+    implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
   private boolean inExterns;
@@ -68,6 +69,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     if (externs != null) {
       inExterns = true;
@@ -77,6 +79,14 @@ class InferJSDocInfo extends AbstractPostOrderCallback
       inExterns = false;
       NodeTraversal.traverse(compiler, root, this);
     }
+  }
+
+  @Override
+  public void hotSwapScript(Node root) {
+    Preconditions.checkNotNull(root);
+    Preconditions.checkState(root.getType() == Token.SCRIPT);
+    inExterns = false;
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   public void visit(NodeTraversal t, Node n, Node parent) {

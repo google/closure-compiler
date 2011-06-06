@@ -1034,27 +1034,27 @@ public class DefaultPassConfig extends PassConfig {
         }
         @Override
         public void hotSwapScript(Node scriptRoot) {
-          // TODO(bashir): Extra warnings about undefined types are reported
-          // when doing inferTypes from scriptRoot. One solution is to do
-          // inferTypes from the AST root instead of scriptRoot but that
-          // approach is very slow!
           makeTypeInference(compiler).inferTypes(scriptRoot);
         }
       };
     }
   };
 
-  final PassFactory inferJsDocInfo =
-    new PassFactory("inferJsDocInfo", false) {
+  final HotSwapPassFactory inferJsDocInfo =
+    new HotSwapPassFactory("inferJsDocInfo", false) {
   @Override
-  protected CompilerPass createInternal(final AbstractCompiler compiler) {
-    return new CompilerPass() {
+  protected HotSwapCompilerPass createInternal(final AbstractCompiler compiler) {
+    return new HotSwapCompilerPass() {
       @Override
       public void process(Node externs, Node root) {
         Preconditions.checkNotNull(topScope);
         Preconditions.checkNotNull(getTypedScopeCreator());
 
         makeInferJsDocInfo(compiler).process(externs, root);
+      }
+      @Override
+      public void hotSwapScript(Node scriptRoot) {
+        makeInferJsDocInfo(compiler).hotSwapScript(scriptRoot);
       }
     };
   }
