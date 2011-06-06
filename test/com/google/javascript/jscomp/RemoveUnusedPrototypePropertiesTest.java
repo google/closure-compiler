@@ -80,7 +80,7 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
            "var x = new e; x.a()");
   }
 
-  public void testAliasing() {
+  public void testAliasing1() {
     // Aliasing a property is not enough for it to count as used
     test("function e(){}" +
            "e.prototype.method1 = function(){};" +
@@ -100,11 +100,96 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
            // aliases
            "e.prototype.alias1 = e.prototype.method1;" +
            "e.prototype.alias2 = e.prototype.method2;" +
-           "var x=new e;x.alias1()",
+           "var x=new e; x.alias1()",
          "function e(){}" +
            "e.prototype.method1 = function(){};" +
            "e.prototype.alias1 = e.prototype.method1;" +
            "var x = new e; x.alias1()");
+  }
+
+  public void testAliasing2() {
+    // Aliasing a property is not enough for it to count as used
+    test("function e(){}" +
+           "e.prototype.method1 = function(){};" +
+           // aliases
+           "e.prototype.alias1 = e.prototype.method1;" +
+           "(new e).method1()",
+         "function e(){}" +
+           "e.prototype.method1 = function(){};" +
+           "(new e).method1()");
+
+    // Using an alias should keep it
+    test("function e(){}" +
+           "e.prototype.method1 = function(){};" +
+           // aliases
+           "e.prototype.alias1 = e.prototype.method1;" +
+           "(new e).alias1()",
+         "function e(){}" +
+           "e.prototype.method1 = function(){};" +
+           "e.prototype.alias1 = e.prototype.method1;" +
+           "(new e).alias1()");
+  }
+
+  public void testAliasing3() {
+    // Aliasing a property is not enough for it to count as used
+    test("function e(){}" +
+           "e.prototype.method1 = function(){};" +
+           "e.prototype.method2 = function(){};" +
+           // aliases
+           "e.prototype['alias1'] = e.prototype.method1;" +
+           "e.prototype['alias2'] = e.prototype.method2;",
+         "function e(){}" +
+           "e.prototype.method1=function(){};" +
+           "e.prototype.method2=function(){};" +
+           "e.prototype[\"alias1\"]=e.prototype.method1;" +
+           "e.prototype[\"alias2\"]=e.prototype.method2;");
+  }
+
+  public void testAliasing4() {
+    // Aliasing a property is not enough for it to count as used
+    test("function e(){}" +
+           "e.prototype['alias1'] = e.prototype.method1 = function(){};" +
+           "e.prototype['alias2'] = e.prototype.method2 = function(){};",
+         "function e(){}" +
+           "e.prototype[\"alias1\"]=e.prototype.method1=function(){};" +
+           "e.prototype[\"alias2\"]=e.prototype.method2=function(){};");
+  }
+
+  public void testAliasing5() {
+    // An exported alias must preserved any referenced values in the
+    // referenced function.
+    test("function e(){}" +
+           "e.prototype.method1 = function(){this.method2()};" +
+           "e.prototype.method2 = function(){};" +
+           // aliases
+           "e.prototype['alias1'] = e.prototype.method1;",
+         "function e(){}" +
+           "e.prototype.method1=function(){this.method2()};" +
+           "e.prototype.method2=function(){};" +
+           "e.prototype[\"alias1\"]=e.prototype.method1;");
+  }
+
+  public void testAliasing6() {
+    // An exported alias must preserved any referenced values in the
+    // referenced function.
+    test("function e(){}" +
+           "e.prototype.method1 = function(){this.method2()};" +
+           "e.prototype.method2 = function(){};" +
+           // aliases
+           "window['alias1'] = e.prototype.method1;",
+         "function e(){}" +
+           "e.prototype.method1=function(){this.method2()};" +
+           "e.prototype.method2=function(){};" +
+           "window['alias1']=e.prototype.method1;");
+  }
+
+  public void testAliasing7() {
+    // An exported alias must preserved any referenced values in the
+    // referenced function.
+    testSame("function e(){}" +
+           "e.prototype['alias1'] = e.prototype.method1 = " +
+               "function(){this.method2()};" +
+           "e.prototype.method2 = function(){};");
   }
 
   public void testStatementRestriction() {
