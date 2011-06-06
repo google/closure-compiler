@@ -841,4 +841,33 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     test("([a])", "1");
     testSame("([foo()])");
   }
+
+  public void testBindToCall() {
+    test("(goog.bind(f))()", "f()");
+    test("(goog.bind(f,a))()", "f.call(a)");
+    test("(goog.bind(f,a,b))()", "f.call(a,b)");
+
+    test("(goog.bind(f))(a)", "f(a)");
+    test("(goog.bind(f,a))(b)", "f.call(a,b)");
+    test("(goog.bind(f,a,b))(c)", "f.call(a,b,c)");
+
+    test("(goog.partial(f))()", "f()");
+    test("(goog.partial(f,a))()", "f(a)");
+    test("(goog.partial(f,a,b))()", "f(a,b)");
+
+    test("(goog.partial(f))(a)", "f(a)");
+    test("(goog.partial(f,a))(b)", "f(a,b)");
+    test("(goog.partial(f,a,b))(c)", "f(a,b,c)");
+
+    test("((function(){}).bind())()", "((function(){}))()");
+    test("((function(){}).bind(a))()", "((function(){})).call(a)");
+    test("((function(){}).bind(a,b))()", "((function(){})).call(a,b)");
+
+    test("((function(){}).bind())(a)", "((function(){}))(a)");
+    test("((function(){}).bind(a))(b)", "((function(){})).call(a,b)");
+    test("((function(){}).bind(a,b))(c)", "((function(){})).call(a,b,c)");
+
+    // Don't rewrite if the bind isn't the immediate call target
+    testSame("(goog.bind(f)).call(g)");
+  }
 }
