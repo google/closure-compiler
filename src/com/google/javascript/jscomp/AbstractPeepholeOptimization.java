@@ -129,14 +129,6 @@ abstract class AbstractPeepholeOptimization {
   }
 
   /**
-   * @return the current coding convention.
-   */
-  CodingConvention getCodingConvention() {
-    // Note: this assumes a thread safe coding convention object.
-    return currentTraversal.getCompiler().getCodingConvention();
-  }
-
-  /**
    * Check if the specified node is null or is still in the AST.
    */
   @VisibleForTesting

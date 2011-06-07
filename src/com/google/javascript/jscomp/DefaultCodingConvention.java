@@ -180,9 +180,4 @@ public class DefaultCodingConvention implements CodingConvention {
   public Collection<AssertionFunctionSpec> getAssertionFunctions() {
     return Collections.emptySet();
   }
-
-  @Override
-  public Bind describeFunctionBind(Node n) {
-    return null;
-  }
 }
