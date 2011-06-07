@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -63,7 +62,7 @@ class InlineObjectLiterals implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
-        compiler, new InliningBehavior(), Predicates.<Var>alwaysTrue());
+        compiler, new InliningBehavior());
     callback.process(externs, root);
   }
 
@@ -155,29 +154,24 @@ class InlineObjectLiterals implements CompilerPass {
         // Ignore indirect references, like x.y (except x.y(), since
         // the function referenced by y might reference 'this').
         //
-        // TODO: If a function is called, figure out if it references
-        // 'this', and if not, then inlining the object should be OK.
-        if (parent.getType() == Token.GETPROP &&
-            (gramps.getType() != Token.CALL ||
-             gramps.getFirstChild() != parent) &&
-            parent.getFirstChild().isEquivalentTo(name)) {
+        if (parent.getType() == Token.GETPROP) {
+          Preconditions.checkState(parent.getFirstChild() == name);
+          // A call target maybe using the object as a 'this' value.
+          if (gramps.getType() == Token.CALL
+              && gramps.getFirstChild() == parent) {
+            return false;
+          }
           continue;
         }
 
-        // Full references mean that we can't inline the object.
-        if (!ref.isLvalue() && !ref.isInitializingDeclaration()) {
-          if (parent.getType() != Token.VAR) {
-            // This is a full reference to the object, we can't inline.
-            return false;
-          }
-
-          // var x; We can ignore safely.
-          continue;
+        // Only rewrite VAR declarations or simple assignment statements
+        if (!isVarOrAssignExprLhs(name)) {
+           return false;
         }
 
         Node val = ref.getAssignedValue();
         if (val == null) {
-          // Var with no assignment. Keep going.
+          // A var with no assignment.
           continue;
         }
 
@@ -217,17 +211,6 @@ class InlineObjectLiterals implements CompilerPass {
           }
         }
 
-        // This is an assignment to an object literal. Make sure that
-        // this isn't inside some giant GETPROP thing, e.g.
-        // (x = {}).c = 5 (even though technically we could work out the
-        // (x = {}).c case without the assignment, that's a sufficiently odd
-        // case to not worry about it.
-        Node p = parent;
-        while ((p = p.getParent()) != null) {
-          if (p.getType() == Token.GETPROP) {
-            return false;
-          }
-        }
 
         // We have found an acceptable object literal assignment. As
         // long as there are no other assignments that mess things up,
@@ -235,6 +218,14 @@ class InlineObjectLiterals implements CompilerPass {
         ret = true;
       }
       return ret;
+    }
+
+    private boolean isVarOrAssignExprLhs(Node n) {
+      Node parent = n.getParent();
+      return parent.getType() == Token.VAR ||
+          (parent.getType() == Token.ASSIGN
+              && parent.getFirstChild() == n
+              && parent.getParent().getType() == Token.EXPR_RESULT);
     }
 
     /**

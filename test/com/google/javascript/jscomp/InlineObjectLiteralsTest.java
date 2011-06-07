@@ -245,4 +245,50 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
       "a = {a1: 100};" +
       "print(a.a1);");
   }
+
+  public void testObject18() {
+    testSame("var a,b; b=a={x:x, y:y}; f(b.x);");
+  }
+
+  public void testObject19() {
+    testSame("var a,b; if(c) { b=a={x:x, y:y}; } else { b=a={x:y}; } f(b.x);");
+  }
+
+  public void testObject20() {
+    testSame("var a,b; if(c) { b=a={x:x, y:y}; } else { b=a={x:y}; } f(a.x);");
+  }
+
+  public void testObject21() {
+    testSame("var a,b; b=a={x:x, y:y};");
+    testSame("var a,b; if(c) { b=a={x:x, y:y}; }" +
+             "else { b=a={x:y}; } f(a.x); f(b.x)");
+    testSame("var a, b; if(c) { if (a={x:x, y:y}) f(); } " +
+             "else { b=a={x:y}; } f(a.x);");
+    testSame("var a,b; b = (a = {x:x, y:x});");
+    testSame("var a,b; a = {x:x, y:x}; b = a");
+    testSame("var a,b; a = {x:x, y:x}; b = x || a");
+    testSame("var a,b; a = {x:x, y:x}; b = y && a");
+    testSame("var a,b; a = {x:x, y:x}; b = y ? a : a");
+    testSame("var a,b; a = {x:x, y:x}; b = y , a");
+    testSame("b = x || (a = {x:1, y:2});");
+  }
+
+  public void testObject22() {
+    test("while(1) { var a = {y:1}; if (b) a.x = 2; f(a.y, a.x);}",
+      "for(;1;){" +
+      " var JSCompiler_object_inline_y_0=1;" +
+      " var JSCompiler_object_inline_x_1;" +
+      " if(b) JSCompiler_object_inline_x_1=2;" +
+      " f(JSCompiler_object_inline_y_0,JSCompiler_object_inline_x_1)" +
+      "}");
+    test("var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}",
+      "var JSCompiler_object_inline_y_1;" +
+      "var JSCompiler_object_inline_x_0;" +
+      "for(;1;) {" +
+      " f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1);" +
+      " JSCompiler_object_inline_x_0=1," +
+      " JSCompiler_object_inline_y_1=1," +
+      " true" +
+      "}");
+  }
 }
