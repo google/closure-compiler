@@ -27,6 +27,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   final boolean allowExpressionDecomposition = true;
   final boolean allowFunctionExpressionInlining = true;
   final boolean allowLocalFunctionInlining = true;
+  boolean assumeStrictThis = true;
 
   public InlineFunctionsTest() {
     this.enableNormalize();
@@ -39,6 +40,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     super.enableLineNumberCheck(true);
     allowGlobalFunctionInlining = true;
     allowBlockInlining = true;
+    assumeStrictThis = true;
   }
 
   @Override
@@ -49,7 +51,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         compiler.getUniqueNameIdSupplier(),
         allowGlobalFunctionInlining,
         allowLocalFunctionInlining,
-        allowBlockInlining);
+        allowBlockInlining,
+        assumeStrictThis);
   }
 
   /**
@@ -1624,6 +1627,85 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
     test("(function(){ return (function() {return 1})() })();",
          "(function(){ return 1 })();");
+  }
+
+  public void testInlineWithThis1() {
+    assumeStrictThis = false;
+    // If no "this" is provided it might need to be coerced to the global
+    // "this".
+    testSame("function f(){} f.call();");
+    testSame("function f(){this} f.call();");
+
+    assumeStrictThis = true;
+    // In strict mode, "this" is never coerced so we can use the provided value.
+    test("function f(){} f.call();", "{}");
+    test("function f(){this} f.call();",
+         "{void 0;}");
+  }
+
+  public void testInlineWithThis2() {
+    // "this" can always be replaced with "this"
+    assumeStrictThis = false;
+    test("function f(){} f.call(this);", "void 0");
+
+    assumeStrictThis = true;
+    test("function f(){} f.call(this);", "void 0");
+  }
+
+  public void testInlineWithThis3() {
+    assumeStrictThis = false;
+    // If no "this" is provided it might need to be coerced to the global
+    // "this".
+    testSame("function f(){} f.call([]);");
+
+    assumeStrictThis = true;
+    // In strict mode, "this" is never coerced so we can use the provided value.
+    test("function f(){} f.call([]);", "{}");
+  }
+
+  public void testInlineWithThis4() {
+    assumeStrictThis = false;
+    // If no "this" is provided it might need to be coerced to the global
+    // "this".
+    testSame("function f(){} f.call(new g);");
+
+    assumeStrictThis = true;
+    // In strict mode, "this" is never coerced so we can use the provided value.
+    test("function f(){} f.call(new g);",
+         "{var JSCompiler_inline_this_0=new g}");
+  }
+
+  public void testInlineWithThis5() {
+    assumeStrictThis = false;
+    // If no "this" is provided it might need to be coerced to the global
+    // "this".
+    testSame("function f(){} f.call(g());");
+
+    assumeStrictThis = true;
+    // In strict mode, "this" is never coerced so we can use the provided value.
+    test("function f(){} f.call(g());",
+         "{var JSCompiler_inline_this_0=g()}");
+  }
+
+  public void testInlineWithThis6() {
+    assumeStrictThis = false;
+    // If no "this" is provided it might need to be coerced to the global
+    // "this".
+    testSame("function f(){this} f.call(new g);");
+
+    assumeStrictThis = true;
+    // In strict mode, "this" is never coerced so we can use the provided value.
+    test("function f(){this} f.call(new g);",
+         "{var JSCompiler_inline_this_0=new g;JSCompiler_inline_this_0}");
+  }
+
+  public void testInlineWithThis7() {
+    assumeStrictThis = true;
+    // In strict mode, "this" is never coerced so we can use the provided value.
+    test("function f(a){a=1;this} f.call();",
+         "{var a$$inline_1=void 0; a$$inline_1=1; void 0;}");
+    test("function f(a){a=1;this} f.call(x, x);",
+         "{var a$$inline_1=x; a$$inline_1=1; x;}");
   }
 
   // http://en.wikipedia.org/wiki/Fixed_point_combinator#Y_combinator

@@ -1043,7 +1043,8 @@ public class DefaultPassConfig extends PassConfig {
   final HotSwapPassFactory inferJsDocInfo =
     new HotSwapPassFactory("inferJsDocInfo", false) {
   @Override
-  protected HotSwapCompilerPass createInternal(final AbstractCompiler compiler) {
+  protected HotSwapCompilerPass createInternal(
+      final AbstractCompiler compiler) {
     return new HotSwapCompilerPass() {
       @Override
       public void process(Node externs, Node root) {
@@ -1597,7 +1598,8 @@ public class DefaultPassConfig extends PassConfig {
           compiler.getUniqueNameIdSupplier(),
           options.inlineFunctions,
           options.inlineLocalFunctions,
-          enableBlockInlining);
+          enableBlockInlining,
+          options.isAssumeStrictThis());
     }
   };
 
