@@ -197,4 +197,18 @@ public class StrictModeCheckTest extends CompilerTestCase {
     // Validate that number as objlit key
     testSame("var o = {1: 3, 2: 4};");
   }
+
+  public void testDuplicateObjectLiteralKey() {
+    testSame("var o = {a: 1, b: 2, c: 3};");
+    testSame("var x = { get a() {}, set a(p) {} };");
+
+    test("var o = {a: 1, b: 2, a: 3};", null,
+         StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    test("var x = { get a() {}, get a() {} };", null,
+         StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    test("var x = { get a() {}, a: 1 };", null,
+         StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    test("var x = { set a(p) {}, a: 1 };", null,
+         StrictModeCheck.DUPLICATE_OBJECT_KEY);
+  }
 }

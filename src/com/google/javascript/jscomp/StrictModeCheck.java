@@ -16,12 +16,15 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
+import java.util.Set;
 
 /**
  * Checks that the code obeys the static restrictions of strict mode:
@@ -69,6 +72,10 @@ class StrictModeCheck extends AbstractPostOrderCallback
   static final DiagnosticType ILLEGAL_NAME = DiagnosticType.error(
       "JSC_ILLEGAL_NAME",
       "identifiers ending in '__' cannot be used in Caja");
+
+  static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.error(
+      "JSC_DUPLICATE_OBJECT_KEY",
+      "object literals cannot contain duplicate keys in ES5 strict mode");
 
   private final AbstractCompiler compiler;
   private final boolean noVarCheck;
@@ -175,12 +182,28 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   /** Checks that object literal keys are valid. */
   private void checkObjectLiteral(NodeTraversal t, Node n) {
-    if (!noCajaChecks) {
-      for (Node key = n.getFirstChild();
-           key != null;
-           key = key.getNext()) {
-        if (key.getString().endsWith("__")) {
-          t.report(key, ILLEGAL_NAME);
+    Set<String> getters = Sets.newHashSet();
+    Set<String> setters = Sets.newHashSet();
+    for (Node key = n.getFirstChild();
+         key != null;
+         key = key.getNext()) {
+      if (!noCajaChecks && key.getString().endsWith("__")) {
+        t.report(key, ILLEGAL_NAME);
+      }
+      if (key.getType() != Token.SET) {
+        // normal property and getter cases
+        if (getters.contains(key.getString())) {
+          t.report(key, DUPLICATE_OBJECT_KEY);
+        } else {
+          getters.add(key.getString());
+        }
+      }
+      if (key.getType() != Token.GET) {
+        // normal property and setter cases
+        if (setters.contains(key.getString())) {
+          t.report(key, DUPLICATE_OBJECT_KEY);
+        } else {
+          setters.add(key.getString());
         }
       }
     }
