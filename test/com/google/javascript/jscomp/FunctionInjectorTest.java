@@ -36,13 +36,12 @@ import java.util.Set;
 public class FunctionInjectorTest extends TestCase {
   static final InliningMode INLINE_DIRECT = InliningMode.DIRECT;
   static final InliningMode INLINE_BLOCK = InliningMode.BLOCK;
-  private boolean assumeStrictThis = true;
 
 
   private FunctionInjector getInjector() {
     Compiler compiler = new Compiler();
     return new FunctionInjector(
-        compiler, compiler.getUniqueNameIdSupplier(), true, assumeStrictThis);
+        compiler, compiler.getUniqueNameIdSupplier(), true);
   }
 
   public void testIsSimpleFunction1() {
@@ -325,16 +324,7 @@ public class FunctionInjectorTest extends TestCase {
   }
 
   public void testCanInlineReferenceToFunction38() {
-    assumeStrictThis = false;
-
     helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(null, goo()); }",
-        "foo", INLINE_BLOCK);
-
-    assumeStrictThis = true;
-
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
         "function foo(a){return true;}; " +
         "function x() { foo.call(null, goo()); }",
         "foo", INLINE_BLOCK);
@@ -348,14 +338,7 @@ public class FunctionInjectorTest extends TestCase {
   }
 
   public void testCanInlineReferenceToFunction40() {
-    assumeStrictThis = false;
     helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(bar, goo()); }",
-        "foo", INLINE_BLOCK);
-
-    assumeStrictThis = true;
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
         "function foo(a){return true;}; " +
         "function x() { foo.call(bar, goo()); }",
         "foo", INLINE_BLOCK);
@@ -369,14 +352,7 @@ public class FunctionInjectorTest extends TestCase {
   }
 
   public void testCanInlineReferenceToFunction42() {
-    assumeStrictThis = false;
     helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(a){return true;}; " +
-        "function x() { foo.call(new bar(), goo()); }",
-        "foo", INLINE_BLOCK);
-
-    assumeStrictThis = true;
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
         "function foo(a){return true;}; " +
         "function x() { foo.call(new bar(), goo()); }",
         "foo", INLINE_BLOCK);
@@ -391,16 +367,8 @@ public class FunctionInjectorTest extends TestCase {
   }
 
   public void testCanInlineReferenceToFunction44() {
-    assumeStrictThis = false;
     // Handle the case of a missing 'this' value in a call.
     helperCanInlineReferenceToFunction(CanInlineResult.NO,
-        "function foo(){return true;}; " +
-        "function x() { foo.call(); }",
-        "foo", INLINE_BLOCK);
-
-    assumeStrictThis = true;
-    // Handle the case of a missing 'this' value in a call.
-    helperCanInlineReferenceToFunction(CanInlineResult.YES,
         "function foo(){return true;}; " +
         "function x() { foo.call(); }",
         "foo", INLINE_BLOCK);
@@ -1326,11 +1294,11 @@ public class FunctionInjectorTest extends TestCase {
       final String code,
       final String fnName,
       final InliningMode mode,
-      boolean allowDecomposition) {
+      boolean allowDecomposition
+      ) {
     final Compiler compiler = new Compiler();
     final FunctionInjector injector = new FunctionInjector(
-        compiler, compiler.getUniqueNameIdSupplier(), allowDecomposition,
-        assumeStrictThis);
+        compiler, compiler.getUniqueNameIdSupplier(), allowDecomposition);
     final Node tree = parse(compiler, code);
 
     Node externsRoot = new Node(Token.EMPTY);
@@ -1382,8 +1350,7 @@ public class FunctionInjectorTest extends TestCase {
       final boolean decompose) {
     final Compiler compiler = new Compiler();
     final FunctionInjector injector = new FunctionInjector(
-        compiler, compiler.getUniqueNameIdSupplier(), decompose,
-        assumeStrictThis);
+        compiler, compiler.getUniqueNameIdSupplier(), decompose);
 
     JSSourceFile[] externsInputs = new JSSourceFile[] {
         JSSourceFile.fromCode("externs", "")

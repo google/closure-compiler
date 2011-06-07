@@ -76,8 +76,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       Supplier<String> safeNameIdSupplier,
       boolean inlineGlobalFunctions,
       boolean inlineLocalFunctions,
-      boolean blockFunctionInliningEnabled,
-      boolean assumeStrictThis) {
+      boolean blockFunctionInliningEnabled) {
     Preconditions.checkArgument(compiler != null);
     Preconditions.checkArgument(safeNameIdSupplier != null);
     this.compiler = compiler;
@@ -86,8 +85,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     this.inlineLocalFunctions = inlineLocalFunctions;
     this.blockFunctionInliningEnabled = blockFunctionInliningEnabled;
 
-    this.injector = new FunctionInjector(
-        compiler, safeNameIdSupplier, true, assumeStrictThis);
+    this.injector = new FunctionInjector(compiler, safeNameIdSupplier, true);
   }
 
   FunctionState getOrCreateFunctionState(String fnName) {

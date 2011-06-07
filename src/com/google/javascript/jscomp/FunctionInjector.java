@@ -42,7 +42,6 @@ class FunctionInjector {
   private final Supplier<String> safeNameIdSupplier;
   private final boolean allowDecomposition;
   private Set<String> knownConstants = Sets.newHashSet();
-  private final boolean assumeStrictThis;
 
   /**
    * @param allowDecomposition Whether an effort should be made to break down
@@ -52,14 +51,12 @@ class FunctionInjector {
   public FunctionInjector(
       AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
-      boolean allowDecomposition,
-      boolean assumeStrictThis) {
+      boolean allowDecomposition) {
     Preconditions.checkNotNull(compiler);
     Preconditions.checkNotNull(safeNameIdSupplier);
     this.compiler = compiler;
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.allowDecomposition = allowDecomposition;
-    this.assumeStrictThis = assumeStrictThis;
   }
 
   /** The type of inlining to perform. */
@@ -200,11 +197,9 @@ class FunctionInjector {
   private boolean isSupportedCallType(Node callNode) {
     if (callNode.getFirstChild().getType() != Token.NAME) {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
-        if (!assumeStrictThis) {
-          Node thisValue = callNode.getFirstChild().getNext();
-          if (thisValue == null || thisValue.getType() != Token.THIS) {
-            return false;
-          }
+        Node thisValue = callNode.getFirstChild().getNext();
+        if (thisValue == null || thisValue.getType() != Token.THIS) {
+          return false;
         }
       } else if (NodeUtil.isFunctionObjectApply(callNode)) {
         return false;
@@ -258,7 +253,7 @@ class FunctionInjector {
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
       Node inlineResult = FunctionArgumentInjector.inject(
-          null, safeReturnNode, null, argMap);
+          safeReturnNode, null, argMap);
       Preconditions.checkArgument(safeReturnNode == inlineResult);
       newExpression = safeReturnNode.removeFirstChild();
     }
@@ -636,9 +631,8 @@ class FunctionInjector {
     if (callNode.getFirstChild().getType() != Token.NAME) {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
         // TODO(johnlenz): Support replace this with a value.
-        if (cArg == null || cArg.getType() != Token.THIS) {
-          return CanInlineResult.NO;
-        }
+        Preconditions.checkNotNull(cArg);
+        Preconditions.checkState(cArg.getType() == Token.THIS);
         cArg = cArg.getNext();
       } else {
         // ".apply" call should be filtered before this.

@@ -54,13 +54,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   boolean acceptConstKeyword;
 
-  /**
-   * Whether the compiler should assume that a function's "this" value
-   * never needs coercion (for example in non-strict "null" or "undefined" will
-   * be coerced to the global "this" and primitives to objects).
-   */
-  private boolean assumeStrictThis;
-
   // TODO(johnlenz): Add an language output mode.
 
   /**
@@ -723,7 +716,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     inlineConstantVars = false;
     inlineFunctions = false;
     inlineLocalFunctions = false;
-    assumeStrictThis = false;
     crossModuleCodeMotion = false;
     crossModuleMethodMotion = false;
     inlineGetters = false;
@@ -1222,20 +1214,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public boolean getInferTypes() {
     return inferTypes;
-  }
-
-  /**
-   * @return Whether assumeStrictThis is set.
-   */
-  public boolean isAssumeStrictThis() {
-    return assumeStrictThis;
-  }
-
-  /**
-   * If true, enables enables additional optimizations.
-   */
-  public void setAssumeStrictThis(boolean enable) {
-    this.assumeStrictThis = enable;
   }
 
   //////////////////////////////////////////////////////////////////////////////

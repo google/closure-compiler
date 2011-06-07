@@ -36,10 +36,6 @@ import java.util.Set;
  */
 class FunctionArgumentInjector {
 
-  // A string to use to represent "this".  Anything that is not a valid
-  // identifier can be used, so we use "this".
-  static final String THIS_MARKER = "this";
-
   private FunctionArgumentInjector() {
     // A private constructor to prevent instantiation.
   }
@@ -53,7 +49,7 @@ class FunctionArgumentInjector {
    *     to replace the name Nodes.
    * @returns The root node or its replacement.
    */
-  static Node inject(AbstractCompiler compiler, Node node, Node parent,
+  static Node inject(Node node, Node parent,
       Map<String, Node> replacements) {
     if (node.getType() == Token.NAME) {
       Node replacementTemplate = replacements.get(node.getString());
@@ -68,30 +64,12 @@ class FunctionArgumentInjector {
         parent.replaceChild(node, replacement);
         return replacement;
       }
-    } else if (node.getType() == Token.THIS) {
-      Node replacementTemplate = replacements.get(THIS_MARKER);
-      Preconditions.checkNotNull(replacementTemplate);
-      if (replacementTemplate.getType() != Token.THIS) {
-        // The name may need to be replaced more than once,
-        // so we need to clone the node.
-        Node replacement = replacementTemplate.cloneTree();
-        parent.replaceChild(node, replacement);
-
-        // Remove the value.  This isn't required but it ensures that we won't
-        // inject side-effects multiple times as it will trigger the null
-        // check above if we do.
-        if (NodeUtil.mayHaveSideEffects(replacementTemplate, compiler)) {
-          replacements.remove(THIS_MARKER);
-        }
-
-        return replacement;
-      }
     }
 
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
       // We have to reassign c in case it was replaced, because the removed c's
       // getNext() would no longer be correct.
-      c = inject(compiler, c, node, replacements);
+      c = inject(c, node, replacements);
     }
 
     return node;
@@ -108,13 +86,15 @@ class FunctionArgumentInjector {
 
     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
     Node cArg = callNode.getFirstChild().getNext();
-    if (cArg != null && NodeUtil.isFunctionObjectCall(callNode)) {
-      argMap.put(THIS_MARKER, cArg);
-      cArg = cArg.getNext();
-    } else {
-      // 'apply' isn't supported yet.
-      Preconditions.checkState(!NodeUtil.isFunctionObjectApply(callNode));
-      argMap.put(THIS_MARKER, NodeUtil.newUndefinedNode(callNode));
+    if (callNode.getFirstChild().getType() != Token.NAME) {
+      if (NodeUtil.isFunctionObjectCall(callNode)) {
+        // TODO(johnlenz): Support replace this with a value.
+        Preconditions.checkNotNull(cArg);
+        Preconditions.checkState(cArg.getType() == Token.THIS);
+        cArg = cArg.getNext();
+      } else {
+        Preconditions.checkState(!NodeUtil.isFunctionObjectApply(callNode));
+      }
     }
 
     for (Node fnArg : NodeUtil.getFunctionParameters(fnNode).children()) {
@@ -400,8 +380,6 @@ class FunctionArgumentInjector {
           if (parameters.contains(name)) {
             parametersReferenced.add(name);
           }
-        } else if (n.getType() == Token.THIS) {
-          parametersReferenced.add(THIS_MARKER);
         }
       }
     }
