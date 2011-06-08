@@ -513,6 +513,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // Object literal keys are handled with OBJECTLIT
         if (!NodeUtil.isObjectLitKey(n, n.getParent())) {
           ensureTyped(t, n, STRING_TYPE);
+        } else {
+          // Object literal keys are not typeable
+          typeable = false;
         }
         break;
 

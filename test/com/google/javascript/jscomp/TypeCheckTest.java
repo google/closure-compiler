@@ -7779,6 +7779,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals(100.0, getTypedPercent(js), 0.1);
   }
 
+  public void testGetTypedPercent5() throws Exception {
+    String js = "/** @enum {number} */ keys = {A: 1,B: 2,C: 3};";
+    assertEquals(100.0, getTypedPercent(js), 0.1);
+  }
+
+  public void testGetTypedPercent6() throws Exception {
+    String js = "a = {TRUE: 1, FALSE: 0};";
+    assertEquals(100.0, getTypedPercent(js), 0.1);
+  }
+
   private double getTypedPercent(String js) throws Exception {
     Node n = compiler.parseTestCode(js);
 
