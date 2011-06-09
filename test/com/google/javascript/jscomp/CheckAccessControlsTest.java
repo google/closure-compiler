@@ -730,6 +730,43 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         "/** @const */ Foo.prototype.prop;");
   }
 
+  public void testConstantProperty11() {
+    test("/** @constructor */ function Foo() {}" +
+        "/** @const */ Foo.prototype.bar;" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() { this.bar = 5; this.bar = 6; }",
+        null , CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testConstantProperty12() {
+    testSame("/** @constructor */ function Foo() {}" +
+        "/** @const */ Foo.prototype.bar;" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() { this.bar = 5; }" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo2() { this.bar = 5; }");
+  }
+
+  public void testConstantProperty13() {
+    test("/** @constructor */ function Foo() {}" +
+        "/** @const */ Foo.prototype.bar;" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function SubFoo() { this.bar = 5; }" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {SubFoo}\n" +
+        " */ function SubSubFoo() { this.bar = 5; }",
+        null , CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
   public void testSuppressConstantProperty() {
     testSame("/** @constructor */ function A() {" +
         "/** @const */ this.bar = 3;}" +

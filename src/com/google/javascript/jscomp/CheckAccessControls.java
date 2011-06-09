@@ -16,19 +16,19 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.FunctionPrototypeType;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import com.google.common.collect.Multimap;
-import com.google.common.collect.HashMultimap;
+import com.google.javascript.rhino.jstype.FunctionPrototypeType;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
 
 /**
  * A compiler pass that checks that the programmer has obeyed all the access
@@ -360,8 +360,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
     String propertyName = getprop.getLastChild().getString();
 
+    boolean isConstant = isPropertyDeclaredConstant(objectType, propertyName);
+
     // Check whether constant properties are reassigned
-    if (objectType != null) {
+    if (isConstant) {
       ObjectType oType = objectType;
       while (oType != null) {
         if (oType.hasReferenceName()) {
@@ -376,20 +378,15 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         oType = oType.getImplicitPrototype();
       }
 
-      JSDocInfo info = objectType.getOwnPropertyJSDocInfo(propertyName);
-      if (info != null && info.isConstant()
-          && objectType.hasReferenceName()) {
-        initializedConstantProperties.put(objectType.getReferenceName(),
-            propertyName);
-      }
+      Preconditions.checkState(objectType.hasReferenceName());
+      initializedConstantProperties.put(objectType.getReferenceName(),
+          propertyName);
 
       // Add the prototype when we're looking at an instance object
       if (objectType.isInstanceType()) {
         ObjectType prototype = objectType.getImplicitPrototype();
         if (prototype != null) {
-          JSDocInfo prototypeInfo
-            = prototype.getOwnPropertyJSDocInfo(propertyName);
-          if (prototypeInfo != null && prototypeInfo.isConstant()
+          if (prototype.hasProperty(propertyName)
               && prototype.hasReferenceName()) {
             initializedConstantProperties.put(prototype.getReferenceName(),
                 propertyName);
@@ -609,6 +606,24 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       }
     }
     return null;
+  }
+
+  /**
+   * Returns if a property is declared constant.
+   */
+  private static boolean isPropertyDeclaredConstant(
+      ObjectType objectType, String prop) {
+    for (;
+         // Only objects with reference names can have constant properties.
+         objectType != null && objectType.hasReferenceName();
+
+         objectType = objectType.getImplicitPrototype()) {
+      JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(prop);
+      if (docInfo != null && docInfo.isConstant()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
