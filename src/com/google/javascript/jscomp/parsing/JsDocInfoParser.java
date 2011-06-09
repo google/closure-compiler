@@ -795,7 +795,7 @@ public final class JsDocInfoParser {
                   } else {
                     skipEOLs();
                     token = next();
-                    typeNode = parseAndRecordTypeNode(token, lineno, charno);
+                    typeNode = parseAndRecordTypeNode(token);
                   }
 
                   if (annotation == Annotation.THIS) {
@@ -1044,21 +1044,6 @@ public final class JsDocInfoParser {
   private Node parseAndRecordTypeNode(JsDocToken token, boolean matchingLC) {
     return parseAndRecordTypeNode(token, stream.getLineno(), stream.getCharno(),
         matchingLC, false);
-  }
-
-  /**
-   * Looks for a type expression at the current token and if found,
-   * returns it. Note that this method consumes input.
-   *
-   * @param token The current token.
-   * @param lineno The line of the type expression.
-   * @param startCharno The starting character position of the type expression.
-   * @return The type expression found or null if none.
-   */
-  private Node parseAndRecordTypeNode(JsDocToken token, int lineno,
-      int startCharno) {
-    return parseAndRecordTypeNode(token, lineno, startCharno,
-        token == JsDocToken.LC, false);
   }
 
   /**

@@ -2205,9 +2205,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         parse("@return {Foo} some long \n * multiline" +
               " \n * description */", true);
 
-    assertDocumentationInMarker(
-        assertAnnotationMarker(jsdoc, "return", 0, 0),
+    JSDocInfo.Marker returnDoc =
+        assertAnnotationMarker(jsdoc, "return", 0, 0);
+    assertDocumentationInMarker(returnDoc,
         "some long multiline description", 13, 2, 15);
+    assertEquals(8, returnDoc.type.getPositionOnStartLine());
+    assertEquals(12, returnDoc.type.getPositionOnEndLine());
   }
 
   public void testParseWithMarkers4() throws Exception {
