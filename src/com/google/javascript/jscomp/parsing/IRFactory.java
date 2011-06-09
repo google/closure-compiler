@@ -919,15 +919,25 @@ public class IRFactory {
         operand.setDouble(-operand.getDouble());
         return operand;
       } else {
-        if (type == Token.INC || type == Token.DEC) {
+        if (type == Token.DELPROP &&
+            !(operand.getType() == Token.GETPROP ||
+              operand.getType() == Token.GETELEM ||
+              operand.getType() == Token.NAME)) {
+          String msg =
+              "Invalid delete operand. Only properties can be deleted.";;
+          errorReporter.error(
+              msg,
+              sourceName,
+              operand.getLineno(), "", 0);
+        } else  if (type == Token.INC || type == Token.DEC) {
           if (!validAssignmentTarget(operand)) {
             String msg = (type == Token.INC)
                 ? "invalid increment target"
                 : "invalid decrement target";
             errorReporter.error(
-              msg,
-              sourceName,
-              operand.getLineno(), "", 0);
+                msg,
+                sourceName,
+                operand.getLineno(), "", 0);
           }
         }
 

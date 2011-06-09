@@ -448,6 +448,25 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     parse("debugger;");
   }
 
+  public void testDelete1() {
+    testNoParseError("delete a.b;");
+  }
+
+  public void testDelete2() {
+    testNoParseError("delete a['b'];");
+  }
+
+  public void testDelete3() {
+    // This is allowed in ES3 and ES5, but not in ES5/strict. There
+    // is a strict mode check for this.
+    testNoParseError("delete a;");
+  }
+
+  public void testDelete4() {
+    testParseError("delete 'x';",
+        "Invalid delete operand. Only properties can be deleted.");
+  }
+
   public void testCommentPositions1() {
     Node root = newParse("/** @param {string} x */function a(x) {};" +
         "/** @param {string} x */function b(x) {}");

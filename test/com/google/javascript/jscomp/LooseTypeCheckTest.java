@@ -105,11 +105,6 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "/** @type {undefined|number} */var a;if (a == foo())return;}");
   }
 
-  public void testTypeCheck7() throws Exception {
-    testTypes("function foo() {delete 'abc';}",
-        TypeCheck.BAD_DELETE);
-  }
-
   public void testTypeCheck8() throws Exception {
     testTypes("/**@return {void}*/function foo(){do {} while (foo());}");
   }

@@ -204,12 +204,8 @@ public class JsonMLConversionTest extends CompilerTestCase {
   public void testDelete() throws Exception {
     testConversion("delete a");
     testConversion("delete a.x");
-    testConversion("delete f()");
     testConversion("delete a[0]");
-    testConversion("delete a.x()");
     testConversion("delete a.x[0]");
-    testConversion("delete a.x[0]()");
-    testConversion("delete (a.x[0]())('a', 'b')");
   }
 
   public void testDirectives() throws Exception {

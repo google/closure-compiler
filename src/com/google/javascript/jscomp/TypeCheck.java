@@ -64,8 +64,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   //
   // User errors
   //
+  // TODO(nicksantos): delete this
   static final DiagnosticType BAD_DELETE =
-      // TODO(user): make this an error
       DiagnosticType.warning(
           "JSC_BAD_DELETE_OPERAND",
           "delete operator needs a reference operand");
@@ -723,9 +723,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case Token.DELPROP:
-        if (!isReference(n.getFirstChild())) {
-          report(t, n, BAD_DELETE);
-        }
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
 
@@ -1790,27 +1787,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     } else {
       // The error condition is handled in TypedScopeCreator.
     }
-  }
-
-
-  /**
-   * This predicate is used to determine if the node represents an expression
-   * that is a Reference according to JavaScript definitions.
-   *
-   * @param n The node being checked.
-   * @return true if the sub-tree n is a reference, false otherwise.
-   */
-  private static boolean isReference(Node n) {
-    switch (n.getType()) {
-      case Token.GETELEM:
-      case Token.GETPROP:
-      case Token.NAME:
-        return true;
-
-      default:
-        return false;
-    }
-
   }
 
   /**
