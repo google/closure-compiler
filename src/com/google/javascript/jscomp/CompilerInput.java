@@ -310,16 +310,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
    */
   public int getLineOffset(int lineno) {
     if (lineOffsets == null) {
-      try {
-        String[] sourceLines = ast.getSourceFile().getCode().split("\n");
-        lineOffsets = new int[sourceLines.length];
-        for (int ii = 1; ii < sourceLines.length; ++ii) {
-          lineOffsets[ii] =
-              lineOffsets[ii - 1] + sourceLines[ii - 1].length() + 1;
-        }
-      } catch (IOException e) {
-        return 0;
-      }
+      findLineOffsets();
     }
     if (lineno < 1 || lineno > lineOffsets.length) {
       throw new IllegalArgumentException(
@@ -327,4 +318,27 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     }
     return lineOffsets[lineno - 1];
   }
+
+  /** @return The number of lines in this input. */
+  public int getNumLines() {
+    if (lineOffsets == null) {
+      findLineOffsets();
+    }
+    return lineOffsets.length;
+  }
+
+  private void findLineOffsets() {
+    try {
+      String[] sourceLines = ast.getSourceFile().getCode().split("\n");
+      lineOffsets = new int[sourceLines.length];
+      for (int ii = 1; ii < sourceLines.length; ++ii) {
+        lineOffsets[ii] =
+            lineOffsets[ii - 1] + sourceLines[ii - 1].length() + 1;
+      }
+    } catch (IOException e) {
+      lineOffsets = new int[1];
+      lineOffsets[0] = 0;
+    }
+  }
+
 }
