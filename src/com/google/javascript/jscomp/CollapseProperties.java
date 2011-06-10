@@ -249,14 +249,20 @@ class CollapseProperties implements CompilerPass {
   private void checkNamespaces() {
     for (Name name : nameMap.values()) {
       if (name.isNamespace() &&
-          (name.aliasingGets > 0 || name.localSets + name.globalSets > 1)) {
+          (name.aliasingGets > 0 || name.localSets + name.globalSets > 1 ||
+           name.deleteProps > 0)) {
         boolean initialized = name.declaration != null;
         for (Ref ref : name.getRefs()) {
           if (ref == name.declaration) {
             continue;
           }
 
-          if (ref.type == Ref.Type.SET_FROM_GLOBAL ||
+          if (ref.type == Ref.Type.DELETE_PROP) {
+            if (initialized) {
+              warnAboutNamespaceRedefinition(name, ref);
+            }
+          } else if (
+              ref.type == Ref.Type.SET_FROM_GLOBAL ||
               ref.type == Ref.Type.SET_FROM_LOCAL) {
             if (initialized) {
               warnAboutNamespaceRedefinition(name, ref);
@@ -495,7 +501,9 @@ class CollapseProperties implements CompilerPass {
         collapseDeclarationOfNameAndDescendants(
             p, appendPropForAlias(alias, p.name));
 
-        if (!p.inExterns && canCollapseChildNames && p.declaration != null &&
+        if (!p.inExterns && canCollapseChildNames &&
+            p.declaration != null &&
+            p.canCollapse() &&
             p.declaration.node != null &&
             p.declaration.node.getParent() != null &&
             p.declaration.node.getParent().getType() == Token.ASSIGN) {
@@ -833,9 +841,15 @@ class CollapseProperties implements CompilerPass {
                                TokenStream.isJSIdentifier(key.getString());
       String propName = isJsIdentifier ?
           key.getString() : String.valueOf(++arbitraryNameCounter);
-      String propAlias = appendPropForAlias(alias, propName);
-      String qName = objlitName.fullName() + '.' + propName;
 
+      // If the name cannot be collapsed, skip it.
+      String qName = objlitName.fullName() + '.' + propName;
+      Name p = nameMap.get(qName);
+      if (p != null && !p.canCollapse()) {
+        continue;
+      }
+
+      String propAlias = appendPropForAlias(alias, propName);
       Node refNode = null;
       if (discardKeys) {
         objlit.removeChild(key);
@@ -866,24 +880,21 @@ class CollapseProperties implements CompilerPass {
       compiler.reportCodeChange();
       nameToAddAfter = newVar;
 
-      if (isJsIdentifier) {
-        // Update the global name's node ancestry if it hasn't already been
-        // done. (Duplicate keys in an object literal can bring us here twice
-        // for the same global name.)
-        Name p = nameMap.get(qName);
-        if (p != null) {
-          if (!discardKeys) {
-            Ref newAlias =
-                p.declaration.cloneAndReclassify(Ref.Type.ALIASING_GET);
-            newAlias.node = refNode;
-            p.addRef(newAlias);
-          }
+      // Update the global name's node ancestry if it hasn't already been
+      // done. (Duplicate keys in an object literal can bring us here twice
+      // for the same global name.)
+      if (isJsIdentifier && p != null) {
+        if (!discardKeys) {
+          Ref newAlias =
+              p.declaration.cloneAndReclassify(Ref.Type.ALIASING_GET);
+          newAlias.node = refNode;
+          p.addRef(newAlias);
+        }
 
-          p.declaration.node = nameNode;
+        p.declaration.node = nameNode;
 
-          if (value.getType() == Token.FUNCTION) {
-            checkForHosedThisReferences(value, value.getJSDocInfo(), p);
-          }
+        if (value.getType() == Token.FUNCTION) {
+          checkForHosedThisReferences(value, value.getJSDocInfo(), p);
         }
       }
 

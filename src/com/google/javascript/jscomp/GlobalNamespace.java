@@ -601,6 +601,9 @@ class GlobalNamespace {
               type = determineGetTypeForHookOrBooleanExpr(t, parent, name);
             }
             break;
+          case Token.DELPROP:
+            type = Ref.Type.DELETE_PROP;
+            break;
           default:
             type = Ref.Type.ALIASING_GET;
             break;
@@ -659,6 +662,8 @@ class GlobalNamespace {
               return Ref.Type.ALIASING_GET;
             }
             break;
+          case Token.DELPROP:
+            return Ref.Type.DELETE_PROP;
         }
         prev = anc;
       }
@@ -807,6 +812,7 @@ class GlobalNamespace {
     int aliasingGets = 0;
     int totalGets = 0;
     int callGets = 0;
+    int deleteProps = 0;
     boolean inExterns;
 
     JSDocInfo docInfo = null;
@@ -828,33 +834,32 @@ class GlobalNamespace {
     }
 
     void addRef(Ref ref) {
+      addRefInternal(ref);
       switch (ref.type) {
         case SET_FROM_GLOBAL:
           if (declaration == null) {
             declaration = ref;
             docInfo = getDocInfoForDeclaration(ref);
           }
-          addRefInternal(ref);
           globalSets++;
           break;
         case SET_FROM_LOCAL:
-          addRefInternal(ref);
           localSets++;
           break;
         case PROTOTYPE_GET:
         case DIRECT_GET:
-          addRefInternal(ref);
           totalGets++;
           break;
         case ALIASING_GET:
-          addRefInternal(ref);
           aliasingGets++;
           totalGets++;
           break;
         case CALL_GET:
-          addRefInternal(ref);
           callGets++;
           totalGets++;
+          break;
+        case DELETE_PROP:
+          deleteProps++;
           break;
         default:
           throw new IllegalStateException();
@@ -893,6 +898,9 @@ class GlobalNamespace {
           case CALL_GET:
             callGets--;
             totalGets--;
+            break;
+          case DELETE_PROP:
+            deleteProps--;
             break;
           default:
             throw new IllegalStateException();
@@ -941,7 +949,8 @@ class GlobalNamespace {
     boolean canCollapse() {
       return !inExterns && !isGetOrSetDefinition() && (isClassOrEnum ||
           (parent == null || parent.canCollapseUnannotatedChildNames()) &&
-          (globalSets > 0 || localSets > 0));
+          (globalSets > 0 || localSets > 0) &&
+          deleteProps == 0);
     }
 
     boolean isGetOrSetDefinition() {
@@ -950,7 +959,7 @@ class GlobalNamespace {
 
     boolean canCollapseUnannotatedChildNames() {
       if (type == Type.OTHER || isGetOrSetDefinition()
-          || globalSets != 1 || localSets != 0) {
+          || globalSets != 1 || localSets != 0 || deleteProps != 0) {
         return false;
       }
 
@@ -1061,6 +1070,7 @@ class GlobalNamespace {
       ALIASING_GET,     // Prevents a name's properties from being collapsed
       DIRECT_GET,       // Prevents a name from being completely eliminated
       CALL_GET,         // Prevents a name from being collapsed if never set
+      DELETE_PROP,      // Prevents a name from being collapsed at all.
     }
 
     Node node;
