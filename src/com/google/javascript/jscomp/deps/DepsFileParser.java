@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp.deps;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ErrorManager;
 
@@ -60,13 +62,26 @@ public class DepsFileParser extends JsFileLineParser {
    */
   private List<DependencyInfo> depInfos;
 
+  /** Translates paths in different build systems. */
+  private final Function<String, String> pathTranslator;
+
   /**
    * Constructor
    *
    * @param errorManager Handles parse errors.
    */
   public DepsFileParser(ErrorManager errorManager) {
+    this(Functions.<String>identity(), errorManager);
+  }
+
+  /**
+   * @param pathTranslator Translates paths in different build systems.
+   * @param errorManager Handles parse errors.
+   */
+  public DepsFileParser(Function<String, String> pathTranslator,
+      ErrorManager errorManager) {
     super(errorManager);
+    this.pathTranslator = pathTranslator;
   }
 
   /**
@@ -139,7 +154,7 @@ public class DepsFileParser extends JsFileLineParser {
               + addDependencyParams, true);
         }
         // Parse the file path.
-        String path = parseJsString(depArgsMatch.group(1));
+        String path = pathTranslator.apply(parseJsString(depArgsMatch.group(1)));
         DependencyInfo depInfo = new SimpleDependencyInfo(path, filePath,
             // Parse the provides.
             parseJsStringArray(depArgsMatch.group(2)),
