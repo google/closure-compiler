@@ -219,7 +219,22 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     inputCharset = getInputCharset();
 
     if (config.jsOutputFile.length() > 0) {
-      options.jsOutputFile = config.jsOutputFile;
+      if (config.skipNormalOutputs) {
+        throw new FlagUsageException("skip_normal_outputs and js_output_file"
+            + " cannot be used together.");
+      } else {
+        options.jsOutputFile = config.jsOutputFile;
+      }
+    }
+
+    if (config.skipNormalOutputs && config.printAst) {
+      throw new FlagUsageException("skip_normal_outputs and print_ast cannot"
+          + " be used together.");
+    }
+
+    if (config.skipNormalOutputs && config.printTree) {
+      throw new FlagUsageException("skip_normal_outputs and print_tree cannot"
+          + " be used together.");
     }
 
     if (config.createSourceMap.length() > 0) {
@@ -609,7 +624,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     B options = createOptions();
 
     List<JSModule> modules = null;
-    Result result;
+    Result result = null;
 
     setRunOptions(options);
 
@@ -624,10 +639,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     List<String> moduleSpecs = config.module;
     if (!moduleSpecs.isEmpty()) {
       modules = createJsModules(moduleSpecs, jsFiles);
-      result = compiler.compileModules(externs, modules, options);
+      if (config.skipNormalOutputs) {
+        compiler.initModules(externs, modules, options);
+      } else {
+        result = compiler.compileModules(externs, modules, options);
+      }
     } else {
       List<JSSourceFile> inputs = createSourceInputs(jsFiles);
-      result = compiler.compile(externs, inputs, options);
+      if (config.skipNormalOutputs) {
+        compiler.init(externs, inputs, options);
+      } else {
+        result = compiler.compile(externs, inputs, options);
+      }
     }
 
     int errCode = processResults(result, modules, options);
@@ -683,7 +706,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
-    if (result.success) {
+    if (config.skipNormalOutputs) {
+      // Output the manifest if requested.
+      outputManifest();
+      return 0;
+    } else if (result.success) {
       if (modules == null) {
         writeOutput(
             jsOutput, compiler, compiler.toSource(), config.outputWrapper,
@@ -1619,6 +1646,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setLanguageIn(String languageIn) {
       this.languageIn = languageIn;
+      return this;
+    }
+
+    /**
+     * Set whether the normal outputs of compilation should be skipped
+     */
+    private boolean skipNormalOutputs = false;
+
+    CommandLineConfig setSkipNormalOutputs(boolean skipNormalOutputs) {
+      this.skipNormalOutputs = skipNormalOutputs;
       return this;
     }
   }
