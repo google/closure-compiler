@@ -99,6 +99,11 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         "JSC_CONSTANT_PROPERTY_REASSIGNED_VALUE",
         "constant property {0} assigned a value more than once");
 
+  static final DiagnosticType CONST_PROPERTY_DELETED =
+      DiagnosticType.warning(
+        "JSC_CONSTANT_PROPERTY_DELETED",
+        "constant property {0} cannot be deleted");
+
   private final AbstractCompiler compiler;
   private final TypeValidator validator;
 
@@ -351,8 +356,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       Node getprop) {
     // Check whether the property is modified
     Node parent = getprop.getParent();
+    boolean isDelete = parent.getType() == Token.DELPROP;
     if (!(NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == getprop)
-        && (parent.getType() != Token.INC) && (parent.getType() != Token.DEC)) {
+        && (parent.getType() != Token.INC) && (parent.getType() != Token.DEC)
+        && !isDelete) {
       return;
     }
 
@@ -364,6 +371,12 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     // Check whether constant properties are reassigned
     if (isConstant) {
+      if (isDelete) {
+        compiler.report(
+            t.makeError(getprop, CONST_PROPERTY_DELETED, propertyName));
+        return;
+      }
+
       ObjectType oType = objectType;
       while (oType != null) {
         if (oType.hasReferenceName()) {

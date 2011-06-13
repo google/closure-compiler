@@ -27,6 +27,7 @@ import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP_REASON;
 import static com.google.javascript.jscomp.CheckAccessControls.PRIVATE_OVERRIDE;
 import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
+import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_DELETED;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE;
 
 import com.google.javascript.jscomp.CheckLevel;
@@ -765,6 +766,12 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         " * @extends {SubFoo}\n" +
         " */ function SubSubFoo() { this.bar = 5; }",
         null , CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  public void testConstantProperty14() {
+    test("/** @constructor */ function Foo() {" +
+        "/** @const */ this.bar = 3; delete this.bar; }",
+        null, CONST_PROPERTY_DELETED);
   }
 
   public void testSuppressConstantProperty() {

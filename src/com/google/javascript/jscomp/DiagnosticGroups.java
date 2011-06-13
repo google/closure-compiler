@@ -101,6 +101,7 @@ public class DiagnosticGroups {
 
   public static DiagnosticGroup CONSTANT_PROPERTY = DiagnosticGroups
       .registerGroup("constantProperty",
+          CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
   public static DiagnosticGroup NON_STANDARD_JSDOC =
@@ -178,6 +179,7 @@ public class DiagnosticGroups {
 
   public static DiagnosticGroup CONST =
       DiagnosticGroups.registerGroup("const",
+          CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
           ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
 
