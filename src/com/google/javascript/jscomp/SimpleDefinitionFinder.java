@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -53,8 +53,8 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
   public SimpleDefinitionFinder(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.definitionSiteMap = Maps.newLinkedHashMap();
-    this.nameDefinitionMultimap = HashMultimap.create();
-    this.nameUseSiteMultimap = HashMultimap.create();
+    this.nameDefinitionMultimap = LinkedHashMultimap.create();
+    this.nameUseSiteMultimap = LinkedHashMultimap.create();
   }
 
   /**
