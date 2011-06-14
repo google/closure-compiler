@@ -903,12 +903,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /** Expansion function for the manifest. */
-  @VisibleForTesting
-  String expandManifest(JSModule forModule) {
-    if (Strings.isEmpty(config.outputManifest)) {
-      return null;
-    }
-    return expandCommandLinePath(config.outputManifest, forModule);
+  private String expandManifest(JSModule forModule, String manifestName) {
+    return expandCommandLinePath(manifestName, forModule);
   }
 
   /**
@@ -1143,10 +1139,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Returns true if and only if a manifest should be generated for each
    * module, as opposed to one unified manifest.
    */
-  private boolean shouldGenerateManifestPerModule() {
+  private boolean shouldGenerateManifestPerModule(String outputManifest) {
     return !config.module.isEmpty()
-        && config.outputManifest != null
-        && config.outputManifest.contains("%outname%");
+        && outputManifest != null
+        && outputManifest.contains("%outname%");
   }
 
   /**
@@ -1154,29 +1150,37 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * manage_closure_dependencies, if requested.
    */
   private void outputManifest() throws IOException {
-    String outputManifest = config.outputManifest;
-    if (Strings.isEmpty(outputManifest)) {
+    List<String> outputManifests = config.outputManifests;
+    if (outputManifests.isEmpty()) {
       return;
     }
 
-    JSModuleGraph graph = compiler.getModuleGraph();
-    if (shouldGenerateManifestPerModule()) {
-      // Generate per-module manifests.
-      Iterable<JSModule> modules = graph.getAllModules();
-      for (JSModule module : modules) {
-        Writer out = fileNameToOutputWriter(expandManifest(module));
-        printManifestTo(module.getInputs(), out);
+    for (String outputManifest : outputManifests) {
+      if (outputManifest.isEmpty()) {
+        continue;
+      }
+
+      JSModuleGraph graph = compiler.getModuleGraph();
+      if (shouldGenerateManifestPerModule(outputManifest)) {
+        // Generate per-module manifests.
+        Iterable<JSModule> modules = graph.getAllModules();
+        for (JSModule module : modules) {
+          Writer out = fileNameToOutputWriter(
+              expandManifest(module, outputManifest));
+          printManifestTo(module.getInputs(), out);
+          out.close();
+        }
+      } else {
+        // Generate a single file manifest.
+        Writer out = fileNameToOutputWriter(
+            expandManifest(null, outputManifest));
+        if (graph == null) {
+          printManifestTo(compiler.getInputsInOrder(), out);
+        } else {
+          printModuleGraphManifestTo(graph, out);
+        }
         out.close();
       }
-    } else {
-      // Generate a single file manifest.
-      Writer out = fileNameToOutputWriter(expandManifest(null));
-      if (graph == null) {
-        printManifestTo(compiler.getInputsInOrder(), out);
-      } else {
-        printModuleGraphManifestTo(graph, out);
-      }
-      out.close();
     }
   }
 
@@ -1618,13 +1622,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private String outputManifest = "";
+    private List<String> outputManifests = ImmutableList.of();
 
     /**
      * Sets whether to print an output manifest file.
      */
-    CommandLineConfig setOutputManifest(String outputManifest) {
-      this.outputManifest = outputManifest;
+    CommandLineConfig setOutputManifest(List<String> outputManifests) {
+      this.outputManifests = outputManifests;
       return this;
     }
 

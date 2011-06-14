@@ -599,7 +599,7 @@ public class CommandLineRunner extends
           .setCharset(flags.charset)
           .setManageClosureDependencies(flags.manage_closure_dependencies)
           .setClosureEntryPoints(flags.closure_entry_point)
-          .setOutputManifest(flags.output_manifest)
+          .setOutputManifest(ImmutableList.of(flags.output_manifest))
           .setAcceptConstKeyword(flags.accept_const_keyword)
           .setLanguageIn(flags.language_in);
     }
