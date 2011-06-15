@@ -119,6 +119,27 @@ class PrototypeObjectType extends ObjectType {
     }
   }
 
+  @Override
+  public StaticSlot<JSType> getSlot(String name) {
+    if (properties.containsKey(name)) {
+      return properties.get(name);
+    }
+    ObjectType implicitPrototype = getImplicitPrototype();
+    if (implicitPrototype != null) {
+      StaticSlot<JSType> prop = implicitPrototype.getSlot(name);
+      if (prop != null) {
+        return prop;
+      }
+    }
+    for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
+      StaticSlot<JSType> prop = interfaceType.getSlot(name);
+      if (prop != null) {
+        return prop;
+      }
+    }
+    return null;
+  }
+
   /**
    * Gets the number of properties of this object.
    */
@@ -139,21 +160,8 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean hasProperty(String propertyName) {
-    if (properties.get(propertyName) != null) {
-      return true;
-    }
-    ObjectType implicitPrototype = getImplicitPrototype();
-    if (implicitPrototype != null) {
-      if (implicitPrototype.hasProperty(propertyName)) {
-        return true;
-      }
-    }
-    for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
-      if (interfaceType.hasProperty(propertyName)) {
-        return true;
-      }
-    }
-    return false;
+    // Unknown types have all properties.
+    return isUnknownType() || getSlot(propertyName) != null;
   }
 
   @Override
@@ -168,16 +176,11 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean isPropertyTypeDeclared(String property) {
-    Property p = properties.get(property);
-    if (p == null) {
-      ObjectType implicitPrototype = getImplicitPrototype();
-      if (implicitPrototype != null) {
-        return implicitPrototype.isPropertyTypeDeclared(property);
-      }
-      // property does not exist
+    StaticSlot<JSType> slot = getSlot(property);
+    if (slot == null) {
       return false;
     }
-    return !p.inferred;
+    return !slot.isTypeInferred();
   }
 
   @Override
@@ -193,29 +196,20 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean isPropertyTypeInferred(String property) {
-    Property p = properties.get(property);
-    if (p == null) {
-      ObjectType implicitPrototype = getImplicitPrototype();
-      if (implicitPrototype != null) {
-        return implicitPrototype.isPropertyTypeInferred(property);
-      }
-      // property does not exist
+    StaticSlot<JSType> slot = getSlot(property);
+    if (slot == null) {
       return false;
     }
-    return p.inferred;
+    return slot.isTypeInferred();
   }
 
   @Override
-  public JSType getPropertyType(String propertyName) {
-    Property p = properties.get(propertyName);
-    if (p != null) {
-      return p.type;
+  public JSType getPropertyType(String property) {
+    StaticSlot<JSType> slot = getSlot(property);
+    if (slot == null) {
+      return getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
-    ObjectType implicitPrototype = getImplicitPrototype();
-    if (implicitPrototype != null) {
-      return implicitPrototype.getPropertyType(propertyName);
-    }
-    return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    return slot.getType();
   }
 
   @Override
@@ -237,7 +231,8 @@ class PrototypeObjectType extends ObjectType {
     if (hasOwnDeclaredProperty(name)) {
       return false;
     }
-    Property newProp = new Property(type, inferred, inExterns, propertyNode);
+    Property newProp = new Property(
+        name, type, inferred, inExterns, propertyNode);
     Property oldProp = properties.get(name);
     if (oldProp != null) {
       // This is to keep previously inferred jsdoc info, e.g., in a
@@ -498,8 +493,14 @@ class PrototypeObjectType extends ObjectType {
     return false;
   }
 
-  private static final class Property implements Serializable {
+  private static final class Property
+      implements Serializable, StaticSlot<JSType> {
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Property's name.
+     */
+    private String name;
 
     /**
      * Property's type.
@@ -525,12 +526,28 @@ class PrototypeObjectType extends ObjectType {
     /**  The JSDocInfo for this property. */
     private JSDocInfo docInfo = null;
 
-    private Property(JSType type, boolean inferred, boolean inExterns,
-        Node propertyNode) {
+    private Property(String name, JSType type, boolean inferred,
+        boolean inExterns, Node propertyNode) {
+      this.name = name;
       this.type = type;
       this.inferred = inferred;
       this.inExterns = inExterns;
       this.propertyNode = propertyNode;
+    }
+
+    @Override
+    public String getName() {
+      return name;
+    }
+
+    @Override
+    public JSType getType() {
+      return type;
+    }
+
+    @Override
+    public boolean isTypeInferred() {
+      return inferred;
     }
   }
 

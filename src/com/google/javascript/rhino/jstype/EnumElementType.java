@@ -75,6 +75,14 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
+  public StaticSlot<JSType> getSlot(String name) {
+    if (primitiveObjectType != null) {
+      return primitiveObjectType.getSlot(name);
+    }
+    return null;
+  }
+
+  @Override
   public boolean isEnumElementType() {
     return true;
   }
@@ -115,7 +123,8 @@ public class EnumElementType extends ObjectType {
    *
    * @return true for everything but Number and Boolean types.
    */
-  @Override public boolean isNullable() {
+  @Override
+  public boolean isNullable() {
     return primitiveType.isNullable();
   }
 

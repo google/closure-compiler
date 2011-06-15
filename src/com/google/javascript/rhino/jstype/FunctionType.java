@@ -906,6 +906,7 @@ public class FunctionType extends PrototypeObjectType {
   /**
    * Gets the type of {@code this} in this function.
    */
+  @Override
   public ObjectType getTypeOfThis() {
     return typeOfThis.isNoObjectType() ?
         registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE) : typeOfThis;

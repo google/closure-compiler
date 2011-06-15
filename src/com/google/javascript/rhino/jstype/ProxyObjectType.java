@@ -65,6 +65,14 @@ class ProxyObjectType extends ObjectType {
     setReferencedType(referencedType);
   }
 
+  @Override
+  public StaticSlot<JSType> getSlot(String name) {
+    if (referencedObjType != null) {
+      return referencedObjType.getSlot(name);
+    }
+    return null;
+  }
+
   JSType getReferencedTypeInternal() {
     return referencedType;
   }
@@ -94,7 +102,8 @@ class ProxyObjectType extends ObjectType {
         null : referencedObjType.hasReferenceName();
   }
 
-  @Override public boolean matchesNumberContext() {
+  @Override
+  public boolean matchesNumberContext() {
     return referencedType.matchesNumberContext();
   }
 
@@ -103,7 +112,8 @@ class ProxyObjectType extends ObjectType {
     return referencedType.matchesStringContext();
   }
 
-  @Override public boolean matchesObjectContext() {
+  @Override
+  public boolean matchesObjectContext() {
     return referencedType.matchesObjectContext();
   }
 

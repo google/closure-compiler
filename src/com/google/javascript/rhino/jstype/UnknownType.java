@@ -61,6 +61,11 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
+  public StaticSlot<JSType> getSlot(String name) {
+    return null;
+  }
+
+  @Override
   public boolean isUnknownType() {
     return true;
   }

@@ -77,13 +77,34 @@ import java.util.Set;
  * declared or inferred.
  *
  */
-public abstract class ObjectType extends JSType {
+public abstract class ObjectType extends JSType implements StaticScope<JSType> {
   private boolean visited;
   private JSDocInfo docInfo = null;
   private boolean unknown = true;
 
   ObjectType(JSTypeRegistry registry) {
     super(registry);
+  }
+
+  @Override
+  public StaticScope<JSType> getParentScope() {
+    return getImplicitPrototype();
+  }
+
+  @Override
+  public abstract StaticSlot<JSType> getSlot(String name);
+
+  @Override
+  public StaticSlot<JSType> getOwnSlot(String name) {
+    if (hasOwnProperty(name)) {
+      return getSlot(name);
+    }
+    return null;
+  }
+
+  @Override
+  public ObjectType getTypeOfThis() {
+    return null;
   }
 
   /**
@@ -105,7 +126,8 @@ public abstract class ObjectType extends JSType {
   /**
    * Gets the docInfo for this type.
    */
-  @Override public JSDocInfo getJSDocInfo() {
+  @Override
+  public JSDocInfo getJSDocInfo() {
     if (docInfo != null) {
       return docInfo;
     } else if (getImplicitPrototype() != null) {
