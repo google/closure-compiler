@@ -934,6 +934,7 @@ public class DefaultPassConfig extends PassConfig {
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new PeepholeOptimizationsPass(compiler,
             new PeepholeSubstituteAlternateSyntax(true),
+            new PeepholeReplaceKnownMethods(),
             new PeepholeRemoveDeadCode(),
             new PeepholeFoldConstants(),
             new PeepholeCollectPropertyAssignments());
@@ -949,6 +950,7 @@ public class DefaultPassConfig extends PassConfig {
             new StatementFusion(),
             new PeepholeRemoveDeadCode(),
             new PeepholeSubstituteAlternateSyntax(false),
+            new PeepholeReplaceKnownMethods(),
             new PeepholeFoldConstants());
     }
   };
