@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -39,6 +40,8 @@ class PeepholeSubstituteAlternateSyntax
   private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
 
   private final boolean doCommaSpliting;
+
+  private final int STRING_SPLIT_OVERHEAD = ".split('.')".length();
 
   static final DiagnosticType INVALID_REGULAR_EXPRESSION_FLAGS =
     DiagnosticType.error(
@@ -137,6 +140,9 @@ class PeepholeSubstituteAlternateSyntax
 
       case Token.BLOCK:
         return tryReplaceIf(node);
+
+      case Token.ARRAYLIT:
+        return tryMinimizeArrayLiteral(node);
 
       default:
         return node; //Nothing changed
@@ -1335,6 +1341,56 @@ class PeepholeSubstituteAlternateSyntax
     n.getParent().replaceChild(n, not);
     reportCodeChange();
     return not;
+  }
+
+  private Node tryMinimizeArrayLiteral(Node n) {
+    boolean allStrings = true;
+    for (Node cur = n.getFirstChild(); cur != null; cur = cur.getNext()) {
+      if (cur.getType() != Token.STRING) {
+        allStrings = false;
+      }
+    }
+
+    if (allStrings) {
+      return tryMinimizeStringArrayLiteral(n);
+    } else {
+      return n;
+    }
+  }
+
+  private Node tryMinimizeStringArrayLiteral(Node n) {
+    int numElements = n.getChildCount();
+    // We save two bytes per element.
+    int saving = numElements * 2 - STRING_SPLIT_OVERHEAD;
+    if (saving <= 0) {
+      return n;
+    }
+
+    String[] strings = new String[n.getChildCount()];
+    int idx = 0;
+    for (Node cur = n.getFirstChild(); cur != null; cur = cur.getNext()) {
+      strings[idx++] = cur.getString();
+    }
+
+    // These delimiters are chars that appears a lot in the program therefore
+    // probably have a small Huffman encoding.
+    NEXT_DELIMITER: for (char delimiter : new char[]{',', ' ', ';', '{', '}'}) {
+      for (String cur : strings) {
+        if (cur.indexOf(delimiter) != -1) {
+          continue NEXT_DELIMITER;
+        }
+      }
+      String template = Joiner.on(delimiter).join(strings);
+      Node call = new Node(Token.CALL,
+        new Node(Token.GETPROP, Node.newString(Token.STRING,template),
+            Node.newString(Token.STRING, "split")),
+        Node.newString(Token.STRING, "" + delimiter));
+      call.copyInformationFromForTree(n);
+      n.getParent().replaceChild(n, call);
+      reportCodeChange();
+      return call;
+    }
+    return n;
   }
 
   private static final Pattern REGEXP_FLAGS_RE = Pattern.compile("^[gmi]*$");
