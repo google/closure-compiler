@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -24,6 +26,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.StaticScope;
+import com.google.javascript.rhino.jstype.StaticSlot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +41,7 @@ import java.util.Set;
  * the global scope. Also builds an index of all the references to those names.
  *
  */
-class GlobalNamespace {
+class GlobalNamespace implements StaticScope<JSType> {
 
   private AbstractCompiler compiler;
   private final Node root;
@@ -83,6 +88,26 @@ class GlobalNamespace {
     this.compiler = compiler;
     this.externsRoot = externsRoot;
     this.root = root;
+  }
+
+  @Override
+  public StaticScope<JSType> getParentScope() {
+    return null;
+  }
+
+  @Override
+  public StaticSlot<JSType> getSlot(String name) {
+    return getOwnSlot(name);
+  }
+
+  @Override
+  public StaticSlot<JSType> getOwnSlot(String name) {
+    return nameMap.get(name);
+  }
+
+  @Override
+  public JSType getTypeOfThis() {
+    return compiler.getTypeRegistry().getNativeObjectType(GLOBAL_THIS);
   }
 
   /**
@@ -785,7 +810,7 @@ class GlobalNamespace {
    * correspond to JavaScript objects whose properties we should consider
    * collapsing.
    */
-  static class Name {
+  static class Name implements StaticSlot<JSType> {
     enum Type {
       OBJECTLIT,
       FUNCTION,
@@ -794,7 +819,7 @@ class GlobalNamespace {
       OTHER,
     }
 
-    final String name;
+    private final String name;
     final Name parent;
     List<Name> props;
 
@@ -831,6 +856,21 @@ class GlobalNamespace {
       Name node = new Name(name, this, inExterns);
       props.add(node);
       return node;
+    }
+
+    @Override
+    public String getName() {
+      return name;
+    }
+
+    @Override
+    public boolean isTypeInferred() {
+      return false;
+    }
+
+    @Override
+    public JSType getType() {
+      return null;
     }
 
     void addRef(Ref ref) {

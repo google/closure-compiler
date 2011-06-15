@@ -131,14 +131,14 @@ class CollapseProperties implements CompilerPass {
     checkNamespaces();
 
     for (Name n : globalNames) {
-      flattenReferencesToCollapsibleDescendantNames(n, n.name);
+      flattenReferencesToCollapsibleDescendantNames(n, n.getName());
     }
 
     // We collapse property definitions after collapsing property references
     // because this step can alter the parse tree above property references,
     // invalidating the node ancestry stored with each reference.
     for (Name n : globalNames) {
-      collapseDeclarationOfNameAndDescendants(n, n.name);
+      collapseDeclarationOfNameAndDescendants(n, n.getName());
     }
   }
 
@@ -313,7 +313,7 @@ class CollapseProperties implements CompilerPass {
     if (n.props == null) return;
 
     for (Name p : n.props) {
-      String propAlias = appendPropForAlias(alias, p.name);
+      String propAlias = appendPropForAlias(alias, p.getName());
 
       if (p.canCollapse()) {
         flattenReferencesTo(p, propAlias);
@@ -499,7 +499,7 @@ class CollapseProperties implements CompilerPass {
       for (Name p : n.props) {
         // Recurse first so that saved node ancestries are intact when needed.
         collapseDeclarationOfNameAndDescendants(
-            p, appendPropForAlias(alias, p.name));
+            p, appendPropForAlias(alias, p.getName()));
 
         if (!p.inExterns && canCollapseChildNames &&
             p.declaration != null &&
@@ -508,7 +508,7 @@ class CollapseProperties implements CompilerPass {
             p.declaration.node.getParent() != null &&
             p.declaration.node.getParent().getType() == Token.ASSIGN) {
           updateSimpleDeclaration(
-              appendPropForAlias(alias, p.name), p, p.declaration);
+              appendPropForAlias(alias, p.getName()), p, p.declaration);
         }
       }
     }
@@ -925,7 +925,7 @@ class CollapseProperties implements CompilerPass {
     if (n.props != null) {
       for (Name p : n.props) {
         if (p.needsToBeStubbed()) {
-          String propAlias = appendPropForAlias(alias, p.name);
+          String propAlias = appendPropForAlias(alias, p.getName());
           Node nameNode = Node.newString(Token.NAME, propAlias);
           Node newVar = new Node(Token.VAR, nameNode)
               .copyInformationFromForTree(addAfter);
