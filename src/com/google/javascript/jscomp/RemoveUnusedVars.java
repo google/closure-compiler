@@ -625,6 +625,14 @@ class RemoveUnusedVars
       for (UseSite site : useSites) {
         Node parent = site.node.getParent();
 
+        // This was a use site removed by something else before we run.
+        // 1. By another pass before us which means the definition graph is
+        //    no updated properly.
+        // 2. By the continuations algorithm above.
+        if (parent == null) {
+          continue; // Ignore it.
+        }
+
         // Ignore references within goog.inherits calls.
         if (NodeUtil.isCall(parent) &&
             convention.getClassesDefinedByCall(parent) != null) {
