@@ -63,10 +63,6 @@ public enum WarningLevel {
    */
   private static void addDefaultWarnings(CompilerOptions options) {
     options.checkSuspiciousCode = true;
-    // TODO(user): This is deprecated. We should turn on the
-    // new one once it is default in command line JSCompiler.
-    options.checkUndefinedProperties = CheckLevel.OFF;
-    options.checkUnusedPropertiesEarly = false;
     options.checkUnreachableCode = CheckLevel.WARNING;
     options.checkControlStructures = true;
   }

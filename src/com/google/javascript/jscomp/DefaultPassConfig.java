@@ -265,11 +265,6 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkGlobalNames);
     }
 
-    if (options.checkUndefinedProperties.isOn() ||
-        options.checkUnusedPropertiesEarly) {
-      checks.add(checkSuspiciousProperties);
-    }
-
     if (options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT
         || options.checkCaja
         || options.checkEs5Strict) {
@@ -1162,19 +1157,6 @@ public class DefaultPassConfig extends PassConfig {
               .injectNamespace(namespaceForChecks).process(externs, jsRoot);
         }
       };
-    }
-  };
-
-  /** Checks for properties that are not read or written */
-  private final PassFactory checkSuspiciousProperties =
-      new PassFactory("checkSuspiciousProperties", true) {
-    @Override
-    protected CompilerPass createInternal(AbstractCompiler compiler) {
-      return new SuspiciousPropertiesCheck(
-          compiler,
-          options.checkUndefinedProperties,
-          options.checkUnusedPropertiesEarly ?
-              CheckLevel.WARNING : CheckLevel.OFF);
     }
   };
 

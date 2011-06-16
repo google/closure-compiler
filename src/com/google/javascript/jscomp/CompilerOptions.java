@@ -144,6 +144,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public boolean checkControlStructures;
 
   /** Checks for non-extern properties that are read but never set. */
+  @Deprecated
   public CheckLevel checkUndefinedProperties;
 
   /**
@@ -153,6 +154,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * including libraries with methods that you don't use, so it is off by
    * default.
    */
+  @Deprecated
   public boolean checkUnusedPropertiesEarly;
 
   /** Checks types on expressions */
@@ -687,8 +689,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     strictMessageReplacement = false;
     checkSuspiciousCode = false;
     checkControlStructures = false;
-    checkUndefinedProperties = CheckLevel.OFF;
-    checkUnusedPropertiesEarly = false;
     checkTypes = false;
     tightenTypes = false;
     inferTypesInGlobalScope = false;
