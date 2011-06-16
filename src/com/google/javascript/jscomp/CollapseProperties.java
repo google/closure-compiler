@@ -224,7 +224,7 @@ class CollapseProperties implements CompilerPass {
               aliasRefs.references.get(i);
 
           Node newNode = alias.node.cloneTree();
-          aliasRef.getParent().replaceChild(aliasRef.getNameNode(), newNode);
+          aliasRef.getParent().replaceChild(aliasRef.getNode(), newNode);
           newNodes.add(newNode);
         }
 

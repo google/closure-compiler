@@ -118,7 +118,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           hoistedFn = reference;
           break;
         } else if (NodeUtil.isFunctionDeclaration(
-            reference.getNameNode().getParent())) {
+            reference.getNode().getParent())) {
           isUnhoistedNamedFunction = true;
         }
       }
@@ -137,8 +137,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (declaredBlock.provablyExecutesBefore(basicBlock)) {
               compiler.report(
-                  JSError.make(reference.getSourceName(),
-                      reference.getNameNode(),
+                  JSError.make(reference.getSourceFile().getName(),
+                      reference.getNode(),
                       checkLevel,
                       REDECLARED_VARIABLE, v.name));
               break;
@@ -152,8 +152,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (!declaredBlock.provablyExecutesBefore(basicBlock)) {
               compiler.report(
-                  JSError.make(reference.getSourceName(),
-                      reference.getNameNode(),
+                  JSError.make(reference.getSourceFile().getName(),
+                      reference.getNode(),
                       AMBIGUOUS_FUNCTION_DECL, v.name));
               break;
             }
@@ -172,8 +172,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           // to deal with possible forward declarations and recursion
           if (reference.getScope() == v.scope) {
             compiler.report(
-                JSError.make(reference.getSourceName(),
-                             reference.getNameNode(),
+                JSError.make(reference.getSourceFile().getName(),
+                             reference.getNode(),
                              checkLevel,
                              UNDECLARED_REFERENCE, v.name));
           }

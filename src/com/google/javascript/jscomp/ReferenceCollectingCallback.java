@@ -27,6 +27,9 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.SimpleSourceFile;
+import com.google.javascript.rhino.jstype.StaticReference;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -138,8 +141,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
         v = t.getScope().getVar(n.getString());
       }
       if (v != null && varFilter.apply(v)) {
-        addReference(t, v,
-            new Reference(n, parent, t, blockStack.peek()));
+        addReference(t, v, new Reference(n, t, blockStack.peek()));
       }
     }
 
@@ -460,30 +462,27 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Represents a single declaration or reference to a variable.
    */
-  static final class Reference {
+  static final class Reference implements StaticReference {
 
     private static final Set<Integer> DECLARATION_PARENTS =
         ImmutableSet.of(Token.VAR, Token.FUNCTION, Token.CATCH);
 
     private final Node nameNode;
-    private final Node parent;
-    private final Node grandparent;
     private final BasicBlock basicBlock;
     private final Scope scope;
-    private final String sourceName;
+    private final StaticSourceFile sourceFile;
 
-    Reference(Node nameNode, Node parent, NodeTraversal t,
+    Reference(Node nameNode, NodeTraversal t,
         BasicBlock basicBlock) {
-      this(nameNode, parent, parent.getParent(), basicBlock, t.getScope(),
-           t.getSourceName());
+      this(nameNode, basicBlock, t.getScope(), t.getInput());
     }
 
     // Bleeding functions are weird, because the declaration does
     // not appear inside their scope. So they need their own constructor.
     static Reference newBleedingFunction(NodeTraversal t,
         BasicBlock basicBlock, Node func) {
-      return new Reference(func.getFirstChild(), func, func.getParent(),
-          basicBlock, t.getScope(), t.getSourceName());
+      return new Reference(func.getFirstChild(),
+          basicBlock, t.getScope(), t.getInput());
     }
 
     /**
@@ -494,32 +493,47 @@ class ReferenceCollectingCallback implements ScopedCallback,
      */
     @VisibleForTesting
     static Reference createRefForTest(String sourceName) {
-      return new Reference(new Node(Token.NAME), null, null, null, null,
-          sourceName);
+      return new Reference(new Node(Token.NAME), null, null,
+          new SimpleSourceFile(sourceName, false));
     }
 
-    private Reference(Node nameNode, Node parent, Node grandparent,
-        BasicBlock basicBlock, Scope scope, String sourceName) {
+    private Reference(Node nameNode,
+        BasicBlock basicBlock, Scope scope, StaticSourceFile sourceFile) {
       this.nameNode = nameNode;
-      this.parent = parent;
-      this.grandparent = grandparent;
       this.basicBlock = basicBlock;
       this.scope = scope;
-      this.sourceName = sourceName;
+      this.sourceFile = sourceFile;
+    }
+
+    @Override
+    public Var getSymbol() {
+      return scope.getVar(nameNode.getString());
+    }
+
+    @Override
+    public Node getNode() {
+      return nameNode;
+    }
+
+    @Override
+    public StaticSourceFile getSourceFile() {
+      return sourceFile;
     }
 
     boolean isDeclaration() {
+      Node parent = getParent();
+      Node grandparent = parent.getParent();
       return DECLARATION_PARENTS.contains(parent.getType()) ||
           parent.getType() == Token.LP &&
           grandparent.getType() == Token.FUNCTION;
     }
 
     boolean isVarDeclaration() {
-      return parent.getType() == Token.VAR;
+      return getParent().getType() == Token.VAR;
     }
 
     boolean isHoistedFunction() {
-      return NodeUtil.isHoistedFunctionDeclaration(parent);
+      return NodeUtil.isHoistedFunctionDeclaration(getParent());
     }
 
     /**
@@ -529,7 +543,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
       // VAR is the only type of variable declaration that may not initialize
       // its variable. Catch blocks, named functions, and parameters all do.
       return isDeclaration() &&
-          (parent.getType() != Token.VAR || nameNode.getFirstChild() != null);
+          getParent().getType() != Token.VAR ||
+          nameNode.getFirstChild() != null;
     }
 
    /**
@@ -537,8 +552,9 @@ class ReferenceCollectingCallback implements ScopedCallback,
     * return the assigned value, otherwise null.
     */
     Node getAssignedValue() {
+      Node parent = getParent();
       return (parent.getType() == Token.FUNCTION)
-          ? parent : NodeUtil.getAssignedValue(getNameNode());
+          ? parent : NodeUtil.getAssignedValue(nameNode);
     }
 
     BasicBlock getBasicBlock() {
@@ -546,15 +562,12 @@ class ReferenceCollectingCallback implements ScopedCallback,
     }
 
     Node getParent() {
-      return parent;
-    }
-
-    Node getNameNode() {
-      return nameNode;
+      return getNode().getParent();
     }
 
     Node getGrandparent() {
-      return grandparent;
+      Node parent = getParent();
+      return parent == null ? null : parent.getParent();
     }
 
     private static boolean isLhsOfForInExpression(Node n) {
@@ -566,11 +579,13 @@ class ReferenceCollectingCallback implements ScopedCallback,
     }
 
     boolean isSimpleAssignmentToName() {
+      Node parent = getParent();
       return parent.getType() == Token.ASSIGN
           && parent.getFirstChild() == nameNode;
     }
 
     boolean isLvalue() {
+      Node parent = getParent();
       int parentType = parent.getType();
       return (parentType == Token.VAR && nameNode.getFirstChild() != null)
           || parentType == Token.INC
@@ -582,10 +597,6 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     Scope getScope() {
       return scope;
-    }
-
-    public String getSourceName() {
-      return sourceName;
     }
   }
 

@@ -967,7 +967,7 @@ import java.util.Set;
             callback.getReferenceCollection(variable);
 
         for (Reference reference : referenceCollection.references) {
-         Node referenceNameNode = reference.getNameNode();
+          Node referenceNameNode = reference.getNode();
 
           // Note that this counts a declaration as a reference to itself
           referencesByNameNode.put(referenceNameNode, variable.getNameNode());

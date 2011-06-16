@@ -161,7 +161,7 @@ class GlobalVarReferenceMap implements ReferenceMap {
     int index = 0;
     int sourceInputOrder = inputOrder.get(sourceName);
     for (Reference ref : refList) {
-      int order = inputOrder.get(ref.getSourceName());
+      int order = inputOrder.get(ref.getSourceFile().getName());
       if (order < sourceInputOrder) {
         lastBefore = index;
       } else if (order > sourceInputOrder) {

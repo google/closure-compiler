@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -37,7 +38,8 @@ import java.util.Set;
  * whether the input is an extern. Also calculates provided and required types.
  *
  */
-public class CompilerInput implements SourceAst, DependencyInfo {
+public class CompilerInput
+    implements SourceAst, DependencyInfo, StaticSourceFile {
   private static final long serialVersionUID = 1L;
 
   // Info about where the file lives.
@@ -294,6 +296,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     this.module = module;
   }
 
+  @Override
   public boolean isExtern() {
     return isExtern;
   }

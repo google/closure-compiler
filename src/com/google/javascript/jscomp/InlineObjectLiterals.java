@@ -147,7 +147,7 @@ class InlineObjectLiterals implements CompilerPass {
     private boolean isInlinableObject(List<Reference> refs) {
       boolean ret = false;
       for (Reference ref : refs) {
-        Node name = ref.getNameNode();
+        Node name = ref.getNode();
         Node parent = ref.getParent();
         Node gramps = ref.getGrandparent();
 
