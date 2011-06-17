@@ -1437,7 +1437,7 @@ public final class NodeUtil {
    */
   static boolean referencesThis(Node n) {
     Node start = (isFunction(n)) ? n.getLastChild() : n;
-    return containsType(start, Token.THIS, new MatchNotFunction());
+    return containsType(start, Token.THIS, MATCH_NOT_FUNCTION);
   }
 
   /**
@@ -1944,7 +1944,7 @@ public final class NodeUtil {
     return isNameReferenced(
         function.getLastChild(),
         "arguments",
-        new MatchNotFunction());
+        MATCH_NOT_FUNCTION);
   }
 
   /**
@@ -2498,7 +2498,7 @@ public final class NodeUtil {
     visitPreOrder(
         root,
         collector,
-        new MatchNotFunction());
+        MATCH_NOT_FUNCTION);
     return collector.vars.values();
   }
 
@@ -2624,6 +2624,8 @@ public final class NodeUtil {
       return !isFunction(n);
     }
   }
+
+  static final Predicate<Node> MATCH_NOT_FUNCTION = new MatchNotFunction();
 
   /**
    * A predicate for matching statements without exiting the current scope.

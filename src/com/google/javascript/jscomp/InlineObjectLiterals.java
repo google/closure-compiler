@@ -111,14 +111,15 @@ class InlineObjectLiterals implements CompilerPass {
      * variable. Any code modifications will have potentially made the
      * ReferenceCollection invalid.
      */
-    private void blacklistVarReferencesInTree(Node root, Scope scope) {
-      for (Node c = root.getFirstChild(); c != null; c = c.getNext()) {
-        blacklistVarReferencesInTree(c, scope);
-      }
-
-      if (root.getType() == Token.NAME) {
-        staleVars.add(scope.getVar(root.getString()));
-      }
+    private void blacklistVarReferencesInTree(Node root, final Scope scope) {
+      NodeUtil.visitPreOrder(root, new NodeUtil.Visitor() {
+        @Override
+        public void visit(Node node) {
+          if (node.getType() == Token.NAME) {
+            staleVars.add(scope.getVar(node.getString()));
+          }
+        }
+      }, NodeUtil.MATCH_NOT_FUNCTION);
     }
 
     /**
@@ -235,12 +236,13 @@ class InlineObjectLiterals implements CompilerPass {
      */
     private Map<String, String> computeVarList(
         Var v, ReferenceCollection referenceInfo) {
-      Map<String, String> varmap = Maps.newHashMap();
+      Map<String, String> varmap = Maps.newLinkedHashMap();
 
       for (Reference ref : referenceInfo.references) {
         if (ref.isLvalue() || ref.isInitializingDeclaration()) {
           Node val = ref.getAssignedValue();
           if (val != null) {
+            Preconditions.checkState(val.getType() == Token.OBJECTLIT);
             for (Node child = val.getFirstChild(); child != null;
                  child = child.getNext()) {
               String varname = child.getString();
@@ -257,13 +259,7 @@ class InlineObjectLiterals implements CompilerPass {
           // This is the var. There is no value.
         } else {
           Node getprop = ref.getParent();
-          Preconditions.checkState(
-            getprop.getType() == Token.GETPROP,
-            "Unexpected reference type: " + Token.name(getprop.getType()));
-          Preconditions.checkState(
-            getprop.getFirstChild().getString().equals(v.getName()),
-            "Unexpected variable name: " + getprop.getFirstChild().getString() +
-            ", expecting: " + v.getName());
+          Preconditions.checkState(getprop.getType() == Token.GETPROP);
 
           // The key being looked up in the original map.
           String varname = getprop.getLastChild().getString();
@@ -305,7 +301,7 @@ class InlineObjectLiterals implements CompilerPass {
       Node val = ref.getAssignedValue();
       blacklistVarReferencesInTree(val, v.scope);
       Preconditions.checkState(val.getType() == Token.OBJECTLIT);
-      Set<String> all = Sets.newHashSet(varmap.keySet());
+      Set<String> all = Sets.newLinkedHashSet(varmap.keySet());
       for (Node key = val.getFirstChild(); key != null;
            key = key.getNext()) {
         String var = key.getString();
@@ -389,6 +385,8 @@ class InlineObjectLiterals implements CompilerPass {
         if (val == null) {
           // is this right?
           varnode.copyInformationFromForTree(vnode);
+        } else {
+          blacklistVarReferencesInTree(val, v.scope);
         }
         vnode.getParent().addChildBefore(varnode, vnode);
       }
@@ -412,13 +410,7 @@ class InlineObjectLiterals implements CompilerPass {
         } else {
           // Make sure that the reference is a GETPROP as we expect it to be.
           Node getprop = ref.getParent();
-          Preconditions.checkState(
-            getprop.getType() == Token.GETPROP,
-            "Unexpected reference type: " + Token.name(getprop.getType()));
-          Preconditions.checkState(
-            getprop.getFirstChild().getString().equals(v.getName()),
-            "Unexpected variable name: " + getprop.getFirstChild().getString() +
-            ", expecting: " + v.getName());
+          Preconditions.checkState(getprop.getType() == Token.GETPROP);
 
           // The key being looked up in the original map.
           String var = getprop.getChildAtIndex(1).getString();
