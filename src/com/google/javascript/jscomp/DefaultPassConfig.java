@@ -668,6 +668,10 @@ public class DefaultPassConfig extends PassConfig {
   /** Creates several passes aimed at removing code. */
   private List<PassFactory> getCodeRemovingPasses() {
     List<PassFactory> passes = Lists.newArrayList();
+    if (options.collapseObjectLiterals && !isInliningForbidden()) {
+      passes.add(collapseObjectLiterals);
+    }
+
     if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(inlineVariables);
     } else if (options.inlineConstantVars) {
@@ -1318,6 +1322,16 @@ public class DefaultPassConfig extends PassConfig {
       return new CollapseProperties(
           compiler, options.collapsePropertiesOnExternTypes,
           !isInliningForbidden());
+    }
+  };
+
+  /** Rewrite properties as variables. */
+  private final PassFactory collapseObjectLiterals =
+      new PassFactory("collapseObjectLiterals", false) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new InlineObjectLiterals(
+          compiler, compiler.getUniqueNameIdSupplier());
     }
   };
 

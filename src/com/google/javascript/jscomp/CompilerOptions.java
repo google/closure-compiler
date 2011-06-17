@@ -236,6 +236,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Folds constants (e.g. (2 + 3) to 5) */
   public boolean foldConstants;
 
+  /** Remove assignments to values that can not be referenced */
   public boolean deadAssignmentElimination;
 
   /** Inlines constants (symbols that are all CAPS) */
@@ -420,6 +421,9 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   /** Flattens multi-level property names (e.g. a$b = x) */
   public boolean collapseProperties;
+
+  /** Split object literals into individual variables when possible. */
+  public boolean collapseObjectLiterals;
 
   /** Flattens multi-level property names on extern types (e.g. String$f = x) */
   boolean collapsePropertiesOnExternTypes;
@@ -760,6 +764,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     aliasKeywords = false;
     collapseProperties = false;
     collapsePropertiesOnExternTypes = false;
+    collapseObjectLiterals = false;
     devirtualizePrototypeMethods = false;
     disambiguateProperties = false;
     ambiguateProperties = false;
