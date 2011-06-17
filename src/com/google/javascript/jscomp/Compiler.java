@@ -1427,7 +1427,9 @@ public class Compiler extends AbstractCompiler {
               cb.getLineIndex(), cb.getColumnIndex());
         }
 
-        String code = toSource(root, sourceMap);
+        // if LanguageMode is ECMASCRIPT5_STRICT, only print 'use strict'
+        // for the first input file
+        String code = toSource(root, sourceMap, inputSeqNum == 0);
         if (!code.isEmpty()) {
           cb.append(code);
 
@@ -1456,19 +1458,19 @@ public class Compiler extends AbstractCompiler {
   @Override
   String toSource(Node n) {
     initCompilerOptionsIfTesting();
-    return toSource(n, null);
+    return toSource(n, null, true);
   }
 
   /**
    * Generates JavaScript source code for an AST.
    */
-  private String toSource(Node n, SourceMap sourceMap) {
+  private String toSource(Node n, SourceMap sourceMap, boolean firstOutput) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setPrettyPrint(options.prettyPrint);
     builder.setLineBreak(options.lineBreak);
     builder.setSourceMap(sourceMap);
     builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
-    builder.setTagAsStrict(
+    builder.setTagAsStrict(firstOutput &&
         options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT);
     builder.setLineLengthThreshold(options.lineLengthThreshold);
 

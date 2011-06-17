@@ -787,6 +787,22 @@ public class CommandLineRunnerTest extends TestCase {
     test("var let", RhinoErrorReporter.PARSE_ERROR);
   }
 
+  public void testES5StrictUseStrict() {
+    args.add("--language_in=ECMASCRIPT5_STRICT");
+    Compiler compiler = compile(new String[] {"var x = f.function"});
+    String outputSource = compiler.toSource();
+    assertEquals("'use strict'", outputSource.substring(0, 12));
+  }
+
+  public void testES5StrictUseStrictMultipleInputs() {
+    args.add("--language_in=ECMASCRIPT5_STRICT");
+    Compiler compiler = compile(new String[] {"var x = f.function",
+        "var y = f.function", "var z = f.function"});
+    String outputSource = compiler.toSource();
+    assertEquals("'use strict'", outputSource.substring(0, 12));
+    assertEquals(outputSource.substring(13).indexOf("'use strict'"), -1);
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
