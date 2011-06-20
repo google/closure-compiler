@@ -386,6 +386,6 @@ function FormData() {}
 
 /**
  * @param {string} name
- * @param {string} value
+ * @param {Blob|string} value
  */
 FormData.prototype.append = function(name, value) {};
