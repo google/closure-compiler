@@ -114,7 +114,7 @@ MediaList.prototype.length;
 MediaList.prototype.item = function(index) {};
 
 /**
- * @constructor
+ * @interface
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-LinkStyle
  */
 function LinkStyle() {}

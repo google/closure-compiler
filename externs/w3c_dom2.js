@@ -388,6 +388,7 @@ HTMLIsIndexElement.prototype.prompt;
 /**
  * @constructor
  * @extends {HTMLElement}
+ * @implements {LinkStyle}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-16428977
  */
 function HTMLStyleElement() {}
@@ -409,6 +410,9 @@ HTMLStyleElement.prototype.media;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-22472002
  */
 HTMLStyleElement.prototype.type;
+
+/** @inheritDoc */
+HTMLStyleElement.prototype.sheet;
 
 /**
  * @constructor
