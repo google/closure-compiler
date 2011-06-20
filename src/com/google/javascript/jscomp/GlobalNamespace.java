@@ -27,8 +27,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -496,13 +498,13 @@ class GlobalNamespace implements StaticScope<JSType> {
       Name nameObj = getOrCreateName(name);
       nameObj.type = type;
 
-      Ref set = new Ref(t, n, Ref.Type.SET_FROM_GLOBAL,
+      Ref set = new Ref(t, n, nameObj, Ref.Type.SET_FROM_GLOBAL,
           currentPreOrderIndex++);
       nameObj.addRef(set);
 
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
-        Ref get = new Ref(t, n, Ref.Type.ALIASING_GET,
+        Ref get = new Ref(t, n, nameObj, Ref.Type.ALIASING_GET,
             currentPreOrderIndex++);
         nameObj.addRef(get);
         Ref.markTwins(set, get);
@@ -565,14 +567,16 @@ class GlobalNamespace implements StaticScope<JSType> {
                             String name) {
       if (maybeHandlePrototypePrefix(t, n, parent, name)) return;
 
-      Name node = getOrCreateName(name);
-      Ref set = new Ref(t, n, Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
-      node.addRef(set);
+      Name nameObj = getOrCreateName(name);
+      Ref set = new Ref(t, n, nameObj,
+          Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
+      nameObj.addRef(set);
 
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
-        Ref get = new Ref(t, n, Ref.Type.ALIASING_GET, currentPreOrderIndex++);
-        node.addRef(get);
+        Ref get = new Ref(t, n, nameObj,
+            Ref.Type.ALIASING_GET, currentPreOrderIndex++);
+        nameObj.addRef(get);
         Ref.markTwins(set, get);
       }
     }
@@ -707,10 +711,10 @@ class GlobalNamespace implements StaticScope<JSType> {
      */
     void handleGet(NodeTraversal t, Node n, Node parent,
         String name, Ref.Type type) {
-      Name node = getOrCreateName(name);
+      Name nameObj = getOrCreateName(name);
 
       // No need to look up additional ancestors, since they won't be used.
-      node.addRef(new Ref(t, n, type, currentPreOrderIndex++));
+      nameObj.addRef(new Ref(t, n, nameObj, type, currentPreOrderIndex++));
     }
 
     /**
@@ -1102,7 +1106,7 @@ class GlobalNamespace implements StaticScope<JSType> {
    * A global name reference. Contains references to the relevant parse tree
    * node and its ancestors that may be affected.
    */
-  static class Ref {
+  static class Ref implements StaticReference {
     enum Type {
       SET_FROM_GLOBAL,
       SET_FROM_LOCAL,
@@ -1114,8 +1118,9 @@ class GlobalNamespace implements StaticScope<JSType> {
     }
 
     Node node;
-    final Type type;
     final CompilerInput source;
+    final Name name;
+    final Type type;
     final Scope scope;
     final int preOrderIndex;
 
@@ -1131,8 +1136,9 @@ class GlobalNamespace implements StaticScope<JSType> {
     /**
      * Creates a reference at the current node.
      */
-    Ref(NodeTraversal t, Node name, Type type, int index) {
-      this.node = name;
+    Ref(NodeTraversal t, Node node, Name name, Type type, int index) {
+      this.node = node;
+      this.name = name;
       this.source = t.getInput();
       this.type = type;
       this.scope = t.getScope();
@@ -1141,6 +1147,7 @@ class GlobalNamespace implements StaticScope<JSType> {
 
     private Ref(Ref original, Type type, int index) {
       this.node = original.node;
+      this.name = original.name;
       this.source = original.source;
       this.type = type;
       this.scope = original.scope;
@@ -1151,7 +1158,23 @@ class GlobalNamespace implements StaticScope<JSType> {
       this.type = type;
       this.source = null;
       this.scope = null;
+      this.name = null;
       this.preOrderIndex = index;
+    }
+
+    @Override
+    public Node getNode() {
+      return node;
+    }
+
+    @Override
+    public StaticSourceFile getSourceFile() {
+      return source;
+    }
+
+    @Override
+    public StaticSlot<JSType> getSymbol() {
+      return name;
     }
 
     JSModule getModule() {
