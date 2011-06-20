@@ -39,7 +39,7 @@ class PeepholeSubstituteAlternateSyntax
   private static final int OR_PRECEDENCE = NodeUtil.precedence(Token.OR);
   private static final int NOT_PRECEDENCE = NodeUtil.precedence(Token.NOT);
 
-  private final boolean doCommaSpliting;
+  private final boolean late;
 
   private final int STRING_SPLIT_OVERHEAD = ".split('.')".length();
 
@@ -56,8 +56,15 @@ class PeepholeSubstituteAlternateSyntax
     }
   };
 
-  PeepholeSubstituteAlternateSyntax(boolean doCommaSpliting) {
-    this.doCommaSpliting = doCommaSpliting;
+  /**
+   * @param late When late is false, this mean we are currently running before
+   * most of the other optimizations. In this case we would avoid optimizations
+   * that would make the code harder to analyze (such as using string spliting,
+   * merging statements with commans, etc). When this is true, we would
+   * do anything to minimize for size.
+   */
+  PeepholeSubstituteAlternateSyntax(boolean late) {
+    this.late = late;
   }
 
   /**
@@ -150,7 +157,7 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node tryFoldComma(Node n) {
-    if (!doCommaSpliting) {
+    if (!late) {
       return n;
     }
     Node parent = n.getParent();
@@ -1359,6 +1366,9 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node tryMinimizeStringArrayLiteral(Node n) {
+    if(!late) {
+      return n;
+    }
     int numElements = n.getChildCount();
     // We save two bytes per element.
     int saving = numElements * 2 - STRING_SPLIT_OVERHEAD;
