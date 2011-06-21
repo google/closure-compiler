@@ -339,32 +339,94 @@ public class Node implements Cloneable, Serializable {
     private String str;
   }
 
-  // PropListItems are immutable so that they can be shared.
-  private static class PropListItem implements Serializable {
+  // PropListItems must be immutable so that they can be shared.
+  private interface PropListItem {
+    int getType();
+    PropListItem getNext();
+    void setNext(PropListItem next);
+    Object getObjectValue();
+    int getIntValue();
+  }
+
+  private static abstract class AbstractPropListItem
+      implements PropListItem, Serializable {
     private static final long serialVersionUID = 1L;
 
-    final PropListItem next;
-    final int type;
-    final int intValue;
-    final Object objectValue;
+    private PropListItem next;
+    private final int propType;
 
-    PropListItem(int type, int intValue, PropListItem next) {
-      this(type, intValue, null, next);
+    AbstractPropListItem(int propType, PropListItem next) {
+      this.propType = propType;
+      this.next = next;
     }
 
-    PropListItem(int type, Object objectValue, PropListItem next) {
-      this(type, 0, objectValue, next);
+    public int getType() {
+      return propType;
     }
 
-    PropListItem(
-        int type, int intValue, Object objectValue, PropListItem next) {
-      this.type = type;
-      this.intValue = intValue;
-      this.objectValue = objectValue;
+    public PropListItem getNext() {
+      return next;
+    }
+
+    public void setNext(PropListItem next) {
       this.next = next;
     }
   }
 
+  // A base class for Object storing props
+  private static class ObjectPropListItem
+      extends AbstractPropListItem {
+    private static final long serialVersionUID = 1L;
+
+    private final Object objectValue;
+
+    ObjectPropListItem(int propType, Object objectValue, PropListItem next) {
+      super(propType, next);
+      this.objectValue = objectValue;
+    }
+
+    @Override
+    public int getIntValue() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object getObjectValue() {
+      return objectValue;
+    }
+
+    @Override
+    public String toString() {
+      return objectValue == null ? "null" : objectValue.toString();
+    }
+  }
+
+  // A base class for int storing props
+  private static class IntPropListItem extends AbstractPropListItem {
+    private static final long serialVersionUID = 1L;
+
+    final int intValue;
+
+    IntPropListItem(int propType, int intValue, PropListItem next) {
+      super(propType, next);
+      this.intValue = intValue;
+    }
+
+    @Override
+    public int getIntValue() {
+      return intValue;
+    }
+
+    @Override
+    public Object getObjectValue() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(intValue);
+    }
+  }
 
   public Node(int nodeType) {
     type = nodeType;
@@ -740,8 +802,8 @@ public class Node implements Cloneable, Serializable {
   @VisibleForTesting
   PropListItem lookupProperty(int propType) {
     PropListItem x = propListHead;
-    while (x != null && propType != x.type) {
-      x = x.next;
+    while (x != null && propType != x.getType()) {
+      x = x.getNext();
     }
     return x;
   }
@@ -776,13 +838,13 @@ public class Node implements Cloneable, Serializable {
   private PropListItem removeProp(PropListItem item, int propType) {
     if (item == null) {
       return null;
-    } else if (item.type == propType) {
-      return item.next;
+    } else if (item.getType() == propType) {
+      return item.getNext();
     } else {
-      PropListItem result = removeProp(item.next, propType);
-      if (result != item.next) {
-        return new PropListItem(
-            item.type, item.intValue, item.objectValue, result);
+      PropListItem result = removeProp(item.getNext(), propType);
+      if (result != item.getNext()) {
+        item.setNext(result);
+        return item;
       } else {
         return item;
       }
@@ -794,7 +856,7 @@ public class Node implements Cloneable, Serializable {
     if (item == null) {
       return null;
     }
-    return item.objectValue;
+    return item.getObjectValue();
   }
 
   public boolean getBooleanProp(int propType) {
@@ -810,7 +872,7 @@ public class Node implements Cloneable, Serializable {
     if (item == null) {
       return 0;
     }
-    return item.intValue;
+    return item.getIntValue();
   }
 
   public int getExistingIntProp(int propType) {
@@ -818,13 +880,13 @@ public class Node implements Cloneable, Serializable {
     if (item == null) {
       Kit.codeBug();
     }
-    return item.intValue;
+    return item.getIntValue();
   }
 
   public void putProp(int propType, Object value) {
     removeProp(propType);
     if (value != null) {
-      propListHead = new PropListItem(propType, value, propListHead);
+      propListHead = createProp(propType, value, propListHead);
     }
   }
 
@@ -835,21 +897,29 @@ public class Node implements Cloneable, Serializable {
   public void putIntProp(int propType, int value) {
     removeProp(propType);
     if (value != 0) {
-      propListHead = new PropListItem(propType, value, propListHead);
+      propListHead = createProp(propType, value, propListHead);
     }
+  }
+
+  PropListItem createProp(int propType, Object value, PropListItem next) {
+    return new ObjectPropListItem(propType, value, next);
+  }
+
+  PropListItem createProp(int propType, int value, PropListItem next) {
+    return new IntPropListItem(propType, value, next);
   }
 
   // Gets all the property types, in sorted order.
   private int[] getSortedPropTypes() {
     int count = 0;
-    for (PropListItem x = propListHead; x != null; x = x.next) {
+    for (PropListItem x = propListHead; x != null; x = x.getNext()) {
       count++;
     }
 
     int[] keys = new int[count];
-    for (PropListItem x = propListHead; x != null; x = x.next) {
+    for (PropListItem x = propListHead; x != null; x = x.getNext()) {
       count--;
-      keys[count] = x.type;
+      keys[count] = x.getType();
     }
 
     Arrays.sort(keys);
@@ -992,7 +1062,7 @@ public class Node implements Cloneable, Serializable {
               value = "last local block";
               break;
             case ISNUMBER_PROP:
-              switch (x.intValue) {
+              switch (x.getIntValue()) {
                 case BOTH:
                   value = "both";
                   break;
@@ -1007,7 +1077,7 @@ public class Node implements Cloneable, Serializable {
               }
               break;
             case SPECIALCALL_PROP:
-              switch (x.intValue) {
+              switch (x.getIntValue()) {
                 case SPECIALCALL_EVAL:
                   value = "eval";
                   break;
@@ -1020,12 +1090,7 @@ public class Node implements Cloneable, Serializable {
               }
               break;
             default:
-              Object obj = x.objectValue;
-              if (obj != null) {
-                value = obj.toString();
-              } else {
-                value = String.valueOf(x.intValue);
-              }
+              value = x.toString();
               break;
           }
           sb.append(value);
