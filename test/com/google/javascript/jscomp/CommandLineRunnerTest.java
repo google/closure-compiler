@@ -638,8 +638,8 @@ public class CommandLineRunnerTest extends TestCase {
           "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphManifestTo(
-        lastCompiler.getModuleGraph(), builder);
+    lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
+        lastCompiler.getModuleGraph(), builder, true);
     assertEquals(
         "{m0}\n" +
         "i0\n" +
@@ -661,8 +661,8 @@ public class CommandLineRunnerTest extends TestCase {
           "var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphManifestTo(
-        lastCompiler.getModuleGraph(), builder);
+    lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
+        lastCompiler.getModuleGraph(), builder, true);
     assertEquals(
         "{m0}\n" +
         "i0\n" +
