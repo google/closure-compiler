@@ -594,6 +594,12 @@ Window.prototype.openDatabase = function(name, version, description, size) {};
 HTMLImageElement.prototype.complete;
 
 /**
+ * @type {string}
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/embedded-content-1.html#attr-img-crossorigin
+ */
+HTMLImageElement.prototype.crossOrigin;
+
+/**
  * The postMessage method (as defined by HTML5 spec and implemented in FF3).
  * @param {*} message
  * @param {string|Array} targetOrigin The target origin in the 2-argument
