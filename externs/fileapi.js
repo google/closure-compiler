@@ -249,6 +249,13 @@ Entry.prototype.copyTo = function(parent, newName, successCallback,
 Entry.prototype.toURI = function(mimeType) {};
 
 /**
+ * @see http://www.w3.org/TR/file-system-api/#widl-Entry-toURL
+ * @param {string=} mimeType
+ * @return {string}
+ */
+Entry.prototype.toURL = function(mimeType) {};
+
+/**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-remove
  * @param {function()} successCallback
  * @param {function(!FileError)=} errorCallback
