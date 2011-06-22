@@ -1510,6 +1510,15 @@ XMLHttpRequest.prototype.responseType;
  */
 XMLHttpRequest.prototype.response;
 
+
+/**
+ * @type {ArrayBuffer}
+ * Implemented as a draft spec in Firefox 4 as the way to get a requested array
+ * buffer from an XMLHttpRequest.
+ * @see https://developer.mozilla.org/En/Using_XMLHttpRequest#Receiving_binary_data_using_JavaScript_typed_arrays
+ */
+XMLHttpRequest.prototype.mozResponseArrayBuffer;
+
 /**
  * XMLHttpRequestEventTarget defines events for checking the status of a data
  * transfer between a client and a server. This should be a common base class
