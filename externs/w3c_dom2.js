@@ -245,6 +245,7 @@ HTMLHeadElement.prototype.profile;
 /**
  * @constructor
  * @extends {HTMLElement}
+ * @implements {LinkStyle}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-35143001
  */
 function HTMLLinkElement() {}
@@ -302,6 +303,9 @@ HTMLLinkElement.prototype.target;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-32498296
  */
 HTMLLinkElement.prototype.type;
+
+/** @inheritDoc */
+HTMLLinkElement.prototype.sheet;
 
 /**
  * @constructor
