@@ -40,15 +40,21 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   // Test object literal -> variable inlining
+
+  public void testObject0() {
+    // Don't mess with global variables, that is the job of CollapseProperties.
+    testSame("var a = {x:1}; f(a.x);");
+  }
+
   public void testObject1() {
-    test("var a = {x:x(), y:y()}; f(a.x, a.y);",
+    testLocal("var a = {x:x(), y:y()}; f(a.x, a.y);",
          "var JSCompiler_object_inline_x_0=x();" +
          "var JSCompiler_object_inline_y_1=y();" +
          "f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);");
   }
 
   public void testObject1a() {
-    test("var a; a = {x:x, y:y}; f(a.x, a.y);",
+    testLocal("var a; a = {x:x, y:y}; f(a.x, a.y);",
          "var JSCompiler_object_inline_x_0;" +
          "var JSCompiler_object_inline_y_1;" +
          "(JSCompiler_object_inline_x_0=x," +
@@ -57,7 +63,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject2() {
-    test("var a = {y:y}; a.x = z; f(a.x, a.y);",
+    testLocal("var a = {y:y}; a.x = z; f(a.x, a.y);",
          "var JSCompiler_object_inline_y_0 = y;" +
          "var JSCompiler_object_inline_x_1;" +
          "JSCompiler_object_inline_x_1=z;" +
@@ -67,31 +73,31 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testObject3() {
     // Inlining the 'y' would cause the 'this' to be different in the
     // target function.
-    testSame("var a = {y:y,x:x}; a.y(); f(a.x);");
-    testSame("var a; a = {y:y,x:x}; a.y(); f(a.x);");
+    testSameLocal("var a = {y:y,x:x}; a.y(); f(a.x);");
+    testSameLocal("var a; a = {y:y,x:x}; a.y(); f(a.x);");
   }
 
   public void testObject4() {
     // Object literal is escaped.
-    testSame("var a = {y:y}; a.x = z; f(a.x, a.y); g(a);");
-    testSame("var a; a = {y:y}; a.x = z; f(a.x, a.y); g(a);");
+    testSameLocal("var a = {y:y}; a.x = z; f(a.x, a.y); g(a);");
+    testSameLocal("var a; a = {y:y}; a.x = z; f(a.x, a.y); g(a);");
   }
 
   public void testObject5() {
-    test("var a = {x:x, y:y}; var b = {a:a}; f(b.a.x, b.a.y);",
+    testLocal("var a = {x:x, y:y}; var b = {a:a}; f(b.a.x, b.a.y);",
          "var a = {x:x, y:y};" +
          "var JSCompiler_object_inline_a_0=a;" +
          "f(JSCompiler_object_inline_a_0.x, JSCompiler_object_inline_a_0.y);");
   }
 
   public void testObject6() {
-    test("for (var i = 0; i < 5; i++) { var a = {i:i,x:x}; f(a.i, a.x); }",
+    testLocal("for (var i = 0; i < 5; i++) { var a = {i:i,x:x}; f(a.i, a.x); }",
          "for (var i = 0; i < 5; i++) {" +
          "  var JSCompiler_object_inline_i_0=i;" +
          "  var JSCompiler_object_inline_x_1=x;" +
          "  f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)" +
          "}");
-    test("if (c) { var a = {i:i,x:x}; f(a.i, a.x); }",
+    testLocal("if (c) { var a = {i:i,x:x}; f(a.i, a.x); }",
          "if (c) {" +
          "  var JSCompiler_object_inline_i_0=i;" +
          "  var JSCompiler_object_inline_x_1=x;" +
@@ -100,16 +106,16 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject7() {
-    test("var a = {x:x, y:f()}; g(a.x);",
+    testLocal("var a = {x:x, y:f()}; g(a.x);",
       "var JSCompiler_object_inline_x_0=x;" +
          "var JSCompiler_object_inline_y_1=f();" +
          "g(JSCompiler_object_inline_x_0)");
   }
 
   public void testObject8() {
-    testSame("var a = {x:x,y:y}; var b = {x:y}; f((c?a:b).x);");
+    testSameLocal("var a = {x:x,y:y}; var b = {x:y}; f((c?a:b).x);");
 
-    test("var a; if(c) { a={x:x, y:y}; } else { a={x:y}; } f(a.x);",
+    testLocal("var a; if(c) { a={x:x, y:y}; } else { a={x:y}; } f(a.x);",
          "var JSCompiler_object_inline_x_0;" +
          "var JSCompiler_object_inline_y_1;" +
          "if(c) JSCompiler_object_inline_x_0=x," +
@@ -119,7 +125,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
          "     JSCompiler_object_inline_y_1=void 0," +
          "     true;" +
          "f(JSCompiler_object_inline_x_0)");
-    test("var a = {x:x,y:y}; var b = {x:y}; c ? f(a.x) : f(b.x);",
+    testLocal("var a = {x:x,y:y}; var b = {x:y}; c ? f(a.x) : f(b.x);",
          "var JSCompiler_object_inline_x_0 = x; " +
          "var JSCompiler_object_inline_y_1 = y; " +
          "var JSCompiler_object_inline_x_2 = y; " +
@@ -128,11 +134,11 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
 
   public void testObject9() {
     // There is a call, so no inlining
-    testSame("function f(a,b) {" +
+    testSameLocal("function f(a,b) {" +
              "  var x = {a:a,b:b}; x.a(); return x.b;" +
              "}");
 
-    test("function f(a,b) {" +
+    testLocal("function f(a,b) {" +
          "  var x = {a:a,b:b}; g(x.a); x = {a:a,b:2}; return x.b;" +
          "}",
          "function f(a,b) {" +
@@ -145,7 +151,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
          "  return JSCompiler_object_inline_b_1" +
          "}");
 
-    test("function f(a,b) { " +
+    testLocal("function f(a,b) { " +
          "  var x = {a:a,b:b}; g(x.a); x.b = x.c = 2; return x.b; " +
          "}",
          "function f(a,b) { " +
@@ -159,13 +165,13 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject10() {
-    test("var x; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b);",
+    testLocal("var x; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b);",
          "var JSCompiler_object_inline_a_0;" +
          "var JSCompiler_object_inline_b_1;" +
          "var b = f();" +
          "JSCompiler_object_inline_a_0=a,JSCompiler_object_inline_b_1=b,true;" +
          "if(JSCompiler_object_inline_a_0) g(JSCompiler_object_inline_b_1)");
-    test("var x = {}; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b) + x.c",
+    testLocal("var x = {}; var b = f(); x = {a:a, b:b}; if(x.a) g(x.b) + x.c",
          "var JSCompiler_object_inline_a_0;" +
          "var JSCompiler_object_inline_b_1;" +
          "var JSCompiler_object_inline_c_2;" +
@@ -174,7 +180,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
          "  JSCompiler_object_inline_c_2=void 0,true;" +
          "if(JSCompiler_object_inline_a_0) " +
          "  g(JSCompiler_object_inline_b_1) + JSCompiler_object_inline_c_2");
-    test("var x; var b = f(); x = {a:a, b:b}; x.c = c; if(x.a) g(x.b) + x.c",
+    testLocal("var x; var b = f(); x = {a:a, b:b}; x.c = c; if(x.a) g(x.b) + x.c",
          "var JSCompiler_object_inline_a_0;" +
          "var JSCompiler_object_inline_b_1;" +
          "var JSCompiler_object_inline_c_2;" +
@@ -184,14 +190,14 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
          "JSCompiler_object_inline_c_2 = c;" +
          "if (JSCompiler_object_inline_a_0)" +
          "  g(JSCompiler_object_inline_b_1) + JSCompiler_object_inline_c_2;");
-    test("var x = {a:a}; if (b) x={b:b}; f(x.a||x.b);",
+    testLocal("var x = {a:a}; if (b) x={b:b}; f(x.a||x.b);",
          "var JSCompiler_object_inline_a_0 = a;" +
          "var JSCompiler_object_inline_b_1;" +
          "if(b) JSCompiler_object_inline_b_1 = b," +
          "      JSCompiler_object_inline_a_0 = void 0," +
          "      true;" +
          "f(JSCompiler_object_inline_a_0 || JSCompiler_object_inline_b_1)");
-    test("var x; var y = 5; x = {a:a, b:b, c:c}; if (b) x={b:b}; f(x.a||x.b);",
+    testLocal("var x; var y = 5; x = {a:a, b:b, c:c}; if (b) x={b:b}; f(x.a||x.b);",
          "var JSCompiler_object_inline_a_0;" +
          "var JSCompiler_object_inline_b_1;" +
          "var JSCompiler_object_inline_c_2;" +
@@ -208,12 +214,12 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject11() {
-    testSame("var x = {a:b}; (x = {a:a}).c = 5; f(x.a);");
-    testSame("var x = {a:a}; f(x[a]); g(x[a]);");
+    testSameLocal("var x = {a:b}; (x = {a:a}).c = 5; f(x.a);");
+    testSameLocal("var x = {a:a}; f(x[a]); g(x[a]);");
   }
 
   public void testObject12() {
-    test("var a; a = {x:1, y:2}; f(a.x, a.y2);",
+    testLocal("var a; a = {x:1, y:2}; f(a.x, a.y2);",
          "var JSCompiler_object_inline_x_0;" +
          "var JSCompiler_object_inline_y_1;" +
          "var JSCompiler_object_inline_y2_2;" +
@@ -225,20 +231,20 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject13() {
-    testSame("var x = {a:1, b:2}; x = {a:3, b:x.a};");
+    testSameLocal("var x = {a:1, b:2}; x = {a:3, b:x.a};");
   }
 
   public void testObject14() {
-    testSame("var x = {a:1}; if ('a' in x) { f(); }");
-    testSame("var x = {a:1}; for (var y in x) { f(y); }");
+    testSameLocal("var x = {a:1}; if ('a' in x) { f(); }");
+    testSameLocal("var x = {a:1}; for (var y in x) { f(y); }");
   }
 
   public void testObject15() {
-    testSame("x = x || {}; f(x.a);");
+    testSameLocal("x = x || {}; f(x.a);");
   }
 
   public void testObject16() {
-    test("function f(e) { bar(); x = {a: foo()}; var x; print(x.a); }",
+    testLocal("function f(e) { bar(); x = {a: foo()}; var x; print(x.a); }",
          "function f(e) { " +
          "  var JSCompiler_object_inline_a_0;" +
          "  bar();" +
@@ -250,7 +256,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   public void testObject17() {
     // Note: Some day, with careful analysis, these two uses could be
     // disambiguated, and the second assignment could be inlined.
-    testSame(
+    testSameLocal(
       "var a = {a: function(){}};" +
       "a.a();" +
       "a = {a1: 100};" +
@@ -258,34 +264,34 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject18() {
-    testSame("var a,b; b=a={x:x, y:y}; f(b.x);");
+    testSameLocal("var a,b; b=a={x:x, y:y}; f(b.x);");
   }
 
   public void testObject19() {
-    testSame("var a,b; if(c) { b=a={x:x, y:y}; } else { b=a={x:y}; } f(b.x);");
+    testSameLocal("var a,b; if(c) { b=a={x:x, y:y}; } else { b=a={x:y}; } f(b.x);");
   }
 
   public void testObject20() {
-    testSame("var a,b; if(c) { b=a={x:x, y:y}; } else { b=a={x:y}; } f(a.x);");
+    testSameLocal("var a,b; if(c) { b=a={x:x, y:y}; } else { b=a={x:y}; } f(a.x);");
   }
 
   public void testObject21() {
-    testSame("var a,b; b=a={x:x, y:y};");
-    testSame("var a,b; if(c) { b=a={x:x, y:y}; }" +
+    testSameLocal("var a,b; b=a={x:x, y:y};");
+    testSameLocal("var a,b; if(c) { b=a={x:x, y:y}; }" +
              "else { b=a={x:y}; } f(a.x); f(b.x)");
-    testSame("var a, b; if(c) { if (a={x:x, y:y}) f(); } " +
+    testSameLocal("var a, b; if(c) { if (a={x:x, y:y}) f(); } " +
              "else { b=a={x:y}; } f(a.x);");
-    testSame("var a,b; b = (a = {x:x, y:x});");
-    testSame("var a,b; a = {x:x, y:x}; b = a");
-    testSame("var a,b; a = {x:x, y:x}; b = x || a");
-    testSame("var a,b; a = {x:x, y:x}; b = y && a");
-    testSame("var a,b; a = {x:x, y:x}; b = y ? a : a");
-    testSame("var a,b; a = {x:x, y:x}; b = y , a");
-    testSame("b = x || (a = {x:1, y:2});");
+    testSameLocal("var a,b; b = (a = {x:x, y:x});");
+    testSameLocal("var a,b; a = {x:x, y:x}; b = a");
+    testSameLocal("var a,b; a = {x:x, y:x}; b = x || a");
+    testSameLocal("var a,b; a = {x:x, y:x}; b = y && a");
+    testSameLocal("var a,b; a = {x:x, y:x}; b = y ? a : a");
+    testSameLocal("var a,b; a = {x:x, y:x}; b = y , a");
+    testSameLocal("b = x || (a = {x:1, y:2});");
   }
 
   public void testObject22() {
-    test("while(1) { var a = {y:1}; if (b) a.x = 2; f(a.y, a.x);}",
+    testLocal("while(1) { var a = {y:1}; if (b) a.x = 2; f(a.y, a.x);}",
       "for(;1;){" +
       " var JSCompiler_object_inline_y_0=1;" +
       " var JSCompiler_object_inline_x_1;" +
@@ -293,7 +299,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
       " f(JSCompiler_object_inline_y_0,JSCompiler_object_inline_x_1)" +
       "}");
 
-    test("var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}",
+    testLocal("var a; while (1) { f(a.x, a.y); a = {x:1, y:1};}",
       "var JSCompiler_object_inline_x_0;" +
       "var JSCompiler_object_inline_y_1;" +
       "for(;1;) {" +
@@ -305,7 +311,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject23() {
-    test("function f() {\n" +
+    testLocal("function f() {\n" +
          "  var templateData = {\n" +
          "    linkIds: {\n" +
          "      CHROME: 'cl',\n" +
@@ -323,7 +329,7 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject24() {
-    test("function f() {\n" +
+    testLocal("function f() {\n" +
          "  var linkIds = {\n" +
          "      CHROME: 1,\n" +
          "  };\n" +
@@ -334,12 +340,31 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
   }
 
   public void testObject25() {
-    test("var a = {x:f(), y:g()}; a = {y:g(), x:f()}; f(a.x, a.y);",
+    testLocal("var a = {x:f(), y:g()}; a = {y:g(), x:f()}; f(a.x, a.y);",
          "var JSCompiler_object_inline_x_0=f();" +
          "var JSCompiler_object_inline_y_1=g();" +
          "JSCompiler_object_inline_y_1=g()," +
          "  JSCompiler_object_inline_x_0=f()," +
          "  true;" +
          "f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)");
+  }
+
+  public void testObject26() {
+    testLocal("var a = {}; a.b = function() {}; new a.b.c",
+         "var JSCompiler_object_inline_b_0;" +
+         "JSCompiler_object_inline_b_0=function(){};" +
+         "new JSCompiler_object_inline_b_0.c");
+  }
+
+  private final String LOCAL_PREFIX = "function local(){";
+  private final String LOCAL_POSTFIX = "}";
+
+  private void testLocal(String code, String result) {
+    test(LOCAL_PREFIX + code + LOCAL_POSTFIX,
+         LOCAL_PREFIX + result + LOCAL_POSTFIX);
+  }
+
+  private void testSameLocal(String code) {
+    testLocal(code, code);
   }
 }

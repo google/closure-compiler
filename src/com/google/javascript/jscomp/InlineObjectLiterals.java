@@ -127,12 +127,18 @@ class InlineObjectLiterals implements CompilerPass {
      */
     private boolean isVarInlineForbidden(Var var) {
       // A variable may not be inlined if:
-      // 1) The variable is exported,
-      // 2) Don't inline the special RENAME_PROPERTY_FUNCTION_NAME
-      // 3) A reference to the variable has been inlined. We're downstream
+      // 1) The variable is defined in the externs
+      // 2) The variable is exported,
+      // 3) Don't inline the special RENAME_PROPERTY_FUNCTION_NAME
+      // 4) A reference to the variable has been inlined. We're downstream
       //    of the mechanism that creates variable references, so we don't
       //    have a good way to update the reference. Just punt on it.
-      return compiler.getCodingConvention().isExported(var.name)
+
+      // Additionally, exclude global variables for now.
+
+      return var.isGlobal()
+          || var.isExtern()
+          || compiler.getCodingConvention().isExported(var.name)
           || RenameProperties.RENAME_PROPERTY_FUNCTION_NAME.equals(var.name)
           || staleVars.contains(var);
     }
