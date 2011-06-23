@@ -242,13 +242,6 @@ Entry.prototype.copyTo = function(parent, newName, successCallback,
     errorCallback) {};
 
 /**
- * @see http://www.w3.org/TR/file-system-api/#widl-Entry-toURI
- * @param {string=} mimeType
- * @return {string}
- */
-Entry.prototype.toURI = function(mimeType) {};
-
-/**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-toURL
  * @param {string=} mimeType
  * @return {string}
