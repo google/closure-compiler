@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
 
 
 /**
@@ -167,6 +166,24 @@ public class VariableReferenceCheckTest extends CompilerTestCase {
   public void testNonHoistedRecursiveFunction3() {
     enableAmbiguousFunctionCheck = true;
     assertNoWarning("function g() { if (false) { function f() { f(); g(); }}}");
+  }
+
+  public void testNoWarnInExterns1() {
+    // Verify duplicate suppressions are properly recognized.
+    String externs =
+       "var google;" +
+       "/** @suppress {duplicate} */ var google";
+    String code = "";
+    test(externs, code, code, null, null);
+  }
+
+  public void testNoWarnInExterns2() {
+    // Verify we don't complain about early references in externs
+    String externs =
+       "window;" +
+       "var window;";
+    String code = "";
+    test(externs, code, code, null, null);
   }
 
   /**

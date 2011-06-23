@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
@@ -131,7 +130,10 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         BasicBlock basicBlock = reference.getBasicBlock();
         boolean isDeclaration = reference.isDeclaration();
 
-        if (isDeclaration) {
+        boolean allowDupe =
+            SyntacticScopeCreator.hasDuplicateDeclarationSuppression(
+                reference.getNode(), v);
+        if (isDeclaration && !allowDupe) {
           // Look through all the declarations we've found so far, and
           // check if any of them are before this block.
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
@@ -161,21 +163,24 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         }
 
         if (!isDeclaration && !isDeclaredInScope) {
-          // Special case to deal with var goog = goog || {}
-          Node grandparent = reference.getGrandparent();
-          if (grandparent.getType() == Token.NAME
-              && grandparent.getString() == v.name) {
-            continue;
-          }
+          // Don't check the order of refer in externs files.
+          if (!reference.getSourceFile().isExtern()) {
+            // Special case to deal with var goog = goog || {}
+            Node grandparent = reference.getGrandparent();
+            if (grandparent.getType() == Token.NAME
+                && grandparent.getString() == v.name) {
+              continue;
+            }
 
-          // Only generate warnings if the scopes do not match in order
-          // to deal with possible forward declarations and recursion
-          if (reference.getScope() == v.scope) {
-            compiler.report(
-                JSError.make(reference.getSourceFile().getName(),
-                             reference.getNode(),
-                             checkLevel,
-                             UNDECLARED_REFERENCE, v.name));
+            // Only generate warnings if the scopes do not match in order
+            // to deal with possible forward declarations and recursion
+            if (reference.getScope() == v.scope) {
+              compiler.report(
+                  JSError.make(reference.getSourceFile().getName(),
+                               reference.getNode(),
+                               checkLevel,
+                               UNDECLARED_REFERENCE, v.name));
+            }
           }
         }
 

@@ -195,21 +195,7 @@ class SyntacticScopeCreator implements ScopeCreator {
           return;
         }
 
-        boolean allowDupe = false;
-        JSDocInfo info = n.getJSDocInfo();
-        if (info == null) {
-          info = parent.getJSDocInfo();
-        }
-        allowDupe =
-            info != null && info.getSuppressions().contains("duplicate");
-
-        info = origVar.nameNode.getJSDocInfo();
-        if (info == null) {
-          info = origParent.getJSDocInfo();
-        }
-
-        allowDupe |=
-            info != null && info.getSuppressions().contains("duplicate");
+        boolean allowDupe = hasDuplicateDeclarationSuppression(n, origVar);
 
         if (!allowDupe) {
           compiler.report(
@@ -249,6 +235,32 @@ class SyntacticScopeCreator implements ScopeCreator {
     }
   }
 
+
+  /**
+   * @param n The name node to check.
+   * @param origVar The associated Var.
+   * @return Whether duplicated declarations warnings should be suppressed
+   *     for the given node.
+   */
+  static boolean hasDuplicateDeclarationSuppression(Node n, Scope.Var origVar) {
+    Preconditions.checkState(n.getType() == Token.NAME);
+    Node parent = n.getParent();
+    Node origParent = origVar.getParentNode();
+
+    JSDocInfo info = n.getJSDocInfo();
+    if (info == null) {
+      info = parent.getJSDocInfo();
+    }
+    if (info != null && info.getSuppressions().contains("duplicate")) {
+      return true;
+    }
+
+    info = origVar.nameNode.getJSDocInfo();
+    if (info == null) {
+      info = origParent.getJSDocInfo();
+    }
+    return (info != null && info.getSuppressions().contains("duplicate"));
+  }
 
   /**
    * Generates an untyped global scope from the root of AST of compiler (which

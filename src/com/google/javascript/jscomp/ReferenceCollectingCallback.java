@@ -103,7 +103,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseRoots(
+        compiler, Lists.newArrayList(externs, root), this);
   }
 
   /**

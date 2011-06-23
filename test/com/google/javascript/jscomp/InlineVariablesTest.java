@@ -1052,4 +1052,10 @@ public class InlineVariablesTest extends CompilerTestCase {
       "}");
   }
 
+  public void testNoInlineRedeclaredExterns() {
+    String externs = "var test = 1;";
+    String code = "/** @suppress {duplicate} */ var test = 2;alert(test);";
+    test(externs, code, code, null, null);
+  }
+
 }
