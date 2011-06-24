@@ -343,7 +343,7 @@ public class Node implements Cloneable, Serializable {
   private interface PropListItem {
     int getType();
     PropListItem getNext();
-    void setNext(PropListItem next);
+    PropListItem chain(PropListItem next);
     Object getObjectValue();
     int getIntValue();
   }
@@ -352,7 +352,7 @@ public class Node implements Cloneable, Serializable {
       implements PropListItem, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private PropListItem next;
+    private final PropListItem next;
     private final int propType;
 
     AbstractPropListItem(int propType, PropListItem next) {
@@ -368,9 +368,7 @@ public class Node implements Cloneable, Serializable {
       return next;
     }
 
-    public void setNext(PropListItem next) {
-      this.next = next;
-    }
+    public abstract PropListItem chain(PropListItem next);
   }
 
   // A base class for Object storing props
@@ -399,6 +397,11 @@ public class Node implements Cloneable, Serializable {
     public String toString() {
       return objectValue == null ? "null" : objectValue.toString();
     }
+
+    @Override
+    public PropListItem chain(PropListItem next) {
+      return new ObjectPropListItem(getType(), objectValue, next);
+    }
   }
 
   // A base class for int storing props
@@ -425,6 +428,11 @@ public class Node implements Cloneable, Serializable {
     @Override
     public String toString() {
       return String.valueOf(intValue);
+    }
+
+    @Override
+    public PropListItem chain(PropListItem next) {
+      return new IntPropListItem(getType(), intValue, next);
     }
   }
 
@@ -843,8 +851,7 @@ public class Node implements Cloneable, Serializable {
     } else {
       PropListItem result = removeProp(item.getNext(), propType);
       if (result != item.getNext()) {
-        item.setNext(result);
-        return item;
+        return item.chain(result);
       } else {
         return item;
       }
@@ -1343,6 +1350,10 @@ public class Node implements Cloneable, Serializable {
 
   // ==========================================================================
   // Accessors
+
+  PropListItem getPropListHeadForTesting() {
+    return propListHead;
+  }
 
   public Node getParent() {
     return parent;

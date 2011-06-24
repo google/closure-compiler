@@ -222,6 +222,45 @@ public class NodeTest extends TestCase {
     assertTrue(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME));
   }
 
+  public void testSharedProps1() {
+    Node n = getNode("A");
+    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 5);
+    Node m = new Node(Token.TRUE);
+    m.clonePropsFrom(n);
+    assertEquals(m.getPropListHeadForTesting(), n.getPropListHeadForTesting());
+    assertEquals(5, n.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    assertEquals(5, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
+  }
+
+  public void testSharedProps2() {
+    Node n = getNode("A");
+    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 5);
+    Node m = new Node(Token.TRUE);
+    m.clonePropsFrom(n);
+
+    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 6);
+    assertEquals(6, n.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    assertEquals(5, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    assertFalse(
+        m.getPropListHeadForTesting() == n.getPropListHeadForTesting());
+
+    m.putIntProp(Node.SIDE_EFFECT_FLAGS, 7);
+    assertEquals(6, n.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    assertEquals(7, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
+  }
+
+  public void testSharedProps3() {
+    Node n = getNode("A");
+    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 2);
+    n.putIntProp(Node.INCRDECR_PROP, 3);
+    Node m = new Node(Token.TRUE);
+    m.clonePropsFrom(n);
+
+    n.putIntProp(Node.SIDE_EFFECT_FLAGS, 4);
+    assertEquals(4, n.getIntProp(Node.SIDE_EFFECT_FLAGS));
+    assertEquals(2, m.getIntProp(Node.SIDE_EFFECT_FLAGS));
+  }
+
   public void testBooleanProp() {
     Node n = getNode("a");
 
