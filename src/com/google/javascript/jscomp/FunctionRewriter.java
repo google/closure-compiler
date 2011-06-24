@@ -211,6 +211,7 @@ class FunctionRewriter implements CompilerPass {
     protected final Node buildCallNode(String methodName, Node argumentNode,
                                        int lineno, int charno) {
       Node call = new Node(Token.CALL, lineno, charno);
+      call.putBooleanProp(Node.FREE_CALL, true);
       call.addChildToBack(Node.newString(Token.NAME, methodName));
       if (argumentNode != null) {
         call.addChildToBack(argumentNode.cloneTree());

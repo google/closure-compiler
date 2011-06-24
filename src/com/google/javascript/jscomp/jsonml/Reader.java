@@ -618,6 +618,13 @@ public class Reader {
     parent.addChildToBack(node);
 
     transformAllChildren(element, node);
+
+    // Keep track of of the "this" context of a call.  A call without an
+    // explicit "this" is a free call.
+    Node first = node.getFirstChild();
+    if (first.getType() != Token.GETPROP && first.getType() != Token.GETELEM) {
+      node.putBooleanProp(Node.FREE_CALL, true);
+    }
   }
 
   private void transformCase(JsonML element, Node parent)
@@ -813,6 +820,7 @@ public class Reader {
       throws JsonMLException {
 
     Node node = createNode(Token.CALL, element);
+    node.putBooleanProp(Node.FREE_CALL, true);
     parent.addChildToBack(node);
 
     Node child = Node.newString(Token.NAME, "eval");

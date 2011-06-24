@@ -471,6 +471,12 @@ class CollapseProperties implements CompilerPass {
     Node ref = NodeUtil.newName(
         compiler.getCodingConvention(), alias, n, originalName);
     NodeUtil.copyNameAnnotations(n.getLastChild(), ref);
+    if (parent.getType() == Token.CALL && n == parent.getFirstChild()) {
+      // The node was a call target, we are deliberately flatten these as
+      // we node the "this" isn't provided by the namespace. Mark it as such:
+      parent.putBooleanProp(Node.FREE_CALL, true);
+    }
+
     JSType type = n.getJSType();
     if (type != null) {
       ref.setJSType(type);

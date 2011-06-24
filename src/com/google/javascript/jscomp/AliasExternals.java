@@ -333,6 +333,7 @@ class AliasExternals implements CompilerPass {
       Node callName = Node.newString(Token.NAME,
         getMutatorFor(propNameNode.getString()));
       Node call = new Node(Token.CALL, callName, propSrc, propDest);
+      call.putBooleanProp(Node.FREE_CALL, true);
 
       // And replace the assign statement with the new call
       replaceNode(parentNode.getParent(), parentNode, call);

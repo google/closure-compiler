@@ -2884,7 +2884,7 @@ public final class NodeUtil {
    * A new CALL node with the "FREE_CALL" set based on call target.
    */
   static Node newCallNode(Node callTarget, Node... parameters) {
-    boolean isFreeCall = isName(callTarget);
+    boolean isFreeCall = !isGet(callTarget);
     Node call = new Node(Token.CALL, callTarget);
     call.putBooleanProp(Node.FREE_CALL, isFreeCall);
     for (Node parameter : parameters) {

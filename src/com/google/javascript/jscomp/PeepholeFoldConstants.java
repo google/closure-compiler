@@ -1359,6 +1359,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node replacement = value.detachFromParent();
     if (key.getType() == Token.GET){
       replacement = new Node(Token.CALL, replacement);
+      replacement.putBooleanProp(Node.FREE_CALL, true);
     }
 
     n.getParent().replaceChild(n, replacement);

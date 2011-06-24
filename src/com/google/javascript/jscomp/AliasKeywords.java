@@ -172,6 +172,7 @@ class AliasKeywords implements CompilerPass {
           compiler.getCodingConvention(),
           getAliasName(), throwNode, getAliasName());
       Node aliasCall = new Node(Token.CALL, name, throwNode.removeFirstChild());
+      aliasCall.putBooleanProp(Node.FREE_CALL, true);
       Node exprResult = new Node(Token.EXPR_RESULT, aliasCall);
       parent.replaceChild(throwNode, exprResult);
     }

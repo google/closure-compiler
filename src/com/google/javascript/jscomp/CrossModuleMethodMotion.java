@@ -151,17 +151,25 @@ class CrossModuleMethodMotion implements CompilerPass {
           Node proto = prop.getPrototype();
           int stubId = idGenerator.newId();
 
+          // example: JSCompiler_stubMethod(id);
+          Node stubCall = new Node(Token.CALL,
+              Node.newString(Token.NAME, STUB_METHOD_NAME),
+              Node.newNumber(stubId))
+              .copyInformationFromForTree(value);
+          stubCall.putBooleanProp(Node.FREE_CALL, true);
+
           // stub out the method in the original module
-          valueParent.replaceChild(value,
-              // A.prototype.b = JSCompiler_stubMethod(id);
-              new Node(Token.CALL,
-                      Node.newString(Token.NAME, STUB_METHOD_NAME),
-                      Node.newNumber(stubId))
-                  .copyInformationFromForTree(value));
+          // A.prototype.b = JSCompiler_stubMethod(id);
+          valueParent.replaceChild(value, stubCall);
 
           // unstub the function body in the deeper module
           Node unstubParent = compiler.getNodeForCodeInsertion(
               deepestCommonModuleRef);
+          Node unstubCall = new Node(Token.CALL,
+              Node.newString(Token.NAME, UNSTUB_METHOD_NAME),
+              Node.newNumber(stubId),
+              value);
+          unstubCall.putBooleanProp(Node.FREE_CALL, true);
           unstubParent.addChildToFront(
               // A.prototype.b = JSCompiler_unstubMethod(id, body);
               new Node(Token.EXPR_RESULT,
@@ -169,10 +177,7 @@ class CrossModuleMethodMotion implements CompilerPass {
                       new Node(Token.GETPROP,
                           proto.cloneTree(),
                           Node.newString(Token.STRING, nameInfo.name)),
-                      new Node(Token.CALL,
-                          Node.newString(Token.NAME, UNSTUB_METHOD_NAME),
-                          Node.newNumber(stubId),
-                          value)))
+                      unstubCall))
                   .copyInformationFromForTree(value));
 
           compiler.reportCodeChange();

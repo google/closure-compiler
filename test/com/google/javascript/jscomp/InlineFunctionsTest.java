@@ -1758,6 +1758,50 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "f(function(){return this})");
   }
 
+  public void testInlineObject() {
+    new StringCompare().testInlineObject();
+  }
+
+  private static class StringCompare extends CompilerTestCase {
+    private boolean allowGlobalFunctionInlining = true;
+
+    StringCompare() {
+      super("", false);
+      this.enableNormalize();
+      this.enableMarkNoSideEffects();
+    }
+
+    @Override
+    public void setUp() throws Exception {
+      super.setUp();
+      super.enableLineNumberCheck(true);
+      allowGlobalFunctionInlining = true;
+    }
+
+    @Override
+    protected CompilerPass getProcessor(Compiler compiler) {
+      compiler.resetUniqueNameId();
+      return new InlineFunctions(
+          compiler,
+          compiler.getUniqueNameIdSupplier(),
+          allowGlobalFunctionInlining,
+          true, // allowLocalFunctionInlining
+          true, // allowBlockInlining
+          true); // assumeStrictThis
+    }
+
+    public void testInlineObject() {
+      allowGlobalFunctionInlining = false;
+      // TODO(johnlenz): normalize the AST so an AST comparison can be done.
+      // As is, the expected AST does not match the actual correct result:
+      // The AST matches "g.a()" with a FREE_CALL annotation, but this as
+      // expected string would fail as it won't be mark as a free call.
+      // "(0,g.a)()" matches the output, but not the resulting AST.
+      test("function inner(){function f(){return g.a}(f())()}",
+           "function inner(){(0,g.a)()}");
+    }
+  }
+
   public void testIssue423() {
     test(
         "(function($) {\n" +

@@ -1228,6 +1228,7 @@ class PeepholeSubstituteAlternateSyntax
         String className = n.getFirstChild().getString();
         if (STANDARD_OBJECT_CONSTRUCTORS.contains(className)) {
           n.setType(Token.CALL);
+          n.putBooleanProp(Node.FREE_CALL, true);
           reportCodeChange();
         }
       }

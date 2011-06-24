@@ -140,6 +140,7 @@ class InstrumentFunctions implements CompilerPass {
       Node call = new Node(Token.CALL,
           Node.newString(Token.NAME, appNameSetter),
           Node.newString(appNameStr));
+      call.putBooleanProp(Node.FREE_CALL, true);
       Node expr = new Node(Token.EXPR_RESULT, call);
 
       Node addingRoot = compiler.getNodeForCodeInsertion(null);
@@ -254,9 +255,11 @@ class InstrumentFunctions implements CompilerPass {
     }
 
     private Node newReportFunctionExitNode() {
-      return new Node(Token.CALL,
+      Node call = new Node(Token.CALL,
           Node.newString(Token.NAME, reportFunctionExitName),
           Node.newNumber(functionId));
+      call.putBooleanProp(Node.FREE_CALL, true);
+      return call;
     }
 
     /**
@@ -299,6 +302,7 @@ class InstrumentFunctions implements CompilerPass {
         Node call = new Node(Token.CALL,
             Node.newString(Token.NAME, reportFunctionName),
             Node.newNumber(id));
+        call.putBooleanProp(Node.FREE_CALL, true);
         Node expr = new Node(Token.EXPR_RESULT, call);
         body.addChildToFront(expr);
         compiler.reportCodeChange();
@@ -313,6 +317,7 @@ class InstrumentFunctions implements CompilerPass {
         Node call = new Node(Token.CALL,
             Node.newString(Token.NAME, definedFunctionName),
             Node.newNumber(id));
+        call.putBooleanProp(Node.FREE_CALL, true);
         Node expr = NodeUtil.newExpr(call);
 
         Node addingRoot = null;

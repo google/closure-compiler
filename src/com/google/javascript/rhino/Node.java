@@ -1717,6 +1717,10 @@ public class Node implements Cloneable, Serializable {
       if (quoted1 != quoted2) {
         return false;
       }
+    } else if (type == Token.CALL) {
+      if (this.getBooleanProp(FREE_CALL) != node.getBooleanProp(FREE_CALL)) {
+        return false;
+      }
     }
 
     if (recurse) {

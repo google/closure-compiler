@@ -300,6 +300,8 @@ class DevirtualizePrototypeMethods
       parent.addChildToFront(
           Node.newString(Token.NAME, newMethodName)
               .copyInformationFrom(node));
+      Preconditions.checkState(parent.getType() == Token.CALL);
+      parent.putBooleanProp(Node.FREE_CALL, true);
       compiler.reportCodeChange();
 
       if (specializationState != null) {
