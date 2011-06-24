@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CodingConvention.Bind;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -137,7 +138,11 @@ class PeepholeSubstituteAlternateSyntax
         // Fall through on purpose because tryFoldStandardConstructors() may
         // convert a NEW node into a CALL node
       case Token.CALL:
-        return tryFoldLiteralConstructor(node);
+        Node result =  tryFoldLiteralConstructor(node);
+        if (result == node) {
+          result = tryFoldImmediateCallToBoundFunction(node);
+        }
+        return result;
 
       case Token.COMMA:
         return tryFoldComma(node);
@@ -153,6 +158,45 @@ class PeepholeSubstituteAlternateSyntax
 
       default:
         return node; //Nothing changed
+    }
+  }
+
+  private Node tryFoldImmediateCallToBoundFunction(Node n) {
+    // Rewriting "(fn.bind(a,b))()" to "fn.call(a,b)" makes it inlinable
+    Preconditions.checkState(n.getType() == Token.CALL);
+    Node callTarget = n.getFirstChild();
+    Bind bind = getCodingConvention().describeFunctionBind(callTarget);
+    if (bind != null) {
+      // replace the call target
+      bind.target.detachFromParent();
+      n.replaceChild(callTarget, bind.target);
+      callTarget = bind.target;
+
+      // push the parameters
+      addParameterAfter(bind.parameters, callTarget);
+
+      // add the this value before the parameters if necessary
+      if (bind.thisValue != null && !NodeUtil.isUndefined(bind.thisValue)) {
+        // rewrite from "fn(a, b)" to "fn.call(thisValue, a, b)"
+        Node newCallTarget = new Node(Token.GETPROP,
+            callTarget.cloneTree(),
+            Node.newString("call").copyInformationFrom(callTarget));
+        n.replaceChild(callTarget, newCallTarget);
+        n.addChildAfter(bind.thisValue.cloneTree(), newCallTarget);
+        n.putBooleanProp(Node.FREE_CALL, false);
+      } else {
+        n.putBooleanProp(Node.FREE_CALL, true);
+      }
+      reportCodeChange();
+    }
+    return n;
+  }
+
+  private void addParameterAfter(Node parameterList, Node after) {
+    if (parameterList != null) {
+      // push the last parameter to the head of the list first.
+      addParameterAfter(parameterList.getNext(), after);
+      after.getParent().addChildAfter(parameterList.cloneTree(), after);
     }
   }
 

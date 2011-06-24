@@ -856,4 +856,110 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     test("var x=[',',' ',',',',',',',',']",
          "var x=',; ;,;,;,;,'.split(';')");
   }
+
+  public void testBindToCall1() {
+    test("(goog.bind(f))()", "f()");
+    test("(goog.bind(f,a))()", "f.call(a)");
+    test("(goog.bind(f,a,b))()", "f.call(a,b)");
+
+    test("(goog.bind(f))(a)", "f(a)");
+    test("(goog.bind(f,a))(b)", "f.call(a,b)");
+    test("(goog.bind(f,a,b))(c)", "f.call(a,b,c)");
+
+    test("(goog.partial(f))()", "f()");
+    test("(goog.partial(f,a))()", "f(a)");
+    test("(goog.partial(f,a,b))()", "f(a,b)");
+
+    test("(goog.partial(f))(a)", "f(a)");
+    test("(goog.partial(f,a))(b)", "f(a,b)");
+    test("(goog.partial(f,a,b))(c)", "f(a,b,c)");
+
+    test("((function(){}).bind())()", "((function(){}))()");
+    test("((function(){}).bind(a))()", "((function(){})).call(a)");
+    test("((function(){}).bind(a,b))()", "((function(){})).call(a,b)");
+
+    test("((function(){}).bind())(a)", "((function(){}))(a)");
+    test("((function(){}).bind(a))(b)", "((function(){})).call(a,b)");
+    test("((function(){}).bind(a,b))(c)", "((function(){})).call(a,b,c)");
+
+    // Without using type information we don't know "f" is a function.
+    testSame("(f.bind())()");
+    testSame("(f.bind(a))()");
+    testSame("(f.bind())(a)");
+    testSame("(f.bind(a))(b)");
+
+    // Don't rewrite if the bind isn't the immediate call target
+    testSame("(goog.bind(f)).call(g)");
+  }
+
+  public void testBindToCall2() {
+    test("(goog$bind(f))()", "f()");
+    test("(goog$bind(f,a))()", "f.call(a)");
+    test("(goog$bind(f,a,b))()", "f.call(a,b)");
+
+    test("(goog$bind(f))(a)", "f(a)");
+    test("(goog$bind(f,a))(b)", "f.call(a,b)");
+    test("(goog$bind(f,a,b))(c)", "f.call(a,b,c)");
+
+    test("(goog$partial(f))()", "f()");
+    test("(goog$partial(f,a))()", "f(a)");
+    test("(goog$partial(f,a,b))()", "f(a,b)");
+
+    test("(goog$partial(f))(a)", "f(a)");
+    test("(goog$partial(f,a))(b)", "f(a,b)");
+    test("(goog$partial(f,a,b))(c)", "f(a,b,c)");
+
+    // Don't rewrite if the bind isn't the immediate call target
+    testSame("(goog$bind(f)).call(g)");
+  }
+
+  public void testBindToCall3() {
+    // TODO(johnlenz): The code generator wraps free calls with (0,...) to
+    // prevent leaking "this", but the parser doesn't unfold it, making a
+    // AST comparison fail.  For now do a string comparison to validate the
+    // correct code is in fact generated.
+    // The FREE call wrapping should be moved out of the code generator
+    // and into a denormalizing pass.
+    new StringCompareTestCase().testBindToCall3();
+  }
+
+  private static class StringCompareTestCase extends CompilerTestCase {
+
+    StringCompareTestCase() {
+      super("", false);
+    }
+
+    @Override
+    protected CompilerPass getProcessor(Compiler compiler) {
+      CompilerPass peepholePass =
+        new PeepholeOptimizationsPass(compiler,
+            new PeepholeSubstituteAlternateSyntax(false));
+      return peepholePass;
+    }
+
+    public void testBindToCall3() {
+      test("(goog.bind(f.m))()", "(0,f.m)()");
+      test("(goog.bind(f.m,a))()", "f.m.call(a)");
+
+      test("(goog.bind(f.m))(a)", "(0,f.m)(a)");
+      test("(goog.bind(f.m,a))(b)", "f.m.call(a,b)");
+
+      test("(goog.partial(f.m))()", "(0,f.m)()");
+      test("(goog.partial(f.m,a))()", "(0,f.m)(a)");
+
+      test("(goog.partial(f.m))(a)", "(0,f.m)(a)");
+      test("(goog.partial(f.m,a))(b)", "(0,f.m)(a,b)");
+
+      // Without using type information we don't know "f" is a function.
+      testSame("f.m.bind()()");
+      testSame("f.m.bind(a)()");
+      testSame("f.m.bind()(a)");
+      testSame("f.m.bind(a)(b)");
+
+      // Don't rewrite if the bind isn't the immediate call target
+      testSame("goog.bind(f.m).call(g)");
+    }
+
+
+  }
 }
