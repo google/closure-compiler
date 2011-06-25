@@ -352,7 +352,7 @@ public class UnionType extends JSType {
    * A {@link UnionType} contains a given type (alternate) iff the member
    * vector contains it.
    *
-   * @param alternate The alternate which might be in this union.
+   * @param type The alternate which might be in this union.
    *
    * @return {@code true} if the alternate is in the union
    */
