@@ -145,6 +145,10 @@ public class ClosureCodingConventionTest extends TestCase {
     assertNotClassDefining("goog.mixin(A, B)");
   }
 
+  public void testInheritanceDetection14() {
+    assertNotClassDefining("goog$mixin((function(){}).prototype)");
+  }
+
   public void testInheritanceDetectionPostCollapseProperties() {
     assertDefinesClasses("goog$inherits(A, B);", "A", "B");
     assertNotClassDefining("goog$inherits(A);");

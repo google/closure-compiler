@@ -87,6 +87,8 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
       } else if (callNode.getChildCount() == 3) {
         // goog.inherits(SubClass, SuperClass)
         subclass = callName.getNext();
+      } else {
+        return null;
       }
 
       if (type == SubclassType.MIXIN) {
