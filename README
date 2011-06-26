@@ -210,6 +210,21 @@ Description: Annotations for software defect detection.
 Local Modifications: None.
 
 
+-----
+Code in:
+lib/jarjar.jar
+
+Jar Jar Links
+URL: http://jarjar.googlecode.com/
+Version: 1.1
+License: Apache License 2.0
+
+Description:
+A utility for repackaging Java libraries.
+
+Local Modifications: None.
+
+
 ----
 Code in:
 lib/junit.jar
