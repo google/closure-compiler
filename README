@@ -152,7 +152,7 @@ system have been added.
 
 -----
 Code in:
-lib/libtrunk_rhino_parser_jarjared.jar
+lib/rhino
 
 Rhino
 URL: http://www.mozilla.org/rhino
@@ -161,9 +161,8 @@ License:  Netscape Public License and MPL / GPL dual license
 
 Description: Mozilla Rhino is an implementation of JavaScript for the JVM.
 
-Local Modifications: None. We've used JarJar to renamespace the code
-post-compilation. See:
-http://code.google.com/p/jarjar/
+Local Modifications: Minor changes to parsing JSDoc that usually get pushed
+up-stream to Rhino trunk.
 
 
 -----
