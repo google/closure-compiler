@@ -1,0 +1,15 @@
+js> var x = <foo><bar><baz>1</baz></bar></foo>;
+js> x
+<foo>
+  <bar>
+    <baz>1</baz>
+  </bar>
+</foo>
+js> var xmlLib = org.mozilla.javascript.xml.XMLLib.extractFromScope(this);
+js> xmlLib.isPrettyPrinting();
+true
+js> xmlLib.setPrettyPrinting(false);
+js> xmlLib.isPrettyPrinting();
+false
+js> x
+<foo><bar><baz>1</baz></bar></foo>

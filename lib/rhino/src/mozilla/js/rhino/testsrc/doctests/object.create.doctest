@@ -1,0 +1,35 @@
+js> load('testsrc/doctests/util.js');
+
+js> Object.create;
+function create() { [native code for Object.create, arity=2] }
+
+js> expectTypeError(function() { Object.create() });
+js> [undefined, true, 1, 'hello'].forEach(function(value) { 
+  >   expectTypeError(function() { Object.create(value) }) 
+  > })
+js> expectTypeError(function() { Object.create({}, null) }) 
+
+js> var obj = Object.create({});
+js> var obj = Object.create({}, {});
+js> var obj = Object.create({}, undefined);
+
+js> var orig = {}
+js> var next = Object.create(orig);
+js> Object.getPrototypeOf(next) === orig;
+true
+
+js> var obj = Object.create({}, {a: {value:1}, b: {value:2}});
+js> [obj.a, obj.b].toSource();
+[1, 2]
+
+js> var orig = {a:1};
+js> var obj = Object.create(orig, {a:{value:2}, b:{value:3}});
+js> [obj.a, obj.b].toSource()
+[2, 3]
+
+js> expectTypeError(function() { Object.create({}, {b: {value:1}, c:1}) });
+
+js> var obj = Object.create(null, {a: {value:1}})
+js> Object.getPrototypeOf(obj) === null
+true
+

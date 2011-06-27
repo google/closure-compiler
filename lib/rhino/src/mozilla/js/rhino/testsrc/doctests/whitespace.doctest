@@ -1,0 +1,19 @@
+js> load('testsrc/doctests/util.js')
+
+js> var bom = String.fromCharCode(0xFEFF);
+js> eval(bom);
+js> var _ = eval("(function(){return"+bom+"1;})");
+js> expectError(function() {
+  >   eval("i"+bom+"f (false);");
+  > }, SyntaxError);
+
+js> parseInt(bom+"1")
+1
+js> parseFloat(bom+"1.5");
+1.5
+js> (bom+"abc"+bom).trim().length
+3
+js> /\s/.test(bom)
+true
+js> (bom+"1"+bom) * 1
+1

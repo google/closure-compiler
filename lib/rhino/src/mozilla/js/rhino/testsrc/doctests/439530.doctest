@@ -1,0 +1,2 @@
+js> var obj = { run: function () { print("\nrunning"); } }
+js> var r = new java.lang.Runnable(obj);

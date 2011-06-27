@@ -1,0 +1,26 @@
+js> load('testsrc/doctests/util.js');
+
+js> Object.isSealed
+function isSealed() { [native code for Object.isSealed, arity=1] }
+
+js> expectTypeError(function() { Object.isSealed() });
+js> [undefined, null, true, 1, 'hello'].forEach(function(value) { 
+  >   expectTypeError(function() { Object.isSealed(value) }) 
+  > })
+
+js> Object.isSealed({})
+false
+
+js> var obj = Object.preventExtensions({});
+js> Object.isSealed(obj);
+true
+
+js> var obj = Object.defineProperty({}, 'a', {configurable:false});
+js> var _ = Object.preventExtensions(obj);
+js> Object.isSealed(obj);
+true
+
+js> var obj = Object.defineProperty({}, 'a', {configurable:true});
+js> var _ = Object.preventExtensions(obj);
+js> Object.isSealed(obj);
+false

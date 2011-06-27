@@ -25,13 +25,15 @@
   <property name="test.dir" value="${basedir}/test" />
   <property name="externs.dir" value="${basedir}/externs" />
   <property name="build.dir" value="${basedir}/build" />
+  <property name="buildlib.dir" value="${build.dir}/lib" />
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testClasses.dir" value="${build.dir}/test" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
   <property name="stylesheetfile" value="${javadoc.dir}/dev_javadoc.css" />
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="tools.dir" value="${basedir}/tools" />
-  <property name="jarfile" value="${build.dir}/${ant.project.name}.jar" />
+  <property name="compiler-jarfile"
+            value="${build.dir}/${ant.project.name}.jar" />
   <property name="num-fuzz-tests" value="10000"/>
   <property name="test" value="*Test"/>
   <property name="jsonml.dir" value="${basedir}/src/com/google/javascript/jscomp/jsonml" />
@@ -64,6 +66,30 @@
       dir="."/>
   </target>
 
+  <!-- compile rhino -->
+  <target name="rhino">
+    <ant antfile="build.xml"
+         inheritAll="false"
+         dir="lib/rhino/src/mozilla/js/rhino/"
+         target="jar">
+      <property name="build.dir" value="../../../../../../build/lib"/>
+      <property name="no-e4x" value="true"/>
+    </ant>
+  </target>
+
+  <target name="rhino-jarjar"
+          depends="rhino"
+          description="Renamespaces Rhino">
+    <taskdef name="jarjar"
+             classname="com.tonicsystems.jarjar.JarJarTask"
+             classpath="lib/jarjar.jar"/>
+    <jarjar destfile="${buildlib.dir}/rhino.jar" update="true">
+      <zipfileset src="${buildlib.dir}/rhino1_7R3pre/js.jar"/>
+      <rule pattern="org.mozilla.javascript.**"
+            result="com.google.javascript.jscomp.mozilla.rhino.@1"/>
+    </jarjar>
+  </target>
+
   <!-- Generate pom.xml with the proper svn build number -->
   <target name="pom" depends="svnversion">
     <copy file="closure-compiler.pom" tofile="${build.dir}/pom.xml">
@@ -73,9 +99,9 @@
       </filterset>
     </copy>
 
-    <property name="jarfile-nodeps" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}.jar" />
-    <property name="jarfile-javadoc" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}-javadoc.jar" />
-    <property name="jarfile-sources" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}-sources.jar" />
+    <property name="compiler-jarfile-nodeps" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}.jar" />
+    <property name="compiler-jarfile-javadoc" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}-javadoc.jar" />
+    <property name="compiler-jarfile-sources" value="${build.dir}/closure-${ant.project.name}-r${build.svnVersion}-sources.jar" />
 
     <artifact:pom id="project" file="${build.dir}/pom.xml" />
   </target>
@@ -83,10 +109,10 @@
   <target name="mvn-install"
           depends="jar-nodeps,jar-javadoc,jar-sources,pom"
           description="Install closure-compiler artifacts into the local maven repo">
-    <artifact:install file="${jarfile-nodeps}">
+    <artifact:install file="${compiler-jarfile-nodeps}">
       <pom refid="project"/>
-      <attach file="${jarfile-javadoc}" classifier="javadoc"/>
-      <attach file="${jarfile-sources}" classifier="sources"/>
+      <attach file="${compiler-jarfile-javadoc}" classifier="javadoc"/>
+      <attach file="${compiler-jarfile-sources}" classifier="sources"/>
     </artifact:install>
   </target>
 
@@ -107,7 +133,7 @@
       <arg value="-Durl=${maven-repository-url}" />
       <arg value="-DrepositoryId=${maven-repository-id}" />
       <arg value="-DpomFile=${build.dir}/pom.xml" />
-      <arg value="-Dfile=${jarfile-nodeps}" />
+      <arg value="-Dfile=${compiler-jarfile-nodeps}" />
       <arg value="-Pgpg" />
     </artifact:mvn>
 
@@ -117,7 +143,7 @@
       <arg value="-Durl=${maven-repository-url}" />
       <arg value="-DrepositoryId=${maven-repository-id}" />
       <arg value="-DpomFile=${build.dir}/pom.xml" />
-      <arg value="-Dfile=${jarfile-sources}" />
+      <arg value="-Dfile=${compiler-jarfile-sources}" />
       <arg value="-Dclassifier=sources" />
       <arg value="-Pgpg" />
     </artifact:mvn>
@@ -128,7 +154,7 @@
       <arg value="-Durl=${maven-repository-url}" />
       <arg value="-DrepositoryId=${maven-repository-id}" />
       <arg value="-DpomFile=${build.dir}/pom.xml" />
-      <arg value="-Dfile=${jarfile-javadoc}" />
+      <arg value="-Dfile=${compiler-jarfile-javadoc}" />
       <arg value="-Dclassifier=javadoc" />
       <arg value="-Pgpg" />
     </artifact:mvn>
@@ -161,8 +187,10 @@
       <include name="guava.jar"/>
       <include name="json.jar"/>
       <include name="jsr305.jar"/>
-      <include name="libtrunk_rhino_parser_jarjared.jar"/>
       <include name="protobuf-java.jar"/>
+    </fileset>
+    <fileset dir="${buildlib.dir}">
+      <include name="rhino.jar"/>
     </fileset>
   </path>
 
@@ -171,13 +199,18 @@
     <fileset dir="${lib.dir}">
       <include name="*.jar"/>
     </fileset>
+    <fileset dir="${buildlib.dir}">
+      <include name="rhino.jar"/>
+    </fileset>
   </path>
 
   <target name="clean" description="delete generated files">
     <delete dir="${build.dir}" />
   </target>
 
-  <target name="compile" description="compile the source code" depends="svnversion">
+  <target name="compile"
+          description="compile the source code"
+          depends="rhino-jarjar,svnversion">
     <mkdir dir="${classes.dir}" />
     <javac srcdir="${gen.dir}"
            destdir="${classes.dir}"
@@ -218,25 +251,26 @@
           depends="compile,pom"
           description="package compiler as an executable jar">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" />
-    <jar destfile="${jarfile-nodeps}" update="true">
+    <jar destfile="${compiler-jarfile-nodeps}" update="true">
       <fileset dir="${classes.dir}" />
       <fileset dir="${build.dir}" includes="externs.zip" />
-      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar" />
     </jar>
   </target>
+
 
   <target name="jar"
           depends="compile"
           description="package compiler as an executable jar">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
-    <jar destfile="${jarfile}" update="true">
+    <jar destfile="${compiler-jarfile}" update="true">
       <fileset dir="${classes.dir}" />
       <fileset dir="${build.dir}" includes="externs.zip" />
       <zipfileset src="${lib.dir}/args4j.jar"/>
       <zipfileset src="${lib.dir}/guava.jar"/>
       <zipfileset src="${lib.dir}/jsr305.jar"/>
-      <zipfileset src="${lib.dir}/libtrunk_rhino_parser_jarjared.jar"/>
       <zipfileset src="${lib.dir}/protobuf-java.jar"/>
+
+      <zipfileset src="${buildlib.dir}/rhino.jar"/>
 
       <manifest>
         <attribute name="Main-Class"
@@ -265,9 +299,10 @@
   <target name="all-classes-jar"
           depends="compile,compile-tests"
           description="package the compiler and its tests into one jar">
-    <jar destfile="${jarfile}" update="true">
+    <jar destfile="${compiler-jarfile}" update="true">
       <fileset dir="${testClasses.dir}" />
-      <zipgroupfileset dir="${lib.dir}"/>
+      <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+      <zipfileset src="${buildlib.dir}/rhino.jar"/>
     </jar>
   </target>
 
@@ -327,7 +362,7 @@
           description="checks the compiler against a variety of js programs">
       <exec executable="java" failonerror="true">
         <arg value="-cp" />
-        <arg value="${jarfile}" />
+        <arg value="${compiler-jarfile}" />
         <arg value="com.google.javascript.jscomp.regtests.CompileEachLineOfProgramOutput" />
         <arg value="generatejs"/>
         <arg value="--stdout"/>
@@ -336,7 +371,8 @@
   </target>
 
   <target name="javadoc"
-          description="generate Javadoc">
+          description="generate Javadoc"
+          depends="rhino-jarjar">
     <mkdir dir="${javadoc.dir}" />
     <javadoc
          destdir="${javadoc.dir}"
@@ -372,13 +408,13 @@
   </target>
 
   <target name="jar-javadoc" depends="javadoc">
-    <jar jarfile="${jarfile-javadoc}">
+    <jar jarfile="${compiler-jarfile-javadoc}">
       <fileset dir="${javadoc.dir}" />
     </jar>
   </target>
 
   <target name="jar-sources" depends="javadoc">
-    <jar jarfile="${jarfile-sources}">
+    <jar jarfile="${compiler-jarfile-sources}">
       <fileset dir="${src.dir}" />
       <fileset dir="${gen.dir}" />
     </jar>
@@ -395,6 +431,9 @@
     </fileset>
     <fileset dir="${classes.dir}">
       <include name="*.class" />
+    </fileset>
+    <fileset dir="${buildlib.dir}">
+      <include name="rhino.jar"/>
     </fileset>
   </path>
 
@@ -415,7 +454,8 @@
            depends="jsonml-compile, compile">
     <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
     <jar destfile="${jsonml-jarfile}" update="true">
-      <zipgroupfileset dir="${lib.dir}"/>
+      <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+      <zipfileset src="${buildlib.dir}/rhino.jar"/>
       <fileset dir="${classes.dir}" />
       <fileset dir="${jsonml-classes.dir}" />
     </jar>

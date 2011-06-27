@@ -1,0 +1,23 @@
+js> load('testsrc/doctests/util.js');
+
+js> Object.getPrototypeOf;
+function getPrototypeOf() { [native code for Object.getPrototypeOf, arity=1] }
+
+js> expectTypeError(function() { Object.getPrototypeOf() })
+js> [undefined, null, true, 1, 'hello'].forEach(function(value) { 
+  >   expectTypeError(function() { Object.getPrototypeOf(value) }) 
+  > })
+
+js> [(function(){}), [], {}].every(function(obj) {
+  >   return Object.getPrototypeOf(obj) === obj.__proto__;
+  > });
+true
+
+js> function UserDefined() {}
+js> [Date, UserDefined].every(function(type) {
+  >   var instance;
+  >   eval('instance = new '+type.name);
+  >   return Object.getPrototypeOf(instance) === type.prototype;
+  > });
+true
+

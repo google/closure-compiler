@@ -1,0 +1,2 @@
+js> encodeURIComponent('$ a ;')
+%24%20a%20%3B

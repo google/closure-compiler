@@ -1,0 +1,114 @@
+/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Rhino code, released
+ * May 6, 1999.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1997-1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Steve Yegge
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * the GNU General Public License Version 2 or later (the "GPL"), in which
+ * case the provisions of the GPL are applicable instead of those above. If
+ * you wish to allow use of your version of this file only under the terms of
+ * the GPL and not to allow others to use your version of this file under the
+ * MPL, indicate your decision by deleting the provisions above and replacing
+ * them with the notice and other provisions required by the GPL. If you do
+ * not delete the provisions above, a recipient may use your version of this
+ * file under either the MPL or the GPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+package org.mozilla.javascript.ast;
+
+import org.mozilla.javascript.Token;
+
+/**
+ * AST node for an embedded JavaScript expression within an E4X XML literal.
+ * Node type, like {@link XmlLiteral}, is {@link Token#XML}.  The node length
+ * includes the curly braces.
+ */
+public class XmlExpression extends XmlFragment {
+
+    private AstNode expression;
+    private boolean isXmlAttribute;
+
+    public XmlExpression() {
+    }
+
+    public XmlExpression(int pos) {
+        super(pos);
+    }
+
+    public XmlExpression(int pos, int len) {
+        super(pos, len);
+    }
+
+    public XmlExpression(int pos, AstNode expr) {
+        super(pos);
+        setExpression(expr);
+    }
+
+    /**
+     * Returns the expression embedded in {}
+     */
+    public AstNode getExpression() {
+        return expression;
+    }
+
+    /**
+     * Sets the expression embedded in {}, and sets its parent to this node.
+     * @throws IllegalArgumentException if {@code expression} is {@code null}
+     */
+    public void setExpression(AstNode expression) {
+        assertNotNull(expression);
+        this.expression = expression;
+        expression.setParent(this);
+    }
+
+    /**
+     * Returns whether this is part of an xml attribute value
+     */
+    public boolean isXmlAttribute() {
+      return isXmlAttribute;
+    }
+
+    /**
+     * Sets whether this is part of an xml attribute value
+     */
+    public void setIsXmlAttribute(boolean isXmlAttribute) {
+      this.isXmlAttribute = isXmlAttribute;
+    }
+
+    @Override
+    public String toSource(int depth) {
+        return makeIndent(depth) + "{" + expression.toSource(depth) + "}";
+    }
+
+    /**
+     * Visits this node, then the child expression.
+     */
+    @Override
+    public void visit(NodeVisitor v) {
+        if (v.visit(this)) {
+            expression.visit(v);
+        }
+    }
+}

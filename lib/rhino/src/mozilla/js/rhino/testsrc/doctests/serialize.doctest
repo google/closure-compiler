@@ -1,0 +1,10 @@
+js> var obj = { a:3, b:"hi", 9:"nine", 12:1200 };
+js> serialize(obj, "foo.bin");
+js> obj2 = deserialize("foo.bin");
+[object Object]
+js> uneval(obj)
+({a:3, b:"hi", 9:"nine", 12:1200})
+js> uneval(obj2)
+({a:3, b:"hi", 9:"nine", 12:1200})
+js> (new java.io.File("foo.bin"))["delete"]();
+true

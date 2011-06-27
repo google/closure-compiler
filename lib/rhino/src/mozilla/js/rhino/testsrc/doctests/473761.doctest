@@ -1,0 +1,8 @@
+js> var xml = <xml><customer><name></name></customer></xml>;
+js> var order = xml.customer.order;
+js> order.orderid = "1";
+1
+js> order.test = "expected_string";
+expected_string
+js> xml.customer.order.test;
+expected_string

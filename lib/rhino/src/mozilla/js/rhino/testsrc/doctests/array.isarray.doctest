@@ -1,0 +1,26 @@
+js> Array.isArray;
+function isArray() { [native code for Array.isArray, arity=1] }
+
+js> Array.isArray()
+false
+js> Array.isArray(undefined);
+false
+js> Array.isArray(null);
+false
+js> Array.isArray(true);
+false
+js> Array.isArray(1);
+false
+js> Array.isArray('hello');
+false
+js> Array.isArray({});
+false
+js> Array.isArray(function(){})
+false
+js> (function() { print(Array.isArray(arguments)) })()
+false
+
+js> Array.isArray([])
+true
+js> Array.isArray(new Array())
+true

@@ -1,0 +1,9 @@
+// Regression test for bug https://bugzilla.mozilla.org/show_bug.cgi?id=368019
+//  - regular expression (regex) parses /[/]/ incorrectly
+js> var re;
+js> re = /[^/]*/;
+/[^/]*/
+js> re = /[/]/;
+/[/]/
+js> re = /\[/;
+/\[/

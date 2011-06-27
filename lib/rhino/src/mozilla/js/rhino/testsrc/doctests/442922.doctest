@@ -1,0 +1,8 @@
+js> var x = <blah x="asdf"><a a="asdf"/></blah>;
+js> serialize(x, "x.ser");
+js> deserialize("x.ser");
+<blah x="asdf">
+  <a a="asdf"/>
+</blah>
+js> (new java.io.File("x.ser"))["delete"]();
+true

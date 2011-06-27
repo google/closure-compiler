@@ -1,0 +1,12 @@
+js> defineClass("Counter")
+js> c = new Counter(7)
+[object Counter]
+js> c.count
+7
+js> c.count
+8
+js> c.count
+9
+js> c.resetCount()
+js> c.count
+0
