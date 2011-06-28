@@ -84,6 +84,24 @@ public class LightweightMessageFormatterTest extends TestCase {
         "\t\t    ^\n", formatter.formatError(error));
   }
 
+  public void testFormatErrorSpaceEndOfLine1() throws Exception {
+    JSError error = JSError.make("javascript/complex.js",
+        1, 10, FOO_TYPE);
+    LightweightMessageFormatter formatter = formatter("assert (1;");
+    assertEquals("javascript/complex.js:1: ERROR - error description here\n" +
+        "assert (1;\n" +
+        "          ^\n", formatter.formatError(error));
+  }
+
+  public void testFormatErrorSpaceEndOfLine2() throws Exception {
+    JSError error = JSError.make("javascript/complex.js",
+        6, 7, FOO_TYPE);
+    LightweightMessageFormatter formatter = formatter("if (foo");
+    assertEquals("javascript/complex.js:6: ERROR - error description here\n" +
+        "if (foo\n" +
+        "       ^\n", formatter.formatError(error));
+  }
+
   private LightweightMessageFormatter formatter(String string) {
     return new LightweightMessageFormatter(source(string));
   }
