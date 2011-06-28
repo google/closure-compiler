@@ -150,20 +150,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks for invalid control structures */
   public boolean checkControlStructures;
 
-  /** Checks for non-extern properties that are read but never set. */
-  @Deprecated
-  public CheckLevel checkUndefinedProperties;
-
-  /**
-   * Checks for non-extern properties that are written but never read.
-   * This check occurs after the first constant-based dead code removal pass,
-   * but before the main optimization loop.  This is noisy if you are
-   * including libraries with methods that you don't use, so it is off by
-   * default.
-   */
-  @Deprecated
-  public boolean checkUnusedPropertiesEarly;
-
   /** Checks types on expressions */
   public boolean checkTypes;
 
