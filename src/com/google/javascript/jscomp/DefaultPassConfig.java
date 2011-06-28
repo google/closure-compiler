@@ -1597,7 +1597,8 @@ public class DefaultPassConfig extends PassConfig {
           options.inlineFunctions,
           options.inlineLocalFunctions,
           enableBlockInlining,
-          options.isAssumeStrictThis());
+          options.isAssumeStrictThis()
+              || options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT);
     }
   };
 
