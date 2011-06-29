@@ -16,21 +16,14 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.Node;
-
 /**
  * Tests for PeepholeRemoveDeadCodeTest in isolation. Tests for the interaction
  * of multiple peephole passes are in PeepholeIntegrationTest.
  */
 public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
-  private static final String MATH =
-      "/** @const */ var Math = {};" +
-      "/** @nosideeffects */ Math.random = function(){};" +
-      "/** @nosideeffects */ Math.sin = function(){};";
-
   public PeepholeRemoveDeadCodeTest() {
-    super(MATH);
+    super("");
   }
 
   @Override
@@ -41,20 +34,10 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node root) {
-        SimpleDefinitionFinder definitionFinder =
-            new SimpleDefinitionFinder(compiler);
-        definitionFinder.process(externs, root);
-        new PureFunctionIdentifier(compiler, definitionFinder)
-            .process(externs, root);
-        PeepholeOptimizationsPass peepholePass =
-            new PeepholeOptimizationsPass(
-                compiler, new PeepholeRemoveDeadCode());
-        peepholePass.process(externs, root);
-      }
-    };
+    PeepholeOptimizationsPass peepholePass =
+      new PeepholeOptimizationsPass(compiler, new PeepholeRemoveDeadCode());
+
+    return peepholePass;
   }
 
   @Override
@@ -243,6 +226,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     //  - the FOR init expression
     //  - the FOR increment expression
 
+
     // Known side-effect free functions calls are removed.
     fold("Math.random()", "");
     fold("Math.random(f() + g())", "f(),g();");
@@ -250,11 +234,7 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     // Calls to functions with unknown side-effects are are left.
     foldSame("f();");
-    foldSame("(function () { f(); })();");
-
-    // We know that this function has no side effects because of the
-    // PureFunctionIdentifier.
-    fold("(function () {})();", "");
+    foldSame("(function () {})();");
 
     // Uncalled function expressions are removed
     fold("(function () {});", "");

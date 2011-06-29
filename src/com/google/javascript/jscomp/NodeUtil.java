@@ -954,6 +954,14 @@ public final class NodeUtil {
         return false;
       }
 
+      // Functions in the "Math" namespace have no side effects.
+      if (nameNode.getFirstChild().getType() == Token.NAME) {
+        String namespaceName = nameNode.getFirstChild().getString();
+        if (namespaceName.equals("Math")) {
+          return false;
+        }
+      }
+
       if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
         if (nameNode.getFirstChild().getType() == Token.REGEXP
             && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
