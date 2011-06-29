@@ -932,7 +932,7 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new PeepholeOptimizationsPass(compiler,
-            new PeepholeSubstituteAlternateSyntax(true),
+            new PeepholeSubstituteAlternateSyntax(false),
             new PeepholeReplaceKnownMethods(),
             new PeepholeRemoveDeadCode(),
             new PeepholeFoldConstants(),
@@ -942,13 +942,13 @@ public class DefaultPassConfig extends PassConfig {
 
   /** Same as peepholeOptimizations but aggressively merges code together */
   final PassFactory latePeepholeOptimizations =
-      new PassFactory("peepholeOptimizations", false) {
+      new PassFactory("latePeepholeOptimizations", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new PeepholeOptimizationsPass(compiler,
             new StatementFusion(),
             new PeepholeRemoveDeadCode(),
-            new PeepholeSubstituteAlternateSyntax(false),
+            new PeepholeSubstituteAlternateSyntax(true),
             new PeepholeReplaceKnownMethods(),
             new PeepholeFoldConstants());
     }
