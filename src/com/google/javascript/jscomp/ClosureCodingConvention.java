@@ -349,6 +349,11 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
 
   @Override
   public Bind describeFunctionBind(Node n) {
+    Bind result = super.describeFunctionBind(n);
+    if (result != null) {
+      return result;
+    }
+
     // It would be nice to be able to identify a fn.bind call
     // but that requires knowing the type of "fn".
 
@@ -359,9 +364,13 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
     Node callTarget = n.getFirstChild();
     String name = callTarget.getQualifiedName();
     if (name != null) {
-      if (name.equals("goog.bind") || name.equals("goog$bind")) {
+      if (name.equals("goog.bind")
+          || name.equals("goog$bind")) {
         // goog.bind(fn, self, args...);
         Node fn = callTarget.getNext();
+        if (fn == null) {
+          return null;
+        }
         Node thisValue = safeNext(fn);
         Node parameters = safeNext(thisValue);
         return new Bind(fn, thisValue, parameters);
@@ -370,20 +379,13 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
       if (name.equals("goog.partial") || name.equals("goog$partial")) {
         // goog.partial(fn, args...);
         Node fn = callTarget.getNext();
+        if (fn == null) {
+          return null;
+        }
         Node thisValue = null;
         Node parameters = safeNext(fn);
         return new Bind(fn, thisValue, parameters);
       }
-    }
-
-    if (callTarget.getType() == Token.GETPROP
-        && callTarget.getLastChild().getString().equals("bind")
-        && callTarget.getFirstChild().getType() == Token.FUNCTION) {
-      // (function(){}).bind(self, args...);
-      Node fn = callTarget.getFirstChild();
-      Node thisValue = callTarget.getNext();
-      Node parameters = safeNext(thisValue);
-      return new Bind(fn, thisValue, parameters);
     }
 
     return null;

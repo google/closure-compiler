@@ -135,6 +135,31 @@ public class DefaultCodingConventionTest extends TestCase {
     assertNotClassDefining("goog$inherits(A);");
   }
 
+  public void testFunctionBind() {
+    assertNotFunctionBind("goog.bind(f)");
+    assertNotFunctionBind("goog$bind(f)");
+    assertNotFunctionBind("goog.partial(f)");
+    assertNotFunctionBind("goog$partial(f)");
+
+    assertFunctionBind("(function(){}).bind()");
+    assertFunctionBind("(function(){}).bind(obj)");
+    assertFunctionBind("(function(){}).bind(obj, p1)");
+
+    assertNotFunctionBind("Function.prototype.bind.call()");
+    assertFunctionBind("Function.prototype.bind.call(obj)");
+    assertFunctionBind("Function.prototype.bind.call(obj, p1)");
+  }
+
+  private void assertFunctionBind(String code) {
+    Node n = parseTestCode(code);
+    assertNotNull(conv.describeFunctionBind(n.getFirstChild()));
+  }
+
+  private void assertNotFunctionBind(String code) {
+    Node n = parseTestCode(code);
+    assertNull(conv.describeFunctionBind(n.getFirstChild()));
+  }
+
   private void assertNotClassDefining(String code) {
     Node n = parseTestCode(code);
     assertNull(conv.getClassesDefinedByCall(n.getFirstChild()));
