@@ -148,6 +148,47 @@ public class ExpressionDecomposerTest extends TestCase {
         ");", 2);
   }
 
+  public void testCanExposeExpression8() {
+    // Can it be decompose?
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE,
+        "HangoutStarter.prototype.launchHangout = function() {\n" +
+        "  var self = a.b;\n" +
+        "  var myUrl = new goog.Uri(getDomServices_(self).getDomHelper()." +
+        "getWindow().location.href);\n" +
+        "};",
+        "getDomServices_");
+
+    // Verify it is properly expose the target expression.
+    helperExposeExpression(
+        "HangoutStarter.prototype.launchHangout = function() {\n" +
+        "  var self = a.b;\n" +
+        "  var myUrl = new goog.Uri(getDomServices_(self).getDomHelper()." +
+        "getWindow().location.href);\n" +
+        "};",
+        "getDomServices_",
+        "HangoutStarter.prototype.launchHangout = function() {" +
+        "  var self = a.b;" +
+        "  var temp_const$$0 = goog.Uri;" +
+        "  var myUrl = new temp_const$$0(getDomServices_(self)." +
+        "      getDomHelper().getWindow().location.href)}");
+
+    // Verify the results can be properly moved.
+    helperMoveExpression(
+        "HangoutStarter.prototype.launchHangout = function() {" +
+        "  var self = a.b;" +
+        "  var temp_const$$0 = goog.Uri;" +
+        "  var myUrl = new temp_const$$0(getDomServices_(self)." +
+        "      getDomHelper().getWindow().location.href)}",
+        "getDomServices_",
+        "HangoutStarter.prototype.launchHangout = function() {" +
+        "  var self=a.b;" +
+        "  var temp_const$$0=goog.Uri;" +
+        "  var temp$$0=getDomServices_(self);" +
+        "  var myUrl=new temp_const$$0(temp$$0.getDomHelper()." +
+        "      getWindow().location.href)}");
+  }
+
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
     helperMoveExpression("foo()", "foo", "var temp$$0 = foo(); temp$$0;");

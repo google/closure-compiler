@@ -155,9 +155,13 @@ class ExpressionDecomposer {
     state.extractBeforeStatement = exprInjectionPoint;
 
     // Extract expressions in the reverse order of their evaluation.
-    for (Node child = nonconditionalExpr, parent = child.getParent();
+    for (Node grandchild = null,
+            child = nonconditionalExpr,
+            parent = child.getParent();
          parent != expressionRoot;
-         child = parent, parent = child.getParent()) {
+         grandchild = child,
+             child = parent,
+             parent = child.getParent()) {
       int parentType = parent.getType();
       Preconditions.checkState(
           !isConditionalOp(parent) || child == parent.getFirstChild());
@@ -187,17 +191,17 @@ class ExpressionDecomposer {
           }
       } else if (parentType == Token.CALL
           && NodeUtil.isGet(parent.getFirstChild())) {
-        // TODO(johnlenz): In Internet Explorer, non-javascript objects such
-        // as DOM objects can not be decomposed.
-        if (!maybeExternMethod(parent.getFirstChild())) {
-          throw new IllegalStateException(
-              "External object method calls can not be decomposed.");
-        } else {
-          Node functionExpression = parent.getFirstChild();
-          decomposeSubExpressions(
-              functionExpression.getNext(), child, state);
-          // Now handle the call expression
-          if (isExpressionTreeUnsafe(functionExpression, state.sideEffects)) {
+        Node functionExpression = parent.getFirstChild();
+        decomposeSubExpressions(functionExpression.getNext(), child, state);
+        // Now handle the call expression
+        if (isExpressionTreeUnsafe(functionExpression, state.sideEffects)
+            && functionExpression.getFirstChild() != grandchild) {
+          // TODO(johnlenz): In Internet Explorer, non-javascript objects such
+          // as DOM objects can not be decomposed.
+          if (true) {
+            throw new IllegalStateException(
+                "Object method calls can not be decomposed.");
+          } else {
             // Either there were preexisting side-effects, or this node has
             // side-effects.
             state.sideEffects = true;
@@ -209,11 +213,9 @@ class ExpressionDecomposer {
           }
         }
       } else if (parentType == Token.OBJECTLIT) {
-        decomposeObjectLiteralKeys(
-            parent.getFirstChild(), child, state);
+        decomposeObjectLiteralKeys(parent.getFirstChild(), child, state);
       } else {
-        decomposeSubExpressions(
-            parent.getFirstChild(), child, state);
+        decomposeSubExpressions(parent.getFirstChild(), child, state);
       }
     }
 
