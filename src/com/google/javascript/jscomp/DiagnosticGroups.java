@@ -72,18 +72,18 @@ public class DiagnosticGroups {
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkRegExp," +
       "checkTypes, checkVars, constantProperty, deprecated, " +
-      "externsValidation, fileoverviewTags, globalThis, " +
+      "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "internetExplorerChecks, invalidCasts, missingProperties, " +
       "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
       "undefinedVars, unknownDefines, uselessCode, " +
       "visibility";
 
-  public static DiagnosticGroup GLOBAL_THIS = DiagnosticGroups
-      .registerGroup("globalThis",
+  public static DiagnosticGroup GLOBAL_THIS =
+      DiagnosticGroups.registerGroup("globalThis",
           CheckGlobalThis.GLOBAL_THIS);
 
-  public static DiagnosticGroup DEPRECATED = DiagnosticGroups
-      .registerGroup("deprecated",
+  public static DiagnosticGroup DEPRECATED =
+      DiagnosticGroups.registerGroup("deprecated",
           CheckAccessControls.DEPRECATED_NAME,
           CheckAccessControls.DEPRECATED_NAME_REASON,
           CheckAccessControls.DEPRECATED_PROP,
@@ -91,16 +91,16 @@ public class DiagnosticGroups {
           CheckAccessControls.DEPRECATED_CLASS,
           CheckAccessControls.DEPRECATED_CLASS_REASON);
 
-  public static DiagnosticGroup VISIBILITY = DiagnosticGroups
-      .registerGroup("visibility",
+  public static DiagnosticGroup VISIBILITY =
+      DiagnosticGroups.registerGroup("visibility",
           CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS,
           CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS,
           CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS,
           CheckAccessControls.PRIVATE_OVERRIDE,
           CheckAccessControls.VISIBILITY_MISMATCH);
 
-  public static DiagnosticGroup CONSTANT_PROPERTY = DiagnosticGroups
-      .registerGroup("constantProperty",
+  public static DiagnosticGroup CONSTANT_PROPERTY =
+      DiagnosticGroups.registerGroup("constantProperty",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
@@ -112,8 +112,8 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("accessControls",
           DEPRECATED, VISIBILITY);
 
-  public static DiagnosticGroup INVALID_CASTS = DiagnosticGroups
-      .registerGroup("invalidCasts",
+  public static DiagnosticGroup INVALID_CASTS =
+      DiagnosticGroups.registerGroup("invalidCasts",
           TypeValidator.INVALID_CAST);
 
   public static DiagnosticGroup FILEOVERVIEW_JSDOC =
@@ -184,8 +184,19 @@ public class DiagnosticGroups {
           ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
 
   public static DiagnosticGroup TYPE_INVALIDATION =
-    DiagnosticGroups.registerGroup("typeInvalidation",
-        DisambiguateProperties.Warnings.INVALIDATION);
+      DiagnosticGroups.registerGroup("typeInvalidation",
+          DisambiguateProperties.Warnings.INVALIDATION);
+
+  public static DiagnosticGroup ES5_STRICT =
+      DiagnosticGroups.registerGroup("es5Strict",
+          StrictModeCheck.UNKNOWN_VARIABLE,
+          StrictModeCheck.WITH_DISALLOWED,
+          StrictModeCheck.EVAL_DECLARATION,
+          StrictModeCheck.EVAL_ASSIGNMENT,
+          StrictModeCheck.ARGUMENTS_DECLARATION,
+          StrictModeCheck.ARGUMENTS_ASSIGNMENT,
+          StrictModeCheck.DELETE_VARIABLE,
+          StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
   /**
    * Adds warning levels by name.
