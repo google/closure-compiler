@@ -340,7 +340,7 @@ GearsAddress.prototype.postalCode = '';
 /** @constructor */
 function GearsHttpRequest() {}
 
-GearsHttpRequest.prototype.open = function(method, url) {};
+GearsHttpRequest.prototype.open = function(method, url, opt_async) {};
 
 GearsHttpRequest.prototype.setRequestHeader = function(name, value) {};
 
