@@ -604,4 +604,7 @@ public class OptimizeParametersTest extends CompilerTestCase {
         "foo()");
   }
 
+  public void testGlobalCatch() {
+    testSame("function foo(a) {} try {} catch (e) {foo(e)}");
+  }
 }

@@ -358,7 +358,12 @@ class OptimizeParameters
           return false;
         } else {
           Var v = s.getVar(n.getString());
-          if (v != null && v.isLocal()) {
+          // Make sure that the variable is global. A caught exception, while
+          // it is in the global scope object in the compiler, it is not a
+          // global variable.
+          if (v != null &&
+              (v.isLocal() ||
+               v.nameNode.getParent().getType() == Token.CATCH)) {
             return false;
           }
         }
