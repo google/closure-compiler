@@ -954,10 +954,11 @@ public final class NodeUtil {
         return false;
       }
 
-      // Functions in the "Math" namespace have no side effects.
+      // Math.floor has no sideeffects.
+      // TODO(nicksantos): This is a terrible terrible hack, until
+      // I create a definitionprovider that understands namespacing.
       if (nameNode.getFirstChild().getType() == Token.NAME) {
-        String namespaceName = nameNode.getFirstChild().getString();
-        if (namespaceName.equals("Math")) {
+        if ("Math.floor".equals(nameNode.getQualifiedName())) {
           return false;
         }
       }
