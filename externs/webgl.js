@@ -1851,6 +1851,11 @@ WebGLRenderingContext.prototype.sizeInBytes = function(type) {};
 WebGLRenderingContext.prototype.getContextAttributes = function() {};
 
 /**
+ * @return {boolean}
+ */
+WebGLRenderingContext.prototype.isContextLost = function() {};
+
+/**
  * @param {number} texture
  */
 WebGLRenderingContext.prototype.activeTexture = function(texture) {};
