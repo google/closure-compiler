@@ -20,6 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.File;
 import java.io.FileReader;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 
@@ -37,7 +39,8 @@ import java.nio.charset.Charset;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public abstract class SourceFile {
+public class SourceFile implements StaticSourceFile, Serializable {
+  private static final long serialVersionUID = 1L;
 
   /** A JavaScript source code provider.  The value should
    * be cached so that the source text stays consistent throughout a single
@@ -53,6 +56,7 @@ public abstract class SourceFile {
   private static final int SOURCE_EXCERPT_REGION_LENGTH = 5;
 
   private final String fileName;
+  private boolean isExternFile = false;
 
   // The fileName may not always identify the original file - for example,
   // supersourced Java inputs, or Java inputs that come from Jar files. This
@@ -76,7 +80,7 @@ public abstract class SourceFile {
    *     need to correspond to a real path. But it should be unique. Will
    *     appear in warning messages emitted by the compiler.
    */
-  SourceFile(String fileName) {
+  public SourceFile(String fileName) {
     if (fileName == null || fileName.isEmpty()) {
       throw new IllegalArgumentException("a source must have a name");
     }
@@ -135,8 +139,20 @@ public abstract class SourceFile {
   }
 
   /** Returns a unique name for the source file. */
+  @Override
   public String getName() {
     return fileName;
+  }
+
+  /** Returns whether this is an extern. */
+  @Override
+  public boolean isExtern() {
+    return isExternFile;
+  }
+
+  /** Sets that this is an extern. */
+  void setIsExtern(boolean newVal) {
+    isExternFile = newVal;
   }
 
   /**
@@ -295,6 +311,7 @@ public abstract class SourceFile {
    * A source file where the code has been preloaded.
    */
   static class Preloaded extends SourceFile {
+    private static final long serialVersionUID = 1L;
 
     Preloaded(String fileName, String code) {
       this(fileName, fileName, code);
@@ -312,6 +329,7 @@ public abstract class SourceFile {
    * from the injected interface.
    */
   static class Generated extends SourceFile {
+    private static final long serialVersionUID = 1L;
     private final Generator generator;
 
     // Not private, so that LazyInput can extend it.
@@ -345,6 +363,7 @@ public abstract class SourceFile {
    * possible.
    */
   static class OnDisk extends SourceFile {
+    private static final long serialVersionUID = 1L;
     private final File file;
 
     // This is stored as a String, but passed in and out as a Charset so that

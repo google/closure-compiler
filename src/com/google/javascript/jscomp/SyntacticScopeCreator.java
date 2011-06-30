@@ -81,7 +81,7 @@ class SyntacticScopeCreator implements ScopeCreator {
 
   private void scanRoot(Node n, Scope parent) {
     if (n.getType() == Token.FUNCTION) {
-      sourceName = (String) n.getProp(Node.SOURCENAME_PROP);
+      sourceName = n.getSourceFileName();
 
       final Node fnNameNode = n.getFirstChild();
       final Node args = fnNameNode.getNext();
@@ -153,7 +153,7 @@ class SyntacticScopeCreator implements ScopeCreator {
         return;  // only one child to scan
 
       case Token.SCRIPT:
-        sourceName = (String) n.getProp(Node.SOURCENAME_PROP);
+        sourceName = n.getSourceFileName();
         break;
     }
 

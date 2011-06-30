@@ -68,6 +68,7 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.Set;
 
@@ -75,13 +76,14 @@ import java.util.Set;
  * IRFactory transforms the new AST to the old AST.
  *
  */
-public class IRFactory {
+class IRFactory {
 
   static final String SUSPICIOUS_COMMENT_WARNING =
       "Non-JSDoc comment has annotations. " +
       "Did you mean to start it with '/**'?";
 
   private final String sourceString;
+  private final StaticSourceFile sourceFile;
   private final String sourceName;
   private final Config config;
   private final ErrorReporter errorReporter;
@@ -117,11 +119,15 @@ public class IRFactory {
   // TODO(johnlenz): Consider creating a template pool for ORIGINALNAME_PROP.
 
   private IRFactory(String sourceString,
-                    String sourceName,
+                    StaticSourceFile sourceFile,
                     Config config,
                     ErrorReporter errorReporter) {
     this.sourceString = sourceString;
-    this.sourceName = sourceName;
+    this.sourceFile = sourceFile;
+
+    // Sometimes this will be null in tests.
+    this.sourceName = sourceFile == null ? null : sourceFile.getName();
+
     this.config = config;
     this.errorReporter = errorReporter;
     this.transformDispatcher = new TransformDispatcher();
@@ -150,15 +156,16 @@ public class IRFactory {
   private Node createTemplateNode() {
     // The Node type choice is arbitrary.
     Node templateNode = new Node(Token.SCRIPT);
-    templateNode.putProp(Node.SOURCENAME_PROP, sourceName);
+    templateNode.setStaticSourceFile(sourceFile);
     return templateNode;
   }
 
   public static Node transformTree(AstRoot node,
+                                   StaticSourceFile sourceFile,
                                    String sourceString,
                                    Config config,
                                    ErrorReporter errorReporter) {
-    IRFactory irFactory = new IRFactory(sourceString, node.getSourceName(),
+    IRFactory irFactory = new IRFactory(sourceString, sourceFile,
         config, errorReporter);
     Node irNode = irFactory.transform(node);
 
@@ -335,7 +342,7 @@ public class IRFactory {
                                lineno,
                                position2charno(position) + numOpeningChars),
           node,
-          sourceName,
+          sourceFile,
           config,
           errorReporter);
     jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);

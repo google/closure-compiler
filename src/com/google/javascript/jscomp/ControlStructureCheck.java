@@ -28,8 +28,6 @@ class ControlStructureCheck implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
 
-  private String sourceName = null;
-
   static final DiagnosticType USE_OF_WITH = DiagnosticType.warning(
       "JSC_USE_OF_WITH",
       "The use of the 'with' structure should be avoided.");
@@ -63,11 +61,6 @@ class ControlStructureCheck implements HotSwapCompilerPass {
           report(node, USE_OF_WITH);
         }
         break;
-
-      case Token.SCRIPT:
-        // Remember the source file name in case we need to report an error.
-        sourceName = (String) node.getProp(Node.SOURCENAME_PROP);
-        break;
     }
 
     for (Node bChild = node.getFirstChild(); bChild != null;) {
@@ -78,6 +71,6 @@ class ControlStructureCheck implements HotSwapCompilerPass {
   }
 
   private void report(Node n, DiagnosticType error) {
-    compiler.report(JSError.make(sourceName, n, error));
+    compiler.report(JSError.make(n.getSourceFileName(), n, error));
   }
 }

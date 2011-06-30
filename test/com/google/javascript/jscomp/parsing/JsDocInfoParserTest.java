@@ -31,6 +31,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.SimpleSourceFile;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 import java.util.Collection;
@@ -2640,13 +2642,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Config config =
         new Config(extraAnnotations, extraSuppressions,
             true, LanguageMode.ECMASCRIPT3, false);
+    StaticSourceFile file = new SimpleSourceFile(script.getSourceName(), false);
     for (Comment comment : script.getComments()) {
       JsDocInfoParser jsdocParser =
         new JsDocInfoParser(
             new JsDocTokenStream(comment.getValue().substring(3),
                 comment.getLineno()),
             comment,
-            script.getSourceName(),
+            file,
             config,
             testErrorReporter);
       jsdocParser.parse();
@@ -2681,10 +2684,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     Config config = new Config(extraAnnotations, extraSuppressions,
         parseDocumentation, LanguageMode.ECMASCRIPT3, false);
+    StaticSourceFile file = new SimpleSourceFile("testcode", false);
     JsDocInfoParser jsdocParser = new JsDocInfoParser(
         stream(comment),
         new Comment(0, 0, CommentType.JSDOC, comment),
-        "testcode", config, errorReporter);
+        file, config, errorReporter);
 
     if (fileLevelJsDocBuilder != null) {
       jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);

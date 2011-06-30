@@ -23,8 +23,8 @@ import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.nio.charset.Charset;
-
 
 /**
  * An abstract representation of a JavaScript source file, as input to
@@ -33,7 +33,8 @@ import java.nio.charset.Charset;
  * @author nicksantos@google.com (Nick Santos)
  * @author moedinger@google.com (Andrew Moedinger)
  */
-public class JSSourceFile extends SourceFile {
+public class JSSourceFile extends SourceFile implements Serializable {
+  private static final long serialVersionUID = 1L;
 
   public static JSSourceFile fromFile(String fileName, Charset charSet) {
     return new JSSourceFile(SourceFile.fromFile(fileName, charSet));

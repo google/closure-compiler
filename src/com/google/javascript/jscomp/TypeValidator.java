@@ -586,7 +586,7 @@ class TypeValidator {
       ObjectType instance, ObjectType implementedInterface, String prop) {
     if (!instance.hasProperty(prop)) {
       // Not implemented
-      String sourceName = (String) n.getProp(Node.SOURCENAME_PROP);
+      String sourceName = n.getSourceFileName();
       sourceName = sourceName == null ? "" : sourceName;
       if (shouldReport) {
         compiler.report(JSError.make(sourceName, n,

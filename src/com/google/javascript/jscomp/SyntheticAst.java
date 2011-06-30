@@ -25,15 +25,15 @@ import com.google.javascript.rhino.Token;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class SyntheticAst implements SourceAst {
+public class SyntheticAst implements SourceAst {
   private static final long serialVersionUID = 1L;
 
-  private final String sourceName;
+  private final SourceFile sourceFile;
 
   private Node root;
 
   SyntheticAst(String sourceName) {
-    this.sourceName = sourceName;
+    this.sourceFile = new SourceFile(sourceName);
     clearAst();
   }
 
@@ -46,12 +46,12 @@ class SyntheticAst implements SourceAst {
   public void clearAst() {
     root = new Node(Token.SCRIPT);
     root.setIsSyntheticBlock(true);
-    root.putProp(Node.SOURCENAME_PROP, sourceName);
+    root.setStaticSourceFile(sourceFile);
   }
 
   @Override
   public SourceFile getSourceFile() {
-    return null;
+    return sourceFile;
   }
 
   @Override

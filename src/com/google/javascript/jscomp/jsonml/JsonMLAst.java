@@ -51,8 +51,11 @@ public class JsonMLAst implements SourceAst {
    */
   private Node root;
 
+  private final SourceFile sourceFile;
+
   public JsonMLAst(JsonML jsonml) {
     this.jsonml = jsonml;
+    this.sourceFile = new SourceFile(getSourceName());
   }
 
   @Override
@@ -97,7 +100,7 @@ public class JsonMLAst implements SourceAst {
     translator.setRootElement(jsonml);
     try {
       root = translator.parse(compiler);
-      root.putProp(Node.SOURCENAME_PROP, getSourceName());
+      root.setStaticSourceFile(sourceFile);
       new AstValidator().validateScript(root);
     } catch (JsonMLException e) {
       // compiler should already have JSErrors

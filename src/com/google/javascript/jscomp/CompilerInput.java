@@ -44,7 +44,6 @@ public class CompilerInput
 
   // Info about where the file lives.
   private JSModule module;
-  private boolean isExtern;
   final private String name;
 
   // The AST.
@@ -76,7 +75,12 @@ public class CompilerInput
   public CompilerInput(SourceAst ast, String inputName, boolean isExtern) {
     this.ast = ast;
     this.name = inputName;
-    this.isExtern = isExtern;
+
+    // TODO(nicksantos): Add a precondition check here. People are passing
+    // in null, but they should not be.
+    if (ast != null && ast.getSourceFile() != null) {
+      ast.getSourceFile().setIsExtern(isExtern);
+    }
   }
 
   public CompilerInput(JSSourceFile file) {
@@ -84,9 +88,7 @@ public class CompilerInput
   }
 
   public CompilerInput(JSSourceFile file, boolean isExtern) {
-    this.ast = new JsAst(file);
-    this.name = file.getName();
-    this.isExtern = isExtern;
+    this(new JsAst(file), file.getName(), isExtern);
   }
 
   /** Returns a name for this input. Must be unique across all inputs. */
@@ -298,11 +300,17 @@ public class CompilerInput
 
   @Override
   public boolean isExtern() {
-    return isExtern;
+    if (ast == null || ast.getSourceFile() == null) {
+      return false;
+    }
+    return ast.getSourceFile().isExtern();
   }
 
   void setIsExtern(boolean isExtern) {
-    this.isExtern = isExtern;
+    if (ast == null || ast.getSourceFile() == null) {
+      return;
+    }
+    ast.getSourceFile().setIsExtern(isExtern);
   }
 
   /**

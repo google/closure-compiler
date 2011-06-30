@@ -44,6 +44,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.SimpleSourceFile;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -85,7 +87,10 @@ public class Node implements Cloneable, Serializable {
       CASES_PROP        = 13,
       DEFAULT_PROP      = 14,
       CASEARRAY_PROP    = 15,
+
+      // TODO(nicksantos): Remove this prop.
       SOURCENAME_PROP   = 16,
+
       TYPE_PROP         = 17,
       SPECIAL_PROP_PROP = 18,
       LABEL_PROP        = 19,
@@ -146,7 +151,9 @@ public class Node implements Cloneable, Serializable {
       DIRECT_EVAL        = 49,    // ES5 distinguishes between direct and
                                   // indirect calls to eval.
       FREE_CALL          = 50,    // A CALL without an explicit "this" value.
-      LAST_PROP          = 50;
+      STATIC_SOURCE_FILE = 51,    // A StaticSourceFile indicating the file
+                                  // where this node lives.
+      LAST_PROP          = 51;
 
   // values of ISNUMBER_PROP to specify
   // which of the children are Number types
@@ -231,6 +238,7 @@ public class Node implements Cloneable, Serializable {
         case DIRECTIVES:         return "directives";
         case DIRECT_EVAL:        return "direct_eval";
         case FREE_CALL:          return "free_call";
+        case STATIC_SOURCE_FILE:    return "source_file";
         default:
           Kit.codeBug();
       }
@@ -859,6 +867,10 @@ public class Node implements Cloneable, Serializable {
   }
 
   public Object getProp(int propType) {
+    if (propType == SOURCENAME_PROP) {
+      return getSourceFileName();
+    }
+
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return null;
@@ -891,6 +903,12 @@ public class Node implements Cloneable, Serializable {
   }
 
   public void putProp(int propType, Object value) {
+    if (propType == SOURCENAME_PROP) {
+      putProp(
+          STATIC_SOURCE_FILE, new SimpleSourceFile((String) value, false));
+      return;
+    }
+
     removeProp(propType);
     if (value != null) {
       propListHead = createProp(propType, value, propListHead);
@@ -1203,6 +1221,22 @@ public class Node implements Cloneable, Serializable {
 
   //==========================================================================
   // Source position management
+
+  public void setStaticSourceFile(StaticSourceFile file) {
+    this.putProp(STATIC_SOURCE_FILE, file);
+  }
+
+  public String getSourceFileName() {
+    StaticSourceFile file =
+        ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
+    return file == null ? null : file.getName();
+  }
+
+  public boolean isFromExterns() {
+    StaticSourceFile file =
+        ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
+    return file == null ? false : file.isExtern();
+  }
 
   public void setLineno(int lineno) {
       int charno = getCharno();
@@ -1996,8 +2030,12 @@ public class Node implements Cloneable, Serializable {
     }
 
     if (getProp(SOURCENAME_PROP) == null) {
-        putProp(SOURCENAME_PROP, other.getProp(SOURCENAME_PROP));
+      putProp(SOURCENAME_PROP, other.getProp(SOURCENAME_PROP));
       sourcePosition = other.sourcePosition;
+    }
+
+    if (getProp(STATIC_SOURCE_FILE) == null) {
+      putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
     }
 
     return this;

@@ -47,7 +47,7 @@ public class JsAst implements SourceAst {
   @Override
   public Node getAstRoot(AbstractCompiler compiler) {
     if (root == null) {
-      createAst(compiler);
+      parse(compiler);
     }
     return root;
   }
@@ -72,25 +72,16 @@ public class JsAst implements SourceAst {
     sourceFile = file;
   }
 
-  private void createAst(AbstractCompiler compiler) {
+  private void parse(AbstractCompiler compiler) {
     try {
-      parse(compiler, sourceFile.getName(), sourceFile.getCode());
-    } catch (IOException e) {
-      compiler.report(
-          JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
-    }
-  }
-
-  private void parse(AbstractCompiler compiler, String sourceName,
-      String sourceStr) {
-    try {
-      logger_.fine("Parsing: " + sourceName);
-      root = ParserRunner.parse(sourceName, sourceStr,
+      logger_.fine("Parsing: " + sourceFile.getName());
+      root = ParserRunner.parse(sourceFile, sourceFile.getCode(),
           compiler.getParserConfig(),
           compiler.getDefaultErrorReporter(),
           logger_);
     } catch (IOException e) {
-      compiler.report(JSError.make(AbstractCompiler.READ_ERROR, sourceName));
+      compiler.report(
+          JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
     }
 
     if (root == null || compiler.hasHaltingErrors()) {
@@ -102,6 +93,6 @@ public class JsAst implements SourceAst {
 
     // Set the source name so that the compiler passes can track
     // the source file and module.
-    root.putProp(Node.SOURCENAME_PROP, sourceName);
+    root.setStaticSourceFile(sourceFile);
   }
 }

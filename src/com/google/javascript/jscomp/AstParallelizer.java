@@ -115,8 +115,7 @@ class AstParallelizer {
     Predicate<Node> shouldSplit = new Predicate<Node>() {
       @Override
       public boolean apply(Node input) {
-        String sourceName = (String) input.getProp(Node.SOURCENAME_PROP);
-        return sourceName != null;
+        return input.getSourceFileName() != null;
       }
     };
 

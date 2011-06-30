@@ -2875,7 +2875,7 @@ public final class NodeUtil {
   public static String getSourceName(Node n) {
     String sourceName = null;
     while (sourceName == null && n != null) {
-      sourceName = (String) n.getProp(Node.SOURCENAME_PROP);
+      sourceName = n.getSourceFileName();
       n = n.getParent();
     }
     return sourceName;

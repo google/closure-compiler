@@ -24,17 +24,19 @@ import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.jstype.SimpleSourceFile;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
 
 /**
  * A parser for JSDoc comments.
@@ -46,6 +48,7 @@ public final class JsDocInfoParser {
 
   private final JsDocTokenStream stream;
   private final JSDocInfoBuilder jsdocBuilder;
+  private final StaticSourceFile sourceFile;
   private final String sourceName;
   private final ErrorReporter errorReporter;
   private final ErrorReporterParser parser = new ErrorReporterParser();
@@ -121,11 +124,15 @@ public final class JsDocInfoParser {
 
   JsDocInfoParser(JsDocTokenStream stream,
                   Comment commentNode,
-                  String sourceName,
+                  StaticSourceFile sourceFile,
                   Config config,
                   ErrorReporter errorReporter) {
     this.stream = stream;
-    this.sourceName = sourceName;
+    this.sourceFile = sourceFile;
+
+    // Sometimes this will be null in tests.
+    this.sourceName = sourceFile == null ? null : sourceFile.getName();
+
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
     if (commentNode != null) {
       this.jsdocBuilder.recordOriginalCommentString(commentNode.getValue());
@@ -151,7 +158,7 @@ public final class JsDocInfoParser {
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(typeString),
         null,
-        "typeparsing",
+        new SimpleSourceFile("typeparsing", false),
         config,
         NullErrorReporter.forNewRhino());
 
@@ -2137,7 +2144,7 @@ public final class JsDocInfoParser {
   private Node createTemplateNode() {
     // The Node type choice is arbitrary.
     Node templateNode = new Node(Token.SCRIPT);
-    templateNode.putProp(Node.SOURCENAME_PROP, sourceName);
+    templateNode.setStaticSourceFile(sourceFile);
     return templateNode;
   }
 

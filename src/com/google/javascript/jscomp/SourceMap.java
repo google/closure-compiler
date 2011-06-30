@@ -100,7 +100,7 @@ public class SourceMap {
       Node node,
       FilePosition outputStartPosition,
       FilePosition outputEndPosition) {
-    String sourceFile = (String) node.getProp(Node.SOURCENAME_PROP);
+    String sourceFile = node.getSourceFileName();
     // If the node does not have an associated source file or
     // its line number is -1, then the node does not have sufficient
     // information for a mapping to be useful.

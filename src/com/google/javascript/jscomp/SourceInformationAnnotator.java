@@ -55,7 +55,7 @@ class SourceInformationAnnotator extends
     // Verify the source file is annotated.
     if (doSanityChecks && sourceFile != null) {
       Preconditions.checkState(sourceFile.equals(
-          n.getProp(Node.SOURCENAME_PROP)));
+          n.getSourceFileName()));
     }
 
     // Annotate the original name.

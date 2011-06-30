@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.mozilla.rhino.Parser;
 import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.IOException;
 import java.util.ResourceBundle;
@@ -87,7 +88,7 @@ public class ParserRunner {
    * @return The AST of the given text.
    * @throws IOException
    */
-  public static Node parse(String sourceName,
+  public static Node parse(StaticSourceFile sourceFile,
                            String sourceString,
                            Config config,
                            ErrorReporter errorReporter,
@@ -116,16 +117,17 @@ public class ParserRunner {
     Parser p = new Parser(compilerEnv, errorReporter);
     AstRoot astRoot = null;
     try {
-      astRoot = p.parse(sourceString, sourceName, 1);
+      astRoot = p.parse(sourceString, sourceFile.getName(), 1);
     } catch (EvaluatorException e) {
-      logger.info("Error parsing " + sourceName + ": " + e.getMessage());
+      logger.info(
+          "Error parsing " + sourceFile.getName() + ": " + e.getMessage());
     } finally {
       Context.exit();
     }
     Node root = null;
     if (astRoot != null) {
       root = IRFactory.transformTree(
-          astRoot, sourceString, config, errorReporter);
+          astRoot, sourceFile, sourceString, config, errorReporter);
       root.setIsSyntheticBlock(true);
     }
     return root;

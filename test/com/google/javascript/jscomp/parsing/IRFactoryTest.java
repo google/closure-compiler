@@ -1190,7 +1190,8 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     AstRoot script = p.parse(string, null, 0);
 
     Config config = ParserRunner.createConfig(true, mode, false);
-    Node root = IRFactory.transformTree(script, string, config, errorReporter);
+    Node root = IRFactory.transformTree(
+        script, null, string, config, errorReporter);
 
     return root;
   }

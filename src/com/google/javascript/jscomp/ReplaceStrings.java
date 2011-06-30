@@ -98,7 +98,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
 
     void addLocation(Node n) {
       replacementLocations.add(new Location(
-          (String)n.getProp(Node.SOURCENAME_PROP),
+          n.getSourceFileName(),
           n.getLineno(), n.getCharno()));
     }
   }

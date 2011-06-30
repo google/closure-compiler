@@ -23,12 +23,13 @@ import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.SimpleSourceFile;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 import java.util.List;
-
+import java.util.logging.Logger;
 
 public class ParserTest extends BaseJSTypeTestCase {
   private static final String SUSPICIOUS_COMMENT_WARNING =
@@ -918,8 +919,10 @@ public class ParserTest extends BaseJSTypeTestCase {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
     Node script = null;
     try {
+
+      StaticSourceFile file = new SimpleSourceFile("input", false);
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(isIdeMode, mode, false),
+          file, string, ParserRunner.createConfig(isIdeMode, mode, false),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -934,8 +937,9 @@ public class ParserTest extends BaseJSTypeTestCase {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Node script = null;
     try {
+      StaticSourceFile file = new SimpleSourceFile("input", false);
       script = ParserRunner.parse(
-          "input", string, ParserRunner.createConfig(true, mode, false),
+          file, string, ParserRunner.createConfig(true, mode, false),
           testErrorReporter, Logger.getAnonymousLogger());
     } catch (IOException e) {
       throw new RuntimeException(e);

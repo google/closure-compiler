@@ -294,7 +294,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateHasSourceName(Node n) {
-    String sourceName = (String) n.getProp(Node.SOURCENAME_PROP);
+    String sourceName = n.getSourceFileName();
     if (sourceName == null || sourceName.isEmpty()) {
       violation("Missing 'source name' annotation.", n);
     }

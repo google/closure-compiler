@@ -1403,7 +1403,7 @@ public class Compiler extends AbstractCompiler {
 
           String delimiter = options.inputDelimiter;
 
-          String sourceName = (String)root.getProp(Node.SOURCENAME_PROP);
+          String sourceName = root.getSourceFileName();
           Preconditions.checkState(sourceName != null);
           Preconditions.checkState(!sourceName.isEmpty());
 

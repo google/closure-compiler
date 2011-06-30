@@ -212,7 +212,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       Node n = t.getCurrentNode().getParent();
       if (n != null && isCallToScopeMethod(n)) {
         transformation = transformationHandler.logAliasTransformation(
-            n.getProp(Node.SOURCENAME_PROP).toString(), getSourceRegion(n));
+            n.getSourceFileName(), getSourceRegion(n));
       }
     }
 

@@ -611,7 +611,7 @@ public class NodeTraversal {
   }
 
   private static String getSourceName(Node n) {
-    String name = (String) n.getProp(Node.SOURCENAME_PROP);
+    String name = n.getSourceFileName();
     return name == null ? "" : name;
   }
 
