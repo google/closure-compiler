@@ -61,4 +61,9 @@ public final class SimpleSourceFile implements StaticSourceFile {
   public boolean isExtern() {
     return extern;
   }
+
+  @Override
+  public String toString() {
+    return name;
+  }
 }

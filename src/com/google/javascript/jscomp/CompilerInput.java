@@ -352,4 +352,8 @@ public class CompilerInput
     }
   }
 
+  @Override
+  public String toString() {
+    return getName();
+  }
 }

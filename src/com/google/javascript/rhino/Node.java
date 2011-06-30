@@ -1226,6 +1226,11 @@ public class Node implements Cloneable, Serializable {
     this.putProp(STATIC_SOURCE_FILE, file);
   }
 
+  /** Sets the source file to a non-extern file of the given name. */
+  public void setSourceFileForTesting(String name) {
+    this.putProp(STATIC_SOURCE_FILE, new SimpleSourceFile(name, false));
+  }
+
   public String getSourceFileName() {
     StaticSourceFile file =
         ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
