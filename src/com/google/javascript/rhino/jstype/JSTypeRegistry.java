@@ -272,7 +272,7 @@ public class JSTypeRegistry implements Serializable {
             createArrowType(createOptionalParameters(ALL_TYPE), UNKNOWN_TYPE),
             null, null, true, true);
     OBJECT_FUNCTION_TYPE.defineDeclaredProperty(
-        "prototype", TOP_LEVEL_PROTOTYPE, true, null);
+        "prototype", TOP_LEVEL_PROTOTYPE, null);
     registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, OBJECT_FUNCTION_TYPE);
 
     ObjectType OBJECT_PROTOTYPE = OBJECT_FUNCTION_TYPE.getPrototype();

@@ -459,7 +459,7 @@ public class FunctionType extends PrototypeObjectType {
                 new FunctionBuilder(registry)
                     .withReturnType(getReturnType())
                     .build(),
-                false, source);
+                source);
           } else {
             params = params.cloneTree();
             Node thisTypeNode = Node.newString(Token.NAME, "thisType");
@@ -473,7 +473,7 @@ public class FunctionType extends PrototypeObjectType {
                     .withParamsNode(params)
                     .withReturnType(getReturnType())
                     .build(),
-                false, source);
+                source);
           }
         } else if ("apply".equals(name)) {
           // Define the "apply" function lazily.
@@ -493,7 +493,7 @@ public class FunctionType extends PrototypeObjectType {
                   .withParams(builder)
                   .withReturnType(getReturnType())
                   .build(),
-              false, source);
+              source);
         }
       }
 
@@ -503,7 +503,7 @@ public class FunctionType extends PrototypeObjectType {
 
   @Override
   boolean defineProperty(String name, JSType type,
-      boolean inferred, boolean inExterns, Node propertyNode) {
+      boolean inferred, Node propertyNode) {
     if ("prototype".equals(name)) {
       ObjectType objType = type.toObjectType();
       if (objType != null) {
@@ -517,7 +517,7 @@ public class FunctionType extends PrototypeObjectType {
         return false;
       }
     }
-    return super.defineProperty(name, type, inferred, inExterns, propertyNode);
+    return super.defineProperty(name, type, inferred, propertyNode);
   }
 
   @Override

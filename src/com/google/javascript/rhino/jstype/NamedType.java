@@ -113,7 +113,7 @@ class NamedType extends ProxyObjectType {
 
   @Override
   boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, boolean inExterns, Node propertyNode) {
+      boolean inferred, Node propertyNode) {
     if (!isResolved()) {
       // If this is an unresolved object type, we need to save all its
       // properties and define them when it is resolved.
@@ -122,11 +122,11 @@ class NamedType extends ProxyObjectType {
       }
       propertyContinuations.add(
           new PropertyContinuation(
-              propertyName, type, inferred, inExterns, propertyNode));
+              propertyName, type, inferred, propertyNode));
       return true;
     } else {
       return super.defineProperty(
-          propertyName, type, inferred, inExterns, propertyNode);
+          propertyName, type, inferred, propertyNode);
     }
   }
 
@@ -399,25 +399,22 @@ class NamedType extends ProxyObjectType {
     private final String propertyName;
     private final JSType type;
     private final boolean inferred;
-    private final boolean inExterns;
     private final Node propertyNode;
 
     private PropertyContinuation(
         String propertyName,
         JSType type,
         boolean inferred,
-        boolean inExterns,
         Node propertyNode) {
       this.propertyName = propertyName;
       this.type = type;
       this.inferred = inferred;
-      this.inExterns = inExterns;
       this.propertyNode = propertyNode;
     }
 
     void commit(ObjectType target) {
       target.defineProperty(
-          propertyName, type, inferred, inExterns, propertyNode);
+          propertyName, type, inferred, propertyNode);
     }
   }
 }

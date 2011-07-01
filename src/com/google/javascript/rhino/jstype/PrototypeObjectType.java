@@ -216,7 +216,7 @@ class PrototypeObjectType extends ObjectType {
   public boolean isPropertyInExterns(String propertyName) {
     Property p = properties.get(propertyName);
     if (p != null) {
-      return p.inExterns;
+      return p.isFromExterns();
     }
     ObjectType implicitPrototype = getImplicitPrototype();
     if (implicitPrototype != null) {
@@ -227,12 +227,12 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   boolean defineProperty(String name, JSType type, boolean inferred,
-      boolean inExterns, Node propertyNode) {
+      Node propertyNode) {
     if (hasOwnDeclaredProperty(name)) {
       return false;
     }
     Property newProp = new Property(
-        name, type, inferred, inExterns, propertyNode);
+        name, type, inferred, propertyNode);
     Property oldProp = properties.get(name);
     if (oldProp != null) {
       // This is to keep previously inferred jsdoc info, e.g., in a
@@ -266,15 +266,14 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public void setPropertyJSDocInfo(String propertyName, JSDocInfo info,
-      boolean inExterns) {
+  public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
     if (info != null) {
       if (!properties.containsKey(propertyName)) {
         // If docInfo was attached, but the type of the property
         // was not defined anywhere, then we consider this an explicit
         // declaration of the property.
         defineInferredProperty(propertyName, getPropertyType(propertyName),
-            inExterns, null);
+            null);
       }
 
       // The prototype property is not represented as a normal Property.
@@ -513,11 +512,6 @@ class PrototypeObjectType extends ObjectType {
     private final boolean inferred;
 
     /**
-     * Whether the property is defined in the externs.
-     */
-    private final boolean inExterns;
-
-    /**
      * The node corresponding to this property, e.g., a GETPROP node that
      * declares this property.
      */
@@ -527,11 +521,10 @@ class PrototypeObjectType extends ObjectType {
     private JSDocInfo docInfo = null;
 
     private Property(String name, JSType type, boolean inferred,
-        boolean inExterns, Node propertyNode) {
+        Node propertyNode) {
       this.name = name;
       this.type = type;
       this.inferred = inferred;
-      this.inExterns = inExterns;
       this.propertyNode = propertyNode;
     }
 
@@ -548,6 +541,10 @@ class PrototypeObjectType extends ObjectType {
     @Override
     public boolean isTypeInferred() {
       return inferred;
+    }
+
+    boolean isFromExterns() {
+      return propertyNode == null ? false : propertyNode.isFromExterns();
     }
   }
 

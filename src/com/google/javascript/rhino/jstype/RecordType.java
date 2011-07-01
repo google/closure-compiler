@@ -84,7 +84,7 @@ public class RecordType extends PrototypeObjectType {
         throw new IllegalStateException(
             "RecordProperty associated with a property should not be null!");
       }
-      defineDeclaredProperty(property, prop.getType(), false, prop.getPropertyNode());
+      defineDeclaredProperty(property, prop.getType(), prop.getPropertyNode());
     }
 
     // Freeze the record type.
@@ -119,7 +119,7 @@ public class RecordType extends PrototypeObjectType {
 
   @Override
   boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, boolean inExterns, Node propertyNode) {
+      boolean inferred, Node propertyNode) {
     if (isFrozen) {
       return false;
     }
@@ -128,7 +128,7 @@ public class RecordType extends PrototypeObjectType {
       properties.put(propertyName, type);
     }
 
-    return super.defineProperty(propertyName, type, inferred, inExterns,
+    return super.defineProperty(propertyName, type, inferred,
         propertyNode);
   }
 

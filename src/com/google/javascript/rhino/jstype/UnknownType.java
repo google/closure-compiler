@@ -127,7 +127,7 @@ public class UnknownType extends ObjectType {
 
   @Override
   boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, boolean inExterns, Node propertyNode) {
+      boolean inferred, Node propertyNode) {
     // nothing to define
     return true;
   }

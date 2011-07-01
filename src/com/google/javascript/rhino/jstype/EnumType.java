@@ -99,7 +99,7 @@ public class EnumType extends PrototypeObjectType {
    */
   public boolean defineElement(String name, Node definingNode) {
     elements.add(name);
-    return defineDeclaredProperty(name, elementsType, false, definingNode);
+    return defineDeclaredProperty(name, elementsType, definingNode);
   }
 
   /**

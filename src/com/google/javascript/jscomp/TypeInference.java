@@ -571,16 +571,16 @@ class TypeInference
             !objectType.isInstanceType()) {
           if ("prototype".equals(propName)) {
             objectType.defineDeclaredProperty(
-                propName, rightType, false, getprop);
+                propName, rightType, getprop);
           } else {
             objectType.defineInferredProperty(
-                propName, rightType, false, getprop);
+                propName, rightType, getprop);
           }
         } else {
           if (getprop.getFirstChild().getType() == Token.THIS &&
               getJSType(syntacticScope.getRootNode()).isConstructor()) {
             objectType.defineInferredProperty(
-                propName, rightType, false, getprop);
+                propName, rightType, getprop);
           } else {
             registry.registerPropertyOnType(propName, objectType);
           }
@@ -622,7 +622,7 @@ class TypeInference
              (!objectType.isInstanceType() ||
                  (var.isExtern() && !objectType.isNativeObjectType())))) {
           return objectType.defineDeclaredProperty(
-              propName, var.getType(), var.isExtern(), getprop);
+              propName, var.getType(), getprop);
         }
       }
     }
@@ -713,7 +713,7 @@ class TypeInference
         if (valueType == null) {
           valueType = getNativeType(UNKNOWN_TYPE);
         }
-        objectType.defineInferredProperty(memberName, valueType, false, name);
+        objectType.defineInferredProperty(memberName, valueType, name);
       } else {
         n.setJSType(getNativeType(UNKNOWN_TYPE));
       }
@@ -1076,7 +1076,7 @@ class TypeInference
               typeToInfer =
                   getNativeType(VOID_TYPE).getLeastSupertype(propType);
             }
-            objType.defineInferredProperty(prop, typeToInfer, false, null);
+            objType.defineInferredProperty(prop, typeToInfer, null);
           }
         }
       }

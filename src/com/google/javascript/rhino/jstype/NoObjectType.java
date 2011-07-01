@@ -146,7 +146,7 @@ public class NoObjectType extends FunctionType {
 
   @Override
   boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, boolean inExterns, Node propertyNode) {
+      boolean inferred, Node propertyNode) {
     // nothing, all properties are defined
     return true;
   }
@@ -157,8 +157,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public void setPropertyJSDocInfo(String propertyName, JSDocInfo info,
-      boolean inExterns) {
+  public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
     // Do nothing, specific properties do not have JSDocInfo.
   }
 

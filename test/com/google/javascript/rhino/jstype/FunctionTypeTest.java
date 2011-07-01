@@ -167,7 +167,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType ctor = registry.createConstructorType(
         "Foo", null, null, null);
     assertFalse(ctor.getInstanceType().isUnknownType());
-    ctor.defineDeclaredProperty("prototype", UNKNOWN_TYPE, false, null);
+    ctor.defineDeclaredProperty("prototype", UNKNOWN_TYPE, null);
     assertTrue(ctor.getInstanceType().isUnknownType());
   }
 
@@ -189,7 +189,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testInterfacePrototypeChain2() {
     FunctionType iface = registry.createInterfaceType("I", null);
     iface.getPrototype().defineDeclaredProperty(
-        "numberProp", NUMBER_TYPE, false, null);
+        "numberProp", NUMBER_TYPE, null);
 
     FunctionType subIface = registry.createInterfaceType("SubI", null);
     subIface.setExtendedInterfaces(

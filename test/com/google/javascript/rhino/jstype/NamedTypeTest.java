@@ -52,7 +52,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
         "TypeA", null, null, null);
     ObjectType typeA = ctorA.getInstanceType();
 
-    namedA.defineDeclaredProperty("foo", NUMBER_TYPE, false, null);
+    namedA.defineDeclaredProperty("foo", NUMBER_TYPE, null);
     namedA.resolve(
         null,
         new MapBasedScope(

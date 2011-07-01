@@ -170,7 +170,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
               // Put the JSDoc in the property slot, if there is one.
               String propName = n.getLastChild().getString();
               if (lhsType.hasOwnProperty(propName)) {
-                lhsType.setPropertyJSDocInfo(propName, docInfo, inExterns);
+                lhsType.setPropertyJSDocInfo(propName, docInfo);
               }
 
               // Put the JSDoc in any constructors or function shapes as well.

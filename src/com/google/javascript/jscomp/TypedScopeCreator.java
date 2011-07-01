@@ -638,7 +638,7 @@ final class TypedScopeCreator implements ScopeCreator {
             // Declare this property on its object literal.
             boolean isExtern = t.getInput() != null && t.getInput().isExtern();
             objLitType.defineDeclaredProperty(
-                memberName, keyType, isExtern, keyNode);
+                memberName, keyType, keyNode);
           }
         }
       }
@@ -1091,9 +1091,9 @@ final class TypedScopeCreator implements ScopeCreator {
                 type == null ?
                     getNativeType(JSTypeNative.NO_TYPE) :
                     type,
-                isExtern, n);
+                 n);
           } else {
-            globalThis.defineDeclaredProperty(variableName, type, isExtern, n);
+            globalThis.defineDeclaredProperty(variableName, type, n);
           }
         }
 
@@ -1432,7 +1432,7 @@ final class TypedScopeCreator implements ScopeCreator {
               ((isExtern && !ownerType.isNativeObjectType()) ||
                !ownerType.isInstanceType())) {
             // If the property is undeclared or inferred, declare it now.
-            ownerType.defineDeclaredProperty(propName, valueType, isExtern, n);
+            ownerType.defineDeclaredProperty(propName, valueType, n);
           }
         }
 
@@ -1500,7 +1500,7 @@ final class TypedScopeCreator implements ScopeCreator {
           // If this is a stub for a prototype, just declare it
           // as an unknown type. These are seen often in externs.
           ownerType.defineInferredProperty(
-              propName, unknownType, isExtern, n);
+              propName, unknownType, n);
         } else {
           typeRegistry.registerPropertyOnType(
               propName, ownerType == null ? unknownType : ownerType);
@@ -1556,7 +1556,6 @@ final class TypedScopeCreator implements ScopeCreator {
           thisType.defineDeclaredProperty(
               name.getString(),
               jsType,
-              false /* functions with implementations are not in externs */,
               member);
         }
       }

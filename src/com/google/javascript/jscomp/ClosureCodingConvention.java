@@ -52,9 +52,9 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
       FunctionType childCtor, SubclassType type) {
     if (type == SubclassType.INHERITS) {
       childCtor.defineDeclaredProperty("superClass_",
-          parentCtor.getPrototype(), false, parentCtor.getSource());
+          parentCtor.getPrototype(), parentCtor.getSource());
       childCtor.getPrototype().defineDeclaredProperty("constructor",
-          childCtor, false, parentCtor.getSource());
+          childCtor, parentCtor.getSource());
     }
   }
 
@@ -261,9 +261,9 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
   @Override
   public void applySingletonGetter(FunctionType functionType,
       FunctionType getterType, ObjectType objectType) {
-    functionType.defineDeclaredProperty("getInstance", getterType, false,
+    functionType.defineDeclaredProperty("getInstance", getterType,
         functionType.getSource());
-    functionType.defineDeclaredProperty("instance_", objectType, false,
+    functionType.defineDeclaredProperty("instance_", objectType,
         functionType.getSource());
   }
 

@@ -133,7 +133,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     subInterfaceInstType = subInterfaceType.getInstanceType();
 
     googBar = registry.createConstructorType("goog.Bar", null, null, null);
-    googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE, true,
+    googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE,
         null);
     googBar.setImplementedInterfaces(
         Lists.<ObjectType>newArrayList(interfaceInstType));
@@ -150,7 +150,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     googSubSubBarInst = googSubSubBar.getInstanceType();
 
     final ObjectType googObject = registry.createAnonymousObjectType();
-    googObject.defineDeclaredProperty("Bar", googBar, false, null);
+    googObject.defineDeclaredProperty("Bar", googBar, null);
 
     namedGoogBar.resolve(null, new StaticScope<JSType>() {
           public StaticSlot<JSType> getSlot(String name) {
@@ -2668,18 +2668,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType record = builder.build();
 
     ObjectType subtypeProp = registry.createAnonymousObjectType();
-    subtypeProp.defineInferredProperty("a", googSubSubBarInst, false, null);
+    subtypeProp.defineInferredProperty("a", googSubSubBarInst, null);
     assertTrue(subtypeProp.isSubtype(record));
     assertFalse(record.isSubtype(subtypeProp));
 
     ObjectType supertypeProp = registry.createAnonymousObjectType();
-    supertypeProp.defineInferredProperty("a", googBarInst, false, null);
+    supertypeProp.defineInferredProperty("a", googBarInst, null);
     assertFalse(supertypeProp.isSubtype(record));
     assertFalse(record.isSubtype(supertypeProp));
 
     ObjectType declaredSubtypeProp = registry.createAnonymousObjectType();
     declaredSubtypeProp.defineDeclaredProperty("a", googSubSubBarInst,
-        false, null);
+        null);
     assertFalse(declaredSubtypeProp.isSubtype(record));
     assertFalse(record.isSubtype(declaredSubtypeProp));
   }
@@ -2807,7 +2807,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // if Function is given a property "a" of type "string", then it's
     // a subtype of the record type {a: string}.
-    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("a", STRING_TYPE, false, null);
+    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("a", STRING_TYPE, null);
     assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
     assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
@@ -2825,7 +2825,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // if Function is given a property "x" of type "string", then it's
     // also a subtype of the record type {x: ?}.
-    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("x", STRING_TYPE, false, null);
+    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("x", STRING_TYPE, null);
     assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
     assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
@@ -2840,7 +2840,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // if Function is given a property "x" of type "string", then it's
     // not a subtype of the record type {x: number}.
-    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("x", STRING_TYPE, false, null);
+    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("x", STRING_TYPE, null);
     assertTypeEquals(NO_OBJECT_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
   }
@@ -2855,7 +2855,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // if goog.Bar is given a property "xyz" of type "string", then it's
     // also a subtype of the record type {x: ?}.
-    googBar.defineDeclaredProperty("xyz", STRING_TYPE, false, null);
+    googBar.defineDeclaredProperty("xyz", STRING_TYPE, null);
 
     assertTypeEquals(googBar,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
@@ -3067,7 +3067,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // adding one property on the prototype
     ObjectType prototype =
         (ObjectType) constructor.getPropertyType("prototype");
-    prototype.defineDeclaredProperty("foo", DATE_TYPE, false, null);
+    prototype.defineDeclaredProperty("foo", DATE_TYPE, null);
 
     assertEquals(NATIVE_PROPERTIES_COUNT + 1, instance.getPropertiesCount());
   }
@@ -3083,8 +3083,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // replacing the prototype
     ObjectType prototype = registry.createAnonymousObjectType();
-    prototype.defineDeclaredProperty("foo", DATE_TYPE, false, null);
-    constructor.defineDeclaredProperty("prototype", prototype, true, null);
+    prototype.defineDeclaredProperty("foo", DATE_TYPE, null);
+    constructor.defineDeclaredProperty("prototype", prototype, null);
 
     assertEquals(NATIVE_PROPERTIES_COUNT + 1, instance.getPropertiesCount());
   }
@@ -3105,7 +3105,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   /** Tests assigning jsdoc on a prototype property. */
   public void testJSDocOnPrototypeProperty() throws Exception {
-    subclassCtor.setPropertyJSDocInfo("prototype", new JSDocInfo(), true);
+    subclassCtor.setPropertyJSDocInfo("prototype", new JSDocInfo());
     assertNull(subclassCtor.getOwnPropertyJSDocInfo("prototype"));
   }
 
@@ -3699,10 +3699,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType sup = registry.createAnonymousObjectType();
     int nativeProperties = sup.getPropertiesCount();
 
-    sup.defineDeclaredProperty("a", DATE_TYPE, false, null);
+    sup.defineDeclaredProperty("a", DATE_TYPE, null);
     assertEquals(nativeProperties + 1, sup.getPropertiesCount());
 
-    sup.defineDeclaredProperty("b", DATE_TYPE, false, null);
+    sup.defineDeclaredProperty("b", DATE_TYPE, null);
     assertEquals(nativeProperties + 2, sup.getPropertiesCount());
 
     ObjectType sub = registry.createObjectType(sup);
@@ -3720,36 +3720,36 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // Test declarations.
     assertTrue(
-        prototype.defineDeclaredProperty("declared", NUMBER_TYPE, false, null));
+        prototype.defineDeclaredProperty("declared", NUMBER_TYPE, null));
     assertFalse(
-        prototype.defineDeclaredProperty("declared", NUMBER_TYPE, false, null));
+        prototype.defineDeclaredProperty("declared", NUMBER_TYPE, null));
     assertFalse(
-        instance.defineDeclaredProperty("declared", NUMBER_TYPE, false, null));
+        instance.defineDeclaredProperty("declared", NUMBER_TYPE, null));
     assertTypeEquals(NUMBER_TYPE, instance.getPropertyType("declared"));
 
     // Test inferring different types.
     assertTrue(prototype.defineInferredProperty("inferred1", STRING_TYPE,
-        false, null));
+        null));
     assertTrue(prototype.defineInferredProperty("inferred1", NUMBER_TYPE,
-        false, null));
+        null));
     assertTypeEquals(
         createUnionType(NUMBER_TYPE, STRING_TYPE),
         instance.getPropertyType("inferred1"));
 
     // Test inferring different types on different objects.
     assertTrue(prototype.defineInferredProperty("inferred2", STRING_TYPE,
-        false, null));
+        null));
     assertTrue(instance.defineInferredProperty("inferred2", NUMBER_TYPE,
-        false, null));
+        null));
     assertTypeEquals(
         createUnionType(NUMBER_TYPE, STRING_TYPE),
         instance.getPropertyType("inferred2"));
 
     // Test inferring on the supertype and declaring on the subtype.
     assertTrue(
-        prototype.defineInferredProperty("prop", STRING_TYPE, false, null));
+        prototype.defineInferredProperty("prop", STRING_TYPE, null));
     assertTrue(
-        instance.defineDeclaredProperty("prop", NUMBER_TYPE, false, null));
+        instance.defineDeclaredProperty("prop", NUMBER_TYPE, null));
     assertTypeEquals(NUMBER_TYPE, instance.getPropertyType("prop"));
     assertTypeEquals(STRING_TYPE, prototype.getPropertyType("prop"));
   }
@@ -3761,24 +3761,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType sup = registry.createAnonymousObjectType();
     int nativeProperties = sup.getPropertiesCount();
 
-    sup.defineDeclaredProperty("a", OBJECT_TYPE, false, null);
+    sup.defineDeclaredProperty("a", OBJECT_TYPE, null);
     assertEquals(nativeProperties + 1, sup.getPropertiesCount());
 
     ObjectType sub = registry.createObjectType(sup);
-    sub.defineDeclaredProperty("a", OBJECT_TYPE, false, null);
+    sub.defineDeclaredProperty("a", OBJECT_TYPE, null);
     assertEquals(nativeProperties + 1, sub.getPropertiesCount());
-  }
-
-  public void testObjectTypeIsPropertyInExterns() {
-    ObjectType sup =
-        registry.createObjectType(registry.createAnonymousObjectType());
-    ObjectType sub = registry.createObjectType(sup);
-
-    sup.defineProperty("externProp", null, false, /* inExterns */ true, null);
-    sub.defineProperty("externProp", null, false, /* inExterns */ false, null);
-
-    assertTrue(sup.isPropertyInExterns("externProp"));
-    assertFalse(sub.isPropertyInExterns("externProp"));
   }
 
   /**
@@ -5156,8 +5144,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       if (type instanceof ObjectType) {
 
         ObjectType objType = (ObjectType) type;
-        objType.defineDeclaredProperty(propName, UNKNOWN_TYPE, false, null);
-        objType.defineDeclaredProperty("allHaz", UNKNOWN_TYPE, false, null);
+        objType.defineDeclaredProperty(propName, UNKNOWN_TYPE, null);
+        objType.defineDeclaredProperty("allHaz", UNKNOWN_TYPE, null);
 
         assertTypeEquals(type,
             registry.getGreatestSubtypeWithProperty(type, propName));
@@ -5183,14 +5171,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType derived1 = registry.createObjectType("d1", null, namedGoogBar);
     ObjectType derived2 = registry.createObjectType("d2", null, namedGoogBar);
 
-    derived1.defineDeclaredProperty("propz", UNKNOWN_TYPE, false, null);
+    derived1.defineDeclaredProperty("propz", UNKNOWN_TYPE, null);
 
     assertTypeEquals(derived1,
         registry.getGreatestSubtypeWithProperty(derived1, "propz"));
     assertTypeEquals(NO_OBJECT_TYPE,
         registry.getGreatestSubtypeWithProperty(derived2, "propz"));
 
-    derived2.defineDeclaredProperty("propz", UNKNOWN_TYPE, false, null);
+    derived2.defineDeclaredProperty("propz", UNKNOWN_TYPE, null);
 
     assertTypeEquals(derived1,
         registry.getGreatestSubtypeWithProperty(derived1, "propz"));
@@ -5206,8 +5194,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType foo = registry.createObjectType("foo", null, OBJECT_TYPE);
     ObjectType bar = registry.createObjectType("bar", null, namedGoogBar);
 
-    foo.defineDeclaredProperty("propz", UNKNOWN_TYPE, false, null);
-    bar.defineDeclaredProperty("propz", UNKNOWN_TYPE, false, null);
+    foo.defineDeclaredProperty("propz", UNKNOWN_TYPE, null);
+    bar.defineDeclaredProperty("propz", UNKNOWN_TYPE, null);
 
     assertTypeEquals(bar,
         registry.getGreatestSubtypeWithProperty(namedGoogBar, "propz"));
@@ -5420,17 +5408,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // anonymous
     ObjectType anonymous = registry.createAnonymousObjectType();
     anonymous.defineDeclaredProperty(
-        "a", NUMBER_TYPE, false, null);
+        "a", NUMBER_TYPE, null);
     anonymous.defineDeclaredProperty(
-        "b", NUMBER_TYPE, false, null);
+        "b", NUMBER_TYPE, null);
     anonymous.defineDeclaredProperty(
-        "c", NUMBER_TYPE, false, null);
+        "c", NUMBER_TYPE, null);
     anonymous.defineDeclaredProperty(
-        "d", NUMBER_TYPE, false, null);
+        "d", NUMBER_TYPE, null);
     anonymous.defineDeclaredProperty(
-        "e", NUMBER_TYPE, false, null);
+        "e", NUMBER_TYPE, null);
     anonymous.defineDeclaredProperty(
-        "f", NUMBER_TYPE, false, null);
+        "f", NUMBER_TYPE, null);
     assertEquals("{a: number, b: number, c: number, d: number, ...}",
         anonymous.toString());
   }
@@ -5496,8 +5484,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createObjectType(registry.createAnonymousObjectType());
     ObjectType sub = registry.createObjectType(sup);
 
-    sup.defineProperty("base", null, false, false, null);
-    sub.defineProperty("sub", null, false, false, null);
+    sup.defineProperty("base", null, false, null);
+    sub.defineProperty("sub", null, false, null);
 
     assertTrue(sup.hasProperty("base"));
     assertFalse(sup.hasProperty("sub"));
@@ -5514,8 +5502,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testNamedTypeHasOwnProperty() throws Exception {
     namedGoogBar.getImplicitPrototype().defineProperty("base", null, false,
-        false, null);
-    namedGoogBar.defineProperty("sub", null, false, false, null);
+        null);
+    namedGoogBar.defineProperty("sub", null, false, null);
 
     assertFalse(namedGoogBar.hasOwnProperty("base"));
     assertTrue(namedGoogBar.hasProperty("base"));
@@ -5524,8 +5512,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testInterfaceHasOwnProperty() throws Exception {
-    interfaceInstType.defineProperty("base", null, false, false, null);
-    subInterfaceInstType.defineProperty("sub", null, false, false, null);
+    interfaceInstType.defineProperty("base", null, false, null);
+    subInterfaceInstType.defineProperty("sub", null, false, null);
 
     assertTrue(interfaceInstType.hasProperty("base"));
     assertFalse(interfaceInstType.hasProperty("sub"));
@@ -5545,8 +5533,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createObjectType(registry.createAnonymousObjectType());
     ObjectType sub = registry.createObjectType(sup);
 
-    sup.defineProperty("base", null, false, false, null);
-    sub.defineProperty("sub", null, false, false, null);
+    sup.defineProperty("base", null, false, null);
+    sub.defineProperty("sub", null, false, null);
 
     assertEquals(Sets.newHashSet("isPrototypeOf", "toLocaleString",
           "propertyIsEnumerable", "toString", "valueOf", "hasOwnProperty",
@@ -5563,7 +5551,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     info.setDeprecated(true);
 
     assertNull(namedGoogBar.getOwnPropertyJSDocInfo("X"));
-    namedGoogBar.setPropertyJSDocInfo("X", info, false);
+    namedGoogBar.setPropertyJSDocInfo("X", info);
     assertTrue(namedGoogBar.getOwnPropertyJSDocInfo("X").isDeprecated());
     assertPropertyTypeInferred(namedGoogBar, "X");
     assertTypeEquals(UNKNOWN_TYPE, namedGoogBar.getPropertyType("X"));
@@ -5580,10 +5568,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSDocInfo privateInfo = new JSDocInfo();
     privateInfo.setVisibility(Visibility.PRIVATE);
 
-    sup.defineProperty("X", NUMBER_TYPE, false, false, null);
-    sup.setPropertyJSDocInfo("X", privateInfo, false);
+    sup.defineProperty("X", NUMBER_TYPE, false, null);
+    sup.setPropertyJSDocInfo("X", privateInfo);
 
-    sub.setPropertyJSDocInfo("X", deprecated, false);
+    sub.setPropertyJSDocInfo("X", deprecated);
 
     assertFalse(sup.getOwnPropertyJSDocInfo("X").isDeprecated());
     assertEquals(Visibility.PRIVATE,
@@ -5598,7 +5586,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSDocInfo deprecated = new JSDocInfo();
     deprecated.setDeprecated(true);
 
-    NO_TYPE.setPropertyJSDocInfo("X", deprecated, false);
+    NO_TYPE.setPropertyJSDocInfo("X", deprecated);
     assertNull(NO_TYPE.getOwnPropertyJSDocInfo("X"));
   }
 
