@@ -211,8 +211,7 @@ class CollapseProperties implements CompilerPass {
               Predicates.<Var>equalTo(aliasVar));
       (new NodeTraversal(compiler, collector)).traverseAtScope(scope);
 
-      ReferenceCollection aliasRefs =
-          collector.getReferenceCollection(aliasVar);
+      ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
       if (aliasRefs.isWellDefined()
           && aliasRefs.firstReferenceIsAssigningDeclaration()
           && aliasRefs.isAssignedOnceInLifetime()) {

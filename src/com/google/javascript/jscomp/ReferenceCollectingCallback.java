@@ -30,9 +30,11 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.jstype.StaticSymbolTable;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +49,8 @@ import java.util.Set;
  * @author kushal@google.com (Kushal Dave)
  */
 class ReferenceCollectingCallback implements ScopedCallback,
-    HotSwapCompilerPass {
+    HotSwapCompilerPass,
+    StaticSymbolTable<Var, ReferenceCollectingCallback.Reference> {
 
   /**
    * Maps a given variable to a collection of references to that name. Note that
@@ -118,14 +121,16 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Gets the variables that were referenced in this callback.
    */
-  public Set<Var> getReferencedVariables() {
+  @Override
+  public Iterable<Var> getAllSymbols() {
     return referenceMap.keySet();
   }
 
   /**
    * Gets the reference collection for the given variable.
    */
-  public ReferenceCollection getReferenceCollection(Var v) {
+  @Override
+  public ReferenceCollection getReferences(Var v) {
     return referenceMap.get(v);
   }
 
@@ -270,9 +275,14 @@ class ReferenceCollectingCallback implements ScopedCallback,
    * A collection of references. Can be subclassed to apply checks or
    * store additional state when adding.
    */
-  static class ReferenceCollection {
+  static class ReferenceCollection implements Iterable<Reference> {
 
     List<Reference> references = Lists.newArrayList();
+
+    @Override
+    public Iterator<Reference> iterator() {
+      return references.iterator();
+    }
 
     void add(Reference reference, NodeTraversal t, Var v) {
       references.add(reference);

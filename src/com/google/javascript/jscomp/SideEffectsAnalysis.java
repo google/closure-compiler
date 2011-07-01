@@ -962,9 +962,9 @@ import java.util.Set;
 
       NodeTraversal.traverse(compiler, root, callback);
 
-      for (Var variable : callback.getReferencedVariables()) {
+      for (Var variable : callback.getAllSymbols()) {
         ReferenceCollection referenceCollection =
-            callback.getReferenceCollection(variable);
+            callback.getReferences(variable);
 
         for (Reference reference : referenceCollection.references) {
           Node referenceNameNode = reference.getNode();

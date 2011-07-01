@@ -31,8 +31,10 @@ import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.jstype.StaticSymbolTable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +45,9 @@ import java.util.Set;
  * the global scope. Also builds an index of all the references to those names.
  *
  */
-class GlobalNamespace implements StaticScope<JSType> {
+class GlobalNamespace
+    implements StaticScope<JSType>,
+    StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
   private AbstractCompiler compiler;
   private final Node root;
@@ -112,14 +116,30 @@ class GlobalNamespace implements StaticScope<JSType> {
     return compiler.getTypeRegistry().getNativeObjectType(GLOBAL_THIS);
   }
 
+  @Override
+  public Iterable<Ref> getReferences(Name slot) {
+    ensureGenerated();
+    return Collections.unmodifiableList(slot.getRefs());
+  }
+
+  @Override
+  public Iterable<Name> getAllSymbols() {
+    ensureGenerated();
+    return Collections.unmodifiableCollection(getNameIndex().values());
+  }
+
+  private void ensureGenerated() {
+    if (!generated) {
+      process();
+    }
+  }
+
   /**
    * Gets a list of the roots of the forest of the global names, where the
    * roots are the top-level names.
    */
   List<Name> getNameForest() {
-    if (!generated) {
-      process();
-    }
+    ensureGenerated();
     return globalNames;
   }
 
@@ -128,9 +148,7 @@ class GlobalNamespace implements StaticScope<JSType> {
    * (as in "a", "a.b.c", etc.).
    */
   Map<String, Name> getNameIndex() {
-    if (!generated) {
-      process();
-    }
+    ensureGenerated();
     return nameMap;
   }
 
