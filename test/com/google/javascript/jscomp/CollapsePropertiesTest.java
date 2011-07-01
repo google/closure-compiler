@@ -1053,6 +1053,15 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "var b$c = x; function f() { var a = null; b$c(); }");
   }
 
+  public void testInlineAliasWithModifications() {
+    testSame("var x = 10; function f() { var y = x; x++; alert(y)} ");
+    testSame("var x = 10; function f() { var y = x; x+=1; alert(y)} ");
+    test("var x = {}; x.x = 10; function f() {var y=x.x; x.x++; alert(y)}",
+         "var x$x = 10; function f() {var y=x$x; x$x++; alert(y)}");
+    test("var x = {}; x.x = 10; function f() {var y=x.x; x.x+=1; alert(y)}",
+         "var x$x = 10; function f() {var y=x$x; x$x+=1; alert(y)}");
+  }
+
   public void testCollapsePropertyOnExternType() {
     collapsePropertiesOnExternTypes = true;
     test("String.myFunc = function() {}; String.myFunc();",

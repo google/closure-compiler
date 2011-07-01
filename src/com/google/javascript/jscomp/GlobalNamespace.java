@@ -335,6 +335,17 @@ class GlobalNamespace implements StaticScope<JSType> {
                 isSet = true;
                 type = Name.Type.FUNCTION;
                 break;
+              case Token.INC:
+              case Token.DEC:
+                isSet = true;
+                type = Name.Type.OTHER;
+                break;
+              default:
+                if (NodeUtil.isAssignmentOp(parent) &&
+                    parent.getFirstChild() == n) {
+                  isSet = true;
+                  type = Name.Type.OTHER;
+                }
             }
           }
           name = n.getString();
@@ -350,8 +361,19 @@ class GlobalNamespace implements StaticScope<JSType> {
                   isPropAssign = true;
                 }
                 break;
+              case Token.INC:
+              case Token.DEC:
+                isSet = true;
+                type = Name.Type.OTHER;
+                break;
               case Token.GETPROP:
                 return;
+              default:
+                if (NodeUtil.isAssignmentOp(parent) &&
+                    parent.getFirstChild() == n) {
+                  isSet = true;
+                  type = Name.Type.OTHER;
+                }
             }
           }
           name = n.getQualifiedName();
