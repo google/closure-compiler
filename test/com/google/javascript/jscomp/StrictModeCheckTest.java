@@ -44,7 +44,7 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testWith() {
-    test("var a; function foo(obj) { with (obj) { a = 3; }}", null,
+    testSame("var a; function foo(obj) { with (obj) { a = 3; }}",
          StrictModeCheck.WITH_DISALLOWED);
   }
 
@@ -54,7 +54,7 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testEval2() {
-    test("function foo(eval) {}", null,
+    testSame("function foo(eval) {}",
          StrictModeCheck.EVAL_DECLARATION);
   }
 
@@ -63,16 +63,16 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testEval4() {
-    test("function foo() { var eval = 3; }", null,
+    testSame("function foo() { var eval = 3; }",
          StrictModeCheck.EVAL_DECLARATION);
   }
 
   public void testEval5() {
-    test("function eval() {}", null, StrictModeCheck.EVAL_DECLARATION);
+    testSame("function eval() {}", StrictModeCheck.EVAL_DECLARATION);
   }
 
   public void testEval6() {
-    test("try {} catch (eval) {}", null, StrictModeCheck.EVAL_DECLARATION);
+    testSame("try {} catch (eval) {}", StrictModeCheck.EVAL_DECLARATION);
   }
 
   public void testEval7() {
@@ -84,11 +84,11 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testUnknownVariable() {
-    test("function foo(a) { a = b; }", null, StrictModeCheck.UNKNOWN_VARIABLE);
+    testSame("function foo(a) { a = b; }", StrictModeCheck.UNKNOWN_VARIABLE);
   }
 
   public void testUnknownVariable2() {
-    test("a: while (true) { a = 3; }", null, StrictModeCheck.UNKNOWN_VARIABLE);
+    testSame("a: while (true) { a = 3; }", StrictModeCheck.UNKNOWN_VARIABLE);
   }
 
   public void testUnknownVariable3() {
@@ -96,22 +96,22 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testArguments() {
-    test("function foo(arguments) {}", null,
+    testSame("function foo(arguments) {}",
          StrictModeCheck.ARGUMENTS_DECLARATION);
   }
 
   public void testArguments2() {
-    test("function foo() { var arguments = 3; }", null,
+    testSame("function foo() { var arguments = 3; }",
          StrictModeCheck.ARGUMENTS_DECLARATION);
   }
 
   public void testArguments3() {
-    test("function arguments() {}", null,
+    testSame("function arguments() {}",
          StrictModeCheck.ARGUMENTS_DECLARATION);
   }
 
   public void testArguments4() {
-    test("try {} catch (arguments) {}", null,
+    testSame("try {} catch (arguments) {}",
          StrictModeCheck.ARGUMENTS_DECLARATION);
   }
 
@@ -121,7 +121,7 @@ public class StrictModeCheckTest extends CompilerTestCase {
 
   public void testEvalAssignment() {
     noCajaChecks = true;
-    test("function foo() { eval = []; }", null,
+    testSame("function foo() { eval = []; }",
          StrictModeCheck.EVAL_ASSIGNMENT);
   }
 
@@ -130,20 +130,21 @@ public class StrictModeCheckTest extends CompilerTestCase {
   }
 
   public void testAssignToArguments() {
-    test("function foo() { arguments = []; }", null,
+    testSame("function foo() { arguments = []; }",
          StrictModeCheck.ARGUMENTS_ASSIGNMENT);
   }
 
   public void testDeleteVar() {
-    test("var a; delete a", null, StrictModeCheck.DELETE_VARIABLE);
+    testSame("var a; delete a", StrictModeCheck.DELETE_VARIABLE);
   }
 
   public void testDeleteFunction() {
-    test("function a() {} delete a", null, StrictModeCheck.DELETE_VARIABLE);
+    testSame("function a() {} delete a", StrictModeCheck.DELETE_VARIABLE);
   }
 
   public void testDeleteArgument() {
-    test("function b(a) { delete a; }", null, StrictModeCheck.DELETE_VARIABLE);
+    testSame("function b(a) { delete a; }",
+        StrictModeCheck.DELETE_VARIABLE);
   }
 
   public void testDeleteProperty() {
@@ -202,13 +203,13 @@ public class StrictModeCheckTest extends CompilerTestCase {
     testSame("var o = {a: 1, b: 2, c: 3};");
     testSame("var x = { get a() {}, set a(p) {} };");
 
-    test("var o = {a: 1, b: 2, a: 3};", null,
+    testSame("var o = {a: 1, b: 2, a: 3};",
+        StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testSame("var x = { get a() {}, get a() {} };",
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    test("var x = { get a() {}, get a() {} };", null,
+    testSame("var x = { get a() {}, a: 1 };",
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    test("var x = { get a() {}, a: 1 };", null,
-         StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    test("var x = { set a(p) {}, a: 1 };", null,
+    testSame("var x = { set a(p) {}, a: 1 };",
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
   }
 }

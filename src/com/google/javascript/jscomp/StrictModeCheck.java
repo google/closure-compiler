@@ -17,10 +17,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
-
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -39,32 +37,32 @@ import java.util.Set;
 class StrictModeCheck extends AbstractPostOrderCallback
     implements CompilerPass {
 
-  static final DiagnosticType UNKNOWN_VARIABLE = DiagnosticType.error(
+  static final DiagnosticType UNKNOWN_VARIABLE = DiagnosticType.warning(
       "JSC_UNKNOWN_VARIABLE", "unknown variable {0}");
 
-  static final DiagnosticType WITH_DISALLOWED = DiagnosticType.error(
+  static final DiagnosticType WITH_DISALLOWED = DiagnosticType.warning(
       "JSC_WITH_DISALLOWED", "\"with\" cannot be used in ES5 strict mode");
 
   static final DiagnosticType EVAL_USE = DiagnosticType.error(
       "JSC_EVAL_USE", "\"eval\" cannot be used in Caja");
 
-  static final DiagnosticType EVAL_DECLARATION = DiagnosticType.error(
+  static final DiagnosticType EVAL_DECLARATION = DiagnosticType.warning(
       "JSC_EVAL_DECLARATION",
       "\"eval\" cannot be redeclared in ES5 strict mode");
 
-  static final DiagnosticType EVAL_ASSIGNMENT = DiagnosticType.error(
+  static final DiagnosticType EVAL_ASSIGNMENT = DiagnosticType.warning(
       "JSC_EVAL_ASSIGNMENT",
       "the \"eval\" object cannot be reassigned in ES5 strict mode");
 
-  static final DiagnosticType ARGUMENTS_DECLARATION = DiagnosticType.error(
+  static final DiagnosticType ARGUMENTS_DECLARATION = DiagnosticType.warning(
       "JSC_ARGUMENTS_DECLARATION",
       "\"arguments\" cannot be redeclared in ES5 strict mode");
 
-  static final DiagnosticType ARGUMENTS_ASSIGNMENT = DiagnosticType.error(
+  static final DiagnosticType ARGUMENTS_ASSIGNMENT = DiagnosticType.warning(
       "JSC_ARGUMENTS_ASSIGNMENT",
       "the \"arguments\" object cannot be reassigned in ES5 strict mode");
 
-  static final DiagnosticType DELETE_VARIABLE = DiagnosticType.error(
+  static final DiagnosticType DELETE_VARIABLE = DiagnosticType.warning(
       "JSC_DELETE_VARIABLE",
       "variables, functions, and arguments cannot be deleted in "
       + "ES5 strict mode");
@@ -73,7 +71,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_ILLEGAL_NAME",
       "identifiers ending in '__' cannot be used in Caja");
 
-  static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.error(
+  static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.warning(
       "JSC_DUPLICATE_OBJECT_KEY",
       "object literals cannot contain duplicate keys in ES5 strict mode");
 

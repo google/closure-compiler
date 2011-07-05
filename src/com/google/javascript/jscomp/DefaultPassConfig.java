@@ -265,11 +265,7 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkGlobalNames);
     }
 
-    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT
-        || options.checkCaja
-        || options.checkEs5Strict) {
-      checks.add(checkStrictMode);
-    }
+    checks.add(checkStrictMode);
 
     // Replace 'goog.getCssName' before processing defines but after the
     // other checks have been done.

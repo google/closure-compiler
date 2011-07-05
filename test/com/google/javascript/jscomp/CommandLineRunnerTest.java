@@ -336,6 +336,7 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testIssue115() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
+    args.add("--jscomp_off=es5Strict");
     args.add("--warning_level=VERBOSE");
     test("function f() { " +
          "  var arguments = Array.prototype.slice.call(arguments, 0);" +

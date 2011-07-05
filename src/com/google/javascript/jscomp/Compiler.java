@@ -258,6 +258,12 @@ public class Compiler extends AbstractCompiler {
           options.checkGlobalThisLevel);
     }
 
+    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT) {
+      options.setWarningLevel(
+          DiagnosticGroups.ES5_STRICT,
+          CheckLevel.ERROR);
+    }
+
     // Initialize the warnings guard.
     List<WarningsGuard> guards = Lists.newArrayList();
     guards.add(

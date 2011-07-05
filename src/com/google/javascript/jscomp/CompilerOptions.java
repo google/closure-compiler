@@ -210,6 +210,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public String checkMissingGetCssNameBlacklist;
 
   /** Checks that the synctactic restrictions of ES5 strict mode are met. */
+  // TODO(johnlenz): remove this.
   public boolean checkEs5Strict;
 
   /** Checks that the synctactic restrictions of Caja are met. */
@@ -701,7 +702,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkMissingReturn = CheckLevel.OFF;
     checkMissingGetCssNameLevel = CheckLevel.OFF;
     checkMissingGetCssNameBlacklist = null;
-    checkEs5Strict = false;
     checkCaja = false;
     computeFunctionSideEffects = false;
     chainCalls = false;
