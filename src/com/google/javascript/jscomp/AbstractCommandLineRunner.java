@@ -1249,8 +1249,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     for (CompilerInput input : inputs) {
       out.append("//" + input.getName() + "\n");
       File file = new File(input.getName());
-      for (String line : Files.readLines(file, Charsets.UTF_8)) {
-        out.append(line + "\n");
+      if (file.canRead()) {
+        Files.copy(file, inputCharset, out);
       }
       out.append("\n");
     }
