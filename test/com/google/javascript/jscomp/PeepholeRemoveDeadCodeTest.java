@@ -592,6 +592,13 @@ public class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     testSame("try {var x = 1} finally {x()}");
     test("function f() { return; try{var x = 1}finally{} }",
         "function f() { return; var x = 1; }");
+    test("try {} finally {x()}", "x()");
+    test("try {} catch (e) { bar()} finally {x()}", "x()");
+    test("try {} catch (e) { bar()}", "");
+    test("try {} catch (e) { var a = 0; } finally {x()}", "var a; x()");
+    test("try {} catch (e) {}", "");
+    test("try {} finally {}", "");
+    test("try {} catch (e) {} finally {}", "");
   }
 
   public void testObjectLiteral() {

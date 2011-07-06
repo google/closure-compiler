@@ -76,21 +76,35 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   /**
    * Remove try blocks without catch blocks and with empty or not
    * existent finally blocks.
+   * Or, only leave the finally blocks if try body blocks are empty
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldTry(Node n) {
-    // Removes TRYs that had its CATCH removed and/or empty FINALLY.
     Preconditions.checkState(n.getType() == Token.TRY);
     Node body = n.getFirstChild();
     Node catchBlock = body.getNext();
     Node finallyBlock = catchBlock.getNext();
 
+    // Removes TRYs that had its CATCH removed and/or empty FINALLY.
     if (!catchBlock.hasChildren() &&
         (finallyBlock == null || !finallyBlock.hasChildren())) {
       n.removeChild(body);
       n.getParent().replaceChild(n, body);
       reportCodeChange();
       return body;
+    }
+
+    // Only leave FINALLYs if TRYs are empty
+    if (!body.hasChildren()) {
+      NodeUtil.redeclareVarsInsideBranch(catchBlock);
+      if (finallyBlock != null) {
+        n.removeChild(finallyBlock);
+        n.getParent().replaceChild(n, finallyBlock);
+      } else {
+        n.getParent().removeChild(n);
+      }
+      reportCodeChange();
+      return finallyBlock;
     }
 
     return n;
