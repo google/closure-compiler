@@ -96,7 +96,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
         return;  // it might be ok to not have a side-effect
       }
     }
-    if (NodeUtil.isSimpleOperatorType(n.getType()) ||
+
+    boolean isSimpleOp = NodeUtil.isSimpleOperatorType(n.getType());
+    if (isSimpleOp ||
         !NodeUtil.mayHaveSideEffects(n, t.getCompiler())) {
       if (n.isQualifiedName() && n.getJSDocInfo() != null) {
         // This no-op statement was there so that JSDoc information could
@@ -110,6 +112,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
       String msg = "This code lacks side-effects. Is there a bug?";
       if (n.getType() == Token.STRING) {
         msg = "Is there a missing '+' on the previous line?";
+      } else if (isSimpleOp) {
+        msg = "The result of the '" + Node.tokenToName(n.getType()) +
+            "' operator is not being used.";
       }
 
       t.getCompiler().report(

@@ -91,4 +91,11 @@ public class CheckSideEffectsTest extends CompilerTestCase {
     test("(0, eval)('alert');", ok);
     test("(0, foo)('alert');", e);
   }
+
+  public void testIsue504() {
+    test("void f();", e);
+    assertEquals(
+        "Suspicious code. The result of the 'void' operator is not being used.",
+        getLastCompiler().getErrorManager().getErrors()[0].description);
+  }
 }
