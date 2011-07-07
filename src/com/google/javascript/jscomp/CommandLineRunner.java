@@ -223,6 +223,11 @@ public class CommandLineRunner extends
         "corresponds to.")
     private String create_source_map = "";
 
+    @Option(name = "--source_map_format",
+        usage = "The source map format to produce. " +
+        "Options: V1, V2, V3, DEFAULT. DEFAULT produces V2.")
+    private SourceMap.Format source_map_format = SourceMap.Format.DEFAULT;
+
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(name = "--jscomp_error",
@@ -594,6 +599,7 @@ public class CommandLineRunner extends
           .setModuleWrapper(flags.module_wrapper)
           .setModuleOutputPathPrefix(flags.module_output_path_prefix)
           .setCreateSourceMap(flags.create_source_map)
+          .setSourceMapFormat(flags.source_map_format)
           .setWarningGuardSpec(Flags.warningGuardSpec)
           .setDefine(flags.define)
           .setCharset(flags.charset)

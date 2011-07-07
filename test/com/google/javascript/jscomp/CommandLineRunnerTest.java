@@ -631,6 +631,15 @@ public class CommandLineRunnerTest extends TestCase {
         lastCompiler.getOptions().sourceMapFormat);
   }
 
+  public void testSourceMapFormat2() {
+    args.add("--js_output_file");
+    args.add("/path/to/out.js");
+    args.add("--source_map_format=V3");
+    testSame("var x = 3;");
+    assertEquals(SourceMap.Format.V3,
+        lastCompiler.getOptions().sourceMapFormat);
+  }
+
   public void testCharSetExpansion() {
     testSame("");
     assertEquals("US-ASCII", lastCompiler.getOptions().outputCharset);
