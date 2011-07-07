@@ -153,7 +153,9 @@ public class Node implements Cloneable, Serializable {
       FREE_CALL          = 50,    // A CALL without an explicit "this" value.
       STATIC_SOURCE_FILE = 51,    // A StaticSourceFile indicating the file
                                   // where this node lives.
-      LAST_PROP          = 51;
+      LENGTH             = 52,    // The length of the code represented by
+                                  // this node.
+      LAST_PROP          = 52;
 
   // values of ISNUMBER_PROP to specify
   // which of the children are Number types
@@ -239,6 +241,7 @@ public class Node implements Cloneable, Serializable {
         case DIRECT_EVAL:        return "direct_eval";
         case FREE_CALL:          return "free_call";
         case STATIC_SOURCE_FILE:    return "source_file";
+        case LENGTH:    return "length";
         default:
           Kit.codeBug();
       }
@@ -1241,6 +1244,14 @@ public class Node implements Cloneable, Serializable {
     StaticSourceFile file =
         ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
     return file == null ? false : file.isExtern();
+  }
+
+  public int getLength() {
+    return getIntProp(LENGTH);
+  }
+
+  public void setLength(int length) {
+    putIntProp(LENGTH, length);
   }
 
   public void setLineno(int lineno) {

@@ -209,6 +209,7 @@ class IRFactory {
         Node newBlock = newNode(Token.BLOCK, irNode);
         newBlock.setLineno(irNode.getLineno());
         newBlock.setCharno(irNode.getCharno());
+        maybeSetLengthFrom(newBlock, node);
         irNode = newBlock;
       }
     }
@@ -306,6 +307,7 @@ class IRFactory {
         irNode.getFirstChild().getLineno() != -1) {
       irNode.setLineno(irNode.getFirstChild().getLineno());
       irNode.setCharno(irNode.getFirstChild().getCharno());
+      maybeSetLengthFrom(irNode, node);
     } else {
       if (irNode.getLineno() == -1) {
         // If we didn't already set the line, then set it now.  This avoids
@@ -315,6 +317,7 @@ class IRFactory {
         irNode.setLineno(lineno);
         int charno = position2charno(node.getAbsolutePosition());
         irNode.setCharno(charno);
+        maybeSetLengthFrom(irNode, node);
       }
     }
   }
@@ -349,6 +352,19 @@ class IRFactory {
     jsdocParser.setFileOverviewJSDocInfo(fileOverviewInfo);
     jsdocParser.parse();
     return jsdocParser;
+  }
+
+  // Set the length on the node if we're in IDE mode.
+  private void maybeSetLengthFrom(Node node, AstNode source) {
+    if (config.isIdeMode) {
+      node.setLength(source.getLength());
+    }
+  }
+
+  private void maybeSetLengthFrom(Node node, Node source) {
+    if (config.isIdeMode) {
+      node.setLength(source.getLength());
+    }
   }
 
   private int position2charno(int position) {
@@ -583,6 +599,7 @@ class IRFactory {
       int leftParamPos = callNode.getAbsolutePosition() + callNode.getLp();
       node.setLineno(callNode.getLineno());
       node.setCharno(position2charno(leftParamPos));
+      maybeSetLengthFrom(node, callNode);
       return node;
     }
 
@@ -614,6 +631,7 @@ class IRFactory {
         int lpColumn = functionNode.getAbsolutePosition() +
             functionNode.getLp();
         newName.setCharno(position2charno(lpColumn));
+        maybeSetLengthFrom(newName, name);
       }
 
       node.addChildToBack(newName);
@@ -670,6 +688,7 @@ class IRFactory {
       // to the operator to get the correct character number.
       n.setCharno(position2charno(exprNode.getAbsolutePosition() +
           exprNode.getOperatorPosition()));
+      maybeSetLengthFrom(n, exprNode);
       return n;
     }
 
@@ -695,6 +714,8 @@ class IRFactory {
         cur.addChildToBack(transform(label));
 
         cur.setLineno(label.getLineno());
+        maybeSetLengthFrom(cur, label);
+
         int clauseAbsolutePosition =
             position2charno(label.getAbsolutePosition());
         cur.setCharno(clauseAbsolutePosition);
@@ -816,12 +837,14 @@ class IRFactory {
       Node literalStringNode = newStringNode(literalNode.getValue());
       // assume it's on the same line.
       literalStringNode.setLineno(literalNode.getLineno());
+      maybeSetLengthFrom(literalStringNode, literalNode);
       Node node = newNode(Token.REGEXP, literalStringNode);
       String flags = literalNode.getFlags();
       if (flags != null && !flags.isEmpty()) {
         Node flagsNode = newStringNode(flags);
         // Assume the flags are on the same line as the literal node.
         flagsNode.setLineno(literalNode.getLineno());
+        maybeSetLengthFrom(flagsNode, literalNode);
         node.addChildToBack(flagsNode);
       }
       return node;
@@ -860,6 +883,7 @@ class IRFactory {
       block.putBooleanProp(Node.SYNTHETIC_BLOCK_PROP, true);
       block.setLineno(caseNode.getLineno());
       block.setCharno(position2charno(caseNode.getAbsolutePosition()));
+      maybeSetLengthFrom(block, caseNode);
       if (caseNode.getStatements() != null) {
         for (AstNode child : caseNode.getStatements()) {
           block.addChildToBack(transform(child));
@@ -896,8 +920,9 @@ class IRFactory {
         // Mark the enclosing block at the same line as the first catch
         // clause.
         if (lineSet == false) {
-            block.setLineno(cc.getLineno());
-            lineSet = true;
+          block.setLineno(cc.getLineno());
+          maybeSetLengthFrom(block, cc);
+          lineSet = true;
         }
         block.addChildToBack(transform(cc));
       }
@@ -913,6 +938,7 @@ class IRFactory {
       // as the finally block (to match Old Rhino's behavior.)
       if ((lineSet == false) && (finallyBlock != null)) {
         block.setLineno(finallyBlock.getLineno());
+        maybeSetLengthFrom(block, finallyBlock);
       }
 
       return node;
@@ -986,6 +1012,7 @@ class IRFactory {
       if (initializerNode.getInitializer() != null) {
         node.addChildToBack(transform(initializerNode.getInitializer()));
         node.setLineno(node.getLineno());
+        maybeSetLengthFrom(node, initializerNode);
       }
       return node;
     }

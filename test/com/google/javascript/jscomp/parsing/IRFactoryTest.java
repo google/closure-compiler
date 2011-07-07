@@ -60,12 +60,12 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
 
   public void testArrayLiteral2() throws Exception {
     testNewParser("[a, , b]",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        ARRAYLIT 0\n" +
-      "            NAME a 0\n" +
-      "            EMPTY 0\n" +
-      "            NAME b 0\n");
+      "SCRIPT 0 [length: 8]\n" +
+      "    EXPR_RESULT 0 [length: 8]\n" +
+      "        ARRAYLIT 0 [length: 8]\n" +
+      "            NAME a 0 [length: 1]\n" +
+      "            EMPTY 0 [length: 1]\n" +
+      "            NAME b 0 [length: 1]\n");
   }
 
   public void testArrayLiteral3() throws Exception {
@@ -74,15 +74,15 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
 
   public void testArrayLiteral4() throws Exception {
     testNewParser("[,,,a,,b]",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        ARRAYLIT 0\n" +
-      "            EMPTY 0\n" +
-      "            EMPTY 0\n" +
-      "            EMPTY 0\n" +
-      "            NAME a 0\n" +
-      "            EMPTY 0\n" +
-      "            NAME b 0\n");
+      "SCRIPT 0 [length: 9]\n" +
+      "    EXPR_RESULT 0 [length: 9]\n" +
+      "        ARRAYLIT 0 [length: 9]\n" +
+      "            EMPTY 0 [length: 1]\n" +
+      "            EMPTY 0 [length: 1]\n" +
+      "            EMPTY 0 [length: 1]\n" +
+      "            NAME a 0 [length: 1]\n" +
+      "            EMPTY 0 [length: 1]\n" +
+      "            NAME b 0 [length: 1]\n");
   }
 
   public void testAssignment() throws Exception {
@@ -263,40 +263,40 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
 
   public void testObjectLiteral6() {
     testNewParser("({1: true})",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        OBJECTLIT 0 [parenthesized: true]\n" +
-      "            STRING 1 0 [quoted: 1]\n" +
-      "                TRUE 0\n");
+      "SCRIPT 0 [length: 11]\n" +
+      "    EXPR_RESULT 0 [length: 10]\n" +
+      "        OBJECTLIT 0 [parenthesized: true] [length: 9]\n" +
+      "            STRING 1 0 [quoted: 1] [length: 1]\n" +
+      "                TRUE 0 [length: 4]\n");
   }
 
   public void testObjectLiteral7() {
     mode = LanguageMode.ECMASCRIPT5;
 
     testNewParser("({get 1() {}})",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        OBJECTLIT 0 [parenthesized: true]\n" +
-      "            GET 1 0 [quoted: 1]\n" +
-      "                FUNCTION  0\n" +
-      "                    NAME  0\n" +
-      "                    LP 0\n" +
-      "                    BLOCK 0\n");
+        "SCRIPT 0 [length: 14]\n" +
+        "    EXPR_RESULT 0 [length: 13]\n" +
+        "        OBJECTLIT 0 [parenthesized: true] [length: 12]\n" +
+        "            GET 1 0 [quoted: 1] [length: 1]\n" +
+        "                FUNCTION  0 [length: 6]\n" +
+        "                    NAME  0\n" +
+        "                    LP 0\n" +
+        "                    BLOCK 0 [length: 2]\n");
   }
 
   public void testObjectLiteral8() {
     mode = LanguageMode.ECMASCRIPT5;
 
     testNewParser("({set 1(a) {}})",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        OBJECTLIT 0 [parenthesized: true]\n" +
-      "            SET 1 0 [quoted: 1]\n" +
-      "                FUNCTION  0\n" +
-      "                    NAME  0\n" +
-      "                    LP 0\n" +
-      "                        NAME a 0\n" +
-      "                    BLOCK 0\n");
+        "SCRIPT 0 [length: 15]\n" +
+        "    EXPR_RESULT 0 [length: 14]\n" +
+        "        OBJECTLIT 0 [parenthesized: true] [length: 13]\n" +
+        "            SET 1 0 [quoted: 1] [length: 1]\n" +
+        "                FUNCTION  0 [length: 7]\n" +
+        "                    NAME  0\n" +
+        "                    LP 0\n" +
+        "                        NAME a 0 [length: 1]\n" +
+        "                    BLOCK 0 [length: 2]\n");
   }
 
 
@@ -340,93 +340,93 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   // named breaks and continues, so disable these tests.
   public void testLabel() {
     testNewParser("foo: bar",
-      "SCRIPT 0\n" +
-      "    LABEL 0\n" +
-      "        LABEL_NAME foo 0\n" +
-      "        EXPR_RESULT 0\n" +
-      "            NAME bar 0\n");
+        "SCRIPT 0 [length: 8]\n" +
+        "    LABEL 0 [length: 4]\n" +
+        "        LABEL_NAME foo 0 [length: 4]\n" +
+        "        EXPR_RESULT 0 [length: 3]\n" +
+        "            NAME bar 0 [length: 3]\n");
   }
 
   public void testLabel2() {
     testNewParser("l: while (f()) { if (g()) { continue l; } }",
-      "SCRIPT 0\n" +
-      "    LABEL 0\n" +
-      "        LABEL_NAME l 0\n" +
-      "        WHILE 0\n" +
-      "            CALL 0\n" +
-      "                NAME f 0\n" +
-      "            BLOCK 0\n" +
-      "                IF 0\n" +
-      "                    CALL 0\n" +
-      "                        NAME g 0\n" +
-      "                    BLOCK 0\n" +
-      "                        CONTINUE 0\n" +
-      "                            LABEL_NAME l 0\n");
+        "SCRIPT 0 [length: 43]\n" +
+        "    LABEL 0 [length: 2]\n" +
+        "        LABEL_NAME l 0 [length: 2]\n" +
+        "        WHILE 0 [length: 40]\n" +
+        "            CALL 0 [length: 3]\n" +
+        "                NAME f 0 [length: 1]\n" +
+        "            BLOCK 0 [length: 28]\n" +
+        "                IF 0 [length: 24]\n" +
+        "                    CALL 0 [length: 3]\n" +
+        "                        NAME g 0 [length: 1]\n" +
+        "                    BLOCK 0 [length: 15]\n" +
+        "                        CONTINUE 0 [length: 11]\n" +
+        "                            LABEL_NAME l 0 [length: 1]\n");
   }
 
   public void testLabel3() {
     testNewParser("Foo:Bar:X:{ break Bar; }",
-      "SCRIPT 0\n" +
-      "    LABEL 0\n" +
-      "        LABEL_NAME Foo 0\n" +
-      "        LABEL 0\n" +
-      "            LABEL_NAME Bar 0\n" +
-      "            LABEL 0\n" +
-      "                LABEL_NAME X 0\n" +
-      "                BLOCK 0\n" +
-      "                    BREAK 0\n" +
-      "                        LABEL_NAME Bar 0\n");
+        "SCRIPT 0 [length: 24]\n" +
+        "    LABEL 0 [length: 4]\n" +
+        "        LABEL_NAME Foo 0 [length: 4]\n" +
+        "        LABEL 0 [length: 4]\n" +
+        "            LABEL_NAME Bar 0 [length: 4]\n" +
+        "            LABEL 0 [length: 2]\n" +
+        "                LABEL_NAME X 0 [length: 2]\n" +
+        "                BLOCK 0 [length: 14]\n" +
+        "                    BREAK 0 [length: 10]\n" +
+        "                        LABEL_NAME Bar 0 [length: 3]\n");
   }
 
   public void testNegation1() {
     testNewParser("-a",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        NEG 0\n" +
-      "            NAME a 0\n");
+        "SCRIPT 0 [length: 2]\n" +
+        "    EXPR_RESULT 0 [length: 2]\n" +
+        "        NEG 0 [length: 2]\n" +
+        "            NAME a 0 [length: 1]\n");
   }
 
   public void testNegation2() {
     testNewParser("-2",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        NUMBER -2.0 0\n");
+        "SCRIPT 0 [length: 2]\n" +
+        "    EXPR_RESULT 0 [length: 2]\n" +
+        "        NUMBER -2.0 0 [length: 1]\n");
   }
 
   public void testNegation3() {
     testNewParser("1 - -2",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        SUB 0\n" +
-      "            NUMBER 1.0 0\n" +
-      "            NUMBER -2.0 0\n");
+        "SCRIPT 0 [length: 6]\n" +
+        "    EXPR_RESULT 0 [length: 6]\n" +
+        "        SUB 0 [length: 6]\n" +
+        "            NUMBER 1.0 0 [length: 1]\n" +
+        "            NUMBER -2.0 0 [length: 1]\n");
   }
 
   public void testGetter() {
     mode = LanguageMode.ECMASCRIPT5;
     testNewParser("({get a() {}})",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        OBJECTLIT 0 [parenthesized: true]\n" +
-      "            GET a 0\n" +
-      "                FUNCTION  0\n" +
-      "                    NAME  0\n" +
-      "                    LP 0\n" +
-      "                    BLOCK 0\n");
+        "SCRIPT 0 [length: 14]\n" +
+        "    EXPR_RESULT 0 [length: 13]\n" +
+        "        OBJECTLIT 0 [parenthesized: true] [length: 12]\n" +
+        "            GET a 0 [length: 1]\n" +
+        "                FUNCTION  0 [length: 6]\n" +
+        "                    NAME  0\n" +
+        "                    LP 0\n" +
+        "                    BLOCK 0 [length: 2]\n");
   }
 
   public void testSetter() {
     mode = LanguageMode.ECMASCRIPT5;
     testNewParser("({set a(x) {}})",
-      "SCRIPT 0\n" +
-      "    EXPR_RESULT 0\n" +
-      "        OBJECTLIT 0 [parenthesized: true]\n" +
-      "            SET a 0\n" +
-      "                FUNCTION  0\n" +
-      "                    NAME  0\n" +
-      "                    LP 0\n" +
-      "                        NAME x 0\n" +
-      "                    BLOCK 0\n");
+        "SCRIPT 0 [length: 15]\n" +
+        "    EXPR_RESULT 0 [length: 14]\n" +
+        "        OBJECTLIT 0 [parenthesized: true] [length: 13]\n" +
+        "            SET a 0 [length: 1]\n" +
+        "                FUNCTION  0 [length: 7]\n" +
+        "                    NAME  0\n" +
+        "                    LP 0\n" +
+        "                        NAME x 0 [length: 1]\n" +
+        "                    BLOCK 0 [length: 2]\n");
   }
 
   public void testSwitch() {
