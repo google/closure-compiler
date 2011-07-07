@@ -360,6 +360,12 @@ public class CommandLineRunnerTest extends TestCase {
          "}");
   }
 
+  public void testIssue504() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("void function() { alert('hi'); }();",
+         "alert('hi');", CheckSideEffects.USELESS_CODE_ERROR);
+  }
+
   public void testDebugFlag1() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     args.add("--debug=false");
@@ -863,6 +869,10 @@ public class CommandLineRunnerTest extends TestCase {
    */
   private void test(String original, DiagnosticType warning) {
     test(new String[] { original }, warning);
+  }
+
+  private void test(String original, String expected, DiagnosticType warning) {
+    test(new String[] { original }, new String[] { expected }, warning);
   }
 
   /**

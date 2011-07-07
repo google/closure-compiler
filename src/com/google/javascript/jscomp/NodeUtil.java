@@ -105,6 +105,9 @@ public final class NodeUtil {
         // ignoring side-effects
         return TernaryValue.TRUE;
 
+      case Token.VOID:
+        return TernaryValue.FALSE;
+
       default:
         return getPureBooleanValue(n);
     }
@@ -129,8 +132,13 @@ public final class NodeUtil {
 
       case Token.NULL:
       case Token.FALSE:
-      case Token.VOID:
         return TernaryValue.FALSE;
+
+      case Token.VOID:
+        if (!mayHaveSideEffects(n.getFirstChild())) {
+          return TernaryValue.FALSE;
+        }
+        break;
 
       case Token.NAME:
         String name = n.getString();
@@ -153,6 +161,7 @@ public final class NodeUtil {
         if (!mayHaveSideEffects(n)) {
           return TernaryValue.TRUE;
         }
+        break;
     }
 
     return TernaryValue.UNKNOWN;

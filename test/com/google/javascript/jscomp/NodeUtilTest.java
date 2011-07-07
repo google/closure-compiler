@@ -89,114 +89,114 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testGetBooleanValue() {
-    assertBooleanTrue("true");
-    assertBooleanTrue("10");
-    assertBooleanTrue("'0'");
-    assertBooleanTrue("/a/");
-    assertBooleanTrue("{}");
-    assertBooleanTrue("[]");
-    assertBooleanFalse("false");
-    assertBooleanFalse("null");
-    assertBooleanFalse("0");
-    assertBooleanFalse("''");
-    assertBooleanFalse("undefined");
-    assertBooleanFalse("void 0");
-    assertBooleanFalse("void foo()");
-    assertBooleanUnknown("b");
-    assertBooleanUnknown("-'0.0'");
+    assertPureBooleanTrue("true");
+    assertPureBooleanTrue("10");
+    assertPureBooleanTrue("'0'");
+    assertPureBooleanTrue("/a/");
+    assertPureBooleanTrue("{}");
+    assertPureBooleanTrue("[]");
+    assertPureBooleanFalse("false");
+    assertPureBooleanFalse("null");
+    assertPureBooleanFalse("0");
+    assertPureBooleanFalse("''");
+    assertPureBooleanFalse("undefined");
+    assertPureBooleanFalse("void 0");
+    assertPureBooleanUnknown("void foo()");
+    assertPureBooleanUnknown("b");
+    assertPureBooleanUnknown("-'0.0'");
 
     // Known but getBooleanValue return false for expressions with side-effects
-    assertBooleanUnknown("{a:foo()}");
-    assertBooleanUnknown("[foo()]");
+    assertPureBooleanUnknown("{a:foo()}");
+    assertPureBooleanUnknown("[foo()]");
   }
 
-  private void assertBooleanTrue(String val) {
+  private void assertPureBooleanTrue(String val) {
     assertEquals(TernaryValue.TRUE, NodeUtil.getPureBooleanValue(getNode(val)));
   }
 
-  private void assertBooleanFalse(String val) {
+  private void assertPureBooleanFalse(String val) {
     assertEquals(
         TernaryValue.FALSE, NodeUtil.getPureBooleanValue(getNode(val)));
   }
 
-  private void assertBooleanUnknown(String val) {
+  private void assertPureBooleanUnknown(String val) {
     assertEquals(
         TernaryValue.UNKNOWN, NodeUtil.getPureBooleanValue(getNode(val)));
   }
 
   public void testGetExpressionBooleanValue() {
-    assertExpressionBooleanTrue("a=true");
-    assertExpressionBooleanFalse("a=false");
+    assertImpureBooleanTrue("a=true");
+    assertImpureBooleanFalse("a=false");
 
-    assertExpressionBooleanTrue("a=(false,true)");
-    assertExpressionBooleanFalse("a=(true,false)");
+    assertImpureBooleanTrue("a=(false,true)");
+    assertImpureBooleanFalse("a=(true,false)");
 
-    assertExpressionBooleanTrue("a=(false || true)");
-    assertExpressionBooleanFalse("a=(true && false)");
+    assertImpureBooleanTrue("a=(false || true)");
+    assertImpureBooleanFalse("a=(true && false)");
 
-    assertExpressionBooleanTrue("a=!(true && false)");
+    assertImpureBooleanTrue("a=!(true && false)");
 
-    assertExpressionBooleanTrue("a,true");
-    assertExpressionBooleanFalse("a,false");
+    assertImpureBooleanTrue("a,true");
+    assertImpureBooleanFalse("a,false");
 
-    assertExpressionBooleanTrue("true||false");
-    assertExpressionBooleanFalse("false||false");
+    assertImpureBooleanTrue("true||false");
+    assertImpureBooleanFalse("false||false");
 
-    assertExpressionBooleanTrue("true&&true");
-    assertExpressionBooleanFalse("true&&false");
+    assertImpureBooleanTrue("true&&true");
+    assertImpureBooleanFalse("true&&false");
 
-    assertExpressionBooleanFalse("!true");
-    assertExpressionBooleanTrue("!false");
-    assertExpressionBooleanTrue("!''");
+    assertImpureBooleanFalse("!true");
+    assertImpureBooleanTrue("!false");
+    assertImpureBooleanTrue("!''");
 
     // Assignment ops other than ASSIGN are unknown.
-    assertExpressionBooleanUnknown("a *= 2");
+    assertImpureBooleanUnknown("a *= 2");
 
     // Complex expressions that contain anything other then "=", ",", or "!" are
     // unknown.
-    assertExpressionBooleanUnknown("2 + 2");
+    assertImpureBooleanUnknown("2 + 2");
 
-    assertExpressionBooleanTrue("a=1");
-    assertExpressionBooleanTrue("a=/a/");
-    assertExpressionBooleanTrue("a={}");
+    assertImpureBooleanTrue("a=1");
+    assertImpureBooleanTrue("a=/a/");
+    assertImpureBooleanTrue("a={}");
 
-    assertExpressionBooleanTrue("true");
-    assertExpressionBooleanTrue("10");
-    assertExpressionBooleanTrue("'0'");
-    assertExpressionBooleanTrue("/a/");
-    assertExpressionBooleanTrue("{}");
-    assertExpressionBooleanTrue("[]");
-    assertExpressionBooleanFalse("false");
-    assertExpressionBooleanFalse("null");
-    assertExpressionBooleanFalse("0");
-    assertExpressionBooleanFalse("''");
-    assertExpressionBooleanFalse("undefined");
-    assertExpressionBooleanFalse("void 0");
-    assertExpressionBooleanFalse("void foo()");
+    assertImpureBooleanTrue("true");
+    assertImpureBooleanTrue("10");
+    assertImpureBooleanTrue("'0'");
+    assertImpureBooleanTrue("/a/");
+    assertImpureBooleanTrue("{}");
+    assertImpureBooleanTrue("[]");
+    assertImpureBooleanFalse("false");
+    assertImpureBooleanFalse("null");
+    assertImpureBooleanFalse("0");
+    assertImpureBooleanFalse("''");
+    assertImpureBooleanFalse("undefined");
+    assertImpureBooleanFalse("void 0");
+    assertImpureBooleanFalse("void foo()");
 
-    assertExpressionBooleanTrue("a?true:true");
-    assertExpressionBooleanFalse("a?false:false");
-    assertExpressionBooleanUnknown("a?true:false");
-    assertExpressionBooleanUnknown("a?true:foo()");
+    assertImpureBooleanTrue("a?true:true");
+    assertImpureBooleanFalse("a?false:false");
+    assertImpureBooleanUnknown("a?true:false");
+    assertImpureBooleanUnknown("a?true:foo()");
 
-    assertExpressionBooleanUnknown("b");
-    assertExpressionBooleanUnknown("-'0.0'");
+    assertImpureBooleanUnknown("b");
+    assertImpureBooleanUnknown("-'0.0'");
 
-    assertExpressionBooleanTrue("{a:foo()}");
-    assertExpressionBooleanTrue("[foo()]");
+    assertImpureBooleanTrue("{a:foo()}");
+    assertImpureBooleanTrue("[foo()]");
   }
 
-  private void assertExpressionBooleanTrue(String val) {
+  private void assertImpureBooleanTrue(String val) {
     assertEquals(TernaryValue.TRUE,
         NodeUtil.getImpureBooleanValue(getNode(val)));
   }
 
-  private void assertExpressionBooleanFalse(String val) {
+  private void assertImpureBooleanFalse(String val) {
     assertEquals(TernaryValue.FALSE,
         NodeUtil.getImpureBooleanValue(getNode(val)));
   }
 
-  private void assertExpressionBooleanUnknown(String val) {
+  private void assertImpureBooleanUnknown(String val) {
     assertEquals(TernaryValue.UNKNOWN,
         NodeUtil.getImpureBooleanValue(getNode(val)));
   }
