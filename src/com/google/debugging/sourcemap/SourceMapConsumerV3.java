@@ -32,7 +32,7 @@ import java.util.ArrayList;
 /**
  * Class for parsing version 3 of the SourceMap format, as produced by the
  * Closure Compiler, etc.
- * http://goto.google.com/sourcemapv3
+ * http://code.google.com/p/closure-compiler/wiki/SourceMaps
  * @author johnlenz@google.com (John Lenz)
  */
 public class SourceMapConsumerV3 implements SourceMapConsumer {

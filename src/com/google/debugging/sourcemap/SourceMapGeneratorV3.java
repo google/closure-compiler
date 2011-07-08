@@ -246,33 +246,25 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
    *
    * 1.  {
    * 2.    version: 3,
-   * 3.    file: "out.js"
-   * 4.    lineCount: 2
-   * 5.    lineMaps: [
-   * 6.        "ABAAA",
-   * 7.        "ABAA"
-   * 8.     ],
-   * 9.    sourceRoot: "",
-   * 10.   sources: ["foo.js", "bar.js"],
-   * 11.   names: ["src", "maps", "are", "fun"],
-   * 12.   mappings: "a;;abcde,abcd,a;"
-   * 16.  }
+   * 3.    file: "out.js",
+   * 4.    lineCount: 2,
+   * 5.    sourceRoot: "",
+   * 6.    sources: ["foo.js", "bar.js"],
+   * 7.    names: ["src", "maps", "are", "fun"],
+   * 8.    mappings: "a;;abcde,abcd,a;"
+   * 9.  }
    *
    * Line 1: The entire file is a single JSON object
    * Line 2: File revision (always the first entry in the object)
    * Line 3: The name of the file that this source map is associated with.
    * Line 4: The number of lines represented in the sourcemap.
-   * Line 5: "lineMaps" field is a JSON array, where each entry represents a
-   *     line in the generated text.
-   * Line 6: A line entry, representing a series of line segments, where each
-   *     segment encodes an mappings-id and repetition count.
-   * Line 9: An optional source root, useful for relocating source files on a
+   * Line 5: An optional source root, useful for relocating source files on a
    *     server or removing repeated prefix values in the "sources" entry.
-   * Line 10: A list of sources used by the "mappings" entry relative to the
+   * Line 6: A list of sources used by the "mappings" entry relative to the
    *     sourceRoot.
-   * Line 11: A list of symbol names used by the "mapping" entry.  This list
+   * Line 7: A list of symbol names used by the "mapping" entry.  This list
    *     may be incomplete.
-   * Line 12: The mappings field.
+   * Line 8: The mappings field.
    */
   public void appendTo(Appendable out, String name) throws IOException {
     int maxLine = prepMappings();
