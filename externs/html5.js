@@ -506,6 +506,17 @@ Database.prototype.changeVersion = function(
     oldVersion, newVersion, callback, errorCallback, successCallback) {};
 
 /**
+ * @interface
+ */
+function DatabaseCallback() {}
+
+/**
+ * @param {Database} db
+ * @return {undefined}
+ */
+DatabaseCallback.prototype.handleEvent = function(db) {};
+
+/**
  * @constructor
  */
 function SQLError() {}
@@ -575,18 +586,21 @@ SQLResultSetRowList.prototype.item = function(index) {};
  * @param {string} version
  * @param {string} description
  * @param {number} size
+ * @param {(DatabaseCallback|function(Database))=} opt_callback
  * @return {Database}
  */
-function openDatabase(name, version, description, size) {}
+function openDatabase(name, version, description, size, opt_callback) {}
 
 /**
  * @param {string} name
  * @param {string} version
  * @param {string} description
  * @param {number} size
+ * @param {(DatabaseCallback|function(Database))=} opt_callback
  * @return {Database}
  */
-Window.prototype.openDatabase = function(name, version, description, size) {};
+Window.prototype.openDatabase =
+    function(name, version, description, size, opt_callback) {};
 
 /**
  * @type {boolean}
