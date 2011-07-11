@@ -799,15 +799,31 @@ IDBKeyRange.prototype.only = function(value) {};
  * @param {*} bound Creates a left bound key range.
  * @param {boolean=} open Open the key range.
  * @return {!IDBKeyRange} The key range.
+ * @deprecated Use lowerBound.
  */
 IDBKeyRange.prototype.leftBound = function(bound, open) {};
+
+/**
+ * @param {*} bound Creates a lower bound key range.
+ * @param {boolean=} open Open the key range.
+ * @return {!IDBKeyRange} The key range.
+ */
+IDBKeyRange.prototype.lowerBound = function(bound, open) {};
 
 /**
  * @param {*} bound Creates a right bound key range.
  * @param {boolean=} open Open the key range.
  * @return {!IDBKeyRange} The key range.
+ * @deprecated Use upperBound.
  */
 IDBKeyRange.prototype.rightBound = function(bound, open) {};
+
+/**
+ * @param {*} bound Creates an upper bound key range.
+ * @param {boolean=} open Open the key range.
+ * @return {!IDBKeyRange} The key range.
+ */
+IDBKeyRange.prototype.upperBound = function(bound, open) {};
 
 /**
  * @param {*} left The left bound value of openLeft is true.
