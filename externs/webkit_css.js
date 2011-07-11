@@ -337,3 +337,16 @@ CSSProperties.prototype.webkitMatchNearestMailBlockquoteColor;
 /** @type {string} */ CSSProperties.prototype.webkitUserModify;
 /** @type {string} */ CSSProperties.prototype.webkitUserSelect;
 /** @type {string} */ CSSProperties.prototype.webkitWritingMode;
+
+/** 
+ * @constructor 
+ * @param {number} x
+ * @param {number} y
+ */
+function WebKitPoint(x, y) {}
+
+/** @type {number} */
+WebKitPoint.prototype.x;
+
+/** @type {number} */
+WebKitPoint.prototype.y;
