@@ -1582,6 +1582,59 @@ HTMLElement.prototype.dataset;
 
 
 /**
+ * @constructor
+ */
+function DOMTokenList() {}
+
+/**
+ * Returns the number of CSS classes applied to this Element.
+ * @type {number}
+ */
+DOMTokenList.prototype.length;
+
+/**
+ * @param {number} index The index of the item to return.
+ * @return {string} The CSS class at the specified index.
+ */
+DOMTokenList.prototype.item = function(index) {};
+
+/**
+ * @param {string} token The CSS class to check for.
+ * @return {boolean} Whether the CSS class has been applied to the Element.
+ */
+DOMTokenList.prototype.contains = function(token) {};
+
+/**
+ * @param {string} token The CSS class to add to this element.
+ */
+DOMTokenList.prototype.add = function(token) {};
+
+/**
+ * @param {string} token The CSS class to remove from this element.
+ */
+DOMTokenList.prototype.remove = function(token) {};
+
+/**
+ * @param {string} token The CSS class to toggle from this element.
+ * @return {boolean} False if the token was removed; True otherwise.
+ */
+DOMTokenList.prototype.toggle = function(token) {};
+
+/**
+ * @return {string} A stringified representation of CSS classes.
+ */
+DOMTokenList.prototype.toString = function() {};
+
+/**
+ * A better interface to CSS classes than className.
+ * @type {DOMTokenList}
+ * @see http://www.w3.org/TR/html5/elements.html#dom-classlist
+ * @const
+ */
+HTMLElement.prototype.classList;
+
+
+/**
  * @param {number} length The length in bytes
  * @constructor
  * @noalias
