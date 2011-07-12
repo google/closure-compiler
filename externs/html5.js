@@ -578,6 +578,7 @@ SQLResultSetRowList.prototype.length;
 /**
  * @param {number} index
  * @return {Object}
+ * @nosideeffects
  */
 SQLResultSetRowList.prototype.item = function(index) {};
 
@@ -958,6 +959,7 @@ HTMLMediaElement.prototype.load = function() {};
 /**
  * @param {string} type Type of the element in question in question.
  * @return {string} Whether it can play the type.
+ * @nosideeffects
  */
 HTMLMediaElement.prototype.canPlayType = function(type) {};
 
@@ -1492,6 +1494,7 @@ FileList.prototype.length;
 /**
  * @param {number} i File to return from the list.
  * @return {File} The ith file in the list.
+ * @nosideeffects
  */
 FileList.prototype.item = function(i) { return null; };
 
@@ -1595,12 +1598,14 @@ DOMTokenList.prototype.length;
 /**
  * @param {number} index The index of the item to return.
  * @return {string} The CSS class at the specified index.
+ * @nosideeffects
  */
 DOMTokenList.prototype.item = function(index) {};
 
 /**
  * @param {string} token The CSS class to check for.
  * @return {boolean} Whether the CSS class has been applied to the Element.
+ * @nosideeffects
  */
 DOMTokenList.prototype.contains = function(token) {};
 
@@ -1622,6 +1627,7 @@ DOMTokenList.prototype.toggle = function(token) {};
 
 /**
  * @return {string} A stringified representation of CSS classes.
+ * @nosideeffects
  */
 DOMTokenList.prototype.toString = function() {};
 
