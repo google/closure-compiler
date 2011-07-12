@@ -61,4 +61,7 @@ public interface StaticSlot<T> {
    * Returns whether the type has been inferred (as opposed to declared).
    */
   boolean isTypeInferred();
+
+  /** Gets the declaration of this symbol. May not exist. */
+  StaticReference<T> getDeclaration();
 }

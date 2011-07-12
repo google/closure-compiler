@@ -173,6 +173,7 @@ class ProcessDefines implements CompilerPass {
     // Find all the global names with a @define annotation
     List<Name> allDefines = Lists.newArrayList();
     for (Name name : namespace.getNameIndex().values()) {
+      Ref decl = name.getDeclaration();
       if (name.docInfo != null && name.docInfo.isDefine()) {
         // Process defines should not depend on check types being enabled,
         // so we look for the JSDoc instead of the inferred type.
@@ -180,14 +181,13 @@ class ProcessDefines implements CompilerPass {
           allDefines.add(name);
         } else {
           JSError error = JSError.make(
-              name.declaration.getSourceName(),
-              name.declaration.node,
-              INVALID_DEFINE_TYPE_ERROR);
+              decl.getSourceName(),
+              decl.node, INVALID_DEFINE_TYPE_ERROR);
           compiler.report(error);
         }
       } else {
         for (Ref ref : name.getRefs()) {
-          if (ref == name.declaration) {
+          if (ref == decl) {
             // Declarations were handled above.
             continue;
           }
@@ -244,12 +244,13 @@ class ProcessDefines implements CompilerPass {
       // Create a map of references to defines keyed by node for easy lookup
       allRefInfo = Maps.newHashMap();
       for (Name name : listOfDefines) {
-        if (name.declaration != null) {
-          allRefInfo.put(name.declaration.node,
-                         new RefInfo(name.declaration, name));
+        Ref decl = name.getDeclaration();
+        if (decl != null) {
+          allRefInfo.put(decl.node,
+                         new RefInfo(decl, name));
         }
         for (Ref ref : name.getRefs()) {
-          if (ref == name.declaration) {
+          if (ref == decl) {
             // Declarations were handled above.
             continue;
           }
@@ -292,7 +293,7 @@ class ProcessDefines implements CompilerPass {
             Node valParent = getValueParent(ref);
             Node val = valParent.getLastChild();
             if (valParent.getType() == Token.ASSIGN && name.isSimpleName() &&
-                name.declaration == ref) {
+                name.getDeclaration() == ref) {
               // For defines, it's an error if a simple name is assigned
               // before it's declared
               compiler.report(

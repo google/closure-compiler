@@ -187,7 +187,7 @@ public class ProcessDefinesTest extends CompilerTestCase {
     Name def = namespace.getNameIndex().get("DEF");
     assertEquals(1, def.getRefs().size());
     assertEquals(1, def.globalSets);
-    assertNotNull(def.declaration);
+    assertNotNull(def.getDeclaration());
   }
 
   public void testSimpleReassign3() {
@@ -242,7 +242,7 @@ public class ProcessDefinesTest extends CompilerTestCase {
     Name def = namespace.getNameIndex().get("DEF");
     assertEquals(2, def.getRefs().size());
     assertEquals(1, def.globalSets);
-    assertNotNull(def.declaration);
+    assertNotNull(def.getDeclaration());
   }
 
   public void testReassignAfterRefInConditional() {
@@ -278,7 +278,7 @@ public class ProcessDefinesTest extends CompilerTestCase {
     Name aDotB = namespace.getNameIndex().get("a.B");
     assertEquals(1, aDotB.getRefs().size());
     assertEquals(1, aDotB.globalSets);
-    assertNotNull(aDotB.declaration);
+    assertNotNull(aDotB.getDeclaration());
   }
 
   public void testNamespacedDefine2a() {

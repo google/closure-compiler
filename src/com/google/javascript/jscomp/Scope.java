@@ -28,8 +28,10 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -75,7 +77,8 @@ public class Scope implements StaticScope<JSType> {
   };
 
   /** Stores info about a variable */
-  public static class Var implements StaticSlot<JSType> {
+  public static class Var
+      implements StaticSlot<JSType>, StaticReference<JSType> {
     /** name */
     final String name;
 
@@ -138,6 +141,29 @@ public class Scope implements StaticScope<JSType> {
      */
     public String getName() {
       return name;
+    }
+
+    /**
+     * Gets the node for the name of the variable.
+     */
+    @Override
+    public Node getNode() {
+      return nameNode;
+    }
+
+    @Override
+    public StaticSourceFile getSourceFile() {
+      return input;
+    }
+
+    @Override
+    public Var getSymbol() {
+      return this;
+    }
+
+    @Override
+    public Var getDeclaration() {
+      return nameNode == null ? null : this;
     }
 
     /**

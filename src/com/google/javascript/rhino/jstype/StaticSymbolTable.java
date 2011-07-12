@@ -44,7 +44,7 @@ package com.google.javascript.rhino.jstype;
  * @author nicksantos@google.com (Nick Santos)
  */
 public interface StaticSymbolTable
-    <S extends StaticSlot<JSType>, R extends StaticReference> {
+    <S extends StaticSlot<JSType>, R extends StaticReference<JSType>> {
   /**
    * Returns the references that point to the given symbol.
    */

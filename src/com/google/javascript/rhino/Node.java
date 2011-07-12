@@ -1235,14 +1235,17 @@ public class Node implements Cloneable, Serializable {
   }
 
   public String getSourceFileName() {
-    StaticSourceFile file =
-        ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
+    StaticSourceFile file = getStaticSourceFile();
     return file == null ? null : file.getName();
   }
 
+  /** Returns the source file associated with this input. May be null */
+  public StaticSourceFile getStaticSourceFile() {
+    return ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
+  }
+
   public boolean isFromExterns() {
-    StaticSourceFile file =
-        ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
+    StaticSourceFile file = getStaticSourceFile();
     return file == null ? false : file.isExtern();
   }
 

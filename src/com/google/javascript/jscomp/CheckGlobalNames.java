@@ -110,11 +110,11 @@ class CheckGlobalNames implements CompilerPass {
   private void validateName(Name name, boolean isDefined) {
     // If the name is not defined, emit warnings for each reference. While
     // we're looking through each reference, check all the module dependencies.
-    Ref declaration = name.declaration;
+    Ref declaration = name.getDeclaration();
     Name parent = name.parent;
     boolean singleGlobalParentDecl =
         parent != null &&
-        parent.declaration != null &&
+        parent.getDeclaration() != null &&
         parent.localSets == 0;
 
     JSModuleGraph moduleGraph = compiler.getModuleGraph();
@@ -128,14 +128,14 @@ class CheckGlobalNames implements CompilerPass {
         reportBadModuleReference(name, ref);
       } else if (ref.scope.isGlobal() &&
           singleGlobalParentDecl &&
-          parent.declaration.preOrderIndex > ref.preOrderIndex) {
+          parent.getDeclaration().preOrderIndex > ref.preOrderIndex) {
         compiler.report(
             JSError.make(ref.source.getName(), ref.node,
                 NAME_DEFINED_LATE_WARNING,
                 name.fullName(),
                 parent.fullName(),
-                parent.declaration.source.getName(),
-                String.valueOf(parent.declaration.node.getLineno())));
+                parent.getDeclaration().source.getName(),
+                String.valueOf(parent.getDeclaration().node.getLineno())));
       }
     }
   }
@@ -156,7 +156,7 @@ class CheckGlobalNames implements CompilerPass {
     compiler.report(
         JSError.make(ref.source.getName(), ref.node, STRICT_MODULE_DEP_QNAME,
                      ref.getModule().getName(),
-                     name.declaration.getModule().getName(),
+                     name.getDeclaration().getModule().getName(),
                      name.fullName()));
   }
 

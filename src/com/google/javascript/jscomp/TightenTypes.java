@@ -33,6 +33,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.UnionType;
@@ -277,7 +278,11 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     @Override public ConcreteType getType() { return type; }
 
     /** Whether this type was inferred rather than declared (always true). */
-    public boolean isTypeInferred() { return true; }
+    @Override public boolean isTypeInferred() { return true; }
+
+    @Override public StaticReference<ConcreteType> getDeclaration() {
+      return null;
+    }
 
     /**
      * Adds the given type to the possible concrete types for this slot.

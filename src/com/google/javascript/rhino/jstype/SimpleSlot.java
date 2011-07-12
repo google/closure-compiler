@@ -66,4 +66,8 @@ public class SimpleSlot implements StaticSlot<JSType> {
   public boolean isTypeInferred() {
     return inferred;
   }
+
+  public StaticReference<JSType> getDeclaration() {
+    return null;
+  }
 }

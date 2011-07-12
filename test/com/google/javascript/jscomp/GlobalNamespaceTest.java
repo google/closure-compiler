@@ -36,13 +36,13 @@ public class GlobalNamespaceTest extends TestCase {
     n.addRef(set1);
     n.addRef(set2);
 
-    assertEquals(set1, n.declaration);
+    assertEquals(set1, n.getDeclaration());
     assertEquals(2, n.globalSets);
     assertEquals(2, n.getRefs().size());
 
     n.removeRef(set1);
 
-    assertEquals(set2, n.declaration);
+    assertEquals(set2, n.getDeclaration());
     assertEquals(1, n.globalSets);
     assertEquals(1, n.getRefs().size());
   }
@@ -55,14 +55,14 @@ public class GlobalNamespaceTest extends TestCase {
     n.addRef(set1);
     n.addRef(set2);
 
-    assertEquals(set1, n.declaration);
+    assertEquals(set1, n.getDeclaration());
     assertEquals(1, n.globalSets);
     assertEquals(1, n.localSets);
     assertEquals(2, n.getRefs().size());
 
     n.removeRef(set1);
 
-    assertEquals(null, n.declaration);
+    assertEquals(null, n.getDeclaration());
     assertEquals(0, n.globalSets);
   }
 

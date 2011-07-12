@@ -46,11 +46,11 @@ import com.google.javascript.rhino.Node;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public interface StaticReference {
+public interface StaticReference<T> {
   /**
    * The variable that this reference points to.
    */
-  StaticSlot<JSType> getSymbol();
+  StaticSlot<T> getSymbol();
 
   /**
    * The node where the reference lives.

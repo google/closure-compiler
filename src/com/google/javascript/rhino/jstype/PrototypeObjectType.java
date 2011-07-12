@@ -493,7 +493,7 @@ class PrototypeObjectType extends ObjectType {
   }
 
   private static final class Property
-      implements Serializable, StaticSlot<JSType> {
+      implements Serializable, StaticSlot<JSType>, StaticReference<JSType> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -531,6 +531,26 @@ class PrototypeObjectType extends ObjectType {
     @Override
     public String getName() {
       return name;
+    }
+
+    @Override
+    public Node getNode() {
+      return propertyNode;
+    }
+
+    @Override
+    public StaticSourceFile getSourceFile() {
+      return propertyNode == null ? null : propertyNode.getStaticSourceFile();
+    }
+
+    @Override
+    public Property getSymbol() {
+      return this;
+    }
+
+    @Override
+    public Property getDeclaration() {
+      return propertyNode == null ? null : this;
     }
 
     @Override

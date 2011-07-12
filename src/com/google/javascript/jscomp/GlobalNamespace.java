@@ -868,7 +868,7 @@ class GlobalNamespace
     List<Name> props;
 
     /** The first global assignment to a name. */
-    Ref declaration;
+    private Ref declaration;
 
     /** All references to a name. This must contain {@code declaration}. */
     private List<Ref> refs;
@@ -905,6 +905,11 @@ class GlobalNamespace
     @Override
     public String getName() {
       return name;
+    }
+
+    @Override
+    public Ref getDeclaration() {
+      return declaration;
     }
 
     @Override
@@ -1146,7 +1151,7 @@ class GlobalNamespace
    * A global name reference. Contains references to the relevant parse tree
    * node and its ancestors that may be affected.
    */
-  static class Ref implements StaticReference {
+  static class Ref implements StaticReference<JSType> {
     enum Type {
       SET_FROM_GLOBAL,
       SET_FROM_LOCAL,

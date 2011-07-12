@@ -33,6 +33,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.testing.TestErrorReporter;
@@ -43,7 +44,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 
 /**
  * Unit test for the the subclasses of ConcreteType.
@@ -355,13 +355,16 @@ public class ConcreteTypeTest extends TestCase {
       this.name = name;
     }
 
-    /* {@inheritDoc} */
+    @Override
     public String getName() { return name; }
 
-    /* {@inheritDoc} */
+    @Override
     public ConcreteType getType() { return ConcreteType.ALL; }
 
-    /* {@inheritDoc} */
+    @Override
     public boolean isTypeInferred() { return true; }
+
+    @Override
+    public StaticReference<ConcreteType> getDeclaration() { return null; }
   }
 }
