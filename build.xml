@@ -20,6 +20,7 @@
   <property name="ant.build.javac.target" value="1.6" />
 
   <!-- define other variables -->
+  <property name="javac.debug" value="on" />
   <property name="src.dir" value="${basedir}/src" />
   <property name="gen.dir" value="${basedir}/gen" />
   <property name="test.dir" value="${basedir}/test" />
