@@ -25,7 +25,12 @@
   <property name="gen.dir" value="${basedir}/gen" />
   <property name="test.dir" value="${basedir}/test" />
   <property name="externs.dir" value="${basedir}/externs" />
-  <property name="build.dir" value="${basedir}/build" />
+  <!-- To workaround Ant limitation on overriding properties set on the
+       command-line, define a unique property to allow "build.dir" to
+       be change without forcing the build of Rhino to the same directory.
+  -->
+  <property name="closure.build.dir" value="${basedir}/build" />
+  <property name="build.dir" value="${closure.build.dir}" />
   <property name="buildlib.dir" value="${build.dir}/lib" />
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testClasses.dir" value="${build.dir}/test" />
@@ -73,7 +78,7 @@
          inheritAll="false"
          dir="lib/rhino/src/mozilla/js/rhino/"
          target="jar">
-      <property name="build.dir" value="../../../../../../build/lib"/>
+      <property name="build.dir" value="${buildlib.dir}"/>
       <property name="no-e4x" value="true"/>
     </ant>
   </target>
