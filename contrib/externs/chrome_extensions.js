@@ -95,12 +95,14 @@ chrome.tabs = {};
 
 /**
  * @param {number?} windowId Window Id.
+ * @param {Object?} options parameters of image capture, such as the format of
+ *    the resulting image.
  * @param {function(string) : void} callback Callback function which accepts
  *    the data URL string of a JPEG encoding of the visible area of the
  *    captured tab. May be assigned to the 'src' property of an HTML Image
  *    element for display.
  */
-chrome.tabs.captureVisibleTab = function(windowId, callback) {};
+chrome.tabs.captureVisibleTab = function(windowId, options, callback) {};
 
 /**
  * @param {number} tabId Tab Id.
