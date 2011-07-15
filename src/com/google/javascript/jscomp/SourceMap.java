@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapFormat;
 import com.google.debugging.sourcemap.SourceMapGenerator;
@@ -24,6 +25,9 @@ import com.google.debugging.sourcemap.SourceMapGeneratorFactory;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Collects information mapping the generated (compiled) source back to
@@ -90,7 +94,19 @@ public class SourceMap {
     };
   }
 
-  final SourceMapGenerator generator;
+  public static class LocationMapping {
+    final String prefix;
+    final String replacement;
+    LocationMapping(String prefix, String replacement) {
+      this.prefix = prefix;
+      this.replacement = replacement;
+    }
+  }
+
+  private final SourceMapGenerator generator;
+  private List<LocationMapping> prefixMappings = Collections.emptyList();
+  private final Map<String, String> sourceLocationFixupCache =
+      Maps.newHashMap();
 
   private SourceMap(SourceMapGenerator generator) {
     this.generator = generator;
@@ -101,12 +117,15 @@ public class SourceMap {
       FilePosition outputStartPosition,
       FilePosition outputEndPosition) {
     String sourceFile = node.getSourceFileName();
+
     // If the node does not have an associated source file or
     // its line number is -1, then the node does not have sufficient
     // information for a mapping to be useful.
     if (sourceFile == null || node.getLineno() < 0) {
       return;
     }
+
+    sourceFile = fixupSourceLocation(sourceFile);
 
     String originalName = (String) node.getProp(Node.ORIGINALNAME_PROP);
 
@@ -116,12 +135,40 @@ public class SourceMap {
         outputStartPosition, outputEndPosition);
   }
 
+  /**
+   * @param sourceFile The source file location to fixup.
+   * @return a remapped source file.
+   */
+  private String fixupSourceLocation(String sourceFile) {
+    if (prefixMappings.isEmpty()) {
+      return sourceFile;
+    }
+
+    String fixed = sourceLocationFixupCache.get(sourceFile);
+    if (fixed != null) {
+      return fixed;
+    }
+
+    // Replace the first prefix found with its replacement
+    for (LocationMapping mapping : prefixMappings) {
+      if (sourceFile.startsWith(mapping.prefix)) {
+        fixed = mapping.replacement + sourceFile.substring(
+          mapping.prefix.length());
+        break;
+      }
+    }
+
+    sourceLocationFixupCache.put(sourceFile, fixed);
+    return fixed;
+  }
+
   public void appendTo(Appendable out, String name) throws IOException {
     generator.appendTo(out, name);
   }
 
   public void reset() {
     generator.reset();
+    sourceLocationFixupCache.clear();
   }
 
   public void setStartingPosition(int offsetLine, int offsetIndex) {
@@ -134,5 +181,12 @@ public class SourceMap {
 
   public void validate(boolean validate) {
     generator.validate(validate);
+  }
+
+  /**
+   * @param sourceMapLocationMappings
+   */
+  public void setPrefixMappings(List<LocationMapping> sourceMapLocationMappings) {
+     this.prefixMappings = sourceMapLocationMappings;
   }
 }

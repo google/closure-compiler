@@ -167,9 +167,9 @@ public abstract class SourceMapTestCase extends TestCase {
     return tokens;
   }
 
-  abstract SourceMap.Format getSourceMapFormat();
+  abstract protected SourceMap.Format getSourceMapFormat();
 
-  abstract SourceMapConsumer getSourceMapConsumer();
+  abstract protected SourceMapConsumer getSourceMapConsumer();
 
   protected void compileAndCheck(String js) {
     String inputName = "testcode";
@@ -253,13 +253,18 @@ public abstract class SourceMapTestCase extends TestCase {
     return compile(js, fileName, null, null);
   }
 
-  protected RunResult compile(
-      String js1, String fileName1, String js2, String fileName2) {
-    Compiler compiler = new Compiler();
+  protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.sourceMapOutputPath = "testcode_source_map.out";
     options.sourceMapFormat = getSourceMapFormat();
     options.sourceMapDetailLevel = detailLevel;
+    return options;
+  }
+
+  protected RunResult compile(
+      String js1, String fileName1, String js2, String fileName2) {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = getCompilerOptions();
 
     // Turn on IDE mode to get rid of optimizations.
     options.ideMode = true;

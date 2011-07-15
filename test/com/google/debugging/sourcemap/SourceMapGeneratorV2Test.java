@@ -29,12 +29,12 @@ import java.io.IOException;
 public class SourceMapGeneratorV2Test extends SourceMapTestCase {
 
   @Override
-  SourceMapConsumer getSourceMapConsumer() {
+  protected SourceMapConsumer getSourceMapConsumer() {
     return new SourceMapConsumerV2();
   }
 
   @Override
-  Format getSourceMapFormat() {
+  protected Format getSourceMapFormat() {
     return SourceMap.Format.V2;
   }
 

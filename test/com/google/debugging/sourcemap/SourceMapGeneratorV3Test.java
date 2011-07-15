@@ -33,12 +33,12 @@ import java.util.List;
 public class SourceMapGeneratorV3Test extends SourceMapTestCase {
 
   @Override
-  SourceMapConsumer getSourceMapConsumer() {
+  protected SourceMapConsumer getSourceMapConsumer() {
     return new SourceMapConsumerV3();
   }
 
   @Override
-  Format getSourceMapFormat() {
+  protected Format getSourceMapFormat() {
     return SourceMap.Format.V3;
   }
 

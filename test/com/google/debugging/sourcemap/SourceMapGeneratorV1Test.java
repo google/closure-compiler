@@ -26,12 +26,12 @@ import com.google.javascript.jscomp.SourceMap.Format;
 public class SourceMapGeneratorV1Test extends SourceMapTestCase {
 
   @Override
-  SourceMapConsumer getSourceMapConsumer() {
+  protected SourceMapConsumer getSourceMapConsumer() {
     return new SourceMapConsumerV1();
   }
 
   @Override
-  Format getSourceMapFormat() {
+  protected Format getSourceMapFormat() {
     return SourceMap.Format.V1;
   }
 

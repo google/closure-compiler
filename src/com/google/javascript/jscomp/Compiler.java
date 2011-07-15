@@ -363,6 +363,7 @@ public class Compiler extends AbstractCompiler {
     // Create the source map if necessary.
     if (options.sourceMapOutputPath != null) {
       sourceMap = options.sourceMapFormat.getInstance();
+      sourceMap.setPrefixMappings(options.sourceMapLocationMappings);
     }
   }
 
@@ -992,11 +993,11 @@ public class Compiler extends AbstractCompiler {
 
   /** Add a source input dynamically. Intended for incremental compilation. */
   void addIncrementalSourceAst(JsAst ast) {
-    String sourceName = ast.getSourceFile().getName();
+    String intputName = ast.getSourceFile().getName();
     Preconditions.checkState(
-        getInput(sourceName) == null,
-        "Duplicate input of name " + sourceName);
-    inputsByName.put(sourceName, new CompilerInput(ast));
+        getInput(intputName) == null,
+        "Duplicate input of name " + intputName);
+    inputsByName.put(intputName, new CompilerInput(ast));
   }
 
   /**
@@ -1009,11 +1010,11 @@ public class Compiler extends AbstractCompiler {
    * @return Whether the new AST was attached successfully.
    */
   boolean replaceIncrementalSourceAst(JsAst ast) {
-    String sourceName = ast.getSourceFile().getName();
+    String inputName = ast.getSourceFile().getName();
     CompilerInput oldInput =
         Preconditions.checkNotNull(
-            getInput(sourceName),
-            "No input to replace: " + sourceName);
+            getInput(inputName),
+            "No input to replace: " + inputName);
     Node newRoot = ast.getAstRoot(this);
     if (newRoot == null) {
       return false;
@@ -1027,7 +1028,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     CompilerInput newInput = new CompilerInput(ast);
-    inputsByName.put(sourceName, newInput);
+    inputsByName.put(inputName, newInput);
 
     JSModule module = oldInput.getModule();
     if (module != null) {
