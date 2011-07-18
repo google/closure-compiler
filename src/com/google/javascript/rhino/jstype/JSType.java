@@ -637,21 +637,7 @@ public abstract class JSType implements Serializable {
       return ((UnionType) thisType).meet(thatType);
     } else if (thatType.isUnionType()) {
       return ((UnionType) thatType).meet(thisType);
-    }
-
-    if (thisType instanceof EnumElementType) {
-      JSType inf = ((EnumElementType) thisType).meet(thatType);
-      if (inf != null) {
-        return inf;
-      }
-    } else if (thatType instanceof EnumElementType) {
-      JSType inf = ((EnumElementType) thatType).meet(thisType);
-      if (inf != null) {
-        return inf;
-      }
-    }
-
-    if (thisType.isObject() && thatType.isObject()) {
+    } else if (thisType.isObject() && thatType.isObject()) {
       return thisType.getNativeType(JSTypeNative.NO_OBJECT_TYPE);
     }
     return thisType.getNativeType(JSTypeNative.NO_TYPE);

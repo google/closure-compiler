@@ -468,13 +468,17 @@ class PrototypeObjectType extends ObjectType {
     }
 
     // other prototype based objects
-    if (isUnknownType() || implicitPrototypeChainIsUnknown()) {
-      // If unsure, say 'yes', to avoid spurious warnings.
-      // TODO(user): resolve the prototype chain completely in all cases,
-      // to avoid guessing.
-      return true;
+    if (that != null) {
+      if (isUnknownType() || implicitPrototypeChainIsUnknown()) {
+        // If unsure, say 'yes', to avoid spurious warnings.
+        // TODO(user): resolve the prototype chain completely in all cases,
+        // to avoid guessing.
+        return true;
+      }
+      return this.isImplicitPrototype(thatObj);
     }
-    return this.isImplicitPrototype(thatObj);
+
+    return false;
   }
 
   private boolean implicitPrototypeChainIsUnknown() {
