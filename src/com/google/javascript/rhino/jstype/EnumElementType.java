@@ -209,7 +209,7 @@ public class EnumElementType extends ObjectType {
 
   @Override
   public ObjectType getImplicitPrototype() {
-    return null;
+    return primitiveObjectType == null ? null : primitiveObjectType;
   }
 
   @Override

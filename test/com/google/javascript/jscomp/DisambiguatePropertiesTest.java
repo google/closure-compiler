@@ -507,15 +507,15 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
 
   public void testEnum() {
     String js = ""
-      + "/** @enum {string} */ var En = {\n"
-      + "  A: 'first',\n"
-      + "  B: 'second'\n"
-      + "};\n"
-      + "var EA = En.A;\n"
-      + "var EB = En.B;\n"
-      + "/** @constructor */ function Foo(){};\n"
-      + "Foo.prototype.A = 0;\n"
-      + "Foo.prototype.B = 0;\n";
+        + "/** @enum {string} */ var En = {\n"
+        + "  A: 'first',\n"
+        + "  B: 'second'\n"
+        + "};\n"
+        + "var EA = En.A;\n"
+        + "var EB = En.B;\n"
+        + "/** @constructor */ function Foo(){};\n"
+        + "Foo.prototype.A = 0;\n"
+        + "Foo.prototype.B = 0;\n";
     String output = ""
         + "var En={A:'first',B:'second'};"
         + "var EA=En.A;"
@@ -532,6 +532,32 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "Foo.prototype.Foo_prototype$B=0";
     testSets(false, js, output, "{A=[[Foo.prototype]], B=[[Foo.prototype]]}");
     testSets(true, js, ttOutput, "{A=[[Foo.prototype]], B=[[Foo.prototype]]}");
+  }
+
+  public void testEnumOfObjects() {
+    String js = ""
+        + "/** @constructor */ function Formatter() {}"
+        + "Formatter.prototype.format = function() {};"
+        + "/** @constructor */ function Unrelated() {}"
+        + "Unrelated.prototype.format = function() {};"
+        + "/** @enum {!Formatter} */ var Enum = {\n"
+        + "  A: new Formatter()\n"
+        + "};\n"
+        + "Enum.A.format();\n";
+    String output = ""
+        + "/** @constructor */ function Formatter() {}"
+        + "Formatter.prototype.Formatter_prototype$format = function() {};"
+        + "/** @constructor */ function Unrelated() {}"
+        + "Unrelated.prototype.Unrelated_prototype$format = function() {};"
+        + "/** @enum {!Formatter} */ var Enum = {\n"
+        + "  A: new Formatter()\n"
+        + "};\n"
+        + "Enum.A.Formatter_prototype$format();\n";
+    testSets(false, js, output,
+        "{format=[[Formatter.prototype], [Unrelated.prototype]]}");
+
+    // TODO(nicksantos): Fix the type tightener to handle this case.
+    // It currently doesn't work, because getSubTypes is broken for enums.
   }
 
   public void testUntypedExterns() {
