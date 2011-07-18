@@ -4985,6 +4985,30 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     verifySubtypeChain(typeChain);
   }
 
+  public void testAnonymousObjectChain() throws Exception {
+    List<JSType> typeChain = Lists.newArrayList(
+        ALL_TYPE,
+        createNullableType(OBJECT_TYPE),
+        OBJECT_TYPE,
+        registry.createAnonymousObjectType(),
+        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        registry.getNativeType(JSTypeNative.NO_TYPE));
+    verifySubtypeChain(typeChain);
+  }
+
+  public void testAnonymousEnumElementChain() throws Exception {
+    ObjectType enumElemType = registry.createEnumType(
+        "typeB", registry.createAnonymousObjectType()).getElementsType();
+    List<JSType> typeChain = Lists.newArrayList(
+        ALL_TYPE,
+        createNullableType(OBJECT_TYPE),
+        OBJECT_TYPE,
+        enumElemType,
+        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        registry.getNativeType(JSTypeNative.NO_TYPE));
+    verifySubtypeChain(typeChain);
+  }
+
   /**
    * Tests that the given chain of types has a total ordering defined
    * by the subtype relationship, with types at the top of the lattice

@@ -2816,6 +2816,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testEnum42() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function f(x) {}" +
+        "/** @enum {Object} */ var MyEnum = {FOO: {newProperty: 1, b: 2}};" +
+        "f(MyEnum.FOO.newProperty);");
+  }
+
   public void testAliasedEnum1() throws Exception {
     testTypes(
         "/** @enum */ var YourEnum = {FOO: 3};" +
