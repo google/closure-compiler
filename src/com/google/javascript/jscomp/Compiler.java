@@ -1718,7 +1718,8 @@ public class Compiler extends AbstractCompiler {
       parserConfig = ParserRunner.createConfig(
         isIdeMode(),
         mode,
-        acceptConstKeyword());
+        acceptConstKeyword(),
+        options.extraAnnotationNames);
     }
     return parserConfig;
   }

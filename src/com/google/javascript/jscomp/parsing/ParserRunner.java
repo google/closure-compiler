@@ -29,6 +29,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -53,10 +54,23 @@ public class ParserRunner {
   public static Config createConfig(boolean isIdeMode,
                                     LanguageMode languageMode,
                                     boolean acceptConstKeyword) {
+    return createConfig(isIdeMode, languageMode, acceptConstKeyword, null);
+  }
+
+  public static Config createConfig(boolean isIdeMode,
+                                    LanguageMode languageMode,
+                                    boolean acceptConstKeyword,
+                                    Set<String> extraAnnotationNames) {
     initResourceConfig();
-    return new Config(annotationNames, suppressionNames,
-                      isIdeMode, languageMode,
-                      acceptConstKeyword);
+    Set<String> effectiveAnnotationNames;
+    if (extraAnnotationNames == null) {
+      effectiveAnnotationNames = annotationNames;
+    } else {
+      effectiveAnnotationNames = new HashSet<String>(annotationNames);
+      effectiveAnnotationNames.addAll(extraAnnotationNames);
+    }
+    return new Config(effectiveAnnotationNames, suppressionNames,
+        isIdeMode, languageMode, acceptConstKeyword);
   }
 
   private static synchronized void initResourceConfig() {

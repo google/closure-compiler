@@ -216,6 +216,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks that the synctactic restrictions of Caja are met. */
   public boolean checkCaja;
 
+  /**
+   * A set of extra annotation names which are accepted and silently ignored
+   * when encountered in a source file. Defaults to null which has the same
+   * effect as specifying an empty set.
+   */
+  Set<String> extraAnnotationNames;
+
   //--------------------------------
   // Optimizations
   //--------------------------------
@@ -708,6 +715,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkCaja = false;
     computeFunctionSideEffects = false;
     chainCalls = false;
+    extraAnnotationNames = null;
 
     // Optimizations
     foldConstants = false;
@@ -1135,6 +1143,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void enableExternExports(boolean enable) {
     this.externExports = enable;
+  }
+
+  public void setExtraAnnotationNames(Set<String> extraAnnotationNames) {
+    this.extraAnnotationNames = Sets.newHashSet(extraAnnotationNames);
   }
 
   public boolean isExternExportsEnabled() {
