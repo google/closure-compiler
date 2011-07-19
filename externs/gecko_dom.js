@@ -86,7 +86,8 @@ Window.prototype.eval;
 Window.prototype.frameElement;
 
 /**
- * @type {?Array}
+ * Allows lookup of frames by index or by name.
+ * @type {?Object}
  * @see https://developer.mozilla.org/en/DOM/window.frames
  */
 Window.prototype.frames;
