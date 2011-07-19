@@ -38,7 +38,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   static final DiagnosticType UNDEFINED_VAR_ERROR = DiagnosticType.error(
       "JSC_UNDEFINED_VARIABLE",
-      "variable {0} is undefined");
+      "variable {0} is undeclared");
 
   static final DiagnosticType VIOLATED_MODULE_DEP_ERROR = DiagnosticType.error(
       "JSC_VIOLATED_MODULE_DEPENDENCY",
