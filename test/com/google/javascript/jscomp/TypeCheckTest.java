@@ -5100,6 +5100,22 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "document.getElementById('node').innerHTML = list.toString();");
   }
 
+  public void testIssue483() throws Exception {
+    testTypes(
+        "/** @constructor */ function C() {" +
+        "  /** @type {?Array} */ this.a = [];" +
+        "}" +
+        "C.prototype.f = function() {" +
+        "  if (this.a.length > 0) {" +
+        "    g(this.a);" +
+        "  }" +
+        "};" +
+        "/** @param {number} a */ function g(a) {}",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : Array\n" +
+        "required: number");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See

@@ -228,7 +228,7 @@ class TypeInference
                   iterKeyType = narrowedKeyType;
                 }
               }
-              redeclare(informed, item.getString(), iterKeyType);
+              redeclareSimpleVar(informed, item, iterKeyType);
             }
             newScope = informed;
             break;
@@ -470,7 +470,7 @@ class TypeInference
     Node name = n.getFirstChild();
     JSType type = getNativeType(JSTypeNative.UNKNOWN_TYPE);
     name.setJSType(type);
-    redeclare(scope, name.getString(), type);
+    redeclareSimpleVar(scope, name, type);
     return scope;
   }
 
@@ -514,7 +514,7 @@ class TypeInference
         //    which is just wrong. This bug needs to be fixed eventually.
         boolean isVarDeclaration = left.hasChildren();
         if (!isVarDeclaration || var == null || var.isTypeInferred()) {
-          redeclare(scope, varName, resultType);
+          redeclareSimpleVar(scope, left, resultType);
         }
         left.setJSType(isVarDeclaration || leftType == null ?
             resultType : null);
@@ -835,8 +835,7 @@ class TypeInference
         JSType type = getJSType(assertedNode);
         JSType narrowed = type.restrictByNotNullOrUndefined();
         if (type != narrowed) {
-          scope = scope.createChildFlowScope();
-          redeclare(scope, assertedNodeName, narrowed);
+          scope = narrowScope(scope, assertedNode, narrowed);
           callNode.setJSType(narrowed);
         }
       } else if (assertedNode.getType() == Token.AND ||
@@ -852,10 +851,20 @@ class TypeInference
       JSType type = getJSType(assertedNode);
       JSType narrowed = type.getGreatestSubtype(getNativeType(assertedType));
       if (type != narrowed) {
-        scope = scope.createChildFlowScope();
-        redeclare(scope, assertedNodeName, narrowed);
+        scope = narrowScope(scope, assertedNode, narrowed);
         callNode.setJSType(narrowed);
       }
+    }
+    return scope;
+  }
+
+  private FlowScope narrowScope(FlowScope scope, Node node, JSType narrowed) {
+    scope = scope.createChildFlowScope();
+    if (node.getType() == Token.GETPROP) {
+      scope.inferQualifiedSlot(
+          node.getQualifiedName(), getNativeType(UNKNOWN_TYPE), narrowed);
+    } else {
+      redeclareSimpleVar(scope, node, narrowed);
     }
     return scope;
   }
@@ -1088,12 +1097,11 @@ class TypeInference
    * null or undefined.
    */
   private FlowScope dereferencePointer(Node n, FlowScope scope) {
-    if (n.getType() == Token.NAME) {
+    if (n.isQualifiedName()) {
       JSType type = getJSType(n);
       JSType narrowed = type.restrictByNotNullOrUndefined();
       if (type != narrowed) {
-        scope = scope.createChildFlowScope();
-        redeclare(scope, n.getString(), narrowed);
+        scope = narrowScope(scope, n, narrowed);
       }
     }
     return scope;
@@ -1319,7 +1327,10 @@ class TypeInference
         flowScope, flowScope);
   }
 
-  private void redeclare(FlowScope scope, String varName, JSType varType) {
+  private void redeclareSimpleVar(
+      FlowScope scope, Node nameNode, JSType varType) {
+    Preconditions.checkState(nameNode.getType() == Token.NAME);
+    String varName = nameNode.getString();
     if (varType == null) {
       varType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
