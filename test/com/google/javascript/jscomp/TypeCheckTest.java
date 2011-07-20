@@ -2150,6 +2150,42 @@ public class TypeCheckTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testDuplicateInstanceMethod1() throws Exception {
+    // If there's no jsdoc on the methods, then we treat them like
+    // any other inferred properties.
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "F.prototype.bar = function() {};" +
+        "F.prototype.bar = function() {};");
+  }
+
+  public void testDuplicateInstanceMethod2() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "/** jsdoc */ F.prototype.bar = function() {};" +
+        "/** jsdoc */ F.prototype.bar = function() {};",
+        "variable F.prototype.bar redefined with type " +
+        "function (this:F): undefined, original definition at " +
+        "[testcode]:1 with type function (this:F): undefined");
+  }
+
+  public void testDuplicateInstanceMethod3() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "F.prototype.bar = function() {};" +
+        "/** jsdoc */ F.prototype.bar = function() {};",
+        "variable F.prototype.bar redefined with type " +
+        "function (this:F): undefined, original definition at " +
+        "[testcode]:1 with type function (this:F): undefined");
+  }
+
+  public void testDuplicateInstanceMethod4() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "/** jsdoc */ F.prototype.bar = function() {};" +
+        "F.prototype.bar = function() {};");
+  }
+
   public void testStubFunctionDeclaration1() throws Exception {
     testFunctionType(
         "/** @constructor */ function f() {};" +

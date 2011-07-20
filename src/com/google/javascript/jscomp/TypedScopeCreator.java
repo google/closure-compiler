@@ -1381,7 +1381,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // 5) ASSIGN to anything else
       //
       // 1, 3, and 4 are declarations, 5 is inferred, and 2 is a declaration iff
-      // the function has not been declared before.
+      // the function has jsdoc or has not been declared before.
       //
       // FUNCTION literals are special because TypedScopeCreator is very smart
       // about getting as much type information as possible for them.
@@ -1418,7 +1418,7 @@ final class TypedScopeCreator implements ScopeCreator {
         // Determining declaration for #2
         inferred = !(rhsValue != null &&
             rhsValue.getType() == Token.FUNCTION &&
-            !scope.isDeclared(qName, false));
+            (info != null || !scope.isDeclared(qName, false)));
       }
 
       if (!inferred) {
