@@ -36,6 +36,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import junit.framework.TestCase;
@@ -312,7 +313,7 @@ public class ConcreteTypeTest extends TestCase {
   }
 
   // TODO(user): move to a common place if it can be used elsewhere
-  private class FakeScope implements StaticScope<ConcreteType> {
+  private class FakeScope extends AbstractStaticScope<ConcreteType> {
     private final FakeScope parent;
     private final Map<String, FakeSlot> slots = Maps.newHashMap();
 

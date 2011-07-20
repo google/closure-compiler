@@ -88,8 +88,6 @@ public class DefaultPassConfig extends PassConfig {
 
   /**
    * A global namespace to share across checking passes.
-   * TODO(nicksantos): This is a hack until I can get the namespace into
-   * the symbol table.
    */
   private GlobalNamespace namespaceForChecks = null;
 
@@ -159,6 +157,10 @@ public class DefaultPassConfig extends PassConfig {
     this.stringMap = state.stringMap;
     this.functionNames = state.functionNames;
     this.idGeneratorMap = state.idGeneratorMap;
+  }
+
+  GlobalNamespace getGlobalNamespace() {
+    return namespaceForChecks;
   }
 
   @Override
@@ -309,6 +311,7 @@ public class DefaultPassConfig extends PassConfig {
   @Override
   protected List<PassFactory> getOptimizations() {
     List<PassFactory> passes = Lists.newArrayList();
+    passes.add(garbageCollectChecks);
 
     // TODO(nicksantos): The order of these passes makes no sense, and needs
     // to be re-arranged.
@@ -1200,10 +1203,21 @@ public class DefaultPassConfig extends PassConfig {
 
           new ProcessDefines(compiler, replacements)
               .injectNamespace(namespaceForChecks).process(externs, jsRoot);
+        }
+      };
+    }
+  };
 
-          // Kill the namespace in the other class
-          // so that it can be garbage collected after all passes
-          // are through with it.
+  /** Release references to data that is only needed during checks. */
+  final PassFactory garbageCollectChecks =
+      new PassFactory("garbageCollectChecks", true) {
+    @Override
+    protected CompilerPass createInternal(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node jsRoot) {
+          // Kill the global namespace so that it can be garbage collected
+          // after all passes are through with it.
           namespaceForChecks = null;
         }
       };

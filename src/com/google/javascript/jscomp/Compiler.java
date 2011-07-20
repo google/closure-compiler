@@ -1052,8 +1052,33 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  ScopeCreator getTypedScopeCreator() {
+  MemoizedScopeCreator getTypedScopeCreator() {
     return getPassConfig().getTypedScopeCreator();
+  }
+
+  @SuppressWarnings("unchecked")
+  DefaultPassConfig ensureDefaultPassConfig() {
+    PassConfig passes = getPassConfig().getBasePassConfig();
+    Preconditions.checkState(passes instanceof DefaultPassConfig,
+        "PassConfigs must eventually delegate to the DefaultPassConfig");
+    return (DefaultPassConfig) passes;
+  }
+
+  SymbolTable buildKnownSymbolTable() {
+    SymbolTable symbolTable = new SymbolTable();
+
+    MemoizedScopeCreator typedScopeCreator = getTypedScopeCreator();
+    if (typedScopeCreator != null) {
+      symbolTable.addSymbolsFrom(typedScopeCreator);
+    }
+
+    GlobalNamespace globalNamespace =
+        ensureDefaultPassConfig().getGlobalNamespace();
+    if (globalNamespace != null) {
+      symbolTable.addSymbolsFrom(globalNamespace);
+    }
+
+    return symbolTable;
   }
 
   @Override

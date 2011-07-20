@@ -185,6 +185,9 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     }
 
     @Override
+    public Node getRootNode() { return null; }
+
+    @Override
     public StaticScope<ConcreteType> getParentScope() { return parent; }
 
     @Override

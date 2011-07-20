@@ -20,6 +20,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -32,7 +33,9 @@ import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.jstype.StaticSymbolTable;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,7 +55,8 @@ import java.util.Map;
  * @see DataFlowAnalysis
  *
  */
-public class Scope implements StaticScope<JSType> {
+public class Scope
+    implements StaticScope<JSType>, StaticSymbolTable<Scope.Var, Scope.Var> {
   private final Map<String, Var> vars = new LinkedHashMap<String, Var>();
   private final Scope parent;
   private final int depth;
@@ -417,6 +421,7 @@ public class Scope implements StaticScope<JSType> {
    * Gets the container node of the scope. This is typically the FUNCTION
    * node or the global BLOCK/SCRIPT node.
    */
+  @Override
   public Node getRootNode() {
     return rootNode;
   }
@@ -546,6 +551,21 @@ public class Scope implements StaticScope<JSType> {
    */
   public Iterator<Var> getVars() {
     return vars.values().iterator();
+  }
+
+  @Override
+  public Iterable<Var> getReferences(Var var) {
+    return ImmutableList.of(var);
+  }
+
+  @Override
+  public StaticScope<JSType> getScope(Var var) {
+    return var.scope;
+  }
+
+  @Override
+  public Iterable<Var> getAllSymbols() {
+    return Collections.unmodifiableCollection(vars.values());
   }
 
   /**

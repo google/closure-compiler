@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticScope;
@@ -126,6 +127,11 @@ class LinkedFlowScope implements FlowScope {
   @Override
   public JSType getTypeOfThis() {
     return cache.functionScope.getTypeOfThis();
+  }
+
+  @Override
+  public Node getRootNode() {
+    return getFunctionScope().getRootNode();
   }
 
   @Override

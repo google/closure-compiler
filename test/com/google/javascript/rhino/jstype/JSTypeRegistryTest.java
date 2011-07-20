@@ -43,6 +43,7 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry.ResolveMode;
 import com.google.javascript.rhino.testing.Asserts;
+import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.MapBasedScope;
 
 import junit.framework.TestCase;
@@ -105,18 +106,13 @@ public class JSTypeRegistryTest extends TestCase {
     SimpleErrorReporter reporter = new SimpleErrorReporter();
     final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
 
-    StaticScope<JSType> scope = new StaticScope<JSType>() {
+    StaticScope<JSType> scope = new AbstractStaticScope<JSType>() {
           public StaticSlot<JSType> getSlot(final String name) {
             return new SimpleSlot(
                 name,
                 typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
                 false);
           }
-          public StaticSlot<JSType> getOwnSlot(String name) {
-            return getSlot(name);
-          }
-          public StaticScope<JSType> getParentScope() { return null; }
-          public JSType getTypeOfThis() { return null; }
         };
 
     ObjectType namedType =
@@ -151,18 +147,13 @@ public class JSTypeRegistryTest extends TestCase {
     SimpleErrorReporter reporter = new SimpleErrorReporter();
     final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
 
-    StaticScope<JSType> scope = new StaticScope<JSType>() {
+    StaticScope<JSType> scope = new AbstractStaticScope<JSType>() {
           public StaticSlot<JSType> getSlot(final String name) {
             return new SimpleSlot(
                 name,
                 typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
                 false);
           }
-          public StaticSlot<JSType> getOwnSlot(String name) {
-            return getSlot(name);
-          }
-          public StaticScope<JSType> getParentScope() { return null; }
-          public JSType getTypeOfThis() { return null; }
         };
 
     ObjectType namedType =

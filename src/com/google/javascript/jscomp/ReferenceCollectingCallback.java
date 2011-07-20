@@ -127,6 +127,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
     return referenceMap.keySet();
   }
 
+  @Override
+  public Scope getScope(Var var) {
+    return var.scope;
+  }
+
   /**
    * Gets the reference collection for the given variable.
    */

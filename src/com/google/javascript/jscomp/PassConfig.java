@@ -83,7 +83,7 @@ public abstract class PassConfig {
   /**
    * Gets the scope creator for typed scopes.
    */
-  ScopeCreator getTypedScopeCreator() {
+  MemoizedScopeCreator getTypedScopeCreator() {
     return typedScopeCreator;
   }
 
@@ -253,7 +253,7 @@ public abstract class PassConfig {
       return delegate.getOptimizations();
     }
 
-    @Override ScopeCreator getTypedScopeCreator() {
+    @Override MemoizedScopeCreator getTypedScopeCreator() {
       return delegate.getTypedScopeCreator();
     }
 

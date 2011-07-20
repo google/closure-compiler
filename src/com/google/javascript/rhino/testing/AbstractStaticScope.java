@@ -22,8 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Jervis
- *   Google Inc.
+ *   Nick Santos
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -37,40 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.google.javascript.rhino.jstype;
+package com.google.javascript.rhino.testing;
 
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.StaticScope;
+import com.google.javascript.rhino.jstype.StaticSlot;
 
 /**
- * The {@code StaticScope} interface must be implemented by any object that
- * defines variables for the purposes of static analysis.  It is distinguished
- * from the {@code Scriptable} class that Rhino normally uses to represent a
- * runtime scope.
- *
- * @param <T> The type of information stored about the slot
+ * A scope that just returns null for everything.
+ * @author nicksantos@google.com (Nick Santos)
  */
-public interface StaticScope<T> {
-  /**
-   * Returns the root node associated with this scope. May be null.
-   */
-  Node getRootNode();
+public abstract class AbstractStaticScope<T> implements StaticScope<T> {
 
-  /** Returns the scope enclosing this one or null if none. */
-  StaticScope<T> getParentScope();
+  @Override
+  public Node getRootNode() {
+    return null;
+  }
 
-  /**
-   * Returns any defined slot within this scope for this name.  This call
-   * continues searching through parent scopes if a slot with this name is not
-   * found in the current scope.
-   * @param name The name of the variable slot to look up.
-   * @return The defined slot for the variable, or {@code null} if no
-   *         definition exists.
-   */
-  StaticSlot<T> getSlot(String name);
+  @Override
+  public StaticScope<T> getParentScope() {
+    return null;
+  }
 
-  /** Like {@code getSlot} but does not recurse into parent scopes. */
-  StaticSlot<T> getOwnSlot(String name);
+  public abstract StaticSlot<T> getSlot(String name);
 
-  /** Returns the expected type of {@code this} in the current scope. */
-  T getTypeOfThis();
+  @Override
+  public StaticSlot<T> getOwnSlot(String name) {
+    return getSlot(name);
+  }
+
+  @Override
+  public T getTypeOfThis() {
+    return null;
+  }
 }

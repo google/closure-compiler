@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleSlot;
-import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
 
 import java.util.Map;
@@ -51,7 +50,7 @@ import java.util.Map;
  * A scope based on a simple hashmap.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class MapBasedScope implements StaticScope<JSType> {
+public class MapBasedScope extends AbstractStaticScope<JSType> {
   private final Map<String, StaticSlot<JSType>> slots = Maps.newHashMap();
 
   public MapBasedScope(Map<String, ? extends JSType> namesToTypes) {
@@ -67,22 +66,7 @@ public class MapBasedScope implements StaticScope<JSType> {
   }
 
   @Override
-  public StaticScope<JSType> getParentScope() {
-    return null;
-  }
-
-  @Override
   public StaticSlot<JSType> getSlot(String name) {
     return slots.get(name);
-  }
-
-  @Override
-  public StaticSlot<JSType> getOwnSlot(String name) {
-    return slots.get(name);
-  }
-
-  @Override
-  public JSType getTypeOfThis() {
-    return null;
   }
 }

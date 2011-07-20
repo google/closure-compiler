@@ -87,6 +87,9 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
   }
 
   @Override
+  public Node getRootNode() { return null; }
+
+  @Override
   public StaticScope<JSType> getParentScope() {
     return getImplicitPrototype();
   }

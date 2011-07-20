@@ -51,6 +51,11 @@ public interface StaticSymbolTable
   Iterable<R> getReferences(S symbol);
 
   /**
+   * Returns the scope for a given symbol.
+   */
+  StaticScope<JSType> getScope(S symbol);
+
+  /**
    * Returns all variables in this symbol table.
    */
   Iterable<S> getAllSymbols();

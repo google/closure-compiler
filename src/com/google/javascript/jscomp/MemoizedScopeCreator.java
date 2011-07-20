@@ -17,9 +17,15 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.StaticSymbolTable;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,7 +40,8 @@ import java.util.Map;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class MemoizedScopeCreator implements ScopeCreator {
+class MemoizedScopeCreator
+    implements ScopeCreator, StaticSymbolTable<Var, Var> {
 
   private final Map<Node, Scope> scopes = Maps.newHashMap();
   private final ScopeCreator delegate;
@@ -44,6 +51,25 @@ class MemoizedScopeCreator implements ScopeCreator {
    */
   MemoizedScopeCreator(ScopeCreator delegate) {
     this.delegate = delegate;
+  }
+
+  @Override
+  public Iterable<Var> getReferences(Var var) {
+    return ImmutableList.of(var);
+  }
+
+  @Override
+  public Scope getScope(Var var) {
+    return var.scope;
+  }
+
+  @Override
+  public Iterable<Var> getAllSymbols() {
+    List<Var> vars = Lists.newArrayList();
+    for (Scope s : scopes.values()) {
+      Iterables.addAll(vars, s.getAllSymbols());
+    }
+    return vars;
   }
 
   @Override

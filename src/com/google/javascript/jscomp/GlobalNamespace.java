@@ -97,6 +97,11 @@ class GlobalNamespace
   }
 
   @Override
+  public Node getRootNode() {
+    return root.getParent();
+  }
+
+  @Override
   public StaticScope<JSType> getParentScope() {
     return null;
   }
@@ -120,6 +125,11 @@ class GlobalNamespace
   public Iterable<Ref> getReferences(Name slot) {
     ensureGenerated();
     return Collections.unmodifiableList(slot.getRefs());
+  }
+
+  @Override
+  public StaticScope<JSType> getScope(Name slot) {
+    return this;
   }
 
   @Override

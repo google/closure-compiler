@@ -55,6 +55,7 @@ import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.MapBasedScope;
 
 import java.util.HashMap;
@@ -152,7 +153,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     final ObjectType googObject = registry.createAnonymousObjectType();
     googObject.defineDeclaredProperty("Bar", googBar, null);
 
-    namedGoogBar.resolve(null, new StaticScope<JSType>() {
+    namedGoogBar.resolve(null, new AbstractStaticScope<JSType>() {
           public StaticSlot<JSType> getSlot(String name) {
             if ("goog".equals(name)) {
               return new SimpleSlot("goog", googObject, false);
@@ -160,16 +161,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
               return null;
             }
           }
-
-          public StaticSlot<JSType> getOwnSlot(String name) {
-            return getSlot(name);
-          }
-
-          public StaticScope<JSType> getParentScope() {
-            return null;
-          }
-
-          public JSType getTypeOfThis() { return null; }
         });
     assertNotNull(namedGoogBar.getImplicitPrototype());
 
