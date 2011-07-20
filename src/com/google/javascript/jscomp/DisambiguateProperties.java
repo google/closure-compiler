@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -32,6 +33,7 @@ import com.google.javascript.jscomp.graph.StandardUnionFind;
 import com.google.javascript.jscomp.graph.UnionFind;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -298,13 +300,14 @@ class DisambiguateProperties<T> implements CompilerPass {
       for (JSType alt : ((UnionType) type).getAlternates()) {
         addInvalidatingType(alt);
       }
-      return;
-    }
-
-    typeSystem.addInvalidatingType(type);
-    ObjectType objType = ObjectType.cast(type);
-    if (objType != null && objType.getImplicitPrototype() != null) {
-      typeSystem.addInvalidatingType(objType.getImplicitPrototype());
+    } else if (type instanceof EnumElementType) {
+      addInvalidatingType(((EnumElementType) type).getPrimitiveType());
+    } else {
+      typeSystem.addInvalidatingType(type);
+      ObjectType objType = ObjectType.cast(type);
+      if (objType != null && objType.getImplicitPrototype() != null) {
+        typeSystem.addInvalidatingType(objType.getImplicitPrototype());
+      }
     }
   }
 
@@ -689,6 +692,9 @@ class DisambiguateProperties<T> implements CompilerPass {
           types.addAll(getTypesToSkipForTypeNonUnion(type));
         }
         return ImmutableSet.copyOf(types);
+      } else if (type instanceof EnumElementType) {
+        return getTypesToSkipForType(
+            ((EnumElementType) type).getPrimitiveType());
       }
       return ImmutableSet.copyOf(getTypesToSkipForTypeNonUnion(type));
     }
@@ -738,6 +744,11 @@ class DisambiguateProperties<T> implements CompilerPass {
     }
 
     @Override public ObjectType getTypeWithProperty(String field, JSType type) {
+      if (type instanceof EnumElementType) {
+        return getTypeWithProperty(
+            field, ((EnumElementType) type).getPrimitiveType());
+      }
+
       if (!(type instanceof ObjectType)) {
         if (type.autoboxesTo() != null) {
           type = type.autoboxesTo();
@@ -910,8 +921,12 @@ class DisambiguateProperties<T> implements CompilerPass {
       jsType = jsType.restrictByNotNullOrUndefined();
       if (jsType instanceof UnionType) {
         for (JSType alt : ((UnionType) jsType).getAlternates()) {
-          return maybeAddAutoboxes(cType, alt, prop);
+          cType = maybeAddAutoboxes(cType, alt, prop);
         }
+        return cType;
+      } else if (jsType instanceof EnumElementType) {
+        return maybeAddAutoboxes(
+            cType, ((EnumElementType) jsType).getPrimitiveType(), prop);
       }
 
       if (jsType.autoboxesTo() != null) {

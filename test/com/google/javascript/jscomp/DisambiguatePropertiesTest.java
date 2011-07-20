@@ -560,6 +560,73 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     // It currently doesn't work, because getSubTypes is broken for enums.
   }
 
+  public void testEnumOfObjects2() {
+    String js = ""
+        + "/** @constructor */ function Formatter() {}"
+        + "Formatter.prototype.format = function() {};"
+        + "/** @constructor */ function Unrelated() {}"
+        + "Unrelated.prototype.format = function() {};"
+        + "/** @enum {?Formatter} */ var Enum = {\n"
+        + "  A: new Formatter(),\n"
+        + "  B: new Formatter()\n"
+        + "};\n"
+        + "function f() {\n"
+        + "  var formatter = window.toString() ? Enum.A : Enum.B;\n"
+        + "  formatter.format();\n"
+        + "}";
+    String output = ""
+        + "/** @constructor */ function Formatter() {}"
+        + "Formatter.prototype.format = function() {};"
+        + "/** @constructor */ function Unrelated() {}"
+        + "Unrelated.prototype.format = function() {};"
+        + "/** @enum {?Formatter} */ var Enum = {\n"
+        + "  A: new Formatter(),\n"
+        + "  B: new Formatter()\n"
+        + "};\n"
+        + "function f() {\n"
+        + "  var formatter = window.toString() ? Enum.A : Enum.B;\n"
+        + "  formatter.format();\n"
+        + "}";
+    testSets(false, js, output, "{}");
+  }
+
+  public void testEnumOfObjects3() {
+    String js = ""
+        + "/** @constructor */ function Formatter() {}"
+        + "Formatter.prototype.format = function() {};"
+        + "/** @constructor */ function Unrelated() {}"
+        + "Unrelated.prototype.format = function() {};"
+        + "/** @enum {!Formatter} */ var Enum = {\n"
+        + "  A: new Formatter(),\n"
+        + "  B: new Formatter()\n"
+        + "};\n"
+        + "/** @enum {!Enum} */ var SubEnum = {\n"
+        + "  C: Enum.A\n"
+        + "};\n"
+        + "function f() {\n"
+        + "  var formatter = SubEnum.C\n"
+        + "  formatter.format();\n"
+        + "}";
+    String output = ""
+        + "/** @constructor */ function Formatter() {}"
+        + "Formatter.prototype.Formatter_prototype$format = function() {};"
+        + "/** @constructor */ function Unrelated() {}"
+        + "Unrelated.prototype.Unrelated_prototype$format = function() {};"
+        + "/** @enum {!Formatter} */ var Enum = {\n"
+        + "  A: new Formatter(),\n"
+        + "  B: new Formatter()\n"
+        + "};\n"
+        + "/** @enum {!Enum} */ var SubEnum = {\n"
+        + "  C: Enum.A\n"
+        + "};\n"
+        + "function f() {\n"
+        + "  var formatter = SubEnum.C\n"
+        + "  formatter.Formatter_prototype$format();\n"
+        + "}";
+    testSets(false, js, output,
+        "{format=[[Formatter.prototype], [Unrelated.prototype]]}");
+  }
+
   public void testUntypedExterns() {
     String externs =
         BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES
