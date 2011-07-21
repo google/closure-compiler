@@ -3,10 +3,11 @@
 package com.google.javascript.jscomp;
 
 public  final class FunctionInformationMap extends
-    com.google.protobuf.GeneratedMessage {
+    com.google.protobuf.GeneratedMessage
+    implements FunctionInformationMapOrBuilder {
   // Use FunctionInformationMap.newBuilder() to construct.
-  private FunctionInformationMap() {
-    initFields();
+  private FunctionInformationMap(Builder builder) {
+    super(builder);
   }
   private FunctionInformationMap(boolean noInit) {}
 
@@ -29,11 +30,43 @@ public  final class FunctionInformationMap extends
     return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_fieldAccessorTable;
   }
 
+  public interface EntryOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required int32 id = 2;
+    boolean hasId();
+    int getId();
+
+    // required string source_name = 3;
+    boolean hasSourceName();
+    String getSourceName();
+
+    // required int32 line_number = 4;
+    boolean hasLineNumber();
+    int getLineNumber();
+
+    // required string module_name = 5;
+    boolean hasModuleName();
+    String getModuleName();
+
+    // required int32 size = 6;
+    boolean hasSize();
+    int getSize();
+
+    // required string name = 7;
+    boolean hasName();
+    String getName();
+
+    // required string compiled_source = 8;
+    boolean hasCompiledSource();
+    String getCompiledSource();
+  }
   public static final class Entry extends
-      com.google.protobuf.GeneratedMessage {
+      com.google.protobuf.GeneratedMessage
+      implements EntryOrBuilder {
     // Use Entry.newBuilder() to construct.
-    private Entry() {
-      initFields();
+    private Entry(Builder builder) {
+      super(builder);
     }
     private Entry(boolean noInit) {}
 
@@ -56,91 +89,234 @@ public  final class FunctionInformationMap extends
       return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Entry_fieldAccessorTable;
     }
 
+    private int bitField0_;
     // required int32 id = 2;
     public static final int ID_FIELD_NUMBER = 2;
-    private boolean hasId;
-    private int id_ = 0;
-    public boolean hasId() { return hasId; }
-    public int getId() { return id_; }
+    private int id_;
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public int getId() {
+      return id_;
+    }
 
     // required string source_name = 3;
     public static final int SOURCE_NAME_FIELD_NUMBER = 3;
-    private boolean hasSourceName;
-    private java.lang.String sourceName_ = "";
-    public boolean hasSourceName() { return hasSourceName; }
-    public java.lang.String getSourceName() { return sourceName_; }
+    private java.lang.Object sourceName_;
+    public boolean hasSourceName() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    public String getSourceName() {
+      java.lang.Object ref = sourceName_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          sourceName_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getSourceNameBytes() {
+      java.lang.Object ref = sourceName_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        sourceName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
 
     // required int32 line_number = 4;
     public static final int LINE_NUMBER_FIELD_NUMBER = 4;
-    private boolean hasLineNumber;
-    private int lineNumber_ = 0;
-    public boolean hasLineNumber() { return hasLineNumber; }
-    public int getLineNumber() { return lineNumber_; }
+    private int lineNumber_;
+    public boolean hasLineNumber() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    public int getLineNumber() {
+      return lineNumber_;
+    }
 
     // required string module_name = 5;
     public static final int MODULE_NAME_FIELD_NUMBER = 5;
-    private boolean hasModuleName;
-    private java.lang.String moduleName_ = "";
-    public boolean hasModuleName() { return hasModuleName; }
-    public java.lang.String getModuleName() { return moduleName_; }
+    private java.lang.Object moduleName_;
+    public boolean hasModuleName() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    public String getModuleName() {
+      java.lang.Object ref = moduleName_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          moduleName_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getModuleNameBytes() {
+      java.lang.Object ref = moduleName_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        moduleName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
 
     // required int32 size = 6;
     public static final int SIZE_FIELD_NUMBER = 6;
-    private boolean hasSize;
-    private int size_ = 0;
-    public boolean hasSize() { return hasSize; }
-    public int getSize() { return size_; }
+    private int size_;
+    public boolean hasSize() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    public int getSize() {
+      return size_;
+    }
 
     // required string name = 7;
     public static final int NAME_FIELD_NUMBER = 7;
-    private boolean hasName;
-    private java.lang.String name_ = "";
-    public boolean hasName() { return hasName; }
-    public java.lang.String getName() { return name_; }
+    private java.lang.Object name_;
+    public boolean hasName() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    public String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          name_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
 
     // required string compiled_source = 8;
     public static final int COMPILED_SOURCE_FIELD_NUMBER = 8;
-    private boolean hasCompiledSource;
-    private java.lang.String compiledSource_ = "";
-    public boolean hasCompiledSource() { return hasCompiledSource; }
-    public java.lang.String getCompiledSource() { return compiledSource_; }
+    private java.lang.Object compiledSource_;
+    public boolean hasCompiledSource() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    public String getCompiledSource() {
+      java.lang.Object ref = compiledSource_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          compiledSource_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getCompiledSourceBytes() {
+      java.lang.Object ref = compiledSource_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        compiledSource_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
 
     private void initFields() {
+      id_ = 0;
+      sourceName_ = "";
+      lineNumber_ = 0;
+      moduleName_ = "";
+      size_ = 0;
+      name_ = "";
+      compiledSource_ = "";
     }
+    private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
-      if (!hasId) return false;
-      if (!hasSourceName) return false;
-      if (!hasLineNumber) return false;
-      if (!hasModuleName) return false;
-      if (!hasSize) return false;
-      if (!hasName) return false;
-      if (!hasCompiledSource) return false;
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSourceName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasLineNumber()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasModuleName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSize()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasCompiledSource()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
       return true;
     }
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
-      if (hasId()) {
-        output.writeInt32(2, getId());
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(2, id_);
       }
-      if (hasSourceName()) {
-        output.writeString(3, getSourceName());
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(3, getSourceNameBytes());
       }
-      if (hasLineNumber()) {
-        output.writeInt32(4, getLineNumber());
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(4, lineNumber_);
       }
-      if (hasModuleName()) {
-        output.writeString(5, getModuleName());
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(5, getModuleNameBytes());
       }
-      if (hasSize()) {
-        output.writeInt32(6, getSize());
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(6, size_);
       }
-      if (hasName()) {
-        output.writeString(7, getName());
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(7, getNameBytes());
       }
-      if (hasCompiledSource()) {
-        output.writeString(8, getCompiledSource());
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBytes(8, getCompiledSourceBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -151,37 +327,44 @@ public  final class FunctionInformationMap extends
       if (size != -1) return size;
 
       size = 0;
-      if (hasId()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, getId());
+          .computeInt32Size(2, id_);
       }
-      if (hasSourceName()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(3, getSourceName());
+          .computeBytesSize(3, getSourceNameBytes());
       }
-      if (hasLineNumber()) {
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, getLineNumber());
+          .computeInt32Size(4, lineNumber_);
       }
-      if (hasModuleName()) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(5, getModuleName());
+          .computeBytesSize(5, getModuleNameBytes());
       }
-      if (hasSize()) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(6, getSize());
+          .computeInt32Size(6, size_);
       }
-      if (hasName()) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(7, getName());
+          .computeBytesSize(7, getNameBytes());
       }
-      if (hasCompiledSource()) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(8, getCompiledSource());
+          .computeBytesSize(8, getCompiledSourceBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
       return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.google.javascript.jscomp.FunctionInformationMap.Entry parseFrom(
@@ -258,34 +441,63 @@ public  final class FunctionInformationMap extends
     }
     public Builder toBuilder() { return newBuilder(this); }
 
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> {
-      private com.google.javascript.jscomp.FunctionInformationMap.Entry result;
-
-      // Construct using com.google.javascript.jscomp.FunctionInformationMap.Entry.newBuilder()
-      private Builder() {}
-
-      private static Builder create() {
-        Builder builder = new Builder();
-        builder.result = new com.google.javascript.jscomp.FunctionInformationMap.Entry();
-        return builder;
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Entry_descriptor;
       }
 
-      protected com.google.javascript.jscomp.FunctionInformationMap.Entry internalGetResult() {
-        return result;
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Entry_fieldAccessorTable;
+      }
+
+      // Construct using com.google.javascript.jscomp.FunctionInformationMap.Entry.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
       }
 
       public Builder clear() {
-        if (result == null) {
-          throw new IllegalStateException(
-            "Cannot call clear() after build().");
-        }
-        result = new com.google.javascript.jscomp.FunctionInformationMap.Entry();
+        super.clear();
+        id_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        sourceName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        lineNumber_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        moduleName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        size_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        name_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        compiledSource_ = "";
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
       public Builder clone() {
-        return create().mergeFrom(result);
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -297,33 +509,59 @@ public  final class FunctionInformationMap extends
         return com.google.javascript.jscomp.FunctionInformationMap.Entry.getDefaultInstance();
       }
 
-      public boolean isInitialized() {
-        return result.isInitialized();
-      }
       public com.google.javascript.jscomp.FunctionInformationMap.Entry build() {
-        if (result != null && !isInitialized()) {
+        com.google.javascript.jscomp.FunctionInformationMap.Entry result = buildPartial();
+        if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
-        return buildPartial();
+        return result;
       }
 
       private com.google.javascript.jscomp.FunctionInformationMap.Entry buildParsed()
           throws com.google.protobuf.InvalidProtocolBufferException {
-        if (!isInitialized()) {
+        com.google.javascript.jscomp.FunctionInformationMap.Entry result = buildPartial();
+        if (!result.isInitialized()) {
           throw newUninitializedMessageException(
             result).asInvalidProtocolBufferException();
         }
-        return buildPartial();
+        return result;
       }
 
       public com.google.javascript.jscomp.FunctionInformationMap.Entry buildPartial() {
-        if (result == null) {
-          throw new IllegalStateException(
-            "build() has already been called on this Builder.");
+        com.google.javascript.jscomp.FunctionInformationMap.Entry result = new com.google.javascript.jscomp.FunctionInformationMap.Entry(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
         }
-        com.google.javascript.jscomp.FunctionInformationMap.Entry returnMe = result;
-        result = null;
-        return returnMe;
+        result.id_ = id_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.sourceName_ = sourceName_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.lineNumber_ = lineNumber_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.moduleName_ = moduleName_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.size_ = size_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.name_ = name_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.compiledSource_ = compiledSource_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -362,6 +600,38 @@ public  final class FunctionInformationMap extends
         return this;
       }
 
+      public final boolean isInitialized() {
+        if (!hasId()) {
+
+          return false;
+        }
+        if (!hasSourceName()) {
+
+          return false;
+        }
+        if (!hasLineNumber()) {
+
+          return false;
+        }
+        if (!hasModuleName()) {
+
+          return false;
+        }
+        if (!hasSize()) {
+
+          return false;
+        }
+        if (!hasName()) {
+
+          return false;
+        }
+        if (!hasCompiledSource()) {
+
+          return false;
+        }
+        return true;
+      }
+
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -374,184 +644,263 @@ public  final class FunctionInformationMap extends
           switch (tag) {
             case 0:
               this.setUnknownFields(unknownFields.build());
+              onChanged();
               return this;
             default: {
               if (!parseUnknownField(input, unknownFields,
                                      extensionRegistry, tag)) {
                 this.setUnknownFields(unknownFields.build());
+                onChanged();
                 return this;
               }
               break;
             }
             case 16: {
-              setId(input.readInt32());
+              bitField0_ |= 0x00000001;
+              id_ = input.readInt32();
               break;
             }
             case 26: {
-              setSourceName(input.readString());
+              bitField0_ |= 0x00000002;
+              sourceName_ = input.readBytes();
               break;
             }
             case 32: {
-              setLineNumber(input.readInt32());
+              bitField0_ |= 0x00000004;
+              lineNumber_ = input.readInt32();
               break;
             }
             case 42: {
-              setModuleName(input.readString());
+              bitField0_ |= 0x00000008;
+              moduleName_ = input.readBytes();
               break;
             }
             case 48: {
-              setSize(input.readInt32());
+              bitField0_ |= 0x00000010;
+              size_ = input.readInt32();
               break;
             }
             case 58: {
-              setName(input.readString());
+              bitField0_ |= 0x00000020;
+              name_ = input.readBytes();
               break;
             }
             case 66: {
-              setCompiledSource(input.readString());
+              bitField0_ |= 0x00000040;
+              compiledSource_ = input.readBytes();
               break;
             }
           }
         }
       }
 
+      private int bitField0_;
 
       // required int32 id = 2;
+      private int id_ ;
       public boolean hasId() {
-        return result.hasId();
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       public int getId() {
-        return result.getId();
+        return id_;
       }
       public Builder setId(int value) {
-        result.hasId = true;
-        result.id_ = value;
+        bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
         return this;
       }
       public Builder clearId() {
-        result.hasId = false;
-        result.id_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = 0;
+        onChanged();
         return this;
       }
 
       // required string source_name = 3;
+      private java.lang.Object sourceName_ = "";
       public boolean hasSourceName() {
-        return result.hasSourceName();
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
-      public java.lang.String getSourceName() {
-        return result.getSourceName();
+      public String getSourceName() {
+        java.lang.Object ref = sourceName_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          sourceName_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
       }
-      public Builder setSourceName(java.lang.String value) {
+      public Builder setSourceName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  result.hasSourceName = true;
-        result.sourceName_ = value;
+  bitField0_ |= 0x00000002;
+        sourceName_ = value;
+        onChanged();
         return this;
       }
       public Builder clearSourceName() {
-        result.hasSourceName = false;
-        result.sourceName_ = getDefaultInstance().getSourceName();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        sourceName_ = getDefaultInstance().getSourceName();
+        onChanged();
         return this;
+      }
+      void setSourceName(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000002;
+        sourceName_ = value;
+        onChanged();
       }
 
       // required int32 line_number = 4;
+      private int lineNumber_ ;
       public boolean hasLineNumber() {
-        return result.hasLineNumber();
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       public int getLineNumber() {
-        return result.getLineNumber();
+        return lineNumber_;
       }
       public Builder setLineNumber(int value) {
-        result.hasLineNumber = true;
-        result.lineNumber_ = value;
+        bitField0_ |= 0x00000004;
+        lineNumber_ = value;
+        onChanged();
         return this;
       }
       public Builder clearLineNumber() {
-        result.hasLineNumber = false;
-        result.lineNumber_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        lineNumber_ = 0;
+        onChanged();
         return this;
       }
 
       // required string module_name = 5;
+      private java.lang.Object moduleName_ = "";
       public boolean hasModuleName() {
-        return result.hasModuleName();
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
-      public java.lang.String getModuleName() {
-        return result.getModuleName();
+      public String getModuleName() {
+        java.lang.Object ref = moduleName_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          moduleName_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
       }
-      public Builder setModuleName(java.lang.String value) {
+      public Builder setModuleName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  result.hasModuleName = true;
-        result.moduleName_ = value;
+  bitField0_ |= 0x00000008;
+        moduleName_ = value;
+        onChanged();
         return this;
       }
       public Builder clearModuleName() {
-        result.hasModuleName = false;
-        result.moduleName_ = getDefaultInstance().getModuleName();
+        bitField0_ = (bitField0_ & ~0x00000008);
+        moduleName_ = getDefaultInstance().getModuleName();
+        onChanged();
         return this;
+      }
+      void setModuleName(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000008;
+        moduleName_ = value;
+        onChanged();
       }
 
       // required int32 size = 6;
+      private int size_ ;
       public boolean hasSize() {
-        return result.hasSize();
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       public int getSize() {
-        return result.getSize();
+        return size_;
       }
       public Builder setSize(int value) {
-        result.hasSize = true;
-        result.size_ = value;
+        bitField0_ |= 0x00000010;
+        size_ = value;
+        onChanged();
         return this;
       }
       public Builder clearSize() {
-        result.hasSize = false;
-        result.size_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        size_ = 0;
+        onChanged();
         return this;
       }
 
       // required string name = 7;
+      private java.lang.Object name_ = "";
       public boolean hasName() {
-        return result.hasName();
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
-      public java.lang.String getName() {
-        return result.getName();
+      public String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
       }
-      public Builder setName(java.lang.String value) {
+      public Builder setName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  result.hasName = true;
-        result.name_ = value;
+  bitField0_ |= 0x00000020;
+        name_ = value;
+        onChanged();
         return this;
       }
       public Builder clearName() {
-        result.hasName = false;
-        result.name_ = getDefaultInstance().getName();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        name_ = getDefaultInstance().getName();
+        onChanged();
         return this;
+      }
+      void setName(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000020;
+        name_ = value;
+        onChanged();
       }
 
       // required string compiled_source = 8;
+      private java.lang.Object compiledSource_ = "";
       public boolean hasCompiledSource() {
-        return result.hasCompiledSource();
+        return ((bitField0_ & 0x00000040) == 0x00000040);
       }
-      public java.lang.String getCompiledSource() {
-        return result.getCompiledSource();
+      public String getCompiledSource() {
+        java.lang.Object ref = compiledSource_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          compiledSource_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
       }
-      public Builder setCompiledSource(java.lang.String value) {
+      public Builder setCompiledSource(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  result.hasCompiledSource = true;
-        result.compiledSource_ = value;
+  bitField0_ |= 0x00000040;
+        compiledSource_ = value;
+        onChanged();
         return this;
       }
       public Builder clearCompiledSource() {
-        result.hasCompiledSource = false;
-        result.compiledSource_ = getDefaultInstance().getCompiledSource();
+        bitField0_ = (bitField0_ & ~0x00000040);
+        compiledSource_ = getDefaultInstance().getCompiledSource();
+        onChanged();
         return this;
+      }
+      void setCompiledSource(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000040;
+        compiledSource_ = value;
+        onChanged();
       }
 
       // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap.Entry)
@@ -559,18 +908,29 @@ public  final class FunctionInformationMap extends
 
     static {
       defaultInstance = new Entry(true);
-      com.google.javascript.jscomp.FunctionInfo.internalForceInit();
       defaultInstance.initFields();
     }
 
     // @@protoc_insertion_point(class_scope:jscomp.FunctionInformationMap.Entry)
   }
 
+  public interface ModuleOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required string name = 102;
+    boolean hasName();
+    String getName();
+
+    // required string compiled_source = 103;
+    boolean hasCompiledSource();
+    String getCompiledSource();
+  }
   public static final class Module extends
-      com.google.protobuf.GeneratedMessage {
+      com.google.protobuf.GeneratedMessage
+      implements ModuleOrBuilder {
     // Use Module.newBuilder() to construct.
-    private Module() {
-      initFields();
+    private Module(Builder builder) {
+      super(builder);
     }
     private Module(boolean noInit) {}
 
@@ -593,36 +953,100 @@ public  final class FunctionInformationMap extends
       return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Module_fieldAccessorTable;
     }
 
+    private int bitField0_;
     // required string name = 102;
     public static final int NAME_FIELD_NUMBER = 102;
-    private boolean hasName;
-    private java.lang.String name_ = "";
-    public boolean hasName() { return hasName; }
-    public java.lang.String getName() { return name_; }
+    private java.lang.Object name_;
+    public boolean hasName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          name_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
 
     // required string compiled_source = 103;
     public static final int COMPILED_SOURCE_FIELD_NUMBER = 103;
-    private boolean hasCompiledSource;
-    private java.lang.String compiledSource_ = "";
-    public boolean hasCompiledSource() { return hasCompiledSource; }
-    public java.lang.String getCompiledSource() { return compiledSource_; }
+    private java.lang.Object compiledSource_;
+    public boolean hasCompiledSource() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    public String getCompiledSource() {
+      java.lang.Object ref = compiledSource_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          compiledSource_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getCompiledSourceBytes() {
+      java.lang.Object ref = compiledSource_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        compiledSource_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
 
     private void initFields() {
+      name_ = "";
+      compiledSource_ = "";
     }
+    private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
-      if (!hasName) return false;
-      if (!hasCompiledSource) return false;
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasCompiledSource()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
       return true;
     }
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
-      if (hasName()) {
-        output.writeString(102, getName());
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(102, getNameBytes());
       }
-      if (hasCompiledSource()) {
-        output.writeString(103, getCompiledSource());
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(103, getCompiledSourceBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -633,17 +1057,24 @@ public  final class FunctionInformationMap extends
       if (size != -1) return size;
 
       size = 0;
-      if (hasName()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(102, getName());
+          .computeBytesSize(102, getNameBytes());
       }
-      if (hasCompiledSource()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(103, getCompiledSource());
+          .computeBytesSize(103, getCompiledSourceBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
       return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
     public static com.google.javascript.jscomp.FunctionInformationMap.Module parseFrom(
@@ -720,34 +1151,53 @@ public  final class FunctionInformationMap extends
     }
     public Builder toBuilder() { return newBuilder(this); }
 
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> {
-      private com.google.javascript.jscomp.FunctionInformationMap.Module result;
-
-      // Construct using com.google.javascript.jscomp.FunctionInformationMap.Module.newBuilder()
-      private Builder() {}
-
-      private static Builder create() {
-        Builder builder = new Builder();
-        builder.result = new com.google.javascript.jscomp.FunctionInformationMap.Module();
-        return builder;
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Module_descriptor;
       }
 
-      protected com.google.javascript.jscomp.FunctionInformationMap.Module internalGetResult() {
-        return result;
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_Module_fieldAccessorTable;
+      }
+
+      // Construct using com.google.javascript.jscomp.FunctionInformationMap.Module.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
       }
 
       public Builder clear() {
-        if (result == null) {
-          throw new IllegalStateException(
-            "Cannot call clear() after build().");
-        }
-        result = new com.google.javascript.jscomp.FunctionInformationMap.Module();
+        super.clear();
+        name_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        compiledSource_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
       public Builder clone() {
-        return create().mergeFrom(result);
+        return create().mergeFrom(buildPartial());
       }
 
       public com.google.protobuf.Descriptors.Descriptor
@@ -759,33 +1209,39 @@ public  final class FunctionInformationMap extends
         return com.google.javascript.jscomp.FunctionInformationMap.Module.getDefaultInstance();
       }
 
-      public boolean isInitialized() {
-        return result.isInitialized();
-      }
       public com.google.javascript.jscomp.FunctionInformationMap.Module build() {
-        if (result != null && !isInitialized()) {
+        com.google.javascript.jscomp.FunctionInformationMap.Module result = buildPartial();
+        if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
-        return buildPartial();
+        return result;
       }
 
       private com.google.javascript.jscomp.FunctionInformationMap.Module buildParsed()
           throws com.google.protobuf.InvalidProtocolBufferException {
-        if (!isInitialized()) {
+        com.google.javascript.jscomp.FunctionInformationMap.Module result = buildPartial();
+        if (!result.isInitialized()) {
           throw newUninitializedMessageException(
             result).asInvalidProtocolBufferException();
         }
-        return buildPartial();
+        return result;
       }
 
       public com.google.javascript.jscomp.FunctionInformationMap.Module buildPartial() {
-        if (result == null) {
-          throw new IllegalStateException(
-            "build() has already been called on this Builder.");
+        com.google.javascript.jscomp.FunctionInformationMap.Module result = new com.google.javascript.jscomp.FunctionInformationMap.Module(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
         }
-        com.google.javascript.jscomp.FunctionInformationMap.Module returnMe = result;
-        result = null;
-        return returnMe;
+        result.name_ = name_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.compiledSource_ = compiledSource_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -809,6 +1265,18 @@ public  final class FunctionInformationMap extends
         return this;
       }
 
+      public final boolean isInitialized() {
+        if (!hasName()) {
+
+          return false;
+        }
+        if (!hasCompiledSource()) {
+
+          return false;
+        }
+        return true;
+      }
+
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -821,68 +1289,103 @@ public  final class FunctionInformationMap extends
           switch (tag) {
             case 0:
               this.setUnknownFields(unknownFields.build());
+              onChanged();
               return this;
             default: {
               if (!parseUnknownField(input, unknownFields,
                                      extensionRegistry, tag)) {
                 this.setUnknownFields(unknownFields.build());
+                onChanged();
                 return this;
               }
               break;
             }
             case 818: {
-              setName(input.readString());
+              bitField0_ |= 0x00000001;
+              name_ = input.readBytes();
               break;
             }
             case 826: {
-              setCompiledSource(input.readString());
+              bitField0_ |= 0x00000002;
+              compiledSource_ = input.readBytes();
               break;
             }
           }
         }
       }
 
+      private int bitField0_;
 
       // required string name = 102;
+      private java.lang.Object name_ = "";
       public boolean hasName() {
-        return result.hasName();
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
-      public java.lang.String getName() {
-        return result.getName();
+      public String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
       }
-      public Builder setName(java.lang.String value) {
+      public Builder setName(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  result.hasName = true;
-        result.name_ = value;
+  bitField0_ |= 0x00000001;
+        name_ = value;
+        onChanged();
         return this;
       }
       public Builder clearName() {
-        result.hasName = false;
-        result.name_ = getDefaultInstance().getName();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        name_ = getDefaultInstance().getName();
+        onChanged();
         return this;
+      }
+      void setName(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000001;
+        name_ = value;
+        onChanged();
       }
 
       // required string compiled_source = 103;
+      private java.lang.Object compiledSource_ = "";
       public boolean hasCompiledSource() {
-        return result.hasCompiledSource();
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
-      public java.lang.String getCompiledSource() {
-        return result.getCompiledSource();
+      public String getCompiledSource() {
+        java.lang.Object ref = compiledSource_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          compiledSource_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
       }
-      public Builder setCompiledSource(java.lang.String value) {
+      public Builder setCompiledSource(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  result.hasCompiledSource = true;
-        result.compiledSource_ = value;
+  bitField0_ |= 0x00000002;
+        compiledSource_ = value;
+        onChanged();
         return this;
       }
       public Builder clearCompiledSource() {
-        result.hasCompiledSource = false;
-        result.compiledSource_ = getDefaultInstance().getCompiledSource();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        compiledSource_ = getDefaultInstance().getCompiledSource();
+        onChanged();
         return this;
+      }
+      void setCompiledSource(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000002;
+        compiledSource_ = value;
+        onChanged();
       }
 
       // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap.Module)
@@ -890,7 +1393,6 @@ public  final class FunctionInformationMap extends
 
     static {
       defaultInstance = new Module(true);
-      com.google.javascript.jscomp.FunctionInfo.internalForceInit();
       defaultInstance.initFields();
     }
 
@@ -899,48 +1401,79 @@ public  final class FunctionInformationMap extends
 
   // repeated group Entry = 1 {
   public static final int ENTRY_FIELD_NUMBER = 1;
-  private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> entry_ =
-    java.util.Collections.emptyList();
+  private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> entry_;
   public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> getEntryList() {
     return entry_;
   }
-  public int getEntryCount() { return entry_.size(); }
+  public java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder>
+      getEntryOrBuilderList() {
+    return entry_;
+  }
+  public int getEntryCount() {
+    return entry_.size();
+  }
   public com.google.javascript.jscomp.FunctionInformationMap.Entry getEntry(int index) {
+    return entry_.get(index);
+  }
+  public com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder getEntryOrBuilder(
+      int index) {
     return entry_.get(index);
   }
 
   // repeated group Module = 101 {
   public static final int MODULE_FIELD_NUMBER = 101;
-  private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> module_ =
-    java.util.Collections.emptyList();
+  private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> module_;
   public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> getModuleList() {
     return module_;
   }
-  public int getModuleCount() { return module_.size(); }
+  public java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder>
+      getModuleOrBuilderList() {
+    return module_;
+  }
+  public int getModuleCount() {
+    return module_.size();
+  }
   public com.google.javascript.jscomp.FunctionInformationMap.Module getModule(int index) {
+    return module_.get(index);
+  }
+  public com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder getModuleOrBuilder(
+      int index) {
     return module_.get(index);
   }
 
   private void initFields() {
+    entry_ = java.util.Collections.emptyList();
+    module_ = java.util.Collections.emptyList();
   }
+  private byte memoizedIsInitialized = -1;
   public final boolean isInitialized() {
-    for (com.google.javascript.jscomp.FunctionInformationMap.Entry element : getEntryList()) {
-      if (!element.isInitialized()) return false;
+    byte isInitialized = memoizedIsInitialized;
+    if (isInitialized != -1) return isInitialized == 1;
+
+    for (int i = 0; i < getEntryCount(); i++) {
+      if (!getEntry(i).isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
     }
-    for (com.google.javascript.jscomp.FunctionInformationMap.Module element : getModuleList()) {
-      if (!element.isInitialized()) return false;
+    for (int i = 0; i < getModuleCount(); i++) {
+      if (!getModule(i).isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
     }
+    memoizedIsInitialized = 1;
     return true;
   }
 
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
     getSerializedSize();
-    for (com.google.javascript.jscomp.FunctionInformationMap.Entry element : getEntryList()) {
-      output.writeGroup(1, element);
+    for (int i = 0; i < entry_.size(); i++) {
+      output.writeGroup(1, entry_.get(i));
     }
-    for (com.google.javascript.jscomp.FunctionInformationMap.Module element : getModuleList()) {
-      output.writeGroup(101, element);
+    for (int i = 0; i < module_.size(); i++) {
+      output.writeGroup(101, module_.get(i));
     }
     getUnknownFields().writeTo(output);
   }
@@ -951,17 +1484,24 @@ public  final class FunctionInformationMap extends
     if (size != -1) return size;
 
     size = 0;
-    for (com.google.javascript.jscomp.FunctionInformationMap.Entry element : getEntryList()) {
+    for (int i = 0; i < entry_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream
-        .computeGroupSize(1, element);
+        .computeGroupSize(1, entry_.get(i));
     }
-    for (com.google.javascript.jscomp.FunctionInformationMap.Module element : getModuleList()) {
+    for (int i = 0; i < module_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream
-        .computeGroupSize(101, element);
+        .computeGroupSize(101, module_.get(i));
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSerializedSize = size;
     return size;
+  }
+
+  private static final long serialVersionUID = 0L;
+  @java.lang.Override
+  protected java.lang.Object writeReplace()
+      throws java.io.ObjectStreamException {
+    return super.writeReplace();
   }
 
   public static com.google.javascript.jscomp.FunctionInformationMap parseFrom(
@@ -1038,34 +1578,63 @@ public  final class FunctionInformationMap extends
   }
   public Builder toBuilder() { return newBuilder(this); }
 
+  @java.lang.Override
+  protected Builder newBuilderForType(
+      com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+    Builder builder = new Builder(parent);
+    return builder;
+  }
   public static final class Builder extends
-      com.google.protobuf.GeneratedMessage.Builder<Builder> {
-    private com.google.javascript.jscomp.FunctionInformationMap result;
-
-    // Construct using com.google.javascript.jscomp.FunctionInformationMap.newBuilder()
-    private Builder() {}
-
-    private static Builder create() {
-      Builder builder = new Builder();
-      builder.result = new com.google.javascript.jscomp.FunctionInformationMap();
-      return builder;
+      com.google.protobuf.GeneratedMessage.Builder<Builder>
+     implements com.google.javascript.jscomp.FunctionInformationMapOrBuilder {
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_descriptor;
     }
 
-    protected com.google.javascript.jscomp.FunctionInformationMap internalGetResult() {
-      return result;
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.google.javascript.jscomp.FunctionInfo.internal_static_jscomp_FunctionInformationMap_fieldAccessorTable;
+    }
+
+    // Construct using com.google.javascript.jscomp.FunctionInformationMap.newBuilder()
+    private Builder() {
+      maybeForceBuilderInitialization();
+    }
+
+    private Builder(BuilderParent parent) {
+      super(parent);
+      maybeForceBuilderInitialization();
+    }
+    private void maybeForceBuilderInitialization() {
+      if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        getEntryFieldBuilder();
+        getModuleFieldBuilder();
+      }
+    }
+    private static Builder create() {
+      return new Builder();
     }
 
     public Builder clear() {
-      if (result == null) {
-        throw new IllegalStateException(
-          "Cannot call clear() after build().");
+      super.clear();
+      if (entryBuilder_ == null) {
+        entry_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+      } else {
+        entryBuilder_.clear();
       }
-      result = new com.google.javascript.jscomp.FunctionInformationMap();
+      if (moduleBuilder_ == null) {
+        module_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+      } else {
+        moduleBuilder_.clear();
+      }
       return this;
     }
 
     public Builder clone() {
-      return create().mergeFrom(result);
+      return create().mergeFrom(buildPartial());
     }
 
     public com.google.protobuf.Descriptors.Descriptor
@@ -1077,41 +1646,47 @@ public  final class FunctionInformationMap extends
       return com.google.javascript.jscomp.FunctionInformationMap.getDefaultInstance();
     }
 
-    public boolean isInitialized() {
-      return result.isInitialized();
-    }
     public com.google.javascript.jscomp.FunctionInformationMap build() {
-      if (result != null && !isInitialized()) {
+      com.google.javascript.jscomp.FunctionInformationMap result = buildPartial();
+      if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
-      return buildPartial();
+      return result;
     }
 
     private com.google.javascript.jscomp.FunctionInformationMap buildParsed()
         throws com.google.protobuf.InvalidProtocolBufferException {
-      if (!isInitialized()) {
+      com.google.javascript.jscomp.FunctionInformationMap result = buildPartial();
+      if (!result.isInitialized()) {
         throw newUninitializedMessageException(
           result).asInvalidProtocolBufferException();
       }
-      return buildPartial();
+      return result;
     }
 
     public com.google.javascript.jscomp.FunctionInformationMap buildPartial() {
-      if (result == null) {
-        throw new IllegalStateException(
-          "build() has already been called on this Builder.");
+      com.google.javascript.jscomp.FunctionInformationMap result = new com.google.javascript.jscomp.FunctionInformationMap(this);
+      int from_bitField0_ = bitField0_;
+      if (entryBuilder_ == null) {
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          entry_ = java.util.Collections.unmodifiableList(entry_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.entry_ = entry_;
+      } else {
+        result.entry_ = entryBuilder_.build();
       }
-      if (result.entry_ != java.util.Collections.EMPTY_LIST) {
-        result.entry_ =
-          java.util.Collections.unmodifiableList(result.entry_);
+      if (moduleBuilder_ == null) {
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          module_ = java.util.Collections.unmodifiableList(module_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.module_ = module_;
+      } else {
+        result.module_ = moduleBuilder_.build();
       }
-      if (result.module_ != java.util.Collections.EMPTY_LIST) {
-        result.module_ =
-          java.util.Collections.unmodifiableList(result.module_);
-      }
-      com.google.javascript.jscomp.FunctionInformationMap returnMe = result;
-      result = null;
-      return returnMe;
+      onBuilt();
+      return result;
     }
 
     public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1125,20 +1700,76 @@ public  final class FunctionInformationMap extends
 
     public Builder mergeFrom(com.google.javascript.jscomp.FunctionInformationMap other) {
       if (other == com.google.javascript.jscomp.FunctionInformationMap.getDefaultInstance()) return this;
-      if (!other.entry_.isEmpty()) {
-        if (result.entry_.isEmpty()) {
-          result.entry_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Entry>();
+      if (entryBuilder_ == null) {
+        if (!other.entry_.isEmpty()) {
+          if (entry_.isEmpty()) {
+            entry_ = other.entry_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureEntryIsMutable();
+            entry_.addAll(other.entry_);
+          }
+          onChanged();
         }
-        result.entry_.addAll(other.entry_);
+      } else {
+        if (!other.entry_.isEmpty()) {
+          if (entryBuilder_.isEmpty()) {
+            entryBuilder_.dispose();
+            entryBuilder_ = null;
+            entry_ = other.entry_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+            entryBuilder_ =
+              com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                 getEntryFieldBuilder() : null;
+          } else {
+            entryBuilder_.addAllMessages(other.entry_);
+          }
+        }
       }
-      if (!other.module_.isEmpty()) {
-        if (result.module_.isEmpty()) {
-          result.module_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Module>();
+      if (moduleBuilder_ == null) {
+        if (!other.module_.isEmpty()) {
+          if (module_.isEmpty()) {
+            module_ = other.module_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureModuleIsMutable();
+            module_.addAll(other.module_);
+          }
+          onChanged();
         }
-        result.module_.addAll(other.module_);
+      } else {
+        if (!other.module_.isEmpty()) {
+          if (moduleBuilder_.isEmpty()) {
+            moduleBuilder_.dispose();
+            moduleBuilder_ = null;
+            module_ = other.module_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+            moduleBuilder_ =
+              com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                 getModuleFieldBuilder() : null;
+          } else {
+            moduleBuilder_.addAllMessages(other.module_);
+          }
+        }
       }
       this.mergeUnknownFields(other.getUnknownFields());
       return this;
+    }
+
+    public final boolean isInitialized() {
+      for (int i = 0; i < getEntryCount(); i++) {
+        if (!getEntry(i).isInitialized()) {
+
+          return false;
+        }
+      }
+      for (int i = 0; i < getModuleCount(); i++) {
+        if (!getModule(i).isInitialized()) {
+
+          return false;
+        }
+      }
+      return true;
     }
 
     public Builder mergeFrom(
@@ -1153,11 +1784,13 @@ public  final class FunctionInformationMap extends
         switch (tag) {
           case 0:
             this.setUnknownFields(unknownFields.build());
+            onChanged();
             return this;
           default: {
             if (!parseUnknownField(input, unknownFields,
                                    extensionRegistry, tag)) {
               this.setUnknownFields(unknownFields.build());
+              onChanged();
               return this;
             }
             break;
@@ -1178,107 +1811,378 @@ public  final class FunctionInformationMap extends
       }
     }
 
+    private int bitField0_;
 
     // repeated group Entry = 1 {
+    private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> entry_ =
+      java.util.Collections.emptyList();
+    private void ensureEntryIsMutable() {
+      if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        entry_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Entry>(entry_);
+        bitField0_ |= 0x00000001;
+       }
+    }
+
+    private com.google.protobuf.RepeatedFieldBuilder<
+        com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder, com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder> entryBuilder_;
+
     public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry> getEntryList() {
-      return java.util.Collections.unmodifiableList(result.entry_);
+      if (entryBuilder_ == null) {
+        return java.util.Collections.unmodifiableList(entry_);
+      } else {
+        return entryBuilder_.getMessageList();
+      }
     }
     public int getEntryCount() {
-      return result.getEntryCount();
+      if (entryBuilder_ == null) {
+        return entry_.size();
+      } else {
+        return entryBuilder_.getCount();
+      }
     }
     public com.google.javascript.jscomp.FunctionInformationMap.Entry getEntry(int index) {
-      return result.getEntry(index);
-    }
-    public Builder setEntry(int index, com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
-      if (value == null) {
-        throw new NullPointerException();
+      if (entryBuilder_ == null) {
+        return entry_.get(index);
+      } else {
+        return entryBuilder_.getMessage(index);
       }
-      result.entry_.set(index, value);
+    }
+    public Builder setEntry(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
+      if (entryBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureEntryIsMutable();
+        entry_.set(index, value);
+        onChanged();
+      } else {
+        entryBuilder_.setMessage(index, value);
+      }
       return this;
     }
-    public Builder setEntry(int index, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
-      result.entry_.set(index, builderForValue.build());
+    public Builder setEntry(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        entry_.set(index, builderForValue.build());
+        onChanged();
+      } else {
+        entryBuilder_.setMessage(index, builderForValue.build());
+      }
       return this;
     }
     public Builder addEntry(com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
-      if (value == null) {
-        throw new NullPointerException();
+      if (entryBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureEntryIsMutable();
+        entry_.add(value);
+        onChanged();
+      } else {
+        entryBuilder_.addMessage(value);
       }
-      if (result.entry_.isEmpty()) {
-        result.entry_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Entry>();
-      }
-      result.entry_.add(value);
       return this;
     }
-    public Builder addEntry(com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
-      if (result.entry_.isEmpty()) {
-        result.entry_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Entry>();
+    public Builder addEntry(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Entry value) {
+      if (entryBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureEntryIsMutable();
+        entry_.add(index, value);
+        onChanged();
+      } else {
+        entryBuilder_.addMessage(index, value);
       }
-      result.entry_.add(builderForValue.build());
+      return this;
+    }
+    public Builder addEntry(
+        com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        entry_.add(builderForValue.build());
+        onChanged();
+      } else {
+        entryBuilder_.addMessage(builderForValue.build());
+      }
+      return this;
+    }
+    public Builder addEntry(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder builderForValue) {
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        entry_.add(index, builderForValue.build());
+        onChanged();
+      } else {
+        entryBuilder_.addMessage(index, builderForValue.build());
+      }
       return this;
     }
     public Builder addAllEntry(
         java.lang.Iterable<? extends com.google.javascript.jscomp.FunctionInformationMap.Entry> values) {
-      if (result.entry_.isEmpty()) {
-        result.entry_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Entry>();
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        super.addAll(values, entry_);
+        onChanged();
+      } else {
+        entryBuilder_.addAllMessages(values);
       }
-      super.addAll(values, result.entry_);
       return this;
     }
     public Builder clearEntry() {
-      result.entry_ = java.util.Collections.emptyList();
+      if (entryBuilder_ == null) {
+        entry_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+      } else {
+        entryBuilder_.clear();
+      }
       return this;
+    }
+    public Builder removeEntry(int index) {
+      if (entryBuilder_ == null) {
+        ensureEntryIsMutable();
+        entry_.remove(index);
+        onChanged();
+      } else {
+        entryBuilder_.remove(index);
+      }
+      return this;
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder getEntryBuilder(
+        int index) {
+      return getEntryFieldBuilder().getBuilder(index);
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder getEntryOrBuilder(
+        int index) {
+      if (entryBuilder_ == null) {
+        return entry_.get(index);  } else {
+        return entryBuilder_.getMessageOrBuilder(index);
+      }
+    }
+    public java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder>
+         getEntryOrBuilderList() {
+      if (entryBuilder_ != null) {
+        return entryBuilder_.getMessageOrBuilderList();
+      } else {
+        return java.util.Collections.unmodifiableList(entry_);
+      }
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder addEntryBuilder() {
+      return getEntryFieldBuilder().addBuilder(
+          com.google.javascript.jscomp.FunctionInformationMap.Entry.getDefaultInstance());
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder addEntryBuilder(
+        int index) {
+      return getEntryFieldBuilder().addBuilder(
+          index, com.google.javascript.jscomp.FunctionInformationMap.Entry.getDefaultInstance());
+    }
+    public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder>
+         getEntryBuilderList() {
+      return getEntryFieldBuilder().getBuilderList();
+    }
+    private com.google.protobuf.RepeatedFieldBuilder<
+        com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder, com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder>
+        getEntryFieldBuilder() {
+      if (entryBuilder_ == null) {
+        entryBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+            com.google.javascript.jscomp.FunctionInformationMap.Entry, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder, com.google.javascript.jscomp.FunctionInformationMap.EntryOrBuilder>(
+                entry_,
+                ((bitField0_ & 0x00000001) == 0x00000001),
+                getParentForChildren(),
+                isClean());
+        entry_ = null;
+      }
+      return entryBuilder_;
     }
 
     // repeated group Module = 101 {
+    private java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> module_ =
+      java.util.Collections.emptyList();
+    private void ensureModuleIsMutable() {
+      if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        module_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Module>(module_);
+        bitField0_ |= 0x00000002;
+       }
+    }
+
+    private com.google.protobuf.RepeatedFieldBuilder<
+        com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder, com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder> moduleBuilder_;
+
     public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module> getModuleList() {
-      return java.util.Collections.unmodifiableList(result.module_);
+      if (moduleBuilder_ == null) {
+        return java.util.Collections.unmodifiableList(module_);
+      } else {
+        return moduleBuilder_.getMessageList();
+      }
     }
     public int getModuleCount() {
-      return result.getModuleCount();
+      if (moduleBuilder_ == null) {
+        return module_.size();
+      } else {
+        return moduleBuilder_.getCount();
+      }
     }
     public com.google.javascript.jscomp.FunctionInformationMap.Module getModule(int index) {
-      return result.getModule(index);
-    }
-    public Builder setModule(int index, com.google.javascript.jscomp.FunctionInformationMap.Module value) {
-      if (value == null) {
-        throw new NullPointerException();
+      if (moduleBuilder_ == null) {
+        return module_.get(index);
+      } else {
+        return moduleBuilder_.getMessage(index);
       }
-      result.module_.set(index, value);
+    }
+    public Builder setModule(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Module value) {
+      if (moduleBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureModuleIsMutable();
+        module_.set(index, value);
+        onChanged();
+      } else {
+        moduleBuilder_.setMessage(index, value);
+      }
       return this;
     }
-    public Builder setModule(int index, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
-      result.module_.set(index, builderForValue.build());
+    public Builder setModule(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        module_.set(index, builderForValue.build());
+        onChanged();
+      } else {
+        moduleBuilder_.setMessage(index, builderForValue.build());
+      }
       return this;
     }
     public Builder addModule(com.google.javascript.jscomp.FunctionInformationMap.Module value) {
-      if (value == null) {
-        throw new NullPointerException();
+      if (moduleBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureModuleIsMutable();
+        module_.add(value);
+        onChanged();
+      } else {
+        moduleBuilder_.addMessage(value);
       }
-      if (result.module_.isEmpty()) {
-        result.module_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Module>();
-      }
-      result.module_.add(value);
       return this;
     }
-    public Builder addModule(com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
-      if (result.module_.isEmpty()) {
-        result.module_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Module>();
+    public Builder addModule(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Module value) {
+      if (moduleBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureModuleIsMutable();
+        module_.add(index, value);
+        onChanged();
+      } else {
+        moduleBuilder_.addMessage(index, value);
       }
-      result.module_.add(builderForValue.build());
+      return this;
+    }
+    public Builder addModule(
+        com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        module_.add(builderForValue.build());
+        onChanged();
+      } else {
+        moduleBuilder_.addMessage(builderForValue.build());
+      }
+      return this;
+    }
+    public Builder addModule(
+        int index, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder builderForValue) {
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        module_.add(index, builderForValue.build());
+        onChanged();
+      } else {
+        moduleBuilder_.addMessage(index, builderForValue.build());
+      }
       return this;
     }
     public Builder addAllModule(
         java.lang.Iterable<? extends com.google.javascript.jscomp.FunctionInformationMap.Module> values) {
-      if (result.module_.isEmpty()) {
-        result.module_ = new java.util.ArrayList<com.google.javascript.jscomp.FunctionInformationMap.Module>();
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        super.addAll(values, module_);
+        onChanged();
+      } else {
+        moduleBuilder_.addAllMessages(values);
       }
-      super.addAll(values, result.module_);
       return this;
     }
     public Builder clearModule() {
-      result.module_ = java.util.Collections.emptyList();
+      if (moduleBuilder_ == null) {
+        module_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+      } else {
+        moduleBuilder_.clear();
+      }
       return this;
+    }
+    public Builder removeModule(int index) {
+      if (moduleBuilder_ == null) {
+        ensureModuleIsMutable();
+        module_.remove(index);
+        onChanged();
+      } else {
+        moduleBuilder_.remove(index);
+      }
+      return this;
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Module.Builder getModuleBuilder(
+        int index) {
+      return getModuleFieldBuilder().getBuilder(index);
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder getModuleOrBuilder(
+        int index) {
+      if (moduleBuilder_ == null) {
+        return module_.get(index);  } else {
+        return moduleBuilder_.getMessageOrBuilder(index);
+      }
+    }
+    public java.util.List<? extends com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder>
+         getModuleOrBuilderList() {
+      if (moduleBuilder_ != null) {
+        return moduleBuilder_.getMessageOrBuilderList();
+      } else {
+        return java.util.Collections.unmodifiableList(module_);
+      }
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Module.Builder addModuleBuilder() {
+      return getModuleFieldBuilder().addBuilder(
+          com.google.javascript.jscomp.FunctionInformationMap.Module.getDefaultInstance());
+    }
+    public com.google.javascript.jscomp.FunctionInformationMap.Module.Builder addModuleBuilder(
+        int index) {
+      return getModuleFieldBuilder().addBuilder(
+          index, com.google.javascript.jscomp.FunctionInformationMap.Module.getDefaultInstance());
+    }
+    public java.util.List<com.google.javascript.jscomp.FunctionInformationMap.Module.Builder>
+         getModuleBuilderList() {
+      return getModuleFieldBuilder().getBuilderList();
+    }
+    private com.google.protobuf.RepeatedFieldBuilder<
+        com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder, com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder>
+        getModuleFieldBuilder() {
+      if (moduleBuilder_ == null) {
+        moduleBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+            com.google.javascript.jscomp.FunctionInformationMap.Module, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder, com.google.javascript.jscomp.FunctionInformationMap.ModuleOrBuilder>(
+                module_,
+                ((bitField0_ & 0x00000002) == 0x00000002),
+                getParentForChildren(),
+                isClean());
+        module_ = null;
+      }
+      return moduleBuilder_;
     }
 
     // @@protoc_insertion_point(builder_scope:jscomp.FunctionInformationMap)
@@ -1286,7 +2190,6 @@ public  final class FunctionInformationMap extends
 
   static {
     defaultInstance = new FunctionInformationMap(true);
-    com.google.javascript.jscomp.FunctionInfo.internalForceInit();
     defaultInstance.initFields();
   }
 

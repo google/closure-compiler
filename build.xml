@@ -55,6 +55,9 @@
   <property name="maven-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
   <property name="maven-repository-id" value="sonatype-nexus-staging" />
 
+  <!-- proto compiler used to generate java classes from .proto files -->
+  <property name="protoc.executable" value="protoc"/>
+
   <property file="build.properties" />
 
   <!-- maven ant tasks -->
@@ -94,6 +97,19 @@
       <rule pattern="org.mozilla.javascript.**"
             result="com.google.javascript.jscomp.mozilla.rhino.@1"/>
     </jarjar>
+  </target>
+
+  <target name="protobuf-gen">
+    <fileset dir="${src.dir}" id="proto.classpath">
+      <include name="**/*.proto"/>
+    </fileset>
+    <pathconvert property="protofiles" pathsep=" " refid="proto.classpath"/>
+    <echo message="${protoc.executable} -I ${src.dir} --java_out=${gen.dir} ${protofiles}"/>
+    <exec executable="${protoc.executable}" searchpath="true">
+      <arg line="-I ${src.dir}"/>
+      <arg line="--java_out=${gen.dir}"/>
+      <arg line="${protofiles}"/>
+    </exec>
   </target>
 
   <!-- Generate pom.xml with the proper svn build number -->

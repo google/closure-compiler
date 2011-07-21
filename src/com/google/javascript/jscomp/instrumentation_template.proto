@@ -7,8 +7,6 @@ syntax = "proto2";
 
 package jscomp;
 
-option py_api_version = 2;
-
 option java_package = "com.google.javascript.jscomp";
 option java_multiple_files = true;
 

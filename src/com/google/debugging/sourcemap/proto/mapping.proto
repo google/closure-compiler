@@ -1,0 +1,39 @@
+// Copyright 2009 Google Inc. All rights reserved.
+//
+// Protocol Buffer definitions of the various source map structures.
+//
+// Author: jschorr@google.com (Joseph Schorr)
+
+syntax = "proto2";
+
+package sourcemap;
+
+option java_package = "com.google.debugging.sourcemap.proto";
+//option java_api_version = 2;
+
+// Maps a position on a given line to the mapping describing
+// the original code.
+message LineMapping {
+  // The line number of the generated code.
+  optional int32 line_number = 1;
+
+  // The column position on the line.
+  optional int32 column_position = 2;
+
+  // The original mapping for this line mapping.
+  optional OriginalMapping original_mapping = 3;
+}
+
+message OriginalMapping {
+  // The original source file.
+  optional string original_file = 1;
+
+  // The line in the original file.
+  optional int32 line_number = 2;
+
+  // The column number on the line.
+  optional int32 column_position = 3;
+
+  // The original name of the identifier.
+  optional string identifier = 4;
+}
