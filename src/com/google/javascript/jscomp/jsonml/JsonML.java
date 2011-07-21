@@ -199,9 +199,7 @@ public class JsonML {
    */
   public void setChildren(JsonML... children) {
     this.children.clear();
-    for (JsonML child : children) {
-      this.children.add(child);
-    }
+      this.children.addAll(Arrays.asList(children));
   }
 
   /**

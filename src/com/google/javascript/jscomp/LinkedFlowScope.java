@@ -352,9 +352,9 @@ class LinkedFlowScope implements FlowScope {
       }
     }
 
-    for (String key : cache.symbols.keySet()) {
-      if (!slots.containsKey(key)) {
-        slots.put(key, cache.symbols.get(key));
+    for (Map.Entry<String, StaticSlot<JSType>> symbolEntry : cache.symbols.entrySet()) {
+      if (!slots.containsKey(symbolEntry.getKey())) {
+        slots.put(symbolEntry.getKey(), symbolEntry.getValue());
       }
     }
 

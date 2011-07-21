@@ -241,9 +241,9 @@ class RenameProperties implements CompilerPass {
     }
 
     // Update the call nodes.
-    for (Node n : callNodeToParentMap.keySet()) {
-      Node parent = callNodeToParentMap.get(n);
-      Node firstArg = n.getFirstChild().getNext();
+    for (Map.Entry<Node, Node> nodeEntry : callNodeToParentMap.entrySet()) {
+      Node parent = nodeEntry.getValue();
+      Node firstArg = nodeEntry.getKey().getFirstChild().getNext();
       StringBuilder sb = new StringBuilder();
       for (String oldName : firstArg.getString().split("[.]")) {
         Property p = propertyMap.get(oldName);
@@ -259,7 +259,7 @@ class RenameProperties implements CompilerPass {
         }
         sb.append(replacement);
       }
-      parent.replaceChild(n, Node.newString(sb.toString()));
+      parent.replaceChild(nodeEntry.getKey(), Node.newString(sb.toString()));
       changed = true;
     }
 

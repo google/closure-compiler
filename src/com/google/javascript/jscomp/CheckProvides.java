@@ -107,11 +107,11 @@ class CheckProvides implements HotSwapCompilerPass {
     }
 
     private void visitScriptNode(NodeTraversal t, Node n) {
-      for (String ctorName : ctors.keySet()) {
-        if (!provides.containsKey(ctorName)) {
+      for (Map.Entry<String, Node> ctorEntry : ctors.entrySet()) {
+        if (!provides.containsKey(ctorEntry.getKey())) {
           compiler.report(
-              t.makeError(ctors.get(ctorName), checkLevel,
-                  MISSING_PROVIDE_WARNING, ctorName));
+              t.makeError(ctorEntry.getValue(), checkLevel,
+                  MISSING_PROVIDE_WARNING, ctorEntry.getKey()));
         }
       }
       provides.clear();

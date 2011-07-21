@@ -323,12 +323,12 @@ class AliasStrings extends AbstractPostOrderCallback
    */
   private void outputStringUsage() {
     StringBuilder sb = new StringBuilder("Strings used more than once:\n");
-    for (String str : stringInfoMap.keySet()) {
-      StringInfo info = stringInfoMap.get(str);
+    for (Entry<String, StringInfo> stringInfoEntry : stringInfoMap.entrySet()) {
+      StringInfo info = stringInfoEntry.getValue();
       if (info.numOccurrences > 1) {
         sb.append(info.numOccurrences);
         sb.append(": ");
-        sb.append(str);
+        sb.append(stringInfoEntry.getKey());
         sb.append('\n');
       }
     }

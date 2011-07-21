@@ -148,9 +148,9 @@ final class MustBeReachingVariableDef extends
       Map<Var, Definition> resultMap = result.reachingDef;
 
       // Take the join of all variables that are not TOP in this.
-      for (Var var : a.reachingDef.keySet()) {
-
-        Definition aDef = a.reachingDef.get(var);
+      for (Map.Entry<Var, Definition> varEntry : a.reachingDef.entrySet()) {
+        Var var = varEntry.getKey();
+        Definition aDef = varEntry.getValue();
 
         if (aDef == null) {
           // "a" is BOTTOM implies that the variable has more than one possible
@@ -177,9 +177,10 @@ final class MustBeReachingVariableDef extends
 
       // Take the join of all variables that are not TOP in other but it is TOP
       // in this.
-      for (Var var : b.reachingDef.keySet()) {
+      for (Map.Entry<Var, Definition> entry : b.reachingDef.entrySet()) {
+        Var var = entry.getKey();
         if (!a.reachingDef.containsKey(var)) {
-          resultMap.put(var, b.reachingDef.get(var));
+          resultMap.put(var, entry.getValue());
         }
       }
       return result;
