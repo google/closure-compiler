@@ -2179,21 +2179,21 @@ WebGLRenderingContext.prototype.frontFace = function(mode) {};
 WebGLRenderingContext.prototype.generateMipmap = function(target) {};
 
 /**
- * @param {number} program
+ * @param {WebGLProgram} program
  * @param {number} index
  * @return {WebGLActiveInfo}
  */
 WebGLRenderingContext.prototype.getActiveAttrib = function(program, index) {};
 
 /**
- * @param {number} program
+ * @param {WebGLProgram} program
  * @param {number} index
  * @return {WebGLActiveInfo}
  */
 WebGLRenderingContext.prototype.getActiveUniform = function(program, index) {};
 
 /**
- * @param {number} program
+ * @param {WebGLProgram} program
  * @return {WebGLObjectArray}
  */
 WebGLRenderingContext.prototype.getAttachedShaders = function(program) {};
