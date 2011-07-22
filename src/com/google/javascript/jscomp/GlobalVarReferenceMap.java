@@ -49,9 +49,14 @@ class GlobalVarReferenceMap implements ReferenceMap {
   /**
    * @param inputs The ordered list of all inputs for the compiler.
    */
-  GlobalVarReferenceMap(List<CompilerInput> inputs) {
+  GlobalVarReferenceMap(List<CompilerInput> inputs,
+      List<CompilerInput> externs) {
     inputOrder = Maps.newHashMap();
     int ind = 0;
+    for (CompilerInput extern : externs) {
+      inputOrder.put(extern.getName(), ind);
+      ind++;
+    }
     for (CompilerInput input : inputs) {
       inputOrder.put(input.getName(), ind);
       ind++;

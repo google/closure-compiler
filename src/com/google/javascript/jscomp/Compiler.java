@@ -1947,6 +1947,13 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
+   * Gets the externs in the order in which they are being processed.
+   */
+  List<CompilerInput> getExternsInOrder() {
+    return Collections.<CompilerInput>unmodifiableList(externs);
+  }
+
+  /**
    * Stores the internal compiler state just before optimization is performed.
    * This can be saved and restored in order to efficiently optimize multiple
    * different output targets without having to perform checking multiple times.
@@ -2031,7 +2038,8 @@ public class Compiler extends AbstractCompiler {
     Preconditions.checkState(collectionRoot.getType() == Token.SCRIPT
         || collectionRoot.getType() == Token.BLOCK);
     if (globalRefMap == null) {
-      globalRefMap = new GlobalVarReferenceMap(getInputsInOrder());
+      globalRefMap = new GlobalVarReferenceMap(getInputsInOrder(),
+          getExternsInOrder());
     }
     globalRefMap.updateGlobalVarReferences(refMapPatch, collectionRoot);
   }
