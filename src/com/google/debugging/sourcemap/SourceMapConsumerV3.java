@@ -28,6 +28,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Class for parsing version 3 of the SourceMap format, as produced by the
@@ -35,7 +38,7 @@ import java.util.ArrayList;
  * http://code.google.com/p/closure-compiler/wiki/SourceMaps
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapConsumerV3 implements SourceMapConsumer {
+public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReversable {
   static final int UNMAPPED = -1;
 
   private String[] sources;
@@ -210,6 +213,46 @@ public class SourceMapConsumerV3 implements SourceMapConsumer {
     int index = search(entries, column, 0, entries.size() - 1);
     Preconditions.checkState(index >= 0, "unexpected:" + index);
     return getOriginalMappingForEntry(entries.get(index));
+  }
+
+  @Override
+  public Collection<String> getOriginalSources() {
+    return Arrays.asList(sources);
+  }
+
+  @Override
+  /**
+   * TODO(devoncarew): this implementation is a prototype. It does an O(n) search of the lines list,
+   * instead of reversing the source map and doing O(1) lookups. It also does not currently make use
+   * of the column parameter.
+   */
+  public Collection<OriginalMapping> getReverseMapping(String originalFile, int line, int column) {
+    int sourceFileId = Arrays.binarySearch(sources, originalFile);
+
+    if (sourceFileId < 0) {
+      return Collections.emptyList();
+    }
+
+    for (ArrayList<Entry> entries : lines) {
+      if (entries != null) {
+        for (Entry entry : entries) {
+          if (entry.getSourceFileId() == sourceFileId) {
+            if (entry.getSourceLine() == line) {
+              Builder builder = OriginalMapping.newBuilder()
+                .setOriginalFile(sources[entry.getSourceFileId()])
+                .setLineNumber(entry.getSourceLine())
+                .setColumnPosition(entry.getSourceColumn());
+
+              OriginalMapping mapping = builder.build();
+
+              return Collections.singletonList(mapping);
+            }
+          }
+        }
+      }
+    }
+
+    return Collections.emptyList();
   }
 
   private String[] getJavaStringArray(JSONArray array) throws JSONException {
