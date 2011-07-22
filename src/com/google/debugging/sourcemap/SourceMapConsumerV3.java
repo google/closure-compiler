@@ -222,7 +222,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReve
 
   @Override
   /**
-   * TODO(devoncarew): this implementation is a prototype. It does an O(n) search of the lines list,
+   * TODO(user): this implementation is a prototype. It does an O(n) search of the lines list,
    * instead of reversing the source map and doing O(1) lookups. It also does not currently make use
    * of the column parameter.
    */
