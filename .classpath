@@ -13,7 +13,15 @@
         <classpathentry kind="lib" path="lib/junit.jar"/>
         <classpathentry kind="lib" path="lib/caja-r4314.jar"/>
         <classpathentry kind="lib" path="lib/protobuf-java.jar"/>
+
+        <!--
+        You need to tell Eclipse to build the compiler jar first, and then
+        normal source warnings will work because it will pick up the artifact.
+
+        If anyone has any better ideas, I'd be glad to hear them.
+        -->
+        <classpathentry kind="lib" path="build/lib/rhino.jar"/>
+
         <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-        <classpathentry kind="lib" path="lib/libtrunk_rhino_parser_jarjared.jar"/>
         <classpathentry kind="output" path="build/classes"/>
 </classpath>
