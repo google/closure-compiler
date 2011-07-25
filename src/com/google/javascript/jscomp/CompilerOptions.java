@@ -37,6 +37,9 @@ import java.util.Set;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class CompilerOptions implements Serializable, Cloneable {
+  // TODO(nicksantos): All public properties of this class should be made
+  // package-private, and have a public setter.
+
   private static final long serialVersionUID = 7L;
 
   /**
@@ -117,20 +120,36 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks that all symbols are defined */
   public boolean checkSymbols;
 
+  public CheckLevel checkShadowVars;
+
   /**
    * Checks that all variables with the @noshadow attribute are
    * never shadowed.
    */
-  public CheckLevel checkShadowVars;
+  public void setCheckShadowVars(CheckLevel level) {
+    this.checkShadowVars = level;
+  }
 
-  /** Checks for suspicious variable definitions and undefined variables */
   public CheckLevel aggressiveVarCheck;
 
-  /** Checks function arity */
+  /** Checks for suspicious variable definitions and undefined variables */
+  public void setAggressiveVarCheck(CheckLevel level) {
+    this.aggressiveVarCheck = level;
+  }
+
   public CheckLevel checkFunctions;
 
-  /** Checks method arity */
+  /** Checks function arity */
+  public void setCheckFunctions(CheckLevel level) {
+    this.checkFunctions = level;
+  }
+
   public CheckLevel checkMethods;
+
+  /** Checks method arity */
+  public void setCheckMethods(CheckLevel level) {
+    this.checkMethods = level;
+  }
 
   /** Makes sure no duplicate messages */
   public boolean checkDuplicateMessages;
@@ -164,29 +183,55 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Checks for inexistant property calls */
   public boolean checkTypedPropertyCalls;
 
+  public CheckLevel reportMissingOverride;
+
   /**
    * Flags a warning if a property is missing the @override annotation, but it
    * overrides a base class property.
    */
-  public CheckLevel reportMissingOverride;
+  public void setReportMissingOverride(CheckLevel level) {
+    this.reportMissingOverride = level;
+  }
+
+  public CheckLevel reportUnknownTypes;
 
   /** Flags a warning for every node whose type could not be determined. */
-  public CheckLevel reportUnknownTypes;
+  public void setReportUnknownTypes(CheckLevel level) {
+    this.reportUnknownTypes = level;
+  }
 
   /** Checks for missing goog.require() calls **/
   public CheckLevel checkRequires;
 
-  /** Checks for missing goog.provides() calls **/
+  public void setCheckRequires(CheckLevel level) {
+    this.checkRequires = level;
+  }
+
   public CheckLevel checkProvides;
+
+  /** Checks for missing goog.provides() calls **/
+  public void setCheckProvides(CheckLevel level) {
+    this.checkProvides = level;
+  }
+
+  public CheckLevel checkGlobalNamesLevel;
 
   /**
    * Checks the integrity of references to qualified global names.
    * (e.g. "a.b")
    */
-  public CheckLevel checkGlobalNamesLevel;
+  public void setCheckGlobalNamesLevel(CheckLevel level) {
+    this.checkGlobalNamesLevel = level;
+  }
+
+  public CheckLevel brokenClosureRequiresLevel;
 
   /** Sets the check level for bad Closure require calls. */
-  public CheckLevel brokenClosureRequiresLevel;
+  public void setBrokenClosureRequiresLevel(CheckLevel level) {
+    this.brokenClosureRequiresLevel = level;
+  }
+
+  public CheckLevel checkGlobalThisLevel;
 
   /**
    * Checks for certain uses of the {@code this} keyword that are considered
@@ -196,13 +241,19 @@ public class CompilerOptions implements Serializable, Cloneable {
    * If this is off, but collapseProperties is on, then the compiler will
    * usually ignore you and run this check anyways.
    */
-  public CheckLevel checkGlobalThisLevel;
+  public void setCheckGlobalThisLevel(CheckLevel level) {
+    this.checkGlobalThisLevel = level;
+  }
+
+  public CheckLevel checkMissingGetCssNameLevel;
 
   /**
    * Checks that certain string literals only appear in strings used as
    * goog.getCssName arguments.
    */
-  public CheckLevel checkMissingGetCssNameLevel;
+  public void setCheckMissingGetCssNameLevel(CheckLevel level) {
+    this.checkMissingGetCssNameLevel = level;
+  }
 
   /**
    * Regex of string literals that may only appear in goog.getCssName arguments.
@@ -276,11 +327,19 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Removes code that will never execute */
   public boolean removeDeadCode;
 
-  /** Checks for unreachable code */
   public CheckLevel checkUnreachableCode;
 
-  /** Checks for missing return statements */
+  /** Checks for unreachable code */
+  public void setCheckUnreachableCode(CheckLevel level) {
+    this.checkUnreachableCode = level;
+  }
+
   public CheckLevel checkMissingReturn;
+
+  /** Checks for missing return statements */
+  public void setCheckMissingReturn(CheckLevel level) {
+    this.checkMissingReturn = level;
+  }
 
   /** Extracts common prototype member declarations */
   public boolean extractPrototypeMemberDeclarations;
