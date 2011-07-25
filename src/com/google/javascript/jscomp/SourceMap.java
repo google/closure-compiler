@@ -97,7 +97,7 @@ public class SourceMap {
   public static class LocationMapping {
     final String prefix;
     final String replacement;
-    LocationMapping(String prefix, String replacement) {
+    public LocationMapping(String prefix, String replacement) {
       this.prefix = prefix;
       this.replacement = replacement;
     }
@@ -156,6 +156,11 @@ public class SourceMap {
           mapping.prefix.length());
         break;
       }
+    }
+
+    // If none of the mappings match then use the original file path.
+    if (fixed == null) {
+      fixed = sourceFile;
     }
 
     sourceLocationFixupCache.put(sourceFile, fixed);
