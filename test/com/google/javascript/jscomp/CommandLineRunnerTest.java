@@ -154,6 +154,12 @@ public class CommandLineRunnerTest extends TestCase {
     test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
   }
 
+  public void testCheckGlobalThisOff() {
+    args.add("--warning_level=VERBOSE");
+    args.add("--jscomp_off=globalThis");
+    testSame("function f() { this.a = 3; }");
+  }
+
   public void testTypeCheckingOffByDefault() {
     test("function f(x) { return x; } f();",
          "function f(a) { return a; } f();");

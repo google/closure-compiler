@@ -252,7 +252,8 @@ public class Compiler extends AbstractCompiler {
           CheckLevel.OFF);
     }
 
-    if (options.checkGlobalThisLevel.isOn()) {
+    if (options.checkGlobalThisLevel.isOn() &&
+        !options.disables(DiagnosticGroups.GLOBAL_THIS)) {
       options.setWarningLevel(
           DiagnosticGroups.GLOBAL_THIS,
           options.checkGlobalThisLevel);
