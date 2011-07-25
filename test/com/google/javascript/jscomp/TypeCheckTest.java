@@ -317,6 +317,16 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: E.<string>");
   }
 
+  public void testParameterizedObject5() throws Exception {
+    testTypes("/** @constructor */ function F() {" +
+        "  /** @type {Object.<number, string>} */ this.numbers = {};" +
+        "}" +
+        "(new F()).numbers['ten'] = '10';",
+        "restricted index type\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
   public void testUnionOfFunctionAndType() throws Exception {
     testTypes("/** @type {null|(function(Number):void)} */ var a;" +
         "/** @type {(function(Number):void)|null} */ var b = null; a = b;");
@@ -3615,6 +3625,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "only arrays or objects can be accessed\n" +
         "found   : undefined\n" +
         "required: Object");
+  }
+
+  public void testArrayAccess9() throws Exception {
+    testTypes("/** @return {?Array} */ function f() { return []; }" +
+        "f()[{}]",
+        "array access\n" +
+        "found   : {}\n" +
+        "required: number");
   }
 
   public void testPropAccess() throws Exception {

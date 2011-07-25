@@ -311,17 +311,20 @@ class TypeValidator {
       JSType indexType) {
     if (objType.isUnknownType()) {
       expectStringOrNumber(t, n, indexType, "property access");
-    } else if (objType.toObjectType() != null &&
-        objType.toObjectType().getIndexType() != null) {
-      expectCanAssignTo(t, n, indexType, objType.toObjectType().getIndexType(),
-          "restricted index type");
-    } else if (objType.isArrayType()) {
-      expectNumber(t, n, indexType, "array access");
-    } else if (objType.matchesObjectContext()) {
-      expectString(t, n, indexType, "property access");
     } else {
-      mismatch(t, n, "only arrays or objects can be accessed",
-          objType, typeRegistry.createUnionType(ARRAY_TYPE, OBJECT_TYPE));
+      ObjectType dereferenced = objType.dereference();
+      if (dereferenced != null && dereferenced.getIndexType() != null) {
+        expectCanAssignTo(t, n, indexType, dereferenced.getIndexType(),
+            "restricted index type");
+      } else if (dereferenced != null && dereferenced.isArrayType()) {
+        expectNumber(t, n, indexType, "array access");
+      } else if (objType.matchesObjectContext()) {
+        expectString(t, n, indexType, "property access");
+      } else {
+        mismatch(t, n, "only arrays or objects can be accessed",
+            objType,
+            typeRegistry.createUnionType(ARRAY_TYPE, OBJECT_TYPE));
+      }
     }
   }
 
