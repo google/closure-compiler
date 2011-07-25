@@ -967,12 +967,15 @@ public class Compiler extends AbstractCompiler {
    * Removes an input file from AST.
    * @param name The name of the file to be removed.
    */
-  protected void removeInput(String name) {
+  protected void removeExternInput(String name) {
     CompilerInput input = getInput(name);
     if (input == null) {
       return;
     }
+    Preconditions.checkState(input.isExtern(), "Not an extern input: "
+        + input.getName());
     inputsByName.remove(name);
+    externs.remove(input);
     Node root = input.getAstRoot(this);
     if (root != null) {
       root.detachFromParent();
@@ -988,6 +991,7 @@ public class Compiler extends AbstractCompiler {
     CompilerInput input = new CompilerInput(ast, name, true);
     inputsByName.put(name, input);
     externsRoot.addChildToFront(ast.getAstRoot(this));
+    externs.add(0, input);
     return input;
   }
 
