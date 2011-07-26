@@ -50,8 +50,6 @@ import com.google.javascript.rhino.jstype.UnionType;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -198,19 +196,7 @@ class UnionTypeBuilder implements Serializable {
     return result;
   }
 
-  private static final Comparator<JSType> typeSorter =
-      new Comparator<JSType>() {
-    @Override public int compare(JSType a, JSType b) {
-      return b.hashCode() - a.hashCode();
-    }
-  };
-
   private Collection<JSType> getAlternateListCopy() {
-    // TODO(nicksantos): Until we're at a place where we're no longer
-    // using java's built-in equals to test type equivalence, we need
-    // hash codes to be the same. So the alternates need to be sorted.
-    Collections.sort(alternates, typeSorter);
-
     return ImmutableList.copyOf(alternates);
   }
 }
