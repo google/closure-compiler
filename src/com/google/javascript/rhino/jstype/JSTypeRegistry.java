@@ -80,7 +80,7 @@ public class JSTypeRegistry implements Serializable {
    * remembers and then defaults to "?" (unknown type). By default this max
    * is 20, but it's very easy for the same property to appear on more than 20
    * types. Use larger unions for property checking. 3000 was picked
-   * semi-randomly for use by the Oz (Emerald Sea FE) project.
+   * semi-randomly for use by the Google+ FE project.
    */
   private static final int PROPERTY_CHECKING_UNION_SIZE = 3000;
 
