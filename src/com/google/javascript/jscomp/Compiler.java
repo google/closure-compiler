@@ -1069,7 +1069,7 @@ public class Compiler extends AbstractCompiler {
     return (DefaultPassConfig) passes;
   }
 
-  SymbolTable buildKnownSymbolTable() {
+  public SymbolTable buildKnownSymbolTable() {
     SymbolTable symbolTable = new SymbolTable();
 
     MemoizedScopeCreator typedScopeCreator = getTypedScopeCreator();
@@ -1082,6 +1082,12 @@ public class Compiler extends AbstractCompiler {
     if (globalNamespace != null) {
       symbolTable.addSymbolsFrom(globalNamespace);
     }
+
+    ReferenceCollectingCallback refCollector =
+        new ReferenceCollectingCallback(
+            this, ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR);
+    NodeTraversal.traverse(this, getRoot(), refCollector);
+    symbolTable.addSymbolsFrom(refCollector);
 
     return symbolTable;
   }

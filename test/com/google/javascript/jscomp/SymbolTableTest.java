@@ -52,10 +52,32 @@ public class SymbolTableTest extends TestCase {
     assertEquals(Token.ASSIGN, refs.get(1).getNode().getParent().getType());
   }
 
+  public void testLocalVarReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "function f(x) { return x; }");
+    Symbol x = getLocalVar(table, "x");
+    List<Reference> refs = Lists.newArrayList(table.getReferences(x));
+
+    assertEquals(2, refs.size());
+    assertEquals(x.getDeclaration(), refs.get(0));
+    assertEquals(Token.LP, refs.get(0).getNode().getParent().getType());
+    assertEquals(Token.RETURN, refs.get(1).getNode().getParent().getType());
+  }
+
   private Symbol getGlobalVar(SymbolTable table, String name) {
     for (Symbol symbol : table.getAllSymbols()) {
       if (symbol.getName().equals(name) &&
           table.getScope(symbol).getParentScope() == null) {
+        return symbol;
+      }
+    }
+    return null;
+  }
+
+  private Symbol getLocalVar(SymbolTable table, String name) {
+    for (Symbol symbol : table.getAllSymbols()) {
+      if (symbol.getName().equals(name) &&
+          table.getScope(symbol).getParentScope() != null) {
         return symbol;
       }
     }
