@@ -84,6 +84,22 @@ public class JSTypeRegistryTest extends TestCase {
     assertTrue(typeRegistry.hasNamespace("a.b"));
   }
 
+  public void testPropertyOnManyTypes() {
+    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
+
+    JSType type = null;
+
+    // By default the UnionTypeBuilder will treat a union of more than 20
+    // types as an unknown type. We don't want that for property checking
+    // so test that the limit is higher.
+    for (int i = 0; i < 100; i++) {
+      type = typeRegistry.createObjectType("type: " + i, null, null);
+      typeRegistry.registerPropertyOnType("foo", type);
+    }
+
+    assertFalse(typeRegistry.getGreatestSubtypeWithProperty(type, "foo").isUnknownType());
+  }
+
   public void testTypeAsNamespace() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
 

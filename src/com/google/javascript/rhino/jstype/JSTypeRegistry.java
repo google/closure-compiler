@@ -75,6 +75,15 @@ import java.util.Set;
 public class JSTypeRegistry implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  /**
+   * The UnionTypeBuilder caps the maximum number of alternate types it
+   * remembers and then defaults to "?" (unknown type). By default this max
+   * is 20, but it's very easy for the same property to appear on more than 20
+   * types. Use larger unions for property checking. 3000 was picked
+   * semi-randomly for use by the Oz (Emerald Sea FE) project.
+   */
+  private static final int PROPERTY_CHECKING_UNION_SIZE = 3000;
+
   // TODO(user): An instance of this class should be used during
   // compilation. We also want to make all types' constructors package private
   // and force usage of this registry instead. This will allow us to evolve the
@@ -607,7 +616,7 @@ public class JSTypeRegistry implements Serializable {
   public void registerPropertyOnType(String propertyName, JSType type) {
     UnionTypeBuilder typeSet = typesIndexedByProperty.get(propertyName);
     if (typeSet == null) {
-      typeSet = new UnionTypeBuilder(this);
+      typeSet = new UnionTypeBuilder(this, PROPERTY_CHECKING_UNION_SIZE);
       typesIndexedByProperty.put(propertyName, typeSet);
     }
 
