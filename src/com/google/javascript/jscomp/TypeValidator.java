@@ -303,23 +303,25 @@ class TypeValidator {
    * first type.
    *
    * @param t The node traversal.
-   * @param n The node to issue warnings on.
+   * @param n The GETELEM node to issue warnings on.
    * @param objType The type of the left side of the GETELEM.
    * @param indexType The type inside the brackets of the GETELEM.
    */
   void expectIndexMatch(NodeTraversal t, Node n, JSType objType,
       JSType indexType) {
+    Preconditions.checkState(n.getType() == Token.GETELEM);
+    Node indexNode = n.getLastChild();
     if (objType.isUnknownType()) {
-      expectStringOrNumber(t, n, indexType, "property access");
+      expectStringOrNumber(t, indexNode, indexType, "property access");
     } else {
       ObjectType dereferenced = objType.dereference();
       if (dereferenced != null && dereferenced.getIndexType() != null) {
-        expectCanAssignTo(t, n, indexType, dereferenced.getIndexType(),
+        expectCanAssignTo(t, indexNode, indexType, dereferenced.getIndexType(),
             "restricted index type");
       } else if (dereferenced != null && dereferenced.isArrayType()) {
-        expectNumber(t, n, indexType, "array access");
+        expectNumber(t, indexNode, indexType, "array access");
       } else if (objType.matchesObjectContext()) {
-        expectString(t, n, indexType, "property access");
+        expectString(t, indexNode, indexType, "property access");
       } else {
         mismatch(t, n, "only arrays or objects can be accessed",
             objType,
