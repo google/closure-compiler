@@ -2148,6 +2148,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function EventCopy() {}");
   }
 
+  public void testDuplicateStaticPropertyDec20() throws Exception {
+    testTypes(
+        "/**\n" +
+        " * @fileoverview\n" +
+        " * @suppress {duplicate}\n" +
+        " */" +
+        "var goog = goog || {};" +
+        "/** @type {string} */ goog.foo = 'y';" +
+        "/** @type {string} */ goog.foo = 'x';");
+  }
+
   public void testDuplicateLocalVarDecl() throws Exception {
     testClosureTypesMultipleWarnings(
         "/** @param {number} x */\n" +
