@@ -48,12 +48,14 @@ class LineNumberCheck implements Callback, CompilerPass {
     NodeTraversal.traverse(compiler, root, this);
   }
 
+  @Override
   public void process(Node externs, Node root) {
     requiresLineNumbers = false;
 
     NodeTraversal.traverse(compiler, root, this);
   }
 
+  @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     // Each JavaScript file is rooted in a script node, so we'll only
     // have line number information inside the script node.
@@ -63,6 +65,7 @@ class LineNumberCheck implements Callback, CompilerPass {
     return true;
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.getType() == Token.SCRIPT) {
       requiresLineNumbers = false;

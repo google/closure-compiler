@@ -162,6 +162,7 @@ class PhaseOptimizer implements CompilerPass {
   /**
    * Run all the passes in the optimizer.
    */
+  @Override
   public void process(Node externs, Node root) {
     for (CompilerPass pass : passes) {
       pass.process(externs, root);
@@ -242,6 +243,7 @@ class PhaseOptimizer implements CompilerPass {
       this.name = name;
     }
 
+    @Override
     public void process(Node externs, Node root) {
       logger.info(name);
       startPass(name);
@@ -310,6 +312,7 @@ class PhaseOptimizer implements CompilerPass {
       return order;
     }
 
+    @Override
     public void process(Node externs, Node root) {
       Preconditions.checkState(!loopMutex, "Nested loops are forbidden");
       loopMutex = true;

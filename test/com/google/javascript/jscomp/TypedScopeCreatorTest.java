@@ -58,6 +58,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   private final Callback callback = new AbstractPostOrderCallback() {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       Scope s = t.getScope();
       if (s.isGlobal()) {
@@ -72,6 +73,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     registry = compiler.getTypeRegistry();
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node root) {
         ScopeCreator scopeCreator =
             new MemoizedScopeCreator(new TypedScopeCreator(compiler));

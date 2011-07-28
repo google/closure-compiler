@@ -198,19 +198,16 @@ class ExpressionDecomposer {
             && functionExpression.getFirstChild() != grandchild) {
           // TODO(johnlenz): In Internet Explorer, non-javascript objects such
           // as DOM objects can not be decomposed.
-          if (true) {
-            throw new IllegalStateException(
-                "Object method calls can not be decomposed.");
-          } else {
-            // Either there were preexisting side-effects, or this node has
-            // side-effects.
-            state.sideEffects = true;
+          Preconditions.checkState(allowObjectCallDecomposing(),
+              "Object method calls can not be decomposed.");
+          // Either there were preexisting side-effects, or this node has
+          // side-effects.
+          state.sideEffects = true;
 
-            // Rewrite the call so "this" is preserved.
-            Node replacement = rewriteCallExpression(parent, state);
-            // Continue from here.
-            parent = replacement;
-          }
+          // Rewrite the call so "this" is preserved.
+          Node replacement = rewriteCallExpression(parent, state);
+          // Continue from here.
+          parent = replacement;
         }
       } else if (parentType == Token.OBJECTLIT) {
         decomposeObjectLiteralKeys(parent.getFirstChild(), child, state);
@@ -235,6 +232,10 @@ class ExpressionDecomposer {
       Node extractedConditional = extractConditional(
           nonconditionalExpr, exprInjectionPoint, needResult);
     }
+  }
+
+  private static boolean allowObjectCallDecomposing() {
+    return false;
   }
 
   /**

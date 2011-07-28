@@ -25,8 +25,6 @@ import com.google.javascript.rhino.Node;
  */
 public class RuntimeTypeCheckTest extends CompilerTestCase {
 
-  private Node runtimeTypeCheckCode = null;
-
   public RuntimeTypeCheckTest() {
     super("/** @const */ var undefined;");
     enableTypeCheck(CheckLevel.WARNING);

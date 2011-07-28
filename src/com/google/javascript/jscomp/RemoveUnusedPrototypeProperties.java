@@ -60,6 +60,7 @@ class RemoveUnusedPrototypeProperties implements
     this.anchorUnusedVars = anchorUnusedVars;
   }
 
+  @Override
   public void enableSpecialization(SpecializeModule.SpecializationState state) {
     this.specializationState = state;
   }

@@ -41,6 +41,7 @@ final class CheckAccidentalSemicolon extends AbstractPostOrderCallback {
     this.level = level;
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     Node child;
     switch (n.getType()) {

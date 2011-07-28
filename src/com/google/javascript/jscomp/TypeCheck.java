@@ -343,6 +343,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param externsRoot The root of the externs parse tree.
    * @param jsRoot The root of the input parse tree to be checked.
    */
+  @Override
   public void process(Node externsRoot, Node jsRoot) {
     Preconditions.checkNotNull(scopeCreator);
     Preconditions.checkNotNull(topScope);
@@ -420,6 +421,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
+  @Override
   public boolean shouldTraverse(
       NodeTraversal t, Node n, Node parent) {
     checkNoTypeCheckSection(n, true);
@@ -458,6 +460,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param n The node being visited.
    * @param parent The parent of the node n.
    */
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     JSType childType;
     JSType leftType, rightType;

@@ -94,6 +94,7 @@ class NameAnonymousFunctions implements CompilerPass {
       bytesUsed += uniqueName.length();
     }
 
+    @Override
     public final String getCombinedName(String lhs, String rhs) {
       return lhs + DELIMITER + rhs;
     }

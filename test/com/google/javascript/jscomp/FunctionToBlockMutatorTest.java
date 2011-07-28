@@ -221,6 +221,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
 
     // inline tester
     Method tester = new Method() {
+      @Override
       public boolean call(NodeTraversal t, Node n, Node parent) {
 
         Node result = mutator.mutate(

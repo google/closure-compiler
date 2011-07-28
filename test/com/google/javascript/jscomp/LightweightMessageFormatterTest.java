@@ -108,9 +108,11 @@ public class LightweightMessageFormatterTest extends TestCase {
 
   private SourceExcerptProvider source(final String source) {
     return new SourceExcerptProvider() {
+      @Override
       public String getSourceLine(String sourceName, int lineNumber) {
         return source;
       }
+      @Override
       public Region getSourceRegion(String sourceName, int lineNumber) {
         throw new UnsupportedOperationException();
       }

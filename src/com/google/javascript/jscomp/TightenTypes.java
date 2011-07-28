@@ -121,6 +121,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
   ConcreteScope getTopScope() { return topScope; }
 
   /** Convenience method to get the type registry of the compiler. */
+  @Override
   public JSTypeRegistry getTypeRegistry() { return compiler.getTypeRegistry(); }
 
   /** All concrete instance types encountered during flow analysis. */
@@ -342,6 +343,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       Preconditions.checkNotNull(expr);
     }
 
+    @Override
     public Collection<Assignment> getAssignments(ConcreteScope scope) {
       return Lists.newArrayList(
           new Assignment(slot, inferConcreteType(scope, expression)));
@@ -370,6 +372,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
      * {@code propName}, and if that property exists, it is assigned the type
      * of {@code expression}.
      */
+    @Override
     public Collection<Assignment> getAssignments(ConcreteScope scope) {
       ConcreteType recvType = inferConcreteType(scope, receiver);
       ConcreteType exprType = inferConcreteType(scope, expression);
@@ -470,6 +473,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       this.argTypes = argTypes;
     }
 
+    @Override
     public Collection<Assignment> getAssignments(ConcreteScope scope) {
       return getFunctionCallAssignments(inferConcreteType(scope, receiver),
                                         thisType, argTypes);
@@ -497,6 +501,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       Preconditions.checkNotNull(receiver);
     }
 
+    @Override
     public Collection<Assignment> getAssignments(ConcreteScope scope) {
       ConcreteType thisType = ConcreteType.NONE;
       ConcreteType recvType = inferConcreteType(scope, receiver);
@@ -553,6 +558,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       Preconditions.checkNotNull(receiver);
     }
 
+    @Override
     public Collection<Assignment> getAssignments(ConcreteScope scope) {
       ConcreteType thisType = (firstArgument != null)
           ? inferConcreteType(scope, firstArgument)
@@ -585,6 +591,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     }
 
     // TODO(user): handle object literals like { a: new Foo };
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.VAR:
@@ -1265,11 +1272,13 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
   }
 
   /** Returns the function (if any) for the given node. */
+  @Override
   public ConcreteFunctionType getConcreteFunction(FunctionType functionType) {
     return functionFromJSType.get(functionType);
   }
 
   /** Returns the function (if any) for the given node. */
+  @Override
   public ConcreteInstanceType getConcreteInstance(ObjectType instanceType) {
     return instanceFromJSType.get(instanceType);
   }

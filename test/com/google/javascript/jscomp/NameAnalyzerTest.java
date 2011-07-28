@@ -1648,6 +1648,7 @@ public class NameAnalyzerTest extends CompilerTestCase {
       this.analyzer = new NameAnalyzer(compiler, true);
     }
 
+    @Override
     public void process(Node externs, Node root) {
       markNoSideEffectCalls.process(externs, root);
       analyzer.process(externs, root);

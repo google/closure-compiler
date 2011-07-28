@@ -124,6 +124,7 @@ class ClosureReverseAbstractInterpreter
     this.restricters =
       new ImmutableMap.Builder<String, Function<TypeRestriction, JSType>>()
       .put("isDef", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           if (p.outcome) {
             return getRestrictedWithoutUndefined(p.type);
@@ -133,6 +134,7 @@ class ClosureReverseAbstractInterpreter
          }
       })
       .put("isNull", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           if (p.outcome) {
             return getNativeType(NULL_TYPE);
@@ -142,6 +144,7 @@ class ClosureReverseAbstractInterpreter
         }
       })
       .put("isDefAndNotNull", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           if (p.outcome) {
             return getRestrictedWithoutUndefined(
@@ -152,26 +155,31 @@ class ClosureReverseAbstractInterpreter
         }
       })
       .put("isString", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           return getRestrictedByTypeOfResult(p.type, "string", p.outcome);
         }
       })
       .put("isBoolean", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           return getRestrictedByTypeOfResult(p.type, "boolean", p.outcome);
         }
       })
       .put("isNumber", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           return getRestrictedByTypeOfResult(p.type, "number", p.outcome);
         }
       })
       .put("isFunction", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           return getRestrictedByTypeOfResult(p.type, "function", p.outcome);
         }
       })
       .put("isArray", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           if (p.type == null) {
             return p.outcome ? getNativeType(ARRAY_TYPE) : null;
@@ -183,6 +191,7 @@ class ClosureReverseAbstractInterpreter
         }
       })
       .put("isObject", new Function<TypeRestriction, JSType>() {
+        @Override
         public JSType apply(TypeRestriction p) {
           if (p.type == null) {
             return p.outcome ? getNativeType(OBJECT_TYPE) : null;

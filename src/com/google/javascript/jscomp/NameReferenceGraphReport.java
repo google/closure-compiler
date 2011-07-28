@@ -282,6 +282,7 @@ final class NameReferenceGraphReport {
    */
   class DiGraphNodeComparator implements
       Comparator<DiGraphNode<Name, Reference>> {
+    @Override
     public int compare(DiGraphNode<Name, Reference> node1,
         DiGraphNode<Name, Reference> node2) {
       Preconditions.checkNotNull(node1.getValue());

@@ -134,6 +134,7 @@ class ControlFlowGraph<N> extends
    */
   public abstract static class AbstractCfgNodeTraversalCallback implements
       Callback {
+    @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
         Node parent) {
       if (parent == null) {

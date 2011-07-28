@@ -46,6 +46,7 @@ class SanityCheck implements CompilerPass {
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     sanityCheckAst(externs, root);
     sanityCheckNormalization(externs, root);

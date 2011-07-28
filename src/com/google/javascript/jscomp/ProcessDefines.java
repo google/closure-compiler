@@ -112,6 +112,7 @@ class ProcessDefines implements CompilerPass {
     return this;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     if (namespace == null) {
       namespace = new GlobalNamespace(compiler, root);
@@ -275,12 +276,14 @@ class ProcessDefines implements CompilerPass {
      * Keeps track of whether the traversal is in a conditional branch.
      * We traverse all nodes of the parse tree.
      */
+    @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
         Node parent) {
       updateAssignAllowedStack(n, true);
       return true;
     }
 
+    @Override
     public  void visit(NodeTraversal t, Node n, Node parent) {
       RefInfo refInfo = allRefInfo.get(n);
       if (refInfo != null) {

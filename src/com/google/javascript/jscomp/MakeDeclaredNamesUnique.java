@@ -250,6 +250,7 @@ class MakeDeclaredNamesUnique
       this.compiler = compiler;
     }
 
+    @Override
     public void process(Node externs, Node js) {
       NodeTraversal.traverse(compiler, js, this);
     }
@@ -270,6 +271,7 @@ class MakeDeclaredNamesUnique
     /**
      * Prepare a set for the new scope.
      */
+    @Override
     public void enterScope(NodeTraversal t) {
       if (t.inGlobalScope()) {
         return;
@@ -283,6 +285,7 @@ class MakeDeclaredNamesUnique
      * Rename vars for the current scope, and merge any referenced
      * names into the parent scope reference set.
      */
+    @Override
     public void exitScope(NodeTraversal t) {
       if (t.inGlobalScope()) {
         return;

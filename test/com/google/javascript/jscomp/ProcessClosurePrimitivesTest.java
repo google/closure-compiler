@@ -57,6 +57,7 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
       return new ProcessClosurePrimitives(compiler, CheckLevel.ERROR, true);
     } else {
       return new CompilerPass() {
+        @Override
         public void process(Node externs, Node root) {
           // Process the original code.
           new ProcessClosurePrimitives(compiler, CheckLevel.OFF, true)

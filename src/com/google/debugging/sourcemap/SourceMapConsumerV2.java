@@ -56,6 +56,7 @@ public class SourceMapConsumerV2 implements SourceMapConsumer {
   /**
    * Parses the given contents containing a source map.
    */
+  @Override
   public void parse(String contents) throws SourceMapParseException {
     try {
       JSONObject sourceMapRoot = new JSONObject(contents);

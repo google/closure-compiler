@@ -65,6 +65,7 @@ abstract class MethodCompilerPass implements CompilerPass {
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     externMethods.clear();
     externMethodsWithoutSignatures.clear();
@@ -124,6 +125,7 @@ abstract class MethodCompilerPass implements CompilerPass {
    */
   private class GetExternMethods extends AbstractPostOrderCallback {
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:
@@ -177,6 +179,7 @@ abstract class MethodCompilerPass implements CompilerPass {
    */
   private class GatherSignatures extends AbstractPostOrderCallback {
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:

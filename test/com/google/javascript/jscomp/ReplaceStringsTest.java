@@ -80,6 +80,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
     pass = new ReplaceStrings(compiler, "`", names, reserved);
 
     return new CompilerPass() {
+        @Override
         public void process(Node externs, Node js) {
           new CollapseProperties(compiler, true, true).process(externs, js);
           pass.process(externs, js);

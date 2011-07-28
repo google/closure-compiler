@@ -466,6 +466,7 @@ public class NormalizeTest extends CompilerTestCase {
     final Set<Node> set = Sets.newHashSet();
     NodeTraversal.traverse(
         getLastCompiler(), root, new AbstractPostOrderCallback() {
+        @Override
         public void visit(NodeTraversal t, Node node, Node parent) {
           if (node.getBooleanProp(prop)) {
             set.add(node);
@@ -521,6 +522,7 @@ public class NormalizeTest extends CompilerTestCase {
     @Override
     public CompilerPass getProcessor(final Compiler compiler) {
       return new CompilerPass() {
+        @Override
         public void process(Node externs, Node root) {
           new CollapseProperties(compiler, false, true).process(externs, root);
         }

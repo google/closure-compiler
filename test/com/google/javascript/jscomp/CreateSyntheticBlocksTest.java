@@ -38,6 +38,7 @@ public class CreateSyntheticBlocksTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node js) {
         new CreateSyntheticBlocks(compiler, START_MARKER, END_MARKER).process(
             externs, js);

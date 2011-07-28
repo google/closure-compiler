@@ -389,6 +389,7 @@ public class FunctionArgumentInjectorTest extends TestCase {
   private static Supplier<String> getNameSupplier() {
     return new Supplier<String>() {
       int i = 0;
+      @Override
       public String get() {
         return String.valueOf(i++);
       }

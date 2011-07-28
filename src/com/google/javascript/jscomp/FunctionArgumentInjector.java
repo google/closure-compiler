@@ -381,6 +381,7 @@ class FunctionArgumentInjector {
       return loopsEntered != 0;
     }
 
+    @Override
     public void visit(Node n) {
       // If we are exiting a loop.
       if (NodeUtil.isLoopStructure(n)) {

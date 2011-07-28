@@ -73,6 +73,7 @@ class DevirtualizePrototypeMethods
     this.compiler = compiler;
   }
 
+  @Override
   public void enableSpecialization(SpecializeModule.SpecializationState state) {
     this.specializationState = state;
   }

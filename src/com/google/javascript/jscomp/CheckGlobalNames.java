@@ -68,6 +68,7 @@ class CheckGlobalNames implements CompilerPass {
     return this;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     // TODO(nicksantos): Let CollapseProperties and CheckGlobalNames
     // share a namespace.

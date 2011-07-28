@@ -621,6 +621,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       }
 
       CssRenamingMap cssRenamingMap = new CssRenamingMap() {
+        @Override
         public String get(String value) {
           if (cssNames.containsKey(value)) {
             return cssNames.get(value);
@@ -629,6 +630,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           }
         }
 
+        @Override
         public CssRenamingMap.Style getStyle() {
           return style;
         }

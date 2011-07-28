@@ -144,6 +144,7 @@ class RhinoErrorReporter {
       super(compiler);
     }
 
+    @Override
     public EvaluatorException runtimeError(String message, String sourceName,
         int line, String lineSource, int lineOffset) {
       return new EvaluatorException(message, sourceName, line, lineSource,
@@ -158,6 +159,7 @@ class RhinoErrorReporter {
       super(compiler);
     }
 
+    @Override
     public com.google.javascript.jscomp.mozilla.rhino.EvaluatorException
         runtimeError(String message, String sourceName, int line,
             String lineSource, int lineOffset) {

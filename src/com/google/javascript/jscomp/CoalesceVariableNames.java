@@ -66,6 +66,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   private static final Comparator<Var> coloringTieBreaker =
       new Comparator<Var>() {
+    @Override
     public int compare(Var v1, Var v2) {
       return v1.index - v2.index;
     }

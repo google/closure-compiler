@@ -330,6 +330,7 @@ public class ProcessDefinesTest extends CompilerTestCase {
       this.compiler = compiler;
     }
 
+    @Override
     public void process(Node externs, Node js) {
       namespace = new GlobalNamespace(compiler, js);
       new ProcessDefines(compiler, overrides)

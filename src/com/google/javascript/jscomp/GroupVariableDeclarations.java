@@ -68,10 +68,12 @@ class GroupVariableDeclarations implements CompilerPass, ScopedCallback {
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
   }
 
+  @Override
   public void enterScope(NodeTraversal t) {
     Set<Node> varNodes = Sets.newLinkedHashSet();
     Iterator<Var> scopeVarIter = t.getScope().getVars();
@@ -92,14 +94,17 @@ class GroupVariableDeclarations implements CompilerPass, ScopedCallback {
     }
   }
 
+  @Override
   public void exitScope(NodeTraversal t) {
   }
 
+  @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
                                 Node parent) {
     return true;
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
   }
 

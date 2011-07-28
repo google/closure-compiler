@@ -40,7 +40,10 @@ public class FunctionTypeBuilderTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     // By turning on type checking, the FunctionTypeBuilder will be invoked.
-    return new CompilerPass() { public void process(Node externs, Node js) {} };
+    return new CompilerPass() {
+          @Override
+          public void process(Node externs, Node js) {}
+        };
   }
 
   @Override

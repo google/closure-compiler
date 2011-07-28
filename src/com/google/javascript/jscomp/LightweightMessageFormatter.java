@@ -55,10 +55,12 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
     return new LightweightMessageFormatter();
   }
 
+  @Override
   public String formatError(JSError error) {
     return format(error, false);
   }
 
+  @Override
   public String formatWarning(JSError warning) {
     return format(warning, true);
   }
@@ -118,10 +120,12 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
    * and return line excerpt without any modification.
    */
   static class LineNumberingFormatter implements ExcerptFormatter {
+    @Override
     public String formatLine(String line, int lineNumber) {
       return line;
     }
 
+    @Override
     public String formatRegion(Region region) {
       if (region == null) {
         return null;

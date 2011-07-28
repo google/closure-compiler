@@ -378,6 +378,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
 
     }
 
+    @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
       Collection<Definition> defs =
           passUnderTest.getDefinitionsReferencedAt(node);

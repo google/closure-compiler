@@ -300,6 +300,7 @@ final class RenameVars implements CompilerPass {
    */
   private static final Comparator<Assignment> FREQUENCY_COMPARATOR =
       new Comparator<Assignment>() {
+    @Override
     public int compare(Assignment a1, Assignment a2) {
       if (a1.count != a2.count) {
         return a2.count - a1.count;
@@ -316,6 +317,7 @@ final class RenameVars implements CompilerPass {
    */
   private static final Comparator<Assignment> ORDER_OF_OCCURRENCE_COMPARATOR =
       new Comparator<Assignment>() {
+        @Override
         public int compare(Assignment a1, Assignment a2) {
           return a1.orderOfOccurrence - a2.orderOfOccurrence;
         }

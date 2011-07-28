@@ -240,6 +240,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    * a variable from getting renamed, but no longer have any effect.
    */
   private class NameRefInExternsCheck extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.NAME) {
         switch (parent.getType()) {

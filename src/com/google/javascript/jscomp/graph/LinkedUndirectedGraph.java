@@ -21,8 +21,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.javascript.jscomp.graph.Graph.GraphEdge;
-import com.google.javascript.jscomp.graph.UndiGraph.UndiGraphEdge;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +41,7 @@ public class LinkedUndirectedGraph<N, E>
   protected final Map<N, LinkedUndirectedGraphNode<N, E>> nodes =
       Maps.newHashMap();
 
+  @Override
   public SubGraph<N, E> newSubGraph() {
     return new SimpleSubGraph<N, E>(this);
   }
@@ -296,6 +295,7 @@ public class LinkedUndirectedGraph<N, E>
       return neighborList;
     }
 
+    @Override
     public Iterator<UndiGraphEdge<N, E>> getNeighborEdgesIterator() {
       return neighborList.iterator();
     }

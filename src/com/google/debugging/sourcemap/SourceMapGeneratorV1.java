@@ -177,6 +177,7 @@ public class SourceMapGeneratorV1 implements SourceMapGenerator {
    * @param startPosition The position on the starting line
    * @param endPosition The position on the ending line.
    */
+  @Override
   public void addMapping(
       String sourceName, @Nullable String symbolName,
       FilePosition sourceStartPosition,
@@ -249,6 +250,7 @@ public class SourceMapGeneratorV1 implements SourceMapGenerator {
    *
    * @param prefix The prefix that is added before the generated source code.
    */
+  @Override
   public void setWrapperPrefix(String prefix) {
     // Determine the current line and character position.
     int prefixLine = 0;
@@ -276,6 +278,7 @@ public class SourceMapGeneratorV1 implements SourceMapGenerator {
    * @param offsetLine The index of the current line being printed.
    * @param offsetIndex The column index of the current character being printed.
    */
+  @Override
   public void setStartingPosition(int offsetLine, int offsetIndex) {
     Preconditions.checkState(offsetLine >= 0);
     Preconditions.checkState(offsetIndex >= 0);
@@ -285,6 +288,7 @@ public class SourceMapGeneratorV1 implements SourceMapGenerator {
   /**
    * Resets the source map for reuse for the generation of a new source file.
    */
+  @Override
   public void reset() {
     mappings = Lists.newArrayList();
     lastMapping = null;
@@ -299,6 +303,7 @@ public class SourceMapGeneratorV1 implements SourceMapGenerator {
    * @param name The name of the generated source file that this source map
    *   represents.
    */
+  @Override
   public void appendTo(Appendable out, String name) throws IOException {
     // Write the mappings out to the file. The format of the generated
     // source map is three sections, each deliminated by a magic comment.
@@ -397,6 +402,7 @@ public class SourceMapGeneratorV1 implements SourceMapGenerator {
     /**
      * As each segment is visited write out the appropriate line mapping.
      */
+    @Override
     public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
       throws IOException {
 

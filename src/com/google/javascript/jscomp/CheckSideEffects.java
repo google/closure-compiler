@@ -44,6 +44,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
     this.level = level;
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     // VOID nodes appear when there are extra semicolons at the BLOCK level.
     // I've been unable to think of any cases where this indicates a bug,

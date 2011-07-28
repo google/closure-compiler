@@ -1347,6 +1347,7 @@ public class FunctionInjectorTest extends TestCase {
 
     // can-inline tester
     Method tester = new Method() {
+      @Override
       public boolean call(NodeTraversal t, Node n, Node parent) {
         CanInlineResult result = injector.canInlineReferenceToFunction(
             t, n, fnNode, unsafe, mode,
@@ -1422,6 +1423,7 @@ public class FunctionInjectorTest extends TestCase {
 
     // inline tester
     Method tester = new Method() {
+      @Override
       public boolean call(NodeTraversal t, Node n, Node parent) {
 
         CanInlineResult canInline = injector.canInlineReferenceToFunction(

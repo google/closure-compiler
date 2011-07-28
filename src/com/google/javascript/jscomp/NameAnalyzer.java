@@ -165,6 +165,7 @@ final class NameAnalyzer implements CompilerPass {
    */
   private static class ReferencePropagationCallback
       implements EdgeCallback<JsName, RefType> {
+    @Override
     public boolean traverseEdge(JsName from,
                                 RefType callSite,
                                 JsName to) {
@@ -251,6 +252,7 @@ final class NameAnalyzer implements CompilerPass {
       return out.toString();
     }
 
+    @Override
     public int compareTo(JsName rhs) {
       return this.name.compareTo(rhs.name);
     }
@@ -277,6 +279,7 @@ final class NameAnalyzer implements CompilerPass {
      * Top GETPROP or NAME or STRING [objlit key] node defining the name of
      * this node
      */
+    @SuppressWarnings("unused")
     Node node;
 
     /**
@@ -298,10 +301,12 @@ final class NameAnalyzer implements CompilerPass {
       this.parent = node.getParent();
     }
 
+    @Override
     public JsName name() {
       return name;
     }
 
+    @Override
     public void remove() {
       // Setters have VAR, FUNCTION, or ASSIGN parent nodes. CALL parent
       // nodes are global refs, and are handled later in this function.
@@ -392,6 +397,7 @@ final class NameAnalyzer implements CompilerPass {
       this.gramps = gramps;
     }
 
+    @Override
     public JsName name() {
       return name;
     }
@@ -418,6 +424,7 @@ final class NameAnalyzer implements CompilerPass {
       Preconditions.checkState(node.getType() == Token.CALL);
     }
 
+    @Override
     public void remove() {
       Preconditions.checkState(node.getType() == Token.CALL);
       if (NodeUtil.isExpressionNode(parent)) {
@@ -450,6 +457,7 @@ final class NameAnalyzer implements CompilerPass {
       Preconditions.checkState(parent.getType() == Token.INSTANCEOF);
     }
 
+    @Override
     public void remove() {
       changeProxy.replaceWith(gramps, parent, new Node(Token.FALSE));
     }
@@ -459,6 +467,7 @@ final class NameAnalyzer implements CompilerPass {
    * Walk through externs and mark nodes as externally declared if declared
    */
   private class ProcessExternals extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       NameInformation ns = null;
       if (NodeUtil.isVarDeclaration(n)) {
@@ -496,6 +505,7 @@ final class NameAnalyzer implements CompilerPass {
    * </pre>
    */
   private class FindDependencyScopes extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (!t.inGlobalScope()) {
         return;
@@ -557,6 +567,7 @@ final class NameAnalyzer implements CompilerPass {
   private class HoistVariableAndFunctionDeclarations
       extends NodeTraversal.AbstractShallowCallback {
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isVarDeclaration(n)) {
         NameInformation ns = createNameInformation(t, n, parent);
@@ -581,6 +592,7 @@ final class NameAnalyzer implements CompilerPass {
    */
   private class FindDeclarationsAndSetters extends AbstractPostOrderCallback {
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
 
       // Record global variable and function declarations
@@ -755,6 +767,7 @@ final class NameAnalyzer implements CompilerPass {
       }
     }
 
+    @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (parent == null) {
         return true;
@@ -803,6 +816,7 @@ final class NameAnalyzer implements CompilerPass {
       return true;
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (!(NodeUtil.isName(n) ||
             NodeUtil.isGet(n) && !NodeUtil.isGetProp(parent))) {
@@ -990,6 +1004,7 @@ final class NameAnalyzer implements CompilerPass {
   }
 
   private class RemoveListener implements AstChangeProxy.ChangeListener {
+    @Override
     public void nodeRemoved(Node n) {
       compiler.reportCodeChange();
     }

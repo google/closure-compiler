@@ -41,6 +41,7 @@ public abstract class BasicErrorManager implements ErrorManager {
   private int warningCount = 0;
   private double typedPercent = 0.0;
 
+  @Override
   public void report(CheckLevel level, JSError error) {
     if (messages.add(new ErrorWithLevel(error, level))) {
       if (level == CheckLevel.ERROR) {
@@ -51,6 +52,7 @@ public abstract class BasicErrorManager implements ErrorManager {
     }
   }
 
+  @Override
   public void generateReport() {
     for (ErrorWithLevel message : messages) {
       println(message.level, message.error);
@@ -69,26 +71,32 @@ public abstract class BasicErrorManager implements ErrorManager {
    */
   protected abstract void printSummary();
 
+  @Override
   public int getErrorCount() {
     return errorCount;
   }
 
+  @Override
   public int getWarningCount() {
     return warningCount;
   }
 
+  @Override
   public JSError[] getErrors() {
     return toArray(CheckLevel.ERROR);
   }
 
+  @Override
   public JSError[] getWarnings() {
     return toArray(CheckLevel.WARNING);
   }
 
+  @Override
   public void setTypedPercent(double typedPercent) {
     this.typedPercent = typedPercent;
   }
 
+  @Override
   public double getTypedPercent() {
     return typedPercent;
   }
@@ -117,6 +125,7 @@ public abstract class BasicErrorManager implements ErrorManager {
     private static final int P1_LT_P2 = -1;
     private static final int P1_GT_P2 = 1;
 
+    @Override
     public int compare(ErrorWithLevel p1, ErrorWithLevel p2) {
       // null is the smallest value
       if (p2 == null) {

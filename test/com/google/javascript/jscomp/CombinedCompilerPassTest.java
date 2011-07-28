@@ -101,11 +101,13 @@ public class CombinedCompilerPassTest extends TestCase  {
       return this;
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       assertEquals(Token.STRING, n.getType());
       visited.append(n.getString());
     }
 
+    @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       assertEquals(Token.STRING, n.getType());
       shouldTraversed.append(n.getString());

@@ -189,6 +189,7 @@ public class CallGraph implements CompilerPass {
     Collection<Function> functions =
         Collections2.<Function>filter(getAllFunctions(),
             new Predicate<Function>() {
+        @Override
         public boolean apply(Function function) {
 
           String functionName = function.getName();

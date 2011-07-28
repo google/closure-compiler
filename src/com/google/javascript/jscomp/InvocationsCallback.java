@@ -36,6 +36,7 @@ import com.google.javascript.rhino.Token;
  */
 abstract class InvocationsCallback extends AbstractPostOrderCallback {
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.getType() != Token.CALL) {
       return;

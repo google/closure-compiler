@@ -46,6 +46,7 @@ public abstract class NullErrorReporter  {
 
   private static class NewRhinoNullReporter extends NullErrorReporter
       implements com.google.javascript.jscomp.mozilla.rhino.ErrorReporter {
+    @Override
     public com.google.javascript.jscomp.mozilla.rhino.EvaluatorException
       runtimeError(String message, String sourceName, int line,
                    String lineSource, int lineOffset) {
@@ -56,6 +57,7 @@ public abstract class NullErrorReporter  {
 
   private static class OldRhinoNullReporter extends NullErrorReporter
       implements ErrorReporter {
+    @Override
     public EvaluatorException runtimeError(String message, String sourceName,
                                            int line, String lineSource,
                                            int lineOffset) {

@@ -64,6 +64,7 @@ class AnonymousFunctionNamingCallback
     this.namer = namer;
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.FUNCTION:

@@ -63,6 +63,7 @@ class SyntacticScopeCreator implements ScopeCreator {
     this.redeclarationHandler = redeclarationHandler;
   }
 
+  @Override
   public Scope createScope(Node n, Scope parent) {
     sourceName = null;
     if (parent == null) {
@@ -181,6 +182,7 @@ class SyntacticScopeCreator implements ScopeCreator {
    * The default handler for duplicate declarations.
    */
   private class DefaultRedeclarationHandler implements RedeclarationHandler {
+    @Override
     public void onRedeclaration(
         Scope s, String name, Node n, CompilerInput input) {
       Node parent = n.getParent();

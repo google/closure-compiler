@@ -290,6 +290,7 @@ public class MarkNoSideEffectCallsTest extends CompilerTestCase {
       NodeTraversal.traverse(compiler, root, this);
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.NEW) {
         if (!NodeUtil.constructorCallHasSideEffects(n)) {

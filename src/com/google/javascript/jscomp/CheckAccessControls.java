@@ -130,6 +130,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
+  @Override
   public void enterScope(NodeTraversal t) {
     if (!t.inGlobalScope()) {
       Node n = t.getScopeRoot();
@@ -145,6 +146,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     }
   }
 
+  @Override
   public void exitScope(NodeTraversal t) {
     if (!t.inGlobalScope()) {
       Node n = t.getScopeRoot();
@@ -212,10 +214,12 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     return type;
   }
 
+  @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     return true;
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.NAME:

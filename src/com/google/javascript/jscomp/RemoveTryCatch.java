@@ -41,11 +41,13 @@ class RemoveTryCatch implements CompilerPass {
   /**
    * Do all processing on the root node.
    */
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new RemoveTryCatchCode());
   }
 
   private class RemoveTryCatchCode extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.TRY:

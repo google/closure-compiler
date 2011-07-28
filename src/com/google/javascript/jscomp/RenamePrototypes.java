@@ -150,6 +150,7 @@ class RenamePrototypes implements CompilerPass {
    */
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
     new Comparator<Property>() {
+      @Override
       public int compare(Property a1, Property a2) {
         int n1 = a1.count();
         int n2 = a2.count();
@@ -200,6 +201,7 @@ class RenamePrototypes implements CompilerPass {
    * @param externs The root of the externs parse tree
    * @param root The root of the main code parse tree
    */
+  @Override
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
 
@@ -289,6 +291,7 @@ class RenamePrototypes implements CompilerPass {
    */
   private class ProcessExternedProperties extends AbstractPostOrderCallback {
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:
@@ -310,6 +313,7 @@ class RenamePrototypes implements CompilerPass {
    */
   private class ProcessProperties extends AbstractPostOrderCallback {
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:

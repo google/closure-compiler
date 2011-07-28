@@ -540,15 +540,18 @@ public class ScopedAliasesTest extends CompilerTestCase {
       this.compiler = compiler;
     }
 
+    @Override
     public void process(Node externs, Node root) {
       NodeTraversal.traverse(compiler, root, this);
     }
 
+    @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
         Node parent) {
       return true;
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       JSDocInfo info = n.getJSDocInfo();
       if (info != null) {

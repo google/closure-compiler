@@ -43,11 +43,13 @@ class ObjectPropertyStringPostprocess implements CompilerPass {
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new Callback());
   }
 
   private class Callback extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() != Token.NEW) {
         return;

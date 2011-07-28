@@ -143,6 +143,7 @@ public class Scope
     /**
      * Gets the name of the variable.
      */
+    @Override
     public String getName() {
       return name;
     }
@@ -247,6 +248,7 @@ public class Scope
      * Gets this variable's type. To know whether this type has been inferred,
      * see {@code #isTypeInferred()}.
      */
+    @Override
     public JSType getType() {
       return type;
     }
@@ -287,6 +289,7 @@ public class Scope
      * Returns whether this variable's type is inferred. To get the variable's
      * type, see {@link #getType()}.
      */
+    @Override
     public boolean isTypeInferred() {
       return typeInferred;
     }
@@ -446,6 +449,7 @@ public class Scope
   /**
    * Gets the type of {@code this} in the current scope.
    */
+  @Override
   public ObjectType getTypeOfThis() {
     return thisType;
   }
@@ -500,10 +504,12 @@ public class Scope
     vars.remove(var.name);
   }
 
+  @Override
   public StaticSlot<JSType> getSlot(String name) {
     return getVar(name);
   }
 
+  @Override
   public StaticSlot<JSType> getOwnSlot(String name) {
     return vars.get(name);
   }

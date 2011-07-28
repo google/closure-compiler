@@ -45,6 +45,7 @@ class SemanticReverseAbstractInterpreter
    */
   private static final Function<TypePair, TypePair> EQ =
     new Function<TypePair, TypePair>() {
+      @Override
       public TypePair apply(TypePair p) {
         if (p.typeA == null || p.typeB == null) {
           return null;
@@ -58,6 +59,7 @@ class SemanticReverseAbstractInterpreter
    */
   private static final Function<TypePair, TypePair> NE =
     new Function<TypePair, TypePair>() {
+      @Override
       public TypePair apply(TypePair p) {
         if (p.typeA == null || p.typeB == null) {
           return null;
@@ -72,6 +74,7 @@ class SemanticReverseAbstractInterpreter
   private static final
       Function<TypePair, TypePair> SHEQ =
     new Function<TypePair, TypePair>() {
+      @Override
       public TypePair apply(TypePair p) {
         if (p.typeA == null || p.typeB == null) {
           return null;
@@ -86,6 +89,7 @@ class SemanticReverseAbstractInterpreter
   private static final
       Function<TypePair, TypePair> SHNE =
     new Function<TypePair, TypePair>() {
+      @Override
       public TypePair apply(TypePair p) {
         if (p.typeA == null || p.typeB == null) {
           return null;
@@ -100,6 +104,7 @@ class SemanticReverseAbstractInterpreter
   private final
       Function<TypePair, TypePair> INEQ =
     new Function<TypePair, TypePair>() {
+      @Override
       public TypePair apply(TypePair p) {
         return new TypePair(
             getRestrictedWithoutUndefined(p.typeA),
@@ -115,6 +120,7 @@ class SemanticReverseAbstractInterpreter
     super(convention, typeRegistry);
   }
 
+  @Override
   public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
       FlowScope blindScope, boolean outcome) {
     // Check for the typeof operator.

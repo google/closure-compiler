@@ -362,6 +362,7 @@ class AliasKeywords implements CompilerPass {
   /**
    * Do all processing on the root node.
    */
+  @Override
   public void process(Node externs, Node root) {
     // Find candidates to alias.
     NodeTraversal.traverse(compiler, root, new FindAliasableNodes());

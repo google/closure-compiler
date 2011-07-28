@@ -95,7 +95,6 @@ public class ParserRunner {
   /**
    * Parses the JavaScript text given by a reader.
    *
-   * @param sourceName The filename.
    * @param sourceString Source code from the file.
    * @param errorReporter An error.
    * @param logger A logger.

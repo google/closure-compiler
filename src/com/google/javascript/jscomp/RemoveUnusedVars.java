@@ -135,6 +135,7 @@ class RemoveUnusedVars
    * Traverses the root, removing all unused variables. Multiple traversals
    * may occur to ensure all unused variables are removed.
    */
+  @Override
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
     SimpleDefinitionFinder defFinder = null;

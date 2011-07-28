@@ -50,6 +50,7 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         compiler.getTypeRegistry());
 
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node root) {
         checker.processForTesting(externs, root);
 

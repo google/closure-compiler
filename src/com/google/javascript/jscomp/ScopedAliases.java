@@ -149,6 +149,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       this.aliasDefinition = aliasDefinition;
     }
 
+    @Override
     public void applyAlias() {
       aliasReference.getParent().replaceChild(
           aliasReference, aliasDefinition.cloneTree());
@@ -165,6 +166,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       this.correctedType = correctedType;
     }
 
+    @Override
     public void applyAlias() {
       aliasReference.setString(correctedType);
     }

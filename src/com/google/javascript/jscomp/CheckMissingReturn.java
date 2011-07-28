@@ -44,6 +44,7 @@ class CheckMissingReturn implements ScopedCallback {
   private final CheckLevel level;
 
   private static final Predicate<Node> IS_RETURN = new Predicate<Node>() {
+    @Override
     public boolean apply(Node input) {
       // Check for null because the control flow graph's implicit return node is
       // represented by null, so this value might be input.
@@ -55,6 +56,7 @@ class CheckMissingReturn implements ScopedCallback {
   private static final Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>
       GOES_THROUGH_TRUE_CONDITION_PREDICATE =
         new Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>() {
+    @Override
     public boolean apply(DiGraphEdge<Node, ControlFlowGraph.Branch> input) {
       // First skill all exceptions.
       Branch branch = input.getValue();

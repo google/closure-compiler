@@ -53,6 +53,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   private final Callback callback = new AbstractPostOrderCallback() {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       Scope s = t.getScope();
       if (s.isGlobal()) {
@@ -64,6 +65,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node root) {
         ScopeCreator scopeCreator =
             new MemoizedScopeCreator(new TypedScopeCreator(compiler));

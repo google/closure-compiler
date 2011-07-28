@@ -38,6 +38,7 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node root) {}
     };
   }

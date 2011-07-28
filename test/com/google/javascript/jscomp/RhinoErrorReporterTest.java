@@ -30,6 +30,7 @@ public class RhinoErrorReporterTest extends TestCase {
 
   public CompilerPass getProcessor(Compiler compiler) {
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node root) {}
     };
   }

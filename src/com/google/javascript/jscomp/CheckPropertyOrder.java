@@ -83,10 +83,12 @@ class CheckPropertyOrder extends AbstractPostOrderCallback
     this.onlyOneError = onlyOneError;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     // Look for both top-level functions and assignments of functions to
     // qualified names.

@@ -81,6 +81,7 @@ class CrossModuleMethodMotion implements CompilerPass {
         canModifyExterns, false);
   }
 
+  @Override
   public void process(Node externRoot, Node root) {
     // If there are < 2 modules, then we will never move anything,
     // so we're done.

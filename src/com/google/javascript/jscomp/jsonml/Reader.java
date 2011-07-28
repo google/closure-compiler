@@ -81,11 +81,6 @@ public class Reader {
       report(JSError.make(sourceName, lineno, charno, type, arguments));
     }
 
-    private void report(DiagnosticType type, String... arguments)
-        throws JsonMLException {
-      report(JSError.make(type, arguments));
-    }
-
     /**
      * Reports a new parser error to the compiler and terminates the job.
      * @param error JSError instance to be passed to the compiler
@@ -422,12 +417,6 @@ public class Reader {
       int fromIndex, boolean newState) throws JsonMLException {
     transformElements(element.getChildren().subList(
         fromIndex, element.childrenSize()), parent, newState);
-  }
-
-  private void transformAllChildrenFromIndex(JsonML element, Node parent,
-      int fromIndex) throws JsonMLException {
-    transformElements(element.getChildren().subList(
-        fromIndex, element.childrenSize()), parent);
   }
 
   private void transformElements(List<JsonML> elements, Node parent,
@@ -1135,6 +1124,9 @@ public class Reader {
     insertExprResultState = true;
   }
 
+  /**
+   * @throws JsonMLException
+   */
   private void transformThisExpr(JsonML element, Node parent)
       throws JsonMLException {
     parent.addChildToBack(createNode(Token.THIS, element));

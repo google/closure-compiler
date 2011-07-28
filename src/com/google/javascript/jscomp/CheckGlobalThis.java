@@ -76,6 +76,7 @@ final class CheckGlobalThis implements Callback {
    * Since this pass reports errors only when a global {@code this} keyword
    * is encountered, there is no reason to traverse non global contexts.
    */
+  @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
 
     if (n.getType() == Token.FUNCTION) {
@@ -150,6 +151,7 @@ final class CheckGlobalThis implements Callback {
     return true;
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
       compiler.report(t.makeError(n, GLOBAL_THIS));

@@ -48,6 +48,7 @@ public class TypeValidatorTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     this.compiler = compiler;
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node n) {
         // Do nothing: we're in it for the type-checking.
       }

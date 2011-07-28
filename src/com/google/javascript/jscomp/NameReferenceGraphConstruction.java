@@ -73,6 +73,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
     return this.graph;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     // Use the MemoizedScopeCreator instance from TypeCheck if available
     // as FunctionTypeBuilder warns about existing types if TypedScopeCreator is

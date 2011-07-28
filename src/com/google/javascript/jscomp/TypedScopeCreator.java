@@ -359,25 +359,6 @@ final class TypedScopeCreator implements ScopeCreator {
     }
   }
 
-  /**
-   * Given a node, determines whether that node names a prototype
-   * property, and if so, returns the qualified name node representing
-   * the owner of that property. Otherwise, returns null.
-   */
-  private static Node getPrototypePropertyOwner(Node n) {
-    if (n.getType() == Token.GETPROP) {
-      Node firstChild = n.getFirstChild();
-      if (firstChild.getType() == Token.GETPROP &&
-          firstChild.getLastChild().getString().equals("prototype")) {
-        Node maybeOwner = firstChild.getFirstChild();
-        if (maybeOwner.isQualifiedName()) {
-          return maybeOwner;
-        }
-      }
-    }
-    return null;
-  }
-
   private JSType getNativeType(JSTypeNative nativeType) {
     return typeRegistry.getNativeType(nativeType);
   }
@@ -1520,6 +1501,7 @@ final class TypedScopeCreator implements ScopeCreator {
         this.thisType = thisType;
       }
 
+      @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
         if (n.getType() == Token.EXPR_RESULT) {
           Node child = n.getFirstChild();

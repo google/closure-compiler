@@ -36,6 +36,7 @@ public class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node js) {
         NodeTraversal.traverse(
             compiler, js, new DeadAssignmentsElimination(compiler));

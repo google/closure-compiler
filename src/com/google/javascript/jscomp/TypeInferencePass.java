@@ -74,6 +74,7 @@ class TypeInferencePass implements CompilerPass {
    * @param externsRoot The root of the externs parse tree.
    * @param jsRoot The root of the input parse tree to be checked.
    */
+  @Override
   public void process(Node externsRoot, Node jsRoot) {
     Node externsAndJs = jsRoot.getParent();
     Preconditions.checkState(externsAndJs != null);
@@ -117,6 +118,7 @@ class TypeInferencePass implements CompilerPass {
   }
 
   private class TypeInferringCallback implements ScopedCallback {
+    @Override
     public void enterScope(NodeTraversal t) {
       Scope scope = t.getScope();
       Node node = t.getCurrentNode();
@@ -125,6 +127,7 @@ class TypeInferencePass implements CompilerPass {
       }
     }
 
+    @Override
     public void exitScope(NodeTraversal t) {
       Scope scope = t.getScope();
       Node node = t.getCurrentNode();
@@ -133,10 +136,12 @@ class TypeInferencePass implements CompilerPass {
       }
     }
 
+    @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       return true;
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Do nothing
     }

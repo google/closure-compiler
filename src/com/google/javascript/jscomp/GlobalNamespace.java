@@ -185,6 +185,7 @@ class GlobalNamespace
       this.newNodes = newNodes;
     }
 
+    @Override
     public boolean apply(Node n) {
       if (!n.isQualifiedName()) {
         return false;

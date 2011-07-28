@@ -178,6 +178,7 @@ abstract class ChainableReverseAbstractInterpreter
    */
   private final Visitor<JSType> restrictUndefinedVisitor =
     new Visitor<JSType>() {
+      @Override
       public JSType caseEnumElementType(EnumElementType enumElementType) {
         JSType type = enumElementType.getPrimitiveType().visit(this);
         if (type != null && enumElementType.getPrimitiveType().equals(type)) {
@@ -187,51 +188,63 @@ abstract class ChainableReverseAbstractInterpreter
         }
       }
 
+      @Override
       public JSType caseAllType() {
         return typeRegistry.createUnionType(OBJECT_TYPE, NUMBER_TYPE,
             STRING_TYPE, BOOLEAN_TYPE, NULL_TYPE);
       }
 
+      @Override
       public JSType caseNoObjectType() {
         return getNativeType(NO_OBJECT_TYPE);
       }
 
+      @Override
       public JSType caseNoType() {
         return getNativeType(NO_TYPE);
       }
 
+      @Override
       public JSType caseBooleanType() {
         return getNativeType(BOOLEAN_TYPE);
       }
 
+      @Override
       public JSType caseFunctionType(FunctionType type) {
         return type;
       }
 
+      @Override
       public JSType caseNullType() {
         return getNativeType(NULL_TYPE);
       }
 
+      @Override
       public JSType caseNumberType() {
         return getNativeType(NUMBER_TYPE);
       }
 
+      @Override
       public JSType caseObjectType(ObjectType type) {
         return type;
       }
 
+      @Override
       public JSType caseStringType() {
         return getNativeType(STRING_TYPE);
       }
 
+      @Override
       public JSType caseUnionType(UnionType type) {
         return type.getRestrictedUnion(getNativeType(VOID_TYPE));
       }
 
+      @Override
       public JSType caseUnknownType() {
         return getNativeType(UNKNOWN_TYPE);
       }
 
+      @Override
       public JSType caseVoidType() {
         return null;
       }
@@ -243,6 +256,7 @@ abstract class ChainableReverseAbstractInterpreter
    */
   private final Visitor<JSType> restrictNullVisitor =
     new Visitor<JSType>() {
+      @Override
       public JSType caseEnumElementType(EnumElementType enumElementType) {
         JSType type = enumElementType.getPrimitiveType().visit(this);
         if (type != null && enumElementType.getPrimitiveType().equals(type)) {
@@ -252,51 +266,63 @@ abstract class ChainableReverseAbstractInterpreter
         }
       }
 
+      @Override
       public JSType caseAllType() {
         return typeRegistry.createUnionType(OBJECT_TYPE, NUMBER_TYPE,
             STRING_TYPE, BOOLEAN_TYPE, VOID_TYPE);
       }
 
+      @Override
       public JSType caseNoObjectType() {
         return getNativeType(NO_OBJECT_TYPE);
       }
 
+      @Override
       public JSType caseNoType() {
         return getNativeType(NO_TYPE);
       }
 
+      @Override
       public JSType caseBooleanType() {
         return getNativeType(BOOLEAN_TYPE);
       }
 
+      @Override
       public JSType caseFunctionType(FunctionType type) {
         return type;
       }
 
+      @Override
       public JSType caseNullType() {
         return null;
       }
 
+      @Override
       public JSType caseNumberType() {
         return getNativeType(NUMBER_TYPE);
       }
 
+      @Override
       public JSType caseObjectType(ObjectType type) {
         return type;
       }
 
+      @Override
       public JSType caseStringType() {
         return getNativeType(STRING_TYPE);
       }
 
+      @Override
       public JSType caseUnionType(UnionType type) {
         return type.getRestrictedUnion(getNativeType(NULL_TYPE));
       }
 
+      @Override
       public JSType caseUnknownType() {
         return getNativeType(UNKNOWN_TYPE);
       }
 
+      @Override
       public JSType caseVoidType() {
         return getNativeType(VOID_TYPE);
       }
@@ -319,14 +345,17 @@ abstract class ChainableReverseAbstractInterpreter
      */
     protected abstract JSType caseTopType(JSType topType);
 
+    @Override
     public JSType caseAllType() {
       return caseTopType(getNativeType(ALL_TYPE));
     }
 
+    @Override
     public JSType caseUnknownType() {
       return caseTopType(getNativeType(UNKNOWN_TYPE));
     }
 
+    @Override
     public JSType caseUnionType(UnionType type) {
       JSType restricted = null;
       for (JSType alternate : type.getAlternates()) {
@@ -342,10 +371,12 @@ abstract class ChainableReverseAbstractInterpreter
       return restricted;
     }
 
+    @Override
     public JSType caseNoType() {
       return getNativeType(NO_TYPE);
     }
 
+    @Override
     public JSType caseEnumElementType(EnumElementType enumElementType) {
       // NOTE(nicksantos): This is a white lie. Suppose we have:
       // /** @enum {string|number} */ var MyEnum = ...;
@@ -372,34 +403,42 @@ abstract class ChainableReverseAbstractInterpreter
    */
   abstract class RestrictByTrueTypeOfResultVisitor
       extends RestrictByTypeOfResultVisitor {
+    @Override
     public JSType caseNoObjectType() {
       return null;
     }
 
+    @Override
     public JSType caseBooleanType() {
       return null;
     }
 
+    @Override
     public JSType caseFunctionType(FunctionType type) {
       return null;
     }
 
+    @Override
     public JSType caseNullType() {
       return null;
     }
 
+    @Override
     public JSType caseNumberType() {
       return null;
     }
 
+    @Override
     public JSType caseObjectType(ObjectType type) {
       return null;
     }
 
+    @Override
     public JSType caseStringType() {
       return null;
     }
 
+    @Override
     public JSType caseVoidType() {
       return null;
     }
@@ -417,34 +456,42 @@ abstract class ChainableReverseAbstractInterpreter
       return topType;
     }
 
+    @Override
     public JSType caseNoObjectType() {
       return getNativeType(NO_OBJECT_TYPE);
     }
 
+    @Override
     public JSType caseBooleanType() {
       return getNativeType(BOOLEAN_TYPE);
     }
 
+    @Override
     public JSType caseFunctionType(FunctionType type) {
       return type;
     }
 
+    @Override
     public JSType caseNullType() {
       return getNativeType(NULL_TYPE);
     }
 
+    @Override
     public JSType caseNumberType() {
       return getNativeType(NUMBER_TYPE);
     }
 
+    @Override
     public JSType caseObjectType(ObjectType type) {
       return type;
     }
 
+    @Override
     public JSType caseStringType() {
       return getNativeType(STRING_TYPE);
     }
 
+    @Override
     public JSType caseVoidType() {
       return getNativeType(VOID_TYPE);
     }
@@ -494,27 +541,33 @@ abstract class ChainableReverseAbstractInterpreter
       return result;
     }
 
+    @Override
     public JSType caseNoObjectType() {
       return (value.equals("object") || value.equals("function")) ==
           resultEqualsValue ? getNativeType(NO_OBJECT_TYPE) : null;
     }
 
+    @Override
     public JSType caseBooleanType() {
       return matchesExpectation("boolean") ? getNativeType(BOOLEAN_TYPE) : null;
     }
 
+    @Override
     public JSType caseFunctionType(FunctionType type) {
       return matchesExpectation("function") ? type : null;
     }
 
+    @Override
     public JSType caseNullType() {
       return matchesExpectation("object") ? getNativeType(NULL_TYPE) : null;
     }
 
+    @Override
     public JSType caseNumberType() {
       return matchesExpectation("number") ? getNativeType(NUMBER_TYPE) : null;
     }
 
+    @Override
     public JSType caseObjectType(ObjectType type) {
       if (value.equals("function")) {
         JSType ctorType = getNativeType(U2U_CONSTRUCTOR_TYPE);
@@ -523,10 +576,12 @@ abstract class ChainableReverseAbstractInterpreter
       return matchesExpectation("object") ? type : null;
     }
 
+    @Override
     public JSType caseStringType() {
       return matchesExpectation("string") ? getNativeType(STRING_TYPE) : null;
     }
 
+    @Override
     public JSType caseVoidType() {
       return matchesExpectation("undefined") ? getNativeType(VOID_TYPE) : null;
     }

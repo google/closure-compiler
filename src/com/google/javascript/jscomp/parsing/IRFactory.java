@@ -361,12 +361,6 @@ class IRFactory {
     }
   }
 
-  private void maybeSetLengthFrom(Node node, Node source) {
-    if (config.isIdeMode) {
-      node.setLength(source.getLength());
-    }
-  }
-
   private int position2charno(int position) {
     int lineIndex = sourceString.lastIndexOf('\n', position);
     if (lineIndex == -1) {
@@ -957,7 +951,7 @@ class IRFactory {
               operand.getType() == Token.GETELEM ||
               operand.getType() == Token.NAME)) {
           String msg =
-              "Invalid delete operand. Only properties can be deleted.";;
+              "Invalid delete operand. Only properties can be deleted.";
           errorReporter.error(
               msg,
               sourceName,

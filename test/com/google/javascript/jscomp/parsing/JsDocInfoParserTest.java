@@ -2660,6 +2660,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         testErrorReporter.hasEncounteredAllWarnings());
   }
 
+  @SuppressWarnings("unused")
   private JSDocInfo parseFileOverviewWithoutDoc(String comment,
                                                 String... warnings) {
     return parse(comment, false, true, warnings);

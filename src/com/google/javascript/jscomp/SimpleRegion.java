@@ -30,14 +30,17 @@ public class SimpleRegion implements Region {
     this.source = source;
   }
 
+  @Override
   public int getBeginningLineNumber() {
     return beginningLineNumber;
   }
 
+  @Override
   public int getEndingLineNumber() {
     return endingLineNumber;
   }
 
+  @Override
   public String getSourceExcerpt() {
     return source;
   }

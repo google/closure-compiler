@@ -65,6 +65,7 @@ public class JSModule implements DependencyInfo, Serializable {
   }
 
   /** Gets the module name. */
+  @Override
   public String getName() {
     return name;
   }

@@ -98,6 +98,7 @@ class RenameProperties implements CompilerPass {
 
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
     new Comparator<Property>() {
+      @Override
       public int compare(Property p1, Property p2) {
 
         /**

@@ -165,6 +165,7 @@ public class GraphColoringTest extends TestCase {
     graph.connect("E", "-->", "A");
 
     Comparator<String> lexicographic = new Comparator<String>() {
+      @Override
       public int compare(String o1, String o2) {
         return o1.toString().compareTo(o2.toString());
       }
@@ -177,6 +178,7 @@ public class GraphColoringTest extends TestCase {
     assertEquals("A", coloring.getPartitionSuperNode("C"));
 
     Comparator<String> biasD = new Comparator<String>() {
+      @Override
       public int compare(String o1, String o2) {
         return o1.replaceAll("D", "@").compareTo(o2.replaceAll("D", "@"));
       }

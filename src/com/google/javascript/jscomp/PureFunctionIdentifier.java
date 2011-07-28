@@ -738,6 +738,7 @@ class PureFunctionIdentifier implements CompilerPass {
    * @return Whether the node is known to be a value that is not a reference
    *     outside the local scope.
    */
+  @SuppressWarnings("unused")
   private static boolean isKnownLocalValue(final Node value) {
     Predicate<Node> taintingPredicate = new Predicate<Node>() {
       @Override
@@ -774,6 +775,7 @@ class PureFunctionIdentifier implements CompilerPass {
    */
   private static class SideEffectPropagationCallback
       implements EdgeCallback<FunctionInformation, Node> {
+    @Override
     public boolean traverseEdge(FunctionInformation callee,
                                 Node callSite,
                                 FunctionInformation caller) {

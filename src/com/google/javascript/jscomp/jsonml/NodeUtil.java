@@ -57,7 +57,7 @@ class NodeUtil {
   /**
    * Is this node a function declaration? A function declaration is a function
    * that has a name that is added to the current scope (i.e. a function that
-   * is not part of a expression; see {@link #isFunctionExpression}).
+   * is not part of a expression).
    */
   static boolean isFunctionDeclaration(Node n) {
     return n.getType() == Token.FUNCTION && isStatement(n);

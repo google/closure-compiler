@@ -41,6 +41,7 @@ public class CheckGlobalNamesTest extends CompilerTestCase {
         compiler, CheckLevel.WARNING);
     if (injectNamespace) {
       return new CompilerPass() {
+        @Override
         public void process(Node externs, Node js) {
           checkGlobalNames.injectNamespace(
               new GlobalNamespace(compiler, js))

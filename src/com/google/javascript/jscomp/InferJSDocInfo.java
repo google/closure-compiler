@@ -63,6 +63,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
+  @SuppressWarnings("unused")
   private boolean inExterns;
 
   InferJSDocInfo(AbstractCompiler compiler) {
@@ -89,6 +90,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, root, this);
   }
 
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     JSDocInfo docInfo;
 

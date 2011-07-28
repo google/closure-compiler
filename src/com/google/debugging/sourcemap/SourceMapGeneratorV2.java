@@ -90,6 +90,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void reset() {
     mappings.clear();
     lastMapping = null;
@@ -105,6 +106,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * @param validate Whether to perform (potentially costly) validation on the
    * generated source map.
    */
+  @Override
   @VisibleForTesting
   public void validate(boolean validate) {
     this.validate = validate;
@@ -117,6 +119,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    *
    * @param prefix The prefix that is added before the generated source code.
    */
+  @Override
   public void setWrapperPrefix(String prefix) {
     // Determine the current line and character position.
     int prefixLine = 0;
@@ -144,6 +147,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * @param offsetLine The index of the current line being printed.
    * @param offsetIndex The column index of the current character being printed.
    */
+  @Override
   public void setStartingPosition(int offsetLine, int offsetIndex) {
     Preconditions.checkState(offsetLine >= 0);
     Preconditions.checkState(offsetIndex >= 0);
@@ -155,6 +159,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    * @param startPosition The position on the starting line
    * @param endPosition The position on the ending line.
    */
+  @Override
   public void addMapping(
       String sourceName, @Nullable String symbolName,
       FilePosition sourceStartPosition,
@@ -264,6 +269,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
    *     An optional name (from the original source) that this entry represents.
    *     This can either be an string or index into the "names" field.
    */
+  @Override
   public void appendTo(Appendable out, String name) throws IOException {
     int maxLine = prepMappings();
 
@@ -540,6 +546,7 @@ public class SourceMapGeneratorV2 implements SourceMapGenerator {
     /**
      * As each segment is visited write out the appropriate line mapping.
      */
+    @Override
     public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
       throws IOException {
 

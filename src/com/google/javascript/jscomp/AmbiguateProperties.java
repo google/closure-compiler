@@ -103,6 +103,7 @@ class AmbiguateProperties implements CompilerPass {
    */
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
       new Comparator<Property>() {
+        @Override
         public int compare(Property p1, Property p2) {
           if (p1.numOccurrences != p2.numOccurrences) {
             return p2.numOccurrences - p1.numOccurrences;
@@ -190,6 +191,7 @@ class AmbiguateProperties implements CompilerPass {
     return newInt;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, externs, new ProcessExterns());
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
@@ -349,24 +351,29 @@ class AmbiguateProperties implements CompilerPass {
       }
     }
 
+    @Override
     public List<GraphNode<Property, Void>> getNodes() {
       return Lists.<GraphNode<Property, Void>>newArrayList(nodes.values());
     }
 
+    @Override
     public GraphNode<Property, Void> getNode(Property property) {
       return nodes.get(property);
     }
 
+    @Override
     public SubGraph<Property, Void> newSubGraph() {
       return new PropertySubGraph();
     }
 
+    @Override
     public void clearNodeAnnotations() {
       for (PropertyGraphNode node : nodes.values()) {
         node.setAnnotation(null);
       }
     }
 
+    @Override
     public int getWeight(Property value) {
       return value.numOccurrences;
     }
@@ -385,6 +392,7 @@ class AmbiguateProperties implements CompilerPass {
      * sub graph.  That is, if none of its related types intersects with the
      * related types for this sub graph.
      */
+    @Override
     public boolean isIndependentOf(Property prop) {
       return !relatedTypes.intersects(prop.relatedTypes);
     }
@@ -393,6 +401,7 @@ class AmbiguateProperties implements CompilerPass {
      * Adds the node to the sub graph, adding all its related types to the
      * related types for the sub graph.
      */
+    @Override
     public void addNode(Property prop) {
       relatedTypes.or(prop.relatedTypes);
     }
@@ -406,15 +415,18 @@ class AmbiguateProperties implements CompilerPass {
       this.property = property;
     }
 
+    @Override
     public Property getValue() {
       return property;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <A extends Annotation> A getAnnotation() {
       return (A) annotation;
     }
 
+    @Override
     public void setAnnotation(Annotation data) {
       annotation = data;
     }
@@ -443,6 +455,7 @@ class AmbiguateProperties implements CompilerPass {
 
   /** Finds all property references, recording the types on which they occur. */
   private class ProcessProperties extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP: {

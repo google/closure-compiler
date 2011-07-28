@@ -554,6 +554,7 @@ public class Compiler extends AbstractCompiler {
 
   private Result compile() {
     return runInCompilerThread(new Callable<Result>() {
+      @Override
       public Result call() throws Exception {
         compileInternal();
         return getResult();
@@ -591,6 +592,7 @@ public class Compiler extends AbstractCompiler {
     final Object[] result = new Object[1];
     final Throwable[] exception = new Throwable[1];
     Runnable runnable = new Runnable() {
+      @Override
       public void run() {
         try {
           if (dumpTraceReport) {
@@ -934,6 +936,7 @@ public class Compiler extends AbstractCompiler {
   Supplier<String> getUniqueNameIdSupplier() {
     final Compiler self = this;
     return new Supplier<String>() {
+      @Override
       public String get() {
         return String.valueOf(self.nextUniqueNameId());
       }
@@ -1325,6 +1328,7 @@ public class Compiler extends AbstractCompiler {
    */
   public String toSource() {
     return runInCompilerThread(new Callable<String>() {
+      @Override
       public String call() throws Exception {
         Tracer tracer = newTracer("toSource");
         try {
@@ -1350,6 +1354,7 @@ public class Compiler extends AbstractCompiler {
    */
   public String[] toSourceArray() {
     return runInCompilerThread(new Callable<String[]>() {
+      @Override
       public String[] call() throws Exception {
         Tracer tracer = newTracer("toSourceArray");
         try {
@@ -1375,6 +1380,7 @@ public class Compiler extends AbstractCompiler {
    */
   public String toSource(final JSModule module) {
     return runInCompilerThread(new Callable<String>() {
+      @Override
       public String call() throws Exception {
         List<CompilerInput> inputs = module.getInputs();
         int numInputs = inputs.size();
@@ -1401,6 +1407,7 @@ public class Compiler extends AbstractCompiler {
    */
   public String[] toSourceArray(final JSModule module) {
     return runInCompilerThread(new Callable<String[]>() {
+      @Override
       public String[] call() throws Exception {
         List<CompilerInput> inputs = module.getInputs();
         int numInputs = inputs.size();
@@ -1437,6 +1444,7 @@ public class Compiler extends AbstractCompiler {
                        final int inputSeqNum,
                        final Node root) {
     runInCompilerThread(new Callable<Void>() {
+      @Override
       public Void call() throws Exception {
         if (options.printInputDelimiter) {
           if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
@@ -1863,6 +1871,7 @@ public class Compiler extends AbstractCompiler {
     return null;
   }
 
+  @Override
   public String getSourceLine(String sourceName, int lineNumber) {
     if (lineNumber < 1) {
       return null;
@@ -1874,6 +1883,7 @@ public class Compiler extends AbstractCompiler {
     return null;
   }
 
+  @Override
   public Region getSourceRegion(String sourceName, int lineNumber) {
     if (lineNumber < 1) {
       return null;

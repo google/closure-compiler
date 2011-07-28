@@ -30,16 +30,20 @@ public interface CssRenamingMap {
   Style getStyle();
 
   public static abstract class ByPart implements CssRenamingMap {
+    @Override
     abstract public String get(String value);
 
+    @Override
     public Style getStyle() {
       return Style.BY_PART;
     }
   }
 
   public static abstract class ByWhole implements CssRenamingMap {
+    @Override
     abstract public String get(String value);
 
+    @Override
     public Style getStyle() {
       return Style.BY_WHOLE;
     }

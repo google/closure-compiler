@@ -99,6 +99,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     return fs;
   }
 
+  @Override
   public void enableSpecialization(SpecializeModule.SpecializationState
       specializationState) {
     this.specializationState = specializationState;
@@ -157,6 +158,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       return inlineLocalFunctions || nodeTraversal.inGlobalScope();
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if ((t.inGlobalScope() && inlineGlobalFunctions)
           || (!t.inGlobalScope() && inlineLocalFunctions)) {
@@ -379,6 +381,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       this.callback = callback;
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         // Function calls
@@ -474,6 +477,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       }
     }
 
+    @Override
     public void visitCallSite(
         NodeTraversal t, Node callNode, Node parent, FunctionState fs) {
       maybeAddReference(t, fs, callNode, t.getModule());
@@ -593,6 +597,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       this.specializationState = specializationState;
     }
 
+    @Override
     public void visitCallSite(
         NodeTraversal t, Node callNode, Node parent, FunctionState fs) {
       Preconditions.checkState(fs.hasExistingFunctionDefinition());
@@ -1015,14 +1020,17 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       this.fn = fn;
     }
 
+    @Override
     public String getName() {
       return fn.getFirstChild().getString();
     }
 
+    @Override
     public Node getFunctionNode() {
       return fn;
     }
 
+    @Override
     public void remove() {
       NodeUtil.removeChild(fn.getParent(), fn);
     }
@@ -1041,14 +1049,17 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       this.var = var;
     }
 
+    @Override
     public String getName() {
       return var.getFirstChild().getString();
     }
 
+    @Override
     public Node getFunctionNode() {
       return var.getFirstChild().getFirstChild();
     }
 
+    @Override
     public void remove() {
       NodeUtil.removeChild(var.getParent(), var);
     }
@@ -1071,14 +1082,17 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       this.fakeName = String.valueOf(index);
     }
 
+    @Override
     public String getName() {
       return fakeName;
     }
 
+    @Override
     public Node getFunctionNode() {
       return fn;
     }
 
+    @Override
     public void remove() {
       // Nothing to do. The function is removed with the call.
     }

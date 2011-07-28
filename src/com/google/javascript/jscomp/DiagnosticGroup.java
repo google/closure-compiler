@@ -130,6 +130,7 @@ public class DiagnosticGroup implements Serializable {
     return types;
   }
 
+  @Override
   public String toString() {
     return name == null ? super.toString() : "DiagnosticGroup<" + name + ">";
   }

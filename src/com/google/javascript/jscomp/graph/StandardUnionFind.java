@@ -70,10 +70,12 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     }
   }
 
+  @Override
   public void add(E e) {
     union(e, e);
   }
 
+  @Override
   public E union(E a, E b) {
     Node<E> nodeA = findRootOrCreateNode(a);
     Node<E> nodeB = findRootOrCreateNode(b);
@@ -94,21 +96,25 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     return nodeB.element;
   }
 
+  @Override
   public E find(E e) {
     checkArgument(elmap.containsKey(e), "Element does not exist: %s", e);
     return findRoot(elmap.get(e)).element;
   }
 
+  @Override
   public boolean areEquivalent(E a, E b) {
     E aRep = find(a);
     E bRep = find(b);
     return aRep == bRep;
   }
 
+  @Override
   public Set<E> elements() {
     return Collections.unmodifiableSet(elmap.keySet());
   }
 
+  @Override
   public Collection<Set<E>> allEquivalenceClasses() {
     Map<Node<E>, ImmutableSet.Builder<E>> groupsTmp = Maps.newHashMap();
     for (Node<E> elem : elmap.values()) {
@@ -157,6 +163,7 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     return node.parent;
   }
 
+  @Override
   public Set<E> findAll(final E value) {
     checkArgument(elmap.containsKey(value), "Element does not exist: " + value);
 
@@ -165,6 +172,7 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
       /** some node that's close to the root, or null */
       Node<E> nodeForValue = elmap.get(value);
 
+      @Override
       public boolean apply(@Nullable Object b) {
         if (Objects.equal(value, b)) {
           return true;

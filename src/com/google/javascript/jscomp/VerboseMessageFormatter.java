@@ -27,10 +27,12 @@ class VerboseMessageFormatter extends AbstractMessageFormatter {
     super(source);
   }
 
+  @Override
   public String formatError(JSError error) {
     return getLevelName(CheckLevel.ERROR) + ": " + format(error);
   }
 
+  @Override
   public String formatWarning(JSError warning) {
     return getLevelName(CheckLevel.WARNING) + ": " + format(warning);
   }

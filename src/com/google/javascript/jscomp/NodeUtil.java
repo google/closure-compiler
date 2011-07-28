@@ -1203,6 +1203,7 @@ public final class NodeUtil {
   }
 
   static class NumbericResultPredicate implements Predicate<Node> {
+    @Override
     public boolean apply(Node n) {
       return isNumericResultHelper(n);
     }
@@ -1255,6 +1256,7 @@ public final class NodeUtil {
   }
 
   static class BooleanResultPredicate implements Predicate<Node> {
+    @Override
     public boolean apply(Node n) {
       return isBooleanResultHelper(n);
     }
@@ -1316,6 +1318,7 @@ public final class NodeUtil {
   }
 
   static class MayBeStringResultPredicate implements Predicate<Node> {
+    @Override
     public boolean apply(Node n) {
       return mayBeStringHelper(n);
     }
@@ -2487,6 +2490,7 @@ public final class NodeUtil {
   private static class VarCollector implements Visitor {
     final Map<String, Node> vars = Maps.newLinkedHashMap();
 
+    @Override
     public void visit(Node n) {
       if (n.getType() == Token.NAME) {
         Node parent = n.getParent();
@@ -2595,6 +2599,7 @@ public final class NodeUtil {
       this.name = name;
     }
 
+    @Override
     public boolean apply(Node n) {
       return n.getType() == Token.NAME
           && n.getString().equals(name);
@@ -2611,6 +2616,7 @@ public final class NodeUtil {
       this.type = type;
     }
 
+    @Override
     public boolean apply(Node n) {
       return n.getType() == type;
     }
@@ -2621,6 +2627,7 @@ public final class NodeUtil {
    * A predicate for matching var or function declarations.
    */
   static class MatchDeclaration implements Predicate<Node> {
+    @Override
     public boolean apply(Node n) {
       return isFunctionDeclaration(n) || n.getType() == Token.VAR;
     }
@@ -2630,6 +2637,7 @@ public final class NodeUtil {
    * A predicate for matching anything except function nodes.
    */
   static class MatchNotFunction implements Predicate<Node>{
+    @Override
     public boolean apply(Node n) {
       return !isFunction(n);
     }
@@ -2641,6 +2649,7 @@ public final class NodeUtil {
    * A predicate for matching statements without exiting the current scope.
    */
   static class MatchShallowStatement implements Predicate<Node>{
+    @Override
     public boolean apply(Node n) {
       Node parent = n.getParent();
       return n.getType() == Token.BLOCK

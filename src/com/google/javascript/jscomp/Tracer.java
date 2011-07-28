@@ -117,7 +117,7 @@ import javax.annotation.Nullable;
  *    Tracer.addTracingStatistic(myTracingStatistic)
  * </pre>
  * where myTracingStatistic implements the {@link TracingStatistic} interface.
- * The class {@link com.google.monitoring.tracing.TracingStatistics} contains
+ * The class com.google.monitoring.tracing.TracingStatistics contains
  * several useful statistics such as cpu time, wait time, and memory usage.
  * If you add your own tracing statistics, the output is not quite as pretty,
  * but includes additional useful information.
@@ -219,6 +219,7 @@ final class Tracer {
    * in unit tests.
    */
   static InternalClock clock = new InternalClock() {
+    @Override
     public long currentTimeMillis() {
       return System.currentTimeMillis();
     }
@@ -973,7 +974,7 @@ final class Tracer {
    * A TracingStatistic allows the program to add additional optional
    * statistics to the trace output.
    *
-   * The class {@link com.google.monitoring.tracing.TracingStatistics}
+   * The class com.google.monitoring.tracing.TracingStatistics
    * contains several useful tracing statistics
    *
    */

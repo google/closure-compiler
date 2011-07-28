@@ -105,6 +105,7 @@ class CollapseVariableDeclarations implements CompilerPass {
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     collapses.clear();
     nodesToCollapse.clear();
@@ -132,6 +133,7 @@ class CollapseVariableDeclarations implements CompilerPass {
     // This is a workaround for a bug in Firefox.
     private final Set<Var> blacklistedVars = Sets.newHashSet();
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.VAR) {
         blacklistStubVars(t, n);

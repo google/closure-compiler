@@ -47,31 +47,6 @@ public class JsonMLConversionTest extends CompilerTestCase {
     enableEcmaScript5(true);
   }
 
-  private void testConversion(String js, String jsonml) throws Exception {
-    JsonML jsonMLRoot = JsonMLUtil.parseString(jsonml);
-    Node root = parseExpectedJs(js);
-    Node astRoot = root.getFirstChild();
-    Preconditions.checkState(astRoot.getType() == Token.SCRIPT);
-
-
-    // test JsonML -> AST conversion
-    JsonMLAst ast = new JsonMLAst(jsonMLRoot);
-    Node resultAstRoot = ast.getAstRoot(null);
-
-    String explanation = resultAstRoot.checkTreeEquals(astRoot);
-    assertNull("JsonML converter returned an incorrect AST for " + js + ".\n" +
-        explanation, explanation);
-
-    // test AST -> JsonML conversion
-    jsonMLRoot = JsonMLUtil.parseString(jsonml);
-    Writer parser = new Writer();
-    JsonML resultJsonMLRoot = parser.processAst(astRoot);
-
-    explanation = JsonMLUtil.compare(resultJsonMLRoot, jsonMLRoot);
-    assertNull("AST converter returned an incorrect JsonML for " + js + ".\n" +
-        explanation, explanation);
-  }
-
   private void testJsonMLToAstConversion(String js) throws Exception {
     JsonML jsonml = JsonMLParser.parse(js);
     Node root = parseExpectedJs(js);

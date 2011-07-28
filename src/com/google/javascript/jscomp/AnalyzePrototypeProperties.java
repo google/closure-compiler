@@ -142,6 +142,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
   }
 
+  @Override
   public void process(Node externRoot, Node root) {
     if (!canModifyExterns) {
       NodeTraversal.traverse(compiler, externRoot,
@@ -202,6 +203,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     }
 
+    @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (isPrototypePropertyAssign(n)) {
         symbolStack.push(new NameContext(getNameInfoForName(
@@ -217,6 +219,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       return true;
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.GETPROP) {
         String propName = n.getFirstChild().getNext().getString();
@@ -408,6 +411,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   }
 
   private class ProcessExternProperties extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.GETPROP) {
         symbolGraph.connect(externNode, firstModule,
@@ -418,6 +422,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
   private class PropagateReferences
       implements EdgeCallback<NameInfo, JSModule> {
+    @Override
     public boolean traverseEdge(NameInfo start, JSModule edge, NameInfo dest) {
       if (start.isReferenced()) {
         JSModule startModule = start.getDeepestCommonModuleRef();

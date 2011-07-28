@@ -48,6 +48,7 @@ class RemoveUnusedNames implements CompilerPass {
     this.canModifyExterns = canModifyExterns;
   }
 
+  @Override
   public void process(Node externRoot, Node root) {
     AnalyzeNameReferences analyzer =
         new AnalyzeNameReferences(compiler);

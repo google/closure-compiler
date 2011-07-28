@@ -176,7 +176,7 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
       chainB.inferSlotType("local" + i,
           i % 3 == 0 ? STRING_TYPE : BOOLEAN_TYPE);
 
-      if (LONG_CHAIN_LENGTH % 7 == 0) {
+      if (i % 7 == 0) {
         chainA = chainA.createChildFlowScope();
         chainB = chainB.createChildFlowScope();
       }

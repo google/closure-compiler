@@ -50,6 +50,7 @@ class ExportTestFunctions implements CompilerPass {
   private class ExportTestFunctionsNodes extends
       NodeTraversal.AbstractPostOrderCallback {
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (parent != null && parent.getType() == Token.SCRIPT) {
         if (NodeUtil.isFunctionDeclaration(n)) {
@@ -89,6 +90,7 @@ class ExportTestFunctions implements CompilerPass {
     }
   }
 
+  @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new ExportTestFunctionsNodes());
   }

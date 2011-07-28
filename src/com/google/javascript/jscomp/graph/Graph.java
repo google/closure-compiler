@@ -133,6 +133,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
   public abstract GraphNode<N, E> createNode(N value);
 
   /** Gets an immutable list of all nodes. */
+  @Override
   public abstract Collection<GraphNode<N, E>> getNodes();
 
   /** Gets an immutable list of all edges. */
@@ -146,6 +147,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    */
   public abstract int getNodeDegree(N value);
 
+  @Override
   public int getWeight(N value) {
     return getNodeDegree(value);
   }
@@ -222,6 +224,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
     return node;
   }
 
+  @Override
   public final void clearNodeAnnotations() {
     for (GraphNode<N, E> n : getNodes()) {
       n.setAnnotation(null);
@@ -308,6 +311,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
       this.graph = graph;
     }
 
+    @Override
     public boolean isIndependentOf(N value) {
       GraphNode<N, E> node = graph.getNode(value);
       for (GraphNode<N, E> n : nodes) {
@@ -318,6 +322,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
       return true;
     }
 
+    @Override
     public void addNode(N value) {
       nodes.add(graph.getNodeOrFail(value));
     }

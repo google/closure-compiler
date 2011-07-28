@@ -61,6 +61,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReve
   /**
    * Parses the given contents containing a source map.
    */
+  @Override
   public void parse(String contents) throws SourceMapParseException {
     parse(contents, null);
   }
@@ -497,6 +498,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReve
       this.length = content.length();
     }
 
+    @Override
     public char next() {
       return content.charAt(current++);
     }
@@ -505,6 +507,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReve
       return content.charAt(current);
     }
 
+    @Override
     public boolean hasNext() {
       return  current < length;
     }

@@ -129,6 +129,7 @@ class FunctionInjector {
     Preconditions.checkState(fnRecursionName != null);
 
     Predicate<Node> p = new Predicate<Node>(){
+      @Override
       public boolean apply(Node n) {
         if (n.getType() == Token.NAME) {
           return n.getString().equals("arguments")

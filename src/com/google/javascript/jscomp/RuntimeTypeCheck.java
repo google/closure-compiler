@@ -53,6 +53,7 @@ import javax.annotation.Nullable;
 class RuntimeTypeCheck implements CompilerPass {
 
   private static final Comparator<JSType> ALPHA = new Comparator<JSType>() {
+    @Override
     public int compare(JSType t1, JSType t2) {
       return getName(t1).compareTo(getName(t2));
     }

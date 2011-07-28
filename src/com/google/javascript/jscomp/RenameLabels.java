@@ -133,6 +133,7 @@ final class RenameLabels implements CompilerPass {
      *
      * {@inheritDoc}
      */
+    @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node node,
         Node parent) {
       if (node.getType() == Token.LABEL) {
@@ -164,6 +165,7 @@ final class RenameLabels implements CompilerPass {
      *
      * {@inheritDoc}
      */
+    @Override
     public void visit(NodeTraversal nodeTraversal, Node node, Node parent) {
       switch (node.getType()) {
         case Token.LABEL:

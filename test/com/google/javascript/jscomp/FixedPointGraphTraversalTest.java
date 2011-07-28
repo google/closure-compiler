@@ -39,6 +39,7 @@ public class FixedPointGraphTraversalTest extends TestCase {
   }
 
   private class CounterIncrementer implements EdgeCallback<Counter, String> {
+    @Override
     public boolean traverseEdge(Counter source, String e, Counter dest) {
       dest.value++;
       return dest.value <= maxChange;
@@ -160,6 +161,7 @@ public class FixedPointGraphTraversalTest extends TestCase {
     try {
       traversal = new FixedPointGraphTraversal<Counter, String>(
         new EdgeCallback<Counter, String>() {
+          @Override
           public boolean traverseEdge(Counter source, String e, Counter dest) {
             return true;
           }

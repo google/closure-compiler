@@ -207,6 +207,7 @@ class AliasExternals implements CompilerPass {
   /**
    * Do all processing on the root node.
    */
+  @Override
   public void process(Node externs, Node root) {
     defaultRoot = root.getFirstChild();
     Preconditions.checkState(defaultRoot.getType() == Token.SCRIPT);
@@ -470,6 +471,7 @@ class AliasExternals implements CompilerPass {
       this.whitelist = whitelist;
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.GETPROP:
@@ -489,6 +491,7 @@ class AliasExternals implements CompilerPass {
    */
   private final class PropertyGatherer extends AbstractPostOrderCallback {
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.GETPROP) {
         Node propNameNode = n.getLastChild();
@@ -622,6 +625,7 @@ class AliasExternals implements CompilerPass {
       }
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.FUNCTION:
@@ -643,6 +647,7 @@ class AliasExternals implements CompilerPass {
    * usage for each global.
    */
   private final class GlobalGatherer extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.NAME) {
         String name = n.getString();

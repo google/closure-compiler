@@ -64,6 +64,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
     this.compiler = compiler;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     addExternDeclaration(externs,
         new Node(Token.VAR,
@@ -82,6 +83,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
   }
 
   private class Callback extends AbstractPostOrderCallback {
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (OBJECT_PROPERTY_STRING.equals(n.getQualifiedName())) {
         Node newName =

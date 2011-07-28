@@ -67,6 +67,7 @@ class AnalyzeNameReferences implements CompilerPass {
   }
 
   private class PropagateReferences implements EdgeCallback<Name, Reference> {
+    @Override
     public boolean traverseEdge(Name start, Reference edge, Name dest) {
       NameInfo startInfo = getInfo(start);
       NameInfo destInfo = getInfo(dest);

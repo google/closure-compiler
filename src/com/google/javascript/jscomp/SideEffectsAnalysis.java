@@ -658,7 +658,8 @@ import java.util.Set;
     }
 
     private static class DegenerateEffectLocation implements EffectLocation {
-       public EffectLocation join(EffectLocation otherLocation) {
+       @Override
+      public EffectLocation join(EffectLocation otherLocation) {
         if (otherLocation == EVERY_LOCATION) {
           return otherLocation;
         } else {
@@ -666,10 +667,12 @@ import java.util.Set;
         }
       }
 
+      @Override
       public boolean intersectsLocation(EffectLocation otherLocation) {
         return this == EVERY_LOCATION && otherLocation == EVERY_LOCATION;
       }
 
+      @Override
       public boolean isEmpty() {
         return this == NO_LOCATION;
       }

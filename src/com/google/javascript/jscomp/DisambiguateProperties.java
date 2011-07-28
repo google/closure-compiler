@@ -279,6 +279,7 @@ class DisambiguateProperties<T> implements CompilerPass {
         JSError.make("", 0, 0, Warnings.INVALIDATION)) != CheckLevel.OFF;
   }
 
+  @Override
   public void process(Node externs, Node root) {
     for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
       addInvalidatingType(mis.typeA);
@@ -330,10 +331,12 @@ class DisambiguateProperties<T> implements CompilerPass {
     protected final Stack<StaticScope<T>> scopes =
         new Stack<StaticScope<T>>();
 
+    @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       return true;
     }
 
+    @Override
     public void enterScope(NodeTraversal t) {
       if (t.inGlobalScope()) {
         scopes.push(typeSystem.getRootScope());
@@ -342,6 +345,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       }
     }
 
+    @Override
     public void exitScope(NodeTraversal t) {
       scopes.pop();
     }

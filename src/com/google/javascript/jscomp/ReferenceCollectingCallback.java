@@ -144,6 +144,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    * For each node, update the block stack and reference collection
    * as appropriate.
    */
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.getType() == Token.NAME) {
       Var v;
@@ -165,6 +166,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Updates block stack and invokes any additional behavior.
    */
+  @Override
   public void enterScope(NodeTraversal t) {
     Node n = t.getScope().getRootNode();
     BasicBlock parent = blockStack.isEmpty() ? null : blockStack.peek();
@@ -174,6 +176,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Updates block statck and invokes any additional behavior.
    */
+  @Override
   public void exitScope(NodeTraversal t) {
     blockStack.pop();
     if (t.getScope().isGlobal()) {
@@ -188,6 +191,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Updates block stack.
    */
+  @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
       Node parent) {
     // If node is a new basic block, put on basic block stack

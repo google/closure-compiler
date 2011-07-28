@@ -123,6 +123,7 @@ public class NodeTraversal {
    * Abstract callback to visit all nodes in post order.
    */
   public abstract static class AbstractPostOrderCallback implements Callback {
+    @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
         Node parent) {
       return true;
@@ -134,6 +135,7 @@ public class NodeTraversal {
    * bodies.
    */
   public abstract static class AbstractShallowCallback implements Callback {
+    @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
         Node parent) {
       // We do want to traverse the name of a named function, but we don't
@@ -149,6 +151,7 @@ public class NodeTraversal {
    */
   public abstract static class AbstractShallowStatementCallback
       implements Callback {
+    @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
         Node parent) {
       return parent == null || NodeUtil.isControlStructure(parent)
@@ -183,6 +186,7 @@ public class NodeTraversal {
       this.include = include;
     }
 
+    @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
         Node parent) {
       return include == nodeTypes.contains(n.getType());

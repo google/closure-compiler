@@ -424,22 +424,27 @@ public class CommandLineRunner extends
       }
     }
 
-    private static class WarningGuardSetter implements Setter {
-      private final Setter proxy;
+    private static class WarningGuardSetter implements Setter<String> {
+      private final Setter<? super String> proxy;
       private final CheckLevel level;
 
-      private WarningGuardSetter(Setter proxy, CheckLevel level) {
+      private WarningGuardSetter(
+          Setter<? super String> proxy, CheckLevel level) {
         this.proxy = proxy;
         this.level = level;
       }
 
-      @Override public boolean isMultiValued() { return proxy.isMultiValued(); }
+      @Override public boolean isMultiValued() {
+        return proxy.isMultiValued();
+      }
 
-      @Override public Class getType() { return proxy.getType(); }
+      @Override public Class<String> getType() {
+        return (Class<String>) proxy.getType();
+      }
 
-      @Override public void addValue(Object value) throws CmdLineException {
-        proxy.addValue((String) value);
-        warningGuardSpec.add(level, (String) value);
+      @Override public void addValue(String value) throws CmdLineException {
+        proxy.addValue(value);
+        warningGuardSpec.add(level, value);
       }
     }
   }

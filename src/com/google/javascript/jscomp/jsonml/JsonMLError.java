@@ -27,9 +27,6 @@ import com.google.javascript.jscomp.JSError;
  */
 public class JsonMLError {
 
-  /**  */
-  private final DiagnosticType type;
-
   /** Description of the error */
   public final String description;
 
@@ -47,7 +44,6 @@ public class JsonMLError {
 
   private JsonMLError(DiagnosticType type, String sourceName, JsonML element,
       int lineNumber, ErrorLevel level, String... arguments) {
-    this.type = type;
     this.description = type.format.format(arguments);
     this.sourceName = sourceName;
     this.element = element;
@@ -57,7 +53,6 @@ public class JsonMLError {
 
   private JsonMLError(String description, DiagnosticType type,
       String sourceName, JsonML element, int lineNumber, ErrorLevel level) {
-    this.type = type;
     this.description = description;
     this.sourceName = sourceName;
     this.element = element;

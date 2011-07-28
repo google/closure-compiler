@@ -35,6 +35,7 @@ interface CodeChangeHandler {
   static final class RecentChange implements CodeChangeHandler {
     private boolean hasChanged = false;
 
+    @Override
     public void reportChange() {
       hasChanged = true;
     }
@@ -52,6 +53,7 @@ interface CodeChangeHandler {
    * A change handler that throws an exception if any changes are made.
    */
   static final class ForbiddenChange implements CodeChangeHandler {
+    @Override
     public void reportChange() {
       throw new IllegalStateException("Code changes forbidden");
     }

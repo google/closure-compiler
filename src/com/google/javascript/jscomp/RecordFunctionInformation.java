@@ -69,6 +69,7 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
     } else {
       // The test expects a consistent module order.
       TreeSet<JSModule> modules = Sets.newTreeSet(new Comparator<JSModule>() {
+        @Override
         public int compare(JSModule o1, JSModule o2) {
           return o1.getName().compareTo(o2.getName());
         }

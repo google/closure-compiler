@@ -64,6 +64,7 @@ public class NodeTraversalTest extends TestCase {
       super(nodeTypes, include);
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       throw new UnsupportedOperationException();
     }

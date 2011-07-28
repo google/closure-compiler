@@ -130,6 +130,7 @@ class FunctionNames implements CompilerPass, Serializable {
       this.functionMap = functionMap;
     }
 
+    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.FUNCTION) {
         Node functionNameNode = n.getFirstChild();

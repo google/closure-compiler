@@ -142,6 +142,7 @@ class LinkedFlowScope implements FlowScope {
   /**
    * Get the slot for the given symbol.
    */
+  @Override
   public StaticSlot<JSType> getSlot(String name) {
     if (cache.dirtySymbols.contains(name)) {
       for (LinkedFlowSlot slot = lastSlot;
@@ -206,6 +207,7 @@ class LinkedFlowScope implements FlowScope {
    * have enough type information. Then fill in that type information
    * with stuff that we've inferred in the local flow.
    */
+  @Override
   public void completeScope(Scope scope) {
     for (Iterator<Var> it = scope.getVars(); it.hasNext();) {
       Var var = it.next();
