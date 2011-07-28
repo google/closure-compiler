@@ -123,6 +123,7 @@ public class JSTypeRegistryTest extends TestCase {
     final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
 
     StaticScope<JSType> scope = new AbstractStaticScope<JSType>() {
+          @Override
           public StaticSlot<JSType> getSlot(final String name) {
             return new SimpleSlot(
                 name,
@@ -164,6 +165,7 @@ public class JSTypeRegistryTest extends TestCase {
     final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
 
     StaticScope<JSType> scope = new AbstractStaticScope<JSType>() {
+          @Override
           public StaticSlot<JSType> getSlot(final String name) {
             return new SimpleSlot(
                 name,

@@ -154,6 +154,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     googObject.defineDeclaredProperty("Bar", googBar, null);
 
     namedGoogBar.resolve(null, new AbstractStaticScope<JSType>() {
+          @Override
           public StaticSlot<JSType> getSlot(String name) {
             if ("goog".equals(name)) {
               return new SimpleSlot("goog", googObject, false);

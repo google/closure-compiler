@@ -82,6 +82,7 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
     warningsIndex = 0;
   }
 
+  @Override
   public void error(String message, String sourceName, int line,
       String lineSource, int lineOffset) {
     if (errors != null && errorsIndex < errors.length) {
@@ -91,6 +92,7 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
     }
   }
 
+  @Override
   public void warning(String message, String sourceName, int line,
       String lineSource, int lineOffset) {
     if (warnings != null && warningsIndex < warnings.length) {
@@ -100,6 +102,7 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
     }
   }
 
+  @Override
   public EvaluatorException runtimeError(String message, String sourceName,
       int line, String lineSource, int lineOffset) {
     throw new UnsupportedOperationException();

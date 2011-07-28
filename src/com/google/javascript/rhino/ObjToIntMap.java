@@ -131,7 +131,7 @@ public class ObjToIntMap implements Serializable
         int i;
         for (i = 2; (1 << i) < minimalCapacity; ++i) { }
         power = i;
-        if (check && power < 2) Kit.codeBug();
+        assert power >= 2;
     }
 
     public boolean isEmpty() {
@@ -298,8 +298,8 @@ public class ObjToIntMap implements Serializable
 // Insert key that is not present to table without deleted entries
 // and enough free space
     private int insertNewKey(Object key, int hash) {
-        if (check && occupiedCount != keyCount) Kit.codeBug();
-        if (check && keyCount == 1 << power) Kit.codeBug();
+        assert occupiedCount == keyCount;
+        assert keyCount != 1 << power;
         int fraction = hash * A;
         int index = fraction >>> (32 - power);
         int N = 1 << power;
@@ -308,9 +308,9 @@ public class ObjToIntMap implements Serializable
             int step = tableLookupStep(fraction, mask, power);
             int firstIndex = index;
             do {
-                if (check && keys[index] == DELETED) Kit.codeBug();
+                assert keys[index] != DELETED;
                 index = (index + step) & mask;
-                if (check && firstIndex == index) Kit.codeBug();
+                assert firstIndex != index;
             } while (keys[index] != null);
         }
         keys[index] = key;
@@ -323,8 +323,8 @@ public class ObjToIntMap implements Serializable
 
     private void rehashTable() {
         if (keys == null) {
-            if (check && keyCount != 0) Kit.codeBug();
-            if (check && occupiedCount != 0) Kit.codeBug();
+            assert keyCount == 0;
+            assert occupiedCount == 0;
             int N = 1 << power;
             keys = new Object[N];
             values = new int[2 * N];
@@ -402,8 +402,7 @@ public class ObjToIntMap implements Serializable
             }
         }
         // Inserting of new key
-        if (check && keys != null && keys[index] != null)
-            Kit.codeBug();
+        assert keys == null || keys[index] == null;
         if (firstDeleted >= 0) {
             index = firstDeleted;
         }

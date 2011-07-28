@@ -55,18 +55,22 @@ public class SimpleSlot implements StaticSlot<JSType> {
     this.inferred = inferred;
   }
 
+  @Override
   public String getName() {
     return name;
   }
 
+  @Override
   public JSType getType() {
     return type;
   }
 
+  @Override
   public boolean isTypeInferred() {
     return inferred;
   }
 
+  @Override
   public StaticReference<JSType> getDeclaration() {
     return null;
   }

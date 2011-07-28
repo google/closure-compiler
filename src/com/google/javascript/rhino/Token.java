@@ -56,8 +56,11 @@ public class Token
 
     // debug flags
     public static final boolean printTrees = true;
-    static final boolean printICode = false;
-    static final boolean printNames = printTrees || printICode;
+    public static boolean shouldPrintTrees() {
+      return printTrees;
+    }
+    static final boolean printNames = printTrees;
+
 
     /**
      * Token types.  These values correspond to JSTokenType values in

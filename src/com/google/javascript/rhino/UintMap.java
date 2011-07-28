@@ -70,7 +70,7 @@ public class UintMap implements Serializable
         int i;
         for (i = 2; (1 << i) < minimalCapacity; ++i) { }
         power = i;
-        if (check && power < 2) Kit.codeBug();
+        assert !(power < 2);
     }
 
     public boolean isEmpty() {
@@ -253,8 +253,8 @@ public class UintMap implements Serializable
 // Insert key that is not present to table without deleted entries
 // and enough free space
     private int insertNewKey(int key) {
-        if (check && occupiedCount != keyCount) Kit.codeBug();
-        if (check && keyCount == 1 << power) Kit.codeBug();
+        assert occupiedCount == keyCount;
+        assert keyCount != 1 << power;
         int[] keys = this.keys;
         int fraction = key * A;
         int index = fraction >>> (32 - power);
@@ -263,9 +263,9 @@ public class UintMap implements Serializable
             int step = tableLookupStep(fraction, mask, power);
             int firstIndex = index;
             do {
-                if (check && keys[index] == DELETED) Kit.codeBug();
+                assert keys[index] != DELETED;
                 index = (index + step) & mask;
-                if (check && firstIndex == index) Kit.codeBug();
+                assert firstIndex != index;
             } while (keys[index] != EMPTY);
         }
         keys[index] = key;
@@ -347,8 +347,7 @@ public class UintMap implements Serializable
             }
         }
         // Inserting of new key
-        if (check && keys != null && keys[index] != EMPTY)
-            Kit.codeBug();
+        assert (keys == null || keys[index] == EMPTY);
         if (firstDeleted >= 0) {
             index = firstDeleted;
         }

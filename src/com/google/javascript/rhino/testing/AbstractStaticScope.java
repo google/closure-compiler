@@ -58,6 +58,7 @@ public abstract class AbstractStaticScope<T> implements StaticScope<T> {
     return null;
   }
 
+  @Override
   public abstract StaticSlot<T> getSlot(String name);
 
   @Override

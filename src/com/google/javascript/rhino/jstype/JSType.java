@@ -88,6 +88,7 @@ public abstract class JSType implements Serializable {
    * method of the union type since this output is used in tests.
    */
   static final Comparator<JSType> ALPHA = new Comparator<JSType>() {
+    @Override
     public int compare(JSType t1, JSType t2) {
       return t1.toString().compareTo(t2.toString());
     }

@@ -371,14 +371,17 @@ public class Node implements Cloneable, Serializable {
       this.next = next;
     }
 
+    @Override
     public int getType() {
       return propType;
     }
 
+    @Override
     public PropListItem getNext() {
       return next;
     }
 
+    @Override
     public abstract PropListItem chain(PropListItem next);
   }
 
@@ -1015,7 +1018,7 @@ public class Node implements Cloneable, Serializable {
       boolean printSource,
       boolean printAnnotations,
       boolean printType) {
-    if (Token.printTrees) {
+    if (Token.shouldPrintTrees()) {
         StringBuilder sb = new StringBuilder();
         toString(sb, printSource, printAnnotations, printType);
         return sb.toString();
@@ -1366,6 +1369,7 @@ public class Node implements Cloneable, Serializable {
       this.used = false;
     }
 
+    @Override
     public Iterator<Node> iterator() {
       if (!used) {
         used = true;
@@ -1381,10 +1385,12 @@ public class Node implements Cloneable, Serializable {
       }
     }
 
+    @Override
     public boolean hasNext() {
       return current != null;
     }
 
+    @Override
     public Node next() {
       if (current == null) {
         throw new NoSuchElementException();
@@ -1396,6 +1402,7 @@ public class Node implements Cloneable, Serializable {
       }
     }
 
+    @Override
     public void remove() {
       throw new UnsupportedOperationException();
     }
@@ -1446,12 +1453,15 @@ public class Node implements Cloneable, Serializable {
       this.cur = cur;
     }
 
+    @Override
     public Iterator<Node> iterator() {
       return new Iterator<Node>() {
+        @Override
         public boolean hasNext() {
           return cur != null;
         }
 
+        @Override
         public Node next() {
           if (!hasNext()) throw new NoSuchElementException();
           Node n = cur;
@@ -1459,6 +1469,7 @@ public class Node implements Cloneable, Serializable {
           return n;
         }
 
+        @Override
         public void remove() {
           throw new UnsupportedOperationException();
         }
@@ -1524,7 +1535,7 @@ public class Node implements Cloneable, Serializable {
    * Helper function to ignore differences in Node subclasses that are no longer
    * used.
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   static private Class getNodeClass(Node n) {
     Class c = n.getClass();
     if (c == FunctionNode.class || c == ScriptOrFnNode.class) {

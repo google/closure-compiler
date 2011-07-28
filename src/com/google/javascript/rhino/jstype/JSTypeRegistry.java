@@ -1370,7 +1370,7 @@ public class JSTypeRegistry implements Serializable {
     return false;
   }
 
-  /** @see #createFromTypeNodes(Node, String, StaticScope, boolean) */
+  /** @see #createFromTypeNodes(Node, String, StaticScope) */
   private JSType createFromTypeNodesInternal(Node n, String sourceName,
       StaticScope<JSType> scope) {
     switch (n.getType()) {

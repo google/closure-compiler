@@ -92,7 +92,7 @@ public class TokenStream
      */
     String tokenToString(int token)
     {
-        if (Token.printTrees) {
+        if (Token.shouldPrintTrees()) {
             String name = Token.name(token);
 
             switch (token) {

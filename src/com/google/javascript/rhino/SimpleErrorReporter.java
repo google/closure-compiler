@@ -51,6 +51,7 @@ public class SimpleErrorReporter implements ErrorReporter {
     private List<String> warnings = null;
     private List<String> errors = null;
 
+    @Override
     public void warning(String message, String sourceName, int line,
                         String lineSource, int lineOffset)
     {
@@ -61,6 +62,7 @@ public class SimpleErrorReporter implements ErrorReporter {
             message, sourceName, line, lineSource, lineOffset));
     }
 
+    @Override
     public void error(String message, String sourceName, int line,
                       String lineSource, int lineOffset)
     {
@@ -71,6 +73,7 @@ public class SimpleErrorReporter implements ErrorReporter {
             message, sourceName, line, lineSource, lineOffset));
     }
 
+    @Override
     public EvaluatorException runtimeError(
         String message, String sourceName, int line, String lineSource,
         int lineOffset)
