@@ -26,6 +26,7 @@ import java.util.Map;
  */
 enum Annotation {
   AUTHOR,
+  CONSISTENTIDGENERATOR,
   CONSTANT,
   CONSTRUCTOR,
   DEFINE,
@@ -37,6 +38,7 @@ enum Annotation {
   EXPORT,
   FILE_OVERVIEW,
   HIDDEN,
+  IDGENERATOR,
   IMPLEMENTS,
   IMPLICIT_CAST,
   INHERIT_DOC,
@@ -73,6 +75,7 @@ enum Annotation {
       new ImmutableMap.Builder<String, Annotation>().
       put("argument", Annotation.PARAM).
       put("author", Annotation.AUTHOR).
+      put("consistentIdGenerator", Annotation.CONSISTENTIDGENERATOR).
       put("const", Annotation.CONSTANT).
       put("constant", Annotation.CONSTANT).
       put("constructor", Annotation.CONSTRUCTOR).
@@ -86,6 +89,7 @@ enum Annotation {
       put("fileoverview", Annotation.FILE_OVERVIEW).
       put("final", Annotation.CONSTANT).
       put("hidden", Annotation.HIDDEN).
+      put("idGenerator", Annotation.IDGENERATOR).
       put("implements", Annotation.IMPLEMENTS).
       put("implicitCast", Annotation.IMPLICIT_CAST).
       put("inheritDoc", Annotation.INHERIT_DOC).

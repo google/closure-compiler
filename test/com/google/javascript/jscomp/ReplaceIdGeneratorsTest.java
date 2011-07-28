@@ -38,32 +38,116 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testAssign() {
+  public void testBackwardCompat() {
     test("foo.bar = goog.events.getUniqueId('foo_bar')",
          "foo.bar = 'a'");
   }
 
-  public void testObjectLiteral() {
-    test("foo = { bar : goog.events.getUniqueId('foo_bar')}",
-         "foo = { bar : 'a' }");
+  public void testSimple() {
+    test("/** @idGenerator */ foo.getUniqueId = function() {};" +
+         "foo.bar = foo.getUniqueId('foo_bar')",
+
+         "foo.getUniqueId = function() {};" +
+         "foo.bar = 'a'");
+
+    test("/** @idGenerator */ goog.events.getUniqueId = function() {};" +
+        "foo1 = goog.events.getUniqueId('foo1');" +
+        "foo1 = goog.events.getUniqueId('foo1');",
+
+        "goog.events.getUniqueId = function() {};" +
+        "foo1 = 'a';" +
+        "foo1 = 'b';");
   }
 
-  public void testTwoNamespaces() {
-    test("foo.bar = goog.events.getUniqueId('foo_bar');\n"
-         + "baz.blah = goog.place.getUniqueId('baz_blah');\n",
-         "foo.bar = 'a';\n"
-         + "baz.blah = 'a'\n");
+  public void testSimpleConsistent() {
+    test("/** @consistentIdGenerator */ id = function() {};" +
+         "foo.bar = id('foo_bar')",
+
+         "id = function() {};" +
+         "foo.bar = 'a'");
+
+    test("/** @consistentIdGenerator */ id = function() {};" +
+         "f1 = id('f1');" +
+         "f1 = id('f1')",
+
+         "id = function() {};" +
+         "f1 = 'a';" +
+         "f1 = 'a'");
+
+    test("/** @consistentIdGenerator */ id = function() {};" +
+        "f1 = id('f1');" +
+        "f1 = id('f1');" +
+        "f1 = id('f1')",
+
+        "id = function() {};" +
+        "f1 = 'a';" +
+        "f1 = 'a';" +
+        "f1 = 'a'");
+  }
+
+  public void testVar() {
+    test("/** @consistentIdGenerator */ var id = function() {};" +
+         "foo.bar = id('foo_bar')",
+
+         "var id = function() {};" +
+         "foo.bar = 'a'");
+  }
+
+  public void testObjLit() {
+    test("/** @consistentIdGenerator */ get.id = function() {};" +
+         "foo.bar = {a: get.id('foo_bar')}",
+
+         "get.id = function() {};" +
+         "foo.bar = {a: 'a'}");
+  }
+
+  public void testTwoGenerators() {
+    test("/** @idGenerator */ var id1 = function() {};" +
+         "/** @idGenerator */ var id2 = function() {};" +
+         "f1 = id1('1');" +
+         "f2 = id1('1');" +
+         "f3 = id2('1');" +
+         "f4 = id2('1');",
+
+         "var id1 = function() {};" +
+         "var id2 = function() {};" +
+         "f1 = 'a';" +
+         "f2 = 'b';" +
+         "f3 = 'a';" +
+         "f4 = 'b';");
+  }
+
+  public void testTwoMixedGenerators() {
+    test("/** @idGenerator */ var id1 = function() {};" +
+         "/** @consistentIdGenerator */ var id2 = function() {};" +
+         "f1 = id1('1');" +
+         "f2 = id1('1');" +
+         "f3 = id2('1');" +
+         "f4 = id2('1');",
+
+         "var id1 = function() {};" +
+         "var id2 = function() {};" +
+         "f1 = 'a';" +
+         "f2 = 'b';" +
+         "f3 = 'a';" +
+         "f4 = 'a';");
   }
 
   public void testLocalCall() {
-    testSame(new String[] {
-          "function Foo() { goog.events.getUniqueId('foo'); }"
-        },
+    testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
+                           "function Foo() { id('foo'); }"},
         ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
   }
 
   public void testConditionalCall() {
-    testSame(new String[] {"if (x) foo = goog.events.getUniqueId('foo')"},
-             ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
+    testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
+                           "if(x) id('foo');"},
+        ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
+  }
+
+  public void testConflictingIdGenerator() {
+    testSame(new String[] {"/** @idGenerator \n @consistentIdGenerator \n*/" +
+                           "var id = function() {}; "},
+        ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
   }
 }

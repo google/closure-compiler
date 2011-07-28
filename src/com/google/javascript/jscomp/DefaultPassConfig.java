@@ -322,9 +322,7 @@ public class DefaultPassConfig extends PassConfig {
 
     passes.add(createEmptyPass("beforeStandardOptimizations"));
 
-    if (!options.idGenerators.isEmpty()) {
-      passes.add(replaceIdGenerators);
-    }
+    passes.add(replaceIdGenerators);
 
     // Optimizes references to the arguments variable.
     if (options.optimizeArgumentsArray) {

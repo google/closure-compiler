@@ -323,6 +323,24 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isConsistentIdGenerator()} flag set to
+   * {@code true}.
+   *
+   * @return {@code true} if the consistentIdGenerator flag was recorded and
+   *     {@code false} if it was already recorded
+   */
+  public boolean recordConsistentIdGenerator() {
+    if (!currentInfo.isConsistentIdGenerator()) {
+      currentInfo.setConsistentIdGenerator(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records the version.
    */
   public boolean recordVersion(String version) {
@@ -398,6 +416,24 @@ final public class JSDocInfoBuilder {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isIdGenerator()} flag set to
+   * {@code true}.
+   *
+   * @return {@code true} if the idGenerator flag was recorded and {@code false}
+   *     if it was already recorded
+   */
+  public boolean recordIdGenerator() {
+    if (!currentInfo.isIdGenerator()) {
+      currentInfo.setIdGenerator(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /**

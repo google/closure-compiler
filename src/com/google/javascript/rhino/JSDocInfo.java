@@ -218,6 +218,10 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_EXTERNS       = 0x00008000; // @externs
   private static final int MASK_JAVADISPATCH  = 0x00010000; // @javadispath
   private static final int MASK_NOCOMPILE     = 0x00020000; // @nocompile
+  // @consistentIdGenerator
+  private static final int MASK_CONSISTIDGEN  = 0x00040000;
+  // @idGenerator
+  private static final int MASK_IDGEN         = 0x00080000;
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
@@ -237,6 +241,10 @@ public class JSDocInfo implements Serializable {
 
   // Visible for testing.
   public JSDocInfo() {}
+
+  void setConsistentIdGenerator(boolean value) {
+    setFlag(value, MASK_CONSISTIDGEN);
+  }
 
   void setConstant(boolean value) {
     setFlag(value, MASK_CONSTANT);
@@ -287,6 +295,10 @@ public class JSDocInfo implements Serializable {
     setFlag(value, MASK_NOSHADOW);
   }
 
+  void setIdGenerator(boolean value) {
+    setFlag(value, MASK_IDGEN);
+  }
+
   void setImplicitCast(boolean value) {
     setFlag(value, MASK_IMPLICITCAST);
   }
@@ -313,6 +325,14 @@ public class JSDocInfo implements Serializable {
     } else {
       bitset &= ~mask;
     }
+  }
+
+  /**
+   * @return whether the {@code @consistentIdGenerator} is present on
+   * this {@link JSDocInfo}
+   */
+  public boolean isConsistentIdGenerator() {
+    return getFlag(MASK_CONSISTIDGEN);
   }
 
   /**
@@ -410,6 +430,14 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isNoShadow() {
     return getFlag(MASK_NOSHADOW);
+  }
+
+  /**
+   * @return whether the {@code @idGenerator} is present on
+   * this {@link JSDocInfo}
+   */
+  public boolean isIdGenerator() {
+    return getFlag(MASK_IDGEN);
   }
 
   /**

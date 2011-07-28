@@ -239,6 +239,14 @@ public final class JsDocInfoParser {
                   }
                   continue retry;
 
+                case CONSISTENTIDGENERATOR:
+                  if (!jsdocBuilder.recordConsistentIdGenerator()) {
+                    parser.addParserWarning("msg.jsdoc.consistidgen",
+                      stream.getLineno(), stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
+                  continue retry;
+
                 case CONSTANT:
                   if (!jsdocBuilder.recordConstancy()) {
                     parser.addParserWarning("msg.jsdoc.const",
@@ -766,6 +774,14 @@ public final class JsDocInfoParser {
                   }
 
                   token = templateInfo.token;
+                  continue retry;
+
+                case IDGENERATOR:
+                  if (!jsdocBuilder.recordIdGenerator()) {
+                    parser.addParserWarning("msg.jsdoc.idgen",
+                      stream.getLineno(), stream.getCharno());
+                  }
+                  token = eatTokensUntilEOL();
                   continue retry;
 
                 case VERSION:
