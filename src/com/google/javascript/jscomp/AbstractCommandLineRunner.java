@@ -32,6 +32,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
@@ -103,6 +104,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private Supplier<List<JSSourceFile>> inputsSupplierForTesting = null;
   private Supplier<List<JSModule>> modulesSupplierForTesting = null;
   private Function<Integer, Boolean> exitCodeReceiverForTesting = null;
+  private Map<String, String> rootRelativePathsMap = null;
 
   // Bookkeeping to measure optimal phase orderings.
   private static final int NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER = 100;
@@ -369,6 +371,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
         inputs.add(JSSourceFile.fromInputStream("stdin", System.in));
         usingStdin = true;
+        if (!config.outputManifests.isEmpty()) {
+          throw new FlagUsageException("Manifest files cannot be generated " +
+              "when the input is from stdin.");
+        }
+        if (!config.outputBundles.isEmpty()) {
+          throw new FlagUsageException("Bundle files cannot be generated " +
+              "when the input is from stdin.");
+        }
       }
     }
     return inputs;
@@ -706,6 +716,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         return 0;
       }
     }
+
+    rootRelativePathsMap = constructRootRelativePathsMap();
 
     if (config.skipNormalOutputs) {
       // Output the manifest and bundle files if requested.
@@ -1142,10 +1154,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         && output != null && output.contains("%outname%");
   }
 
-  /**
-   * Writes the manifest or bundle of all compiler input files that survived
-   * manage_closure_dependencies, if requested.
-   */
   private void outputManifest() throws IOException {
     outputManifestOrBundle(config.outputManifests, true);
   }
@@ -1154,6 +1162,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     outputManifestOrBundle(config.outputBundles, false);
   }
 
+  /**
+   * Writes the manifest or bundle of all compiler input files that survived
+   * manage_closure_dependencies, if requested.
+   */
   private void outputManifestOrBundle(List<String> outputFiles,
       boolean isManifest) throws IOException {
     if (outputFiles.isEmpty()) {
@@ -1231,13 +1243,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   private void printManifestTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
-    List<String> names = Lists.newArrayList();
     for (CompilerInput input : inputs) {
-      names.add(input.getName());
+      String rootRelativePath = rootRelativePathsMap.get(input.getName());
+      String displayName = rootRelativePath != null
+                               ? rootRelativePath
+                               : input.getName();
+      out.append(displayName);
+      out.append("\n");
     }
-    String result = Joiner.on("\n").join(names);
-    out.append(result);
-    out.append("\n");
   }
 
   /**
@@ -1247,13 +1260,40 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private void printBundleTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
     for (CompilerInput input : inputs) {
-      out.append("//" + input.getName() + "\n");
+      String rootRelativePath = rootRelativePathsMap.get(input.getName());
+      String displayName = rootRelativePath != null
+                               ? rootRelativePath
+                               : input.getName();
       File file = new File(input.getName());
-      if (file.canRead()) {
-        Files.copy(file, inputCharset, out);
-      }
+      out.append("//");
+      out.append(displayName);
+      out.append("\n");
+      Files.copy(file, inputCharset, out);
       out.append("\n");
     }
+  }
+
+  /**
+   * Construct and return the input root path map. The key is the exec path of
+   * each input file, and the value is the corresponding root relative path.
+   */
+  private Map<String, String> constructRootRelativePathsMap()
+      throws IOException {
+    Map<String, String> rootRelativePathsMap = Maps.newLinkedHashMap();
+    if (!config.manifestMapFile.equals("")) {
+      File mapFile = new File(config.manifestMapFile);
+      BufferedReader br = Files.newReader(mapFile, Charsets.UTF_8);
+      String line;
+      while ((line = br.readLine()) != null) {
+        int colonIndex = line.indexOf(':');
+        Preconditions.checkState(colonIndex > 0);
+        String execPath = line.substring(0, colonIndex);
+        String rootRelativePath = line.substring(colonIndex + 1);
+        Preconditions.checkState(rootRelativePath.indexOf(':') == -1);
+        rootRelativePathsMap.put(execPath, rootRelativePath);
+      }
+    }
+    return rootRelativePathsMap;
   }
 
   private class RunTimeStats {
@@ -1697,7 +1737,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     /**
-     * Set whether the normal outputs of compilation should be skipped
+     * Sets whether the normal outputs of compilation should be skipped.
      */
     private boolean skipNormalOutputs = false;
 
@@ -1705,6 +1745,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       this.skipNormalOutputs = skipNormalOutputs;
       return this;
     }
+
+    /**
+     * Sets the map file that contains the root paths for input files,
+     * used to generate human-readable file names in the bundle files.
+     */
+    private String manifestMapFile = "";
+
+    CommandLineConfig setManifestMapFile(String manifestMapFile) {
+      this.manifestMapFile = manifestMapFile;
+      return this;
+    }
+
   }
 
   /**
