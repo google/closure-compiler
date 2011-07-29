@@ -147,11 +147,13 @@ class ReplaceIdGenerators implements CompilerPass {
         return;
       }
 
-      for (Node ancestor : n.getAncestors()) {
-        if (NodeUtil.isControlStructure(ancestor)) {
-          // Warn about conditional calls.
-          compiler.report(t.makeError(n, CONDITIONAL_ID_GENERATOR_CALL));
-          return;
+      if (!consistent) {
+        for (Node ancestor : n.getAncestors()) {
+          if (NodeUtil.isControlStructure(ancestor)) {
+            // Warn about conditional calls.
+            compiler.report(t.makeError(n, CONDITIONAL_ID_GENERATOR_CALL));
+            return;
+          }
         }
       }
 

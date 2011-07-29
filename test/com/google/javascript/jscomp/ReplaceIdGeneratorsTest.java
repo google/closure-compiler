@@ -155,5 +155,11 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
     testSame(new String[] {"/** @idGenerator \n @consistentIdGenerator \n*/" +
                            "var id = function() {}; "},
         ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
+
+    test("/** @consistentIdGenerator */ var id = function() {};" +
+        "if (x) {foo.bar = id('foo_bar')}",
+
+        "var id = function() {};" +
+        "if (x) {foo.bar = 'a'}");
   }
 }
