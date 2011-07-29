@@ -143,6 +143,12 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
     testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
                            "if(x) id('foo');"},
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
+
+    test("/** @consistentIdGenerator */ var id = function() {};" +
+        "function fb() {foo.bar = id('foo_bar')}",
+
+        "var id = function() {};" +
+        "function fb() {foo.bar = 'a'}");
   }
 
   public void testConflictingIdGenerator() {
