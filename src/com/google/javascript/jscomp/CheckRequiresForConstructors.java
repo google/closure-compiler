@@ -63,7 +63,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot) {
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     Callback callback = new CheckRequiresForConstructorsCallback();
     new NodeTraversal(compiler, callback).traverseWithScope(scriptRoot,
         SyntacticScopeCreator.generateUntypedTopScope(compiler));

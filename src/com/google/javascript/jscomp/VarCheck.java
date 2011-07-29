@@ -113,7 +113,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot) {
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     Preconditions.checkState(scriptRoot.getType() == Token.SCRIPT);
     NodeTraversal t = new NodeTraversal(compiler, this);
     // Note we use the global scope to prevent wrong "undefined-var errors" on

@@ -835,8 +835,8 @@ public class DefaultPassConfig extends PassConfig {
           exportedNames = pass.getExportedVariableNames();
         }
         @Override
-        public void hotSwapScript(Node scriptRoot) {
-          pass.hotSwapScript(scriptRoot);
+        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+          pass.hotSwapScript(scriptRoot, originalRoot);
         }
       };
     }
@@ -1031,7 +1031,7 @@ public class DefaultPassConfig extends PassConfig {
           makeTypeInference(compiler).process(externs, root);
         }
         @Override
-        public void hotSwapScript(Node scriptRoot) {
+        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
           makeTypeInference(compiler).inferTypes(scriptRoot);
         }
       };
@@ -1052,8 +1052,8 @@ public class DefaultPassConfig extends PassConfig {
         makeInferJsDocInfo(compiler).process(externs, root);
       }
       @Override
-      public void hotSwapScript(Node scriptRoot) {
-        makeInferJsDocInfo(compiler).hotSwapScript(scriptRoot);
+      public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+        makeInferJsDocInfo(compiler).hotSwapScript(scriptRoot, originalRoot);
       }
     };
   }
@@ -1076,7 +1076,7 @@ public class DefaultPassConfig extends PassConfig {
           compiler.getErrorManager().setTypedPercent(check.getTypedPercent());
         }
         @Override
-        public void hotSwapScript(Node scriptRoot) {
+        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
           makeTypeCheck(compiler).check(scriptRoot, false);
         }
       };
@@ -1138,7 +1138,7 @@ public class DefaultPassConfig extends PassConfig {
       }
     }
     @Override
-    public void hotSwapScript(Node scriptRoot) {
+    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
       patchGlobalTypedScope(compiler, scriptRoot);
     }
   }

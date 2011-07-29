@@ -326,6 +326,17 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
       boolean inferred, Node propertyNode);
 
   /**
+   * Removes the declared or inferred property from this ObjectType.
+   *
+   * @param propertyName the property's name
+   * @return true if the property was removed successfully. False if the
+   *         property did not exist, or could not be removed.
+   */
+  boolean removeProperty(String propertyName) {
+    return false;
+  }
+
+  /**
    * Gets the node corresponding to the definition of the specified property.
    * This could be the node corresponding to declaration of the property or the
    * node corresponding to the first reference to this property, e.g.,

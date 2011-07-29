@@ -126,7 +126,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot) {
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 

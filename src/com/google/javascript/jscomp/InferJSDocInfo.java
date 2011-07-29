@@ -83,7 +83,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
   }
 
   @Override
-  public void hotSwapScript(Node root) {
+  public void hotSwapScript(Node root, Node originalRoot) {
     Preconditions.checkNotNull(root);
     Preconditions.checkState(root.getType() == Token.SCRIPT);
     inExterns = false;

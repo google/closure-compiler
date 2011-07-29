@@ -72,10 +72,10 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot) {
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
         compiler, new ReferenceCheckingBehavior());
-    callback.hotSwapScript(scriptRoot);
+    callback.hotSwapScript(scriptRoot, originalRoot);
   }
 
   /**

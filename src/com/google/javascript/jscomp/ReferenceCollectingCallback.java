@@ -115,7 +115,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    * Same as process but only runs on a part of AST associated to one script.
    */
   @Override
-  public void hotSwapScript(Node scriptRoot) {
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 

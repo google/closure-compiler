@@ -46,11 +46,11 @@ class CheckProvides implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    hotSwapScript(root);
+    hotSwapScript(root, null);
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot) {
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     CheckProvidesCallback callback =
         new CheckProvidesCallback(codingConvention);
     new NodeTraversal(compiler, callback).traverse(scriptRoot);

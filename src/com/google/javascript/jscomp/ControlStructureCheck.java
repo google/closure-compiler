@@ -42,7 +42,7 @@ class ControlStructureCheck implements HotSwapCompilerPass {
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot) {
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     check(scriptRoot);
   }
 

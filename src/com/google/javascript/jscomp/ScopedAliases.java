@@ -91,11 +91,11 @@ class ScopedAliases implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    hotSwapScript(root);
+    hotSwapScript(root, null);
   }
 
   @Override
-  public void hotSwapScript(Node root) {
+  public void hotSwapScript(Node root, Node originalRoot) {
     Traversal traversal = new Traversal();
     NodeTraversal.traverse(compiler, root, traversal);
 
