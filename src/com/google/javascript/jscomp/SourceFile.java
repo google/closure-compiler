@@ -65,6 +65,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
   // from a Jar, it could be the path to the Jar.
   private String originalPath = null;
 
+  // Source Line Information
+  private int[] lineOffsets = null;
+
   // Remember the offset for the previous line query.  If the next line
   // is after this point, we can start scanning at the previous offset rather
   // than starting at the beginning of the file.
@@ -89,6 +92,41 @@ public class SourceFile implements StaticSourceFile, Serializable {
     this.lastOffset = 0;
     this.lastLine = 1;
   }
+
+  @Override
+  public int getLineOffset(int lineno) {
+    if (lineOffsets == null) {
+      findLineOffsets();
+    }
+    if (lineno < 1 || lineno > lineOffsets.length) {
+      throw new IllegalArgumentException(
+          "Expected line number between 1 and " + lineOffsets.length);
+    }
+    return lineOffsets[lineno - 1];
+  }
+
+  /** @return The number of lines in this source file. */
+  int getNumLines() {
+    if (lineOffsets == null) {
+      findLineOffsets();
+    }
+    return lineOffsets.length;
+  }
+
+  private void findLineOffsets() {
+    try {
+      String[] sourceLines = getCode().split("\n");
+      lineOffsets = new int[sourceLines.length];
+      for (int ii = 1; ii < sourceLines.length; ++ii) {
+        lineOffsets[ii] =
+            lineOffsets[ii - 1] + sourceLines[ii - 1].length() + 1;
+      }
+    } catch (IOException e) {
+      lineOffsets = new int[1];
+      lineOffsets[0] = 0;
+    }
+  }
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Implementation

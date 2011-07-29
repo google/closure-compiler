@@ -957,18 +957,6 @@ public class Node implements Cloneable, Serializable {
     return keys;
   }
 
-  public int getLineno() {
-    return extractLineno(sourcePosition);
-  }
-
-  public int getCharno() {
-    return extractCharno(sourcePosition);
-  }
-
-  public int getSourcePosition() {
-    return sourcePosition;
-  }
-
   /** Can only be called when <tt>getType() == TokenStream.NUMBER</tt> */
   public double getDouble() throws UnsupportedOperationException {
     if (this.getType() == Token.NUMBER) {
@@ -1258,6 +1246,25 @@ public class Node implements Cloneable, Serializable {
 
   public void setLength(int length) {
     putIntProp(LENGTH, length);
+  }
+
+  public int getLineno() {
+    return extractLineno(sourcePosition);
+  }
+
+  public int getCharno() {
+    return extractCharno(sourcePosition);
+  }
+
+  public int getSourceOffset() {
+    StaticSourceFile file = getStaticSourceFile();
+    int lineOffset = file == null ?
+        Integer.MIN_VALUE : file.getLineOffset(getLineno());
+    return lineOffset + getCharno();
+  }
+
+  public int getSourcePosition() {
+    return sourcePosition;
   }
 
   public void setLineno(int lineno) {

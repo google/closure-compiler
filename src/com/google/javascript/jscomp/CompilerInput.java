@@ -49,9 +49,6 @@ public class CompilerInput
   // The AST.
   private final SourceAst ast;
 
-  // Source Line Information
-  private int[] lineOffsets = null;
-
   // Provided and required symbols.
   private final Set<String> provides = Sets.newHashSet();
   private final Set<String> requires = Sets.newHashSet();
@@ -122,7 +119,6 @@ public class CompilerInput
   @Override
   public void setSourceFile(SourceFile file) {
     ast.setSourceFile(file);
-    lineOffsets = null;
   }
 
   /** Returns the SourceAst object on which this input is based. */
@@ -313,43 +309,14 @@ public class CompilerInput
     ast.getSourceFile().setIsExtern(isExtern);
   }
 
-  /**
-   * @param lineno the line of the input to get the absolute offset of.
-   * @return the absolute offset of the start of the provided line.
-   * @throws IllegalArgumentException if lineno is less than 1 or greater than
-   *         the number of lines in the source.
-   */
+  @Override
   public int getLineOffset(int lineno) {
-    if (lineOffsets == null) {
-      findLineOffsets();
-    }
-    if (lineno < 1 || lineno > lineOffsets.length) {
-      throw new IllegalArgumentException(
-          "Expected line number between 1 and " + lineOffsets.length);
-    }
-    return lineOffsets[lineno - 1];
+    return ast.getSourceFile().getLineOffset(lineno);
   }
 
   /** @return The number of lines in this input. */
   public int getNumLines() {
-    if (lineOffsets == null) {
-      findLineOffsets();
-    }
-    return lineOffsets.length;
-  }
-
-  private void findLineOffsets() {
-    try {
-      String[] sourceLines = ast.getSourceFile().getCode().split("\n");
-      lineOffsets = new int[sourceLines.length];
-      for (int ii = 1; ii < sourceLines.length; ++ii) {
-        lineOffsets[ii] =
-            lineOffsets[ii - 1] + sourceLines[ii - 1].length() + 1;
-      }
-    } catch (IOException e) {
-      lineOffsets = new int[1];
-      lineOffsets[0] = 0;
-    }
+    return ast.getSourceFile().getNumLines();
   }
 
   @Override

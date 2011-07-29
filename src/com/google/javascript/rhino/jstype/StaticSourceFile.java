@@ -53,4 +53,19 @@ public interface StaticSourceFile {
    * Returns whether this is an externs file.
    */
   boolean isExtern();
+
+  /**
+   * Returns the offset of the given line number relative to the file start.
+   * Line number should be 1-based.
+   *
+   * If the source file doesn't have line information, it should return
+   * Integer.MIN_VALUE. The negative offsets will make it more obvious
+   * what happened.
+   *
+   * @param lineNumber the line of the input to get the absolute offset of.
+   * @return the absolute offset of the start of the provided line.
+   * @throws IllegalArgumentException if lineno is less than 1 or greater than
+   *         the number of lines in the source.
+   */
+  int getLineOffset(int lineNumber);
 }

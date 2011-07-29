@@ -63,6 +63,11 @@ public final class SimpleSourceFile implements StaticSourceFile {
   }
 
   @Override
+  public int getLineOffset(int line) {
+    return Integer.MIN_VALUE;
+  }
+
+  @Override
   public String toString() {
     return name;
   }
