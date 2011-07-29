@@ -19,18 +19,14 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 
 /**
- * A CleanupPass implementation that will remove all field declarations on
- * JSTypes contributed by the original file.
- * <p>
- * This pass is expected to clear out declarations contributed to any JSType,
- * even if the constructor declaration is not provided in the file being
- * updated.
+ * A CleanupPass implementation that will remove all Global Vars contributed by
+ * the original file.
  *
  * @author tylerg@google.com (Tyler Goodwin)
  */
-public class FieldCleanupPass implements HotSwapCompilerPass {
+public class GlobalVarCleanupPass implements HotSwapCompilerPass {
 
-  public FieldCleanupPass(AbstractCompiler compiler) {
+  public GlobalVarCleanupPass(AbstractCompiler compiler) {
   }
 
   @Override
@@ -39,7 +35,7 @@ public class FieldCleanupPass implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    // FieldCleanupPass should not do work during process.
+    // GlobalVarCleanupPass should not do work during process.
   }
 
 }
