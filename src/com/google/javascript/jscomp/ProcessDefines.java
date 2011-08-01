@@ -289,7 +289,7 @@ class ProcessDefines implements CompilerPass {
       if (refInfo != null) {
         Ref ref = refInfo.ref;
         Name name = refInfo.name;
-        String fullName = name.fullName();
+        String fullName = name.getFullName();
         switch (ref.type) {
           case SET_FROM_GLOBAL:
           case SET_FROM_LOCAL:

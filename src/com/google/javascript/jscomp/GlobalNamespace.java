@@ -874,7 +874,7 @@ class GlobalNamespace
       OTHER,
     }
 
-    private final String name;
+    private final String baseName;
     final Name parent;
     List<Name> props;
 
@@ -898,7 +898,7 @@ class GlobalNamespace
     JSDocInfo docInfo = null;
 
     Name(String name, Name parent, boolean inExterns) {
-      this.name = name;
+      this.baseName = name;
       this.parent = parent;
       this.type = Type.OTHER;
       this.inExterns = inExterns;
@@ -913,9 +913,17 @@ class GlobalNamespace
       return node;
     }
 
+    String getBaseName() {
+      return baseName;
+    }
+
     @Override
     public String getName() {
-      return name;
+      return getFullName();
+    }
+
+    String getFullName() {
+      return parent == null ? baseName : parent.getFullName() + '.' + baseName;
     }
 
     @Override
@@ -1127,13 +1135,9 @@ class GlobalNamespace
     }
 
     @Override public String toString() {
-      return fullName() + " (" + type + "): globalSets=" + globalSets +
+      return getFullName() + " (" + type + "): globalSets=" + globalSets +
           ", localSets=" + localSets + ", totalGets=" + totalGets +
           ", aliasingGets=" + aliasingGets + ", callGets=" + callGets;
-    }
-
-    String fullName() {
-      return parent == null ? name : parent.fullName() + '.' + name;
     }
 
     /**

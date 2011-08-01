@@ -131,14 +131,14 @@ class CollapseProperties implements CompilerPass {
     checkNamespaces();
 
     for (Name n : globalNames) {
-      flattenReferencesToCollapsibleDescendantNames(n, n.getName());
+      flattenReferencesToCollapsibleDescendantNames(n, n.getBaseName());
     }
 
     // We collapse property definitions after collapsing property references
     // because this step can alter the parse tree above property references,
     // invalidating the node ancestry stored with each reference.
     for (Name n : globalNames) {
-      collapseDeclarationOfNameAndDescendants(n, n.getName());
+      collapseDeclarationOfNameAndDescendants(n, n.getBaseName());
     }
   }
 
@@ -285,7 +285,7 @@ class CollapseProperties implements CompilerPass {
   private void warnAboutNamespaceAliasing(Name nameObj, Ref ref) {
     compiler.report(
         JSError.make(ref.getSourceName(), ref.node,
-                     UNSAFE_NAMESPACE_WARNING, nameObj.fullName()));
+                     UNSAFE_NAMESPACE_WARNING, nameObj.getFullName()));
   }
 
   /**
@@ -297,7 +297,7 @@ class CollapseProperties implements CompilerPass {
   private void warnAboutNamespaceRedefinition(Name nameObj, Ref ref) {
     compiler.report(
         JSError.make(ref.getSourceName(), ref.node,
-                     NAMESPACE_REDEFINED_WARNING, nameObj.fullName()));
+                     NAMESPACE_REDEFINED_WARNING, nameObj.getFullName()));
   }
 
   /**
@@ -312,7 +312,7 @@ class CollapseProperties implements CompilerPass {
     if (n.props == null) return;
 
     for (Name p : n.props) {
-      String propAlias = appendPropForAlias(alias, p.getName());
+      String propAlias = appendPropForAlias(alias, p.getBaseName());
 
       if (p.canCollapse()) {
         flattenReferencesTo(p, propAlias);
@@ -333,7 +333,7 @@ class CollapseProperties implements CompilerPass {
     Ref ref = Iterables.getOnlyElement(name.getRefs());
     Node nameNode = NodeUtil.newName(
         compiler.getCodingConvention(), alias, ref.node,
-        name.fullName());
+        name.getFullName());
     Node varNode = new Node(Token.VAR, nameNode).copyInformationFrom(nameNode);
 
     Preconditions.checkState(
@@ -353,7 +353,7 @@ class CollapseProperties implements CompilerPass {
    * @param alias The flattened name (e.g. "a$b" or "a$b$c$d")
    */
   private void flattenReferencesTo(Name n, String alias) {
-    String originalName = n.fullName();
+    String originalName = n.getFullName();
     for (Ref r : n.getRefs()) {
       if (r == n.getDeclaration()) {
         // Declarations are handled separately.
@@ -395,7 +395,7 @@ class CollapseProperties implements CompilerPass {
   private void flattenPrefixes(String alias, Name n, int depth) {
     // Only flatten the prefix of a name declaration if the name being
     // initialized is fully qualified (i.e. not an object literal key).
-    String originalName = n.fullName();
+    String originalName = n.getFullName();
     Ref decl = n.getDeclaration();
     if (decl != null && decl.node != null &&
         decl.node.getType() == Token.GETPROP) {
@@ -505,7 +505,7 @@ class CollapseProperties implements CompilerPass {
       for (Name p : n.props) {
         // Recurse first so that saved node ancestries are intact when needed.
         collapseDeclarationOfNameAndDescendants(
-            p, appendPropForAlias(alias, p.getName()));
+            p, appendPropForAlias(alias, p.getBaseName()));
 
         if (!p.inExterns && canCollapseChildNames &&
             p.getDeclaration() != null &&
@@ -514,7 +514,7 @@ class CollapseProperties implements CompilerPass {
             p.getDeclaration().node.getParent() != null &&
             p.getDeclaration().node.getParent().getType() == Token.ASSIGN) {
           updateSimpleDeclaration(
-              appendPropForAlias(alias, p.getName()), p, p.getDeclaration());
+              appendPropForAlias(alias, p.getBaseName()), p, p.getDeclaration());
         }
       }
     }
@@ -545,7 +545,7 @@ class CollapseProperties implements CompilerPass {
     // Create the new alias node.
     Node nameNode = NodeUtil.newName(
         compiler.getCodingConvention(), alias, gramps.getFirstChild(),
-        refName.fullName());
+        refName.getFullName());
     NodeUtil.copyNameAnnotations(ref.node.getLastChild(), nameNode);
 
     if (gramps.getType() == Token.EXPR_RESULT) {
@@ -685,7 +685,7 @@ class CollapseProperties implements CompilerPass {
 
       Node nameNode = NodeUtil.newName(
           compiler.getCodingConvention(),
-          alias, ref.node.getAncestor(2), n.fullName());
+          alias, ref.node.getAncestor(2), n.getFullName());
 
       JSDocInfo info = ref.node.getParent().getJSDocInfo();
       if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME) ||
@@ -737,7 +737,7 @@ class CollapseProperties implements CompilerPass {
               if (n.getType() == Token.THIS) {
                 compiler.report(
                     JSError.make(name.getDeclaration().getSourceName(), n,
-                        UNSAFE_THIS, name.fullName()));
+                        UNSAFE_THIS, name.getFullName()));
               }
             }
           });
@@ -851,7 +851,7 @@ class CollapseProperties implements CompilerPass {
           key.getString() : String.valueOf(++arbitraryNameCounter);
 
       // If the name cannot be collapsed, skip it.
-      String qName = objlitName.fullName() + '.' + propName;
+      String qName = objlitName.getFullName() + '.' + propName;
       Name p = nameMap.get(qName);
       if (p != null && !p.canCollapse()) {
         continue;
@@ -933,7 +933,7 @@ class CollapseProperties implements CompilerPass {
     if (n.props != null) {
       for (Name p : n.props) {
         if (p.needsToBeStubbed()) {
-          String propAlias = appendPropForAlias(alias, p.getName());
+          String propAlias = appendPropForAlias(alias, p.getBaseName());
           Node nameNode = Node.newString(Token.NAME, propAlias);
           Node newVar = new Node(Token.VAR, nameNode)
               .copyInformationFromForTree(addAfter);

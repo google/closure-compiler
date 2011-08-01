@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
@@ -62,6 +63,26 @@ public class SymbolTableTest extends TestCase {
     assertEquals(x.getDeclaration(), refs.get(0));
     assertEquals(Token.LP, refs.get(0).getNode().getParent().getType());
     assertEquals(Token.RETURN, refs.get(1).getNode().getParent().getType());
+  }
+
+  public void testNamespacedReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var goog = {};" +
+        "goog.dom = {};" +
+        "goog.dom.DomHelper = function(){};");
+    Symbol goog = getGlobalVar(table, "goog");
+    assertNotNull(goog);
+    assertEquals(3, Iterables.size(table.getReferences(goog)));
+
+    Symbol googDom = getGlobalVar(table, "goog.dom");
+    assertNotNull(googDom);
+
+    // TODO(nicksantos): Fill in the missing reference.
+    assertEquals(1, Iterables.size(table.getReferences(googDom)));
+
+    Symbol googDomHelper = getGlobalVar(table, "goog.dom.DomHelper");
+    assertNotNull(googDomHelper);
+    assertEquals(1, Iterables.size(table.getReferences(googDomHelper)));
   }
 
   private Symbol getGlobalVar(SymbolTable table, String name) {
