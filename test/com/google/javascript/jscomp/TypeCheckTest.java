@@ -3179,6 +3179,44 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testGoodExtends14() throws Exception {
+    testTypes(
+        CLOSURE_DEFS +
+        "/** @param {Function} f */ function g(f) {" +
+        "  /** @constructor */ function NewType() {};" +
+        "  goog.inherits(NewType, f);" +
+        "  (new NewType());" +
+        "}");
+  }
+
+  public void testGoodExtends15() throws Exception {
+    testTypes(
+        CLOSURE_DEFS +
+        "/** @constructor */ function OldType() {}" +
+        "/** @param {?function(new:OldType)} f */ function g(f) {" +
+        "  /**\n" +
+        "    * @constructor\n" +
+        "    * @extends {OldType}\n" +
+        "    */\n" +
+        "  function NewType() {};" +
+        "  goog.inherits(NewType, f);" +
+        "  NewType.prototype.method = function() {" +
+        "    NewType.superClass_.foo.call(this);" +
+        "  };" +
+        "}",
+        "Property foo never defined on OldType.prototype");
+  }
+
+  public void testGoodExtends16() throws Exception {
+    testTypes(
+        CLOSURE_DEFS +
+        "/** @param {Function} f */ function g(f) {" +
+        "  /** @constructor */ function NewType() {};" +
+        "  goog.inherits(f, NewType);" +
+        "  (new NewType());" +
+        "}");
+  }
+
   public void testBadExtends1() throws Exception {
     testTypes("/** @constructor */function base() {}\n" +
         "/** @constructor\n * @extends {not_base} */function derived() {}\n",

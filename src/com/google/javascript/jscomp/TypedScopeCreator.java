@@ -1211,6 +1211,12 @@ final class TypedScopeCreator implements ScopeCreator {
       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
     }
 
+    private FunctionType getFunctionType(@Nullable Var v) {
+      JSType t = v == null ? null : v.getType();
+      ObjectType o = t == null ? null : t.dereference();
+      return o instanceof FunctionType ? ((FunctionType) o) : null;
+    }
+
     /**
      * Look for class-defining calls.
      * Because JS has no 'native' syntax for defining classes,
@@ -1221,15 +1227,23 @@ final class TypedScopeCreator implements ScopeCreator {
       SubclassRelationship relationship =
           codingConvention.getClassesDefinedByCall(n);
       if (relationship != null) {
-        ObjectType superClass = ObjectType.cast(
-            typeRegistry.getType(relationship.superclassName));
-        ObjectType subClass = ObjectType.cast(
-            typeRegistry.getType(relationship.subclassName));
-        if (superClass != null && subClass != null) {
-          FunctionType superCtor = superClass.getConstructor();
-          FunctionType subCtor = subClass.getConstructor();
+        FunctionType superCtor = getFunctionType(
+            scope.getVar(relationship.superclassName));
+        FunctionType subCtor = getFunctionType(
+            scope.getVar(relationship.subclassName));
+        if (superCtor != null && superCtor.isConstructor() &&
+            subCtor != null && subCtor.isConstructor()) {
+          ObjectType superClass = superCtor.getInstanceType();
+          ObjectType subClass = subCtor.getInstanceType();
 
-          if (relationship.type == SubclassType.INHERITS) {
+          // superCtor and subCtor might be structural constructors
+          // (like {function(new:Object)}) so we need to resolve them back
+          // to the original ctor objects.
+          superCtor = superClass.getConstructor();
+          subCtor = subClass.getConstructor();
+
+          if (relationship.type == SubclassType.INHERITS &&
+              !superClass.isEmptyType() && !subClass.isEmptyType()) {
             validator.expectSuperType(t, n, superClass, subClass);
           }
 
