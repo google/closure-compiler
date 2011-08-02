@@ -40,9 +40,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
   static final DiagnosticType UNKNOWN_VARIABLE = DiagnosticType.warning(
       "JSC_UNKNOWN_VARIABLE", "unknown variable {0}");
 
-  static final DiagnosticType WITH_DISALLOWED = DiagnosticType.warning(
-      "JSC_WITH_DISALLOWED", "\"with\" cannot be used in ES5 strict mode");
-
   static final DiagnosticType EVAL_USE = DiagnosticType.error(
       "JSC_EVAL_USE", "\"eval\" cannot be used in Caja");
 
@@ -97,9 +94,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   @Override public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() == Token.WITH) {
-      t.report(n, WITH_DISALLOWED);
-    } else if (n.getType() == Token.NAME) {
+    if (n.getType() == Token.NAME) {
       if (!isDeclaration(n)) {
         checkNameUse(t, n);
       }

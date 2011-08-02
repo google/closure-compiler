@@ -825,6 +825,15 @@ public class CommandLineRunnerTest extends TestCase {
     assertEquals(outputSource.substring(13).indexOf("'use strict'"), -1);
   }
 
+  public void testWithKeywordDefault() {
+    test("var x = {}; with (x) {}", ControlStructureCheck.USE_OF_WITH);
+  }
+
+  public void testWithKeywordWithEs5ChecksOff() {
+    args.add("--jscomp_off=es5Strict");
+    testSame("var x = {}; with (x) {}");
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {

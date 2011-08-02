@@ -43,11 +43,6 @@ public class StrictModeCheckTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testWith() {
-    testSame("var a; function foo(obj) { with (obj) { a = 3; }}",
-         StrictModeCheck.WITH_DISALLOWED);
-  }
-
   public void testEval() {
     test("function foo() { eval('a'); }", null,
          StrictModeCheck.EVAL_USE);
