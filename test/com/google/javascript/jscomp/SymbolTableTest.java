@@ -76,9 +76,7 @@ public class SymbolTableTest extends TestCase {
 
     Symbol googDom = getGlobalVar(table, "goog.dom");
     assertNotNull(googDom);
-
-    // TODO(nicksantos): Fill in the missing reference.
-    assertEquals(1, Iterables.size(table.getReferences(googDom)));
+    assertEquals(2, Iterables.size(table.getReferences(googDom)));
 
     Symbol googDomHelper = getGlobalVar(table, "goog.dom.DomHelper");
     assertNotNull(googDomHelper);

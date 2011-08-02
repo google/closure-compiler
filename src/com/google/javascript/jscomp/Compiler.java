@@ -1092,6 +1092,8 @@ public class Compiler extends AbstractCompiler {
     NodeTraversal.traverse(this, getRoot(), refCollector);
     symbolTable.addSymbolsFrom(refCollector);
 
+    symbolTable.fillNamespaceReferences();
+
     return symbolTable;
   }
 

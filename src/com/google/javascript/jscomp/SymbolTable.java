@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticReference;
@@ -136,10 +137,37 @@ public final class SymbolTable
       }
 
       for (R otherRef : otherSymbolTable.getReferences(otherSymbol)) {
-        Node otherRefNode = otherRef.getNode();
-        if (!mySymbol.references.containsKey(otherRefNode)) {
-          mySymbol.references.put(
-              otherRefNode, new Reference(mySymbol, otherRefNode));
+        mySymbol.defineReferenceAt(otherRef.getNode());
+      }
+    }
+  }
+
+  /**
+   * Not all symbol tables record references to "namespace" objects.
+   * For example, if you have:
+   * goog.dom.DomHelper = function() {};
+   * The symbol table may not record that as a reference to "goog.dom",
+   * because that would be redundant.
+   */
+  void fillNamespaceReferences() {
+    for (Symbol symbol : getAllSymbols()) {
+      for (Reference ref : getReferences(symbol)) {
+        Node currentNode = ref.getNode();
+        while (currentNode.getType() == Token.GETPROP) {
+          currentNode = currentNode.getFirstChild();
+
+          String name = currentNode.getQualifiedName();
+          if (name != null) {
+            Symbol namespace = symbol.scope.getSlot(name);
+
+            // Never create new symbols, because we don't want to guess at
+            // declarations if we're not sure. If this symbol doesn't exist,
+            // then we probably want to add a better symbol table that does
+            // have it.
+            if (namespace != null) {
+              namespace.defineReferenceAt(currentNode);
+            }
+          }
         }
       }
     }
@@ -193,6 +221,12 @@ public final class SymbolTable
     @Override
     public Reference getDeclaration() {
       return declaration;
+    }
+
+    void defineReferenceAt(Node n) {
+      if (!references.containsKey(n)) {
+        references.put(n, new Reference(this, n));
+      }
     }
 
     /** Sets the declaration node. May only be called once. */
