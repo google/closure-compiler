@@ -923,6 +923,10 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("!+'\\v1'");
   }
 
+  public void testIssue522() {
+    testSame("[][1] = 1;");
+  }
+
   private static final List<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",

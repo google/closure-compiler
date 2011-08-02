@@ -1206,8 +1206,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
-
-
   /**
    * Try to fold array-element. e.g [1, 2, 3][10];
    */
@@ -1219,44 +1217,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     if (left.getType() == Token.ARRAYLIT) {
-      if (right.getType() != Token.NUMBER) {
-        // Sometimes people like to use complex expressions to index into
-        // arrays, or strings to index into array methods.
-        return n;
-      }
-
-      double index = right.getDouble();
-      int intIndex = (int) index;
-      if (intIndex != index) {
-        error(INVALID_GETELEM_INDEX_ERROR, right);
-        return n;
-      }
-
-      if (intIndex < 0) {
-        error(INDEX_OUT_OF_BOUNDS_ERROR, right);
-        return n;
-      }
-
-      Node elem = left.getFirstChild();
-      for (int i = 0; elem != null && i < intIndex; i++) {
-        elem = elem.getNext();
-      }
-
-      if (elem == null) {
-        error(INDEX_OUT_OF_BOUNDS_ERROR, right);
-        return n;
-      }
-
-      if (elem.getType() == Token.EMPTY) {
-        elem = NodeUtil.newUndefinedNode(elem);
-      } else {
-        left.removeChild(elem);
-      }
-
-      // Replace the entire GETELEM with the value
-      n.getParent().replaceChild(n, elem);
-      reportCodeChange();
-      return elem;
+      return tryFoldArrayAccess(n, left, right);
     }
     return n;
   }
@@ -1301,6 +1262,68 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
+  private boolean isAssignmentTarget(Node n) {
+    Node parent = n.getParent();
+    if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
+        || parent.getType() == Token.INC
+        || parent.getType() == Token.DEC) {
+      // If GETPROP/GETELEM is used as assignment target the object literal is
+      // acting as a temporary we can't fold it here:
+      //    "{a:x}.a += 1" is not "x += 1"
+      return true;
+    }
+    return false;
+  }
+
+  private Node tryFoldArrayAccess(Node n, Node left, Node right) {
+    Node parent = n.getParent();
+    // If GETPROP/GETELEM is used as assignment target the array literal is
+    // acting as a temporary we can't fold it here:
+    //    "[][0] += 1"
+    if (isAssignmentTarget(n)) {
+      return n;
+    }
+
+    if (right.getType() != Token.NUMBER) {
+      // Sometimes people like to use complex expressions to index into
+      // arrays, or strings to index into array methods.
+      return n;
+    }
+
+    double index = right.getDouble();
+    int intIndex = (int) index;
+    if (intIndex != index) {
+      error(INVALID_GETELEM_INDEX_ERROR, right);
+      return n;
+    }
+
+    if (intIndex < 0) {
+      error(INDEX_OUT_OF_BOUNDS_ERROR, right);
+      return n;
+    }
+
+    Node elem = left.getFirstChild();
+    for (int i = 0; elem != null && i < intIndex; i++) {
+      elem = elem.getNext();
+    }
+
+    if (elem == null) {
+      error(INDEX_OUT_OF_BOUNDS_ERROR, right);
+      return n;
+    }
+
+    if (elem.getType() == Token.EMPTY) {
+      elem = NodeUtil.newUndefinedNode(elem);
+    } else {
+      left.removeChild(elem);
+    }
+
+    // Replace the entire GETELEM with the value
+    n.getParent().replaceChild(n, elem);
+    reportCodeChange();
+    return elem;
+  }
+
   private Node tryFoldObjectPropAccess(Node n, Node left, Node right) {
     Preconditions.checkArgument(NodeUtil.isGet(n));
 
@@ -1308,10 +1331,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    Node parent = n.getParent();
-    if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-        || parent.getType() == Token.INC
-        || parent.getType() == Token.DEC) {
+    if (isAssignmentTarget(n)) {
       // If GETPROP/GETELEM is used as assignment target the object literal is
       // acting as a temporary we can't fold it here:
       //    "{a:x}.a += 1" is not "x += 1"
