@@ -197,7 +197,7 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
     test("var x = goog.getCssName('header', 'active')",
          null, UNEXPECTED_STRING_LITERAL_ERROR);
     test("el.className = goog.getCssName('footer', window)",
-         null, UNEXPECTED_STRING_LITERAL_ERROR);
+         null, ReplaceCssNames.STRING_LITERAL_EXPECTED_ERROR);
     test("setClass(goog.getCssName('buttonbar', 'disabled'))",
          null, UNEXPECTED_STRING_LITERAL_ERROR);
     test("setClass(goog.getCssName(goog.getCssName('buttonbar'), 'active'))",
@@ -259,6 +259,8 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
     test("goog.getCssName(baseClass, null);", null,
         ReplaceCssNames.STRING_LITERAL_EXPECTED_ERROR);
     test("goog.getCssName(baseClass, undefined);", null,
+        ReplaceCssNames.STRING_LITERAL_EXPECTED_ERROR);
+    test("goog.getCssName('foo', 3);", null,
         ReplaceCssNames.STRING_LITERAL_EXPECTED_ERROR);
   }
 

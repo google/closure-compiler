@@ -162,12 +162,14 @@ class ReplaceCssNames implements CompilerPass {
 
             Node second = first.getNext();
 
-            if (first.getType() == Token.STRING) {
+            if (second.getType() != Token.STRING) {
+              compiler.report(t.makeError(n, STRING_LITERAL_EXPECTED_ERROR,
+                  Token.name(second.getType())));
+            } else if (first.getType() == Token.STRING) {
               compiler.report(t.makeError(
                   n, UNEXPECTED_STRING_LITERAL_ERROR,
                   first.getString(), second.getString()));
-
-            } else if (second.getType() == Token.STRING) {
+            } else {
               processStringNode(t, second);
               n.removeChild(first);
               Node replacement = new Node(Token.ADD, first,
@@ -177,10 +179,6 @@ class ReplaceCssNames implements CompilerPass {
               replacement.setJSType(nativeStringType);
               parent.replaceChild(n, replacement);
               compiler.reportCodeChange();
-
-            } else {
-              compiler.report(t.makeError(n, STRING_LITERAL_EXPECTED_ERROR,
-                  Token.name(second.getType())));
             }
             break;
 
