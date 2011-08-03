@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -80,16 +81,24 @@ class DisambiguateProperties<T> implements CompilerPass {
       DisambiguateProperties.class.getName());
 
   static class Warnings {
+    // TODO(user): {1} and {2} are not exactly useful for most people.
     static final DiagnosticType INVALIDATION = DiagnosticType.disabled(
         "JSC_INVALIDATION",
         "Property disambiguator skipping all instances of property {0} "
-        + "because of type {1} node {2}");
+        + "because of type {1} node {2}. {3}");
   }
 
   private final boolean showInvalidationWarnings;
 
   private final AbstractCompiler compiler;
   private final TypeSystem<T> typeSystem;
+
+  /**
+   * Map of a type to all the related errors that invalidated the type
+   * for disambiguation. It has be Object because of the generic nature of
+   * this pass.
+   */
+  private Multimap<Object, JSError> invalidationMap;
 
   private class Property {
     /** The name of the property. */
@@ -277,6 +286,11 @@ class DisambiguateProperties<T> implements CompilerPass {
     this.typeSystem = typeSystem;
     this.showInvalidationWarnings = compiler.getErrorLevel(
         JSError.make("", 0, 0, Warnings.INVALIDATION)) != CheckLevel.OFF;
+    if (this.showInvalidationWarnings) {
+      this.invalidationMap = LinkedHashMultimap.create();
+    } else {
+      this.invalidationMap = null;
+    }
   }
 
   @Override
@@ -284,12 +298,29 @@ class DisambiguateProperties<T> implements CompilerPass {
     for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
       addInvalidatingType(mis.typeA);
       addInvalidatingType(mis.typeB);
+      recordInvalidationError(mis.typeA, mis.src);
+      recordInvalidationError(mis.typeB, mis.src);
     }
 
     StaticScope<T> scope = typeSystem.getRootScope();
     NodeTraversal.traverse(compiler, externs, new FindExternProperties());
     NodeTraversal.traverse(compiler, root, new FindRenameableProperties());
     renameProperties();
+  }
+
+  private void recordInvalidationError(JSType t, JSError error) {
+    if (!t.isObject()) {
+      return;
+    }
+    if (t.isUnionType()) {
+      for (JSType alt : ((UnionType) t).getAlternates()) {
+        recordInvalidationError(alt, error);
+      }
+      return;
+    }
+    if (invalidationMap != null) {
+      invalidationMap.put(t, error);
+    }
   }
 
   /**
@@ -409,9 +440,31 @@ class DisambiguateProperties<T> implements CompilerPass {
       if (!prop.scheduleRenaming(n.getLastChild(),
                                  processProperty(t, prop, type, null))) {
         if (showInvalidationWarnings) {
+          String suggestion = "";
+          if (type instanceof JSType) {
+            JSType jsType = (JSType) type;
+            String qName = n.getFirstChild().getQualifiedName();
+            if (jsType.isAllType() || jsType.isUnknownType()) {
+              if (n.getFirstChild().getType() == Token.THIS) {
+                suggestion = "The \"this\" object is unknown in the function,"+
+                    "consider using @this";
+              } else {
+                suggestion = "Consider casting " + qName +
+                    " if you know it's type.";
+              }
+            } else {
+              StringBuilder sb = new StringBuilder();
+              printErrorLocations(sb, jsType);
+              if (sb.length() != 0) {
+                suggestion = "Consider fixing errors for the following types: ";
+                suggestion += sb.toString();
+              }
+            }
+          }
           compiler.report(JSError.make(
               t.getSourceName(), n, Warnings.INVALIDATION, name,
-              (type == null ? "null" : type.toString()), n.toString()));
+              (type == null ? "null" : type.toString()), n.toString(),
+              suggestion));
         }
       }
     }
@@ -431,14 +484,37 @@ class DisambiguateProperties<T> implements CompilerPass {
         Property prop = getProperty(name);
         if (!prop.scheduleRenaming(child,
                                    processProperty(t, prop, type, null))) {
+          // TODO(user): It doesn't look like the user can do much in this
+          // case right now.
           if (showInvalidationWarnings) {
             compiler.report(JSError.make(
                 t.getSourceName(), child, Warnings.INVALIDATION, name,
-                (type == null ? "null" : type.toString()), n.toString()));
+                (type == null ? "null" : type.toString()), n.toString(), ""));
           }
         }
-
         child = child.getNext();
+      }
+    }
+
+    private void printErrorLocations(StringBuilder sb, JSType t) {
+      if (!t.isObject() || t.isAllType() || t.isUnionType()) {
+        return;
+      }
+      if (t.isUnionType()) {
+        for (JSType alt : ((UnionType) t).getAlternates()) {
+          printErrorLocations(sb, alt);
+        }
+        return;
+      }
+      for (JSError error : invalidationMap.get(t)) {
+        if(sb.length() != 0) {
+          sb.append(", ");
+        }
+        sb.append(t.toString());
+        sb.append(" at ");
+        sb.append(error.sourceName);
+        sb.append(":");
+        sb.append(error.lineNumber);
       }
     }
 

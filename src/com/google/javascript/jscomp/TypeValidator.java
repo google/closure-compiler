@@ -30,6 +30,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.DisambiguateProperties.Warnings;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -61,6 +62,7 @@ class TypeValidator {
   private final JSTypeRegistry typeRegistry;
   private final JSType allValueTypes;
   private boolean shouldReport = true;
+  private final boolean recordErrors;
   private final JSType nullOrUndefined;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
@@ -131,6 +133,8 @@ class TypeValidator {
         STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
     this.nullOrUndefined = typeRegistry.createUnionType(
         NULL_TYPE, VOID_TYPE);
+    this.recordErrors = compiler.getErrorLevel(
+        JSError.make("", 0, 0, Warnings.INVALIDATION)) != CheckLevel.OFF;
   }
 
   /**
@@ -349,7 +353,7 @@ class TypeValidator {
       if (bothIntrinsics(rightType, leftType)) {
         // We have a superior warning for this mistake, which gives you
         // the line numbers of both types.
-        registerMismatch(rightType, leftType);
+        registerMismatch(rightType, leftType, null);
       } else {
         mismatch(t, n,
             "assignment to property " + propName + " of " +
@@ -378,7 +382,7 @@ class TypeValidator {
       if (bothIntrinsics(rightType, leftType)) {
         // We have a superior warning for this mistake, which gives you
         // the line numbers of both types.
-        registerMismatch(rightType, leftType);
+        registerMismatch(rightType, leftType, null);
       } else {
         mismatch(t, n, msg, rightType, leftType);
       }
@@ -430,13 +434,10 @@ class TypeValidator {
   void expectCanOverride(NodeTraversal t, Node n, JSType overridingType,
       JSType hiddenType, String propertyName, JSType ownerType) {
     if (!overridingType.canAssignTo(hiddenType)) {
-      registerMismatch(overridingType, hiddenType);
-      if (shouldReport) {
-        compiler.report(
-            t.makeError(n, HIDDEN_PROPERTY_MISMATCH,
-                propertyName, ownerType.toString(),
-                hiddenType.toString(), overridingType.toString()));
-      }
+      registerMismatch(overridingType, hiddenType,
+          report(t.makeError(n, HIDDEN_PROPERTY_MISMATCH, propertyName,
+            ownerType.toString(), hiddenType.toString(),
+            overridingType.toString())));
     }
   }
 
@@ -455,12 +456,8 @@ class TypeValidator {
         subObject.getImplicitPrototype().getImplicitPrototype();
     if (!declaredSuper.equals(superObject)) {
       if (declaredSuper.equals(getNativeType(OBJECT_TYPE))) {
-        if (shouldReport) {
-          compiler.report(
-              t.makeError(n, MISSING_EXTENDS_TAG_WARNING,
-                  subObject.toString()));
-        }
-        registerMismatch(superObject, declaredSuper);
+        registerMismatch(superObject, declaredSuper, report(
+            t.makeError(n, MISSING_EXTENDS_TAG_WARNING, subObject.toString())));
       } else {
         mismatch(t.getSourceName(), n,
             "mismatch in declaration of superclass type",
@@ -488,12 +485,8 @@ class TypeValidator {
     type = type.restrictByNotNullOrUndefined();
 
     if (!type.canAssignTo(castType) && !castType.canAssignTo(type)) {
-      if (shouldReport) {
-        compiler.report(
-            t.makeError(n, INVALID_CAST,
-                castType.toString(), type.toString()));
-      }
-      registerMismatch(type, castType);
+      registerMismatch(type, castType, report(t.makeError(n, INVALID_CAST,
+          castType.toString(), type.toString())));
     }
   }
 
@@ -554,13 +547,10 @@ class TypeValidator {
         if (!(allowDupe ||
               var.getParentNode().getType() == Token.EXPR_RESULT) ||
             !newType.equals(varType)) {
-          if (shouldReport) {
-            compiler.report(
-                JSError.make(sourceName, n, DUP_VAR_DECLARATION,
-                    variableName, newType.toString(), var.getInputName(),
-                    String.valueOf(var.nameNode.getLineno()),
-                    varType.toString()));
-          }
+          report(JSError.make(sourceName, n, DUP_VAR_DECLARATION,
+              variableName, newType.toString(), var.getInputName(),
+              String.valueOf(var.nameNode.getLineno()),
+              varType.toString()));
         }
       }
     }
@@ -593,12 +583,10 @@ class TypeValidator {
       // Not implemented
       String sourceName = n.getSourceFileName();
       sourceName = sourceName == null ? "" : sourceName;
-      if (shouldReport) {
-        compiler.report(JSError.make(sourceName, n,
-            INTERFACE_METHOD_NOT_IMPLEMENTED,
-            prop, implementedInterface.toString(), instance.toString()));
-      }
-      registerMismatch(instance, implementedInterface);
+      registerMismatch(instance, implementedInterface,
+          report(JSError.make(sourceName, n,
+          INTERFACE_METHOD_NOT_IMPLEMENTED,
+          prop, implementedInterface.toString(), instance.toString())));
     } else {
       JSType found = instance.getPropertyType(prop);
       JSType required
@@ -607,15 +595,12 @@ class TypeValidator {
       required = required.restrictByNotNullOrUndefined();
       if (!found.canAssignTo(required)) {
         // Implemented, but not correctly typed
-        if (shouldReport) {
-          FunctionType constructor
-            = implementedInterface.toObjectType().getConstructor();
-          compiler.report(t.makeError(n,
-              HIDDEN_INTERFACE_PROPERTY_MISMATCH, prop,
-              constructor.getTopMostDefiningType(prop).toString(),
-              required.toString(), found.toString()));
-        }
-        registerMismatch(found, required);
+        FunctionType constructor
+          = implementedInterface.toObjectType().getConstructor();
+        registerMismatch(found, required, report(t.makeError(n,
+            HIDDEN_INTERFACE_PROPERTY_MISMATCH, prop,
+            constructor.getTopMostDefiningType(prop).toString(),
+            required.toString(), found.toString())));
       }
     }
   }
@@ -635,15 +620,12 @@ class TypeValidator {
 
   private void mismatch(String sourceName, Node n,
                         String msg, JSType found, JSType required) {
-    registerMismatch(found, required);
-    if (shouldReport) {
-      compiler.report(
-          JSError.make(sourceName, n, TYPE_MISMATCH_WARNING,
-                       formatFoundRequired(msg, found, required)));
-    }
+    registerMismatch(found, required, report(
+        JSError.make(sourceName, n, TYPE_MISMATCH_WARNING,
+                     formatFoundRequired(msg, found, required))));
   }
 
-  private void registerMismatch(JSType found, JSType required) {
+  private void registerMismatch(JSType found, JSType required, JSError error) {
     // Don't register a mismatch for differences in null or undefined or if the
     // code didn't downcast.
     found = found.restrictByNotNullOrUndefined();
@@ -652,7 +634,7 @@ class TypeValidator {
       return;
     }
 
-    mismatches.add(new TypeMismatch(found, required));
+    mismatches.add(new TypeMismatch(found, required, error));
     if (found instanceof FunctionType &&
         required instanceof FunctionType) {
       FunctionType fnTypeA = ((FunctionType) found);
@@ -661,17 +643,19 @@ class TypeValidator {
       Iterator<Node> paramItB = fnTypeB.getParameters().iterator();
       while (paramItA.hasNext() && paramItB.hasNext()) {
         registerIfMismatch(paramItA.next().getJSType(),
-            paramItB.next().getJSType());
+            paramItB.next().getJSType(), error);
       }
 
-      registerIfMismatch(fnTypeA.getReturnType(), fnTypeB.getReturnType());
+      registerIfMismatch(
+        fnTypeA.getReturnType(), fnTypeB.getReturnType(), error);
     }
   }
 
-  private void registerIfMismatch(JSType found, JSType required) {
+  private void registerIfMismatch(
+      JSType found, JSType required, JSError error) {
     if (found != null && required != null &&
         !found.canAssignTo(required)) {
-      registerMismatch(found, required);
+      registerMismatch(found, required, error);
     }
   }
 
@@ -767,6 +751,13 @@ class TypeValidator {
     return typeRegistry.getNativeType(typeId);
   }
 
+  private JSError report(JSError error) {
+    if (shouldReport) {
+      compiler.report(error);
+    }
+    return recordErrors ? error : null;
+  }
+
   /**
    * Signals that the first type and the second type have been
    * used interchangeably.
@@ -777,15 +768,17 @@ class TypeValidator {
   static class TypeMismatch {
     final JSType typeA;
     final JSType typeB;
+    final JSError src;
 
     /**
      * It's the responsibility of the class that creates the
      * {@code TypeMismatch} to ensure that {@code a} and {@code b} are
      * non-matching types.
      */
-    TypeMismatch(JSType a, JSType b) {
+    TypeMismatch(JSType a, JSType b, JSError src) {
       this.typeA = a;
       this.typeB = b;
+      this.src = src;
     }
 
     @Override public boolean equals(Object object) {
