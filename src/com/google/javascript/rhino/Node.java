@@ -155,7 +155,9 @@ public class Node implements Cloneable, Serializable {
                                   // where this node lives.
       LENGTH             = 52,    // The length of the code represented by
                                   // this node.
-      LAST_PROP          = 52;
+      INPUT_ID           = 53,    // The id of the input associated with this
+                                  // node.
+      LAST_PROP          = 53;
 
   // values of ISNUMBER_PROP to specify
   // which of the children are Number types
@@ -241,6 +243,7 @@ public class Node implements Cloneable, Serializable {
         case DIRECT_EVAL:        return "direct_eval";
         case FREE_CALL:          return "free_call";
         case STATIC_SOURCE_FILE:    return "source_file";
+        case INPUT_ID:  return "input_id";
         case LENGTH:    return "length";
         default:
           Kit.codeBug();
@@ -1233,6 +1236,20 @@ public class Node implements Cloneable, Serializable {
   /** Returns the source file associated with this input. May be null */
   public StaticSourceFile getStaticSourceFile() {
     return ((StaticSourceFile) this.getProp(STATIC_SOURCE_FILE));
+  }
+
+  /**
+   * @param inputId
+   */
+  public void setInputId(InputId inputId) {
+    this.putProp(INPUT_ID, inputId);
+  }
+
+  /**
+   * @return The Id of the CompilerInput associated with this Node.
+   */
+  public InputId getInputId() {
+    return ((InputId) this.getProp(INPUT_ID));
   }
 
   public boolean isFromExterns() {
@@ -2432,4 +2449,5 @@ public class Node implements Cloneable, Serializable {
       return Objects.hashCode(nodeA, nodeB);
     }
   }
+
 }
