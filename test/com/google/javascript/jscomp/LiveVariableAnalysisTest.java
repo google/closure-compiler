@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -349,6 +350,7 @@ public class LiveVariableAnalysisTest extends TestCase {
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node n = compiler.parseTestCode(src).removeFirstChild();
     Node script = new Node(Token.SCRIPT, n);
+    script.setInputId(new InputId("test"));
     assertEquals(0, compiler.getErrorCount());
     Scope scope = new SyntacticScopeCreator(compiler).createScope(
         n, new Scope(script, compiler));

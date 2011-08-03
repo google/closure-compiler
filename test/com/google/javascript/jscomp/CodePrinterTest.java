@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -39,6 +40,7 @@ public class CodePrinterTest extends TestCase {
       DefaultPassConfig passConfig = new DefaultPassConfig(null);
       CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
       Node externs = new Node(Token.SCRIPT);
+      externs.setInputId(new InputId("externs"));
       externs.setIsSyntheticBlock(true);
       Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
       externAndJsRoot.setIsSyntheticBlock(true);

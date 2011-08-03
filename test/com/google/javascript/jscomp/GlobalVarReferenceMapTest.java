@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -39,20 +40,20 @@ import java.util.Map;
 public class GlobalVarReferenceMapTest extends TestCase {
 
   private static final CompilerInput INPUT1 =
-      new CompilerInput(null, "input1", false);
+      new CompilerInput(JSSourceFile.fromCode("input1", ""), false);
   private static final CompilerInput INPUT2 =
-      new CompilerInput(null, "input2", false);
+      new CompilerInput(JSSourceFile.fromCode("input2", ""), false);
   private static final CompilerInput INPUT3 =
-      new CompilerInput(null, "input3", false);
+      new CompilerInput(JSSourceFile.fromCode("input3", ""), false);
   private static final CompilerInput EXTERN1 =
-    new CompilerInput(null, "extern1", true);
+    new CompilerInput(JSSourceFile.fromCode("externs1", ""), true);
 
   private final GlobalVarReferenceMap map = new GlobalVarReferenceMap(
       Lists.newArrayList(INPUT1, INPUT2, INPUT3), Lists.newArrayList(EXTERN1));
   private final Map<Var, ReferenceCollection> globalMap = Maps.newHashMap();
   private final Node root = new Node(Token.BLOCK);
   private final Scope globalScope = new Scope(root, (ObjectType) null);
-  Node scriptRoot = new Node(Token.SCRIPT);
+  private Node scriptRoot = new Node(Token.SCRIPT);
 
   // In the initial setUp we have 3 references to var1 (one in each input) and
   // 2 references to var2 (in first and third inputs), and 2 references to var3
@@ -94,6 +95,7 @@ public class GlobalVarReferenceMapTest extends TestCase {
     globalMap.put(globalScope.getVar(VAR2), var2TempRefs);
     globalMap.put(globalScope.getVar(VAR3), var3TempRefs);
     map.updateGlobalVarReferences(globalMap, root);
+    scriptRoot.setInputId(new InputId(INPUT2.getName()));
     scriptRoot.putProp(Node.SOURCENAME_PROP, INPUT2.getName());
   }
 

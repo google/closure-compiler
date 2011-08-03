@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -73,6 +74,7 @@ public class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.SCRIPT);
     n.setIsSyntheticBlock(true);
     expectInvalid(n, Check.SCRIPT);
+    n.setInputId(new InputId("something_input"));
     n.putProp(Node.SOURCENAME_PROP, "something");
     expectValid(n, Check.SCRIPT);
     expectInvalid(n, Check.STATEMENT);

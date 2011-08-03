@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.JsFileParser;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
@@ -45,6 +46,7 @@ public class CompilerInput
   // Info about where the file lives.
   private JSModule module;
   final private String name;
+  final private InputId id;
 
   // The AST.
   private final SourceAst ast;
@@ -71,6 +73,7 @@ public class CompilerInput
 
   public CompilerInput(SourceAst ast, String inputName, boolean isExtern) {
     this.ast = ast;
+    this.id = ast.getInputId();
     this.name = inputName;
 
     // TODO(nicksantos): Add a precondition check here. People are passing
@@ -88,6 +91,12 @@ public class CompilerInput
     this(new JsAst(file), file.getName(), isExtern);
   }
 
+  /** Returns a id for this input. Must be unique across all inputs. */
+  @Override
+  public InputId getInputId() {
+    return id;
+  }
+
   /** Returns a name for this input. Must be unique across all inputs. */
   @Override
   public String getName() {
@@ -103,7 +112,13 @@ public class CompilerInput
 
   @Override
   public Node getAstRoot(AbstractCompiler compiler) {
-    return ast.getAstRoot(compiler);
+    Node root = ast.getAstRoot(compiler);
+    // The root maybe null if the AST can not be created.
+    if (root != null) {
+      Preconditions.checkState(root.getType() == Token.SCRIPT);
+      Preconditions.checkNotNull(root.getInputId());
+    }
+    return root;
   }
 
   @Override

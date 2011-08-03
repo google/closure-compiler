@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.SourceAst;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
 import java.util.ArrayDeque;
@@ -52,9 +53,11 @@ public class JsonMLAst implements SourceAst {
   private Node root;
 
   private final SourceFile sourceFile;
+  private final InputId inputId;
 
   public JsonMLAst(JsonML jsonml) {
     this.jsonml = jsonml;
+    this.inputId = new InputId(getSourceName());
     this.sourceFile = new SourceFile(getSourceName());
   }
 
@@ -100,6 +103,7 @@ public class JsonMLAst implements SourceAst {
     translator.setRootElement(jsonml);
     try {
       root = translator.parse(compiler);
+      root.setInputId(inputId);
       root.setStaticSourceFile(sourceFile);
       new AstValidator().validateScript(root);
     } catch (JsonMLException e) {
@@ -169,5 +173,10 @@ public class JsonMLAst implements SourceAst {
       this.element = element;
       this.childno = childno;
     }
+  }
+
+  @Override
+  public InputId getInputId() {
+    return inputId;
   }
 }

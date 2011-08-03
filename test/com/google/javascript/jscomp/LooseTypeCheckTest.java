@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -4704,8 +4705,11 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
   private JSType testNameNode(String name) {
     Node node = Node.newString(Token.NAME, name);
     Node parent = new Node(Token.SCRIPT, node);
+    parent.setInputId(new InputId("code"));
 
-    Node externs = new Node(Token.BLOCK);
+    Node externs = new Node(Token.SCRIPT);
+    externs.setInputId(new InputId("externs"));
+
     Node externAndJsRoot = new Node(Token.BLOCK, externs, parent);
     externAndJsRoot.setIsSyntheticBlock(true);
 

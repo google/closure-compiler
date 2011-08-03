@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -28,11 +29,13 @@ import com.google.javascript.rhino.Token;
 public class SyntheticAst implements SourceAst {
   private static final long serialVersionUID = 1L;
 
+  private final InputId inputId;
   private final SourceFile sourceFile;
 
   private Node root;
 
   SyntheticAst(String sourceName) {
+    this.inputId = new InputId(sourceName);
     this.sourceFile = new SourceFile(sourceName);
     clearAst();
   }
@@ -45,8 +48,14 @@ public class SyntheticAst implements SourceAst {
   @Override
   public void clearAst() {
     root = new Node(Token.SCRIPT);
+    root.setInputId(inputId);
     root.setIsSyntheticBlock(true);
     root.setStaticSourceFile(sourceFile);
+  }
+
+  @Override
+  public InputId getInputId() {
+    return inputId;
   }
 
   @Override

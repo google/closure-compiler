@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -83,6 +84,7 @@ public class AstValidator implements CompilerPass {
     validateNodeType(Token.SCRIPT, n);
     validateIsSynthetic(n);
     validateHasSourceName(n);
+    validateHasInputId(n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateStatement(c);
     }
@@ -297,6 +299,13 @@ public class AstValidator implements CompilerPass {
     String sourceName = n.getSourceFileName();
     if (sourceName == null || sourceName.isEmpty()) {
       violation("Missing 'source name' annotation.", n);
+    }
+  }
+
+  private void validateHasInputId(Node n) {
+    InputId inputId = n.getInputId();
+    if (inputId == null) {
+      violation("Missing 'input id' annotation.", n);
     }
   }
 

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
 import java.io.Serializable;
@@ -37,6 +38,9 @@ public interface SourceAst extends Serializable {
    * to be garbage collected if the inputs are still around after compilation.
    */
   public void clearAst();
+
+  /** @return The input id associated with this AST */
+  public InputId getInputId();
 
   /** Returns the source file the generated AST represents. */
   public SourceFile getSourceFile();

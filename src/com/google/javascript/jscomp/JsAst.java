@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 
 import com.google.javascript.jscomp.parsing.ParserRunner;
 
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -35,11 +36,13 @@ public class JsAst implements SourceAst {
   private static final Logger logger_ = Logger.getLogger(JsAst.class.getName());
   private static final long serialVersionUID = 1L;
 
+  private transient InputId inputId;
   private transient SourceFile sourceFile;
   private String fileName;
   private Node root;
 
   public JsAst(SourceFile sourceFile) {
+    this.inputId = new InputId(sourceFile.getName());
     this.sourceFile = sourceFile;
     this.fileName = sourceFile.getName();
   }
@@ -48,6 +51,7 @@ public class JsAst implements SourceAst {
   public Node getAstRoot(AbstractCompiler compiler) {
     if (root == null) {
       parse(compiler);
+      root.setInputId(inputId);
     }
     return root;
   }
@@ -59,6 +63,11 @@ public class JsAst implements SourceAst {
     // the assumption that if we're dumping the parse tree, then we probably
     // assume regenerating everything else is a smart idea also.
     sourceFile.clearCachedSource();
+  }
+
+  @Override
+  public InputId getInputId() {
+    return inputId;
   }
 
   @Override
@@ -86,7 +95,7 @@ public class JsAst implements SourceAst {
 
     if (root == null || compiler.hasHaltingErrors()) {
       // There was a parse error or IOException, so use a dummy block.
-      root = new Node(Token.BLOCK);
+      root = new Node(Token.SCRIPT);
     } else {
       compiler.prepareAst(root);
     }
