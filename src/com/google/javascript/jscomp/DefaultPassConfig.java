@@ -1688,7 +1688,7 @@ public class DefaultPassConfig extends PassConfig {
    * {@code var x,y;}.
    */
   final PassFactory exploitAssign =
-      new PassFactory("expointAssign", true) {
+      new PassFactory("exploitAssign", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       return new PeepholeOptimizationsPass(compiler,
@@ -2047,7 +2047,7 @@ public class DefaultPassConfig extends PassConfig {
   /**
    * Create a no-op pass that can only run once. Used to break up loops.
    */
-  private static PassFactory createEmptyPass(String name) {
+  static PassFactory createEmptyPass(String name) {
     return new PassFactory(name, true) {
       @Override
       protected CompilerPass createInternal(final AbstractCompiler compiler) {
