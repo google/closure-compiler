@@ -20,6 +20,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
+import com.google.javascript.jscomp.SymbolTable.SymbolScope;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
@@ -30,6 +31,9 @@ import java.util.List;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class SymbolTableTest extends TestCase {
+
+  private static final String EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS +
+      "\nfunction customExternFn(customExternArg) {}";
 
   public void testGlobalVar() throws Exception {
     SymbolTable table = createSymbolTable(
@@ -83,6 +87,29 @@ public class SymbolTableTest extends TestCase {
     assertEquals(1, Iterables.size(table.getReferences(googDomHelper)));
   }
 
+  public void testGlobalVarInExterns() throws Exception {
+    SymbolTable table = createSymbolTable("customExternFn(1);");
+    Symbol fn = getGlobalVar(table, "customExternFn");
+    List<Reference> refs = Lists.newArrayList(table.getReferences(fn));
+    assertEquals(2, refs.size());
+
+    SymbolScope scope = table.getEnclosingScope(refs.get(0).getNode());
+    assertTrue(scope.isGlobalScope());
+    assertNull(table.getSymbolForScope(scope));
+  }
+
+  public void testLocalVarInExterns() throws Exception {
+    SymbolTable table = createSymbolTable("");
+    Symbol arg = getLocalVar(table, "customExternArg");
+    List<Reference> refs = Lists.newArrayList(table.getReferences(arg));
+    assertEquals(1, refs.size());
+
+    Symbol fn = getGlobalVar(table, "customExternFn");
+    SymbolScope scope = table.getEnclosingScope(refs.get(0).getNode());
+    assertFalse(scope.isGlobalScope());
+    assertEquals(fn, table.getSymbolForScope(scope));
+  }
+
   private Symbol getGlobalVar(SymbolTable table, String name) {
     for (Symbol symbol : table.getAllSymbols()) {
       if (symbol.getName().equals(name) &&
@@ -119,8 +146,7 @@ public class SymbolTableTest extends TestCase {
     List<JSSourceFile> inputs = Lists.newArrayList(
         JSSourceFile.fromCode("in1", input));
     List<JSSourceFile> externs = Lists.newArrayList(
-        JSSourceFile.fromCode(
-            "externs1", CompilerTypeTestCase.DEFAULT_EXTERNS));
+        JSSourceFile.fromCode("externs1", EXTERNS));
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
         options);

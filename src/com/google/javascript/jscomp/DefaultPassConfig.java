@@ -1145,7 +1145,7 @@ public class DefaultPassConfig extends PassConfig {
 
   /** Checks global name usage. */
   final PassFactory checkGlobalNames =
-      new PassFactory("Check names", true) {
+      new PassFactory("checkGlobalNames", true) {
     @Override
     protected CompilerPass createInternal(final AbstractCompiler compiler) {
       return new CompilerPass() {

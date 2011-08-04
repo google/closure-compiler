@@ -566,9 +566,9 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
 
-      info = getBestJSDocInfo(objectLit);
-      Node lValue = getBestLValue(objectLit);
-      String lValueName = getBestLValueName(lValue);
+      info = NodeUtil.getBestJSDocInfo(objectLit);
+      Node lValue = NodeUtil.getBestLValue(objectLit);
+      String lValueName = NodeUtil.getBestLValueName(lValue);
       boolean createdEnumType = false;
       if (info != null && info.hasEnumParameterType()) {
         type = createEnumTypeFromNodes(objectLit, lValueName, info, lValue);
@@ -608,7 +608,7 @@ final class TypedScopeCreator implements ScopeCreator {
         if (keyType != null) {
           // Try to declare this property in the current scope if it
           // has an authoritative name.
-          String qualifiedName = getBestLValueName(keyNode);
+          String qualifiedName = NodeUtil.getBestLValueName(keyNode);
           if (qualifiedName != null) {
             defineSlot(keyNode, objLit, qualifiedName, keyType, false);
           } else {
@@ -697,9 +697,9 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // Determine the name and JSDocInfo and lvalue for the function.
       // Any of these may be null.
-      Node lValue = getBestLValue(n);
-      JSDocInfo info = getBestJSDocInfo(n);
-      String functionName = getBestLValueName(lValue);
+      Node lValue = NodeUtil.getBestLValue(n);
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+      String functionName = NodeUtil.getBestLValueName(lValue);
       FunctionType functionType =
           createFunctionTypeFromNodes(n, functionName, info, lValue);
 
@@ -1734,60 +1734,4 @@ final class TypedScopeCreator implements ScopeCreator {
       }
     } // end declareArguments
   } // end LocalScopeBuilder
-
-
-  /** Find the best JSDoc for the given node. */
-  static JSDocInfo getBestJSDocInfo(Node n) {
-    JSDocInfo info = n.getJSDocInfo();
-    if (info == null) {
-      Node parent = n.getParent();
-      int parentType = parent.getType();
-      if (parentType == Token.NAME) {
-        info = parent.getJSDocInfo();
-        if (info == null && parent.getParent().hasOneChild()) {
-          info = parent.getParent().getJSDocInfo();
-        }
-      } else if (parentType == Token.ASSIGN) {
-        info = parent.getJSDocInfo();
-      } else if (NodeUtil.isObjectLitKey(parent, parent.getParent())) {
-        info = parent.getJSDocInfo();
-      }
-    }
-    return info;
-  }
-
-  /** Find the l-value that the given r-value is being assigned to. */
-  private static Node getBestLValue(Node n) {
-    Node parent = n.getParent();
-    int parentType = parent.getType();
-    boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(n);
-    if (isFunctionDeclaration) {
-      return n.getFirstChild();
-    } else if (parentType == Token.NAME) {
-      return parent;
-    } else if (parentType == Token.ASSIGN) {
-      return parent.getFirstChild();
-    } else if (NodeUtil.isObjectLitKey(parent, parent.getParent())) {
-      return parent;
-    }
-    return null;
-  }
-
-  /** Get the name of the given l-value node. */
-  private static String getBestLValueName(@Nullable Node lValue) {
-    if (lValue == null || lValue.getParent() == null) {
-      return null;
-    }
-    if (NodeUtil.isObjectLitKey(lValue, lValue.getParent())) {
-      Node owner = getBestLValue(lValue.getParent());
-      if (owner != null) {
-        String ownerName = getBestLValueName(owner);
-        if (ownerName != null) {
-          return ownerName + "." + NodeUtil.getObjectLitKeyName(lValue);
-        }
-      }
-      return null;
-    }
-    return lValue.getQualifiedName();
-  }
 }

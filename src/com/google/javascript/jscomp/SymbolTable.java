@@ -95,8 +95,76 @@ public final class SymbolTable
   }
 
   @Override
-  public StaticScope<JSType> getScope(Symbol slot) {
+  public SymbolScope getScope(Symbol slot) {
     return slot.scope;
+  }
+
+  /**
+   * Gets the scope that contains the given node.
+   * If {@code n} is a function name, we return the scope that contains the
+   * function, not the function itself.
+   */
+  public SymbolScope getEnclosingScope(Node n) {
+    Node current = n.getParent();
+    if (n.getType() == Token.NAME &&
+        n.getParent().getType() == Token.FUNCTION) {
+      current = current.getParent();
+    }
+
+    for (; current != null; current = current.getParent()) {
+      if (scopes.containsKey(current)) {
+        return scopes.get(current);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * All local scopes are associated with a function, and some functions
+   * are associated with a symbol. Returns the symbol associated with the given
+   * scope.
+   */
+  public Symbol getSymbolForScope(SymbolScope scope) {
+    Node rootNode = scope.getRootNode();
+    if (rootNode.getType() != Token.FUNCTION) {
+      return null;
+    }
+
+    String name = NodeUtil.getBestLValueName(
+        NodeUtil.getBestLValue(rootNode));
+    return name == null ? null : scope.getParentScope().getSlot(name);
+  }
+
+  public String toDebugString() {
+    StringBuilder builder = new StringBuilder();
+    for (Symbol symbol : getAllSymbols()) {
+      toDebugString(builder, symbol);
+    }
+    return builder.toString();
+  }
+
+  private void toDebugString(StringBuilder builder, Symbol symbol) {
+    SymbolScope scope = symbol.scope;
+    if (scope.isGlobalScope()) {
+      builder.append(
+          String.format("'%s' : in global scope:\n", symbol.getName()));
+    } else {
+      builder.append(
+          String.format("'%s' : in scope %s:%d\n",
+              symbol.getName(),
+              scope.getRootNode().getSourceFileName(),
+              scope.getRootNode().getLineno()));
+    }
+
+    int refCount = 0;
+    for (Reference ref : getReferences(symbol)) {
+      builder.append(
+          String.format("  Ref %d: %s:%d\n",
+              refCount,
+              ref.getNode().getSourceFileName(),
+              ref.getNode().getLineno()));
+      refCount++;
+    }
   }
 
   /**
@@ -122,6 +190,9 @@ public final class SymbolTable
       }
 
       Node declNode = decl.getNode();
+      if (declNode == null || declNode.getStaticSourceFile() == null) {
+        continue;
+      }
 
       Symbol mySymbol = symbols.get(declNode);
       if (mySymbol == null) {
@@ -235,6 +306,31 @@ public final class SymbolTable
       this.declaration = ref;
       references.put(ref.getNode(), ref);
     }
+
+    public boolean inGlobalScope() {
+      return scope.isGlobalScope();
+    }
+
+    public boolean inExterns() {
+      Node n = getDeclarationNode();
+      return n == null ? false : n.isFromExterns();
+    }
+
+    public Node getDeclarationNode() {
+      return declaration == null ? null : declaration.getNode();
+    }
+
+    public String getSourceFileName() {
+      Node n = getDeclarationNode();
+      return n == null ? null : n.getSourceFileName();
+    }
+
+    @Override
+    public String toString() {
+      Node n = getDeclarationNode();
+      int lineNo = n == null ? -1 : n.getLineno();
+      return getName() + "@" + getSourceFileName() + ":" + lineNo;
+    }
   }
 
   public static final class Reference implements StaticReference<JSType> {
@@ -259,6 +355,13 @@ public final class SymbolTable
     @Override
     public StaticSourceFile getSourceFile() {
       return node.getStaticSourceFile();
+    }
+
+    @Override
+    public String toString() {
+      String sourceName = node == null ? null : node.getSourceFileName();
+      int lineNo = node == null ? -1 : node.getLineno();
+      return node.getQualifiedName() + "@" + sourceName + ":" + lineNo;
     }
   }
 
@@ -305,6 +408,10 @@ public final class SymbolTable
     @Override
     public JSType getTypeOfThis() {
       return typeOfThis;
+    }
+
+    public boolean isGlobalScope() {
+      return getParentScope() == null;
     }
   }
 }

@@ -667,6 +667,20 @@ public class Node implements Cloneable, Serializable {
     return n;
   }
 
+  public int getIndexOfChild(Node child) {
+    Node n = first;
+    int i = 0;
+    while (n != null) {
+      if (child == n) {
+        return i;
+      }
+
+      n = n.next;
+      i++;
+    }
+    return -1;
+  }
+
   public Node getLastSibling() {
     Node n = this;
     while (n.next != null) {

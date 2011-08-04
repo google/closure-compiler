@@ -3033,4 +3033,63 @@ public final class NodeUtil {
     }
     return false;
   }
+
+  /** Find the best JSDoc for the given node. */
+  static JSDocInfo getBestJSDocInfo(Node n) {
+    JSDocInfo info = n.getJSDocInfo();
+    if (info == null) {
+      Node parent = n.getParent();
+      if (parent == null) {
+        return null;
+      }
+
+      int parentType = parent.getType();
+      if (parentType == Token.NAME) {
+        info = parent.getJSDocInfo();
+        if (info == null && parent.getParent().hasOneChild()) {
+          info = parent.getParent().getJSDocInfo();
+        }
+      } else if (parentType == Token.ASSIGN) {
+        info = parent.getJSDocInfo();
+      } else if (isObjectLitKey(parent, parent.getParent())) {
+        info = parent.getJSDocInfo();
+      }
+    }
+    return info;
+  }
+
+  /** Find the l-value that the given r-value is being assigned to. */
+  static Node getBestLValue(Node n) {
+    Node parent = n.getParent();
+    int parentType = parent.getType();
+    boolean isFunctionDeclaration = isFunctionDeclaration(n);
+    if (isFunctionDeclaration) {
+      return n.getFirstChild();
+    } else if (parentType == Token.NAME) {
+      return parent;
+    } else if (parentType == Token.ASSIGN) {
+      return parent.getFirstChild();
+    } else if (isObjectLitKey(parent, parent.getParent())) {
+      return parent;
+    }
+    return null;
+  }
+
+  /** Get the name of the given l-value node. */
+  static String getBestLValueName(@Nullable Node lValue) {
+    if (lValue == null || lValue.getParent() == null) {
+      return null;
+    }
+    if (isObjectLitKey(lValue, lValue.getParent())) {
+      Node owner = getBestLValue(lValue.getParent());
+      if (owner != null) {
+        String ownerName = getBestLValueName(owner);
+        if (ownerName != null) {
+          return ownerName + "." + getObjectLitKeyName(lValue);
+        }
+      }
+      return null;
+    }
+    return lValue.getQualifiedName();
+  }
 }

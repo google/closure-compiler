@@ -300,6 +300,19 @@ public class NodeTest extends TestCase {
     assertTrue(nodeClone.getBooleanProp(Node.IS_DISPATCHER));
   }
 
+  public void testGetIndexOfChild() {
+    Node assign = getNode("b = c");
+    assertEquals(2, assign.getChildCount());
+
+    Node firstChild = assign.getFirstChild();
+    Node secondChild = firstChild.getNext();
+    assertNotNull(secondChild);
+
+    assertEquals(0, assign.getIndexOfChild(firstChild));
+    assertEquals(1, assign.getIndexOfChild(secondChild));
+    assertEquals(-1, assign.getIndexOfChild(assign));
+  }
+
   private static Node getNode(String js) {
     Node root = parse("var a=(" + js + ");");
     Node expr = root.getFirstChild();
