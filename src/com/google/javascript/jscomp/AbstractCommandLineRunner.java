@@ -32,7 +32,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
@@ -1277,21 +1276,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Construct and return the input root path map. The key is the exec path of
    * each input file, and the value is the corresponding root relative path.
    */
-  private Map<String, String> constructRootRelativePathsMap()
-      throws IOException {
+  private Map<String, String> constructRootRelativePathsMap() {
     Map<String, String> rootRelativePathsMap = Maps.newLinkedHashMap();
-    if (!config.manifestMapFile.equals("")) {
-      File mapFile = new File(config.manifestMapFile);
-      BufferedReader br = Files.newReader(mapFile, Charsets.UTF_8);
-      String line;
-      while ((line = br.readLine()) != null) {
-        int colonIndex = line.indexOf(':');
-        Preconditions.checkState(colonIndex > 0);
-        String execPath = line.substring(0, colonIndex);
-        String rootRelativePath = line.substring(colonIndex + 1);
-        Preconditions.checkState(rootRelativePath.indexOf(':') == -1);
-        rootRelativePathsMap.put(execPath, rootRelativePath);
-      }
+    for (String mapString : config.manifestMaps) {
+      int colonIndex = mapString.indexOf(':');
+      Preconditions.checkState(colonIndex > 0);
+      String execPath = mapString.substring(0, colonIndex);
+      String rootRelativePath = mapString.substring(colonIndex + 1);
+      Preconditions.checkState(rootRelativePath.indexOf(':') == -1);
+      rootRelativePathsMap.put(execPath, rootRelativePath);
     }
     return rootRelativePathsMap;
   }
@@ -1736,24 +1729,23 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    private boolean skipNormalOutputs = false;
+
     /**
      * Sets whether the normal outputs of compilation should be skipped.
      */
-    private boolean skipNormalOutputs = false;
-
     CommandLineConfig setSkipNormalOutputs(boolean skipNormalOutputs) {
       this.skipNormalOutputs = skipNormalOutputs;
       return this;
     }
 
-    /**
-     * Sets the map file that contains the root paths for input files,
-     * used to generate human-readable file names in the bundle files.
-     */
-    private String manifestMapFile = "";
+    private List<String> manifestMaps = ImmutableList.of();
 
-    CommandLineConfig setManifestMapFile(String manifestMapFile) {
-      this.manifestMapFile = manifestMapFile;
+    /**
+     * Sets the execPath:rootRelativePath mappings
+     */
+    CommandLineConfig setManifestMaps(List<String> manifestMaps) {
+      this.manifestMaps = manifestMaps;
       return this;
     }
 
