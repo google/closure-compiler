@@ -85,7 +85,9 @@ class SyntacticScopeCreator implements ScopeCreator {
     if (n.getType() == Token.FUNCTION) {
       if (inputId == null) {
         inputId = NodeUtil.getInputId(n);
-        Preconditions.checkNotNull(inputId);
+        // TODO(johnlenz): inputId maybe null if the FUNCTION node is detached
+        // from the AST.
+        // Is it meaningful to build a scope for detached FUNCTION node?
       }
 
       final Node fnNameNode = n.getFirstChild();
