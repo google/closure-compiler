@@ -164,7 +164,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
         if (!isDeclaration && !isDeclaredInScope) {
           // Don't check the order of refer in externs files.
-          if (!reference.getSourceFile().isExtern()) {
+          if (!reference.getNode().isFromExterns()) {
             // Special case to deal with var goog = goog || {}
             Node grandparent = reference.getGrandparent();
             if (grandparent.getType() == Token.NAME

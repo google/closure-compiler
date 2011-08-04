@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideExcept
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -104,7 +105,7 @@ public class Compiler extends AbstractCompiler {
   Node jsRoot;
   Node externAndJsRoot;
 
-  private Map<String, CompilerInput> inputsByName;
+  private Map<InputId, CompilerInput> inputsById;
 
   /** The source code map */
   private SourceMap sourceMap;
@@ -354,7 +355,7 @@ public class Compiler extends AbstractCompiler {
     this.inputs = getAllInputsFromModules(modules);
     initBasedOnOptions();
 
-    initInputsByNameMap();
+    initInputsByIdMap();
   }
 
   /**
@@ -418,7 +419,7 @@ public class Compiler extends AbstractCompiler {
    */
   public void rebuildInputsFromModules() {
     inputs = getAllInputsFromModules(modules);
-    initInputsByNameMap();
+    initInputsByIdMap();
   }
 
   /**
@@ -453,22 +454,20 @@ public class Compiler extends AbstractCompiler {
    * Creates a map to make looking up an input by name fast. Also checks for
    * duplicate inputs.
    */
-  void initInputsByNameMap() {
-    inputsByName = new HashMap<String, CompilerInput>();
+  void initInputsByIdMap() {
+    inputsById = new HashMap<InputId, CompilerInput>();
     for (CompilerInput input : externs) {
-      String name = input.getName();
-      if (!inputsByName.containsKey(name)) {
-        inputsByName.put(name, input);
-      } else {
-        report(JSError.make(DUPLICATE_EXTERN_INPUT, name));
+      InputId id = input.getInputId();
+      CompilerInput previous = inputsById.put(id, input);
+      if (previous != null) {
+        report(JSError.make(DUPLICATE_EXTERN_INPUT, input.getName()));
       }
     }
     for (CompilerInput input : inputs) {
-      String name = input.getName();
-      if (!inputsByName.containsKey(name)) {
-        inputsByName.put(name, input);
-      } else {
-        report(JSError.make(DUPLICATE_INPUT, name));
+      InputId id = input.getInputId();
+      CompilerInput previous = inputsById.put(id, input);
+      if (previous != null) {
+        report(JSError.make(DUPLICATE_INPUT, input.getName()));
       }
     }
   }
@@ -963,22 +962,22 @@ public class Compiler extends AbstractCompiler {
   // interface, and which ones should always be injected.
 
   @Override
-  public CompilerInput getInput(String name) {
-    return inputsByName.get(name);
+  public CompilerInput getInput(InputId id) {
+    return inputsById.get(id);
   }
 
   /**
    * Removes an input file from AST.
-   * @param name The name of the file to be removed.
+   * @param id The id of the input to be removed.
    */
-  protected void removeExternInput(String name) {
-    CompilerInput input = getInput(name);
+  protected void removeExternInput(InputId id) {
+    CompilerInput input = getInput(id);
     if (input == null) {
       return;
     }
     Preconditions.checkState(input.isExtern(), "Not an extern input: "
         + input.getName());
-    inputsByName.remove(name);
+    inputsById.remove(id);
     externs.remove(input);
     Node root = input.getAstRoot(this);
     if (root != null) {
@@ -988,12 +987,12 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   public CompilerInput newExternInput(String name) {
-    if (inputsByName.containsKey(name)) {
+    SourceAst ast = new SyntheticAst(name);
+    if (inputsById.containsKey(ast.getInputId())) {
       throw new IllegalArgumentException("Conflicting externs name: " + name);
     }
-    SourceAst ast = new SyntheticAst(name);
-    CompilerInput input = new CompilerInput(ast, name, true);
-    inputsByName.put(name, input);
+    CompilerInput input = new CompilerInput(ast, true);
+    inputsById.put(input.getInputId(), input);
     externsRoot.addChildToFront(ast.getAstRoot(this));
     externs.add(0, input);
     return input;
@@ -1001,11 +1000,11 @@ public class Compiler extends AbstractCompiler {
 
   /** Add a source input dynamically. Intended for incremental compilation. */
   void addIncrementalSourceAst(JsAst ast) {
-    String intputName = ast.getSourceFile().getName();
+    InputId id = ast.getInputId();
     Preconditions.checkState(
-        getInput(intputName) == null,
-        "Duplicate input of name " + intputName);
-    inputsByName.put(intputName, new CompilerInput(ast));
+        getInput(id) == null,
+        "Duplicate input " + id.getIdName());
+    inputsById.put(id, new CompilerInput(ast));
   }
 
   /**
@@ -1018,11 +1017,10 @@ public class Compiler extends AbstractCompiler {
    * @return Whether the new AST was attached successfully.
    */
   boolean replaceIncrementalSourceAst(JsAst ast) {
-    String inputName = ast.getSourceFile().getName();
-    CompilerInput oldInput =
-        Preconditions.checkNotNull(
-            getInput(inputName),
-            "No input to replace: " + inputName);
+    CompilerInput oldInput = getInput(ast.getInputId());
+    Preconditions.checkNotNull(
+        oldInput,
+        "No input to replace: " + ast.getInputId().getIdName());
     Node newRoot = ast.getAstRoot(this);
     if (newRoot == null) {
       return false;
@@ -1036,13 +1034,20 @@ public class Compiler extends AbstractCompiler {
     }
 
     CompilerInput newInput = new CompilerInput(ast);
-    inputsByName.put(inputName, newInput);
+    inputsById.put(ast.getInputId(), newInput);
 
     JSModule module = oldInput.getModule();
     if (module != null) {
       module.addAfter(newInput, oldInput);
       module.remove(oldInput);
     }
+
+    // Verify the input id is set properly.
+    Preconditions.checkState(
+        newInput.getInputId().equals(oldInput.getInputId()));
+    InputId inputIdOnAst = newInput.getAstRoot(this).getInputId();
+    Preconditions.checkState(newInput.getInputId().equals(inputIdOnAst));
+
     return true;
   }
 
@@ -1282,11 +1287,13 @@ public class Compiler extends AbstractCompiler {
     return new JsAst(file).getAstRoot(this);
   }
 
+  private int syntheticCodeId = 0;
+
   @Override
   Node parseSyntheticCode(String js) {
     CompilerInput input = new CompilerInput(
-        JSSourceFile.fromCode(" [synthetic] ", js));
-    inputsByName.put(input.getName(), input);
+        JSSourceFile.fromCode(" [synthetic:" + (++syntheticCodeId) + "] ", js));
+    inputsById.put(input.getInputId(), input);
     return input.getAstRoot(this);
   }
 
@@ -1309,10 +1316,10 @@ public class Compiler extends AbstractCompiler {
     initCompilerOptionsIfTesting();
     CompilerInput input = new CompilerInput(
         JSSourceFile.fromCode(" [testcode] ", js));
-    if (inputsByName == null) {
-      inputsByName = Maps.newHashMap();
+    if (inputsById == null) {
+      inputsById = Maps.newHashMap();
     }
-    inputsByName.put(input.getName(), input);
+    inputsById.put(input.getInputId(), input);
     return input.getAstRoot(this);
   }
 
@@ -1867,8 +1874,13 @@ public class Compiler extends AbstractCompiler {
   }
 
   private SourceFile getSourceFileByName(String sourceName) {
-    if (inputsByName.containsKey(sourceName)) {
-      return inputsByName.get(sourceName).getSourceFile();
+    // Here we assume that the source name is the input name, this
+    // is try of javascript parsed from source.
+    if (sourceName != null) {
+      CompilerInput input = inputsById.get(new InputId(sourceName));
+      if (input != null) {
+        return input.getSourceFile();
+      }
     }
     return null;
   }

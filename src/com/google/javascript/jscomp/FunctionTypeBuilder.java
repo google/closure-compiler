@@ -312,7 +312,7 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder inferReturnStatementsAsLastResort(
       @Nullable Node functionBlock) {
-    if (functionBlock == null || compiler.getInput(sourceName).isExtern()) {
+    if (functionBlock == null || functionBlock.isFromExterns()) {
       return this;
     }
     Preconditions.checkArgument(functionBlock.getType() == Token.BLOCK);

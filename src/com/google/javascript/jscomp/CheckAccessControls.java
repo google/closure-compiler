@@ -29,6 +29,7 @@ import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 /**
  * A compiler pass that checks that the programmer has obeyed all the access
@@ -336,16 +337,21 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       if (docInfo != null) {
         // If a name is private, make sure that we're in the same file.
         Visibility visibility = docInfo.getVisibility();
-        if (visibility == Visibility.PRIVATE &&
-            !t.getInput().getName().equals(docInfo.getSourceName())) {
-          if (docInfo.isConstructor() &&
-              isValidPrivateConstructorAccess(parent)) {
-            return;
-          }
+        if (visibility == Visibility.PRIVATE) {
+          StaticSourceFile varSrc = var.getSourceFile();
+          StaticSourceFile refSrc = name.getStaticSourceFile();
+          if (varSrc != null &&
+              refSrc != null &&
+              !varSrc.getName().equals(refSrc.getName())) {
+            if (docInfo.isConstructor() &&
+                isValidPrivateConstructorAccess(parent)) {
+              return;
+            }
 
-          compiler.report(
-              t.makeError(name, BAD_PRIVATE_GLOBAL_ACCESS,
-                  name.getString(), docInfo.getSourceName()));
+            compiler.report(
+                t.makeError(name, BAD_PRIVATE_GLOBAL_ACCESS,
+                    name.getString(), varSrc.getName()));
+          }
         }
       }
     }

@@ -7054,8 +7054,9 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         Lists.newArrayList(JSSourceFile.fromCode("[testcode]", js)),
         compiler.getOptions());
 
-    Node n = compiler.getInput("[testcode]").getAstRoot(compiler);
-    Node externsNode = compiler.getInput("[externs]").getAstRoot(compiler);
+    Node n = compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler);
+    Node externsNode = compiler.getInput(new InputId("[externs]"))
+        .getAstRoot(compiler);
     Node externAndJsRoot = new Node(Token.BLOCK, externsNode, n);
     externAndJsRoot.setIsSyntheticBlock(true);
 

@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -44,21 +45,20 @@ class GlobalVarReferenceMap implements ReferenceMap {
 
   private Map<String, ReferenceCollection> refMap = null;
 
-  private final Map<String, Integer> inputOrder;
+  private final Map<InputId, Integer> inputOrder;
 
   /**
    * @param inputs The ordered list of all inputs for the compiler.
    */
-  GlobalVarReferenceMap(List<CompilerInput> inputs,
-      List<CompilerInput> externs) {
+  GlobalVarReferenceMap(List<CompilerInput> inputs, List<CompilerInput> externs) {
     inputOrder = Maps.newHashMap();
     int ind = 0;
     for (CompilerInput extern : externs) {
-      inputOrder.put(extern.getName(), ind);
+      inputOrder.put(extern.getInputId(), ind);
       ind++;
     }
     for (CompilerInput input : inputs) {
-      inputOrder.put(input.getName(), ind);
+      inputOrder.put(input.getInputId(), ind);
       ind++;
     }
   }
@@ -105,21 +105,24 @@ class GlobalVarReferenceMap implements ReferenceMap {
       resetGlobalVarReferences(refMapPatch);
       return;
     }
-    String sourceName = NodeUtil.getSourceName(root);
-    Preconditions.checkNotNull(sourceName);
+
+    InputId inputId = root.getInputId();
+    Preconditions.checkNotNull(inputId);
     // Note there are two assumptions here (i) the order of compiler inputs
     // has not changed and (ii) all references are in the order they appear
     // in AST (this is enforced in ReferenceCollectionCallback).
-    removeScriptReferences(sourceName);
+    removeScriptReferences(inputId);
     for (Entry<Var, ReferenceCollection> entry : refMapPatch.entrySet()) {
       Var var = entry.getKey();
       if (var.isGlobal()) {
-        replaceReferences(var.getName(), sourceName, entry.getValue());
+        replaceReferences(var.getName(), inputId, entry.getValue());
       }
     }
   }
 
-  private void removeScriptReferences(String sourceName) {
+  private void removeScriptReferences(InputId inputId) {
+    Preconditions.checkNotNull(inputId);
+
     // TODO(bashir): If this is too slow it is not too difficult to make it
     // faster with keeping an index for variables accessed in sourceName.
     for (ReferenceCollection collection : refMap.values()) {
@@ -127,14 +130,14 @@ class GlobalVarReferenceMap implements ReferenceMap {
         continue;
       }
       List<Reference> oldRefs = collection.references;
-      SourceRefRange range = findSourceRefRange(oldRefs, sourceName);
+      SourceRefRange range = findSourceRefRange(oldRefs, inputId);
       List<Reference> newRefs = Lists.newArrayList(range.refsBefore());
       newRefs.addAll(range.refsAfter());
       collection.references = newRefs;
     }
   }
 
-  private void replaceReferences(String varName, String sourceName,
+  private void replaceReferences(String varName, InputId inputId,
       ReferenceCollection newSourceCollection) {
     ReferenceCollection combined = new ReferenceCollection();
     List<Reference> combinedRefs = combined.references;
@@ -146,7 +149,7 @@ class GlobalVarReferenceMap implements ReferenceMap {
     }
     // otherwise replace previous references that are from sourceName
     SourceRefRange range = findSourceRefRange(oldCollection.references,
-        sourceName);
+      inputId);
     combinedRefs.addAll(range.refsBefore());
     combinedRefs.addAll(newSourceCollection.references);
     combinedRefs.addAll(range.refsAfter());
@@ -158,15 +161,20 @@ class GlobalVarReferenceMap implements ReferenceMap {
    * used to decide where to insert new sourceName refs.
    */
   private SourceRefRange findSourceRefRange(List<Reference> refList,
-      String sourceName) {
+      InputId inputId) {
+    Preconditions.checkNotNull(inputId);
+
     // TODO(bashir): We can do binary search here, but since this is fast enough
     // right now, we just do a linear search for simplicity.
     int lastBefore = -1;
     int firstAfter = refList.size();
     int index = 0;
-    int sourceInputOrder = inputOrder.get(sourceName);
+
+    Preconditions.checkState(inputOrder.containsKey(inputId), inputId.getIdName());
+    int sourceInputOrder = inputOrder.get(inputId);
     for (Reference ref : refList) {
-      int order = inputOrder.get(ref.getSourceFile().getName());
+      Preconditions.checkNotNull(ref.getInputId());
+      int order = inputOrder.get(ref.getInputId());
       if (order < sourceInputOrder) {
         lastBefore = index;
       } else if (order > sourceInputOrder) {

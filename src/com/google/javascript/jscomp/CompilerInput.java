@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -40,12 +39,12 @@ import java.util.Set;
  *
  */
 public class CompilerInput
-    implements SourceAst, DependencyInfo, StaticSourceFile {
+    implements SourceAst, DependencyInfo {
+
   private static final long serialVersionUID = 1L;
 
   // Info about where the file lives.
   private JSModule module;
-  final private String name;
   final private InputId id;
 
   // The AST.
@@ -68,13 +67,16 @@ public class CompilerInput
   }
 
   public CompilerInput(SourceAst ast, boolean isExtern) {
-    this(ast, ast.getSourceFile().getName(), isExtern);
+    this(ast, ast.getInputId(), isExtern);
   }
 
-  public CompilerInput(SourceAst ast, String inputName, boolean isExtern) {
+  public CompilerInput(SourceAst ast, String inputId, boolean isExtern) {
+    this(ast, new InputId(inputId), isExtern);
+  }
+
+  public CompilerInput(SourceAst ast, InputId inputId, boolean isExtern) {
     this.ast = ast;
-    this.id = ast.getInputId();
-    this.name = inputName;
+    this.id = inputId;
 
     // TODO(nicksantos): Add a precondition check here. People are passing
     // in null, but they should not be.
@@ -88,10 +90,10 @@ public class CompilerInput
   }
 
   public CompilerInput(JSSourceFile file, boolean isExtern) {
-    this(new JsAst(file), file.getName(), isExtern);
+    this(new JsAst(file), isExtern);
   }
 
-  /** Returns a id for this input. Must be unique across all inputs. */
+  /** Returns a name for this input. Must be unique across all inputs. */
   @Override
   public InputId getInputId() {
     return id;
@@ -100,7 +102,11 @@ public class CompilerInput
   /** Returns a name for this input. Must be unique across all inputs. */
   @Override
   public String getName() {
-    return name;
+    return id.getIdName();
+  }
+
+  public SourceAst getAst() {
+    return ast;
   }
 
   /** Gets the path relative to closure-base, if one is available. */
@@ -309,7 +315,6 @@ public class CompilerInput
     this.module = module;
   }
 
-  @Override
   public boolean isExtern() {
     if (ast == null || ast.getSourceFile() == null) {
       return false;
@@ -324,7 +329,6 @@ public class CompilerInput
     ast.getSourceFile().setIsExtern(isExtern);
   }
 
-  @Override
   public int getLineOffset(int lineno) {
     return ast.getSourceFile().getLineOffset(lineno);
   }

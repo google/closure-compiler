@@ -156,9 +156,13 @@ public class Scope
       return nameNode;
     }
 
+    CompilerInput getInput() {
+      return input;
+    }
+
     @Override
     public StaticSourceFile getSourceFile() {
-      return input;
+      return nameNode.getStaticSourceFile();
     }
 
     @Override

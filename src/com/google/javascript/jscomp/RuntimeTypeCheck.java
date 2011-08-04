@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.UnionType;
 
 import java.io.IOException;
@@ -347,10 +348,9 @@ class RuntimeTypeCheck implements CompilerPass {
 
         String refName = objType.getReferenceName();
 
-        String sourceName =
-            NodeUtil.getSourceName(objType.getConstructor().getSource());
-        CompilerInput sourceInput = compiler.getInput(sourceName);
-        if (sourceInput == null || sourceInput.isExtern()) {
+        StaticSourceFile sourceFile =
+            NodeUtil.getSourceFile(objType.getConstructor().getSource());
+        if (sourceFile == null || sourceFile.isExtern()) {
           return new Node(Token.CALL,
                   jsCode("externClassChecker"),
                   Node.newString(refName));

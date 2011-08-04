@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
@@ -49,7 +50,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Looks up an input (possibly an externs input) by name. May return null.
    */
-  public abstract CompilerInput getInput(String sourceName);
+  public abstract CompilerInput getInput(InputId inputId);
 
   /**
    * Creates a new externs file.

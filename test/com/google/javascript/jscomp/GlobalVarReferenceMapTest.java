@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope.Var;
-import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -39,14 +38,14 @@ import java.util.Map;
  */
 public class GlobalVarReferenceMapTest extends TestCase {
 
-  private static final CompilerInput INPUT1 =
+  private final CompilerInput INPUT1 =
       new CompilerInput(JSSourceFile.fromCode("input1", ""), false);
-  private static final CompilerInput INPUT2 =
+  private final CompilerInput INPUT2 =
       new CompilerInput(JSSourceFile.fromCode("input2", ""), false);
-  private static final CompilerInput INPUT3 =
+  private final CompilerInput INPUT3 =
       new CompilerInput(JSSourceFile.fromCode("input3", ""), false);
-  private static final CompilerInput EXTERN1 =
-    new CompilerInput(JSSourceFile.fromCode("externs1", ""), true);
+  private final CompilerInput EXTERN1 =
+      new CompilerInput(JSSourceFile.fromCode("extern1", ""), true);
 
   private final GlobalVarReferenceMap map = new GlobalVarReferenceMap(
       Lists.newArrayList(INPUT1, INPUT2, INPUT3), Lists.newArrayList(EXTERN1));
@@ -64,13 +63,13 @@ public class GlobalVarReferenceMapTest extends TestCase {
   private final ReferenceCollection var1Refs = new ReferenceCollection();
   private final ReferenceCollection var2Refs = new ReferenceCollection();
   private final ReferenceCollection var3Refs = new ReferenceCollection();
-  private final Reference var1In1Ref =  createRefForTest(INPUT1.getName());
-  private final Reference var1In2Ref =  createRefForTest(INPUT2.getName());
-  private final Reference var1In3Ref =  createRefForTest(INPUT3.getName());
-  private final Reference var2In1Ref =  createRefForTest(INPUT1.getName());
-  private final Reference var2In3Ref =  createRefForTest(INPUT3.getName());
-  private final Reference var3In2Ref =  createRefForTest(INPUT2.getName());
-  private final Reference var3In1Ext =  createRefForTest(EXTERN1.getName());
+  private final Reference var1In1Ref = createRefForTest(INPUT1);
+  private final Reference var1In2Ref = createRefForTest(INPUT2);
+  private final Reference var1In3Ref = createRefForTest(INPUT3);
+  private final Reference var2In1Ref = createRefForTest(INPUT1);
+  private final Reference var2In3Ref = createRefForTest(INPUT3);
+  private final Reference var3In2Ref = createRefForTest(INPUT2);
+  private final Reference var3In1Ext = createRefForTest(EXTERN1);
 
   @Override
   protected void setUp() throws Exception {
@@ -95,7 +94,7 @@ public class GlobalVarReferenceMapTest extends TestCase {
     globalMap.put(globalScope.getVar(VAR2), var2TempRefs);
     globalMap.put(globalScope.getVar(VAR3), var3TempRefs);
     map.updateGlobalVarReferences(globalMap, root);
-    scriptRoot.setInputId(new InputId(INPUT2.getName()));
+    scriptRoot.setInputId(INPUT2.getInputId());
     scriptRoot.putProp(Node.SOURCENAME_PROP, INPUT2.getName());
   }
 
@@ -133,15 +132,15 @@ public class GlobalVarReferenceMapTest extends TestCase {
     Map<Var, ReferenceCollection> scriptMap = Maps.newHashMap();
 
     ReferenceCollection newVar1Refs = new ReferenceCollection();
-    Reference newVar1In2Ref = createRefForTest(INPUT2.getName());
+    Reference newVar1In2Ref = createRefForTest(INPUT2);
     newVar1Refs.references = Lists.newArrayList(newVar1In2Ref);
 
     ReferenceCollection newVar2Refs = new ReferenceCollection();
-    Reference newVar2In2Ref = createRefForTest(INPUT2.getName());
+    Reference newVar2In2Ref = createRefForTest(INPUT2);
     newVar2Refs.references = Lists.newArrayList(newVar2In2Ref);
 
     ReferenceCollection newVar3Refs = new ReferenceCollection();
-    Reference newVar3In2Ref = createRefForTest(INPUT2.getName());
+    Reference newVar3In2Ref = createRefForTest(INPUT2);
     newVar3Refs.references = Lists.newArrayList(newVar3In2Ref);
 
     scriptMap.put(globalScope.getVar(VAR1), newVar1Refs);
@@ -170,7 +169,7 @@ public class GlobalVarReferenceMapTest extends TestCase {
     final String var4 = "var4";
     globalScope.declare(var4, new Node(Token.NAME), null, INPUT2);
     ReferenceCollection newVar3Refs = new ReferenceCollection();
-    Reference newVar3In2Ref = createRefForTest(INPUT2.getName());
+    Reference newVar3In2Ref = createRefForTest(INPUT2);
     newVar3Refs.references = Lists.newArrayList(newVar3In2Ref);
     scriptMap.put(globalScope.getVar(var4), newVar3Refs);
     map.updateGlobalVarReferences(scriptMap, scriptRoot);

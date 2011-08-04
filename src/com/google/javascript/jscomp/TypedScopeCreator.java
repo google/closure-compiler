@@ -57,6 +57,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -393,6 +394,11 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     private String sourceName = null;
 
+    /**
+     * The InputId of the current node.
+     */
+    private InputId inputId;
+
     private AbstractScopeBuilder(Scope scope) {
       this.scope = scope;
     }
@@ -419,10 +425,12 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     @Override
-    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
+    public final boolean shouldTraverse(NodeTraversal t, Node n,
         Node parent) {
+      inputId = t.getInputId();
       if (n.getType() == Token.FUNCTION ||
           n.getType() == Token.SCRIPT) {
+        Preconditions.checkNotNull(inputId);
         sourceName = NodeUtil.getSourceName(n);
       }
 
@@ -450,6 +458,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      inputId = t.getInputId();
       attachLiteralTypes(t, n);
 
       switch (n.getType()) {
@@ -730,9 +739,7 @@ final class TypedScopeCreator implements ScopeCreator {
       JSType type = getDeclaredType(sourceName, info, name, value);
       if (type == null) {
         // The variable's type will be inferred.
-        CompilerInput input = compiler.getInput(sourceName);
-        Preconditions.checkNotNull(input, sourceName);
-        type = input.isExtern() ?
+        type = name.isFromExterns() ?
             getNativeType(UNKNOWN_TYPE) : null;
       }
       defineSlot(name, var, type);
@@ -1059,8 +1066,10 @@ final class TypedScopeCreator implements ScopeCreator {
         if (!inferred) {
           setDeferredType(n, type);
         }
-        CompilerInput input = compiler.getInput(sourceName);
-        boolean isExtern = input.isExtern();
+
+        CompilerInput input = compiler.getInput(inputId);
+        // The input may be null if we are working with a AST snippet.
+        boolean isExtern = n.isFromExterns();
         Var newVar =
             scopeToDeclareIn.declare(variableName, n, type, input, inferred);
 

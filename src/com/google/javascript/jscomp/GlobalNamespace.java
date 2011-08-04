@@ -1178,7 +1178,8 @@ class GlobalNamespace
     }
 
     Node node;
-    final CompilerInput source;
+    final JSModule module;
+    final StaticSourceFile source;
     final Name name;
     final Type type;
     final Scope scope;
@@ -1199,7 +1200,8 @@ class GlobalNamespace
     Ref(NodeTraversal t, Node node, Name name, Type type, int index) {
       this.node = node;
       this.name = name;
-      this.source = t.getInput();
+      this.module = t.getInput() == null ? null : t.getInput().getModule();
+      this.source = node.getStaticSourceFile();
       this.type = type;
       this.scope = t.getScope();
       this.preOrderIndex = index;
@@ -1208,6 +1210,7 @@ class GlobalNamespace
     private Ref(Ref original, Type type, int index) {
       this.node = original.node;
       this.name = original.name;
+      this.module = original.module;
       this.source = original.source;
       this.type = type;
       this.scope = original.scope;
@@ -1216,6 +1219,7 @@ class GlobalNamespace
 
     private Ref(Type type, int index) {
       this.type = type;
+      this.module = null;
       this.source = null;
       this.scope = null;
       this.name = null;
@@ -1238,7 +1242,7 @@ class GlobalNamespace
     }
 
     JSModule getModule() {
-      return source == null ? null : source.getModule();
+      return module;
     }
 
     String getSourceName() {

@@ -25,10 +25,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.StaticSymbolTable;
@@ -491,11 +491,12 @@ class ReferenceCollectingCallback implements ScopedCallback,
     private final Node nameNode;
     private final BasicBlock basicBlock;
     private final Scope scope;
+    private final InputId inputId;
     private final StaticSourceFile sourceFile;
 
     Reference(Node nameNode, NodeTraversal t,
         BasicBlock basicBlock) {
-      this(nameNode, basicBlock, t.getScope(), t.getInput());
+      this(nameNode, basicBlock, t.getScope(), t.getInput().getInputId());
     }
 
     // Bleeding functions are weird, because the declaration does
@@ -503,27 +504,27 @@ class ReferenceCollectingCallback implements ScopedCallback,
     static Reference newBleedingFunction(NodeTraversal t,
         BasicBlock basicBlock, Node func) {
       return new Reference(func.getFirstChild(),
-          basicBlock, t.getScope(), t.getInput());
+          basicBlock, t.getScope(), t.getInput().getInputId());
     }
 
     /**
      * Creates a variable reference in a given script file name, used in tests.
      *
-     * @param sourceName The name of the script file.
      * @return The created reference.
      */
     @VisibleForTesting
-    static Reference createRefForTest(String sourceName) {
+    static Reference createRefForTest(CompilerInput input) {
       return new Reference(new Node(Token.NAME), null, null,
-          new SimpleSourceFile(sourceName, false));
+          input.getInputId());
     }
 
     private Reference(Node nameNode,
-        BasicBlock basicBlock, Scope scope, StaticSourceFile sourceFile) {
+        BasicBlock basicBlock, Scope scope, InputId inputId) {
       this.nameNode = nameNode;
       this.basicBlock = basicBlock;
       this.scope = scope;
-      this.sourceFile = sourceFile;
+      this.inputId = inputId;
+      this.sourceFile = nameNode.getStaticSourceFile();
     }
 
     @Override
@@ -534,6 +535,10 @@ class ReferenceCollectingCallback implements ScopedCallback,
     @Override
     public Node getNode() {
       return nameNode;
+    }
+
+    public InputId getInputId() {
+      return inputId;
     }
 
     @Override
