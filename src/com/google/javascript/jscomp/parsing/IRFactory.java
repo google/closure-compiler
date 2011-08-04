@@ -173,7 +173,7 @@ class IRFactory {
       for (Comment comment : node.getComments()) {
         if (comment.getCommentType() == CommentType.JSDOC &&
             !comment.isParsed()) {
-          irFactory.handlePossibleFileOverviewJsDoc(comment);
+          irFactory.handlePossibleFileOverviewJsDoc(comment, irNode);
         } else if (comment.getCommentType() == CommentType.BLOCK) {
           irFactory.handleBlockComment(comment);
         }
@@ -242,16 +242,16 @@ class IRFactory {
     return false;
   }
 
-  private void handlePossibleFileOverviewJsDoc(Comment comment) {
-    JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
+  private void handlePossibleFileOverviewJsDoc(Comment comment, Node irNode) {
+    JsDocInfoParser jsDocParser = createJsDocInfoParser(comment, irNode);
     comment.setParsed(true);
     handlePossibleFileOverviewJsDoc(jsDocParser);
   }
 
-  private JSDocInfo handleJsDoc(AstNode node) {
+  private JSDocInfo handleJsDoc(AstNode node, Node irNode) {
     Comment comment = node.getJsDocNode();
     if (comment != null) {
-      JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
+      JsDocInfoParser jsDocParser = createJsDocInfoParser(comment, irNode);
       comment.setParsed(true);
       if (!handlePossibleFileOverviewJsDoc(jsDocParser)) {
         return jsDocParser.retrieveAndResetParsedJSDocInfo();
@@ -261,8 +261,8 @@ class IRFactory {
   }
 
   private Node transform(AstNode node) {
-    JSDocInfo jsDocInfo = handleJsDoc(node);
     Node irNode = justTransform(node);
+    JSDocInfo jsDocInfo = handleJsDoc(node, irNode);
     if (jsDocInfo != null) {
       irNode.setJSDocInfo(jsDocInfo);
     }
@@ -271,8 +271,8 @@ class IRFactory {
   }
 
   private Node transformNameAsString(Name node) {
-    JSDocInfo jsDocInfo = handleJsDoc(node);
     Node irNode = transformDispatcher.processName(node, true);
+    JSDocInfo jsDocInfo = handleJsDoc(node, irNode);
     if (jsDocInfo != null) {
       irNode.setJSDocInfo(jsDocInfo);
     }
@@ -281,8 +281,8 @@ class IRFactory {
   }
 
   private Node transformNumberAsString(NumberLiteral literalNode) {
-    JSDocInfo jsDocInfo = handleJsDoc(literalNode);
     Node irNode = newStringNode(getStringValue(literalNode.getNumber()));
+    JSDocInfo jsDocInfo = handleJsDoc(literalNode, irNode);
     if (jsDocInfo != null) {
       irNode.setJSDocInfo(jsDocInfo);
     }
@@ -329,10 +329,11 @@ class IRFactory {
    * file-level JSDoc comments (@fileoverview and @license).
    *
    * @param node The JsDoc Comment node to parse.
+   * @param irNode
    * @return A JSDocInfoParser. Will contain either fileoverview jsdoc, or
    *     normal jsdoc, or no jsdoc (if the method parses to the wrong level).
    */
-  private JsDocInfoParser createJsDocInfoParser(Comment node) {
+  private JsDocInfoParser createJsDocInfoParser(Comment node, Node irNode) {
     String comment = node.getValue();
     int lineno = node.getLineno();
     int position = node.getAbsolutePosition();
@@ -345,7 +346,7 @@ class IRFactory {
                                lineno,
                                position2charno(position) + numOpeningChars),
           node,
-          sourceFile,
+          irNode,
           config,
           errorReporter);
     jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);

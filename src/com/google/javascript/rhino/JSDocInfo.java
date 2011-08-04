@@ -153,8 +153,8 @@ public class JSDocInfo implements Serializable {
 
   private LazilyInitializedDocumentation documentation = null;
 
-  /** The source file containing the JSDoc. */
-  private String sourceName = null;
+  // The Node this JSDoc is associated with.
+  private Node associatedNode = null;
 
   private Visibility visibility = null;
 
@@ -1290,19 +1290,23 @@ public class JSDocInfo implements Serializable {
     return documentation == null ? null : documentation.fileOverview;
   }
 
+  public Node getAssociatedNode() {
+    return this.associatedNode;
+  }
+
+  void setAssociatedNode(Node node) {
+    this.associatedNode = node;
+  }
+
   /** Gets the name of the source file that contains this JSDoc. */
   public String getSourceName() {
-    return sourceName;
+    return this.associatedNode != null
+        ? this.associatedNode.getSourceFileName() : null;
   }
 
   /** Gets the list of all markers for the documentation in this JSDoc. */
   public Collection<Marker> getMarkers() {
     return documentation == null ? null : documentation.markers;
-  }
-
-  /** Sets the name of the source file that contains this JSDoc. */
-  void setSourceName(String sourceName) {
-    this.sourceName = sourceName;
   }
 
   /** Gets the template type name. */

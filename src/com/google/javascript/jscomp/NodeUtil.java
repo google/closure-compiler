@@ -21,12 +21,14 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.Arrays;
@@ -2897,6 +2899,31 @@ public final class NodeUtil {
       n = n.getParent();
     }
     return sourceName;
+  }
+
+  /**
+   * @param n The node.
+   * @return The source name property on the node or its ancestors.
+   */
+  public static StaticSourceFile getSourceFile(Node n) {
+    StaticSourceFile sourceName = null;
+    while (sourceName == null && n != null) {
+      sourceName = n.getStaticSourceFile();
+      n = n.getParent();
+    }
+    return sourceName;
+  }
+
+  /**
+   * @param n The node.
+   * @return The InputId property on the node or its ancestors.
+   */
+  public static InputId getInputId(Node n) {
+    while (n != null && n.getType() != Token.SCRIPT) {
+      n = n.getParent();
+    }
+
+    return (n != null && n.getType() == Token.SCRIPT) ? n.getInputId() : null;
   }
 
   /**

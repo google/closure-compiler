@@ -114,15 +114,15 @@ final public class JSDocInfoBuilder {
    * returns it. Once this method is called, the builder can be reused to build
    * another {@link JSDocInfo} object.
    *
-   * @param sourceName The source file containing the JSDoc.
+   * @param associatedNode The source node containing the JSDoc.
    * @return a {@link JSDocInfo} object populated with the values given to this
    *     builder. If no value was populated, this method simply returns
    *     {@code null}
    */
-  public JSDocInfo build(String sourceName) {
+  public JSDocInfo build(Node associatedNode) {
     if (populated) {
       JSDocInfo built = currentInfo;
-      built.setSourceName(sourceName);
+      built.setAssociatedNode(associatedNode);
       populateDefaults(built);
       populated = false;
       currentInfo = new JSDocInfo(this.parseDocumentation);

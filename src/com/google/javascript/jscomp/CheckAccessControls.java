@@ -451,8 +451,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         return;
       }
 
-      boolean sameInput =
-          t.getInput().getName().equals(docInfo.getSourceName());
+      String referenceSource = getprop.getSourceFileName();
+      String definingSource = docInfo.getSourceName();
+      boolean sameInput = referenceSource != null
+          && referenceSource.equals(definingSource);
       Visibility visibility = docInfo.getVisibility();
       JSType ownerType = normalizeClassType(objectType);
       if (isOverride) {

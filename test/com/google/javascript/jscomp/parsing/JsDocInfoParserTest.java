@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.mozilla.rhino.ast.AstRoot;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.testing.TestErrorReporter;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -2145,7 +2146,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testSourceName() throws Exception {
     JSDocInfo jsdoc = parse("@deprecated */", true);
-    assertEquals("testcode", jsdoc.getSourceName());
+    assertEquals("testcode", jsdoc.getAssociatedNode().getSourceFileName());
   }
 
   public void testParseBlockComment() throws Exception {
@@ -2649,7 +2650,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
             new JsDocTokenStream(comment.getValue().substring(3),
                 comment.getLineno()),
             comment,
-            file,
+            null,
             config,
             testErrorReporter);
       jsdocParser.parse();
@@ -2686,10 +2687,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Config config = new Config(extraAnnotations, extraSuppressions,
         parseDocumentation, LanguageMode.ECMASCRIPT3, false);
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
+    Node associatedNode = new Node(Token.SCRIPT);
+    associatedNode.setInputId(new InputId(file.getName()));
+    associatedNode.setStaticSourceFile(file);
     JsDocInfoParser jsdocParser = new JsDocInfoParser(
         stream(comment),
         new Comment(0, 0, CommentType.JSDOC, comment),
-        file, config, errorReporter);
+        associatedNode,
+        config, errorReporter);
 
     if (fileLevelJsDocBuilder != null) {
       jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);

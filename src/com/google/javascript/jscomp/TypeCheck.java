@@ -1562,9 +1562,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       boolean isExtern = false;
       JSDocInfo functionJSDocInfo = functionType.getJSDocInfo();
       if(functionJSDocInfo != null) {
-        String sourceName = functionJSDocInfo.getSourceName();
-        CompilerInput functionSource = compiler.getInput(sourceName);
-        isExtern = functionSource.isExtern();
+        isExtern = functionJSDocInfo.getAssociatedNode().isFromExterns();
       }
 
       // Non-native constructors should not be called directly
