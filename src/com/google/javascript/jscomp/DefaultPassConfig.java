@@ -92,6 +92,12 @@ public class DefaultPassConfig extends PassConfig {
   private GlobalNamespace namespaceForChecks = null;
 
   /**
+   * A symbol table for registering references that get removed during
+   * preprocessing.
+   */
+  private PreprocessorSymbolTable preprocessorSymbolTable = null;
+
+  /**
    * A type-tightener to share across optimization passes.
    */
   private TightenTypes tightenTypes = null;
@@ -161,6 +167,10 @@ public class DefaultPassConfig extends PassConfig {
 
   GlobalNamespace getGlobalNamespace() {
     return namespaceForChecks;
+  }
+
+  PreprocessorSymbolTable getPreprocessorSymbolTable() {
+    return preprocessorSymbolTable;
   }
 
   @Override
@@ -867,8 +877,15 @@ public class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("processGoogScopeAliases", true) {
     @Override
     protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
+      if (options.ideMode) {
+        preprocessorSymbolTable =
+            new PreprocessorSymbolTable(compiler.getRoot());
+      }
+
       return new ScopedAliases(
-              compiler, options.getAliasTransformationHandler());
+          compiler,
+          preprocessorSymbolTable,
+          options.getAliasTransformationHandler());
     }
   };
 

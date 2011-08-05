@@ -496,7 +496,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
 
   @Override
   protected ScopedAliases getProcessor(Compiler compiler) {
-    return new ScopedAliases(compiler, transformationHandler);
+    return new ScopedAliases(compiler, null, transformationHandler);
   }
 
   private static class TransformationHandlerSpy

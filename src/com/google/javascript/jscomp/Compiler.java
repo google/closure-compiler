@@ -1098,6 +1098,12 @@ public class Compiler extends AbstractCompiler {
     NodeTraversal.traverse(this, getRoot(), refCollector);
     symbolTable.addSymbolsFrom(refCollector);
 
+    PreprocessorSymbolTable preprocessorSymbolTable =
+        ensureDefaultPassConfig().getPreprocessorSymbolTable();
+    if (preprocessorSymbolTable != null) {
+      symbolTable.addSymbolsFrom(preprocessorSymbolTable);
+    }
+
     symbolTable.fillNamespaceReferences();
 
     return symbolTable;

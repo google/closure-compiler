@@ -21,11 +21,11 @@ import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.SimpleReference;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.StaticSymbolTable;
 
 import java.util.Collections;
@@ -185,30 +185,33 @@ public final class SymbolTable
           otherSymbolTable.getScope(otherSymbol));
 
       StaticReference<JSType> decl = otherSymbol.getDeclaration();
-      if (decl == null) {
-        continue;
+      Node declNode = decl == null ? null : decl.getNode();
+      Symbol mySymbol = null;
+      if (declNode != null && declNode.getStaticSourceFile() != null) {
+        // If we have a declaration node, we can ensure the symbol is declared.
+        mySymbol = symbols.get(declNode);
+        if (mySymbol == null) {
+          mySymbol = new Symbol(
+              otherSymbol.getName(),
+              otherSymbol.getType(),
+              otherSymbol.isTypeInferred(),
+              myScope);
+          symbols.put(declNode, mySymbol);
+          myScope.ownSymbols.put(mySymbol.getName(), mySymbol);
+
+          mySymbol.setDeclaration(new Reference(mySymbol, declNode));
+        }
+      } else {
+        // If we don't have a declaration node, we won't be able to declare
+        // a symbol in this symbol table. But we may be able to salvage the
+        // references if we already have a symbol.
+        mySymbol = myScope.getOwnSlot(otherSymbol.getName());
       }
 
-      Node declNode = decl.getNode();
-      if (declNode == null || declNode.getStaticSourceFile() == null) {
-        continue;
-      }
-
-      Symbol mySymbol = symbols.get(declNode);
-      if (mySymbol == null) {
-        mySymbol = new Symbol(
-            otherSymbol.getName(),
-            otherSymbol.getType(),
-            otherSymbol.isTypeInferred(),
-            myScope);
-        symbols.put(declNode, mySymbol);
-        myScope.ownSymbols.put(mySymbol.getName(), mySymbol);
-
-        mySymbol.setDeclaration(new Reference(mySymbol, declNode));
-      }
-
-      for (R otherRef : otherSymbolTable.getReferences(otherSymbol)) {
-        mySymbol.defineReferenceAt(otherRef.getNode());
+      if (mySymbol != null) {
+        for (R otherRef : otherSymbolTable.getReferences(otherSymbol)) {
+          mySymbol.defineReferenceAt(otherRef.getNode());
+        }
       }
     }
   }
@@ -263,7 +266,8 @@ public final class SymbolTable
 
       if (otherScopeParent == null) {
         // The global scope must be created before any local scopes.
-        Preconditions.checkState(scopes.isEmpty());
+        Preconditions.checkState(
+            scopes.isEmpty(), "Global scopes found at different roots");
       }
 
       myScope = new SymbolScope(
@@ -333,35 +337,9 @@ public final class SymbolTable
     }
   }
 
-  public static final class Reference implements StaticReference<JSType> {
-    private final Symbol symbol;
-    private final Node node;
-
+  public static final class Reference extends SimpleReference<Symbol> {
     Reference(Symbol symbol, Node node) {
-      this.symbol = symbol;
-      this.node = node;
-    }
-
-    @Override
-    public Symbol getSymbol() {
-      return symbol;
-    }
-
-    @Override
-    public Node getNode() {
-      return node;
-    }
-
-    @Override
-    public StaticSourceFile getSourceFile() {
-      return node.getStaticSourceFile();
-    }
-
-    @Override
-    public String toString() {
-      String sourceName = node == null ? null : node.getSourceFileName();
-      int lineNo = node == null ? -1 : node.getLineno();
-      return node.getQualifiedName() + "@" + sourceName + ":" + lineNo;
+      super(symbol, node);
     }
   }
 

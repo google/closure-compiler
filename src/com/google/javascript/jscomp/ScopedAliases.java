@@ -29,6 +29,8 @@ import com.google.javascript.rhino.Token;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /**
  * Process aliases in goog.scope blocks.
  *
@@ -50,6 +52,7 @@ class ScopedAliases implements HotSwapCompilerPass {
   static final String SCOPING_METHOD_NAME = "goog.scope";
 
   private final AbstractCompiler compiler;
+  private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final AliasTransformationHandler transformationHandler;
 
   // Errors
@@ -84,8 +87,10 @@ class ScopedAliases implements HotSwapCompilerPass {
       "The local variable {0} is in a goog.scope and is not an alias.");
 
   ScopedAliases(AbstractCompiler compiler,
+      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       AliasTransformationHandler transformationHandler) {
     this.compiler = compiler;
+    this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.transformationHandler = transformationHandler;
   }
 
@@ -263,6 +268,9 @@ class ScopedAliases implements HotSwapCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (isCallToScopeMethod(n)) {
+        if (preprocessorSymbolTable != null) {
+          preprocessorSymbolTable.addReference(n.getFirstChild());
+        }
         if (!NodeUtil.isExpressionNode(parent)) {
           report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
         }

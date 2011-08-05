@@ -87,6 +87,16 @@ public class SymbolTableTest extends TestCase {
     assertEquals(1, Iterables.size(table.getReferences(googDomHelper)));
   }
 
+  public void testGoogScopeReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var goog = {};" +
+        "goog.scope = function() {};" +
+        "goog.scope(function() {});");
+    Symbol googScope = getGlobalVar(table, "goog.scope");
+    assertNotNull(googScope);
+    assertEquals(2, Iterables.size(table.getReferences(googScope)));
+  }
+
   public void testGlobalVarInExterns() throws Exception {
     SymbolTable table = createSymbolTable("customExternFn(1);");
     Symbol fn = getGlobalVar(table, "customExternFn");
