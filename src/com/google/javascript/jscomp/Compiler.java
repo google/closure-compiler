@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 
 /**
  * Compiler (and the other classes in this package) does the following:
@@ -1463,12 +1464,14 @@ public class Compiler extends AbstractCompiler {
 
           String delimiter = options.inputDelimiter;
 
+          String inputName = root.getInputId().getIdName();
           String sourceName = root.getSourceFileName();
           Preconditions.checkState(sourceName != null);
           Preconditions.checkState(!sourceName.isEmpty());
 
-          delimiter = delimiter.replaceAll("%name%", sourceName)
-            .replaceAll("%num%", String.valueOf(inputSeqNum));
+          delimiter = delimiter
+              .replaceAll("%name%", Matcher.quoteReplacement(inputName))
+              .replaceAll("%num%", String.valueOf(inputSeqNum));
 
           cb.append(delimiter)
             .append("\n");
