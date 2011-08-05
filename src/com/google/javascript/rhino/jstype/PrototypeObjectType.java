@@ -244,6 +244,11 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
+  public boolean removeProperty(String name) {
+    return properties.remove(name) != null;
+  }
+
+  @Override
   public Node getPropertyNode(String propertyName) {
     Property p = properties.get(propertyName);
     if (p != null) {

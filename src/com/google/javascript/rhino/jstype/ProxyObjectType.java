@@ -246,6 +246,12 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean removeProperty(String name) {
+    return referencedObjType == null ? false :
+        referencedObjType.removeProperty(name);
+  }
+
+  @Override
   public boolean isPropertyTypeDeclared(String propertyName) {
     return referencedObjType == null ? false :
         referencedObjType.isPropertyTypeDeclared(propertyName);

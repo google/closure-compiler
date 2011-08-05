@@ -332,7 +332,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
    * @return true if the property was removed successfully. False if the
    *         property did not exist, or could not be removed.
    */
-  boolean removeProperty(String propertyName) {
+  public boolean removeProperty(String propertyName) {
     return false;
   }
 

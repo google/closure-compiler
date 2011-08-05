@@ -16,7 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 
 /**
  * A CleanupPass implementation that will remove all field declarations on
@@ -30,11 +34,18 @@ import com.google.javascript.rhino.Node;
  */
 public class FieldCleanupPass implements HotSwapCompilerPass {
 
+  private final AbstractCompiler compiler;
+
   public FieldCleanupPass(AbstractCompiler compiler) {
+    this.compiler = compiler;
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    String srcName = originalRoot.getSourceFileName();
+    Callback cb =
+        new QualifiedNameSearchTraversal(compiler.getTypeRegistry(), srcName);
+    new NodeTraversal(compiler, cb).traverse(originalRoot);
   }
 
   @Override
@@ -42,4 +53,59 @@ public class FieldCleanupPass implements HotSwapCompilerPass {
     // FieldCleanupPass should not do work during process.
   }
 
+  /**
+   * Search for fields to cleanup by looking for nodes in the tree which are
+   * root nodes of qualified names and getting the final token of the qualified
+   * name as a candidate field.
+   * <p>
+   * Once a candidate field is found, ask the {@code JSTypeRegistry} for all
+   * JSTypes that have a field with the same name, and check if the field on
+   * that type is defined in the file the compiler is cleaning up. If so, remove
+   * the field, and update the {@code JSTypeRegistry} to no longer associate the
+   * type with the field.
+   * <p>
+   * This algorithm was chosen for simplicity and is less than optimally
+   * efficient in two ways:
+   * <p>
+   * 1) All types with a matching field name are iterated over (when only types
+   * that extend or implement the JSType indicated by the containing object in
+   * the found Qualified Name need to be checked).
+   * <p>
+   * 2) All Qualified Names are checked, even those which are not L-Values or
+   * single declarations of an Type Expression. In general field should only be
+   * declared as part of an assignment ('ns.Type.a = 3;') or stand alone name
+   * declaration ('ns.Type.a;').
+   */
+  static class QualifiedNameSearchTraversal extends AbstractShallowCallback {
+
+    private final JSTypeRegistry typeRegistry;
+    private final String srcName;
+
+    public QualifiedNameSearchTraversal(
+        JSTypeRegistry typeRegistry, String srcName) {
+      this.typeRegistry = typeRegistry;
+      this.srcName = srcName;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node p) {
+      // We are a root GetProp
+      if (NodeUtil.isGetProp(n) && !NodeUtil.isGetProp(p)) {
+        String propName = getFieldName(n);
+        Iterable<ObjectType> types =
+            typeRegistry.getEachReferenceTypeWithProperty(propName);
+        for (ObjectType type : types) {
+          Node pNode = type.getPropertyNode(propName);
+          if (srcName.equals(pNode.getSourceFileName())) {
+            typeRegistry.unregisterPropertyOnType(propName, type);
+            type.removeProperty(propName);
+          }
+        }
+      }
+    }
+
+    private String getFieldName(Node n) {
+      return n.getLastChild().getString();
+    }
+  }
 }

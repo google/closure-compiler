@@ -649,6 +649,22 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
+   * Removes the index's reference to a property on the given type (if it is
+   * currently registered). If the property is not registered on the type yet,
+   * this method will not change internal state.
+   *
+   * @param propertyName the name of the property to unregister
+   * @param type the type to unregister the property on.
+   */
+  public void unregisterPropertyOnType(String propertyName, JSType type) {
+    Map<String, ObjectType> typeSet =
+        eachRefTypeIndexedByProperty.get(propertyName);
+    if (typeSet != null) {
+      typeSet.remove(type.toObjectType().getReferenceName());
+    }
+  }
+
+  /**
    * Gets the greatest subtype of the {@code type} that has a property
    * {@code propertyName} defined on it.
    */
