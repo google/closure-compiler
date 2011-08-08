@@ -2096,6 +2096,7 @@ public class Node implements Cloneable, Serializable {
    * debug information across node append and remove operations.
    * @return this
    */
+  // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
   public Node copyInformationFrom(Node other) {
     if (getProp(ORIGINALNAME_PROP) == null) {
         putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
@@ -2118,11 +2119,68 @@ public class Node implements Cloneable, Serializable {
    * entire tree rooted at this node.
    * @return this
    */
+  // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
   public Node copyInformationFromForTree(Node other) {
     copyInformationFrom(other);
     for (Node child = getFirstChild();
          child != null; child = child.getNext()) {
       child.copyInformationFromForTree(other);
+    }
+
+    return this;
+  }
+
+  /**
+   * Overwrite all the source information in this node with
+   * that of {@code other}.
+   */
+  public Node useSourceInfoFrom(Node other) {
+    putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
+    putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
+    sourcePosition = other.sourcePosition;
+    return this;
+  }
+
+  /**
+   * Overwrite all the source information in this node and its subtree with
+   * that of {@code other}.
+   */
+  public Node useSourceInfoFromForTree(Node other) {
+    useSourceInfoFrom(other);
+    for (Node child = getFirstChild();
+         child != null; child = child.getNext()) {
+      child.useSourceInfoFromForTree(other);
+    }
+
+    return this;
+  }
+
+  /**
+   * Overwrite all the source information in this node with
+   * that of {@code other} iff the source info is missing.
+   */
+  public Node useSourceInfoIfMissingFrom(Node other) {
+    if (getProp(ORIGINALNAME_PROP) == null) {
+      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
+    }
+
+    if (getProp(STATIC_SOURCE_FILE) == null) {
+      putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
+      sourcePosition = other.sourcePosition;
+    }
+
+    return this;
+  }
+
+  /**
+   * Overwrite all the source information in this node and its subtree with
+   * that of {@code other} iff the source info is missing.
+   */
+  public Node useSourceInfoIfMissingFromForTree(Node other) {
+    useSourceInfoIfMissingFrom(other);
+    for (Node child = getFirstChild();
+         child != null; child = child.getNext()) {
+      child.useSourceInfoIfMissingFromForTree(other);
     }
 
     return this;
