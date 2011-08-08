@@ -1003,7 +1003,8 @@ public class FunctionInjectorTest extends TestCase {
     helperInlineReferenceToFunction(
         "function foo(){function x() {var a; return true;} return x}; foo();",
         "function foo(){function x(){var a;return true}return x};" +
-            "{function x$$inline_1(){var a$$inline_2;return true}x$$inline_1}",
+            "{var x$$inline_1 = function(){" +
+            "var a$$inline_2;return true};x$$inline_1}",
         "foo", INLINE_BLOCK);
   }
 
@@ -1538,7 +1539,12 @@ public class FunctionInjectorTest extends TestCase {
 
   private static Node parseExpected(Compiler compiler, String js) {
     Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
+    String message = "Unexpected errors: ";
+    JSError[] errs = compiler.getErrors();
+    for (int i = 0; i < errs.length; i++){
+      message += "\n" + errs[i].toString();
+    }
+    assertEquals(message, 0, compiler.getErrorCount());
     return n;
   }
 

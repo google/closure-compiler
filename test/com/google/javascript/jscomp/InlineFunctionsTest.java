@@ -228,7 +228,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testInlineFunctions15b() {
-    // closure factories: don't inline closure with locals.
+    // closure factories: don't inline closure with locals in global scope.
     test("function foo(){var x;return function(a){return a+1}}" +
          "var b=function(){return c};" +
          "var d=b()+foo()",
@@ -238,19 +238,33 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testInlineFunctions15c() {
-    // closure factories: don't inline into non-global scope.
+    // closure factories: inline into non-global scope.
     test("function foo(){return function(a){return a+1}}" +
          "var b=function(){return c};" +
          "function _x(){ var d=b()+foo() }",
 
-         "function foo(){return function(a){return a+1}}" +
+         "function _x(){ var d=c+function(a){return a+1}}");
+  }
+
+  public void testInlineFunctions15d() {
+    // closure factories: don't inline functions with vars.
+    test("function foo(){var x; return function(a){return a+1}}" +
+         "var b=function(){return c};" +
+         "function _x(){ var d=b()+foo() }",
+
+         "function foo(){var x; return function(a){return a+1}}" +
          "function _x(){ var d=c+foo() }");
   }
 
-  public void testInlineFunctions16() {
-    // watch out for closures that are deeper in the function
+  public void testInlineFunctions16a() {
     testSame("function foo(b){return window.bar(function(){c(b)})}" +
-             "var d=foo(e)");
+         "var d=foo(e)");
+  }
+
+  public void testInlineFunctions16b() {
+    test("function foo(){return window.bar(function(){c()})}" +
+         "var d=foo(e)",
+         "var d=window.bar(function(){c()})");
   }
 
   public void testInlineFunctions17() {
@@ -1404,13 +1418,42 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testComplexFunctionWithFunctionDefinition2() {
-    // Don't inline if local names might need to be captured.
+    // Don't inline if local names might be captured.
     testSame("function f(a){call(function(){return})}f()");
+  }
+
+  public void testComplexFunctionWithFunctionDefinition2a() {
+    // Don't inline if local names might be captured.
+    testSame("(function(){" +
+        "var f = function(a){call(function(){return})};f()})()");
+  }
+
+  public void testComplexFunctionWithFunctionDefinition2b() {
+    // Don't inline if local names might be captured.
+    test("(function(){function f(){call(function(){return})}f()})()",
+         "{{call(function(){return})}}");
+  }
+
+  public void testComplexFunctionWithFunctionDefinition2c() {
+    // Don't inline if local names might be captured.
+    test("(function(){function f(a){call(function(){return})}f()})()",
+      "{var f$$inline_1 = function(a$$inline_2){call(function(){return})};" +
+      "f$$inline_1()}"
+      );
   }
 
   public void testComplexFunctionWithFunctionDefinition3() {
     // Don't inline if local names might need to be captured.
     testSame("function f(){var a; call(function(){return})}f()");
+  }
+
+  public void testComplexFunctionWithFunctionDefinition3a() {
+    // Don't inline if local names might need to be captured.
+    test("(function(){function f(){var a; call(function(){return})}f()})()",
+        "{var f$$inline_1 = function() {" +
+        "  var a$$inline_2; call(function(){return})" +
+        "};" +
+        "f$$inline_1()}");
   }
 
   public void testDecomposePlusEquals() {
@@ -1552,10 +1595,34 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testFunctionExpressionCallInlining11c() {
-    // Can't inline functions that return inner functions into non-global scope.
+    // Can inline, not temps needed.
+    test("function _x() {" +
+         "  ((function(){return function(){foo()}})())();" +
+         "}",
+         "function _x() {" +
+         "  {foo();}" +
+         "}");
+  }
+
+  public void testFunctionExpressionCallInlining11d() {
+    // Yes, inline into a function containing eval, if
+    // no temps are introduced.
+    test("function _x() {" +
+         "  eval();" +
+         "  ((function(){return function(){foo()}})())();" +
+         "}",
+         "function _x() {" +
+         "  eval();{foo();}" +
+         "}");
+  }
+
+    public void testFunctionExpressionCallInlining11e() {
+    // No, don't inline into a function containing eval,
+    // if no temps are introduced.
     testSame("function _x() {" +
-                "((function(){return function(){foo()}})())();" +
-                "}");
+         "  eval();" +
+         "  ((function(a){return function(){foo()}})())();" +
+         "}");
   }
 
   public void testFunctionExpressionCallInlining12() {
@@ -1865,6 +1932,24 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "    }" +
         "  }" +
         "})(jQuery)");
+  }
+
+  public void testAnonymous1() {
+    test("(function(){var a=10;(function(){var b=a;a++;alert(b)})()})();",
+         "{var a$$inline_2=10;" +
+         "{var b$$inline_3=a$$inline_2;" +
+         "a$$inline_2++;alert(b$$inline_3)}}");
+  }
+
+  public void testAnonymous2() {
+    testSame("(function(){eval();(function(){var b=a;a++;alert(b)})()})();");
+  }
+
+  public void testAnonymous3() {
+    // Introducing a new value into is tricky
+    testSame("(function(){var a=10;(function(){arguments;})()})();");
+    test("(function(){(function(){arguments;})()})();",
+        "{(function(){arguments;})()}");
   }
 
   // Inline a single reference function into deeper modules
