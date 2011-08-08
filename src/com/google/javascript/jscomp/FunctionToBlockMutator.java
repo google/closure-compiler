@@ -68,11 +68,6 @@ class FunctionToBlockMutator {
     // without causing conflicts.
     makeLocalNamesUnique(newFnNode, isCallInLoop);
 
-    // Function declarations must be rewritten as function expressions as
-    // they will be within a block and normalization prevents function
-    // declarations within block as browser implementations vary.
-    rewriteFunctionDeclarations(newFnNode.getLastChild());
-
     // TODO(johnlenz): Mark NAME nodes constant for parameters that are not
     // modified.
     Set<String> namesToAlias =
@@ -113,35 +108,6 @@ class FunctionToBlockMutator {
     return injectableBlock;
   }
 
-
-  /**
-   * @param n The node to inspect
-   */
-  private void rewriteFunctionDeclarations(Node n) {
-    if (n.getType() == Token.FUNCTION) {
-      if (NodeUtil.isFunctionDeclaration(n)) {
-        // Rewrite: function f() {} ==> var f = function() {}
-        Node fnNameNode = n.getFirstChild();
-
-        Node var = new Node(Token.VAR).copyInformationFrom(n);
-        Node name = Node.newString(Token.NAME, fnNameNode.getString())
-            .copyInformationFrom(fnNameNode);
-
-        fnNameNode.setString("");
-        // Add the VAR, remove the FUNCTION
-        n.getParent().replaceChild(n, var);
-        var.addChildToFront(name);
-        // readd the function as a function expression
-        name.addChildToFront(n);
-      }
-      return;
-    }
-
-    for (Node c = n.getFirstChild(), next; c != null; c = next) {
-      next = c.getNext(); // We may rewrite "c"
-      rewriteFunctionDeclarations(c);
-    }
-  }
 
   /**
    *  For all VAR node with uninitialized declarations, set

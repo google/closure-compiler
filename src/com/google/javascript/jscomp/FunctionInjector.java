@@ -128,18 +128,13 @@ class FunctionInjector {
     final String fnRecursionName = fnNode.getFirstChild().getString();
     Preconditions.checkState(fnRecursionName != null);
 
-    // If the function references "arguments" directly in the function
-    boolean referencesArguments = NodeUtil.isNameReferenced(
-        block, "arguments", NodeUtil.MATCH_NOT_FUNCTION);
-
-    // or it references "eval" or one of its names anywhere.
     Predicate<Node> p = new Predicate<Node>(){
       @Override
       public boolean apply(Node n) {
         if (n.getType() == Token.NAME) {
-          return n.getString().equals("eval")
-            || (!fnName.isEmpty()
-                && n.getString().equals(fnName))
+          return n.getString().equals("arguments")
+            || n.getString().equals("eval")
+            || n.getString().equals(fnName)
             || (!fnRecursionName.isEmpty()
                 && n.getString().equals(fnRecursionName));
         }
@@ -147,8 +142,7 @@ class FunctionInjector {
       }
     };
 
-    return !referencesArguments
-        && !NodeUtil.has(block, p, Predicates.<Node>alwaysTrue());
+    return !NodeUtil.has(block, p, Predicates.<Node>alwaysTrue());
   }
 
   /**
@@ -174,6 +168,16 @@ class FunctionInjector {
       return CanInlineResult.NO;
     }
 
+    // Limit where functions that contain functions can be inline.  Introducing
+    // an inner function into another function can capture a variable and cause
+    // a memory leak.  This isn't a problem in the global scope as those values
+    // last until explicitly cleared.
+    if (containsFunctions && !t.inGlobalScope()) {
+      // TODO(johnlenz): Allow inlining into any scope without local names or
+      // inner functions.
+      return CanInlineResult.NO;
+    }
+
     // TODO(johnlenz): Add support for 'apply'
     if (referencesThis && !NodeUtil.isFunctionObjectCall(callNode)) {
       // TODO(johnlenz): Allow 'this' references to be replaced with a
@@ -185,7 +189,7 @@ class FunctionInjector {
       return canInlineReferenceDirectly(callNode, fnNode);
     } else {
       return canInlineReferenceAsStatementBlock(
-          t, callNode, fnNode, needAliases, containsFunctions);
+          t, callNode, fnNode, needAliases);
     }
   }
 
@@ -525,11 +529,9 @@ class FunctionInjector {
    *    a = foo();
    *    var a = foo();
    * </pre>
-   * @param containsFunctions Whether the fnNode contains inner functions.
    */
   private CanInlineResult canInlineReferenceAsStatementBlock(
-      NodeTraversal t, Node callNode, Node fnNode, Set<String> namesToAlias,
-      boolean containsFunctions) {
+      NodeTraversal t, Node callNode, Node fnNode, Set<String> namesToAlias) {
     CallSiteType callSiteType = classifyCallSite(callNode);
     if (callSiteType == CallSiteType.UNSUPPORTED) {
       return CanInlineResult.NO;
@@ -541,7 +543,7 @@ class FunctionInjector {
     }
 
     if (!callMeetsBlockInliningRequirements(
-            t, callNode, fnNode, namesToAlias, containsFunctions)) {
+            t, callNode, fnNode, namesToAlias)) {
       return CanInlineResult.NO;
     }
 
@@ -558,8 +560,7 @@ class FunctionInjector {
    * inlining would introduce new globals.
    */
   private boolean callMeetsBlockInliningRequirements(
-      NodeTraversal t, Node callNode, final Node fnNode,
-      Set<String> namesToAlias, boolean containsFunctions) {
+      NodeTraversal t, Node callNode, Node fnNode, Set<String> namesToAlias) {
     // Note: functions that contain function definitions are filtered out
     // in isCanidateFunction.
 
@@ -570,39 +571,25 @@ class FunctionInjector {
     // Don't inline functions with var declarations into a scope with inner
     // functions as the new vars would leak into the inner function and
     // cause memory leaks.
-    boolean hasLocalNames = hasLocalNames(fnNode);
-    boolean forbidTemps = false;
+    boolean fnContainsVars = NodeUtil.has(
+        NodeUtil.getFunctionBody(fnNode),
+        new NodeUtil.MatchDeclaration(),
+        new NodeUtil.MatchShallowStatement());
+    boolean callerContainsFunction = false;
     if (!t.inGlobalScope()) {
       Node fnCaller = t.getScopeRoot();
       Node fnCallerBody = fnCaller.getLastChild();
 
-      // Don't allow any new vars in a scope that contains eval
-      forbidTemps = NodeUtil.isNameReferenced(
-          fnCallerBody, "eval", NodeUtil.MATCH_NOT_FUNCTION);
-      if (!forbidTemps && containsFunctions) {
-        // Don't allow any new vars in a scope that has other functions.
-        // Don't count the function we are removing by inlining.
-        Predicate<Node> match = new Predicate<Node>(){
-          @Override
-          public boolean apply(Node n) {
-            if (n.getType() == Token.FUNCTION) {
-              return n != fnNode;
-            }
-            return false;
-          }
-        };
-        forbidTemps = NodeUtil.has(fnCallerBody,
-            match, NodeUtil.MATCH_NOT_FUNCTION);
-      }
+      callerContainsFunction = NodeUtil.containsFunction(fnCallerBody);
     }
 
-    if (forbidTemps) {
-      if (hasLocalNames) {
-        return false;
-      }
+    if (fnContainsVars && callerContainsFunction) {
+      return false;
+    }
 
-      // If the caller contains functions, verify we aren't adding any
-      // additional VAR declarations because aliasing is needed.
+    // If the caller contains functions, verify we aren't adding any
+    // additional VAR declarations because aliasing is needed.
+    if (callerContainsFunction) {
       Map<String, Node> args =
           FunctionArgumentInjector.getFunctionCallParameterMap(
               fnNode, callNode, this.safeNameIdSupplier);
@@ -619,19 +606,6 @@ class FunctionInjector {
     }
 
     return true;
-  }
-
-  /**
-   * @param fnNode The function to inspect.
-   * @return Whether the function has parameters, var, or function declarations.
-   */
-  private boolean hasLocalNames(Node fnNode) {
-    Node block = NodeUtil.getFunctionBody(fnNode);
-    return NodeUtil.getFunctionParameters(fnNode).hasChildren()
-        || NodeUtil.has(
-             block,
-             new NodeUtil.MatchVarDeclaration(),
-             new NodeUtil.MatchShallowStatement());
   }
 
   /**

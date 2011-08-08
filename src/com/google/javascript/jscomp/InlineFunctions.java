@@ -312,7 +312,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     return NodeUtil.getFunctionParameters(fnNode).hasChildren()
         || NodeUtil.has(
              block,
-             new NodeUtil.MatchVarDeclaration(),
+             new NodeUtil.MatchDeclaration(),
              new NodeUtil.MatchShallowStatement());
   }
 

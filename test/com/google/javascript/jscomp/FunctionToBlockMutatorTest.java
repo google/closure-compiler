@@ -161,14 +161,6 @@ public class FunctionToBlockMutatorTest extends TestCase {
         "foo", null, false, callInLoop);
   }
 
-  public void testMutateFunctionDefinition() {
-     // function declarations are rewritten as function
-     // expressions
-     helperMutate(
-        "function foo(a){function g(){}}; foo(1);",
-        "{var g$$inline_3=function(){};}",
-        "foo", null);
-  }
 
   public void helperMutate(
       String code, final String expectedResult, final String fnName) {

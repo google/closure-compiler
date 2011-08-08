@@ -2673,15 +2673,6 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * A predicate for matching var
-   */
-  static class MatchVarDeclaration implements Predicate<Node> {
-    @Override
-    public boolean apply(Node n) {
-      return n.getType() == Token.VAR;
-    }
-  }
 
   /**
    * A predicate for matching var or function declarations.
