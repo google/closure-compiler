@@ -173,6 +173,16 @@ public class DefaultPassConfig extends PassConfig {
     return preprocessorSymbolTable;
   }
 
+  void maybeInitializePreprocessorSymbolTable(AbstractCompiler compiler) {
+    if (options.ideMode) {
+      Node root = compiler.getRoot();
+      if (preprocessorSymbolTable == null ||
+          preprocessorSymbolTable.getRootNode() != root) {
+        preprocessorSymbolTable = new PreprocessorSymbolTable(root);
+      }
+    }
+  }
+
   @Override
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = Lists.newArrayList();
@@ -833,8 +843,10 @@ public class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("processProvidesAndRequires", false) {
     @Override
     protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
+      maybeInitializePreprocessorSymbolTable(compiler);
       final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(
           compiler,
+          preprocessorSymbolTable,
           options.brokenClosureRequiresLevel,
           options.rewriteNewDateGoogNow);
 
@@ -877,11 +889,7 @@ public class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("processGoogScopeAliases", true) {
     @Override
     protected HotSwapCompilerPass createInternal(AbstractCompiler compiler) {
-      if (options.ideMode) {
-        preprocessorSymbolTable =
-            new PreprocessorSymbolTable(compiler.getRoot());
-      }
-
+      maybeInitializePreprocessorSymbolTable(compiler);
       return new ScopedAliases(
           compiler,
           preprocessorSymbolTable,

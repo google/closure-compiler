@@ -97,6 +97,27 @@ public class SymbolTableTest extends TestCase {
     assertEquals(2, Iterables.size(table.getReferences(googScope)));
   }
 
+  public void testGoogRequireReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var goog = {};" +
+        "goog.provide = function() {};" +
+        "goog.require = function() {};" +
+        "goog.provide('goog.dom');" +
+        "goog.require('goog.dom');");
+    Symbol goog = getGlobalVar(table, "goog");
+    assertNotNull(goog);
+
+    // 8 references:
+    // 5 in code
+    // 2 in strings
+    // 1 created by ProcessClosurePrimitives when it processes the provide.
+    //
+    // NOTE(nicksantos): In the future, we may de-dupe references such
+    // that the one in the goog.provide string and the one created by
+    // ProcessClosurePrimitives count as the same reference.
+    assertEquals(8, Iterables.size(table.getReferences(goog)));
+  }
+
   public void testGlobalVarInExterns() throws Exception {
     SymbolTable table = createSymbolTable("customExternFn(1);");
     Symbol fn = getGlobalVar(table, "customExternFn");

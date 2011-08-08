@@ -100,7 +100,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
     if (lineno < 1 || lineno > lineOffsets.length) {
       throw new IllegalArgumentException(
-          "Expected line number between 1 and " + lineOffsets.length);
+          "Expected line number between 1 and " + lineOffsets.length +
+          "\nActual: " + lineno);
     }
     return lineOffsets[lineno - 1];
   }

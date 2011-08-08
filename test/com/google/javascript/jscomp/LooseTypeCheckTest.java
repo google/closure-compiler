@@ -6967,7 +6967,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         0, compiler.getErrorCount());
 
     // For processing goog.addDependency for forward typedefs.
-    new ProcessClosurePrimitives(compiler, CheckLevel.ERROR, true)
+    new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, true)
         .process(null, n);
 
     CodingConvention convention = compiler.getCodingConvention();

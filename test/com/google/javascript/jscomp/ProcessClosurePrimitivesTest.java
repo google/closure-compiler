@@ -54,13 +54,14 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   @Override public CompilerPass getProcessor(final Compiler compiler) {
     if ((additionalCode == null) && (additionalEndCode == null)) {
-      return new ProcessClosurePrimitives(compiler, CheckLevel.ERROR, true);
+      return new ProcessClosurePrimitives(
+          compiler, null, CheckLevel.ERROR, true);
     } else {
       return new CompilerPass() {
         @Override
         public void process(Node externs, Node root) {
           // Process the original code.
-          new ProcessClosurePrimitives(compiler, CheckLevel.OFF, true)
+          new ProcessClosurePrimitives(compiler, null, CheckLevel.OFF, true)
               .process(externs, root);
 
           // Inject additional code at the beginning.
@@ -98,7 +99,7 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
           }
 
           // Process the tree a second time.
-          new ProcessClosurePrimitives(compiler, CheckLevel.ERROR, true)
+          new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, true)
               .process(externs, root);
         }
       };

@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * Replaces goog.provide calls, removes goog.require calls, verifies that
  * goog.require has a corresponding goog.provide and some closure specific
@@ -116,11 +118,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private final Set<String> exportedVariables = Sets.newHashSet();
   private final CheckLevel requiresLevel;
   private final boolean rewriteNewDateGoogNow;
+  private final PreprocessorSymbolTable preprocessorSymbolTable;
 
   ProcessClosurePrimitives(AbstractCompiler compiler,
-                           CheckLevel requiresLevel,
-                           boolean rewriteNewDateGoogNow) {
+      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
+      CheckLevel requiresLevel,
+      boolean rewriteNewDateGoogNow) {
     this.compiler = compiler;
+    this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.moduleGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
     this.rewriteNewDateGoogNow = rewriteNewDateGoogNow;
@@ -295,6 +300,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // leave this here this time and let it error next time if it
       // is still not provided.
       if (provided != null || requiresLevel.isOn()) {
+        maybeAddToSymbolTable(left);
+        maybeAddStringNodeToSymbolTable(arg);
         parent.detachFromParent();
         compiler.reportCodeChange();
       }
@@ -309,6 +316,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     Node arg = left.getNext();
     if (verifyProvide(t, left, arg)) {
       String ns = arg.getString();
+
+      maybeAddToSymbolTable(left);
+      maybeAddStringNodeToSymbolTable(arg);
+
       if (providedNames.containsKey(ns)) {
         ProvidedName previouslyProvided = providedNames.get(ns);
         if (!previouslyProvided.isExplicitlyProvided()) {
@@ -1024,8 +1035,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           ? firstNode : provideStringNode;
       newNode.copyInformationFromForTree(sourceInfoNode);
       if (offset != 0) {
-        newNode.setSourcePositionForTree(
-            newNode.getSourcePosition() + offset);
+        newNode.setSourceEncodedPositionForTree(
+            sourceInfoNode.getSourcePosition() + offset);
       }
     }
 
@@ -1074,6 +1085,57 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     return value != null
       && value.getType() == Token.OBJECTLIT
       && !value.hasChildren();
+  }
+
+  /**
+   * The string in {@code n} is a reference name. Create a synthetic
+   * node for it with all the proper source info, and add it to the symbol
+   * table.
+   */
+  private void maybeAddStringNodeToSymbolTable(Node n) {
+    if (preprocessorSymbolTable == null) {
+      return;
+    }
+
+    String name = n.getString();
+    Node syntheticRef = NodeUtil.newQualifiedNameNode(
+        compiler.getCodingConvention(), name,
+        n /* real source offsets will be filled in below */,
+        name);
+
+    // Offsets to add to source. Named for documentation purposes.
+    final int FOR_QUOTE = 1;
+    final int FOR_DOT = 1;
+
+    Node current = null;
+    for (current = syntheticRef;
+         current.getType() == Token.GETPROP;
+         current = current.getFirstChild()) {
+      int fullLen = current.getQualifiedName().length();
+      int namespaceLen = current.getFirstChild().getQualifiedName().length();
+
+      current.setSourceEncodedPosition(n.getSourcePosition() + FOR_QUOTE);
+      current.setLength(fullLen);
+
+      current.getLastChild().setSourceEncodedPosition(
+          n.getSourcePosition() + namespaceLen + FOR_QUOTE + FOR_DOT);
+      current.getLastChild().setLength(
+          current.getLastChild().getString().length());
+    }
+
+    current.setSourceEncodedPosition(n.getSourcePosition() + FOR_QUOTE);
+    current.setLength(current.getString().length());
+
+    maybeAddToSymbolTable(syntheticRef);
+  }
+
+  /**
+   * Add the given qualified name node to the symbol table.
+   */
+  private void maybeAddToSymbolTable(Node n) {
+    if (preprocessorSymbolTable != null) {
+      preprocessorSymbolTable.addReference(n);
+    }
   }
 
   // -------------------------------------------------------------------------

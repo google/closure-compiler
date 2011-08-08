@@ -1310,12 +1310,16 @@ public class Node implements Cloneable, Serializable {
       sourcePosition = mergeLineCharNo(getLineno(), charno);
   }
 
-  public void setSourcePositionForTree(int sourcePosition) {
+  public void setSourceEncodedPosition(int sourcePosition) {
+    this.sourcePosition = sourcePosition;
+  }
+
+  public void setSourceEncodedPositionForTree(int sourcePosition) {
     this.sourcePosition = sourcePosition;
 
     for (Node child = getFirstChild();
          child != null; child = child.getNext()) {
-      child.setSourcePositionForTree(sourcePosition);
+      child.setSourceEncodedPositionForTree(sourcePosition);
     }
   }
 
@@ -2097,15 +2101,15 @@ public class Node implements Cloneable, Serializable {
         putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
-    if (getProp(SOURCENAME_PROP) == null) {
-      putProp(SOURCENAME_PROP, other.getProp(SOURCENAME_PROP));
-      sourcePosition = other.sourcePosition;
-    }
-
     if (getProp(STATIC_SOURCE_FILE) == null) {
       putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
     }
 
+    if (getProp(SOURCENAME_PROP) == null) {
+      putProp(SOURCENAME_PROP, other.getProp(SOURCENAME_PROP));
+    }
+
+    sourcePosition = other.sourcePosition;
     return this;
   }
 
