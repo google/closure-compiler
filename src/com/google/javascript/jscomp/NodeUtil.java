@@ -508,6 +508,55 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns true if the operator on this node is symmetric
+   */
+  public static boolean isSymmetricOperation(Node n) {
+    switch (n.getType()) {
+      case Token.EQ: // equal
+      case Token.NE: // not equal
+      case Token.SHEQ: // exactly equal
+      case Token.SHNE: // exactly not equal
+      case Token.MUL: // multiply, unlike add it only works on numbers
+                      // or results NaN if any of the operators is not a number
+        return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if the operator on this node is relational.
+   * the returned set does not include the equalities.
+   */
+  public static boolean isRelationalOperation(Node n) {
+    switch (n.getType()) {
+      case Token.GT: // equal
+      case Token.GE: // not equal
+      case Token.LT: // exactly equal
+      case Token.LE: // exactly not equal
+        return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns the inverse of an operator if it is invertible.
+   * ex. '>' ==> '<'
+   */
+  public static int getInverseOperator(int type) {
+    switch (type) {
+      case Token.GT:
+        return Token.LT;
+      case Token.LT:
+        return Token.GT;
+      case Token.GE:
+        return Token.LE;
+      case Token.LE:
+        return Token.GE;
+    }
+    return Token.ERROR;
+  }
+
+  /**
    * Returns true if this is a literal value. We define a literal value
    * as any node that evaluates to the same thing regardless of when or
    * where it is evaluated. So /xyz/ and [3, 5] are literals, but
