@@ -1239,6 +1239,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   /**
    * Prints a list of input names, delimited by newlines, to the manifest file.
+   * The names are using root-relative paths.
    */
   private void printManifestTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
@@ -1254,18 +1255,14 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   /**
    * Prints all the input contents, starting with a comment that specifies
-   * the input file name before each file
+   * the input file name (using exec paths) before each file.
    */
   private void printBundleTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
     for (CompilerInput input : inputs) {
-      String rootRelativePath = rootRelativePathsMap.get(input.getName());
-      String displayName = rootRelativePath != null
-                               ? rootRelativePath
-                               : input.getName();
       File file = new File(input.getName());
       out.append("//");
-      out.append(displayName);
+      out.append(input.getName());
       out.append("\n");
       Files.copy(file, inputCharset, out);
       out.append("\n");
