@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
@@ -92,8 +93,8 @@ public class FieldCleanupPass implements HotSwapCompilerPass {
       // We are a root GetProp
       if (NodeUtil.isGetProp(n) && !NodeUtil.isGetProp(p)) {
         String propName = getFieldName(n);
-        Iterable<ObjectType> types =
-            typeRegistry.getEachReferenceTypeWithProperty(propName);
+        Iterable<ObjectType> types = ImmutableList.copyOf(
+            typeRegistry.getEachReferenceTypeWithProperty(propName));
         for (ObjectType type : types) {
           Node pNode = type.getPropertyNode(propName);
           if (srcName.equals(pNode.getSourceFileName())) {
