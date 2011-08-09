@@ -2099,18 +2099,17 @@ public class Node implements Cloneable, Serializable {
   // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
   public Node copyInformationFrom(Node other) {
     if (getProp(ORIGINALNAME_PROP) == null) {
-        putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
+      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
     if (getProp(STATIC_SOURCE_FILE) == null) {
       putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
-    }
-
-    if (getProp(SOURCENAME_PROP) == null) {
+      sourcePosition = other.sourcePosition;
+    } else if (getProp(SOURCENAME_PROP) == null) {
       putProp(SOURCENAME_PROP, other.getProp(SOURCENAME_PROP));
+      sourcePosition = other.sourcePosition;
     }
 
-    sourcePosition = other.sourcePosition;
     return this;
   }
 
