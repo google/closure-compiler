@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Class for parsing version 3 of the SourceMap format, as produced by the
@@ -38,7 +40,8 @@ import java.util.Collections;
  * http://code.google.com/p/closure-compiler/wiki/SourceMaps
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReversable {
+public class SourceMapConsumerV3 implements SourceMapConsumer,
+    SourceMappingReversable {
   static final int UNMAPPED = -1;
 
   private String[] sources;
@@ -46,6 +49,9 @@ public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReve
   private int lineCount;
   // Slots in the lines list will be null if the line does not have any entries.
   private ArrayList<ArrayList<Entry>> lines = null;
+  /** originalFile path ==> original line ==> target mappings */
+  private Map<String, Map<Integer, Collection<OriginalMapping>>>
+      reverseSourceMapping;
 
   public SourceMapConsumerV3() {
 
@@ -222,38 +228,31 @@ public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReve
   }
 
   @Override
-  /**
-   * TODO(user): this implementation is a prototype. It does an O(n) search of the lines list,
-   * instead of reversing the source map and doing O(1) lookups. It also does not currently make use
-   * of the column parameter.
-   */
-  public Collection<OriginalMapping> getReverseMapping(String originalFile, int line, int column) {
-    int sourceFileId = Arrays.binarySearch(sources, originalFile);
+  public Collection<OriginalMapping> getReverseMapping(String originalFile,
+      int line, int column) {
+    // TODO(user): This implementation currently does not make use of the column
+    // parameter.
 
-    if (sourceFileId < 0) {
-      return Collections.emptyList();
+    // Synchronization needs to be handled by callers.
+    if (reverseSourceMapping == null) {
+      createReverseMapping();
     }
 
-    for (ArrayList<Entry> entries : lines) {
-      if (entries != null) {
-        for (Entry entry : entries) {
-          if (entry.getSourceFileId() == sourceFileId) {
-            if (entry.getSourceLine() == line) {
-              Builder builder = OriginalMapping.newBuilder()
-                .setOriginalFile(sources[entry.getSourceFileId()])
-                .setLineNumber(entry.getSourceLine())
-                .setColumnPosition(entry.getSourceColumn());
+    Map<Integer, Collection<OriginalMapping>> sourceLineToCollectionMap =
+        reverseSourceMapping.get(originalFile);
 
-              OriginalMapping mapping = builder.build();
+    if (sourceLineToCollectionMap == null) {
+      return Collections.emptyList();
+    } else {
+      Collection<OriginalMapping> mappings =
+          sourceLineToCollectionMap.get(line);
 
-              return Collections.singletonList(mapping);
-            }
-          }
-        }
+      if (mappings == null) {
+        return Collections.emptyList();
+      } else {
+        return mappings;
       }
     }
-
-    return Collections.emptyList();
   }
 
   private String[] getJavaStringArray(JSONArray array) throws JSONException {
@@ -481,6 +480,52 @@ public class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReve
         x.setIdentifier(names[entry.getNameId()]);
       }
       return x.build();
+    }
+  }
+
+  /**
+   * Reverse the source map; the created mapping will allow us to quickly go
+   * from a source file and line number to a collection of target
+   * OriginalMappings.
+   */
+  private void createReverseMapping() {
+    reverseSourceMapping =
+        new HashMap<String, Map<Integer, Collection<OriginalMapping>>>();
+
+    for (int targetLine = 0; targetLine < lines.size(); targetLine++) {
+      ArrayList<Entry> entries = lines.get(targetLine);
+
+      if (entries != null) {
+        for (Entry entry : entries) {
+          if (entry.getSourceFileId() != UNMAPPED
+              && entry.getSourceLine() != UNMAPPED) {
+            String originalFile = sources[entry.getSourceFileId()];
+
+            if (!reverseSourceMapping.containsKey(originalFile)) {
+              reverseSourceMapping.put(originalFile,
+                  new HashMap<Integer, Collection<OriginalMapping>>());
+            }
+
+            Map<Integer, Collection<OriginalMapping>> lineToCollectionMap =
+                reverseSourceMapping.get(originalFile);
+
+            int sourceLine = entry.getSourceLine();
+
+            if (!lineToCollectionMap.containsKey(sourceLine)) {
+              lineToCollectionMap.put(sourceLine,
+                  new ArrayList<OriginalMapping>(1));
+            }
+
+            Collection<OriginalMapping> mappings =
+                lineToCollectionMap.get(sourceLine);
+
+            Builder builder = OriginalMapping.newBuilder().setLineNumber(
+                targetLine).setColumnPosition(entry.getGeneratedColumn());
+
+            mappings.add(builder.build());
+          }
+        }
+      }
     }
   }
 
