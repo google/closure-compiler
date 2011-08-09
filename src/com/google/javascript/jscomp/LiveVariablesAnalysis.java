@@ -203,8 +203,12 @@ class LiveVariablesAnalysis extends
             // for(var x in y) {...}
             lhs = lhs.getLastChild();
           }
-          addToSetIfLocal(lhs, kill);
-          addToSetIfLocal(lhs, gen);
+          if (NodeUtil.isName(lhs)) {
+            addToSetIfLocal(lhs, kill);
+            addToSetIfLocal(lhs, gen);
+          } else {
+            computeGenKill(lhs, gen, kill, conditional);
+          }
           computeGenKill(rhs, gen, kill, conditional);
         }
         return;

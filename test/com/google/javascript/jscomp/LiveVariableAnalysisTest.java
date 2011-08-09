@@ -206,6 +206,10 @@ public class LiveVariableAnalysisTest extends TestCase {
     assertNotLiveAfterX("var a;X:a();a(param2)", "param1");
   }
 
+  public void testExpressionInForIn() {
+    assertLiveBeforeX("var a = [0]; X:for (a[1] in foo) { }", "a");
+  }
+
   public void testArgumentsArray() {
     // Check that use of arguments forces the parameters into the
     // escaped set.
