@@ -368,8 +368,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           throw new FlagUsageException("Can't specify stdin twice.");
         }
 
-        inputs.add(JSSourceFile.fromInputStream("stdin", System.in));
-        usingStdin = true;
         if (!config.outputManifests.isEmpty()) {
           throw new FlagUsageException("Manifest files cannot be generated " +
               "when the input is from stdin.");
@@ -378,6 +376,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           throw new FlagUsageException("Bundle files cannot be generated " +
               "when the input is from stdin.");
         }
+        inputs.add(JSSourceFile.fromInputStream("stdin", System.in));
+        usingStdin = true;
       }
     }
     return inputs;
@@ -1689,9 +1689,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     /**
      * Sets whether to print output manifest files.
+     * Filter out empty file names.
      */
     CommandLineConfig setOutputManifest(List<String> outputManifests) {
-      this.outputManifests = outputManifests;
+      this.outputManifests = Lists.newArrayList();
+      for (String manifestName : outputManifests) {
+        if (!manifestName.isEmpty()) {
+          this.outputManifests.add(manifestName);
+        }
+      }
+      this.outputManifests = ImmutableList.copyOf(this.outputManifests);
       return this;
     }
 
