@@ -730,7 +730,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
             OUTPUT_WRAPPER_MARKER);
 
         // Output the source map if requested.
-        outputSourceMap(options);
+        outputSourceMap(options, options.jsOutputFile);
       } else {
         String moduleFilePrefix = config.moduleOutputPathPrefix;
         maybeCreateDirsForPath(moduleFilePrefix);
@@ -963,7 +963,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *
    * @param options The options to the Compiler.
    */
-  private void outputSourceMap(B options)
+  private void outputSourceMap(B options, String associatedName)
       throws IOException {
     if (Strings.isEmpty(options.sourceMapOutputPath)) {
       return;
@@ -971,7 +971,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     String outName = expandSourceMapPath(options, null);
     Writer out = fileNameToOutputWriter(outName);
-    compiler.getSourceMap().appendTo(out, outName);
+    compiler.getSourceMap().appendTo(out, associatedName);
     out.close();
   }
 
