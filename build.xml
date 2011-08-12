@@ -276,6 +276,7 @@
     <jar destfile="${compiler-jarfile-nodeps}" update="true">
       <fileset dir="${classes.dir}" />
       <fileset dir="${build.dir}" includes="externs.zip" />
+      <zipfileset src="${build.dir}/lib/rhino.jar"/>
     </jar>
   </target>
 
