@@ -24,6 +24,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * CodingConvention defines a set of hooks to customize the behavior of the
@@ -207,6 +208,13 @@ public interface CodingConvention extends Serializable {
   public String getDelegateSuperclassName();
 
   /**
+   * Checks for function calls that set the calling conventions on delegate
+   * methods.
+   */
+  public void checkForCallingConventionDefiningCalls(
+      Node n, Map<String, String> delegateCallingConventions);
+
+  /**
    * Defines the delegate proxy prototype properties. Their types depend on
    * properties of the delegate base methods.
    *
@@ -214,7 +222,8 @@ public interface CodingConvention extends Serializable {
    */
   public void defineDelegateProxyPrototypeProperties(
       JSTypeRegistry registry, Scope scope,
-      List<ObjectType> delegateProxyPrototypes);
+      List<ObjectType> delegateProxyPrototypes,
+      Map<String, String> delegateCallingConventions);
 
   /**
    * Gets the name of the global object.

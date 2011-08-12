@@ -50,6 +50,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -71,6 +72,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -134,6 +136,8 @@ final class TypedScopeCreator implements ScopeCreator {
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
   private final List<ObjectType> delegateProxyPrototypes = Lists.newArrayList();
+  private final Map<String, String> delegateCallingConventions =
+      Maps.newHashMap();
 
   /**
    * Defer attachment of types to nodes until all type names
@@ -217,7 +221,8 @@ final class TypedScopeCreator implements ScopeCreator {
 
     if (parent == null) {
       codingConvention.defineDelegateProxyPrototypeProperties(
-          typeRegistry, newScope, delegateProxyPrototypes);
+          typeRegistry, newScope, delegateProxyPrototypes,
+          delegateCallingConventions);
     }
     return newScope;
   }
@@ -464,6 +469,7 @@ final class TypedScopeCreator implements ScopeCreator {
       switch (n.getType()) {
         case Token.CALL:
           checkForClassDefiningCalls(t, n, parent);
+          checkForCallingConventionDefiningCalls(n, delegateCallingConventions);
           break;
 
         case Token.FUNCTION:
@@ -1224,6 +1230,15 @@ final class TypedScopeCreator implements ScopeCreator {
       JSType t = v == null ? null : v.getType();
       ObjectType o = t == null ? null : t.dereference();
       return o instanceof FunctionType ? ((FunctionType) o) : null;
+    }
+
+    /**
+     * Look for calls that set a delegate method's calling convention.
+     */
+    private void checkForCallingConventionDefiningCalls(
+        Node n, Map<String, String> delegateCallingConventions) {
+      codingConvention.checkForCallingConventionDefiningCalls(n,
+          delegateCallingConventions);
     }
 
     /**

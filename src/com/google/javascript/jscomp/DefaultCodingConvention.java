@@ -24,6 +24,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * CodingConvention defines a set of hooks to customize the behavior of the
@@ -155,9 +156,16 @@ public class DefaultCodingConvention implements CodingConvention {
   }
 
   @Override
+  public void checkForCallingConventionDefiningCalls(Node n,
+      Map<String, String> delegateCallingConventions) {
+    // do nothing.
+  }
+
+  @Override
   public void defineDelegateProxyPrototypeProperties(
       JSTypeRegistry registry, Scope scope,
-      List<ObjectType> delegateProxyPrototypes) {
+      List<ObjectType> delegateProxyPrototypes,
+      Map<String, String> delegateCallingConventions) {
     // do nothing.
   }
 
