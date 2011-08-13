@@ -314,9 +314,9 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     StringWriter out = new StringWriter();
     String name = "./app.js";
     List<SourceMapSection> appSections = Lists.newArrayList(
-        new SourceMapSection("src1", 0, 0),
-        new SourceMapSection("src2", 100, 10),
-        new SourceMapSection("src3", 150, 5));
+        SourceMapSection.forURL("src1", 0, 0),
+        SourceMapSection.forURL("src2", 100, 10),
+        SourceMapSection.forURL("src3", 150, 5));
 
     SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
     generator.appendIndexMapTo(out, name, appSections);
@@ -352,6 +352,56 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
             out.toString());
   }
 
+  private String getEmptyMapFor(String name) throws IOException {
+    StringWriter out = new StringWriter();
+    SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
+    generator.appendTo(out, name);
+    return out.toString();
+  }
+
+  public void testWriteMetaMap2() throws IOException {
+    StringWriter out = new StringWriter();
+    String name = "./app.js";
+    List<SourceMapSection> appSections = Lists.newArrayList(
+        // Map and URLs can be mixed.
+        SourceMapSection.forMap(getEmptyMapFor("./part.js"), 0, 0),
+        SourceMapSection.forURL("src2", 100, 10));
+
+    SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
+    generator.appendIndexMapTo(out, name, appSections);
+
+    assertEquals(
+            "{\n" +
+            "\"version\":3,\n" +
+            "\"file\":\"./app.js\",\n" +
+            "\"sections\":[\n" +
+            "{\n" +
+            "\"offset\":{\n" +
+            "\"line\":0,\n" +
+            "\"column\":0\n" +
+            "},\n" +
+            "\"map\":{\n" +
+              "\"version\":3,\n" +
+              "\"file\":\"./part.js\",\n" +
+              "\"lineCount\":1,\n" +
+              "\"mappings\":\";\",\n" +
+              "\"sources\":[],\n" +
+              "\"names\":[]\n" +
+            "}\n" +
+            "\n" +
+            "},\n" +
+            "{\n" +
+            "\"offset\":{\n" +
+            "\"line\":100,\n" +
+            "\"column\":10\n" +
+            "},\n" +
+            "\"url\":\"src2\"\n" +
+            "}\n" +
+            "]\n" +
+            "}\n",
+            out.toString());
+  }
+
   public void testParseSourceMetaMap() throws Exception {
     final String INPUT1 = "file1";
     final String INPUT2 = "file2";
@@ -371,10 +421,10 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
 
     StringBuilder output = new StringBuilder();
     FilePosition offset = appendAndCount(output, result1.generatedSource);
-    sections.add(new SourceMapSection(MAP1, 0, 0));
+    sections.add(SourceMapSection.forURL(MAP1, 0, 0));
     output.append(result2.generatedSource);
     sections.add(
-         new SourceMapSection(MAP2, offset.getLine(), offset.getColumn()));
+        SourceMapSection.forURL(MAP2, offset.getLine(), offset.getColumn()));
 
     SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
     StringBuilder mapContents = new StringBuilder();

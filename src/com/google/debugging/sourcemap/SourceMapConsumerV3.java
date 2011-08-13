@@ -163,14 +163,25 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
       JSONArray sections = sourceMapRoot.getJSONArray("sections");
       for (int i = 0, count = sections.length(); i < count; i++) {
         JSONObject section = sections.getJSONObject(i);
-        String url = section.getString("url");
+        if (section.has("map") && section.has("url")) {
+          throw new SourceMapParseException(
+              "Invalid map format: section may not have both 'map' and 'url'");
+        }
         JSONObject offset = section.getJSONObject("offset");
         int line = offset.getInt("line");
         int column = offset.getInt("column");
-
-        String mapSectionContents = sectionSupplier.getSourceMap(url);
-        if (mapSectionContents == null) {
-          throw new SourceMapParseException("Unable to retrieve: " + url);
+        String mapSectionContents;
+        if (section.has("url")) {
+          String url = section.getString("url");
+          mapSectionContents = sectionSupplier.getSourceMap(url);
+          if (mapSectionContents == null) {
+            throw new SourceMapParseException("Unable to retrieve: " + url);
+          }
+        } else if (section.has("map")) {
+          mapSectionContents = section.getString("map");
+        } else {
+          throw new SourceMapParseException(
+              "Invalid map format: section must have either 'map' or 'url'");
         }
         generator.mergeMapSection(line, column, mapSectionContents);
       }

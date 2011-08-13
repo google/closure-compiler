@@ -26,9 +26,15 @@ public class SourceMapSection {
    * A url for a valid source map file that represents a section of a generate
    * source file such as when multiple files are concatenated together.
    */
-  private final String sectionUrl;
+  private final String value;
   private final int line;
   private final int column;
+  private final SectionType type;
+
+  public static enum SectionType {
+    URL,
+    MAP
+  }
 
   /**
    * @param sectionUrl The url for the partial sourcemap
@@ -36,18 +42,50 @@ public class SourceMapSection {
    *    starts.
    * @param column The number of characters into the line where the represented
    *    section starts.
+   * @deprecated
    */
+  @Deprecated
   public SourceMapSection(String sectionUrl, int line, int column) {
-    this.sectionUrl = sectionUrl;
+    this.type = SectionType.URL;
+    this.value = sectionUrl;
     this.line = line;
     this.column = column;
   }
 
+  private SourceMapSection(
+      SectionType type, String value, int line, int column) {
+    this.type = type;
+    this.value = value;
+    this.line = line;
+    this.column = column;
+  }
+
+  static SourceMapSection forMap(String value, int line, int column) {
+    return new SourceMapSection(SectionType.MAP, value, line, column);
+  }
+
+  static SourceMapSection forURL(String value, int line, int column) {
+    return new SourceMapSection(SectionType.URL, value, line, column);
+  }
+
+  public SectionType getSectionType() {
+    return this.type;
+  }
+
   /**
    * @return the name of the map
+   * @deprecated
    */
   public String getSectionUrl() {
-    return sectionUrl;
+    assert(type.equals(SectionType.URL));
+    return value;
+  }
+
+  /**
+   * @return the value that represents the map for this section.
+   */
+  public String getSectionValue() {
+    return value;
   }
 
   /**

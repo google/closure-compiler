@@ -630,7 +630,13 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
       out.append("{\n");
       appendFirstField(out, "offset",
           offsetValue(section.getLine(), section.getColumn()));
-      appendField(out, "url", escapeString(section.getSectionUrl()));
+      if (section.getSectionType() == SourceMapSection.SectionType.URL) {
+        appendField(out, "url", escapeString(section.getSectionValue()));
+      } else if (section.getSectionType() == SourceMapSection.SectionType.MAP) {
+        appendField(out, "map", section.getSectionValue());
+      } else {
+        throw new IOException("Unexpected section type");
+      }
       out.append("\n}");
     }
 
