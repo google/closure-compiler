@@ -191,6 +191,13 @@ public class ClosureCodingConventionTest extends TestCase {
     assertFunctionBind("Function.prototype.bind.call(obj, p1)");
   }
 
+  public void testRequire() {
+    assertRequire("goog.require('foo')");
+    assertNotRequire("goog.require(foo)");
+    assertNotRequire("goog.require()");
+    assertNotRequire("foo()");
+  }
+
   private void assertFunctionBind(String code) {
     Node n = parseTestCode(code);
     assertNotNull(conv.describeFunctionBind(n.getFirstChild()));
@@ -199,6 +206,16 @@ public class ClosureCodingConventionTest extends TestCase {
   private void assertNotFunctionBind(String code) {
     Node n = parseTestCode(code);
     assertNull(conv.describeFunctionBind(n.getFirstChild()));
+  }
+
+  private void assertRequire(String code) {
+    Node n = parseTestCode(code);
+    assertNotNull(conv.extractClassNameIfRequire(n.getFirstChild(), n));
+  }
+
+  private void assertNotRequire(String code) {
+    Node n = parseTestCode(code);
+    assertNull(conv.extractClassNameIfRequire(n.getFirstChild(), n));
   }
 
   private void assertNotObjectLiteralCast(String code) {
