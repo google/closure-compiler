@@ -141,6 +141,14 @@ public class SymbolTableTest extends TestCase {
     assertEquals(fn, table.getSymbolForScope(scope));
   }
 
+  public void testPrototypeSymbol() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ function Foo() {}");
+    Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
+    assertNotNull(fooPrototype);
+    assertEquals(1, Iterables.size(table.getReferences(fooPrototype)));
+  }
+
   private Symbol getGlobalVar(SymbolTable table, String name) {
     for (Symbol symbol : table.getAllSymbols()) {
       if (symbol.getName().equals(name) &&

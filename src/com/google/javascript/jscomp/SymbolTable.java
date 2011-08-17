@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Table;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -68,9 +70,9 @@ public final class SymbolTable
 
   /**
    * All symbols in the program, uniquely identified by the node where
-   * they're declared.
+   * they're declared and their name.
    */
-  private final Map<Node, Symbol> symbols = Maps.newHashMap();
+  private final Table<Node, String, Symbol> symbols = HashBasedTable.create();
 
   /**
    * All scopes in the program, uniquely identified by the node where
@@ -181,6 +183,7 @@ public final class SymbolTable
   <S extends StaticSlot<JSType>, R extends StaticReference<JSType>>
   void addSymbolsFrom(StaticSymbolTable<S, R> otherSymbolTable) {
     for (S otherSymbol : otherSymbolTable.getAllSymbols()) {
+      String name = otherSymbol.getName();
       SymbolScope myScope = createScopeFrom(
           otherSymbolTable.getScope(otherSymbol));
 
@@ -189,15 +192,15 @@ public final class SymbolTable
       Symbol mySymbol = null;
       if (declNode != null && declNode.getStaticSourceFile() != null) {
         // If we have a declaration node, we can ensure the symbol is declared.
-        mySymbol = symbols.get(declNode);
+        mySymbol = symbols.get(declNode, name);
         if (mySymbol == null) {
           mySymbol = new Symbol(
-              otherSymbol.getName(),
+              name,
               otherSymbol.getType(),
               otherSymbol.isTypeInferred(),
               myScope);
-          symbols.put(declNode, mySymbol);
-          myScope.ownSymbols.put(mySymbol.getName(), mySymbol);
+          symbols.put(declNode, name, mySymbol);
+          myScope.ownSymbols.put(name, mySymbol);
 
           mySymbol.setDeclaration(new Reference(mySymbol, declNode));
         }
@@ -205,7 +208,7 @@ public final class SymbolTable
         // If we don't have a declaration node, we won't be able to declare
         // a symbol in this symbol table. But we may be able to salvage the
         // references if we already have a symbol.
-        mySymbol = myScope.getOwnSlot(otherSymbol.getName());
+        mySymbol = myScope.getOwnSlot(name);
       }
 
       if (mySymbol != null) {
