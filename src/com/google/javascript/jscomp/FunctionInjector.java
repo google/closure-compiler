@@ -390,6 +390,8 @@ class FunctionInjector {
     CallSiteType callSiteType = classifyCallSite(callNode);
     Preconditions.checkArgument(callSiteType != CallSiteType.UNSUPPORTED);
 
+    boolean isCallInLoop = NodeUtil.isWithinLoop(callNode);
+
     // Store the name for the result. This will be used to
     // replace "return expr" statements with "resultName = expr"
     // to replace
@@ -411,8 +413,10 @@ class FunctionInjector {
 
       case EXPRESSION:
         resultName = getUniqueResultName();
-        needsDefaultReturnResult = false; // The intermediary result already
-                                          // has the default value.
+        // The intermediary result has a default value of "undefined", so
+        // we only need to set the implicit return value if we are in a loop
+        // and the variable maybe reused.
+        needsDefaultReturnResult = isCallInLoop;
         break;
 
       case DECOMPOSABLE_EXPRESSION:
@@ -422,8 +426,6 @@ class FunctionInjector {
       default:
         throw new IllegalStateException("Unexpected call site type.");
     }
-
-    boolean isCallInLoop = NodeUtil.isWithinLoop(callNode);
 
     FunctionToBlockMutator mutator = new FunctionToBlockMutator(
         compiler, this.safeNameIdSupplier);

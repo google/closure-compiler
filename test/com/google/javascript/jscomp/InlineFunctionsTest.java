@@ -1758,6 +1758,41 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "f(function(){return this})");
   }
 
+  public void testIssue5159924a() {
+    test("function f() { if (x()) return y() }\n" +
+         "while(1){ var m = f() || z() }",
+         "for(;1;) {" +
+         "  {" +
+         "    var JSCompiler_inline_result$$0;" +
+         "    JSCompiler_inline_label_f_1: {" +
+         "      if(x()) {" +
+         "        JSCompiler_inline_result$$0 = y();" +
+         "        break JSCompiler_inline_label_f_1" +
+         "      }" +
+         "      JSCompiler_inline_result$$0 = void 0;" +
+         "    }" +
+         "  }" +
+         "  var m=JSCompiler_inline_result$$0 || z()" +
+         "}");
+  }
+
+  public void testIssue5159924b() {
+    test("function f() { if (x()) return y() }\n" +
+         "while(1){ var m = f() }",
+         "for(;1;){" +
+         "  var m;" +
+         "  {" +
+         "    JSCompiler_inline_label_f_0: { " +
+         "      if(x()) {" +
+         "        m = y();" +
+         "        break JSCompiler_inline_label_f_0" +
+         "      }" +
+         "      m = void 0" +
+         "    }" +
+         "  }" +
+         "}");
+  }
+
   public void testInlineObject() {
     new StringCompare().testInlineObject();
   }
