@@ -36,3 +36,10 @@ JSON.parse = function(jsonStr, opt_reviver) {};
  * @return {string} json string which represents jsonObj.
  */
 JSON.stringify = function(jsonObj, opt_replacer, opt_space) {};
+
+/**
+ * As per EcmaScript 5, 15.12.3.
+ * @param {string=} opt_key The JSON key for this object.
+ * @return {string} The string representation of the object.
+ */
+Object.prototype.toJSON = function(key) {};
