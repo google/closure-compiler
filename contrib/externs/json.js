@@ -42,4 +42,4 @@ JSON.stringify = function(jsonObj, opt_replacer, opt_space) {};
  * @param {string=} opt_key The JSON key for this object.
  * @return {string} The string representation of the object.
  */
-Object.prototype.toJSON = function(key) {};
+Object.prototype.toJSON = function(opt_key) {};
