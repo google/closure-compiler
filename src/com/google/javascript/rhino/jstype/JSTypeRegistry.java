@@ -641,8 +641,8 @@ public class JSTypeRegistry implements Serializable {
     } else if (type instanceof NamedType) {
       addReferenceTypeIndexedByProperty(
           propertyName, ((NamedType) type).getReferencedType());
-    } else if (type instanceof UnionType) {
-      for (JSType alternate : ((UnionType) type).getAlternates()) {
+    } else if (type.isUnionType()) {
+      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
         addReferenceTypeIndexedByProperty(propertyName, alternate);
       }
     }

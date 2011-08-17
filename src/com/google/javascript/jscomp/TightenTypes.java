@@ -36,7 +36,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
-import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -864,9 +863,9 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     private Collection<Action> getImplicitActionsFromCall(
         Node n, JSType recvType) {
       Node receiver = n.getFirstChild();
-      if (recvType instanceof UnionType) {
+      if (recvType.isUnionType()) {
         List<Action> actions = Lists.newArrayList();
-        for (JSType alt : ((UnionType) recvType).getAlternates()) {
+        for (JSType alt : recvType.toMaybeUnionType().getAlternates()) {
           actions.addAll(getImplicitActionsFromCall(n, alt));
         }
         return actions;
@@ -905,9 +904,9 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
 
     private Collection<Action> getImplicitActionsFromArgument(
         Node arg, ObjectType thisType, JSType paramType) {
-      if (paramType instanceof UnionType) {
+      if (paramType.isUnionType()) {
         List<Action> actions = Lists.newArrayList();
-        for (JSType paramAlt : ((UnionType) paramType).getAlternates()) {
+        for (JSType paramAlt : paramType.toMaybeUnionType().getAlternates()) {
           actions.addAll(
               getImplicitActionsFromArgument(arg, thisType, paramAlt));
         }
@@ -924,9 +923,9 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     private Collection<Action> getImplicitActionsFromProp(
         JSType jsType, String prop, Node fnNode) {
       List<Action> actions = Lists.newArrayList();
-      if (jsType instanceof UnionType) {
+      if (jsType.isUnionType()) {
         boolean found = false;
-        for (JSType alt : ((UnionType) jsType).getAlternates()) {
+        for (JSType alt : jsType.toMaybeUnionType().getAlternates()) {
           ObjectType altObj = ObjectType.cast(alt);
           if (altObj != null) {
             actions.addAll(getImplicitActionsFromPropNonUnion(
@@ -1005,7 +1004,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
 
     if (jsType.isUnionType()) {
       ConcreteType type = ConcreteType.NONE;
-      for (JSType alt : ((UnionType) jsType).getAlternates()) {
+      for (JSType alt : jsType.toMaybeUnionType().getAlternates()) {
         type = type.unionWith(createType(alt));
       }
       return type;
@@ -1032,8 +1031,8 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
    */
   private ConcreteType createTypeWithSubTypes(JSType jsType) {
     ConcreteType ret = ConcreteType.NONE;
-    if (jsType instanceof UnionType) {
-      for (JSType alt : ((UnionType) jsType).getAlternates()) {
+    if (jsType.isUnionType()) {
+      for (JSType alt : jsType.toMaybeUnionType().getAlternates()) {
         ret = ret.unionWith(createTypeWithSubTypes(alt));
       }
     } else {

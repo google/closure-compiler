@@ -242,8 +242,17 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
-  public boolean isUnionType() {
-    return false;
+  public final boolean isUnionType() {
+    return toMaybeUnionType() != null;
+  }
+
+  /**
+   * Downcasts this to a UnionType, or returns null if this is not a UnionType.
+   *
+   * Named in honor of Haskell's Maybe type constructor.
+   */
+  public UnionType toMaybeUnionType() {
+    return null;
   }
 
   public boolean isFunctionType() {
@@ -635,9 +644,9 @@ public abstract class JSType implements Serializable {
     } else if (thatType.isSubtype(thisType)) {
       return filterNoResolvedType(thatType);
     } else if (thisType.isUnionType()) {
-      return ((UnionType) thisType).meet(thatType);
+      return thisType.toMaybeUnionType().meet(thatType);
     } else if (thatType.isUnionType()) {
-      return ((UnionType) thatType).meet(thisType);
+      return thatType.toMaybeUnionType().meet(thisType);
     }
 
     if (thisType instanceof EnumElementType) {
@@ -671,8 +680,8 @@ public abstract class JSType implements Serializable {
       // inf(UnresolvedType1, UnresolvedType2) needs to resolve
       // to the base unresolved type, so that the relation is symmetric.
       return type.getNativeType(JSTypeNative.NO_RESOLVED_TYPE);
-    } else if (type instanceof UnionType) {
-      UnionType unionType = (UnionType) type;
+    } else if (type.isUnionType()) {
+      UnionType unionType = type.toMaybeUnionType();
       boolean needsFiltering = false;
       for (JSType alt : unionType.getAlternates()) {
         if (alt.isNoResolvedType()) {
@@ -749,7 +758,7 @@ public abstract class JSType implements Serializable {
    */
   public TypePair getTypesUnderEquality(JSType that) {
     // unions types
-    if (that instanceof UnionType) {
+    if (that.isUnionType()) {
       TypePair p = that.getTypesUnderEquality(this);
       return new TypePair(p.typeB, p.typeA);
     }
@@ -782,7 +791,7 @@ public abstract class JSType implements Serializable {
    */
   public TypePair getTypesUnderInequality(JSType that) {
     // unions types
-    if (that instanceof UnionType) {
+    if (that.isUnionType()) {
       TypePair p = that.getTypesUnderInequality(this);
       return new TypePair(p.typeB, p.typeA);
     }
@@ -827,7 +836,7 @@ public abstract class JSType implements Serializable {
    */
   public TypePair getTypesUnderShallowInequality(JSType that) {
     // union types
-    if (that instanceof UnionType) {
+    if (that.isUnionType()) {
       TypePair p = that.getTypesUnderShallowInequality(this);
       return new TypePair(p.typeB, p.typeA);
     }
@@ -914,8 +923,8 @@ public abstract class JSType implements Serializable {
       return true;
     }
     // unions
-    if (thatType instanceof UnionType) {
-      UnionType union = (UnionType)thatType;
+    if (thatType.isUnionType()) {
+      UnionType union = thatType.toMaybeUnionType();
       for (JSType element : union.alternates) {
         if (thisType.isSubtype(element)) {
           return true;

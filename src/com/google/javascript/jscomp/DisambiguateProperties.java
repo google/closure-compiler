@@ -42,7 +42,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticScope;
-import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Collection;
 import java.util.List;
@@ -313,7 +312,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       return;
     }
     if (t.isUnionType()) {
-      for (JSType alt : ((UnionType) t).getAlternates()) {
+      for (JSType alt : t.toMaybeUnionType().getAlternates()) {
         recordInvalidationError(alt, error);
       }
       return;
@@ -328,8 +327,8 @@ class DisambiguateProperties<T> implements CompilerPass {
    */
   private void addInvalidatingType(JSType type) {
     type = type.restrictByNotNullOrUndefined();
-    if (type instanceof UnionType) {
-      for (JSType alt : ((UnionType) type).getAlternates()) {
+    if (type.isUnionType()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternates()) {
         addInvalidatingType(alt);
       }
     } else if (type instanceof EnumElementType) {
@@ -501,7 +500,7 @@ class DisambiguateProperties<T> implements CompilerPass {
         return;
       }
       if (t.isUnionType()) {
-        for (JSType alt : ((UnionType) t).getAlternates()) {
+        for (JSType alt : t.toMaybeUnionType().getAlternates()) {
           printErrorLocations(sb, alt);
         }
         return;
@@ -766,9 +765,9 @@ class DisambiguateProperties<T> implements CompilerPass {
 
     @Override public ImmutableSet<JSType> getTypesToSkipForType(JSType type) {
       type = type.restrictByNotNullOrUndefined();
-      if (type instanceof UnionType) {
+      if (type.isUnionType()) {
         Set<JSType> types = Sets.newHashSet(type);
-        for (JSType alt : ((UnionType) type).getAlternates()) {
+        for (JSType alt : type.toMaybeUnionType().getAlternates()) {
           types.addAll(getTypesToSkipForTypeNonUnion(type));
         }
         return ImmutableSet.copyOf(types);
@@ -805,7 +804,7 @@ class DisambiguateProperties<T> implements CompilerPass {
 
     @Override public Iterable<JSType> getTypeAlternatives(JSType type) {
       if (type.isUnionType()) {
-        return ((UnionType) type).getAlternates();
+        return type.toMaybeUnionType().getAlternates();
       } else {
         ObjectType objType = type.toObjectType();
         if (objType != null &&
@@ -999,8 +998,8 @@ class DisambiguateProperties<T> implements CompilerPass {
     private ConcreteType maybeAddAutoboxes(
         ConcreteType cType, JSType jsType, String prop) {
       jsType = jsType.restrictByNotNullOrUndefined();
-      if (jsType instanceof UnionType) {
-        for (JSType alt : ((UnionType) jsType).getAlternates()) {
+      if (jsType.isUnionType()) {
+        for (JSType alt : jsType.toMaybeUnionType().getAlternates()) {
           cType = maybeAddAutoboxes(cType, alt, prop);
         }
         return cType;

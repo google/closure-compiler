@@ -818,7 +818,7 @@ public class FunctionType extends PrototypeObjectType {
   private void appendVarArgsString(StringBuilder builder, JSType paramType) {
     if (paramType.isUnionType()) {
       // Remove the optionalness from the var arg.
-      paramType = ((UnionType) paramType).getRestrictedUnion(
+      paramType = paramType.toMaybeUnionType().getRestrictedUnion(
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
     builder.append("...[").append(paramType.toString()).append("]");

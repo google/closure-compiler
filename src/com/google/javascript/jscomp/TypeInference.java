@@ -47,7 +47,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSlot;
-import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -1194,8 +1193,8 @@ class TypeInference
       if (literals.booleanValues == BooleanLiteralSet.EMPTY &&
           getNativeType(BOOLEAN_TYPE).isSubtype(type)) {
         // Exclusion only make sense for a union type.
-        if (type instanceof UnionType) {
-          type = ((UnionType) type).getRestrictedUnion(
+        if (type.isUnionType()) {
+          type = type.toMaybeUnionType().getRestrictedUnion(
               getNativeType(BOOLEAN_TYPE));
         }
       }

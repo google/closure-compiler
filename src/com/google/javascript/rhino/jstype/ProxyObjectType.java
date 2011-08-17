@@ -193,6 +193,11 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public UnionType toMaybeUnionType() {
+    return referencedType.toMaybeUnionType();
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     return referencedType.testForEquality(that);
   }

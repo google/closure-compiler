@@ -28,7 +28,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
-import com.google.javascript.rhino.jstype.UnionType;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -310,7 +309,7 @@ class RuntimeTypeCheck implements CompilerPass {
       Collection<JSType> alternates;
       if (type.isUnionType()) {
         alternates = Sets.newTreeSet(ALPHA);
-        Iterables.addAll(alternates, ((UnionType)type).getAlternates());
+        Iterables.addAll(alternates, type.toMaybeUnionType().getAlternates());
       } else {
         alternates = ImmutableList.of(type);
       }

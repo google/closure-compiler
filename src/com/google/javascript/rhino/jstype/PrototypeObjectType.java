@@ -439,7 +439,7 @@ class PrototypeObjectType extends ObjectType {
     }
 
     // Union types
-    if (that instanceof UnionType) {
+    if (that.isUnionType()) {
       // The static {@code JSType.isSubtype} check already decomposed
       // union types, so we don't need to check those again.
       return false;

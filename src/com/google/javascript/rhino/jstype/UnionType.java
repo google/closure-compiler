@@ -278,8 +278,8 @@ public class UnionType extends JSType {
       }
     }
 
-    if (that instanceof UnionType) {
-      for (JSType otherAlternate : ((UnionType) that).alternates) {
+    if (that.isUnionType()) {
+      for (JSType otherAlternate : that.toMaybeUnionType().alternates) {
         if (otherAlternate.isSubtype(this)) {
           builder.addAlternate(otherAlternate);
         }
@@ -303,8 +303,8 @@ public class UnionType extends JSType {
    */
   @Override
   public boolean isEquivalentTo(JSType object) {
-    if (object instanceof UnionType) {
-      UnionType that = (UnionType) object;
+    if (object.isUnionType()) {
+      UnionType that = object.toMaybeUnionType();
       if (alternates.size() != that.alternates.size()) {
         return false;
       }
@@ -334,8 +334,8 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public boolean isUnionType() {
-    return true;
+  public UnionType toMaybeUnionType() {
+    return this;
   }
 
   @Override

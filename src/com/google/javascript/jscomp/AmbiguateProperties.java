@@ -40,7 +40,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.BitSet;
 import java.util.Collection;
@@ -164,8 +163,8 @@ class AmbiguateProperties implements CompilerPass {
    */
   private void addInvalidatingType(JSType type) {
     type = type.restrictByNotNullOrUndefined();
-    if (type instanceof UnionType) {
-      for (JSType alt : ((UnionType) type).getAlternates()) {
+    if (type.isUnionType()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternates()) {
         addInvalidatingType(alt);
       }
     }
@@ -284,10 +283,10 @@ class AmbiguateProperties implements CompilerPass {
    * won't be ambiguated).
    */
   private void computeRelatedTypes(JSType type) {
-    if (type instanceof UnionType) {
+    if (type.isUnionType()) {
       type = type.restrictByNotNullOrUndefined();
-      if (type instanceof UnionType) {
-        for (JSType alt : ((UnionType) type).getAlternates()) {
+      if (type.isUnionType()) {
+        for (JSType alt : type.toMaybeUnionType().getAlternates()) {
           computeRelatedTypes(alt);
         }
         return;
@@ -517,10 +516,10 @@ class AmbiguateProperties implements CompilerPass {
 
   /** Returns true if properties on this type should not be renamed. */
   private boolean isInvalidatingType(JSType type) {
-    if (type instanceof UnionType) {
+    if (type.isUnionType()) {
       type = type.restrictByNotNullOrUndefined();
-      if (type instanceof UnionType) {
-        for (JSType alt : ((UnionType) type).getAlternates()) {
+      if (type.isUnionType()) {
+        for (JSType alt : type.toMaybeUnionType().getAlternates()) {
           if (isInvalidatingType(alt)) {
             return true;
           }
@@ -588,10 +587,10 @@ class AmbiguateProperties implements CompilerPass {
 
       ++numOccurrences;
 
-      if (newType instanceof UnionType) {
+      if (newType.isUnionType()) {
         newType = newType.restrictByNotNullOrUndefined();
-        if (newType instanceof UnionType) {
-          for (JSType alt : ((UnionType) newType).getAlternates()) {
+        if (newType.isUnionType()) {
+          for (JSType alt : newType.toMaybeUnionType().getAlternates()) {
             addNonUnionType(alt);
           }
           return;

@@ -112,8 +112,8 @@ class UnionTypeBuilder implements Serializable {
           alternate.isCheckedUnknownType();
     }
     if (!isAllType && !isNativeUnknownType) {
-      if (alternate instanceof UnionType) {
-        UnionType union = (UnionType) alternate;
+      if (alternate.isUnionType()) {
+        UnionType union = alternate.toMaybeUnionType();
         for (JSType unionAlt : union.getAlternates()) {
           addAlternate(unionAlt);
         }

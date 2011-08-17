@@ -40,7 +40,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.UnionType;
 
 import java.text.MessageFormat;
 import java.util.Iterator;
@@ -272,8 +271,8 @@ class TypeValidator {
   }
 
   private boolean containsForwardDeclaredUnresolvedName(JSType type) {
-    if (type instanceof UnionType) {
-      for (JSType alt : ((UnionType) type).getAlternates()) {
+    if (type.isUnionType()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternates()) {
         if (containsForwardDeclaredUnresolvedName(alt)) {
           return true;
         }
