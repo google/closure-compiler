@@ -26,7 +26,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticReference;
@@ -379,8 +378,8 @@ public class Scope
     this.parent = parent;
     this.rootNode = rootNode;
     JSType nodeType = rootNode.getJSType();
-    if (nodeType != null && nodeType instanceof FunctionType) {
-      thisType = ((FunctionType) nodeType).getTypeOfThis();
+    if (nodeType != null && nodeType.isFunctionType()) {
+      thisType = nodeType.toMaybeFunctionType().getTypeOfThis();
     } else {
       thisType = parent.thisType;
     }

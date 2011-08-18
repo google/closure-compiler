@@ -634,10 +634,10 @@ class TypeValidator {
     }
 
     mismatches.add(new TypeMismatch(found, required, error));
-    if (found instanceof FunctionType &&
-        required instanceof FunctionType) {
-      FunctionType fnTypeA = ((FunctionType) found);
-      FunctionType fnTypeB = ((FunctionType) required);
+    if (found.isFunctionType() &&
+        required.isFunctionType()) {
+      FunctionType fnTypeA = found.toMaybeFunctionType();
+      FunctionType fnTypeB = required.toMaybeFunctionType();
       Iterator<Node> paramItA = fnTypeA.getParameters().iterator();
       Iterator<Node> paramItB = fnTypeB.getParameters().iterator();
       while (paramItA.hasNext() && paramItB.hasNext()) {
@@ -721,7 +721,7 @@ class TypeValidator {
       return type.toString();
     } else if (qualifiedName != null) {
       return qualifiedName;
-    } else if (type instanceof FunctionType) {
+    } else if (type.isFunctionType()) {
       // Don't show complex function names.
       return "function";
     } else {

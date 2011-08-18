@@ -255,12 +255,43 @@ public abstract class JSType implements Serializable {
     return null;
   }
 
-  public boolean isFunctionType() {
-    return false;
+  /** Returns true if toMaybeFunctionType returns a non-null FunctionType. */
+  public final boolean isFunctionType() {
+    return toMaybeFunctionType() != null;
   }
 
-  public boolean isEnumElementType() {
-    return false;
+  /**
+   * Downcasts this to a FunctionType, or returns null if this is not
+   * a function.
+   *
+   * For the purposes of this function, we define a MaybeFunctionType as any
+   * type in the sub-lattice
+   * { x | LEAST_FUNCTION_TYPE <= x <= GREATEST_FUNCTION_TYPE }
+   * This definition excludes bottom types like NoType and NoObjectType.
+   *
+   * This definition is somewhat arbitrary and axiomatic, but this is the
+   * definition that makes the most sense for the most callers.
+   */
+  public FunctionType toMaybeFunctionType() {
+    return null;
+  }
+
+  /**
+   * Null-safe version of toMaybeFunctionType().
+   */
+  public static FunctionType toMaybeFunctionType(JSType type) {
+    return type == null ? null : type.toMaybeFunctionType();
+  }
+
+  public final boolean isEnumElementType() {
+    return toMaybeEnumElementType() != null;
+  }
+
+  /**
+   * Downcasts this to an EnumElementType, or returns null if this is not an EnumElementType.
+   */
+  public EnumElementType toMaybeEnumElementType() {
+    return null;
   }
 
   public boolean isEnumType() {
@@ -305,6 +336,7 @@ public abstract class JSType implements Serializable {
 
   /**
    * Whether this type is an Instance object of some constructor.
+   * Does not necessarily mean this is an {@link InstanceObjectType}.
    */
   public boolean isInstanceType() {
     return false;
@@ -649,13 +681,13 @@ public abstract class JSType implements Serializable {
       return thatType.toMaybeUnionType().meet(thisType);
     }
 
-    if (thisType instanceof EnumElementType) {
-      JSType inf = ((EnumElementType) thisType).meet(thatType);
+    if (thisType.isEnumElementType()) {
+      JSType inf = thisType.toMaybeEnumElementType().meet(thatType);
       if (inf != null) {
         return inf;
       }
-    } else if (thatType instanceof EnumElementType) {
-      JSType inf = ((EnumElementType) thatType).meet(thisType);
+    } else if (thatType.isEnumElementType()) {
+      JSType inf = thatType.toMaybeEnumElementType().meet(thisType);
       if (inf != null) {
         return inf;
       }

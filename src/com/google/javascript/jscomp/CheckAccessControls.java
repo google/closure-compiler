@@ -177,7 +177,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
           if (lValueType != null && lValueType.isConstructor()) {
             // If a.b is a constructor, then everything in this function
             // belongs to the "a.b" type.
-            return ((FunctionType) lValueType).getInstanceType();
+            return (lValueType.toMaybeFunctionType()).getInstanceType();
           } else {
             // If a.b is not a constructor, then treat this as a method
             // of whatever type is on "a".
@@ -205,7 +205,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     if (type == null || type.isUnknownType()) {
       return type;
     } else if (type.isConstructor()) {
-      return ((FunctionType) type).getInstanceType();
+      return (type.toMaybeFunctionType()).getInstanceType();
     } else if (type.isFunctionPrototypeType()) {
       FunctionType owner = ((FunctionPrototypeType) type).getOwnerFunction();
       if (owner.isConstructor()) {

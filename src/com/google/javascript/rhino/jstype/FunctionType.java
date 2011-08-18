@@ -189,8 +189,8 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   @Override
-  public boolean isFunctionType() {
-    return true;
+  public FunctionType toMaybeFunctionType() {
+    return this;
   }
 
   @Override
@@ -563,10 +563,7 @@ public class FunctionType extends PrototypeObjectType {
         return this;
       }
 
-      FunctionType other = null;
-      if (that instanceof FunctionType) {
-        other = (FunctionType) that;
-      }
+      FunctionType other = that.toMaybeFunctionType();
 
       // If these are ordinary functions, then merge them.
       // Don't do this if any of the params/return
@@ -729,11 +726,9 @@ public class FunctionType extends PrototypeObjectType {
    */
   @Override
   public boolean isEquivalentTo(JSType otherType) {
-    if (!(otherType instanceof FunctionType)) {
-      return false;
-    }
-    FunctionType that = (FunctionType) otherType;
-    if (!that.isFunctionType()) {
+    FunctionType that =
+        JSType.toMaybeFunctionType(otherType.toMaybeFunctionType());
+    if (that == null) {
       return false;
     }
     if (this.isConstructor()) {
@@ -836,7 +831,8 @@ public class FunctionType extends PrototypeObjectType {
     }
 
     if (that.isFunctionType()) {
-      if (((FunctionType) that).isInterface()) {
+      FunctionType other = that.toMaybeFunctionType();
+      if (other.isInterface()) {
         // Any function can be assigned to an interface function.
         return true;
       }
@@ -851,7 +847,6 @@ public class FunctionType extends PrototypeObjectType {
       // this as an error. It also screws up out standard method
       // for aliasing constructors. Let's punt on all this for now.
       // TODO(nicksantos): fix this.
-      FunctionType other = (FunctionType) that;
       boolean treatThisTypesAsCovariant =
         // If either one of these is a ctor, skip 'this' checking.
         this.isConstructor() || other.isConstructor() ||
@@ -1016,7 +1011,8 @@ public class FunctionType extends PrototypeObjectType {
 
     if (subTypes != null) {
       for (int i = 0; i < subTypes.size(); i++) {
-        subTypes.set(i, (FunctionType) subTypes.get(i).resolve(t, scope));
+        subTypes.set(
+            i, JSType.toMaybeFunctionType(subTypes.get(i).resolve(t, scope)));
       }
     }
 

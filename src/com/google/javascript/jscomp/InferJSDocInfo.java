@@ -22,7 +22,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 
@@ -210,7 +209,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         objType.setJSDocInfo(docInfo);
 
         if (objType.isConstructor() || objType.isInterface()) {
-          ((FunctionType) objType).getInstanceType().setJSDocInfo(
+          objType.toMaybeFunctionType(objType).getInstanceType().setJSDocInfo(
               docInfo);
         } else if (objType instanceof EnumType) {
           ((EnumType) objType).getElementsType().setJSDocInfo(docInfo);

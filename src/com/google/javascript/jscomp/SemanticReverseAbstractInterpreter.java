@@ -419,8 +419,8 @@ class SemanticReverseAbstractInterpreter
     JSType rightType = right.getJSType();
     ObjectType targetType =
         typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
-    if (rightType instanceof FunctionType) {
-      targetType = (FunctionType) rightType;
+    if (rightType != null && rightType.isFunctionType()) {
+      targetType = rightType.toMaybeFunctionType();
     }
     Visitor<JSType> visitor;
     if (outcome) {
@@ -489,11 +489,9 @@ class SemanticReverseAbstractInterpreter
 
     @Override
     public JSType caseUnknownType() {
-      if (target instanceof FunctionType) {
-        FunctionType funcTarget = (FunctionType) target;
-        if (funcTarget.hasInstanceType()) {
-          return funcTarget.getInstanceType();
-        }
+      FunctionType funcTarget = JSType.toMaybeFunctionType(target);
+      if (funcTarget != null && funcTarget.hasInstanceType()) {
+        return funcTarget.getInstanceType();
       }
       return getNativeType(UNKNOWN_TYPE);
     }
@@ -518,7 +516,7 @@ class SemanticReverseAbstractInterpreter
         return type;
       }
 
-      FunctionType funcTarget = (FunctionType) target;
+      FunctionType funcTarget = target.toMaybeFunctionType();
       if (funcTarget.hasInstanceType()) {
         return type.getGreatestSubtype(funcTarget.getInstanceType());
       }
@@ -544,7 +542,7 @@ class SemanticReverseAbstractInterpreter
         return type;
       }
 
-      FunctionType funcTarget = (FunctionType) target;
+      FunctionType funcTarget = target.toMaybeFunctionType();
       if (funcTarget.hasInstanceType()) {
         if (type.isSubtype(funcTarget.getInstanceType())) {
           return null;
@@ -562,7 +560,7 @@ class SemanticReverseAbstractInterpreter
         return type;
       }
 
-      FunctionType funcTarget = (FunctionType) target;
+      FunctionType funcTarget = target.toMaybeFunctionType();
       if (funcTarget.hasInstanceType()) {
         return type.getRestrictedUnion(funcTarget.getInstanceType());
       }
