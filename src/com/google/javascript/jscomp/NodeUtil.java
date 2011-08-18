@@ -2163,7 +2163,7 @@ public final class NodeUtil {
         case Token.GET:
           // GET must always return a function type.
           if (valueType.isFunctionType()) {
-            FunctionType fntype = valueType.toMaybeFunctionType();
+            FunctionType fntype = ((FunctionType) valueType);
             valueType = fntype.getReturnType();
           } else {
             return null;
@@ -2172,7 +2172,7 @@ public final class NodeUtil {
         case Token.SET:
           if (valueType.isFunctionType()) {
             // SET must always return a function type.
-            FunctionType fntype = valueType.toMaybeFunctionType();
+            FunctionType fntype = ((FunctionType) valueType);
             Node param = fntype.getParametersNode().getFirstChild();
             // SET function must always have one parameter.
             valueType = param.getJSType();

@@ -61,11 +61,9 @@ class TypedCodeGenerator extends CodeGenerator {
 
   private String getTypeAnnotation(Node node) {
     JSType type = node.getJSType();
-    if (type == null) {
-      return "";
-    } else if (type.isFunctionType()) {
+    if (type instanceof FunctionType) {
       return getFunctionAnnotation(node);
-    } else if (!type.isUnknownType()
+    } else if (type != null && !type.isUnknownType()
         && !type.isEmptyType() && !type.isVoidType() &&
         !type.isFunctionPrototypeType()) {
       return "/** @type {" + node.getJSType() + "} */\n";
@@ -87,7 +85,7 @@ class TypedCodeGenerator extends CodeGenerator {
       return "";
     }
 
-    FunctionType funType = type.toMaybeFunctionType();
+    FunctionType funType = (FunctionType) fnNode.getJSType();
 
     // We need to use the child nodes of the function as the nodes for the
     // parameters of the function type do not have the real parameter names.

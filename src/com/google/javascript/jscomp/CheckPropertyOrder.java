@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Collections;
@@ -106,7 +105,7 @@ class CheckPropertyOrder extends AbstractPostOrderCallback
     }
 
     if (func != null) {
-      FunctionType funcType = JSType.toMaybeFunctionType(func.getJSType());
+      FunctionType funcType = (FunctionType) func.getJSType();
       checkConstructor(
           func, (funcType != null) ? funcType.getInstanceType() : null,
           t.getSourceName(), funcName);

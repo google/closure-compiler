@@ -441,7 +441,8 @@ final class FunctionTypeBuilder {
       String ownerTypeName = owner.getQualifiedName();
       Var ownerVar = scope.getVar(ownerTypeName);
       JSType ownerType = ownerVar == null ? null : ownerVar.getType();
-      FunctionType ownerFnType = JSType.toMaybeFunctionType(ownerType);
+      FunctionType ownerFnType = ownerType instanceof FunctionType ?
+          (FunctionType) ownerType : null;
       ObjectType instType =
           ownerFnType == null || ownerFnType.isOrdinaryFunction() ?
           null : ownerFnType.getInstanceType();

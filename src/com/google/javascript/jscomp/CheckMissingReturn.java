@@ -149,9 +149,9 @@ class CheckMissingReturn implements ScopedCallback {
    * @return If a return type is expected, returns it. Otherwise returns null.
    */
   private JSType explicitReturnExpected(Node scope) {
-    FunctionType scopeType = JSType.toMaybeFunctionType(scope.getJSType());
+    JSType scopeType = scope.getJSType();
 
-    if (scopeType == null) {
+    if (!(scopeType instanceof FunctionType)) {
       return null;
     }
 
@@ -159,7 +159,7 @@ class CheckMissingReturn implements ScopedCallback {
       return null;
     }
 
-    JSType returnType = scopeType.getReturnType();
+    JSType returnType = ((FunctionType) scopeType).getReturnType();
 
     if (returnType == null) {
       return null;

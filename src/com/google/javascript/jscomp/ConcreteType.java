@@ -23,7 +23,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticScope;
@@ -359,7 +358,7 @@ abstract class ConcreteType implements LatticeElement {
 
     /** Returns the JSType of this function. */
     public FunctionType getJSType() {
-      return JSType.toMaybeFunctionType(declaration.getJSType());
+      return (FunctionType) declaration.getJSType();
     }
 
     /**

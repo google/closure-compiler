@@ -361,7 +361,7 @@ class DevirtualizePrototypeMethods
    * NO_TYPE.
    */
   private void fixFunctionType(Node functionNode) {
-    FunctionType type = JSType.toMaybeFunctionType(functionNode.getJSType());
+    FunctionType type = (FunctionType) functionNode.getJSType();
     if (type != null) {
       JSTypeRegistry typeRegistry = compiler.getTypeRegistry();
 

@@ -381,10 +381,9 @@ class NameReferenceGraphConstruction implements CompilerPass {
         // A.C() -> A.B(). However, this is not important in module code motion
         // and will be ignored (for now).
       }
-      if (type.isConstructor()) {
+      if (type.isFunctionType() && type.isConstructor()) {
         return recordClassConstructorOrInterface(
-            name, type.toMaybeFunctionType(),
-            n, parent, parent.getParent(), rValue);
+            name, (FunctionType) type, n, parent, parent.getParent(), rValue);
       } else {
         Name symbol = graph.defineNameIfNotExists(name, isExtern);
         symbol.setType(type);
@@ -408,9 +407,9 @@ class NameReferenceGraphConstruction implements CompilerPass {
       FunctionType classType = null;
       String className = null;
 
-      if (constructor != null && constructor.isConstructor()) {
+      if (constructor instanceof FunctionType && constructor.isConstructor()) {
         // Case where the class has been properly declared with @constructor
-        classType = constructor.toMaybeFunctionType();
+        classType = (FunctionType) constructor;
         className = classType.getReferenceName();
       } else {
         // We'll guess it is a constructor even if it didn't have @constructor

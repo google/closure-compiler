@@ -221,8 +221,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     private void checkForFunctionsWithUnknownTypes(Node function) {
       Preconditions.checkArgument(NodeUtil.isFunction(function));
 
-      FunctionType functionType =
-          JSType.toMaybeFunctionType(function.getJSType());
+      FunctionType functionType = (FunctionType) function.getJSType();
 
       if (functionType == null) {
         // No type information is available (CheckTypes was probably not run)

@@ -799,8 +799,8 @@ class TypeInference
     Node left = n.getFirstChild();
     JSType functionType = getJSType(left).restrictByNotNullOrUndefined();
     if (functionType != null) {
-      if (functionType.isFunctionType()) {
-        FunctionType fnType = functionType.toMaybeFunctionType();
+      if (functionType instanceof FunctionType) {
+        FunctionType fnType = (FunctionType) functionType;
         n.setJSType(fnType.getReturnType());
         updateTypeOfParameters(n, fnType);
         updateTypeOfThisOnClosure(n, fnType);
@@ -881,16 +881,16 @@ class TypeInference
         return;
       }
 
-      JSType iParameterType = getJSType(iParameter);
+      JSType iParameterType = iParameter.getJSType();
       Node iArgument = n.getChildAtIndex(i + 1);
       JSType iArgumentType = getJSType(iArgument);
       inferPropertyTypesToMatchConstraint(iArgumentType, iParameterType);
 
-      if (iParameterType.isFunctionType()) {
-        FunctionType iParameterFnType = iParameterType.toMaybeFunctionType();
+      if (iParameterType instanceof FunctionType) {
+        FunctionType iParameterFnType = (FunctionType) iParameterType;
 
         if (iArgument.getType() == Token.FUNCTION &&
-            iArgumentType.isFunctionType() &&
+            iArgumentType instanceof FunctionType &&
             iArgument.getJSDocInfo() == null) {
           iArgument.setJSType(iParameterFnType);
         }
@@ -937,8 +937,8 @@ class TypeInference
         for (Node jParameter : fnType.getParameters()) {
           JSType jParameterType =
               getJSType(jParameter).restrictByNotNullOrUndefined();
-          if (jParameterType.isFunctionType()) {
-            FunctionType jParameterFnType = jParameterType.toMaybeFunctionType();
+          if (jParameterType instanceof FunctionType) {
+            FunctionType jParameterFnType = (FunctionType) jParameterType;
             if (jParameterFnType.getTypeOfThis().equals(iParameterType)) {
               foundTemplateTypeOfThisParameter = true;
               // Find the actual type of the this argument.
@@ -949,13 +949,13 @@ class TypeInference
               Node jArgument = n.getChildAtIndex(j + 1);
               JSType jArgumentType = getJSType(jArgument);
               if (jArgument.getType() == Token.FUNCTION &&
-                  jArgumentType.isFunctionType()) {
+                  jArgumentType instanceof FunctionType) {
                 if (iArgumentType != null &&
                     // null and undefined get filtered out above.
                     !iArgumentType.isNoType()) {
                   // If it's an function expression, update the type of this
                   // using the actual type of T.
-                  FunctionType jArgumentFnType = jArgumentType.toMaybeFunctionType();
+                  FunctionType jArgumentFnType = (FunctionType) jArgumentType;
                   if (jArgumentFnType.getTypeOfThis().isUnknownType()) {
                     // The new type will be picked up when we traverse the inner
                     // function.
@@ -1006,15 +1006,9 @@ class TypeInference
       constructorType = constructorType.restrictByNotNullOrUndefined();
       if (constructorType.isUnknownType()) {
         type = getNativeType(UNKNOWN_TYPE);
-      } else {
-        FunctionType ct = constructorType.toMaybeFunctionType();
-        if (ct == null && constructorType instanceof FunctionType) {
-          // If constructorType is a NoObjectType, then toMaybeFunctionType will
-          // return null. But NoObjectType implements the FunctionType
-          // interface, precisely because it can validly construct objects.
-          ct = (FunctionType) constructorType;
-        }
-        if (ct != null && ct.isConstructor()) {
+      } else if (constructorType instanceof FunctionType) {
+        FunctionType ct = (FunctionType) constructorType;
+        if (ct.isConstructor()) {
           type = ct.getInstanceType();
         }
       }

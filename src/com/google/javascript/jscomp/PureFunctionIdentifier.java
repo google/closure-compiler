@@ -610,8 +610,8 @@ class PureFunctionIdentifier implements CompilerPass {
       if (inExterns) {
         JSType jstype = node.getJSType();
         boolean knownLocalResult = false;
-        FunctionType functionType = JSType.toMaybeFunctionType(jstype);
-        if (functionType != null) {
+        if (jstype != null && jstype.isFunctionType()) {
+          FunctionType functionType = (FunctionType) jstype;
           JSType jstypeReturn = functionType.getReturnType();
           if (isLocalValueType(jstypeReturn, true)) {
             knownLocalResult = true;

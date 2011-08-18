@@ -163,6 +163,11 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean isEnumElementType() {
+    return referencedType.isEnumElementType();
+  }
+
+  @Override
   public boolean isConstructor() {
     return referencedType.isConstructor();
   }
@@ -190,16 +195,6 @@ class ProxyObjectType extends ObjectType {
   @Override
   public UnionType toMaybeUnionType() {
     return referencedType.toMaybeUnionType();
-  }
-
-  @Override
-  public FunctionType toMaybeFunctionType() {
-    return referencedType.toMaybeFunctionType();
-  }
-
-  @Override
-  public EnumElementType toMaybeEnumElementType() {
-    return referencedType.toMaybeEnumElementType();
   }
 
   @Override
