@@ -24,7 +24,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_FUNCTION_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -428,9 +427,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     switch (n.getType()) {
       case Token.FUNCTION:
         // normal type checking
-        final TypeCheck outerThis = this;
         final Scope outerScope = t.getScope();
-        final FunctionType functionType = (FunctionType) n.getJSType();
         final String functionPrivateName = n.getFirstChild().getString();
         if (functionPrivateName != null && functionPrivateName.length() > 0 &&
             outerScope.isDeclared(functionPrivateName, false) &&
@@ -879,8 +876,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       // object.prototype = ...;
       if (property.equals("prototype")) {
-        if (objectJsType instanceof FunctionType) {
-          FunctionType functionType = (FunctionType) objectJsType;
+        if (objectJsType != null && objectJsType.isFunctionType()) {
+          FunctionType functionType = objectJsType.toMaybeFunctionType();
           if (functionType.isConstructor()) {
             JSType rvalueType = rvalue.getJSType();
             validator.expectObject(t, rvalue, rvalueType,
@@ -898,9 +895,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         String property2 = NodeUtil.getStringValue(object.getLastChild());
 
         if ("prototype".equals(property2)) {
-          JSType jsType = object2.getJSType();
-          if (jsType instanceof FunctionType) {
-            FunctionType functionType = (FunctionType) jsType;
+          JSType jsType = getJSType(object2);
+          if (jsType.isFunctionType()) {
+            FunctionType functionType = jsType.toMaybeFunctionType();
             if (functionType.isConstructor() || functionType.isInterface()) {
               checkDeclaredPropertyInheritance(
                   t, assign, functionType, property, info, getJSType(rvalue));
@@ -1408,10 +1405,15 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void visitNew(NodeTraversal t, Node n) {
     Node constructor = n.getFirstChild();
-    FunctionType type = getFunctionType(constructor);
-    if (type != null && type.isConstructor()) {
-      visitParameterList(t, n, type);
-      ensureTyped(t, n, type.getInstanceType());
+    JSType type = getJSType(constructor).restrictByNotNullOrUndefined();
+    if (type.isConstructor() || type.isEmptyType() || type.isUnknownType()) {
+      FunctionType fnType = type.toMaybeFunctionType();
+      if (fnType != null) {
+        visitParameterList(t, n, fnType);
+        ensureTyped(t, n, fnType.getInstanceType());
+      } else {
+        ensureTyped(t, n);
+      }
     } else {
       // TODO(user): add support for namespaced objects.
       if (constructor.getType() != Token.GETPROP) {
@@ -1474,7 +1476,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param n The node being visited.
    */
   private void visitFunction(NodeTraversal t, Node n) {
-    FunctionType functionType = (FunctionType) n.getJSType();
+    FunctionType functionType = JSType.toMaybeFunctionType(n.getJSType());
     String functionPrivateName = n.getFirstChild().getString();
     if (functionType.isConstructor()) {
       FunctionType baseConstructor = functionType.
@@ -1556,8 +1558,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     // A couple of types can be called as if they were functions.
     // If it is a function type, then validate parameters.
-    if (childType instanceof FunctionType) {
-      FunctionType functionType = (FunctionType) childType;
+    if (childType.isFunctionType()) {
+      FunctionType functionType = childType.toMaybeFunctionType();
 
       boolean isExtern = false;
       JSDocInfo functionJSDocInfo = functionType.getJSDocInfo();
@@ -1653,8 +1655,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
     JSType jsType = getJSType(function);
 
-    if (jsType instanceof FunctionType) {
-      FunctionType functionType = (FunctionType) jsType;
+    if (jsType.isFunctionType()) {
+      FunctionType functionType = jsType.toMaybeFunctionType();
 
       JSType returnType = functionType.getReturnType();
 
@@ -1807,21 +1809,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  /**
-   * Gets the type of the node or {@code null} if the node's type is not a
-   * function.
-   */
-  private FunctionType getFunctionType(Node n) {
-    JSType type = getJSType(n).restrictByNotNullOrUndefined();
-    if (type.isUnknownType()) {
-      return typeRegistry.getNativeFunctionType(U2U_CONSTRUCTOR_TYPE);
-    } else if (type instanceof FunctionType) {
-      return (FunctionType) type;
-    } else {
-      return null;
-    }
-  }
-
   // TODO(nicksantos): TypeCheck should never be attaching types to nodes.
   // All types should be attached by TypeInference. This is not true today
   // for legacy reasons. There are a number of places where TypeInference
@@ -1861,7 +1848,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void ensureTyped(NodeTraversal t, Node n, JSType type) {
     // Make sure FUNCTION nodes always get function type.
     Preconditions.checkState(n.getType() != Token.FUNCTION ||
-            type instanceof FunctionType ||
+            type.isFunctionType() ||
             type.isUnknownType());
     JSDocInfo info = n.getJSDocInfo();
     if (info != null) {

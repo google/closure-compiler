@@ -81,8 +81,8 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public boolean isFunctionType() {
-    return false;
+  public FunctionType toMaybeFunctionType() {
+    return null;
   }
 
   @Override

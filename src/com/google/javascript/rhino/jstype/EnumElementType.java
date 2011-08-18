@@ -83,8 +83,8 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  public boolean isEnumElementType() {
-    return true;
+  public EnumElementType toMaybeEnumElementType() {
+    return this;
   }
 
   @Override

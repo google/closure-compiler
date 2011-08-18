@@ -673,13 +673,16 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
             }
 
             if (type.isFunction()) {
-              if (lhs.getJSType() == null
-                  || !(lhs.getJSType() instanceof FunctionType)) {
+              JSType lhsType = lhs.getJSType();
+              if (lhsType == null) {
                 break;
               }
-              ConcreteType retType = createType(((FunctionType)
-                  lhs.getJSType().restrictByNotNullOrUndefined())
-                  .getReturnType());
+              FunctionType funType =
+                  lhsType.restrictByNotNullOrUndefined().toMaybeFunctionType();
+              if (funType == null) {
+                break;
+              }
+              ConcreteType retType = createType(funType.getReturnType());
               retType = createUnionWithSubTypes(retType);
               ConcreteType newret = type.toFunction().getReturnSlot()
                   .getType().unionWith(retType);
@@ -869,7 +872,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           actions.addAll(getImplicitActionsFromCall(n, alt));
         }
         return actions;
-      } else if (!(recvType instanceof FunctionType)) {
+      } else if (!(recvType.isFunctionType())) {
         return Lists.<Action>newArrayList();
       }
 
@@ -879,21 +882,21 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       String prop = receiver.getLastChild().getString();
       if (objType != null &&
           (objType.isPropertyInExterns(prop)) &&
-          ((FunctionType) recvType).getParameters() != null) {
+          (recvType.toMaybeFunctionType()).getParameters() != null) {
         List<Action> actions = Lists.newArrayList();
 
         // Look for a function type in the argument list.
         Iterator<Node> paramIter =
-            ((FunctionType) recvType).getParameters().iterator();
+            (recvType.toMaybeFunctionType()).getParameters().iterator();
         Iterator<Node> argumentIter = n.children().iterator();
         argumentIter.next(); // Skip the function name.
         while (paramIter.hasNext() && argumentIter.hasNext()) {
           Node arg = argumentIter.next();
           Node param = paramIter.next();
-          if (arg.getJSType() instanceof FunctionType) {
+          if (arg.getJSType() != null && arg.getJSType().isFunctionType()) {
             actions.addAll(getImplicitActionsFromArgument(
                 arg,
-                ((FunctionType) arg.getJSType()).getTypeOfThis(),
+                arg.getJSType().toMaybeFunctionType().getTypeOfThis(),
                 param.getJSType()));
           }
         }
@@ -911,9 +914,9 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
               getImplicitActionsFromArgument(arg, thisType, paramAlt));
         }
         return actions;
-      } else if (paramType instanceof FunctionType) {
+      } else if (paramType.isFunctionType()) {
         return Lists.<Action>newArrayList(createExternFunctionCall(
-            arg, thisType, (FunctionType) paramType));
+            arg, thisType, paramType.toMaybeFunctionType()));
       } else {
         return Lists.<Action>newArrayList(createExternFunctionCall(
             arg, thisType, null));
@@ -967,10 +970,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           thisType = ((FunctionPrototypeType) jsType)
               .getOwnerFunction().getInstanceType();
         }
-        FunctionType callType = null;
-        if (propType instanceof FunctionType) {
-          callType = (FunctionType) propType;
-        }
+        FunctionType callType = propType.toMaybeFunctionType();
         Action action = createExternFunctionCall(
             fnNode, thisType, callType);
         return Lists.<Action>newArrayList(action);
@@ -1011,8 +1011,8 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     }
 
     if (jsType.isFunctionType()) {
-      if (getConcreteFunction((FunctionType) jsType) != null) {
-        return getConcreteFunction((FunctionType) jsType);
+      if (getConcreteFunction(jsType.toMaybeFunctionType()) != null) {
+        return getConcreteFunction(jsType.toMaybeFunctionType());
       }
       // Since we don't have a declaration, it's not concrete.
       return ConcreteType.ALL;
@@ -1245,7 +1245,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
       functionFromDeclaration.put(decl,
           funType = new ConcreteFunctionType(this, decl, parent));
       if (decl.getJSType() != null) {
-        functionFromJSType.put((FunctionType) decl.getJSType(), funType);
+        functionFromJSType.put(decl.getJSType().toMaybeFunctionType(), funType);
       }
     }
     return funType;

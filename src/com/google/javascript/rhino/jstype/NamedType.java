@@ -258,9 +258,8 @@ class NamedType extends ProxyObjectType {
                                     StaticScope<JSType> enclosing) {
     JSType value = lookupViaProperties(t, enclosing);
     // last component of the chain
-    if ((value instanceof FunctionType) &&
-        (value.isConstructor() || value.isInterface())) {
-      FunctionType functionType = (FunctionType) value;
+    if (value != null && (value.isConstructor() || value.isInterface())) {
+      FunctionType functionType = value.toMaybeFunctionType();
       setReferencedAndResolvedType(
           functionType.getInstanceType(), t, enclosing);
     } else if (value instanceof EnumType) {
