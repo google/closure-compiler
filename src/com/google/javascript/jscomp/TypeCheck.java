@@ -1415,19 +1415,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n);
       }
     } else {
-      // TODO(user): add support for namespaced objects.
-      if (constructor.getType() != Token.GETPROP) {
-        // TODO(user): make the constructor node have lineno/charno
-        // and use constructor for a more precise error indication.
-        // It seems that GETPROP nodes are missing this information.
-        Node line;
-        if (constructor.getLineno() < 0 || constructor.getCharno() < 0) {
-          line = n;
-        } else {
-          line = constructor;
-        }
-        report(t, line, NOT_A_CONSTRUCTOR);
-      }
+      report(t, n, NOT_A_CONSTRUCTOR);
       ensureTyped(t, n);
     }
   }

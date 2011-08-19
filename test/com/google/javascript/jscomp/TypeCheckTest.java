@@ -5759,6 +5759,17 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testNew17() throws Exception {
+    testTypes("var goog = {}; goog.x = 3; new goog.x",
+              "cannot instantiate non-constructor");
+  }
+
+  public void testNew18() throws Exception {
+    testTypes("var goog = {};" +
+              "/** @constructor */ goog.F = function() {};" +
+              "/** @constructor */ goog.G = goog.F;");
+  }
+
   public void testName1() throws Exception {
     assertEquals(VOID_TYPE, testNameNode("undefined"));
   }
