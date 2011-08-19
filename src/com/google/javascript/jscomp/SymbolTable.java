@@ -18,19 +18,25 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.SimpleReference;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.StaticSymbolTable;
+import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -60,6 +66,11 @@ import javax.annotation.Nullable;
  * this symbol table that indexes symbols or references by the desired lookup
  * key.
  *
+ * By design, this symbol table conflates "type Foo" with "the constructor
+ * that creates objects of type Foo" when looking up types. JSCompiler
+ * internally treats these as distinct objects, but we assume that most
+ * clients will not care about the distinction.
+ *
  * @see #addSymbolsFrom For more information on how to write plugins for this
  *    symbol table.
  *
@@ -79,6 +90,8 @@ public final class SymbolTable
    * they're declared.
    */
   private final Map<Node, SymbolScope> scopes = Maps.newHashMap();
+
+  private SymbolScope globalScope = null;
 
   /**
    * Clients should get a symbol table by asking the compiler at the end
@@ -135,6 +148,69 @@ public final class SymbolTable
     String name = NodeUtil.getBestLValueName(
         NodeUtil.getBestLValue(rootNode));
     return name == null ? null : scope.getParentScope().getSlot(name);
+  }
+
+  /**
+   * Get all symbols associated with the type of the given symbol.
+   *
+   * For example, given a variable x declared as
+   * /* @type {Array|Date} /
+   * var x = f();
+   * this will return the constructors for Array and Date.
+   */
+  public Iterable<Symbol> getAllSymbolsForTypeOf(Symbol sym) {
+    return getAllSymbolsForType(sym.getType(), sym.scope);
+  }
+
+  /**
+   * Gets the symbol for the given constuctor or interface.
+   */
+  public Symbol getSymbolDeclaredBy(FunctionType fn) {
+    Preconditions.checkState(fn.isConstructor() || fn.isInterface());
+    ObjectType instanceType = fn.getInstanceType();
+    String name = instanceType.getReferenceName();
+    if (name == null || globalScope == null) {
+      return null;
+    }
+
+    Node source = fn.getSource();
+    return (source == null ?
+        globalScope : getEnclosingScope(source)).getSlot(name);
+  }
+
+  private List<Symbol> getAllSymbolsForType(
+      JSType type, SymbolScope scope) {
+    if (type == null) {
+      return ImmutableList.of();
+    }
+    UnionType unionType = type.toMaybeUnionType();
+    if (unionType != null) {
+      List<Symbol> result = Lists.newArrayListWithExpectedSize(2);
+      for (JSType alt : unionType.getAlternates()) {
+        result.addAll(getAllSymbolsForType(alt, scope));
+      }
+      return result;
+    }
+
+    FunctionType fnType = type.toMaybeFunctionType();
+    if (fnType != null) {
+      Symbol result = globalScope.getSlot("Function");
+      return result == null ?
+          ImmutableList.<Symbol>of() : ImmutableList.of(result);
+    }
+
+    ObjectType objType = type.toObjectType();
+    if (objType != null) {
+      String name = objType.getReferenceName();
+      Symbol result = scope.getSlot(
+          (name == null || !objType.isInstanceType())
+          ? "Object" : name);
+      return result == null
+          ? ImmutableList.<Symbol>of() : ImmutableList.of(result);
+    }
+
+    // TODO(nicksantos): Create symbols for value types (number, string).
+    return ImmutableList.of();
   }
 
   public String toDebugString() {
@@ -270,7 +346,7 @@ public final class SymbolTable
       if (otherScopeParent == null) {
         // The global scope must be created before any local scopes.
         Preconditions.checkState(
-            scopes.isEmpty(), "Global scopes found at different roots");
+            globalScope == null, "Global scopes found at different roots");
       }
 
       myScope = new SymbolScope(
@@ -278,6 +354,9 @@ public final class SymbolTable
           otherScopeParent == null ? null : createScopeFrom(otherScopeParent),
           otherScope.getTypeOfThis());
       scopes.put(otherScopeRoot, myScope);
+      if (myScope.isGlobalScope()) {
+        globalScope = myScope;
+      }
     }
     return myScope;
   }

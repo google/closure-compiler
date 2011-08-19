@@ -149,6 +149,31 @@ public class SymbolTableTest extends TestCase {
     assertEquals(1, Iterables.size(table.getReferences(fooPrototype)));
   }
 
+  public void testSymbolsForType() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "function random() { return 1; }" +
+        "/** @constructor */ function Foo() {}" +
+        "/** @constructor */ function Bar() {}" +
+        "var x = random() ? new Foo() : new Bar();");
+
+    Symbol x = getGlobalVar(table, "x");
+    Symbol foo = getGlobalVar(table, "Foo");
+    Symbol bar = getGlobalVar(table, "Bar");
+    Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
+    Symbol fn = getGlobalVar(table, "Function");
+    Symbol obj = getGlobalVar(table, "Object");
+    assertEquals(
+        Lists.newArrayList(foo, bar), table.getAllSymbolsForTypeOf(x));
+    assertEquals(
+        Lists.newArrayList(fn), table.getAllSymbolsForTypeOf(foo));
+    assertEquals(
+        Lists.newArrayList(obj), table.getAllSymbolsForTypeOf(fooPrototype));
+    assertEquals(
+        foo,
+        table.getSymbolDeclaredBy(
+            foo.getType().toMaybeFunctionType()));
+  }
+
   private Symbol getGlobalVar(SymbolTable table, String name) {
     for (Symbol symbol : table.getAllSymbols()) {
       if (symbol.getName().equals(name) &&

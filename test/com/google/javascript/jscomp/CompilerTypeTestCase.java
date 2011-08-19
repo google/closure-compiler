@@ -45,6 +45,8 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
 
   /** A default set of externs for testing. */
   static final String DEFAULT_EXTERNS =
+      "/** @constructor \n * @param {*=} opt_value */ " +
+      "function Object(opt_value) {}" +
       "/** @constructor \n * @param {*} var_args */ " +
       "function Function(var_args) {}" +
       "/** @type {!Function} */ Function.prototype.apply;" +
