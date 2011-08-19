@@ -128,13 +128,18 @@ class FunctionInjector {
     final String fnRecursionName = fnNode.getFirstChild().getString();
     Preconditions.checkState(fnRecursionName != null);
 
+    // If the function references "arguments" directly in the function
+    boolean referencesArguments = NodeUtil.isNameReferenced(
+        block, "arguments", NodeUtil.MATCH_NOT_FUNCTION);
+
+    // or it references "eval" or one of its names anywhere.
     Predicate<Node> p = new Predicate<Node>(){
       @Override
       public boolean apply(Node n) {
         if (n.getType() == Token.NAME) {
-          return n.getString().equals("arguments")
-            || n.getString().equals("eval")
-            || n.getString().equals(fnName)
+          return n.getString().equals("eval")
+            || (!fnName.isEmpty()
+                && n.getString().equals(fnName))
             || (!fnRecursionName.isEmpty()
                 && n.getString().equals(fnRecursionName));
         }
@@ -142,7 +147,8 @@ class FunctionInjector {
       }
     };
 
-    return !NodeUtil.has(block, p, Predicates.<Node>alwaysTrue());
+    return !referencesArguments
+        && !NodeUtil.has(block, p, Predicates.<Node>alwaysTrue());
   }
 
   /**
@@ -562,7 +568,8 @@ class FunctionInjector {
    * inlining would introduce new globals.
    */
   private boolean callMeetsBlockInliningRequirements(
-      NodeTraversal t, Node callNode, Node fnNode, Set<String> namesToAlias) {
+      NodeTraversal t, Node callNode, final Node fnNode,
+      Set<String> namesToAlias) {
     // Note: functions that contain function definitions are filtered out
     // in isCanidateFunction.
 
@@ -577,21 +584,36 @@ class FunctionInjector {
         NodeUtil.getFunctionBody(fnNode),
         new NodeUtil.MatchDeclaration(),
         new NodeUtil.MatchShallowStatement());
-    boolean callerContainsFunction = false;
+    boolean forbidTemps = false;
     if (!t.inGlobalScope()) {
       Node fnCaller = t.getScopeRoot();
       Node fnCallerBody = fnCaller.getLastChild();
 
-      callerContainsFunction = NodeUtil.containsFunction(fnCallerBody);
+      // Don't allow any new vars into a scope that contains eval or one
+      // that contains functions (excluding the function being inlined).
+      Predicate<Node> match = new Predicate<Node>(){
+        @Override
+        public boolean apply(Node n) {
+          if (n.getType() == Token.NAME) {
+            return n.getString().equals("eval");
+          }
+          if (n.getType() == Token.FUNCTION) {
+            return n != fnNode;
+          }
+          return false;
+        }
+      };
+      forbidTemps = NodeUtil.has(fnCallerBody,
+          match, NodeUtil.MATCH_NOT_FUNCTION);
     }
 
-    if (fnContainsVars && callerContainsFunction) {
+    if (fnContainsVars && forbidTemps) {
       return false;
     }
 
-    // If the caller contains functions, verify we aren't adding any
+    // If the caller contains functions or evals, verify we aren't adding any
     // additional VAR declarations because aliasing is needed.
-    if (callerContainsFunction) {
+    if (forbidTemps) {
       Map<String, Node> args =
           FunctionArgumentInjector.getFunctionCallParameterMap(
               fnNode, callNode, this.safeNameIdSupplier);
