@@ -27,6 +27,7 @@ import com.google.common.io.Files;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -268,6 +270,26 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         throw new FlagUsageException("Unknown language `" + config.languageIn +
                                      "' specified.");
+      }
+    }
+
+    if (!config.outputManifests.isEmpty()) {
+      Set<String> uniqueNames = Sets.newHashSet();
+      for (String filename : config.outputManifests) {
+        if (!uniqueNames.add(filename)) {
+          throw new FlagUsageException("output_manifest flags specify " +
+              "duplicate file names: " + filename);
+        }
+      }
+    }
+
+    if (!config.outputBundles.isEmpty()) {
+      Set<String> uniqueNames = Sets.newHashSet();
+      for (String filename : config.outputBundles) {
+        if (!uniqueNames.add(filename)) {
+          throw new FlagUsageException("output_bundle flags specify " +
+              "duplicate file names: " + filename);
+        }
       }
     }
 
