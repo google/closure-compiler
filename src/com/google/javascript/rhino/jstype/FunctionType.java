@@ -85,6 +85,8 @@ public class FunctionType extends PrototypeObjectType {
    */
   private FunctionPrototypeType prototype;
 
+  private SimpleSlot prototypeSlot;
+
   /**
    * Whether a function is a constructor, an interface, or just an ordinary
    * function.
@@ -269,6 +271,31 @@ public class FunctionType extends PrototypeObjectType {
     return call;
   }
 
+  @Override
+  public StaticSlot<JSType> getSlot(String name) {
+    if ("prototype".equals(name)) {
+      // Lazy initialization of the prototype field.
+      getPrototype();
+      return prototypeSlot;
+    } else {
+      return super.getSlot(name);
+    }
+  }
+
+  /**
+   * Includes the prototype iff someone has created it. We do not want
+   * to expose the prototype for ordinary functions.
+   */
+  public Set<String> getOwnPropertyNames() {
+    if (prototype == null) {
+      return super.getOwnPropertyNames();
+    } else {
+      Set<String> names = Sets.newHashSet("prototype");
+      names.addAll(super.getOwnPropertyNames());
+      return names;
+    }
+  }
+
   /**
    * Gets the {@code prototype} property of this function type. This is
    * equivalent to {@code (ObjectType) getPropertyType("prototype")}.
@@ -312,6 +339,7 @@ public class FunctionType extends PrototypeObjectType {
 
     boolean replacedPrototype = prototype != null;
     this.prototype = prototype;
+    this.prototypeSlot = new SimpleSlot("prototype", prototype, true);
 
     if (isConstructor() || isInterface()) {
       FunctionType superClass = getSuperClassConstructor();
@@ -434,71 +462,57 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   @Override
-  public boolean hasProperty(String name) {
-    return super.hasProperty(name) || "prototype".equals(name);
-  }
-
-  @Override
-  public boolean hasOwnProperty(String name) {
-    return super.hasOwnProperty(name) || "prototype".equals(name);
-  }
-
-  @Override
   public JSType getPropertyType(String name) {
-    if ("prototype".equals(name)) {
-      return getPrototype();
-    } else {
-      if (!hasOwnProperty(name)) {
-        if ("call".equals(name)) {
-          // Define the "call" function lazily.
-          Node params = getParametersNode();
-          if (params == null) {
-            // If there's no params array, don't do any type-checking
-            // in this CALL function.
-            defineDeclaredProperty(name,
-                new FunctionBuilder(registry)
-                    .withReturnType(getReturnType())
-                    .build(),
-                source);
-          } else {
-            params = params.cloneTree();
-            Node thisTypeNode = Node.newString(Token.NAME, "thisType");
-            thisTypeNode.setJSType(
-                registry.createOptionalNullableType(getTypeOfThis()));
-            params.addChildToFront(thisTypeNode);
-            thisTypeNode.setOptionalArg(true);
-
-            defineDeclaredProperty(name,
-                new FunctionBuilder(registry)
-                    .withParamsNode(params)
-                    .withReturnType(getReturnType())
-                    .build(),
-                source);
-          }
-        } else if ("apply".equals(name)) {
-          // Define the "apply" function lazily.
-          FunctionParamBuilder builder = new FunctionParamBuilder(registry);
-
-          // Ecma-262 says that apply's second argument must be an Array
-          // or an arguments object. We don't model the arguments object,
-          // so let's just be forgiving for now.
-          // TODO(nicksantos): Model the Arguments object.
-          builder.addOptionalParams(
-              registry.createNullableType(getTypeOfThis()),
-              registry.createNullableType(
-                  registry.getNativeType(JSTypeNative.OBJECT_TYPE)));
+    if (!hasOwnProperty(name)) {
+      if ("call".equals(name)) {
+        // Define the "call" function lazily.
+        Node params = getParametersNode();
+        if (params == null) {
+          // If there's no params array, don't do any type-checking
+          // in this CALL function.
+          defineDeclaredProperty(name,
+              new FunctionBuilder(registry)
+              .withReturnType(getReturnType())
+              .build(),
+              source);
+        } else {
+          params = params.cloneTree();
+          Node thisTypeNode = Node.newString(Token.NAME, "thisType");
+          thisTypeNode.setJSType(
+              registry.createOptionalNullableType(getTypeOfThis()));
+          params.addChildToFront(thisTypeNode);
+          thisTypeNode.setOptionalArg(true);
 
           defineDeclaredProperty(name,
               new FunctionBuilder(registry)
-                  .withParams(builder)
-                  .withReturnType(getReturnType())
-                  .build(),
+              .withParamsNode(params)
+              .withReturnType(getReturnType())
+              .build(),
               source);
         }
-      }
+      } else if ("apply".equals(name)) {
+        // Define the "apply" function lazily.
+        FunctionParamBuilder builder = new FunctionParamBuilder(registry);
 
-      return super.getPropertyType(name);
+        // Ecma-262 says that apply's second argument must be an Array
+        // or an arguments object. We don't model the arguments object,
+        // so let's just be forgiving for now.
+        // TODO(nicksantos): Model the Arguments object.
+        builder.addOptionalParams(
+            registry.createNullableType(getTypeOfThis()),
+            registry.createNullableType(
+                registry.getNativeType(JSTypeNative.OBJECT_TYPE)));
+
+        defineDeclaredProperty(name,
+            new FunctionBuilder(registry)
+            .withParams(builder)
+            .withReturnType(getReturnType())
+            .build(),
+            source);
+      }
     }
+
+    return super.getPropertyType(name);
   }
 
   @Override
@@ -518,12 +532,6 @@ public class FunctionType extends PrototypeObjectType {
       }
     }
     return super.defineProperty(name, type, inferred, propertyNode);
-  }
-
-  @Override
-  public boolean isPropertyTypeInferred(String property) {
-    return "prototype".equals(property) ||
-        super.isPropertyTypeInferred(property);
   }
 
   @Override

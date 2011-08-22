@@ -38,10 +38,11 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-
 
 /**
  * Tests for FunctionTypes.
@@ -163,12 +164,29 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertTrue(objReturnBoolean.canAssignTo(ifaceReturnBoolean));
   }
 
+  public void testOrdinaryFunctionPrototype() {
+    FunctionType oneNumber = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(NUMBER_TYPE))
+        .withReturnType(BOOLEAN_TYPE).build();
+    assertEquals(ImmutableSet.<String>of(), oneNumber.getOwnPropertyNames());
+  }
+
   public void testCtorWithPrototypeSet() {
     FunctionType ctor = registry.createConstructorType(
         "Foo", null, null, null);
     assertFalse(ctor.getInstanceType().isUnknownType());
-    ctor.defineDeclaredProperty("prototype", UNKNOWN_TYPE, null);
+
+    Node node = new Node(Token.OBJECTLIT);
+    ctor.defineDeclaredProperty("prototype", UNKNOWN_TYPE, node);
     assertTrue(ctor.getInstanceType().isUnknownType());
+
+    assertEquals(ImmutableSet.<String>of("prototype"),
+        ctor.getOwnPropertyNames());
+    assertTrue(ctor.isPropertyTypeInferred("prototype"));
+    assertTrue(ctor.getPropertyType("prototype").isUnknownType());
+
+    // The node is not recorded.
+    assertNull(ctor.getPropertyNode("prototype"));
   }
 
   public void testEmptyFunctionTypes() {
