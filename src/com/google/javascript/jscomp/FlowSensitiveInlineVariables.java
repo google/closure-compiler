@@ -119,6 +119,11 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
       return; // Don't even brother. All global variables are likely escaped.
     }
 
+    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE <
+        t.getScope().getVarCount()) {
+      return;
+    }
+
     // Compute the forward reaching definition.
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     // Process the body of the function.

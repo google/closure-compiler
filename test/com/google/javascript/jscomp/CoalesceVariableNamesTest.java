@@ -407,6 +407,15 @@ public class CoalesceVariableNamesTest extends CompilerTestCase {
                "var closure_var; function bar() { print(closure_var); }");
   }
 
+  public void testMaxVars() {
+    String code = "";
+    for (int i = 0;
+         i < LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE + 1; i++) {
+      code += String.format("var x%d = 0; print(x%d);", i, i);
+    }
+    inFunction(code);
+  }
+
   private void inFunction(String src) {
     inFunction(src, src);
   }

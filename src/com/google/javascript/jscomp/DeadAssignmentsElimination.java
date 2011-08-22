@@ -76,6 +76,11 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       return;
     }
 
+    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE <
+        t.getScope().getVarCount()) {
+      return;
+    }
+
     // We are not going to do any dead assignment elimination in when there is
     // at least one inner function because in most browsers, when there is a
     // closure, ALL the variables are saved (escaped).

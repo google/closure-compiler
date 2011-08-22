@@ -89,18 +89,31 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     NodeTraversal.traverse(compiler, root, this);
   }
 
-  @Override
-  public void enterScope(NodeTraversal t) {
+  private static boolean shouldOptimizeScope(Scope scope) {
     // TODO(user): We CAN do this in the global scope, just need to be
     // careful when something is exported. Liveness uses bit-vector for live
     // sets so I don't see compilation time will be a problem for running this
     // pass in the global scope.
-    if (t.inGlobalScope()) {
+    if (scope.isGlobal()) {
+      return false;
+    }
+
+    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE <
+        scope.getVarCount()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public void enterScope(NodeTraversal t) {
+    Scope scope = t.getScope();
+    if (!shouldOptimizeScope(scope)) {
       return;
     }
-    Scope scope = t.getScope();
-    ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
 
+    ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
     LiveVariablesAnalysis liveness =
         new LiveVariablesAnalysis(cfg, scope, compiler);
     // If the function has exactly 2 params, mark them as escaped. This is
@@ -126,7 +139,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   @Override
   public void exitScope(NodeTraversal t) {
-    if (t.inGlobalScope()) {
+    if (!shouldOptimizeScope(t.getScope())) {
       return;
     }
     colorings.pop();
