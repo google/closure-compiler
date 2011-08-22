@@ -56,8 +56,10 @@ public class JsMessageExtractorTest extends TestCase {
       extractMessage("if (true) {}}");
       fail("Expected exception");
     } catch (RuntimeException e) {
-      assertEquals("JSCompiler errors\n" +
-          "testcode:1: ERROR - Parse error. syntax error\n", e.getMessage());
+      assertTrue(e.getMessage().contains("JSCompiler errors\n"));
+      assertTrue(e.getMessage().contains(
+          "testcode:1: ERROR - Parse error. syntax error\n"));
+      assertTrue(e.getMessage().contains("if (true) {}}\n"));
     }
   }
 
@@ -66,8 +68,10 @@ public class JsMessageExtractorTest extends TestCase {
       extractMessage("", "if (true) {}}");
       fail("Expected exception");
     } catch (RuntimeException e) {
-      assertEquals("JSCompiler errors\n" +
-          "testcode:2: ERROR - Parse error. syntax error\n", e.getMessage());
+      assertTrue(e.getMessage().contains("JSCompiler errors\n"));
+      assertTrue(e.getMessage().contains(
+          "testcode:2: ERROR - Parse error. syntax error\n"));
+      assertTrue(e.getMessage().contains("if (true) {}}\n"));
     }
   }
 

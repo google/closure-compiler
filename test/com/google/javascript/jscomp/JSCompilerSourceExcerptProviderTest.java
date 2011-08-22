@@ -29,10 +29,12 @@ public class JSCompilerSourceExcerptProviderTest extends TestCase {
         "foo:first line\nfoo:second line\nfoo:third line\n");
     JSSourceFile bar = JSSourceFile.fromCode("bar",
         "bar:first line\nbar:second line\nbar:third line\nbar:fourth line\n");
+    JSSourceFile foo2 = JSSourceFile.fromCode("foo2",
+        "foo2:first line\nfoo2:second line\nfoo2:third line");
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     compiler.init(
-        new JSSourceFile[] {}, new JSSourceFile[] {foo, bar}, options);
+        new JSSourceFile[] {}, new JSSourceFile[] {foo, bar, foo2}, options);
     this.provider = compiler;
   }
 
@@ -57,6 +59,13 @@ public class JSCompilerSourceExcerptProviderTest extends TestCase {
     assertEquals(null, provider.getSourceLine("foo", 4));
     assertEquals(null, provider.getSourceLine("bar", 0));
     assertEquals(null, provider.getSourceLine("bar", 5));
+  }
+
+  public void testExceptNoNewLine() throws Exception {
+    assertEquals("foo2:first line", provider.getSourceLine("foo2", 1));
+    assertEquals("foo2:second line", provider.getSourceLine("foo2", 2));
+    assertEquals("foo2:third line", provider.getSourceLine("foo2", 3));
+    assertEquals(null, provider.getSourceLine("foo2", 4));
   }
 
   public void testExcerptRegion() throws Exception {
