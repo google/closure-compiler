@@ -178,10 +178,16 @@ class FunctionInjector {
     // an inner function into another function can capture a variable and cause
     // a memory leak.  This isn't a problem in the global scope as those values
     // last until explicitly cleared.
-    if (containsFunctions && !t.inGlobalScope()) {
-      // TODO(johnlenz): Allow inlining into any scope without local names or
-      // inner functions.
-      return CanInlineResult.NO;
+    if (containsFunctions) {
+      if (!t.inGlobalScope()) {
+        // TODO(johnlenz): Allow inlining into any scope without local names or
+        // inner functions.
+        return CanInlineResult.NO;
+      } else if (NodeUtil.isWithinLoop(callNode)) {
+        // An inner closure maybe relying on a local value holding a value for a
+        // single iteration through a loop.
+        return CanInlineResult.NO;
+      }
     }
 
     // TODO(johnlenz): Add support for 'apply'

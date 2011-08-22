@@ -750,6 +750,26 @@ public class FunctionInjectorTest extends TestCase {
         "foo", INLINE_BLOCK, true);
   }
 
+  public void testCanInlineReferenceToFunctionInLoop1() {
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(){return a;}; " +
+        "while(1) { foo(); }",
+        "foo", INLINE_BLOCK, true);
+  }
+
+  public void testCanInlineReferenceToFunctionInLoop2() {
+    // If function contains function, don't inline it into a loop.
+    // TODO(johnlenz): this can be improved by looking to see
+    // if the inner function contains any references to values defined
+    // in the outer function.
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(){return function() {};}; " +
+        "while(1) { foo(); }",
+        "foo", INLINE_BLOCK, true);
+  }
+
   public void testInline1() {
     helperInlineReferenceToFunction(
         "function foo(){}; foo();",
