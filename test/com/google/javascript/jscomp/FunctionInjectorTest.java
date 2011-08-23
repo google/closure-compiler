@@ -37,6 +37,7 @@ public class FunctionInjectorTest extends TestCase {
   static final InliningMode INLINE_DIRECT = InliningMode.DIRECT;
   static final InliningMode INLINE_BLOCK = InliningMode.BLOCK;
   private boolean assumeStrictThis = false;
+  private boolean assumeMinimumCapture = false;
 
   @Override
   protected void setUp() throws Exception {
@@ -47,7 +48,8 @@ public class FunctionInjectorTest extends TestCase {
   private FunctionInjector getInjector() {
     Compiler compiler = new Compiler();
     return new FunctionInjector(
-        compiler, compiler.getUniqueNameIdSupplier(), true, assumeStrictThis);
+        compiler, compiler.getUniqueNameIdSupplier(), true,
+        assumeStrictThis, assumeMinimumCapture);
   }
 
   public void testIsSimpleFunction1() {
@@ -1356,7 +1358,8 @@ public class FunctionInjectorTest extends TestCase {
     final Compiler compiler = new Compiler();
     final FunctionInjector injector = new FunctionInjector(
         compiler, compiler.getUniqueNameIdSupplier(), allowDecomposition,
-        assumeStrictThis);
+        assumeStrictThis,
+        assumeMinimumCapture);
     final Node tree = parse(compiler, code);
 
     Node externsRoot = new Node(Token.EMPTY);
@@ -1410,7 +1413,8 @@ public class FunctionInjectorTest extends TestCase {
     final Compiler compiler = new Compiler();
     final FunctionInjector injector = new FunctionInjector(
         compiler, compiler.getUniqueNameIdSupplier(), decompose,
-        assumeStrictThis);
+        assumeStrictThis,
+        assumeMinimumCapture);
 
     JSSourceFile[] externsInputs = new JSSourceFile[] {
         JSSourceFile.fromCode("externs", "")

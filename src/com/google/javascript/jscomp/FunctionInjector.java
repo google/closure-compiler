@@ -43,6 +43,7 @@ class FunctionInjector {
   private final boolean allowDecomposition;
   private Set<String> knownConstants = Sets.newHashSet();
   private final boolean assumeStrictThis;
+  private final boolean assumeMinimumCapture;
 
   /**
    * @param allowDecomposition Whether an effort should be made to break down
@@ -53,13 +54,15 @@ class FunctionInjector {
       AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
       boolean allowDecomposition,
-      boolean assumeStrictThis) {
+      boolean assumeStrictThis,
+      boolean assumeMinimumCapture) {
     Preconditions.checkNotNull(compiler);
     Preconditions.checkNotNull(safeNameIdSupplier);
     this.compiler = compiler;
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.allowDecomposition = allowDecomposition;
     this.assumeStrictThis = assumeStrictThis;
+    this.assumeMinimumCapture = assumeMinimumCapture;
   }
 
   /** The type of inlining to perform. */
@@ -179,7 +182,7 @@ class FunctionInjector {
     // a memory leak.  This isn't a problem in the global scope as those values
     // last until explicitly cleared.
     if (containsFunctions) {
-      if (!t.inGlobalScope()) {
+      if (!assumeMinimumCapture && !t.inGlobalScope()) {
         // TODO(johnlenz): Allow inlining into any scope without local names or
         // inner functions.
         return CanInlineResult.NO;
@@ -576,6 +579,8 @@ class FunctionInjector {
   private boolean callMeetsBlockInliningRequirements(
       NodeTraversal t, Node callNode, final Node fnNode,
       Set<String> namesToAlias) {
+    final boolean assumeMinimumCapture = this.assumeMinimumCapture;
+
     // Note: functions that contain function definitions are filtered out
     // in isCanidateFunction.
 
@@ -603,7 +608,7 @@ class FunctionInjector {
           if (n.getType() == Token.NAME) {
             return n.getString().equals("eval");
           }
-          if (n.getType() == Token.FUNCTION) {
+          if (!assumeMinimumCapture && n.getType() == Token.FUNCTION) {
             return n != fnNode;
           }
           return false;

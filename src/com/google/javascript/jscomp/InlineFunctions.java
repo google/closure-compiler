@@ -69,6 +69,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
   private final boolean blockFunctionInliningEnabled;
   private final boolean inlineGlobalFunctions;
   private final boolean inlineLocalFunctions;
+  private final boolean assumeMinimumCapture;
 
   private SpecializeModule.SpecializationState specializationState;
 
@@ -77,7 +78,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       boolean inlineGlobalFunctions,
       boolean inlineLocalFunctions,
       boolean blockFunctionInliningEnabled,
-      boolean assumeStrictThis) {
+      boolean assumeStrictThis,
+      boolean assumeMinimumCapture) {
     Preconditions.checkArgument(compiler != null);
     Preconditions.checkArgument(safeNameIdSupplier != null);
     this.compiler = compiler;
@@ -85,9 +87,11 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     this.inlineGlobalFunctions = inlineGlobalFunctions;
     this.inlineLocalFunctions = inlineLocalFunctions;
     this.blockFunctionInliningEnabled = blockFunctionInliningEnabled;
+    this.assumeMinimumCapture = assumeMinimumCapture;
 
     this.injector = new FunctionInjector(
-        compiler, safeNameIdSupplier, true, assumeStrictThis);
+        compiler, safeNameIdSupplier,
+        true, assumeStrictThis, assumeMinimumCapture);
   }
 
   FunctionState getOrCreateFunctionState(String fnName) {
@@ -287,7 +291,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
             // TODO(johnlenz): this can be improved by looking at the possible
             // values for locals.  If there are simple values, or constants
             // we could still inline.
-            if (hasLocalNames(fnNode)) {
+            if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
               fs.setInline(false);
             }
           }
