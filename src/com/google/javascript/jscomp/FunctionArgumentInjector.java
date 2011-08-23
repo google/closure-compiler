@@ -170,7 +170,7 @@ class FunctionArgumentInjector {
     Set<String> names = getFunctionParameterSet(fnNode);
     Set<String> unsafeNames = Sets.newHashSet();
     return findModifiedParameters(
-        fnNode, null, names, unsafeNames);
+        fnNode.getLastChild(), null, names, unsafeNames, false);
   }
 
   /**
@@ -188,20 +188,31 @@ class FunctionArgumentInjector {
    * @param n The node in question.
    * @param parent The parent of the node.
    * @param names The set of names to check.
+   * @param unsafe The set of names that require aliases.
+   * @param inInnerFunction Whether the inspection is occurring on a inner
+   *     function.
    */
   private static Set<String> findModifiedParameters(
-      Node n, Node parent, Set<String> names, Set<String> unsafe) {
+      Node n, Node parent, Set<String> names, Set<String> unsafe,
+      boolean inInnerFunction) {
     Preconditions.checkArgument(unsafe != null);
     if (n.getType() == Token.NAME) {
       if (names.contains(n.getString())) {
-        if (canNameValueChange(n, parent)) {
+        if (inInnerFunction || canNameValueChange(n, parent)) {
           unsafe.add(n.getString());
         }
       }
+    } else if (n.getType() == Token.FUNCTION) {
+      // A function parameter can not be replaced with a direct inlined value
+      // if it is referred to by an inner function. The inner function
+      // can out live the call we are replacing, so inner function must
+      // capture a unique name.  This approach does not work within loop
+      // bodies so those are forbidden elsewhere.
+      inInnerFunction = true;
     }
 
     for (Node c : n.children()) {
-      findModifiedParameters(c, n, names, unsafe);
+      findModifiedParameters(c, n, names, unsafe, inInnerFunction);
     }
 
     return unsafe;
