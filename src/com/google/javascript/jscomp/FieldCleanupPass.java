@@ -97,7 +97,7 @@ public class FieldCleanupPass implements HotSwapCompilerPass {
             typeRegistry.getEachReferenceTypeWithProperty(propName));
         for (ObjectType type : types) {
           Node pNode = type.getPropertyNode(propName);
-          if (srcName.equals(pNode.getSourceFileName())) {
+          if (pNode != null && srcName.equals(pNode.getSourceFileName())) {
             typeRegistry.unregisterPropertyOnType(propName, type);
             type.removeProperty(propName);
           }
