@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.Reach;
+
 /**
  * A CompilationLevel represents the level of optimization that should be
  * applied when compiling JavaScript code.
@@ -94,11 +96,12 @@ public enum CompilationLevel {
     // Does not call applyBasicCompilationOptions(options) because the call to
     // skipAllCompilerPasses() cannot be easily undone.
     options.closurePass = true;
-    options.variableRenaming = VariableRenamingPolicy.LOCAL;
+    options.setRenamingPolicy(
+        VariableRenamingPolicy.LOCAL, PropertyRenamingPolicy.OFF);
     options.shadowVariables = true;
-    options.inlineLocalVariables = true;
+    options.setInlineVariables(Reach.LOCAL_ONLY);
     options.flowSensitiveInlineVariables = true;
-    options.inlineLocalFunctions = true;
+    options.setInlineFunctions(Reach.LOCAL_ONLY);
     options.checkGlobalThisLevel = CheckLevel.OFF;
     options.foldConstants = true;
     options.coalesceVariableNames = true;
@@ -108,8 +111,7 @@ public enum CompilationLevel {
     options.labelRenaming = true;
     options.removeDeadCode = true;
     options.optimizeArgumentsArray = true;
-    options.removeUnusedVars = false;
-    options.removeUnusedLocalVars = true;
+    options.setRemoveUnusedVariable(Reach.LOCAL_ONLY);
     options.collapseObjectLiterals = true;
 
     // Allows annotations that are not standard.
@@ -144,9 +146,9 @@ public enum CompilationLevel {
     options.removeClosureAsserts = true;
     options.aliasKeywords = true;
     options.reserveRawExports = true;
-    options.variableRenaming = VariableRenamingPolicy.ALL;
+    options.setRenamingPolicy(
+        VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.shadowVariables = true;
-    options.propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
     options.removeUnusedPrototypeProperties = true;
     options.removeUnusedPrototypePropertiesInExterns = true;
     options.collapseAnonymousFunctions = true;
@@ -155,16 +157,14 @@ public enum CompilationLevel {
     options.rewriteFunctionExpressions = true;
     options.smartNameRemoval = true;
     options.inlineConstantVars = true;
-    options.inlineFunctions = true;
-    options.inlineLocalFunctions = true;
+    options.setInlineFunctions(Reach.ALL);
     options.inlineGetters = true;
-    options.inlineVariables = true;
+    options.setInlineVariables(Reach.ALL);
     options.flowSensitiveInlineVariables = true;
     options.computeFunctionSideEffects = true;
 
     // Remove unused vars also removes unused functions.
-    options.removeUnusedVars = true;
-    options.removeUnusedLocalVars = true;
+    options.setRemoveUnusedVariable(Reach.ALL);
 
     // Move code around based on the defined modules.
     options.crossModuleCodeMotion = true;

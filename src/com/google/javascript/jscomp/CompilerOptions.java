@@ -37,6 +37,14 @@ import java.util.Set;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class CompilerOptions implements Serializable, Cloneable {
+
+  // A common enum for compiler passes that can run either globally or locally.
+  public enum Reach {
+    ALL,
+    LOCAL_ONLY,
+    NONE
+  }
+
   // TODO(nicksantos): All public properties of this class should be made
   // package-private, and have a public setter.
 
@@ -1076,6 +1084,72 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setIdGenerators(Set<String> idGenerators) {
     this.idGenerators = Sets.newHashSet(idGenerators);
+  }
+
+  /**
+   * Set the function inlining policy for the compiler.
+   */
+  public void setInlineFunctions(Reach reach) {
+    switch (reach) {
+      case ALL:
+        this.inlineFunctions = true;
+        this.inlineLocalFunctions = true;
+        break;
+      case LOCAL_ONLY:
+        this.inlineFunctions = false;
+        this.inlineLocalFunctions = true;
+        break;
+      case NONE:
+        this.inlineFunctions = false;
+        this.inlineLocalFunctions = false;
+        break;
+      default:
+        throw new IllegalStateException("unexpected");
+    }
+  }
+
+  /**
+   * Set the variable inlining policy for the compiler.
+   */
+  public void setInlineVariables(Reach reach) {
+    switch (reach) {
+      case ALL:
+        this.inlineVariables = true;
+        this.inlineLocalVariables = true;
+        break;
+      case LOCAL_ONLY:
+        this.inlineVariables = false;
+        this.inlineLocalVariables = true;
+        break;
+      case NONE:
+        this.inlineVariables = false;
+        this.inlineLocalVariables = false;
+        break;
+      default:
+        throw new IllegalStateException("unexpected");
+    }
+  }
+
+  /**
+   * Set the variable removal policy for the compiler.
+   */
+  public void setRemoveUnusedVariable(Reach reach) {
+    switch (reach) {
+      case ALL:
+        this.removeUnusedVars = true;
+        this.removeUnusedLocalVars = true;
+        break;
+      case LOCAL_ONLY:
+        this.removeUnusedVars = false;
+        this.removeUnusedLocalVars = true;
+        break;
+      case NONE:
+        this.removeUnusedVars = false;
+        this.removeUnusedLocalVars = false;
+        break;
+      default:
+        throw new IllegalStateException("unexpected");
+    }
   }
 
   /**
