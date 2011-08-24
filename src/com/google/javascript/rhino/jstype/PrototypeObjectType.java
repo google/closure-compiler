@@ -357,6 +357,9 @@ class PrototypeObjectType extends ObjectType {
     if (hasReferenceName()) {
       return getReferenceName();
     } else if (prettyPrint) {
+      // Don't pretty print recursively.
+      prettyPrint = false;
+
       // Use a tree set so that the properties are sorted.
       Set<String> propertyNames = Sets.newTreeSet();
       for (ObjectType current = this;
@@ -387,6 +390,8 @@ class PrototypeObjectType extends ObjectType {
       }
 
       sb.append("}");
+
+      prettyPrint = true;
       return sb.toString();
     } else {
       return "{...}";
