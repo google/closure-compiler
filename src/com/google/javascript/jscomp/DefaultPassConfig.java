@@ -1623,7 +1623,6 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("inlineFunctions", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
-      boolean assumeMinimumCapture = false;
       boolean enableBlockInlining = !isInliningForbidden();
       return new InlineFunctions(
           compiler,
@@ -1631,9 +1630,9 @@ public class DefaultPassConfig extends PassConfig {
           options.inlineFunctions,
           options.inlineLocalFunctions,
           enableBlockInlining,
-          options.isAssumeStrictThis()
+          options.assumeStrictThis()
               || options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT,
-          assumeMinimumCapture);
+          options.assumeClosuresOnlyCaptureReferences);
     }
   };
 

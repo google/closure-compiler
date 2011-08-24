@@ -301,6 +301,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Enhanced function inlining */
   public boolean inlineLocalFunctions;
 
+  /** Assume closures capture only what they reference */
+  public boolean assumeClosuresOnlyCaptureReferences;
+
   /** Move code to a deeper module */
   public boolean crossModuleCodeMotion;
 
@@ -786,6 +789,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     inlineFunctions = false;
     inlineLocalFunctions = false;
     assumeStrictThis = false;
+    assumeClosuresOnlyCaptureReferences = false;
     crossModuleCodeMotion = false;
     crossModuleMethodMotion = false;
     inlineGetters = false;
@@ -1360,7 +1364,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   /**
    * @return Whether assumeStrictThis is set.
    */
-  public boolean isAssumeStrictThis() {
+  public boolean assumeStrictThis() {
     return assumeStrictThis;
   }
 
@@ -1371,11 +1375,25 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.assumeStrictThis = enable;
   }
 
+  /**
+   * @return Whether assumeClosuresOnlyCaptureReferences is set.
+   */
+  public boolean assumeClosuresOnlyCaptureReferences() {
+    return assumeClosuresOnlyCaptureReferences;
+  }
+
+  /**
+   * If true, enables enables additional optimizations.
+   */
+  public void setAssumeClosuresOnlyCaptureReferences(boolean enable) {
+    this.assumeClosuresOnlyCaptureReferences = enable;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   // Enums
 
   /** When to do the extra sanity checks */
-  static enum LanguageMode {
+  public static enum LanguageMode {
     /**
      * Tranditional JavaScript
      */
