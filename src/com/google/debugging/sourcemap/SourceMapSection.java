@@ -60,11 +60,11 @@ public class SourceMapSection {
     this.column = column;
   }
 
-  static SourceMapSection forMap(String value, int line, int column) {
+  public static SourceMapSection forMap(String value, int line, int column) {
     return new SourceMapSection(SectionType.MAP, value, line, column);
   }
 
-  static SourceMapSection forURL(String value, int line, int column) {
+  public static SourceMapSection forURL(String value, int line, int column) {
     return new SourceMapSection(SectionType.URL, value, line, column);
   }
 
