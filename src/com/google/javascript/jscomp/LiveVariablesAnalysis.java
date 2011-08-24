@@ -47,8 +47,10 @@ import java.util.Set;
 class LiveVariablesAnalysis extends
     DataFlowAnalysis<Node, LiveVariablesAnalysis.LiveVariableLattice> {
 
-  // 25 = (# of original Power Rangers) ^ (# years of Warren Harding in office)
-  static final int MAX_VARIABLES_TO_ANALYZE = 25;
+  // 100 = ((# of original Power Rangers) ^
+  //        (# years of Warren Harding in office)) *
+  //       (# of Ninja Turtles)
+  static final int MAX_VARIABLES_TO_ANALYZE = 100;
 
   public static final String ARGUMENT_ARRAY_ALIAS = "arguments";
 
