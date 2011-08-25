@@ -70,6 +70,8 @@ public class SymbolTableTest extends TestCase {
   }
 
   public void testNamespacedReferences() throws Exception {
+    // Because the type of goog is anonymous, we build its properties into
+    // the global scope.
     SymbolTable table = createSymbolTable(
         "var goog = {};" +
         "goog.dom = {};" +
@@ -85,6 +87,22 @@ public class SymbolTableTest extends TestCase {
     Symbol googDomHelper = getGlobalVar(table, "goog.dom.DomHelper");
     assertNotNull(googDomHelper);
     assertEquals(1, Iterables.size(table.getReferences(googDomHelper)));
+  }
+
+  public void testRemovalOfNamespacedReferencesOfProperties()
+      throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ var DomHelper = function(){};" +
+        "/** method */ DomHelper.method = function() {};");
+
+    Symbol domHelper = getGlobalVar(table, "DomHelper");
+    assertNotNull(domHelper);
+
+    Symbol domHelperNamespacedMethod = getGlobalVar(table, "DomHelper.method");
+    assertNull(domHelperNamespacedMethod);
+
+    Symbol domHelperMethod = domHelper.getPropertyScope().getSlot("method");
+    assertNotNull(domHelperMethod);
   }
 
   public void testGoogScopeReferences() throws Exception {
@@ -172,6 +190,94 @@ public class SymbolTableTest extends TestCase {
         foo,
         table.getSymbolDeclaredBy(
             foo.getType().toMaybeFunctionType()));
+  }
+
+  public void testStaticMethodReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ var DomHelper = function(){};" +
+        "/** method */ DomHelper.method = function() {};" +
+        "function f() { var x = DomHelper; x.method() + x.method(); }");
+
+    Symbol method =
+        getGlobalVar(table, "DomHelper").getPropertyScope().getSlot("method");
+    assertEquals(
+        3, Iterables.size(table.getReferences(method)));
+  }
+
+  public void testMethodReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ var DomHelper = function(){};" +
+        "/** method */ DomHelper.prototype.method = function() {};" +
+        "function f() { " +
+        "  (new DomHelper()).method(); (new DomHelper()).method(); };");
+
+    Symbol method =
+        getGlobalVar(table, "DomHelper.prototype")
+        .getPropertyScope().getSlot("method");
+    assertEquals(
+        3, Iterables.size(table.getReferences(method)));
+  }
+
+  public void testFieldReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ var DomHelper = function(){" +
+        "  /** @type {number} */ this.field = 3;" +
+        "};" +
+        "function f() { " +
+        "  return (new DomHelper()).field + (new DomHelper()).field; };");
+
+    Symbol field =
+        getGlobalVar(table, "DomHelper.prototype")
+        .getPropertyScope().getSlot("field");
+    assertEquals(
+        3, Iterables.size(table.getReferences(field)));
+  }
+
+  public void testUndeclaredFieldReferences() throws Exception {
+    // We do not currently create symbol table entries for undeclared fields,
+    // but this may change in the future.
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ var DomHelper = function(){};" +
+        "DomHelper.prototype.method = function() { " +
+        "  this.field = 3;" +
+        "  return x.field;" +
+        "}");
+
+    Symbol field =
+        getGlobalVar(table, "DomHelper.prototype")
+        .getPropertyScope().getSlot("field");
+    assertNull(field);
+  }
+
+  public void testPrototypeReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ function DomHelper() {}" +
+        "DomHelper.prototype.method = function() {};");
+    Symbol prototype =
+        getGlobalVar(table, "DomHelper.prototype");
+    assertNotNull(prototype);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(prototype));
+
+    // One of the refs is implicit in the declaration of the function.
+    assertEquals(2, refs.size());
+  }
+
+  public void testPrototypeReferences2() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */\n"
+        + "function Snork() {}\n"
+        + "Snork.prototype.baz = 3;\n");
+    Symbol prototype =
+        getGlobalVar(table, "Snork.prototype");
+    assertNotNull(prototype);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(prototype));
+
+    // TODO(nicksantos): This is a bug and should be fixed.
+    // It has to do with some weirdness with how prototypes are handled
+    // in our type system.
+    assertEquals(1, refs.size());
   }
 
   private Symbol getGlobalVar(SymbolTable table, String name) {

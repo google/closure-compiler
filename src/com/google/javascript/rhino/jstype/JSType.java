@@ -335,6 +335,15 @@ public abstract class JSType implements Serializable {
   }
 
   /**
+   * Whether this type is the original constructor of a nominal type.
+   * Does not include structural constructors.
+   */
+  public final boolean isNominalConstructor() {
+    return (isConstructor() || isInterface()) &&
+        toMaybeFunctionType().getInstanceType().isNominalType();
+  }
+
+  /**
    * Whether this type is an Instance object of some constructor.
    * Does not necessarily mean this is an {@link InstanceObjectType}.
    */

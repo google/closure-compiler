@@ -19,8 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -38,6 +40,7 @@ import com.google.javascript.rhino.jstype.UnionType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -66,10 +69,13 @@ import javax.annotation.Nullable;
  * this symbol table that indexes symbols or references by the desired lookup
  * key.
  *
- * By design, this symbol table conflates "type Foo" with "the constructor
- * that creates objects of type Foo" when looking up types. JSCompiler
- * internally treats these as distinct objects, but we assume that most
- * clients will not care about the distinction.
+ * By design, when this symbol table creates symbols for types, it tries
+ * to mimic the symbol table you would get in an OO language. For example,
+ * the "type Foo" and "the constructor that creates objects of type Foo"
+ * are the same symbol. The types of "Foo.prototype" and "new Foo()" also
+ * have the same symbol. Although JSCompiler internally treats these as
+ * distinct symbols, we assume that most clients will not care about
+ * the distinction.
  *
  * @see #addSymbolsFrom For more information on how to write plugins for this
  *    symbol table.
@@ -86,7 +92,7 @@ public final class SymbolTable
   private final Table<Node, String, Symbol> symbols = HashBasedTable.create();
 
   /**
-   * All scopes in the program, uniquely identified by the node where
+   * All syntactic scopes in the program, uniquely identified by the node where
    * they're declared.
    */
   private final Map<Node, SymbolScope> scopes = Maps.newHashMap();
@@ -140,6 +146,19 @@ public final class SymbolTable
    * scope.
    */
   public Symbol getSymbolForScope(SymbolScope scope) {
+    if (scope.isPropertyScope()) {
+      JSType type = scope.getTypeOfThis();
+      if (type != null) {
+        if (type.isNominalConstructor()) {
+          return getSymbolDeclaredBy(type.toMaybeFunctionType());
+        } else if (type.isFunctionPrototypeType()) {
+          return getSymbolForInstancesOf(
+              ((ObjectType) type).getOwnerFunction());
+        }
+      }
+      return null;
+    }
+
     Node rootNode = scope.getRootNode();
     if (rootNode.getType() != Token.FUNCTION) {
       return null;
@@ -159,7 +178,14 @@ public final class SymbolTable
    * this will return the constructors for Array and Date.
    */
   public Iterable<Symbol> getAllSymbolsForTypeOf(Symbol sym) {
-    return getAllSymbolsForType(sym.getType(), sym.scope);
+    return getAllSymbolsForType(sym.getType());
+  }
+
+  /**
+   * Returns the global scope.
+   */
+  public SymbolScope getGlobalScope() {
+    return globalScope;
   }
 
   /**
@@ -178,39 +204,91 @@ public final class SymbolTable
         globalScope : getEnclosingScope(source)).getSlot(name);
   }
 
-  private List<Symbol> getAllSymbolsForType(
-      JSType type, SymbolScope scope) {
+  /**
+   * Gets the symbol for the prototype if this is the symbol for a constructor
+   * or interface.
+   */
+  public Symbol getSymbolForInstancesOf(Symbol sym) {
+    FunctionType fn = sym.getFunctionType();
+    if (fn != null && fn.isNominalConstructor()) {
+      return getSymbolForInstancesOf(fn);
+    }
+    return null;
+  }
+
+  /**
+   * Gets the symbol for the prototype of the given constructor or interface.
+   */
+  public Symbol getSymbolForInstancesOf(FunctionType fn) {
+    Preconditions.checkState(fn.isConstructor() || fn.isInterface());
+    ObjectType pType = fn.getPrototype();
+    String name = pType.getReferenceName();
+    if (name == null || globalScope == null) {
+      return null;
+    }
+
+    Node source = fn.getSource();
+    return (source == null ?
+        globalScope : getEnclosingScope(source)).getSlot(name);
+  }
+
+  /**
+   * Gets all symbols associated with the given type.
+   * For union types, this may be multiple symbols.
+   */
+  public List<Symbol> getAllSymbolsForType(JSType type) {
     if (type == null) {
       return ImmutableList.of();
     }
+
     UnionType unionType = type.toMaybeUnionType();
     if (unionType != null) {
       List<Symbol> result = Lists.newArrayListWithExpectedSize(2);
       for (JSType alt : unionType.getAlternates()) {
-        result.addAll(getAllSymbolsForType(alt, scope));
+        // Our type system never has nested unions.
+        Symbol altSym = getOnlySymbolForType(alt);
+        if (altSym != null) {
+          result.add(altSym);
+        }
       }
       return result;
+    }
+    Symbol result = getOnlySymbolForType(type);
+    return result == null
+        ? ImmutableList.<Symbol>of() : ImmutableList.of(result);
+  }
+
+  /**
+   * Gets all symbols associated with the given type.
+   * If there are more that one symbol associated with the given type,
+   * return null.
+   */
+  private Symbol getOnlySymbolForType(JSType type) {
+    if (type == null) {
+      return null;
     }
 
     FunctionType fnType = type.toMaybeFunctionType();
     if (fnType != null) {
-      Symbol result = globalScope.getSlot("Function");
-      return result == null ?
-          ImmutableList.<Symbol>of() : ImmutableList.of(result);
+      return globalScope.getSlot("Function");
     }
 
     ObjectType objType = type.toObjectType();
     if (objType != null) {
       String name = objType.getReferenceName();
-      Symbol result = scope.getSlot(
+
+      FunctionType ctor = objType.getConstructor();
+      Node sourceNode = ctor == null ? null : ctor.getSource();
+      SymbolScope scope = sourceNode == null
+          ? globalScope : getEnclosingScope(sourceNode);
+
+      return scope.getSlot(
           (name == null || !objType.isInstanceType())
           ? "Object" : name);
-      return result == null
-          ? ImmutableList.<Symbol>of() : ImmutableList.of(result);
     }
 
     // TODO(nicksantos): Create symbols for value types (number, string).
-    return ImmutableList.of();
+    return null;
   }
 
   public String toDebugString() {
@@ -270,15 +348,7 @@ public final class SymbolTable
         // If we have a declaration node, we can ensure the symbol is declared.
         mySymbol = symbols.get(declNode, name);
         if (mySymbol == null) {
-          mySymbol = new Symbol(
-              name,
-              otherSymbol.getType(),
-              otherSymbol.isTypeInferred(),
-              myScope);
-          symbols.put(declNode, name, mySymbol);
-          myScope.ownSymbols.put(name, mySymbol);
-
-          mySymbol.setDeclaration(new Reference(mySymbol, declNode));
+          mySymbol = copySymbolTo(otherSymbol, myScope);
         }
       } else {
         // If we don't have a declaration node, we won't be able to declare
@@ -292,6 +362,36 @@ public final class SymbolTable
           mySymbol.defineReferenceAt(otherRef.getNode());
         }
       }
+    }
+  }
+
+  private Symbol copySymbolTo(StaticSlot<JSType> sym, SymbolScope scope) {
+    return declareSymbol(
+        sym.getName(), sym.getType(), sym.isTypeInferred(), scope,
+        // All symbols must have declaration nodes.
+        Preconditions.checkNotNull(sym.getDeclaration().getNode()));
+  }
+
+  private Symbol declareSymbol(
+      String name, JSType type, boolean inferred,
+      SymbolScope scope, Node declNode) {
+    Symbol symbol = new Symbol(name, type, inferred, scope);
+    symbols.put(declNode, name, symbol);
+
+    Symbol replacedSymbol = scope.ownSymbols.put(name, symbol);
+    Preconditions.checkState(replacedSymbol == null);
+
+    symbol.setDeclaration(new Reference(symbol, declNode));
+    return symbol;
+  }
+
+  private void removeSymbol(Symbol s) {
+    SymbolScope scope = getScope(s);
+    if (scope.ownSymbols.remove(s.getName()) != s) {
+      throw new IllegalStateException("Symbol not found in scope " + s);
+    }
+    if (symbols.remove(s.getDeclaration().getNode(), s.getName()) != s) {
+      throw new IllegalStateException("Symbol not found in table " + s);
     }
   }
 
@@ -323,6 +423,112 @@ public final class SymbolTable
           }
         }
       }
+    }
+  }
+
+  /**
+   * Create symbols and references for all properites of types in
+   * this symbol table.
+   *
+   * This gets a little bit tricky, because of the way this symbol table
+   * conflates "type Foo" and "the constructor of type Foo". So if you
+   * have:
+   *
+   * <code>
+   * SymbolTable symbolTale = for("var x = new Foo();");
+   * Symbol x = symbolTable.getGlobalScope().getSlot("x");
+   * Symbol type = symbolTable.getOnlySymbolForType(x.getType());
+   * </code>
+   *
+   * Then type.getPropertyScope() will have the properties of the
+   * constructor "Foo". To get the properties of instances of "Foo",
+   * you will need to call:
+   *
+   * <code>
+   * Symbol instance = symbolTable.getSymbolForInstancesOf(type);
+   * </code>
+   *
+   * As described at the top of this file, notice that "new Foo()" and
+   * "Foo.prototype" are represented by the same symbol.
+   */
+  void fillPropertySymbols(
+      AbstractCompiler compiler, Node externs, Node root) {
+    // Collect all ctors and interface ctors.
+    // We need to create these lists first, so that we don't end up
+    // mutating the symbol table while we're creating new symbols.
+    List<Symbol> types = Lists.newArrayList();
+    List<Symbol> instances = Lists.newArrayList();
+    for (Symbol sym : getAllSymbols()) {
+      FunctionType t = sym.getFunctionType();
+      if (t != null && t.isNominalConstructor()) {
+        types.add(sym);
+
+        Symbol instance = getSymbolForInstancesOf(t);
+        if (instance != null) {
+          instances.add(instance);
+        }
+      }
+    }
+
+    // Create symbols for their properties.
+    for (Symbol s : Iterables.concat(types, instances)) {
+      createPropertyScopeFor(s);
+    }
+
+    (new PropertyRefCollector(compiler)).process(externs, root);
+  }
+
+  private void createPropertyScopeFor(Symbol s) {
+    // In order to build a property scope for s, we will need to build
+    // a property scope for all its implicit prototypes first. This means
+    // that sometimes we will already have built its property scope
+    // for a previous symbol.
+    if (s.propertyScope != null) {
+      return;
+    }
+
+    SymbolScope parentPropertyScope = null;
+    ObjectType type = s.getType().toObjectType();
+    ObjectType proto = type.getParentScope();
+    if (proto != null && proto != type && proto.getConstructor() != null) {
+      Symbol parentSymbol = getSymbolForInstancesOf(proto.getConstructor());
+      if (parentSymbol != null) {
+        createPropertyScopeFor(parentSymbol);
+        parentPropertyScope = parentSymbol.getPropertyScope();
+      }
+    }
+
+    ObjectType instanceType = type;
+    Iterable<String> propNames = type.getOwnPropertyNames();
+    if (instanceType.isFunctionPrototypeType()) {
+      // Merge the properties of "Foo.prototype" and "new Foo()" together.
+      instanceType =
+          ((ObjectType) instanceType)
+          .getOwnerFunction().getInstanceType();
+      Set<String> set = Sets.newHashSet(propNames);
+      Iterables.addAll(set, instanceType.getOwnPropertyNames());
+      propNames = set;
+    }
+
+    s.propertyScope = new SymbolScope(null, parentPropertyScope, type);
+    for (String propName : propNames) {
+      StaticSlot<JSType> newProp = instanceType.getSlot(propName);
+      if (newProp.getDeclaration() == null) {
+        // Skip properties without declarations. We won't know how to index
+        // them, because we index things by node.
+        continue;
+      }
+
+      // We have symbol tables that do not do type analysis. They just try
+      // to build a complete index of all objects in the program. So we might
+      // already have symbols for things like "Foo.bar". If this happens,
+      // throw out the old symbol and use the type-based symbol.
+      Symbol oldProp = getScope(s).getSlot(s.getName() + "." + propName);
+      if (oldProp != null) {
+        removeSymbol(oldProp);
+      }
+
+      copySymbolTo(newProp, s.propertyScope);
     }
   }
 
@@ -368,6 +574,8 @@ public final class SymbolTable
 
     private final SymbolScope scope;
 
+    private SymbolScope propertyScope = null;
+
     private Reference declaration = null;
 
     Symbol(String name, JSType type, boolean inferred, SymbolScope scope) {
@@ -378,6 +586,10 @@ public final class SymbolTable
     @Override
     public Reference getDeclaration() {
       return declaration;
+    }
+
+    public FunctionType getFunctionType() {
+      return JSType.toMaybeFunctionType(getType());
     }
 
     void defineReferenceAt(Node n) {
@@ -409,6 +621,10 @@ public final class SymbolTable
     public String getSourceFileName() {
       Node n = getDeclarationNode();
       return n == null ? null : n.getSourceFileName();
+    }
+
+    public SymbolScope getPropertyScope() {
+      return propertyScope;
     }
 
     @Override
@@ -471,7 +687,64 @@ public final class SymbolTable
     }
 
     public boolean isGlobalScope() {
-      return getParentScope() == null;
+      return getParentScope() == null && getRootNode() != null;
+    }
+
+    public boolean isPropertyScope() {
+      return getRootNode() == null;
+    }
+  }
+
+  private class PropertyRefCollector
+      extends NodeTraversal.AbstractPostOrderCallback
+      implements CompilerPass {
+    private final AbstractCompiler compiler;
+
+    PropertyRefCollector(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      NodeTraversal.traverseRoots(
+          compiler,
+          Lists.newArrayList(externs, root),
+          this);
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.getType() == Token.GETPROP) {
+        JSType owner = n.getFirstChild().getJSType();
+        if (owner == null) {
+          return;
+        }
+
+        String propName = n.getLastChild().getString();
+        if (owner.isNominalConstructor()) {
+          Symbol sym = getSymbolDeclaredBy(owner.toMaybeFunctionType());
+          if (sym == null || sym.getPropertyScope() == null) {
+            // This will happen in some rare cases where there are no
+            // extern declarations for built-in types (like Function).
+            return;
+          }
+
+          Symbol prop = sym.getPropertyScope().getSlot(propName);
+          if (prop != null) {
+            prop.defineReferenceAt(n);
+          }
+        } else {
+          for (Symbol ctor : getAllSymbolsForType(owner)) {
+            Symbol sym = getSymbolForInstancesOf(ctor);
+            if (sym != null) {
+              Symbol prop = sym.getPropertyScope().getSlot(propName);
+              if (prop != null) {
+                prop.defineReferenceAt(n);
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

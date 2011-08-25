@@ -1105,6 +1105,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     symbolTable.fillNamespaceReferences();
+    symbolTable.fillPropertySymbols(this, externsRoot, jsRoot);
 
     return symbolTable;
   }
