@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.ConcreteType.ConcreteInstanceType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -966,9 +965,8 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           .restrictByNotNullOrUndefined();
       if (jsType.isPropertyInExterns(prop) && propType.isFunctionType()) {
         ObjectType thisType = jsType;
-        if (jsType instanceof FunctionPrototypeType) {
-          thisType = ((FunctionPrototypeType) jsType)
-              .getOwnerFunction().getInstanceType();
+        if (jsType.isFunctionPrototypeType()) {
+          thisType = thisType.getOwnerFunction().getInstanceType();
         }
         FunctionType callType = propType.toMaybeFunctionType();
         Action action = createExternFunctionCall(

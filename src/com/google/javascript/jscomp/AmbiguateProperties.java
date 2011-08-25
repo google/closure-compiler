@@ -33,7 +33,6 @@ import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.InstanceObjectType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -303,9 +302,8 @@ class AmbiguateProperties implements CompilerPass {
     related.set(getIntForType(type));
 
     // A prototype is related to its instance.
-    if (type instanceof FunctionPrototypeType) {
-      addRelatedInstance(
-          ((FunctionPrototypeType) type).getOwnerFunction(), related);
+    if (type.isFunctionPrototypeType()) {
+      addRelatedInstance(((ObjectType) type).getOwnerFunction(), related);
       return;
     }
 

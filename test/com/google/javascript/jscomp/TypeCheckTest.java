@@ -6299,6 +6299,33 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testAnonymousPrototype1() throws Exception {
+    testTypes(
+        "var ns = {};" +
+        "/** @constructor */ ns.Foo = function() {" +
+        "  this.bar(3, 5);" +
+        "};" +
+        "ns.Foo.prototype = {" +
+        "  bar: function(x) {}" +
+        "};",
+        "Function ns.Foo.prototype.bar: called with 2 argument(s). " +
+        "Function requires at least 1 argument(s) and no more " +
+        "than 1 argument(s).");
+  }
+
+  public void testAnonymousPrototype2() throws Exception {
+    testTypes(
+        "/** @interface */ var Foo = function() {};" +
+        "Foo.prototype = {" +
+        "  foo: function(x) {}" +
+        "};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @implements {Foo}\n" +
+        " */ var Bar = function() {};",
+        "property foo on interface Foo is not implemented by type Bar");
+  }
+
   public void testAnonymousType1() throws Exception {
     testTypes("function f() {}" +
         "/** @constructor */\n" +

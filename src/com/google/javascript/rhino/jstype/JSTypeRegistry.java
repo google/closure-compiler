@@ -271,8 +271,8 @@ public class JSTypeRegistry implements Serializable {
     // The initializations of TOP_LEVEL_PROTOTYPE and OBJECT_FUNCTION_TYPE
     // use each other's results, so at least one of them will get null
     // instead of an actual type; however, this seems to be benign.
-    ObjectType TOP_LEVEL_PROTOTYPE =
-        new FunctionPrototypeType(this, null, null, true);
+    PrototypeObjectType TOP_LEVEL_PROTOTYPE =
+        new PrototypeObjectType(this, null, null, true);
     registerNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE, TOP_LEVEL_PROTOTYPE);
 
     // Object
@@ -280,15 +280,15 @@ public class JSTypeRegistry implements Serializable {
         new FunctionType(this, "Object", null,
             createArrowType(createOptionalParameters(ALL_TYPE), UNKNOWN_TYPE),
             null, null, true, true);
-    OBJECT_FUNCTION_TYPE.defineDeclaredProperty(
-        "prototype", TOP_LEVEL_PROTOTYPE, null);
-    registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, OBJECT_FUNCTION_TYPE);
 
-    ObjectType OBJECT_PROTOTYPE = OBJECT_FUNCTION_TYPE.getPrototype();
-    registerNativeType(JSTypeNative.OBJECT_PROTOTYPE, OBJECT_PROTOTYPE);
+    OBJECT_FUNCTION_TYPE.setPrototype(TOP_LEVEL_PROTOTYPE);
+    registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, OBJECT_FUNCTION_TYPE);
 
     ObjectType OBJECT_TYPE = OBJECT_FUNCTION_TYPE.getInstanceType();
     registerNativeType(JSTypeNative.OBJECT_TYPE, OBJECT_TYPE);
+
+    ObjectType OBJECT_PROTOTYPE = OBJECT_FUNCTION_TYPE.getPrototype();
+    registerNativeType(JSTypeNative.OBJECT_PROTOTYPE, OBJECT_PROTOTYPE);
 
     // Function
     FunctionType FUNCTION_FUNCTION_TYPE =
@@ -1295,6 +1295,16 @@ public class JSTypeRegistry implements Serializable {
   public ObjectType createAnonymousObjectType() {
     PrototypeObjectType type =
         new PrototypeObjectType(this, null, null);
+    type.setPrettyPrint(true);
+    return type;
+  }
+
+  /**
+   * Create an anonymous object type for a native type.
+   */
+  ObjectType createNativeAnonymousObjectType() {
+    PrototypeObjectType type =
+        new PrototypeObjectType(this, null, null, true);
     type.setPrettyPrint(true);
     return type;
   }

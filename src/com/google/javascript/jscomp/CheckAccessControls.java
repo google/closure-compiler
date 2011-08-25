@@ -25,7 +25,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -207,7 +206,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     } else if (type.isConstructor()) {
       return (type.toMaybeFunctionType()).getInstanceType();
     } else if (type.isFunctionPrototypeType()) {
-      FunctionType owner = ((FunctionPrototypeType) type).getOwnerFunction();
+      FunctionType owner = ((ObjectType) type).getOwnerFunction();
       if (owner.isConstructor()) {
         return owner.getInstanceType();
       }

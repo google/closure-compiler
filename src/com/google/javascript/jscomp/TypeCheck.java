@@ -1467,8 +1467,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     FunctionType functionType = JSType.toMaybeFunctionType(n.getJSType());
     String functionPrivateName = n.getFirstChild().getString();
     if (functionType.isConstructor()) {
-      FunctionType baseConstructor = functionType.
-          getPrototype().getImplicitPrototype().getConstructor();
+      FunctionType baseConstructor = functionType.getSuperClassConstructor();
       if (baseConstructor != null &&
           baseConstructor != getNativeType(OBJECT_FUNCTION_TYPE) &&
           (baseConstructor.isInterface() && functionType.isConstructor())) {

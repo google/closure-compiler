@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -526,8 +525,7 @@ abstract class ConcreteType implements LatticeElement {
     /** Returns the type of the constructor or null if this has none. */
     ConcreteFunctionType getConstructorType() {
       if (instanceType.isFunctionPrototypeType()) {
-        FunctionPrototypeType protoType = (FunctionPrototypeType) instanceType;
-        return factory.getConcreteFunction(protoType.getOwnerFunction());
+        return factory.getConcreteFunction(instanceType.getOwnerFunction());
       } else {
         FunctionType constructor = instanceType.getConstructor();
         return (constructor != null)

@@ -41,6 +41,8 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
@@ -78,6 +80,11 @@ class PrototypeObjectType extends ObjectType {
   // Modelling this is a bear. Always call getImplicitPrototype(), because
   // some subclasses override this to do special resolution handling.
   private ObjectType implicitPrototypeFallback;
+
+  // If this is a function prototype, then this is the owner.
+  // A PrototypeObjectType can only be the prototype of one function. If we try
+  // to do this for multiple functions, then we'll have to create a new one.
+  private FunctionType ownerFunction = null;
 
   // Whether the toString representation of this should be pretty-printed,
   // by printing all properties.
@@ -308,7 +315,7 @@ class PrototypeObjectType extends ObjectType {
    * present on the object and different from the native one.
    */
   private boolean hasOverridenNativeProperty(String propertyName) {
-    if (isNative()) {
+    if (isNativeObjectType()) {
       return false;
     }
 
@@ -342,14 +349,6 @@ class PrototypeObjectType extends ObjectType {
   @Override
   public boolean canBeCalled() {
     return isRegexpType();
-  }
-
-  /**
-   * Whether this represents a native type (such as Object, Date,
-   * RegExp, etc.).
-   */
-  boolean isNative() {
-    return nativeType;
   }
 
   @Override
@@ -427,6 +426,8 @@ class PrototypeObjectType extends ObjectType {
   public String getReferenceName() {
     if (className != null) {
       return className;
+    } else if (ownerFunction != null) {
+      return ownerFunction.getReferenceName() + ".prototype";
     } else {
       return null;
     }
@@ -434,7 +435,7 @@ class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean hasReferenceName() {
-    return className != null;
+    return className != null || ownerFunction != null;
   }
 
   @Override
@@ -583,6 +584,30 @@ class PrototypeObjectType extends ObjectType {
   @Override
   public boolean isNativeObjectType() {
     return nativeType;
+  }
+
+  void setOwnerFunction(FunctionType type) {
+    Preconditions.checkState(ownerFunction == null);
+    ownerFunction = type;
+  }
+
+  @Override
+  public FunctionType getOwnerFunction() {
+    return ownerFunction;
+  }
+
+  @Override
+  public Iterable<ObjectType> getCtorImplementedInterfaces() {
+    return isFunctionPrototypeType()
+        ? getOwnerFunction().getImplementedInterfaces()
+        : ImmutableList.<ObjectType>of();
+  }
+
+  @Override
+  public Iterable<ObjectType> getCtorExtendedInterfaces() {
+    return isFunctionPrototypeType()
+        ? getOwnerFunction().getExtendedInterfaces()
+        : ImmutableList.<ObjectType>of();
   }
 
   @Override

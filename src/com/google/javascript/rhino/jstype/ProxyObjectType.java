@@ -153,11 +153,6 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean isFunctionPrototypeType() {
-    return referencedType.isFunctionPrototypeType();
-  }
-
-  @Override
   public boolean isEnumType() {
     return referencedType.isEnumType();
   }
@@ -188,6 +183,12 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean isNativeObjectType() {
+    return referencedObjType == null
+        ? false : referencedObjType.isNativeObjectType();
+  }
+
+  @Override
   public UnionType toMaybeUnionType() {
     return referencedType.toMaybeUnionType();
   }
@@ -210,6 +211,12 @@ class ProxyObjectType extends ObjectType {
   @Override
   public boolean isSubtype(JSType that) {
     return referencedType.isSubtype(that);
+  }
+
+  @Override
+  public FunctionType getOwnerFunction() {
+    return referencedObjType == null
+        ? null : referencedObjType.getOwnerFunction();
   }
 
   @Override

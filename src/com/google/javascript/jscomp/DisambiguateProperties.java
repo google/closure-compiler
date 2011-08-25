@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.graph.StandardUnionFind;
 import com.google.javascript.jscomp.graph.UnionFind;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionPrototypeType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -882,11 +881,10 @@ class DisambiguateProperties<T> implements CompilerPass {
 
     @Override public JSType getInstanceFromPrototype(JSType type) {
       if (type.isFunctionPrototypeType()) {
-        FunctionPrototypeType prototype = (FunctionPrototypeType) type;
+        ObjectType prototype = (ObjectType) type;
         FunctionType owner = prototype.getOwnerFunction();
         if (owner.isConstructor() || owner.isInterface()) {
-          return ((FunctionPrototypeType) type).getOwnerFunction()
-              .getInstanceType();
+          return prototype.getOwnerFunction().getInstanceType();
         }
       }
       return null;
@@ -900,8 +898,8 @@ class DisambiguateProperties<T> implements CompilerPass {
         FunctionType constructor;
         if (objType.isFunctionType()) {
           constructor = objType.toMaybeFunctionType();
-        } else if (objType instanceof FunctionPrototypeType) {
-          constructor = ((FunctionPrototypeType) objType).getOwnerFunction();
+        } else if (objType.isFunctionPrototypeType()) {
+          constructor = objType.getOwnerFunction();
         } else {
           constructor = objType.getConstructor();
         }

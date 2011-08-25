@@ -372,8 +372,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         RhinoErrorReporter.TYPE_PARSE_ERROR);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Foo", x.toString());
-    // Should be true
-    assertFalse(x.getImplicitPrototype().hasOwnProperty("bar"));
+    assertTrue(x.getImplicitPrototype().hasOwnProperty("bar"));
     assertEquals("number", x.getPropertyType("bar").toString());
     assertTrue(x.isPropertyTypeInferred("bar"));
   }
@@ -406,17 +405,14 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "var x = window;");
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Window", x.toString());
-    // This should be TRUE
-    assertFalse(x.getImplicitPrototype().hasOwnProperty("alert"));
-    /*
-    assertEquals("function (this:Window, ?): undefined",
+    assertTrue(x.getImplicitPrototype().hasOwnProperty("alert"));
+    assertEquals("function (?): undefined",
         x.getPropertyType("alert").toString());
-    assertTrue(x.isPropertyTypeDeclared("alert"));
+    assertFalse(x.isPropertyTypeDeclared("alert"));
 
     ObjectType y = (ObjectType) findNameType("y", globalScope);
-    assertEquals("function (this:Window, ?): undefined",
+    assertEquals("?",
         y.getPropertyType("alert").toString());
-    */
   }
 
   public void testAddMethodsPrototypeTwoWays() throws Exception {
@@ -438,22 +434,20 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         instanceType.getPropertyType("m3"));
 
     // Verify the prototype chain.
-    // The prototype property of a Function has to be a FunctionPrototypeType.
-    // In order to make the type safety work out correctly, we create
-    // a FunctionPrototypeType with the anonymous object as its implicit
-    // prototype. Verify this behavior.
+    // This is a special case where we want the anonymous object to
+    // become a prototype.
     assertFalse(instanceType.hasOwnProperty("m1"));
     assertFalse(instanceType.hasOwnProperty("m2"));
     assertFalse(instanceType.hasOwnProperty("m3"));
 
     ObjectType proto1 = instanceType.getImplicitPrototype();
-    assertFalse(proto1.hasOwnProperty("m1"));
-    assertFalse(proto1.hasOwnProperty("m2"));
+    assertTrue(proto1.hasOwnProperty("m1"));
+    assertTrue(proto1.hasOwnProperty("m2"));
     assertTrue(proto1.hasOwnProperty("m3"));
 
     ObjectType proto2 = proto1.getImplicitPrototype();
-    assertTrue(proto2.hasOwnProperty("m1"));
-    assertTrue(proto2.hasOwnProperty("m2"));
+    assertFalse(proto2.hasProperty("m1"));
+    assertFalse(proto2.hasProperty("m2"));
     assertFalse(proto2.hasProperty("m3"));
   }
 

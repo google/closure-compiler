@@ -93,14 +93,9 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @type Foo */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;";
-    // TODO(johnlenz): fix this. Doing nothing is safe, but
-    // handling this would be better.
-    String desired = "{a=[[Foo.prototype]]}";
-    String expected = "{}";
+    String expected = "{a=[[Foo.prototype]]}";
     testSets(false, js, js, expected);
-
-    // Tighten types fails here.
-    // testSets(true, js, js, expected);
+    testSets(true, js, js, expected);
   }
 
   public void testOneType3() {
@@ -111,14 +106,9 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @type Foo */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;";
-    // TODO(johnlenz): fix this. Doing nothing is safe, but
-    // handling this would be better.
-    String desired = "{a=[[Foo.prototype]]}";
-    String expected = "{}";
+    String expected = "{a=[[Foo.prototype]]}";
     testSets(false, js, js, expected);
-
-    // Tighten types fails here.
-    // testSets(true, js, js, expected);
+    testSets(true, js, js, expected);
   }
 
   public void testPrototypeAndInstance() {
@@ -180,11 +170,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var B=new Bar;"
         + "B.Bar_prototype$a=0";
 
-    // Would like it to be (but doing nothing is safe):
-    // testSets(false, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
-    testSets(false, js, js, "{}");
-    // TODO(johnlenz): If tighten types is completed, this needs to be fixed.
-    // testSets(true, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+    testSets(false, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+    testSets(true, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
   }
 
   public void testTwoTypes3() {
@@ -214,11 +201,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var B=new Bar;"
         + "B.Bar_prototype$a=0";
 
-    // Would like it to be (but doing nothing is safe):
-    // testSets(false, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
-    testSets(false, js, js, "{}");
-    // TODO(johnlenz): If tighten types is completed, this needs to be fixed.
-    // testSets(true, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+    testSets(false, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+    testSets(true, js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
   }
 
   public void testTwoFields() {

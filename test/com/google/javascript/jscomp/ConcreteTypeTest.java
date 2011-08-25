@@ -161,8 +161,8 @@ public class ConcreteTypeTest extends TestCase {
     assertNull(obj.getPropertySlot("c"));
 
     // The prototype chain should be: MyObj -> MyObj.prototype -> Object ->
-    // Object.prototype -> {...}.prototype -> null.
-    for (int i = 0; i < 4; ++i) {
+    // Object.prototype -> null.
+    for (int i = 0; i < 3; ++i) {
       assertNotNull(obj = obj.getImplicitPrototype());
       assertTrue(obj.isInstance());
     }

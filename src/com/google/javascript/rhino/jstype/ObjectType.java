@@ -539,6 +539,16 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
     return type == null ? null : type.toObjectType();
   }
 
+  @Override
+  public final boolean isFunctionPrototypeType() {
+    return getOwnerFunction() != null;
+  }
+
+  /** Gets the owner of this if it's a function prototype. */
+  public FunctionType getOwnerFunction() {
+    return null;
+  }
+
   /**
    * Gets the interfaces implemented by the ctor associated with this type.
    * Intended to be overridden by subclasses.

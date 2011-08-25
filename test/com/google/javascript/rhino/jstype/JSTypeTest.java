@@ -384,7 +384,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(UNKNOWN_TYPE,
         U2U_CONSTRUCTOR_TYPE.getPropertyType("anyProperty"));
 
-    assertTrue(U2U_CONSTRUCTOR_TYPE.isNative());
     assertTrue(U2U_CONSTRUCTOR_TYPE.isNativeObjectType());
 
     Asserts.assertResolvesToSame(U2U_CONSTRUCTOR_TYPE);
@@ -3081,20 +3080,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals(NATIVE_PROPERTIES_COUNT + 1, instance.getPropertiesCount());
   }
 
-  /**
-   * Tests that the native constructor U2U_CONSTRUCTOR_TYPE is properly
-   * implemented.
-   */
-  public void testFunctionCyclycity() throws Exception {
-    FunctionPrototypeType instanceType =
-        new FunctionPrototypeType(
-            registry, U2U_CONSTRUCTOR_TYPE,
-            U2U_CONSTRUCTOR_TYPE.getInstanceType());
-    U2U_CONSTRUCTOR_TYPE.setPrototype(instanceType);
-    U2U_CONSTRUCTOR_TYPE.detectImplicitPrototypeCycle();
-    instanceType.detectImplicitPrototypeCycle();
-  }
-
   /** Tests assigning jsdoc on a prototype property. */
   public void testJSDocOnPrototypeProperty() throws Exception {
     subclassCtor.setPropertyJSDocInfo("prototype", new JSDocInfo());
@@ -5223,17 +5208,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(fun.getInstanceType().isUnknownType());
   }
 
-  public void testInvalidSetPrototypeBasedOn() {
+  public void testLateSetPrototypeBasedOn() {
     FunctionType fun = registry.createConstructorType("fun", null, null, null);
     assertFalse(fun.getInstanceType().isUnknownType());
 
-    // You cannot change the prototype chain after checking if it is unknown.
-    try {
-      fun.setPrototypeBasedOn(unresolvedNamedType);
-      fail();
-    } catch (IllegalStateException e) {
-      e.printStackTrace();
-    }
+    fun.setPrototypeBasedOn(unresolvedNamedType);
+    assertTrue(fun.getInstanceType().isUnknownType());
   }
 
   public void testGetTypeUnderEquality1() {

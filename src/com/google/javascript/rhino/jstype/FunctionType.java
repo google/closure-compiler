@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 
 import com.google.common.base.Preconditions;
@@ -83,7 +84,7 @@ public class FunctionType extends PrototypeObjectType {
    * graph, so some prototypes must temporarily be {@code null} during
    * the construction of the graph.
    */
-  private FunctionPrototypeType prototype;
+  private PrototypeObjectType prototype;
 
   private SimpleSlot prototypeSlot;
 
@@ -300,10 +301,15 @@ public class FunctionType extends PrototypeObjectType {
    * Gets the {@code prototype} property of this function type. This is
    * equivalent to {@code (ObjectType) getPropertyType("prototype")}.
    */
-  public FunctionPrototypeType getPrototype() {
+  public ObjectType getPrototype() {
     // lazy initialization of the prototype field
     if (prototype == null) {
-      setPrototype(new FunctionPrototypeType(registry, this, null));
+      setPrototype(
+          new PrototypeObjectType(
+              registry,
+              this.getReferenceName() + ".prototype",
+              registry.getNativeObjectType(OBJECT_TYPE),
+              isNativeObjectType()));
     }
     return prototype;
   }
@@ -314,13 +320,33 @@ public class FunctionType extends PrototypeObjectType {
    * @param baseType The base type.
    */
   public void setPrototypeBasedOn(ObjectType baseType) {
-    if (prototype == null) {
-      setPrototype(
-          new FunctionPrototypeType(
-              registry, this, baseType, isNativeObjectType()));
-    } else {
-      prototype.setImplicitPrototype(baseType);
+    // This is a bit weird. We need to successfully handle these
+    // two cases:
+    // Foo.prototype = new Bar();
+    // and
+    // Foo.prototype = {baz: 3};
+    // In the first case, we do not want new properties to get
+    // added to Bar. In the second case, we do want new properties
+    // to get added to the type of the anonymous object.
+    //
+    // We handle this by breaking it into two cases:
+    //
+    // In the first case, we create a new PrototypeObjectType and set
+    // its implicit prototype to the type being assigned. This ensures
+    // that Bar will not get any properties of Foo.prototype, but properties
+    // later assigned to Bar will get inherited properly.
+    //
+    // In the second case, we just use the anonymous object as the prototype.
+    if (baseType.hasReferenceName() ||
+        baseType.isUnknownType() ||
+        isNativeObjectType() ||
+        baseType.isFunctionPrototypeType() ||
+        !(baseType instanceof PrototypeObjectType)) {
+
+      baseType = new PrototypeObjectType(
+          registry, this.getReferenceName() + ".prototype", baseType);
     }
+    setPrototype((PrototypeObjectType) baseType);
   }
 
   /**
@@ -328,7 +354,7 @@ public class FunctionType extends PrototypeObjectType {
    * @param prototype the prototype. If this value is {@code null} it will
    *        silently be discarded.
    */
-  public boolean setPrototype(FunctionPrototypeType prototype) {
+  public boolean setPrototype(PrototypeObjectType prototype) {
     if (prototype == null) {
       return false;
     }
@@ -340,6 +366,7 @@ public class FunctionType extends PrototypeObjectType {
     boolean replacedPrototype = prototype != null;
     this.prototype = prototype;
     this.prototypeSlot = new SimpleSlot("prototype", prototype, true);
+    this.prototype.setOwnerFunction(this);
 
     if (isConstructor() || isInterface()) {
       FunctionType superClass = getSuperClassConstructor();
@@ -524,9 +551,8 @@ public class FunctionType extends PrototypeObjectType {
         if (objType.isEquivalentTo(prototype)) {
           return true;
         }
-        return setPrototype(
-            new FunctionPrototypeType(
-                registry, this, objType, isNativeObjectType()));
+        this.setPrototypeBasedOn(objType);
+        return true;
       } else {
         return false;
       }
@@ -984,7 +1010,7 @@ public class FunctionType extends PrototypeObjectType {
     setResolvedTypeInternal(this);
 
     call = (ArrowType) safeResolve(call, t, scope);
-    prototype = (FunctionPrototypeType) safeResolve(prototype, t, scope);
+    prototype = (PrototypeObjectType) safeResolve(prototype, t, scope);
 
     // Warning about typeOfThis if it doesn't resolve to an ObjectType
     // is handled further upstream.
