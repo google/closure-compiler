@@ -303,6 +303,9 @@ public class UnionType extends JSType {
    */
   @Override
   public boolean isEquivalentTo(JSType object) {
+    if (object == null) {
+      return false;
+    }
     if (object.isUnionType()) {
       UnionType that = object.toMaybeUnionType();
       if (alternates.size() != that.alternates.size()) {

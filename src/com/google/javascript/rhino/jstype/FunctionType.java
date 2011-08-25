@@ -761,7 +761,7 @@ public class FunctionType extends PrototypeObjectType {
   @Override
   public boolean isEquivalentTo(JSType otherType) {
     FunctionType that =
-        JSType.toMaybeFunctionType(otherType.toMaybeFunctionType());
+        JSType.toMaybeFunctionType(otherType);
     if (that == null) {
       return false;
     }

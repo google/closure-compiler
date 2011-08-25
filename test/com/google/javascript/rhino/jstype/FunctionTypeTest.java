@@ -234,4 +234,10 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertEquals(s, t1.getGreatestSubtype(t2).toString());
     assertEquals(s, t2.getGreatestSubtype(t1).toString());
   }
+
+  public void testIsEquivalentTo() {
+    FunctionType type = new FunctionBuilder(registry).build();
+    assertFalse(type.isEquivalentTo(null));
+    assertTrue(type.isEquivalentTo(type));
+  }
 }
