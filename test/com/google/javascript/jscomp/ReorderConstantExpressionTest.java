@@ -23,8 +23,9 @@ package com.google.javascript.jscomp;
 public class ReorderConstantExpressionTest extends CompilerTestCase {
 
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new ReorderConstantExpression(compiler);
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    return new PeepholeOptimizationsPass(compiler,
+        new ReorderConstantExpression(compiler));
   }
 
   @Override

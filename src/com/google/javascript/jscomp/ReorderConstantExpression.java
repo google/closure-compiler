@@ -25,46 +25,40 @@ import com.google.javascript.rhino.Node;
  * compression together than their original counterparts.
  *
  */
-class ReorderConstantExpression implements CompilerPass {
+class ReorderConstantExpression extends AbstractPeepholeOptimization {
 
   private AbstractCompiler compiler;
 
+  // TODO(user): Rename this pass to PeepholeReorderConstantExpression
+  // to follow our naming convention.
   ReorderConstantExpression(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
   @Override
-  public void process(Node externs, Node node) {
+  Node optimizeSubtree(Node subtree) {
     // if the operator is symertric
-    if (NodeUtil.isSymmetricOperation(node)
-        || NodeUtil.isRelationalOperation(node)) {
+    if (NodeUtil.isSymmetricOperation(subtree)
+        || NodeUtil.isRelationalOperation(subtree)) {
       // right value is immutable and left is not
-      if (NodeUtil.isImmutableValue(node.getLastChild())
-          && !NodeUtil.isImmutableValue(node.getFirstChild())) {
+      if (NodeUtil.isImmutableValue(subtree.getLastChild())
+          && !NodeUtil.isImmutableValue(subtree.getFirstChild())) {
 
         // if relational, get the inverse operator.
-        if (NodeUtil.isRelationalOperation(node)){
-          int inverseOperator = NodeUtil.getInverseOperator(node.getType());
-          node.setType(inverseOperator);
+        if (NodeUtil.isRelationalOperation(subtree)){
+          int inverseOperator = NodeUtil.getInverseOperator(subtree.getType());
+          subtree.setType(inverseOperator);
         }
 
         // swap them
-        Node firstNode = node.getFirstChild().detachFromParent();
-        Node lastNode = node.getLastChild().detachFromParent();
+        Node firstNode = subtree.getFirstChild().detachFromParent();
+        Node lastNode = subtree.getLastChild().detachFromParent();
 
-        node.addChildrenToFront(lastNode);
-        node.addChildrenToBack(firstNode);
+        subtree.addChildrenToFront(lastNode);
+        subtree.addChildrenToBack(firstNode);
         this.compiler.reportCodeChange();
       }
     }
-
-    // process children then siblings.
-    if (node.hasChildren()) {
-      Node child = node.getFirstChild();
-      while (child != null) {
-        process(externs, child);
-        child = child.getNext();
-      }
-    }
+    return subtree;
   }
 }
