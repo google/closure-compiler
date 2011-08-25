@@ -16,22 +16,26 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
+
 /**
  * Tests for {@link ExtractPrototypeMemberDeclarations}.
  *
  */
 public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
   private static final String TMP = "JSCompiler_prototypeAlias";
+  private Pattern pattern = Pattern.USE_GLOBAL_TEMP;
 
   @Override
   protected void setUp() {
     super.enableLineNumberCheck(true);
     enableNormalize();
+    pattern = Pattern.USE_GLOBAL_TEMP;
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ExtractPrototypeMemberDeclarations(compiler);
+    return new ExtractPrototypeMemberDeclarations(compiler, pattern);
   }
 
   public void testNotEnoughPrototypeToExtract() {
@@ -160,12 +164,92 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
         TMP + ".g = 1;");
   }
 
+  public void testAnonSimple() {
+    pattern = Pattern.USE_ANON_FUNCTION;
+
+    extract(
+        generatePrototypeDeclarations("x", 3),
+        generateExtractedDeclarations(3) +
+        loadPrototype("x"));
+
+    testSame(generatePrototypeDeclarations("x", 1));
+    testSame(generatePrototypeDeclarations("x", 2));
+
+    extract(
+        generatePrototypeDeclarations("x", 7),
+        generateExtractedDeclarations(7) +
+        loadPrototype("x"));
+
+  }
+
+  public void testAnonWithDevirtualization() {
+    pattern = Pattern.USE_ANON_FUNCTION;
+
+    extract(
+        "x.prototype.a = 1;" +
+        "x.prototype.b = 1;" +
+        "function devirtualize() { }" +
+        "x.prototype.c = 1;",
+
+        "(function(" + TMP + "){" +
+        TMP + ".a = 1;" +
+        TMP + ".b = 1;" +
+        TMP + ".c = 1;" +
+        loadPrototype("x") +
+        "function devirtualize() { }");
+
+    extract(
+        "x.prototype.a = 1;" +
+        "function devirtualize1() { }" +
+        "x.prototype.b = 1;" +
+        "function devirtualize2() { }" +
+        "x.prototype.c = 1;" +
+        "function devirtualize3() { }",
+
+        "(function(" + TMP + "){" +
+        TMP + ".a = 1;" +
+        TMP + ".b = 1;" +
+        TMP + ".c = 1;" +
+        loadPrototype("x") +
+        "function devirtualize1() { }" +
+        "function devirtualize2() { }" +
+        "function devirtualize3() { }");
+  }
+
+  public void testAnonWithSideFx() {
+    pattern = Pattern.USE_ANON_FUNCTION;
+    testSame(
+        "function foo() {};" +
+        "foo.prototype.a1 = 1;" +
+        "bar();;" +
+        "foo.prototype.a2 = 2;" +
+        "bar();;" +
+        "foo.prototype.a3 = 3;" +
+        "bar();;" +
+        "foo.prototype.a4 = 4;" +
+        "bar();;" +
+        "foo.prototype.a5 = 5;" +
+        "bar();;" +
+        "foo.prototype.a6 = 6;" +
+        "bar();;" +
+        "foo.prototype.a7 = 7;" +
+        "bar();");
+  }
+
   public String loadPrototype(String qName) {
-    return TMP + " = " + qName + ".prototype;";
+    if (pattern == Pattern.USE_GLOBAL_TEMP) {
+      return TMP + " = " + qName + ".prototype;";
+    } else {
+      return "})(" + qName + ".prototype);";
+    }
   }
 
   public void extract(String src, String expected) {
-    test(src, "var " + TMP + ";" + expected);
+    if (pattern == Pattern.USE_GLOBAL_TEMP) {
+      test(src, "var " + TMP + ";" + expected);
+    } else {
+      test(src, expected);
+    }
   }
 
   public String generatePrototypeDeclarations(String className, int num) {
@@ -185,6 +269,11 @@ public class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCase {
 
   public String generateExtractedDeclarations(int num) {
     StringBuilder builder = new StringBuilder();
+
+    if (pattern == Pattern.USE_ANON_FUNCTION) {
+      builder.append("(function(" + TMP + "){");
+    }
+
     for (int i = 0; i < num; i++) {
       char member = (char) ('a' + i);
       builder.append(generateExtractedDeclaration("" + member,  "" + member));

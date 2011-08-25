@@ -62,6 +62,17 @@ import java.util.List;
  * to be extracted must be in a single line. We call this a single
  * {@link ExtractionInstance}.
  *
+ * <p>Alternatively, for users who do not want a global variable to be
+ * introduced, we will create an anonymous function instead.
+ * <pre>
+ * function B() { ... }
+ * (function (x) {
+ *   x.foo = function() { ... }
+ *   ...
+ *   x.bar = function() { ... }
+ * )(B.prototype)
+ * </pre>
+ *
  * The RHS of the declarations can have side effects, however, one good way to
  * break this is the following:
  * <pre>
@@ -71,20 +82,8 @@ import java.util.List;
  * </pre>
  * Such logic is highly unlikely and we will assume that it never occurs.
  *
- *
  */
 class ExtractPrototypeMemberDeclarations implements CompilerPass {
-
-  private static final int GLOBAL_VAR_DECL_OVERHEAD = "var t;".length();
-
-  // Every extraction instance must first use the temp variable to point to
-  // the prototype object.
-  private static final int PER_EXTRACTION_INSTANCE_OVERHEAD =
-      "t=y.prototype;".length();
-
-  // The gain we get per prototype declaration. Assuming it can be aliased.
-  private static final int PER_PROTOTYPE_MEMBER_DELTA =
-      "t.y=".length() - "x[p].y=".length();
 
   // The name of variable that will temporary hold the pointer to the prototype
   // object. Of cause, we assume that it'll be renamed by RenameVars.
@@ -92,8 +91,47 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  public ExtractPrototypeMemberDeclarations(AbstractCompiler compiler) {
+  private final Pattern pattern;
+
+  enum Pattern {
+    USE_GLOBAL_TEMP(
+        // Global Overhead.
+        // We need a temp variable to hold all the prototype.
+        "var t;".length(),
+        // Per Extract overhead:
+        // Every extraction instance must first use the temp variable to point
+        // to the prototype object.
+        "t=y.prototype;".length(),
+        // TODO(user): Check to to see if AliasExterns is on
+        // The gain we get per prototype declaration. Assuming it can be
+        // aliased.
+        "t.y=".length() - "x[p].y=".length()),
+
+    USE_ANON_FUNCTION(
+       // Global Overhead:
+       0,
+       // Per-extraction overhead:
+       // This is the cost of a single anoynmous function.
+       "(function(t){})(y.prototype);".length(),
+       // Per-prototype member declaration overhead:
+       // Here we assumes that they don't have AliasExterns on (in SIMPLE mode).
+       "t.y=".length() - "x.prototype.y=".length());
+
+
+    private final int globalOverhead;
+    private final int perExtractionOverhead;
+    private final int perMemberOverhead;
+
+    Pattern(int globalOverHead, int perExtractionOverhead, int perMemberOverhead) {
+      this.globalOverhead = globalOverHead;
+      this.perExtractionOverhead = perExtractionOverhead;
+      this.perMemberOverhead = perMemberOverhead;
+    }
+  }
+
+  ExtractPrototypeMemberDeclarations(AbstractCompiler compiler, Pattern pattern) {
     this.compiler = compiler;
+    this.pattern = pattern;
   }
 
   @Override
@@ -111,14 +149,16 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    * through all ExtractInstance and performs extraction there.
    */
   private void doExtraction(GatherExtractionInfo info) {
-    // First declare the temp variable.
-    Node injectionPoint = compiler.getNodeForCodeInsertion(null);
 
-    Node var = NodeUtil.newVarNode(prototypeAlias, null)
-        .copyInformationFromForTree(injectionPoint);
+    // Insert a global temp if we are using the USE_GLOBAL_TEMP pattern.
+    if (pattern == Pattern.USE_GLOBAL_TEMP) {
+      Node injectionPoint = compiler.getNodeForCodeInsertion(null);
 
-    injectionPoint.addChildrenToFront(var);
+      Node var = NodeUtil.newVarNode(prototypeAlias, null)
+          .copyInformationFromForTree(injectionPoint);
 
+      injectionPoint.addChildrenToFront(var);
+    }
     // Go through all extraction instances and extract each of them.
     for (ExtractionInstance instance : info.instances) {
       extractInstance(instance);
@@ -131,19 +171,39 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    * instead.
    */
   private void extractInstance(ExtractionInstance instance) {
-    // Use the temp variable to hold the prototype.
     PrototypeMemberDeclaration first = instance.declarations.getFirst();
     String className = first.qualifiedClassName;
-    Node stmt = new Node(first.node.getType(),
-        new Node(Token.ASSIGN,
-            Node.newString(Token.NAME, prototypeAlias),
-            NodeUtil.newQualifiedNameNode(
-                compiler.getCodingConvention(), className + ".prototype",
-                instance.parent, className + ".prototype")))
-        .copyInformationFromForTree(first.node);
+    if (pattern == Pattern.USE_GLOBAL_TEMP) {
+      // Use the temp variable to hold the prototype.
+      Node stmt = new Node(first.node.getType(),
+          new Node(Token.ASSIGN,
+              Node.newString(Token.NAME, prototypeAlias),
+              NodeUtil.newQualifiedNameNode(
+                  compiler.getCodingConvention(), className + ".prototype",
+                  instance.parent, className + ".prototype")))
+          .copyInformationFromForTree(first.node);
 
-    instance.parent.addChildBefore(stmt, first.node);
+      instance.parent.addChildBefore(stmt, first.node);
+    } else if (pattern == Pattern.USE_ANON_FUNCTION){
+      Node block = new Node(Token.BLOCK);
+      Node func = new Node(Token.FUNCTION,
+           Node.newString(Token.NAME, ""),
+           new Node(Token.LP, Node.newString(Token.NAME, prototypeAlias)),
+           block);
 
+      Node call = new Node(Token.CALL,func,
+           NodeUtil.newQualifiedNameNode(
+               compiler.getCodingConvention(), className + ".prototype",
+               instance.parent, className + ".prototype"));
+      call.putIntProp(Node.FREE_CALL, 1);
+
+      Node stmt = new Node(first.node.getType(), call);
+      stmt.copyInformationFromForTree(first.node);
+      instance.parent.addChildBefore(stmt, first.node);
+      for (PrototypeMemberDeclaration declar : instance.declarations) {
+        block.addChildToBack(declar.node.detachFromParent());
+      }
+    }
     // Go thought each member declaration and replace it with an assignment
     // to the prototype variable.
     for (PrototypeMemberDeclaration declar : instance.declarations) {
@@ -190,7 +250,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
   private class GatherExtractionInfo extends AbstractShallowCallback {
 
     private List<ExtractionInstance> instances = Lists.newLinkedList();
-    private int totalDelta = GLOBAL_VAR_DECL_OVERHEAD;
+    private int totalDelta = pattern.globalOverhead;
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -230,7 +290,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     }
   }
 
-  private static class ExtractionInstance {
+  private class ExtractionInstance {
     LinkedList<PrototypeMemberDeclaration> declarations = Lists.newLinkedList();
     private int delta = 0;
     private final Node parent;
@@ -238,7 +298,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     private ExtractionInstance(PrototypeMemberDeclaration head, Node parent) {
       this.parent = parent;
       declarations.add(head);
-      delta = PER_EXTRACTION_INSTANCE_OVERHEAD + PER_PROTOTYPE_MEMBER_DELTA;
+      delta = pattern.perExtractionOverhead + pattern.perMemberOverhead;
 
       for (Node cur = head.node.getNext(); cur != null; cur = cur.getNext()) {
 
@@ -256,7 +316,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
           break;
         }
         declarations.add(prototypeMember);
-        delta += PER_PROTOTYPE_MEMBER_DELTA;
+        delta += pattern.perMemberOverhead;
       }
     }
 
