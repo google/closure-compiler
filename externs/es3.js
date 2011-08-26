@@ -798,11 +798,12 @@ Boolean.prototype.toString = function() {};
 function Number(opt_value) {}
 
 /**
+ * @param {number=} opt_fractionDigits
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/toExponential
  */
-Number.prototype.toExponential = function() {};
+Number.prototype.toExponential = function(opt_fractionDigits) {};
 
 /**
  * @param {*=} opt_digits
