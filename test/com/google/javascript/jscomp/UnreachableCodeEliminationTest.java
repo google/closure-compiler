@@ -448,4 +448,11 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
         " }\n" +
         "}");
   }
+
+  public void testIssue5215541_deadVarDeclar() {
+    testSame("throw 1; var x");
+    testSame("throw 1; function x() {}");
+    testSame("throw 1; var x; var y;");
+    test("throw 1; var x = foo", "var x; throw 1");
+  }
 }

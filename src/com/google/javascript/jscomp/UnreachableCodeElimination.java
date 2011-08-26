@@ -221,6 +221,20 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
         break;
     }
 
+
+    if (NodeUtil.isVar(n) && !n.getFirstChild().hasChildren()) {
+      // Very Edge case, Consider this:
+      // File 1: {throw 1}
+      // File 2: {var x}
+      // The node var x is unreachable in the global scope.
+      // Before we remove the node, redeclareVarsInsideBranch
+      // would basically move var x to the beginning of File 2,
+      // which resulted in zero change in the AST but triggered
+      // reportCodeChange().
+      // Instead, we should just ignore dead variable declarations.
+      return;
+    }
+
     NodeUtil.redeclareVarsInsideBranch(n);
     compiler.reportCodeChange();
     if (logger.isLoggable(Level.FINE)) {
