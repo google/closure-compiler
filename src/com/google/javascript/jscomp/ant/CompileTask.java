@@ -38,7 +38,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -61,6 +64,8 @@ public final class CompileTask
   private boolean prettyPrint;
   private boolean printInputDelimiter;
   private boolean generateExports;
+  private boolean replaceProperties;
+  private String replacePropertiesPrefix;
   private File outputFile;
   private final List<FileList> externFileLists;
   private final List<FileList> sourceFileLists;
@@ -75,6 +80,8 @@ public final class CompileTask
     this.prettyPrint = false;
     this.printInputDelimiter = false;
     this.generateExports = false;
+    this.replaceProperties = false;
+    this.replacePropertiesPrefix = "closure.define.";
     this.externFileLists = Lists.newLinkedList();
     this.sourceFileLists = Lists.newLinkedList();
     this.sourcePaths = Lists.newLinkedList();
@@ -139,6 +146,20 @@ public final class CompileTask
    */
   public void setOutput(File value) {
     this.outputFile = value;
+  }
+
+  /**
+   * Set the replacement property prefix.
+   */
+  public void setReplacePropertiesPrefix(String value) {
+    this.replacePropertiesPrefix = value;
+  }
+
+  /**
+   * Whether to replace @define lines with properties
+   */
+  public void setReplaceProperties(boolean value) {
+    this.replaceProperties = value;
   }
 
   /**
@@ -239,7 +260,49 @@ public final class CompileTask
 
     this.warningLevel.setOptionsForWarningLevel(options);
     options.setManageClosureDependencies(manageDependencies);
+
+    if (replaceProperties) {
+      convertPropertiesMap(options);
+    }
+
     return options;
+  }
+
+  private void convertPropertiesMap(CompilerOptions options) {
+    Map<String, Object> props = getProject().getProperties();
+    for (Map.Entry<String, Object> entry : props.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+
+      if (key.startsWith(replacePropertiesPrefix)) {
+        key = key.substring(replacePropertiesPrefix.length());
+
+        if (value instanceof String) {
+          final boolean isTrue = "true".equals(value);
+          final boolean isFalse = "false".equals(value);
+
+          if (isTrue || isFalse) {
+            options.setDefineToBooleanLiteral(key, isTrue);
+          } else {
+            try {
+              double dblTemp = Double.parseDouble((String) value);
+              options.setDefineToDoubleLiteral(key, dblTemp);
+            } catch (NumberFormatException nfe) {
+              // Not a number, assume string
+              options.setDefineToStringLiteral(key, (String) value);
+            }
+          }
+        } else if (value instanceof Boolean) {
+          options.setDefineToBooleanLiteral(key, (Boolean) value);
+        } else if (value instanceof Integer) {
+          options.setDefineToNumberLiteral(key, (Integer) value);
+        } else if (value instanceof Double) {
+          options.setDefineToDoubleLiteral(key, (Double) value);
+        } else {
+          log("Unexpected property value for key=" + key + "; value=" + value);
+        }
+      }
+    }
   }
 
   private Compiler createCompiler(CompilerOptions options) {
