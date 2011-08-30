@@ -169,24 +169,22 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   private JSType getClassOfMethod(Node n, Node parent) {
     if (parent.getType() == Token.ASSIGN) {
       Node lValue = parent.getFirstChild();
-      if (lValue.isQualifiedName()) {
-        if (lValue.getType() == Token.GETPROP) {
-          // We have an assignment of the form "a.b = ...".
-          JSType lValueType = lValue.getJSType();
-          if (lValueType != null && lValueType.isConstructor()) {
-            // If a.b is a constructor, then everything in this function
-            // belongs to the "a.b" type.
-            return (lValueType.toMaybeFunctionType()).getInstanceType();
-          } else {
-            // If a.b is not a constructor, then treat this as a method
-            // of whatever type is on "a".
-            return normalizeClassType(lValue.getFirstChild().getJSType());
-          }
+      if (NodeUtil.isGet(lValue)) {
+        // We have an assignment of the form "a.b = ...".
+        JSType lValueType = lValue.getJSType();
+        if (lValueType != null && lValueType.isNominalConstructor()) {
+          // If a.b is a constructor, then everything in this function
+          // belongs to the "a.b" type.
+          return (lValueType.toMaybeFunctionType()).getInstanceType();
         } else {
-          // We have an assignment of the form "a = ...", so pull the
-          // type off the "a".
-          return normalizeClassType(lValue.getJSType());
+          // If a.b is not a constructor, then treat this as a method
+          // of whatever type is on "a".
+          return normalizeClassType(lValue.getFirstChild().getJSType());
         }
+      } else {
+        // We have an assignment of the form "a = ...", so pull the
+        // type off the "a".
+        return normalizeClassType(lValue.getJSType());
       }
     } else if (NodeUtil.isFunctionDeclaration(n) ||
                parent.getType() == Token.NAME) {
@@ -203,7 +201,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   private JSType normalizeClassType(JSType type) {
     if (type == null || type.isUnknownType()) {
       return type;
-    } else if (type.isConstructor()) {
+    } else if (type.isNominalConstructor()) {
       return (type.toMaybeFunctionType()).getInstanceType();
     } else if (type.isFunctionPrototypeType()) {
       FunctionType owner = ((ObjectType) type).getOwnerFunction();

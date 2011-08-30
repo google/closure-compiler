@@ -353,6 +353,14 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     });
   }
 
+  public void testPrivateAccessForProperties4() {
+    testSame(new String[] {
+      "/** @constructor */ function Foo() {}" +
+      "/** @private */ Foo.prototype.bar_ = function() {};",
+      "Foo.prototype['baz'] = function() { (new Foo()).bar_(); };"
+    });
+  }
+
   public void testNoPrivateAccessForProperties1() {
     test(new String[] {
       "/** @constructor */ function Foo() {} (new Foo).bar_();",
