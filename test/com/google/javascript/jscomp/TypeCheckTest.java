@@ -4254,8 +4254,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testClosure7() throws Exception {
     testClosureTypes(
         CLOSURE_DEFS +
-        "goog.asserts = {};" +
-        "/** @return {*} */ goog.asserts.assert = function(x) { return x; };" +
         "/** @type {string|null|undefined} */ var a = foo();" +
         "/** @type {number} */" +
         "var b = goog.asserts.assert(a);",
@@ -7720,6 +7718,57 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "condition always evaluates to the same value\n" +
         "left : (null|string)\n" +
         "right: number");
+  }
+
+  public void testTypeInferenceWithNoEntry1() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function f(x) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.init = function() {" +
+        "  /** @type {?{baz: number}} */ this.bar = {baz: 3};" +
+        "};" +
+        "/**\n" +
+        " * @extends {Foo}\n" +
+        " * @constructor\n" +
+        " */" +
+        "function SubFoo() {}" +
+        "/** Method */" +
+        "SubFoo.prototype.method = function() {" +
+        "  for (var i = 0; i < 10; i++) {" +
+        "    f(this.bar);" +
+        "    f(this.bar.baz);" +
+        "  }" +
+        "};",
+        "actual parameter 1 of f does not match formal parameter\n"+
+        "found   : (null|{baz: number})\n" +
+        "required: number");
+  }
+
+  public void testTypeInferenceWithNoEntry2() throws Exception {
+    testClosureTypes(
+        CLOSURE_DEFS +
+        "/** @param {number} x */ function f(x) {}" +
+        "/** @param {!Object} x */ function g(x) {}" +
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype.init = function() {" +
+        "  /** @type {?{baz: number}} */ this.bar = {baz: 3};" +
+        "};" +
+        "/**\n" +
+        " * @extends {Foo}\n" +
+        " * @constructor\n" +
+        " */" +
+        "function SubFoo() {}" +
+        "/** Method */" +
+        "SubFoo.prototype.method = function() {" +
+        "  for (var i = 0; i < 10; i++) {" +
+        "    f(this.bar);" +
+        "    goog.asserts.assert(this.bar);" +
+        "    g(this.bar);" +
+        "  }" +
+        "};",
+        "actual parameter 1 of f does not match formal parameter\n"+
+        "found   : (null|{baz: number})\n" +
+        "required: number");
   }
 
   public void testForwardPropertyReference() throws Exception {

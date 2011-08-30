@@ -861,7 +861,7 @@ class TypeInference
     scope = scope.createChildFlowScope();
     if (node.getType() == Token.GETPROP) {
       scope.inferQualifiedSlot(
-          node.getQualifiedName(), getNativeType(UNKNOWN_TYPE), narrowed);
+          node.getQualifiedName(), getJSType(node), narrowed);
     } else {
       redeclareSimpleVar(scope, node, narrowed);
     }
