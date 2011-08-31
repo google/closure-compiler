@@ -406,7 +406,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Window", x.toString());
     assertTrue(x.getImplicitPrototype().hasOwnProperty("alert"));
-    assertEquals("function (?): undefined",
+    assertEquals("function (this:Window, ?): undefined",
         x.getPropertyType("alert").toString());
     assertFalse(x.isPropertyTypeDeclared("alert"));
 
@@ -507,8 +507,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertEquals("number", iPrototype.getPropertyType("bar").toString());
 
-    // should be: "function (this:I): undefined"
-    assertEquals("function (): undefined",
+    assertEquals("function (this:I): undefined",
         iPrototype.getPropertyType("baz").toString());
 
     // should not be null
@@ -882,7 +881,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertEquals(
         // should be: "function (this:Foo, number): ?"
-        "function (number): ?",
+        "function (this:Foo, number): ?",
         proto.getPropertyType("bar").toString());
   }
 

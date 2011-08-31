@@ -839,20 +839,25 @@ final class TypedScopeCreator implements ScopeCreator {
 
         if (functionType == null) {
           // Find the type of any overridden function.
-          FunctionType overriddenPropType = null;
-          if (lvalueNode != null &&
-              lvalueNode.getType() == Token.GETPROP &&
-              lvalueNode.isQualifiedName()) {
-            Var var = scope.getVar(
-                lvalueNode.getFirstChild().getQualifiedName());
-            if (var != null) {
-              ObjectType ownerType = ObjectType.cast(var.getType());
-              if (ownerType != null) {
-                String propName = lvalueNode.getLastChild().getString();
-                overriddenPropType =
-                    findOverriddenFunction(ownerType, propName);
-              }
+          Node ownerNode = NodeUtil.getBestLValueOwner(lvalueNode);
+          String ownerName = NodeUtil.getBestLValueName(ownerNode);
+          Var ownerVar = null;
+          String propName = null;
+          ObjectType ownerType = null;
+          if (ownerName != null) {
+            ownerVar = scope.getVar(ownerName);
+            if (ownerVar != null) {
+              ownerType = ObjectType.cast(ownerVar.getType());
             }
+            if (name != null) {
+              propName = name.substring(ownerName.length() + 1);
+            }
+          }
+
+          FunctionType overriddenPropType = null;
+          if (ownerType != null && propName != null) {
+            overriddenPropType =
+                findOverriddenFunction(ownerType, propName);
           }
 
           FunctionTypeBuilder builder =
@@ -864,23 +869,20 @@ final class TypedScopeCreator implements ScopeCreator {
               .inferReturnType(info)
               .inferInheritance(info);
 
+
           // Infer the context type.
           boolean searchedForThisType = false;
-          if (lvalueNode != null &&
-              lvalueNode.getType() == Token.GETPROP) {
-            Node objNode = lvalueNode.getFirstChild();
-            if (objNode.getType() == Token.GETPROP &&
-                objNode.getLastChild().getString().equals("prototype")) {
-              builder.inferThisType(info, objNode.getFirstChild());
-              searchedForThisType = true;
-            } else if (objNode.getType() == Token.THIS) {
-              builder.inferThisType(info, objNode.getJSType());
-              searchedForThisType = true;
-            }
+          if (ownerType != null && ownerType.isFunctionPrototypeType()) {
+            builder.inferThisType(
+                info, ownerType.getOwnerFunction().getInstanceType());
+            searchedForThisType = true;
+          } else if (ownerNode != null && ownerNode.getType() == Token.THIS) {
+            builder.inferThisType(info, ownerNode.getJSType());
+            searchedForThisType = true;
           }
 
           if (!searchedForThisType) {
-            builder.inferThisType(info, (Node) null);
+            builder.inferThisType(info);
           }
 
           functionType = builder

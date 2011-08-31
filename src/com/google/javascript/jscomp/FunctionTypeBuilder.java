@@ -397,11 +397,11 @@ final class FunctionTypeBuilder {
 
   /**
    * Infers the type of {@code this}.
-   * @param type The type of this.
+   * @param type The type of this if the info is missing.
    */
   FunctionTypeBuilder inferThisType(JSDocInfo info, JSType type) {
     // Look at the @this annotation first.
-    inferThisType(info, (Node) null);
+    inferThisType(info);
 
     if (thisType == null) {
       ObjectType objType = ObjectType.cast(type);
@@ -416,12 +416,8 @@ final class FunctionTypeBuilder {
   /**
    * Infers the type of {@code this}.
    * @param info The JSDocInfo for this function.
-   * @param owner The node for the object whose prototype "owns" this function.
-   *     For example, {@code A} in the expression {@code A.prototype.foo}. May
-   *     be null to indicate that this is not a prototype property.
    */
-  FunctionTypeBuilder inferThisType(JSDocInfo info,
-      @Nullable Node owner) {
+  FunctionTypeBuilder inferThisType(JSDocInfo info) {
     ObjectType maybeThisType = null;
     if (info != null && info.hasThisType()) {
       maybeThisType = ObjectType.cast(
@@ -430,24 +426,6 @@ final class FunctionTypeBuilder {
     if (maybeThisType != null) {
       thisType = maybeThisType;
       thisType.setValidator(new ThisTypeValidator());
-    } else if (owner != null &&
-               (info == null || !info.hasType())) {
-      // If the function is of the form:
-      // x.prototype.y = function() {}
-      // then we can assume "x" is the @this type. On the other hand,
-      // if it's of the form:
-      // /** @type {Function} */ x.prototype.y;
-      // then we should not give it a @this type.
-      String ownerTypeName = owner.getQualifiedName();
-      Var ownerVar = scope.getVar(ownerTypeName);
-      JSType ownerType = ownerVar == null ? null : ownerVar.getType();
-      FunctionType ownerFnType = JSType.toMaybeFunctionType(ownerType);
-      ObjectType instType =
-          ownerFnType == null || ownerFnType.isOrdinaryFunction() ?
-          null : ownerFnType.getInstanceType();
-      if (instType != null) {
-        thisType = instType;
-      }
     }
 
     return this;

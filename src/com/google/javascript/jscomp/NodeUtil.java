@@ -3151,6 +3151,20 @@ public final class NodeUtil {
     return null;
   }
 
+  /** Get the owner of the given l-value node. */
+  static Node getBestLValueOwner(@Nullable Node lValue) {
+    if (lValue == null || lValue.getParent() == null) {
+      return null;
+    }
+    if (isObjectLitKey(lValue, lValue.getParent())) {
+      return getBestLValue(lValue.getParent());
+    } else if (isGet(lValue)) {
+      return lValue.getFirstChild();
+    }
+
+    return null;
+  }
+
   /** Get the name of the given l-value node. */
   static String getBestLValueName(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {

@@ -4638,6 +4638,32 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testThis12() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function f(x) {}" +
+        "/** @constructor */ function Ctor() {}" +
+        "Ctor.prototype['method'] = function() {" +
+        "  f(this);" +
+        "}",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : Ctor\n" +
+        "required: number");
+  }
+
+  public void testThis13() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function f(x) {}" +
+        "/** @constructor */ function Ctor() {}" +
+        "Ctor.prototype = {" +
+        "  method: function() {" +
+        "    f(this);" +
+        "  }" +
+        "};",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : Ctor\n" +
+        "required: number");
+  }
+
   public void testThisTypeOfFunction1() throws Exception {
     testTypes(
         "/** @type {function(this:Object)} */ function f() {}" +
