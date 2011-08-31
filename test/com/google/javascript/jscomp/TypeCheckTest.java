@@ -4664,6 +4664,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testThis14() throws Exception {
+    testTypes(
+        "/** @param {number} x */ function f(x) {}" +
+        "f(this.Object);",
+        "actual parameter 1 of f does not match formal parameter\n" +
+        "found   : function (new:Object, *): ?\n" +
+        "required: number");
+  }
+
   public void testThisTypeOfFunction1() throws Exception {
     testTypes(
         "/** @type {function(this:Object)} */ function f() {}" +

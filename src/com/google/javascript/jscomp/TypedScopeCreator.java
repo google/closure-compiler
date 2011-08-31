@@ -1082,20 +1082,6 @@ final class TypedScopeCreator implements ScopeCreator {
         Var newVar =
             scopeToDeclareIn.declare(variableName, n, type, input, inferred);
 
-        if (shouldDeclareOnGlobalThis) {
-          ObjectType globalThis =
-              typeRegistry.getNativeObjectType(GLOBAL_THIS);
-          if (inferred) {
-            globalThis.defineInferredProperty(variableName,
-                type == null ?
-                    getNativeType(JSTypeNative.NO_TYPE) :
-                    type,
-                 n);
-          } else {
-            globalThis.defineDeclaredProperty(variableName, type, n);
-          }
-        }
-
         if (type instanceof EnumType) {
           Node initialValue = newVar.getInitialValue();
           boolean isValidValue = initialValue != null &&
@@ -1141,6 +1127,20 @@ final class TypedScopeCreator implements ScopeCreator {
                       variableName));
             }
           }
+        }
+      }
+
+      if (shouldDeclareOnGlobalThis) {
+        ObjectType globalThis =
+            typeRegistry.getNativeObjectType(GLOBAL_THIS);
+        if (inferred) {
+          globalThis.defineInferredProperty(variableName,
+              type == null ?
+              getNativeType(JSTypeNative.NO_TYPE) :
+              type,
+              n);
+        } else {
+          globalThis.defineDeclaredProperty(variableName, type, n);
         }
       }
 
