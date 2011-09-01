@@ -379,10 +379,12 @@ XMLHttpRequest.prototype.onreadystatechange;
  * The FormData object represents an ordered collection of entries. Each entry
  * has a name and value.
  *
+ * @param {?Element=} opt_form An optional form to use for constructing the form
+ *     data set.
  * @constructor
  * @see http://www.w3.org/TR/XMLHttpRequest2/#the-formdata-interface
  */
-function FormData() {}
+function FormData(opt_form) {}
 
 /**
  * @param {string} name
