@@ -94,7 +94,7 @@ public class SourceMapGeneratorV1Test extends SourceMapTestCase {
                    "[]\n" +
 
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,0,\"f\"]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,10]\n" +
                    "[\"testcode\",1,13]\n");
@@ -116,7 +116,7 @@ public class SourceMapGeneratorV1Test extends SourceMapTestCase {
                    "[\"testcode\",1,0,\"c\"]\n" +
                    "[\"testcode\",1,0,\"b\"]\n" +
                    "[\"testcode\",1,0,\"a\"]\n" +
-                   "[\"testcode\",1,17,\"a.b.c\"]\n" +
+                   "[\"testcode\",1,8,\"a.b.c\"]\n" +
                    "[\"testcode\",1,17]\n" +
                    "[\"testcode\",1,20]\n");
   }
@@ -135,7 +135,7 @@ public class SourceMapGeneratorV1Test extends SourceMapTestCase {
                    "/** Begin mapping definitions. **/\n" +
                    "[\"testcode\",1,0]\n" +
                    "[\"testcode\",1,4,\"q\"]\n" +
-                   "[\"testcode\",1,17,\"q\"]\n" +
+                   "[\"testcode\",1,8,\"q\"]\n" +
                    "[\"testcode\",1,17]\n" +
                    "[\"testcode\",1,20]\n");
   }
@@ -154,7 +154,7 @@ public class SourceMapGeneratorV1Test extends SourceMapTestCase {
                    "/** Begin mapping definitions. **/\n" +
                    "[\"testcode\",1,1]\n" +
                    "[\"testcode\",1,3]\n" +
-                   "[\"testcode\",1,18,\"q\"]\n" +
+                   "[\"testcode\",1,9,\"q\"]\n" +
                    "[\"testcode\",1,18]\n" +
                    "[\"testcode\",1,21]\n");
   }
@@ -174,7 +174,7 @@ public class SourceMapGeneratorV1Test extends SourceMapTestCase {
                    "[]\n" +
 
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,0,\"f\"]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,10]\n" +
                    "[\"testcode\",1,11,\"foo\"]\n" +
@@ -202,7 +202,7 @@ public class SourceMapGeneratorV1Test extends SourceMapTestCase {
                    "[]\n" +
 
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,0,\"f\"]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,11,\"foo\"]\n" +
                    "[\"testcode\",1,16,\"bar\"]\n" +
@@ -226,7 +226,7 @@ public class SourceMapGeneratorV1Test extends SourceMapTestCase {
                    "/** Begin file information. **/\n" +
                    "[]\n" +
                    "/** Begin mapping definitions. **/\n" +
-                   "[\"testcode\",1,9,\"f\"]\n" +
+                   "[\"testcode\",1,0,\"f\"]\n" +
                    "[\"testcode\",1,9,\"f\"]\n" +
                    "[\"testcode\",1,10]\n" +
                    "[\"testcode\",1,11,\"foo\"]\n" +

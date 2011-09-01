@@ -575,7 +575,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Node param3 = param2.getNext();
     Node body = params.getNext();
 
-    assertNodePosition(2, 5, function);
+    assertNodePosition(1, 0, function);
     assertNodePosition(2, 5, functionName);
     // params corresponds to the LP token.
     // Can't be on a separate line because of inferred
@@ -1103,7 +1103,7 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     //assertNodePosition(1, 1, aDotbName);
     assertNodePosition(1, 0, aName);
     assertNodePosition(2, 0, bName);
-    assertNodePosition(3, 8, fnNode);
+    assertNodePosition(3, 0, fnNode);
     assertNodePosition(3, 8, fnName);
   }
 

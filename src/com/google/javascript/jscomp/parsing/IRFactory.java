@@ -302,23 +302,15 @@ class IRFactory {
   }
 
   private void setSourceInfo(Node irNode, AstNode node) {
-    // If we have a named function, set the position to that of the name.
-    if (irNode.getType() == Token.FUNCTION &&
-        irNode.getFirstChild().getLineno() != -1) {
-      irNode.setLineno(irNode.getFirstChild().getLineno());
-      irNode.setCharno(irNode.getFirstChild().getCharno());
+    if (irNode.getLineno() == -1) {
+      // If we didn't already set the line, then set it now. This avoids
+      // cases like ParenthesizedExpression where we just return a previous
+      // node, but don't want the new node to get its parent's line number.
+      int lineno = node.getLineno();
+      irNode.setLineno(lineno);
+      int charno = position2charno(node.getAbsolutePosition());
+      irNode.setCharno(charno);
       maybeSetLengthFrom(irNode, node);
-    } else {
-      if (irNode.getLineno() == -1) {
-        // If we didn't already set the line, then set it now.  This avoids
-        // cases like ParenthesizedExpression where we just return a previous
-        // node, but don't want the new node to get its parent's line number.
-        int lineno = node.getLineno();
-        irNode.setLineno(lineno);
-        int charno = position2charno(node.getAbsolutePosition());
-        irNode.setCharno(charno);
-        maybeSetLengthFrom(irNode, node);
-      }
     }
   }
 

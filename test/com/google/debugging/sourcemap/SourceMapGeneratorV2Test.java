@@ -57,7 +57,7 @@ public class SourceMapGeneratorV2Test extends SourceMapTestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAkBEBEB\"],\n" +
-                   "\"mappings\":[[0,1,9,0],\n" +
+                   "\"mappings\":[[0,1,0,0],\n" +
                    "[0,1,9,0],\n" +
                    "[0,1,18],\n" +
                    "[0,1,21],\n" +
@@ -83,7 +83,7 @@ public class SourceMapGeneratorV2Test extends SourceMapTestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAkBABkBA/kCA+ADMBcBgBA9\"],\n" +
-                   "\"mappings\":[[0,1,9,0],\n" +
+                   "\"mappings\":[[0,1,0,0],\n" +
                    "[0,1,9,0],\n" +
                    "[0,1,18],\n" +
                    "[0,1,19,1],\n" +
@@ -145,7 +145,7 @@ public class SourceMapGeneratorV2Test extends SourceMapTestCase {
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
         "\"lineMaps\":[\"cAEBABIBA/ICA+ADICA/ICA+IDA9AEYBMBA5\"],\n" +
-        "\"mappings\":[[0,1,9,0],\n" +
+        "\"mappings\":[[0,1,0,0],\n" +
         "[0,1,9,0],\n" +
         "[0,1,10],\n" +
         "[0,1,11,1],\n" +
@@ -172,7 +172,7 @@ public class SourceMapGeneratorV2Test extends SourceMapTestCase {
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[\"cAEBA/ICA+IDE9IEA8IFA7IGg6MHA5\"],\n" +
-                   "\"mappings\":[[0,1,9,0],\n" +
+                   "\"mappings\":[[0,1,0,0],\n" +
                    "[0,1,9,0],\n" +
                    "[0,1,11,1],\n" +
                    "[0,1,16,2],\n" +
@@ -196,7 +196,7 @@ public class SourceMapGeneratorV2Test extends SourceMapTestCase {
                    "\"lineCount\":1,\n" +
                    "\"lineMaps\":[" +
                        "\"cAEBABIBA/ICA+ADICA/ICA+IDA9IEYBMBA5\"],\n" +
-                   "\"mappings\":[[0,1,9,0],\n" +
+                   "\"mappings\":[[0,1,0,0],\n" +
                    "[0,1,9,0],\n" +
                    "[0,1,10],\n" +
                    "[0,1,11,1],\n" +

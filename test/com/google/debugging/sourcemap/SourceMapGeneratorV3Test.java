@@ -54,7 +54,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACSA,QAAAA,UAAS,EAAG;\",\n" +
+                   "\"mappings\":\"AACAA,QAASA,UAAS,EAAG;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
                    "\"names\":[\"__BASIC__\"]\n" +
                    "}\n");
@@ -78,7 +78,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACSA,QAAAA,UAAS,CAACC,UAAD,CAAaC,UAAb," +
+                   "\"mappings\":\"AACAA,QAASA,UAAS,CAACC,UAAD,CAAaC,UAAb," +
                        "CAAyB,CAAE,IAAIC,QAAU,SAAhB;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
                    "\"names\":[\"__BASIC__\",\"__PARAM1__\",\"__PARAM2__\"," +
@@ -135,7 +135,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACSA,QAAAA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
+                   "\"mappings\":\"AACAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
                        "CAAW,CAAED,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkB,CAAG," +
                        "OAAOD,IAA9B;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
@@ -150,9 +150,9 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACSA,QAAAA,EAAAA,CAAEC,GAAFD,CAAOE," +
-                       "GAAPF,EAAcC,GAAdD,CAAoBC,GAApBD,CAA0BE,GAA1BF," +
-                       "SAA0CC,IAA1CD;\",\n" +
+                   "\"mappings\":\"AACAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE," +
+                       "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF," +
+                       "SAAmDC,IAAnDD;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
                    "\"names\":[\"f\",\"foo\",\"bar\"]\n" +
                    "}\n");
@@ -166,7 +166,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACSA,QAAAA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
+                   "\"mappings\":\"AACAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
                        "CAAW,CAIrBD,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkBD," +
                        "GAClB,OAAOA,IALc;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
