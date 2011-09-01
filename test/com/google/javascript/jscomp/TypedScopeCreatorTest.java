@@ -372,8 +372,9 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         RhinoErrorReporter.TYPE_PARSE_ERROR);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Foo", x.toString());
+    assertEquals("Foo.prototype", x.getImplicitPrototype().toString());
     assertTrue(x.getImplicitPrototype().hasOwnProperty("bar"));
-    assertEquals("number", x.getPropertyType("bar").toString());
+    assertEquals("?", x.getPropertyType("bar").toString());
     assertTrue(x.isPropertyTypeInferred("bar"));
   }
 

@@ -587,7 +587,7 @@ class PrototypeObjectType extends ObjectType {
   }
 
   void setOwnerFunction(FunctionType type) {
-    Preconditions.checkState(ownerFunction == null);
+    Preconditions.checkState(ownerFunction == null || type == null);
     ownerFunction = type;
   }
 

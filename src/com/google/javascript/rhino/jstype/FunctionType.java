@@ -338,7 +338,6 @@ public class FunctionType extends PrototypeObjectType {
     //
     // In the second case, we just use the anonymous object as the prototype.
     if (baseType.hasReferenceName() ||
-        baseType.isUnknownType() ||
         isNativeObjectType() ||
         baseType.isFunctionPrototypeType() ||
         !(baseType instanceof PrototypeObjectType)) {
@@ -363,10 +362,18 @@ public class FunctionType extends PrototypeObjectType {
       return false;
     }
 
-    boolean replacedPrototype = prototype != null;
+    PrototypeObjectType oldPrototype = this.prototype;
+    boolean replacedPrototype = oldPrototype != null;
+
     this.prototype = prototype;
     this.prototypeSlot = new SimpleSlot("prototype", prototype, true);
     this.prototype.setOwnerFunction(this);
+
+    if (oldPrototype != null) {
+      // Disassociating the old prototype makes this easier to debug--
+      // we don't have to worry about two prototypes running around.
+      oldPrototype.setOwnerFunction(null);
+    }
 
     if (isConstructor() || isInterface()) {
       FunctionType superClass = getSuperClassConstructor();

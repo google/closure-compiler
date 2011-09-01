@@ -5260,6 +5260,72 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
+  public void testIssue537a() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype = {method: function() {}};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "function Bar() {" +
+        "  Foo.call(this);" +
+        "  if (this.baz()) this.method(1);" +
+        "}" +
+        "Bar.prototype = {" +
+        "  baz: function() {" +
+        "    return true;" +
+        "  }" +
+        "};" +
+        "Bar.prototype.__proto__ = Foo.prototype;",
+        "Function Foo.prototype.method: called with 1 argument(s). " +
+        "Function requires at least 0 argument(s) " +
+        "and no more than 0 argument(s).");
+  }
+
+  public void testIssue537b() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype = {method: function() {}};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "function Bar() {" +
+        "  Foo.call(this);" +
+        "  if (this.baz(1)) this.method();" +
+        "}" +
+        "Bar.prototype = {" +
+        "  baz: function() {" +
+        "    return true;" +
+        "  }" +
+        "};" +
+        "Bar.prototype.__proto__ = Foo.prototype;",
+        "Function Bar.prototype.baz: called with 1 argument(s). " +
+        "Function requires at least 0 argument(s) " +
+        "and no more than 0 argument(s).");
+  }
+
+  public void testIssue537c() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "function Bar() {" +
+        "  Foo.call(this);" +
+        "  if (this.baz2()) alert(1);" +
+        "}" +
+        "Bar.prototype = {" +
+        "  baz: function() {" +
+        "    return true;" +
+        "  }" +
+        "};" +
+        "Bar.prototype.__proto__ = Foo.prototype;",
+        "Property baz2 never defined on Bar");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See

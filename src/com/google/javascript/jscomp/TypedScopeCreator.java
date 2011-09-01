@@ -1378,24 +1378,6 @@ final class TypedScopeCreator implements ScopeCreator {
       String propName = n.getLastChild().getString();
       Preconditions.checkArgument(qName != null && ownerName != null);
 
-      // Function prototypes are special.
-      // It's a common JS idiom to do:
-      // F.prototype = { ... };
-      // So if F does not have an explicitly declared super type,
-      // allow F.prototype to be redefined arbitrarily.
-      if ("prototype".equals(propName)) {
-        Var qVar = scope.getVar(qName);
-        if (qVar != null) {
-          if (!qVar.isTypeInferred()) {
-            // Just ignore assigns to declared prototypes.
-            return;
-          }
-          if (qVar.getScope() == scope) {
-            scope.undeclare(qVar);
-          }
-        }
-      }
-
       // Precedence of type information on GETPROPs:
       // 1) @type annnotation / @enum annotation
       // 2) ASSIGN to FUNCTION literal
@@ -1414,6 +1396,38 @@ final class TypedScopeCreator implements ScopeCreator {
       if (valueType == null && rhsValue != null) {
         // Determining type for #5
         valueType = rhsValue.getJSType();
+      }
+      // Function prototypes are special.
+      // It's a common JS idiom to do:
+      // F.prototype = { ... };
+      // So if F does not have an explicitly declared super type,
+      // allow F.prototype to be redefined arbitrarily.
+      if ("prototype".equals(propName)) {
+        Var qVar = scope.getVar(qName);
+        if (qVar != null) {
+          // If the programmer has declared that F inherits from Super,
+          // and they assign F.prototype to an object literal,
+          // then they are responsible for making sure that the object literal's
+          // implicit prototype is set up appropriately. We just obey
+          // the @extends tag.
+          ObjectType qVarType = ObjectType.cast(qVar.getType());
+          if (qVarType != null &&
+              rhsValue != null &&
+              rhsValue.getType() == Token.OBJECTLIT) {
+            typeRegistry.resetImplicitPrototype(
+                rhsValue.getJSType(), qVarType.getImplicitPrototype());
+          } else if (!qVar.isTypeInferred()) {
+            // If the programmer has declared that F inherits from Super,
+            // and they assign F.prototype to some arbitrary expression,
+            // there's not much we can do. We just ignore the expression,
+            // and hope they've annotated their code in a way to tell us
+            // what props are going to be on that prototype.
+            return;
+          }
+          if (qVar.getScope() == scope) {
+            scope.undeclare(qVar);
+          }
+        }
       }
 
       if (valueType == null) {
