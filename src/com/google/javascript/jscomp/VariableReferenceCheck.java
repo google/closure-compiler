@@ -138,8 +138,13 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           // check if any of them are before this block.
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (declaredBlock.provablyExecutesBefore(basicBlock)) {
+              // TODO(johnlenz): Fix AST generating clients that so they would
+              // have property StaticSourceFile attached at each node. Or
+              // better yet, make sure the generated code never violates
+              // the requirement to pass aggressive var check!
+              String filename = NodeUtil.getSourceName(reference.getNode());
               compiler.report(
-                  JSError.make(reference.getSourceFile().getName(),
+                  JSError.make(filename,
                       reference.getNode(),
                       checkLevel,
                       REDECLARED_VARIABLE, v.name));
@@ -153,8 +158,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           // block it is declared.
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (!declaredBlock.provablyExecutesBefore(basicBlock)) {
+              String filename = NodeUtil.getSourceName(reference.getNode());
               compiler.report(
-                  JSError.make(reference.getSourceFile().getName(),
+                  JSError.make(filename,
                       reference.getNode(),
                       AMBIGUOUS_FUNCTION_DECL, v.name));
               break;
@@ -175,8 +181,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             // Only generate warnings if the scopes do not match in order
             // to deal with possible forward declarations and recursion
             if (reference.getScope() == v.scope) {
+              String filename = NodeUtil.getSourceName(reference.getNode());
               compiler.report(
-                  JSError.make(reference.getSourceFile().getName(),
+                  JSError.make(filename,
                                reference.getNode(),
                                checkLevel,
                                UNDECLARED_REFERENCE, v.name));
