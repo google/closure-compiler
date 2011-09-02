@@ -2331,7 +2331,7 @@ google.maps.Marker.prototype.getVisible = function() {};
 google.maps.Marker.prototype.getZIndex = function() {};
 
 /**
- * @param {google.maps.Animation} animation
+ * @param {?google.maps.Animation} animation
  * @return {undefined}
  */
 google.maps.Marker.prototype.setAnimation = function(animation) {};
