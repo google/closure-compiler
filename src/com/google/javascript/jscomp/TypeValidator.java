@@ -30,7 +30,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.DisambiguateProperties.Warnings;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -61,7 +60,6 @@ class TypeValidator {
   private final JSTypeRegistry typeRegistry;
   private final JSType allValueTypes;
   private boolean shouldReport = true;
-  private final boolean recordErrors;
   private final JSType nullOrUndefined;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
@@ -132,8 +130,6 @@ class TypeValidator {
         STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
     this.nullOrUndefined = typeRegistry.createUnionType(
         NULL_TYPE, VOID_TYPE);
-    this.recordErrors = compiler.getErrorLevel(
-        JSError.make("", 0, 0, Warnings.INVALIDATION)) != CheckLevel.OFF;
   }
 
   /**
@@ -754,7 +750,7 @@ class TypeValidator {
     if (shouldReport) {
       compiler.report(error);
     }
-    return recordErrors ? error : null;
+    return error;
   }
 
   /**

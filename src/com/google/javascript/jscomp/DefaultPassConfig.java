@@ -1391,10 +1391,11 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
       if (tightenTypes == null) {
-        return DisambiguateProperties.forJSTypeSystem(compiler);
+        return DisambiguateProperties.forJSTypeSystem(compiler,
+            options.propertyInvalidationErrors);
       } else {
         return DisambiguateProperties.forConcreteTypeSystem(
-            compiler, tightenTypes);
+            compiler, tightenTypes, options.propertyInvalidationErrors);
       }
     }
   };

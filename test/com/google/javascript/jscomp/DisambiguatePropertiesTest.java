@@ -26,6 +26,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -54,15 +55,20 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
       public void process(Node externs, Node root) {
         checker.processForTesting(externs, root);
 
+        Map<String, CheckLevel> propertiesToErrorFor =
+            Maps.<String, CheckLevel>newHashMap();
+        propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
+
         if (runTightenTypes) {
           TightenTypes tightener = new TightenTypes(compiler);
           tightener.process(externs, root);
           lastPass = DisambiguateProperties.forConcreteTypeSystem(compiler,
-                                                                  tightener);
+              tightener, propertiesToErrorFor);
         } else {
           // This must be created after type checking is run as it depends on
           // any mismatches found during checking.
-          lastPass = DisambiguateProperties.forJSTypeSystem(compiler);
+          lastPass = DisambiguateProperties.forJSTypeSystem(
+              compiler, propertiesToErrorFor);
         }
 
         lastPass.process(externs, root);
@@ -1224,9 +1230,28 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(false, js, output, "{}");
   }
 
+  public void testErrorOnProtectedProperty() {
+    String js = "function addSingletonGetter(foo) { foo.foobar = 'a'; };";
+
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    compiler.init(new JSSourceFile[]{JSSourceFile.fromCode("externs", "")},
+                  new JSSourceFile[]{
+                      JSSourceFile.fromCode("testcode", js)}, options);
+
+    Node root = compiler.parseInputs();
+    Node externsRoot = root.getFirstChild();
+    Node mainRoot = externsRoot.getNext();
+    getProcessor(compiler).process(externsRoot, mainRoot);
+
+    assertEquals(1, compiler.getErrors().length);
+    assertTrue(compiler.getErrors()[0].toString().contains("foobar"));
+  }
+
   public void runFindHighestTypeInChain() {
     // Check that this doesn't go into an infinite loop.
-    DisambiguateProperties.forJSTypeSystem(new Compiler())
+    DisambiguateProperties.forJSTypeSystem(new Compiler(),
+        Maps.<String, CheckLevel>newHashMap())
         .getTypeWithProperty("no",
             new JSTypeRegistry(new TestErrorReporter(null, null))
             .getNativeType(JSTypeNative.OBJECT_PROTOTYPE));

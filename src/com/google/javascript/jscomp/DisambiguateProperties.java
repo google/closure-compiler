@@ -85,8 +85,6 @@ class DisambiguateProperties<T> implements CompilerPass {
         + "because of type {1} node {2}. {3}");
   }
 
-  private final boolean showInvalidationWarnings;
-
   private final AbstractCompiler compiler;
   private final TypeSystem<T> typeSystem;
 
@@ -96,6 +94,16 @@ class DisambiguateProperties<T> implements CompilerPass {
    * this pass.
    */
   private Multimap<Object, JSError> invalidationMap;
+
+  /**
+   * In practice any large code base will have thousands and thousands of
+   * type invalidations, which makes reporting all of the errors useless.
+   * However, certain properties are worth specifically guarding because of the
+   * large amount of code that can be removed as dead code. This list contains
+   * the properties (eg: "toString") that we care about; if any of these
+   * properties is invalidated it causes an error.
+   */
+  private final Map<String, CheckLevel> propertiesToErrorFor;
 
   private class Property {
     /** The name of the property. */
@@ -262,15 +270,18 @@ class DisambiguateProperties<T> implements CompilerPass {
   private Map<String, Property> properties = Maps.newHashMap();
 
   static DisambiguateProperties<JSType> forJSTypeSystem(
-      AbstractCompiler compiler) {
+      AbstractCompiler compiler,
+      Map<String, CheckLevel> propertiesToErrorFor) {
     return new DisambiguateProperties<JSType>(
-        compiler, new JSTypeSystem(compiler));
+        compiler, new JSTypeSystem(compiler), propertiesToErrorFor);
   }
 
   static DisambiguateProperties<ConcreteType> forConcreteTypeSystem(
-      AbstractCompiler compiler, TightenTypes tt) {
+      AbstractCompiler compiler, TightenTypes tt,
+      Map<String, CheckLevel> propertiesToErrorFor) {
     return new DisambiguateProperties<ConcreteType>(
-        compiler, new ConcreteTypeSystem(tt, compiler.getCodingConvention()));
+        compiler, new ConcreteTypeSystem(tt, compiler.getCodingConvention()),
+            propertiesToErrorFor);
   }
 
   /**
@@ -278,12 +289,11 @@ class DisambiguateProperties<T> implements CompilerPass {
    * above for either the JSType system, or the concrete type system.
    */
   private DisambiguateProperties(AbstractCompiler compiler,
-                                 TypeSystem<T> typeSystem) {
+      TypeSystem<T> typeSystem, Map<String, CheckLevel> propertiesToErrorFor) {
     this.compiler = compiler;
     this.typeSystem = typeSystem;
-    this.showInvalidationWarnings = compiler.getErrorLevel(
-        JSError.make("", 0, 0, Warnings.INVALIDATION)) != CheckLevel.OFF;
-    if (this.showInvalidationWarnings) {
+    this.propertiesToErrorFor = propertiesToErrorFor;
+    if (!this.propertiesToErrorFor.isEmpty()) {
       this.invalidationMap = LinkedHashMultimap.create();
     } else {
       this.invalidationMap = null;
@@ -436,7 +446,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       Property prop = getProperty(name);
       if (!prop.scheduleRenaming(n.getLastChild(),
                                  processProperty(t, prop, type, null))) {
-        if (showInvalidationWarnings) {
+        if (propertiesToErrorFor.containsKey(name)) {
           String suggestion = "";
           if (type instanceof JSType) {
             JSType jsType = (JSType) type;
@@ -459,9 +469,10 @@ class DisambiguateProperties<T> implements CompilerPass {
             }
           }
           compiler.report(JSError.make(
-              t.getSourceName(), n, Warnings.INVALIDATION, name,
-              (type == null ? "null" : type.toString()), n.toString(),
-              suggestion));
+              t.getSourceName(), n, propertiesToErrorFor.get(name),
+              Warnings.INVALIDATION, name,
+              (type == null ? "null" : type.toString()),
+              n.toString(), suggestion));
         }
       }
     }
@@ -483,9 +494,10 @@ class DisambiguateProperties<T> implements CompilerPass {
                                    processProperty(t, prop, type, null))) {
           // TODO(user): It doesn't look like the user can do much in this
           // case right now.
-          if (showInvalidationWarnings) {
+          if (propertiesToErrorFor.containsKey(name)) {
             compiler.report(JSError.make(
-                t.getSourceName(), child, Warnings.INVALIDATION, name,
+                t.getSourceName(), child, propertiesToErrorFor.get(name),
+                Warnings.INVALIDATION, name,
                 (type == null ? "null" : type.toString()), n.toString(), ""));
           }
         }

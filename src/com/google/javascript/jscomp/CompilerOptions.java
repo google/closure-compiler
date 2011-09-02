@@ -647,6 +647,10 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Fixes open source issue: 390
   boolean operaCompoundAssignFix;
 
+  /** List of properties that we report invalidation errors for. */
+  Map<String, CheckLevel> propertyInvalidationErrors;
+
+
   //--------------------------------
   // Output options
   //--------------------------------
@@ -868,6 +872,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     replaceStringsFunctionDescriptions = Collections.emptyList();
     replaceStringsPlaceholderToken = "";
     replaceStringsReservedStrings = Collections.emptySet();
+    propertyInvalidationErrors = Maps.newHashMap();
 
     // Output
     printInputDelimiter = false;
@@ -1388,6 +1393,17 @@ public class CompilerOptions implements Serializable, Cloneable {
   public void setAssumeClosuresOnlyCaptureReferences(boolean enable) {
     this.assumeClosuresOnlyCaptureReferences = enable;
   }
+
+  /**
+   * Sets the list of properties that we report property invalidation errors
+   * for.
+   */
+  public void setPropertyInvalidationErrors(
+      Map<String, CheckLevel> propertyInvalidationErrors) {
+    this.propertyInvalidationErrors =
+        Maps.newHashMap(propertyInvalidationErrors);
+  }
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Enums
