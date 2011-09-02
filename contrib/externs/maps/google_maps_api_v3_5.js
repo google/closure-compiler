@@ -2254,7 +2254,7 @@ google.maps.Marker.MAX_ZINDEX;
 
 /**
  * @nosideeffects
- * @return {google.maps.Animation}
+ * @return {?google.maps.Animation}
  */
 google.maps.Marker.prototype.getAnimation = function() {};
 
