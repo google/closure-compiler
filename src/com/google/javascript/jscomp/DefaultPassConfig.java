@@ -973,7 +973,8 @@ public class DefaultPassConfig extends PassConfig {
             new PeepholeRemoveDeadCode(),
             new PeepholeSubstituteAlternateSyntax(true),
             new PeepholeReplaceKnownMethods(),
-            new PeepholeFoldConstants());
+            new PeepholeFoldConstants(),
+            new ReorderConstantExpression());
     }
   };
 

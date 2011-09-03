@@ -27,14 +27,8 @@ import com.google.javascript.rhino.Node;
  */
 class ReorderConstantExpression extends AbstractPeepholeOptimization {
 
-  private AbstractCompiler compiler;
-
   // TODO(user): Rename this pass to PeepholeReorderConstantExpression
   // to follow our naming convention.
-  ReorderConstantExpression(AbstractCompiler compiler) {
-    this.compiler = compiler;
-  }
-
   @Override
   Node optimizeSubtree(Node subtree) {
     // if the operator is symertric
@@ -56,7 +50,7 @@ class ReorderConstantExpression extends AbstractPeepholeOptimization {
 
         subtree.addChildrenToFront(lastNode);
         subtree.addChildrenToBack(firstNode);
-        this.compiler.reportCodeChange();
+        reportCodeChange();
       }
     }
     return subtree;
