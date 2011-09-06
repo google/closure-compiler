@@ -7219,7 +7219,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testObjectLiteralDeclaration4() throws Exception {
-    testClosureTypesMultipleWarnings(
+    testClosureTypes(
         "var x = {" +
         "  /** @param {boolean} x */ abc: function(x) {}" +
         "};" +
@@ -7227,14 +7227,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         " * @param {string} x\n" +
         " * @suppress {duplicate}\n" +
         " */ x.abc = function(x) {};",
-        Lists.newArrayList(
-            "variable x.abc redefined with type " +
-            "function (string): undefined, " +
-            "original definition at  [testcode] :1 with type " +
-            "function (boolean): undefined",
-            "assignment to property abc of x\n" +
-            "found   : function (string): undefined\n" +
-            "required: function (boolean): undefined"));
+        "assignment to property abc of x\n" +
+        "found   : function (string): undefined\n" +
+        "required: function (boolean): undefined");
+    // TODO(user): suppress {duplicate} currently also silence the
+    // redefining type error in the TypeValidator. May be it needs
+    // a new suppress name instead?
   }
 
   public void testObjectLiteralDeclaration5() throws Exception {

@@ -66,6 +66,11 @@ class SuppressDocWarningsGuard extends WarningsGuard {
           info = NodeUtil.getFunctionJSDocInfo(current);
         } else if (type == Token.SCRIPT) {
           info = current.getJSDocInfo();
+        } else if (type == Token.ASSIGN) {
+          Node rhs = current.getLastChild();
+          if (NodeUtil.isFunction(rhs)) {
+            info = NodeUtil.getFunctionJSDocInfo(rhs);
+          }
         }
 
         if (info != null) {

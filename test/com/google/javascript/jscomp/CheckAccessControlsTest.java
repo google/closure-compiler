@@ -590,6 +590,15 @@ public class CheckAccessControlsTest extends CompilerTestCase {
       "function SubFoo() {}" +
       "/** @protected */ SubFoo.prototype.bar = function() {};",
     }, null, PRIVATE_OVERRIDE);
+
+    testSame(new String[] {
+      "/** @constructor */ function Foo() { } " +
+      "/** @private */ Foo.prototype.bar = function() {};",
+      "/** @constructor \n * @extends {Foo} */ " +
+      "function SubFoo() {}" +
+      "/** @override \n *@suppress{visibility} */\n" +
+      " SubFoo.prototype.bar = function() {};",
+    });
   }
 
   public void testAccessOfStaticMethodOnPrivateConstructor() {
