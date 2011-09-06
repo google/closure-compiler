@@ -656,6 +656,18 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         func.getPrototype().getPropertyType("apply").toString());
   }
 
+  public void testTypesInExterns() throws Exception {
+    testSame(
+        CompilerTypeTestCase.DEFAULT_EXTERNS,
+        "", null);
+
+    Var v = globalScope.getVar("Object");
+    FunctionType obj = (FunctionType) v.getType();
+    assertEquals("function (new:Object, *): ?", obj.toString());
+    assertNotNull(v.getNode());
+    assertNotNull(v.input);
+  }
+
   public void testPropertyDeclarationOnInstanceType() {
     testSame(
         "/** @type {!Object} */ var a = {};" +

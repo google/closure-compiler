@@ -1067,16 +1067,16 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       // declared in closest scope?
+      CompilerInput input = compiler.getInput(inputId);
       if (scopeToDeclareIn.isDeclared(variableName, false)) {
         Var oldVar = scopeToDeclareIn.getVar(variableName);
         validator.expectUndeclaredVariable(
-            sourceName, n, parent, oldVar, variableName, type);
+            sourceName, input, n, parent, oldVar, variableName, type);
       } else {
         if (!inferred) {
           setDeferredType(n, type);
         }
 
-        CompilerInput input = compiler.getInput(inputId);
         // The input may be null if we are working with a AST snippet.
         boolean isExtern = n.isFromExterns();
         Var newVar =

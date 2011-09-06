@@ -496,8 +496,8 @@ class TypeValidator {
    * @param newType The type being applied to the variable. Mostly just here
    *     for the benefit of the warning.
    */
-  void expectUndeclaredVariable(String sourceName, Node n, Node parent, Var var,
-      String variableName, JSType newType) {
+  void expectUndeclaredVariable(String sourceName, CompilerInput input,
+      Node n, Node parent, Var var, String variableName, JSType newType) {
     boolean allowDupe = false;
     if (n.getType() == Token.GETPROP ||
         NodeUtil.isObjectLitKey(n, parent)) {
@@ -522,8 +522,12 @@ class TypeValidator {
       // is an error and the second declaration is ignored, except in the
       // case of native types. A null input type means that the declaration
       // was made in TypedScopeCreator#createInitialScope and is a
-      // native type.
+      // native type. We should redeclare it at the new input site.
       if (var.input == null) {
+        Scope s = var.getScope();
+        s.undeclare(var);
+        s.declare(variableName, n, varType, input, false);
+
         n.setJSType(varType);
         if (parent.getType() == Token.VAR) {
           if (n.getFirstChild() != null) {
