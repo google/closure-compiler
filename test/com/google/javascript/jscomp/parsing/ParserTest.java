@@ -915,7 +915,22 @@ public class ParserTest extends BaseJSTypeTestCase {
     parse("x.yield;");
   }
 
-  private void parseError(String string, String... errors) {
+  public void testIdeModePartialTree() {
+    Node partialTree = parseError("function Foo() {} f.",
+        "missing name after . operator");
+    assertNull(partialTree);
+
+    isIdeMode = true;
+    partialTree = parseError("function Foo() {} f.",
+        "missing name after . operator");
+    assertNotNull(partialTree);
+  }
+
+  /**
+   * Verify that the given code has the given parse errors.
+   * @return If in IDE mode, returns a partial tree.
+   */
+  private Node parseError(String string, String... errors) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
     Node script = null;
     try {
@@ -931,6 +946,8 @@ public class ParserTest extends BaseJSTypeTestCase {
     // verifying that all warnings were seen
     assertTrue(testErrorReporter.hasEncounteredAllErrors());
     assertTrue(testErrorReporter.hasEncounteredAllWarnings());
+
+    return script;
   }
 
   private Node parse(String string, String... warnings) {

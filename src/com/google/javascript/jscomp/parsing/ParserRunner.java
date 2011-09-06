@@ -126,6 +126,7 @@ public class ParserRunner {
     if (config.isIdeMode) {
       compilerEnv.setAllowMemberExprAsFunctionName(true);
     }
+    compilerEnv.setIdeMode(config.isIdeMode);
 
     Parser p = new Parser(compilerEnv, errorReporter);
     AstRoot astRoot = null;
