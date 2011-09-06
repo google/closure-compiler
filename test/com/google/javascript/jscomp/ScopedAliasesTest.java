@@ -177,6 +177,10 @@ public class ScopedAliasesTest extends CompilerTestCase {
 
   private void testTypes(String aliases, String code) {
     testScopedNoChanges(aliases, code);
+    verifyTypes();
+  }
+
+  private void verifyTypes() {
     Compiler lastCompiler = getLastCompiler();
     new TypeVerifyingPass(lastCompiler).process(lastCompiler.externsRoot,
         lastCompiler.jsRoot);
@@ -302,6 +306,27 @@ public class ScopedAliasesTest extends CompilerTestCase {
         ""
         + "/** @type {function() : x} */ types.actual;"
         + "/** @type {function() : goog.Timer} */ types.expected;");
+  }
+
+  public void testForwardJsDoc() {
+    testScoped(
+        "/**\n" +
+        " * @constructor\n" +
+        " */\n" +
+        "foo.Foo = function() {};" +
+        "/** @param {Foo.Bar} x */ function actual(x) {3}" +
+        "var Foo = foo.Foo;" +
+        "/** @constructor */ Foo.Bar = function() {};" +
+        "/** @param {foo.Foo.Bar} x */ function expected(x) {}",
+
+        "/**\n" +
+        " * @constructor\n" +
+        " */\n" +
+        "foo.Foo = function() {};" +
+        "/** @param {foo.Foo.Bar} x */ function actual(x) {3}" +
+        "/** @constructor */ foo.Foo.Bar = function() {};" +
+        "/** @param {foo.Foo.Bar} x */ function expected(x) {}");
+    verifyTypes();
   }
 
   public void testTestTypes() {

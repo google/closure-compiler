@@ -26,6 +26,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -112,7 +113,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       }
 
       // Remove the alias definitions.
-      for (Node aliasDefinition : traversal.getAliasDefinitions()) {
+      for (Node aliasDefinition : traversal.getAliasDefinitionsInOrder()) {
         if (aliasDefinition.getParent().getType() == Token.VAR &&
             aliasDefinition.getParent().hasOneChild()) {
           aliasDefinition.getParent().detachFromParent();
@@ -133,7 +134,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       }
 
       if (traversal.getAliasUsages().size() > 0 ||
-          traversal.getAliasDefinitions().size() > 0 ||
+          traversal.getAliasDefinitionsInOrder().size() > 0 ||
           traversal.getScopeCalls().size() > 0) {
         compiler.reportCodeChange();
       }
@@ -180,7 +181,9 @@ class ScopedAliases implements HotSwapCompilerPass {
 
   private class Traversal implements NodeTraversal.ScopedCallback {
     // The job of this class is to collect these three data sets.
-    private final List<Node> aliasDefinitions = Lists.newArrayList();
+
+    // The order of this list determines the order that aliases are applied.
+    private final List<Node> aliasDefinitionsInOrder = Lists.newArrayList();
 
     private final List<Node> scopeCalls = Lists.newArrayList();
 
@@ -193,8 +196,8 @@ class ScopedAliases implements HotSwapCompilerPass {
 
     private AliasTransformation transformation = null;
 
-    List<Node> getAliasDefinitions() {
-      return aliasDefinitions;
+    Collection<Node> getAliasDefinitionsInOrder() {
+      return aliasDefinitionsInOrder;
     }
 
     private List<AliasUsage> getAliasUsages() {
@@ -220,6 +223,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (n != null && isCallToScopeMethod(n)) {
         transformation = transformationHandler.logAliasTransformation(
             n.getSourceFileName(), getSourceRegion(n));
+        findAliases(t);
       }
     }
 
@@ -265,53 +269,84 @@ class ScopedAliases implements HotSwapCompilerPass {
       hasErrors = true;
     }
 
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (isCallToScopeMethod(n)) {
-        if (preprocessorSymbolTable != null) {
-          preprocessorSymbolTable.addReference(n.getFirstChild());
-        }
-        if (!NodeUtil.isExpressionNode(parent)) {
-          report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
-        }
-        if (n.getChildCount() != 2) {
-          // The goog.scope call should have exactly 1 parameter.  The first
-          // child is the "goog.scope" and the second should be the parameter.
-          report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
-        } else {
-          Node anonymousFnNode = n.getChildAtIndex(1);
-          if (!NodeUtil.isFunction(anonymousFnNode) ||
-              NodeUtil.getFunctionName(anonymousFnNode) != null ||
-              NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
-            report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
-          } else {
-            scopeCalls.add(n);
-          }
-        }
-      }
-
-
-      if (t.getScopeDepth() == 2) {
+    private void findAliases(NodeTraversal t) {
+      Scope scope = t.getScope();
+      for (Var v : scope.getVarIterable()) {
+        Node n = v.getNode();
         int type = n.getType();
-        if (type == Token.NAME && parent.getType() == Token.VAR) {
+        Node parent = n.getParent();
+        if (parent.getType() == Token.VAR) {
           if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
             String name = n.getString();
-            Var aliasVar = t.getScope().getVar(name);
+            Var aliasVar = scope.getVar(name);
             aliases.put(name, aliasVar);
-            aliasDefinitions.add(n);
+
             String qualifiedName =
                 aliasVar.getInitialValue().getQualifiedName();
             transformation.addAlias(name, qualifiedName);
-            return;
           } else {
             // TODO(robbyw): Support using locals for private variables.
             report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
           }
         }
+      }
+    }
 
-        if (type == Token.NAME && NodeUtil.isAssignmentOp(parent) &&
-            n == parent.getFirstChild()) {
-          report(t, n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());
+    private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
+      if (preprocessorSymbolTable != null) {
+        preprocessorSymbolTable.addReference(n.getFirstChild());
+      }
+      if (!NodeUtil.isExpressionNode(parent)) {
+        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+      }
+      if (n.getChildCount() != 2) {
+        // The goog.scope call should have exactly 1 parameter.  The first
+        // child is the "goog.scope" and the second should be the parameter.
+        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+      } else {
+        Node anonymousFnNode = n.getChildAtIndex(1);
+        if (!NodeUtil.isFunction(anonymousFnNode) ||
+            NodeUtil.getFunctionName(anonymousFnNode) != null ||
+            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
+          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+        } else {
+          scopeCalls.add(n);
+        }
+      }
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (isCallToScopeMethod(n)) {
+        validateScopeCall(t, n, n.getParent());
+      }
+
+      if (t.getScopeDepth() < 2) {
+        return;
+      }
+
+      int type = n.getType();
+      Var aliasVar = null;
+      if (type == Token.NAME) {
+        String name = n.getString();
+        Var lexicalVar = t.getScope().getVar(n.getString());
+        if (lexicalVar != null && lexicalVar == aliases.get(name)) {
+          aliasVar = lexicalVar;
+        }
+      }
+
+      // Validate the top level of the goog.scope block.
+      if (t.getScopeDepth() == 2) {
+        if (aliasVar != null && NodeUtil.isLValue(n)) {
+          if (aliasVar.getNode() == n) {
+            aliasDefinitionsInOrder.add(n);
+
+            // Return early, to ensure that we don't record a definition
+            // twice.
+            return;
+          } else {
+            report(t, n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());
+          }
         }
 
         if (type == Token.RETURN) {
@@ -323,23 +358,18 @@ class ScopedAliases implements HotSwapCompilerPass {
         }
       }
 
+      // Validate all descendent scopes of the goog.scope block.
       if (t.getScopeDepth() >= 2) {
-        if (n.getType() == Token.NAME) {
-          String name = n.getString();
-          Var aliasVar = aliases.get(name);
-
-          // Check if this name points to an alias.
-          if (aliasVar != null &&
-              t.getScope().getVar(name) == aliasVar) {
-            // Note, to support the transitive case, it's important we don't
-            // clone aliasedNode here.  For example,
-            // var g = goog; var d = g.dom; d.createElement('DIV');
-            // The node in aliasedNode (which is "g") will be replaced in the
-            // changes pass above with "goog".  If we cloned here, we'd end up
-            // with <code>g.dom.createElement('DIV')</code>.
-            Node aliasedNode = aliasVar.getInitialValue();
-            aliasUsages.add(new AliasedNode(n, aliasedNode));
-          }
+        // Check if this name points to an alias.
+        if (aliasVar != null) {
+          // Note, to support the transitive case, it's important we don't
+          // clone aliasedNode here.  For example,
+          // var g = goog; var d = g.dom; d.createElement('DIV');
+          // The node in aliasedNode (which is "g") will be replaced in the
+          // changes pass above with "goog".  If we cloned here, we'd end up
+          // with <code>g.dom.createElement('DIV')</code>.
+          Node aliasedNode = aliasVar.getInitialValue();
+          aliasUsages.add(new AliasedNode(n, aliasedNode));
         }
 
         JSDocInfo info = n.getJSDocInfo();
