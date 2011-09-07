@@ -22,7 +22,8 @@ package com.google.javascript.jscomp;
 public class ExportTestFunctionsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      "function google_exportSymbol(a, b) {}; ";
+      "function google_exportSymbol(a, b) {}; "
+      + "function google_exportProperty(a, b, c) {};";
 
   private static final String TEST_FUNCTIONS_WITH_NAMES =
       "function Foo(arg) {}; "
@@ -41,7 +42,8 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ExportTestFunctions(compiler, "google_exportSymbol");
+    return new ExportTestFunctions(compiler, "google_exportSymbol",
+        "google_exportProperty");
   }
 
   @Override
@@ -65,17 +67,17 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
     test("function Foo() {function testA() {}}",
          "function Foo() {function testA(){}}");
     test("function setUp() {}",
-         "function setUp(){} google_exportSymbol(\"setUp\",setUp)");
+         "function setUp(){} google_exportSymbol('setUp',setUp)");
     test("function setUpPage() {}",
-         "function setUpPage(){} google_exportSymbol(\"setUpPage\",setUpPage)");
+         "function setUpPage(){} google_exportSymbol('setUpPage',setUpPage)");
     test("function tearDown() {}",
-         "function tearDown(){} google_exportSymbol(\"tearDown\",tearDown)");
+         "function tearDown(){} google_exportSymbol('tearDown',tearDown)");
     test("function tearDownPage() {}",
-         "function tearDownPage(){} google_exportSymbol(\"tearDownPage\"," +
+         "function tearDownPage(){} google_exportSymbol('tearDownPage'," +
          "tearDownPage)");
     test("function testBar() { function testB() {}}",
          "function testBar(){function testB(){}}"
-             + "google_exportSymbol(\"testBar\",testBar)");
+             + "google_exportSymbol('testBar',testBar)");
     testSame("var testCase = {}; testCase.setUpPage = function() {}");
   }
 
@@ -93,19 +95,47 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
          "var Foo = function() {var testA = function() {}}");
     test("var setUp = function() {}",
          "var setUp = function() {}; " +
-         "google_exportSymbol(\"setUp\",setUp)");
+         "google_exportSymbol('setUp',setUp)");
     test("var setUpPage = function() {}",
          "var setUpPage = function() {}; " +
-         "google_exportSymbol(\"setUpPage\",setUpPage)");
+         "google_exportSymbol('setUpPage',setUpPage)");
     test("var tearDown = function() {}",
          "var tearDown = function() {}; " +
-         "google_exportSymbol(\"tearDown\",tearDown)");
+         "google_exportSymbol('tearDown',tearDown)");
     test("var tearDownPage = function() {}",
          "var tearDownPage = function() {}; " +
-         "google_exportSymbol(\"tearDownPage\", tearDownPage)");
+         "google_exportSymbol('tearDownPage', tearDownPage)");
     test("var testBar = function() { var testB = function() {}}",
          "var testBar = function(){ var testB = function() {}}; " +
-         "google_exportSymbol(\"testBar\",testBar)");
+         "google_exportSymbol('testBar',testBar)");
   }
 
+  public void testFunctionAssignmentsAreExported() {
+    test("Foo = {}; Foo.prototype.bar = function() {};",
+         "Foo = {}; Foo.prototype.bar = function() {};");
+
+    test("Foo = {}; Foo.prototype.setUpPage = function() {};",
+         "Foo = {}; Foo.prototype.setUpPage = function() {};"
+         + "google_exportProperty(Foo.prototype, 'setUpPage', "
+         + "Foo.prototype.setUpPage);");
+
+    test("Foo = {}; Foo.prototype.testBar = function() {};",
+         "Foo = {}; Foo.prototype.testBar = function() {};"
+         + "google_exportProperty(Foo.prototype, 'testBar', "
+         + "Foo.prototype.testBar);");
+
+    test("Foo = {}; Foo.prototype.testBar = function() "
+         + "{ var testBaz = function() {}};",
+         "Foo = {}; Foo.prototype.testBar = function() "
+         + "{ var testBaz = function() {}};"
+         + "google_exportProperty(Foo.prototype, 'testBar', "
+         + "Foo.prototype.testBar);");
+
+    test("Foo = {}; Foo.baz.prototype.testBar = function() "
+         + "{ var testBaz = function() {}};",
+         "Foo = {}; Foo.baz.prototype.testBar = function() "
+         + "{ var testBaz = function() {}};"
+         + "google_exportProperty(Foo.baz.prototype, 'testBar', "
+         + "Foo.baz.prototype.testBar);");
+  }
 }

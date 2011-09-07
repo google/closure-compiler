@@ -29,42 +29,62 @@ import java.util.regex.Pattern;
 class ExportTestFunctions implements CompilerPass {
 
   private static final Pattern TEST_FUNCTIONS_NAME_PATTERN =
-      Pattern.compile("^(?:setUpPage|setUp|tearDown|tearDownPage|test.*)$");
+      Pattern.compile("^(?:((\\w+\\.)+prototype\\.)*" +
+                      "(setUpPage|setUp|tearDown|tearDownPage|test\\w+))$");
 
   private AbstractCompiler compiler;
   private final String exportSymbolFunction;
+  private final String exportPropertyFunction;
 
   /**
    * Creates a new export test functions compiler pass.
    * @param compiler
    * @param exportSymbolFunction The function name used to export symbols in JS.
+   * @param exportSymbolFunction The function name used to export properties in
+   *     JS.
    */
   ExportTestFunctions(AbstractCompiler compiler,
-      String exportSymbolFunction) {
+      String exportSymbolFunction, String exportPropertyFunction) {
 
     Preconditions.checkNotNull(compiler);
     this.compiler = compiler;
     this.exportSymbolFunction = exportSymbolFunction;
+    this.exportPropertyFunction = exportPropertyFunction;
   }
 
   private class ExportTestFunctionsNodes extends
-      NodeTraversal.AbstractPostOrderCallback {
+      NodeTraversal.AbstractShallowCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (parent != null && parent.getType() == Token.SCRIPT) {
+
+      if (parent == null) {
+        return;
+      }
+
+      if (parent.getType() == Token.SCRIPT) {
         if (NodeUtil.isFunctionDeclaration(n)) {
           // Check for a test function statement.
           String functionName = NodeUtil.getFunctionName(n);
           if (isTestFunction(n, functionName)) {
-            exportTestFunction(functionName, n, parent);
+            exportTestFunctionAsSymbol(functionName, n, parent);
           }
         } else if (isVarDeclaredFunction(n)) {
           // Check for a test function expression.
           Node functionNode = n.getFirstChild().getFirstChild();
           String functionName = NodeUtil.getFunctionName(functionNode);
           if (isTestFunction(functionNode, functionName)) {
-            exportTestFunction(functionName, n, parent);
+            exportTestFunctionAsSymbol(functionName, n, parent);
+          }
+        }
+      } else if (NodeUtil.isExprAssign(parent) &&
+            n.getLastChild().getType() != Token.ASSIGN) {
+        // Check for a test method assignment.
+        Node grandparent = parent.getParent();
+        if (grandparent != null && grandparent.getType() == Token.SCRIPT) {
+          String functionName = n.getFirstChild().getQualifiedName();
+          if (isTestFunction(n, functionName)) {
+            exportTestFunctionAsProperty(functionName, parent, n, grandparent);
           }
         }
       }
@@ -96,7 +116,7 @@ class ExportTestFunctions implements CompilerPass {
   }
 
   // Adds exportSymbol(testFunctionName, testFunction);
-  private void exportTestFunction(String testFunctionName, Node node,
+  private void exportTestFunctionAsSymbol(String testFunctionName, Node node,
       Node scriptNode) {
 
     Node exportCallTarget = NodeUtil.newQualifiedNameNode(
@@ -116,6 +136,28 @@ class ExportTestFunctions implements CompilerPass {
     scriptNode.addChildAfter(expression, node);
     compiler.reportCodeChange();
   }
+
+
+  // Adds exportProperty() of the test function name on the prototype object
+  private void exportTestFunctionAsProperty(String fullyQualifiedFunctionName,
+      Node parent, Node node, Node scriptNode) {
+
+    String testFunctionName =
+        NodeUtil.getPrototypePropertyName(node.getFirstChild());
+    String objectName = fullyQualifiedFunctionName.substring(0,
+        fullyQualifiedFunctionName.lastIndexOf('.'));
+    String exportCallStr = String.format("%s(%s, '%s', %s);",
+        exportPropertyFunction, objectName, testFunctionName,
+        fullyQualifiedFunctionName);
+
+    Node exportCall = this.compiler.parseSyntheticCode(exportCallStr)
+        .removeChildren();
+    exportCall.useSourceInfoFromForTree(scriptNode);
+
+    scriptNode.addChildAfter(exportCall, parent);
+    compiler.reportCodeChange();
+  }
+
 
   /**
    * Whether a function is recognized as a test function. We follow the JsUnit

@@ -810,7 +810,8 @@ public class DefaultPassConfig extends PassConfig {
       CodingConvention convention = compiler.getCodingConvention();
       if (convention.getExportSymbolFunction() != null) {
         return new ExportTestFunctions(compiler,
-            convention.getExportSymbolFunction());
+            convention.getExportSymbolFunction(),
+            convention.getExportPropertyFunction());
       } else {
         return new ErrorPass(compiler, GENERATE_EXPORTS_ERROR);
       }
