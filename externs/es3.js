@@ -1663,7 +1663,9 @@ String.prototype.localeCompare = function(other) {};
  * expression.
  *
  * @param {*} regexp
- * @return {Array|null}
+ * @return {Array.<string>} This should really return an Array with a few
+ *     special properties, but we do not have a good way to model this in
+ *     our type system. Also see Regexp.prototype.exec.
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/match
  */
 String.prototype.match = function(regexp) {};
@@ -1843,7 +1845,9 @@ RegExp.prototype.compile = function(pattern, opt_flags) {};
 
 /**
  * @param {*} str The string to search.
- * @return {Array.<string>|null}
+ * @return {Array.<string>} This should really return an Array with a few
+ *     special properties, but we do not have a good way to model this in
+ *     our type system. Also see String.prototype.match.
  * @see http://msdn.microsoft.com/en-us/library/z908hy33(VS.85).aspx
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/exec
  */
