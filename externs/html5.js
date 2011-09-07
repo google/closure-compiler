@@ -636,6 +636,13 @@ Window.prototype.postMessage = function(message, targetOrigin, ports) {};
 Document.prototype.postMessage = function(message) {};
 
 /**
+ * Document head accessor.
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dom.html#the-head-element-0
+ * @type {HTMLHeadElement}
+ */
+Document.prototype.head;
+
+/**
  * @see https://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/DOMApplicationCache/DOMApplicationCache.html
  * @constructor
  * @implements {EventTarget}
