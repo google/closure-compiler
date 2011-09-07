@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -86,5 +87,18 @@ class MemoizedScopeCreator
 
   public Scope getScopeIfMemoized(Node n) {
     return scopes.get(n);
+  }
+
+  /**
+   * Removes all scopes with root nodes from a given script file.
+   *
+   * @param scriptName the name of the script file to remove nodes for.
+   */
+  void removeScopesForScript(String scriptName) {
+    for (Node scopeRoot : ImmutableSet.copyOf(scopes.keySet())) {
+      if (scriptName.equals(scopeRoot.getSourceFileName())) {
+        scopes.remove(scopeRoot);
+      }
+    }
   }
 }
