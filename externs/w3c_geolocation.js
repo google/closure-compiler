@@ -59,6 +59,8 @@ function GeolocationCoordinates() {}
 /** @type {number} */ GeolocationCoordinates.prototype.accuracy;
 /** @type {number} */ GeolocationCoordinates.prototype.altitude;
 /** @type {number} */ GeolocationCoordinates.prototype.altitudeAccuracy;
+/** @type {number} */ GeolocationCoordinates.prototype.heading;
+/** @type {number} */ GeolocationCoordinates.prototype.speed;
 
 
 /**
