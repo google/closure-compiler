@@ -1079,7 +1079,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   public SymbolTable buildKnownSymbolTable() {
-    SymbolTable symbolTable = new SymbolTable();
+    SymbolTable symbolTable = new SymbolTable(getTypeRegistry());
 
     MemoizedScopeCreator typedScopeCreator = getTypedScopeCreator();
     if (typedScopeCreator != null) {
@@ -1105,6 +1105,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     symbolTable.fillNamespaceReferences();
+    symbolTable.fillThisReferences(this, externsRoot, jsRoot);
     symbolTable.fillPropertySymbols(this, externsRoot, jsRoot);
 
     return symbolTable;

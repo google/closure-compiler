@@ -45,6 +45,28 @@ public class SymbolTableTest extends TestCase {
     assertEquals(1, getVars(table).size());
   }
 
+  public void testGlobalThisReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var x = this; function f() { return this + this + this; }");
+
+    Symbol global = getGlobalVar(table, "*global*");
+    assertNotNull(global);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(global));
+    assertEquals(1, refs.size());
+  }
+
+  public void testGlobalThisPropertyReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ function Foo() {} this.Foo;");
+
+    Symbol foo = getGlobalVar(table, "Foo");
+    assertNotNull(foo);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(foo));
+    assertEquals(2, refs.size());
+  }
+
   public void testGlobalVarReferences() throws Exception {
     SymbolTable table = createSymbolTable(
         "/** @type {number} */ var x = 5; x = 6;");
@@ -67,6 +89,19 @@ public class SymbolTableTest extends TestCase {
     assertEquals(x.getDeclaration(), refs.get(0));
     assertEquals(Token.LP, refs.get(0).getNode().getParent().getType());
     assertEquals(Token.RETURN, refs.get(1).getNode().getParent().getType());
+  }
+
+  public void testLocalThisReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ function F() { this.foo = 3; this.bar = 5; }");
+
+    Symbol f = getGlobalVar(table, "F");
+    assertNotNull(f);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(f));
+
+    // 1 declaration and 2 local refs
+    assertEquals(3, refs.size());
   }
 
   public void testNamespacedReferences() throws Exception {
@@ -305,7 +340,7 @@ public class SymbolTableTest extends TestCase {
     List<Symbol> result = Lists.newArrayList();
     for (Symbol symbol : table.getAllSymbols()) {
       if (symbol.getDeclaration() != null &&
-          !symbol.getDeclaration().getSourceFile().isExtern()) {
+          !symbol.getDeclaration().getNode().isFromExterns()) {
         result.add(symbol);
       }
     }

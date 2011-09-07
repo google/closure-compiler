@@ -28,6 +28,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.SimpleReference;
 import com.google.javascript.rhino.jstype.SimpleSlot;
@@ -84,6 +86,12 @@ import javax.annotation.Nullable;
  */
 public final class SymbolTable
     implements StaticSymbolTable<SymbolTable.Symbol, SymbolTable.Reference> {
+  /**
+   * The name we use for the JavaScript built-in Global object.  It's
+   * anonymous in JavaScript, so we have to give it an invalid identifier
+   * to avoid conflicts with user-defined property names.
+   */
+  public static final String GLOBAL_THIS = "*global*";
 
   /**
    * All symbols in the program, uniquely identified by the node where
@@ -99,11 +107,15 @@ public final class SymbolTable
 
   private SymbolScope globalScope = null;
 
+  private final JSTypeRegistry registry;
+
   /**
    * Clients should get a symbol table by asking the compiler at the end
    * of a compilation job.
    */
-  SymbolTable() {}
+  SymbolTable(JSTypeRegistry registry) {
+    this.registry = registry;
+  }
 
   @Override
   public Iterable<Reference> getReferences(Symbol symbol) {
@@ -149,7 +161,9 @@ public final class SymbolTable
     if (scope.isPropertyScope()) {
       JSType type = scope.getTypeOfThis();
       if (type != null) {
-        if (type.isNominalConstructor()) {
+        if (type.isGlobalThisType()) {
+          return globalScope.getSlot(GLOBAL_THIS);
+        } else if (type.isNominalConstructor()) {
           return getSymbolDeclaredBy(type.toMaybeFunctionType());
         } else if (type.isFunctionPrototypeType()) {
           return getSymbolForInstancesOf(
@@ -533,6 +547,14 @@ public final class SymbolTable
   }
 
   /**
+   * Fill in references to "this" variables.
+   */
+  void fillThisReferences(
+      AbstractCompiler compiler, Node externs, Node root) {
+    (new ThisRefCollector(compiler)).process(externs, root);
+  }
+
+  /**
    * Given a scope from another symbol table, returns the {@code SymbolScope}
    * rooted at the same node. Creates one if it doesn't exist yet.
    */
@@ -693,6 +715,10 @@ public final class SymbolTable
     public boolean isPropertyScope() {
       return getRootNode() == null;
     }
+
+    public boolean isLexicalScope() {
+      return getRootNode() != null;
+    }
   }
 
   private class PropertyRefCollector
@@ -712,6 +738,19 @@ public final class SymbolTable
           this);
     }
 
+    private void maybeDefineReference(Node n, Symbol ownerSymbol) {
+      String propName = n.getLastChild().getString();
+
+      // getPropertyScope() will be null in some rare cases where there
+      // are no extern declarations for built-in types (like Function).
+      if (ownerSymbol != null && ownerSymbol.getPropertyScope() != null) {
+        Symbol prop = ownerSymbol.getPropertyScope().getSlot(propName);
+        if (prop != null) {
+          prop.defineReferenceAt(n);
+        }
+      }
+    }
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.GETPROP) {
@@ -720,30 +759,65 @@ public final class SymbolTable
           return;
         }
 
-        String propName = n.getLastChild().getString();
-        if (owner.isNominalConstructor()) {
-          Symbol sym = getSymbolDeclaredBy(owner.toMaybeFunctionType());
-          if (sym == null || sym.getPropertyScope() == null) {
-            // This will happen in some rare cases where there are no
-            // extern declarations for built-in types (like Function).
-            return;
+        if (owner.isGlobalThisType()) {
+          Symbol sym = globalScope.getSlot(n.getLastChild().getString());
+          if (sym != null) {
+            sym.defineReferenceAt(n);
           }
-
-          Symbol prop = sym.getPropertyScope().getSlot(propName);
-          if (prop != null) {
-            prop.defineReferenceAt(n);
-          }
+        } else if (owner.isNominalConstructor()) {
+          maybeDefineReference(
+              n, getSymbolDeclaredBy(owner.toMaybeFunctionType()));
         } else {
           for (Symbol ctor : getAllSymbolsForType(owner)) {
-            Symbol sym = getSymbolForInstancesOf(ctor);
-            if (sym != null) {
-              Symbol prop = sym.getPropertyScope().getSlot(propName);
-              if (prop != null) {
-                prop.defineReferenceAt(n);
-              }
-            }
+            maybeDefineReference(n, getSymbolForInstancesOf(ctor));
           }
         }
+      }
+    }
+  }
+
+  private class ThisRefCollector
+      extends NodeTraversal.AbstractPostOrderCallback
+      implements CompilerPass {
+    private final AbstractCompiler compiler;
+
+    ThisRefCollector(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      NodeTraversal.traverseRoots(
+          compiler,
+          Lists.newArrayList(externs, root),
+          this);
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.getType() != Token.THIS) {
+        return;
+      }
+
+      JSType type = n.getJSType();
+      if (type == null) {
+        return;
+      }
+
+      // declare the global this at the first place it's used.
+      if (type.isGlobalThisType() &&
+          globalScope.getSlot(GLOBAL_THIS) == null) {
+        declareSymbol(
+            GLOBAL_THIS,
+            registry.getNativeType(JSTypeNative.GLOBAL_THIS),
+            false /* declared */,
+            globalScope,
+            n);
+      }
+
+      Symbol s = getOnlySymbolForType(type);
+      if (s != null) {
+        s.defineReferenceAt(n);
       }
     }
   }

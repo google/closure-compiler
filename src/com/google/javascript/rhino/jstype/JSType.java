@@ -255,6 +255,11 @@ public abstract class JSType implements Serializable {
     return null;
   }
 
+  /** Returns true if this is a global this type. */
+  public final boolean isGlobalThisType() {
+    return this == registry.getNativeType(JSTypeNative.GLOBAL_THIS);
+  }
+
   /** Returns true if toMaybeFunctionType returns a non-null FunctionType. */
   public final boolean isFunctionType() {
     return toMaybeFunctionType() != null;
