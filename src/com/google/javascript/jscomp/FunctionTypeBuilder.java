@@ -34,7 +34,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.InstanceObjectType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -673,11 +672,11 @@ final class FunctionTypeBuilder {
     JSType existingType = typeRegistry.getType(fnName);
 
     if (existingType != null) {
-      boolean isInstanceObject = existingType instanceof InstanceObjectType;
+      boolean isInstanceObject = existingType.isInstanceType();
       if (isInstanceObject || fnName.equals("Function")) {
         FunctionType existingFn =
             isInstanceObject ?
-            ((InstanceObjectType) existingType).getConstructor() :
+            existingType.toObjectType().getConstructor() :
             typeRegistry.getNativeFunctionType(FUNCTION_FUNCTION_TYPE);
 
         if (existingFn.getSource() == null) {

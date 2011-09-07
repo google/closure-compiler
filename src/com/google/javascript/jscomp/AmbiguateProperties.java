@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.InstanceObjectType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -170,7 +169,7 @@ class AmbiguateProperties implements CompilerPass {
 
     invalidatingTypes.add(type);
     ObjectType objType = ObjectType.cast(type);
-    if (objType instanceof InstanceObjectType) {
+    if (objType != null && objType.isInstanceType()) {
       invalidatingTypes.add(objType.getImplicitPrototype());
     }
   }

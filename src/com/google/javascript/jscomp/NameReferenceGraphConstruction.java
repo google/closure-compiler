@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.InstanceObjectType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -371,7 +370,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       if (type.isUnknownType() || type.isUnionType()) {
         return false;
       }
-      return (type instanceof InstanceObjectType || type.autoboxesTo() != null);
+      return (type.isInstanceType() || type.autoboxesTo() != null);
     }
 
     private Name recordStaticNameDefinition(NodeTraversal t, String name,

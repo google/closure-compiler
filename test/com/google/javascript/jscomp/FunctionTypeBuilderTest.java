@@ -19,10 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.testing.BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES;
 
 import com.google.javascript.jscomp.CheckLevel;
-
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.InstanceObjectType;
+import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.List;
 
@@ -120,11 +119,11 @@ public class FunctionTypeBuilderTest extends CompilerTestCase {
   public void testExternSubTypes() throws Exception {
     testSame(ALL_NATIVE_EXTERN_TYPES, "", null);
 
-    List<FunctionType> subtypes = ((InstanceObjectType) getLastCompiler()
+    List<FunctionType> subtypes = ((ObjectType) getLastCompiler()
         .getTypeRegistry().getType("Error")).getConstructor().getSubTypes();
     for (FunctionType type : subtypes) {
       String typeName = type.getInstanceType().toString();
-      FunctionType typeInRegistry = ((InstanceObjectType) getLastCompiler()
+      FunctionType typeInRegistry = ((ObjectType) getLastCompiler()
           .getTypeRegistry().getType(typeName)).getConstructor();
       assertTrue(typeInRegistry == type);
     }
