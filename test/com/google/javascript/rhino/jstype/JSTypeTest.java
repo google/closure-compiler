@@ -387,6 +387,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(U2U_CONSTRUCTOR_TYPE.isNativeObjectType());
 
     Asserts.assertResolvesToSame(U2U_CONSTRUCTOR_TYPE);
+
+    assertTrue(U2U_CONSTRUCTOR_TYPE.isNominalConstructor());
   }
 
   /**
@@ -526,6 +528,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NO_OBJECT_TYPE.getPropertyType("anyProperty"));
 
     Asserts.assertResolvesToSame(NO_OBJECT_TYPE);
+
+    assertFalse(NO_OBJECT_TYPE.isNominalConstructor());
   }
 
   /**
@@ -656,6 +660,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NO_TYPE.getPropertyType("anyProperty"));
 
     Asserts.assertResolvesToSame(NO_TYPE);
+
+    assertFalse(NO_TYPE.isNominalConstructor());
   }
 
   /**
@@ -946,6 +952,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(ARRAY_TYPE.isNativeObjectType());
 
     Asserts.assertResolvesToSame(ARRAY_TYPE);
+
+    assertFalse(ARRAY_TYPE.isNominalConstructor());
+    assertTrue(ARRAY_TYPE.getConstructor().isNominalConstructor());
   }
 
   /**
@@ -1052,6 +1061,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("Unknown", UNKNOWN_TYPE.getDisplayName());
 
     Asserts.assertResolvesToSame(UNKNOWN_TYPE);
+    assertFalse(UNKNOWN_TYPE.isNominalConstructor());
   }
 
   /**
@@ -1173,6 +1183,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("<Any Type>", ALL_TYPE.getDisplayName());
 
     Asserts.assertResolvesToSame(ALL_TYPE);
+    assertFalse(ALL_TYPE.isNominalConstructor());
   }
 
   /**
@@ -1325,6 +1336,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(OBJECT_TYPE.getImplicitPrototype().isNativeObjectType());
 
     Asserts.assertResolvesToSame(OBJECT_TYPE);
+    assertFalse(OBJECT_TYPE.isNominalConstructor());
+    assertTrue(OBJECT_TYPE.getConstructor().isNominalConstructor());
   }
 
   /**
@@ -1587,6 +1600,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("number", NUMBER_TYPE.getDisplayName());
 
     Asserts.assertResolvesToSame(NUMBER_TYPE);
+    assertFalse(NUMBER_TYPE.isNominalConstructor());
   }
 
   /**
@@ -1742,6 +1756,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(NULL_TYPE,
         NULL_TYPE.getGreatestSubtype(
             createUnionType(forwardDeclaredNamedType, NULL_TYPE)));
+    assertFalse(NULL_TYPE.isNominalConstructor());
   }
 
   /**
@@ -1949,6 +1964,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(DATE_TYPE.isNativeObjectType());
 
     Asserts.assertResolvesToSame(DATE_TYPE);
+    assertFalse(DATE_TYPE.isNominalConstructor());
+    assertTrue(DATE_TYPE.getConstructor().isNominalConstructor());
   }
 
   /**
@@ -2094,6 +2111,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(REGEXP_TYPE.isNativeObjectType());
 
     Asserts.assertResolvesToSame(REGEXP_TYPE);
+    assertFalse(REGEXP_TYPE.isNominalConstructor());
+    assertTrue(REGEXP_TYPE.getConstructor().isNominalConstructor());
   }
 
   /**
@@ -2255,6 +2274,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTrue(STRING_OBJECT_TYPE.hasDisplayName());
     assertEquals("String", STRING_OBJECT_TYPE.getDisplayName());
+    assertFalse(STRING_OBJECT_TYPE.isNominalConstructor());
+    assertTrue(STRING_OBJECT_TYPE.getConstructor().isNominalConstructor());
   }
 
   /**
@@ -2366,6 +2387,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals(null, STRING_TYPE.findPropertyType("unknownProperty"));
 
     Asserts.assertResolvesToSame(STRING_TYPE);
+    assertFalse(STRING_TYPE.isNominalConstructor());
   }
 
   private void assertPropertyTypeDeclared(ObjectType ownerType, String prop) {

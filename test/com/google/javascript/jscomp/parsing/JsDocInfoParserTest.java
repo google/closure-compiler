@@ -499,8 +499,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("function (?): (?|number)", "function (?): ?");
   }
 
-  public void testParseFunctionalType19() throws Exception {
-    testParseType("function (new:Object)", "function (new:Object): ?");
+  public void testStructuralConstructor() throws Exception {
+    JSType type = testParseType(
+        "function (new:Object)", "function (new:Object): ?");
+    assertTrue(type.isConstructor());
+    assertFalse(type.isNominalConstructor());
+  }
+
+  public void testNominalConstructor() throws Exception {
+    ObjectType type = testParseType("Array", "(Array|null)").dereference();
+    assertTrue(type.getConstructor().isNominalConstructor());
   }
 
   public void testBug1419535() throws Exception {
@@ -610,17 +618,20 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. missing closing ]");
   }
 
-  private void testParseType(String type) throws Exception {
-    testParseType(type, type);
+  private JSType testParseType(String type) throws Exception {
+    return testParseType(type, type);
   }
 
-  private void testParseType(
+  private JSType testParseType(
       String type, String typeExpected) throws Exception {
     JSDocInfo info = parse("@type {" + type + "}*/");
 
     assertNotNull(info);
     assertTrue(info.hasType());
-    assertEquals(typeExpected, resolve(info.getType()).toString());
+
+    JSType actual = resolve(info.getType());
+    assertEquals(typeExpected, actual.toString());
+    return actual;
   }
 
   public void testParseNullableModifiers1() throws Exception {

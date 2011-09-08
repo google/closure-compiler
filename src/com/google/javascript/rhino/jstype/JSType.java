@@ -344,8 +344,23 @@ public abstract class JSType implements Serializable {
    * Does not include structural constructors.
    */
   public final boolean isNominalConstructor() {
-    return (isConstructor() || isInterface()) &&
-        toMaybeFunctionType().getInstanceType().isNominalType();
+    if (isConstructor() || isInterface()) {
+      FunctionType fn = toMaybeFunctionType();
+      if (fn == null) {
+        return false;
+      }
+
+      // Programmer-defined constructors will have a link
+      // back to the original function in the source tree.
+      // Structural constructors will not.
+      if (fn.getSource() != null) {
+        return true;
+      }
+
+      // Native constructors are always nominal.
+      return fn.isNativeObjectType();
+    }
+    return false;
   }
 
   /**
