@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for the Google Maps v3 API.
+ * @fileoverview Externs for the Google Maps v3.6 API.
  * @see http://code.google.com/apis/maps/documentation/javascript/reference.html
  * @externs
  */
