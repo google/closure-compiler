@@ -134,7 +134,7 @@ public class SymbolTableTest extends TestCase {
     assertNotNull(domHelper);
 
     Symbol domHelperNamespacedMethod = getGlobalVar(table, "DomHelper.method");
-    assertNull(domHelperNamespacedMethod);
+    assertEquals("method", domHelperNamespacedMethod.getName());
 
     Symbol domHelperMethod = domHelper.getPropertyScope().getSlot("method");
     assertNotNull(domHelperMethod);
@@ -194,14 +194,6 @@ public class SymbolTableTest extends TestCase {
     assertEquals(fn, table.getSymbolForScope(scope));
   }
 
-  public void testPrototypeSymbol() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function Foo() {}");
-    Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
-    assertNotNull(fooPrototype);
-    assertEquals(1, Iterables.size(table.getReferences(fooPrototype)));
-  }
-
   public void testSymbolsForType() throws Exception {
     SymbolTable table = createSymbolTable(
         "function random() { return 1; }" +
@@ -247,8 +239,7 @@ public class SymbolTableTest extends TestCase {
         "  (new DomHelper()).method(); (new DomHelper()).method(); };");
 
     Symbol method =
-        getGlobalVar(table, "DomHelper.prototype")
-        .getPropertyScope().getSlot("method");
+        getGlobalVar(table, "DomHelper.prototype.method");
     assertEquals(
         3, Iterables.size(table.getReferences(method)));
   }
@@ -261,9 +252,7 @@ public class SymbolTableTest extends TestCase {
         "function f() { " +
         "  return (new DomHelper()).field + (new DomHelper()).field; };");
 
-    Symbol field =
-        getGlobalVar(table, "DomHelper.prototype")
-        .getPropertyScope().getSlot("field");
+    Symbol field = getGlobalVar(table, "DomHelper.prototype.field");
     assertEquals(
         3, Iterables.size(table.getReferences(field)));
   }
@@ -278,9 +267,7 @@ public class SymbolTableTest extends TestCase {
         "  return x.field;" +
         "}");
 
-    Symbol field =
-        getGlobalVar(table, "DomHelper.prototype")
-        .getPropertyScope().getSlot("field");
+    Symbol field = getGlobalVar(table, "DomHelper.prototype.field");
     assertNull(field);
   }
 
@@ -295,7 +282,7 @@ public class SymbolTableTest extends TestCase {
     List<Reference> refs = Lists.newArrayList(table.getReferences(prototype));
 
     // One of the refs is implicit in the declaration of the function.
-    assertEquals(2, refs.size());
+    assertEquals(refs.toString(), 2, refs.size());
   }
 
   public void testPrototypeReferences2() throws Exception {
@@ -308,21 +295,37 @@ public class SymbolTableTest extends TestCase {
     assertNotNull(prototype);
 
     List<Reference> refs = Lists.newArrayList(table.getReferences(prototype));
+    assertEquals(2, refs.size());
+  }
 
-    // TODO(nicksantos): This is a bug and should be fixed.
-    // It has to do with some weirdness with how prototypes are handled
-    // in our type system.
+  public void testPrototypeReferences3() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ function Foo() {}");
+    Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
+    assertNotNull(fooPrototype);
+
+    List<Reference> refs = Lists.newArrayList(
+        table.getReferences(fooPrototype));
     assertEquals(1, refs.size());
+    assertEquals(Token.FUNCTION, refs.get(0).getNode().getType());
+  }
+
+  public void testPrototypeReferences4() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype = {bar: 3}");
+    Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
+    assertNotNull(fooPrototype);
+
+    List<Reference> refs = Lists.newArrayList(
+        table.getReferences(fooPrototype));
+    assertEquals(1, refs.size());
+    assertEquals(Token.GETPROP, refs.get(0).getNode().getType());
+    assertEquals("Foo.prototype", refs.get(0).getNode().getQualifiedName());
   }
 
   private Symbol getGlobalVar(SymbolTable table, String name) {
-    for (Symbol symbol : table.getAllSymbols()) {
-      if (symbol.getName().equals(name) &&
-          table.getScope(symbol).getParentScope() == null) {
-        return symbol;
-      }
-    }
-    return null;
+    return table.getGlobalScope().getSlot(name);
   }
 
   private Symbol getLocalVar(SymbolTable table, String name) {
@@ -360,6 +363,25 @@ public class SymbolTableTest extends TestCase {
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
-    return compiler.buildKnownSymbolTable();
+    return assertSymbolTableValid(compiler.buildKnownSymbolTable());
+  }
+
+  /**
+   * Asserts that the symbol table meets some invariants.
+   * Returns the same table for easy chaining.
+   */
+  private SymbolTable assertSymbolTableValid(SymbolTable table) {
+    for (Symbol sym : table.getAllSymbols()) {
+      // Make sure that grabbing the symbol's scope and looking it up
+      // again produces the same symbol.
+      assertEquals(sym, table.getScope(sym).getSlot(sym.getName()));
+
+      for (Reference ref : table.getReferences(sym)) {
+        // Make sure that the symbol and reference are mutually linked.
+        assertEquals(sym, ref.getSymbol());
+      }
+    }
+
+    return table;
   }
 }

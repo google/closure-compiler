@@ -69,6 +69,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticSlot;
 
 import java.util.Iterator;
 import java.util.List;
@@ -1101,8 +1102,18 @@ final class TypedScopeCreator implements ScopeCreator {
               !fnType.equals(getNativeType(U2U_CONSTRUCTOR_TYPE))) {
             // Declare var.prototype in the scope chain.
             FunctionType superClassCtor = fnType.getSuperClassConstructor();
-            scopeToDeclareIn.declare(variableName + ".prototype", n,
-                fnType.getPrototype(), input,
+            StaticSlot<JSType> prototypeSlot = fnType.getSlot("prototype");
+
+            // It's not really important what node we declare the prototype
+            // at. It's more important that the Var node is consistent with
+            // the node that the type system uses internally.
+            Node prototypeNode = n;
+            if (prototypeSlot.getDeclaration() != null) {
+              prototypeNode = prototypeSlot.getDeclaration().getNode();
+            }
+
+            scopeToDeclareIn.declare(variableName + ".prototype",
+                prototypeNode, prototypeSlot.getType(), input,
                 /* declared iff there's an explicit supertype */
                 superClassCtor == null ||
                 superClassCtor.getInstanceType().equals(

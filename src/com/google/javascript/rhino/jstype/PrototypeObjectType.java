@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.jstype.ObjectType.Property;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +50,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
@@ -244,7 +244,7 @@ class PrototypeObjectType extends ObjectType {
     if (oldProp != null) {
       // This is to keep previously inferred jsdoc info, e.g., in a
       // replaceScript scenario.
-      newProp.docInfo = oldProp.docInfo;
+      newProp.setJSDocInfo(oldProp.getJSDocInfo());
     }
     properties.put(name, newProp);
     return true;
@@ -259,7 +259,7 @@ class PrototypeObjectType extends ObjectType {
   public Node getPropertyNode(String propertyName) {
     Property p = properties.get(propertyName);
     if (p != null) {
-      return p.propertyNode;
+      return p.getNode();
     }
     ObjectType implicitPrototype = getImplicitPrototype();
     if (implicitPrototype != null) {
@@ -272,7 +272,7 @@ class PrototypeObjectType extends ObjectType {
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
     Property p = properties.get(propertyName);
     if (p != null) {
-      return p.docInfo;
+      return p.getJSDocInfo();
     }
     return null;
   }
@@ -292,7 +292,7 @@ class PrototypeObjectType extends ObjectType {
       // We probably don't want to attach any JSDoc to it anyway.
       Property property = properties.get(propertyName);
       if (property != null) {
-        property.docInfo = info;
+        property.setJSDocInfo(info);
       }
     }
   }
@@ -499,82 +499,6 @@ class PrototypeObjectType extends ObjectType {
     return false;
   }
 
-  private static final class Property
-      implements Serializable, StaticSlot<JSType>, StaticReference<JSType> {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * Property's name.
-     */
-    private String name;
-
-    /**
-     * Property's type.
-     */
-    private JSType type;
-
-    /**
-     * Whether the property's type is inferred.
-     */
-    private final boolean inferred;
-
-    /**
-     * The node corresponding to this property, e.g., a GETPROP node that
-     * declares this property.
-     */
-    private final Node propertyNode;
-
-    /**  The JSDocInfo for this property. */
-    private JSDocInfo docInfo = null;
-
-    private Property(String name, JSType type, boolean inferred,
-        Node propertyNode) {
-      this.name = name;
-      this.type = type;
-      this.inferred = inferred;
-      this.propertyNode = propertyNode;
-    }
-
-    @Override
-    public String getName() {
-      return name;
-    }
-
-    @Override
-    public Node getNode() {
-      return propertyNode;
-    }
-
-    @Override
-    public StaticSourceFile getSourceFile() {
-      return propertyNode == null ? null : propertyNode.getStaticSourceFile();
-    }
-
-    @Override
-    public Property getSymbol() {
-      return this;
-    }
-
-    @Override
-    public Property getDeclaration() {
-      return propertyNode == null ? null : this;
-    }
-
-    @Override
-    public JSType getType() {
-      return type;
-    }
-
-    @Override
-    public boolean isTypeInferred() {
-      return inferred;
-    }
-
-    boolean isFromExterns() {
-      return propertyNode == null ? false : propertyNode.isFromExterns();
-    }
-  }
-
   @Override
   public boolean hasCachedValues() {
     return super.hasCachedValues();
@@ -620,7 +544,7 @@ class PrototypeObjectType extends ObjectType {
           (ObjectType) implicitPrototype.resolve(t, scope);
     }
     for (Property prop : properties.values()) {
-      prop.type = safeResolve(prop.type, t, scope);
+      prop.setType(safeResolve(prop.getType(), t, scope));
     }
     return this;
   }

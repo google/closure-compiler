@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
+import static com.google.javascript.rhino.jstype.ObjectType.Property;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -83,10 +84,10 @@ public class FunctionType extends PrototypeObjectType {
    * initializing this field is that there are cycles in the native types
    * graph, so some prototypes must temporarily be {@code null} during
    * the construction of the graph.
+   *
+   * If non-null, the type must be a PrototypeObjectType.
    */
-  private PrototypeObjectType prototype;
-
-  private SimpleSlot prototypeSlot;
+  private Property prototypeSlot;
 
   /**
    * Whether a function is a constructor, an interface, or just an ordinary
@@ -288,7 +289,7 @@ public class FunctionType extends PrototypeObjectType {
    * to expose the prototype for ordinary functions.
    */
   public Set<String> getOwnPropertyNames() {
-    if (prototype == null) {
+    if (prototypeSlot == null) {
       return super.getOwnPropertyNames();
     } else {
       Set<String> names = Sets.newHashSet("prototype");
@@ -303,15 +304,16 @@ public class FunctionType extends PrototypeObjectType {
    */
   public ObjectType getPrototype() {
     // lazy initialization of the prototype field
-    if (prototype == null) {
+    if (prototypeSlot == null) {
       setPrototype(
           new PrototypeObjectType(
               registry,
               this.getReferenceName() + ".prototype",
               registry.getNativeObjectType(OBJECT_TYPE),
-              isNativeObjectType()));
+              isNativeObjectType()),
+          null);
     }
-    return prototype;
+    return (ObjectType) prototypeSlot.getType();
   }
 
   /**
@@ -320,6 +322,10 @@ public class FunctionType extends PrototypeObjectType {
    * @param baseType The base type.
    */
   public void setPrototypeBasedOn(ObjectType baseType) {
+    setPrototypeBasedOn(baseType, null);
+  }
+
+  void setPrototypeBasedOn(ObjectType baseType, Node propertyNode) {
     // This is a bit weird. We need to successfully handle these
     // two cases:
     // Foo.prototype = new Bar();
@@ -345,7 +351,7 @@ public class FunctionType extends PrototypeObjectType {
       baseType = new PrototypeObjectType(
           registry, this.getReferenceName() + ".prototype", baseType);
     }
-    setPrototype((PrototypeObjectType) baseType);
+    setPrototype((PrototypeObjectType) baseType, propertyNode);
   }
 
   /**
@@ -353,7 +359,7 @@ public class FunctionType extends PrototypeObjectType {
    * @param prototype the prototype. If this value is {@code null} it will
    *        silently be discarded.
    */
-  public boolean setPrototype(PrototypeObjectType prototype) {
+  boolean setPrototype(PrototypeObjectType prototype, Node propertyNode) {
     if (prototype == null) {
       return false;
     }
@@ -362,12 +368,13 @@ public class FunctionType extends PrototypeObjectType {
       return false;
     }
 
-    PrototypeObjectType oldPrototype = this.prototype;
+    PrototypeObjectType oldPrototype = prototypeSlot == null
+        ? null : (PrototypeObjectType) prototypeSlot.getType();
     boolean replacedPrototype = oldPrototype != null;
 
-    this.prototype = prototype;
-    this.prototypeSlot = new SimpleSlot("prototype", prototype, true);
-    this.prototype.setOwnerFunction(this);
+    this.prototypeSlot = new Property("prototype", prototype, true,
+        propertyNode == null ? source : propertyNode);
+    prototype.setOwnerFunction(this);
 
     if (oldPrototype != null) {
       // Disassociating the old prototype makes this easier to debug--
@@ -555,10 +562,11 @@ public class FunctionType extends PrototypeObjectType {
     if ("prototype".equals(name)) {
       ObjectType objType = type.toObjectType();
       if (objType != null) {
-        if (objType.isEquivalentTo(prototype)) {
+        if (prototypeSlot != null &&
+            objType.isEquivalentTo(prototypeSlot.getType())) {
           return true;
         }
-        this.setPrototypeBasedOn(objType);
+        this.setPrototypeBasedOn(objType, propertyNode);
         return true;
       } else {
         return false;
@@ -985,8 +993,8 @@ public class FunctionType extends PrototypeObjectType {
         getInstanceType().clearCachedValues();
       }
 
-      if (prototype != null) {
-        prototype.clearCachedValues();
+      if (prototypeSlot != null) {
+        ((PrototypeObjectType) prototypeSlot.getType()).clearCachedValues();
       }
     }
   }
@@ -1002,7 +1010,7 @@ public class FunctionType extends PrototypeObjectType {
 
   @Override
   public boolean hasCachedValues() {
-    return prototype != null || super.hasCachedValues();
+    return prototypeSlot != null || super.hasCachedValues();
   }
 
   /**
@@ -1017,7 +1025,10 @@ public class FunctionType extends PrototypeObjectType {
     setResolvedTypeInternal(this);
 
     call = (ArrowType) safeResolve(call, t, scope);
-    prototype = (PrototypeObjectType) safeResolve(prototype, t, scope);
+    if (prototypeSlot != null) {
+      prototypeSlot.setType(
+          (PrototypeObjectType) safeResolve(prototypeSlot.getType(), t, scope));
+    }
 
     // Warning about typeOfThis if it doesn't resolve to an ObjectType
     // is handled further upstream.

@@ -47,6 +47,8 @@ import java.io.Serializable;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class SimpleSlot implements StaticSlot<JSType>, Serializable {
+  private static final long serialVersionUID = 1L;
+
   final String name;
   final JSType type;
   final boolean inferred;

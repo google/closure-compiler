@@ -484,8 +484,23 @@ public final class SymbolTable
       }
     }
 
-    // Create symbols for their properties.
-    for (Symbol s : Iterables.concat(types, instances)) {
+    // Create a property scope for each symbol, and populate
+    // it with that symbol's properties.
+    //
+    // The order of operations here is significant.
+    //
+    // When we add properties to Foo, we'll remove Foo.prototype from
+    // the symbol table and replace it with a fresh symbol in Foo's
+    // property scope. So the symbol for Foo.prototype in
+    // {@code instances} will be stale.
+    //
+    // To prevent this, we always populate {@code instances} before
+    // their constructors.
+    for (Symbol s : instances) {
+      createPropertyScopeFor(s);
+    }
+
+    for (Symbol s : types) {
       createPropertyScopeFor(s);
     }
 
@@ -516,9 +531,7 @@ public final class SymbolTable
     Iterable<String> propNames = type.getOwnPropertyNames();
     if (instanceType.isFunctionPrototypeType()) {
       // Merge the properties of "Foo.prototype" and "new Foo()" together.
-      instanceType =
-          ((ObjectType) instanceType)
-          .getOwnerFunction().getInstanceType();
+      instanceType = instanceType.getOwnerFunction().getInstanceType();
       Set<String> set = Sets.newHashSet(propNames);
       Iterables.addAll(set, instanceType.getOwnPropertyNames());
       propNames = set;
@@ -542,7 +555,13 @@ public final class SymbolTable
         removeSymbol(oldProp);
       }
 
-      copySymbolTo(newProp, s.propertyScope);
+      Symbol newSym = copySymbolTo(newProp, s.propertyScope);
+      if (oldProp != null) {
+        newSym.propertyScope = oldProp.propertyScope;
+        for (Reference ref : oldProp.references.values()) {
+          newSym.defineReferenceAt(ref.getNode());
+        }
+      }
     }
   }
 
@@ -695,7 +714,19 @@ public final class SymbolTable
         return own;
       }
 
-      return parent == null ? null : parent.getSlot(name);
+      Symbol ancestor = parent == null ? null : parent.getSlot(name);
+      if (ancestor != null) {
+        return ancestor;
+      }
+
+      int dot = name.lastIndexOf('.');
+      if (dot != -1) {
+        Symbol owner = getSlot(name.substring(0, dot));
+        if (owner != null && owner.getPropertyScope() != null) {
+          return owner.getPropertyScope().getSlot(name.substring(dot + 1));
+        }
+      }
+      return null;
     }
 
     @Override
