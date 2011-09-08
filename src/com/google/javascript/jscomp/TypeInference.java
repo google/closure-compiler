@@ -77,11 +77,6 @@ class TypeInference
         "JSC_FUNCTION_LITERAL_UNDEFINED_THIS",
         "Function literal argument refers to undefined this argument");
 
-  static final DiagnosticType FUNCTION_LITERAL_UNREAD_THIS =
-    DiagnosticType.warning(
-        "JSC_FUNCTION_LITERAL_UNREAD_THIS",
-        "Function literal argument does not refer to bound this argument");
-
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
@@ -962,13 +957,6 @@ class TypeInference
                     jArgument.setJSType(
                         registry.createFunctionTypeWithNewThisType(
                             jArgumentFnType, (ObjectType) iArgumentType));
-                  }
-                  // Warn if the anonymous function literal does not
-                  // reference this.
-                  if (!NodeUtil.referencesThis(
-                          NodeUtil.getFunctionBody(jArgument))) {
-                    compiler.report(JSError.make(NodeUtil.getSourceName(n), n,
-                        FUNCTION_LITERAL_UNREAD_THIS));
                   }
                 } else {
                   // Warn if the anonymous function literal references this.

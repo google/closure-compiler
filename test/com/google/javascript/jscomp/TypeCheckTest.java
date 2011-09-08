@@ -8750,18 +8750,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + "baz(function() { this; }, {});");
   }
 
-  public void testFunctionLiteralUnreadThisArgument() throws Exception {
-    testTypes(""
-        + "/**\n"
-        + " * @param {function(this:T, ...)?} fn\n"
-        + " * @param {?T} opt_obj\n"
-        + " * @template T\n"
-        + " */\n"
-        + "function baz(fn, opt_obj) {}\n"
-        + "baz(function() {}, {});",
-        "Function literal argument does not refer to bound this argument");
-  }
-
   public void testFunctionLiteralUnreadNullThisArgument() throws Exception {
     testTypes(""
         + "/**\n"
