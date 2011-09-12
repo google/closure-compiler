@@ -559,7 +559,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
   private static class TypeVerifyingPass
       implements CompilerPass, NodeTraversal.Callback {
     private final Compiler compiler;
-    private List<String> actualTypes = null;
+    private List<Node> actualTypes = null;
 
     public TypeVerifyingPass(Compiler compiler) {
       this.compiler = compiler;
@@ -583,15 +583,20 @@ public class ScopedAliasesTest extends CompilerTestCase {
         Collection<Node> typeNodes = info.getTypeNodes();
         if (typeNodes.size() > 0) {
           if (actualTypes != null) {
-            List<String> expectedTypes = Lists.newArrayList();
+            List<Node> expectedTypes = Lists.newArrayList();
             for (Node typeNode : info.getTypeNodes()) {
-              expectedTypes.add(typeNode.toStringTree());
+              expectedTypes.add(typeNode);
             }
-            assertEquals(expectedTypes, actualTypes);
+            assertEquals("Wrong number of jsdoc types",
+                expectedTypes.size(), actualTypes.size());
+            for (int i = 0; i < expectedTypes.size(); i++) {
+              assertNull(
+                  expectedTypes.get(i).checkTreeEquals(actualTypes.get(i)));
+            }
           } else {
             actualTypes = Lists.newArrayList();
             for (Node typeNode : info.getTypeNodes()) {
-              actualTypes.add(typeNode.toStringTree());
+              actualTypes.add(typeNode);
             }
           }
         }

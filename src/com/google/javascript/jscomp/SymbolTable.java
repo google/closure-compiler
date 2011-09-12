@@ -512,7 +512,8 @@ public final class SymbolTable
   void fillJSDocInfo(
       AbstractCompiler compiler, Node externs, Node root) {
     NodeTraversal.traverseRoots(
-        compiler, Lists.newArrayList(externs, root), new JSDocInfoCollector());
+        compiler, Lists.newArrayList(externs, root),
+        new JSDocInfoCollector(compiler.getTypeRegistry()));
   }
 
   private void createPropertyScopeFor(Symbol s) {
@@ -864,6 +865,12 @@ public final class SymbolTable
   /** Collects references to types in JSDocInfo. */
   private class JSDocInfoCollector
       extends NodeTraversal.AbstractPostOrderCallback {
+    private final JSTypeRegistry registry;
+
+    private JSDocInfoCollector(JSTypeRegistry registry) {
+      this.registry = registry;
+    }
+
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getJSDocInfo() != null) {
         // Find references in the JSDocInfo.
@@ -878,6 +885,13 @@ public final class SymbolTable
     public void visitTypeNode(SymbolScope scope, Node n) {
       if (n.getType() == Token.STRING) {
         Symbol symbol = scope.getSlot(n.getString());
+        if (symbol == null) {
+          // If we can't find this type, it might be a reference to a
+          // primitive type (like {string}). Autobox it to check.
+          JSType type = registry.getType(n.getString());
+          JSType autobox = type == null ? null : type.autoboxesTo();
+          symbol = autobox == null ? null : getOnlySymbolForType(autobox);
+        }
         if (symbol != null) {
           symbol.defineReferenceAt(n);
         }

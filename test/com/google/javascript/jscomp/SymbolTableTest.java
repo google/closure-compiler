@@ -342,6 +342,7 @@ public class SymbolTableTest extends TestCase {
 
     assertEquals(1, refs.get(0).getNode().getLineno());
     assertEquals(29, refs.get(0).getNode().getCharno());
+    assertEquals(3, refs.get(0).getNode().getLength());
 
     assertEquals(2, refs.get(1).getNode().getLineno());
     assertEquals(11, refs.get(1).getNode().getCharno());
@@ -354,6 +355,27 @@ public class SymbolTableTest extends TestCase {
 
     assertEquals(7, refs.get(4).getNode().getLineno());
     assertEquals(13, refs.get(4).getNode().getCharno());
+  }
+
+  public void testReferencesInJSDoc2() {
+    SymbolTable table = createSymbolTable(
+        "/** @param {string} x */ function f(x) {}\n");
+    Symbol str = getGlobalVar(table, "String");
+    assertNotNull(str);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(str));
+
+    // We're going to pick up a lot of references from the externs,
+    // so it's not meaningful to check the number of references.
+    // We really want to make sure that all the references are in the externs,
+    // except the last one.
+    assertTrue(refs.size() > 1);
+
+    int last = refs.size() - 1;
+    for (int i = 0; i < refs.size(); i++) {
+      Reference ref = refs.get(i);
+      assertEquals(i != last, ref.getNode().isFromExterns());
+    }
   }
 
   private Symbol getGlobalVar(SymbolTable table, String name) {

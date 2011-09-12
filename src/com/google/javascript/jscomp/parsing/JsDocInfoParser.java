@@ -2154,7 +2154,9 @@ public final class JsDocInfoParser {
   }
 
   private Node newStringNode(String s, int lineno, int charno) {
-    return Node.newString(s, lineno, charno).clonePropsFrom(templateNode);
+    Node n = Node.newString(s, lineno, charno).clonePropsFrom(templateNode);
+    n.setLength(s.length());
+    return n;
   }
 
   // This is similar to IRFactory.createTemplateNode to share common props
