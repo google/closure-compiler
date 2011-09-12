@@ -311,6 +311,18 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("var goog = {}; goog.provide('goog.dom');");
   }
 
+  public void testGetMsgWiring() throws Exception {
+    test("var goog = {}; goog.getMsg = function(x) { return x; };" +
+         "/** @desc A real foo. */ var MSG_FOO = goog.getMsg('foo');",
+         "var goog={getMsg:function(a){return a}}, " +
+         "MSG_FOO=goog.getMsg('foo');");
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("var goog = {}; goog.getMsg = function(x) { return x; };" +
+         "/** @desc A real foo. */ var MSG_FOO = goog.getMsg('foo');" +
+         "window['foo'] = MSG_FOO;",
+         "window.foo = 'foo';");
+  }
+
   public void testCssNameWiring() throws Exception {
     test("var goog = {}; goog.getCssName = function() {};" +
          "goog.setCssNameMapping = function() {};" +
