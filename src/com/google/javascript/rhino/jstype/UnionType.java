@@ -207,6 +207,15 @@ public class UnionType extends JSType {
   }
 
   @Override
+  public JSType autobox() {
+    UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
+    for (JSType t : alternates) {
+      restricted.addAlternate(t.autobox());
+    }
+    return restricted.build();
+  }
+
+  @Override
   public JSType restrictByNotNullOrUndefined() {
     UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
     for (JSType t : alternates) {

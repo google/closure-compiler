@@ -6218,7 +6218,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
           "var x = /** @type {Object|number} */ (" +
           "  {/** @type {string} */ foo: 3});" +
         "}",
-        "assignment to property foo of (Object|null|number)\n" +
+        "assignment to property foo of Object\n" +
         "found   : number\n" +
         "required: string");
   }
@@ -8462,6 +8462,34 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         " * @return {boolean}\n" +
         " */\n" +
         "function g(x) { return x.isVisible; }");
+  }
+
+  public void testMissingProperty38() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "/** @constructor */ function Bar() {}" +
+        "/** @return {Foo|Bar} */ function f() { return new Foo(); }" +
+        "f().missing;",
+        "Property missing never defined on (Bar|Foo|null)");
+  }
+
+  public void testMissingProperty39() throws Exception {
+    testTypes(
+        "/** @return {string|number} */ function f() { return 3; }" +
+        "f().length;");
+  }
+
+  public void testMissingProperty40() throws Exception {
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MissingType'], []);" +
+        "/** @param {(Array|MissingType)} x */" +
+        "function f(x) { x.impossible(); }", null);
+  }
+
+  public void testMissingProperty41() throws Exception {
+    testTypes(
+        "/** @param {(Array|Date)} x */" +
+        "function f(x) { if (x.impossible) x.impossible(); }");
   }
 
   public void testReflectObject1() throws Exception {

@@ -543,13 +543,22 @@ public abstract class JSType implements Serializable {
   /**
    * Dereference a type for property access.
    *
+   * Autoboxes the type, and filters null/undefined, and returns the result.
+   */
+  public JSType autobox() {
+    JSType restricted = restrictByNotNullOrUndefined();
+    JSType autobox = restricted.autoboxesTo();
+    return autobox == null ? restricted : autobox;
+  }
+
+  /**
+   * Dereference a type for property access.
+   *
    * Autoboxes the type, filters null/undefined, and returns the result
    * iff it's an object.
    */
   public final ObjectType dereference() {
-    JSType restricted = restrictByNotNullOrUndefined();
-    JSType autobox = restricted.autoboxesTo();
-    return ObjectType.cast(autobox == null ? restricted : autobox);
+    return ObjectType.cast(autobox());
   }
 
   /**

@@ -1284,29 +1284,49 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
-   * Make sure that the access of this property is ok.
+   * Emit a warning if we can prove that a property cannot possibly be
+   * defined on an object. Note the difference between JS and a strictly
+   * statically typed language: we're checking if the property
+   * *cannot be defined*, whereas a java compiler would check if the
+   * property *can be undefined*.
    */
   private void checkPropertyAccess(JSType childType, String propName,
       NodeTraversal t, Node n) {
-    ObjectType objectType = childType.dereference();
-    if (objectType != null) {
-      JSType propType = getJSType(n);
-      if ((!objectType.hasProperty(propName) ||
-           objectType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) &&
-          propType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
-        if (objectType instanceof EnumType) {
-          report(t, n, INEXISTENT_ENUM_ELEMENT, propName);
-        } else if (!objectType.isEmptyType() &&
-            reportMissingProperties && !isPropertyTest(n)) {
-          if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
-            report(t, n, INEXISTENT_PROPERTY, propName,
-                validator.getReadableJSTypeName(n.getFirstChild(), true));
+    // If the property type is unknown, check the object type to see if it
+    // can ever be defined. We explicitly exclude CHECKED_UNKNOWN (for
+    // properties where we've checked that it exists, or for properties on
+    // objects that aren't in this binary).
+    JSType propType = getJSType(n);
+    if (propType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
+      childType = childType.autobox();
+      ObjectType objectType = ObjectType.cast(childType);
+      if (objectType != null) {
+        // We special-case object types so that checks on enums can be
+        // much stricter, and so that we can use hasProperty (which is much
+        // faster in most cases).
+        if (!objectType.hasProperty(propName) ||
+            objectType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
+          if (objectType instanceof EnumType) {
+            report(t, n, INEXISTENT_ENUM_ELEMENT, propName);
+          } else {
+            checkPropertyAccessHelper(objectType, propName, t, n);
           }
         }
+
+      } else {
+        checkPropertyAccessHelper(childType, propName, t, n);
       }
-    } else {
-      // TODO(nicksantos): might want to flag the access on a non object when
-      // it's impossible to get a property from this type.
+    }
+  }
+
+  private void checkPropertyAccessHelper(JSType objectType, String propName,
+      NodeTraversal t, Node n) {
+    if (!objectType.isEmptyType() &&
+        reportMissingProperties && !isPropertyTest(n)) {
+      if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
+        report(t, n, INEXISTENT_PROPERTY, propName,
+            validator.getReadableJSTypeName(n.getFirstChild(), true));
+      }
     }
   }
 
