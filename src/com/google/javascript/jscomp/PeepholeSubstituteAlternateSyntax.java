@@ -1387,12 +1387,18 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node reduceTrueFalse(Node n) {
-    Node not = new Node(Token.NOT,
-        Node.newNumber(n.getType() == Token.TRUE ? 0 : 1));
-    not.copyInformationFromForTree(n);
-    n.getParent().replaceChild(n, not);
-    reportCodeChange();
-    return not;
+    // TODO(johnlenz): Re-enable this with Chrome 15.
+    /*
+    if (late) {
+      Node not = new Node(Token.NOT,
+          Node.newNumber(n.getType() == Token.TRUE ? 0 : 1));
+      not.copyInformationFromForTree(n);
+      n.getParent().replaceChild(n, not);
+      reportCodeChange();
+      return not;
+    }
+    */
+    return n;
   }
 
   private Node tryMinimizeArrayLiteral(Node n) {

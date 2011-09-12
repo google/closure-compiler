@@ -329,6 +329,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     switch (n.getType()) {
       case Token.NOT:
+        // TODO(johnlenz): skip folding !0/!1 during late fold,
+        // when it is folded there.
+        /*
         // Don't fold !0 and !1 back to false.
         if (left.getType() == Token.NUMBER) {
           double numValue = left.getDouble();
@@ -336,6 +339,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             return n;
           }
         }
+        */
         int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;
         Node replacementNode = new Node(result);
         parent.replaceChild(n, replacementNode);

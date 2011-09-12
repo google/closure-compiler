@@ -232,7 +232,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
          "function z() {(a) ? foo() : goo(); return !0}");
     fold("function z() {if (a) { foo(); x = true; return true " +
          "} else { goo(); x = true; return true }}",
-         "function z() {(a) ? foo() : goo(); x = !0; return !0}");
+         "function z() {(a) ? foo() : goo(); x = true; return true}");
 
     fold("function z() {" +
          "  if (a) { bar(); foo(); return true }" +
@@ -241,7 +241,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
          "function z() {" +
          "  if (a) { bar(); foo(); }" +
          "    else { bar(); goo(); }" +
-         "  return !0;" +
+         "  return true;" +
          "}");
   }
 
@@ -515,7 +515,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   }
 
   public void testFoldReturnResult() {
-    fold("function f(){return false;}", "function f(){return !1}");
+    fold("function f(){return false;}", "function f(){return false}");
     foldSame("function f(){return null;}");
     fold("function f(){return void 0;}",
          "function f(){}");
@@ -756,8 +756,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
   }
 
   public void testFoldTrueFalse() {
-    fold("x = true", "x = !0");
-    fold("x = false", "x = !1");
+    fold("x = true", "x = true");
+    fold("x = false", "x = false");
   }
 
   public void testIssue291() {
