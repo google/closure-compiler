@@ -1726,6 +1726,8 @@ public final class JsDocInfoParser {
     }
 
     String typeName = stream.getString();
+    int lineno = stream.getLineno();
+    int charno = stream.getCharno();
     while (match(JsDocToken.EOL) &&
         typeName.charAt(typeName.length() - 1) == '.') {
       skipEOLs();
@@ -1735,7 +1737,7 @@ public final class JsDocInfoParser {
       }
     }
 
-    Node typeNameNode = newStringNode(typeName);
+    Node typeNameNode = newStringNode(typeName, lineno, charno);
 
     if (match(JsDocToken.LT)) {
       next();
@@ -2148,8 +2150,11 @@ public final class JsDocInfoParser {
   }
 
   private Node newStringNode(String s) {
-    return Node.newString(s, stream.getLineno(),
-        stream.getCharno()).clonePropsFrom(templateNode);
+    return newStringNode(s, stream.getLineno(), stream.getCharno());
+  }
+
+  private Node newStringNode(String s, int lineno, int charno) {
+    return Node.newString(s, lineno, charno).clonePropsFrom(templateNode);
   }
 
   // This is similar to IRFactory.createTemplateNode to share common props

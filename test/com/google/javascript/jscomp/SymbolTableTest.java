@@ -324,6 +324,38 @@ public class SymbolTableTest extends TestCase {
     assertEquals("Foo.prototype", refs.get(0).getNode().getQualifiedName());
   }
 
+  public void testReferencesInJSDoc() {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @type {Foo} */ var x;\n" +
+        "/** @param {Foo} x */ function f(x) {}\n" +
+        "/** @return {function(): Foo} */ function g() {}\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */ function Sub() {}");
+    Symbol foo = getGlobalVar(table, "Foo");
+    assertNotNull(foo);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(foo));
+    assertEquals(5, refs.size());
+
+    assertEquals(1, refs.get(0).getNode().getLineno());
+    assertEquals(29, refs.get(0).getNode().getCharno());
+
+    assertEquals(2, refs.get(1).getNode().getLineno());
+    assertEquals(11, refs.get(1).getNode().getCharno());
+
+    assertEquals(3, refs.get(2).getNode().getLineno());
+    assertEquals(12, refs.get(2).getNode().getCharno());
+
+    assertEquals(4, refs.get(3).getNode().getLineno());
+    assertEquals(25, refs.get(3).getNode().getCharno());
+
+    assertEquals(7, refs.get(4).getNode().getLineno());
+    assertEquals(13, refs.get(4).getNode().getCharno());
+  }
+
   private Symbol getGlobalVar(SymbolTable table, String name) {
     return table.getGlobalScope().getSlot(name);
   }

@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -507,6 +508,13 @@ public final class SymbolTable
     (new PropertyRefCollector(compiler)).process(externs, root);
   }
 
+  /** Index JSDocInfo. */
+  void fillJSDocInfo(
+      AbstractCompiler compiler, Node externs, Node root) {
+    NodeTraversal.traverseRoots(
+        compiler, Lists.newArrayList(externs, root), new JSDocInfoCollector());
+  }
+
   private void createPropertyScopeFor(Symbol s) {
     // In order to build a property scope for s, we will need to build
     // a property scope for all its implicit prototypes first. This means
@@ -849,6 +857,35 @@ public final class SymbolTable
       Symbol s = getOnlySymbolForType(type);
       if (s != null) {
         s.defineReferenceAt(n);
+      }
+    }
+  }
+
+  /** Collects references to types in JSDocInfo. */
+  private class JSDocInfoCollector
+      extends NodeTraversal.AbstractPostOrderCallback {
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.getJSDocInfo() != null) {
+        // Find references in the JSDocInfo.
+        JSDocInfo info = n.getJSDocInfo();
+        for (Node typeAst : info.getTypeNodes()) {
+          SymbolScope scope = scopes.get(t.getScopeRoot());
+          visitTypeNode(scope == null ? globalScope : scope, typeAst);
+        }
+      }
+    }
+
+    public void visitTypeNode(SymbolScope scope, Node n) {
+      if (n.getType() == Token.STRING) {
+        Symbol symbol = scope.getSlot(n.getString());
+        if (symbol != null) {
+          symbol.defineReferenceAt(n);
+        }
+      }
+
+      for (Node child = n.getFirstChild();
+           child != null; child = child.getNext()) {
+        visitTypeNode(scope, child);
       }
     }
   }
