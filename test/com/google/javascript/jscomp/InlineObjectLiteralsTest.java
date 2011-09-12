@@ -356,6 +356,11 @@ public class InlineObjectLiteralsTest extends CompilerTestCase {
          "new JSCompiler_object_inline_b_0.c");
   }
 
+  public void testBug545() {
+    testLocal("var a = {}", "");
+    testLocal("var a; a = {}", "true");
+  }
+
   private final String LOCAL_PREFIX = "function local(){";
   private final String LOCAL_POSTFIX = "}";
 

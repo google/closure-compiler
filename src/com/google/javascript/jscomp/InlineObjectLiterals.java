@@ -327,25 +327,30 @@ class InlineObjectLiterals implements CompilerPass {
                    NodeUtil.newUndefinedNode(null)));
       }
 
-      // All assignments evaluate to true, so make sure that the
-      // expr statement evaluates to true in case it matters.
-      nodes.add(new Node(Token.TRUE));
+      Node replacement;
+      if (nodes.isEmpty()) {
+        replacement = new Node(Token.TRUE);
+      } else {
+        // All assignments evaluate to true, so make sure that the
+        // expr statement evaluates to true in case it matters.
+        nodes.add(new Node(Token.TRUE));
 
-      // Join these using COMMA.  A COMMA node must have 2 children, so we
-      // create a tree. In the tree the first child be the COMMA to match
-      // the parser, otherwise tree equality tests fail.
-      nodes = Lists.reverse(nodes);
-      Node replacement = new Node(Token.COMMA);
-      Node cur = replacement;
-      int i;
-      for (i = 0; i < nodes.size() - 2; i++) {
+        // Join these using COMMA.  A COMMA node must have 2 children, so we
+        // create a tree. In the tree the first child be the COMMA to match
+        // the parser, otherwise tree equality tests fail.
+        nodes = Lists.reverse(nodes);
+        replacement = new Node(Token.COMMA);
+        Node cur = replacement;
+        int i;
+        for (i = 0; i < nodes.size() - 2; i++) {
+          cur.addChildToFront(nodes.get(i));
+          Node t = new Node(Token.COMMA);
+          cur.addChildToFront(t);
+          cur = t;
+        }
         cur.addChildToFront(nodes.get(i));
-        Node t = new Node(Token.COMMA);
-        cur.addChildToFront(t);
-        cur = t;
+        cur.addChildToFront(nodes.get(i + 1));
       }
-      cur.addChildToFront(nodes.get(i));
-      cur.addChildToFront(nodes.get(i + 1));
 
       Node replace = ref.getParent();
       replacement.copyInformationFromForTree(replace);
