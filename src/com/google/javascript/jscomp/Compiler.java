@@ -1083,6 +1083,7 @@ public class Compiler extends AbstractCompiler {
 
     MemoizedScopeCreator typedScopeCreator = getTypedScopeCreator();
     if (typedScopeCreator != null) {
+      symbolTable.addScopes(typedScopeCreator.getAllMemoizedScopes());
       symbolTable.addSymbolsFrom(typedScopeCreator);
     }
 

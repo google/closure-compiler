@@ -40,6 +40,7 @@ import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.StaticSymbolTable;
 import com.google.javascript.rhino.jstype.UnionType;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -335,6 +336,17 @@ public final class SymbolTable
               ref.getNode().getSourceFileName(),
               ref.getNode().getLineno()));
       refCount++;
+    }
+  }
+
+  /**
+   * Make sure all the given scopes in {@code otherSymbolTable}
+   * are in this symbol table.
+   */
+  <S extends StaticScope<JSType>>
+  void addScopes(Collection<S> scopes) {
+    for (S scope : scopes) {
+      createScopeFrom(scope);
     }
   }
 
@@ -839,25 +851,43 @@ public final class SymbolTable
         return;
       }
 
-      JSType type = n.getJSType();
-      if (type == null) {
-        return;
+      Symbol symbol = null;
+      if (t.inGlobalScope()) {
+        // declare the global this at the first place it's used.
+        if (globalScope.getSlot(GLOBAL_THIS) == null) {
+          symbol = declareSymbol(
+              GLOBAL_THIS,
+              registry.getNativeType(JSTypeNative.GLOBAL_THIS),
+              false /* declared */,
+              globalScope,
+              n);
+        } else {
+          symbol = globalScope.getSlot(GLOBAL_THIS);
+        }
+      } else {
+        // Otherwise, declare a "this" property when possible.
+        SymbolScope scope = scopes.get(t.getScopeRoot());
+        Preconditions.checkNotNull(scope);
+        Symbol scopeSymbol = getSymbolForScope(scope);
+        if (scopeSymbol != null) {
+          createPropertyScopeFor(scopeSymbol);
+
+          SymbolScope propScope = scopeSymbol.getPropertyScope();
+          symbol = propScope.getSlot("this");
+          if (symbol == null) {
+            JSType type = n.getJSType();
+            symbol = declareSymbol(
+                "this",
+                type,
+                type != null && !type.isUnknownType(),
+                propScope,
+                n);
+          }
+        }
       }
 
-      // declare the global this at the first place it's used.
-      if (type.isGlobalThisType() &&
-          globalScope.getSlot(GLOBAL_THIS) == null) {
-        declareSymbol(
-            GLOBAL_THIS,
-            registry.getNativeType(JSTypeNative.GLOBAL_THIS),
-            false /* declared */,
-            globalScope,
-            n);
-      }
-
-      Symbol s = getOnlySymbolForType(type);
-      if (s != null) {
-        s.defineReferenceAt(n);
+      if (symbol != null) {
+        symbol.defineReferenceAt(n);
       }
     }
   }

@@ -95,13 +95,24 @@ public class SymbolTableTest extends TestCase {
     SymbolTable table = createSymbolTable(
         "/** @constructor */ function F() { this.foo = 3; this.bar = 5; }");
 
-    Symbol f = getGlobalVar(table, "F");
-    assertNotNull(f);
+    Symbol t = getGlobalVar(table, "F.this");
+    assertNotNull(t);
 
-    List<Reference> refs = Lists.newArrayList(table.getReferences(f));
+    List<Reference> refs = Lists.newArrayList(table.getReferences(t));
+    assertEquals(2, refs.size());
+  }
 
-    // 1 declaration and 2 local refs
-    assertEquals(3, refs.size());
+  public void testLocalThisReferences2() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ function F() {}" +
+        "/** doc */ F.prototype.baz = " +
+        "    function() { this.foo = 3; this.bar = 5; };");
+
+    Symbol t = getGlobalVar(table, "F.prototype.baz.this");
+    assertNotNull(t);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(t));
+    assertEquals(2, refs.size());
   }
 
   public void testNamespacedReferences() throws Exception {

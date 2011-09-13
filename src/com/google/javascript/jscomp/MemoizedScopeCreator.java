@@ -26,6 +26,8 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.StaticSymbolTable;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -85,7 +87,11 @@ class MemoizedScopeCreator
     return scope;
   }
 
-  public Scope getScopeIfMemoized(Node n) {
+  Collection<Scope> getAllMemoizedScopes() {
+    return Collections.unmodifiableCollection(scopes.values());
+  }
+
+  Scope getScopeIfMemoized(Node n) {
     return scopes.get(n);
   }
 
