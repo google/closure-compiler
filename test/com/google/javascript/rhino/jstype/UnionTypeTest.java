@@ -62,7 +62,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    * Tests the behavior of variants type.
    */
   @SuppressWarnings("checked")
-      public void testUnionType() throws Exception {
+  public void testUnionType() throws Exception {
     UnionType nullOrString =
         (UnionType) createUnionType(NULL_TYPE, STRING_OBJECT_TYPE);
     UnionType stringOrNull =
@@ -287,5 +287,70 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     UnionType type = (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
     assertFalse(type.isEquivalentTo(null));
     assertTrue(type.isEquivalentTo(type));
+  }
+
+  public void testProxyUnionType() throws Exception {
+    UnionType stringOrNumber =
+        (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
+    UnionType stringOrBoolean =
+        (UnionType) createUnionType(BOOLEAN_TYPE, STRING_TYPE);
+
+    assertEquals(
+        "(boolean|number|string)",
+        stringOrNumber.getLeastSupertype(stringOrBoolean).toString());
+    assertEquals(
+        "string",
+        stringOrNumber.getGreatestSubtype(stringOrBoolean).toString());
+    assertEquals(
+        TernaryValue.UNKNOWN,
+        stringOrNumber.testForEquality(stringOrBoolean));
+    assertEquals(
+        "(number|string)",
+        stringOrNumber.getTypesUnderEquality(
+            stringOrBoolean).typeA.toString());
+    assertEquals(
+        "string",
+        stringOrNumber.getTypesUnderShallowEquality(
+            stringOrBoolean).typeA.toString());
+    assertEquals(
+        "(number|string)",
+        stringOrNumber.getTypesUnderInequality(
+            stringOrBoolean).typeA.toString());
+    assertEquals(
+        "(number|string)",
+        stringOrNumber.getTypesUnderShallowInequality(
+            stringOrBoolean).typeA.toString());
+
+    ObjectType stringOrNumberProxy =
+        new ProxyObjectType(registry, stringOrNumber);
+    ObjectType stringOrBooleanProxy =
+        new ProxyObjectType(registry, stringOrBoolean);
+    assertEquals(
+        "(boolean|number|string)",
+        stringOrNumberProxy.getLeastSupertype(
+            stringOrBooleanProxy).toString());
+    assertEquals(
+        "string",
+        stringOrNumberProxy.getGreatestSubtype(
+            stringOrBooleanProxy).toString());
+    assertEquals(
+        TernaryValue.UNKNOWN,
+        stringOrNumberProxy.testForEquality(stringOrBooleanProxy));
+    assertEquals(
+        "(number|string)",
+        stringOrNumberProxy.getTypesUnderEquality(
+            stringOrBooleanProxy).typeA.toString());
+    assertEquals(
+        "string",
+        stringOrNumberProxy.getTypesUnderShallowEquality(
+            stringOrBooleanProxy).typeA.toString());
+    assertEquals(
+        "(number|string)",
+        stringOrNumberProxy.getTypesUnderInequality(
+            stringOrBooleanProxy).typeA.toString());
+    assertEquals(
+        "(number|string)",
+        stringOrNumberProxy.getTypesUnderShallowInequality(
+            stringOrBooleanProxy).typeA.toString());
   }
 }

@@ -661,7 +661,7 @@ public abstract class JSType implements Serializable {
   public JSType getLeastSupertype(JSType that) {
     if (that.isUnionType()) {
       // Union types have their own implementation of getLeastSupertype.
-      return that.getLeastSupertype(this);
+      return that.toMaybeUnionType().getLeastSupertype(this);
     }
     return getLeastSupertype(this, that);
   }
@@ -829,7 +829,7 @@ public abstract class JSType implements Serializable {
   public TypePair getTypesUnderEquality(JSType that) {
     // unions types
     if (that.isUnionType()) {
-      TypePair p = that.getTypesUnderEquality(this);
+      TypePair p = that.toMaybeUnionType().getTypesUnderEquality(this);
       return new TypePair(p.typeB, p.typeA);
     }
 
@@ -862,7 +862,7 @@ public abstract class JSType implements Serializable {
   public TypePair getTypesUnderInequality(JSType that) {
     // unions types
     if (that.isUnionType()) {
-      TypePair p = that.getTypesUnderInequality(this);
+      TypePair p = that.toMaybeUnionType().getTypesUnderInequality(this);
       return new TypePair(p.typeB, p.typeA);
     }
 
@@ -907,7 +907,7 @@ public abstract class JSType implements Serializable {
   public TypePair getTypesUnderShallowInequality(JSType that) {
     // union types
     if (that.isUnionType()) {
-      TypePair p = that.getTypesUnderShallowInequality(this);
+      TypePair p = that.toMaybeUnionType().getTypesUnderShallowInequality(this);
       return new TypePair(p.typeB, p.typeA);
     }
 
