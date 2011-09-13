@@ -5326,6 +5326,29 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "Property baz2 never defined on Bar");
   }
 
+  public void testIssue537d() throws Exception {
+    testTypes(
+        "/** @constructor */ function Foo() {}" +
+        "Foo.prototype = {" +
+        "  /** @return {Bar} */ x: function() { new Bar(); }," +
+        "  /** @return {Foo} */ y: function() { new Bar(); }" +
+        "};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Foo}\n" +
+        " */\n" +
+        "function Bar() {" +
+        "  this.xy = 3;" +
+        "}" +
+        "/** @return {Bar} */ function f() { return new Bar(); }" +
+        "/** @return {Foo} */ function g() { return new Bar(); }" +
+        "Bar.prototype = {" +
+        "  /** @return {Bar} */ x: function() { new Bar(); }," +
+        "  /** @return {Foo} */ y: function() { new Bar(); }" +
+        "};" +
+        "Bar.prototype.__proto__ = Foo.prototype;");
+  }
+
   /**
    * Tests that the || operator is type checked correctly, that is of
    * the type of the first argument or of the second argument. See

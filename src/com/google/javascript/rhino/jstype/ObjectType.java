@@ -514,7 +514,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
   }
 
   /**
-   * Returns true if any cached valeus have been set for this type.  If true,
+   * Returns true if any cached values have been set for this type.  If true,
    * then the prototype chain should not be changed, as it might invalidate the
    * cached values.
    */
