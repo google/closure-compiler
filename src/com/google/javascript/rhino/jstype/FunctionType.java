@@ -41,8 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
-import static com.google.javascript.rhino.jstype.ObjectType.Property;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -967,6 +965,9 @@ public class FunctionType extends PrototypeObjectType {
    * Sets the source node.
    */
   public void setSource(Node source) {
+    if (null == source) {
+      prototypeSlot = null;
+    }
     this.source = source;
   }
 
@@ -1027,7 +1028,7 @@ public class FunctionType extends PrototypeObjectType {
     call = (ArrowType) safeResolve(call, t, scope);
     if (prototypeSlot != null) {
       prototypeSlot.setType(
-          (PrototypeObjectType) safeResolve(prototypeSlot.getType(), t, scope));
+          safeResolve(prototypeSlot.getType(), t, scope));
     }
 
     // Warning about typeOfThis if it doesn't resolve to an ObjectType
