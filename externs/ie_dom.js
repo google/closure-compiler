@@ -500,7 +500,9 @@ Window.prototype.XMLHttpRequest;
 Window.prototype.alert;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms535933(VS.85).aspx
+ * @param {string} event
+ * @param {Function} handler
+ * @see http://msdn.microsoft.com/en-us/library/ms536343(VS.85).aspx
  */
 Window.prototype.attachEvent;
 
@@ -1092,6 +1094,8 @@ Document.prototype.XSLDocument;
 // functions
 
 /**
+ * @param {string} event
+ * @param {Function} handler
  * @see http://msdn.microsoft.com/en-us/library/ms536343(VS.85).aspx
  */
 Document.prototype.attachEvent;
@@ -1306,6 +1310,13 @@ Document.prototype.styleSheets;
  * @see http://msdn.microsoft.com/en-us/library/ms535922(VS.85).aspx
  */
 Element.prototype.addBehavior = function(sUrl) {};
+
+/**
+ * @param {string} event
+ * @param {Function} handler
+ * @see http://msdn.microsoft.com/en-us/library/mm536343(v=vs.85).aspx
+ */
+Element.prototype.attachEvent;
 
 /**
  * @type {boolean}
