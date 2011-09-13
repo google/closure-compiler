@@ -275,6 +275,24 @@ IDBRequest.prototype.onerror = function() {};
 IDBRequest.prototype.result;
 
 /**
+ * @type {number}
+ * @const
+ */
+IDBRequest.prototype.errorCode;
+
+/**
+ * @type {Object}
+ * @const
+ */
+IDBRequest.prototype.source;
+
+/**
+ * @type {IDBTransaction}
+ * @const
+ */
+IDBRequest.prototype.transaction;
+
+/**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBDatabase
  */
