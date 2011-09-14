@@ -259,6 +259,7 @@ final class TypedScopeCreator implements ScopeCreator {
     }
     for (Var var : varsToRemove) {
       globalScope.undeclare(var);
+      globalScope.getTypeOfThis().removeProperty(var.getName());
     }
 
     // Now re-traverse the given script.
