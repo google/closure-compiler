@@ -15,7 +15,7 @@
  */
 /**
  * @fileoverview Definitions for all iPhone extensions. Created from:
- * http://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/
+ * http://developer.apple.com/library/safari/navigation/
  *
  * @externs
  * @author agrieve@google.com (Andrew Grieve)
@@ -25,7 +25,7 @@
  * The Touch class represents a single touch on the surface. A touch is the
  * presence or movement of a finger that is part of a unique multi-touch
  * sequence.
- * @see http://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/Touch/Touch.html
+ * @see http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/TouchClassReference/Touch/Touch.html
  * @constructor
  */
 function Touch() {}
@@ -80,6 +80,7 @@ Touch.prototype.target;
 
 /**
  * The TouchList class is used to represent a collection of Touch objects.
+ * @see http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/TouchListClassReference/TouchList/TouchList.html
  * @constructor
  */
 function TouchList() {}
@@ -120,7 +121,7 @@ TouchList.prototype.item = function(index) {};
  * TouchEvent objects are combined together to form high-level GestureEvent
  * objects that are also sent during a multi-touch sequence.</p>
  *
- * @see http://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/TouchEvent/TouchEvent.html
+ * @see http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/TouchEventClassReference/TouchEvent/TouchEvent.html
  * @extends {UIEvent}
  * @constructor
  */
@@ -163,6 +164,31 @@ TouchEvent.prototype.scale;
 TouchEvent.prototype.rotation;
 
 /**
+ * Initializes a newly created TouchEvent object.
+ * @param {string} type
+ * @param {boolean} canBubble
+ * @param {boolean} cancelable
+ * @param {Window} view
+ * @param {number} detail
+ * @param {number} screenX
+ * @param {number} screenY
+ * @param {number} clientX
+ * @param {number} clientY
+ * @param {boolean} ctrlKey
+ * @param {boolean} altKey
+ * @param {boolean} shiftKey
+ * @param {boolean} metaKey
+ * @param {TouchList} touches
+ * @param {TouchList} targetTouches
+ * @param {TouchList} changedTouches
+ * @param {number} scale
+ * @param {number} rotation
+ */
+TouchEvent.prototype.initTouchEvent = function(type, canBubble, cancelable,
+    view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
+    metaKey, touches, targetTouches, changedTouches, scale, rotation) {};
+
+/**
  * Specifies the JavaScript method to invoke when the system cancels tracking
  * for the touch.
  * @param {Event} e
@@ -194,14 +220,14 @@ Element.prototype.ontouchstart = function(e) {};
  * Specifies the JavaScript method to invoke when the browser device's
  * orientation changes, i.e.the device is rotated.
  * @param {Event} e
- * @see http://developer.apple.com/safari/library/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html#//apple_ref/doc/uid/TP40006511-SW16
+ * @see http://developer.apple.com/library/IOS/#documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html
  */
 Window.prototype.onorientationchange = function(e) {};
 
 /**
  * Returns the orientation of the browser's device, one of [-90, 0, 90, 180].
  * @type {number}
- * @see http://developer.apple.com/safari/library/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html#//apple_ref/doc/uid/TP40006511-SW16
+ * @see http://developer.apple.com/library/IOS/#documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html
  */
 Window.prototype.orientation;
 
