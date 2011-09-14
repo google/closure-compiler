@@ -1154,8 +1154,8 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
   private void assertMarkerPosition(Node n, int lineno, int charno) {
     int count = 0;
     for (JSDocInfo.Marker marker : n.getJSDocInfo().getMarkers()) {
-      assertEquals(lineno, marker.annotation.getStartLine());
-      assertEquals(charno, marker.annotation.getPositionOnStartLine());
+      assertEquals(lineno, marker.getAnnotation().getStartLine());
+      assertEquals(charno, marker.getAnnotation().getPositionOnStartLine());
       count++;
     }
     assertEquals(1, count);

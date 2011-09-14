@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -126,10 +127,33 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
+   * A piece of information in a marker containing a position with a string
+   * that has no leading or trailing whitespace.
+   */
+  static class TrimmedStringPosition extends StringPosition {
+    @Override public void setItem(String item) {
+      Preconditions.checkArgument(
+          item.charAt(0) != ' ' &&
+          item.charAt(item.length() - 1) != ' ',
+          "String has leading or trailing whitespace");
+      super.setItem(item);
+    }
+  }
+
+  /**
    * A piece of information in a marker containing a position with a type.
    */
   public static class TypePosition extends SourcePosition<Node> {
-    public boolean hasBrackets = false;
+    private boolean brackets = false;
+
+    /** Returns whether the type has curly braces around it. */
+    public boolean hasBrackets() {
+      return brackets;
+    }
+
+    void setHasBrackets(boolean newVal) {
+      brackets = newVal;
+    }
   }
 
   /**
@@ -143,10 +167,54 @@ public class JSDocInfo implements Serializable {
    * if documentation collection is turned on.
    */
   public static final class Marker {
-    public StringPosition annotation = null;
-    public StringPosition name = null;
-    public StringPosition description = null;
-    public TypePosition type = null;
+    private TrimmedStringPosition annotation = null;
+    private TrimmedStringPosition name = null;
+    private StringPosition description = null;
+    private TypePosition type = null;
+
+    /**
+     * Gets the position info for the annotation name (e.g., "@see").
+     */
+    public StringPosition getAnnotation() {
+      return annotation;
+    }
+
+    void setAnnotation(TrimmedStringPosition p) {
+      annotation = p;
+    }
+
+    /**
+     * Gets the position info for parameter name of a @param tag.
+     */
+    public StringPosition getName() {
+      return name;
+    }
+
+    void setName(TrimmedStringPosition p) {
+      name = p;
+    }
+
+    /**
+     * Gets the position info for the description part of a block tag.
+     */
+    public StringPosition getDescription() {
+      return description;
+    }
+
+    void setDescription(StringPosition p) {
+      description = p;
+    }
+
+    /**
+     * Gets the position info for the type expression of a block tag.
+     */
+    public TypePosition getType() {
+      return type;
+    }
+
+    void setType(TypePosition p) {
+      type = p;
+    }
   }
 
   private LazilyInitializedInfo info = null;
@@ -1306,7 +1374,8 @@ public class JSDocInfo implements Serializable {
 
   /** Gets the list of all markers for the documentation in this JSDoc. */
   public Collection<Marker> getMarkers() {
-    return documentation == null ? null : documentation.markers;
+    return documentation == null
+        ? ImmutableList.<Marker>of() : documentation.markers;
   }
 
   /** Gets the template type name. */

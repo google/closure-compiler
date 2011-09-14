@@ -82,6 +82,22 @@ public abstract class SourcePosition<T> {
    */
   public void setPositionInformation(int startLineno, int startCharno,
                                      int endLineno, int endCharno) {
+    if (startLineno == endLineno) {
+      if (startCharno >= endCharno) {
+        throw new IllegalStateException(
+            "Recorded bad position information\n" +
+            "start-char: " + startCharno + "\n" +
+            "end-char: " + endCharno);
+      }
+    } else {
+      if (startLineno > endLineno) {
+        throw new IllegalStateException(
+            "Recorded bad position information\n" +
+            "start-line: " + startLineno + "\n" +
+            "end-line: " + endLineno);
+      }
+    }
+
     this.startLineno = startLineno;
     this.startCharno = startCharno;
     this.endLineno = endLineno;

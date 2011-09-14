@@ -2223,8 +2223,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         assertAnnotationMarker(jsdoc, "return", 0, 0);
     assertDocumentationInMarker(returnDoc,
         "some long multiline description", 13, 2, 15);
-    assertEquals(8, returnDoc.type.getPositionOnStartLine());
-    assertEquals(12, returnDoc.type.getPositionOnEndLine());
+    assertEquals(8, returnDoc.getType().getPositionOnStartLine());
+    assertEquals(12, returnDoc.getType().getPositionOnEndLine());
   }
 
   public void testParseWithMarkers4() throws Exception {
@@ -2261,7 +2261,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     assertNameInMarker(
         assertAnnotationMarker(jsdoc, "param", 0, 0),
-        "name", 18);
+        "name", 0, 18);
   }
 
   public void testParseWithMarkerNames2() throws Exception {
@@ -2271,19 +2271,30 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeInMarker(
         assertNameInMarker(
             assertAnnotationMarker(jsdoc, "param", 0, 0, 0),
-            "name", 18),
-        "SomeType", 7, true);
+            "name", 0, 18),
+        "SomeType", 0, 7, 0, 16, true);
 
     assertTypeInMarker(
         assertNameInMarker(
             assertAnnotationMarker(jsdoc, "param", 1, 2, 1),
-            "anothername", 23),
-        "AnotherType", 9, true);
+            "anothername", 1, 23),
+        "AnotherType", 1, 9, 1, 21, true);
+  }
+
+  public void testParseWithMarkerNames3() throws Exception {
+    JSDocInfo jsdoc = parse(
+        "@param {Some.Long.Type.\n *  Name} name somedescription */", true);
+
+    assertTypeInMarker(
+        assertNameInMarker(
+            assertAnnotationMarker(jsdoc, "param", 0, 0, 0),
+            "name", 1, 10),
+        "Some.Long.Type.Name", 0, 7, 1, 8, true);
   }
 
   public void testParseWithoutMarkerName() throws Exception {
     JSDocInfo jsdoc = parse("@author helloworld*/", true);
-    assertNull(assertAnnotationMarker(jsdoc, "author", 0, 0).name);
+    assertNull(assertAnnotationMarker(jsdoc, "author", 0, 0).getName());
   }
 
   public void testParseWithMarkerType() throws Exception {
@@ -2291,7 +2302,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     assertTypeInMarker(
         assertAnnotationMarker(jsdoc, "extends", 0, 0),
-        "FooBar", 9, true);
+        "FooBar", 0, 9, 0, 16, true);
   }
 
   public void testParseWithMarkerType2() throws Exception {
@@ -2299,7 +2310,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     assertTypeInMarker(
         assertAnnotationMarker(jsdoc, "extends", 0, 0),
-        "FooBar", 9, false);
+        "FooBar", 0, 9, 0, 15, false);
   }
 
   public void testTypeTagConflict1() throws Exception {
@@ -2495,15 +2506,15 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
                                                        int startCharno,
                                                        int endLineno,
                                                        int endCharno) {
-    assertTrue(marker.description != null);
-    assertEquals(description, marker.description.getItem());
+    assertTrue(marker.getDescription() != null);
+    assertEquals(description, marker.getDescription().getItem());
 
     // Match positional information.
-    assertEquals(marker.annotation.getStartLine(),
-                 marker.description.getStartLine());
-    assertEquals(startCharno, marker.description.getPositionOnStartLine());
-    assertEquals(endLineno, marker.description.getEndLine());
-    assertEquals(endCharno, marker.description.getPositionOnEndLine());
+    assertEquals(marker.getAnnotation().getStartLine(),
+                 marker.getDescription().getStartLine());
+    assertEquals(startCharno, marker.getDescription().getPositionOnStartLine());
+    assertEquals(endLineno, marker.getDescription().getEndLine());
+    assertEquals(endCharno, marker.getDescription().getPositionOnEndLine());
 
     return marker;
   }
@@ -2517,31 +2528,25 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
    *     to have brackets.
    * @return The marker, for chaining purposes.
    */
-  private JSDocInfo.Marker assertTypeInMarker(JSDocInfo.Marker marker,
-                                            String typeName, int startCharno,
-                                            boolean hasBrackets) {
+  private JSDocInfo.Marker assertTypeInMarker(
+      JSDocInfo.Marker marker, String typeName,
+      int startLineno, int startCharno, int endLineno, int endCharno,
+      boolean hasBrackets) {
 
-    assertTrue(marker.type != null);
-    assertTrue(marker.type.getItem().getType() == Token.STRING);
+    assertTrue(marker.getType() != null);
+    assertTrue(marker.getType().getItem().getType() == Token.STRING);
 
     // Match the name and brackets information.
-    String foundName = marker.type.getItem().getString();
+    String foundName = marker.getType().getItem().getString();
 
     assertEquals(typeName, foundName);
-    assertEquals(hasBrackets, marker.type.hasBrackets);
+    assertEquals(hasBrackets, marker.getType().hasBrackets());
 
     // Match position information.
-    assertEquals(startCharno, marker.type.getPositionOnStartLine());
-
-    int endCharno = startCharno + foundName.length();
-
-    if (hasBrackets) {
-      endCharno += 1;
-    }
-
-    assertEquals(endCharno, marker.type.getPositionOnEndLine());
-    assertEquals(marker.annotation.getStartLine(), marker.type.getStartLine());
-    assertEquals(marker.annotation.getStartLine(), marker.type.getEndLine());
+    assertEquals(startCharno, marker.getType().getPositionOnStartLine());
+    assertEquals(endCharno, marker.getType().getPositionOnEndLine());
+    assertEquals(startLineno, marker.getType().getStartLine());
+    assertEquals(endLineno, marker.getType().getEndLine());
 
     return marker;
   }
@@ -2554,16 +2559,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
    * @return The marker, for chaining purposes.
    */
   private JSDocInfo.Marker assertNameInMarker(JSDocInfo.Marker marker,
-                                            String name, int startCharno) {
-    assertTrue(marker.name != null);
-    assertEquals(name, marker.name.getItem());
+      String name, int startLine, int startCharno) {
+    assertTrue(marker.getName() != null);
+    assertEquals(name, marker.getName().getItem());
 
-    assertEquals(startCharno, marker.name.getPositionOnStartLine());
+    assertEquals(startCharno, marker.getName().getPositionOnStartLine());
     assertEquals(startCharno + name.length(),
-                 marker.name.getPositionOnEndLine());
+                 marker.getName().getPositionOnEndLine());
 
-    assertEquals(marker.annotation.getStartLine(), marker.name.getStartLine());
-    assertEquals(marker.annotation.getStartLine(), marker.name.getEndLine());
+    assertEquals(startLine, marker.getName().getStartLine());
+    assertEquals(startLine, marker.getName().getEndLine());
 
     return marker;
   }
@@ -2612,16 +2617,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     int counter = 0;
 
     for (JSDocInfo.Marker marker : markers) {
-      if (marker.annotation != null) {
-        if (annotationName.equals(marker.annotation.getItem())) {
+      if (marker.getAnnotation() != null) {
+        if (annotationName.equals(marker.getAnnotation().getItem())) {
 
           if (counter == index) {
-            assertEquals(startLineno, marker.annotation.getStartLine());
+            assertEquals(startLineno, marker.getAnnotation().getStartLine());
             assertEquals(startCharno,
-                         marker.annotation.getPositionOnStartLine());
-            assertEquals(startLineno, marker.annotation.getEndLine());
+                         marker.getAnnotation().getPositionOnStartLine());
+            assertEquals(startLineno, marker.getAnnotation().getEndLine());
             assertEquals(startCharno + annotationName.length(),
-                         marker.annotation.getPositionOnEndLine());
+                         marker.getAnnotation().getPositionOnEndLine());
 
             return marker;
           }

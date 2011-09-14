@@ -147,10 +147,13 @@ final public class JSDocInfoBuilder {
     JSDocInfo.Marker marker = currentInfo.addMarker();
 
     if (marker != null) {
-      marker.annotation = new JSDocInfo.StringPosition();
-      marker.annotation.setItem(annotation);
-      marker.annotation.setPositionInformation(lineno, charno, lineno,
-                                               charno + annotation.length());
+      JSDocInfo.TrimmedStringPosition position =
+          new JSDocInfo.TrimmedStringPosition();
+      position.setItem(annotation);
+      position.setPositionInformation(lineno, charno, lineno,
+          charno + annotation.length());
+      marker.setAnnotation(position);
+      populated = true;
     }
 
     currentMarker = marker;
@@ -162,10 +165,11 @@ final public class JSDocInfoBuilder {
   public void markText(String text, int startLineno, int startCharno,
       int endLineno, int endCharno) {
     if (currentMarker != null) {
-      currentMarker.description = new JSDocInfo.StringPosition();
-      currentMarker.description.setItem(text);
-      currentMarker.description.setPositionInformation(startLineno, startCharno,
-                                                       endLineno, endCharno);
+      JSDocInfo.StringPosition position = new JSDocInfo.StringPosition();
+      position.setItem(text);
+      position.setPositionInformation(startLineno, startCharno,
+          endLineno, endCharno);
+      currentMarker.setDescription(position);
     }
   }
 
@@ -173,13 +177,14 @@ final public class JSDocInfoBuilder {
    * Adds a type declaration to the current marker.
    */
   public void markTypeNode(Node typeNode, int lineno, int startCharno,
-      int endCharno, boolean hasLC) {
+      int endLineno, int endCharno, boolean hasLC) {
     if (currentMarker != null) {
-      currentMarker.type = new JSDocInfo.TypePosition();
-      currentMarker.type.setItem(typeNode);
-      currentMarker.type.hasBrackets = hasLC;
-      currentMarker.type.setPositionInformation(lineno, startCharno,
-                                                lineno, endCharno);
+      JSDocInfo.TypePosition position = new JSDocInfo.TypePosition();
+      position.setItem(typeNode);
+      position.setHasBrackets(hasLC);
+      position.setPositionInformation(lineno, startCharno,
+          endLineno, endCharno);
+      currentMarker.setType(position);
     }
   }
 
@@ -188,10 +193,12 @@ final public class JSDocInfoBuilder {
    */
   public void markName(String name, int lineno, int charno) {
     if (currentMarker != null) {
-      currentMarker.name = new JSDocInfo.StringPosition();
-      currentMarker.name.setItem(name);
-      currentMarker.name.setPositionInformation(lineno, charno,
-                                                lineno, charno + name.length());
+      JSDocInfo.TrimmedStringPosition position =
+          new JSDocInfo.TrimmedStringPosition();
+      position.setItem(name);
+      position.setPositionInformation(lineno, charno,
+          lineno, charno + name.length());
+      currentMarker.setName(position);
     }
   }
 

@@ -1100,10 +1100,13 @@ public final class JsDocInfoParser {
     int startCharno = stream.getCharno();
 
     Node typeNode = parseParamTypeExpressionAnnotation(token);
-    int endCharno = stream.getCharno();
+    if (typeNode != null) {
+      int endLineno = stream.getLineno();
+      int endCharno = stream.getCharno();
 
-    jsdocBuilder.markTypeNode(typeNode, lineno, startCharno, endCharno,
-        true);
+      jsdocBuilder.markTypeNode(typeNode, lineno, startCharno,
+          endLineno, endCharno, true);
+    }
     return typeNode;
   }
 
@@ -1136,10 +1139,13 @@ public final class JsDocInfoParser {
       typeNode.putBooleanProp(Node.BRACELESS_TYPE, true);
     }
 
-    int endCharno = stream.getCharno();
+    if (typeNode != null) {
+      int endLineno = stream.getLineno();
+      int endCharno = stream.getCharno();
 
-    jsdocBuilder.markTypeNode(typeNode, lineno, startCharno, endCharno,
-        matchingLC);
+      jsdocBuilder.markTypeNode(
+          typeNode, lineno, startCharno, endLineno, endCharno, matchingLC);
+    }
 
     return typeNode;
   }
