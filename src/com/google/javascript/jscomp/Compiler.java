@@ -1049,6 +1049,7 @@ public class Compiler extends AbstractCompiler {
     InputId inputIdOnAst = newInput.getAstRoot(this).getInputId();
     Preconditions.checkState(newInput.getInputId().equals(inputIdOnAst));
 
+    inputs.remove(oldInput);
     return true;
   }
 
