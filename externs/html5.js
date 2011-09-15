@@ -347,6 +347,30 @@ CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
 CanvasRenderingContext2D.prototype.putImageData = function(imagedata, dx, dy,
     opt_dirtyX, opt_dirtyY, opt_dirtyWidth, opt_dirtyHeight) {};
 
+/** 
+ * Note: Webkit only
+ * @param {number|string=} opt_a
+ * @param {number=} opt_b
+ * @param {number=} opt_c
+ * @param {number=} opt_d
+ * @param {number=} opt_e
+ * @see http://developer.apple.com/library/safari/#documentation/appleapplications/reference/WebKitDOMRef/CanvasRenderingContext2D_idl/Classes/CanvasRenderingContext2D/index.html
+ * @return {undefined}
+ */
+CanvasRenderingContext2D.prototype.setFillColor;
+
+/** 
+ * Note: Webkit only
+ * @param {number|string=} opt_a
+ * @param {number=} opt_b
+ * @param {number=} opt_c
+ * @param {number=} opt_d
+ * @param {number=} opt_e
+ * @see http://developer.apple.com/library/safari/#documentation/appleapplications/reference/WebKitDOMRef/CanvasRenderingContext2D_idl/Classes/CanvasRenderingContext2D/index.html
+ * @return {undefined}
+ */
+CanvasRenderingContext2D.prototype.setStrokeColor;
+
 /** @type {string} */
 CanvasRenderingContext2D.prototype.fillColor;
 
