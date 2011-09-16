@@ -1055,6 +1055,11 @@ google.maps.GeocoderResult = function() {};
 google.maps.GeocoderResult.prototype.address_components;
 
 /**
+ * @type {string}
+ */
+google.maps.GeocoderResult.prototype.formatted_address;
+
+/**
  * @type {google.maps.GeocoderGeometry}
  */
 google.maps.GeocoderResult.prototype.geometry;
@@ -2093,7 +2098,7 @@ google.maps.MapType.prototype.minZoom;
 google.maps.MapType.prototype.name;
 
 /**
- * @type {google.maps.Projection}
+ * @type {?google.maps.Projection}
  */
 google.maps.MapType.prototype.projection;
 
