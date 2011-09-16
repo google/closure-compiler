@@ -657,6 +657,7 @@ public class JSTypeRegistry implements Serializable {
    * @param type the type to unregister the property on.
    */
   public void unregisterPropertyOnType(String propertyName, JSType type) {
+    // TODO(bashir): typesIndexedByProperty should also be updated!
     Map<String, ObjectType> typeSet =
         eachRefTypeIndexedByProperty.get(propertyName);
     if (typeSet != null) {
