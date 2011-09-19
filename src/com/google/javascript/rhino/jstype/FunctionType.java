@@ -965,8 +965,16 @@ public class FunctionType extends PrototypeObjectType {
    * Sets the source node.
    */
   public void setSource(Node source) {
-    if (null == source) {
-      prototypeSlot = null;
+    if (prototypeSlot != null) {
+      // NOTE(bashir): On one hand when source is null we want to drop any
+      // references to old nodes retained in prototypeSlot. On the other hand
+      // we cannot simply drop prototypeSlot, so we retain all information
+      // except the propertyNode for which we use an approximation! These
+      // details mostly matter in hot-swap passes.
+      if (source == null || prototypeSlot.getNode() == null) {
+        prototypeSlot = new Property(prototypeSlot.getName(),
+            prototypeSlot.getType(), prototypeSlot.isTypeInferred(), source);
+      }
     }
     this.source = source;
   }
