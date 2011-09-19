@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.ConcreteType.ConcreteFunctionType;
 import com.google.javascript.jscomp.ConcreteType.ConcreteInstanceType;
 import com.google.javascript.jscomp.ConcreteType.ConcreteUnionType;
 import com.google.javascript.jscomp.ConcreteType.Factory;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -378,5 +379,8 @@ public class ConcreteTypeTest extends TestCase {
 
     @Override
     public StaticReference<ConcreteType> getDeclaration() { return null; }
+
+    @Override
+    public JSDocInfo getJSDocInfo() { return null; }
   }
 }

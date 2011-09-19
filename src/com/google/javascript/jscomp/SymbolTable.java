@@ -107,6 +107,11 @@ public final class SymbolTable
    */
   private final Map<Node, SymbolScope> scopes = Maps.newHashMap();
 
+  /**
+   * All JSDocInfo in the program.
+   */
+  private final List<JSDocInfo> docInfos = Lists.newArrayList();
+
   private SymbolScope globalScope = null;
 
   private final JSTypeRegistry registry;
@@ -132,6 +137,10 @@ public final class SymbolTable
   @Override
   public SymbolScope getScope(Symbol slot) {
     return slot.scope;
+  }
+
+  public Collection<JSDocInfo> getAllJSDocInfo() {
+    return Collections.unmodifiableList(docInfos);
   }
 
   /**
@@ -396,13 +405,15 @@ public final class SymbolTable
     return declareSymbol(
         sym.getName(), sym.getType(), sym.isTypeInferred(), scope,
         // All symbols must have declaration nodes.
-        Preconditions.checkNotNull(sym.getDeclaration().getNode()));
+        Preconditions.checkNotNull(sym.getDeclaration().getNode()),
+        sym.getJSDocInfo());
   }
 
   private Symbol declareSymbol(
       String name, JSType type, boolean inferred,
-      SymbolScope scope, Node declNode) {
+      SymbolScope scope, Node declNode, JSDocInfo info) {
     Symbol symbol = new Symbol(name, type, inferred, scope);
+    symbol.setJSDocInfo(info);
     symbols.put(declNode, name, symbol);
 
     Symbol replacedSymbol = scope.ownSymbols.put(name, symbol);
@@ -578,6 +589,9 @@ public final class SymbolTable
 
       Symbol newSym = copySymbolTo(newProp, s.propertyScope);
       if (oldProp != null) {
+        if (newSym.getJSDocInfo() == null) {
+          newSym.setJSDocInfo(oldProp.getJSDocInfo());
+        }
         newSym.propertyScope = oldProp.propertyScope;
         for (Reference ref : oldProp.references.values()) {
           newSym.defineReferenceAt(ref.getNode());
@@ -640,6 +654,8 @@ public final class SymbolTable
 
     private Reference declaration = null;
 
+    private JSDocInfo docInfo = null;
+
     Symbol(String name, JSType type, boolean inferred, SymbolScope scope) {
       super(name, type, inferred);
       this.scope = scope;
@@ -654,7 +670,7 @@ public final class SymbolTable
       return JSType.toMaybeFunctionType(getType());
     }
 
-    void defineReferenceAt(Node n) {
+    public void defineReferenceAt(Node n) {
       if (!references.containsKey(n)) {
         references.put(n, new Reference(this, n));
       }
@@ -687,6 +703,15 @@ public final class SymbolTable
 
     public SymbolScope getPropertyScope() {
       return propertyScope;
+    }
+
+    @Override
+    public JSDocInfo getJSDocInfo() {
+      return docInfo;
+    }
+
+    void setJSDocInfo(JSDocInfo info) {
+      this.docInfo = info;
     }
 
     @Override
@@ -860,7 +885,8 @@ public final class SymbolTable
               registry.getNativeType(JSTypeNative.GLOBAL_THIS),
               false /* declared */,
               globalScope,
-              n);
+              n,
+              null);
         } else {
           symbol = globalScope.getSlot(GLOBAL_THIS);
         }
@@ -881,7 +907,8 @@ public final class SymbolTable
                 type,
                 type != null && !type.isUnknownType(),
                 propScope,
-                n);
+                n,
+                null);
           }
         }
       }
@@ -903,8 +930,10 @@ public final class SymbolTable
 
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getJSDocInfo() != null) {
+
         // Find references in the JSDocInfo.
         JSDocInfo info = n.getJSDocInfo();
+        docInfos.add(info);
         for (Node typeAst : info.getTypeNodes()) {
           SymbolScope scope = scopes.get(t.getScopeRoot());
           visitTypeNode(scope == null ? globalScope : scope, typeAst);

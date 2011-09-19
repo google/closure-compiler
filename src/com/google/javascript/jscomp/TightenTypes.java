@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ConcreteType.ConcreteFunctionType;
 import com.google.javascript.jscomp.ConcreteType.ConcreteInstanceType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -283,6 +284,10 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     @Override public boolean isTypeInferred() { return true; }
 
     @Override public StaticReference<ConcreteType> getDeclaration() {
+      return null;
+    }
+
+    @Override public JSDocInfo getJSDocInfo() {
       return null;
     }
 

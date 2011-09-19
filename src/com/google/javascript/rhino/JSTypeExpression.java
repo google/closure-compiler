@@ -97,7 +97,9 @@ public final class JSTypeExpression implements Serializable {
    * Evaluates the type expression into a {@code JSType} object.
    */
   public JSType evaluate(StaticScope<JSType> scope, JSTypeRegistry registry) {
-    return registry.createFromTypeNodes(root, sourceName, scope);
+    JSType type = registry.createFromTypeNodes(root, sourceName, scope);
+    root.setJSType(type);
+    return type;
   }
 
   @Override

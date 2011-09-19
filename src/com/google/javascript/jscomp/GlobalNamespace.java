@@ -1140,6 +1140,11 @@ class GlobalNamespace
           ", aliasingGets=" + aliasingGets + ", callGets=" + callGets;
     }
 
+    @Override
+    public JSDocInfo getJSDocInfo() {
+      return docInfo;
+    }
+
     /**
      * Tries to get the doc info for a given declaration ref.
      */

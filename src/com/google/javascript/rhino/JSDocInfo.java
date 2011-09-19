@@ -1374,7 +1374,7 @@ public class JSDocInfo implements Serializable {
 
   /** Gets the list of all markers for the documentation in this JSDoc. */
   public Collection<Marker> getMarkers() {
-    return documentation == null
+    return (documentation == null || documentation.markers == null)
         ? ImmutableList.<Marker>of() : documentation.markers;
   }
 

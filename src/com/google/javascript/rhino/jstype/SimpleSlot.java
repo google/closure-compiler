@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.JSDocInfo;
+
 import java.io.Serializable;
 
 /**
@@ -76,6 +78,11 @@ public class SimpleSlot implements StaticSlot<JSType>, Serializable {
 
   @Override
   public StaticReference<JSType> getDeclaration() {
+    return null;
+  }
+
+  @Override
+  public JSDocInfo getJSDocInfo() {
     return null;
   }
 }

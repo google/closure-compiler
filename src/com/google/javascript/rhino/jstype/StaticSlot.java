@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.JSDocInfo;
+
 /**
  * The {@code StaticSlot} interface must be implemented by variables that can
  * appear as members of a {@code StaticScope}.
@@ -64,4 +66,7 @@ public interface StaticSlot<T> {
 
   /** Gets the declaration of this symbol. May not exist. */
   StaticReference<T> getDeclaration();
+
+  /** Gets the JSDoc for this slot. */
+  JSDocInfo getJSDocInfo();
 }

@@ -647,7 +647,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
       this.type = type;
     }
 
-    JSDocInfo getJSDocInfo() {
+    @Override public JSDocInfo getJSDocInfo() {
       return this.docInfo;
     }
 
