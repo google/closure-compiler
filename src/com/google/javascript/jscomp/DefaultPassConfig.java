@@ -1238,15 +1238,20 @@ public class DefaultPassConfig extends PassConfig {
 
   /** Release references to data that is only needed during checks. */
   final PassFactory garbageCollectChecks =
-      new PassFactory("garbageCollectChecks", true) {
+      new HotSwapPassFactory("garbageCollectChecks", true) {
     @Override
-    protected CompilerPass createInternal(final AbstractCompiler compiler) {
-      return new CompilerPass() {
+    protected HotSwapCompilerPass createInternal(final AbstractCompiler compiler) {
+      return new HotSwapCompilerPass() {
         @Override
         public void process(Node externs, Node jsRoot) {
           // Kill the global namespace so that it can be garbage collected
           // after all passes are through with it.
           namespaceForChecks = null;
+        }
+
+        @Override
+        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+          process(null, null);
         }
       };
     }
