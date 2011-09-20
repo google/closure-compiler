@@ -20,8 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
-import com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl;
-
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.EntityResolver;
@@ -89,7 +87,7 @@ public class XtbMessageBundle implements MessageBundle {
   // Inlined from guava-internal.
   private SAXParser createSAXParser()
       throws ParserConfigurationException, SAXException {
-    SAXParserFactory factory = new SAXParserFactoryImpl();
+    SAXParserFactory factory = SAXParserFactory.newInstance();
     factory.setValidating(false);
     factory.setXIncludeAware(false);
     factory.setFeature(
