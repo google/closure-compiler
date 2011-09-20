@@ -25,7 +25,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -161,6 +163,44 @@ public final class SymbolTable
       }
     }
     return null;
+  }
+
+  /**
+   * If {@code sym} is a function, try to find a Symbol for
+   * a parameter with the given name.
+   *
+   * Returns null if we couldn't find one.
+   *
+   * Notice that this just makes a best effort, and may not be able
+   * to find parameters for non-conventional function definitions.
+   * For example, we would not be able to find "y" in this code:
+   * <code>
+   * var x = x() ? function(y) {} : function(y) {};
+   * </code>
+   */
+  public Symbol getParameterInFunction(Symbol sym, String paramName) {
+    SymbolScope scope = getScopeInFunction(sym);
+    if (scope != null) {
+      Symbol param = scope.getSlot(paramName);
+      if (param != null && param.scope == scope) {
+        return param;
+      }
+    }
+    return null;
+  }
+
+  private SymbolScope getScopeInFunction(Symbol sym) {
+    FunctionType type = sym.getFunctionType();
+    if (type == null) {
+      return null;
+    }
+
+    Node functionNode = type.getSource();
+    if (functionNode == null) {
+      return null;
+    }
+
+    return scopes.get(functionNode);
   }
 
   /**
@@ -537,6 +577,27 @@ public final class SymbolTable
     NodeTraversal.traverseRoots(
         compiler, Lists.newArrayList(externs, root),
         new JSDocInfoCollector(compiler.getTypeRegistry()));
+
+    // Create references to parameters in the JSDoc.
+    for (Symbol sym : getAllSymbols()) {
+      JSDocInfo info = sym.getJSDocInfo();
+      if (info == null) {
+        continue;
+      }
+
+      for (Marker marker : info.getMarkers()) {
+        SourcePosition<Node> pos = marker.getNameNode();
+        if (pos == null) {
+          continue;
+        }
+
+        Node paramNode = pos.getItem();
+        Symbol param = getParameterInFunction(sym, paramNode.getString());
+        if (param != null) {
+          param.defineReferenceAt(paramNode);
+        }
+      }
+    }
   }
 
   private void createPropertyScopeFor(Symbol s) {
@@ -934,6 +995,7 @@ public final class SymbolTable
         // Find references in the JSDocInfo.
         JSDocInfo info = n.getJSDocInfo();
         docInfos.add(info);
+
         for (Node typeAst : info.getTypeNodes()) {
           SymbolScope scope = scopes.get(t.getScopeRoot());
           visitTypeNode(scope == null ? globalScope : scope, typeAst);

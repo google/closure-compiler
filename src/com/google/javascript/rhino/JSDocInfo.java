@@ -121,14 +121,15 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * A piece of information in a marker containing a position with a string.
+   * A piece of information (found in a marker) which contains a position
+   * with a string.
    */
   public static class StringPosition extends SourcePosition<String> {
   }
 
   /**
-   * A piece of information in a marker containing a position with a string
-   * that has no leading or trailing whitespace.
+   * A piece of information (found in a marker) which contains a position
+   * with a string that has no leading or trailing whitespace.
    */
   static class TrimmedStringPosition extends StringPosition {
     @Override public void setItem(String item) {
@@ -141,7 +142,14 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * A piece of information in a marker containing a position with a type.
+   * A piece of information (found in a marker) which contains a position
+   * with a name node.
+   */
+  public static class NamePosition extends SourcePosition<Node> {}
+
+  /**
+   * A piece of information (found in a marker) which contains a position
+   * with a type expression syntax tree.
    */
   public static class TypePosition extends SourcePosition<Node> {
     private boolean brackets = false;
@@ -169,11 +177,12 @@ public class JSDocInfo implements Serializable {
   public static final class Marker {
     private TrimmedStringPosition annotation = null;
     private TrimmedStringPosition name = null;
+    private SourcePosition<Node> nameNode = null;
     private StringPosition description = null;
     private TypePosition type = null;
 
     /**
-     * Gets the position info for the annotation name (e.g., "@see").
+     * Gets the position information for the annotation name. (e.g., "param")
      */
     public StringPosition getAnnotation() {
       return annotation;
@@ -184,8 +193,11 @@ public class JSDocInfo implements Serializable {
     }
 
     /**
-     * Gets the position info for parameter name of a @param tag.
+     * Gets the position information for the name found
+     * in a @param tag.
+     * @deprecated Use #getNameNode
      */
+    @Deprecated
     public StringPosition getName() {
       return name;
     }
@@ -195,7 +207,20 @@ public class JSDocInfo implements Serializable {
     }
 
     /**
-     * Gets the position info for the description part of a block tag.
+     * Gets the position information for the name found
+     * in an @param tag.
+     */
+    public SourcePosition<Node> getNameNode() {
+      return nameNode;
+    }
+
+    void setNameNode(SourcePosition<Node> p) {
+      nameNode = p;
+    }
+
+    /**
+     * Gets the position information for the description found
+     * in a block tag.
      */
     public StringPosition getDescription() {
       return description;
@@ -206,7 +231,8 @@ public class JSDocInfo implements Serializable {
     }
 
     /**
-     * Gets the position info for the type expression of a block tag.
+     * Gets the position information for the type expression found
+     * in some block tags, like "@param" and "@return".
      */
     public TypePosition getType() {
       return type;

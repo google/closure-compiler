@@ -335,7 +335,7 @@ public class SymbolTableTest extends TestCase {
     assertEquals("Foo.prototype", refs.get(0).getNode().getQualifiedName());
   }
 
-  public void testReferencesInJSDoc() {
+  public void testReferencesInJSDocType() {
     SymbolTable table = createSymbolTable(
         "/** @constructor */ function Foo() {}\n" +
         "/** @type {Foo} */ var x;\n" +
@@ -368,7 +368,7 @@ public class SymbolTableTest extends TestCase {
     assertEquals(13, refs.get(4).getNode().getCharno());
   }
 
-  public void testReferencesInJSDoc2() {
+  public void testReferencesInJSDocType2() {
     SymbolTable table = createSymbolTable(
         "/** @param {string} x */ function f(x) {}\n");
     Symbol str = getGlobalVar(table, "String");
@@ -387,6 +387,19 @@ public class SymbolTableTest extends TestCase {
       Reference ref = refs.get(i);
       assertEquals(i != last, ref.getNode().isFromExterns());
     }
+  }
+
+  public void testReferencesInJSDocName() {
+    String code = "/** @param {Object} x */ function f(x) {}\n";
+    SymbolTable table = createSymbolTable(code);
+    Symbol x = getLocalVar(table, "x");
+    assertNotNull(x);
+
+    List<Reference> refs = Lists.newArrayList(table.getReferences(x));
+    assertEquals(2, refs.size());
+
+    assertEquals(code.indexOf("x) {"), refs.get(0).getNode().getCharno());
+    assertEquals(code.indexOf("x */"), refs.get(1).getNode().getCharno());
   }
 
   private Symbol getGlobalVar(SymbolTable table, String name) {

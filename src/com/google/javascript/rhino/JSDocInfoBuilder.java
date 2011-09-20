@@ -40,6 +40,7 @@
 package com.google.javascript.rhino;
 
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.Token;
 
 import java.util.Set;
 
@@ -193,12 +194,28 @@ final public class JSDocInfoBuilder {
    */
   public void markName(String name, int lineno, int charno) {
     if (currentMarker != null) {
+      // Record the name as both a SourcePosition<String> and a
+      // SourcePosition<Node>. The <String> form is deprecated,
+      // because <Node> is more consistent with how other name
+      // references are handled (see #markTypeNode)
+      //
+      // TODO(nicksantos): Remove all uses of the Name position
+      // and replace them with the NameNode position.
       JSDocInfo.TrimmedStringPosition position =
           new JSDocInfo.TrimmedStringPosition();
       position.setItem(name);
       position.setPositionInformation(lineno, charno,
           lineno, charno + name.length());
       currentMarker.setName(position);
+
+      SourcePosition<Node> nodePos =
+          new JSDocInfo.NamePosition();
+      Node node = Node.newString(Token.NAME, name, lineno, charno);
+      node.setLength(name.length());
+      nodePos.setItem(node);
+      nodePos.setPositionInformation(lineno, charno,
+          lineno, charno + name.length());
+      currentMarker.setNameNode(nodePos);
     }
   }
 
