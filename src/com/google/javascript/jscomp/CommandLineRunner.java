@@ -207,7 +207,8 @@ public class CommandLineRunner extends
         usage = "An output wrapper for a javascript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
         + "with a module specified using --module. The wrapper must "
-        + "contain %s as the code placeholder")
+        + "contain %s as the code placeholder. The %basename% placeholder can "
+        + "also be used to substitute the base name of the module output file.")
     private List<String> module_wrapper = Lists.newArrayList();
 
     @Option(name = "--module_output_path_prefix",

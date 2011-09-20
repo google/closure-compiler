@@ -660,6 +660,21 @@ public class CommandLineRunnerTest extends TestCase {
         lastCompiler.getOptions().sourceMapFormat);
   }
 
+  public void testModuleWrapperBaseNameExpansion() throws Exception {
+    useModules = ModulePattern.CHAIN;
+    args.add("--module_wrapper=m0:%s // %basename%");
+    testSame(new String[] {
+      "var x = 3;",
+      "var y = 4;"
+    });
+
+    StringBuilder builder = new StringBuilder();
+    lastCommandLineRunner.writeModuleOutput(
+        builder,
+        lastCompiler.getModuleGraph().getRootModule());
+    assertEquals("var x=3; // m0.js\n", builder.toString());
+  }
+
   public void testCharSetExpansion() {
     testSame("");
     assertEquals("US-ASCII", lastCompiler.getOptions().outputCharset);
@@ -957,10 +972,10 @@ public class CommandLineRunnerTest extends TestCase {
       args.add("/path/to/input" + i + ".js");
       if (useModules == ModulePattern.CHAIN) {
         args.add("--module");
-        args.add("mod" + i + ":1" + (i > 0 ? (":mod" + (i - 1)) : ""));
+        args.add("m" + i + ":1" + (i > 0 ? (":m" + (i - 1)) : ""));
       } else if (useModules == ModulePattern.STAR) {
         args.add("--module");
-        args.add("mod" + i + ":1" + (i > 0 ? ":mod0" : ""));
+        args.add("m" + i + ":1" + (i > 0 ? ":m0" : ""));
       }
     }
 

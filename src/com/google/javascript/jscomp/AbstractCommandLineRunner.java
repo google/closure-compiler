@@ -107,6 +107,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private Function<Integer, Boolean> exitCodeReceiverForTesting = null;
   private Map<String, String> rootRelativePathsMap = null;
 
+  private Map<String, String> parsedModuleWrappers = null;
+
   // Bookkeeping to measure optimal phase orderings.
   private static final int NUM_RUNS_TO_DETERMINE_OPTIMAL_ORDER = 100;
 
@@ -589,6 +591,26 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     return wrappers;
   }
 
+  private String getModuleOutputFileName(JSModule m) {
+    return config.moduleOutputPathPrefix + m.getName() + ".js";
+  }
+
+  @VisibleForTesting
+  void writeModuleOutput(Appendable out, JSModule m)
+      throws FlagUsageException, IOException {
+    if (parsedModuleWrappers == null) {
+      parsedModuleWrappers = parseModuleWrappers(
+          config.moduleWrapper,
+          Lists.newArrayList(compiler.getModuleGraph().getAllModules()));
+    }
+
+    String fileName = getModuleOutputFileName(m);
+    String baseName = new File(fileName).getName();
+    writeOutput(out, compiler, compiler.toSource(m),
+        parsedModuleWrappers.get(m.getName()).replace("%basename%", baseName),
+        "%s");
+  }
+
   /**
    * Writes code to an output stream, optionally wrapping it in an arbitrary
    * wrapper that contains a placeholder where the code should be inserted.
@@ -754,10 +776,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         // Output the source map if requested.
         outputSourceMap(options, options.jsOutputFile);
       } else {
-        String moduleFilePrefix = config.moduleOutputPathPrefix;
-        maybeCreateDirsForPath(moduleFilePrefix);
-        Map<String, String> moduleWrappers =
-            parseModuleWrappers(config.moduleWrapper, modules);
+        parsedModuleWrappers = parseModuleWrappers(config.moduleWrapper, modules);
+        maybeCreateDirsForPath(config.moduleOutputPathPrefix);
 
         // If the source map path is in fact a pattern for each
         // module, create a stream per-module. Otherwise, create
@@ -773,15 +793,13 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
             mapOut = fileNameToOutputWriter(expandSourceMapPath(options, m));
           }
 
-          Writer writer = fileNameToOutputWriter(
-              moduleFilePrefix + m.getName() + ".js");
+          Writer writer = fileNameToOutputWriter(getModuleOutputFileName(m));
 
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().reset();
           }
 
-          writeOutput(writer, compiler, compiler.toSource(m),
-              moduleWrappers.get(m.getName()), "%s");
+          writeModuleOutput(writer, m);
 
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().appendTo(mapOut, m.getName());
@@ -1570,10 +1588,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     private final List<String> moduleWrapper = Lists.newArrayList();
 
     /**
-     * An output wrapper for a javascript module (optional).
-     * The format is <name>:<wrapper>. The module name must correspond
-     * with a module specified using --module. The wrapper must
-     * contain %s as the code placeholder
+     * An output wrapper for a javascript module (optional). See the flag
+     * description for formatting requirements.
      */
     CommandLineConfig setModuleWrapper(List<String> moduleWrapper) {
       this.moduleWrapper.clear();
