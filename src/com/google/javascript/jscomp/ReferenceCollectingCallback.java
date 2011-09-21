@@ -527,6 +527,13 @@ class ReferenceCollectingCallback implements ScopedCallback,
       this.sourceFile = nameNode.getStaticSourceFile();
     }
 
+    /**
+     * Makes a copy of the current reference using a new Scope instance.
+     */
+    Reference cloneWithNewScope(Scope newScope) {
+      return new Reference(nameNode, basicBlock, newScope, inputId);
+    }
+
     @Override
     public Var getSymbol() {
       return scope.getVar(nameNode.getString());

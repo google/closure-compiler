@@ -178,4 +178,21 @@ public class GlobalVarReferenceMapTest extends TestCase {
     assertEquals(newVar3In2Ref, refs.references.get(0));
   }
 
+  public void testUpdateReferencesWithGlobalScope() {
+    Scope newGlobalScope = new Scope(root, (ObjectType) null);
+    map.updateReferencesWithGlobalScope(newGlobalScope);
+    ReferenceCollection references =
+        map.getReferences(globalScope.getVar(VAR1));
+    for (Reference ref : references) {
+      assertEquals(newGlobalScope, ref.getScope());
+    }
+    references = map.getReferences(globalScope.getVar(VAR2));
+    for (Reference ref : references) {
+      assertEquals(newGlobalScope, ref.getScope());
+    }
+    references = map.getReferences(globalScope.getVar(VAR3));
+    for (Reference ref : references) {
+      assertEquals(newGlobalScope, ref.getScope());
+    }
+  }
 }

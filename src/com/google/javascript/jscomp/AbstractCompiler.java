@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
@@ -323,6 +322,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    *
    * @return The reference collection map associated to global scope variable.
    */
-  abstract ReferenceMap getGlobalVarReferences();
+  abstract GlobalVarReferenceMap getGlobalVarReferences();
 
 }

@@ -208,4 +208,52 @@ class GlobalVarReferenceMap implements ReferenceMap {
       return refList.subList(firstAfter, refList.size());
     }
   }
+
+  /**
+   * @param globalScope a new Global Scope to replace the scope of references
+   *        with.
+   */
+  public void updateReferencesWithGlobalScope(Scope globalScope) {
+    for (ReferenceCollection collection : refMap.values()) {
+      List<Reference> newRefs =
+          Lists.newArrayListWithCapacity(collection.references.size());
+      for (Reference ref : collection.references) {
+        if (ref.getScope() != globalScope) {
+          newRefs.add(ref.cloneWithNewScope(globalScope));
+        } else {
+          newRefs.add(ref);
+        }
+      }
+      collection.references = newRefs;
+    }
+  }
+
+  /**
+   * A CleanupPass implementation that will replace references to old Syntactic
+   * Global Scopes generated in previous compile runs with references to the
+   * Global Typed Scope.
+   *
+   * @author tylerg@google.com (Tyler Goodwin)
+   */
+  static class GlobalVarRefCleanupPass implements HotSwapCompilerPass {
+
+    private final AbstractCompiler compiler;
+
+    public GlobalVarRefCleanupPass(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+      GlobalVarReferenceMap refMap = compiler.getGlobalVarReferences();
+      if (refMap != null) {
+        refMap.updateReferencesWithGlobalScope(compiler.getTopScope());
+      }
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      // GlobalVarRefCleanupPass should not do work during process.
+    }
+  }
 }

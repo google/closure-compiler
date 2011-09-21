@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
@@ -2094,7 +2093,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  ReferenceMap getGlobalVarReferences() {
+  GlobalVarReferenceMap getGlobalVarReferences() {
     return globalRefMap;
   }
 
