@@ -1591,6 +1591,38 @@ public class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.mayBeString(getNode("(1+[])")));
   }
 
+  public void testValidNames() {
+    assertTrue(NodeUtil.isValidPropertyName("a"));
+    assertTrue(NodeUtil.isValidPropertyName("a3"));
+    assertFalse(NodeUtil.isValidPropertyName("3a"));
+    assertFalse(NodeUtil.isValidPropertyName("a."));
+    assertFalse(NodeUtil.isValidPropertyName(".a"));
+    assertFalse(NodeUtil.isValidPropertyName("a.b"));
+    assertFalse(NodeUtil.isValidPropertyName("true"));
+    assertFalse(NodeUtil.isValidPropertyName("a.true"));
+    assertFalse(NodeUtil.isValidPropertyName("a..b"));
+
+    assertTrue(NodeUtil.isValidSimpleName("a"));
+    assertTrue(NodeUtil.isValidSimpleName("a3"));
+    assertFalse(NodeUtil.isValidSimpleName("3a"));
+    assertFalse(NodeUtil.isValidSimpleName("a."));
+    assertFalse(NodeUtil.isValidSimpleName(".a"));
+    assertFalse(NodeUtil.isValidSimpleName("a.b"));
+    assertFalse(NodeUtil.isValidSimpleName("true"));
+    assertFalse(NodeUtil.isValidSimpleName("a.true"));
+    assertFalse(NodeUtil.isValidSimpleName("a..b"));
+
+    assertTrue(NodeUtil.isValidQualifiedName("a"));
+    assertTrue(NodeUtil.isValidQualifiedName("a3"));
+    assertFalse(NodeUtil.isValidQualifiedName("3a"));
+    assertFalse(NodeUtil.isValidQualifiedName("a."));
+    assertFalse(NodeUtil.isValidQualifiedName(".a"));
+    assertTrue(NodeUtil.isValidQualifiedName("a.b"));
+    assertFalse(NodeUtil.isValidQualifiedName("true"));
+    assertFalse(NodeUtil.isValidQualifiedName("a.true"));
+    assertFalse(NodeUtil.isValidQualifiedName("a..b"));
+  }
+
   public void testGetNearestFunctionName() {
     testFunctionName("function a() {}", "a");
     testFunctionName("(function a() {})", "a");

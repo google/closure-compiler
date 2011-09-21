@@ -2523,10 +2523,9 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether the given name can appear on the right side of
-   * the dot operator. Many properties (like reserved words) cannot.
+   * Determines whether the given name is a valid variable name.
    */
-  static boolean isValidPropertyName(String name) {
+  public static boolean isValidSimpleName(String name) {
     return TokenStream.isJSIdentifier(name) &&
         !TokenStream.isKeyword(name) &&
         // no Unicode escaped characters - some browsers are less tolerant
@@ -2536,6 +2535,32 @@ public final class NodeUtil {
         // to UTF-16 characters, so we're only searching for character
         // values, not escapes.
         isLatin(name);
+  }
+
+  /**
+   * Determines whether the given name is a valid qualified name.
+   */
+  // TODO(nicksantos): This should be moved into a "Language" API,
+  // so that the results are different for es5 and es3.
+  public static boolean isValidQualifiedName(String name) {
+    if (name.endsWith(".") || name.startsWith(".")) {
+      return false;
+    }
+    String[] parts = name.split("\\.");
+    for (String part : parts) {
+      if (!isValidSimpleName(part)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Determines whether the given name can appear on the right side of
+   * the dot operator. Many properties (like reserved words) cannot.
+   */
+  static boolean isValidPropertyName(String name) {
+    return isValidSimpleName(name);
   }
 
   private static class VarCollector implements Visitor {
