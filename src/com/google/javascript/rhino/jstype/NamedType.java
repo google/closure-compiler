@@ -258,10 +258,15 @@ class NamedType extends ProxyObjectType {
                                     StaticScope<JSType> enclosing) {
     JSType value = lookupViaProperties(t, enclosing);
     // last component of the chain
-    if (value != null && (value.isConstructor() || value.isInterface())) {
+    if (value != null && value.isFunctionType() &&
+        (value.isConstructor() || value.isInterface())) {
       FunctionType functionType = value.toMaybeFunctionType();
       setReferencedAndResolvedType(
           functionType.getInstanceType(), t, enclosing);
+    } else if (value != null && value.isNoObjectType()) {
+      setReferencedAndResolvedType(
+          registry.getNativeFunctionType(
+              JSTypeNative.NO_OBJECT_TYPE).getInstanceType(), t, enclosing);
     } else if (value instanceof EnumType) {
       setReferencedAndResolvedType(
           ((EnumType) value).getElementsType(), t, enclosing);

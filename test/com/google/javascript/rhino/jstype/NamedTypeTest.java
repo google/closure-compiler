@@ -59,4 +59,15 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
             ImmutableMap.of("TypeA", ctorA)));
     assertTypeEquals(NUMBER_TYPE, typeA.getPropertyType("foo"));
   }
+
+  public void testActiveXObjectResolve() {
+    NamedType activeXObject =
+        new NamedType(registry, "ActiveXObject", "source", 1, 0);
+    activeXObject.resolve(
+        null,
+        new MapBasedScope(
+            ImmutableMap.of("ActiveXObject", NO_OBJECT_TYPE)));
+    assertEquals("ActiveXObject", activeXObject.toString());
+    assertTypeEquals(NO_OBJECT_TYPE, activeXObject.getReferencedType());
+  }
 }
