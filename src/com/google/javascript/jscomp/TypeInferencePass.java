@@ -104,10 +104,9 @@ class TypeInferencePass implements CompilerPass {
     TypeInference typeInference =
         new TypeInference(
             compiler, computeCfg(n), reverseInterpreter, scope,
-            assertionFunctionsMap, getUnflowableVars(scope));
+            assertionFunctionsMap);
     try {
       typeInference.analyze();
-      escapedLocalVars.putAll(typeInference.getAssignedOuterLocalVars());
 
       // Resolve any new type names found during the inference.
       compiler.getTypeRegistry().resolveTypesInScope(scope);

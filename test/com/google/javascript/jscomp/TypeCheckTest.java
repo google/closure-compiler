@@ -618,7 +618,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // Don't do type inference on GETELEMs.
     testClosureTypes(
         CLOSURE_DEFS +
-        "function f(arguments) { " +
+        "function f(x) { " +
         "  return goog.isString(arguments[0]) ? arguments[0] : 0;" +
         "}", null);
   }
@@ -627,7 +627,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // Don't do type inference on GETELEMs.
     testClosureTypes(
         CLOSURE_DEFS +
-        "function f(arguments) { " +
+        "function f(x) { " +
         "  return typeof arguments[0] == 'string' ? arguments[0] : 0;" +
         "}", null);
   }
@@ -9222,7 +9222,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         registry)
         .processForTesting(null, n);
 
-    assertEquals(0, compiler.getErrorCount());
+    assertEquals(
+        "unexpected error(s) : " +
+        Joiner.on(", ").join(compiler.getErrors()),
+        0, compiler.getErrorCount());
 
     if (descriptions == null) {
       assertEquals(

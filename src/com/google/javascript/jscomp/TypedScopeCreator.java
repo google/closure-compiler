@@ -49,12 +49,15 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
+import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
+import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.ErrorReporter;
@@ -140,6 +143,10 @@ final class TypedScopeCreator implements ScopeCreator {
   private final Map<String, String> delegateCallingConventions =
       Maps.newHashMap();
 
+  // Simple properties inferred about functions.
+  private final Map<Node, AstFunctionContents> functionAnalysisResults =
+      Maps.newHashMap();
+
   /**
    * Defer attachment of types to nodes until all type names
    * have been resolved. Then, we can resolve the type and attach it.
@@ -189,6 +196,10 @@ final class TypedScopeCreator implements ScopeCreator {
     Scope newScope = null;
     AbstractScopeBuilder scopeBuilder = null;
     if (parent == null) {
+      // Run a first-order analysis over the syntax tree.
+      (new FirstOrderFunctionAnalyzer(compiler, functionAnalysisResults))
+          .process(root.getFirstChild(), root.getLastChild());
+
       // Find all the classes in the global scope.
       newScope = createInitialScope(root);
 
@@ -241,6 +252,9 @@ final class TypedScopeCreator implements ScopeCreator {
     Preconditions.checkState(scriptRoot.getType() == Token.SCRIPT);
     Preconditions.checkNotNull(globalScope);
     Preconditions.checkState(globalScope.isGlobal());
+
+    (new FirstOrderFunctionAnalyzer(
+        compiler, functionAnalysisResults)).process(null, scriptRoot);
 
     // TODO(bashir): Variable declaration is not the only side effect of last
     // global scope generation but here we only wipe that part off!
@@ -865,7 +879,7 @@ final class TypedScopeCreator implements ScopeCreator {
           FunctionTypeBuilder builder =
               new FunctionTypeBuilder(name, compiler, errorRoot, sourceName,
                   scope)
-              .setSourceNode(fnRoot)
+              .setContents(getFunctionAnalysisResults(fnRoot))
               .inferFromOverriddenFunction(overriddenPropType, parametersNode)
               .inferTemplateTypeName(info)
               .inferReturnType(info)
@@ -889,7 +903,6 @@ final class TypedScopeCreator implements ScopeCreator {
 
           functionType = builder
               .inferParameterTypes(parametersNode, info)
-              .inferReturnStatementsAsLastResort(fnBlock)
               .buildAndRegister();
         }
       }
@@ -1721,6 +1734,16 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     void build() {
       NodeTraversal.traverse(compiler, scope.getRootNode(), this);
+
+      AstFunctionContents contents =
+          getFunctionAnalysisResults(scope.getRootNode());
+      if (contents != null) {
+        for (String varName : contents.getEscapedVarNames()) {
+          Var v = scope.getVar(varName);
+          Preconditions.checkState(v.getScope() == scope);
+          v.markEscaped();
+        }
+      }
     }
 
     /**
@@ -1789,4 +1812,66 @@ final class TypedScopeCreator implements ScopeCreator {
       }
     } // end declareArguments
   } // end LocalScopeBuilder
+
+  /**
+   * Does a first-order function analysis that just looks at simple things
+   * like what variables are escaped, and whether 'this' is used.
+   */
+  private static class FirstOrderFunctionAnalyzer
+      extends AbstractScopedCallback implements CompilerPass {
+    private final AbstractCompiler compiler;
+    private final Map<Node, AstFunctionContents> data;
+
+    FirstOrderFunctionAnalyzer(
+        AbstractCompiler compiler, Map<Node, AstFunctionContents> outParam) {
+      this.compiler = compiler;
+      this.data = outParam;
+    }
+
+    @Override public void process(Node externs, Node root) {
+      if (externs == null) {
+        NodeTraversal.traverse(compiler, root, this);
+      } else {
+        NodeTraversal.traverseRoots(
+            compiler, ImmutableList.of(externs, root), this);
+      }
+    }
+
+    @Override public void enterScope(NodeTraversal t) {
+      if (!t.inGlobalScope()) {
+        Node n = t.getScopeRoot();
+        data.put(n, new AstFunctionContents(n));
+      }
+    }
+
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      if (t.inGlobalScope()) {
+        return;
+      }
+
+      if (n.getType() == Token.RETURN && n.getFirstChild() != null) {
+        data.get(t.getScopeRoot()).recordNonEmptyReturn();
+      } else if (n.getType() == Token.NAME && NodeUtil.isLValue(n)) {
+        String name = n.getString();
+        Scope scope = t.getScope();
+        Var var = scope.getVar(name);
+        if (var != null) {
+          Scope ownerScope = var.getScope();
+          if (scope != ownerScope && ownerScope.isLocal()) {
+            data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
+          }
+        }
+      }
+    }
+  }
+
+  private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+    if (n == null) {
+      return null;
+    }
+
+    // Sometimes this will return null in things like
+    // NameReferenceGraphConstruction that build partial scopes.
+    return functionAnalysisResults.get(n);
+  }
 }

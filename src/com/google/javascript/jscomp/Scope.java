@@ -120,6 +120,8 @@ public class Scope
     /** The enclosing scope */
     final Scope scope;
 
+    private boolean markedEscaped = false;
+
     /**
      * Creates a variable.
      *
@@ -328,6 +330,19 @@ public class Scope
     @Override
     public String toString() {
       return "Scope.Var " + name + "{" + type + "}";
+    }
+
+    /** Record that this is escaped by an inner scope. */
+    void markEscaped() {
+      markedEscaped = true;
+    }
+
+    /**
+     * Whether this is escaped by an inner scope.
+     * Notice that not all scope creators record this information.
+     */
+    boolean isMarkedEscaped() {
+      return markedEscaped;
     }
   }
 

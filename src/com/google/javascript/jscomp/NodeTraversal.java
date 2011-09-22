@@ -135,6 +135,24 @@ public class NodeTraversal {
   }
 
   /**
+   * Abstract scoped callback to visit all nodes in post order.
+   */
+  public abstract static class AbstractScopedCallback
+      implements ScopedCallback {
+    @Override
+    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
+        Node parent) {
+      return true;
+    }
+
+    @Override
+    public void enterScope(NodeTraversal t) {}
+
+    @Override
+    public void exitScope(NodeTraversal t) {}
+  }
+
+  /**
    * Abstract callback to visit all nodes but not traverse into function
    * bodies.
    */

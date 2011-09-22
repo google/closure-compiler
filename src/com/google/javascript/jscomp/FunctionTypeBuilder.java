@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
@@ -71,6 +72,8 @@ final class FunctionTypeBuilder {
   private final String sourceName;
   private final Scope scope;
 
+  private FunctionContents contents = UnknownFunctionContents.get();
+
   private JSType returnType = null;
   private boolean returnTypeInferred = false;
   private List<ObjectType> implementedInterfaces = null;
@@ -80,7 +83,6 @@ final class FunctionTypeBuilder {
   private boolean isConstructor = false;
   private boolean isInterface = false;
   private Node parametersNode = null;
-  private Node sourceNode = null;
   private String templateTypeName = null;
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
@@ -219,10 +221,12 @@ final class FunctionTypeBuilder {
   }
 
   /**
-   * Sets the FUNCTION node of this function.
+   * Sets the contents of this function.
    */
-  FunctionTypeBuilder setSourceNode(@Nullable Node sourceNode) {
-    this.sourceNode = sourceNode;
+  FunctionTypeBuilder setContents(@Nullable FunctionContents contents) {
+    if (contents != null) {
+      this.contents = contents;
+    }
     return this;
   }
 
@@ -301,42 +305,6 @@ final class FunctionTypeBuilder {
         returnType != null &&
         returnType.restrictByNotNullOrUndefined().isTemplateType()) {
       reportError(TEMPLATE_TYPE_EXPECTED, fnName);
-    }
-    return this;
-  }
-
-  /**
-   * If we haven't found a return value yet, try to look at the "return"
-   * statements in the function.
-   */
-  FunctionTypeBuilder inferReturnStatementsAsLastResort(
-      @Nullable Node functionBlock) {
-    if (functionBlock == null || functionBlock.isFromExterns()) {
-      return this;
-    }
-    Preconditions.checkArgument(functionBlock.getType() == Token.BLOCK);
-    if (returnType == null) {
-      boolean hasNonEmptyReturns = false;
-      List<Node> worklist = Lists.newArrayList(functionBlock);
-      while (!worklist.isEmpty()) {
-        Node current = worklist.remove(worklist.size() - 1);
-        int cType = current.getType();
-        if (cType == Token.RETURN && current.getFirstChild() != null) {
-          hasNonEmptyReturns = true;
-          break;
-        } else if (NodeUtil.isStatementBlock(current) ||
-            NodeUtil.isControlStructure(current)) {
-          for (Node child = current.getFirstChild();
-               child != null; child = child.getNext()) {
-            worklist.add(child);
-          }
-        }
-      }
-
-      if (!hasNonEmptyReturns) {
-        returnType = typeRegistry.getNativeType(VOID_TYPE);
-        returnTypeInferred = true;
-      }
     }
     return this;
   }
@@ -604,6 +572,12 @@ final class FunctionTypeBuilder {
    * Builds the function type, and puts it in the registry.
    */
   FunctionType buildAndRegister() {
+    if (returnType == null &&
+        !contents.mayHaveNonEmptyReturns() && !contents.mayBeFromExterns()) {
+      returnType = typeRegistry.getNativeType(VOID_TYPE);
+      returnTypeInferred = true;
+    }
+
     if (returnType == null) {
       returnType = typeRegistry.getNativeType(UNKNOWN_TYPE);
     }
@@ -617,7 +591,8 @@ final class FunctionTypeBuilder {
     if (isConstructor) {
       fnType = getOrCreateConstructor();
     } else if (isInterface) {
-      fnType = typeRegistry.createInterfaceType(fnName, sourceNode);
+      fnType = typeRegistry.createInterfaceType(
+          fnName, contents.getSourceNode());
       if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
         typeRegistry.declareType(fnName, fnType.getInstanceType());
       }
@@ -625,7 +600,7 @@ final class FunctionTypeBuilder {
     } else {
       fnType = new FunctionBuilder(typeRegistry)
           .withName(fnName)
-          .withSourceNode(sourceNode)
+          .withSourceNode(contents.getSourceNode())
           .withParamsNode(parametersNode)
           .withReturnType(returnType, returnTypeInferred)
           .withTypeOfThis(thisType)
@@ -668,7 +643,7 @@ final class FunctionTypeBuilder {
    */
   private FunctionType getOrCreateConstructor() {
     FunctionType fnType = typeRegistry.createConstructorType(
-        fnName, sourceNode, parametersNode, returnType);
+        fnName, contents.getSourceNode(), parametersNode, returnType);
     JSType existingType = typeRegistry.getType(fnName);
 
     if (existingType != null) {
@@ -680,7 +655,7 @@ final class FunctionTypeBuilder {
             typeRegistry.getNativeFunctionType(FUNCTION_FUNCTION_TYPE);
 
         if (existingFn.getSource() == null) {
-          existingFn.setSource(sourceNode);
+          existingFn.setSource(contents.getSourceNode());
         }
 
         if (!existingFn.hasEqualCallType(fnType)) {
@@ -767,6 +742,92 @@ final class FunctionTypeBuilder {
         }
       }
       return false;
+    }
+  }
+
+  /** Holds data dynamically inferred about functions. */
+  static interface FunctionContents {
+    /** Returns the source node of this function. May be null. */
+    Node getSourceNode();
+
+    /** Returns if the function may be in externs. */
+    boolean mayBeFromExterns();
+
+    /** Returns if a return of a real value (not undefined) appears. */
+    boolean mayHaveNonEmptyReturns();
+
+    /** Gets a list of variables in this scope that are escaped. */
+    Iterable<String> getEscapedVarNames();
+  }
+
+  static class UnknownFunctionContents implements FunctionContents {
+    private static UnknownFunctionContents singleton =
+        new UnknownFunctionContents();
+
+    static FunctionContents get() {
+      return singleton;
+    }
+
+    @Override
+    public Node getSourceNode() {
+      return null;
+    }
+
+    @Override
+    public boolean mayBeFromExterns() {
+      return true;
+    }
+
+    @Override
+    public boolean mayHaveNonEmptyReturns() {
+      return true;
+    }
+
+    @Override
+    public Iterable<String> getEscapedVarNames() {
+      return ImmutableList.of();
+    }
+  }
+
+  static class AstFunctionContents implements FunctionContents {
+    private final Node n;
+    private boolean hasNonEmptyReturns = false;
+    private Set<String> escapedVarNames;
+
+    AstFunctionContents(Node n) {
+      this.n = n;
+    }
+
+    @Override
+    public Node getSourceNode() {
+      return n;
+    }
+
+    @Override
+    public boolean mayBeFromExterns() {
+      return n.isFromExterns();
+    }
+
+    @Override
+    public boolean mayHaveNonEmptyReturns() {
+      return hasNonEmptyReturns;
+    }
+
+    void recordNonEmptyReturn() {
+      hasNonEmptyReturns = true;
+    }
+
+    @Override
+    public Iterable<String> getEscapedVarNames() {
+      return escapedVarNames == null
+          ? ImmutableList.<String>of() : escapedVarNames;
+    }
+
+    void recordEscapedVarName(String name) {
+      if (escapedVarNames == null) {
+        escapedVarNames = Sets.newHashSet();
+      }
+      escapedVarNames.add(name);
     }
   }
 }
