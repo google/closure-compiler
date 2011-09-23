@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
-
 
 /**
  * A symbol table for inferring types during data flow analysis.
@@ -55,7 +55,7 @@ interface FlowScope extends StaticScope<JSType>, LatticeElement {
    * type of the slot when we enter the scope, and the current type being
    * inferred.
    */
-  void inferQualifiedSlot(String symbol, JSType bottomType,
+  void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
       JSType inferredType);
 
   /**

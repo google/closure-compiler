@@ -108,7 +108,7 @@ class LinkedFlowScope implements FlowScope {
   }
 
   @Override
-  public void inferQualifiedSlot(String symbol, JSType bottomType,
+  public void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
       JSType inferredType) {
     Scope functionScope = getFunctionScope();
     if (functionScope.isLocal()) {
@@ -117,7 +117,11 @@ class LinkedFlowScope implements FlowScope {
         // already defined even if they haven't been declared in the Scope
         // object. If the name has not yet been defined in this scope, we
         // need to define it now before we refine it.
-        functionScope.declare(symbol, null, bottomType, null);
+        int firstDot = symbol.indexOf(".");
+        Preconditions.checkState(firstDot != -1);
+        Var owner = functionScope.getVar(symbol.substring(0, firstDot));
+        Scope ownerScope = owner == null ? functionScope : owner.getScope();
+        ownerScope.declare(symbol, node, bottomType, null);
       }
 
       inferSlotType(symbol, inferredType);

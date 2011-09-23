@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 /**
+ * @author mkretzschmar@google.com (Martin Kretzschmar)
  */
 public class CheckMissingGetCssNameTest extends CompilerTestCase {
   @Override

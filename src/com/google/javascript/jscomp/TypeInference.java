@@ -472,7 +472,7 @@ class TypeInference
       case Token.GETPROP:
         String qualifiedName = left.getQualifiedName();
         if (qualifiedName != null) {
-          scope.inferQualifiedSlot(qualifiedName,
+          scope.inferQualifiedSlot(left, qualifiedName,
               leftType == null ? getNativeType(UNKNOWN_TYPE) : leftType,
               resultType);
         }
@@ -806,7 +806,7 @@ class TypeInference
     scope = scope.createChildFlowScope();
     if (node.getType() == Token.GETPROP) {
       scope.inferQualifiedSlot(
-          node.getQualifiedName(), getJSType(node), narrowed);
+          node, node.getQualifiedName(), getJSType(node), narrowed);
     } else {
       redeclareSimpleVar(scope, node, narrowed);
     }

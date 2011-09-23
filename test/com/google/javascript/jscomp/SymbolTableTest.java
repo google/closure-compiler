@@ -402,15 +402,35 @@ public class SymbolTableTest extends TestCase {
     assertEquals(code.indexOf("x */"), refs.get(1).getNode().getCharno());
   }
 
+  public void testGlobalQualifiedNamesInLocalScopes() {
+    SymbolTable table = createSymbolTable(
+        "/** @const */ var x = {}; function f() { x.number = 3; }");
+    Symbol xNumber = getLocalVar(table, "x.number");
+    assertNotNull(xNumber);
+    assertTrue(table.getScope(xNumber).isGlobalScope());
+
+    assertEquals("?", xNumber.getType().toString());
+  }
+
+  public void testLocalQualifiedNamesInLocalScopes() {
+    SymbolTable table = createSymbolTable(
+        "function f() { var x = {}; x.number = 3; }");
+    Symbol xNumber = getLocalVar(table, "x.number");
+    assertNotNull(xNumber);
+    assertFalse(table.getScope(xNumber).isGlobalScope());
+
+    assertEquals("?", xNumber.getType().toString());
+  }
+
   private Symbol getGlobalVar(SymbolTable table, String name) {
     return table.getGlobalScope().getSlot(name);
   }
 
   private Symbol getLocalVar(SymbolTable table, String name) {
-    for (Symbol symbol : table.getAllSymbols()) {
-      if (symbol.getName().equals(name) &&
-          table.getScope(symbol).getParentScope() != null) {
-        return symbol;
+    for (SymbolScope scope : table.getAllScopes()) {
+      if (!scope.isGlobalScope() && scope.isLexicalScope() &&
+          scope.getSlot(name) != null) {
+        return scope.getSlot(name);
       }
     }
     return null;

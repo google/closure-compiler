@@ -399,6 +399,11 @@ public final class SymbolTable
     }
   }
 
+  /** Gets all the scopes in this symbol table. */
+  Collection<SymbolScope> getAllScopes() {
+    return Collections.unmodifiableCollection(scopes.values());
+  }
+
   /**
    * Make sure all the symbols and references in {@code otherSymbolTable}
    * are in this symbol table.

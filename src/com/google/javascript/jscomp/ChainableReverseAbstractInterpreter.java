@@ -164,7 +164,7 @@ abstract class ChainableReverseAbstractInterpreter
 
         JSType origType = node.getJSType();
         origType = origType == null ? getNativeType(UNKNOWN_TYPE) : origType;
-        scope.inferQualifiedSlot(qualifiedName, origType, type);
+        scope.inferQualifiedSlot(node, qualifiedName, origType, type);
         break;
 
       default:

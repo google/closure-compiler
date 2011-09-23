@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
  * Ensures string literals matching certain patterns are only used as
  * goog.getCssName parameters.
  *
+ * @author mkretzschmar@google.com (Martin Kretzschmar)
  */
 class CheckMissingGetCssName
     extends AbstractPostOrderCallback implements CompilerPass {

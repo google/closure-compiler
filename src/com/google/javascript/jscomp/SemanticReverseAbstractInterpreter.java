@@ -463,7 +463,7 @@ class SemanticReverseAbstractInterpreter
           JSType unknownType = typeRegistry.getNativeType(
               JSTypeNative.UNKNOWN_TYPE);
           informed.inferQualifiedSlot(
-              propertyQualifiedName, unknownType, unknownType);
+              object, propertyQualifiedName, unknownType, unknownType);
           return informed;
         }
       }
