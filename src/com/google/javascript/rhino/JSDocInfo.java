@@ -1388,7 +1388,14 @@ public class JSDocInfo implements Serializable {
     return this.associatedNode;
   }
 
-  void setAssociatedNode(Node node) {
+  /**
+   * Sets the node associated with this JSDoc.
+   * Notice that many nodes may have pointer to the same JSDocInfo
+   * object (because we propagate it across the type graph). But there
+   * is only one canonical "owner" node of the JSDocInfo, which corresponds
+   * to its original place in the syntax tree.
+   */
+  public void setAssociatedNode(Node node) {
     this.associatedNode = node;
   }
 

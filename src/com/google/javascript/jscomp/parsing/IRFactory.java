@@ -189,13 +189,19 @@ class IRFactory {
     // Only after we've seen all @fileoverview entries, attach the
     // last one to the root node, and copy the found license strings
     // to that node.
-    irNode.setJSDocInfo(rootNodeJsDocHolder.getJSDocInfo());
+    JSDocInfo rootNodeJsDoc = rootNodeJsDocHolder.getJSDocInfo();
+    if (rootNodeJsDoc != null) {
+      irNode.setJSDocInfo(rootNodeJsDoc);
+      rootNodeJsDoc.setAssociatedNode(irNode);
+    }
+
     if (fileOverviewInfo != null) {
       if ((irNode.getJSDocInfo() != null) &&
           (irNode.getJSDocInfo().getLicense() != null)) {
         fileOverviewInfo.setLicense(irNode.getJSDocInfo().getLicense());
       }
       irNode.setJSDocInfo(fileOverviewInfo);
+      fileOverviewInfo.setAssociatedNode(irNode);
     }
   }
 
