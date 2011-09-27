@@ -4655,6 +4655,36 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
+   * Tests that Proxied FunctionTypes behave the same over getLeastSupertype and
+   * getGreatestSubtype as non proxied FunctionTypes
+   */
+  public void testSupertypeOfProxiedFunctionTypes() {
+    ObjectType fn1 =
+        new FunctionBuilder(registry)
+        .withParamsNode(new Node(Token.LP))
+        .withReturnType(NUMBER_TYPE)
+        .build();
+    ObjectType fn2 =
+        new FunctionBuilder(registry)
+        .withParamsNode(new Node(Token.LP))
+        .withReturnType(STRING_TYPE)
+        .build();
+    ObjectType p1 = new ProxyObjectType(registry, fn1);
+    ObjectType p2 = new ProxyObjectType(registry, fn2);
+    ObjectType supremum =
+        new FunctionBuilder(registry)
+        .withParamsNode(new Node(Token.LP))
+        .withReturnType(registry.createUnionType(STRING_TYPE, NUMBER_TYPE))
+        .build();
+
+    assertTypeEquals(fn1.getLeastSupertype(fn2), p1.getLeastSupertype(p2));
+    assertTypeEquals(supremum, fn1.getLeastSupertype(fn2));
+    assertTypeEquals(supremum, fn1.getLeastSupertype(p2));
+    assertTypeEquals(supremum, p1.getLeastSupertype(fn2));
+    assertTypeEquals(supremum, p1.getLeastSupertype(p2));
+  }
+
+  /**
    * Tests the {@link NamedType#equals} function, which had a bug in it.
    */
   public void testNamedTypeEquals() {
@@ -4917,6 +4947,29 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     verifySubtypeChain(typeChain);
   }
 
+  public void testFunctionUnionSubtypeChain() throws Exception {
+    List<JSType> typeChain = Lists.newArrayList(
+        createUnionType(
+            OBJECT_TYPE,
+            STRING_TYPE),
+        createUnionType(
+            GREATEST_FUNCTION_TYPE,
+            googBarInst,
+            STRING_TYPE),
+        createUnionType(
+            STRING_TYPE,
+            registry.createFunctionType(
+                createUnionType(STRING_TYPE, NUMBER_TYPE)),
+            googBarInst),
+        createUnionType(
+            registry.createFunctionType(NUMBER_TYPE),
+            googSubBarInst),
+        LEAST_FUNCTION_TYPE,
+        NO_OBJECT_TYPE,
+        NO_TYPE);
+    verifySubtypeChain(typeChain);
+  }
+
   public void testConstructorSubtypeChain() throws Exception {
     List<JSType> typeChain = Lists.newArrayList(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
@@ -5023,6 +5076,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void verifySubtypeChain(List<JSType> typeChain,
                                  boolean checkSubtyping) throws Exception {
+    // Ugh. This wouldn't require so much copy-and-paste if we had a functional
+    // programming language.
     for (int i = 0; i < typeChain.size(); i++) {
       for (int j = 0; j < typeChain.size(); j++) {
         JSType typeI = typeChain.get(i);
@@ -5030,17 +5085,23 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
         JSType namedTypeI = getNamedWrapper("TypeI", typeI);
         JSType namedTypeJ = getNamedWrapper("TypeJ", typeJ);
+        JSType proxyTypeI = new ProxyObjectType(registry, typeI);
+        JSType proxyTypeJ = new ProxyObjectType(registry, typeJ);
 
         if (i == j) {
           assertTrue(typeI + " should equal itself",
               typeI.isEquivalentTo(typeI));
           assertTrue("Named " + typeI + " should equal itself",
               namedTypeI.isEquivalentTo(namedTypeI));
+          assertTrue("Proxy " + typeI + " should equal itself",
+              proxyTypeI.isEquivalentTo(proxyTypeI));
         } else {
           assertFalse(typeI + " should not equal " + typeJ,
               typeI.isEquivalentTo(typeJ));
           assertFalse("Named " + typeI + " should not equal " + typeJ,
               namedTypeI.isEquivalentTo(namedTypeJ));
+          assertFalse("Proxy " + typeI + " should not equal " + typeJ,
+              proxyTypeI.isEquivalentTo(proxyTypeJ));
         }
 
         if (checkSubtyping) {
@@ -5050,24 +5111,54 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             assertTrue(
                 "Named " + typeJ + " should be a subtype of Named " + typeI,
                 namedTypeJ.isSubtype(namedTypeI));
+            // TODO(nicksantos): Should these tests pass?
+            //assertTrue(
+            //    "Proxy " + typeJ + " should be a subtype of Proxy " + typeI,
+            //    proxyTypeJ.isSubtype(proxyTypeI));
           } else {
             assertFalse(typeJ + " should not be a subtype of " + typeI,
                 typeJ.isSubtype(typeI));
             assertFalse(
                 "Named " + typeJ + " should not be a subtype of Named " + typeI,
                 namedTypeJ.isSubtype(namedTypeI));
+            // TODO(nicksantos): Should these tests pass?
+            //assertFalse(
+            //    "Named " + typeJ + " should not be a subtype of Named " + typeI,
+            //    proxyTypeJ.isSubtype(proxyTypeI));
           }
 
           JSType expectedSupremum = i < j ? typeI : typeJ;
           JSType expectedInfimum = i > j ? typeI : typeJ;
+
           assertTypeEquals(
               expectedSupremum + " should be the least supertype of " + typeI +
               " and " + typeJ,
               expectedSupremum, typeI.getLeastSupertype(typeJ));
+
+          // TODO(nicksantos): Should these tests pass?
+          //assertTypeEquals(
+          //    expectedSupremum + " should be the least supertype of Named " +
+          //    typeI + " and Named " + typeJ,
+          //    expectedSupremum, namedTypeI.getLeastSupertype(namedTypeJ));
+          //assertTypeEquals(
+          //    expectedSupremum + " should be the least supertype of Proxy " +
+          //    typeI + " and Proxy " + typeJ,
+          //    expectedSupremum, proxyTypeI.getLeastSupertype(proxyTypeJ));
+
           assertTypeEquals(
               expectedInfimum + " should be the greatest subtype of " + typeI +
               " and " + typeJ,
               expectedInfimum, typeI.getGreatestSubtype(typeJ));
+
+          // TODO(nicksantos): Should these tests pass?
+          //assertTypeEquals(
+          //    expectedInfimum + " should be the greatest subtype of Named " +
+          //    typeI + " and Named " + typeJ,
+          //    expectedInfimum, namedTypeI.getGreatestSubtype(namedTypeJ));
+          //assertTypeEquals(
+          //    expectedInfimum + " should be the greatest subtype of Proxy " +
+          //    typeI + " and Proxy " + typeJ,
+          //    expectedInfimum, proxyTypeI.getGreatestSubtype(proxyTypeJ));
         }
       }
     }

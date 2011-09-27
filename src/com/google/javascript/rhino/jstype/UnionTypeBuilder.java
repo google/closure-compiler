@@ -44,6 +44,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.jstype.UnionType;
@@ -71,6 +72,26 @@ class UnionTypeBuilder implements Serializable {
   private boolean isNativeUnknownType = false;
   private boolean areAllUnknownsChecked = true;
   private final int maxUnionSize;
+
+  // Every UnionType may have at most one structural function in it.
+  //
+  // NOTE(nicksantos): I've read some literature that says that type-inferenced
+  // languages are fundamentally incompatible with union types. I refuse
+  // to believe this. But they do make the type lattice much more complicated.
+  //
+  // For this reason, when we deal with function types, we actually merge some
+  // nodes on the lattice, and treat them as fundamentally equivalent.
+  // For example, we treat
+  // function(): string | function(): number
+  // as equivalent to
+  // function(): (string|number)
+  // and normalize the first type into the second type.
+  //
+  // To perform this normalization, we've modified UnionTypeBuilder to disallow
+  // multiple structural functions in a union. We always delegate to
+  // FunctionType::getLeastSupertype, which either merges the functions into
+  // one structural function, or just bails out and uses the top function type.
+  private int functionTypePosition = -1;
 
   // Memoize the result, in case build() is called multiple times.
   private JSType result = null;
@@ -125,6 +146,7 @@ class UnionTypeBuilder implements Serializable {
         // Look through the alternates we've got so far,
         // and check if any of them are duplicates of
         // one another.
+        int i = 0;
         Iterator<JSType> it = alternates.iterator();
         while (it.hasNext()) {
           JSType current = it.next();
@@ -147,10 +169,29 @@ class UnionTypeBuilder implements Serializable {
             } else if (current.isSubtype(alternate)) {
               // Alternate makes current obsolete
               it.remove();
+              if (i == functionTypePosition) {
+                functionTypePosition = -1;
+              }
             }
           }
+          i++;
         }
-        alternates.add(alternate);
+
+        if (alternate.isFunctionType()) {
+          // See the comments on functionTypePosition above.
+          if (functionTypePosition == -1) {
+            functionTypePosition = alternates.size();
+            alternates.add(alternate);
+          } else {
+            JSType supremum = alternate.toMaybeFunctionType().getLeastSupertype(
+                alternates.get(functionTypePosition).toMaybeFunctionType());
+            Preconditions.checkState(supremum.isFunctionType());
+            alternates.set(functionTypePosition, supremum);
+          }
+        } else {
+          alternates.add(alternate);
+        }
+
         result = null; // invalidate the memoized result
       }
     } else {

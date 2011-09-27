@@ -369,15 +369,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseUnionType13() throws Exception {
     testParseType(
         "(function(this:Date),function(this:String):number)",
-        "(function (this:Date): ?|function (this:String): number)");
+        "Function");
   }
 
   public void testParseUnionType14() throws Exception {
     testParseType(
         "(function(...[function(number):boolean]):number)|" +
         "function(this:String, string):number",
-        "(function (...[function (number): boolean]): number|" +
-        "function (this:String, string): number)");
+        "Function");
   }
 
   public void testParseUnionType15() throws Exception {
