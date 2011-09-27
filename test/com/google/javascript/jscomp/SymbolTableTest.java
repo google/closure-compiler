@@ -223,7 +223,7 @@ public class SymbolTableTest extends TestCase {
     assertEquals(
         Lists.newArrayList(fn), table.getAllSymbolsForTypeOf(foo));
     assertEquals(
-        Lists.newArrayList(obj), table.getAllSymbolsForTypeOf(fooPrototype));
+        Lists.newArrayList(foo), table.getAllSymbolsForTypeOf(fooPrototype));
     assertEquals(
         foo,
         table.getSymbolDeclaredBy(
@@ -253,6 +253,28 @@ public class SymbolTableTest extends TestCase {
         getGlobalVar(table, "DomHelper.prototype.method");
     assertEquals(
         3, Iterables.size(table.getReferences(method)));
+  }
+
+  public void testSuperClassMethodReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var goog = {};" +
+        "goog.inherits = function(a, b) {};" +
+        "/** @constructor */ var A = function(){};" +
+        "/** method */ A.prototype.method = function() {};" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {A}\n" +
+        " */\n" +
+        "var B = function(){};\n" +
+        "goog.inherits(B, A);" +
+        "/** method */ B.prototype.method = function() {" +
+        "  B.superClass_.method();" +
+        "};");
+
+    Symbol methodA =
+        getGlobalVar(table, "A.prototype.method");
+    assertEquals(
+        2, Iterables.size(table.getReferences(methodA)));
   }
 
   public void testFieldReferences() throws Exception {

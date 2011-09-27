@@ -210,18 +210,7 @@ public final class SymbolTable
    */
   public Symbol getSymbolForScope(SymbolScope scope) {
     if (scope.isPropertyScope()) {
-      JSType type = scope.getTypeOfThis();
-      if (type != null) {
-        if (type.isGlobalThisType()) {
-          return globalScope.getSlot(GLOBAL_THIS);
-        } else if (type.isNominalConstructor()) {
-          return getSymbolDeclaredBy(type.toMaybeFunctionType());
-        } else if (type.isFunctionPrototypeType()) {
-          return getSymbolForInstancesOf(
-              ((ObjectType) type).getOwnerFunction());
-        }
-      }
-      return null;
+      return getSymbolForTypeHelper(scope.getTypeOfThis(), false);
     }
 
     Node rootNode = scope.getRootNode();
@@ -300,6 +289,8 @@ public final class SymbolTable
   /**
    * Gets all symbols associated with the given type.
    * For union types, this may be multiple symbols.
+   * For instance types, this will return the constructor of
+   * that instance.
    */
   public List<Symbol> getAllSymbolsForType(JSType type) {
     if (type == null) {
@@ -311,49 +302,59 @@ public final class SymbolTable
       List<Symbol> result = Lists.newArrayListWithExpectedSize(2);
       for (JSType alt : unionType.getAlternates()) {
         // Our type system never has nested unions.
-        Symbol altSym = getOnlySymbolForType(alt);
+        Symbol altSym = getSymbolForTypeHelper(alt, true);
         if (altSym != null) {
           result.add(altSym);
         }
       }
       return result;
     }
-    Symbol result = getOnlySymbolForType(type);
+    Symbol result = getSymbolForTypeHelper(type, true);
     return result == null
         ? ImmutableList.<Symbol>of() : ImmutableList.of(result);
   }
 
   /**
    * Gets all symbols associated with the given type.
-   * If there are more that one symbol associated with the given type,
+   * If there is more that one symbol associated with the given type,
    * return null.
+   * @param type The type.
+   * @param linkToCtor If true, we should link instance types back
+   *     to their constructor function. If false, we should link
+   *     instance types back to their prototype. See the comments
+   *     at the top of this file for more information on how
+   *     our internal type system is more granular than Symbols.
    */
-  private Symbol getOnlySymbolForType(JSType type) {
+  private Symbol getSymbolForTypeHelper(JSType type, boolean linkToCtor) {
     if (type == null) {
       return null;
     }
 
-    FunctionType fnType = type.toMaybeFunctionType();
-    if (fnType != null) {
-      return globalScope.getSlot("Function");
+    if (type.isGlobalThisType()) {
+      return globalScope.getSlot(GLOBAL_THIS);
+    } else if (type.isNominalConstructor()) {
+      return linkToCtor ?
+          globalScope.getSlot("Function") :
+          getSymbolDeclaredBy(type.toMaybeFunctionType());
+    } else if (type.isFunctionPrototypeType()) {
+      FunctionType ownerFn = ((ObjectType) type).getOwnerFunction();
+      return linkToCtor ?
+          getSymbolDeclaredBy(ownerFn) :
+          getSymbolForInstancesOf(ownerFn);
+    } else if (type.isInstanceType()) {
+      FunctionType ownerFn = ((ObjectType) type).getConstructor();
+      return linkToCtor ?
+          getSymbolDeclaredBy(ownerFn) :
+          getSymbolForInstancesOf(ownerFn);
+    } else if (type.isFunctionType()) {
+      return linkToCtor ?
+          globalScope.getSlot("Function") :
+          globalScope.getSlot("Function.prototype");
+    } else if (type.autoboxesTo() != null) {
+      return getSymbolForTypeHelper(type.autoboxesTo(), linkToCtor);
+    } else {
+      return null;
     }
-
-    ObjectType objType = type.toObjectType();
-    if (objType != null) {
-      String name = objType.getReferenceName();
-
-      FunctionType ctor = objType.getConstructor();
-      Node sourceNode = ctor == null ? null : ctor.getSource();
-      SymbolScope scope = sourceNode == null
-          ? globalScope : getEnclosingScope(sourceNode);
-
-      return scope.getSlot(
-          (name == null || !objType.isInstanceType())
-          ? "Object" : name);
-    }
-
-    // TODO(nicksantos): Create symbols for value types (number, string).
-    return null;
   }
 
   public String toDebugString() {
@@ -520,7 +521,7 @@ public final class SymbolTable
    * <code>
    * SymbolTable symbolTale = for("var x = new Foo();");
    * Symbol x = symbolTable.getGlobalScope().getSlot("x");
-   * Symbol type = symbolTable.getOnlySymbolForType(x.getType());
+   * Symbol type = symbolTable.getAllSymbolsForType(x.getType()).get(0);
    * </code>
    *
    * Then type.getPropertyScope() will have the properties of the
@@ -1016,7 +1017,8 @@ public final class SymbolTable
           // primitive type (like {string}). Autobox it to check.
           JSType type = registry.getType(n.getString());
           JSType autobox = type == null ? null : type.autoboxesTo();
-          symbol = autobox == null ? null : getOnlySymbolForType(autobox);
+          symbol = autobox == null
+              ? null : getSymbolForTypeHelper(autobox, true);
         }
         if (symbol != null) {
           symbol.defineReferenceAt(n);
