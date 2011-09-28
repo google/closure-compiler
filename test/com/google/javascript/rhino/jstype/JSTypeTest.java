@@ -4684,6 +4684,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(supremum, p1.getLeastSupertype(p2));
   }
 
+  public void testTypeOfThisIsProxied() {
+    ObjectType fnType = new FunctionBuilder(registry)
+        .withReturnType(NUMBER_TYPE).withTypeOfThis(OBJECT_TYPE).build();
+    ObjectType proxyType = new ProxyObjectType(registry, fnType);
+    assertTypeEquals(fnType.getTypeOfThis(), proxyType.getTypeOfThis());
+  }
+
   /**
    * Tests the {@link NamedType#equals} function, which had a bug in it.
    */

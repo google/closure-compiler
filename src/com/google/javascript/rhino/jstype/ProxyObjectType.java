@@ -393,4 +393,12 @@ class ProxyObjectType extends ObjectType {
   public String toDebugHashCodeString() {
     return "{proxy:" + referencedType.toDebugHashCodeString() + "}";
   }
+
+  @Override
+  public ObjectType getTypeOfThis() {
+    if (referencedObjType != null) {
+      return referencedObjType.getTypeOfThis();
+    }
+    return super.getTypeOfThis();
+  }
 }
