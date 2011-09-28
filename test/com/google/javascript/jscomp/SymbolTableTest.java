@@ -408,6 +408,9 @@ public class SymbolTableTest extends TestCase {
     for (int i = 0; i < refs.size(); i++) {
       Reference ref = refs.get(i);
       assertEquals(i != last, ref.getNode().isFromExterns());
+      if (!ref.getNode().isFromExterns()) {
+        assertEquals("in1", ref.getNode().getSourceFileName());
+      }
     }
   }
 
@@ -422,6 +425,8 @@ public class SymbolTableTest extends TestCase {
 
     assertEquals(code.indexOf("x) {"), refs.get(0).getNode().getCharno());
     assertEquals(code.indexOf("x */"), refs.get(1).getNode().getCharno());
+    assertEquals("in1",
+        refs.get(0).getNode().getSourceFileName());
   }
 
   public void testGlobalQualifiedNamesInLocalScopes() {

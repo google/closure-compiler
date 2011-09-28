@@ -41,6 +41,7 @@ package com.google.javascript.rhino;
 
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.Set;
 
@@ -191,8 +192,18 @@ final public class JSDocInfoBuilder {
 
   /**
    * Adds a name declaration to the current marker.
+   * @deprecated Use #markName(String, StaticSourceFile, int, int)
    */
-  public void markName(String name, int lineno, int charno) {
+  @Deprecated
+  public void markName(String name,  int lineno, int charno) {
+    markName(name, null, lineno, charno);
+  }
+
+  /**
+   * Adds a name declaration to the current marker.
+   */
+  public void markName(String name, StaticSourceFile file,
+      int lineno, int charno) {
     if (currentMarker != null) {
       // Record the name as both a SourcePosition<String> and a
       // SourcePosition<Node>. The <String> form is deprecated,
@@ -212,6 +223,7 @@ final public class JSDocInfoBuilder {
           new JSDocInfo.NamePosition();
       Node node = Node.newString(Token.NAME, name, lineno, charno);
       node.setLength(name.length());
+      node.setStaticSourceFile(file);
       nodePos.setItem(node);
       nodePos.setPositionInformation(lineno, charno,
           lineno, charno + name.length());

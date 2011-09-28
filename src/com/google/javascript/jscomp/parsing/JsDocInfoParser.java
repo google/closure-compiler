@@ -30,6 +30,8 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +47,7 @@ public final class JsDocInfoParser {
 
   private final JsDocTokenStream stream;
   private final JSDocInfoBuilder jsdocBuilder;
-  private final String sourceName;
+  private final StaticSourceFile sourceFile;
   private final Node associatedNode;
   private final ErrorReporter errorReporter;
   private final ErrorReporterParser parser = new ErrorReporterParser();
@@ -58,12 +60,12 @@ public final class JsDocInfoParser {
     void addParserWarning(String messageId, String messageArg, int lineno,
         int charno) {
       errorReporter.warning(ScriptRuntime.getMessage1(messageId, messageArg),
-          sourceName, lineno, null, charno);
+          getSourceName(), lineno, null, charno);
     }
 
     void addParserWarning(String messageId, int lineno, int charno) {
       errorReporter.warning(ScriptRuntime.getMessage0(messageId),
-          sourceName, lineno, null, charno);
+          getSourceName(), lineno, null, charno);
     }
 
     void addTypeWarning(String messageId, String messageArg, int lineno,
@@ -71,14 +73,14 @@ public final class JsDocInfoParser {
       errorReporter.warning(
           "Bad type annotation. " +
           ScriptRuntime.getMessage1(messageId, messageArg),
-          sourceName, lineno, null, charno);
+          getSourceName(), lineno, null, charno);
     }
 
     void addTypeWarning(String messageId, int lineno, int charno) {
       errorReporter.warning(
           "Bad type annotation. " +
           ScriptRuntime.getMessage0(messageId),
-          sourceName, lineno, null, charno);
+          getSourceName(), lineno, null, charno);
     }
   }
 
@@ -128,7 +130,8 @@ public final class JsDocInfoParser {
     this.associatedNode = associatedNode;
 
     // Sometimes this will be null in tests.
-    this.sourceName = associatedNode == null ? "" : associatedNode.getSourceFileName();
+    this.sourceFile = associatedNode == null
+        ? null : associatedNode.getStaticSourceFile();
 
     this.jsdocBuilder = new JSDocInfoBuilder(config.parseJsDocDocumentation);
     if (commentNode != null) {
@@ -139,6 +142,10 @@ public final class JsDocInfoParser {
 
     this.errorReporter = errorReporter;
     this.templateNode = this.createTemplateNode();
+  }
+
+  private String getSourceName() {
+    return sourceFile == null ? null : sourceFile.getName();
   }
 
   /**
@@ -655,7 +662,7 @@ public final class JsDocInfoParser {
                     continue retry;
                   }
 
-                  jsdocBuilder.markName(name, lineno, charno);
+                  jsdocBuilder.markName(name, sourceFile, lineno, charno);
 
                   // Find the parameter's description (if applicable).
                   if (jsdocBuilder.shouldParseDocumentation()) {
@@ -1220,7 +1227,7 @@ public final class JsDocInfoParser {
    */
   private JSTypeExpression createJSTypeExpression(Node n) {
     return n == null ? null :
-        new JSTypeExpression(n, sourceName);
+        new JSTypeExpression(n, getSourceName());
   }
 
   /**
