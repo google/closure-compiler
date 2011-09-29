@@ -1222,6 +1222,9 @@ WebGLRenderingContext.prototype.UNPACK_ALIGNMENT;
 WebGLRenderingContext.prototype.UNPACK_FLIP_Y_WEBGL;
 
 /** @type {number} */
+WebGLRenderingContext.prototype.UNPACK_PREMULTIPLY_ALPHA_WEBGL;
+
+/** @type {number} */
 WebGLRenderingContext.prototype.PACK_ALIGNMENT;
 
 /** @type {number} */
