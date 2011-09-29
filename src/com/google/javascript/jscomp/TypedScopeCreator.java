@@ -253,6 +253,14 @@ final class TypedScopeCreator implements ScopeCreator {
     Preconditions.checkNotNull(globalScope);
     Preconditions.checkState(globalScope.isGlobal());
 
+    String scriptName = NodeUtil.getSourceName(scriptRoot);
+    Preconditions.checkNotNull(scriptName);
+    for (Node node : ImmutableList.copyOf(functionAnalysisResults.keySet())) {
+      if (scriptName.equals(NodeUtil.getSourceName(node))) {
+        functionAnalysisResults.remove(node);
+      }
+    }
+
     (new FirstOrderFunctionAnalyzer(
         compiler, functionAnalysisResults)).process(null, scriptRoot);
 
@@ -260,8 +268,6 @@ final class TypedScopeCreator implements ScopeCreator {
     // global scope generation but here we only wipe that part off!
 
     // Remove all variables that were previously declared in this scripts.
-    String scriptName = NodeUtil.getSourceName(scriptRoot);
-    Preconditions.checkNotNull(scriptName);
     // First find all vars to remove then remove them because of iterator!
     Iterator<Var> varIter = globalScope.getVars();
     List<Var> varsToRemove = Lists.newArrayList();
