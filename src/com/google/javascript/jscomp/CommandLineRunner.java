@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.LimitInputStream;
 
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -362,6 +363,36 @@ public class CommandLineRunner extends
         usage = "A file containing additional command-line options.")
     private String flag_file = "";
 
+    @Argument
+    private List<String> arguments = Lists.newArrayList();
+
+    /**
+     * Users may specify JS inputs via the legacy {@code --js} option, as well
+     * as via additional arguments to the Closure Compiler. For example, it is
+     * convenient to leverage the additional arguments feature when using the
+     * Closure Compiler in combination with {@code find} and {@code xargs}:
+     * <pre>
+     * find MY_JS_SRC_DIR -name '*.js' \
+     *     | xargs java -jar compiler.jar --manage_closure_dependencies
+     * </pre>
+     * The {@code find} command will produce a list of '*.js' source files in
+     * the {@code MY_JS_SRC_DIR} directory while {@code xargs} will convert them
+     * to a single, space-delimited set of arguments that are appended to the
+     * {@code java} command to run the Compiler.
+     * <p>
+     * Note that it is important to use the
+     * {@code --manage_closure_dependencies} option in this case because the
+     * order produced by {@code find} is unlikely to be sorted correctly with
+     * respect to {@code goog.provide()} and {@code goog.requires()}.
+     */
+    List<String> getJsFiles() {
+      List<String> allJsInputs = Lists.newArrayListWithCapacity(
+          js.size() + arguments.size());
+      allJsInputs.addAll(js);
+      allJsInputs.addAll(arguments);
+      return allJsInputs;
+    }
+
     // Our own option parser to be backwards-compatible.
     // It needs to be public because of the crazy reflection that args4j does.
     public static class BooleanOptionHandler extends OptionHandler<Boolean> {
@@ -600,7 +631,7 @@ public class CommandLineRunner extends
           .setJscompDevMode(flags.jscomp_dev_mode)
           .setLoggingLevel(flags.logging_level)
           .setExterns(flags.externs)
-          .setJs(flags.js)
+          .setJs(flags.getJsFiles())
           .setJsOutputFile(flags.js_output_file)
           .setModule(flags.module)
           .setVariableMapInputFile(flags.variable_map_input_file)
