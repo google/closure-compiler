@@ -168,7 +168,7 @@ function parseInt(num, base) {}
 
 /**
  * @param {string} code
- * @return {Object}
+ * @return {*}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/eval
  */
 function eval(code) {}
