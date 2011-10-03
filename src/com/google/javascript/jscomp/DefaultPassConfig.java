@@ -208,7 +208,8 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(suspiciousCode);
     }
 
-    if (options.checkControlStructures)  {
+    if (options.checkControlStructures
+        || options.enables(DiagnosticGroups.ES5_STRICT))  {
       checks.add(checkControlStructures);
     }
 
@@ -288,7 +289,9 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkGlobalNames);
     }
 
-    checks.add(checkStrictMode);
+    if (options.enables(DiagnosticGroups.ES5_STRICT) || options.checkCaja) {
+      checks.add(checkStrictMode);
+    }
 
     // Replace 'goog.getCssName' before processing defines but after the
     // other checks have been done.
