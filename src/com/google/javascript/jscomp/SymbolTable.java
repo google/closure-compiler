@@ -146,6 +146,22 @@ public final class SymbolTable
   }
 
   /**
+   * Declare a symbol after the main symbol table was constructed.
+   * Throws an exception if you try to declare a symbol twice.
+   */
+  public Symbol declareInferredSymbol(
+      SymbolScope scope, String name, Node declNode) {
+    Symbol symbol = new Symbol(name, null, true, scope);
+    symbols.put(declNode, name, symbol);
+
+    Symbol replacement = scope.ownSymbols.put(name, symbol);
+    Preconditions.checkState(replacement == null, "duplicate symbol");
+
+    symbol.setDeclaration(new Reference(symbol, declNode));
+    return symbol;
+  }
+
+  /**
    * Gets the scope that contains the given node.
    * If {@code n} is a function name, we return the scope that contains the
    * function, not the function itself.
