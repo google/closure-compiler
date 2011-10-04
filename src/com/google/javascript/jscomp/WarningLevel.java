@@ -55,6 +55,27 @@ public enum WarningLevel {
     options.addWarningsGuard(
         new ShowByPathWarningsGuard(
             "the_longest_path_that_cannot_be_expressed_as_a_string"));
+
+    // Allow passes that aren't going to report anything to be skipped.
+
+    // NOTE: options.checkShadowVars is not in this list as it produces an
+    // error.
+    options.checkRequires = CheckLevel.OFF;
+    options.checkProvides = CheckLevel.OFF;
+    options.checkMissingGetCssNameLevel = CheckLevel.OFF;
+    options.aggressiveVarCheck = CheckLevel.OFF;
+    options.checkTypes = false;
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
+    options.checkUnreachableCode = CheckLevel.OFF;
+    options.checkMissingReturn = CheckLevel.OFF;
+    options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.CONSTANT_PROPERTY, CheckLevel.OFF);
+    options.checkGlobalNamesLevel = CheckLevel.OFF;
+    options.checkSuspiciousCode = false;
+    options.checkGlobalThisLevel = CheckLevel.OFF;
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
+    options.checkCaja = false;
   }
 
   /**
