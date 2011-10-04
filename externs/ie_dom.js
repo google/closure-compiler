@@ -293,13 +293,13 @@ function Window() {}
 /** @type {function(new:ActiveXObject, string, string=)} */
 Window.prototype.ActiveXObject;
 
-/** @inheritDoc */
+/** @override */
 Window.prototype.addEventListener = function(type, listener, useCapture) {};
 
-/** @inheritDoc */
+/** @override */
 Window.prototype.removeEventListener = function(type, listener, useCapture) {};
 
-/** @inheritDoc */
+/** @override */
 Window.prototype.dispatchEvent = function(evt) {};
 
 /**

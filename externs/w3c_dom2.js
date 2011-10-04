@@ -304,7 +304,7 @@ HTMLLinkElement.prototype.target;
  */
 HTMLLinkElement.prototype.type;
 
-/** @inheritDoc */
+/** @override */
 HTMLLinkElement.prototype.sheet;
 
 /**
@@ -415,7 +415,7 @@ HTMLStyleElement.prototype.media;
  */
 HTMLStyleElement.prototype.type;
 
-/** @inheritDoc */
+/** @override */
 HTMLStyleElement.prototype.sheet;
 
 /**

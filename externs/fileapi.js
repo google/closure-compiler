@@ -450,14 +450,14 @@ FileError.prototype.code;
  */
 function FileReader() {}
 
-/** @inheritDoc */
+/** @override */
 FileReader.prototype.addEventListener = function(type, listener, useCapture) {};
 
-/** @inheritDoc */
+/** @override */
 FileReader.prototype.removeEventListener = function(type, listener, useCapture)
     {};
 
-/** @inheritDoc */
+/** @override */
 FileReader.prototype.dispatchEvent = function(evt) {};
 
 /**

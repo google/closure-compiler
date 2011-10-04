@@ -116,13 +116,13 @@ DOMImplementation.prototype.hasFeature = function(feature, version) {};
  */
 function Node() {}
 
-/** @inheritDoc */
+/** @override */
 Node.prototype.addEventListener = function(type, listener, useCapture) {};
 
-/** @inheritDoc */
+/** @override */
 Node.prototype.removeEventListener = function(type, listener, useCapture) {};
 
-/** @inheritDoc */
+/** @override */
 Node.prototype.dispatchEvent = function(evt) {};
 
 /**
