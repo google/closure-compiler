@@ -43,6 +43,20 @@ public class CheckRequiresForConstructorsTest extends CompilerTestCase {
     testSame(js);
   }
 
+  public void testPassWithOneNewOuterClass() {
+    String js =
+        "var goog = {};" +
+        "goog.require('goog.foo.Bar'); var bar = new goog.foo.Bar.Baz();";
+    testSame(js);
+  }
+
+  public void testPassWithOneNewOuterClassWithUpperPrefix() {
+    String js =
+        "var goog = {};" +
+        "goog.require('goog.foo.IDBar'); var bar = new goog.foo.IDBar.Baz();";
+    testSame(js);
+  }
+
   public void testFailWithOneNew() {
     String[] js = new String[] {"var foo = {}; var bar = new foo.bar();"};
     String warning = "'foo.bar' used but not goog.require'd";

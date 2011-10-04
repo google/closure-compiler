@@ -69,6 +69,27 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
         SyntacticScopeCreator.generateUntypedTopScope(compiler));
   }
 
+  // Return true if the name is a class name (starts with an uppercase
+  // character, but is not in all caps).
+  private static boolean isClassName(String name) {
+    return (name != null && name.length() > 1
+            && Character.isUpperCase(name.charAt(0))
+            && !name.equals(name.toUpperCase()));
+  }
+
+  // Return the shortest prefix of the className that refers to a class,
+  // or null if no part refers to a class.
+  private static String getOutermostClassName(String className) {
+    for (String part : className.split("\\.")) {
+      if (isClassName(part)) {
+        return className.substring(0, className.indexOf(part) +
+                                   part.length());
+      }
+    }
+
+    return null;
+  }
+
   /**
    * This class "records" each constructor and goog.require visited and creates
    * a warning for each new node without an appropriate goog.require node.
@@ -136,8 +157,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       Set<String> classNames = Sets.newHashSet();
       for (Node node : newNodes) {
         String className = node.getFirstChild().getQualifiedName();
-        if ((constructors == null || !constructors.contains(className))
-            && (requires == null || !requires.contains(className))
+        String outermostClassName = getOutermostClassName(className);
+        boolean notProvidedByConstructors =
+            (constructors == null || !constructors.contains(className));
+        boolean notProvidedByRequires =
+            (requires == null || (!requires.contains(className)
+                                  && !requires.contains(outermostClassName)));
+        if (notProvidedByConstructors && notProvidedByRequires
             && !classNames.contains(className)) {
           compiler.report(
               t.makeError(node, level, MISSING_REQUIRE_WARNING, className));
