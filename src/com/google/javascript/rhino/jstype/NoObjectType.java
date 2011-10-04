@@ -73,7 +73,7 @@ public class NoObjectType extends FunctionType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtype(this, that)) {
+    if (JSType.isSubtypeHelper(this, that)) {
       return true;
     } else {
       return that.isObject() && !that.isNoType() && !that.isNoResolvedType();

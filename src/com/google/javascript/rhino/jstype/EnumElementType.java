@@ -176,7 +176,7 @@ public class EnumElementType extends ObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtype(this, that)) {
+    if (JSType.isSubtypeHelper(this, that)) {
       return true;
     } else {
       return primitiveType.isSubtype(that);

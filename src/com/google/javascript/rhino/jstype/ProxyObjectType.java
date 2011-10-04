@@ -183,6 +183,11 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean isAllType() {
+    return referencedType.isAllType();
+  }
+
+  @Override
   public boolean isNativeObjectType() {
     return referencedObjType == null
         ? false : referencedObjType.isNativeObjectType();

@@ -50,11 +50,6 @@ abstract class ValueType extends JSType {
   }
 
   @Override
-  public boolean isSubtype(JSType that) {
-    return JSType.isSubtype(this, that);
-  }
-
-  @Override
   final JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
     return this;
   }

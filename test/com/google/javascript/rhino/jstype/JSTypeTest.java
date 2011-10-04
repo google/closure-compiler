@@ -5118,20 +5118,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             assertTrue(
                 "Named " + typeJ + " should be a subtype of Named " + typeI,
                 namedTypeJ.isSubtype(namedTypeI));
-            // TODO(nicksantos): Should these tests pass?
-            //assertTrue(
-            //    "Proxy " + typeJ + " should be a subtype of Proxy " + typeI,
-            //    proxyTypeJ.isSubtype(proxyTypeI));
+            assertTrue(
+                "Proxy " + typeJ + " should be a subtype of Proxy " + typeI,
+                proxyTypeJ.isSubtype(proxyTypeI));
           } else {
             assertFalse(typeJ + " should not be a subtype of " + typeI,
                 typeJ.isSubtype(typeI));
             assertFalse(
                 "Named " + typeJ + " should not be a subtype of Named " + typeI,
                 namedTypeJ.isSubtype(namedTypeI));
-            // TODO(nicksantos): Should these tests pass?
-            //assertFalse(
-            //    "Named " + typeJ + " should not be a subtype of Named " + typeI,
-            //    proxyTypeJ.isSubtype(proxyTypeI));
+            assertFalse(
+                "Named " + typeJ + " should not be a subtype of Named " + typeI,
+                proxyTypeJ.isSubtype(proxyTypeI));
           }
 
           JSType expectedSupremum = i < j ? typeI : typeJ;

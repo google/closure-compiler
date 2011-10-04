@@ -873,7 +873,7 @@ public class FunctionType extends PrototypeObjectType {
    */
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtype(this, that)) {
+    if (JSType.isSubtypeHelper(this, that)) {
       return true;
     }
 

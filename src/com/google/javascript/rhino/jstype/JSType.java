@@ -956,7 +956,9 @@ public abstract class JSType implements Serializable {
    *
    * @return {@code this &lt;: that}
    */
-  public abstract boolean isSubtype(JSType that);
+  public boolean isSubtype(JSType that) {
+    return isSubtypeHelper(this, that);
+  }
 
   /**
    * Whether this type is meaningfully different from {@code that} type.
@@ -979,7 +981,7 @@ public abstract class JSType implements Serializable {
    * A generic implementation meant to be used as a helper for common subtyping
    * cases.
    */
-  static boolean isSubtype(JSType thisType, JSType thatType) {
+  static boolean isSubtypeHelper(JSType thisType, JSType thatType) {
     // unknown
     if (thatType.isUnknownType()) {
       return true;
@@ -1001,9 +1003,10 @@ public abstract class JSType implements Serializable {
         }
       }
     }
-    // named types
-    if (thatType instanceof NamedType) {
-      return thisType.isSubtype(((NamedType)thatType).getReferencedType());
+    // proxy types
+    if (thatType instanceof ProxyObjectType) {
+      return thisType.isSubtype(
+          ((ProxyObjectType) thatType).getReferencedTypeInternal());
     }
     return false;
   }
