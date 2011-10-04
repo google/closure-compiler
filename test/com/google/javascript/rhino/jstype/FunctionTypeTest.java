@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 /**
@@ -239,5 +240,17 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType type = new FunctionBuilder(registry).build();
     assertFalse(type.isEquivalentTo(null));
     assertTrue(type.isEquivalentTo(type));
+  }
+
+  public void testRecursiveFunction() {
+    ProxyObjectType loop = new ProxyObjectType(registry, NUMBER_TYPE);
+    FunctionType fn = new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters(loop))
+        .withReturnType(loop).build();
+
+    loop.setReferencedType(fn);
+    assertEquals("function (Function): Function", fn.toString());
+
+    Asserts.assertEquivalenceOperations(fn, loop);
   }
 }

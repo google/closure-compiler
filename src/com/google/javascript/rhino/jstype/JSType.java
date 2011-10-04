@@ -308,7 +308,15 @@ public abstract class JSType implements Serializable {
   }
 
   public boolean isRecordType() {
-    return false;
+    return toMaybeRecordType() != null;
+  }
+
+  /**
+   * Downcasts this to a RecordType, or returns null if this is not
+   * a RecordType.
+   */
+  RecordType toMaybeRecordType() {
+    return null;
   }
 
   public boolean isTemplateType() {
@@ -690,10 +698,6 @@ public abstract class JSType implements Serializable {
    * @return {@code this &#8744; that}
    */
   public JSType getGreatestSubtype(JSType that) {
-    if (that.isRecordType()) {
-      // Record types have their own implementation of getGreatestSubtype.
-      return that.getGreatestSubtype(this);
-    }
     return getGreatestSubtype(this, that);
   }
 
@@ -717,6 +721,10 @@ public abstract class JSType implements Serializable {
       return thisType.toMaybeUnionType().meet(thatType);
     } else if (thatType.isUnionType()) {
       return thatType.toMaybeUnionType().meet(thisType);
+    } else if (thisType.isRecordType()) {
+      return thisType.toMaybeRecordType().getGreatestSubtypeHelper(thatType);
+    } else if (thatType.isRecordType()) {
+      return thatType.toMaybeRecordType().getGreatestSubtypeHelper(thisType);
     }
 
     if (thisType.isEnumElementType()) {

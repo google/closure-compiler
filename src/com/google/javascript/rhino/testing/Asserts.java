@@ -109,4 +109,30 @@ public class Asserts {
         "Actual  : " + a,
         b.isEquivalentTo(a));
   }
+
+  /**
+   * For the given equivalent types, run all type operations that
+   * should have trivial solutions (getGreatestSubtype, isEquivalentTo, etc)
+   */
+  public static void assertEquivalenceOperations(JSType a, JSType b) {
+    Assert.assertTrue(a.isEquivalentTo(b));
+    Assert.assertTrue(a.isEquivalentTo(a));
+    Assert.assertTrue(b.isEquivalentTo(b));
+    Assert.assertTrue(b.isEquivalentTo(a));
+
+    Assert.assertTrue(a.isSubtype(b));
+    Assert.assertTrue(a.isSubtype(a));
+    Assert.assertTrue(b.isSubtype(b));
+    Assert.assertTrue(b.isSubtype(a));
+
+    assertTypeEquals(a, a.getGreatestSubtype(b));
+    assertTypeEquals(a, a.getGreatestSubtype(a));
+    assertTypeEquals(a, b.getGreatestSubtype(b));
+    assertTypeEquals(a, b.getGreatestSubtype(a));
+
+    assertTypeEquals(a, a.getLeastSupertype(b));
+    assertTypeEquals(a, a.getLeastSupertype(a));
+    assertTypeEquals(a, b.getLeastSupertype(b));
+    assertTypeEquals(a, b.getLeastSupertype(a));
+  }
 }

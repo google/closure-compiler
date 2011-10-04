@@ -3605,14 +3605,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testGetprop1() throws Exception {
     testTypes("/** @return {void}*/function foo(){foo().bar;}",
-        "undefined has no properties\n" +
+        "No properties on this expression\n" +
         "found   : undefined\n" +
         "required: Object");
   }
 
   public void testGetprop2() throws Exception {
     testTypes("var x = null; x.alert();",
-        "null has no properties\n" +
+        "No properties on this expression\n" +
         "found   : null\n" +
         "required: Object");
   }
@@ -3695,7 +3695,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testPropAccess2() throws Exception {
     testTypes("var bar = void 0; bar.baz;",
-        "undefined has no properties\n" +
+        "No properties on this expression\n" +
         "found   : undefined\n" +
         "required: Object");
   }
@@ -3704,7 +3704,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     // Verifies that we don't emit two warnings, because
     // the var has been dereferenced after the first one.
     testTypes("var bar = void 0; bar.baz; bar.bax;",
-        "undefined has no properties\n" +
+        "No properties on this expression\n" +
         "found   : undefined\n" +
         "required: Object");
   }

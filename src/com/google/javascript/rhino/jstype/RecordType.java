@@ -61,7 +61,7 @@ import java.util.SortedMap;
  * can be assigned to a record of type { a : A }.
  *
  */
-public class RecordType extends PrototypeObjectType {
+class RecordType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
   private final SortedMap<String, JSType> properties = Maps.newTreeMap();
@@ -77,6 +77,7 @@ public class RecordType extends PrototypeObjectType {
    */
   RecordType(JSTypeRegistry registry, Map<String, RecordProperty> properties) {
     super(registry, null, null);
+    setPrettyPrint(true);
 
     for (String property : properties.keySet()) {
       RecordProperty prop = properties.get(property);
@@ -93,12 +94,16 @@ public class RecordType extends PrototypeObjectType {
 
   @Override
   public boolean isEquivalentTo(JSType other) {
-    if (!(other instanceof RecordType)) {
+    if (!other.isRecordType()) {
       return false;
     }
 
     // Compare properties.
-    RecordType otherRecord = (RecordType) other;
+    RecordType otherRecord = other.toMaybeRecordType();
+    if (otherRecord == this) {
+      return true;
+    }
+
     Set<String> keySet = properties.keySet();
     Map<String, JSType> otherProps = otherRecord.properties;
     if (!otherProps.keySet().equals(keySet)) {
@@ -138,7 +143,7 @@ public class RecordType extends PrototypeObjectType {
       return super.getLeastSupertype(that);
     }
 
-    RecordType thatRecord = (RecordType) that;
+    RecordType thatRecord = that.toMaybeRecordType();
     RecordTypeBuilder builder = new RecordTypeBuilder(registry);
 
     // The least supertype consist of those properties of the record
@@ -156,8 +161,7 @@ public class RecordType extends PrototypeObjectType {
     return builder.build();
   }
 
-  @Override
-  public JSType getGreatestSubtype(JSType that) {
+  JSType getGreatestSubtypeHelper(JSType that) {
     if (that.isRecordType()) {
       RecordType thatRecord = (RecordType) that;
       RecordTypeBuilder builder = new RecordTypeBuilder(registry);
@@ -186,8 +190,12 @@ public class RecordType extends PrototypeObjectType {
       return builder.build();
     }
 
-    JSType greatestSubtype = super.getGreatestSubtype(that);
-    if (greatestSubtype.isNoObjectType() && !that.isNoObjectType()) {
+    JSType greatestSubtype = registry.getNativeType(
+        JSTypeNative.NO_OBJECT_TYPE);
+    JSType thatRestrictedToObj =
+        registry.getNativeType(JSTypeNative.OBJECT_TYPE)
+        .getGreatestSubtype(that);
+    if (!thatRestrictedToObj.isEmptyType()) {
       // In this branch, the other type is some object type. We find
       // the greatest subtype with the following algorithm:
       // 1) For each property "x" of this record type, take the union
@@ -204,7 +212,7 @@ public class RecordType extends PrototypeObjectType {
           if (altPropType != null && !alt.isEquivalentTo(this) &&
               alt.isSubtype(that) &&
               (propType.isUnknownType() || altPropType.isUnknownType() ||
-               altPropType.isEquivalentTo(propType))) {
+                  altPropType.isEquivalentTo(propType))) {
             builder.addAlternate(alt);
           }
         }
@@ -215,8 +223,8 @@ public class RecordType extends PrototypeObjectType {
   }
 
   @Override
-  public boolean isRecordType() {
-    return true;
+  RecordType toMaybeRecordType() {
+    return this;
   }
 
   @Override
@@ -238,7 +246,7 @@ public class RecordType extends PrototypeObjectType {
       return false;
     }
 
-    return RecordType.isSubtype(this, (RecordType) that);
+    return RecordType.isSubtype(this, that.toMaybeRecordType());
   }
 
   /** Determines if typeA is a subtype of typeB */
@@ -281,29 +289,6 @@ public class RecordType extends PrototypeObjectType {
     }
 
     return true;
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("{");
-
-    int i = 0;
-
-    for (String property : properties.keySet()) {
-      if (i > 0) {
-        sb.append(", ");
-      }
-
-      sb.append(property);
-      sb.append(": ");
-      sb.append(properties.get(property).toString());
-
-      ++i;
-    }
-
-    sb.append("}");
-    return sb.toString();
   }
 
   @Override

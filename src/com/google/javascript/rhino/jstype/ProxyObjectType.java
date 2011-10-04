@@ -194,6 +194,11 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  RecordType toMaybeRecordType() {
+    return referencedType.toMaybeRecordType();
+  }
+
+  @Override
   public UnionType toMaybeUnionType() {
     return referencedType.toMaybeUnionType();
   }

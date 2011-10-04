@@ -1274,7 +1274,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // TODO(user): remove in favor of flagging every property access on
     // non-object.
     if (!validator.expectNotNullOrUndefined(t, n, childType,
-            childType + " has no properties", getNativeType(OBJECT_TYPE))) {
+            "No properties on this expression", getNativeType(OBJECT_TYPE))) {
       ensureTyped(t, n);
       return;
     }

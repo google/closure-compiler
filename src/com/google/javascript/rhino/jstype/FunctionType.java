@@ -133,6 +133,8 @@ public class FunctionType extends PrototypeObjectType {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
         nativeType);
+    setPrettyPrint(true);
+
     Preconditions.checkArgument(source == null ||
         Token.FUNCTION == source.getType());
     Preconditions.checkNotNull(arrowType);
@@ -154,6 +156,8 @@ public class FunctionType extends PrototypeObjectType {
   private FunctionType(JSTypeRegistry registry, String name, Node source) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE));
+    setPrettyPrint(true);
+
     Preconditions.checkArgument(source == null ||
         Token.FUNCTION == source.getType());
     Preconditions.checkArgument(name != null);
@@ -814,9 +818,12 @@ public class FunctionType extends PrototypeObjectType {
    */
   @Override
   public String toString() {
-    if (this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {
+    if (!isPrettyPrint() ||
+        this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {
       return "Function";
     }
+
+    setPrettyPrint(false);
 
     StringBuilder b = new StringBuilder(32);
     b.append("function (");
@@ -853,6 +860,8 @@ public class FunctionType extends PrototypeObjectType {
     }
     b.append("): ");
     b.append(call.returnType);
+
+    setPrettyPrint(true);
     return b.toString();
   }
 
