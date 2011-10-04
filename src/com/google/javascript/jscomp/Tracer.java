@@ -508,7 +508,7 @@ final class Tracer {
     }
 
     if (!trace.isEmpty()) {
-      logger.log(Level.INFO, "timers:\n{0}", getCurrentThreadTraceReport());
+      logger.log(Level.WARNING, "timers:\n{0}", getCurrentThreadTraceReport());
     }
   }
 

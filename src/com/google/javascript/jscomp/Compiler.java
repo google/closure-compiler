@@ -1688,10 +1688,8 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   void prepareAst(Node root) {
-    Tracer tracer = newTracer("prepareAst");
     CompilerPass pass = new PrepareAst(this);
     pass.process(null, root);
-    stopTracer(tracer, "prepareAst");
   }
 
   void recordFunctionInformation() {
