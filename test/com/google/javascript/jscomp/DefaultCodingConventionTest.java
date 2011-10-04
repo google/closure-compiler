@@ -25,7 +25,7 @@ import junit.framework.TestCase;
  * Test class for {@link DefaultCodingConvention}.
  */
 public class DefaultCodingConventionTest extends TestCase {
-  private DefaultCodingConvention conv = new DefaultCodingConvention();
+  private CodingConvention conv = CodingConventions.getDefault();
 
   public void testVarAndOptionalParams() {
     Node args = new Node(Token.LP,

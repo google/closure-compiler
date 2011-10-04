@@ -44,7 +44,7 @@ public class RenameVarsTest extends CompilerTestCase {
     if (useGoogleCodingConvention) {
       return new GoogleCodingConvention();
     } else {
-      return new DefaultCodingConvention();
+      return CodingConventions.getDefault();
     }
   }
 

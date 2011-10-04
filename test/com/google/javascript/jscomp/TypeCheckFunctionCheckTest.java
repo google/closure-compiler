@@ -148,7 +148,7 @@ public class TypeCheckFunctionCheckTest extends CompilerTestCase {
   }
 
   public void testFunctionWithDefaultCodingConvention() {
-    convention = new DefaultCodingConvention();
+    convention = CodingConventions.getDefault();
     testSame("var foo = function(x) {}; foo(1, 2);");
     testSame("var foo = function(opt_x) {}; foo(1, 2);");
     testSame("var foo = function(var_args) {}; foo(1, 2);");

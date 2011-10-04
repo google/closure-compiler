@@ -640,7 +640,7 @@ public class CommandLineRunner extends
           .setCreateNameMapFiles(flags.create_name_map_files)
           .setPropertyMapOutputFile(flags.property_map_output_file)
           .setCodingConvention(flags.third_party ?
-               new DefaultCodingConvention() :
+               CodingConventions.getDefault() :
                new ClosureCodingConvention())
           .setSummaryDetailLevel(flags.summary_detail_level)
           .setOutputWrapper(flags.output_wrapper)

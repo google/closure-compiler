@@ -30,8 +30,6 @@ import java.util.Map;
  * CodingConvention defines a set of hooks to customize the behavior of the
  * Compiler for a specific team/company.
  *
- * // TODO(bolinfest): Tighten up this interface -- it is far too big.
- *
  */
 public interface CodingConvention extends Serializable {
 

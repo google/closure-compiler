@@ -1550,7 +1550,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private CodingConvention codingConvention = new DefaultCodingConvention();
+    private CodingConvention codingConvention = CodingConventions.getDefault();
 
     /**
      * Sets rules and conventions to enforce.

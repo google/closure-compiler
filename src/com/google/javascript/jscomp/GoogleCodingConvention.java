@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * Within Google, variable names are semantically significant.
  *
  */
-public class GoogleCodingConvention extends ClosureCodingConvention {
+public class GoogleCodingConvention extends CodingConventions.Proxy {
 
   private static final long serialVersionUID = 1L;
 
@@ -38,6 +38,16 @@ public class GoogleCodingConvention extends ClosureCodingConvention {
 
   private static final Pattern ENUM_KEY_PATTERN =
     Pattern.compile("[A-Z0-9][A-Z0-9_]*");
+
+  /** By default, decorate the ClosureCodingConvention. */
+  public GoogleCodingConvention() {
+    this(new ClosureCodingConvention());
+  }
+
+  /** Decorates a wrapped CodingConvention. */
+  public GoogleCodingConvention(CodingConvention convention) {
+    super(convention);
+  }
 
   /**
    * {@inheritDoc}

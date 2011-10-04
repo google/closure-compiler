@@ -20,6 +20,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.CodingConvention.Bind;
+import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
+import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -35,13 +40,21 @@ import java.util.Set;
  * This describes the Closure-specific JavaScript coding conventions.
  *
  */
-public class ClosureCodingConvention extends DefaultCodingConvention {
+public class ClosureCodingConvention extends CodingConventions.Proxy {
 
   private static final long serialVersionUID = 1L;
 
   static final DiagnosticType OBJECTLIT_EXPECTED = DiagnosticType.warning(
       "JSC_REFLECT_OBJECTLIT_EXPECTED",
       "Object literal expected as second argument");
+
+  public ClosureCodingConvention() {
+    this(CodingConventions.getDefault());
+  }
+
+  public ClosureCodingConvention(CodingConvention wrapped) {
+    super(wrapped);
+  }
 
   /**
    * Closure's goog.inherits adds a {@code superClass_} property to the
