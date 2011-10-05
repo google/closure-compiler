@@ -2712,7 +2712,7 @@ public final class NodeUtil {
   /**
    * A predicate for matching anything except function nodes.
    */
-  static class MatchNotFunction implements Predicate<Node>{
+  private static class MatchNotFunction implements Predicate<Node>{
     @Override
     public boolean apply(Node n) {
       return !isFunction(n);

@@ -855,7 +855,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         Predicates.<Node>or(
             new NodeUtil.MatchNodeType(Token.BREAK),
             new NodeUtil.MatchNodeType(Token.CONTINUE)),
-        new NodeUtil.MatchNotFunction());
+        NodeUtil.MATCH_NOT_FUNCTION);
   }
 
   /**
