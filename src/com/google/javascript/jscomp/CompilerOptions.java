@@ -630,6 +630,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Process instances of goog.testing.ObjectPropertyString. */
   boolean processObjectPropertyString;
 
+  /** Replace id generators */
+  boolean replaceIdGenerators = true;  // true by default for legacy reasons.
+
   /** Id generators to replace. */
   Set<String> idGenerators;
 
@@ -1080,6 +1083,13 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setProcessObjectPropertyString(boolean process) {
     processObjectPropertyString = process;
+  }
+
+  /**
+   * @param replaceIdGenerators the replaceIdGenerators to set
+   */
+  public void setReplaceIdGenerators(boolean replaceIdGenerators) {
+    this.replaceIdGenerators = replaceIdGenerators;
   }
 
   /**

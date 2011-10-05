@@ -120,7 +120,9 @@ class ReplaceIdGenerators implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new GatherGenerators());
-    NodeTraversal.traverse(compiler, root, new ReplaceGenerators());
+    if (!nameGenerators.isEmpty() || !this.consistNameGenerators.isEmpty()) {
+      NodeTraversal.traverse(compiler, root, new ReplaceGenerators());
+    }
   }
 
   private class ReplaceGenerators extends AbstractPostOrderCallback {
