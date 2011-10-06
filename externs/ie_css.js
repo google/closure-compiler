@@ -135,3 +135,112 @@ CSSProperties.prototype.zoom;
  * @see http://msdn.microsoft.com/en-us/library/ms535153(VS.85).aspx
  */
 CSSProperties.prototype.writingMode;
+
+/**
+ * IE-specific extensions.
+ * @see http://blogs.msdn.com/b/ie/archive/2008/09/08/microsoft-css-vendor-extensions.aspx
+ */
+
+/** @type {string} */
+CSSProperties.prototype.MsAccelerator;
+
+/** @type {string} */
+CSSProperties.prototype.MsBackgroundPositionX;
+
+/** @type {string} */
+CSSProperties.prototype.MsBackgroundPositionY;
+
+/** @type {string} */
+CSSProperties.prototype.MsBehavior;
+
+/** @type {string} */
+CSSProperties.prototype.MsBlockProgression;
+
+/** @type {string} */
+CSSProperties.prototype.MsFilter;
+
+/** @type {string} */
+CSSProperties.prototype.MsImeMode;
+
+/** @type {string} */
+CSSProperties.prototype.MsLayoutGrid;
+
+/** @type {string} */
+CSSProperties.prototype.MsLayoutGridChar;
+
+/** @type {string} */
+CSSProperties.prototype.MsLayoutGridLine;
+
+/** @type {string} */
+CSSProperties.prototype.MsLayoutGridMode;
+
+/** @type {string} */
+CSSProperties.prototype.MsLayoutGridType;
+
+/** @type {string} */
+CSSProperties.prototype.MsLineBreak;
+
+/** @type {string} */
+CSSProperties.prototype.MsLineGridMode;
+
+/** @type {string} */
+CSSProperties.prototype.MsInterpolationMode;
+
+/** @type {string} */
+CSSProperties.prototype.MsOverflowX;
+
+/** @type {string} */
+CSSProperties.prototype.MsOverflowY;
+
+/** @type {string} */
+CSSProperties.prototype.MsScrollbar3dlightColor;
+
+/** @type {string} */
+CSSProperties.prototype.MsScrollbarArrowColor;
+
+/** @type {string} */
+CSSProperties.prototype.MsScrollbarBaseColor;
+
+/** @type {string} */
+CSSProperties.prototype.MsScrollbarDarkshadowColor;
+
+/** @type {string} */
+CSSProperties.prototype.MsScrollbarFaceColor;
+
+CSSProperties.prototype.MsScrollbarHighlightColor;
+
+/** @type {string} */
+CSSProperties.prototype.MsScrollbarShadowColor;
+
+/** @type {string} */
+CSSProperties.prototype.MsScrollbarTrackColor;
+
+/** @type {string} */
+CSSProperties.prototype.MsTextAlignLast;
+
+/** @type {string} */
+CSSProperties.prototype.MsTextAutospace;
+
+/** @type {string} */
+CSSProperties.prototype.MsTextJustify;
+
+/** @type {string} */
+CSSProperties.prototype.MsTextKashidaSpace;
+
+/** @type {string} */
+CSSProperties.prototype.MsTextOverflow;
+
+/** @type {string} */
+CSSProperties.prototype.MsTextUnderlinePosition;
+
+/** @type {string} */
+CSSProperties.prototype.MsWordBreak;
+
+/** @type {string} */
+CSSProperties.prototype.MsWordWrap;
+
+/** @type {string} */
+CSSProperties.prototype.MsWritingMode;
+
+/** @type {string} */
+CSSProperties.prototype.MsZoom;
