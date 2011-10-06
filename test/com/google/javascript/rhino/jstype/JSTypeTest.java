@@ -3022,6 +3022,25 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       }
     }
   }
+
+  public void testProxiedFunctionTypeRelationships() {
+    FunctionType dateMethodEmpty = new FunctionBuilder(registry)
+      .withParamsNode(registry.createParameters())
+      .withTypeOfThis(DATE_TYPE).build().toMaybeFunctionType();
+    FunctionType dateMethodWithParam = new FunctionBuilder(registry)
+      .withParamsNode(registry.createParameters(NUMBER_TYPE))
+      .withTypeOfThis(DATE_TYPE).build().toMaybeFunctionType();
+    ProxyObjectType proxyDateMethodEmpty =
+        new ProxyObjectType(registry, dateMethodEmpty);
+    ProxyObjectType proxyDateMethodWithParam =
+        new ProxyObjectType(registry, dateMethodWithParam);
+
+    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
+        proxyDateMethodEmpty.getLeastSupertype(proxyDateMethodWithParam));
+    assertTypeEquals(LEAST_FUNCTION_TYPE,
+        proxyDateMethodEmpty.getGreatestSubtype(proxyDateMethodWithParam));
+  }
+
   /**
    * Tests relationships between structural function types.
    */

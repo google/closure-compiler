@@ -706,7 +706,15 @@ public abstract class JSType implements Serializable {
    * getGreatestSubtype implementations.
    */
   static JSType getGreatestSubtype(JSType thisType, JSType thatType) {
-    if (thisType.isEquivalentTo(thatType)) {
+    if (thisType.isFunctionType() && thatType.isFunctionType()) {
+      // The FunctionType sub-lattice is not well-defined. i.e., the
+      // proposition
+      // A < B => sup(A, B) == B
+      // does not hold because of unknown parameters and return types.
+      // See the comment in supAndInfHelper for more info on this.
+      return thisType.toMaybeFunctionType().supAndInfHelper(
+          thatType.toMaybeFunctionType(), false);
+    } else if (thisType.isEquivalentTo(thatType)) {
       return thisType;
     } else if (thisType.isUnknownType() || thatType.isUnknownType()) {
       // The greatest subtype with any unknown type is the universal

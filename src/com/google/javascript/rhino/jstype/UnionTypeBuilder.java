@@ -143,6 +143,20 @@ class UnionTypeBuilder implements Serializable {
           return this;
         }
 
+        // Function types are special, because they have their
+        // own bizarro sub-lattice. See the commants on
+        // FunctionType#supAndInf helper and above at functionTypePosition.
+        if (alternate.isFunctionType() && functionTypePosition != -1) {
+          // See the comments on functionTypePosition above.
+          FunctionType other =
+              alternates.get(functionTypePosition).toMaybeFunctionType();
+          FunctionType supremum =
+              alternate.toMaybeFunctionType().supAndInfHelper(other, true);
+          alternates.set(functionTypePosition, supremum);
+          result = null;
+          return this;
+        }
+
         // Look through the alternates we've got so far,
         // and check if any of them are duplicates of
         // one another.
@@ -179,19 +193,11 @@ class UnionTypeBuilder implements Serializable {
 
         if (alternate.isFunctionType()) {
           // See the comments on functionTypePosition above.
-          if (functionTypePosition == -1) {
-            functionTypePosition = alternates.size();
-            alternates.add(alternate);
-          } else {
-            JSType supremum = alternate.toMaybeFunctionType().getLeastSupertype(
-                alternates.get(functionTypePosition).toMaybeFunctionType());
-            Preconditions.checkState(supremum.isFunctionType());
-            alternates.set(functionTypePosition, supremum);
-          }
-        } else {
-          alternates.add(alternate);
+          Preconditions.checkState(functionTypePosition == -1);
+          functionTypePosition = alternates.size();
         }
 
+        alternates.add(alternate);
         result = null; // invalidate the memoized result
       }
     } else {
