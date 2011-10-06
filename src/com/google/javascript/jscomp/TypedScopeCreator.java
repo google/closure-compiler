@@ -1124,20 +1124,27 @@ final class TypedScopeCreator implements ScopeCreator {
             FunctionType superClassCtor = fnType.getSuperClassConstructor();
             StaticSlot<JSType> prototypeSlot = fnType.getSlot("prototype");
 
-            // It's not really important what node we declare the prototype
-            // at. It's more important that the Var node is consistent with
-            // the node that the type system uses internally.
-            Node prototypeNode = n;
-            if (prototypeSlot.getDeclaration() != null) {
-              prototypeNode = prototypeSlot.getDeclaration().getNode();
-            }
+            String prototypeName = variableName + ".prototype";
 
-            scopeToDeclareIn.declare(variableName + ".prototype",
-                prototypeNode, prototypeSlot.getType(), input,
-                /* declared iff there's an explicit supertype */
-                superClassCtor == null ||
-                superClassCtor.getInstanceType().equals(
-                    getNativeType(OBJECT_TYPE)));
+            // There are some rare cases where the prototype will already
+            // be declared. See TypedScopeCreatorTest#testBogusPrototypeInit.
+            // Fortunately, other warnings will complain if this happens.
+            if (scopeToDeclareIn.getOwnSlot(prototypeName) == null) {
+              // It's not really important what node we declare the prototype
+              // at. It's more important that the Var node is consistent with
+              // the node that the type system uses internally.
+              Node prototypeNode = n;
+              if (prototypeSlot.getDeclaration() != null) {
+                prototypeNode = prototypeSlot.getDeclaration().getNode();
+              }
+
+              scopeToDeclareIn.declare(prototypeName,
+                  prototypeNode, prototypeSlot.getType(), input,
+                  /* declared iff there's an explicit supertype */
+                  superClassCtor == null ||
+                  superClassCtor.getInstanceType().equals(
+                      getNativeType(OBJECT_TYPE)));
+            }
 
             // Make sure the variable is initialized to something if
             // it constructs itself.

@@ -201,6 +201,13 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(foo.isPropertyTypeInferred("bar"));
   }
 
+  public void testBogusPrototypeInit() {
+    // This used to cause a compiler crash.
+    testSame("/** @const */ var goog = {}; " +
+        "goog.F = {}; /** @const */ goog.F.prototype = {};" +
+        "/** @constructor */ goog.F = function() {};");
+  }
+
   public void testInferredPrototypeProperty1() {
     testSame("/** @constructor */ var Foo = function() {};" +
         "Foo.prototype.bar = 1; var x = new Foo();");
