@@ -30,6 +30,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileList;
+import org.apache.tools.ant.types.Parameter;
 import org.apache.tools.ant.types.Path;
 
 import java.io.File;
@@ -66,6 +67,7 @@ public final class CompileTask
   private boolean replaceProperties;
   private String replacePropertiesPrefix;
   private File outputFile;
+  private final List<Parameter> defineParams;
   private final List<FileList> externFileLists;
   private final List<FileList> sourceFileLists;
   private final List<Path> sourcePaths;
@@ -81,6 +83,7 @@ public final class CompileTask
     this.generateExports = false;
     this.replaceProperties = false;
     this.replacePropertiesPrefix = "closure.define.";
+    this.defineParams = Lists.newLinkedList();
     this.externFileLists = Lists.newLinkedList();
     this.sourceFileLists = Lists.newLinkedList();
     this.sourcePaths = Lists.newLinkedList();
@@ -155,7 +158,7 @@ public final class CompileTask
   }
 
   /**
-   * Whether to replace @define lines with properties
+   * Whether to replace {@code @define} lines with properties
    */
   public void setReplaceProperties(boolean value) {
     this.replaceProperties = value;
@@ -264,9 +267,43 @@ public final class CompileTask
       convertPropertiesMap(options);
     }
 
+    convertDefineParameters(options);
+
     return options;
   }
 
+  /**
+   * Creates a new {@code <define/>} nested element. Supports name and value
+   * attribtues.
+   */
+  public Parameter createDefine() {
+    Parameter param = new Parameter();
+    defineParams.add(param);
+    return param;
+  }
+
+  /**
+   * Converts {@code <define/>} nested elements into Compiler {@code @define}
+   * replacements. Note: unlike project properties, {@code <define/>} elements
+   * do not need to be named starting with the replacement prefix.
+   */
+  private void convertDefineParameters(CompilerOptions options) {
+    for (Parameter p : defineParams) {
+      String key = p.getName();
+      Object value = p.getValue();
+
+      if (!setDefine(options, key, value)) {
+        log("Unexpected @define value for name=" + key + "; value=" + value);
+      }
+    }
+  }
+
+  /**
+   * Converts project properties beginning with the replacement prefix
+   * into Compiler {@code @define} replacements.
+   *
+   * @param options
+   */
   private void convertPropertiesMap(CompilerOptions options) {
     Map<String, Object> props = getProject().getProperties();
     for (Map.Entry<String, Object> entry : props.entrySet()) {
@@ -276,32 +313,53 @@ public final class CompileTask
       if (key.startsWith(replacePropertiesPrefix)) {
         key = key.substring(replacePropertiesPrefix.length());
 
-        if (value instanceof String) {
-          final boolean isTrue = "true".equals(value);
-          final boolean isFalse = "false".equals(value);
-
-          if (isTrue || isFalse) {
-            options.setDefineToBooleanLiteral(key, isTrue);
-          } else {
-            try {
-              double dblTemp = Double.parseDouble((String) value);
-              options.setDefineToDoubleLiteral(key, dblTemp);
-            } catch (NumberFormatException nfe) {
-              // Not a number, assume string
-              options.setDefineToStringLiteral(key, (String) value);
-            }
-          }
-        } else if (value instanceof Boolean) {
-          options.setDefineToBooleanLiteral(key, (Boolean) value);
-        } else if (value instanceof Integer) {
-          options.setDefineToNumberLiteral(key, (Integer) value);
-        } else if (value instanceof Double) {
-          options.setDefineToDoubleLiteral(key, (Double) value);
-        } else {
+        if (!setDefine(options, key, value)) {
           log("Unexpected property value for key=" + key + "; value=" + value);
         }
       }
     }
+  }
+
+  /**
+   * Maps Ant-style values (e.g., from Properties) into expected
+   * Closure {@code @define} literals
+   *
+   * @return True if the {@code @define} replacement succeeded, false if
+   *         the variable's value could not be mapped properly.
+   */
+  private boolean setDefine(CompilerOptions options,
+      String key, Object value) {
+    boolean success = false;
+
+    if (value instanceof String) {
+      final boolean isTrue = "true".equals(value);
+      final boolean isFalse = "false".equals(value);
+
+      if (isTrue || isFalse) {
+        options.setDefineToBooleanLiteral(key, isTrue);
+      } else {
+        try {
+          double dblTemp = Double.parseDouble((String) value);
+          options.setDefineToDoubleLiteral(key, dblTemp);
+        } catch (NumberFormatException nfe) {
+          // Not a number, assume string
+          options.setDefineToStringLiteral(key, (String) value);
+        }
+      }
+
+      success = true;
+    } else if (value instanceof Boolean) {
+      options.setDefineToBooleanLiteral(key, (Boolean) value);
+      success = true;
+    } else if (value instanceof Integer) {
+      options.setDefineToNumberLiteral(key, (Integer) value);
+      success = true;
+    } else if (value instanceof Double) {
+      options.setDefineToDoubleLiteral(key, (Double) value);
+      success = true;
+    }
+
+    return success;
   }
 
   private Compiler createCompiler(CompilerOptions options) {
