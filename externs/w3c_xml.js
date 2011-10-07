@@ -288,9 +288,21 @@ XPathNamespace.XPATH_NAMESPACE_NODE = 13;
  * server.
  *
  * @constructor
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequest-object
  */
 function XMLHttpRequest() {}
+
+/** @override */
+XMLHttpRequest.prototype.addEventListener =
+    function(type, listener, useCapture) {};
+
+/** @override */
+XMLHttpRequest.prototype.removeEventListener =
+    function(type, listener, useCapture) {};
+
+/** @override */
+XMLHttpRequest.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @param {string} method
