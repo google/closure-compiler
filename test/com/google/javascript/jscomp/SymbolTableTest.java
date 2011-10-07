@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
@@ -447,6 +448,30 @@ public class SymbolTableTest extends TestCase {
     assertFalse(table.getScope(xNumber).isGlobalScope());
 
     assertEquals("?", xNumber.getType().toString());
+  }
+
+  public void testNaturalSymbolOrdering() {
+    SymbolTable table = createSymbolTable(
+        "/** @const */ var a = {};" +
+        "/** @const */ a.b = {};" +
+        "/** @param {number} x */ function f(x) {}");
+    Symbol a = getGlobalVar(table, "a");
+    Symbol ab = getGlobalVar(table, "a.b");
+    Symbol f = getGlobalVar(table, "f");
+    Symbol x = getLocalVar(table, "x");
+    Ordering<Symbol> ordering = table.getNaturalSymbolOrdering();
+    assertSymmetricOrdering(ordering, a, ab);
+    assertSymmetricOrdering(ordering, a, f);
+    assertSymmetricOrdering(ordering, ab, f);
+    assertSymmetricOrdering(ordering, f, x);
+  }
+
+  private void assertSymmetricOrdering(
+      Ordering<Symbol> ordering, Symbol first, Symbol second) {
+    assertTrue(ordering.compare(first, first) == 0);
+    assertTrue(ordering.compare(second, second) == 0);
+    assertTrue(ordering.compare(first, second) < 0);
+    assertTrue(ordering.compare(second, first) > 0);
   }
 
   private Symbol getGlobalVar(SymbolTable table, String name) {

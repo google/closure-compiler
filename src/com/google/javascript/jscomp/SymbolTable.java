@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.JSDocInfo;
@@ -134,6 +135,17 @@ public final class SymbolTable
   @Override
   public Iterable<Symbol> getAllSymbols() {
     return Collections.unmodifiableCollection(symbols.values());
+  }
+
+  /**
+   * Gets the 'natural' ordering of symbols.
+   *
+   * Right now, we only guarantee that symbols in the global scope will come
+   * before symbols in local scopes. After that, the order is deterministic but
+   * undefined.
+   */
+  public Ordering<Symbol> getNaturalSymbolOrdering() {
+    return SYMBOL_ORDERING;
   }
 
   @Override
@@ -816,6 +828,7 @@ public final class SymbolTable
     private final SymbolScope parent;
     private final JSType typeOfThis;
     private final Map<String, Symbol> ownSymbols = Maps.newHashMap();
+    private final int scopeDepth;
 
     SymbolScope(
         Node rootNode,
@@ -824,6 +837,7 @@ public final class SymbolTable
       this.rootNode = rootNode;
       this.parent = parent;
       this.typeOfThis = typeOfThis;
+      this.scopeDepth = parent == null ? 0 : (parent.getScopeDepth() + 1);
     }
 
     @Override
@@ -878,6 +892,10 @@ public final class SymbolTable
 
     public boolean isLexicalScope() {
       return getRootNode() != null;
+    }
+
+    public int getScopeDepth() {
+      return scopeDepth;
     }
   }
 
@@ -1047,4 +1065,43 @@ public final class SymbolTable
       }
     }
   }
+
+  // Comparators
+  private final Ordering<String> SOURCE_NAME_ORDERING =
+      Ordering.natural().nullsFirst();
+
+  private final Ordering<Node> NODE_ORDERING = new Ordering<Node>() {
+    @Override
+    public int compare(Node a, Node b) {
+      int result = SOURCE_NAME_ORDERING.compare(a.getSourceFileName(), b.getSourceFileName());
+      if (result != 0) {
+        return result;
+      }
+
+      return a.getSourcePosition() - b.getSourcePosition();
+    }
+  };
+
+  private final Ordering<Symbol> SYMBOL_ORDERING = new Ordering<Symbol>() {
+    @Override
+    public int compare(Symbol a, Symbol b) {
+      SymbolScope scopeA = getScope(a);
+      SymbolScope scopeB = getScope(b);
+      int result = scopeA.getScopeDepth() - scopeB.getScopeDepth();
+      if (result != 0) {
+        return result;
+      }
+
+      if (scopeA.isLexicalScope() && !scopeB.isLexicalScope()) {
+        return -1;
+      }
+
+      if (scopeB.isLexicalScope() && !scopeA.isLexicalScope()) {
+        return 1;
+      }
+
+      return NODE_ORDERING.compare(
+          a.getDeclaration().getNode(),  b.getDeclaration().getNode());
+    }
+  };
 }
