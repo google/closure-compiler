@@ -733,6 +733,69 @@ chrome.idle.queryState = function(thresholdSeconds, callback) {};
 /** @type {ChromeEvent} */
 chrome.idle.onStateChanged;
 
+/**
+ * Chrome Text-to-Speech API.
+ * @see http://code.google.com/chrome/extensions/tts.html
+ */
+chrome.tts = {};
+
+/**
+ * An event from the TTS engine to communicate the status of an utterance.
+ * @constructor
+ */
+function TtsEvent() {}
+/** @type {string} */
+TtsEvent.type;
+/** @type {number} */
+TtsEvent.charIndex;
+/** @type {string} */
+TtsEvent.errorMessage;
+
+/**
+ * A description of a voice available for speech synthesis.
+ * @constructor
+ */
+function TtsVoice() {}
+/** @type {string} */
+TtsVoice.voiceName;
+/** @type {string} */
+TtsVoice.lang;
+/** @type {string} */
+TtsVoice.gender;
+/** @type {string} */
+TtsVoice.extensionId;
+/** @type {Array.<string>} */
+TtsVoice.eventTypes;
+
+/**
+ * Gets an array of all available voices.
+ * @param {function(Array.<TtsVoice>)=} opt_callback The callback function.
+ */
+chrome.tts.getVoices = function(opt_callback) {};
+
+/**
+ * Checks if the engine is currently speaking.
+ * @param {function(boolean)=} opt_callback The callback function.
+ */
+chrome.tts.isSpeaking = function(opt_callback) {};
+
+/**
+ * Speaks text using a text-to-speech engine.
+ * @param {string} utterance The text to speak, either plain text or a complete,
+ *     well-formed SSML document. Speech engines that do not support SSML will
+ *     strip away the tags and speak the text. The maximum length of the text is
+ *     32,768 characters.
+ * @param {Object=} opt_options The speech options.
+ * @param {function()=} opt_callback Called right away, before speech finishes.
+ */
+chrome.tts.speak = function(utterance, opt_options, opt_callback) {};
+
+/**
+ * Stops any current speech.
+ */
+chrome.tts.stop = function() {};
+
+
 // Classes
 
 /**
