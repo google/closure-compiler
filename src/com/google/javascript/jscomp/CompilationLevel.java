@@ -93,6 +93,9 @@ public enum CompilationLevel {
    * @param options The CompilerOptions object to set the options on.
    */
   private static void applySafeCompilationOptions(CompilerOptions options) {
+    // ReplaceIdGenerators is on by default, but should run in simple mode.
+    options.replaceIdGenerators = false;
+
     // Does not call applyBasicCompilationOptions(options) because the call to
     // skipAllCompilerPasses() cannot be easily undone.
     options.closurePass = true;
