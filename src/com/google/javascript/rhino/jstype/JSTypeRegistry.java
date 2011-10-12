@@ -50,6 +50,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
@@ -731,6 +732,36 @@ public class JSTypeRegistry implements Serializable {
     } else {
       return ImmutableList.of();
     }
+  }
+
+  /**
+   * Finds the common supertype of the two given object types.
+   */
+  ObjectType findCommonSuperObject(ObjectType a, ObjectType b) {
+    List<ObjectType> stackA = getSuperStack(a);
+    List<ObjectType> stackB = getSuperStack(b);
+
+    ObjectType result = getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+    while (!stackA.isEmpty() && !stackB.isEmpty()) {
+      ObjectType currentA = stackA.remove(stackA.size() - 1);
+      ObjectType currentB = stackB.remove(stackB.size() - 1);
+      if (currentA.isEquivalentTo(currentB)) {
+        result = currentA;
+      } else {
+        return result;
+      }
+    }
+    return result;
+  }
+
+  private static List<ObjectType> getSuperStack(ObjectType a) {
+    List<ObjectType> stack = Lists.newArrayListWithExpectedSize(5);
+    for (ObjectType current = a;
+         current != null;
+         current = current.getImplicitPrototype()) {
+      stack.add(current);
+    }
+    return stack;
   }
 
   /**

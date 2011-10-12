@@ -655,6 +655,13 @@ public abstract class JSType implements Serializable {
   }
 
   /**
+   * Gets the least supertype of this that's not a union.
+   */
+  public JSType collapseUnion() {
+    return this;
+  }
+
+  /**
    * Gets the least supertype of {@code this} and {@code that}.
    * The least supertype is the join (&#8744;) or supremum of both types in the
    * type lattice.<p>

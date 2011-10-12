@@ -411,4 +411,12 @@ class ProxyObjectType extends ObjectType {
     }
     return super.getTypeOfThis();
   }
+
+  @Override
+  public JSType collapseUnion() {
+    if (referencedType.isUnionType()) {
+      return referencedType.collapseUnion();
+    }
+    return this;
+  }
 }

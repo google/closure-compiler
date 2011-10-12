@@ -555,4 +555,35 @@ public class UnionType extends JSType {
     }
     return true;
   }
+
+  @Override
+  public JSType collapseUnion() {
+    JSType currentValue = null;
+    ObjectType currentCommonSuper = null;
+    for (JSType a : alternates) {
+      if (a.isUnknownType()) {
+        return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      }
+
+      ObjectType obj = a.toObjectType();
+      if (obj == null) {
+        if (currentValue == null && currentCommonSuper == null) {
+          // If obj is not an object, then it must be a value.
+          currentValue = a;
+        } else {
+          // Multiple values and objects will always collapse to the ALL_TYPE.
+          return getNativeType(JSTypeNative.ALL_TYPE);
+        }
+      } else if (currentValue != null) {
+        // Values and objects will always collapse to the ALL_TYPE.
+        return getNativeType(JSTypeNative.ALL_TYPE);
+      } else if (currentCommonSuper == null) {
+        currentCommonSuper = obj;
+      } else {
+        currentCommonSuper =
+            registry.findCommonSuperObject(currentCommonSuper, obj);
+      }
+    }
+    return currentCommonSuper;
+  }
 }

@@ -353,4 +353,63 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
         stringOrNumberProxy.getTypesUnderShallowInequality(
             stringOrBooleanProxy).typeA.toString());
   }
+
+  public void testCollapseUnion1() {
+    assertEquals(
+        "*",
+        registry.createUnionType(NUMBER_TYPE, STRING_TYPE)
+        .collapseUnion().toString());
+  }
+
+  public void testCollapseUnion2() {
+    assertEquals(
+        "?",
+        registry.createUnionType(UNKNOWN_TYPE, NUMBER_TYPE)
+        .collapseUnion().toString());
+    assertEquals(
+        "?",
+        registry.createUnionType(NUMBER_TYPE, UNKNOWN_TYPE)
+        .collapseUnion().toString());
+  }
+
+  public void testCollapseUnion3() {
+    assertEquals(
+        "Object",
+        registry.createUnionType(ARRAY_TYPE, DATE_TYPE)
+        .collapseUnion().toString());
+    assertEquals(
+        "Object",
+        registry.createUnionType(ARRAY_TYPE, OBJECT_TYPE)
+        .collapseUnion().toString());
+    assertEquals(
+        "Error",
+        registry.createUnionType(ERROR_TYPE, RANGE_ERROR_TYPE)
+        .collapseUnion().toString());
+    assertEquals(
+        "Error",
+        registry.createUnionType(EVAL_ERROR_TYPE, RANGE_ERROR_TYPE)
+        .collapseUnion().toString());
+    assertEquals(
+        "Error",
+        registry.createUnionType(
+            EVAL_ERROR_TYPE, RANGE_ERROR_TYPE, TYPE_ERROR_TYPE)
+        .collapseUnion().toString());
+  }
+
+  public void testCollapseUnion4() {
+    assertEquals(
+        "*",
+        registry.createUnionType(OBJECT_TYPE, STRING_TYPE)
+        .collapseUnion().toString());
+    assertEquals(
+        "*",
+        registry.createUnionType(STRING_TYPE, OBJECT_TYPE)
+        .collapseUnion().toString());
+  }
+
+  public void testCollapseProxyUnion() {
+    // Make sure we don't unbox the proxy.
+    ProxyObjectType type = new ProxyObjectType(registry, OBJECT_TYPE);
+    assertTrue(type == type.collapseUnion());
+  }
 }
