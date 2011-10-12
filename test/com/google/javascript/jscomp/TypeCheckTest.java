@@ -8731,7 +8731,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f(x, y, z) {}\n" +
         "f(this, this, function() { this });",
-        FunctionTypeBuilder.TEMPLATE_TYPE_DUPLICATED.format(), true);
+        FunctionTypeBuilder.TEMPLATE_TYPE_DUPLICATED.format());
   }
 
   public void testBadTemplateType2() throws Exception {
@@ -8743,7 +8743,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f(x, y) {}\n" +
         "f(0, function() {});",
-        TypeInference.TEMPLATE_TYPE_NOT_OBJECT_TYPE.format(), true);
+        TypeInference.TEMPLATE_TYPE_NOT_OBJECT_TYPE.format("number"));
   }
 
   public void testBadTemplateType3() throws Exception {
@@ -8754,7 +8754,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f(x) {}\n" +
         "f(this);",
-        TypeInference.TEMPLATE_TYPE_OF_THIS_EXPECTED.format(), true);
+        TypeInference.TEMPLATE_TYPE_OF_THIS_EXPECTED.format());
   }
 
   public void testBadTemplateType4() throws Exception {
@@ -8764,7 +8764,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f() {}\n" +
         "f();",
-        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format(), true);
+        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
   }
 
   public void testBadTemplateType5() throws Exception {
@@ -8775,7 +8775,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f() {}\n" +
         "f();",
-        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format(), true);
+        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
   }
 
   public void testFunctionLiteralUndefinedThisArgument() throws Exception {
@@ -8810,6 +8810,23 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + " */\n"
         + "function baz(fn, opt_obj) {}\n"
         + "baz(function() {}, null);");
+  }
+
+  public void testUnionTemplateThisType() throws Exception {
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "/** @return {F|Array} */ function g() { return []; }" +
+        "/** @param {F} x */ function h(x) { }" +
+        "/**\n" +
+        "* @param {T} x\n" +
+        "* @param {function(this:T, ...)} y\n" +
+        "* @template T\n" +
+        "*/\n" +
+        "function f(x, y) {}\n" +
+        "f(g(), function() { h(this); });",
+        "actual parameter 1 of h does not match formal parameter\n" +
+        "found   : Object\n" +
+        "required: (F|null)");
   }
 
   public void testActiveXObject() throws Exception {

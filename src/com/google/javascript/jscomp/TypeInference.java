@@ -56,12 +56,12 @@ import java.util.Map;
 class TypeInference
     extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Node, FlowScope> {
   static final DiagnosticType TEMPLATE_TYPE_NOT_OBJECT_TYPE =
-      DiagnosticType.error(
+      DiagnosticType.warning(
       "JSC_TEMPLATE_TYPE_NOT_OBJECT_TYPE",
-      "The template type must be an object type");
+      "The template type must be an object type.\nActual: {0}");
 
   static final DiagnosticType TEMPLATE_TYPE_OF_THIS_EXPECTED =
-      DiagnosticType.error(
+      DiagnosticType.warning(
       "JSC_TEMPLATE_TYPE_OF_THIS_EXPECTED",
       "A function type with the template type as the type of this must be a " +
       "parameter type");
@@ -864,14 +864,18 @@ class TypeInference
           getJSType(iParameter).restrictByNotNullOrUndefined();
       if (iParameterType.isTemplateType()) {
         // Find the actual type of this argument.
-        JSType iArgumentType = null;
+        ObjectType iArgumentType = null;
         if (i + 1 < childCount) {
           Node iArgument = n.getChildAtIndex(i + 1);
-          iArgumentType = getJSType(iArgument).restrictByNotNullOrUndefined();
-          if (!(iArgumentType instanceof ObjectType)) {
+          iArgumentType = getJSType(iArgument)
+              .restrictByNotNullOrUndefined()
+              .collapseUnion()
+              .toObjectType();
+          if (iArgumentType == null) {
             compiler.report(
                 JSError.make(NodeUtil.getSourceName(iArgument), iArgument,
-                    TEMPLATE_TYPE_NOT_OBJECT_TYPE));
+                    TEMPLATE_TYPE_NOT_OBJECT_TYPE,
+                    getJSType(iArgument).toString()));
             return;
           }
         }
@@ -906,7 +910,7 @@ class TypeInference
                     // function.
                     jArgument.setJSType(
                         registry.createFunctionTypeWithNewThisType(
-                            jArgumentFnType, (ObjectType) iArgumentType));
+                            jArgumentFnType, iArgumentType));
                   }
                 } else {
                   // Warn if the anonymous function literal references this.

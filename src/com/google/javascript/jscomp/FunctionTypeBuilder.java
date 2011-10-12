@@ -120,11 +120,11 @@ final class FunctionTypeBuilder {
       + "found   : {1}\n"
       + "expected: {2}");
 
-  static final DiagnosticType TEMPLATE_TYPE_DUPLICATED = DiagnosticType.error(
+  static final DiagnosticType TEMPLATE_TYPE_DUPLICATED = DiagnosticType.warning(
       "JSC_TEMPLATE_TYPE_DUPLICATED",
       "Only one parameter type must be the template type");
 
-  static final DiagnosticType TEMPLATE_TYPE_EXPECTED = DiagnosticType.error(
+  static final DiagnosticType TEMPLATE_TYPE_EXPECTED = DiagnosticType.warning(
       "JSC_TEMPLATE_TYPE_EXPECTED",
       "The template type must be a parameter type");
 

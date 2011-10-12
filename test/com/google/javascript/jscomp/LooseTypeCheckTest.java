@@ -6879,7 +6879,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f(x, y, z) {}\n" +
         "f(this, this, function() { this });",
-        FunctionTypeBuilder.TEMPLATE_TYPE_DUPLICATED.format(), true);
+        FunctionTypeBuilder.TEMPLATE_TYPE_DUPLICATED.format());
   }
 
   public void testBadTemplateType2() throws Exception {
@@ -6891,7 +6891,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f(x, y) {}\n" +
         "f(0, function() {});",
-        TypeInference.TEMPLATE_TYPE_NOT_OBJECT_TYPE.format(), true);
+        TypeInference.TEMPLATE_TYPE_NOT_OBJECT_TYPE.format("number"));
   }
 
   public void testBadTemplateType3() throws Exception {
@@ -6902,7 +6902,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f(x) {}\n" +
         "f(this);",
-        TypeInference.TEMPLATE_TYPE_OF_THIS_EXPECTED.format(), true);
+        TypeInference.TEMPLATE_TYPE_OF_THIS_EXPECTED.format());
   }
 
   public void testBadTemplateType4() throws Exception {
@@ -6912,7 +6912,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f() {}\n" +
         "f();",
-        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format(), true);
+        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
   }
 
   public void testBadTemplateType5() throws Exception {
@@ -6923,7 +6923,7 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "function f() {}\n" +
         "f();",
-        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format(), true);
+        FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
   }
 
   private void checkObjectType(ObjectType objectType, String propertyName,
