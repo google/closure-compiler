@@ -484,6 +484,7 @@ Window.prototype.updateCommands;
 /** @type {?function (string, string, number)} */
 Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onfocus;
+/** @type {?function (Event)} */ Window.prototype.onhashchange;
 /** @type {?function (Event)} */ Window.prototype.onkeydown;
 /** @type {?function (Event)} */ Window.prototype.onkeypress;
 /** @type {?function (Event)} */ Window.prototype.onkeyup;
@@ -495,6 +496,7 @@ Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onmouseup;
 /** @type {?function (Event)} */ Window.prototype.onmousewheel;
 /** @type {?function (Event)} */ Window.prototype.onpaint;
+/** @type {?function (Event)} */ Window.prototype.onpopstate;
 /** @type {?function (Event)} */ Window.prototype.onreset;
 /** @type {?function (Event)} */ Window.prototype.onresize;
 /** @type {?function (Event)} */ Window.prototype.onscroll;
