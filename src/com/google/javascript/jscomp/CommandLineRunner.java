@@ -34,6 +34,7 @@ import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 import org.kohsuke.args4j.spi.StringOptionHandler;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -784,7 +785,8 @@ public class CommandLineRunner extends
     ZipInputStream zip = new ZipInputStream(input);
     Map<String, JSSourceFile> externsMap = Maps.newHashMap();
     for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
-      LimitInputStream entryStream = new LimitInputStream(zip, entry.getSize());
+      BufferedInputStream entryStream = new BufferedInputStream(
+          new LimitInputStream(zip, entry.getSize()));
       externsMap.put(entry.getName(),
           JSSourceFile.fromInputStream(
               // Give the files an odd prefix, so that they do not conflict
