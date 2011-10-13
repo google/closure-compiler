@@ -300,7 +300,14 @@ public abstract class JSType implements Serializable {
   }
 
   public boolean isEnumType() {
-    return false;
+    return toMaybeEnumType() != null;
+  }
+
+  /**
+   * Downcasts this to an EnumType, or returns null if this is not an EnumType.
+   */
+  public EnumType toMaybeEnumType() {
+    return null;
   }
 
   boolean isNamedType() {

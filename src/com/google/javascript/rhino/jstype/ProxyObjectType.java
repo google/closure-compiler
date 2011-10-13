@@ -153,8 +153,8 @@ class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean isEnumType() {
-    return referencedType.isEnumType();
+  public EnumType toMaybeEnumType() {
+    return referencedType.toMaybeEnumType();
   }
 
   @Override

@@ -866,13 +866,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         return;
       }
 
-      // /** @enum ... */object.name = ...;
-      if (info != null && info.hasEnumParameterType()) {
-        checkEnumInitializer(
-            t, rvalue, info.getEnumParameterType().evaluate(
-                t.getScope(), typeRegistry));
-        return;
-      }
+      checkEnumAlias(t, info, rvalue);
 
       // object.prototype = ...;
       if (property.equals("prototype")) {
@@ -972,8 +966,15 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Validate value is assignable to the key type.
 
     JSType keyType = getJSType(key);
+
+    JSType allowedValueType = keyType;
+    if (allowedValueType.isEnumElementType()) {
+      allowedValueType =
+          allowedValueType.toMaybeEnumElementType().getPrimitiveType();
+    }
+
     boolean valid = validator.expectCanAssignToPropertyOf(t, key,
-        rightType, keyType,
+        rightType, allowedValueType,
         owner, NodeUtil.getObjectLitKeyName(key));
     if (valid) {
       ensureTyped(t, key, rightType);
@@ -1404,13 +1405,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (info == null) {
           info = varInfo;
         }
-        if (info != null && info.hasEnumParameterType()) {
-          // var.getType() can never be null, this would indicate a bug in the
-          // scope creation logic.
-          checkEnumInitializer(
-              t, value,
-              info.getEnumParameterType().evaluate(t.getScope(), typeRegistry));
-        } else if (var.isTypeInferred()) {
+
+        checkEnumAlias(t, info, value);
+        if (var.isTypeInferred()) {
           ensureTyped(t, name, valueType);
         } else {
           validator.expectCanAssignTo(
@@ -1755,48 +1752,39 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     ensureTyped(t, n);
   }
 
+
   /**
-   * <p>Checks the initializer of an enum. An enum can be initialized with an
-   * object literal whose values must be subtypes of the declared enum element
-   * type, or by copying another enum.</p>
+   * <p>Checks enum aliases.
    *
-   * <p>In the case of an enum copy, we verify that the enum element type of the
-   * enum used for initialization is a subtype of the enum element type of
+   * <p>We verify that the enum element type of the enum used
+   * for initialization is a subtype of the enum element type of
    * the enum the value is being copied in.</p>
    *
-   * <p>Examples:</p>
-   * <pre>var myEnum = {FOO: ..., BAR: ...};
-   * var myEnum = myOtherEnum;</pre>
+   * <p>Example:</p>
+   * <pre>var myEnum = myOtherEnum;</pre>
+   *
+   * <p>Enum aliases are irregular, so we need special code for this :(</p>
    *
    * @param value the value used for initialization of the enum
    * @param primitiveType The type of each element of the enum.
    */
-  private void checkEnumInitializer(
-      NodeTraversal t, Node value, JSType primitiveType) {
-    if (value.getType() == Token.OBJECTLIT) {
-      for (Node key = value.getFirstChild();
-           key != null; key = key.getNext()) {
-        Node propValue = key.getFirstChild();
-
-        // the value's type must be assignable to the enum's primitive type
-        validator.expectCanAssignTo(
-            t, propValue, getJSType(propValue), primitiveType,
-            "element type must match enum's type");
-      }
-    } else if (value.getJSType() instanceof EnumType) {
-      // TODO(user): Remove the instanceof check in favor
-      // of a type.isEnumType() predicate. Currently, not all enum types are
-      // implemented by the EnumClass, e.g. the unknown type and the any
-      // type. The types need to be defined by interfaces such that an
-      // implementation can implement multiple types interface.
-      EnumType valueEnumType = (EnumType) value.getJSType();
-      JSType valueEnumPrimitiveType =
-          valueEnumType.getElementsType().getPrimitiveType();
-      validator.expectCanAssignTo(t, value, valueEnumPrimitiveType,
-          primitiveType, "incompatible enum element types");
-    } else {
-      // The error condition is handled in TypedScopeCreator.
+  private void checkEnumAlias(
+      NodeTraversal t, JSDocInfo declInfo, Node value) {
+    if (declInfo == null || !declInfo.hasEnumParameterType()) {
+      return;
     }
+
+    JSType valueType = getJSType(value);
+    if (!valueType.isEnumType()) {
+      return;
+    }
+
+    EnumType valueEnumType = valueType.toMaybeEnumType();
+    JSType valueEnumPrimitiveType =
+        valueEnumType.getElementsType().getPrimitiveType();
+    validator.expectCanAssignTo(t, value, valueEnumPrimitiveType,
+        declInfo.getEnumParameterType().evaluate(t.getScope(), typeRegistry),
+        "incompatible enum element types");
   }
 
   /**

@@ -73,8 +73,8 @@ public class EnumType extends PrototypeObjectType {
   }
 
   @Override
-  public boolean isEnumType() {
-    return true;
+  public EnumType toMaybeEnumType() {
+    return this;
   }
 
   @Override

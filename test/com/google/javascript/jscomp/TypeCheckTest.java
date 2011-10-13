@@ -2646,19 +2646,20 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testEnum3() throws Exception {
     testTypes("/**@enum*/var a={BB:1,BB:2}",
-        "enum element BB already defined", true);
+        "variable a.BB redefined with type a.<number>, " +
+        "original definition at [testcode]:1 with type a.<number>");
   }
 
   public void testEnum4() throws Exception {
     testTypes("/**@enum*/var a={BB:'string'}",
-        "element type must match enum's type\n" +
+        "assignment to property BB of enum{a}\n" +
         "found   : string\n" +
         "required: number");
   }
 
   public void testEnum5() throws Exception {
     testTypes("/**@enum {String}*/var a={BB:'string'}",
-        "element type must match enum's type\n" +
+        "assignment to property BB of enum{a}\n" +
         "found   : string\n" +
         "required: (String|null)");
   }
@@ -2677,15 +2678,23 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEnum8() throws Exception {
-    testTypes("/** @enum */var a=8;",
-        "enum initializer must be an object literal or an enum");
+    testClosureTypesMultipleWarnings("/** @enum */var a=8;",
+        Lists.newArrayList(
+            "enum initializer must be an object literal or an enum",
+            "initializing variable\n" +
+            "found   : number\n" +
+            "required: enum{a}"));
   }
 
   public void testEnum9() throws Exception {
-    testTypes(
+    testClosureTypesMultipleWarnings(
         "var goog = {};" +
         "/** @enum */goog.a=8;",
-        "enum initializer must be an object literal or an enum");
+        Lists.newArrayList(
+            "enum initializer must be an object literal or an enum",
+            "assignment to property a of goog\n" +
+            "found   : number\n" +
+            "required: enum{goog.a}"));
   }
 
   public void testEnum10() throws Exception {
@@ -2732,14 +2741,15 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testEnum16() throws Exception {
     testTypes("var goog = {};" +
-        "/**@enum*/goog.a={BB:1,BB:2}",
-        "enum element BB already defined", true);
+        "/**@enum*/goog .a={BB:1,BB:2}",
+        "variable goog.a.BB redefined with type goog.a.<number>, " +
+        "original definition at [testcode]:1 with type goog.a.<number>");
   }
 
   public void testEnum17() throws Exception {
     testTypes("var goog = {};" +
         "/**@enum*/goog.a={BB:'string'}",
-        "element type must match enum's type\n" +
+        "assignment to property BB of enum{goog.a}\n" +
         "found   : string\n" +
         "required: number");
   }

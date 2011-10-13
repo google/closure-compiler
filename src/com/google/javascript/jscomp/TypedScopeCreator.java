@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.TypeCheck.ENUM_DUP;
 import static com.google.javascript.jscomp.TypeCheck.ENUM_NOT_CONSTANT;
 import static com.google.javascript.jscomp.TypeCheck.MULTIPLE_VAR_DEF;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_FUNCTION_TYPE;
@@ -619,10 +618,8 @@ final class TypedScopeCreator implements ScopeCreator {
       setDeferredType(objectLit, type);
 
       // If this is an enum, the properties were already taken care of above.
-      if (!createdEnumType) {
-        processObjectLitProperties(
-            t, objectLit, ObjectType.cast(objectLit.getJSType()));
-      }
+      processObjectLitProperties(
+          t, objectLit, ObjectType.cast(objectLit.getJSType()), !createdEnumType);
     }
 
     /**
@@ -630,18 +627,22 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param objLit The OBJECTLIT node.
      * @param objLitType The type of the OBJECTLIT node. This might be a named
      *     type, because of the lends annotation.
+     * @param declareOnOwner If true, declare properties on the objLitType as
+     *     well. If false, the caller should take crae of this.
      */
     void processObjectLitProperties(
-        NodeTraversal t, Node objLit, ObjectType objLitType) {
+        NodeTraversal t, Node objLit, ObjectType objLitType,
+        boolean declareOnOwner) {
       for (Node keyNode = objLit.getFirstChild(); keyNode != null;
            keyNode = keyNode.getNext()) {
         Node value = keyNode.getFirstChild();
         String memberName = NodeUtil.getObjectLitKeyName(keyNode);
         JSDocInfo info = keyNode.getJSDocInfo();
-        JSType valueType = getDeclaredType(
-            t.getSourceName(), info, keyNode, value);
-        JSType keyType = NodeUtil.getObjectLitKeyTypeFromValueType(
-            keyNode, valueType);
+        JSType valueType =
+            getDeclaredType(t.getSourceName(), info, keyNode, value);
+        JSType keyType =  objLitType.isEnumType() ?
+            objLitType.toMaybeEnumType().getElementsType() :
+            NodeUtil.getObjectLitKeyTypeFromValueType(keyNode, valueType);
         if (keyType != null) {
           // Try to declare this property in the current scope if it
           // has an authoritative name.
@@ -652,11 +653,10 @@ final class TypedScopeCreator implements ScopeCreator {
             setDeferredType(keyNode, keyType);
           }
 
-          if (objLitType != null) {
+          if (objLitType != null && declareOnOwner) {
             // Declare this property on its object literal.
             boolean isExtern = t.getInput() != null && t.getInput().isExtern();
-            objLitType.defineDeclaredProperty(
-                memberName, keyType, keyNode);
+            objLitType.defineDeclaredProperty(memberName, keyType, keyNode);
           }
         }
       }
@@ -987,8 +987,6 @@ final class TypedScopeCreator implements ScopeCreator {
               // GET and SET don't have a String value;
               compiler.report(
                   JSError.make(sourceName, key, ENUM_NOT_CONSTANT, keyName));
-            } else if (enumType.hasOwnProperty(keyName)) {
-              compiler.report(JSError.make(sourceName, key, ENUM_DUP, keyName));
             } else if (!codingConvention.isValidEnumKey(keyName)) {
               compiler.report(
                   JSError.make(sourceName, key, ENUM_NOT_CONSTANT, keyName));

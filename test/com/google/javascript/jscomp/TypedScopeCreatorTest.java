@@ -236,6 +236,13 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(f instanceof EnumType);
   }
 
+  public void testEnumElement() {
+    testSame("/** @enum */ var Foo = {BAR: 1}; var f = Foo;");
+    Var bar = globalScope.getVar("Foo.BAR");
+    assertNotNull(bar);
+    assertEquals("Foo.<number>", bar.getType().toString());
+  }
+
   public void testNamespacedEnum() {
     testSame("var goog = {}; goog.ui = {};" +
         "/** @constructor */goog.ui.Zippy = function() {};" +
