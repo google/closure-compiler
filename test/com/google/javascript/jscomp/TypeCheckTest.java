@@ -1864,6 +1864,43 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testInnerFunction10() throws Exception {
+    testTypes(
+        "function f() {" +
+        "  /** @type {?number} */ var x = null;" +
+        "  /** @return {string} */" +
+        "  function g() {" +
+        "    if (!x) {" +
+        "      x = 1;" +
+        "    }" +
+        "    return x;" +
+        "  }" +
+        "}",
+        "inconsistent return type\n" +
+        "found   : number\n" +
+        "required: string");
+  }
+
+  public void testInnerFunction11() throws Exception {
+    // TODO(nicksantos): This is actually bad inference, because
+    // h sets x to null. We should fix this, but for now we do it
+    // this way so that we don't break existing binaries. We will
+    // need to change TypeInference#isUnflowable to fix this.
+    testTypes(
+        "function f() {" +
+        "  /** @type {?number} */ var x = null;" +
+        "  /** @return {number} */" +
+        "  function g() {" +
+        "    x = 1;" +
+        "    h();" +
+        "    return x;" +
+        "  }" +
+        "  function h() {" +
+        "    x = null;" +
+        "  }" +
+        "}");
+  }
+
   public void testAbstractMethodHandling1() throws Exception {
     testTypes(
         "/** @type {Function} */ var abstractFn = function() {};" +

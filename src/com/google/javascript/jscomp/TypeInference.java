@@ -1287,8 +1287,10 @@ class TypeInference
     scope.inferSlotType(varName, varType);
   }
 
-  private static boolean isUnflowable(Var v) {
-    return v != null && v.isLocal() && v.isMarkedEscaped();
+  private boolean isUnflowable(Var v) {
+    return v != null && v.isLocal() && v.isMarkedEscaped() &&
+        // It's OK to flow a variable in the scope where it's escaped.
+        v.getScope() == syntacticScope;
   }
 
   /**
