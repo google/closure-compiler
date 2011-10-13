@@ -840,6 +840,37 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testUndeclaredGlobalProperty1() throws Exception {
+    testTypes("/** @const */ var x = {}; x.y = null;" +
+        "function f(a) { x.y = a; }" +
+        "/** @param {string} a */ function g(a) { }" +
+        "function h() { g(x.y); }");
+  }
+
+  public void testUndeclaredGlobalProperty2() throws Exception {
+    testTypes("/** @const */ var x = {}; x.y = null;" +
+        "function f() { x.y = 3; }" +
+        "/** @param {string} a */ function g(a) { }" +
+        "function h() { g(x.y); }",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : (null|number)\n" +
+        "required: string");
+  }
+
+  public void testLocallyInferredGlobalProperty1() throws Exception {
+    // We used to have a bug where x.y.z leaked from f into h.
+    testTypes(
+        "/** @constructor */ function F() {}" +
+        "/** @type {number} */ F.prototype.z;" +
+        "/** @const */ var x = {}; /** @type {F} */ x.y;" +
+        "function f() { x.y.z = 'abc'; }" +
+        "/** @param {number} x */ function g(x) {}" +
+        "function h() { g(x.y.z); }",
+        "assignment to property z of F\n" +
+        "found   : string\n" +
+        "required: number");
+  }
+
   public void testPropertyInferredPropagation() throws Exception {
     testTypes("/** @return {Object} */function f() { return {}; }\n" +
          "function g() { var x = f(); if (x.p) x.a = 'a'; else x.a = 'b'; }\n" +

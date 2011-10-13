@@ -430,16 +430,6 @@ public class SymbolTableTest extends TestCase {
         refs.get(0).getNode().getSourceFileName());
   }
 
-  public void testGlobalQualifiedNamesInLocalScopes() {
-    SymbolTable table = createSymbolTable(
-        "/** @const */ var x = {}; function f() { x.number = 3; }");
-    Symbol xNumber = getLocalVar(table, "x.number");
-    assertNotNull(xNumber);
-    assertTrue(table.getScope(xNumber).isGlobalScope());
-
-    assertEquals("?", xNumber.getType().toString());
-  }
-
   public void testLocalQualifiedNamesInLocalScopes() {
     SymbolTable table = createSymbolTable(
         "function f() { var x = {}; x.number = 3; }");

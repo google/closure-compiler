@@ -113,15 +113,7 @@ class LinkedFlowScope implements FlowScope {
     Scope functionScope = getFunctionScope();
     if (functionScope.isLocal()) {
       if (functionScope.getVar(symbol) == null && !functionScope.isBottom()) {
-        // When we enter a local scope, many qualified names are
-        // already defined even if they haven't been declared in the Scope
-        // object. If the name has not yet been defined in this scope, we
-        // need to define it now before we refine it.
-        int firstDot = symbol.indexOf(".");
-        Preconditions.checkState(firstDot != -1);
-        Var owner = functionScope.getVar(symbol.substring(0, firstDot));
-        Scope ownerScope = owner == null ? functionScope : owner.getScope();
-        ownerScope.declare(symbol, node, bottomType, null);
+        functionScope.declare(symbol, node, bottomType, null);
       }
 
       inferSlotType(symbol, inferredType);
