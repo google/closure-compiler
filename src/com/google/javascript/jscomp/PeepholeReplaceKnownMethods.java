@@ -108,6 +108,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         subtree = tryFoldStringSubstr(subtree, stringNode, firstArg);
       } else if (functionNameString.equals("substring")) {
         subtree = tryFoldStringSubstring(subtree, stringNode, firstArg);
+      } else if (functionNameString.equals("charAt")) {
+        subtree = tryFoldStringCharAt(subtree, stringNode, firstArg);
+      } else if (functionNameString.equals("charCodeAt")) {
+        subtree = tryFoldStringCharCodeAt(subtree, stringNode, firstArg);
       }
     }
 
@@ -258,7 +262,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
       //Check that the string is in a format we can recognize
       checkVal = NodeUtil.getStringNumberValue(stringVal);
-      if (checkVal == null || checkVal == Double.NaN) {
+      if (checkVal == null) {
         return n;
       }
 
@@ -574,4 +578,64 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     return resultNode;
   }
 
+  /**
+   * Try to fold .charAt() calls on strings
+   */
+  private Node tryFoldStringCharAt(Node n, Node stringNode, Node arg1) {
+    Preconditions.checkArgument(n.getType() == Token.CALL);
+    Preconditions.checkArgument(stringNode.getType() == Token.STRING);
+
+    int index;
+    String stringAsString = stringNode.getString();
+
+    if (arg1 != null && arg1.getType() == Token.NUMBER
+        && arg1.getNext() == null) {
+      index = (int) arg1.getDouble();
+    } else {
+      return n;
+    }
+
+    if (index < 0 || stringAsString.length() <= index) {
+      // http://es5.github.com/#x15.5.4.4 says "" is returned when index is
+      // out of bounds but we bail.
+      return n;
+    }
+
+    Node resultNode = Node.newString(
+        stringAsString.substring(index, index + 1));
+    Node parent = n.getParent();
+    parent.replaceChild(n, resultNode);
+    reportCodeChange();
+    return resultNode;
+  }
+
+  /**
+   * Try to fold .charCodeAt() calls on strings
+   */
+  private Node tryFoldStringCharCodeAt(Node n, Node stringNode, Node arg1) {
+    Preconditions.checkArgument(n.getType() == Token.CALL);
+    Preconditions.checkArgument(stringNode.getType() == Token.STRING);
+
+    int index;
+    String stringAsString = stringNode.getString();
+
+    if (arg1 != null && arg1.getType() == Token.NUMBER
+        && arg1.getNext() == null) {
+      index = (int) arg1.getDouble();
+    } else {
+      return n;
+    }
+
+    if (index < 0 || stringAsString.length() <= index) {
+      // http://es5.github.com/#x15.5.4.5 says NaN is returned when index is
+      // out of bounds but we bail.
+      return n;
+    }
+
+    Node resultNode = Node.newNumber(stringAsString.charAt(index));
+    Node parent = n.getParent();
+    parent.replaceChild(n, resultNode);
+    reportCodeChange();
+    return resultNode;
+  }
 }

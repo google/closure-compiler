@@ -152,6 +152,40 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'a'.substring(0, 2)");
   }
 
+  public void testFoldStringCharAt() {
+    fold("x = 'abcde'.charAt(0)", "x = 'a'");
+    fold("x = 'abcde'.charAt(1)", "x = 'b'");
+    fold("x = 'abcde'.charAt(2)", "x = 'c'");
+    fold("x = 'abcde'.charAt(3)", "x = 'd'");
+    fold("x = 'abcde'.charAt(4)", "x = 'e'");
+    foldSame("x = 'abcde'.charAt(5)");  // or x = ''
+    foldSame("x = 'abcde'.charAt(-1)");  // or x = ''
+    foldSame("x = 'abcde'.charAt(y)");
+    foldSame("x = 'abcde'.charAt()");  // or x = 'a'
+    foldSame("x = 'abcde'.charAt(0, ++z)");  // or (++z, 'a')
+    foldSame("x = 'abcde'.charAt(null)");  // or x = 'a'
+    foldSame("x = 'abcde'.charAt(true)");  // or x = 'b'
+    fold("x = '\\ud834\udd1e'.charAt(0)", "x = '\\ud834'");
+    fold("x = '\\ud834\udd1e'.charAt(1)", "x = '\\udd1e'");
+  }
+
+  public void testFoldStringCharCodeAt() {
+    fold("x = 'abcde'.charCodeAt(0)", "x = 97");
+    fold("x = 'abcde'.charCodeAt(1)", "x = 98");
+    fold("x = 'abcde'.charCodeAt(2)", "x = 99");
+    fold("x = 'abcde'.charCodeAt(3)", "x = 100");
+    fold("x = 'abcde'.charCodeAt(4)", "x = 101");
+    foldSame("x = 'abcde'.charCodeAt(5)");  // or x = (0/0)
+    foldSame("x = 'abcde'.charCodeAt(-1)");  // or x = (0/0)
+    foldSame("x = 'abcde'.charCodeAt(y)");
+    foldSame("x = 'abcde'.charCodeAt()");  // or x = 97
+    foldSame("x = 'abcde'.charCodeAt(0, ++z)");  // or (++z, 97)
+    foldSame("x = 'abcde'.charCodeAt(null)");  // or x = 97
+    foldSame("x = 'abcde'.charCodeAt(true)");  // or x = 98
+    fold("x = '\\ud834\udd1e'.charCodeAt(0)", "x = 55348");
+    fold("x = '\\ud834\udd1e'.charCodeAt(1)", "x = 56606");
+  }
+
   public void testJoinBug() {
     fold("var x = [].join();", "var x = '';");
     fold("var x = [x].join();", "var x = '' + x;");
