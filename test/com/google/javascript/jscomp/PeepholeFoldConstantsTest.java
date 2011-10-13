@@ -140,6 +140,36 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("null === undefined", "false");
     fold("void 0 === undefined", "true");
 
+    fold("undefined == NaN", "false");
+    fold("NaN == undefined", "false");
+    fold("undefined == Infinity", "false");
+    fold("Infinity == undefined", "false");
+    fold("undefined == -Infinity", "false");
+    fold("-Infinity == undefined", "false");
+    fold("({}) == undefined", "false");
+    fold("undefined == ({})", "false");
+    fold("([]) == undefined", "false");
+    fold("undefined == ([])", "false");
+    fold("(/a/g) == undefined", "false");
+    fold("undefined == (/a/g)", "false");
+    fold("(function(){}) == undefined", "false");
+    fold("undefined == (function(){})", "false");
+
+    fold("undefined != NaN", "true");
+    fold("NaN != undefined", "true");
+    fold("undefined != Infinity", "true");
+    fold("Infinity != undefined", "true");
+    fold("undefined != -Infinity", "true");
+    fold("-Infinity != undefined", "true");
+    fold("({}) != undefined", "true");
+    fold("undefined != ({})", "true");
+    fold("([]) != undefined", "true");
+    fold("undefined != ([])", "true");
+    fold("(/a/g) != undefined", "true");
+    fold("undefined != (/a/g)", "true");
+    fold("(function(){}) != undefined", "true");
+    fold("undefined != (function(){})", "true");
+
     foldSame("this == undefined");
     foldSame("x == undefined");
   }
@@ -169,6 +199,104 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     fold("undefined !== void 0", "false");
     fold("undefined === void 0", "true");
+  }
+
+  public void testNullComparison1() {
+    fold("null == undefined", "true");
+    fold("null == null", "true");
+    fold("null == void 0", "true");
+
+    fold("null == 0", "false");
+    fold("null == 1", "false");
+    fold("null == 'hi'", "false");
+    fold("null == true", "false");
+    fold("null == false", "false");
+
+    fold("null === undefined", "false");
+    fold("null === null", "true");
+    fold("null === void 0", "false");
+
+    foldSame("null == this");
+    foldSame("null == x");
+
+    fold("null != undefined", "false");
+    fold("null != null", "false");
+    fold("null != void 0", "false");
+
+    fold("null != 0", "true");
+    fold("null != 1", "true");
+    fold("null != 'hi'", "true");
+    fold("null != true", "true");
+    fold("null != false", "true");
+
+    fold("null !== undefined", "true");
+    fold("null !== void 0", "true");
+    fold("null !== null", "false");
+
+    foldSame("null != this");
+    foldSame("null != x");
+
+    fold("null < null", "false");
+    fold("null > null", "false");
+    fold("null >= null", "true");
+    fold("null <= null", "true");
+
+    foldSame("0 < null"); // foldable
+    fold("true > null", "true");
+    foldSame("'hi' >= null"); // foldable
+    fold("null <= null", "true");
+
+    foldSame("null < 0");  // foldable
+    fold("null > true", "false");
+    foldSame("null >= 'hi'"); // foldable
+    fold("null <= null", "true");
+
+    fold("null == null", "true");
+    fold("0 == null", "false");
+    fold("1 == null", "false");
+    fold("'hi' == null", "false");
+    fold("true == null", "false");
+    fold("false == null", "false");
+    fold("null === null", "true");
+    fold("void 0 === null", "false");
+
+    fold("null == NaN", "false");
+    fold("NaN == null", "false");
+    fold("null == Infinity", "false");
+    fold("Infinity == null", "false");
+    fold("null == -Infinity", "false");
+    fold("-Infinity == null", "false");
+    fold("({}) == null", "false");
+    fold("null == ({})", "false");
+    fold("([]) == null", "false");
+    fold("null == ([])", "false");
+    fold("(/a/g) == null", "false");
+    fold("null == (/a/g)", "false");
+    fold("(function(){}) == null", "false");
+    fold("null == (function(){})", "false");
+
+    fold("null != NaN", "true");
+    fold("NaN != null", "true");
+    fold("null != Infinity", "true");
+    fold("Infinity != null", "true");
+    fold("null != -Infinity", "true");
+    fold("-Infinity != null", "true");
+    fold("({}) != null", "true");
+    fold("null != ({})", "true");
+    fold("([]) != null", "true");
+    fold("null != ([])", "true");
+    fold("(/a/g) != null", "true");
+    fold("null != (/a/g)", "true");
+    fold("(function(){}) != null", "true");
+    fold("null != (function(){})", "true");
+
+    foldSame("({a:f()}) == null");
+    foldSame("null == ({a:f()})");
+    foldSame("([f()]) == null");
+    foldSame("null == ([f()])");
+
+    foldSame("this == null");
+    foldSame("x == null");
   }
 
   public void testUnaryOps() {

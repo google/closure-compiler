@@ -880,9 +880,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   @SuppressWarnings("fallthrough")
   private Node tryFoldComparison(Node n, Node left, Node right) {
-    if (!NodeUtil.isLiteralValue(left, false) ||
-        !NodeUtil.isLiteralValue(right, false)) {
-      // We only handle non-literal operands for LT and GT.
+    boolean leftLiteral = NodeUtil.isLiteralValue(left, true);
+    boolean rightLiteral = NodeUtil.isLiteralValue(right, true);
+
+    if (!leftLiteral || !rightLiteral) {
+      // We only handle literal operands for LT and GT.
       if (n.getType() != Token.GT && n.getType() != Token.LT) {
         return n;
       }
@@ -891,18 +893,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     int op = n.getType();
     boolean result;
 
-    // TODO(johnlenz): Use the JSType to compare nodes of different types.
-
-    boolean rightLiteral = NodeUtil.isLiteralValue(right, false);
-    boolean undefinedRight = ((Token.NAME == right.getType()
-          && right.getString().equals("undefined"))
-          || (Token.VOID == right.getType()
-              && NodeUtil.isLiteralValue(right.getFirstChild(), false)));
+    boolean undefinedRight = NodeUtil.isUndefined(right) && rightLiteral;
+    boolean nullRight = NodeUtil.isNull(right);
     int lhType = getNormalizedNodeType(left);
     int rhType = getNormalizedNodeType(right);
     switch (lhType) {
       case Token.VOID:
-        if (!NodeUtil.isLiteralValue(left.getFirstChild(), false)) {
+        if (!leftLiteral) {
           return n;
         } else if (!rightLiteral) {
           return n;
@@ -910,8 +907,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           result = compareToUndefined(right, op);
         }
         break;
-
       case Token.NULL:
+        if (rightLiteral && isEqualityOp(op)) {
+          result = compareToNull(right, op);
+          break;
+        }
+        // fallthrough
       case Token.TRUE:
       case Token.FALSE:
         if (undefinedRight) {
@@ -980,6 +981,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           result = compareToUndefined(left, op);
           break;
         }
+        if (nullRight && isEqualityOp(op)) {
+          result = compareToNull(left, op);
+          break;
+        }
         if (Token.STRING != right.getType()) {
           return n;  // Only eval if they are the same type
         }
@@ -1004,6 +1009,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           result = compareToUndefined(left, op);
           break;
         }
+        if (nullRight && isEqualityOp(op)) {
+          result = compareToNull(left, op);
+          break;
+        }
         if (Token.NUMBER != right.getType()) {
           return n;  // Only eval if they are the same type
         }
@@ -1016,7 +1025,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         break;
 
       case Token.NAME:
-        if (undefinedRight) {
+        if (leftLiteral && undefinedRight) {
           result = compareToUndefined(left, op);
           break;
         }
@@ -1025,6 +1034,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           boolean undefinedLeft = (left.getString().equals("undefined"));
           if (undefinedLeft) {
             result = compareToUndefined(right, op);
+            break;
+          }
+          if (leftLiteral && nullRight && isEqualityOp(op)) {
+            result = compareToNull(left, op);
             break;
           }
         }
@@ -1049,6 +1062,37 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             return n;  // don't handle that op
         }
         break;
+
+      case Token.NEG:
+        if (leftLiteral) {
+          if (undefinedRight) {
+            result = compareToUndefined(left, op);
+            break;
+          }
+          if (nullRight && isEqualityOp(op)) {
+            result = compareToNull(left, op);
+            break;
+          }
+        }
+        // Nothing else for now.
+        return n;
+
+      case Token.ARRAYLIT:
+      case Token.OBJECTLIT:
+      case Token.REGEXP:
+      case Token.FUNCTION:
+        if (leftLiteral) {
+          if (undefinedRight) {
+            result = compareToUndefined(left, op);
+            break;
+          }
+          if (nullRight && isEqualityOp(op)) {
+            result = compareToNull(left, op);
+            break;
+          }
+        }
+        // ignore the rest for now.
+        return n;
 
       default:
         // assert, this should cover all consts
@@ -1126,10 +1170,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * @return Whether the boolean op is true or false
    */
   private boolean compareToUndefined(Node value, int op) {
-    boolean valueUndefined = ((Token.NAME == value.getType()
-        && value.getString().equals("undefined"))
-        || (Token.VOID == value.getType()
-            && NodeUtil.isLiteralValue(value.getFirstChild(), false)));
+    Preconditions.checkState(NodeUtil.isLiteralValue(value, true));
+    boolean valueUndefined = NodeUtil.isUndefined(value);
     boolean valueNull = (Token.NULL == value.getType());
     boolean equivalent = valueUndefined || valueNull;
     switch (op) {
@@ -1147,6 +1189,41 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.LE:
       case Token.GE:
         return false;
+      default:
+        throw new IllegalStateException("unexpected.");
+    }
+  }
+
+  private boolean isEqualityOp(int op) {
+    switch (op) {
+      case Token.EQ:
+      case Token.NE:
+      case Token.SHEQ:
+      case Token.SHNE:
+        return true;
+    }
+    return false;
+  }
+
+  /**
+   * @param value The value to compare to "null"
+   * @param op The boolean op to compare with
+   * @return Whether the boolean op is true or false
+   */
+  private boolean compareToNull(Node value, int op) {
+    boolean valueUndefined = NodeUtil.isUndefined(value);
+    boolean valueNull = (Token.NULL == value.getType());
+    boolean equivalent = valueUndefined || valueNull;
+    switch (op) {
+      case Token.EQ:
+        // undefined is only equal to null or an undefined value
+        return equivalent;
+      case Token.NE:
+        return !equivalent;
+      case Token.SHEQ:
+        return valueNull;
+      case Token.SHNE:
+        return !valueNull;
       default:
         throw new IllegalStateException("unexpected.");
     }
