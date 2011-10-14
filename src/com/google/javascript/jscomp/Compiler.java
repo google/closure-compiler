@@ -1993,6 +1993,13 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
+   * Returns an unmodifiable view of the compiler inputs indexed by id.
+   */
+  public Map<InputId, CompilerInput> getInputsById() {
+    return Collections.unmodifiableMap(inputsById);
+  }
+
+  /**
    * Gets the externs in the order in which they are being processed.
    */
   List<CompilerInput> getExternsInOrder() {
