@@ -40,6 +40,7 @@ JSON.stringify = function(jsonObj, opt_replacer, opt_space) {};
 /**
  * As per EcmaScript 5, 15.12.3.
  * @param {string=} opt_key The JSON key for this object.
- * @return {string} The string representation of the object.
+ * @return {*} The serializable representation of this object. Note that this
+ *     need not be a string. See http://goo.gl/PEUvs.
  */
 Object.prototype.toJSON = function(opt_key) {};
