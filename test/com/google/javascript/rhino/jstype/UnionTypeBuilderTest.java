@@ -100,11 +100,38 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertUnion("(Object|string)", STRING_OBJECT_TYPE, stringAndObject);
   }
 
+  public void testRemovalOfDupes2() {
+    JSType union =
+        registry.createUnionType(
+            EVAL_ERROR_TYPE,
+            createFunctionWithReturn(ERROR_TYPE),
+            ERROR_TYPE,
+            createFunctionWithReturn(EVAL_ERROR_TYPE));
+    assertEquals("(Error|function (): Error)", union.toString());
+  }
+
+  public void testRemovalOfDupes3() {
+    JSType union =
+        registry.createUnionType(
+            ERROR_TYPE,
+            createFunctionWithReturn(EVAL_ERROR_TYPE),
+            EVAL_ERROR_TYPE,
+            createFunctionWithReturn(ERROR_TYPE));
+    assertEquals("(Error|function (): Error)", union.toString());
+  }
+
   public void assertUnion(String expected, JSType ... types) {
     UnionTypeBuilder builder = new UnionTypeBuilder(registry);
     for (JSType type : types) {
       builder.addAlternate(type);
     }
     assertEquals(expected, builder.build().toString());
+  }
+
+  public FunctionType createFunctionWithReturn(JSType type) {
+    return new FunctionBuilder(registry)
+        .withParamsNode(registry.createParameters())
+        .withReturnType(type)
+        .build();
   }
 }

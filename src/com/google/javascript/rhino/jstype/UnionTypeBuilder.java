@@ -51,6 +51,7 @@ import com.google.javascript.rhino.jstype.UnionType;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -110,7 +111,7 @@ class UnionTypeBuilder implements Serializable {
     if (specialCaseType != null) {
       return ImmutableList.of(specialCaseType);
     }
-    return alternates;
+    return Collections.unmodifiableList(alternates);
   }
 
   /**
@@ -160,7 +161,7 @@ class UnionTypeBuilder implements Serializable {
         // Look through the alternates we've got so far,
         // and check if any of them are duplicates of
         // one another.
-        int i = 0;
+        int currentIndex = 0;
         Iterator<JSType> it = alternates.iterator();
         while (it.hasNext()) {
           JSType current = it.next();
@@ -183,12 +184,16 @@ class UnionTypeBuilder implements Serializable {
             } else if (current.isSubtype(alternate)) {
               // Alternate makes current obsolete
               it.remove();
-              if (i == functionTypePosition) {
+
+              if (currentIndex == functionTypePosition) {
                 functionTypePosition = -1;
+              } else if (currentIndex < functionTypePosition) {
+                functionTypePosition--;
+                currentIndex--;
               }
             }
           }
-          i++;
+          currentIndex++;
         }
 
         if (alternate.isFunctionType()) {
