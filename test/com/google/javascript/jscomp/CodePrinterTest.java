@@ -1268,4 +1268,8 @@ public class CodePrinterTest extends TestCase {
     assertPrint("var x = {0.2: 1};", "var x={\"0.2\":1}");
     assertPrint("var x = {'0.2': 1};", "var x={\"0.2\":1}");
   }
+
+  public void testIssue582() {
+    assertPrint("var x = -0.0;", "var x=-0.0");
+  }
 }
