@@ -291,7 +291,7 @@ public class JSModuleGraph {
    * @throws MissingProvideException if an entry point was not provided
    *     by any of the inputs.
    */
-  List<CompilerInput> manageDependencies(
+  public List<CompilerInput> manageDependencies(
       List<String> entryPoints,
       List<CompilerInput> inputs)
       throws CircularDependencyException, MissingProvideException {
