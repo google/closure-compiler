@@ -738,6 +738,11 @@ public class DefaultPassConfig extends PassConfig {
       if (options.enables(DiagnosticGroups.GLOBAL_THIS)) {
         sharedCallbacks.add(new CheckGlobalThis(compiler));
       }
+
+      if (options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
+        sharedCallbacks.add(new CheckDebuggerStatement(compiler));
+      }
+
       return combineChecks(compiler, sharedCallbacks);
     }
 

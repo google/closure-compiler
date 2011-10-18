@@ -157,6 +157,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("undefinedVars",
           VarCheck.UNDEFINED_VAR_ERROR);
 
+  public static DiagnosticGroup DEBUGGER_STATEMENT_PRESENT =
+      DiagnosticGroups.registerGroup("checkDebuggerStatement",
+          CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
+
   public static DiagnosticGroup CHECK_REGEXP =
       DiagnosticGroups.registerGroup("checkRegExp",
           CheckRegExp.REGEXP_REFERENCE,
