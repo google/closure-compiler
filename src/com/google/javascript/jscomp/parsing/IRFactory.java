@@ -673,8 +673,14 @@ class IRFactory {
           transformTokenType(exprNode.getType()),
           transform(exprNode.getLeft()),
           transform(exprNode.getRight()));
+      // Set the line number here so we can fine-tune it in ways transform
+      // doesn't do.
       n.setLineno(exprNode.getLineno());
-      n.setCharno(position2charno(exprNode.getAbsolutePosition()));
+      // Position in new ASTNode is to start of expression, but old-fashioned
+      // line numbers from Node reference the operator token.  Add the offset
+      // to the operator to get the correct character number.
+      n.setCharno(position2charno(exprNode.getAbsolutePosition() +
+          exprNode.getOperatorPosition()));
       maybeSetLengthFrom(n, exprNode);
       return n;
     }

@@ -2728,10 +2728,10 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var goog = {};" +
         "/** @enum */goog.a=8;",
         Lists.newArrayList(
+            "enum initializer must be an object literal or an enum",
             "assignment to property a of goog\n" +
             "found   : number\n" +
-            "required: enum{goog.a}",
-            "enum initializer must be an object literal or an enum"));
+            "required: enum{goog.a}"));
   }
 
   public void testEnum10() throws Exception {
