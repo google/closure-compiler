@@ -95,6 +95,9 @@ public class InfixExpression extends AstNode {
         int beg = left.getPosition();
         int end = right.getPosition() + right.getLength();
         setBounds(beg, end);
+        // line number should agree with source position
+        setLineno(left.getLineno());
+
         // this updates their positions to be parent-relative
         setLeft(left);
         setRight(right);

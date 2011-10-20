@@ -61,7 +61,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
     assertEquals(Token.ASSIGN, assign.getType());
     assertEquals(1, assign.getLineno());
-    assertEquals(2, assign.getCharno());
+    assertEquals(0, assign.getCharno());
   }
 
   public void testLinenoCharnoAssign2() throws Exception {
@@ -69,7 +69,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
     assertEquals(Token.ASSIGN, assign.getType());
     assertEquals(2, assign.getLineno());
-    assertEquals(12, assign.getCharno());
+    assertEquals(1, assign.getCharno());
   }
 
   public void testLinenoCharnoCall() throws Exception {
@@ -136,7 +136,7 @@ public class ParserTest extends BaseJSTypeTestCase {
 
     assertEquals(Token.LT, lt.getType());
     assertEquals(1, lt.getLineno());
-    assertEquals(9, lt.getCharno());
+    assertEquals(7, lt.getCharno());
   }
 
   public void testLinenoCharnoHook() throws Exception {
@@ -261,7 +261,7 @@ public class ParserTest extends BaseJSTypeTestCase {
         getFirstChild().getFirstChild();
 
     assertEquals(1, op.getLineno());
-    assertEquals(11, op.getCharno());
+    assertEquals(8, op.getCharno());
   }
 
   public void testJSDocAttachment1() {

@@ -357,7 +357,7 @@ public class ParserTest extends TestCase {
 
         assertEquals(1, var1.getLineno());
         assertEquals(1, firstVarName.getLineno());
-        assertEquals(2, var1Add.getLineno());
+        assertEquals(1, var1Add.getLineno());
         assertEquals(1, var1Add.getLeft().getLineno());
         assertEquals(3, var1Add.getRight().getLineno());
 
@@ -371,7 +371,7 @@ public class ParserTest extends TestCase {
 
         assertEquals(8, var3.getLineno());
         assertEquals(8, thirdVarName.getLineno());
-        assertEquals(9, thirdVarDiv.getLineno());
+        assertEquals(8, thirdVarDiv.getLineno());
         assertEquals(8, thirdVarDiv.getLeft().getLineno());
         assertEquals(9, thirdVarDiv.getRight().getLineno());
     }
@@ -494,7 +494,7 @@ public class ParserTest extends TestCase {
         AstNode rhs = compare.getRight();
 
         assertEquals(1, lhs.getLineno());
-        assertEquals(2, compare.getLineno());
+        assertEquals(1, compare.getLineno());
         assertEquals(3, rhs.getLineno());
     }
 
@@ -509,7 +509,7 @@ public class ParserTest extends TestCase {
         AstNode rhs = compare.getRight();
 
         assertEquals(1, lhs.getLineno());
-        assertEquals(2, compare.getLineno());
+        assertEquals(1, compare.getLineno());
         assertEquals(3, rhs.getLineno());
     }
 
@@ -524,7 +524,7 @@ public class ParserTest extends TestCase {
         AstNode rhs = assign.getRight();
 
         assertEquals(1, lhs.getLineno());
-        assertEquals(2, assign.getLineno());
+        assertEquals(1, assign.getLineno());
         assertEquals(3, rhs.getLineno());
     }
 
@@ -541,7 +541,7 @@ public class ParserTest extends TestCase {
         AstNode aRef = comma2.getLeft();
         AstNode bRef = comma2.getRight();
 
-        assertEquals(2, comma1.getLineno());
+        assertEquals(1, comma1.getLineno());
         assertEquals(1, comma2.getLineno());
         assertEquals(1, aRef.getLineno());
         assertEquals(2, bRef.getLineno());
@@ -589,7 +589,7 @@ public class ParserTest extends TestCase {
       AstNode cName = orClause.getRight();
 
       assertEquals(1, ifStmt.getLineno());
-      assertEquals(2, orClause.getLineno());
+      assertEquals(1, orClause.getLineno());
       assertEquals(1, andClause.getLineno());
       assertEquals(4, cName.getLineno());
 
@@ -626,7 +626,8 @@ public class ParserTest extends TestCase {
       AstNode thirdValue = thirdObjectLit.getRight();
 
       assertEquals(1, firstVarName.getLineno());
-      assertEquals(2, firstObjectLit.getLineno());
+      assertEquals(2, objectLiteral.getLineno());
+      assertEquals(3, firstObjectLit.getLineno());
       assertEquals(3, firstKey.getLineno());
       assertEquals(3, firstValue.getLineno());
 
@@ -701,8 +702,8 @@ public class ParserTest extends TestCase {
       AstNode bTest = andTest.getRight();
 
       assertEquals(1, ifStmt.getLineno());
-      assertEquals(4, orTest.getLineno());
-      assertEquals(3, andTest.getLineno());
+      assertEquals(2, orTest.getLineno());
+      assertEquals(2, andTest.getLineno());
       assertEquals(2, aTest.getLineno());
       assertEquals(4, bTest.getLineno());
       assertEquals(5, cTest.getLineno());
@@ -754,18 +755,18 @@ public class ParserTest extends TestCase {
 
       assertEquals(2, bigLHSExpr.getLineno());
       assertEquals(7, bigRHSExpr.getLineno());
-      assertEquals(4, eqTest.getLineno());
-      assertEquals(9, notEqTest.getLineno());
+      assertEquals(2, eqTest.getLineno());
+      assertEquals(7, notEqTest.getLineno());
 
       assertEquals(2, test1Expr.getLineno());
       assertEquals(5, test2Expr.getLineno());
       assertEquals(7, test3Expr.getLineno());
       assertEquals(10, test4Expr.getLineno());
 
-      assertEquals(3, bitOrTest.getLineno());
-      assertEquals(6, bitAndTest.getLineno());
-      assertEquals(8, bitXorTest.getLineno());
-      assertEquals(11, bitShiftTest.getLineno());
+      assertEquals(2, bitOrTest.getLineno());
+      assertEquals(5, bitAndTest.getLineno());
+      assertEquals(7, bitXorTest.getLineno());
+      assertEquals(10, bitShiftTest.getLineno());
     }
 
     public void testLinenoFunctionCall() {
@@ -808,7 +809,7 @@ public class ParserTest extends TestCase {
       AstNode bName = aDotbName.getRight();
       FunctionNode fnNode = (FunctionNode) fnAssignment.getRight();
 
-      assertEquals(2, fnAssignment.getLineno());
+      assertEquals(1, fnAssignment.getLineno());
       assertEquals(1, aDotbName.getLineno());
       assertEquals(1, aName.getLineno());
       assertEquals(2, bName.getLineno());

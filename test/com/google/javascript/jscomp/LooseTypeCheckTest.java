@@ -2320,10 +2320,10 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
         "var goog = {};" +
         "/** @enum */goog.a=8;",
         Lists.newArrayList(
-            "enum initializer must be an object literal or an enum",
             "assignment to property a of goog\n" +
             "found   : number\n" +
-            "required: enum{goog.a}"));
+            "required: enum{goog.a}",
+            "enum initializer must be an object literal or an enum"));
   }
 
   public void testEnum10() throws Exception {
@@ -4132,7 +4132,8 @@ public class LooseTypeCheckTest extends CompilerTypeTestCase {
                "used in externs.",
                "assignment to property innerHTML of Element\n" +
                "found   : Array\n" +
-               "required: string"});
+               "required: string"
+               });
   }
 
   public void testNumberNode() throws Exception {
