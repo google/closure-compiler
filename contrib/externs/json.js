@@ -20,6 +20,9 @@
  * @externs
  */
 
+// This cannot go into the COMMON externs because it conflicts with the pure
+// Javascript implementations of the API.
+
 var JSON = {};
 
 /**
@@ -36,11 +39,3 @@ JSON.parse = function(jsonStr, opt_reviver) {};
  * @return {string} json string which represents jsonObj.
  */
 JSON.stringify = function(jsonObj, opt_replacer, opt_space) {};
-
-/**
- * As per EcmaScript 5, 15.12.3.
- * @param {string=} opt_key The JSON key for this object.
- * @return {*} The serializable representation of this object. Note that this
- *     need not be a string. See http://goo.gl/PEUvs.
- */
-Object.prototype.toJSON = function(opt_key) {};
