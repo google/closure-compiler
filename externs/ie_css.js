@@ -47,8 +47,9 @@ StyleSheet.prototype.addImport;
 /**
  * @param {string} bstrSelector
  * @param {string} bstrStyle
- * @param {number} lIndex
+ * @param {number=} opt_iIndex
  * @return {number}
+ * @see http://msdn.microsoft.com/en-us/library/aa358796%28v=vs.85%29.aspx
  */
 StyleSheet.prototype.addRule;
 

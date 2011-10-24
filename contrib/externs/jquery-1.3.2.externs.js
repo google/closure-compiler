@@ -35,7 +35,7 @@ var $ = function(arg, opt_arg) {};
 var jQuery = {};
 
 /** @constructor */
-function jQueryObject() {};
+function jQueryObject() {}
 
 
 // http://docs.jquery.com/Core - Object accessors
@@ -297,10 +297,10 @@ jQueryObject.prototype.end = function() {};
 // http://docs.jquery.com/Manipulation
 
 /**
- * @param {string|Node|Element|jQueryObject} content
+ * @param {...(string|Node|Element|jQueryObject)} var_args
  * @return {jQueryObject}
  */
-jQueryObject.prototype.append = function(content) {};
+jQueryObject.prototype.append = function(var_args) {};
 
 /**
  * @param {string|Node|Element|jQueryObject} target
@@ -309,10 +309,10 @@ jQueryObject.prototype.append = function(content) {};
 jQueryObject.prototype.appendTo = function(target) {};
 
 /**
- * @param {string|Node|Element|jQueryObject} content
+ * @param {...(string|Node|Element|jQueryObject)} var_args
  * @return {jQueryObject}
  */
-jQueryObject.prototype.prepend = function(content) {};
+jQueryObject.prototype.prepend = function(var_args) {};
 
 /**
  * @param {string|Node|Element|jQueryObject} target
@@ -321,16 +321,16 @@ jQueryObject.prototype.prepend = function(content) {};
 jQueryObject.prototype.prependTo = function(target) {};
 
 /**
- * @param {string|Node|Element|jQueryObject} content
+ * @param {...(string|Node|Element|jQueryObject)} var_args
  * @return {jQueryObject}
  */
-jQueryObject.prototype.after = function(content) {};
+jQueryObject.prototype.after = function(var_args) {};
 
 /**
- * @param {string|Node|Element|jQueryObject} content
+ * @param {...(string|Node|Element|jQueryObject)} var_args
  * @return {jQueryObject}
  */
-jQueryObject.prototype.before = function(content) {};
+jQueryObject.prototype.before = function(var_args) {};
 
 /**
  * @param {string|Node|Element|jQueryObject} target
