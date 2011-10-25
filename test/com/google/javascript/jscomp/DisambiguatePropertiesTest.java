@@ -297,6 +297,48 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         js, expected, "{}");
   }
 
+  public void testIgnoreUnknownType1() {
+    String js = ""
+        + "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "Foo.prototype.blah = 3;\n"
+        + "/** @type {Foo} */\n"
+        + "var F = new Foo;\n"
+        + "F.blah = 0;\n"
+        + "/** @return {Object} */\n"
+        + "var U = function() { return {} };\n"
+        + "U().blah();";
+    String expected = ""
+        + "function Foo(){}Foo.prototype.blah=3;var F = new Foo;F.blah=0;"
+        + "var U=function(){return{}};U().blah()";
+    testSets(false, js, expected, "{blah=[[Foo.prototype]]}");
+    testSets(true, BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES,
+        js, expected, "{}");
+  }
+
+  public void testIgnoreUnknownType2() {
+    String js = ""
+        + "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "Foo.prototype.blah = 3;\n"
+        + "/** @type {Foo} */\n"
+        + "var F = new Foo;\n"
+        + "F.blah = 0;\n"
+        + "/** @constructor */\n"
+        + "function Bar() {}\n"
+        + "Bar.prototype.blah = 3;\n"
+        + "/** @return {Object} */\n"
+        + "var U = function() { return {} };\n"
+        + "U().blah();";
+    String expected = ""
+        + "function Foo(){}Foo.prototype.blah=3;var F = new Foo;F.blah=0;"
+        + "function Bar(){}Bar.prototype.blah=3;"
+        + "var U=function(){return{}};U().blah()";
+    testSets(false, js, expected, "{}");
+    testSets(true, BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES,
+        js, expected, "{}");
+  }
+
   public void testUnionTypeTwoFields() {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
