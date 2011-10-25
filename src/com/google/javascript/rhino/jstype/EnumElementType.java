@@ -290,8 +290,7 @@ public class EnumElementType extends ObjectType {
   @Override
   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
     primitiveType = primitiveType.resolve(t, scope);
-    primitiveObjectType =
-        (ObjectType) safeResolve(primitiveObjectType, t, scope);
+    primitiveObjectType = ObjectType.cast(primitiveType);
     return this;
   }
 }

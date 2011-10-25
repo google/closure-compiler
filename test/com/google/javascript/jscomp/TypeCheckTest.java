@@ -3106,6 +3106,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: Array");
   }
 
+  public void testBackwardsTypedefUse10() throws Exception {
+    testTypes(
+        "/** @param {goog.MyEnum} x */ function g(x) {}" +
+        "var goog = {};" +
+        "/** @enum {goog.MyTypedef} */ goog.MyEnum = {FOO: 1};" +
+        "/** @typedef {number} */ goog.MyTypedef;" +
+        "g(1);",
+        "actual parameter 1 of g does not match formal parameter\n" +
+        "found   : number\n" +
+        "required: goog.MyEnum.<number>");
+  }
+
   public void testBackwardsConstructor1() throws Exception {
     testTypes(
         "function f() { (new Foo(true)); }" +
