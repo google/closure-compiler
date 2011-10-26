@@ -1610,7 +1610,7 @@ String.prototype.fontsize = function(size) {};
  * of the specified value, starting the search at fromIndex, returns -1 if the
  * value is not found.
  *
- * @param {RegExp|string|null} searchValue
+ * @param {string|null} searchValue
  * @param {(number|null)=} opt_fromIndex
  * @return {number}
  * @nosideeffects
@@ -1630,7 +1630,7 @@ String.prototype.italics = function() {};
  * the specified value, or -1 if not found. The calling string is searched
  * backward, starting at fromIndex.
  *
- * @param {RegExp|string|null} searchValue
+ * @param {string|null} searchValue
  * @param {(number|null)=} opt_fromIndex
  * @return {number}
  * @nosideeffects
