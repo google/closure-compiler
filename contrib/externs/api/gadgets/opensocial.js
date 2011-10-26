@@ -72,7 +72,7 @@ gadgets.rpc = {};
 gadgets.rpc.ACK;
 
 /**
- * @param {string} targetId The id of the target gadget, null for container.
+ * @param {?string} targetId The id of the target gadget, null for container.
  * @param {string} serviceName The RPC service to call.
  * @param {function(...[*]) : void=} opt_callback Function called when the RPC
  *     completes.
