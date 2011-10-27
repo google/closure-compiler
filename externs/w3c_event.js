@@ -130,6 +130,27 @@ Event.prototype.initEvent = function(eventTypeArg, canBubbleArg, cancelableArg) 
 
 /**
  * @constructor
+ * @extends {Event}
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/#interface-CustomEvent
+ */
+function CustomEvent() {}
+
+/**
+ * @param {string} eventType
+ * @param {boolean} bubbles
+ * @param {boolean} cancellable
+ * @param {*} detail
+ */
+CustomEvent.prototype.initCustomEvent = function(
+    eventType, bubbles, cancellable, detail) {};
+
+/**
+ * @type {*}
+ */
+CustomEvent.prototype.detail;
+
+/**
+ * @constructor
  */
 function DocumentEvent() {}
 
