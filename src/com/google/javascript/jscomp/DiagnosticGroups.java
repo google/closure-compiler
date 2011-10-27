@@ -207,6 +207,10 @@ public class DiagnosticGroups {
           StrictModeCheck.DELETE_VARIABLE,
           StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
+  public static DiagnosticGroup CHECK_PROVIDES =
+      DiagnosticGroups.registerGroup("checkProvides",
+          CheckProvides.MISSING_PROVIDE_WARNING);
+
   /**
    * Adds warning levels by name.
    */
