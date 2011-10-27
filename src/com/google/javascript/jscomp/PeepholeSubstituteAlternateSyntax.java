@@ -125,7 +125,6 @@ class PeepholeSubstituteAlternateSyntax
         }
         return node;
 
-
       case Token.TRUE:
       case Token.FALSE:
         return reduceTrueFalse(node);
@@ -264,10 +263,32 @@ class PeepholeSubstituteAlternateSyntax
           n.replaceChild(child, returnNode);
           n.removeChild(nextNode);
           reportCodeChange();
+        } else if (elseBranch != null && statementMustExitParent(thenBranch)) {
+          child.removeChild(elseBranch);
+          n.addChildAfter(elseBranch, child);
+          reportCodeChange();
         }
       }
     }
     return n;
+  }
+
+  private boolean statementMustExitParent(Node n) {
+    switch (n.getType()) {
+      case Token.THROW:
+      case Token.RETURN:
+        return true;
+      case Token.BLOCK:
+        if (n.hasChildren()) {
+          Node child = n.getLastChild();
+          return statementMustExitParent(child);
+        }
+        return false;
+      // TODO(johnlenz): handle TRY/FINALLY
+      case Token.FUNCTION:
+      default:
+        return false;
+    }
   }
 
   /**
