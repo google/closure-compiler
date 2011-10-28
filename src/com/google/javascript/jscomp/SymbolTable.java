@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
@@ -108,7 +109,7 @@ public final class SymbolTable
    * All syntactic scopes in the program, uniquely identified by the node where
    * they're declared.
    */
-  private final Map<Node, SymbolScope> scopes = Maps.newHashMap();
+  private final Map<Node, SymbolScope> scopes = Maps.newLinkedHashMap();
 
   /**
    * All JSDocInfo in the program.
@@ -439,8 +440,45 @@ public final class SymbolTable
   }
 
   /** Gets all the scopes in this symbol table. */
-  Collection<SymbolScope> getAllScopes() {
+  public Collection<SymbolScope> getAllScopes() {
     return Collections.unmodifiableCollection(scopes.values());
+  }
+
+  /**
+   * Finds anonymous functions in local scopes, and gives them names
+   * and symbols. They will show up as local variables with names
+   * "function%0", "function%1", etc.
+   */
+  public void addAnonymousFunctions() {
+    TreeSet<SymbolScope> scopes = Sets.newTreeSet(LEXICAL_SCOPE_ORDERING);
+    for (SymbolScope scope : getAllScopes()) {
+      if (scope.isLexicalScope()) {
+        scopes.add(scope);
+      }
+    }
+
+    for (SymbolScope scope : scopes) {
+      addAnonymousFunctionsInScope(scope);
+    }
+  }
+
+  private void addAnonymousFunctionsInScope(SymbolScope scope) {
+    Symbol sym = getSymbolForScope(scope);
+    if (sym == null) {
+      // JSCompiler has no symbol for this scope. Check to see if it's a
+      // local function. If it is, give it a name.
+      if (scope.isLexicalScope() &&
+          !scope.isGlobalScope() &&
+          scope.getParentScope() != null) {
+        SymbolScope parent = scope.getParentScope();
+
+        int count = parent.innerAnonFunctionsWithNames++;
+        String innerName = "function%" + count;
+        scope.setSymbolForScope(
+            declareInferredSymbol(
+                parent, innerName, scope.getRootNode()));
+      }
+    }
   }
 
   /**
@@ -863,6 +901,9 @@ public final class SymbolTable
     private final Map<String, Symbol> ownSymbols = Maps.newHashMap();
     private final int scopeDepth;
 
+    // The number of inner anonymous functions that we've given names to.
+    private int innerAnonFunctionsWithNames = 0;
+
     // The symbol associated with a property scope.
     private Symbol mySymbol;
 
@@ -1160,6 +1201,16 @@ public final class SymbolTable
       // Source position is a bit mask of line in the top 4 bits, so this
       // is a quick way to compare order without computing absolute position.
       return a.getSourcePosition() - b.getSourcePosition();
+    }
+  };
+
+  private final Ordering<SymbolScope> LEXICAL_SCOPE_ORDERING =
+      new Ordering<SymbolScope>() {
+    @Override
+    public int compare(SymbolScope a, SymbolScope b) {
+      Preconditions.checkState(a.isLexicalScope() && b.isLexicalScope(),
+                               "We can only sort lexical scopes");
+      return NODE_ORDERING.compare(a.getRootNode(), b.getRootNode());
     }
   };
 
