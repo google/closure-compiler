@@ -372,8 +372,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     }
 
     Node right = callTarget.getNext();
-    if (right != null && !NodeUtil.isImmutableValue(right)) {
-      return n;
+    if (right != null) {
+      if (right.getNext() != null || !NodeUtil.isImmutableValue(right)) {
+        return n;
+      }
     }
 
     Node arrayNode = callTarget.getFirstChild();
@@ -382,6 +384,13 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     if ((arrayNode.getType() != Token.ARRAYLIT) ||
         !functionName.getString().equals("join")) {
       return n;
+    }
+
+    if (right != null && right.getType() == Token.STRING
+        && ",".equals(right.getString())) {
+      // "," is the default, it doesn't need to be explicit
+      n.removeChild(right);
+      reportCodeChange();
     }
 
     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
