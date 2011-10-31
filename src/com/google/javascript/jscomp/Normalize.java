@@ -261,10 +261,10 @@ class Normalize implements CompilerPass {
 
           if (expectedConst) {
             Preconditions.checkState(expectedConst == isConst,
-                "The name " + name + " is not annotated as constant.");
+                "The name %s is not annotated as constant.", name);
           } else {
             Preconditions.checkState(expectedConst == isConst,
-                "The name " + name + " should not be annotated as constant.");
+                "The name %s should not be annotated as constant.", name);
           }
         }
 
@@ -273,8 +273,7 @@ class Normalize implements CompilerPass {
           constantMap.put(name, isConst);
         } else {
           Preconditions.checkState(value.booleanValue() == isConst,
-              "The name " + name + " is not consistently annotated as " +
-              "constant.");
+              "The name %s is not consistently annotated as constant.", name);
         }
       }
     }

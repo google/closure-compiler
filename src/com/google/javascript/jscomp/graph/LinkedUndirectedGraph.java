@@ -121,7 +121,7 @@ public class LinkedUndirectedGraph<N, E>
   @Override
   public Iterator<GraphNode<N, E>> getNeighborNodesIterator(N value) {
     UndiGraphNode<N, E> uNode = getUndirectedGraphNode(value);
-    Preconditions.checkNotNull(uNode, value + " should be in the graph.");
+    Preconditions.checkNotNull(uNode, "%s should be in the graph.", value);
     return ((LinkedUndirectedGraphNode<N, E>) uNode).neighborIterator();
   }
 

@@ -229,7 +229,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
     }
 
     int index = search(entries, column, 0, entries.size() - 1);
-    Preconditions.checkState(index >= 0, "unexpected:" + index);
+    Preconditions.checkState(index >= 0, "unexpected:%s", index);
     return getOriginalMappingForEntry(entries.get(index));
   }
 

@@ -1671,10 +1671,8 @@ final class NameAnalyzer implements CompilerPass {
       case Token.VAR:
         break;
       case Token.ASSIGN:
-        Preconditions.checkArgument(
-            parent.getType() == Token.FOR,
-            "Unsupported assignment in replaceWithRhs. parent: " +
-            Token.name(parent.getType()));
+        Preconditions.checkArgument(parent.getType() == Token.FOR,
+            "Unsupported assignment in replaceWithRhs. parent: %s", Token.name(parent.getType()));
         break;
       default:
         throw new IllegalArgumentException(

@@ -424,8 +424,8 @@ class NameReferenceGraphConstruction implements CompilerPass {
       String qNameStr = className + ".prototype." +
           NodeUtil.getPrototypePropertyName(qName);
       Name prototypeProp = graph.defineNameIfNotExists(qNameStr, isExtern);
-      Preconditions.checkNotNull(
-          prototypeProp, qNameStr + " should be in the name graph as a node.");
+      Preconditions.checkNotNull(prototypeProp,
+          "%s should be in the name graph as a node.", qNameStr);
       if (assign != null) {
         prototypeProp.addAssignmentDeclaration(assign);
       }

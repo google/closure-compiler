@@ -294,9 +294,8 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     void addLoopedPass(PassFactory factory) {
       String name = factory.getName();
-      Preconditions.checkArgument(
-          !myNames.contains(name),
-          "Already a pass with name '" + name + "' in this loop");
+      Preconditions.checkArgument(!myNames.contains(name),
+          "Already a pass with name '%s' in this loop", name);
       myNames.add(factory.getName());
       myPasses.add(new PassFactoryDelegate(compiler, factory));
     }

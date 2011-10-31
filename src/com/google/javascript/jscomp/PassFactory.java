@@ -84,7 +84,7 @@ public abstract class PassFactory {
    */
   final CompilerPass create(AbstractCompiler compiler) {
     Preconditions.checkState(!isCreated || !isOneTimePass,
-        "One-time passes cannot be run multiple times: " + name);
+        "One-time passes cannot be run multiple times: %s", name);
     isCreated = true;
     return createInternal(compiler);
   }
