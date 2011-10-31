@@ -508,6 +508,53 @@ public class SymbolTableTest extends TestCase {
     assertEquals(5, refs.get(1).getNode().getLineno());
   }
 
+  public void testMultipleExtends() {
+    SymbolTable table = createSymbolTable(
+        "/** @const */ var goog = goog || {};\n" +
+        "goog.inherits = function(x, y) {};\n" +
+        "/** @constructor */\n" +
+        "goog.A = function() { this.fieldA = this.constructor; };\n" +
+        "/** @constructor */ goog.A.FooA = function() {};\n" +
+        "/** @return {void} */ goog.A.prototype.methodA = function() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {goog.A}\n" +
+        " */\n" +
+        "goog.B = function() { this.fieldB = this.constructor; };\n" +
+        "goog.inherits(goog.B, goog.A);\n" +
+        "/** @return {void} */ goog.B.prototype.methodB = function() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {goog.A}\n" +
+        " */\n" +
+        "goog.B2 = function() { this.fieldB = this.constructor; };\n" +
+        "goog.inherits(goog.B2, goog.A);\n" +
+        "/** @constructor */ goog.B2.FooB = function() {};\n" +
+        "/** @return {void} */ goog.B2.prototype.methodB = function() {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {goog.B}\n" +
+        " */\n" +
+        "goog.C = function() { this.fieldC = this.constructor; };\n" +
+        "goog.inherits(goog.C, goog.B);\n" +
+        "/** @constructor */ goog.C.FooC = function() {};\n" +
+        "/** @return {void} */ goog.C.prototype.methodC = function() {};\n");
+
+    Symbol bCtor = getGlobalVar(table, "goog.B.prototype.constructor");
+    assertNotNull(bCtor);
+
+    List<Reference> bRefs = table.getReferenceList(bCtor);
+    assertEquals(2, bRefs.size());
+    assertEquals(11, bCtor.getDeclaration().getNode().getLineno());
+
+    Symbol cCtor = getGlobalVar(table, "goog.C.prototype.constructor");
+    assertNotNull(cCtor);
+
+    List<Reference> cRefs = table.getReferenceList(cCtor);
+    assertEquals(2, cRefs.size());
+    assertEquals(26, cCtor.getDeclaration().getNode().getLineno());
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);
@@ -548,6 +595,7 @@ public class SymbolTableTest extends TestCase {
     List<JSSourceFile> externs = Lists.newArrayList(
         JSSourceFile.fromCode("externs1", EXTERNS));
     CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new ClosureCodingConvention());
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
         options);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);

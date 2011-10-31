@@ -65,9 +65,9 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
       FunctionType childCtor, SubclassType type) {
     if (type == SubclassType.INHERITS) {
       childCtor.defineDeclaredProperty("superClass_",
-          parentCtor.getPrototype(), parentCtor.getSource());
+          parentCtor.getPrototype(), childCtor.getSource());
       childCtor.getPrototype().defineDeclaredProperty("constructor",
-          childCtor, parentCtor.getSource());
+          childCtor, childCtor.getSource());
     }
   }
 

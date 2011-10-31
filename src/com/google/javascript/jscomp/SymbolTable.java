@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.TreeSet;
 
 import javax.annotation.Nullable;
@@ -92,6 +93,9 @@ import javax.annotation.Nullable;
  */
 public final class SymbolTable
     implements StaticSymbolTable<SymbolTable.Symbol, SymbolTable.Reference> {
+  private static final Logger logger =
+      Logger.getLogger(SymbolTable.class.getName());
+
   /**
    * The name we use for the JavaScript built-in Global object.  It's
    * anonymous in JavaScript, so we have to give it an invalid identifier
@@ -542,9 +546,10 @@ public final class SymbolTable
       String name, JSType type, boolean inferred, SymbolScope scope,
       Node declNode) {
     Symbol symbol = new Symbol(name, type, inferred, scope);
-    symbols.put(declNode, name, symbol);
+    Symbol replacedSymbol = symbols.put(declNode, name, symbol);
+    Preconditions.checkState(replacedSymbol == null);
 
-    Symbol replacedSymbol = scope.ownSymbols.put(name, symbol);
+    replacedSymbol = scope.ownSymbols.put(name, symbol);
     Preconditions.checkState(replacedSymbol == null);
     return symbol;
   }
@@ -602,17 +607,22 @@ public final class SymbolTable
   void fillPropertyScopes() {
     // Collect all object symbols.
     List<Symbol> types = Lists.newArrayList();
+
+    // Create a property scope for each named type and each anonymous object,
+    // and populate it with that object's properties.
+    //
+    // We notably don't want to create a property scope for 'x' in
+    // var x = new Foo();
+    // where x is just an instance of another type.
     for (Symbol sym : getAllSymbols()) {
-      JSType type = sym.getType();
-      ObjectType dereferenced = type == null ? null : type.dereference();
-      if (dereferenced != null) {
+      ObjectType type = ObjectType.cast(sym.getType());
+      if (type != null &&
+          (type.getReferenceName() == null ||
+           sym.getName().equals(type.getReferenceName()))) {
         types.add(sym);
       }
     }
 
-    // Create a property scope for each symbol, and populate
-    // it with that symbol's properties.
-    //
     // The order of operations here is significant.
     //
     // When we add properties to Foo, we'll remove Foo.prototype from
@@ -745,9 +755,20 @@ public final class SymbolTable
       // to build a complete index of all objects in the program. So we might
       // already have symbols for things like "Foo.bar". If this happens,
       // throw out the old symbol and use the type-based symbol.
-      Symbol oldProp = getScope(s).getSlot(s.getName() + "." + propName);
+      Symbol oldProp = symbols.get(newProp.getDeclaration().getNode(),
+          s.getName() + "." + propName);
       if (oldProp != null) {
         removeSymbol(oldProp);
+      }
+
+      // If we've already have an entry in the table for this symbol,
+      // then skip it. This should only happen if we screwed up,
+      // and declared multiple distinct properties with the same name
+      // at the same node. We bail out here to be safe.
+      if (symbols.get(newProp.getDeclaration().getNode(),
+              newProp.getName()) != null) {
+        logger.warning("Found duplicate symbol " + newProp);
+        continue;
       }
 
       Symbol newSym = copySymbolTo(newProp, s.propertyScope);
@@ -990,6 +1011,16 @@ public final class SymbolTable
 
     public int getScopeDepth() {
       return scopeDepth;
+    }
+
+    @Override
+    public String toString() {
+      Node n = getRootNode();
+      if (n != null) {
+        return "Scope@" + n.getSourceFileName() + ":" + n.getLineno();
+      } else {
+        return "PropertyScope@" + getSymbolForScope();
+      }
     }
   }
 

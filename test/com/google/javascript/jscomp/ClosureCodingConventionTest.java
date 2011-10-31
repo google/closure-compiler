@@ -17,8 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import junit.framework.TestCase;
 
@@ -196,6 +199,26 @@ public class ClosureCodingConventionTest extends TestCase {
     assertNotRequire("goog.require(foo)");
     assertNotRequire("goog.require()");
     assertNotRequire("foo()");
+  }
+
+  public void testApplySubclassRelationship() {
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+
+    Node nodeA = new Node(Token.FUNCTION);
+    FunctionType ctorA = registry.createConstructorType("A", nodeA,
+        new Node(Token.LP), null);
+
+    Node nodeB = new Node(Token.FUNCTION);
+    FunctionType ctorB = registry.createConstructorType("B", nodeB,
+        new Node(Token.LP), null);
+
+    conv.applySubclassRelationship(ctorA, ctorB, SubclassType.INHERITS);
+
+    assertTrue(ctorB.getPrototype().hasOwnProperty("constructor"));
+    assertEquals(nodeB, ctorB.getPrototype().getPropertyNode("constructor"));
+
+    assertTrue(ctorB.hasOwnProperty("superClass_"));
+    assertEquals(nodeB, ctorB.getPropertyNode("superClass_"));
   }
 
   private void assertFunctionBind(String code) {
