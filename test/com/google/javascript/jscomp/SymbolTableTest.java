@@ -489,6 +489,25 @@ public class SymbolTableTest extends TestCase {
     assertSymmetricOrdering(ordering, f, x);
   }
 
+  public void testDeclarationDisagreement() {
+    SymbolTable table = createSymbolTable(
+        "/** @const */ var goog = goog || {};\n" +
+        "/** @param {!Function} x */\n" +
+        "goog.addSingletonGetter2 = function(x) {};\n" +
+        "/** Wakka wakka wakka */\n" +
+        "goog.addSingletonGetter = goog.addSingletonGetter2;\n" +
+        "/** @param {!Function} x */\n" +
+        "goog.addSingletonGetter = function(x) {};\n");
+
+    Symbol method = getGlobalVar(table, "goog.addSingletonGetter");
+    List<Reference> refs = table.getReferenceList(method);
+    assertEquals(2, refs.size());
+
+    // Note that the declaration should show up second.
+    assertEquals(7, method.getDeclaration().getNode().getLineno());
+    assertEquals(5, refs.get(1).getNode().getLineno());
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);

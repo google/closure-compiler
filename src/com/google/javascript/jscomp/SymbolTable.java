@@ -506,7 +506,14 @@ public final class SymbolTable
         // If we have a declaration node, we can ensure the symbol is declared.
         mySymbol = symbols.get(declNode, name);
         if (mySymbol == null) {
-          mySymbol = copySymbolTo(otherSymbol, myScope);
+          // Sometimes, our symbol tables will disagree on where the
+          // declaration node should be. In the rare case where this happens,
+          // trust the existing symbol.
+          // See SymbolTableTest#testDeclarationDisagreement.
+          mySymbol = myScope.ownSymbols.get(otherSymbol.getName());
+          if (mySymbol == null) {
+            mySymbol = copySymbolTo(otherSymbol, myScope);
+          }
         }
       } else {
         // If we don't have a declaration node, we won't be able to declare
