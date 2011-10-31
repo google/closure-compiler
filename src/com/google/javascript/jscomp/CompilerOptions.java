@@ -469,6 +469,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Specifies a prefix for all globals */
   public String renamePrefix;
 
+  /**
+   * Specifies the name of an object that will be used to store all non-extern
+   * globals.
+   */
+  public String renamePrefixNamespace;
+
   /** Aliases true, false, and null to variables with shorter names. */
   public boolean aliasKeywords;
 
