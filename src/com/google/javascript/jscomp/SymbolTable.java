@@ -291,14 +291,7 @@ public final class SymbolTable
   public Symbol getSymbolDeclaredBy(FunctionType fn) {
     Preconditions.checkState(fn.isConstructor() || fn.isInterface());
     ObjectType instanceType = fn.getInstanceType();
-    String name = instanceType.getReferenceName();
-    if (name == null || globalScope == null) {
-      return null;
-    }
-
-    Node source = fn.getSource();
-    return (source == null ?
-        globalScope : getEnclosingScope(source)).getSlot(name);
+    return getSymbolForName(fn.getSource(), instanceType.getReferenceName());
   }
 
   /**
@@ -319,14 +312,20 @@ public final class SymbolTable
   public Symbol getSymbolForInstancesOf(FunctionType fn) {
     Preconditions.checkState(fn.isConstructor() || fn.isInterface());
     ObjectType pType = fn.getPrototype();
-    String name = pType.getReferenceName();
+    return getSymbolForName(fn.getSource(), pType.getReferenceName());
+  }
+
+  private Symbol getSymbolForName(Node source, String name) {
     if (name == null || globalScope == null) {
       return null;
     }
 
-    Node source = fn.getSource();
-    return (source == null ?
-        globalScope : getEnclosingScope(source)).getSlot(name);
+    SymbolScope scope = source == null ?
+        globalScope : getEnclosingScope(source);
+
+    // scope will sometimes be null if one of the type-stripping passes
+    // was run, and the symbol isn't in the AST anymore.
+    return scope == null ? null : scope.getSlot(name);
   }
 
   /**
@@ -381,6 +380,9 @@ public final class SymbolTable
           getSymbolDeclaredBy(type.toMaybeFunctionType());
     } else if (type.isFunctionPrototypeType()) {
       FunctionType ownerFn = ((ObjectType) type).getOwnerFunction();
+      if (!ownerFn.isConstructor() && !ownerFn.isInterface()) {
+        return null;
+      }
       return linkToCtor ?
           getSymbolDeclaredBy(ownerFn) :
           getSymbolForInstancesOf(ownerFn);

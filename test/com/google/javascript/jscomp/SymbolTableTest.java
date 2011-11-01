@@ -555,6 +555,24 @@ public class SymbolTableTest extends TestCase {
     assertEquals(26, cCtor.getDeclaration().getNode().getLineno());
   }
 
+  public void testMissingConstructorTag() {
+    SymbolTable table = createSymbolTable(
+        "function F() {" +
+        "  this.field1 = 3;" +
+        "}" +
+        "F.prototype.method1 = function() {" +
+        "  this.field1 = 5;" +
+        "};" +
+        "(new F()).method1();");
+
+    // Because the constructor tag is missing, this is going
+    // to be missing a lot of inference.
+    assertNull(getGlobalVar(table, "F.prototype.field1"));
+
+    Symbol sym = getGlobalVar(table, "F.prototype.method1");
+    assertEquals(1, table.getReferenceList(sym).size());
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);
