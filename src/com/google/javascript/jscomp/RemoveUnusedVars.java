@@ -376,7 +376,6 @@ class RemoveUnusedVars
       while ((lastArg = argList.getLastChild()) != null) {
         Var var = fnScope.getVar(lastArg.getString());
         if (!referenced.contains(var)) {
-          Preconditions.checkNotNull(var == null);
           argList.removeChild(lastArg);
           compiler.reportCodeChange();
         } else {
