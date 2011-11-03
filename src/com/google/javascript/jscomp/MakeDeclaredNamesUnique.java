@@ -45,7 +45,18 @@ import java.util.Set;
 class MakeDeclaredNamesUnique
     implements NodeTraversal.ScopedCallback {
 
+  // Arguments is special cased to handle cases where a local name shadows
+  // the arguments declaration.
   public static final String ARGUMENTS = "arguments";
+
+  // The name stack is similiar to how we model scopes but handles some
+  // additional cases that are not handled by the current Scope object.
+  // Specifically, a Scope currently has only two concepts of scope (global,
+  // and function local).  But there are in reality a couple of additional
+  // case to worry about:
+  //   catch expressions
+  //   function expressions names
+  // Both belong to a scope by themselves.
   private Deque<Renamer> nameStack = new ArrayDeque<Renamer>();
   private final Renamer rootRenamer;
 
@@ -77,18 +88,7 @@ class MakeDeclaredNamesUnique
       renamer = nameStack.peek().forChildScope();
     }
 
-    if (declarationRoot.getType() == Token.FUNCTION) {
-      // Add the function parameters
-      Node fnParams = declarationRoot.getFirstChild().getNext();
-      for (Node c = fnParams.getFirstChild(); c != null; c = c.getNext()) {
-        String name = c.getString();
-        renamer.addDeclaredName(name);
-      }
-
-      // Add the function body declarations
-      Node functionBody = declarationRoot.getLastChild();
-      findDeclaredNames(functionBody, null, renamer);
-    } else {
+    if (declarationRoot.getType() != Token.FUNCTION) {
       // Add the block declarations
       findDeclaredNames(declarationRoot, null, renamer);
     }
@@ -118,6 +118,23 @@ class MakeDeclaredNamesUnique
               && !NodeUtil.isFunctionDeclaration(n)) {
             renamer.addDeclaredName(name);
           }
+
+          nameStack.push(renamer);
+        }
+        break;
+
+      case Token.LP: {
+          Renamer renamer = nameStack.peek().forChildScope();
+
+          // Add the function parameters
+          for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+            String name = c.getString();
+            renamer.addDeclaredName(name);
+          }
+
+          // Add the function body declarations
+          Node functionBody = n.getNext();
+          findDeclaredNames(functionBody, null, renamer);
 
           nameStack.push(renamer);
         }
@@ -155,8 +172,16 @@ class MakeDeclaredNamesUnique
         break;
 
       case Token.FUNCTION:
+        // Remove the function body scope
+        nameStack.pop();
         // Remove function recursive name (if any).
         nameStack.pop();
+        break;
+
+      case Token.LP:
+        // Note: The parameters and function body variables live in the
+        // same scope, we introduce the scope when in the "shouldTraverse"
+        // visit of LP, but remove it when when we exit the function above.
         break;
 
       case Token.CATCH:

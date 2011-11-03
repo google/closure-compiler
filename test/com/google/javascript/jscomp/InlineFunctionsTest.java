@@ -175,18 +175,18 @@ public class InlineFunctionsTest extends CompilerTestCase {
     // don't inline if the input parameter is modified.
     test("function INC(x){return x++}" +
          "var y=INC(i)",
-         "var y;{var x$$inline_1=i;" +
-         "y=x$$inline_1++}");
+         "var y;{var x$$inline_0=i;" +
+         "y=x$$inline_0++}");
   }
 
   public void testInlineFunctions10() {
     test("function INC(x){return x++}" +
          "var y=INC(i);y=INC(i)",
          "var y;" +
-         "{var x$$inline_1=i;" +
-         "y=x$$inline_1++}" +
-         "{var x$$inline_4=i;" +
-         "y=x$$inline_4++}");
+         "{var x$$inline_0=i;" +
+         "y=x$$inline_0++}" +
+         "{var x$$inline_2=i;" +
+         "y=x$$inline_2++}");
   }
 
   public void testInlineFunctions11() {
@@ -209,7 +209,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     // inline as block if the input parameter has side-effects.
     test("function f(x){return x}" +
          "var y=f(i++)",
-         "var y;{var x$$inline_1=i++;y=x$$inline_1}");
+         "var y;{var x$$inline_0=i++;y=x$$inline_0}");
   }
 
   public void testInlineFunctions14() {
@@ -250,9 +250,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "var JSCompiler_temp_const$$0 = c;\n" +
          "{\n" +
          "var JSCompiler_inline_result$$1;\n" +
-         "var x$$inline_3;\n" +
+         "var x$$inline_2;\n" +
          "JSCompiler_inline_result$$1 = " +
-         "    function(a$$inline_4){ return a$$inline_4+1 };\n" +
+         "    function(a$$inline_3){ return a$$inline_3+1 };\n" +
          "}" +
          "var d=JSCompiler_temp_const$$0 + JSCompiler_inline_result$$1");
   }
@@ -301,9 +301,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "  var JSCompiler_temp_const$$0 = c;\n" +
          "  {\n" +
          "  var JSCompiler_inline_result$$1;\n" +
-         "  var x$$inline_3;\n" +
+         "  var x$$inline_2;\n" +
          "  JSCompiler_inline_result$$1 = " +
-         "      function(a$$inline_4) {return a$$inline_4+1};\n" +
+         "      function(a$$inline_3) {return a$$inline_3+1};\n" +
          "  }\n" +
          "  var d = JSCompiler_temp_const$$0+JSCompiler_inline_result$$1\n" +
          "}");
@@ -320,8 +320,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test(
         "function foo(b){return window.bar(function(){c(b)})}" +
         "var d=foo(e)",
-        "var d;{var b$$inline_1=e;" +
-        "d=window.bar(function(){c(b$$inline_1)})}");
+        "var d;{var b$$inline_0=e;" +
+        "d=window.bar(function(){c(b$$inline_0)})}");
   }
 
   public void testInlineFunctions16b() {
@@ -377,11 +377,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function bar(d){return plex(d)}" +
          "var d=foo(1,2)",
 
-         "var d;{JSCompiler_inline_label_plex_2:{" +
+         "var d;{JSCompiler_inline_label_plex_1:{" +
          "if(1+2){" +
-         "d=0;break JSCompiler_inline_label_plex_2}" +
+         "d=0;break JSCompiler_inline_label_plex_1}" +
          "else{" +
-         "d=1;break JSCompiler_inline_label_plex_2}d=void 0}}");
+         "d=1;break JSCompiler_inline_label_plex_1}d=void 0}}");
   }
 
   public void testInlineFunctions23() {
@@ -391,11 +391,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function foo(a, b){return bar(a+b)}" +
          "var d=foo(1,2)",
 
-         "var d;{JSCompiler_inline_label_complex_2:{" +
+         "var d;{JSCompiler_inline_label_complex_1:{" +
          "if(1+2){" +
-         "d=0;break JSCompiler_inline_label_complex_2" +
+         "d=0;break JSCompiler_inline_label_complex_1" +
          "}else{" +
-         "d=1;break JSCompiler_inline_label_complex_2" +
+         "d=1;break JSCompiler_inline_label_complex_1" +
          "}d=void 0}}");
   }
 
@@ -532,7 +532,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "foo(2,3,x())",
 
         "1+2+1+2+4+5+6+7+8+9+1+2+3+10;" +
-        "{var JSCompiler_inline_anon_param_4=x();" +
+        "{var JSCompiler_inline_anon_param_2=x();" +
         "2+3+2+3+4+5+6+7+8+9+1+2+3+10}");
   }
 
@@ -547,50 +547,50 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testNoInlineIfParametersModified1() {
     // Assignment
     test("function f(x){return x=1}f(undefined)",
-         "{var x$$inline_1=undefined;" +
-         "x$$inline_1=1}");
+         "{var x$$inline_0=undefined;" +
+         "x$$inline_0=1}");
   }
 
   public void testNoInlineIfParametersModified2() {
     test("function f(x){return (x)=1;}f(2)",
-         "{var x$$inline_1=2;" +
-         "x$$inline_1=1}");
+         "{var x$$inline_0=2;" +
+         "x$$inline_0=1}");
   }
 
   public void testNoInlineIfParametersModified3() {
     // Assignment variant.
     test("function f(x){return x*=2}f(2)",
-         "{var x$$inline_1=2;" +
-         "x$$inline_1*=2}");
+         "{var x$$inline_0=2;" +
+         "x$$inline_0*=2}");
   }
 
   public void testNoInlineIfParametersModified4() {
     // Assignment in if.
     test("function f(x){return x?(x=2):0}f(2)",
-         "{var x$$inline_1=2;" +
-         "x$$inline_1?(" +
-         "x$$inline_1=2):0}");
+         "{var x$$inline_0=2;" +
+         "x$$inline_0?(" +
+         "x$$inline_0=2):0}");
   }
 
   public void testNoInlineIfParametersModified5() {
     // Assignment in if, multiple params
     test("function f(x,y){return x?(y=2):0}f(2,undefined)",
-         "{var y$$inline_3=undefined;2?(" +
-         "y$$inline_3=2):0}");
+         "{var y$$inline_1=undefined;2?(" +
+         "y$$inline_1=2):0}");
   }
 
   public void testNoInlineIfParametersModified6() {
     test("function f(x,y){return x?(y=2):0}f(2)",
-         "{var y$$inline_3=void 0;2?(" +
-         "y$$inline_3=2):0}");
+         "{var y$$inline_1=void 0;2?(" +
+         "y$$inline_1=2):0}");
   }
 
   public void testNoInlineIfParametersModified7() {
     // Increment
     test("function f(a){return++a<++a}f(1)",
-         "{var a$$inline_1=1;" +
-         "++a$$inline_1<" +
-         "++a$$inline_1}");
+         "{var a$$inline_0=1;" +
+         "++a$$inline_0<" +
+         "++a$$inline_0}");
   }
 
   public void testNoInlineIfParametersModified8() {
@@ -615,14 +615,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testInlineNeverMutateConstants() {
     test("function f(x){return x=1}f(undefined)",
-         "{var x$$inline_1=undefined;" +
-         "x$$inline_1=1}");
+         "{var x$$inline_0=undefined;" +
+         "x$$inline_0=1}");
   }
 
   public void testInlineNeverOverrideNewValues() {
     test("function f(a){return++a<++a}f(1)",
-        "{var a$$inline_1=1;" +
-        "++a$$inline_1<++a$$inline_1}");
+        "{var a$$inline_0=1;" +
+        "++a$$inline_0<++a$$inline_0}");
   }
 
   public void testInlineMutableArgsReferencedOnce() {
@@ -651,26 +651,26 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testInlineBlockMutableArgs1() {
     test("function foo(x){x+x}foo([])",
-         "{var x$$inline_1=[];" +
-         "x$$inline_1+x$$inline_1}");
+         "{var x$$inline_0=[];" +
+         "x$$inline_0+x$$inline_0}");
   }
 
   public void testInlineBlockMutableArgs2() {
     test("function foo(x){x+x}foo(new Date)",
-         "{var x$$inline_1=new Date;" +
-         "x$$inline_1+x$$inline_1}");
+         "{var x$$inline_0=new Date;" +
+         "x$$inline_0+x$$inline_0}");
   }
 
   public void testInlineBlockMutableArgs3() {
     test("function foo(x){x+x}foo(true&&new Date)",
-         "{var x$$inline_1=true&&new Date;" +
-         "x$$inline_1+x$$inline_1}");
+         "{var x$$inline_0=true&&new Date;" +
+         "x$$inline_0+x$$inline_0}");
   }
 
   public void testInlineBlockMutableArgs4() {
     test("function foo(x){x+x}foo({})",
-         "{var x$$inline_1={};" +
-         "x$$inline_1+x$$inline_1}");
+         "{var x$$inline_0={};" +
+         "x$$inline_0+x$$inline_0}");
   }
 
   public void testShadowVariables1() {
@@ -685,7 +685,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "bar();",
 
          "var a=0;" +
-         "{var a$$inline_1=3+4}");
+         "{var a$$inline_0=3+4}");
   }
 
   public void testShadowVariables2() {
@@ -708,8 +708,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function _bar(){a=foo()}",
 
         "var a=0;" +
-        "function _bar(){{var a$$inline_1=2;" +
-        "a=3+a$$inline_1}}");
+        "function _bar(){{var a$$inline_0=2;" +
+        "a=3+a$$inline_0}}");
   }
 
   public void testShadowVariables4() {
@@ -739,8 +739,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function _bar(a){a=foo(4)}",
 
         "var a=0;function _bar(a$$2){{" +
-        "var a$$inline_1=4;" +
-        "a$$2=3+a$$inline_1}}");
+        "var a$$inline_0=4;" +
+        "a$$2=3+a$$inline_0}}");
   }
 
   public void testShadowVariables7() {
@@ -749,7 +749,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function foo(){return a}" +
          "(function(){var a=5;(function(){foo()})()})()",
          "var a=3;" +
-         "{var a$$inline_1=5;{a}}"
+         "{var a$$inline_0=5;{a}}"
          );
 
     assumeMinimumCapture = true;
@@ -757,7 +757,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function foo(){return a}" +
          "(function(){var a=5;(function(){foo()})()})()",
          "var a=3;" +
-         "{var a$$inline_2=5;{a}}"
+         "{var a$$inline_1=5;{a}}"
          );
   }
 
@@ -846,7 +846,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function foo(){return a}" +
          "(function(){var a=5;(function(){foo()})()})()",
          "var a=3;" +
-         "{var a$$inline_1=5;{a}}"
+         "{var a$$inline_0=5;{a}}"
          );
 
     assumeMinimumCapture = true;
@@ -855,7 +855,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "function foo(){return a}" +
          "(function(){var a=5;(function(){foo()})()})()",
          "var a=3;" +
-         "{var a$$inline_2=5;{a}}"
+         "{var a$$inline_1=5;{a}}"
          );
 
   }
@@ -878,7 +878,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
         "var a=0;" +
         "function _goo(){var a$$2=2;var x;" +
-        "{var a$$inline_1=3;x=a+a}}");
+        "{var a$$inline_0=3;x=a+a}}");
   }
 
   public void testCostBasedInlining1() {
@@ -977,8 +977,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(a){return 1 + a + a;}" +
          "var a = f(f(1));",
          "var a;" +
-         "{var a$$inline_1=1+1+1;" +
-         "a=1+a$$inline_1+a$$inline_1}");
+         "{var a$$inline_0=1+1+1;" +
+         "a=1+a$$inline_0+a$$inline_0}");
   }
 
   public void testCostBasedInlining10() {
@@ -996,8 +996,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(a){return a + a;}" +
          "var a = f(f(1))",
          "var a;" +
-         "{var a$$inline_1=1+1;" +
-         "a=a$$inline_1+a$$inline_1}");
+         "{var a$$inline_0=1+1;" +
+         "a=a$$inline_0+a$$inline_0}");
   }
 
   public void testCostBasedInlining12() {
@@ -1210,7 +1210,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
     // But do inline into functions
     test("function f(){a();b();var z=1+1}function _foo(){f()}",
-         "function _foo(){{a();b();var z$$inline_1=1+1}}");
+         "function _foo(){{a();b();var z$$inline_0=1+1}}");
 
   }
 
@@ -1268,9 +1268,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testComplexInline7() {
     test("function f(x,y){if (x) return y(); else return true;}" +
          "var b=1;z=f(1,b)",
-         "var b=1;{JSCompiler_inline_label_f_4:{if(1){z=b();" +
-         "break JSCompiler_inline_label_f_4}else{z=true;" +
-         "break JSCompiler_inline_label_f_4}z=void 0}}");
+         "var b=1;{JSCompiler_inline_label_f_2:{if(1){z=b();" +
+         "break JSCompiler_inline_label_f_2}else{z=true;" +
+         "break JSCompiler_inline_label_f_2}z=void 0}}");
   }
 
   public void testComplexInline8() {
@@ -1319,10 +1319,10 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(x,y){if (x) return y(); else return true;}" +
          "var b=1;var z=f(1,b)",
          "var b=1;var z;" +
-         "{JSCompiler_inline_label_f_4:{if(1){z=b();" +
-         "break JSCompiler_inline_label_f_4" +
+         "{JSCompiler_inline_label_f_2:{if(1){z=b();" +
+         "break JSCompiler_inline_label_f_2" +
          "}else{" +
-         "z=true;break JSCompiler_inline_label_f_4}z=void 0}}");
+         "z=true;break JSCompiler_inline_label_f_2}z=void 0}}");
   }
 
   public void testComplexInlineVars8() {
@@ -1391,28 +1391,28 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testComplexSample() {
     String result = "" +
       "{{" +
-      "var styleSheet$$inline_9=null;" +
+      "var styleSheet$$inline_2=null;" +
       "if(goog$userAgent$IE)" +
-        "styleSheet$$inline_9=0;" +
+        "styleSheet$$inline_2=0;" +
       "else " +
-        "var head$$inline_10=0;" +
+        "var head$$inline_3=0;" +
       "{" +
-        "var element$$inline_11=" +
-            "styleSheet$$inline_9;" +
-        "var stylesString$$inline_12=a;" +
+        "var element$$inline_4=" +
+            "styleSheet$$inline_2;" +
+        "var stylesString$$inline_5=a;" +
         "if(goog$userAgent$IE)" +
-          "element$$inline_11.cssText=" +
-              "stylesString$$inline_12;" +
+          "element$$inline_4.cssText=" +
+              "stylesString$$inline_5;" +
         "else " +
         "{" +
-          "var propToSet$$inline_13=" +
+          "var propToSet$$inline_6=" +
               "\"innerText\";" +
-          "element$$inline_11[" +
-              "propToSet$$inline_13]=" +
-                  "stylesString$$inline_12" +
+          "element$$inline_4[" +
+              "propToSet$$inline_6]=" +
+                  "stylesString$$inline_5" +
         "}" +
       "}" +
-      "styleSheet$$inline_9" +
+      "styleSheet$$inline_2" +
       "}}";
 
     test("var foo = function(stylesString, opt_element) { " +
@@ -1510,7 +1510,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
     test("(function(){" +
          "var f = function(a){call(function(){return a})};f()})()",
-         "{{var a$$inline_1=void 0;call(function(){return a$$inline_1})}}");
+         "{{var a$$inline_0=void 0;call(function(){return a$$inline_0})}}");
   }
 
   public void testComplexFunctionWithFunctionDefinition2a() {
@@ -1524,7 +1524,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
     test("(function(){" +
          "var f = function(a){call(function(){return a})};f()})()",
-         "{{var a$$inline_1=void 0;call(function(){return a$$inline_1})}}");
+         "{{var a$$inline_0=void 0;call(function(){return a$$inline_0})}}");
   }
 
   public void testComplexFunctionWithFunctionDefinition3() {
@@ -1536,7 +1536,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     assumeMinimumCapture = true;
 
     test("function f(){var a; call(function(){return a})}f()",
-         "{var a$$inline_1;call(function(){return a$$inline_1})}");
+         "{var a$$inline_0;call(function(){return a$$inline_0})}");
 
   }
 
@@ -1561,10 +1561,10 @@ public class InlineFunctionsTest extends CompilerTestCase {
         ");",
         "{" +
         "var JSCompiler_inline_result$$0;" +
-        "var ret$$inline_2={};\n" +
-        "ret$$inline_2[ONE]='a';\n" +
-        "ret$$inline_2[TWO]='b';\n" +
-        "JSCompiler_inline_result$$0 = ret$$inline_2;\n" +
+        "var ret$$inline_1={};\n" +
+        "ret$$inline_1[ONE]='a';\n" +
+        "ret$$inline_1[TWO]='b';\n" +
+        "JSCompiler_inline_result$$0 = ret$$inline_1;\n" +
         "}" +
         "{" +
         "descriptions_=JSCompiler_inline_result$$0;" +
@@ -1683,7 +1683,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "((function(){var a; return function(){foo()}})())();",
 
         "{var JSCompiler_inline_result$$0;" +
-        "var a$$inline_2;" +
+        "var a$$inline_1;" +
         "JSCompiler_inline_result$$0=function(){foo()};}" +
         "JSCompiler_inline_result$$0()");
 
@@ -1756,8 +1756,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testFunctionExpressionOmega() {
     // ... with unused recursive name.
     test("(function (f){f(f)})(function(f){f(f)})",
-         "{var f$$inline_1=function(f$$1){f$$1(f$$1)};" +
-          "{{f$$inline_1(f$$inline_1)}}}");
+         "{var f$$inline_0=function(f$$1){f$$1(f$$1)};" +
+          "{{f$$inline_0(f$$inline_0)}}}");
   }
 
   public void testLocalFunctionInlining1() {
@@ -1893,9 +1893,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
     assumeStrictThis = true;
     // In strict mode, "this" is never coerced so we can use the provided value.
     test("function f(a){a=1;this} f.call();",
-         "{var a$$inline_1=void 0; a$$inline_1=1; void 0;}");
+         "{var a$$inline_0=void 0; a$$inline_0=1; void 0;}");
     test("function f(a){a=1;this} f.call(x, x);",
-         "{var a$$inline_1=x; a$$inline_1=1; x;}");
+         "{var a$$inline_0=x; a$$inline_0=1; x;}");
   }
 
   // http://en.wikipedia.org/wiki/Fixed_point_combinator#Y_combinator
@@ -1951,19 +1951,19 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "factorial(5)\n",
         "var factorial;\n" +
         "{\n" +
-        "var M$$inline_6 = function(f$$2) {\n" +
+        "var M$$inline_4 = function(f$$2) {\n" +
         "  return function(n){if(n===0)return 1;else return n*f$$2(n-1)}\n" +
         "};\n" +
         "{\n" +
-        "var f$$inline_1=function(f$$inline_9){\n" +
-        "  return M$$inline_6(\n" +
-        "    function(arg$$inline_10){\n" +
-        "      return f$$inline_9(f$$inline_9)(arg$$inline_10)\n" +
+        "var f$$inline_0=function(f$$inline_7){\n" +
+        "  return M$$inline_4(\n" +
+        "    function(arg$$inline_8){\n" +
+        "      return f$$inline_7(f$$inline_7)(arg$$inline_8)\n" +
         "     })\n" +
         "};\n" +
-        "factorial=M$$inline_6(\n" +
-        "  function(arg$$inline_2){\n" +
-        "    return f$$inline_1(f$$inline_1)(arg$$inline_2)\n" +
+        "factorial=M$$inline_4(\n" +
+        "  function(arg$$inline_1){\n" +
+        "    return f$$inline_0(f$$inline_0)(arg$$inline_1)\n" +
         "});\n" +
         "}\n" +
         "}" +
@@ -2097,12 +2097,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "  var JSCompiler_temp_const$$0 = goog.Uri;" +
         "  {" +
         "  var JSCompiler_inline_result$$1;" +
-        "  var self$$inline_3 = self$$2;" +
-        "  if (!self$$inline_3.domServices_) {" +
-        "    self$$inline_3.domServices_ = goog$component$DomServices.get(" +
-        "        self$$inline_3.appContext_);" +
+        "  var self$$inline_2 = self$$2;" +
+        "  if (!self$$inline_2.domServices_) {" +
+        "    self$$inline_2.domServices_ = goog$component$DomServices.get(" +
+        "        self$$inline_2.appContext_);" +
         "  }" +
-        "  JSCompiler_inline_result$$1=self$$inline_3.domServices_;" +
+        "  JSCompiler_inline_result$$1=self$$inline_2.domServices_;" +
         "  }" +
         "  var myUrl = new JSCompiler_temp_const$$0(" +
         "      JSCompiler_inline_result$$1.getDomHelper()." +
@@ -2154,11 +2154,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "    $(this).data('checkboxes');\n" +
         "  }\n" +
         "})(jQuery)",
-        "{var $$$inline_3=jQuery;\n" +
-        "$$$inline_3.fn.multicheck=function(options$$inline_7){\n" +
-        "  {options$$inline_7.checkboxes=" +
-            "$$$inline_3(this).siblings(\":checkbox\");\n" +
-        "  {$$$inline_3(this).data(\"checkboxes\")}" +
+        "{var $$$inline_0=jQuery;\n" +
+        "$$$inline_0.fn.multicheck=function(options$$inline_4){\n" +
+        "  {options$$inline_4.checkboxes=" +
+            "$$$inline_0(this).siblings(\":checkbox\");\n" +
+        "  {$$$inline_0(this).data(\"checkboxes\")}" +
         "  }\n" +
         "}\n" +
         "}");
@@ -2167,15 +2167,15 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testAnonymous1() {
     assumeMinimumCapture = false;
     test("(function(){var a=10;(function(){var b=a;a++;alert(b)})()})();",
-         "{var a$$inline_2=10;" +
-         "{var b$$inline_3=a$$inline_2;" +
-         "a$$inline_2++;alert(b$$inline_3)}}");
+         "{var a$$inline_0=10;" +
+         "{var b$$inline_1=a$$inline_0;" +
+         "a$$inline_0++;alert(b$$inline_1)}}");
 
     assumeMinimumCapture = true;
     test("(function(){var a=10;(function(){var b=a;a++;alert(b)})()})();",
-        "{var a$$inline_4=10;" +
-        "{var b$$inline_1=a$$inline_4;" +
-        "a$$inline_4++;alert(b$$inline_1)}}");
+        "{var a$$inline_2=10;" +
+        "{var b$$inline_0=a$$inline_2;" +
+        "a$$inline_2++;alert(b$$inline_0)}}");
   }
 
   public void testAnonymous2() {
@@ -2189,7 +2189,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
     assumeMinimumCapture = true;
     test("(function(){var a=10;(function(){arguments;})()})();",
-         "{var a$$inline_1=10;(function(){arguments;})();}");
+         "{var a$$inline_0=10;(function(){arguments;})();}");
 
     test("(function(){(function(){arguments;})()})();",
         "{(function(){arguments;})()}");
@@ -2217,14 +2217,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function _testLocalVariableInLoop_(){\n" +
         "  var result=0;\n" +
         "  {" +
-        "  var arr$$inline_4=[1,2,3,4,5];\n" +
-        "  var i$$inline_5=0;\n" +
-        "  var l$$inline_6=arr$$inline_4.length;\n" +
-        "  for(;i$$inline_5<l$$inline_6;i$$inline_5++){\n" +
-        "    var j$$inline_7=arr$$inline_4[i$$inline_5];\n" +
+        "  var arr$$inline_0=[1,2,3,4,5];\n" +
+        "  var i$$inline_1=0;\n" +
+        "  var l$$inline_2=arr$$inline_0.length;\n" +
+        "  for(;i$$inline_1<l$$inline_2;i$$inline_1++){\n" +
+        "    var j$$inline_3=arr$$inline_0[i$$inline_1];\n" +
         "    (function(){\n" +
-        "       var k$$inline_8=j$$inline_7;\n" +
-        "       setTimeout(function(){result+=k$$inline_8},5*i$$inline_5)\n" +
+        "       var k$$inline_4=j$$inline_3;\n" +
+        "       setTimeout(function(){result+=k$$inline_4},5*i$$inline_1)\n" +
         "     })()\n" +
         "  }\n" +
         "  }\n" +
@@ -2247,12 +2247,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function _testLocalVariable_(){\n" +
         "  var result=0;\n" +
         "  {\n" +
-        "  var j$$inline_4=[i];\n" +
+        "  var j$$inline_2=[i];\n" +
         "  {\n" +
-        "  var j$$inline_1=j$$inline_4;\n" +  // this temp is needed.
-        "  setTimeout(function(){result+=j$$inline_1},5*i);\n" +
+        "  var j$$inline_0=j$$inline_2;\n" +  // this temp is needed.
+        "  setTimeout(function(){result+=j$$inline_0},5*i);\n" +
         "  }\n" +
-        "  j$$inline_4=null\n" + // because this value can be modified later.
+        "  j$$inline_2=null\n" + // because this value can be modified later.
         "  }\n" +
         "}");
   }

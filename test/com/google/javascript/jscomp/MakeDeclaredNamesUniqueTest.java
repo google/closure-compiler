@@ -69,7 +69,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     useDefaultRenamer = false;
   }
 
-  public void testWithInversion(String original, String expected) {
+  private void testWithInversion(String original, String expected) {
     invert = false;
     test(original, expected);
     invert = true;
@@ -77,7 +77,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     invert = false;
   }
 
-  public void testSameWithInversion(String externs, String original) {
+  private void testSameWithInversion(String externs, String original) {
     invert = false;
     testSame(externs, original, null);
     invert = true;
@@ -85,7 +85,7 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     invert = false;
   }
 
-  public void testSameWithInversion(String original) {
+  private void testSameWithInversion(String original) {
     testSameWithInversion("", original);
   }
 
@@ -93,11 +93,11 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     return "function f(){" + s + "}";
   }
 
-  public void testInFunction(String original, String expected) {
+  private void testInFunction(String original, String expected) {
     test(wrapInFunction(original), wrapInFunction(expected));
   }
 
-  public void testSameInFunction(String original) {
+  private void testSameInFunction(String original) {
     testSame(wrapInFunction(original));
   }
 
@@ -203,6 +203,31 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testInFunction(
         "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} };var e$$2",
         "try { } catch(e) {e; try { } catch(e$$0) {e$$0;} };var e$$1");
+  }
+
+  public void testMakeLocalNamesUniqueWithContext5() {
+    // Set the test type
+    this.useDefaultRenamer = true;
+
+    testWithInversion(
+        "function f(){var f; f = 1}",
+        "function f(){var f$$1; f$$1 = 1}");
+    testWithInversion(
+        "function f(f){f = 1}",
+        "function f(f$$1){f$$1 = 1}");
+    testWithInversion(
+        "function f(f){var f; f = 1}",
+        "function f(f$$1){var f$$1; f$$1 = 1}");
+
+    test(
+        "var fn = function f(){var f; f = 1}",
+        "var fn = function f(){var f$$1; f$$1 = 1}");
+    test(
+        "var fn = function f(f){f = 1}",
+        "var fn = function f(f$$1){f$$1 = 1}");
+    test(
+        "var fn = function f(f){var f; f = 1}",
+        "var fn = function f(f$$1){var f$$1; f$$1 = 1}");
   }
 
   public void testArguments() {
