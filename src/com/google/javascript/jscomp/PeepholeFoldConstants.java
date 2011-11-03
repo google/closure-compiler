@@ -1245,8 +1245,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   /** Returns whether this node must be coerced to a string. */
   private boolean inForcedStringContext(Node n) {
-    return n.getParent().getType() == Token.GETELEM &&
-        n.getParent().getLastChild() == n;
+    if (n.getParent().getType() == Token.GETELEM &&
+        n.getParent().getLastChild() == n) {
+      return true;
+    }
+
+    // we can fold in the case "" + new String("")
+    if (n.getParent().getType() == Token.ADD) {
+      return true;
+    }
+    return false;
   }
 
   private Node tryFoldInForcedStringContext(Node n) {

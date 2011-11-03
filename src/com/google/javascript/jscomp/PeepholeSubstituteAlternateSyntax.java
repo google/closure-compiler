@@ -139,7 +139,10 @@ class PeepholeSubstituteAlternateSyntax
       case Token.CALL:
         Node result =  tryFoldLiteralConstructor(node);
         if (result == node) {
-          result = tryFoldImmediateCallToBoundFunction(node);
+          result = tryFoldSimpleFunctionCall(node);
+          if (result == node) {
+            result = tryFoldImmediateCallToBoundFunction(node);
+          }
         }
         return result;
 
@@ -158,6 +161,26 @@ class PeepholeSubstituteAlternateSyntax
       default:
         return node; //Nothing changed
     }
+  }
+
+  private Node tryFoldSimpleFunctionCall(Node n) {
+    Preconditions.checkState(n.getType() == Token.CALL);
+    Node callTarget = n.getFirstChild();
+    if (callTarget != null && callTarget.getType() == Token.NAME &&
+          callTarget.getString().equals("String")) {
+      // Fold String(a) to ''+(a) - which allows further optimizations
+      Node value = callTarget.getNext();
+      if (value != null) {
+        Node addition = new Node(Token.ADD);
+        Node stringNode = Node.newString("").copyInformationFrom(callTarget);
+        addition.addChildToFront(stringNode);
+        addition.addChildToBack(value.detachFromParent());
+        n.getParent().replaceChild(n, addition);
+        reportCodeChange();
+        return addition;
+      }
+    }
+    return n;
   }
 
   private Node tryFoldImmediateCallToBoundFunction(Node n) {

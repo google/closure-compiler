@@ -959,6 +959,11 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     new StringCompareTestCase().testBindToCall3();
   }
 
+  public void testSimpleFunctionCall() {
+    test("var a = String(23)", "var a = '' + 23");
+    test("var a = String('hello')", "var a = '' + 'hello'");
+  }
+
   private static class StringCompareTestCase extends CompilerTestCase {
 
     StringCompareTestCase() {

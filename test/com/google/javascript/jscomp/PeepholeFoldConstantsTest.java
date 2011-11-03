@@ -560,6 +560,9 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = ob[new String(12)]", "x = ob['12']");
     fold("x = ob[new String(false)]", "x = ob['false']");
     fold("x = ob[new String(null)]", "x = ob['null']");
+    fold("x = 'a' + new String('b')", "x = 'ab'");
+    fold("x = 'a' + new String(23)", "x = 'a23'");
+    fold("x = 2 + new String(1)", "x = '21'");
     foldSame("x = ob[new String(a)]");
     foldSame("x = new String('a')");
     foldSame("x = (new String('a'))[3]");
