@@ -445,6 +445,22 @@ public final class SymbolTable
     }
   }
 
+  /** Finds all the scopes and adds them to this symbol table. */
+  void findScopes(AbstractCompiler compiler, Node externs, Node root) {
+    NodeTraversal.traverseRoots(
+        compiler,
+        Lists.newArrayList(externs, root),
+        new NodeTraversal.AbstractScopedCallback() {
+          @Override
+          public void enterScope(NodeTraversal t) {
+            createScopeFrom(t.getScope());
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node p) {}
+        });
+  }
+
   /** Gets all the scopes in this symbol table. */
   public Collection<SymbolScope> getAllScopes() {
     return Collections.unmodifiableCollection(scopes.values());

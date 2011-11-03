@@ -1080,6 +1080,8 @@ public class Compiler extends AbstractCompiler {
     if (typedScopeCreator != null) {
       symbolTable.addScopes(typedScopeCreator.getAllMemoizedScopes());
       symbolTable.addSymbolsFrom(typedScopeCreator);
+    } else {
+      symbolTable.findScopes(this, externsRoot, jsRoot);
     }
 
     GlobalNamespace globalNamespace =

@@ -36,6 +36,19 @@ public class SymbolTableTest extends TestCase {
   private static final String EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS +
       "\nfunction customExternFn(customExternArg) {}";
 
+  private CompilerOptions options;
+
+  public void setUp() throws Exception {
+    super.setUp();
+
+    options = new CompilerOptions();
+    options.setCodingConvention(new ClosureCodingConvention());
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
+        options);
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.ideMode = true;
+  }
+
   public void testGlobalVar() throws Exception {
     SymbolTable table = createSymbolTable(
         "/** @type {number} */ var x = 5;");
@@ -573,6 +586,26 @@ public class SymbolTableTest extends TestCase {
     assertEquals(1, table.getReferenceList(sym).size());
   }
 
+  public void testTypeCheckingOff() {
+    options = new CompilerOptions();
+
+    // Turning type-checking off is even worse than not annotating anything.
+    SymbolTable table = createSymbolTable(
+        "/** @contstructor */" +
+        "function F() {" +
+        "  this.field1 = 3;" +
+        "}" +
+        "F.prototype.method1 = function() {" +
+        "  this.field1 = 5;" +
+        "};" +
+        "(new F()).method1();");
+    assertNull(getGlobalVar(table, "F.prototype.field1"));
+    assertNull(getGlobalVar(table, "F.prototype.method1"));
+
+    Symbol sym = getGlobalVar(table, "F");
+    assertEquals(3, table.getReferenceList(sym).size());
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);
@@ -612,12 +645,6 @@ public class SymbolTableTest extends TestCase {
         JSSourceFile.fromCode("in1", input));
     List<JSSourceFile> externs = Lists.newArrayList(
         JSSourceFile.fromCode("externs1", EXTERNS));
-    CompilerOptions options = new CompilerOptions();
-    options.setCodingConvention(new ClosureCodingConvention());
-    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
-        options);
-    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
-    options.ideMode = true;
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
