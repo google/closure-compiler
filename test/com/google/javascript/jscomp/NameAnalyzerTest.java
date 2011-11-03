@@ -1634,6 +1634,13 @@ public class NameAnalyzerTest extends CompilerTestCase {
       "if (false){}");
   }
 
+  // We cannot leave x.a.prototype there because it will
+  // fail sanity var check.
+  public void testBrokenNamespaceWithPrototypeAssignment() {
+    test("var x = {}; x.a.prototype = 1", "");
+  }
+
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new MarkNoSideEffectCallsAndNameAnalyzerRunner(compiler);
