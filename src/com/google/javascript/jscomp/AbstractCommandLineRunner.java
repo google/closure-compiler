@@ -98,7 +98,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private A compiler;
 
   private Charset inputCharset;
-  private String outputCharset;
+
+  // NOTE(nicksantos): JSCompiler has always used ASCII as the default
+  // output charset. This was done to solve legacy problems with
+  // bad proxies, etc. We are not sure if these issues are still problems,
+  // and changing the encoding would require a big obnoxious migration plan.
+  //
+  // New outputs should use outputCharset2, which is how I would have
+  // designed this if I had a time machine.
+  private Charset outputCharset2;
+  private String legacyOutputCharset;
 
   private boolean testMode = false;
   private Supplier<List<JSSourceFile>> externsSupplierForTesting = null;
@@ -221,7 +230,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.setCodingConvention(config.codingConvention);
     options.setSummaryDetailLevel(config.summaryDetailLevel);
 
-    outputCharset = options.outputCharset = getOutputCharset();
+    legacyOutputCharset = options.outputCharset = getLegacyOutputCharset();
+    outputCharset2 = getOutputCharset2();
     inputCharset = getInputCharset();
 
     if (config.jsOutputFile.length() > 0) {
@@ -684,9 +694,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     boolean writeOutputToFile = !options.jsOutputFile.isEmpty();
     if (writeOutputToFile) {
-      jsOutput = fileNameToOutputWriter(options.jsOutputFile);
+      jsOutput = fileNameToLegacyOutputWriter(options.jsOutputFile);
     } else if (jsOutput instanceof OutputStream) {
-      jsOutput = streamToOutputWriter((OutputStream) jsOutput);
+      jsOutput = streamToLegacyOutputWriter((OutputStream) jsOutput);
     }
 
     List<String> jsFiles = config.js;
@@ -785,15 +795,16 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         Writer mapOut = null;
 
         if (!shouldGenerateMapPerModule(options)) {
-          mapOut = fileNameToOutputWriter(expandSourceMapPath(options, null));
+          mapOut = fileNameToOutputWriter2(expandSourceMapPath(options, null));
         }
 
         for (JSModule m : modules) {
           if (shouldGenerateMapPerModule(options)) {
-            mapOut = fileNameToOutputWriter(expandSourceMapPath(options, m));
+            mapOut = fileNameToOutputWriter2(expandSourceMapPath(options, m));
           }
 
-          Writer writer = fileNameToOutputWriter(getModuleOutputFileName(m));
+          Writer writer =
+              fileNameToLegacyOutputWriter(getModuleOutputFileName(m));
 
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().reset();
@@ -868,7 +879,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    *    be a supported charset.
    * @throws FlagUsageException if flag is not a valid Charset name.
    */
-  private String getOutputCharset() throws FlagUsageException {
+  private String getLegacyOutputCharset() throws FlagUsageException {
     if (!config.charset.isEmpty()) {
       if (!Charset.isSupported(config.charset)) {
         throw new FlagUsageException(config.charset +
@@ -877,6 +888,21 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return config.charset;
     }
     return "US-ASCII";
+  }
+
+  /**
+   * Query the flag for the output charset. Defaults to UTF-8.
+   * @throws FlagUsageException if flag is not a valid Charset name.
+   */
+  private Charset getOutputCharset2() throws FlagUsageException {
+    if (!config.charset.isEmpty()) {
+      if (!Charset.isSupported(config.charset)) {
+        throw new FlagUsageException(config.charset +
+            " is not a valid charset name.");
+      }
+      return Charset.forName(config.charset);
+    }
+    return Charsets.UTF_8;
   }
 
   protected List<JSSourceFile> createExterns() throws FlagUsageException,
@@ -916,7 +942,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       exPath = outputFile.getParent() + File.separatorChar + exPath;
     }
 
-    return fileNameToOutputWriter(exPath);
+    return fileNameToOutputWriter2(exPath);
   }
 
   /**
@@ -960,7 +986,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * Converts a file name into a Writer taking in account the output charset.
    * Returns null if the file name is null.
    */
-  private Writer fileNameToOutputWriter(String fileName) throws IOException {
+  private Writer fileNameToLegacyOutputWriter(String fileName) throws IOException {
     if (fileName == null) {
       return null;
     }
@@ -968,7 +994,22 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return new StringWriter();
     }
 
-    return streamToOutputWriter(filenameToOutputStream(fileName));
+    return streamToLegacyOutputWriter(filenameToOutputStream(fileName));
+  }
+
+  /**
+   * Converts a file name into a Writer taking in account the output charset.
+   * Returns null if the file name is null.
+   */
+  private Writer fileNameToOutputWriter2(String fileName) throws IOException {
+    if (fileName == null) {
+      return null;
+    }
+    if (testMode) {
+      return new StringWriter();
+    }
+
+    return streamToOutputWriter2(filenameToOutputStream(fileName));
   }
 
   /**
@@ -984,16 +1025,30 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Create a writer.
+   * Create a writer with the legacy output charset.
    */
-  private Writer streamToOutputWriter(OutputStream stream)
+  private Writer streamToLegacyOutputWriter(OutputStream stream)
       throws IOException {
-    if (outputCharset == null) {
+    if (legacyOutputCharset == null) {
       return new BufferedWriter(
           new OutputStreamWriter(stream));
     } else {
       return new BufferedWriter(
-          new OutputStreamWriter(stream, outputCharset));
+          new OutputStreamWriter(stream, legacyOutputCharset));
+    }
+  }
+
+  /**
+   * Create a writer with the newer output charset.
+   */
+  private Writer streamToOutputWriter2(OutputStream stream)
+      throws IOException {
+    if (outputCharset2 == null) {
+      return new BufferedWriter(
+          new OutputStreamWriter(stream));
+    } else {
+      return new BufferedWriter(
+          new OutputStreamWriter(stream, outputCharset2));
     }
   }
 
@@ -1010,7 +1065,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     String outName = expandSourceMapPath(options, null);
-    Writer out = fileNameToOutputWriter(outName);
+    Writer out = fileNameToOutputWriter2(outName);
     compiler.getSourceMap().appendTo(out, associatedName);
     out.close();
   }
@@ -1221,7 +1276,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         // Generate per-module manifests or bundles
         Iterable<JSModule> modules = graph.getAllModules();
         for (JSModule module : modules) {
-          Writer out = fileNameToOutputWriter(
+          Writer out = fileNameToOutputWriter2(
               expandCommandLinePath(output, module));
           if (isManifest) {
             printManifestTo(module.getInputs(), out);
@@ -1232,7 +1287,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         }
       } else {
         // Generate a single file manifest or bundle.
-        Writer out = fileNameToOutputWriter(
+        Writer out = fileNameToOutputWriter2(
             expandCommandLinePath(output, null));
         if (graph == null) {
           if (isManifest) {
