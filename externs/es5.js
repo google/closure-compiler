@@ -65,13 +65,6 @@ Window.prototype.JSON.stringify =
 
 
 /**
- * @param {*=} opt_ignoredKey
- * @return {string}
- */
-Date.prototype.toJSON = function(opt_ignoredKey) {};
-
-
-/**
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/Trim
@@ -247,3 +240,11 @@ Object.isFrozen = function(obj) {};
  *     need not be a string. See http://goo.gl/PEUvs.
  */
 Object.prototype.toJSON = function(opt_key) {};
+
+
+/**
+ * @param {*=} opt_ignoredKey
+ * @return {string}
+ * @override
+ */
+Date.prototype.toJSON = function(opt_ignoredKey) {};
