@@ -22,6 +22,7 @@ import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
@@ -566,6 +567,21 @@ public class SymbolTableTest extends TestCase {
     List<Reference> cRefs = table.getReferenceList(cCtor);
     assertEquals(2, cRefs.size());
     assertEquals(26, cCtor.getDeclaration().getNode().getLineno());
+  }
+
+  public void testJSDocAssociationWithBadNamespace() {
+    SymbolTable table = createSymbolTable(
+        // Notice that the declaration for "goog" is missing.
+        // We want to recover anyway and print out what we know
+        // about goog.Foo.
+        "/** @constructor */ goog.Foo = function(){};");
+
+    Symbol foo = getGlobalVar(table, "goog.Foo");
+    assertNotNull(foo);
+
+    JSDocInfo info = foo.getJSDocInfo();
+    assertNotNull(info);
+    assertTrue(info.isConstructor());
   }
 
   public void testMissingConstructorTag() {

@@ -355,7 +355,7 @@ final class TypedScopeCreator implements ScopeCreator {
                child != null; child = child.getNext()) {
             identifyNameNode(
                 child, child.getFirstChild(),
-                NodeUtil.getInfoForNameNode(child));
+                NodeUtil.getBestJSDocInfo(child));
           }
           break;
         case Token.EXPR_RESULT:

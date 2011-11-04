@@ -502,8 +502,8 @@ public class Scope
     Preconditions.checkState(vars.get(name) == null);
 
     // native variables do not have a name node.
-    // TODO(user): make Var abstract and have NativeVar, NormalVar.
-    JSDocInfo info = NodeUtil.getInfoForNameNode(nameNode);
+    JSDocInfo info = nameNode == null
+        ? null : NodeUtil.getBestJSDocInfo(nameNode);
 
     Var var = new Var(inferred, name, nameNode, type, this, vars.size(), input,
         info != null && info.isDefine(), info);

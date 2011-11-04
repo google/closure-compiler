@@ -2923,26 +2923,6 @@ public final class NodeUtil {
   }
 
   /**
-   * @param nameNode A name node
-   * @return The JSDocInfo for the name node
-   */
-  static JSDocInfo getInfoForNameNode(Node nameNode) {
-    JSDocInfo info = null;
-    Node parent = null;
-    if (nameNode != null) {
-      info = nameNode.getJSDocInfo();
-      parent = nameNode.getParent();
-    }
-
-    if (info == null && parent != null &&
-        ((parent.getType() == Token.VAR && parent.hasOneChild()) ||
-          parent.getType() == Token.FUNCTION)) {
-      info = parent.getJSDocInfo();
-    }
-    return info;
-  }
-
-  /**
    * Get the JSDocInfo for a function.
    */
   public static JSDocInfo getFunctionJSDocInfo(Node n) {
@@ -3146,13 +3126,14 @@ public final class NodeUtil {
 
       int parentType = parent.getType();
       if (parentType == Token.NAME) {
-        info = parent.getJSDocInfo();
-        if (info == null && parent.getParent().hasOneChild()) {
-          info = parent.getParent().getJSDocInfo();
-        }
+        return getBestJSDocInfo(parent);
       } else if (parentType == Token.ASSIGN) {
         info = parent.getJSDocInfo();
       } else if (isObjectLitKey(parent, parent.getParent())) {
+        info = parent.getJSDocInfo();
+      } else if (parentType == Token.FUNCTION) {
+        info = parent.getJSDocInfo();
+      } else if (parentType == Token.VAR && parent.hasOneChild()) {
         info = parent.getJSDocInfo();
       }
     }
