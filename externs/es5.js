@@ -243,6 +243,13 @@ Object.prototype.toJSON = function(opt_key) {};
 
 
 /**
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date/toISOString
+ * @return {string}
+ */
+Date.prototype.toISOString = function() {};
+
+
+/**
  * @param {*=} opt_ignoredKey
  * @return {string}
  * @override
