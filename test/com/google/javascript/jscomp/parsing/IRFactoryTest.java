@@ -40,23 +40,11 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT3;
   }
 
-  public void testScript() throws Exception {
-    parse("");
-  }
-
   public void testStrictScript() throws Exception {
     assertNull(newParse("").getDirectives());
     assertEquals(
         Sets.newHashSet("use strict"),
         newParse("'use strict'").getDirectives());
-  }
-
-  public void testName() throws Exception {
-    parse("a");
-  }
-
-  public void testArrayLiteral() throws Exception {
-    parse("[a, b]");
   }
 
   public void testArrayLiteral2() throws Exception {
@@ -67,10 +55,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
       "            NAME a 1 [source_file: FileName.js] [length: 1]\n" +
       "            EMPTY 1 [source_file: FileName.js] [length: 1]\n" +
       "            NAME b 1 [source_file: FileName.js] [length: 1]\n");
-  }
-
-  public void testArrayLiteral3() throws Exception {
-    parse("[a, undefined, b]");
   }
 
   public void testArrayLiteral4() throws Exception {
@@ -84,162 +68,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
       "            NAME a 1 [source_file: FileName.js] [length: 1]\n" +
       "            EMPTY 1 [source_file: FileName.js] [length: 1]\n" +
       "            NAME b 1 [source_file: FileName.js] [length: 1]\n");
-  }
-
-  public void testAssignment() throws Exception {
-    parse("a = b");
-  }
-
-  public void testAssignment2() throws Exception {
-    parse("a += b");
-  }
-
-  public void testInfix() throws Exception {
-    parse("a + b");
-  }
-
-  public void testScope() throws Exception {
-    parse("{ a; b; c; }");
-  }
-
-  public void testConditional() throws Exception {
-    parse("a ? b : c");
-  }
-
-  public void testEmpty() throws Exception {
-    parse(";;");
-  }
-
-  public void testIf() throws Exception {
-    parse("if (a) { b }");
-  }
-
-  public void testIf2() throws Exception {
-    parse("if (a) { b } else { c }");
-  }
-
-  public void testNumber() throws Exception {
-    parse("0");
-  }
-
-  public void testNumber2() throws Exception {
-    parse("1.2");
-  }
-
-  public void testString() throws Exception {
-    parse("'a'");
-  }
-
-  public void testString2() throws Exception {
-    parse("\"a\"");
-  }
-
-  public void testUnary() throws Exception {
-    parse("-a");
-  }
-
-  public void testUnary2() throws Exception {
-    parse("a++");
-  }
-
-  public void testUnary3() throws Exception {
-    parse("++a");
-  }
-
-  public void testVar() throws Exception {
-    parse("var a = 1");
-  }
-
-  public void testVar2() throws Exception {
-    parse("var a = 1, b = 2");
-  }
-
-  public void testVar3() throws Exception {
-    parse("var a, b = 1");
-  }
-
-  public void testElementGet() throws Exception {
-    parse("a[i]");
-  }
-
-  public void testPropertyGet() throws Exception {
-    parse("a.b");
-  }
-
-  public void testRegexp() throws Exception {
-    parse("/ab+c/");
-  }
-
-  public void testRegexp2() throws Exception {
-    parse("/ab+c/g");
-  }
-
-  public void testFunctionCall() throws Exception {
-    parse("a()");
-  }
-
-  public void testFunctionCall2() throws Exception {
-    parse("a(b)");
-  }
-
-  public void testFunctionCall3() throws Exception {
-    parse("a(b, c)");
-  }
-
-  public void testNew() throws Exception {
-    parse("new A()");
-  }
-
-  public void testNew2() throws Exception {
-    parse("new A(b)");
-  }
-
-  public void testNew3() throws Exception {
-    parse("new A(b, c)");
-  }
-
-  public void testFunction() {
-    parse("function f() {}");
-  }
-
-  public void testFunction2() {
-    parse("(function() {})");
-  }
-
-  public void testFunction3() {
-    parse("function f(a) {}");
-  }
-
-  public void testFunction4() {
-    parse("(function(a) {})");
-  }
-
-  public void testFunction5() {
-    parse("function f(a, b) {}");
-  }
-
-  public void testFunction6() {
-    parse("(function(a, b) {})");
-  }
-
-  public void testReturn() {
-    parse("(function() {return 1;})");
-  }
-
-  public void testReturn2() {
-    parse("function f() {return;}");
-  }
-
-  public void testReturn3() {
-    parse("function f(){return x?1:2}");
-  }
-
-  public void testThrow() {
-    parse("throw e");
-  }
-
-  public void testWith() {
-    parse("with (a) { b }");
   }
 
   public void testObjectLiteral() {
@@ -298,43 +126,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
         "                    LP 1 [source_file: FileName.js]\n" +
         "                        NAME a 1 [source_file: FileName.js] [length: 1]\n" +
         "                    BLOCK 1 [source_file: FileName.js] [length: 2]\n");
-  }
-
-
-  public void testKeywordLiteral() {
-    parse("true");
-  }
-
-  public void testWhile() {
-    parse("while (!a) { a--; }");
-  }
-
-  public void testParen() {
-    parse("(a)");
-  }
-
-  public void testParen2() {
-    parse("(1+1)*2");
-  }
-
-  public void testFor() {
-    parse("for (var i = 0; i < n; i++) { a(i); }");
-  }
-
-  public void testForIn() {
-    parse("for (i in a) { b(i); }");
-  }
-
-  public void testBreak() {
-    parse("while (true) { break; }");
-  }
-
-  public void testContinue() {
-    parse("while (true) { continue; }");
-  }
-
-  public void testDoLoop() {
-    parse("do { a() } while (b());");
   }
 
   // The old and new parser produce different results now with labels, and
@@ -428,25 +219,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
         "                    LP 1 [source_file: FileName.js]\n" +
         "                        NAME x 1 [source_file: FileName.js] [length: 1]\n" +
         "                    BLOCK 1 [source_file: FileName.js] [length: 2]\n");
-  }
-
-  public void testSwitch() {
-    parse("switch (e) {" +
-        "case 'a': a(); break;" +
-        "case 'b': b();" +
-        "case 'c': c(); }");
-  }
-
-  public void testSwitch2() {
-    parse("switch (e) { case 'a': a(); break; default: b();}");
-  }
-
-  public void testSwitch3() {
-    parse("function f(){switch(x){default:case 1:return 2}}");
-  }
-
-  public void testDebugger() {
-    parse("debugger;");
   }
 
   public void testDelete1() {
@@ -1172,11 +944,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     assertEquals(expected, actual);
   }
 
-  private void parse(String string) {
-    String compare = newParse(string).checkTreeEquals(oldParse(string));
-    assertTrue(compare, compare == null);
-  }
-
   private Node newParse(String string) {
     return newParse(string, new TestErrorReporter(null, null));
   }
@@ -1193,20 +960,6 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Config config = ParserRunner.createConfig(true, mode, false);
     Node root = IRFactory.transformTree(
         script, SourceFile.fromCode("FileName.js", string), string, config, errorReporter);
-
-    return root;
-  }
-
-  private Node oldParse(String string) {
-    com.google.javascript.rhino.CompilerEnvirons environment =
-        new com.google.javascript.rhino.CompilerEnvirons();
-
-    environment.setParseJSDoc(true);
-
-    com.google.javascript.rhino.Parser p =
-        new com.google.javascript.rhino.Parser(environment, null);
-
-    Node root = p.parse(string, null, 0);
 
     return root;
   }
