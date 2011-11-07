@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  */
 public class PeepholeIntegrationTest extends CompilerTestCase {
 
-  private boolean doCommaSplitting = true;
+  private boolean late = true;
 
   // TODO(user): Remove this when we no longer need to do string comparison.
   private PeepholeIntegrationTest(boolean compareAsTree) {
@@ -35,7 +35,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    this.doCommaSplitting = true;
+    this.late = true;
     enableLineNumberCheck(true);
 
     // TODO(nicksantos): Turn this on. There are some normalizations
@@ -47,9 +47,9 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
       new PeepholeOptimizationsPass(compiler,
-        new PeepholeSubstituteAlternateSyntax(doCommaSplitting),
+        new PeepholeSubstituteAlternateSyntax(late),
         new PeepholeRemoveDeadCode(),
-        new PeepholeFoldConstants()
+        new PeepholeFoldConstants(late)
       );
 
     return peepholePass;
@@ -77,6 +77,19 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     scTest.disableNormalize();
 
     scTest.test(js, expected);
+  }
+
+  public void testTrueFalse() {
+    late = false;
+    foldSame("x = true");
+    foldSame("x = false");
+    fold("x = !1", "x = false");
+    fold("x = !0", "x = true");
+    late = true;
+    fold("x = true", "x = !0");
+    fold("x = false", "x = !1");
+    foldSame("x = !1");
+    foldSame("x = !0");
   }
 
   /** Check that removing blocks with 1 child works */
@@ -167,12 +180,12 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     fold("function z() {if (a) { return true }" +
          "else if (b) { return true }" +
          "else { return true }}",
-         "function z() {return true;}");
+         "function z() {return !0;}");
 
     fold("function z() {if (a()) { return true }" +
          "else if (b()) { return true }" +
          "else { return true }}",
-         "function z() {a()||b();return true;}");
+         "function z() {a()||b();return !0;}");
   }
 
   public void testFoldLogicalOpIntegration() {
@@ -318,11 +331,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testTrueFalseFolding() {
-    fold("x = true", "x = true");
-    fold("x = false", "x = false");
-    fold("x = !3", "x = false");
-    fold("x = true && !0", "x = true");
-    fold("x = !!!!!!!!!!!!3", "x = true");
+    fold("x = true", "x = !0");
+    fold("x = false", "x = !1");
+    fold("x = !3", "x = !1");
+    fold("x = true && !0", "x = !0");
+    fold("x = !!!!!!!!!!!!3", "x = !0");
     fold("if(!3){x()}", "");
     fold("if(!!3){x()}", "x()");
   }
@@ -334,7 +347,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   public void testAvoidCommaSplitting() {
     fold("x(),y(),z()", "x();y();z()");
-    doCommaSplitting = false;
+    late = false;
     foldSame("x(),y(),z()");
   }
 

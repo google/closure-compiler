@@ -981,11 +981,12 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("peepholeOptimizations", false) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
+      final boolean late = false;
       return new PeepholeOptimizationsPass(compiler,
-            new PeepholeSubstituteAlternateSyntax(false),
+            new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(),
             new PeepholeRemoveDeadCode(),
-            new PeepholeFoldConstants(),
+            new PeepholeFoldConstants(late),
             new PeepholeCollectPropertyAssignments());
     }
   };
@@ -995,12 +996,13 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("latePeepholeOptimizations", true) {
     @Override
     protected CompilerPass createInternal(AbstractCompiler compiler) {
+      final boolean late = true;
       return new PeepholeOptimizationsPass(compiler,
             new StatementFusion(),
             new PeepholeRemoveDeadCode(),
-            new PeepholeSubstituteAlternateSyntax(true),
+            new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(),
-            new PeepholeFoldConstants()
+            new PeepholeFoldConstants(late)
             // TODO(johnlenz): reenable this once Chrome 15 is stable
             // new ReorderConstantExpression()
             );

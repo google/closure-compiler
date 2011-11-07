@@ -147,7 +147,7 @@ class PeepholeSubstituteAlternateSyntax
         return result;
 
       case Token.COMMA:
-        return tryFoldComma(node);
+        return trySplitComma(node);
 
       case Token.NAME:
         return tryReplaceUndefined(node);
@@ -222,7 +222,7 @@ class PeepholeSubstituteAlternateSyntax
     }
   }
 
-  private Node tryFoldComma(Node n) {
+  private Node trySplitComma(Node n) {
     if (!late) {
       return n;
     }
@@ -1431,8 +1431,6 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node reduceTrueFalse(Node n) {
-    // TODO(johnlenz): Re-enable this with Chrome 15.
-    /*
     if (late) {
       Node not = new Node(Token.NOT,
           Node.newNumber(n.getType() == Token.TRUE ? 0 : 1));
@@ -1441,7 +1439,6 @@ class PeepholeSubstituteAlternateSyntax
       reportCodeChange();
       return not;
     }
-    */
     return n;
   }
 

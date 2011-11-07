@@ -58,6 +58,18 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private static final double MAX_FOLD_NUMBER = Math.pow(2, 53);
 
+  private final boolean late;
+
+  /**
+   * @param late When late is false, this mean we are currently running before
+   * most of the other optimizations. In this case we would avoid optimizations
+   * that would make the code harder to analyze. When this is true, we would
+   * do anything to minimize for size.
+   */
+  PeepholeFoldConstants(boolean late) {
+    this.late = late;
+  }
+
   @Override
   Node optimizeSubtree(Node subtree) {
     switch(subtree.getType()) {
@@ -329,17 +341,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     switch (n.getType()) {
       case Token.NOT:
-        // TODO(johnlenz): skip folding !0/!1 during late fold,
-        // when it is folded there.
-        /*
         // Don't fold !0 and !1 back to false.
-        if (left.getType() == Token.NUMBER) {
+        if (late && left.getType() == Token.NUMBER) {
           double numValue = left.getDouble();
           if (numValue == 0 || numValue == 1) {
             return n;
           }
         }
-        */
         int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;
         Node replacementNode = new Node(result);
         parent.replaceChild(n, replacementNode);
