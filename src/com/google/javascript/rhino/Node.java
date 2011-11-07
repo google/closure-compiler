@@ -1051,24 +1051,6 @@ public class Node implements Cloneable, Serializable {
         } else {
           sb.append(first.getString());
         }
-      } else if (this instanceof ScriptOrFnNode) {
-        ScriptOrFnNode sof = (ScriptOrFnNode) this;
-        if (this instanceof FunctionNode) {
-          FunctionNode fn = (FunctionNode) this;
-          sb.append(' ');
-          sb.append(fn.getFunctionName());
-        }
-        if (printSource) {
-          sb.append(" [source name: ");
-          sb.append(sof.getSourceName());
-          sb.append("] [encoded source length: ");
-          sb.append(sof.getEncodedSourceEnd() - sof.getEncodedSourceStart());
-          sb.append("] [base line: ");
-          sb.append(sof.getBaseLineno());
-          sb.append("] [end line: ");
-          sb.append(sof.getEndLineno());
-          sb.append(']');
-        }
       } else if (type == Token.NUMBER) {
         sb.append(' ');
         sb.append(getDouble());
@@ -1574,19 +1556,6 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * Helper function to ignore differences in Node subclasses that are no longer
-   * used.
-   */
-  @SuppressWarnings("rawtypes")
-  static private Class getNodeClass(Node n) {
-    Class c = n.getClass();
-    if (c == FunctionNode.class || c == ScriptOrFnNode.class) {
-      return Node.class;
-    }
-    return c;
-  }
-
-  /**
    * Compare this node to node2 recursively and return the first pair of nodes
    * that differs doing a preorder depth-first traversal. Package private for
    * testing. Returns null if the nodes are equivalent.
@@ -1754,7 +1723,7 @@ public class Node implements Cloneable, Serializable {
   boolean isEquivalentTo(Node node, boolean compareJsType, boolean recurse) {
     if (type != node.getType()
         || getChildCount() != node.getChildCount()
-        || getNodeClass(this) != getNodeClass(node)) {
+        || this.getClass() != node.getClass()) {
       return false;
     }
 

@@ -326,53 +326,6 @@ public class ScriptRuntime {
     }
 
     /**
-     * Convert the value to a string.
-     *
-     * See ECMA 9.8.
-     */
-    public static String toString(Object val) {
-        for (;;) {
-            if (val == null) {
-                return "null";
-            }
-            if (val instanceof String) {
-                return (String)val;
-            }
-            if (val instanceof Number) {
-                // XXX should we just teach NativeNumber.stringValue()
-                // about Numbers?
-                return numberToString(((Number)val).doubleValue(), 10);
-            }
-            return val.toString();
-        }
-    }
-
-    public static String numberToString(double d, int base) {
-        if (d != d)
-            return "NaN";
-        if (d == Double.POSITIVE_INFINITY)
-            return "Infinity";
-        if (d == Double.NEGATIVE_INFINITY)
-            return "-Infinity";
-        if (d == 0.0)
-            return "0";
-
-        if ((base < 2) || (base > 36)) {
-            throw Context.reportRuntimeError1(
-                "msg.bad.radix", Integer.toString(base));
-        }
-
-        if (base != 10) {
-            return DToA.JS_dtobasestr(base, d);
-        } else {
-            StringBuffer result = new StringBuffer();
-            DToA.JS_dtostr(result, DToA.DTOSTR_STANDARD, 0, d);
-            return result.toString();
-        }
-
-    }
-
-    /**
      * If str is a decimal presentation of Uint32 value, return it as long.
      * Othewise return -1L;
      */
@@ -458,8 +411,7 @@ public class ScriptRuntime {
         final String defaultResource
             = "rhino_ast.java.com.google.javascript.rhino.Messages";
 
-        Context cx = Context.getCurrentContext();
-        Locale locale = cx != null ? cx.getLocale() : Locale.getDefault();
+        Locale locale = Locale.getDefault();
 
         // ResourceBundle does cacheing.
         ResourceBundle rb = ResourceBundle.getBundle(defaultResource, locale);
@@ -480,122 +432,6 @@ public class ScriptRuntime {
         // TODO: MessageFormat is not available on pJava
         MessageFormat formatter = new MessageFormat(formatString);
         return formatter.format(arguments);
-    }
-
-    public static EcmaError constructError(String error, String message)
-    {
-        int[] linep = new int[1];
-        String filename = Context.getSourcePositionFromStack(linep);
-        return constructError(error, message, filename, linep[0], null, 0);
-    }
-
-    public static EcmaError constructError(String error,
-                                           String message,
-                                           String sourceName,
-                                           int lineNumber,
-                                           String lineSource,
-                                           int columnNumber)
-    {
-        return new EcmaError(error, message, sourceName,
-                             lineNumber, lineSource, columnNumber);
-    }
-
-    public static EcmaError typeError(String message)
-    {
-        return constructError("TypeError", message);
-    }
-
-    public static EcmaError typeError0(String messageId)
-    {
-        String msg = getMessage0(messageId);
-        return typeError(msg);
-    }
-
-    public static EcmaError typeError1(String messageId, String arg1)
-    {
-        String msg = getMessage1(messageId, arg1);
-        return typeError(msg);
-    }
-
-    public static EcmaError typeError2(String messageId, String arg1,
-                                       String arg2)
-    {
-        String msg = getMessage2(messageId, arg1, arg2);
-        return typeError(msg);
-    }
-
-    public static EcmaError typeError3(String messageId, String arg1,
-                                       String arg2, String arg3)
-    {
-        String msg = getMessage3(messageId, arg1, arg2, arg3);
-        return typeError(msg);
-    }
-
-    public static RuntimeException undefReadError(Object object, Object id)
-    {
-        String idStr = (id == null) ? "null" : id.toString();
-        return typeError2("msg.undef.prop.read", toString(object), idStr);
-    }
-
-    public static RuntimeException undefCallError(Object object, Object id)
-    {
-        String idStr = (id == null) ? "null" : id.toString();
-        return typeError2("msg.undef.method.call", toString(object), idStr);
-    }
-
-    public static RuntimeException undefWriteError(Object object,
-                                                   Object id,
-                                                   Object value)
-    {
-        String idStr = (id == null) ? "null" : id.toString();
-        String valueStr = toString(value);
-        return typeError3("msg.undef.prop.write", toString(object), idStr,
-                          valueStr);
-    }
-
-    public static RuntimeException notFunctionError(Object value)
-    {
-        return notFunctionError(value, value);
-    }
-
-    public static RuntimeException notFunctionError(Object value,
-                                                    Object messageHelper)
-    {
-        // XXX Use value for better error reporting
-        String msg = (messageHelper == null)
-                     ? "null" : messageHelper.toString();
-        return typeError2("msg.isnt.function", msg,
-                value == null ? "null" : value.getClass().getName());
-    }
-
-    static int lastIndexResult(Context cx)
-    {
-        return cx.scratchIndex;
-    }
-
-    public static void storeUint32Result(Context cx, long value)
-    {
-        if ((value >>> 32) != 0)
-            throw new IllegalArgumentException();
-        cx.scratchUint32 = value;
-    }
-
-    public static long lastUint32Result(Context cx)
-    {
-        long value = cx.scratchUint32;
-        if ((value >>> 32) != 0)
-            throw new IllegalStateException();
-        return value;
-    }
-
-    static String makeUrlForGeneratedScript
-        (boolean isEval, String masterScriptUrl, int masterScriptLine)
-    {
-        if (isEval) {
-            return masterScriptUrl+'#'+masterScriptLine+"(eval)";
-        } else {
-            return masterScriptUrl+'#'+masterScriptLine+"(Function)";
-        }
     }
 
     static boolean isGeneratedScript(String sourceUrl) {
