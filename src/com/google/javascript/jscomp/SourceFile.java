@@ -306,50 +306,108 @@ public class SourceFile implements StaticSourceFile, Serializable {
   }
 
   public static SourceFile fromFile(String fileName, Charset c) {
-    return fromFile(new File(fileName), c);
+    return builder().withCharset(c).buildFromFile(fileName);
   }
 
   public static SourceFile fromFile(String fileName) {
-    return fromFile(new File(fileName));
+    return builder().buildFromFile(fileName);
   }
 
   public static SourceFile fromFile(File file, Charset c) {
-    return new OnDisk(file, c);
+    return builder().withCharset(c).buildFromFile(file);
   }
 
   public static SourceFile fromFile(File file) {
-    return new OnDisk(file);
+    return builder().buildFromFile(file);
   }
 
   public static SourceFile fromCode(String fileName, String code) {
-    return new Preloaded(fileName, code);
+    return builder().buildFromCode(fileName, code);
   }
 
   public static SourceFile fromCode(String fileName,
       String originalPath, String code) {
-    return new Preloaded(fileName, originalPath, code);
+    return builder().withOriginalPath(originalPath)
+        .buildFromCode(fileName, code);
   }
 
   public static SourceFile fromInputStream(String fileName, InputStream s)
       throws IOException {
-    return fromCode(fileName,
-        CharStreams.toString(new InputStreamReader(s, Charsets.UTF_8)));
+    return builder().buildFromInputStream(fileName, s);
   }
 
   public static SourceFile fromInputStream(String fileName,
       String originalPath, InputStream s) throws IOException {
-    return fromCode(fileName, originalPath,
-        CharStreams.toString(new InputStreamReader(s, Charsets.UTF_8)));
+    return builder().withOriginalPath(originalPath)
+        .buildFromInputStream(fileName, s);
   }
 
   public static SourceFile fromReader(String fileName, Reader r)
       throws IOException {
-    return fromCode(fileName, CharStreams.toString(r));
+    return builder().buildFromReader(fileName, r);
   }
 
   public static SourceFile fromGenerator(String fileName,
       Generator generator) {
-    return new Generated(fileName, generator);
+    return builder().buildFromGenerator(fileName, generator);
+  }
+
+  /** Create a new builder for source files. */
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /**
+   * A builder interface for source files.
+   *
+   * Allows users to customize the Charset, and the original path of
+   * the source file (if it differs from the path on disk).
+   */
+  public static class Builder {
+    private Charset charset = Charsets.UTF_8;
+    private String originalPath = null;
+
+    public Builder() {}
+
+    /** Set the charset to use when reading from an input stream or file. */
+    public Builder withCharset(Charset charset) {
+      this.charset = charset;
+      return this;
+    }
+
+    /** Set the original path to use. */
+    public Builder withOriginalPath(String originalPath) {
+      this.originalPath = originalPath;
+      return this;
+    }
+
+    public SourceFile buildFromFile(String fileName) {
+      return buildFromFile(new File(fileName));
+    }
+
+    public SourceFile buildFromFile(File file) {
+      return new OnDisk(file, originalPath, charset);
+    }
+
+    public SourceFile buildFromCode(String fileName, String code) {
+      return new Preloaded(fileName, originalPath, code);
+    }
+
+    public SourceFile buildFromInputStream(String fileName, InputStream s)
+        throws IOException {
+      return buildFromCode(fileName,
+          CharStreams.toString(new InputStreamReader(s, charset)));
+    }
+
+    public SourceFile buildFromReader(String fileName, Reader r)
+        throws IOException {
+      return buildFromCode(fileName, CharStreams.toString(r));
+    }
+
+    public SourceFile buildFromGenerator(String fileName,
+        Generator generator) {
+      return new Generated(fileName, originalPath, generator);
+    }
   }
 
 
@@ -361,10 +419,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
    */
   static class Preloaded extends SourceFile {
     private static final long serialVersionUID = 1L;
-
-    Preloaded(String fileName, String code) {
-      this(fileName, fileName, code);
-    }
 
     Preloaded(String fileName, String originalPath, String code) {
       super(fileName);
@@ -382,8 +436,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private final Generator generator;
 
     // Not private, so that LazyInput can extend it.
-    Generated(String fileName, Generator generator) {
+    Generated(String fileName, String originalPath, Generator generator) {
       super(fileName);
+      super.setOriginalPath(originalPath);
       this.generator = generator;
     }
 
@@ -418,19 +473,15 @@ public class SourceFile implements StaticSourceFile, Serializable {
     // This is stored as a String, but passed in and out as a Charset so that
     // we can serialize the class.
     // Default input file format for JSCompiler has always been UTF_8.
-    protected String inputCharset = Charsets.UTF_8.name();
+    private String inputCharset = Charsets.UTF_8.name();
 
-    OnDisk(File file, Charset c) {
-      this(file);
+    OnDisk(File file, String originalPath, Charset c) {
+      super(file.getPath());
+      this.file = file;
+      super.setOriginalPath(originalPath);
       if (c != null) {
         this.setCharset(c);
       }
-    }
-
-    // No Charset provided?
-    OnDisk(File file) {
-      super(file.getPath());
-      this.file = file;
     }
 
     @Override
