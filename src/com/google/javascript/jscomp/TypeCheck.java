@@ -493,14 +493,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, t.getScope().getTypeOfThis());
         break;
 
-      case Token.REF_SPECIAL:
-        ensureTyped(t, n);
-        break;
-
-      case Token.GET_REF:
-        ensureTyped(t, n, getJSType(n.getFirstChild()));
-        break;
-
       case Token.NULL:
         ensureTyped(t, n, NULL_TYPE);
         break;

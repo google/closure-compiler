@@ -475,7 +475,7 @@ class IRFactory {
       if (n == null) return false;
 
       int nType = n.getType();
-      return (nType == Token.EXPR_RESULT || nType == Token.EXPR_VOID) &&
+      return nType == Token.EXPR_RESULT &&
           n.getFirstChild().getType() == Token.STRING &&
           ALLOWED_DIRECTIVES.contains(n.getFirstChild().getString());
     }
@@ -1121,12 +1121,8 @@ class IRFactory {
         return Token.TYPEOF;
       case com.google.javascript.jscomp.mozilla.rhino.Token.GETPROP:
         return Token.GETPROP;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.SETPROP:
-        return Token.SETPROP;
       case com.google.javascript.jscomp.mozilla.rhino.Token.GETELEM:
         return Token.GETELEM;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.SETELEM:
-        return Token.SETELEM;
       case com.google.javascript.jscomp.mozilla.rhino.Token.CALL:
         return Token.CALL;
       case com.google.javascript.jscomp.mozilla.rhino.Token.NAME:

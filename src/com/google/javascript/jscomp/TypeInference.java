@@ -333,7 +333,6 @@ class TypeInference
         break;
 
       case Token.LP:
-      case Token.GET_REF:
         scope = traverse(n.getFirstChild(), scope);
         n.setJSType(getJSType(n.getFirstChild()));
         break;

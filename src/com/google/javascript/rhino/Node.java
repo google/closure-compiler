@@ -1641,13 +1641,7 @@ public class Node implements Cloneable, Serializable {
       case Token.ERROR:           return "error";
       case Token.EOF:             return "eof";
       case Token.EOL:             return "eol";
-      case Token.ENTERWITH:       return "enterwith";
-      case Token.LEAVEWITH:       return "leavewith";
       case Token.RETURN:          return "return";
-      case Token.GOTO:            return "goto";
-      case Token.IFEQ:            return "ifeq";
-      case Token.IFNE:            return "ifne";
-      case Token.SETNAME:         return "setname";
       case Token.BITOR:           return "bitor";
       case Token.BITXOR:          return "bitxor";
       case Token.BITAND:          return "bitand";
@@ -1671,9 +1665,7 @@ public class Node implements Cloneable, Serializable {
       case Token.DELPROP:         return "delprop";
       case Token.TYPEOF:          return "typeof";
       case Token.GETPROP:         return "getprop";
-      case Token.SETPROP:         return "setprop";
       case Token.GETELEM:         return "getelem";
-      case Token.SETELEM:         return "setelem";
       case Token.CALL:            return "call";
       case Token.NAME:            return "name";
       case Token.NUMBER:          return "number";
@@ -1686,22 +1678,11 @@ public class Node implements Cloneable, Serializable {
       case Token.SHNE:            return "shne";
       case Token.REGEXP:          return "regexp";
       case Token.POS:             return "pos";
-      case Token.BINDNAME:        return "bindname";
       case Token.THROW:           return "throw";
       case Token.IN:              return "in";
       case Token.INSTANCEOF:      return "instanceof";
-      case Token.GETVAR:          return "getvar";
-      case Token.SETVAR:          return "setvar";
       case Token.TRY:             return "try";
-      case Token.TYPEOFNAME:      return "typeofname";
-      case Token.THISFN:          return "thisfn";
-      case Token.SEMI:            return "semi";
-      case Token.LB:              return "lb";
-      case Token.RB:              return "rb";
-      case Token.LC:              return "lc";
-      case Token.RC:              return "rc";
       case Token.LP:              return "lp";
-      case Token.RP:              return "rp";
       case Token.COMMA:           return "comma";
       case Token.ASSIGN:          return "assign";
       case Token.ASSIGN_BITOR:    return "assign_bitor";
@@ -1723,8 +1704,6 @@ public class Node implements Cloneable, Serializable {
       case Token.DEC:             return "dec";
       case Token.DOT:             return "dot";
       case Token.FUNCTION:        return "function";
-      case Token.EXPORT:          return "export";
-      case Token.IMPORT:          return "import";
       case Token.IF:              return "if";
       case Token.ELSE:            return "else";
       case Token.SWITCH:          return "switch";
@@ -1746,15 +1725,9 @@ public class Node implements Cloneable, Serializable {
       case Token.ARRAYLIT:        return "arraylit";
       case Token.OBJECTLIT:       return "objectlit";
       case Token.LABEL:           return "label";
-      case Token.TARGET:          return "target";
-      case Token.LOOP:            return "loop";
-      case Token.EXPR_VOID:       return "expr_void";
       case Token.EXPR_RESULT:     return "expr_result";
-      case Token.JSR:             return "jsr";
       case Token.SCRIPT:          return "script";
       case Token.EMPTY:           return "empty";
-      case Token.GET_REF:         return "get_ref";
-      case Token.REF_SPECIAL:     return "ref_special";
     }
     return "<unknown="+token+">";
   }
@@ -1845,7 +1818,6 @@ public class Node implements Cloneable, Serializable {
 
   public boolean hasSideEffects() {
     switch (type) {
-      case Token.EXPR_VOID:
       case Token.COMMA:
         if (last != null)
           return last.hasSideEffects();
@@ -1872,32 +1844,14 @@ public class Node implements Cloneable, Serializable {
       case Token.ASSIGN_LSH:
       case Token.ASSIGN_RSH:
       case Token.ASSIGN_URSH:
-      case Token.ENTERWITH:
-      case Token.LEAVEWITH:
       case Token.RETURN:
-      case Token.GOTO:
-      case Token.IFEQ:
-      case Token.IFNE:
       case Token.NEW:
       case Token.DELPROP:
-      case Token.SETNAME:
-      case Token.SETPROP:
-      case Token.SETELEM:
       case Token.CALL:
       case Token.THROW:
-      case Token.RETHROW:
-      case Token.SETVAR:
-      case Token.CATCH_SCOPE:
-      case Token.RETURN_RESULT:
-      case Token.SET_REF:
-      case Token.DEL_REF:
-      case Token.REF_CALL:
       case Token.TRY:
-      case Token.SEMI:
       case Token.INC:
       case Token.DEC:
-      case Token.EXPORT:
-      case Token.IMPORT:
       case Token.IF:
       case Token.ELSE:
       case Token.SWITCH:
@@ -1913,13 +1867,6 @@ public class Node implements Cloneable, Serializable {
       case Token.FINALLY:
       case Token.BLOCK:
       case Token.LABEL:
-      case Token.TARGET:
-      case Token.LOOP:
-      case Token.JSR:
-      case Token.SETPROP_OP:
-      case Token.SETELEM_OP:
-      case Token.LOCAL_BLOCK:
-      case Token.SET_REF_OP:
         return true;
 
       default:

@@ -52,7 +52,8 @@ public class SanityCheckTest extends CompilerTestCase {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         getLastCompiler().reportCodeChange();
-        root.addChildToBack(new Node(Token.EXPR_VOID, Node.newNumber(0)));
+        root.getFirstChild().addChildToBack(
+              new Node(Token.IF, new Node(Token.TRUE), new Node(Token.EMPTY)));
       }
     };
 
@@ -60,7 +61,7 @@ public class SanityCheckTest extends CompilerTestCase {
     try {
       test("var x = 3;", "var x=3;0;0");
     } catch (IllegalStateException e) {
-      assertEquals("Expected script but was expr_void Reference node EXPR_VOID",
+      assertEquals("Expected block but was empty Reference node EMPTY",
           e.getMessage());
       exceptionCaught = true;
     }

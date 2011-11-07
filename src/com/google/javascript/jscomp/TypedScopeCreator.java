@@ -562,10 +562,6 @@ final class TypedScopeCreator implements ScopeCreator {
           n.setJSType(getNativeType(REGEXP_TYPE));
           break;
 
-        case Token.REF_SPECIAL:
-          n.setJSType(getNativeType(UNKNOWN_TYPE));
-          break;
-
         case Token.OBJECTLIT:
           defineObjectLiteral(t, n);
           break;

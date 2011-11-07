@@ -282,17 +282,6 @@ class CodeGenerator {
         }
         break;
 
-      case Token.GET_REF:
-        add(first);
-        break;
-
-      case Token.REF_SPECIAL:
-        Preconditions.checkState(childCount == 1);
-        add(first);
-        add(".");
-        add((String) n.getProp(Node.NAME_PROP));
-        break;
-
       case Token.FUNCTION:
         if (n.getClass() != Node.class) {
           throw new Error("Unexpected Node subclass.");
@@ -597,9 +586,6 @@ class CodeGenerator {
         cc.endStatement();
         break;
 
-      case Token.EXPR_VOID:
-        throw new Error("Unexpected EXPR_VOID. Should be EXPR_RESULT.");
-
       case Token.EXPR_RESULT:
         Preconditions.checkState(childCount == 1);
         add(first, Context.START_OF_EXPR);
@@ -720,11 +706,6 @@ class CodeGenerator {
         add(":");
         addNonEmptyStatement(
             last, getContextForNonEmptyExpression(context), true);
-        break;
-
-      // This node is auto generated in anonymous functions and should just get
-      // ignored for our purposes.
-      case Token.SETNAME:
         break;
 
       default:

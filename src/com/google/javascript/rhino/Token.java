@@ -47,8 +47,6 @@ package com.google.javascript.rhino;
  * It is based on the C source files jsscan.c and jsscan.h
  * in the jsref package.
  *
- * @see com.google.javascript.rhino.Parser
- *
  */
 
 public class Token
@@ -73,16 +71,7 @@ public class Token
         EOF            = 0,  // end of file token - (not EOF_CHAR)
         EOL            = 1,  // end of line
 
-        // Interpreter reuses the following as bytecodes
-        FIRST_BYTECODE_TOKEN    = 2,
-
-        ENTERWITH      = 2,
-        LEAVEWITH      = 3,
         RETURN         = 4,
-        GOTO           = 5,
-        IFEQ           = 6,
-        IFNE           = 7,
-        SETNAME        = 8,
         BITOR          = 9,
         BITXOR         = 10,
         BITAND         = 11,
@@ -108,9 +97,7 @@ public class Token
         DELPROP        = 31,
         TYPEOF         = 32,
         GETPROP        = 33,
-        SETPROP        = 34,
         GETELEM        = 35,
-        SETELEM        = 36,
         CALL           = 37,
         NAME           = 38,
         NUMBER         = 39,
@@ -122,50 +109,14 @@ public class Token
         SHEQ           = 45,   // shallow equality (===)
         SHNE           = 46,   // shallow inequality (!==)
         REGEXP         = 47,
-        BINDNAME       = 48,
         THROW          = 49,
-        RETHROW        = 50, // rethrow caught execetion: catch (e if ) use it
         IN             = 51,
         INSTANCEOF     = 52,
-        LOCAL_LOAD     = 53,
-        GETVAR         = 54,
-        SETVAR         = 55,
-        CATCH_SCOPE    = 56,
-        ENUM_INIT_KEYS = 57,
-        ENUM_INIT_VALUES = 58,
-        ENUM_NEXT      = 59,
-        ENUM_ID        = 60,
-        THISFN         = 61,
-        RETURN_RESULT  = 62, // to return prevoisly stored return result
         ARRAYLIT       = 63, // array literal
         OBJECTLIT      = 64, // object literal
-        GET_REF        = 65, // *reference
-        SET_REF        = 66, // *reference    = something
-        DEL_REF        = 67, // delete reference
-        REF_CALL       = 68, // f(args)    = something or f(args)++
-        REF_SPECIAL    = 69, // reference for special properties like __proto
-
-        // For XML support:
-        DEFAULTNAMESPACE = 70, // default xml namespace =
-        ESCXMLATTR     = 71,
-        ESCXMLTEXT     = 72,
-        REF_MEMBER     = 73, // Reference for x.@y, x..y etc.
-        REF_NS_MEMBER  = 74, // Reference for x.ns::y, x..ns::y etc.
-        REF_NAME       = 75, // Reference for @y, @[y] etc.
-        REF_NS_NAME    = 76; // Reference for ns::y, @ns::y@[y] etc.
-
-        // End of interpreter bytecodes
-    public final static int
-        LAST_BYTECODE_TOKEN    = REF_NS_NAME,
 
         TRY            = 77,
-        SEMI           = 78,  // semicolon
-        LB             = 79,  // left and right brackets
-        RB             = 80,
-        LC             = 81,  // left and right curlies (braces)
-        RC             = 82,
         LP             = 83,  // left and right parentheses
-        RP             = 84,
         COMMA          = 85,  // comma operator
 
         ASSIGN         = 86,  // simple assignment  (=)
@@ -179,9 +130,8 @@ public class Token
         ASSIGN_SUB     = 94,  // -=
         ASSIGN_MUL     = 95,  // *=
         ASSIGN_DIV     = 96,  // /=
-        ASSIGN_MOD     = 97;  // %=
+        ASSIGN_MOD     = 97,  // %=
 
-    public final static int
         FIRST_ASSIGN   = ASSIGN,
         LAST_ASSIGN    = ASSIGN_MOD,
 
@@ -193,8 +143,6 @@ public class Token
         DEC            = 103,
         DOT            = 104, // member operator (.)
         FUNCTION       = 105, // function keyword
-        EXPORT         = 106, // export keyword
-        IMPORT         = 107, // import keyword
         IF             = 108, // if keyword
         ELSE           = 109, // else keyword
         SWITCH         = 110, // switch keyword
@@ -214,43 +162,15 @@ public class Token
 
         EMPTY          = 124,
 
-        /* types used for the parse tree - these never get returned
-         * by the scanner.
-         */
-
         BLOCK          = 125, // statement block
         LABEL          = 126, // label
-        TARGET         = 127,
-        LOOP           = 128,
-        EXPR_VOID      = 129, // expression statement in functions
         EXPR_RESULT    = 130, // expression statement in scripts
-        JSR            = 131,
         SCRIPT         = 132, // top-level node for entire script
-        TYPEOFNAME     = 133, // for typeof(simple-name)
-        USE_STACK      = 134,
-        SETPROP_OP     = 135, // x.y op= something
-        SETELEM_OP     = 136, // x[y] op= something
-        LOCAL_BLOCK    = 137,
-        SET_REF_OP     = 138, // *reference op= something
-
-        // For XML support:
-        DOTDOT         = 139,  // member operator (..)
-        COLONCOLON     = 140,  // namespace::name
-        XML            = 141,  // XML type
-        DOTQUERY       = 142,  // .() -- e.g., x.emps.emp.(name == "terry")
-        XMLATTR        = 143,  // @
-        XMLEND         = 144,
-
-        // Optimizer-only-tokens
-        TO_OBJECT      = 145,
-        TO_DOUBLE      = 146,
 
         GET            = 147,  // JS 1.5 get pseudo keyword
         SET            = 148,  // JS 1.5 set pseudo keyword
 
         CONST          = 149,  // JS 1.5 const keyword
-        SETCONST       = 150,
-        SETCONSTVAR    = 151,
         DEBUGGER       = 152,
 
         // JSCompiler introduced tokens
@@ -266,7 +186,9 @@ public class Token
         QMARK          = 304,
         ELLIPSIS       = 305,
         BANG           = 306,
-        EQUALS         = 307;
+        EQUALS         = 307,
+        LB             = 308,  // left brackets
+        LC             = 309;  // left curly braces
 
   public static String name(int token)
     {
@@ -275,15 +197,7 @@ public class Token
         }
         switch (token) {
           case ERROR:           return "ERROR";
-          case EOF:             return "EOF";
-          case EOL:             return "EOL";
-          case ENTERWITH:       return "ENTERWITH";
-          case LEAVEWITH:       return "LEAVEWITH";
           case RETURN:          return "RETURN";
-          case GOTO:            return "GOTO";
-          case IFEQ:            return "IFEQ";
-          case IFNE:            return "IFNE";
-          case SETNAME:         return "SETNAME";
           case BITOR:           return "BITOR";
           case BITXOR:          return "BITXOR";
           case BITAND:          return "BITAND";
@@ -309,9 +223,7 @@ public class Token
           case DELPROP:         return "DELPROP";
           case TYPEOF:          return "TYPEOF";
           case GETPROP:         return "GETPROP";
-          case SETPROP:         return "SETPROP";
           case GETELEM:         return "GETELEM";
-          case SETELEM:         return "SETELEM";
           case CALL:            return "CALL";
           case NAME:            return "NAME";
           case LABEL_NAME:      return "LABEL_NAME";
@@ -324,43 +236,13 @@ public class Token
           case SHEQ:            return "SHEQ";
           case SHNE:            return "SHNE";
           case REGEXP:          return "REGEXP";
-          case BINDNAME:        return "BINDNAME";
           case THROW:           return "THROW";
-          case RETHROW:         return "RETHROW";
           case IN:              return "IN";
           case INSTANCEOF:      return "INSTANCEOF";
-          case LOCAL_LOAD:      return "LOCAL_LOAD";
-          case GETVAR:          return "GETVAR";
-          case SETVAR:          return "SETVAR";
-          case CATCH_SCOPE:     return "CATCH_SCOPE";
-          case ENUM_INIT_KEYS:  return "ENUM_INIT_KEYS";
-          case ENUM_INIT_VALUES:  return "ENUM_INIT_VALUES";
-          case ENUM_NEXT:       return "ENUM_NEXT";
-          case ENUM_ID:         return "ENUM_ID";
-          case THISFN:          return "THISFN";
-          case RETURN_RESULT:   return "RETURN_RESULT";
           case ARRAYLIT:        return "ARRAYLIT";
           case OBJECTLIT:       return "OBJECTLIT";
-          case GET_REF:         return "GET_REF";
-          case SET_REF:         return "SET_REF";
-          case DEL_REF:         return "DEL_REF";
-          case REF_CALL:        return "REF_CALL";
-          case REF_SPECIAL:     return "REF_SPECIAL";
-          case DEFAULTNAMESPACE:return "DEFAULTNAMESPACE";
-          case ESCXMLTEXT:      return "ESCXMLTEXT";
-          case ESCXMLATTR:      return "ESCXMLATTR";
-          case REF_MEMBER:      return "REF_MEMBER";
-          case REF_NS_MEMBER:   return "REF_NS_MEMBER";
-          case REF_NAME:        return "REF_NAME";
-          case REF_NS_NAME:     return "REF_NS_NAME";
           case TRY:             return "TRY";
-          case SEMI:            return "SEMI";
-          case LB:              return "LB";
-          case RB:              return "RB";
-          case LC:              return "LC";
-          case RC:              return "RC";
           case LP:              return "LP";
-          case RP:              return "RP";
           case COMMA:           return "COMMA";
           case ASSIGN:          return "ASSIGN";
           case ASSIGN_BITOR:    return "ASSIGN_BITOR";
@@ -382,8 +264,6 @@ public class Token
           case DEC:             return "DEC";
           case DOT:             return "DOT";
           case FUNCTION:        return "FUNCTION";
-          case EXPORT:          return "EXPORT";
-          case IMPORT:          return "IMPORT";
           case IF:              return "IF";
           case ELSE:            return "ELSE";
           case SWITCH:          return "SWITCH";
@@ -398,34 +278,14 @@ public class Token
           case WITH:            return "WITH";
           case CATCH:           return "CATCH";
           case FINALLY:         return "FINALLY";
-          case RESERVED:        return "RESERVED";
           case EMPTY:           return "EMPTY";
           case BLOCK:           return "BLOCK";
           case LABEL:           return "LABEL";
-          case TARGET:          return "TARGET";
-          case LOOP:            return "LOOP";
-          case EXPR_VOID:       return "EXPR_VOID";
           case EXPR_RESULT:     return "EXPR_RESULT";
-          case JSR:             return "JSR";
           case SCRIPT:          return "SCRIPT";
-          case TYPEOFNAME:      return "TYPEOFNAME";
-          case USE_STACK:       return "USE_STACK";
-          case SETPROP_OP:      return "SETPROP_OP";
-          case SETELEM_OP:      return "SETELEM_OP";
-          case LOCAL_BLOCK:     return "LOCAL_BLOCK";
-          case SET_REF_OP:      return "SET_REF_OP";
-          case DOTDOT:          return "DOTDOT";
-          case COLONCOLON:      return "COLONCOLON";
-          case XML:             return "XML";
-          case DOTQUERY:        return "DOTQUERY";
-          case XMLATTR:         return "XMLATTR";
-          case XMLEND:          return "XMLEND";
-          case TO_OBJECT:       return "TO_OBJECT";
-          case TO_DOUBLE:       return "TO_DOUBLE";
           case GET:             return "GET";
           case SET:             return "SET";
           case CONST:           return "CONST";
-          case SETCONST:        return "SETCONST";
           case DEBUGGER:        return "DEBUGGER";
           case ANNOTATION:      return "ANNOTATION";
           case PIPE:            return "PIPE";

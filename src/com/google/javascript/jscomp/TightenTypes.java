@@ -798,15 +798,6 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
         case Token.GETELEM:
           return Lists.newArrayList();
 
-        case Token.GET_REF:
-          // We ignore ref specials as their types should not be computed.
-          if (lhs.getFirstChild().getType() == Token.REF_SPECIAL) {
-            return Lists.newArrayList();
-          } else {
-            throw new AssertionError(
-                "Bad LHS for getref: " + parent.toStringTree());
-          }
-
         default:
           throw new AssertionError(
               "Bad LHS for assignment: " + parent.toStringTree());

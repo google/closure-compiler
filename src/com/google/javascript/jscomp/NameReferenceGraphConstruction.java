@@ -168,8 +168,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       switch (n.getType()) {
         case Token.NAME:
         case Token.GETPROP:
-          if (NodeUtil.isGetProp(parent) ||
-              parent.getType() == Token.REF_SPECIAL) {
+          if (NodeUtil.isGetProp(parent)) {
             // We will resolve this when we visit parent later in the traversal.
             return;
           } else if (NodeUtil.isFunction(parent)) {
