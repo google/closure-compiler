@@ -65,66 +65,13 @@ public class Node implements Cloneable, Serializable {
   private static final long serialVersionUID = 1L;
 
   public static final int
-      // Rhino's AST captures data flow. These are the annotations
-      // it used. We've mostly torn them out.
-      LOCAL_BLOCK_PROP  = -3,
-      OBJECT_IDS_PROP   = -2,
-      CATCH_SCOPE_PROP  = -1,
-      LABEL_ID_PROP     =  0,
-
-      TARGET_PROP       =  1,
-      BREAK_PROP        =  2,
-      CONTINUE_PROP     =  3,
-      ENUM_PROP         =  4,
-      FUNCTION_PROP     =  5,
-      TEMP_PROP         =  6,
-      LOCAL_PROP        =  7,
-      CODEOFFSET_PROP   =  8,
-      FIXUPS_PROP       =  9,
-      VARS_PROP         = 10,
-      USES_PROP         = 11,
-      REGEXP_PROP       = 12,
-      CASES_PROP        = 13,
-      DEFAULT_PROP      = 14,
-      CASEARRAY_PROP    = 15,
-
       // TODO(nicksantos): Remove this prop.
       SOURCENAME_PROP   = 16,
 
-      TYPE_PROP         = 17,
-      SPECIAL_PROP_PROP = 18,
-      LABEL_PROP        = 19,
-      FINALLY_PROP      = 20,
-      LOCALCOUNT_PROP   = 21,
-  /*
-      the following properties are defined and manipulated by the
-      optimizer -
-      TARGETBLOCK_PROP - the block referenced by a branch node
-      VARIABLE_PROP - the variable referenced by a BIND or NAME node
-      LASTUSE_PROP - that variable node is the last reference before
-                      a new def or the end of the block
-      ISNUMBER_PROP - this node generates code on Number children and
-                      delivers a Number result (as opposed to Objects)
-      DIRECTCALL_PROP - this call node should emit code to test the function
-                        object against the known class and call diret if it
-                        matches.
-  */
-
-      TARGETBLOCK_PROP  = 22,
-      VARIABLE_PROP     = 23,
-      LASTUSE_PROP      = 24,
-      ISNUMBER_PROP     = 25,
-      DIRECTCALL_PROP   = 26,
-
-      SPECIALCALL_PROP  = 27,
-      DEBUGSOURCE_PROP  = 28,
       JSDOC_INFO_PROP   = 29,     // contains a TokenStream.JSDocInfo object
       VAR_ARGS_NAME     = 30,     // the name node is a variable length
                                   // argument placeholder.
-      SKIP_INDEXES_PROP  = 31,    // array of skipped indexes of array literal
       INCRDECR_PROP      = 32,    // pre or post type of increment/decrement
-      MEMBER_TYPE_PROP   = 33,    // type of element access operation
-      NAME_PROP          = 34,    // property name
       PARENTHESIZED_PROP = 35,    // expression is parenthesized
       QUOTED_PROP        = 36,    // set to indicate a quoted object lit key
       OPT_ARG_NAME       = 37,    // The name node is an optional argument.
@@ -159,72 +106,19 @@ public class Node implements Cloneable, Serializable {
                                   // node.
       LAST_PROP          = 53;
 
-  // values of ISNUMBER_PROP to specify
-  // which of the children are Number types
-  public static final int
-      BOTH = 0,
-      LEFT = 1,
-      RIGHT = 2;
-
-  public static final int    // values for SPECIALCALL_PROP
-      NON_SPECIALCALL  = 0,
-      SPECIALCALL_EVAL = 1,
-      SPECIALCALL_WITH = 2;
-
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
       POST_FLAG = 0x2;
 
-  public static final int   // flags for MEMBER_TYPE_PROP
-      PROPERTY_FLAG    = 0x1, // property access: element is valid name
-      ATTRIBUTE_FLAG   = 0x2, // x.@y or x..@y
-      DESCENDANTS_FLAG = 0x4; // x..y or x..@i
-
   private static final String propToString(int propType) {
       switch (propType) {
-        case LOCAL_BLOCK_PROP:   return "local_block";
-        case OBJECT_IDS_PROP:    return "object_ids_prop";
-        case CATCH_SCOPE_PROP:   return "catch_scope_prop";
-        case LABEL_ID_PROP:      return "label_id_prop";
-        case TARGET_PROP:        return "target";
         case BRACELESS_TYPE:     return "braceless_type";
-        case BREAK_PROP:         return "break";
-        case CONTINUE_PROP:      return "continue";
-        case ENUM_PROP:          return "enum";
-        case FUNCTION_PROP:      return "function";
-        case TEMP_PROP:          return "temp";
-        case LOCAL_PROP:         return "local";
-        case CODEOFFSET_PROP:    return "codeoffset";
-        case FIXUPS_PROP:        return "fixups";
-        case VARS_PROP:          return "vars";
         case VAR_ARGS_NAME:      return "var_args_name";
-        case USES_PROP:          return "uses";
-        case REGEXP_PROP:        return "regexp";
-        case CASES_PROP:         return "cases";
-        case DEFAULT_PROP:       return "default";
-        case CASEARRAY_PROP:     return "casearray";
         case SOURCENAME_PROP:    return "sourcename";
-        case TYPE_PROP:          return "type";
-        case SPECIAL_PROP_PROP:  return "special_prop";
-        case LABEL_PROP:         return "label";
-        case FINALLY_PROP:       return "finally";
-        case LOCALCOUNT_PROP:    return "localcount";
-
-        case TARGETBLOCK_PROP:   return "targetblock";
-        case VARIABLE_PROP:      return "variable";
-        case LASTUSE_PROP:       return "lastuse";
-        case ISNUMBER_PROP:      return "isnumber";
-        case DIRECTCALL_PROP:    return "directcall";
-
-        case SPECIALCALL_PROP:   return "specialcall";
-        case DEBUGSOURCE_PROP:   return "debugsource";
 
         case JSDOC_INFO_PROP:    return "jsdoc_info";
 
-        case SKIP_INDEXES_PROP:  return "skip_indexes";
         case INCRDECR_PROP:      return "incrdecr";
-        case MEMBER_TYPE_PROP:   return "member_type";
-        case NAME_PROP:          return "name";
         case PARENTHESIZED_PROP: return "parenthesized";
         case QUOTED_PROP:        return "quoted";
         case OPT_ARG_NAME:       return "opt_arg";
@@ -1073,40 +967,6 @@ public class Node implements Cloneable, Serializable {
           sb.append(": ");
           String value;
           switch (type) {
-            case TARGETBLOCK_PROP: // can't add this as it recurses
-              value = "target block property";
-              break;
-            case LOCAL_BLOCK_PROP: // can't add this as it is dull
-              value = "last local block";
-              break;
-            case ISNUMBER_PROP:
-              switch (x.getIntValue()) {
-                case BOTH:
-                  value = "both";
-                  break;
-                case RIGHT:
-                  value = "right";
-                  break;
-                case LEFT:
-                  value = "left";
-                  break;
-                default:
-                  throw Kit.codeBug();
-              }
-              break;
-            case SPECIALCALL_PROP:
-              switch (x.getIntValue()) {
-                case SPECIALCALL_EVAL:
-                  value = "eval";
-                  break;
-                case SPECIALCALL_WITH:
-                  value = "with";
-                  break;
-                default:
-                  // NON_SPECIALCALL should not be stored
-                  throw Kit.codeBug();
-              }
-              break;
             default:
               value = x.toString();
               break;
@@ -1731,29 +1591,7 @@ public class Node implements Cloneable, Serializable {
       return false;
     }
 
-    if (type == Token.ARRAYLIT) {
-      try {
-        int[] indices1 = (int[]) getProp(Node.SKIP_INDEXES_PROP);
-        int[] indices2 = (int[]) node.getProp(Node.SKIP_INDEXES_PROP);
-        if (indices1 == null) {
-          if (indices2 != null) {
-            return false;
-          }
-        } else if (indices2 == null) {
-          return false;
-        } else if (indices1.length != indices2.length) {
-          return false;
-        } else {
-          for (int i = 0; i < indices1.length; i++) {
-            if (indices1[i] != indices2[i]) {
-              return false;
-            }
-          }
-        }
-      } catch (Exception e) {
-        return false;
-      }
-    } else if (type == Token.INC || type == Token.DEC) {
+    if (type == Token.INC || type == Token.DEC) {
       int post1 = this.getIntProp(INCRDECR_PROP);
       int post2 = node.getIntProp(INCRDECR_PROP);
       if (post1 != post2) {
@@ -1783,64 +1621,6 @@ public class Node implements Cloneable, Serializable {
     }
 
     return true;
-  }
-
-  public boolean hasSideEffects() {
-    switch (type) {
-      case Token.COMMA:
-        if (last != null)
-          return last.hasSideEffects();
-        else
-          return true;
-
-      case Token.HOOK:
-        if (first == null || first.next == null || first.next.next == null) {
-          Kit.codeBug();
-        }
-        return first.next.hasSideEffects() && first.next.next.hasSideEffects();
-
-      case Token.ERROR: // Avoid cascaded error messages
-      case Token.EXPR_RESULT:
-      case Token.ASSIGN:
-      case Token.ASSIGN_ADD:
-      case Token.ASSIGN_SUB:
-      case Token.ASSIGN_MUL:
-      case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD:
-      case Token.ASSIGN_BITOR:
-      case Token.ASSIGN_BITXOR:
-      case Token.ASSIGN_BITAND:
-      case Token.ASSIGN_LSH:
-      case Token.ASSIGN_RSH:
-      case Token.ASSIGN_URSH:
-      case Token.RETURN:
-      case Token.NEW:
-      case Token.DELPROP:
-      case Token.CALL:
-      case Token.THROW:
-      case Token.TRY:
-      case Token.INC:
-      case Token.DEC:
-      case Token.IF:
-      case Token.ELSE:
-      case Token.SWITCH:
-      case Token.WHILE:
-      case Token.DO:
-      case Token.FOR:
-      case Token.BREAK:
-      case Token.CONTINUE:
-      case Token.VAR:
-      case Token.CONST:
-      case Token.WITH:
-      case Token.CATCH:
-      case Token.FINALLY:
-      case Token.BLOCK:
-      case Token.LABEL:
-        return true;
-
-      default:
-        return false;
-    }
   }
 
   /**

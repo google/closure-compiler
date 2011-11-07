@@ -76,12 +76,6 @@ class PrepareAst implements CompilerPass {
    * Covert EXPR_VOID to EXPR_RESULT to simplify the rest of the code.
    */
   private void normalizeNodeTypes(Node n) {
-    // Remove unused properties to minimize differences between ASTs
-    // produced by the two parsers.
-    if (n.getType() == Token.FUNCTION) {
-      Preconditions.checkState(n.getProp(Node.FUNCTION_PROP) == null);
-    }
-
     normalizeBlocks(n);
 
     for (Node child = n.getFirstChild();
