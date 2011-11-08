@@ -182,6 +182,25 @@ public class SymbolTableTest extends TestCase {
     assertEquals(1, Iterables.size(table.getReferences(googDomHelper)));
   }
 
+  public void testIncompleteNamespacedReferences() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */\n" +
+        "goog.dom.DomHelper = function(){};\n" +
+        "var y = goog.dom.DomHelper;\n");
+    Symbol goog = getGlobalVar(table, "goog");
+    assertNotNull(goog);
+    assertEquals(2, table.getReferenceList(goog).size());
+
+    // TODO(nicksantos): We should try to create a symbol for goog.dom,
+    // even though we can't find a declaration for it.
+    Symbol googDom = getGlobalVar(table, "goog.dom");
+    assertNull(googDom);
+
+    Symbol googDomHelper = getGlobalVar(table, "goog.dom.DomHelper");
+    assertNotNull(googDomHelper);
+    assertEquals(2, Iterables.size(table.getReferences(googDomHelper)));
+  }
+
   public void testRemovalOfNamespacedReferencesOfProperties()
       throws Exception {
     SymbolTable table = createSymbolTable(

@@ -521,10 +521,12 @@ public final class SymbolTable
       SymbolScope myScope = createScopeFrom(
           otherSymbolTable.getScope(otherSymbol));
 
-      StaticReference<JSType> decl = otherSymbol.getDeclaration();
-      Node declNode = decl == null ? null : decl.getNode();
+      StaticReference<JSType> decl =
+          findBestDeclToAdd(otherSymbolTable, otherSymbol);
       Symbol mySymbol = null;
-      if (declNode != null && declNode.getStaticSourceFile() != null) {
+      if (decl != null) {
+        Node declNode = decl.getNode();
+
         // If we have a declaration node, we can ensure the symbol is declared.
         mySymbol = symbols.get(declNode, name);
         if (mySymbol == null) {
@@ -534,7 +536,7 @@ public final class SymbolTable
           // See SymbolTableTest#testDeclarationDisagreement.
           mySymbol = myScope.ownSymbols.get(otherSymbol.getName());
           if (mySymbol == null) {
-            mySymbol = copySymbolTo(otherSymbol, myScope);
+            mySymbol = copySymbolTo(otherSymbol, declNode, myScope);
           }
         }
       } else {
@@ -546,17 +548,53 @@ public final class SymbolTable
 
       if (mySymbol != null) {
         for (R otherRef : otherSymbolTable.getReferences(otherSymbol)) {
-          mySymbol.defineReferenceAt(otherRef.getNode());
+          if (isGoodRefToAdd(otherRef)) {
+            mySymbol.defineReferenceAt(otherRef.getNode());
+          }
         }
       }
     }
   }
 
+  /** Helper for addSymbolsFrom, to determine the best declaration spot. */
+  private <S extends StaticSlot<JSType>, R extends StaticReference<JSType>>
+  StaticReference<JSType> findBestDeclToAdd(
+      StaticSymbolTable<S, R> otherSymbolTable, S slot) {
+    StaticReference<JSType> decl = slot.getDeclaration();
+    if (isGoodRefToAdd(decl)) {
+      return decl;
+    }
+
+    for (R ref : otherSymbolTable.getReferences(slot)) {
+      if (isGoodRefToAdd(ref)) {
+        return ref;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Helper for addSymbolsFrom, to determine whether a reference is
+   * acceptable. A reference must be in the normal source tree.
+   */
+  private boolean isGoodRefToAdd(@Nullable StaticReference<JSType> ref) {
+    return ref != null && ref.getNode() != null
+        && ref.getNode().getStaticSourceFile() != null
+        && !VarCheck.SYNTHETIC_VARS_DECLAR.equals(
+            ref.getNode().getStaticSourceFile().getName());
+  }
+
   private Symbol copySymbolTo(StaticSlot<JSType> sym, SymbolScope scope) {
+    return copySymbolTo(sym, sym.getDeclaration().getNode(), scope);
+  }
+
+  private Symbol copySymbolTo(
+      StaticSlot<JSType> sym, Node declNode, SymbolScope scope) {
+    // All symbols must have declaration nodes.
+    Preconditions.checkNotNull(declNode);
     return declareSymbol(
-        sym.getName(), sym.getType(), sym.isTypeInferred(), scope,
-        // All symbols must have declaration nodes.
-        Preconditions.checkNotNull(sym.getDeclaration().getNode()),
+        sym.getName(), sym.getType(), sym.isTypeInferred(), scope, declNode,
         sym.getJSDocInfo());
   }
 
@@ -1086,7 +1124,15 @@ public final class SymbolTable
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.getType() == Token.GETPROP) {
         JSType owner = n.getFirstChild().getJSType();
-        if (owner == null) {
+        if (owner == null || owner.isUnknownType()) {
+          // Try to find the symbol by its fully qualified name.
+          String name = n.getQualifiedName();
+          if (name != null) {
+            Symbol lexicalSym = getEnclosingScope(n).getSlot(name);
+            if (lexicalSym != null) {
+              lexicalSym.defineReferenceAt(n);
+            }
+          }
           return;
         }
 
