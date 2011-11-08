@@ -51,21 +51,11 @@ package com.google.javascript.rhino;
  * It is based on the C source files jsscan.c and jsscan.h
  * in the jsref package.
  *
- * @see Parser
- *
  */
 
-public class TokenStream
-{
-    /*
-     * For chars - because we need something out-of-range
-     * to check.  (And checking EOF by exception is annoying.)
-     * Note distinction from EOF token type!
-     */
-    private final static int EOF_CHAR = -1;
-
+public class TokenStream {
     public static boolean isKeyword(String s) {
-        return Token.EOF != stringToKeyword(s);
+        return Token.ERROR != stringToKeyword(s);
     }
 
     private static int stringToKeyword(String name) {
@@ -259,7 +249,7 @@ public class TokenStream
         }
 // #/generated#
 // #/string_id_map#
-        if (id == 0) { return Token.EOF; }
+        if (id == 0) { return Token.ERROR; }
         return id & 0xff;
     }
 
@@ -275,10 +265,10 @@ public class TokenStream
                 if (c == '\\') {
                     if (! ((i + 5) < length)
                         && (s.charAt(i + 1) == 'u')
-                        && 0 <= Kit.xDigitToInt(s.charAt(i + 2), 0)
-                        && 0 <= Kit.xDigitToInt(s.charAt(i + 3), 0)
-                        && 0 <= Kit.xDigitToInt(s.charAt(i + 4), 0)
-                        && 0 <= Kit.xDigitToInt(s.charAt(i + 5), 0)) {
+                        && 0 <= xDigitToInt(s.charAt(i + 2), 0)
+                        && 0 <= xDigitToInt(s.charAt(i + 3), 0)
+                        && 0 <= xDigitToInt(s.charAt(i + 4), 0)
+                        && 0 <= xDigitToInt(s.charAt(i + 5), 0)) {
                         return true;
                      }
                 }
@@ -290,37 +280,30 @@ public class TokenStream
         return true;
     }
 
-    private static boolean isAlpha(int c) {
-        // Use 'Z' < 'a'
-        if (c <= 'Z') {
-            return 'A' <= c;
-        } else {
-            return 'a' <= c && c <= 'z';
-        }
-    }
-
-    static boolean isDigit(int c) {
-        return '0' <= c && c <= '9';
-    }
-
     /**
-     * Tests whether the character is a valid JavaScript white space character
-     * as defined in ECMAScript 3rd edition.
-     *
-     * Note:  jsscan.c uses C isspace() (which allows
-     * \v, I think.)  note that code in getChar() implicitly accepts
-     * '\r' == \u000D as well.
+     * If character <tt>c</tt> is a hexadecimal digit, return
+     * <tt>accumulator</tt> * 16 plus corresponding
+     * number. Otherise return -1.
      */
-    static boolean isJSSpace(int c) {
-        if (c <= 127) {
-            return c == 0x20 || c == 0x9 || c == 0xC || c == 0xB;
-        } else {
-            return c == 0xA0
-                || Character.getType((char)c) == Character.SPACE_SEPARATOR;
+    private static int xDigitToInt(int c, int accumulator) {
+        check: {
+            // Use 0..9 < A..Z < a..z
+            if (c <= '9') {
+                c -= '0';
+                if (0 <= c) { break check; }
+            } else if (c <= 'F') {
+                if ('A' <= c) {
+                    c -= ('A' - 10);
+                    break check;
+                }
+            } else if (c <= 'f') {
+                if ('a' <= c) {
+                    c -= ('a' - 10);
+                    break check;
+                }
+            }
+            return -1;
         }
-    }
-
-    private static boolean isJSFormatChar(int c) {
-        return c > 127 && Character.getType((char)c) == Character.FORMAT;
+        return (accumulator << 4) | c;
     }
 }

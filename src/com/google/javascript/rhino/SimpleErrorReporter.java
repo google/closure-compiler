@@ -53,8 +53,7 @@ public class SimpleErrorReporter implements ErrorReporter {
 
     @Override
     public void warning(String message, String sourceName, int line,
-                        String lineSource, int lineOffset)
-    {
+                        String lineSource, int lineOffset) {
         if (warnings == null) {
             warnings = new ArrayList<String>();
         }
@@ -64,8 +63,7 @@ public class SimpleErrorReporter implements ErrorReporter {
 
     @Override
     public void error(String message, String sourceName, int line,
-                      String lineSource, int lineOffset)
-    {
+                      String lineSource, int lineOffset) {
         if (errors == null) {
             errors = new ArrayList<String>();
         }
@@ -76,8 +74,7 @@ public class SimpleErrorReporter implements ErrorReporter {
     @Override
     public EvaluatorException runtimeError(
         String message, String sourceName, int line, String lineSource,
-        int lineOffset)
-    {
+        int lineOffset) {
         return new EvaluatorException(
             message, sourceName, line, lineSource, lineOffset);
     }
@@ -85,23 +82,20 @@ public class SimpleErrorReporter implements ErrorReporter {
     /**
      * Returns the list of errors, or {@code null} if there were none.
      */
-    public List<String> errors()
-    {
+    public List<String> errors() {
         return errors;
     }
 
     /**
      * Returns the list of warnings, or {@code null} if there were none.
      */
-    public List<String> warnings()
-    {
+    public List<String> warnings() {
         return warnings;
     }
 
     private String formatDetailedMessage(
         String message, String sourceName, int line, String lineSource,
-        int lineOffset)
-    {
+        int lineOffset) {
         RhinoException e = new RhinoException(message);
         if (sourceName != null) {
           e.initSourceName(sourceName);

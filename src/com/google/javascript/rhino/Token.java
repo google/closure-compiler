@@ -49,27 +49,14 @@ package com.google.javascript.rhino;
  *
  */
 
-public class Token
-{
-
-    // debug flags
-    public static final boolean printTrees = true;
-    public static boolean shouldPrintTrees() {
-      return printTrees;
-    }
-    static final boolean printNames = printTrees;
-
+public class Token {
 
     /**
      * Token types.  These values correspond to JSTokenType values in
      * jsscan.c.
      */
-
     public final static int
-    // start enum
-        ERROR          = -1, // well-known as the only code < EOF
-        EOF            = 0,  // end of file token - (not EOF_CHAR)
-        EOL            = 1,  // end of line
+        ERROR          = -1,
 
         RETURN         = 4,
         BITOR          = 9,
@@ -190,11 +177,7 @@ public class Token
         LB             = 308,  // left brackets
         LC             = 309;  // left curly braces
 
-  public static String name(int token)
-    {
-        if (!printNames) {
-            return String.valueOf(token);
-        }
+  public static String name(int token) {
         switch (token) {
           case ERROR:           return "ERROR";
           case RETURN:          return "RETURN";

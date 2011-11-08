@@ -40,28 +40,19 @@
 
 package com.google.javascript.rhino;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-
 /**
  * The class of exceptions thrown by the JavaScript engine.
  */
 @SuppressWarnings("serial")
-public class RhinoException extends RuntimeException
-{
-    RhinoException()
-    {
+public class RhinoException extends RuntimeException {
+    RhinoException() {
     }
 
-    RhinoException(String details)
-    {
+    RhinoException(String details) {
         super(details);
     }
 
-    @Override public final String getMessage()
-    {
+    @Override public final String getMessage() {
         String details = details();
         if (sourceName == null || lineNumber <= 0) {
             return details;
@@ -79,8 +70,7 @@ public class RhinoException extends RuntimeException
         return buf.toString();
     }
 
-    public String details()
-    {
+    public String details() {
         return super.getMessage();
     }
 
@@ -88,8 +78,7 @@ public class RhinoException extends RuntimeException
      * Get the uri of the script source containing the error, or null
      * if that information is not available.
      */
-    public final String sourceName()
-    {
+    public final String sourceName() {
         return sourceName;
     }
 
@@ -101,8 +90,7 @@ public class RhinoException extends RuntimeException
      *
      * @throws IllegalStateException if the method is called more then once.
      */
-    public final void initSourceName(String sourceName)
-    {
+    public final void initSourceName(String sourceName) {
         if (sourceName == null) throw new IllegalArgumentException();
         if (this.sourceName != null) throw new IllegalStateException();
         this.sourceName = sourceName;
@@ -112,8 +100,7 @@ public class RhinoException extends RuntimeException
      * Returns the line number of the statement causing the error,
      * or zero if not available.
      */
-    public final int lineNumber()
-    {
+    public final int lineNumber() {
         return lineNumber;
     }
 
@@ -125,18 +112,20 @@ public class RhinoException extends RuntimeException
      *
      * @throws IllegalStateException if the method is called more then once.
      */
-    public final void initLineNumber(int lineNumber)
-    {
-        if (lineNumber <= 0) throw new IllegalArgumentException(String.valueOf(lineNumber));
-        if (this.lineNumber > 0) throw new IllegalStateException();
+    public final void initLineNumber(int lineNumber) {
+        if (lineNumber <= 0) {
+          throw new IllegalArgumentException(String.valueOf(lineNumber));
+        }
+        if (this.lineNumber > 0) {
+          throw new IllegalStateException();
+        }
         this.lineNumber = lineNumber;
     }
 
     /**
      * The column number of the location of the error, or zero if unknown.
      */
-    public final int columnNumber()
-    {
+    public final int columnNumber() {
         return columnNumber;
     }
 
@@ -148,18 +137,20 @@ public class RhinoException extends RuntimeException
      *
      * @throws IllegalStateException if the method is called more then once.
      */
-    public final void initColumnNumber(int columnNumber)
-    {
-        if (columnNumber <= 0) throw new IllegalArgumentException(String.valueOf(columnNumber));
-        if (this.columnNumber > 0) throw new IllegalStateException();
+    public final void initColumnNumber(int columnNumber) {
+        if (columnNumber <= 0) {
+          throw new IllegalArgumentException(String.valueOf(columnNumber));
+        }
+        if (this.columnNumber > 0) {
+          throw new IllegalStateException();
+        }
         this.columnNumber = columnNumber;
     }
 
     /**
      * The source text of the line causing the error, or null if unknown.
      */
-    public final String lineSource()
-    {
+    public final String lineSource() {
         return lineSource;
     }
 
@@ -171,16 +162,14 @@ public class RhinoException extends RuntimeException
      *
      * @throws IllegalStateException if the method is called more then once.
      */
-    public final void initLineSource(String lineSource)
-    {
+    public final void initLineSource(String lineSource) {
         if (lineSource == null) throw new IllegalArgumentException();
         if (this.lineSource != null) throw new IllegalStateException();
         this.lineSource = lineSource;
     }
 
     final void recordErrorOrigin(String sourceName, int lineNumber,
-                                 String lineSource, int columnNumber)
-    {
+                                 String lineSource, int columnNumber) {
         // XXX: for compatibility allow for now -1 to mean 0
         if (lineNumber == -1) {
             lineNumber = 0;
@@ -200,67 +189,8 @@ public class RhinoException extends RuntimeException
         }
     }
 
-    private String generateStackTrace()
-    {
-        // The real Rhino code here has been removed.
-        return "<No stack trace available>";
-    }
-
-    /**
-     * Get a string representing the script stack of this exception.
-     * If optimization is enabled, this corresponds to all java stack elements
-     * with a source name ending with ".js".
-     * @return a script stack dump
-     * @since 1.6R6
-     */
-    public String getScriptStackTrace()
-    {
-        return getScriptStackTrace(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".js");
-            }
-        });
-    }
-
-    /**
-     * Get a string representing the script stack of this exception.
-     * If optimization is enabled, this corresponds to all java stack elements
-     * with a source name matching the <code>filter</code>.
-     * @param filter the file name filter to determine whether a file is a
-     *               script file
-     * @return a script stack dump
-     * @since 1.6R6
-     */
-    public String getScriptStackTrace(FilenameFilter filter)
-    {
-        // The real Rhino code here has been removed.
-        return "<No stack trace available>";
-    }
-
-    @Override public void printStackTrace(PrintWriter s)
-    {
-        if (interpreterStackInfo == null) {
-            super.printStackTrace(s);
-        } else {
-            s.print(generateStackTrace());
-        }
-    }
-
-    @Override public void printStackTrace(PrintStream s)
-    {
-        if (interpreterStackInfo == null) {
-            super.printStackTrace(s);
-        } else {
-            s.print(generateStackTrace());
-        }
-    }
-
     private String sourceName;
     private int lineNumber;
     private String lineSource;
     private int columnNumber;
-
-    Object interpreterStackInfo;
-    int[] interpreterLineData;
 }

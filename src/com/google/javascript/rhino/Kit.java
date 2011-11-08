@@ -43,42 +43,13 @@ package com.google.javascript.rhino;
  */
 public class Kit {
     /**
-     * If character <tt>c</tt> is a hexadecimal digit, return
-     * <tt>accumulator</tt> * 16 plus corresponding
-     * number. Otherise return -1.
-     */
-    public static int xDigitToInt(int c, int accumulator)
-    {
-        check: {
-            // Use 0..9 < A..Z < a..z
-            if (c <= '9') {
-                c -= '0';
-                if (0 <= c) { break check; }
-            } else if (c <= 'F') {
-                if ('A' <= c) {
-                    c -= ('A' - 10);
-                    break check;
-                }
-            } else if (c <= 'f') {
-                if ('a' <= c) {
-                    c -= ('a' - 10);
-                    break check;
-                }
-            }
-            return -1;
-        }
-        return (accumulator << 4) | c;
-    }
-
-    /**
      * Throws RuntimeException to indicate failed assertion.
      * The function never returns and its return type is RuntimeException
      * only to be able to write <tt>throw Kit.codeBug()</tt> if plain
      * <tt>Kit.codeBug()</tt> triggers unreachable code error.
      */
-    public static RuntimeException codeBug()
-        throws RuntimeException
-    {
+    static RuntimeException codeBug()
+        throws RuntimeException {
         RuntimeException ex = new IllegalStateException("FAILED ASSERTION");
         // Print stack trace ASAP
         ex.printStackTrace(System.err);

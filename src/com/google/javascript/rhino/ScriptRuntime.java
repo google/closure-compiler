@@ -64,8 +64,7 @@ public class ScriptRuntime {
     }
 
     // It is public so NativeRegExp can access it .
-    public static boolean isJSLineTerminator(int c)
-    {
+    public static boolean isJSLineTerminator(int c) {
         // Optimization for faster check for eol character:
         // they do not have 0xDFD0 bits set
         if ((c & 0xDFD0) != 0) {
@@ -84,8 +83,6 @@ public class ScriptRuntime {
     // A similar problem exists for negative zero.
     public static final double
         negativeZero = Double.longBitsToDouble(0x8000000000000000L);
-
-    public static final Double NaNobj = new Double(NaN);
 
     /*
      * Helper function for toNumber, parseInt, and TokenStream.getToken.
@@ -134,8 +131,7 @@ public class ScriptRuntime {
                     return NaN;
                 }
             } else if (radix == 2 || radix == 4 || radix == 8 ||
-                       radix == 16 || radix == 32)
-            {
+                       radix == 16 || radix == 32) {
                 /* The number may also be inaccurate for one of these bases.
                  * This happens if the addition in value*radix + digit causes
                  * a round-down to an even least significant mantissa bit
@@ -240,8 +236,7 @@ public class ScriptRuntime {
         return sum;
     }
 
-    public static String escapeString(String s)
-    {
+    public static String escapeString(String s) {
         return escapeString(s, '"');
     }
 
@@ -249,8 +244,7 @@ public class ScriptRuntime {
      * For escaping strings printed by object and array literals; not quite
      * the same as 'escape.'
      */
-    public static String escapeString(String s, char escapeQuote)
-    {
+    public static String escapeString(String s, char escapeQuote) {
         if (!(escapeQuote == '"' || escapeQuote == '\'')) Kit.codeBug();
         StringBuffer sb = null;
 
@@ -311,8 +305,7 @@ public class ScriptRuntime {
         return (sb == null) ? s : sb.toString();
     }
 
-    static boolean isValidIdentifierName(String s)
-    {
+    static boolean isValidIdentifierName(String s) {
         int L = s.length();
         if (L == 0)
             return false;
@@ -329,8 +322,7 @@ public class ScriptRuntime {
      * If str is a decimal presentation of Uint32 value, return it as long.
      * Othewise return -1L;
      */
-    public static long testUint32String(String str)
-    {
+    public static long testUint32String(String str) {
         // The length of the decimal string representation of
         //  UINT32_MAX_VALUE, 4294967296
         final int MAX_VALUE_LENGTH = 10;
@@ -361,8 +353,7 @@ public class ScriptRuntime {
         return -1;
     }
 
-    static boolean isSpecialProperty(String s)
-    {
+    static boolean isSpecialProperty(String s) {
         return s.equals("__proto__") || s.equals("__parent__");
     }
 
@@ -370,35 +361,12 @@ public class ScriptRuntime {
     // Statements
     // ------------------
 
-    public static String getMessage0(String messageId)
-    {
+    public static String getMessage0(String messageId) {
         return getMessage(messageId, null);
     }
 
-    public static String getMessage1(String messageId, Object arg1)
-    {
+    public static String getMessage1(String messageId, Object arg1) {
         Object[] arguments = {arg1};
-        return getMessage(messageId, arguments);
-    }
-
-    public static String getMessage2(
-        String messageId, Object arg1, Object arg2)
-    {
-        Object[] arguments = {arg1, arg2};
-        return getMessage(messageId, arguments);
-    }
-
-    public static String getMessage3(
-        String messageId, Object arg1, Object arg2, Object arg3)
-    {
-        Object[] arguments = {arg1, arg2, arg3};
-        return getMessage(messageId, arguments);
-    }
-
-    public static String getMessage4(
-        String messageId, Object arg1, Object arg2, Object arg3, Object arg4)
-    {
-        Object[] arguments = {arg1, arg2, arg3, arg4};
         return getMessage(messageId, arguments);
     }
 
@@ -406,8 +374,7 @@ public class ScriptRuntime {
      * make sense to use a ListResourceBundle instead of a properties
      * file to avoid (synchronized) text parsing.
      */
-    public static String getMessage(String messageId, Object[] arguments)
-    {
+    public static String getMessage(String messageId, Object[] arguments) {
         final String defaultResource
             = "rhino_ast.java.com.google.javascript.rhino.Messages";
 
@@ -433,15 +400,4 @@ public class ScriptRuntime {
         MessageFormat formatter = new MessageFormat(formatString);
         return formatter.format(arguments);
     }
-
-    static boolean isGeneratedScript(String sourceUrl) {
-        // ALERT: this may clash with a valid URL containing (eval) or
-        // (Function)
-        return sourceUrl.indexOf("(eval)") >= 0
-               || sourceUrl.indexOf("(Function)") >= 0;
-    }
-
-    public static final Object[] emptyArgs = new Object[0];
-    public static final String[] emptyStrings = new String[0];
-
 }

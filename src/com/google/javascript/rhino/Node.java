@@ -917,12 +917,9 @@ public class Node implements Cloneable, Serializable {
       boolean printSource,
       boolean printAnnotations,
       boolean printType) {
-    if (Token.shouldPrintTrees()) {
-        StringBuilder sb = new StringBuilder();
-        toString(sb, printSource, printAnnotations, printType);
-        return sb.toString();
-    }
-    return String.valueOf(type);
+    StringBuilder sb = new StringBuilder();
+    toString(sb, printSource, printAnnotations, printType);
+    return sb.toString();
   }
 
   private void toString(
@@ -930,59 +927,57 @@ public class Node implements Cloneable, Serializable {
       boolean printSource,
       boolean printAnnotations,
       boolean printType) {
-    if (Token.printTrees) {
-      sb.append(Token.name(type));
-      if (this instanceof StringNode) {
-        sb.append(' ');
-        sb.append(getString());
-      } else if (type == Token.FUNCTION) {
-        sb.append(' ');
-        // In the case of JsDoc trees, the first child is often not a string
-        // which causes exceptions to be thrown when calling toString or
-        // toStringTree.
-        if (first == null || first.getType() != Token.NAME) {
-          sb.append("<invalid>");
-        } else {
-          sb.append(first.getString());
-        }
-      } else if (type == Token.NUMBER) {
-        sb.append(' ');
-        sb.append(getDouble());
+    sb.append(Token.name(type));
+    if (this instanceof StringNode) {
+      sb.append(' ');
+      sb.append(getString());
+    } else if (type == Token.FUNCTION) {
+      sb.append(' ');
+      // In the case of JsDoc trees, the first child is often not a string
+      // which causes exceptions to be thrown when calling toString or
+      // toStringTree.
+      if (first == null || first.getType() != Token.NAME) {
+        sb.append("<invalid>");
+      } else {
+        sb.append(first.getString());
       }
-      if (printSource) {
-        int lineno = getLineno();
-        if (lineno != -1) {
-          sb.append(' ');
-          sb.append(lineno);
-        }
+    } else if (type == Token.NUMBER) {
+      sb.append(' ');
+      sb.append(getDouble());
+    }
+    if (printSource) {
+      int lineno = getLineno();
+      if (lineno != -1) {
+        sb.append(' ');
+        sb.append(lineno);
       }
+    }
 
-      if (printAnnotations) {
-        int[] keys = getSortedPropTypes();
-        for (int i = 0; i < keys.length; i++) {
-          int type = keys[i];
-          PropListItem x = lookupProperty(type);
-          sb.append(" [");
-          sb.append(propToString(type));
-          sb.append(": ");
-          String value;
-          switch (type) {
-            default:
-              value = x.toString();
-              break;
-          }
-          sb.append(value);
-          sb.append(']');
+    if (printAnnotations) {
+      int[] keys = getSortedPropTypes();
+      for (int i = 0; i < keys.length; i++) {
+        int type = keys[i];
+        PropListItem x = lookupProperty(type);
+        sb.append(" [");
+        sb.append(propToString(type));
+        sb.append(": ");
+        String value;
+        switch (type) {
+          default:
+            value = x.toString();
+            break;
         }
+        sb.append(value);
+        sb.append(']');
       }
+    }
 
-      if (printType) {
-        if (jsType != null) {
-          String jsTypeString = jsType.toString();
-          if (jsTypeString != null) {
-            sb.append(" : ");
-            sb.append(jsTypeString);
-          }
+    if (printType) {
+      if (jsType != null) {
+        String jsTypeString = jsType.toString();
+        if (jsTypeString != null) {
+          sb.append(" : ");
+          sb.append(jsTypeString);
         }
       }
     }
@@ -1009,17 +1004,15 @@ public class Node implements Cloneable, Serializable {
 
   private static void toStringTreeHelper(Node n, int level, Appendable sb)
       throws IOException {
-    if (Token.printTrees) {
-      for (int i = 0; i != level; ++i) {
-        sb.append("    ");
-      }
-      sb.append(n.toString());
-      sb.append('\n');
-      for (Node cursor = n.getFirstChild();
-           cursor != null;
-           cursor = cursor.getNext()) {
-        toStringTreeHelper(cursor, level + 1, sb);
-      }
+    for (int i = 0; i != level; ++i) {
+      sb.append("    ");
+    }
+    sb.append(n.toString());
+    sb.append('\n');
+    for (Node cursor = n.getFirstChild();
+         cursor != null;
+         cursor = cursor.getNext()) {
+      toStringTreeHelper(cursor, level + 1, sb);
     }
   }
 
@@ -1468,8 +1461,6 @@ public class Node implements Cloneable, Serializable {
   public static String tokenToName(int token) {
     switch (token) {
       case Token.ERROR:           return "error";
-      case Token.EOF:             return "eof";
-      case Token.EOL:             return "eol";
       case Token.RETURN:          return "return";
       case Token.BITOR:           return "bitor";
       case Token.BITXOR:          return "bitxor";
