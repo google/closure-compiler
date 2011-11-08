@@ -17,17 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,12 +39,6 @@ class TypeInferencePass implements CompilerPass {
   private Scope topScope;
   private ScopeCreator scopeCreator;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
-
-  /**
-   * Local variables that are declared in an outer scope, but are assigned in
-   * an inner scope. We cannot do type inference on these vars.
-   */
-  private final Multimap<Scope, Var> escapedLocalVars = HashMultimap.create();
 
   TypeInferencePass(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
@@ -89,15 +77,6 @@ class TypeInferencePass implements CompilerPass {
     NodeTraversal inferTypes = new NodeTraversal(
         compiler, new TypeInferringCallback(), scopeCreator);
     inferTypes.traverseWithScope(node, topScope);
-  }
-
-  private Collection<Var> getUnflowableVars(Scope scope) {
-    List<Var> vars = Lists.newArrayList();
-    for (Scope current = scope;
-         current.isLocal(); current = current.getParent()) {
-      vars.addAll(escapedLocalVars.get(current));
-    }
-    return vars;
   }
 
   void inferTypes(NodeTraversal t, Node n, Scope scope) {

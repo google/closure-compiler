@@ -38,7 +38,7 @@ import java.util.List;
  * <li>PROPERTIES - name.
  * </ol>
  *
- * @see http://cldr.unicode.org/development/development-process/design-proposals/xmb
+ * @see <a href="http://cldr.unicode.org/development/development-process/design-proposals/xmb">xmb</a>
  */
 public class GoogleJsMessageIdGenerator implements IdGenerator {
 

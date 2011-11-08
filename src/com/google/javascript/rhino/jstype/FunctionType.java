@@ -290,6 +290,7 @@ public class FunctionType extends PrototypeObjectType {
    * Includes the prototype iff someone has created it. We do not want
    * to expose the prototype for ordinary functions.
    */
+  @Override
   public Set<String> getOwnPropertyNames() {
     if (prototypeSlot == null) {
       return super.getOwnPropertyNames();

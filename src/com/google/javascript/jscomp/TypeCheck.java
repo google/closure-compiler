@@ -1758,7 +1758,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * <p>Enum aliases are irregular, so we need special code for this :(</p>
    *
    * @param value the value used for initialization of the enum
-   * @param primitiveType The type of each element of the enum.
    */
   private void checkEnumAlias(
       NodeTraversal t, JSDocInfo declInfo, Node value) {

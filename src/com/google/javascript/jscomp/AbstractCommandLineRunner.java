@@ -1041,8 +1041,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   /**
    * Create a writer with the newer output charset.
    */
-  private Writer streamToOutputWriter2(OutputStream stream)
-      throws IOException {
+  private Writer streamToOutputWriter2(OutputStream stream) {
     if (outputCharset2 == null) {
       return new BufferedWriter(
           new OutputStreamWriter(stream));

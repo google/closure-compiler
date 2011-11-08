@@ -16,11 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
-import com.google.javascript.jscomp.CodingConvention.Bind;
-import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
-import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;

@@ -40,8 +40,8 @@ class ExportTestFunctions implements CompilerPass {
    * Creates a new export test functions compiler pass.
    * @param compiler
    * @param exportSymbolFunction The function name used to export symbols in JS.
-   * @param exportSymbolFunction The function name used to export properties in
-   *     JS.
+   * @param exportPropertyFunction The function name used to export properties
+   *     in JS.
    */
   ExportTestFunctions(AbstractCompiler compiler,
       String exportSymbolFunction, String exportPropertyFunction) {

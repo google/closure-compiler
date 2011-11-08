@@ -1255,10 +1255,10 @@ public final class SymbolTable
   /** Collects references to types in JSDocInfo. */
   private class JSDocInfoCollector
       extends NodeTraversal.AbstractPostOrderCallback {
-    private final JSTypeRegistry registry;
+    private final JSTypeRegistry typeRegistry;
 
     private JSDocInfoCollector(JSTypeRegistry registry) {
-      this.registry = registry;
+      this.typeRegistry = registry;
     }
 
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
@@ -1281,7 +1281,7 @@ public final class SymbolTable
         if (symbol == null) {
           // If we can't find this type, it might be a reference to a
           // primitive type (like {string}). Autobox it to check.
-          JSType type = registry.getType(n.getString());
+          JSType type = typeRegistry.getType(n.getString());
           JSType autobox = type == null ? null : type.autoboxesTo();
           symbol = autobox == null
               ? null : getSymbolForTypeHelper(autobox, true);

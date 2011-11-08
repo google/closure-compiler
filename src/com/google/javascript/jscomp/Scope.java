@@ -268,6 +268,7 @@ public class Scope
     /**
      * Gets the JSDocInfo for the variable.
      */
+    @Override
     public JSDocInfo getJSDocInfo() {
       return info;
     }

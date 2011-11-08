@@ -47,7 +47,6 @@ public class XtbMessageBundle implements MessageBundle {
   private static final SecureEntityResolver NOOP_RESOLVER
       = new SecureEntityResolver();
 
-  private final String projectId;
   private final Map<String, JsMessage> messages;
   private final JsMessage.IdGenerator idGenerator;
 
@@ -64,7 +63,6 @@ public class XtbMessageBundle implements MessageBundle {
    */
   public XtbMessageBundle(InputStream xtb, @Nullable String projectId) {
     Preconditions.checkState(!"".equals(projectId));
-    this.projectId = projectId;
     this.messages = Maps.newHashMap();
     this.idGenerator = new GoogleJsMessageIdGenerator(projectId);
 

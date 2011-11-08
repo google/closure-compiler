@@ -487,14 +487,12 @@ jQuery.deferred.prototype.done = function(doneCallbacks, doneCallbacks2) {};
 jQuery.deferred.prototype.fail = function(failCallbacks, failCallbacks2) {};
 
 /**
- * @deprecated
  * @return {boolean}
  * @nosideeffects
  */
 jQuery.deferred.prototype.isRejected = function() {};
 
 /**
- * @deprecated
  * @return {boolean}
  * @nosideeffects
  */
@@ -615,7 +613,6 @@ $.dequeue = function(elem, queueName) {};
 jQuery.prototype.detach = function(selector) {};
 
 /**
- * @deprecated
  * @param {(string|Object.<string,*>)=} arg1
  * @param {string=} handler
  * @return {jQuery}
@@ -1189,7 +1186,6 @@ jQuery.prototype.jquery;
 jQuery.jqXHR = function () {};
 
 /**
- * @deprecated
  * @param {function()} callback
  * @return {jQuery.jqXHR}
 */
@@ -1203,7 +1199,6 @@ jQuery.jqXHR.prototype.complete = function (callback) {};
 jQuery.jqXHR.prototype.done = function(doneCallbacks) {};
 
 /**
- * @deprecated
  * @param {function()} callback
  * @return {jQuery.jqXHR}
 */
@@ -1237,7 +1232,6 @@ jQuery.jqXHR.prototype.isResolved = function() {};
 jQuery.jqXHR.prototype.onreadystatechange = function (callback) {};
 
 /**
- * @deprecated
  * @param {function()} callback
  * @return {jQuery.jqXHR}
 */
@@ -1282,7 +1276,6 @@ jQuery.prototype.last = function() {};
 jQuery.prototype.length;
 
 /**
- * @deprecated
  * @param {(string|Object)} arg1
  * @param {(function()|Object)=} arg2
  * @param {function()=} handler

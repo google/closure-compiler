@@ -209,7 +209,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         objType.setJSDocInfo(docInfo);
 
         if (objType.isConstructor() || objType.isInterface()) {
-          objType.toMaybeFunctionType(objType).getInstanceType().setJSDocInfo(
+          JSType.toMaybeFunctionType(objType).getInstanceType().setJSDocInfo(
               docInfo);
         } else if (objType instanceof EnumType) {
           ((EnumType) objType).getElementsType().setJSDocInfo(docInfo);

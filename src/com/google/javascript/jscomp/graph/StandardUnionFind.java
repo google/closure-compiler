@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import static com.google.common.collect.Iterators.filter;
-import static com.google.common.collect.Iterators.unmodifiableIterator;
 import com.google.common.collect.Maps;
 
 import java.io.Serializable;
@@ -193,8 +192,8 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
       }
 
       @Override public Iterator<E> iterator() {
-        return unmodifiableIterator(filter(elmap.keySet().iterator(),
-            isSameRoot));
+        return filter(elmap.keySet().iterator(),
+            isSameRoot);
       }
 
       @Override public int size() {

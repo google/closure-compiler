@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
 
 /**
- * Test class for {@link DefaultCodingConvention}.
+ * Test class for the default {@link CodingConvention}.
  */
 public class DefaultCodingConventionTest extends TestCase {
   private CodingConvention conv = CodingConventions.getDefault();

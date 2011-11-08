@@ -97,10 +97,6 @@ public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     test(wrapInFunction(original), wrapInFunction(expected));
   }
 
-  private void testSameInFunction(String original) {
-    testSame(wrapInFunction(original));
-  }
-
   public void testMakeLocalNamesUniqueWithContext1() {
     // Set the test type
     this.useDefaultRenamer = true;
