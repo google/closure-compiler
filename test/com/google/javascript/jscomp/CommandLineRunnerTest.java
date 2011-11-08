@@ -376,7 +376,7 @@ public class CommandLineRunnerTest extends TestCase {
          "}",
          "function f(b) {" +
          " var a;" +
-         " return ((a=b.id) && (a=parseInt(a.substr(1))) && a>0);" +
+         " return ((a=b.id) && (a=parseInt(a.substr(1))) && 0<a);" +
          "}");
   }
 

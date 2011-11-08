@@ -1002,10 +1002,8 @@ public class DefaultPassConfig extends PassConfig {
             new PeepholeRemoveDeadCode(),
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeReplaceKnownMethods(),
-            new PeepholeFoldConstants(late)
-            // TODO(johnlenz): reenable this once Chrome 15 is stable
-            // new ReorderConstantExpression()
-            );
+            new PeepholeFoldConstants(late),
+            new ReorderConstantExpression());
     }
   };
 
