@@ -926,6 +926,16 @@ public final class SymbolTable
       this.docInfo = info;
     }
 
+    /** Whether this is a property of another variable. */
+    public boolean isProperty() {
+      return scope.isPropertyScope();
+    }
+
+    /** Whether this is a variable in a lexical scope. */
+    public boolean isLexicalVariable() {
+      return scope.isLexicalScope();
+    }
+
     @Override
     public String toString() {
       Node n = getDeclarationNode();
