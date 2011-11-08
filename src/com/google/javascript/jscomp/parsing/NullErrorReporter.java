@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.EvaluatorException;
 
 /**
  * An error reporter which consumes all calls and performs no actions.
@@ -57,11 +56,5 @@ public abstract class NullErrorReporter  {
 
   private static class OldRhinoNullReporter extends NullErrorReporter
       implements ErrorReporter {
-    @Override
-    public EvaluatorException runtimeError(String message, String sourceName,
-                                           int line, String lineSource,
-                                           int lineOffset) {
-      return new EvaluatorException(message);
-    }
   }
 }

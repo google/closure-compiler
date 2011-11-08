@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.EvaluatorException;
 import com.google.javascript.rhino.ScriptRuntime;
 import com.google.javascript.jscomp.CheckLevel;
 
@@ -142,13 +141,6 @@ class RhinoErrorReporter {
 
     private OldRhinoErrorReporter(AbstractCompiler compiler) {
       super(compiler);
-    }
-
-    @Override
-    public EvaluatorException runtimeError(String message, String sourceName,
-        int line, String lineSource, int lineOffset) {
-      return new EvaluatorException(message, sourceName, line, lineSource,
-          lineOffset);
     }
   }
 

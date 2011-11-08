@@ -71,14 +71,6 @@ public class SimpleErrorReporter implements ErrorReporter {
             message, sourceName, line, lineSource, lineOffset));
     }
 
-    @Override
-    public EvaluatorException runtimeError(
-        String message, String sourceName, int line, String lineSource,
-        int lineOffset) {
-        return new EvaluatorException(
-            message, sourceName, line, lineSource, lineOffset);
-    }
-
     /**
      * Returns the list of errors, or {@code null} if there were none.
      */

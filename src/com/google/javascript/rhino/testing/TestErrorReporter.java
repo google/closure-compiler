@@ -40,8 +40,6 @@
 package com.google.javascript.rhino.testing;
 
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.EvaluatorException;
-
 import junit.framework.Assert;
 
 /**
@@ -100,12 +98,6 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
     } else {
       fail("extra warning: " + message);
     }
-  }
-
-  @Override
-  public EvaluatorException runtimeError(String message, String sourceName,
-      int line, String lineSource, int lineOffset) {
-    throw new UnsupportedOperationException();
   }
 
   /**
