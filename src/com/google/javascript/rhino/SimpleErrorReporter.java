@@ -86,21 +86,22 @@ public class SimpleErrorReporter implements ErrorReporter {
     }
 
     private String formatDetailedMessage(
-        String message, String sourceName, int line, String lineSource,
+        String message, String sourceName, int lineNumber, String lineSource,
         int lineOffset) {
-        RhinoException e = new RhinoException(message);
-        if (sourceName != null) {
-          e.initSourceName(sourceName);
-        }
-        if (lineSource != null) {
-          e.initLineSource(lineSource);
-        }
-        if (line > 0) {
-          e.initLineNumber(line);
-        }
-        if (lineOffset > 0) {
-          e.initColumnNumber(lineOffset);
-        }
-        return e.getMessage();
+      String details = message;
+      if (sourceName == null || lineNumber <= 0) {
+        return details;
+      }
+      StringBuilder buf = new StringBuilder(details);
+      buf.append(" (");
+      if (sourceName != null) {
+        buf.append(sourceName);
+      }
+      if (lineNumber > 0) {
+        buf.append('#');
+        buf.append(lineNumber);
+      }
+      buf.append(')');
+      return buf.toString();
     }
 }
