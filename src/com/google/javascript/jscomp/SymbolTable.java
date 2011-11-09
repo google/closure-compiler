@@ -147,6 +147,16 @@ public final class SymbolTable
   }
 
   /**
+   * Get the symbols in their natural ordering.
+   * Always returns a mutable list.
+   */
+  public List<Symbol> getAllSymbolsSorted() {
+    List<Symbol> sortedSymbols = Lists.newArrayList(symbols.values());
+    Collections.sort(sortedSymbols, getNaturalSymbolOrdering());
+    return sortedSymbols;
+  }
+
+  /**
    * Gets the 'natural' ordering of symbols.
    *
    * Right now, we only guarantee that symbols in the global scope will come
@@ -637,7 +647,7 @@ public final class SymbolTable
    * because that would be redundant.
    */
   void fillNamespaceReferences() {
-    for (Symbol symbol : getAllSymbols()) {
+    for (Symbol symbol : getAllSymbolsSorted()) {
       for (Reference ref : getReferences(symbol)) {
         Node currentNode = ref.getNode();
         while (currentNode.getType() == Token.GETPROP) {
@@ -647,10 +657,15 @@ public final class SymbolTable
           if (name != null) {
             Symbol namespace = symbol.scope.getSlot(name);
 
-            // Never create new symbols, because we don't want to guess at
-            // declarations if we're not sure. If this symbol doesn't exist,
-            // then we probably want to add a better symbol table that does
-            // have it.
+            if (namespace == null && symbol.scope.isGlobalScope()) {
+              namespace = declareSymbol(name,
+                  registry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
+                  true,
+                  symbol.scope,
+                  currentNode,
+                  null /* jsdoc info */);
+            }
+
             if (namespace != null) {
               namespace.defineReferenceAt(currentNode);
             }

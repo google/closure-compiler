@@ -84,6 +84,16 @@ public class SymbolTableTest extends TestCase {
     assertEquals(0, refs.size());
   }
 
+  public void testGlobalThisReferences3() throws Exception {
+    SymbolTable table = createSymbolTable("this.foo = {}; this.foo.bar = {};");
+
+    Symbol global = getGlobalVar(table, "*global*");
+    assertNotNull(global);
+
+    List<Reference> refs = table.getReferenceList(global);
+    assertEquals(2, refs.size());
+  }
+
   public void testGlobalThisPropertyReferences() throws Exception {
     SymbolTable table = createSymbolTable(
         "/** @constructor */ function Foo() {} this.Foo;");
@@ -192,10 +202,9 @@ public class SymbolTableTest extends TestCase {
     assertNotNull(goog);
     assertEquals(2, table.getReferenceList(goog).size());
 
-    // TODO(nicksantos): We should try to create a symbol for goog.dom,
-    // even though we can't find a declaration for it.
     Symbol googDom = getGlobalVar(table, "goog.dom");
-    assertNull(googDom);
+    assertNotNull(googDom);
+    assertEquals(2, table.getReferenceList(googDom).size());
 
     Symbol googDomHelper = getGlobalVar(table, "goog.dom.DomHelper");
     assertNotNull(googDomHelper);
@@ -702,6 +711,18 @@ public class SymbolTableTest extends TestCase {
         assertEquals(sym, ref.getSymbol());
       }
     }
+
+    // Make sure that the global "this" is declared at the first input root.
+    Symbol global = getGlobalVar(table, "*global*");
+    assertNotNull(global);
+    assertNotNull(global.getDeclaration());
+    assertEquals(Token.SCRIPT, global.getDeclaration().getNode().getType());
+
+    List<Reference> globalRefs = table.getReferenceList(global);
+
+    // The main reference list should never contain the synthetic declaration
+    // for the global root.
+    assertFalse(globalRefs.contains(global.getDeclaration()));
 
     return table;
   }
