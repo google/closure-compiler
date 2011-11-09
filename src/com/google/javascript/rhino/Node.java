@@ -1517,15 +1517,12 @@ public class Node implements Cloneable, Serializable {
       case Token.ASSIGN_DIV:      return "assign_div";
       case Token.ASSIGN_MOD:      return "assign_mod";
       case Token.HOOK:            return "hook";
-      case Token.COLON:           return "colon";
       case Token.OR:              return "or";
       case Token.AND:             return "and";
       case Token.INC:             return "inc";
       case Token.DEC:             return "dec";
-      case Token.DOT:             return "dot";
       case Token.FUNCTION:        return "function";
       case Token.IF:              return "if";
-      case Token.ELSE:            return "else";
       case Token.SWITCH:          return "switch";
       case Token.CASE:            return "case";
       case Token.DEFAULT:         return "default";
@@ -1537,8 +1534,6 @@ public class Node implements Cloneable, Serializable {
       case Token.VAR:             return "var";
       case Token.WITH:            return "with";
       case Token.CATCH:           return "catch";
-      case Token.FINALLY:         return "finally";
-      case Token.RESERVED:        return "reserved";
       case Token.NOT:             return "not";
       case Token.VOID:            return "void";
       case Token.BLOCK:           return "block";

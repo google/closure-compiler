@@ -154,7 +154,6 @@ class ControlFlowGraph<N> extends
       case Token.BLOCK:
       case Token.SCRIPT:
       case Token.TRY:
-      case Token.FINALLY:
         return true;
       case Token.FUNCTION:
         // A function node represents the start of a function where the name

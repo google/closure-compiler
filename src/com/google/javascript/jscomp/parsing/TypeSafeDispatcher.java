@@ -186,7 +186,6 @@ abstract class TypeSafeDispatcher<T> {
       case Token.DEFAULT:
         return processSwitchCase((SwitchCase) node);
       case Token.CATCH:
-      case Token.FINALLY:
         return processCatchClause((CatchClause) node);
       case Token.COLON:
         return processObjectProperty((ObjectProperty) node);

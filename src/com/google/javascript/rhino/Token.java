@@ -119,19 +119,13 @@ public class Token {
         ASSIGN_DIV     = 96,  // /=
         ASSIGN_MOD     = 97,  // %=
 
-        FIRST_ASSIGN   = ASSIGN,
-        LAST_ASSIGN    = ASSIGN_MOD,
-
         HOOK           = 98, // conditional (?:)
-        COLON          = 99,
         OR             = 100, // logical or (||)
         AND            = 101, // logical and (&&)
         INC            = 102, // increment/decrement (++ --)
         DEC            = 103,
-        DOT            = 104, // member operator (.)
         FUNCTION       = 105, // function keyword
         IF             = 108, // if keyword
-        ELSE           = 109, // else keyword
         SWITCH         = 110, // switch keyword
         CASE           = 111, // case keyword
         DEFAULT        = 112, // default keyword
@@ -143,9 +137,7 @@ public class Token {
         VAR            = 118, // var keyword
         WITH           = 119, // with keyword
         CATCH          = 120, // catch keyword
-        FINALLY        = 121, // finally keyword
         VOID           = 122, // void keyword
-        RESERVED       = 123, // reserved keywords
 
         EMPTY          = 124,
 
@@ -163,8 +155,6 @@ public class Token {
         // JSCompiler introduced tokens
         LABEL_NAME     = 153,
 
-        LAST_TOKEN     = 153,
-
         // JSDoc-only tokens
         ANNOTATION     = 300,
         PIPE           = 301,
@@ -175,7 +165,8 @@ public class Token {
         BANG           = 306,
         EQUALS         = 307,
         LB             = 308,  // left brackets
-        LC             = 309;  // left curly braces
+        LC             = 309,  // left curly braces
+        COLON          = 310;
 
   public static String name(int token) {
         switch (token) {
@@ -245,10 +236,8 @@ public class Token {
           case AND:             return "AND";
           case INC:             return "INC";
           case DEC:             return "DEC";
-          case DOT:             return "DOT";
           case FUNCTION:        return "FUNCTION";
           case IF:              return "IF";
-          case ELSE:            return "ELSE";
           case SWITCH:          return "SWITCH";
           case CASE:            return "CASE";
           case DEFAULT:         return "DEFAULT";
@@ -260,7 +249,6 @@ public class Token {
           case VAR:             return "VAR";
           case WITH:            return "WITH";
           case CATCH:           return "CATCH";
-          case FINALLY:         return "FINALLY";
           case EMPTY:           return "EMPTY";
           case BLOCK:           return "BLOCK";
           case LABEL:           return "LABEL";

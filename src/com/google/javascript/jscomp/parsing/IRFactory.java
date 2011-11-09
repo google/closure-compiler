@@ -1188,8 +1188,6 @@ class IRFactory {
         return Token.ASSIGN_MOD;
       case com.google.javascript.jscomp.mozilla.rhino.Token.HOOK:
         return Token.HOOK;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.COLON:
-        return Token.COLON;
       case com.google.javascript.jscomp.mozilla.rhino.Token.OR:
         return Token.OR;
       case com.google.javascript.jscomp.mozilla.rhino.Token.AND:
@@ -1202,8 +1200,6 @@ class IRFactory {
         return Token.FUNCTION;
       case com.google.javascript.jscomp.mozilla.rhino.Token.IF:
         return Token.IF;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.ELSE:
-        return Token.ELSE;
       case com.google.javascript.jscomp.mozilla.rhino.Token.SWITCH:
         return Token.SWITCH;
       case com.google.javascript.jscomp.mozilla.rhino.Token.CASE:
@@ -1226,8 +1222,6 @@ class IRFactory {
         return Token.WITH;
       case com.google.javascript.jscomp.mozilla.rhino.Token.CATCH:
         return Token.CATCH;
-      case com.google.javascript.jscomp.mozilla.rhino.Token.FINALLY:
-        return Token.FINALLY;
       case com.google.javascript.jscomp.mozilla.rhino.Token.VOID:
         return Token.VOID;
       case com.google.javascript.jscomp.mozilla.rhino.Token.EMPTY:
