@@ -455,7 +455,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 12 | NaN", "x=12");
   }
 
-  public void testFoldingMixTypes() {
+  public void testFoldingMixTypesLate() {
+    late = true;
     fold("x = x + '2'", "x+='2'");
     fold("x = +x + +'2'", "x = +x + 2");
     fold("x = x - '2'", "x-=2");
@@ -463,6 +464,24 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = '2' ^ x", "x^=2");
     fold("x = '2' & x", "x&=2");
     fold("x = '2' | x", "x|=2");
+
+    fold("x = '2' | y", "x=2|y");
+    fold("x = y | '2'", "x=y|2");
+    fold("x = y | (a && '2')", "x=y|(a&&2)");
+    fold("x = y | (a,'2')", "x=y|(a,2)");
+    fold("x = y | (a?'1':'2')", "x=y|(a?1:2)");
+    fold("x = y | ('x'?'1':'2')", "x=y|('x'?1:2)");
+  }
+
+  public void testFoldingMixTypesEarly() {
+    late = false;
+    foldSame("x = x + '2'");
+    fold("x = +x + +'2'", "x = +x + 2");
+    fold("x = x - '2'", "x = x - 2");
+    fold("x = x ^ '2'", "x = x ^ 2");
+    fold("x = '2' ^ x", "x = 2 ^ x");
+    fold("x = '2' & x", "x = 2 & x");
+    fold("x = '2' | x", "x = 2 | x");
 
     fold("x = '2' | y", "x=2|y");
     fold("x = y | '2'", "x=y|2");
@@ -846,7 +865,8 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("print(1/2)", "print(0.5)");
   }
 
-  public void testAssignOps() {
+  public void testAssignOpsLate() {
+    late = true;
     fold("x=x+y", "x+=y");
     foldSame("x=y+x");
     fold("x=x*y", "x*=y");
@@ -862,6 +882,29 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x=y*x", "x*=y");
     fold("x.y=x.y+z", "x.y+=z");
     foldSame("next().x = next().x + 1");
+    // This is ok, really.
+    fold("({a:1}).a = ({a:1}).a + 1", "({a:1}).a = 2");
+  }
+
+ public void testAssignOpsEarly() {
+    late = false;
+    foldSame("x=x+y");
+    foldSame("x=y+x");
+    foldSame("x=x*y");
+    foldSame("x=y*x");
+    foldSame("x.y=x.y+z");
+    foldSame("next().x = next().x + 1");
+
+    foldSame("x=x-y");
+    foldSame("x=y-x");
+    foldSame("x=x|y");
+    foldSame("x=y|x");
+    foldSame("x=x*y");
+    foldSame("x=y*x");
+    foldSame("x.y=x.y+z");
+    foldSame("next().x = next().x + 1");
+    // This is ok, really.
+    fold("({a:1}).a = ({a:1}).a + 1", "({a:1}).a = 2");
   }
 
   public void testFoldAdd1() {
@@ -1013,7 +1056,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("(![foo()])");
   }
 
-  public void testFoldObjectLiteralRef() {
+  public void testFoldObjectLiteralRef1() {
     // Leave extra side-effects in place
     testSame("var x = ({a:foo(),b:bar()}).a");
     testSame("var x = ({a:1,b:bar()}).a");
@@ -1021,7 +1064,7 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // on the LHS the object act as a temporary leave it in place.
     testSame("({a:x}).a = 1");
-    testSame("({a:x}).a += 1");
+    test("({a:x}).a += 1", "({a:x}).a = x + 1");
     testSame("({a:x}).a ++");
     testSame("({a:x}).a --");
 
@@ -1058,6 +1101,13 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // GETELEM is handled the same way.
     test("var x = ({'a':1})['a']", "var x = 1");
+  }
+
+  public void testFoldObjectLiteralRef2() {
+    late = false;
+    test("({a:x}).a += 1", "({a:x}).a = x + 1");
+    late = true;
+    testSame("({a:x}).a += 1");
   }
 
   public void testIEString() {

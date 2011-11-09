@@ -131,6 +131,19 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.ASSIGN:
         return tryFoldAssign(subtree, left, right);
 
+      case Token.ASSIGN_BITOR:
+      case Token.ASSIGN_BITXOR:
+      case Token.ASSIGN_BITAND:
+      case Token.ASSIGN_LSH:
+      case Token.ASSIGN_RSH:
+      case Token.ASSIGN_URSH:
+      case Token.ASSIGN_ADD:
+      case Token.ASSIGN_SUB:
+      case Token.ASSIGN_MUL:
+      case Token.ASSIGN_DIV:
+      case Token.ASSIGN_MOD:
+        return tryUnfoldAssignOp(subtree, left, right);
+
       case Token.ADD:
         return tryFoldAdd(subtree, left, right);
 
@@ -452,6 +465,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldAssign(Node n, Node left, Node right) {
     Preconditions.checkArgument(n.getType() == Token.ASSIGN);
 
+    if (!late) {
+      return n;
+    }
+
     // Tries to convert x = x + y -> x += y;
     if (!right.hasChildren() ||
         right.getFirstChild().getNext() != right.getLastChild()) {
@@ -519,6 +536,31 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     reportCodeChange();
 
     return newNode;
+  }
+
+  private Node tryUnfoldAssignOp(Node n, Node left, Node right) {
+    if (late) {
+      return n;
+    }
+
+    if (!n.hasChildren() ||
+        n.getFirstChild().getNext() != n.getLastChild()) {
+      return n;
+    }
+
+    if (mayHaveSideEffects(left)) {
+      return n;
+    }
+
+    // Tries to convert x += y -> x = x + y;
+    int op = NodeUtil.getOpFromAssignmentOp(n);
+    Node replacement = new Node(Token.ASSIGN, left.detachFromParent(),
+        new Node(op, left.cloneTree(), right.detachFromParent())
+            .useSourceInfoFrom(n));
+    n.getParent().replaceChild(n, replacement);
+    reportCodeChange();
+
+    return replacement;
   }
 
   /**
