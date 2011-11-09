@@ -114,7 +114,7 @@ public class VariableVisibilityAnalysisTest extends CompilerTestCase {
       VariableVisibility visibility) {
     Node labeledVariable = searchLabel(label);
 
-    Preconditions.checkState(NodeUtil.isVar(labeledVariable));
+    Preconditions.checkState(labeledVariable.isVar());
 
     // VAR
     //   NAME
@@ -197,7 +197,7 @@ public class VariableVisibilityAnalysisTest extends CompilerTestCase {
 
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (NodeUtil.isFunction(n)
+        if (n.isFunction()
             && functionName.equals(NodeUtil.getFunctionName(n))) {
           foundNode[0] = n;
         }

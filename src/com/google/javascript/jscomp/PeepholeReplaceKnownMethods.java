@@ -35,7 +35,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
   @Override
   Node optimizeSubtree(Node subtree) {
-    if (NodeUtil.isCall(subtree) ){
+    if (subtree.isCall() ){
       return tryFoldKnownMethods(subtree);
     }
     return subtree;
@@ -130,7 +130,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       // then dispatch to specific folding method.
       Node callTarget = subtree.getFirstChild();
 
-      if (!NodeUtil.isName(callTarget)) {
+      if (!callTarget.isName()) {
         return subtree;
       }
 
@@ -367,7 +367,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
   private Node tryFoldArrayJoin(Node n) {
     Node callTarget = n.getFirstChild();
 
-    if (callTarget == null || !NodeUtil.isGetProp(callTarget)) {
+    if (callTarget == null || !callTarget.isGetProp()) {
       return n;
     }
 

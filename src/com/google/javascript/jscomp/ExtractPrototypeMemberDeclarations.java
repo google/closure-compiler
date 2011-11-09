@@ -306,7 +306,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         // the control flow. In fact, they are lifted to the beginning of the
         // block. This happens a lot when devirtualization breaks the whole
         // chain.
-        if (NodeUtil.isFunction(cur)) {
+        if (cur.isFunction()) {
           continue;
         }
 

@@ -551,8 +551,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     AbstractPostOrderCallback finder = new AbstractPostOrderCallback() {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (jsScope == t.getScope() || !NodeUtil.isName(n)
-            || NodeUtil.isFunction(parent)) {
+        if (jsScope == t.getScope() || !n.isName()
+            || parent.isFunction()) {
           return;
         }
         String name = n.getString();

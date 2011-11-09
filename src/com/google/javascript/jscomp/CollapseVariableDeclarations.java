@@ -161,7 +161,7 @@ class CollapseVariableDeclarations implements CompilerPass {
       while (n != null &&
           (n.getType() == Token.VAR || canBeRedeclared(n, t.getScope()))) {
 
-        if (NodeUtil.isVar(n)) {
+        if (n.isVar()) {
           blacklistStubVars(t, n);
           hasVar = true;
         }
@@ -194,7 +194,7 @@ class CollapseVariableDeclarations implements CompilerPass {
       Node assign = n.getFirstChild();
       Node lhs = assign.getFirstChild();
 
-      if (!NodeUtil.isName(lhs)) {
+      if (!lhs.isName()) {
         return false;
       }
 
@@ -218,14 +218,14 @@ class CollapseVariableDeclarations implements CompilerPass {
         Preconditions.checkState(var.getNext() == n);
         collapse.parent.removeChildAfter(var);
 
-        if (NodeUtil.isVar(n)) {
+        if (n.isVar()) {
           while(n.hasChildren()) {
             var.addChildToBack(n.removeFirstChild());
           }
         } else {
           Node assign = n.getFirstChild();
           Node lhs = assign.getFirstChild();
-          Preconditions.checkState(NodeUtil.isName(lhs));
+          Preconditions.checkState(lhs.isName());
           Node rhs = assign.getLastChild();
           lhs.addChildToBack(rhs.detachFromParent());
           var.addChildToBack(lhs.detachFromParent());

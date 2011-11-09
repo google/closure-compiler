@@ -662,11 +662,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
     Preconditions.checkArgument(n.getType() == Token.NEW);
     Node date = n.getFirstChild();
-    if (!NodeUtil.isName(date) || !"Date".equals(date.getString())) {
+    if (!date.isName() || !"Date".equals(date.getString())) {
       return;
     }
     Node callGoogNow = date.getNext();
-    if (callGoogNow == null || !NodeUtil.isCall(callGoogNow) ||
+    if (callGoogNow == null || !callGoogNow.isCall() ||
         callGoogNow.getNext() != null) {
       return;
     }
@@ -855,8 +855,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      */
     void addDefinition(Node node, JSModule module) {
       Preconditions.checkArgument(NodeUtil.isExpressionNode(node) || // assign
-                                  NodeUtil.isFunction(node) ||
-                                  NodeUtil.isVar(node));
+                                  node.isFunction() ||
+                                  node.isVar());
       Preconditions.checkArgument(explicitNode != node);
       if ((candidateDefinition == null) || !NodeUtil.isExpressionNode(node)) {
         candidateDefinition = node;

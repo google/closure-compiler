@@ -458,7 +458,7 @@ class FunctionArgumentInjector {
      * @return Whether node is a reference to locally declared name.
      */
     private boolean isLocalName(Node node) {
-      if (NodeUtil.isName(node)) {
+      if (node.isName()) {
         String name = node.getString();
         return locals.contains(name);
       }

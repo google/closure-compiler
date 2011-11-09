@@ -305,7 +305,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
       } else {
         Node anonymousFnNode = n.getChildAtIndex(1);
-        if (!NodeUtil.isFunction(anonymousFnNode) ||
+        if (!anonymousFnNode.isFunction() ||
             NodeUtil.getFunctionName(anonymousFnNode) != null ||
             NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
           report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);

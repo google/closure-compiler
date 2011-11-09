@@ -427,7 +427,7 @@ class ExpressionDecomposer {
 
   private boolean isConstantName(Node n, Set<String> knownConstants) {
     // Non-constant names values may have been changed.
-    return NodeUtil.isName(n) && (NodeUtil.isConstantName(n)
+    return n.isName() && (NodeUtil.isConstantName(n)
         || knownConstants.contains(n.getString()));
   }
 
@@ -441,7 +441,7 @@ class ExpressionDecomposer {
     Node parent = expr.getParent();
 
     boolean isLhsOfAssignOp = NodeUtil.isAssignmentOp(parent)
-        && !NodeUtil.isAssign(parent)
+        && !parent.isAssign()
         && parent.getFirstChild() == expr;
 
     Node firstExtractedNode = null;
@@ -473,7 +473,7 @@ class ExpressionDecomposer {
     // If it is ASSIGN_XXX, keep the assignment in place and extract the
     // original value of the LHS operand.
     if (isLhsOfAssignOp) {
-      Preconditions.checkState(NodeUtil.isName(expr) || NodeUtil.isGet(expr));
+      Preconditions.checkState(expr.isName() || NodeUtil.isGet(expr));
       // Transform "x += 2" into "x = temp + 2"
       Node opNode = new Node(NodeUtil.getOpFromAssignmentOp(parent))
           .copyInformationFrom(parent);

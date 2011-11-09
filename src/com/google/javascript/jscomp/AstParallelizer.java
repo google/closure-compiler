@@ -84,7 +84,7 @@ class AstParallelizer {
     Predicate<Node> shouldSplit = new Predicate<Node>() {
       @Override
       public boolean apply(Node input) {
-        return NodeUtil.isFunction(input);
+        return input.isFunction();
       }
     };
 

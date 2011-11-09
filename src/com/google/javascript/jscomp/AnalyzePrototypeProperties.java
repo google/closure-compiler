@@ -213,7 +213,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
             parent.getString() /* VAR */ :
             n.getFirstChild().getString() /* named function */;
         symbolStack.push(new NameContext(getNameInfoForName(name, VAR)));
-      } else if (NodeUtil.isFunction(n)) {
+      } else if (n.isFunction()) {
         symbolStack.push(new NameContext(anonymousNode));
       }
       return true;
@@ -283,7 +283,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
       if (isPrototypePropertyAssign(n) ||
           isGlobalFunctionDeclaration(t, n) ||
-          NodeUtil.isFunction(n)) {
+          n.isFunction()) {
         symbolStack.pop();
       }
     }
@@ -495,7 +495,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     public Node getFunctionNode() {
       Node parent = nameNode.getParent();
 
-      if (NodeUtil.isFunction(parent)) {
+      if (parent.isFunction()) {
         return parent;
       } else {
         // we are the name of a var node, so the function is name's second child

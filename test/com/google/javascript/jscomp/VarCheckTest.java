@@ -382,7 +382,7 @@ public class VarCheckTest extends CompilerTestCase {
           new AbstractPostOrderCallback() {
         @Override
         public void visit(NodeTraversal t, Node n, Node parent) {
-          if (NodeUtil.isName(n) && !NodeUtil.isFunction(parent)
+          if (n.isName() && !parent.isFunction()
               && parent.getType() != Token.LABEL) {
             assertTrue("Variable " + n.getString() + " should have be declared",
                 t.getScope().isDeclared(n.getString(), true));

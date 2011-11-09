@@ -242,10 +242,10 @@ final class MustBeReachingVariableDef extends
           // for(x in y) {...}
           Node lhs = n.getFirstChild();
           Node rhs = lhs.getNext();
-          if (NodeUtil.isVar(lhs)) {
+          if (lhs.isVar()) {
             lhs = lhs.getLastChild(); // for(var x in y) {...}
           }
-          if (NodeUtil.isName(lhs)) {
+          if (lhs.isName()) {
             addToDefIfLocal(lhs.getString(), cfgNode, rhs, output);
           }
         }
@@ -275,7 +275,7 @@ final class MustBeReachingVariableDef extends
 
       default:
         if (NodeUtil.isAssignmentOp(n)) {
-          if (NodeUtil.isName(n.getFirstChild())) {
+          if (n.getFirstChild().isName()) {
             Node name = n.getFirstChild();
             computeMustDef(name.getNext(), cfgNode, output, conditional);
             addToDefIfLocal(name.getString(), conditional ? null : cfgNode,
@@ -285,7 +285,7 @@ final class MustBeReachingVariableDef extends
             // Treat all assignments to arguments as redefining the
             // parameters itself.
             Node obj = n.getFirstChild().getFirstChild();
-            if (NodeUtil.isName(obj) && "arguments".equals(obj.getString())) {
+            if (obj.isName() && "arguments".equals(obj.getString())) {
               // TODO(user): More accuracy can be introduced
               // ie: We know exactly what arguments[x] is if x is a constant
               // number.
@@ -294,14 +294,14 @@ final class MustBeReachingVariableDef extends
           }
         }
 
-        if (NodeUtil.isName(n) && "arguments".equals(n.getString())) {
+        if (n.isName() && "arguments".equals(n.getString())) {
           escapeParameters(output);
         }
 
         // DEC and INC actually defines the variable.
         if (n.getType() == Token.DEC || n.getType() == Token.INC) {
           Node target = n.getFirstChild();
-          if (NodeUtil.isName(target)) {
+          if (target.isName()) {
             addToDefIfLocal(target.getString(),
                 conditional ? null : cfgNode, null, output);
             return;
@@ -391,7 +391,7 @@ final class MustBeReachingVariableDef extends
         new AbstractCfgNodeTraversalCallback() {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (NodeUtil.isName(n) && jsScope.isDeclared(n.getString(), true)) {
+        if (n.isName() && jsScope.isDeclared(n.getString(), true)) {
           def.depends.add(jsScope.getVar(n.getString()));
         }
       }

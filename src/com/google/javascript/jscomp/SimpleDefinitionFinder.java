@@ -71,7 +71,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
   }
 
   DefinitionSite getDefinitionForFunction(Node function) {
-    Preconditions.checkState(NodeUtil.isFunction(function));
+    Preconditions.checkState(function.isFunction());
     return getDefinitionAt(getNameNodeFromFunctionNode(function));
   }
 
@@ -81,7 +81,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       return null;
     }
 
-    if (NodeUtil.isGetProp(useSite)) {
+    if (useSite.isGetProp()) {
       String propName = useSite.getLastChild().getString();
       if (propName.equals("apply") || propName.equals("call")) {
         useSite = useSite.getFirstChild();
@@ -135,14 +135,14 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
    * much if this pass runs after "collapsing properties".
    */
   private static String getSimplifiedName(Node node) {
-    if (NodeUtil.isName(node)) {
+    if (node.isName()) {
       String name = node.getString();
       if (name != null && !name.isEmpty()) {
         return name;
       } else {
         return null;
       }
-    } else if (NodeUtil.isGetProp(node)) {
+    } else if (node.isGetProp()) {
       return "this." + node.getLastChild().getString();
     }
     return null;
@@ -160,7 +160,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       // Arguments of external functions should not count as name
       // definitions.  They are placeholder names for documentation
       // purposes only which are not reachable from anywhere.
-      if (inExterns && NodeUtil.isName(node) && parent.getType() == Token.LP) {
+      if (inExterns && node.isName() && parent.getType() == Token.LP) {
         return;
       }
 
@@ -172,7 +172,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
           Node rValue = def.getRValue();
           if ((rValue != null) &&
               !NodeUtil.isImmutableValue(rValue) &&
-              !NodeUtil.isFunction(rValue)) {
+              !rValue.isFunction()) {
 
             // Unhandled complex expression
             Definition unknownDef =
@@ -351,9 +351,9 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     }
 
     String partialName;
-    if (NodeUtil.isGetProp(lValue)) {
+    if (lValue.isGetProp()) {
       partialName = lValue.getLastChild().getString();
-    } else if (NodeUtil.isName(lValue)) {
+    } else if (lValue.isName()) {
       partialName = lValue.getString();
     } else {
       // GETELEM is assumed to be an export or other expression are unknown
@@ -387,7 +387,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     // rather than simply having an extern definition.  Don't mess with it.
     Node nameNode = SimpleDefinitionFinder.getNameNodeFromFunctionNode(fn);
     if (nameNode != null
-        && NodeUtil.isName(nameNode)) {
+        && nameNode.isName()) {
       String name = nameNode.getString();
       if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN) ||
              name.equals(
@@ -404,7 +404,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     // example: a = function(){};
     // example: var a = function(){};
     if (fn.getFirstChild().getString().isEmpty()
-        && (NodeUtil.isExprAssign(gramps) || NodeUtil.isName(parent))) {
+        && (NodeUtil.isExprAssign(gramps) || parent.isName())) {
       return true;
     }
 
@@ -415,14 +415,14 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
    * @return the node defining the name for this function (if any).
    */
   static Node getNameNodeFromFunctionNode(Node function) {
-    Preconditions.checkState(NodeUtil.isFunction(function));
+    Preconditions.checkState(function.isFunction());
     if (NodeUtil.isFunctionDeclaration(function)) {
       return function.getFirstChild();
     } else {
       Node parent = function.getParent();
       if (NodeUtil.isVarDeclaration(parent)) {
         return parent;
-      } else if (NodeUtil.isAssign(parent)) {
+      } else if (parent.isAssign()) {
         return parent.getFirstChild();
       } else if (NodeUtil.isObjectLitKey(parent, parent.getParent())) {
         return parent;
@@ -448,7 +448,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       }
     } else {
       Node useSite = node;
-      if (NodeUtil.isGetProp(useSite)) {
+      if (useSite.isGetProp()) {
         String propName = useSite.getLastChild().getString();
         if (propName.equals("apply") || propName.equals("call")) {
           useSite = useSite.getFirstChild();

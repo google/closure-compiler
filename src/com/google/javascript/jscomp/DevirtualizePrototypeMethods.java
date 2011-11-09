@@ -99,7 +99,7 @@ class DevirtualizePrototypeMethods
   private static boolean isCall(UseSite site) {
     Node node = site.node;
     Node parent = node.getParent();
-    return (parent.getFirstChild() == node) && NodeUtil.isCall(parent);
+    return (parent.getFirstChild() == node) && parent.isCall();
   }
 
   /**
@@ -119,16 +119,16 @@ class DevirtualizePrototypeMethods
     }
 
     Node functionNode = parent.getLastChild();
-    if ((functionNode == null) || !NodeUtil.isFunction(functionNode)) {
+    if ((functionNode == null) || !functionNode.isFunction()) {
       return false;
     }
 
-    if (!NodeUtil.isGetProp(node)) {
+    if (!node.isGetProp()) {
       return false;
     }
 
     Node nameNode = node.getFirstChild();
-    return NodeUtil.isGetProp(nameNode) &&
+    return nameNode.isGetProp() &&
         nameNode.getLastChild().getString().equals("prototype");
 
   }
@@ -213,7 +213,7 @@ class DevirtualizePrototypeMethods
     // rewrite changes the structure of this object.
     Node rValue = definition.getRValue();
     if (rValue == null ||
-        !NodeUtil.isFunction(rValue) ||
+        !rValue.isFunction() ||
         NodeUtil.isVarArgsFunction(rValue)) {
       return false;
     }
@@ -221,7 +221,7 @@ class DevirtualizePrototypeMethods
     // Exporting a method prevents rewrite.
     Node lValue = definition.getLValue();
     if ((lValue == null) ||
-        !NodeUtil.isGetProp(lValue)) {
+        !lValue.isGetProp()) {
       return false;
     }
     CodingConvention codingConvention = compiler.getCodingConvention();
@@ -387,12 +387,12 @@ class DevirtualizePrototypeMethods
    * traverse function boundaries.
    */
   private void replaceReferencesToThis(Node node, String name) {
-    if (NodeUtil.isFunction(node)) {
+    if (node.isFunction()) {
       return;
     }
 
     for (Node child : node.children()) {
-      if (NodeUtil.isThis(child)) {
+      if (child.isThis()) {
         Node newName = Node.newString(Token.NAME, name);
         newName.setJSType(child.getJSType());
         node.replaceChild(child, newName);

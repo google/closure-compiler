@@ -45,13 +45,13 @@ class DefinitionsRemover {
 
     if (NodeUtil.isVarDeclaration(n) && n.hasChildren()) {
       return new VarDefinition(n, isExtern);
-    } else if (NodeUtil.isFunction(parent) && parent.getFirstChild() == n) {
+    } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
         return new NamedFunctionDefinition(parent, isExtern);
       } else if (!n.getString().equals("")) {
         return new FunctionExpressionDefinition(parent, isExtern);
       }
-    } else if (NodeUtil.isAssign(parent) && parent.getFirstChild() == n) {
+    } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n, parent)) {
       return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(),
@@ -75,13 +75,13 @@ class DefinitionsRemover {
 
     if (NodeUtil.isVarDeclaration(n) && n.hasChildren()) {
       return true;
-    } else if (NodeUtil.isFunction(parent) && parent.getFirstChild() == n) {
+    } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
         return true;
       } else if (!n.getString().equals("")) {
         return true;
       }
-    } else if (NodeUtil.isAssign(parent) && parent.getFirstChild() == n) {
+    } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return true;
     } else if (NodeUtil.isObjectLitKey(n, parent)) {
       return true;
@@ -212,8 +212,8 @@ class DefinitionsRemover {
         Node argumentName,
         boolean inExterns) {
       super(argumentName, inExterns);
-      Preconditions.checkArgument(NodeUtil.isFunction(function));
-      Preconditions.checkArgument(NodeUtil.isName(argumentName));
+      Preconditions.checkArgument(function.isFunction());
+      Preconditions.checkArgument(argumentName.isName());
     }
 
     @Override
@@ -232,7 +232,7 @@ class DefinitionsRemover {
 
     FunctionDefinition(Node node, boolean inExterns) {
       super(inExterns);
-      Preconditions.checkArgument(NodeUtil.isFunction(node));
+      Preconditions.checkArgument(node.isFunction());
       function = node;
     }
 
@@ -289,7 +289,7 @@ class DefinitionsRemover {
 
     AssignmentDefinition(Node node, boolean inExterns) {
       super(inExterns);
-      Preconditions.checkArgument(NodeUtil.isAssign(node));
+      Preconditions.checkArgument(node.isAssign());
       assignment = node;
     }
 

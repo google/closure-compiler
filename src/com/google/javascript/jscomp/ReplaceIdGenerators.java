@@ -92,11 +92,11 @@ class ReplaceIdGenerators implements CompilerPass {
       }
 
       String name = null;
-      if (NodeUtil.isAssign(n)) {
+      if (n.isAssign()) {
         name = n.getFirstChild().getQualifiedName();
-      } else if (NodeUtil.isVar(n)) {
+      } else if (n.isVar()) {
         name = n.getFirstChild().getString();
-      } else if (NodeUtil.isFunction(n)){
+      } else if (n.isFunction()){
         name = n.getFirstChild().getString();
         if (name.isEmpty()) {
           return;
@@ -162,7 +162,7 @@ class ReplaceIdGenerators implements CompilerPass {
       Node id = n.getFirstChild().getNext();
 
       // TODO(user): Error on id not a string literal.
-      if (!NodeUtil.isString(id)) {
+      if (!id.isString()) {
         return;
       }
 

@@ -204,11 +204,11 @@ class LiveVariablesAnalysis extends
           // for(x in y) {...}
           Node lhs = n.getFirstChild();
           Node rhs = lhs.getNext();
-          if (NodeUtil.isVar(lhs)) {
+          if (lhs.isVar()) {
             // for(var x in y) {...}
             lhs = lhs.getLastChild();
           }
-          if (NodeUtil.isName(lhs)) {
+          if (lhs.isName()) {
             addToSetIfLocal(lhs, kill);
             addToSetIfLocal(lhs, gen);
           } else {
@@ -252,12 +252,12 @@ class LiveVariablesAnalysis extends
         return;
 
       default:
-        if (NodeUtil.isAssignmentOp(n) && NodeUtil.isName(n.getFirstChild())) {
+        if (NodeUtil.isAssignmentOp(n) && n.getFirstChild().isName()) {
           Node lhs = n.getFirstChild();
           if (!conditional) {
             addToSetIfLocal(lhs, kill);
           }
-          if (!NodeUtil.isAssign(n)) {
+          if (!n.isAssign()) {
             // assignments such as a += 1 reads a.
             addToSetIfLocal(lhs, gen);
           }
@@ -272,7 +272,7 @@ class LiveVariablesAnalysis extends
   }
 
   private void addToSetIfLocal(Node node, BitSet set) {
-    Preconditions.checkState(NodeUtil.isName(node));
+    Preconditions.checkState(node.isName());
     String name = node.getString();
     if (!jsScope.isDeclared(name, false)) {
       return;

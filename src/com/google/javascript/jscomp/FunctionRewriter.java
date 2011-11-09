@@ -332,7 +332,7 @@ class FunctionRewriter implements CompilerPass {
 
       Node value = maybeGetSingleReturnRValue(functionNode);
       if (value != null &&
-          NodeUtil.isName(value) &&
+          value.isName() &&
           value.getString().equals(paramNode.getString())) {
         return true;
       }
@@ -447,8 +447,8 @@ class FunctionRewriter implements CompilerPass {
     private Node getGetPropertyName(Node functionNode) {
       Node value = maybeGetSingleReturnRValue(functionNode);
       if (value != null &&
-          NodeUtil.isGetProp(value) &&
-          NodeUtil.isThis(value.getFirstChild())) {
+          value.isGetProp() &&
+          value.getFirstChild().isThis()) {
         return value.getLastChild();
       }
       return null;
@@ -525,9 +525,9 @@ class FunctionRewriter implements CompilerPass {
 
       Node assign = statement.getFirstChild();
       Node lhs = assign.getFirstChild();
-      if (NodeUtil.isGetProp(lhs) && NodeUtil.isThis(lhs.getFirstChild())) {
+      if (lhs.isGetProp() && lhs.getFirstChild().isThis()) {
         Node rhs = assign.getLastChild();
-        if (NodeUtil.isName(rhs) &&
+        if (rhs.isName() &&
             rhs.getString().equals(paramNode.getString())) {
           Node propertyName = lhs.getLastChild();
           return propertyName;

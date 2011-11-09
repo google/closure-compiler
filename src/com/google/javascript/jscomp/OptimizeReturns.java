@@ -82,7 +82,7 @@ class OptimizeReturns
 
     // Assume non-function definitions results are used.
     Node rValue = definition.getRValue();
-    if (rValue == null || !NodeUtil.isFunction(rValue)) {
+    if (rValue == null || !rValue.isFunction()) {
       return true;
     }
 
@@ -109,7 +109,7 @@ class OptimizeReturns
       } else {
         // Allow a standalone name reference.
         //     var a;
-        if (!NodeUtil.isVar(useNodeParent)) {
+        if (!useNodeParent.isVar()) {
           return true;
         }
       }
@@ -158,7 +158,7 @@ class OptimizeReturns
    */
   private void rewriteReturns(
       final SimpleDefinitionFinder defFinder, Node fnNode) {
-    Preconditions.checkState(NodeUtil.isFunction(fnNode));
+    Preconditions.checkState(fnNode.isFunction());
     NodeUtil.visitPostOrder(
       fnNode.getLastChild(),
       new NodeUtil.Visitor() {
@@ -189,6 +189,6 @@ class OptimizeReturns
   private static boolean isCall(UseSite site) {
     Node node = site.node;
     Node parent = node.getParent();
-    return (parent.getFirstChild() == node) && NodeUtil.isCall(parent);
+    return (parent.getFirstChild() == node) && parent.isCall();
   }
 }

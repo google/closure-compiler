@@ -379,8 +379,7 @@ class PeepholeSubstituteAlternateSyntax
     Node breakTarget = n;
     for (;!ControlFlowAnalysis.isBreakTarget(breakTarget, null /* no label */);
         breakTarget = breakTarget.getParent()) {
-      if (NodeUtil.isFunction(breakTarget) ||
-          breakTarget.getType() == Token.SCRIPT) {
+      if (breakTarget.isFunction() || breakTarget.isScript()) {
         // No break target.
         return n;
       }
@@ -733,7 +732,7 @@ class PeepholeSubstituteAlternateSyntax
 
     // if(x)var y=1;else y=2  ->  var y=x?1:2
     if (thenBranchIsVar && elseBranchIsExpressionBlock &&
-        NodeUtil.isAssign(getBlockExpression(elseBranch).getFirstChild())) {
+        getBlockExpression(elseBranch).getFirstChild().isAssign()) {
 
       Node var = getBlockVar(thenBranch);
       Node elseAssign = getBlockExpression(elseBranch).getFirstChild();
@@ -758,7 +757,7 @@ class PeepholeSubstituteAlternateSyntax
 
     // if(x)y=1;else var y=2  ->  var y=x?1:2
     } else if (elseBranchIsVar && thenBranchIsExpressionBlock &&
-        NodeUtil.isAssign(getBlockExpression(thenBranch).getFirstChild())) {
+        getBlockExpression(thenBranch).getFirstChild().isAssign()) {
 
       Node var = getBlockVar(elseBranch);
       Node thenAssign = getBlockExpression(thenBranch).getFirstChild();

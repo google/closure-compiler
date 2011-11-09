@@ -83,13 +83,13 @@ public class SourceMap {
     // detail is not needed.
     SYMBOLS {
       @Override public boolean apply(Node node) {
-        return NodeUtil.isCall(node)
-            || NodeUtil.isNew(node)
-            || NodeUtil.isFunction(node)
-            || NodeUtil.isName(node)
+        return node.isCall()
+            || node.isNew()
+            || node.isFunction()
+            || node.isName()
             || NodeUtil.isGet(node)
             || NodeUtil.isObjectLitKey(node, node.getParent())
-            || (NodeUtil.isString(node) && NodeUtil.isGet(node.getParent()));
+            || (node.isString() && NodeUtil.isGet(node.getParent()));
       }
     };
   }

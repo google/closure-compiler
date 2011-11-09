@@ -105,7 +105,7 @@ public class ParallelCompilerPassTest extends TestCase {
           new AbstractPostOrderCallback() {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
-              if ((NodeUtil.isString(n) || NodeUtil.isName(n))
+              if ((n.isString() || n.isName())
                   && n.getString().equals("foo")) {
                 n.setString("bar");
               }

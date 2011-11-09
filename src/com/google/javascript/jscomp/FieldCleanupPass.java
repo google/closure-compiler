@@ -91,7 +91,7 @@ public class FieldCleanupPass implements HotSwapCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node p) {
       // We are a root GetProp
-      if (NodeUtil.isGetProp(n) && !NodeUtil.isGetProp(p)) {
+      if (n.isGetProp() && !p.isGetProp()) {
         String propName = getFieldName(n);
         JSType type = n.getFirstChild().getJSType();
         if (type == null || type.toObjectType() == null) {

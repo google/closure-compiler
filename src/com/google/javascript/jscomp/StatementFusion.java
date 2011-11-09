@@ -36,7 +36,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
   @Override
   Node optimizeSubtree(Node n) {
     // The block of a function body always need { }.
-    if (!NodeUtil.isFunction(n.getParent()) && canFuseIntoOneStatement(n)) {
+    if (!n.getParent().isFunction() && canFuseIntoOneStatement(n)) {
       fuseIntoOneStatement(n);
       reportCodeChange();
     }

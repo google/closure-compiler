@@ -175,10 +175,10 @@ class MaybeReachingVariableUse extends
           // for(x in y) {...}
           Node lhs = n.getFirstChild();
           Node rhs = lhs.getNext();
-          if (NodeUtil.isVar(lhs)) {
+          if (lhs.isVar()) {
             lhs = lhs.getLastChild(); // for(var x in y) {...}
           }
-          if (NodeUtil.isName(lhs) && !conditional) {
+          if (lhs.isName() && !conditional) {
             removeFromUseIfLocal(lhs.getString(), output);
           }
           computeMayUse(rhs, cfgNode, output, conditional);
@@ -210,14 +210,14 @@ class MaybeReachingVariableUse extends
         return;
 
       default:
-        if (NodeUtil.isAssignmentOp(n) && NodeUtil.isName(n.getFirstChild())) {
+        if (NodeUtil.isAssignmentOp(n) && n.getFirstChild().isName()) {
           Node name = n.getFirstChild();
           if (!conditional) {
             removeFromUseIfLocal(name.getString(), output);
           }
 
           // In case of a += "Hello". There is a read of a.
-          if (!NodeUtil.isAssign(n)) {
+          if (!n.isAssign()) {
             addToUseIfLocal(name.getString(), cfgNode, output);
           }
 

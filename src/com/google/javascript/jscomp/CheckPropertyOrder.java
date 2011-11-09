@@ -95,11 +95,11 @@ class CheckPropertyOrder extends AbstractPostOrderCallback
     // qualified names.
     Node func = null;
     String funcName = null;
-    if (NodeUtil.isFunction(n) && isConstructor(n)) {
+    if (n.isFunction() && isConstructor(n)) {
       func = n;
       funcName = n.getFirstChild().getString();
-    } else if (NodeUtil.isAssign(n)
-               && NodeUtil.isFunction(n.getFirstChild().getNext())
+    } else if (n.isAssign()
+               && n.getFirstChild().getNext().isFunction()
                && isConstructor(n)) {
       func = n.getFirstChild().getNext();
       funcName = n.getFirstChild().getQualifiedName();
@@ -121,7 +121,7 @@ class CheckPropertyOrder extends AbstractPostOrderCallback
   @SuppressWarnings("unchecked")
   private void checkConstructor(Node func, ObjectType objType,
                                 String sourceName, String funcName) {
-    Preconditions.checkArgument(NodeUtil.isFunction(func));
+    Preconditions.checkArgument(func.isFunction());
 
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, func.getFirstChild().getNext().getNext());

@@ -519,7 +519,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Node lhsAssign = getSimpleAssignmentName(n);
 
       Node condition = getConditionalStatementCondition(next);
-      if (NodeUtil.isName(lhsAssign) && NodeUtil.isName(condition)
+      if (lhsAssign.isName() && condition.isName()
           && lhsAssign.getString().equals(condition.getString())) {
         Node rhsAssign = getSimpleAssignmentValue(n);
         TernaryValue value = NodeUtil.getImpureBooleanValue(rhsAssign);
@@ -542,7 +542,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // For our purposes we define a simple assignment to be a assignment
     // to a NAME node, or a VAR declaration with one child and a initializer.
     if (NodeUtil.isExprAssign(n)
-        && NodeUtil.isName(n.getFirstChild().getFirstChild())) {
+        && n.getFirstChild().getFirstChild().isName()) {
       return true;
     } else if (n.getType() == Token.VAR && n.hasOneChild() &&
         n.getFirstChild().getFirstChild() != null) {

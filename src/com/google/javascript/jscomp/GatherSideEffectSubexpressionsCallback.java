@@ -315,7 +315,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     // Calls to functions that are known to be "pure" have no side
     // effects.
     Node functionName = node.getFirstChild();
-    if (NodeUtil.isName(functionName) || NodeUtil.isGetProp(functionName)) {
+    if (functionName.isName() || functionName.isGetProp()) {
       if (!accumulator.classDefiningCallsHaveSideEffects() &&
           isClassDefiningCall(node)) {
         return true;

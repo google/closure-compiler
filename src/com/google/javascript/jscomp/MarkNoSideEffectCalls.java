@@ -122,12 +122,12 @@ class MarkNoSideEffectCalls implements CompilerPass {
         traversal.report(node, INVALID_NO_SIDE_EFFECT_ANNOTATION);
       }
 
-      if (NodeUtil.isGetProp(node)) {
+      if (node.isGetProp()) {
         if (NodeUtil.isExpressionNode(parent) &&
             hasNoSideEffectsAnnotation(node)) {
           noSideEffectFunctionNames.add(node);
         }
-      } else if (NodeUtil.isFunction(node)) {
+      } else if (node.isFunction()) {
 
         // The annotation may attached to the function node, the
         // variable declaration or assignment expression.
@@ -137,16 +137,16 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
         Node nameNode = null;
 
-        if (NodeUtil.isName(parent)) {
+        if (parent.isName()) {
           Node gramp = parent.getParent();
-          if (NodeUtil.isVar(gramp) &&
+          if (gramp.isVar() &&
               gramp.hasOneChild() &&
               hasNoSideEffectsAnnotation(gramp)) {
             hasAnnotation = true;
           }
 
           nameNodes.add(parent);
-        } else if (NodeUtil.isAssign(parent)) {
+        } else if (parent.isAssign()) {
           if (hasNoSideEffectsAnnotation(parent)) {
             hasAnnotation = true;
           }
@@ -174,7 +174,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
-      if (!NodeUtil.isCall(node) && !NodeUtil.isNew(node)) {
+      if (!node.isCall() && !node.isNew()) {
         return;
       }
 

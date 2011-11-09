@@ -155,7 +155,7 @@ class FunctionToBlockMutator {
     }
 
     // For all VARs
-    if (NodeUtil.isVar(n)) {
+    if (n.isVar()) {
       Node name = n.getFirstChild();
       // It isn't initialized.
       if (!name.hasChildren()) {

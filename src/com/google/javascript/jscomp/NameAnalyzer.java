@@ -816,8 +816,8 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!(NodeUtil.isName(n) ||
-            NodeUtil.isGet(n) && !NodeUtil.isGetProp(parent))) {
+      if (!(n.isName() ||
+            NodeUtil.isGet(n) && !parent.isGetProp())) {
         // This is not a simple or qualified name.
         return;
       }
@@ -917,7 +917,7 @@ final class NameAnalyzer implements CompilerPass {
         // protect this node by creating a reference to WINDOW.
         for (Node ancestor : n.getAncestors()) {
           if (NodeUtil.isAssignmentOp(ancestor) ||
-              NodeUtil.isFunction(ancestor)) {
+              ancestor.isFunction()) {
             recordReference(WINDOW, name, RefType.REGULAR);
             break;
           }
@@ -1361,7 +1361,7 @@ final class NameAnalyzer implements CompilerPass {
 
     // Check whether this is a class-defining call. Classes may only be defined
     // in the global scope.
-    if (NodeUtil.isCall(parent) && t.inGlobalScope()) {
+    if (parent.isCall() && t.inGlobalScope()) {
       CodingConvention convention = compiler.getCodingConvention();
       SubclassRelationship classes = convention.getClassesDefinedByCall(parent);
       if (classes != null) {

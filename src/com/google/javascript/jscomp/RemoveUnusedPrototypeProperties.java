@@ -125,7 +125,7 @@ class RemoveUnusedPrototypeProperties implements
       specializableFunction = ((GlobalFunction) symbol).getFunctionNode();
     } else if (symbol instanceof AssignmentProperty) {
       Node propertyValue = ((AssignmentProperty) symbol).getValue();
-      if (NodeUtil.isFunction(propertyValue)) {
+      if (propertyValue.isFunction()) {
         specializableFunction = propertyValue;
       }
     } else if (symbol instanceof LiteralProperty) {

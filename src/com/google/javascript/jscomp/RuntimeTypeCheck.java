@@ -112,7 +112,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isFunction(n)) {
+      if (n.isFunction()) {
         visitFunction(t, n);
       }
     }
@@ -223,7 +223,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isFunction(n)) {
+      if (n.isFunction()) {
         visitFunction(t, n);
       } else if (n.getType() == Token.RETURN) {
         visitReturn(t, n);

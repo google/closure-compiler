@@ -869,7 +869,7 @@ public final class NodeUtil {
 
         if (isAssignmentOp(n)) {
           Node assignTarget = n.getFirstChild();
-          if (isName(assignTarget)) {
+          if (assignTarget.isName()) {
             return true;
           }
 
@@ -1358,12 +1358,8 @@ public final class NodeUtil {
     return false;
   }
 
-  static boolean isNull(Node n) {
-    return n.isNull();
-  }
-
   static boolean isNullOrUndefined(Node n) {
-    return isNull(n) || isUndefined(n);
+    return n.isNull() || isUndefined(n);
   }
 
   static class MayBeStringResultPredicate implements Predicate<Node> {
@@ -1393,7 +1389,7 @@ public final class NodeUtil {
 
   static boolean mayBeStringHelper(Node n) {
     return !isNumericResult(n) && !isBooleanResult(n)
-        && !isUndefined(n) && !isNull(n);
+        && !isUndefined(n) && !n.isNull();
   }
 
   /**
@@ -1498,7 +1494,7 @@ public final class NodeUtil {
    * Returns true if the shallow scope contains references to 'this' keyword
    */
   static boolean referencesThis(Node n) {
-    Node start = (isFunction(n)) ? n.getLastChild() : n;
+    Node start = (n.isFunction()) ? n.getLastChild() : n;
     return containsType(start, Token.THIS, MATCH_NOT_FUNCTION);
   }
 
@@ -1507,34 +1503,6 @@ public final class NodeUtil {
    */
   static boolean isGet(Node n) {
     return n.isGetProp() || n.isGetElem();
-  }
-
-  /**
-   * Is this a GETPROP node?
-   */
-  static boolean isGetProp(Node n) {
-    return n.isGetProp();
-  }
-
-  /**
-   * Is this a NAME node?
-   */
-  static boolean isName(Node n) {
-    return n.isName();
-  }
-
-  /**
-   * Is this a NEW node?
-   */
-  static boolean isNew(Node n) {
-    return n.isNew();
-  }
-
-  /**
-   * Is this a VAR node?
-   */
-  static boolean isVar(Node n) {
-    return n.isVar();
   }
 
   /**
@@ -1554,22 +1522,15 @@ public final class NodeUtil {
    * @return The value node representing the new value.
    */
   static Node getAssignedValue(Node n) {
-    Preconditions.checkState(isName(n));
+    Preconditions.checkState(n.isName());
     Node parent = n.getParent();
-    if (isVar(parent)) {
+    if (parent.isVar()) {
       return n.getFirstChild();
-    } else if (isAssign(parent) && parent.getFirstChild() == n) {
+    } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return n.getNext();
     } else {
       return null;
     }
-  }
-
-  /**
-   * Is this a STRING node?
-   */
-  static boolean isString(Node n) {
-    return n.isString();
   }
 
   /**
@@ -1582,13 +1543,6 @@ public final class NodeUtil {
   static boolean isExprAssign(Node n) {
     return n.isExprResult()
         && n.getFirstChild().isAssign();
-  }
-
-  /**
-   * Is this an ASSIGN node?
-   */
-  static boolean isAssign(Node n) {
-    return n.isAssign();
   }
 
   /**
@@ -1652,7 +1606,7 @@ public final class NodeUtil {
         return true;
       }
 
-      if (NodeUtil.isFunction(parent)) {
+      if (parent.isFunction()) {
         break;
       }
     }
@@ -1776,12 +1730,7 @@ public final class NodeUtil {
    *       function parameter (not a label or a empty function expression name).
    */
   static boolean isReferenceName(Node n) {
-    return isName(n) && !n.getString().isEmpty();
-  }
-
-  /** @return Whether the node is a label name. */
-  static boolean isLabelName(Node n) {
-    return (n != null && n.isLabelName());
+    return n.isName() && !n.getString().isEmpty();
   }
 
   /** Whether the child node is the FINALLY block of a try. */
@@ -1888,48 +1837,19 @@ public final class NodeUtil {
   }
 
   /**
-   * Is this a CALL node?
-   */
-  static boolean isCall(Node n) {
-    return n.isCall();
-  }
-
-  /**
    * @param node A node
    * @return Whether the call is a NEW or CALL node.
    */
   static boolean isCallOrNew(Node node) {
-    return NodeUtil.isCall(node) || NodeUtil.isNew(node);
-  }
-
-  /**
-   * Is this a FUNCTION node?
-   */
-  static boolean isFunction(Node n) {
-    return n.isFunction();
+    return node.isCall() || node.isNew();
   }
 
   /**
    * Return a BLOCK node for the given FUNCTION node.
    */
   static Node getFunctionBody(Node fn) {
-    Preconditions.checkArgument(isFunction(fn));
+    Preconditions.checkArgument(fn.isFunction());
     return fn.getLastChild();
-  }
-
-  /**
-   * Is this a THIS node?
-   */
-  static boolean isThis(Node node) {
-    return node.isThis();
-  }
-
-
-  /**
-   * Is this an ARRAYLIT node
-   */
-  static boolean isArrayLiteral(Node node) {
-    return node.isArrayLit();
   }
 
   /**
@@ -2001,7 +1921,7 @@ public final class NodeUtil {
    * looking for references to the "arguments" var_args object.
    */
   static boolean isVarArgsFunction(Node function) {
-    Preconditions.checkArgument(isFunction(function));
+    Preconditions.checkArgument(function.isFunction());
     return isNameReferenced(
         function.getLastChild(),
         "arguments",
@@ -2611,7 +2531,7 @@ public final class NodeUtil {
    */
   static Node getPrototypeClassName(Node qName) {
     Node cur = qName;
-    while (isGetProp(cur)) {
+    while (cur.isGetProp()) {
       if (cur.getLastChild().getString().equals("prototype")) {
         return cur.getFirstChild();
       } else {
@@ -2708,7 +2628,7 @@ public final class NodeUtil {
   private static class MatchNotFunction implements Predicate<Node>{
     @Override
     public boolean apply(Node n) {
-      return !isFunction(n);
+      return !n.isFunction();
     }
   }
 
@@ -2722,7 +2642,7 @@ public final class NodeUtil {
     public boolean apply(Node n) {
       Node parent = n.getParent();
       return n.isBlock()
-          || (!isFunction(n) && (parent == null
+          || (!n.isFunction() && (parent == null
               || isControlStructure(parent)
               || isStatementBlock(parent)));
     }
@@ -3084,7 +3004,7 @@ public final class NodeUtil {
    * argument or null if no such parameter exists.
    */
   static Node getArgumentForFunction(Node function, int index) {
-    Preconditions.checkState(isFunction(function));
+    Preconditions.checkState(function.isFunction());
     return getNthSibling(
         function.getFirstChild().getNext().getFirstChild(), index);
   }
@@ -3103,7 +3023,7 @@ public final class NodeUtil {
     Node getNode = call.getFirstChild();
     if (isGet(getNode)) {
       Node propNode = getNode.getLastChild();
-      return isString(propNode) && "toString".equals(propNode.getString());
+      return propNode.isString() && "toString".equals(propNode.getString());
     }
     return false;
   }

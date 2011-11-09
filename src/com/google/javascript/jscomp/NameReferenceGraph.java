@@ -119,7 +119,7 @@ class NameReferenceGraph extends
    */
   public List<Name> getReferencesAt(Node site) {
     Preconditions.checkArgument(
-        NodeUtil.isGetProp(site) || NodeUtil.isName(site));
+        site.isGetProp() || site.isName());
     List<Name> result = new ArrayList<Name>();
     for (Name target : referenceMap.get(site)) {
       result.add(target);
@@ -390,7 +390,7 @@ class NameReferenceGraph extends
     }
 
     boolean isCall() {
-      return NodeUtil.isCall(site);
+      return site.isCall();
     }
 
     /**

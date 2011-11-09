@@ -42,7 +42,7 @@ class SimpleFunctionAliasAnalysis {
    */
   public boolean isAliased(Node functionNode) {
     Preconditions.checkNotNull(aliasedFunctions);
-    Preconditions.checkArgument(NodeUtil.isFunction(functionNode));
+    Preconditions.checkArgument(functionNode.isFunction());
 
     return aliasedFunctions.contains(functionNode);
   }
@@ -55,7 +55,7 @@ class SimpleFunctionAliasAnalysis {
    */
   public boolean isExposedToCallOrApply(Node functionNode) {
     Preconditions.checkNotNull(functionsExposedToCallOrApply);
-    Preconditions.checkArgument(NodeUtil.isFunction(functionNode));
+    Preconditions.checkArgument(functionNode.isFunction());
 
     return functionsExposedToCallOrApply.contains(functionNode);
   }
@@ -76,7 +76,7 @@ class SimpleFunctionAliasAnalysis {
       if (!definition.isExtern()) {
         Node rValue = definition.getRValue();
 
-        if (rValue != null && NodeUtil.isFunction(rValue)) {
+        if (rValue != null && rValue.isFunction()) {
           // rValue is a Token.FUNCTION from a definition
 
           for (UseSite useSite : finder.getUseSites(definition)) {
@@ -105,7 +105,7 @@ class SimpleFunctionAliasAnalysis {
       // GET{PROP,ELEM} don't count as aliases
       // but we have to check for using them in .call and .apply.
 
-      if (NodeUtil.isGetProp(useParent)) {
+      if (useParent.isGetProp()) {
         Node gramps = useParent.getParent();
         if (NodeUtil.isFunctionObjectApply(gramps) ||
             NodeUtil.isFunctionObjectCall(gramps)) {

@@ -222,7 +222,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     }
 
 
-    if (NodeUtil.isVar(n) && !n.getFirstChild().hasChildren()) {
+    if (n.isVar() && !n.getFirstChild().hasChildren()) {
       // Very Edge case, Consider this:
       // File 1: {throw 1}
       // File 2: {var x}

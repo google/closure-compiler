@@ -98,8 +98,8 @@ class VariableVisibilityAnalysis implements CompilerPass {
   public VariableVisibility getVariableVisibility(Node declaringNameNode) {
     Node parent = declaringNameNode.getParent();
 
-    Preconditions.checkArgument(NodeUtil.isVar(parent)
-        || NodeUtil.isFunction(parent)
+    Preconditions.checkArgument(parent.isVar()
+        || parent.isFunction()
         || parent.getType() == Token.LP);
 
     return visibilityByDeclaringNameNode.get(declaringNameNode);

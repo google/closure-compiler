@@ -98,7 +98,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     // This optimization is valid only within a function so we are going to
     // skip over the initial entry to the global scope.
     Node function = traversal.getScopeRoot();
-    if (!NodeUtil.isFunction(function)) {
+    if (!function.isFunction()) {
       return;
     }
 
@@ -163,7 +163,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
     // Otherwise, we are in a function scope and we should record if the current
     // name is referring to the implicit arguments array.
-    if (NodeUtil.isName(node) && ARGUMENTS.equals(node.getString())) {
+    if (node.isName() && ARGUMENTS.equals(node.getString())) {
       currentArgumentsAccess.add(node);
     }
   }
@@ -221,7 +221,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       Node getElemParent = getElem.getParent();
       // When we have argument[0](), replacing it with a() is semantically
       // different if argument[0] is a function call that refers to 'this'
-      if (NodeUtil.isCall(getElemParent) &&
+      if (getElemParent.isCall() &&
           getElemParent.getFirstChild() == getElem) {
         // TODO(user): We can consider using .call() if aliasing that
         // argument allows shorter alias for other arguments.

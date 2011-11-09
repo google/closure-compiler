@@ -159,7 +159,7 @@ public class CallGraph implements CompilerPass {
    * AST Token.FUNCTION node, or null if no such object exists.
    */
   public Function getFunctionForAstNode(Node functionNode) {
-    Preconditions.checkArgument(NodeUtil.isFunction(functionNode));
+    Preconditions.checkArgument(functionNode.isFunction());
 
     return functionsByNode.get(functionNode);
   }
@@ -259,7 +259,7 @@ public class CallGraph implements CompilerPass {
 
           connectCallsiteToTargets(callsite, provider);
 
-        } else if (NodeUtil.isFunction(n)) {
+        } else if (n.isFunction()) {
           if (!functionsByNode.containsKey(n)) {
             createFunction(n);
           }
@@ -318,7 +318,7 @@ public class CallGraph implements CompilerPass {
         } else {
           Node target = definition.getRValue();
 
-          if (target != null && NodeUtil.isFunction(target)) {
+          if (target != null && target.isFunction()) {
             Function targetFunction = functionsByNode.get(target);
 
             if (targetFunction == null) {
@@ -415,7 +415,7 @@ public class CallGraph implements CompilerPass {
       // GET{PROP,ELEM} don't count as aliases
       // but we have to check for using them in .call and .apply.
 
-      if (NodeUtil.isGetProp(useParent)) {
+      if (useParent.isGetProp()) {
         Node gramps = useParent.getParent();
         if (NodeUtil.isFunctionObjectApply(gramps) ||
             NodeUtil.isFunctionObjectCall(gramps)) {
@@ -435,7 +435,7 @@ public class CallGraph implements CompilerPass {
     if (definition != null && !definition.isExtern()) {
       Node rValue = definition.getRValue();
 
-      if (rValue != null && NodeUtil.isFunction(rValue)) {
+      if (rValue != null && rValue.isFunction()) {
         Function function = functionsByNode.get(rValue);
         Preconditions.checkNotNull(function);
 
@@ -582,8 +582,8 @@ public class CallGraph implements CompilerPass {
     // NameReferenceGraph throws an exception unless the node is
     // a GETPROP or a NAME
     if (!useNameReferenceGraph
-        || (NodeUtil.isGetProp(targetExpression)
-        ||  NodeUtil.isName(targetExpression))) {
+        || (targetExpression.isGetProp()
+        ||  targetExpression.isName())) {
 
       Collection<Definition> definitions =
         definitionProvider.getDefinitionsReferencedAt(targetExpression);

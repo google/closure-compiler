@@ -239,7 +239,7 @@ class SpecializeModule implements CompilerPass {
     new NodeMatcher() {
       @Override
       public void reportMatch(Node original, Node specialized) {
-        if (NodeUtil.isFunction(original)) {
+        if (original.isFunction()) {
           OriginalFunctionInformation functionInfo =
               new OriginalFunctionInformation(original);
 
@@ -250,7 +250,7 @@ class SpecializeModule implements CompilerPass {
 
       @Override
       public boolean shouldTraverse(Node n1, Node n2) {
-        return !NodeUtil.isFunction(n1);
+        return !n1.isFunction();
       }
     }.match(original, toBeSpecialized);
   }
@@ -461,11 +461,11 @@ class SpecializeModule implements CompilerPass {
 
       Node originalParent = originalFunction.getParent();
 
-      isAssignFunction = NodeUtil.isAssign(originalParent) ||
-          NodeUtil.isName(originalParent);
+      isAssignFunction = originalParent.isAssign() ||
+          originalParent.isName();
 
       assignHasVar =
-          isAssignFunction && NodeUtil.isVar(originalParent.getParent());
+          isAssignFunction && originalParent.getParent().isVar();
     }
 
     private Node copiedOriginalFunction() {
@@ -686,7 +686,7 @@ class SpecializeModule implements CompilerPass {
      * however we do not currently support this.
      */
     public boolean canFixupFunction(Node functionNode) {
-      Preconditions.checkArgument(NodeUtil.isFunction(functionNode));
+      Preconditions.checkArgument(functionNode.isFunction());
 
       if (!nodeIsInGlobalScope(functionNode) ||
           initialModuleAliasAnalysis.isAliased(functionNode)) {
@@ -701,7 +701,7 @@ class SpecializeModule implements CompilerPass {
       Node parent = functionNode.getParent();
       Node gramps = parent.getParent();
 
-      if (NodeUtil.isName(parent) && NodeUtil.isVar(gramps)) {
+      if (parent.isName() && gramps.isVar()) {
         // var f = function() {}
         return true;
       }
@@ -743,7 +743,7 @@ class SpecializeModule implements CompilerPass {
      */
     private Node containingFunction(Node node) {
       for (Node ancestor : node.getAncestors()) {
-        if (NodeUtil.isFunction(ancestor)) {
+        if (ancestor.isFunction()) {
           return ancestor;
         }
       }

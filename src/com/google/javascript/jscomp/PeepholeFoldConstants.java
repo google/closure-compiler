@@ -944,7 +944,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     boolean result;
 
     boolean undefinedRight = NodeUtil.isUndefined(right) && rightLiteral;
-    boolean nullRight = NodeUtil.isNull(right);
+    boolean nullRight = right.isNull();
     int lhType = getNormalizedNodeType(left);
     int rhType = getNormalizedNodeType(right);
     switch (lhType) {

@@ -634,14 +634,14 @@ class RemoveUnusedVars
         }
 
         // Ignore references within goog.inherits calls.
-        if (NodeUtil.isCall(parent) &&
+        if (parent.isCall() &&
             convention.getClassesDefinedByCall(parent) != null) {
           continue;
         }
 
         // Accessing the property directly prevents rewrite.
         if (!SimpleDefinitionFinder.isCallOrNewSite(site)) {
-          if (!(NodeUtil.isGetProp(parent) &&
+          if (!(parent.isGetProp() &&
               NodeUtil.isFunctionObjectCall(parent.getParent()))) {
             return false;
           }

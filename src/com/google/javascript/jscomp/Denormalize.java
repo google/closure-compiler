@@ -70,7 +70,7 @@ class Denormalize implements CompilerPass, Callback {
     }
 
     // Is the current node something that can be in a for loop initializer?
-    if (!NodeUtil.isExpressionNode(n) && !NodeUtil.isVar(n)) {
+    if (!NodeUtil.isExpressionNode(n) && !n.isVar()) {
       return;
     }
 
@@ -81,8 +81,8 @@ class Denormalize implements CompilerPass, Callback {
     } else if (NodeUtil.isForIn(nextSibling)) {
       Node forNode = nextSibling;
       Node forVar = forNode.getFirstChild();
-      if (NodeUtil.isName(forVar)
-          && NodeUtil.isVar(n) && n.hasOneChild()) {
+      if (forVar.isName()
+          && n.isVar() && n.hasOneChild()) {
         Node name = n.getFirstChild();
         if (!name.hasChildren()
             && forVar.getString().equals(name.getString())) {
@@ -111,7 +111,7 @@ class Denormalize implements CompilerPass, Callback {
       parent.removeChild(n);
 
       Node newInitializer;
-      if (NodeUtil.isVar(n)) {
+      if (n.isVar()) {
         newInitializer = n;
       } else {
         // Extract the expression from EXPR_RESULT node.

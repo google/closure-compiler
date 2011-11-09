@@ -214,7 +214,7 @@ public class SimpleFunctionAliasAnalysisTest extends CompilerTestCase {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isFunction(n)
+      if (n.isFunction()
           && target.equals(NodeUtil.getFunctionName(n))) {
         found = n;
       }

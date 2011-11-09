@@ -630,7 +630,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     Node lastJump = null;
     for (Iterator<Node> iter = exceptionHandler.iterator(); iter.hasNext();) {
       Node curHandler = iter.next();
-      if (NodeUtil.isFunction(curHandler)) {
+      if (curHandler.isFunction()) {
         break;
       }
       if (NodeUtil.hasFinally(curHandler)) {
@@ -821,7 +821,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     if (mayThrowException(target) && !exceptionHandler.isEmpty()) {
       Node lastJump = cfgNode;
       for (Node handler : exceptionHandler) {
-        if (NodeUtil.isFunction(handler)) {
+        if (handler.isFunction()) {
           return;
         }
         Preconditions.checkState(handler.getType() == Token.TRY);

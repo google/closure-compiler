@@ -188,7 +188,7 @@ class PureFunctionIdentifier implements CompilerPass {
    */
   private static Collection<Definition> getCallableDefinitions(
       DefinitionProvider definitionProvider, Node name) {
-    if (NodeUtil.isGetProp(name) || NodeUtil.isName(name)) {
+    if (name.isGetProp() || name.isName()) {
       List<Definition> result = Lists.newArrayList();
 
       Collection<Definition> decls =
@@ -199,7 +199,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
       for (Definition current : decls) {
         Node rValue = current.getRValue();
-        if ((rValue != null) && NodeUtil.isFunction(rValue)) {
+        if ((rValue != null) && rValue.isFunction()) {
           result.add(current);
         } else {
           return null;
@@ -331,7 +331,7 @@ class PureFunctionIdentifier implements CompilerPass {
             flags.setThrows();
           }
 
-          if (!NodeUtil.isNew(callNode)) {
+          if (!callNode.isNew()) {
             if (functionInfo.taintsThis) {
               flags.setMutatesThis();
             }
@@ -348,12 +348,12 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       // Handle special cases (Math, RegEx)
-      if (NodeUtil.isCall(callNode)) {
+      if (callNode.isCall()) {
         Preconditions.checkState(compiler != null);
         if (!NodeUtil.functionCallHasSideEffects(callNode, compiler)) {
           flags.clearSideEffectFlags();
         }
-      } else if (NodeUtil.isNew(callNode)) {
+      } else if (callNode.isNew()) {
         // Handle known cases now (Object, Date, RegExp, etc)
         if (!NodeUtil.constructorCallHasSideEffects(callNode)) {
           flags.clearSideEffectFlags();
@@ -385,7 +385,7 @@ class PureFunctionIdentifier implements CompilerPass {
       // entry for the enclosing function exists in the
       // FunctionInformation map when processing assignments and calls
       // inside visit.
-      if (NodeUtil.isFunction(node)) {
+      if (node.isFunction()) {
         Node gramp = parent.getParent();
         visitFunction(traversal, node, parent, gramp);
       }
@@ -405,7 +405,7 @@ class PureFunctionIdentifier implements CompilerPass {
         return;
       }
 
-      if (NodeUtil.isCall(node) || NodeUtil.isNew(node)) {
+      if (node.isCall() || node.isNew()) {
         allFunctionCalls.add(node);
       }
 
@@ -526,7 +526,7 @@ class PureFunctionIdentifier implements CompilerPass {
     private void visitAssignmentOrUnaryOperator(
         FunctionInformation sideEffectInfo,
         Scope scope, Node op, Node lhs, Node rhs) {
-      if (NodeUtil.isName(lhs)) {
+      if (lhs.isName()) {
         Var var = scope.getVar(lhs.getString());
         if (var == null || var.scope != scope) {
           sideEffectInfo.setTaintsGlobalState();
@@ -541,18 +541,18 @@ class PureFunctionIdentifier implements CompilerPass {
               NodeUtil.isAssignmentOp(op)
               || isIncDec(op) || op.getType() == Token.DELPROP);
           if (rhs != null
-              && NodeUtil.isAssign(op)
+              && op.isAssign()
               && !NodeUtil.evaluatesToLocalValue(rhs)) {
             sideEffectInfo.blacklistLocal(var);
           }
         }
       } else if (NodeUtil.isGet(lhs)) {
-        if (NodeUtil.isThis(lhs.getFirstChild())) {
+        if (lhs.getFirstChild().isThis()) {
           sideEffectInfo.setTaintsThis();
         } else {
           Var var = null;
           Node objectNode = lhs.getFirstChild();
-          if (NodeUtil.isName(objectNode)) {
+          if (objectNode.isName()) {
             var = scope.getVar(objectNode.getString());
           }
           if (var == null || var.scope != scope) {
@@ -581,13 +581,13 @@ class PureFunctionIdentifier implements CompilerPass {
      */
     private void visitCall(FunctionInformation sideEffectInfo, Node node) {
       // Handle special cases (Math, RegEx)
-      if (NodeUtil.isCall(node)
+      if (node.isCall()
           && !NodeUtil.functionCallHasSideEffects(node, compiler)) {
         return;
       }
 
       // Handle known cases now (Object, Date, RegExp, etc)
-      if (NodeUtil.isNew(node)
+      if (node.isNew()
           && !NodeUtil.constructorCallHasSideEffects(node)) {
         return;
       }
@@ -688,9 +688,9 @@ class PureFunctionIdentifier implements CompilerPass {
       JSDocInfo info = node.getJSDocInfo();
       if (info != null) {
         return info;
-      } else if (NodeUtil.isName(parent)) {
+      } else if (parent.isName()) {
         return gramp.hasOneChild() ? gramp.getJSDocInfo() : null;
-      } else if (NodeUtil.isAssign(parent)) {
+      } else if (parent.isAssign()) {
         return parent.getJSDocInfo();
       } else {
         return null;
@@ -798,7 +798,7 @@ class PureFunctionIdentifier implements CompilerPass {
         // Calling a constructor that modifies "this" has no side effects.
         if (callSite.getType() != Token.NEW) {
           Node objectNode = getCallThisObject(callSite);
-          if (objectNode != null && NodeUtil.isName(objectNode)
+          if (objectNode != null && objectNode.isName()
               && !isCallOrApply(callSite)) {
             // Exclude ".call" and ".apply" as the value may still be may be
             // null or undefined. We don't need to worry about this with a
@@ -814,7 +814,7 @@ class PureFunctionIdentifier implements CompilerPass {
                 changed = true;
               }
             //}
-          } else if (objectNode != null && NodeUtil.isThis(objectNode)) {
+          } else if (objectNode != null && objectNode.isThis()) {
             if (!caller.mutatesThis()) {
               caller.setTaintsThis();
               changed = true;

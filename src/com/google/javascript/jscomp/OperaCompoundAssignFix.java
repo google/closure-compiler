@@ -80,7 +80,7 @@ class OperaCompoundAssignFix extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!NodeUtil.isName(n)) {
+    if (!n.isName()) {
       return;
     }
 
@@ -95,8 +95,8 @@ class OperaCompoundAssignFix extends AbstractPostOrderCallback
 
     while (!(NodeUtil.isExpressionNode(parent) ||
              NodeUtil.isStatementBlock(parent))) {
-      if (NodeUtil.isAssign(parent) &&
-          NodeUtil.isName(parent.getFirstChild()) &&
+      if (parent.isAssign() &&
+          parent.getFirstChild().isName() &&
           parent.getFirstChild().getString().equals(n.getString()) &&
           nested) {
         reassign = true;
@@ -121,7 +121,7 @@ class OperaCompoundAssignFix extends AbstractPostOrderCallback
 
   private void applyWorkAround(Node assign, NodeTraversal t) {
 //System.out.println("applyWorkAround: " + assign.toStringTree());
-    Preconditions.checkArgument(NodeUtil.isAssign(assign));
+    Preconditions.checkArgument(assign.isAssign());
     Node parent = assign.getParent();
     Node comma = new Node(Token.COMMA);
     comma.copyInformationFrom(assign);

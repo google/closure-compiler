@@ -91,11 +91,11 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         // TODO(user): We only care about calls to functions that
         // passes one of the dependent variable to a non-sideeffect free
         // function.
-        if (NodeUtil.isCall(n) && NodeUtil.functionCallHasSideEffects(n)) {
+        if (n.isCall() && NodeUtil.functionCallHasSideEffects(n)) {
           return true;
         }
 
-        if (NodeUtil.isNew(n) && NodeUtil.constructorCallHasSideEffects(n)) {
+        if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
           return true;
         }
 
@@ -127,7 +127,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     // Compute the forward reaching definition.
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     // Process the body of the function.
-    Preconditions.checkState(NodeUtil.isFunction(t.getScopeRoot()));
+    Preconditions.checkState(t.getScopeRoot().isFunction());
     cfa.process(null, t.getScopeRoot().getLastChild());
     cfg = cfa.getCfg();
     reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler);
@@ -189,11 +189,11 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
         @Override
         public void visit(NodeTraversal t, Node n, Node parent) {
-          if (NodeUtil.isName(n)) {
+          if (n.isName()) {
 
             // Make sure that the name node is purely a read.
             if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-                || NodeUtil.isVar(parent) || parent.getType() == Token.INC ||
+                || parent.isVar() || parent.getType() == Token.INC ||
                 parent.getType() == Token.DEC || parent.getType() == Token.LP ||
                 parent.getType() == Token.CATCH) {
               return;
@@ -238,7 +238,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     private int numUseWithinUseCfgNode;
 
     Candidate(String varName, Node defCfgNode, Node use, Node useCfgNode) {
-      Preconditions.checkArgument(NodeUtil.isName(use));
+      Preconditions.checkArgument(use.isName());
       this.varName = varName;
       this.defCfgNode = defCfgNode;
       this.use = use;
@@ -248,7 +248,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     private boolean canInline() {
 
       // Cannot inline a parameter.
-      if (NodeUtil.isFunction(defCfgNode)) {
+      if (defCfgNode.isFunction()) {
         return false;
       }
 
@@ -262,7 +262,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
       // Check that the assignment isn't used as a R-Value.
       // TODO(user): Certain cases we can still inline.
-      if (NodeUtil.isAssign(def) && !NodeUtil.isExprAssign(def.getParent())) {
+      if (def.isAssign() && !NodeUtil.isExprAssign(def.getParent())) {
         return false;
       }
 
@@ -337,7 +337,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
               @Override
               public boolean apply(Node input) {
                 // Recurse if the node is not a function.
-                return !NodeUtil.isFunction(input);
+                return !input.isFunction();
               }
           })) {
         return false;
@@ -373,7 +373,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     private void inlineVariable() {
       Node defParent = def.getParent();
       Node useParent = use.getParent();
-      if (NodeUtil.isAssign(def)) {
+      if (def.isAssign()) {
         Node rhs = def.getLastChild();
         rhs.detachFromParent();
         // Oh yes! I have grandparent to remove this.
@@ -383,7 +383,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         }
         defParent.detachFromParent();
         useParent.replaceChild(use, rhs);
-      } else if (NodeUtil.isVar(defParent)) {
+      } else if (defParent.isVar()) {
         Node rhs = def.getLastChild();
         def.removeChild(rhs);
         useParent.replaceChild(use, rhs);
@@ -413,7 +413,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
             case Token.ASSIGN:
               Node lhs = n.getFirstChild();
-              if (NodeUtil.isName(lhs) && lhs.getString().equals(varName)) {
+              if (lhs.isName() && lhs.getString().equals(varName)) {
                 def = n;
               }
               return;
@@ -434,9 +434,9 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
         @Override
         public void visit(NodeTraversal t, Node n, Node parent) {
-          if (NodeUtil.isName(n) && n.getString().equals(varName) &&
+          if (n.isName() && n.getString().equals(varName) &&
               // do not count in if it is left child of an assignment operator
-              !(NodeUtil.isAssign(parent) &&
+              !(parent.isAssign() &&
                (parent.getFirstChild() == n))) {
             numUseWithinUseCfgNode++;
           }

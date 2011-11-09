@@ -133,7 +133,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
     // Only a function can have an empty name.
     if (varName.isEmpty()) {
-      Preconditions.checkState(NodeUtil.isFunction(parent));
+      Preconditions.checkState(parent.isFunction());
 
       // A function declaration with an empty name passes Rhino,
       // but is supposed to be a syntax error according to the spec.

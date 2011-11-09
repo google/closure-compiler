@@ -733,14 +733,14 @@ public class NodeUtilTest extends TestCase {
     Node StatementNode = root.getFirstChild();
     assertTrue(NodeUtil.isExpressionNode(StatementNode));
     Node functionNode = StatementNode.getFirstChild();
-    assertTrue(NodeUtil.isFunction(functionNode));
+    assertTrue(functionNode.isFunction());
     assertTrue(NodeUtil.isFunctionExpression(functionNode));
   }
 
   public void testIsFunctionExpression2() {
     Node root = parse("function foo() {}");
     Node functionNode = root.getFirstChild();
-    assertTrue(NodeUtil.isFunction(functionNode));
+    assertTrue(functionNode.isFunction());
     assertFalse(NodeUtil.isFunctionExpression(functionNode));
   }
 
@@ -1046,44 +1046,6 @@ public class NodeUtilTest extends TestCase {
     Node parent = new Node(Token.BLOCK, n);
     parent.putProp(Node.SOURCENAME_PROP, "foo");
     assertEquals("foo", NodeUtil.getSourceName(n));
-  }
-
-  public void testIsLabelName() {
-    Compiler compiler = new Compiler();
-
-    // Test removing the initializer.
-    String code = "a:while(1) {a; continue a; break a; break;}";
-    Node actual = parse(code);
-
-    Node labelNode = actual.getFirstChild();
-    assertTrue(labelNode.getType() == Token.LABEL);
-    assertTrue(NodeUtil.isLabelName(labelNode.getFirstChild()));
-    assertFalse(NodeUtil.isLabelName(labelNode.getLastChild()));
-
-    Node whileNode = labelNode.getLastChild();
-    assertTrue(whileNode.getType() == Token.WHILE);
-    Node whileBlock = whileNode.getLastChild();
-    assertTrue(whileBlock.getType() == Token.BLOCK);
-    assertFalse(NodeUtil.isLabelName(whileBlock));
-
-    Node firstStatement = whileBlock.getFirstChild();
-    assertTrue(firstStatement.getType() == Token.EXPR_RESULT);
-    Node variableReference = firstStatement.getFirstChild();
-    assertTrue(variableReference.getType() == Token.NAME);
-    assertFalse(NodeUtil.isLabelName(variableReference));
-
-    Node continueStatement = firstStatement.getNext();
-    assertTrue(continueStatement.getType() == Token.CONTINUE);
-    assertTrue(NodeUtil.isLabelName(continueStatement.getFirstChild()));
-
-    Node firstBreak = continueStatement.getNext();
-    assertTrue(firstBreak.getType() == Token.BREAK);
-    assertTrue(NodeUtil.isLabelName(firstBreak.getFirstChild()));
-
-    Node secondBreak = firstBreak.getNext();
-    assertTrue(secondBreak.getType() == Token.BREAK);
-    assertFalse(secondBreak.hasChildren());
-    assertFalse(NodeUtil.isLabelName(secondBreak.getFirstChild()));
   }
 
   public void testLocalValue1() throws Exception {

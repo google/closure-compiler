@@ -94,7 +94,7 @@ class OptimizeParameters
     // rewrite changes the structure of this object.
     Node rValue = definition.getRValue();
     if (rValue == null ||
-        !NodeUtil.isFunction(rValue) ||
+        !rValue.isFunction() ||
         NodeUtil.isVarArgsFunction(rValue)) {
       return false;
     }
@@ -224,7 +224,7 @@ class OptimizeParameters
     // Remove the constant parameters in the definitions and add it as a local
     // variable.
     Node function = definition.getRValue();
-    if (NodeUtil.isFunction(function)) {
+    if (function.isFunction()) {
       optimizeFunctionDefinition(parameters, function);
     }
   }
@@ -452,7 +452,7 @@ class OptimizeParameters
    * @param value The initial value of the variable.
    */
   private void addVariableToFunction(Node function, Node varName, Node value) {
-    Preconditions.checkArgument(NodeUtil.isFunction(function),
+    Preconditions.checkArgument(function.isFunction(),
         "Node must be a function.");
 
     Node block = function.getLastChild();
@@ -501,7 +501,7 @@ class OptimizeParameters
    * @return The Node of the argument removed.
    */
   private Node eliminateFunctionParamAt(Node function, int argIndex) {
-    Preconditions.checkArgument(NodeUtil.isFunction(function),
+    Preconditions.checkArgument(function.isFunction(),
         "Node must be a function.");
 
     Node formalArgPtr = NodeUtil.getArgumentForFunction(

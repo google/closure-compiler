@@ -190,7 +190,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       }
 
       Scope scope = t.getScope();
-      if (!NodeUtil.isName(lhs)) {
+      if (!lhs.isName()) {
         return; // Not a local variable assignment.
       }
       String name = lhs.getString();
@@ -207,9 +207,9 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       // regardless of what the liveness results because it
       // does not change the result afterward.
       if (rhs != null &&
-          NodeUtil.isName(rhs) &&
+          rhs.isName() &&
           rhs.getString().equals(var.name) &&
-          NodeUtil.isAssign(n)) {
+          n.isAssign()) {
         n.removeChild(rhs);
         n.getParent().replaceChild(n, rhs);
         compiler.reportCodeChange();
@@ -235,7 +235,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         return;
       }
 
-      if (NodeUtil.isAssign(n)) {
+      if (n.isAssign()) {
         n.removeChild(rhs);
         n.getParent().replaceChild(n, rhs);
       } else if (NodeUtil.isAssignmentOp(n)) {
@@ -360,7 +360,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       return VariableLiveness.MAYBE_LIVE;
     }
 
-    if (NodeUtil.isName(n) && variable.equals(n.getString())) {
+    if (n.isName() && variable.equals(n.getString())) {
       if (NodeUtil.isVarOrSimpleAssignLhs(n, n.getParent())) {
         Preconditions.checkState(n.getParent().getType() == Token.ASSIGN);
         // The expression to which the assignment is made is evaluated before

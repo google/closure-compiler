@@ -147,8 +147,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (colorings.isEmpty() || !NodeUtil.isName(n) ||
-        NodeUtil.isFunction(parent)) {
+    if (colorings.isEmpty() || !n.isName() ||
+        parent.isFunction()) {
       // Don't rename named functions.
       return;
     }
@@ -170,7 +170,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       n.setString(coalescedVar.name);
       compiler.reportCodeChange();
 
-      if (NodeUtil.isVar(parent)) {
+      if (parent.isVar()) {
         removeVarDeclaration(n);
       }
     } else {
@@ -204,7 +204,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       n.setString(pseudoName);
       compiler.reportCodeChange();
 
-      if (!vNode.getValue().equals(coalescedVar) && NodeUtil.isVar(parent)) {
+      if (!vNode.getValue().equals(coalescedVar) && parent.isVar()) {
         removeVarDeclaration(n);
       }
     }
@@ -227,7 +227,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         // and unzipped size increase after this. We are not totally sure why
         // that is but, for now, we will respect the dead functions and not play
         // around with it.
-        if (!NodeUtil.isFunction(v.getParentNode())) {
+        if (!v.getParentNode().isFunction()) {
           interferenceGraph.createNode(v);
         }
       }
@@ -401,8 +401,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
      * @return Whether any LiveRangeChecker would be interested in the node.
      */
     public static boolean shouldVisit(Node n) {
-      return (NodeUtil.isName(n)
-        || (n.hasChildren() && NodeUtil.isName(n.getFirstChild())));
+      return (n.isName()
+        || (n.hasChildren() && n.getFirstChild().isName()));
     }
 
     @Override
@@ -417,12 +417,12 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
 
     private static boolean isAssignTo(Var var, Node n, Node parent) {
-      if (NodeUtil.isName(n) && var.getName().equals(n.getString()) &&
+      if (n.isName() && var.getName().equals(n.getString()) &&
           parent != null) {
         if (parent.getType() == Token.LP) {
           // In a function declaration, the formal parameters are assigned.
           return true;
-        } else if (NodeUtil.isVar(parent)) {
+        } else if (parent.isVar()) {
           // If this is a VAR declaration, if the name node has a child, we are
           // assigning to that name.
           return n.hasChildren();
@@ -431,14 +431,14 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       } else {
         // Lastly, any assignmentOP is also an assign.
         Node name = n.getFirstChild();
-        return name != null && NodeUtil.isName(name) &&
+        return name != null && name.isName() &&
           var.getName().equals(name.getString()) &&
           NodeUtil.isAssignmentOp(n);
       }
     }
 
     private static boolean isReadFrom(Var var, Node name) {
-      return name != null && NodeUtil.isName(name) &&
+      return name != null && name.isName() &&
           var.getName().equals(name.getString()) &&
           !NodeUtil.isVarOrSimpleAssignLhs(name, name.getParent());
     }

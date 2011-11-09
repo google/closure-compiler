@@ -137,7 +137,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
 
         Node gParent = parent.getParent();
         Node ggParent = gParent.getParent();
-        if (NodeUtil.isAssign(parent) &&
+        if (parent.isAssign() &&
             NodeUtil.isPrototypeProperty(parent.getFirstChild())) {
           pushContainingFunction(
               recordPrototypePropDefinition(t, parent.getFirstChild(), type,
@@ -168,13 +168,13 @@ class NameReferenceGraphConstruction implements CompilerPass {
       switch (n.getType()) {
         case Token.NAME:
         case Token.GETPROP:
-          if (NodeUtil.isGetProp(parent)) {
+          if (parent.isGetProp()) {
             // We will resolve this when we visit parent later in the traversal.
             return;
-          } else if (NodeUtil.isFunction(parent)) {
+          } else if (parent.isFunction()) {
             // Function declarations have been taken care of in enterScope();
             return;
-          } else if (NodeUtil.isAssign(parent)) {
+          } else if (parent.isAssign()) {
             // Handled below.
             return;
           }
@@ -196,13 +196,13 @@ class NameReferenceGraphConstruction implements CompilerPass {
         case Token.ASSIGN:
           Node lhs = n.getFirstChild();
           Node rhs = n.getLastChild();
-          if (NodeUtil.isFunction(rhs)) {
+          if (rhs.isFunction()) {
             // These are recorded when entering the scope.
             return;
           }
-          if (NodeUtil.isName(lhs) ||
-              NodeUtil.isGetProp(lhs) ||
-              NodeUtil.isGetProp(rhs)) {
+          if (lhs.isName() ||
+              lhs.isGetProp() ||
+              rhs.isGetProp()) {
             if (NodeUtil.isPrototypeProperty(lhs)) {
               Name name = recordPrototypePropDefinition(
                   t, lhs, getType(rhs), n, parent, parent.getParent());
@@ -227,7 +227,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
           // We need to alias every name that is passed as a parameter because
           // they have different names inside the function's scope.
           while ((param = param.getNext()) != null) {
-            if (NodeUtil.isName(param) || NodeUtil.isGetProp(param)) {
+            if (param.isName() || param.isGetProp()) {
               safeAlias(param);
             }
           }
@@ -250,7 +250,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
      * @param n node to alias
      */
     private void safeAlias(Node n) {
-      if (NodeUtil.isName(n) || NodeUtil.isGetProp(n)) {
+      if (n.isName() || n.isGetProp()) {
         String name = n.getQualifiedName();
         // getQualifiedName can return null in cases like bar[0].baz
         if (name != null) {
@@ -259,10 +259,10 @@ class NameReferenceGraphConstruction implements CompilerPass {
         }
       }
 
-      if (NodeUtil.isGetProp(n)) {
+      if (n.isGetProp()) {
         // var foo = bar[0].baz;
         defineAndAlias(n.getLastChild().getString());
-      } else if (NodeUtil.isAssign(n)) {
+      } else if (n.isAssign()) {
         // In case of nested assignment, we only consider the name of the
         // immediate neighbor.
         safeAlias(n.getFirstChild());
@@ -277,10 +277,10 @@ class NameReferenceGraphConstruction implements CompilerPass {
     }
 
     private void maybeAliasNamesOnAssign(Node lhs, Node rhs) {
-      if ((NodeUtil.isName(lhs) || NodeUtil.isGetProp(lhs)) &&
+      if ((lhs.isName() || lhs.isGetProp()) &&
           containsName(rhs) &&
-          !NodeUtil.isFunction(rhs) &&
-          !NodeUtil.isNew(rhs)) {
+          !rhs.isFunction() &&
+          !rhs.isNew()) {
         safeAlias(lhs);
         safeAlias(rhs);
       }
@@ -291,9 +291,9 @@ class NameReferenceGraphConstruction implements CompilerPass {
     }
 
     private void maybeRecordExport(Node call) {
-      Preconditions.checkArgument(NodeUtil.isCall(call));
+      Preconditions.checkArgument(call.isCall());
       Node getProp = call.getFirstChild();
-      if (!NodeUtil.isGetProp(getProp)) {
+      if (!getProp.isGetProp()) {
         return;
       }
 
@@ -315,7 +315,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       }
 
       Node symbol = getProp.getNext();
-      if (!NodeUtil.isString(symbol)) {
+      if (!symbol.isString()) {
         return;
       }
 
@@ -335,7 +335,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
     private boolean isLocalNameReference(NodeTraversal t, Node n) {
       // TODO(user): What happen if it is a reference to an outer local
       // variable (closures)?
-      if (NodeUtil.isName(n)) {
+      if (n.isName()) {
         Var v = t.getScope().getVar(n.getString());
         return v != null && v.isLocal();
       }
@@ -346,8 +346,8 @@ class NameReferenceGraphConstruction implements CompilerPass {
      * @return true if n MUST be a static name reference.
      */
     private boolean isStaticNameReference(Node n, Scope scope) {
-      Preconditions.checkArgument(NodeUtil.isName(n) || NodeUtil.isGetProp(n));
-      if (NodeUtil.isName(n)) {
+      Preconditions.checkArgument(n.isName() || n.isGetProp());
+      if (n.isName()) {
         return true;
       }
       String qName = n.getQualifiedName();
@@ -362,7 +362,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
      * @return true if n MUST be a prototype name reference.
      */
     private boolean isPrototypeNameReference(Node n) {
-      if (!NodeUtil.isGetProp(n)) {
+      if (!n.isGetProp()) {
         return false;
       }
       JSType type = getType(n.getFirstChild());
@@ -386,7 +386,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       } else {
         Name symbol = graph.defineNameIfNotExists(name, isExtern);
         symbol.setType(type);
-        if (NodeUtil.isAssign(n)) {
+        if (n.isAssign()) {
           symbol.addAssignmentDeclaration(n);
         } else {
           symbol.addFunctionDeclaration(n);
@@ -448,7 +448,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
 
     private void recordPrototypePropUse(
         NodeTraversal t, Node n, Node parent) {
-      Preconditions.checkArgument(NodeUtil.isGetProp(n));
+      Preconditions.checkArgument(n.isGetProp());
       Node instance = n.getFirstChild();
       JSType instanceType = getType(instance);
       JSType boxedType = instanceType.autoboxesTo();
@@ -518,7 +518,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
         // Don't count reference in extern as a use.
         return;
       } else {
-        Preconditions.checkArgument(NodeUtil.isGetProp(n));
+        Preconditions.checkArgument(n.isGetProp());
         Reference ref = new Reference(n, parent);
         ref.setUnknown(true);
         unknownNameUse.put(n.getLastChild().getString(),
@@ -538,7 +538,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       if (rhs != null) {
         // TODO(user): record the definition.
         symbol.setType(getType(rhs));
-        if (NodeUtil.isAssign(n)) {
+        if (n.isAssign()) {
           symbol.addAssignmentDeclaration(n);
         } else {
           symbol.addFunctionDeclaration(n);
