@@ -2212,4 +2212,139 @@ public class Node implements Cloneable, Serializable {
     }
   }
 
+
+  /*** AST type check methods ***/
+
+  public boolean isArrayLit() {
+    return this.getType() == Token.ARRAYLIT;
+  }
+
+  public boolean isAssign() {
+    return this.getType() == Token.ASSIGN;
+  }
+
+  public boolean isBlock() {
+    return this.getType() == Token.BLOCK;
+  }
+
+  public boolean isCall() {
+    return this.getType() == Token.CALL;
+  }
+
+  public boolean isCase() {
+    return this.getType() == Token.CASE;
+  }
+
+  public boolean isCatch() {
+    return this.getType() == Token.CATCH;
+  }
+
+  public boolean isDec() {
+    return this.getType() == Token.DEC;
+  }
+
+  public boolean isDefault() {
+    return this.getType() == Token.DEFAULT;
+  }
+
+  public boolean isDo() {
+    return this.getType() == Token.DO;
+  }
+
+  public boolean isEmpty() {
+    return this.getType() == Token.EMPTY;
+  }
+
+  public boolean isExprResult() {
+    return this.getType() == Token.EXPR_RESULT;
+  }
+
+  public boolean isFor() {
+    return this.getType() == Token.FOR;
+  }
+
+  public boolean isFunction() {
+    return this.getType() == Token.FUNCTION;
+  }
+
+  public boolean isGet() {
+    return this.getType() == Token.GET;
+  }
+
+  public boolean isGetElem() {
+    return this.getType() == Token.GETELEM;
+  }
+
+  public boolean isGetProp() {
+    return this.getType() == Token.GETPROP;
+  }
+
+  public boolean isIf() {
+    return this.getType() == Token.IF;
+  }
+
+  public boolean isInc() {
+    return this.getType() == Token.INC;
+  }
+
+  public boolean isLabel() {
+    return this.getType() == Token.LABEL;
+  }
+
+  public boolean isLabelName() {
+    return this.getType() == Token.LABEL_NAME;
+  }
+
+  public boolean isLP() {
+    return this.getType() == Token.LP;
+  }
+
+  public boolean isName() {
+    return this.getType() == Token.NAME;
+  }
+
+  public boolean isNew() {
+    return this.getType() == Token.NEW;
+  }
+
+  public boolean isNull() {
+    return this.getType() == Token.NULL;
+  }
+
+  public boolean isObjectLit() {
+    return this.getType() == Token.OBJECTLIT;
+  }
+
+  public boolean isRegExp() {
+    return this.getType() == Token.REGEXP;
+  }
+
+  public boolean isScript() {
+    return this.getType() == Token.SCRIPT;
+  }
+
+  public boolean isSet() {
+    return this.getType() == Token.SET;
+  }
+
+  public boolean isString() {
+    return this.getType() == Token.STRING;
+  }
+
+  public boolean isThis() {
+    return this.getType() == Token.THIS;
+  }
+
+  public boolean isTry() {
+    return this.getType() == Token.TRY;
+  }
+
+  public boolean isVar() {
+    return this.getType() == Token.VAR;
+  }
+
+  public boolean isVoid() {
+    return this.getType() == Token.VOID;
+  }
+
 }
