@@ -147,7 +147,7 @@ public class TypeInferenceTest extends TestCase {
   }
 
   private EnumType createEnumType(String name, JSType elemType) {
-    return registry.createEnumType(name, elemType);
+    return registry.createEnumType(name, null, elemType);
   }
 
   private JSType createUndefinableType(JSTypeNative type) {

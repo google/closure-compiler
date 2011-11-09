@@ -104,7 +104,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("b", STRING_TYPE, null);
     recordType = builder.build();
 
-    enumType = new EnumType(registry, "Enum", NUMBER_TYPE);
+    enumType = new EnumType(registry, "Enum", null, NUMBER_TYPE);
     elementsType = enumType.getElementsType();
     functionType = new FunctionBuilder(registry)
         .withReturnType(NUMBER_TYPE)
@@ -3395,7 +3395,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests the behavior of the enum type.
    */
   public void testEnumType() throws Exception {
-    EnumType enumType = new EnumType(registry, "Enum", NUMBER_TYPE);
+    EnumType enumType = new EnumType(registry, "Enum", null, NUMBER_TYPE);
 
     // isXxx
     assertFalse(enumType.isArrayType());
@@ -3496,8 +3496,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("Enum", enumType.getDisplayName());
 
     assertEquals("AnotherEnum", new EnumType(registry, "AnotherEnum",
-        NUMBER_TYPE).getDisplayName());
-    assertFalse(new EnumType(registry, null, NUMBER_TYPE).hasDisplayName());
+        null, NUMBER_TYPE).getDisplayName());
+    assertFalse(
+        new EnumType(registry, null, null, NUMBER_TYPE).hasDisplayName());
 
     Asserts.assertResolvesToSame(enumType);
   }
@@ -3611,7 +3612,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testStringEnumType() throws Exception {
     EnumElementType stringEnum =
-        new EnumType(registry, "Enum", STRING_TYPE).getElementsType();
+        new EnumType(registry, "Enum", null, STRING_TYPE).getElementsType();
 
     assertTypeEquals(UNKNOWN_TYPE, stringEnum.getPropertyType("length"));
     assertTypeEquals(NUMBER_TYPE, stringEnum.findPropertyType("length"));
@@ -3624,7 +3625,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testStringObjectEnumType() throws Exception {
     EnumElementType stringEnum =
-        new EnumType(registry, "Enum", STRING_OBJECT_TYPE).getElementsType();
+        new EnumType(registry, "Enum", null, STRING_OBJECT_TYPE)
+        .getElementsType();
 
     assertTypeEquals(NUMBER_TYPE, stringEnum.getPropertyType("length"));
     assertTypeEquals(NUMBER_TYPE, stringEnum.findPropertyType("length"));
@@ -4737,7 +4739,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType realA = registry.createConstructorType(
         "typeA", null, null, null).getInstanceType();
     ObjectType realB = registry.createEnumType(
-        "typeB", NUMBER_TYPE).getElementsType();
+        "typeB", null, NUMBER_TYPE).getElementsType();
     registry.declareType("typeA", realA);
     registry.declareType("typeB", realB);
 
@@ -5076,7 +5078,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testAnonymousEnumElementChain() throws Exception {
     ObjectType enumElemType = registry.createEnumType(
-        "typeB", registry.createAnonymousObjectType()).getElementsType();
+        "typeB", null, registry.createAnonymousObjectType()).getElementsType();
     List<JSType> typeChain = Lists.newArrayList(
         ALL_TYPE,
         createNullableType(OBJECT_TYPE),

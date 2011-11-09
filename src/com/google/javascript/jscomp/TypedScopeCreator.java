@@ -972,7 +972,7 @@ final class TypedScopeCreator implements ScopeCreator {
       if (enumType == null) {
         JSType elementsType =
             info.getEnumParameterType().evaluate(scope, typeRegistry);
-        enumType = typeRegistry.createEnumType(name, elementsType);
+        enumType = typeRegistry.createEnumType(name, rValue, elementsType);
 
         if (rValue != null && rValue.getType() == Token.OBJECTLIT) {
           // collect enum elements

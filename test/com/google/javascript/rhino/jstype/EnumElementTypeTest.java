@@ -48,9 +48,9 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 public class EnumElementTypeTest extends BaseJSTypeTestCase {
   public void testSubtypeRelation() throws Exception {
     EnumElementType typeA = registry.createEnumType(
-        "typeA", NUMBER_TYPE).getElementsType();
+        "typeA", null, NUMBER_TYPE).getElementsType();
     EnumElementType typeB = registry.createEnumType(
-        "typeB", NUMBER_TYPE).getElementsType();
+        "typeB", null, NUMBER_TYPE).getElementsType();
 
     assertFalse(typeA.isSubtype(typeB));
     assertFalse(typeB.isSubtype(typeA));
@@ -64,7 +64,8 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
 
   public void testMeet() throws Exception {
     EnumElementType typeA = registry.createEnumType(
-        "typeA", createUnionType(NUMBER_TYPE, STRING_TYPE)).getElementsType();
+        "typeA", null, createUnionType(NUMBER_TYPE, STRING_TYPE))
+        .getElementsType();
 
     JSType stringsOfA = typeA.getGreatestSubtype(STRING_TYPE);
     assertFalse(stringsOfA.isEmptyType());

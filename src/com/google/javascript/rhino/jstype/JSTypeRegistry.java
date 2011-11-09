@@ -1013,8 +1013,9 @@ public class JSTypeRegistry implements Serializable {
   /**
    * Creates an enum type.
    */
-  public EnumType createEnumType(String name, JSType elementsType) {
-    return new EnumType(this, name, elementsType);
+  public EnumType createEnumType(
+      String name, Node source, JSType elementsType) {
+    return new EnumType(this, name, source, elementsType);
   }
 
   /**
