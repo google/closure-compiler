@@ -510,6 +510,8 @@ public final class SymbolTable
       // local function. If it is, give it a name.
       if (scope.isLexicalScope() &&
           !scope.isGlobalScope() &&
+          scope.getRootNode() != null &&
+          !scope.getRootNode().isFromExterns() &&
           scope.getParentScope() != null) {
         SymbolScope parent = scope.getParentScope();
 
