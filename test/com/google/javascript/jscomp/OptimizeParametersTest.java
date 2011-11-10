@@ -607,4 +607,14 @@ public class OptimizeParametersTest extends CompilerTestCase {
   public void testGlobalCatch() {
     testSame("function foo(a) {} try {} catch (e) {foo(e)}");
   }
+
+  public void testNamelessParameter1() {
+    test("f(g()); function f(){}",
+         "f(); function f(){g()}");
+  }
+
+  public void testNamelessParameter2() {
+    test("f(g(),h()); function f(){}",
+         "f(); function f(){g();h()}");
+  }
 }

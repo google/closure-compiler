@@ -34,7 +34,7 @@ import java.util.List;
  * <ul>
  * <li>Removes optional parameters if no caller specifies it as argument.</li>
  * <li>Removes arguments at call site to function that
- *     ignores the parameter. (Not implemented) </li>
+ *     ignores the parameter.</li>
  * <li>Inline a parameter if the function is always called with that constant.
  *     </li>
  * </ul>
@@ -383,10 +383,8 @@ class OptimizeParameters
     for (int index = parameters.size() - 1; index >= 0; index--) {
       if (parameters.get(index).shouldRemove()) {
         Node paramName = eliminateFunctionParamAt(function, index);
-        if (paramName != null) {
-          addVariableToFunction(function, paramName,
-              parameters.get(index).getArg());
-        }
+        addVariableToFunction(function, paramName,
+            parameters.get(index).getArg());
       }
     }
   }
@@ -460,8 +458,13 @@ class OptimizeParameters
         "Node must be a block.");
 
     Preconditions.checkState(value.getParent() == null);
-    Node newVar = NodeUtil.newVarNode(varName.getString(), value);
-    block.addChildToFront(newVar);
+    Node stmt;
+    if (varName != null) {
+      stmt = NodeUtil.newVarNode(varName.getString(), value);
+    } else {
+      stmt = new Node(Token.EXPR_RESULT, value);
+    }
+    block.addChildToFront(stmt);
     compiler.reportCodeChange();
   }
 
