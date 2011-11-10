@@ -651,6 +651,55 @@ public class SymbolTableTest extends TestCase {
     assertEquals(3, table.getReferenceList(sym).size());
   }
 
+  public void testSuperClassReference() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "  var a = {b: {}};\n"
+        + "/** @constructor */\n"
+        + "a.b.BaseClass = function() {};\n"
+        + "a.b.BaseClass.prototype.doSomething = function() {\n"
+        + "  alert('hi');\n"
+        + "};\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {a.b.BaseClass}\n"
+        + " */\n"
+        + "a.b.DerivedClass = function() {};\n"
+        + "goog.inherits(a.b.DerivedClass, a.b.BaseClass);\n"
+        + "/** @override */\n"
+        + "a.b.DerivedClass.prototype.doSomething = function() {\n"
+        + "  a.b.DerivedClass.superClass_.doSomething();\n"
+        + "};\n");
+
+    Symbol bad = getGlobalVar(
+        table, "a.b.DerivedClass.superClass_.doSomething");
+    assertNull(bad);
+
+    Symbol good = getGlobalVar(
+        table, "a.b.BaseClass.prototype.doSomething");
+    assertNotNull(good);
+
+    List<Reference> refs = table.getReferenceList(good);
+    assertEquals(2, refs.size());
+    assertEquals("a.b.DerivedClass.superClass_.doSomething",
+        refs.get(1).getNode().getQualifiedName());
+  }
+
+  public void testInnerEnum() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var goog = {}; goog.ui = {};"
+        + "  /** @constructor */\n"
+        + "goog.ui.Zippy = function() {};\n"
+        + "/** @enum {string} */\n"
+        + "goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };\n");
+
+    Symbol eventType = getGlobalVar(table, "goog.ui.Zippy.EventType");
+    assertNotNull(eventType);
+    assertTrue(eventType.getType().isEnumType());
+
+    Symbol toggle = getGlobalVar(table, "goog.ui.Zippy.EventType.TOGGLE");
+    assertNotNull(toggle);
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);
