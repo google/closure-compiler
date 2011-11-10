@@ -121,6 +121,7 @@ class PeepholeSubstituteAlternateSyntax
 
       case Token.FOR:
         if (!NodeUtil.isForIn(node)) {
+          tryJoinForCondition(node);
           tryMinimizeCondition(NodeUtil.getConditionExpression(node));
         }
         return node;
@@ -160,6 +161,46 @@ class PeepholeSubstituteAlternateSyntax
 
       default:
         return node; //Nothing changed
+    }
+  }
+
+  private void tryJoinForCondition(Node n) {
+    if (!late) {
+      return;
+    }
+
+    Node block = n.getLastChild();
+    Node maybeIf = block.getFirstChild();
+    if (maybeIf != null && maybeIf.getType() == Token.IF) {
+      Node maybeBreak = maybeIf.getChildAtIndex(1).getFirstChild();
+      if (maybeBreak != null && maybeBreak.getType() == Token.BREAK
+          && !maybeBreak.hasChildren()) {
+
+        // Preserve the IF ELSE expression is there is one.
+        if (maybeIf.getChildCount() == 3) {
+          block.replaceChild(maybeIf,
+              maybeIf.getLastChild().detachFromParent());
+        } else {
+          block.removeFirstChild();
+        }
+
+        Node ifCondition = maybeIf.removeFirstChild();
+        Node fixedIfCondition = new Node(Token.NOT, ifCondition)
+            .copyInformationFrom(ifCondition);
+
+        // Ok, join the IF expression with the FOR expression
+        Node forCondition = NodeUtil.getConditionExpression(n);
+        if (forCondition.getType() == Token.EMPTY) {
+          n.replaceChild(forCondition, fixedIfCondition);
+        } else {
+          Node replacement = new Node(Token.AND);
+          n.replaceChild(forCondition, replacement);
+          replacement.addChildToBack(forCondition);
+          replacement.addChildToBack(fixedIfCondition);
+        }
+
+        reportCodeChange();
+      }
     }
   }
 

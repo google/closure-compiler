@@ -31,7 +31,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
       "var RegExp = function f(a){};\n" +
       "var Array = function f(a){};\n";
 
-  private boolean doCommaSplitting = true;
+  private boolean late = true;
 
   // TODO(user): Remove this when we no longer need to do string comparison.
   private PeepholeSubstituteAlternateSyntaxTest(boolean compareAsTree) {
@@ -44,16 +44,17 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   @Override
   public void setUp() throws Exception {
-    doCommaSplitting = true;
+    late = true;
     super.setUp();
     enableLineNumberCheck(true);
+    disableNormalize();
   }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass =
       new PeepholeOptimizationsPass(compiler,
-          new PeepholeSubstituteAlternateSyntax(doCommaSplitting));
+          new PeepholeSubstituteAlternateSyntax(late));
 
     return peepholePass;
   }
@@ -503,6 +504,32 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("if(!!(f() > 20)) {foo();foo()}", "if(f() > 20){foo();foo()}");
   }
 
+  public void testFoldLoopBreakLate() {
+    late = true;
+    fold("for(;;) if (a) break", "for(;!a;);");
+    foldSame("for(;;) if (a) { f(); break }");
+    fold("for(;;) if (a) break; else f()", "for(;!a;) { { f(); } }");
+    fold("for(;a;) if (b) break", "for(;a && !b;);");
+    fold("for(;a;) { if (b) break; if (c) break; }", "for(;(a && !b) && !c;);");
+
+    // 'while' is normalized to 'for'
+    enableNormalize(true);
+    fold("while(true) if (a) break", "for(;1&&!a;);");
+  }
+
+  public void testFoldLoopBreakEarly() {
+    late = false;
+    foldSame("for(;;) if (a) break");
+    foldSame("for(;;) if (a) { f(); break }");
+    foldSame("for(;;) if (a) break; else f()");
+    foldSame("for(;a;) if (b) break");
+    foldSame("for(;a;) { if (b) break; if (c) break; }");
+
+    foldSame("while(1) if (a) break");
+    enableNormalize(true);
+    foldSame("while(1) if (a) break");
+  }
+
   public void testFoldConditionalVarDeclaration() {
     fold("if(x) var y=1;else y=2", "var y=x?1:2");
     fold("if(x) y=1;else var y=2", "var y=x?1:2");
@@ -800,31 +827,31 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   public void testComma1() {
     fold("1, 2", "1; 1");
-    doCommaSplitting = false;
+    late = false;
     foldSame("1, 2");
   }
 
   public void testComma2() {
     test("1, a()", "1; a()");
-    doCommaSplitting = false;
+    late = false;
     foldSame("1, a()");
   }
 
   public void testComma3() {
     test("1, a(), b()", "1; a(); b()");
-    doCommaSplitting = false;
+    late = false;
     foldSame("1, a(), b()");
   }
 
   public void testComma4() {
     test("a(), b()", "a();b()");
-    doCommaSplitting = false;
+    late = false;
     foldSame("a(), b()");
   }
 
   public void testComma5() {
     test("a(), b(), 1", "a();b();1");
-    doCommaSplitting = false;
+    late = false;
     foldSame("a(), b(), 1");
   }
 
