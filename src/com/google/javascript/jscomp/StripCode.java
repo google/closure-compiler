@@ -391,8 +391,8 @@ class StripCode implements CompilerPass {
      */
     boolean isCallWhoseReturnValueShouldBeStripped(@Nullable Node n) {
       return n != null &&
-          (n.getType() == Token.CALL ||
-           n.getType() == Token.NEW) &&
+          (n.isCall() ||
+           n.isNew()) &&
           n.hasChildren() &&
           (qualifiedNameBeginsWithStripType(n.getFirstChild()) ||
               nameEndsWithFieldNameToStrip(n.getFirstChild()));
@@ -482,9 +482,9 @@ class StripCode implements CompilerPass {
         return false;
       }
 
-      if (parent != null && parent.getType() == Token.NAME) {
+      if (parent != null && parent.isName()) {
         Node gramps = parent.getParent();
-        if (gramps != null && gramps.getType() == Token.VAR) {
+        if (gramps != null && gramps.isVar()) {
           // The call's return value is being used to initialize a newly
           // declared variable. We should leave the call intact for now.
           // That way, when the traversal reaches the variable declaration,
@@ -510,9 +510,9 @@ class StripCode implements CompilerPass {
      * @return Whether the name ends with a field name that should be stripped
      */
     boolean nameEndsWithFieldNameToStrip(@Nullable Node n) {
-      if (n != null && n.getType() == Token.GETPROP) {
+      if (n != null && n.isGetProp()) {
         Node propNode = n.getLastChild();
-        return propNode != null && propNode.getType() == Token.STRING &&
+        return propNode != null && propNode.isString() &&
                isStripName(propNode.getString());
       }
       return false;

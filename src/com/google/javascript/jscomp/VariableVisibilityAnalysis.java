@@ -21,8 +21,6 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Map;
 
 /**
@@ -100,7 +98,7 @@ class VariableVisibilityAnalysis implements CompilerPass {
 
     Preconditions.checkArgument(parent.isVar()
         || parent.isFunction()
-        || parent.getType() == Token.LP);
+        || parent.isLP());
 
     return visibilityByDeclaringNameNode.get(declaringNameNode);
   }
@@ -147,6 +145,6 @@ class VariableVisibilityAnalysis implements CompilerPass {
   private static boolean variableIsParameter(Var variable) {
     Node variableParent = variable.getParentNode();
 
-    return variableParent != null && variableParent.getType() == Token.LP;
+    return variableParent != null && variableParent.isLP();
   }
 }

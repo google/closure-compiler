@@ -1468,7 +1468,7 @@ public class Compiler extends AbstractCompiler {
           if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
             cb.append("\n");  // Make sure that the label starts on a new line
           }
-          Preconditions.checkState(root.getType() == Token.SCRIPT);
+          Preconditions.checkState(root.isScript());
 
           String delimiter = options.inputDelimiter;
 
@@ -2086,8 +2086,8 @@ public class Compiler extends AbstractCompiler {
   @Override
   void updateGlobalVarReferences(Map<Var, ReferenceCollection> refMapPatch,
       Node collectionRoot) {
-    Preconditions.checkState(collectionRoot.getType() == Token.SCRIPT
-        || collectionRoot.getType() == Token.BLOCK);
+    Preconditions.checkState(collectionRoot.isScript()
+        || collectionRoot.isBlock());
     if (globalRefMap == null) {
       globalRefMap = new GlobalVarReferenceMap(getInputsInOrder(),
           getExternsInOrder());

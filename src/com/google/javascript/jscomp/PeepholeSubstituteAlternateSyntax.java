@@ -205,9 +205,9 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node tryFoldSimpleFunctionCall(Node n) {
-    Preconditions.checkState(n.getType() == Token.CALL);
+    Preconditions.checkState(n.isCall());
     Node callTarget = n.getFirstChild();
-    if (callTarget != null && callTarget.getType() == Token.NAME &&
+    if (callTarget != null && callTarget.isName() &&
           callTarget.getString().equals("String")) {
       // Fold String(a) to ''+(a) - which allows further optimizations
       Node value = callTarget.getNext();
@@ -226,7 +226,7 @@ class PeepholeSubstituteAlternateSyntax
 
   private Node tryFoldImmediateCallToBoundFunction(Node n) {
     // Rewriting "(fn.bind(a,b))()" to "fn.call(a,b)" makes it inlinable
-    Preconditions.checkState(n.getType() == Token.CALL);
+    Preconditions.checkState(n.isCall());
     Node callTarget = n.getFirstChild();
     Bind bind = getCodingConvention().describeFunctionBind(callTarget);
     if (bind != null) {
@@ -271,7 +271,7 @@ class PeepholeSubstituteAlternateSyntax
     Node left = n.getFirstChild();
     Node right = n.getLastChild();
 
-    if (parent.getType() == Token.EXPR_RESULT
+    if (parent.isExprResult()
         && parent.getParent().getType() != Token.LABEL) {
       // split comma
       n.detachChildren();
@@ -298,7 +298,7 @@ class PeepholeSubstituteAlternateSyntax
 
     for (Node child = n.getFirstChild();
          child != null; child = child.getNext()){
-      if (child.getType() == Token.IF){
+      if (child.isIf()){
 
         Node cond = child.getFirstChild();
         Node thenBranch = cond.getNext();
@@ -448,7 +448,7 @@ class PeepholeSubstituteAlternateSyntax
       }
     }
 
-    if (follow == null && (n.getType() == Token.THROW || result != null)) {
+    if (follow == null && (n.isThrow() || result != null)) {
       // Can't complete remove a throw here or a return with a result.
       return n;
     }
@@ -492,7 +492,7 @@ class PeepholeSubstituteAlternateSyntax
       }
     }
 
-    if (follow == null && (n.getType() == Token.THROW || exitExpr != null)) {
+    if (follow == null && (n.isThrow() || exitExpr != null)) {
       // Can't complete remove a throw here or a return with a result.
       return n;
     }
@@ -542,9 +542,9 @@ class PeepholeSubstituteAlternateSyntax
 
   boolean isExceptionPossible(Node n) {
     // TODO(johnlenz): maybe use ControlFlowAnalysis.mayThrowException?
-    Preconditions.checkState(n.getType() == Token.RETURN
-        || n.getType() == Token.THROW);
-    return n.getType() == Token.THROW
+    Preconditions.checkState(n.isReturn()
+        || n.isThrow());
+    return n.isThrow()
         || (n.hasChildren()
             && !NodeUtil.isLiteralValue(n.getLastChild(), true));
   }
@@ -619,7 +619,7 @@ class PeepholeSubstituteAlternateSyntax
           return n;
         }
 
-        if (cond.getType() == Token.NOT) {
+        if (cond.isNot()) {
           // if(!x)bar(); -> x||bar();
           if (isLowerPrecedenceInExpression(cond, OR_PRECEDENCE) &&
               isLowerPrecedenceInExpression(expr.getFirstChild(),
@@ -663,7 +663,7 @@ class PeepholeSubstituteAlternateSyntax
             thenBranch.hasOneChild()) {
           Node innerIf = thenBranch.getFirstChild();
 
-          if (innerIf.getType() == Token.IF) {
+          if (innerIf.isIf()) {
             Node innerCond = innerIf.getFirstChild();
             Node innerThenBranch = innerCond.getNext();
             Node innerElseBranch = innerThenBranch.getNext();
@@ -694,7 +694,7 @@ class PeepholeSubstituteAlternateSyntax
 
     // if(!x)foo();else bar(); -> if(x)bar();else foo();
     // An additional set of curly braces isn't worth it.
-    if (cond.getType() == Token.NOT && !consumesDanglingElse(elseBranch)) {
+    if (cond.isNot() && !consumesDanglingElse(elseBranch)) {
       n.replaceChild(cond, cond.removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
@@ -782,7 +782,7 @@ class PeepholeSubstituteAlternateSyntax
       Node maybeName2 = elseAssign.getFirstChild();
 
       if (name1.hasChildren()
-          && maybeName2.getType() == Token.NAME
+          && maybeName2.isName()
           && name1.getString().equals(maybeName2.getString())) {
         Node thenExpr = name1.removeChildren();
         Node elseExpr = elseAssign.getLastChild().detachFromParent();
@@ -807,7 +807,7 @@ class PeepholeSubstituteAlternateSyntax
       Node name2 = var.getFirstChild();
 
       if (name2.hasChildren()
-          && maybeName1.getType() == Token.NAME
+          && maybeName1.isName()
           && maybeName1.getString().equals(name2.getString())) {
         Node thenExpr = thenAssign.getLastChild().detachFromParent();
         Node elseExpr = name2.removeChildren();
@@ -849,7 +849,7 @@ class PeepholeSubstituteAlternateSyntax
    * @param n The IF node to examine.
    */
   private void tryRemoveRepeatedStatements(Node n) {
-    Preconditions.checkState(n.getType() == Token.IF);
+    Preconditions.checkState(n.isIf());
 
     Node parent = n.getParent();
     if (!NodeUtil.isStatementBlock(parent)) {
@@ -883,24 +883,24 @@ class PeepholeSubstituteAlternateSyntax
    *     an expression.
    */
   private boolean isFoldableExpressBlock(Node n) {
-    if (n.getType() == Token.BLOCK) {
+    if (n.isBlock()) {
       if (n.hasOneChild()) {
         Node maybeExpr = n.getFirstChild();
-        if (maybeExpr.getType() == Token.EXPR_RESULT) {
+        if (maybeExpr.isExprResult()) {
           // IE has a bug where event handlers behave differently when
           // their return value is used vs. when their return value is in
           // an EXPR_RESULT. It's pretty freaking weird. See:
           // http://code.google.com/p/closure-compiler/issues/detail?id=291
           // We try to detect this case, and not fold EXPR_RESULTs
           // into other expressions.
-          if (maybeExpr.getFirstChild().getType() == Token.CALL) {
+          if (maybeExpr.getFirstChild().isCall()) {
             Node calledFn = maybeExpr.getFirstChild().getFirstChild();
 
             // We only have to worry about methods with an implicit 'this'
             // param, or this doesn't happen.
-            if (calledFn.getType() == Token.GETELEM) {
+            if (calledFn.isGetElem()) {
               return false;
-            } else if (calledFn.getType() == Token.GETPROP &&
+            } else if (calledFn.isGetProp() &&
                        calledFn.getLastChild().getString().startsWith("on")) {
               return false;
             }
@@ -928,10 +928,10 @@ class PeepholeSubstituteAlternateSyntax
    *     an return with or without an expression.
    */
   private boolean isReturnBlock(Node n) {
-    if (n.getType() == Token.BLOCK) {
+    if (n.isBlock()) {
       if (n.hasOneChild()) {
         Node first = n.getFirstChild();
-        return first.getType() == Token.RETURN;
+        return first.isReturn();
       }
     }
 
@@ -943,10 +943,10 @@ class PeepholeSubstituteAlternateSyntax
    *     an return.
    */
   private boolean isReturnExpressBlock(Node n) {
-    if (n.getType() == Token.BLOCK) {
+    if (n.isBlock()) {
       if (n.hasOneChild()) {
         Node first = n.getFirstChild();
-        if (first.getType() == Token.RETURN) {
+        if (first.isReturn()) {
           return first.hasOneChild();
         }
       }
@@ -959,7 +959,7 @@ class PeepholeSubstituteAlternateSyntax
    * @return Whether the node is a single return statement.
    */
   private boolean isReturnExpression(Node n) {
-    if (n.getType() == Token.RETURN) {
+    if (n.isReturn()) {
       return n.hasOneChild();
     }
     return false;
@@ -978,10 +978,10 @@ class PeepholeSubstituteAlternateSyntax
    *     a VAR declaration of a single variable.
    */
   private boolean isVarBlock(Node n) {
-    if (n.getType() == Token.BLOCK) {
+    if (n.isBlock()) {
       if (n.hasOneChild()) {
         Node first = n.getFirstChild();
-        if (first.getType() == Token.VAR) {
+        if (first.isVar()) {
           return first.hasOneChild();
         }
       }
@@ -1062,8 +1062,8 @@ class PeepholeSubstituteAlternateSyntax
         new Predicate<Node>() {
       @Override
       public boolean apply(Node input) {
-        return (input.getType() == Token.GETPROP &&
-            input.getParent().getType() == Token.ASSIGN);
+        return (input.isGetProp() &&
+            input.getParent().isAssign());
       }
     };
 
@@ -1131,14 +1131,14 @@ class PeepholeSubstituteAlternateSyntax
                 }
               }
 
-              if (leftParent.getType() == Token.NOT) {
+              if (leftParent.isNot()) {
                 left = leftParent.removeFirstChild();
               } else {
                 leftParent.detachFromParent();
                 left = new Node(Token.NOT, leftParent)
                   .copyInformationFrom(leftParent);
               }
-              if (rightParent.getType() == Token.NOT) {
+              if (rightParent.isNot()) {
                 right = rightParent.removeFirstChild();
               } else {
                 rightParent.detachFromParent();
@@ -1146,7 +1146,7 @@ class PeepholeSubstituteAlternateSyntax
                   .copyInformationFrom(rightParent);
               }
 
-              int newOp = (first.getType() == Token.AND) ? Token.OR : Token.AND;
+              int newOp = (first.isAnd()) ? Token.OR : Token.AND;
               Node newRoot = new Node(newOp, left, right);
               parent.replaceChild(n, newRoot);
               reportCodeChange();
@@ -1302,13 +1302,13 @@ class PeepholeSubstituteAlternateSyntax
    * Fold "new Object()" to "Object()".
    */
   private Node tryFoldStandardConstructors(Node n) {
-    Preconditions.checkState(n.getType() == Token.NEW);
+    Preconditions.checkState(n.isNew());
 
     // If name normalization has been run then we know that
     // new Object() does in fact refer to what we think it is
     // and not some custom-defined Object().
     if (isASTNormalized()) {
-      if (n.getFirstChild().getType() == Token.NAME) {
+      if (n.getFirstChild().isName()) {
         String className = n.getFirstChild().getString();
         if (STANDARD_OBJECT_CONSTRUCTORS.contains(className)) {
           n.setType(Token.CALL);
@@ -1326,8 +1326,8 @@ class PeepholeSubstituteAlternateSyntax
    * call to Array or Object is to a local function with the same name.
    */
   private Node tryFoldLiteralConstructor(Node n) {
-    Preconditions.checkArgument(n.getType() == Token.CALL
-        || n.getType() == Token.NEW);
+    Preconditions.checkArgument(n.isCall()
+        || n.isNew());
 
     Node constructorNameNode = n.getFirstChild();
 
@@ -1425,7 +1425,7 @@ class PeepholeSubstituteAlternateSyntax
     }
 
     if (// is pattern folded
-        pattern.getType() == Token.STRING
+        pattern.isString()
         // make sure empty pattern doesn't fold to //
         && !"".equals(pattern.getString())
 
@@ -1433,7 +1433,7 @@ class PeepholeSubstituteAlternateSyntax
         // 100 chars, or it blows up the regexp parser in Opera 9.2.
         && pattern.getString().length() < 100
 
-        && (null == flags || flags.getType() == Token.STRING)
+        && (null == flags || flags.isString())
         // don't escape patterns with unicode escapes since Safari behaves badly
         // (read can't parse or crashes) on regex literals with unicode escapes
         && (isEcmaScript5OrGreater()
@@ -1473,7 +1473,7 @@ class PeepholeSubstituteAlternateSyntax
   private Node reduceTrueFalse(Node n) {
     if (late) {
       Node not = new Node(Token.NOT,
-          Node.newNumber(n.getType() == Token.TRUE ? 0 : 1));
+          Node.newNumber(n.isTrue() ? 0 : 1));
       not.copyInformationFromForTree(n);
       n.getParent().replaceChild(n, not);
       reportCodeChange();

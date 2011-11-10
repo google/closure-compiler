@@ -87,7 +87,7 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
         new AbstractPeepholeOptimization() {
       @Override
       public Node optimizeSubtree(Node node) {
-        if (node.getType() == Token.NAME) {
+        if (node.isName()) {
           visitationLog.add(node.getString() + "1");
         }
 
@@ -99,7 +99,7 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
         new AbstractPeepholeOptimization() {
       @Override
       public Node optimizeSubtree(Node node) {
-        if (node.getType() == Token.NAME) {
+        if (node.isName()) {
           visitationLog.add(node.getString() + "2");
         }
 
@@ -134,7 +134,7 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
       extends AbstractPeepholeOptimization {
     @Override
     public Node optimizeSubtree(Node node) {
-      if (node.getType() == Token.VAR) {
+      if (node.isVar()) {
         Set<Node> nodesToRemove = Sets.newHashSet();
 
         for (Node child : node.children()) {
@@ -161,7 +161,7 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
       extends AbstractPeepholeOptimization {
     @Override
     public Node optimizeSubtree(Node node) {
-      if (node.getType() == Token.NAME && "x".equals(node.getString())) {
+      if (node.isName() && "x".equals(node.getString())) {
         node.getParent().removeChild(node);
         reportCodeChange();
 
@@ -180,9 +180,9 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
       extends AbstractPeepholeOptimization {
     @Override
     public Node optimizeSubtree(Node node) {
-      if (node.getType() == Token.NAME && "x".equals(node.getString())) {
+      if (node.isName() && "x".equals(node.getString())) {
         Node parent = node.getParent();
-        if (parent.getType() == Token.VAR) {
+        if (parent.isVar()) {
           parent.getParent().removeChild(parent);
           reportCodeChange();
           return null;
@@ -199,7 +199,7 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
   private static class RenameYToX extends AbstractPeepholeOptimization {
     @Override
     public Node optimizeSubtree(Node node) {
-      if (node.getType() == Token.NAME && "y".equals(node.getString())) {
+      if (node.isName() && "y".equals(node.getString())) {
         Node replacement = Node.newString(Token.NAME, "x");
 
         node.getParent().replaceChild(node, replacement);

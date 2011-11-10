@@ -112,7 +112,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     @Override
     public void keepSimplifiedShortCircuitExpression(Node original) {
       Preconditions.checkArgument(
-          (original.getType() == Token.AND) || (original.getType() == Token.OR),
+          (original.isAnd()) || (original.isOr()),
           "Expected: AND or OR, Got: %s", Token.name(original.getType()));
       Node left = original.getFirstChild();
       Node right = left.getNext();
@@ -128,7 +128,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     public void keepSimplifiedHookExpression(Node hook,
                                              boolean thenHasSideEffects,
                                              boolean elseHasSideEffects) {
-      Preconditions.checkArgument(hook.getType() == Token.HOOK,
+      Preconditions.checkArgument(hook.isHook(),
           "Expected: HOOK, Got: %s", Token.name(hook.getType()));
       Node condition = hook.getFirstChild();
       Node thenBranch = condition.getNext();
@@ -227,17 +227,17 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
     }
 
     // Do not recurse into nested functions.
-    if (node.getType() == Token.FUNCTION) {
+    if (node.isFunction()) {
       return false;
     }
 
     // simplify and maybe keep hook expression.
-    if (node.getType() == Token.HOOK) {
+    if (node.isHook()) {
       return processHook(node);
     }
 
     // simplify and maybe keep AND/OR expression.
-    if ((node.getType() == Token.AND) || (node.getType() == Token.OR)) {
+    if ((node.isAnd()) || (node.isOr())) {
       return processShortCircuitExpression(node);
     }
 
@@ -247,9 +247,9 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
 
       // Node type suggests that the expression has side effects.
 
-      if (node.getType() == Token.CALL) {
+      if (node.isCall()) {
         return processFunctionCall(node);
-      } else if (node.getType() == Token.NEW) {
+      } else if (node.isNew()) {
         return processConstructorCall(node);
       } else {
         accumulator.keepSubTree(node);
@@ -265,7 +265,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
    */
   boolean processShortCircuitExpression(Node node) {
     Preconditions.checkArgument(
-        (node.getType() == Token.AND) || (node.getType() == Token.OR),
+        (node.isAnd()) || (node.isOr()),
         "Expected: AND or OR, Got: %s", Token.name(node.getType()));
 
     // keep whole expression if rhs of the branching expression
@@ -286,7 +286,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
    * @return true to continue traversal, false otherwise
    */
   boolean processHook(Node node) {
-    Preconditions.checkArgument(node.getType() == Token.HOOK,
+    Preconditions.checkArgument(node.isHook(),
         "Expected: HOOK, Got: %s", Token.name(node.getType()));
 
     Node condition = node.getFirstChild();
@@ -309,7 +309,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
    * @return true to continue traversal, false otherwise
    */
   boolean processFunctionCall(Node node) {
-    Preconditions.checkArgument(node.getType() == Token.CALL,
+    Preconditions.checkArgument(node.isCall(),
         "Expected: CALL, Got: %s", Token.name(node.getType()));
 
     // Calls to functions that are known to be "pure" have no side
@@ -336,7 +336,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
    * @return true to continue traversal, false otherwise
    */
   boolean processConstructorCall(Node node) {
-    Preconditions.checkArgument(node.getType() == Token.NEW,
+    Preconditions.checkArgument(node.isNew(),
         "Expected: NEW, Got: %s", Token.name(node.getType()));
 
     // Calls to constructors that are known to be "pure" have no

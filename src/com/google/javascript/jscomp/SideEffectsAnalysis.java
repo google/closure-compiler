@@ -271,7 +271,7 @@ import java.util.Set;
         // For now, we don't allow movement within a CASE.
         //
         // TODO(dcc): be less conservative about movement within CASE
-        if (node2DeepestControlDependentBlock.getType() == Token.CASE) {
+        if (node2DeepestControlDependentBlock.isCase()) {
           return false;
         }
 
@@ -870,8 +870,8 @@ import java.util.Set;
           NodeUtil.isAssignmentOp(parent) && parent.getType() != Token.ASSIGN;
 
         return (nonSimpleAssign
-            || parent.getType() == Token.DEC
-            || parent.getType() == Token.INC);
+            || parent.isDec()
+            || parent.isInc());
       }
 
       return true;

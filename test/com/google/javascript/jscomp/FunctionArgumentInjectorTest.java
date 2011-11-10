@@ -20,8 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 import java.util.Collections;
@@ -437,19 +435,19 @@ public class FunctionArgumentInjectorTest extends TestCase {
   }
 
   private static Node findCall(Node n, String name) {
-    if (n.getType() == Token.CALL) {
+    if (n.isCall()) {
       Node callee;
       if (NodeUtil.isGet(n.getFirstChild())) {
         callee = n.getFirstChild().getFirstChild();
         Node prop = callee.getNext();
         // Only "call" is support at this point.
-        Preconditions.checkArgument(prop.getType() == Token.STRING &&
+        Preconditions.checkArgument(prop.isString() &&
             prop.getString().equals("call"));
       } else {
         callee = n.getFirstChild();
       }
 
-      if (callee.getType() == Token.NAME
+      if (callee.isName()
           && callee.getString().equals(name)) {
         return n;
       }
@@ -466,7 +464,7 @@ public class FunctionArgumentInjectorTest extends TestCase {
   }
 
   private static Node findFunction(Node n, String name) {
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       if (n.getFirstChild().getString().equals(name)) {
         return n;
       }

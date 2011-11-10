@@ -50,8 +50,8 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
     @Override
     public boolean apply(Node n) {
       return (NodeUtil.isAssignmentOp(n) &&
-              n.getFirstChild().getType() == Token.NAME) ||
-          n.getType() == Token.INC || n.getType() == Token.DEC;
+              n.getFirstChild().isName()) ||
+          n.isInc() || n.isDec();
     }
   };
 
@@ -177,7 +177,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
     Node parent = n.getParent();
 
     if (NodeUtil.isAssignmentOp(n) ||
-        n.getType() == Token.INC || n.getType() == Token.DEC) {
+        n.isInc() || n.isDec()) {
 
       Node lhs = n.getFirstChild();
       Node rhs = lhs.getNext();
@@ -243,13 +243,13 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         n.removeChild(lhs);
         Node op = new Node(NodeUtil.getOpFromAssignmentOp(n), lhs, rhs);
         parent.replaceChild(n, op);
-      } else if (n.getType() == Token.INC || n.getType() == Token.DEC) {
+      } else if (n.isInc() || n.isDec()) {
         if (NodeUtil.isExpressionNode(parent)) {
           parent.replaceChild(n,
               new Node(Token.VOID, Node.newNumber(0).copyInformationFrom(n)));
-        } else if(n.getType() == Token.COMMA && n != parent.getLastChild()) {
+        } else if(n.isComma() && n != parent.getLastChild()) {
           parent.removeChild(n);
-        } else if (parent.getType() == Token.FOR && !NodeUtil.isForIn(parent) &&
+        } else if (parent.isFor() && !NodeUtil.isForIn(parent) &&
             NodeUtil.getConditionExpression(parent) != n) {
           parent.replaceChild(n, new Node(Token.EMPTY));
         } else {
@@ -362,7 +362,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
 
     if (n.isName() && variable.equals(n.getString())) {
       if (NodeUtil.isVarOrSimpleAssignLhs(n, n.getParent())) {
-        Preconditions.checkState(n.getParent().getType() == Token.ASSIGN);
+        Preconditions.checkState(n.getParent().isAssign());
         // The expression to which the assignment is made is evaluated before
         // the RHS is evaluated (normal left to right evaluation) but the KILL
         // occurs after the RHS is evaluated.

@@ -115,7 +115,7 @@ class InlineObjectLiterals implements CompilerPass {
       NodeUtil.visitPreOrder(root, new NodeUtil.Visitor() {
         @Override
         public void visit(Node node) {
-          if (node.getType() == Token.NAME) {
+          if (node.isName()) {
             staleVars.add(scope.getVar(node.getString()));
           }
         }
@@ -161,10 +161,10 @@ class InlineObjectLiterals implements CompilerPass {
         // Ignore indirect references, like x.y (except x.y(), since
         // the function referenced by y might reference 'this').
         //
-        if (parent.getType() == Token.GETPROP) {
+        if (parent.isGetProp()) {
           Preconditions.checkState(parent.getFirstChild() == name);
           // A call target maybe using the object as a 'this' value.
-          if (gramps.getType() == Token.CALL
+          if (gramps.isCall()
               && gramps.getFirstChild() == parent) {
             return false;
           }
@@ -197,8 +197,8 @@ class InlineObjectLiterals implements CompilerPass {
         // Also, ES5 getters/setters aren't handled by this pass.
         for (Node child = val.getFirstChild(); child != null;
              child = child.getNext()) {
-          if (child.getType() == Token.GET ||
-              child.getType() == Token.SET) {
+          if (child.isGet() ||
+              child.isSet()) {
             // ES5 get/set not supported.
             return false;
           }
@@ -229,10 +229,10 @@ class InlineObjectLiterals implements CompilerPass {
 
     private boolean isVarOrAssignExprLhs(Node n) {
       Node parent = n.getParent();
-      return parent.getType() == Token.VAR ||
-          (parent.getType() == Token.ASSIGN
+      return parent.isVar() ||
+          (parent.isAssign()
               && parent.getFirstChild() == n
-              && parent.getParent().getType() == Token.EXPR_RESULT);
+              && parent.getParent().isExprResult());
     }
 
     /**
@@ -248,7 +248,7 @@ class InlineObjectLiterals implements CompilerPass {
         if (ref.isLvalue() || ref.isInitializingDeclaration()) {
           Node val = ref.getAssignedValue();
           if (val != null) {
-            Preconditions.checkState(val.getType() == Token.OBJECTLIT);
+            Preconditions.checkState(val.isObjectLit());
             for (Node child = val.getFirstChild(); child != null;
                  child = child.getNext()) {
               String varname = child.getString();
@@ -261,11 +261,11 @@ class InlineObjectLiterals implements CompilerPass {
               varmap.put(varname, var);
             }
           }
-        } else if (ref.getParent().getType() == Token.VAR) {
+        } else if (ref.getParent().isVar()) {
           // This is the var. There is no value.
         } else {
           Node getprop = ref.getParent();
-          Preconditions.checkState(getprop.getType() == Token.GETPROP);
+          Preconditions.checkState(getprop.isGetProp());
 
           // The key being looked up in the original map.
           String varname = getprop.getLastChild().getString();
@@ -288,7 +288,7 @@ class InlineObjectLiterals implements CompilerPass {
      */
     private void fillInitialValues(Reference init, Map<String, Node> initvals) {
       Node object = init.getAssignedValue();
-      Preconditions.checkState(object.getType() == Token.OBJECTLIT);
+      Preconditions.checkState(object.isObjectLit());
       for (Node key = object.getFirstChild(); key != null;
            key = key.getNext()) {
         initvals.put(key.getString(), key.removeFirstChild());
@@ -306,7 +306,7 @@ class InlineObjectLiterals implements CompilerPass {
       List<Node> nodes = Lists.newArrayList();
       Node val = ref.getAssignedValue();
       blacklistVarReferencesInTree(val, v.scope);
-      Preconditions.checkState(val.getType() == Token.OBJECTLIT);
+      Preconditions.checkState(val.isObjectLit());
       Set<String> all = Sets.newLinkedHashSet(varmap.keySet());
       for (Node key = val.getFirstChild(); key != null;
            key = key.getNext()) {
@@ -355,7 +355,7 @@ class InlineObjectLiterals implements CompilerPass {
       Node replace = ref.getParent();
       replacement.copyInformationFromForTree(replace);
 
-      if (replace.getType() == Token.VAR) {
+      if (replace.isVar()) {
         replace.getParent().replaceChild(
             replace, NodeUtil.newExpr(replacement));
       } else {
@@ -380,7 +380,7 @@ class InlineObjectLiterals implements CompilerPass {
       // VAR then it should be directly replaced.
       Node vnode;
       boolean defined = referenceInfo.isWellDefined() &&
-          init.getParent().getType() == Token.VAR;
+          init.getParent().isVar();
       if (defined) {
         vnode = init.getParent();
         fillInitialValues(init, initvals);
@@ -414,14 +414,14 @@ class InlineObjectLiterals implements CompilerPass {
           // Assignments have to be handled specially, since they
           // expand out into multiple assignments.
           replaceAssignmentExpression(v, ref, varmap);
-        } else if (ref.getParent().getType() == Token.VAR) {
+        } else if (ref.getParent().isVar()) {
           // The old variable declaration. It didn't have a
           // value. Remove it entirely as it should now be unused.
           ref.getGrandparent().removeChild(ref.getParent());
         } else {
           // Make sure that the reference is a GETPROP as we expect it to be.
           Node getprop = ref.getParent();
-          Preconditions.checkState(getprop.getType() == Token.GETPROP);
+          Preconditions.checkState(getprop.isGetProp());
 
           // The key being looked up in the original map.
           String var = getprop.getChildAtIndex(1).getString();

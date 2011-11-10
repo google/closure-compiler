@@ -138,14 +138,14 @@ class ReplaceCssNames implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.CALL &&
+      if (n.isCall() &&
           GET_CSS_NAME_FUNCTION.equals(n.getFirstChild().getQualifiedName())) {
         int count = n.getChildCount();
         Node first = n.getFirstChild().getNext();
         switch (count) {
           case 2:
             // Replace the function call with the processed argument.
-            if (first.getType() == Token.STRING) {
+            if (first.isString()) {
               processStringNode(t, first);
               n.removeChild(first);
               parent.replaceChild(n, first);
@@ -165,7 +165,7 @@ class ReplaceCssNames implements CompilerPass {
             if (second.getType() != Token.STRING) {
               compiler.report(t.makeError(n, STRING_LITERAL_EXPECTED_ERROR,
                   Token.name(second.getType())));
-            } else if (first.getType() == Token.STRING) {
+            } else if (first.isString()) {
               compiler.report(t.makeError(
                   n, UNEXPECTED_STRING_LITERAL_ERROR,
                   first.getString(), second.getString()));

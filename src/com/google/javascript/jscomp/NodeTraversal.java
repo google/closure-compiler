@@ -349,7 +349,7 @@ public class NodeTraversal {
    */
   void traverseAtScope(Scope s) {
     Node n = s.getRootNode();
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       // We need to do some extra magic to make sure that the scope doesn't
       // get re-created when we dive into the function.
       if (inputId == null) {
@@ -503,7 +503,7 @@ public class NodeTraversal {
    */
   private void traverseFunction(Node n, Node parent) {
     Preconditions.checkState(n.getChildCount() == 3);
-    Preconditions.checkState(n.getType() == Token.FUNCTION);
+    Preconditions.checkState(n.isFunction());
 
     final Node fnName = n.getFirstChild();
 
@@ -532,7 +532,7 @@ public class NodeTraversal {
 
     // Body
     Preconditions.checkState(body.getNext() == null &&
-            body.getType() == Token.BLOCK);
+            body.isBlock());
     traverseBranch(body, n);
 
     popScope();

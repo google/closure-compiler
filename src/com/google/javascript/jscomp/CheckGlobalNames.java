@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Checks references to undefined properties of global variables.
@@ -144,7 +143,7 @@ class CheckGlobalNames implements CompilerPass {
   private boolean isTypedef(Ref ref) {
     // If this is an annotated EXPR-GET, don't do anything.
     Node parent = ref.node.getParent();
-    if (parent.getType() == Token.EXPR_RESULT) {
+    if (parent.isExprResult()) {
       JSDocInfo info = ref.node.getJSDocInfo();
       if (info != null && info.hasTypedefType()) {
         return true;

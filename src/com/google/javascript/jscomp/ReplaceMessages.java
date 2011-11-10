@@ -186,7 +186,7 @@ class ReplaceMessages extends JsMessageVisitor {
           (JsMessage.PlaceholderReference) part;
 
       for (Node node : argListNode.children()) {
-        if (node.getType() == Token.NAME) {
+        if (node.isName()) {
           String arg = node.getString();
 
           // We ignore the case here because the transconsole only supports

@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.SideEffectsAnalysis.LocationAbstractionMode;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Tests for {@link SideEffectsAnalysis}.
@@ -616,7 +615,7 @@ public class SideEffectsAnalysisTest extends CompilerTestCase {
     }
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.LABEL &&
+      if (n.isLabel() &&
           target.equals(n.getFirstChild().getString())) {
 
         found = n.getLastChild();

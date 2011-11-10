@@ -114,7 +114,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    Preconditions.checkState(scriptRoot.getType() == Token.SCRIPT);
+    Preconditions.checkState(scriptRoot.isScript());
     NodeTraversal t = new NodeTraversal(compiler, this);
     // Note we use the global scope to prevent wrong "undefined-var errors" on
     // variables that are defined in other js files.
@@ -145,7 +145,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
     // Check if this is a declaration for a var that has been declared
     // elsewhere. If so, mark it as a duplicate.
-    if ((parent.getType() == Token.VAR ||
+    if ((parent.isVar() ||
          NodeUtil.isFunctionDeclaration(parent)) &&
         varsToDeclareInExterns.contains(varName)) {
       createSynthesizedExternVar(varName);
@@ -242,7 +242,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   private class NameRefInExternsCheck extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.NAME) {
+      if (n.isName()) {
         switch (parent.getType()) {
           case Token.VAR:
           case Token.FUNCTION:

@@ -397,7 +397,7 @@ class ExpressionDecomposer {
     } else {
       // Only conditionals that are the direct child of an expression statement
       // don't need results, for those simply replace the expression statement.
-      Preconditions.checkArgument(parent.getType() == Token.EXPR_RESULT);
+      Preconditions.checkArgument(parent.isExprResult());
       Node gramps = parent.getParent();
       gramps.replaceChild(parent, ifNode);
     }
@@ -519,7 +519,7 @@ class ExpressionDecomposer {
    * @return The replacement node.
    */
   private Node rewriteCallExpression(Node call, DecompositionState state) {
-    Preconditions.checkArgument(call.getType() == Token.CALL);
+    Preconditions.checkArgument(call.isCall());
     Node first = call.getFirstChild();
     Preconditions.checkArgument(NodeUtil.isGet(first));
 
@@ -609,7 +609,7 @@ class ExpressionDecomposer {
     Node injectionPoint = expressionRoot;
 
     Node parent = injectionPoint.getParent();
-    while (parent.getType() == Token.LABEL) {
+    while (parent.isLabel()) {
       injectionPoint = parent;
       parent = injectionPoint.getParent();
     }
@@ -802,7 +802,7 @@ class ExpressionDecomposer {
           //
           Node first = parent.getFirstChild();
           if (requiresDecomposition
-              && parent.getType() == Token.CALL
+              && parent.isCall()
               && NodeUtil.isGet(first)) {
             if (maybeExternMethod(first)) {
               return DecompositionType.UNDECOMPOSABLE;
@@ -842,7 +842,7 @@ class ExpressionDecomposer {
    * @return Whether the assignment is safe from side-effects.
    */
   private boolean isSafeAssign(Node n, boolean seenSideEffects) {
-    if (n.getType() == Token.ASSIGN) {
+    if (n.isAssign()) {
       Node lhs = n.getFirstChild();
       switch (lhs.getType()) {
         case Token.NAME:

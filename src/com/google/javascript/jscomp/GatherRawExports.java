@@ -20,8 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Set;
 
 /**
@@ -53,7 +51,7 @@ class GatherRawExports extends AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     Node sibling = n.getNext();
     if (sibling != null
-        && sibling.getType() == Token.STRING
+        && sibling.isString()
         && NodeUtil.isGet(parent)) {
       // TODO(johnlenz): Should we warn if we see a property name that
       // hasn't been exported?
@@ -64,9 +62,9 @@ class GatherRawExports extends AbstractPostOrderCallback
   }
 
   private boolean isGlobalThisObject(NodeTraversal t, Node n) {
-    if (n.getType() == Token.THIS) {
+    if (n.isThis()) {
       return t.inGlobalScope();
-    } else if (n.getType() == Token.NAME) {
+    } else if (n.isName()) {
       String varName = n.getString();
       if (varName.equals(GLOBAL_THIS_NAME)) {
         return true;

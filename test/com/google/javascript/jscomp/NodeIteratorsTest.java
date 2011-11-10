@@ -154,8 +154,8 @@ public class NodeIteratorsTest extends TestCase {
     boolean found = false;
     while (searchIt.hasNext()) {
       Node n = searchIt.next();
-      if (n.getType() == Token.NAME &&
-          searchIt.currentParent().getType() == Token.VAR &&
+      if (n.isName() &&
+          searchIt.currentParent().isVar() &&
           n.getString().equals("X")) {
         found = true;
         break;

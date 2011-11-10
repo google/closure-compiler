@@ -216,8 +216,8 @@ public class CallGraph implements CompilerPass {
    * AST Token.CALL or Token.NEW node, or null if no such object exists.
    */
   public Callsite getCallsiteForAstNode(Node callsiteNode) {
-    Preconditions.checkArgument(callsiteNode.getType() == Token.CALL ||
-        callsiteNode.getType() == Token.NEW);
+    Preconditions.checkArgument(callsiteNode.isCall() ||
+        callsiteNode.isNew());
 
     return callsitesByNode.get(callsiteNode);
   }
@@ -574,8 +574,8 @@ public class CallGraph implements CompilerPass {
    */
   private Collection<Definition> lookupDefinitionsForTargetsOfCall(
       Node callsite, DefinitionProvider definitionProvider) {
-    Preconditions.checkArgument(callsite.getType() == Token.CALL
-        || callsite.getType() == Token.NEW);
+    Preconditions.checkArgument(callsite.isCall()
+        || callsite.isNew());
 
     Node targetExpression = callsite.getFirstChild();
 

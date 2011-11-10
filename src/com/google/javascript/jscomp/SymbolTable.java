@@ -192,8 +192,8 @@ public final class SymbolTable
    */
   public SymbolScope getEnclosingScope(Node n) {
     Node current = n.getParent();
-    if (n.getType() == Token.NAME &&
-        n.getParent().getType() == Token.FUNCTION) {
+    if (n.isName() &&
+        n.getParent().isFunction()) {
       current = current.getParent();
     }
 
@@ -650,7 +650,7 @@ public final class SymbolTable
     for (Symbol symbol : getAllSymbolsSorted()) {
       for (Reference ref : getReferences(symbol)) {
         Node currentNode = ref.getNode();
-        while (currentNode.getType() == Token.GETPROP) {
+        while (currentNode.isGetProp()) {
           currentNode = currentNode.getFirstChild();
 
           String name = currentNode.getQualifiedName();
@@ -1137,7 +1137,7 @@ public final class SymbolTable
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.GETPROP) {
+      if (n.isGetProp()) {
         JSType owner = n.getFirstChild().getJSType();
         if (owner == null || owner.isUnknownType()) {
           // Try to find the symbol by its fully qualified name.
@@ -1291,7 +1291,7 @@ public final class SymbolTable
     }
 
     public void visitTypeNode(SymbolScope scope, Node n) {
-      if (n.getType() == Token.STRING) {
+      if (n.isString()) {
         Symbol symbol = scope.getSlot(n.getString());
         if (symbol == null) {
           // If we can't find this type, it might be a reference to a

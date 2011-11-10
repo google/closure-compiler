@@ -21,8 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import static com.google.javascript.jscomp.MarkNoSideEffectCalls.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -292,11 +290,11 @@ public class MarkNoSideEffectCallsTest extends CompilerTestCase {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.NEW) {
+      if (n.isNew()) {
         if (!NodeUtil.constructorCallHasSideEffects(n)) {
           noSideEffectCalls.add(n.getFirstChild().getQualifiedName());
         }
-      } else if (n.getType() == Token.CALL) {
+      } else if (n.isCall()) {
         if (!NodeUtil.functionCallHasSideEffects(n)) {
           noSideEffectCalls.add(n.getFirstChild().getQualifiedName());
         }

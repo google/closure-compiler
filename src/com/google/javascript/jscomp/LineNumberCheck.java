@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * A simple pass to ensure that all AST nodes have line numbers,
@@ -59,7 +58,7 @@ class LineNumberCheck implements Callback, CompilerPass {
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     // Each JavaScript file is rooted in a script node, so we'll only
     // have line number information inside the script node.
-    if (n.getType() == Token.SCRIPT) {
+    if (n.isScript()) {
       requiresLineNumbers = true;
     }
     return true;
@@ -67,7 +66,7 @@ class LineNumberCheck implements Callback, CompilerPass {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() == Token.SCRIPT) {
+    if (n.isScript()) {
       requiresLineNumbers = false;
     } else if (requiresLineNumbers) {
       if (n.getLineno() == -1) {

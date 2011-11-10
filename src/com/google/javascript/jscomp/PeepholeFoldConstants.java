@@ -355,7 +355,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     switch (n.getType()) {
       case Token.NOT:
         // Don't fold !0 and !1 back to false.
-        if (late && left.getType() == Token.NUMBER) {
+        if (late && left.isNumber()) {
           double numValue = left.getDouble();
           if (numValue == 0 || numValue == 1) {
             return n;
@@ -376,7 +376,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return n;
       case Token.NEG:
         try {
-          if (left.getType() == Token.NAME) {
+          if (left.isName()) {
             if (left.getString().equals("Infinity")) {
               // "-Infinity" is valid and a literal, don't modify it.
               return n;
@@ -447,7 +447,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (NodeUtil.isImmutableValue(left)) {
         // Non-object types are never instances.
         replacementNode = new Node(Token.FALSE);
-      } else if (right.getType() == Token.NAME
+      } else if (right.isName()
           && "Object".equals(right.getString())) {
         replacementNode = new Node(Token.TRUE);
       }
@@ -463,7 +463,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   private Node tryFoldAssign(Node n, Node left, Node right) {
-    Preconditions.checkArgument(n.getType() == Token.ASSIGN);
+    Preconditions.checkArgument(n.isAssign());
 
     if (!late) {
       return n;
@@ -618,7 +618,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldChildAddString(Node n, Node left, Node right) {
 
     if (NodeUtil.isLiteralValue(right, false) &&
-        left.getType() == Token.ADD) {
+        left.isAdd()) {
 
       Node ll = left.getFirstChild();
       Node lr = ll.getNext();
@@ -626,7 +626,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // Left's right child MUST be a string. We would not want to fold
       // foo() + 2 + 'a' because we don't know what foo() will return, and
       // therefore we don't know if left is a string concat, or a numeric add.
-      if (lr.getType() == Token.STRING) {
+      if (lr.isString()) {
         String leftString = NodeUtil.getStringValue(lr);
         String rightString = NodeUtil.getStringValue(right);
         if (leftString != null && rightString != null) {
@@ -641,7 +641,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     if (NodeUtil.isLiteralValue(left, false) &&
-        right.getType() == Token.ADD) {
+        right.isAdd()) {
 
       Node rl = right.getFirstChild();
       Node rr = right.getLastChild();
@@ -649,7 +649,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // Left's right child MUST be a string. We would not want to fold
       // foo() + 2 + 'a' because we don't know what foo() will return, and
       // therefore we don't know if left is a string concat, or a numeric add.
-      if (rl.getType() == Token.STRING) {
+      if (rl.isString()) {
         String leftString = NodeUtil.getStringValue(left);
         String rightString = NodeUtil.getStringValue(rl);
         if (leftString != null && rightString != null) {
@@ -670,8 +670,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold an ADD node with constant operands
    */
   private Node tryFoldAddConstantString(Node n, Node left, Node right) {
-    if (left.getType() == Token.STRING ||
-        right.getType() == Token.STRING) {
+    if (left.isString() ||
+        right.isString()) {
       // Add strings.
       String leftString = NodeUtil.getStringValue(left);
       String rightString = NodeUtil.getStringValue(right);
@@ -800,7 +800,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     int opType = n.getType();
     Preconditions.checkState(
         (NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType))
-        || n.getType() == Token.ADD);
+        || n.isAdd());
 
     Preconditions.checkState(
         n.getType() != Token.ADD || !NodeUtil.mayBeString(n));
@@ -837,7 +837,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   private Node tryFoldAdd(Node node, Node left, Node right) {
-    Preconditions.checkArgument(node.getType() == Token.ADD);
+    Preconditions.checkArgument(node.isAdd());
 
     if (NodeUtil.mayBeString(node, true)) {
       if (NodeUtil.isLiteralValue(left, false) &&
@@ -862,8 +862,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold shift operations
    */
   private Node tryFoldShift(Node n, Node left, Node right) {
-    if (left.getType() == Token.NUMBER &&
-        right.getType() == Token.NUMBER) {
+    if (left.isNumber() &&
+        right.isNumber()) {
 
       double result;
       double lval = left.getDouble();
@@ -1195,13 +1195,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case Token.SHEQ:
       case Token.EQ:
         Preconditions.checkState(
-            left.getType() == Token.NUMBER && right.getType() == Token.NUMBER);
+            left.isNumber() && right.isNumber());
         result = lv == rv;
         break;
       case Token.SHNE:
       case Token.NE:
         Preconditions.checkState(
-            left.getType() == Token.NUMBER && right.getType() == Token.NUMBER);
+            left.isNumber() && right.isNumber());
         result = lv != rv;
         break;
       case Token.LE: result = lv <= rv; break;
@@ -1284,7 +1284,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * e.g. this[new String('eval')] -> this.eval
    */
   private Node tryFoldCtorCall(Node n) {
-    Preconditions.checkArgument(n.getType() == Token.NEW);
+    Preconditions.checkArgument(n.isNew());
 
     // we can remove this for GETELEM calls (anywhere else?)
     if (inForcedStringContext(n)) {
@@ -1295,13 +1295,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   /** Returns whether this node must be coerced to a string. */
   private boolean inForcedStringContext(Node n) {
-    if (n.getParent().getType() == Token.GETELEM &&
+    if (n.getParent().isGetElem() &&
         n.getParent().getLastChild() == n) {
       return true;
     }
 
     // we can fold in the case "" + new String("")
-    if (n.getParent().getType() == Token.ADD) {
+    if (n.getParent().isAdd()) {
       return true;
     }
     return false;
@@ -1309,7 +1309,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private Node tryFoldInForcedStringContext(Node n) {
     // For now, we only know how to fold ctors.
-    Preconditions.checkArgument(n.getType() == Token.NEW);
+    Preconditions.checkArgument(n.isNew());
 
     Node objectType = n.getFirstChild();
     if (objectType.getType() != Token.NAME) {
@@ -1349,9 +1349,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold array-element. e.g [1, 2, 3][10];
    */
   private Node tryFoldGetElem(Node n, Node left, Node right) {
-    Preconditions.checkArgument(n.getType() == Token.GETELEM);
+    Preconditions.checkArgument(n.isGetElem());
 
-    if (left.getType() == Token.OBJECTLIT) {
+    if (left.isObjectLit()) {
       return tryFoldObjectPropAccess(n, left, right);
     }
 
@@ -1365,13 +1365,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold array-length. e.g [1, 2, 3].length ==> 3, [x, y].length ==> 2
    */
   private Node tryFoldGetProp(Node n, Node left, Node right) {
-    Preconditions.checkArgument(n.getType() == Token.GETPROP);
+    Preconditions.checkArgument(n.isGetProp());
 
-    if (left.getType() == Token.OBJECTLIT) {
+    if (left.isObjectLit()) {
       return tryFoldObjectPropAccess(n, left, right);
     }
 
-    if (right.getType() == Token.STRING &&
+    if (right.isString() &&
         right.getString().equals("length")) {
       int knownLength = -1;
       switch (left.getType()) {
@@ -1404,8 +1404,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private boolean isAssignmentTarget(Node n) {
     Node parent = n.getParent();
     if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-        || parent.getType() == Token.INC
-        || parent.getType() == Token.DEC) {
+        || parent.isInc()
+        || parent.isDec()) {
       // If GETPROP/GETELEM is used as assignment target the object literal is
       // acting as a temporary we can't fold it here:
       //    "{a:x}.a += 1" is not "x += 1"
@@ -1451,7 +1451,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (elem.getType() == Token.EMPTY) {
+    if (elem.isEmpty()) {
       elem = NodeUtil.newUndefinedNode(elem);
     } else {
       left.removeChild(elem);
@@ -1510,13 +1510,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (value.getType() == Token.FUNCTION && NodeUtil.referencesThis(value)) {
+    if (value.isFunction() && NodeUtil.referencesThis(value)) {
       // 'this' may refer to the object we are trying to remove
       return n;
     }
 
     Node replacement = value.detachFromParent();
-    if (key.getType() == Token.GET){
+    if (key.isGet()){
       replacement = new Node(Token.CALL, replacement);
       replacement.putBooleanProp(Node.FREE_CALL, true);
     }

@@ -263,7 +263,7 @@ class AliasKeywords implements CompilerPass {
     @Override
     public void visit(Node n, Node parent) {
       Node value = n.getFirstChild();
-      if (value.getType() == Token.NUMBER && value.getDouble() == 0) {
+      if (value.isNumber() && value.getDouble() == 0) {
         super.visit(n, parent);
       }
     }

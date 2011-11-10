@@ -209,7 +209,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
         symbolStack.push(new NameContext(getNameInfoForName(
                 n.getFirstChild().getLastChild().getString(), PROPERTY)));
       } else if (isGlobalFunctionDeclaration(t, n)) {
-        String name = parent.getType() == Token.NAME ?
+        String name = parent.isName() ?
             parent.getString() /* VAR */ :
             n.getFirstChild().getString() /* named function */;
         symbolStack.push(new NameContext(getNameInfoForName(name, VAR)));
@@ -221,7 +221,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.GETPROP) {
+      if (n.isGetProp()) {
         String propName = n.getFirstChild().getNext().getString();
         if (propName.equals("prototype")) {
           processPrototypeParent(t, parent);
@@ -230,12 +230,12 @@ class AnalyzePrototypeProperties implements CompilerPass {
         } else {
           addSymbolUse(propName, t.getModule(), PROPERTY);
         }
-      } else if (n.getType() == Token.OBJECTLIT &&
+      } else if (n.isObjectLit() &&
           // Make sure that we're not handling object literals being
           // assigned to a prototype, as in:
           // Foo.prototype = {bar: 3, baz: 5};
-          !(parent.getType() == Token.ASSIGN &&
-            parent.getFirstChild().getType() == Token.GETPROP &&
+          !(parent.isAssign() &&
+            parent.getFirstChild().isGetProp() &&
             parent.getFirstChild().getLastChild().getString().equals(
                 "prototype"))) {
         // var x = {a: 1, b: 2}
@@ -247,7 +247,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
             addSymbolUse(propNameNode.getString(), t.getModule(), PROPERTY);
           }
         }
-      } else if (n.getType() == Token.NAME) {
+      } else if (n.isName()) {
         String name = n.getString();
 
         Var var = t.getScope().getVar(name);
@@ -255,7 +255,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           // Only process global functions.
           if (var.isGlobal()) {
             if (var.getInitialValue() != null &&
-                var.getInitialValue().getType() == Token.FUNCTION) {
+                var.getInitialValue().isFunction()) {
               if (t.inGlobalScope()) {
                 if (!processGlobalFunctionDeclaration(t, n, parent,
                         parent.getParent())) {
@@ -310,23 +310,23 @@ class AnalyzePrototypeProperties implements CompilerPass {
     private boolean isGlobalFunctionDeclaration(NodeTraversal t, Node n) {
       return t.inGlobalScope() &&
           (NodeUtil.isFunctionDeclaration(n) ||
-           n.getType() == Token.FUNCTION &&
-           n.getParent().getType() == Token.NAME);
+           n.isFunction() &&
+           n.getParent().isName());
     }
 
     private boolean isPrototypePropertyAssign(Node assign) {
       Node n = assign.getFirstChild();
       if (n != null && NodeUtil.isVarOrSimpleAssignLhs(n, assign)
-          && n.getType() == Token.GETPROP
-          && assign.getParent().getType() == Token.EXPR_RESULT) {
+          && n.isGetProp()
+          && assign.getParent().isExprResult()) {
         // We want to exclude the assignment itself from the usage list
         boolean isChainedProperty =
-            n.getFirstChild().getType() == Token.GETPROP;
+            n.getFirstChild().isGetProp();
 
         if (isChainedProperty) {
           Node child = n.getFirstChild().getFirstChild().getNext();
 
-          if (child.getType() == Token.STRING &&
+          if (child.isString() &&
               child.getString().equals("prototype")) {
             return true;
           }
@@ -378,7 +378,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           Node parent = n.getParent();
           Node grandParent = parent.getParent();
 
-          if (dest.getType() == Token.STRING &&
+          if (dest.isString() &&
               NodeUtil.isExprAssign(grandParent) &&
               NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
             String name = dest.getString();
@@ -390,7 +390,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
         // Foo.prototype = { "getBar" : function() { ... } }
         case Token.ASSIGN:
           Node map = n.getFirstChild().getNext();
-          if (map.getType() == Token.OBJECTLIT) {
+          if (map.isObjectLit()) {
             for (Node key = map.getFirstChild();
                  key != null; key = key.getNext()) {
               // May be STRING, GET, or SET,
@@ -413,7 +413,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   private class ProcessExternProperties extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.GETPROP) {
+      if (n.isGetProp()) {
         symbolGraph.connect(externNode, firstModule,
             getNameInfoForName(n.getLastChild().getString(), PROPERTY));
       }
@@ -470,7 +470,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     GlobalFunction(Node nameNode, Node parent, Node gramps, JSModule module) {
       Preconditions.checkState(
-          parent.getType() == Token.VAR ||
+          parent.isVar() ||
           NodeUtil.isFunctionDeclaration(parent));
       this.nameNode = nameNode;
       this.module = module;
@@ -479,10 +479,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public void remove() {
       Node parent = nameNode.getParent();
-      if (parent.getType() == Token.FUNCTION || parent.hasOneChild()) {
+      if (parent.isFunction() || parent.hasOneChild()) {
         NodeUtil.removeChild(parent.getParent(), parent);
       } else {
-        Preconditions.checkState(parent.getType() == Token.VAR);
+        Preconditions.checkState(parent.isVar());
         parent.removeChild(nameNode);
       }
     }

@@ -274,7 +274,7 @@ class FunctionRewriter implements CompilerPass {
       }
 
       Node statement = body.getFirstChild();
-      if (statement.getType() == Token.RETURN) {
+      if (statement.isReturn()) {
         return statement.getFirstChild();
       }
       return null;

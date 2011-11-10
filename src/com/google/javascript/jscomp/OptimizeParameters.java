@@ -363,7 +363,7 @@ class OptimizeParameters
           // global variable.
           if (v != null &&
               (v.isLocal() ||
-               v.nameNode.getParent().getType() == Token.CATCH)) {
+               v.nameNode.getParent().isCatch())) {
             return false;
           }
         }
@@ -456,7 +456,7 @@ class OptimizeParameters
         "Node must be a function.");
 
     Node block = function.getLastChild();
-    Preconditions.checkArgument(block.getType() == Token.BLOCK,
+    Preconditions.checkArgument(block.isBlock(),
         "Node must be a block.");
 
     Preconditions.checkState(value.getParent() == null);

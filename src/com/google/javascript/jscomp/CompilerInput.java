@@ -121,7 +121,7 @@ public class CompilerInput
     Node root = ast.getAstRoot(compiler);
     // The root maybe null if the AST can not be created.
     if (root != null) {
-      Preconditions.checkState(root.getType() == Token.SCRIPT);
+      Preconditions.checkState(root.isScript());
       Preconditions.checkNotNull(root.getInputId());
     }
     return root;
@@ -247,7 +247,7 @@ public class CompilerInput
     }
 
     void visitSubtree(Node n, Node parent) {
-      if (n.getType() == Token.CALL) {
+      if (n.isCall()) {
         String require =
             codingConvention.extractClassNameIfRequire(n, parent);
         if (require != null) {

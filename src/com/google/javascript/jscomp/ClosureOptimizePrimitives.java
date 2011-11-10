@@ -43,7 +43,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.CALL) {
+      if (n.isCall()) {
         String fnName = n.getFirstChild().getQualifiedName();
         if ("goog$object$create".equals(fnName) ||
             "goog.object.create".equals(fnName)) {

@@ -142,7 +142,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    */
   private static void replaceThis(Node expectedGetprop, Node replacement) {
     Node leftChild = expectedGetprop.getFirstChild();
-    if (leftChild.getType() == Token.THIS) {
+    if (leftChild.isThis()) {
       expectedGetprop.replaceChild(leftChild, replacement);
     } else {
       replaceThis(leftChild, replacement);
@@ -195,7 +195,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     }
 
     Node expectedBlock = fn.getLastChild();
-    return  expectedBlock.getType() == Token.BLOCK ?
+    return  expectedBlock.isBlock() ?
         expectedBlock : null;
   }
 

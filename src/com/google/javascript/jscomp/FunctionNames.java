@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.io.Serializable;
 import java.util.*;
 
@@ -132,7 +130,7 @@ class FunctionNames implements CompilerPass, Serializable {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.FUNCTION) {
+      if (n.isFunction()) {
         Node functionNameNode = n.getFirstChild();
         String functionName = functionNameNode.getString();
 

@@ -640,9 +640,9 @@ public class ExpressionDecomposerTest extends TestCase {
     class Find {
       int found = 0;
       Node find(Node n) {
-        if (n.getType() == Token.CALL) {
+        if (n.isCall()) {
           Node callee = n.getFirstChild();
-          if (name == null || (callee.getType() == Token.NAME
+          if (name == null || (callee.isName()
               && callee.getString().equals(name))) {
             found++;
             if (found == call) {

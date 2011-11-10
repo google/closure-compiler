@@ -102,7 +102,7 @@ class OptimizeReturns
       Node useNodeParent = site.node.getParent();
       if (isCall(site)) {
         Node callNode = useNodeParent;
-        Preconditions.checkState(callNode.getType() == Token.CALL);
+        Preconditions.checkState(callNode.isCall());
         if (isValueUsed(callNode)) {
           return true;
         }
@@ -164,7 +164,7 @@ class OptimizeReturns
       new NodeUtil.Visitor() {
         @Override
         public void visit(Node node) {
-          if (node.getType() == Token.RETURN && node.hasOneChild()) {
+          if (node.isReturn() && node.hasOneChild()) {
             boolean keepValue = NodeUtil.mayHaveSideEffects(
                 node.getFirstChild(), compiler);
             if (!keepValue) {

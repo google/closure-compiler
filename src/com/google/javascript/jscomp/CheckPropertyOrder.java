@@ -329,10 +329,10 @@ class CheckPropertyOrder extends AbstractPostOrderCallback
         case Token.ASSIGN:
           // If the left hand side is "this.x", then add x to the lists.
           Node lhs = node.getFirstChild(), rhs = lhs.getNext();
-          if (lhs.getType() == Token.GETPROP) {
+          if (lhs.isGetProp()) {
             Node llhs = lhs.getFirstChild(), lrhs = llhs.getNext();
-            if ((llhs.getType() == Token.THIS)
-                && (lrhs.getType() == Token.STRING)
+            if ((llhs.isThis())
+                && (lrhs.isString())
                 && (lrhs.getNext() == null)) {
               return flowThrough(rhs, input.copyAndAdd(lrhs.getString()));
             }

@@ -22,8 +22,6 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.List;
 
 /**
@@ -1240,11 +1238,11 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.NEW) {
+      if (n.isNew()) {
         if (!NodeUtil.constructorCallHasSideEffects(n)) {
           noSideEffectCalls.add(generateNameString(n.getFirstChild()));
         }
-      } else if (n.getType() == Token.CALL) {
+      } else if (n.isCall()) {
         if (!NodeUtil.functionCallHasSideEffects(n)) {
           noSideEffectCalls.add(generateNameString(n.getFirstChild()));
         }
@@ -1255,16 +1253,16 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
     }
 
     private String generateNameString(Node node) {
-      if (node.getType() == Token.OR) {
+      if (node.isOr()) {
         return "(" + generateNameString(node.getFirstChild()) +
             " || " + generateNameString(node.getLastChild()) + ")";
-      } else if (node.getType() == Token.HOOK) {
+      } else if (node.isHook()) {
         return "(" + generateNameString(node.getFirstChild().getNext()) +
             " : " + generateNameString(node.getLastChild()) + ")";
       } else {
         String result = node.getQualifiedName();
         if (result == null) {
-          if (node.getType() == Token.FUNCTION) {
+          if (node.isFunction()) {
             result = node.toString(false, false, false).trim();
           } else {
             result = node.getFirstChild().toString(false, false, false);

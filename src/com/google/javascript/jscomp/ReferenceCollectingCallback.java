@@ -146,7 +146,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() == Token.NAME) {
+    if (n.isName()) {
       Var v;
       if (n.getString().equals("arguments")) {
         v = t.getScope().getArgumentsVar();
@@ -233,7 +233,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       }
     }
 
-    return n.getType() == Token.CASE;
+    return n.isCase();
   }
 
   private void addReference(NodeTraversal t, Var v, Reference reference) {
@@ -557,12 +557,12 @@ class ReferenceCollectingCallback implements ScopedCallback,
       Node parent = getParent();
       Node grandparent = parent.getParent();
       return DECLARATION_PARENTS.contains(parent.getType()) ||
-          parent.getType() == Token.LP &&
-          grandparent.getType() == Token.FUNCTION;
+          parent.isLP() &&
+          grandparent.isFunction();
     }
 
     boolean isVarDeclaration() {
-      return getParent().getType() == Token.VAR;
+      return getParent().isVar();
     }
 
     boolean isHoistedFunction() {
@@ -586,7 +586,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     */
     Node getAssignedValue() {
       Node parent = getParent();
-      return (parent.getType() == Token.FUNCTION)
+      return (parent.isFunction())
           ? parent : NodeUtil.getAssignedValue(nameNode);
     }
 
@@ -605,7 +605,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     private static boolean isLhsOfForInExpression(Node n) {
       Node parent = n.getParent();
-      if (parent.getType() == Token.VAR) {
+      if (parent.isVar()) {
         return isLhsOfForInExpression(parent);
       }
       return NodeUtil.isForIn(parent) && parent.getFirstChild() == n;
@@ -613,7 +613,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     boolean isSimpleAssignmentToName() {
       Node parent = getParent();
-      return parent.getType() == Token.ASSIGN
+      return parent.isAssign()
           && parent.getFirstChild() == nameNode;
     }
 
@@ -668,7 +668,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       // only named functions may be hoisted.
       this.isHoisted = NodeUtil.isHoistedFunctionDeclaration(root);
 
-      this.isFunction = root.getType() == Token.FUNCTION;
+      this.isFunction = root.isFunction();
 
       if (root.getParent() != null) {
         int pType = root.getParent().getType();

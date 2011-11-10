@@ -421,7 +421,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateVarOrOptionalExpression(Node n) {
-    if (n.getType() == Token.VAR) {
+    if (n.isVar()) {
       validateVar(n);
     } else {
       validateOptionalExpression(n);
@@ -429,7 +429,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateVarOrAssignmentTarget(Node n) {
-    if (n.getType() == Token.VAR) {
+    if (n.isVar()) {
       // Only one NAME can be declared for FOR-IN expressions.
       this.validateChildCount(n, 1);
       validateVar(n);
@@ -548,7 +548,7 @@ public class AstValidator implements CompilerPass {
     int defaults = 0;
     for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
       validateSwitchMember(n.getLastChild());
-      if (c.getType() == Token.DEFAULT) {
+      if (c.isDefault()) {
         defaults++;
       }
     }
@@ -586,7 +586,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateOptionalExpression(Node n) {
-    if (n.getType() == Token.EMPTY) {
+    if (n.isEmpty()) {
       validateChildless(n);
     } else {
       validateExpression(n);

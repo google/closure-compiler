@@ -136,7 +136,7 @@ final class RenameLabels implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node node,
         Node parent) {
-      if (node.getType() == Token.LABEL) {
+      if (node.isLabel()) {
         // Determine the new name for this label.
         LabelNamespace current = namespaceStack.peek();
         int currentDepth = current.renameMap.size() + 1;
@@ -226,7 +226,7 @@ final class RenameLabels implements CompilerPass {
         Node newChild = node.getLastChild();
         node.removeChild(newChild);
         parent.replaceChild(node, newChild);
-        if (newChild.getType() == Token.BLOCK) {
+        if (newChild.isBlock()) {
           NodeUtil.tryMergeBlock(newChild);
         }
         compiler.reportCodeChange();

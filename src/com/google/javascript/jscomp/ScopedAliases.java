@@ -114,7 +114,7 @@ class ScopedAliases implements HotSwapCompilerPass {
 
       // Remove the alias definitions.
       for (Node aliasDefinition : traversal.getAliasDefinitionsInOrder()) {
-        if (aliasDefinition.getParent().getType() == Token.VAR &&
+        if (aliasDefinition.getParent().isVar() &&
             aliasDefinition.getParent().hasOneChild()) {
           aliasDefinition.getParent().detachFromParent();
         } else {
@@ -213,7 +213,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
 
     private boolean isCallToScopeMethod(Node n) {
-      return n.getType() == Token.CALL &&
+      return n.isCall() &&
           SCOPING_METHOD_NAME.equals(n.getFirstChild().getQualifiedName());
     }
 
@@ -237,7 +237,7 @@ class ScopedAliases implements HotSwapCompilerPass {
 
     @Override
     public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.FUNCTION && t.inGlobalScope()) {
+      if (n.isFunction() && t.inGlobalScope()) {
         // Do not traverse in to functions except for goog.scope functions.
         if (parent == null || !isCallToScopeMethod(parent)) {
           return false;
@@ -249,7 +249,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     private SourcePosition<AliasTransformation> getSourceRegion(Node n) {
       Node testNode = n;
       Node next = null;
-      for (; next != null || testNode.getType() == Token.SCRIPT;) {
+      for (; next != null || testNode.isScript();) {
         next = testNode.getNext();
         testNode = testNode.getParent();
       }
@@ -275,7 +275,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         Node n = v.getNode();
         int type = n.getType();
         Node parent = n.getParent();
-        if (parent.getType() == Token.VAR) {
+        if (parent.isVar()) {
           if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
             String name = n.getString();
             Var aliasVar = scope.getVar(name);
@@ -384,7 +384,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
 
     private void fixTypeNode(Node typeNode) {
-      if (typeNode.getType() == Token.STRING) {
+      if (typeNode.isString()) {
         String name = typeNode.getString();
         int endIndex = name.indexOf('.');
         if (endIndex == -1) {

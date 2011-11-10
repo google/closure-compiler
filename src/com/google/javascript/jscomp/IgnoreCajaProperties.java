@@ -54,7 +54,7 @@ class IgnoreCajaProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Look for a for..in loop.
-      if (n.getType() == Token.FOR && n.getChildCount() == 3) {
+      if (n.isFor() && n.getChildCount() == 3) {
         Node body = n.getLastChild();
         n.removeChild(body);
         Node key = n.getFirstChild();
@@ -66,7 +66,7 @@ class IgnoreCajaProperties implements CompilerPass {
         Node ifBody;
 
         // Construct the body of the if statement.
-        if (key.getType() == Token.VAR) {
+        if (key.isVar()) {
           // for (var key in x) { body; }
           // =>
           // for (var tmp in x) {

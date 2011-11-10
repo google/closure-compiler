@@ -60,7 +60,7 @@ class FunctionArgumentInjector {
 
   static Node inject(AbstractCompiler compiler, Node node, Node parent,
       Map<String, Node> replacements, boolean replaceThis) {
-    if (node.getType() == Token.NAME) {
+    if (node.isName()) {
       Node replacementTemplate = replacements.get(node.getString());
       if (replacementTemplate != null) {
         // This should not be replacing declared names.
@@ -73,7 +73,7 @@ class FunctionArgumentInjector {
         parent.replaceChild(node, replacement);
         return replacement;
       }
-    } else if (replaceThis && node.getType() == Token.THIS) {
+    } else if (replaceThis && node.isThis()) {
       Node replacementTemplate = replacements.get(THIS_MARKER);
       Preconditions.checkNotNull(replacementTemplate);
       if (replacementTemplate.getType() != Token.THIS) {
@@ -91,7 +91,7 @@ class FunctionArgumentInjector {
 
         return replacement;
       }
-    } else if (node.getType() == Token.FUNCTION) {
+    } else if (node.isFunction()) {
       // Once we enter another scope the "this" value changes, don't try
       // to replace it within an inner scope.
       replaceThis = false;
@@ -196,13 +196,13 @@ class FunctionArgumentInjector {
       Node n, Node parent, Set<String> names, Set<String> unsafe,
       boolean inInnerFunction) {
     Preconditions.checkArgument(unsafe != null);
-    if (n.getType() == Token.NAME) {
+    if (n.isName()) {
       if (names.contains(n.getString())) {
         if (inInnerFunction || canNameValueChange(n, parent)) {
           unsafe.add(n.getString());
         }
       }
-    } else if (n.getType() == Token.FUNCTION) {
+    } else if (n.isFunction()) {
       // A function parameter can not be replaced with a direct inlined value
       // if it is referred to by an inner function. The inner function
       // can out live the call we are replacing, so inner function must
@@ -250,7 +250,7 @@ class FunctionArgumentInjector {
       return;
     }
 
-    Preconditions.checkArgument(fnNode.getType() == Token.FUNCTION);
+    Preconditions.checkArgument(fnNode.isFunction());
     Node block = fnNode.getLastChild();
 
     Set<String> parameters = argMap.keySet();
@@ -416,12 +416,12 @@ class FunctionArgumentInjector {
       // that are seen.
       if (inLoop() || sideEffectSeen) {
         // Record references to parameters.
-        if (n.getType() == Token.NAME) {
+        if (n.isName()) {
           String name = n.getString();
           if (parameters.contains(name)) {
             parametersReferenced.add(name);
           }
-        } else if (n.getType() == Token.THIS) {
+        } else if (n.isThis()) {
           parametersReferenced.add(THIS_MARKER);
         }
       }
@@ -470,13 +470,13 @@ class FunctionArgumentInjector {
    * Gather any names declared in the local scope.
    */
   private static void gatherLocalNames(Node n, Set<String> names) {
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       if (NodeUtil.isFunctionDeclaration(n)) {
         names.add(n.getFirstChild().getString());
       }
       // Don't traverse into inner function scopes;
       return;
-    } else if (n.getType() == Token.NAME) {
+    } else if (n.isName()) {
       switch (n.getParent().getType()) {
         case Token.VAR:
         case Token.CATCH:

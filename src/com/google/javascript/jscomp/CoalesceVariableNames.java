@@ -253,8 +253,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           continue NEXT_VAR_PAIR;
         }
 
-        if (v1.getParentNode().getType() == Token.LP &&
-            v2.getParentNode().getType() == Token.LP) {
+        if (v1.getParentNode().isLP() &&
+            v2.getParentNode().isLP()) {
           interferenceGraph.connectIfNotFound(v1, null, v2);
           continue NEXT_VAR_PAIR;
         }
@@ -419,7 +419,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     private static boolean isAssignTo(Var var, Node n, Node parent) {
       if (n.isName() && var.getName().equals(n.getString()) &&
           parent != null) {
-        if (parent.getType() == Token.LP) {
+        if (parent.isLP()) {
           // In a function declaration, the formal parameters are assigned.
           return true;
         } else if (parent.isVar()) {

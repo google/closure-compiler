@@ -169,7 +169,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     switch (node.getType()) {
       case Token.NAME:
         // var MSG_HELLO = 'Message'
-        if ((parent != null) && (parent.getType() == Token.VAR)) {
+        if ((parent != null) && (parent.isVar())) {
           messageKey = node.getString();
           isVar = true;
         } else {
@@ -206,7 +206,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
     // Is this a message name?
     boolean isNewStyleMessage =
-        msgNode != null && msgNode.getType() == Token.CALL;
+        msgNode != null && msgNode.isCall();
     if (!isMessageName(messageKey, isNewStyleMessage)) {
       return;
     }
@@ -395,7 +395,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    */
   private boolean maybeInitMetaDataFromHelpVar(Builder builder,
       @Nullable Node sibling) throws MalformedException {
-    if ((sibling != null) && (sibling.getType() == Token.VAR)) {
+    if ((sibling != null) && (sibling.isVar())) {
       Node nameNode = sibling.getFirstChild();
       String name = nameNode.getString();
       if (name.equals(builder.getKey() + DESC_SUFFIX)) {
@@ -504,7 +504,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         case Token.LP:
           // Parse the placeholder names from the function argument list.
           for (Node argumentNode : fnChild.children()) {
-            if (argumentNode.getType() == Token.NAME) {
+            if (argumentNode.isName()) {
               String phName = argumentNode.getString();
               if (phNames.contains(phName)) {
                 throw new MalformedException("Duplicate placeholder name: "

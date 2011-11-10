@@ -148,7 +148,7 @@ class RescopeGlobalSymbols implements CompilerPass {
       }
       String name = n.getString();
       // Ignore anonymous functions
-      if (parent.getType() == Token.FUNCTION && name.length() == 0) {
+      if (parent.isFunction() && name.length() == 0) {
         return;
       }
       Scope.Var var = t.getScope().getVar(name);
@@ -159,7 +159,7 @@ class RescopeGlobalSymbols implements CompilerPass {
       Node nameNode = var.getNameNode();
       // The exception variable (e in try{}catch(e){}) should not be rewritten.
       if (nameNode != null && nameNode.getParent() != null &&
-          nameNode.getParent().getType() == Token.CATCH) {
+          nameNode.getParent().isCatch()) {
         return;
       }
       replaceSymbol(n, name);
@@ -214,13 +214,13 @@ class RescopeGlobalSymbols implements CompilerPass {
       // because the previous traversal in RewriteScopeCallback creates
       // them.
       for (Node c : n.children()) {
-        if (c.getType() == Token.ASSIGN ||
-            parent.getType() == Token.FOR) {
+        if (c.isAssign() ||
+            parent.isFor()) {
           interestingChildren.add(c);
         }
       }
       for (Node c : interestingChildren) {
-        if (parent.getType() == Token.FOR && parent.getFirstChild() == n) {
+        if (parent.isFor() && parent.getFirstChild() == n) {
           commas.add(c.cloneTree());
         } else {
           // Var statement outside of for-loop.

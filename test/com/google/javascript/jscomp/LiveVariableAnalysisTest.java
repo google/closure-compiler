@@ -316,7 +316,7 @@ public class LiveVariableAnalysisTest extends TestCase {
 
   private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(
       Node node, ControlFlowGraph<Node> cfg) {
-    if (node.getType() == Token.LABEL) {
+    if (node.isLabel()) {
       if (node.getFirstChild().getString().equals("X")) {
         return cfg.getNode(node.getLastChild()).getAnnotation();
       }

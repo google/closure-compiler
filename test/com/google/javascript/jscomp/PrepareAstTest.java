@@ -58,10 +58,10 @@ public class PrepareAstTest extends CompilerTestCase {
   public void testFreeCall1() throws Exception {
     Node root = parseExpectedJs("foo();");
     Node script = root.getFirstChild();
-    Preconditions.checkState(script.getType() == Token.SCRIPT);
+    Preconditions.checkState(script.isScript());
     Node firstExpr = script.getFirstChild();
     Node call = firstExpr.getFirstChild();
-    Preconditions.checkState(call.getType() == Token.CALL);
+    Preconditions.checkState(call.isCall());
 
     assertTrue(call.getBooleanProp(Node.FREE_CALL));
   }
@@ -69,10 +69,10 @@ public class PrepareAstTest extends CompilerTestCase {
   public void testFreeCall2() throws Exception {
     Node root = parseExpectedJs("x.foo();");
     Node script = root.getFirstChild();
-    Preconditions.checkState(script.getType() == Token.SCRIPT);
+    Preconditions.checkState(script.isScript());
     Node firstExpr = script.getFirstChild();
     Node call = firstExpr.getFirstChild();
-    Preconditions.checkState(call.getType() == Token.CALL);
+    Preconditions.checkState(call.isCall());
 
     assertFalse(call.getBooleanProp(Node.FREE_CALL));
   }

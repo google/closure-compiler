@@ -33,7 +33,6 @@ import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.jscomp.graph.StandardUnionFind;
 import com.google.javascript.jscomp.graph.UnionFind;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -401,7 +400,7 @@ class DisambiguateProperties<T> implements CompilerPass {
   private class FindExternProperties extends AbstractScopingCallback {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       // TODO(johnlenz): Support object-literal property definitions.
-      if (n.getType() == Token.GETPROP) {
+      if (n.isGetProp()) {
         String field = n.getLastChild().getString();
         T type = typeSystem.getType(getScope(), n.getFirstChild(), field);
         Property prop = getProperty(field);
@@ -429,9 +428,9 @@ class DisambiguateProperties<T> implements CompilerPass {
   private class FindRenameableProperties extends AbstractScopingCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.GETPROP) {
+      if (n.isGetProp()) {
         handleGetProp(t, n);
-      } else if (n.getType() == Token.OBJECTLIT) {
+      } else if (n.isObjectLit()) {
         handleObjectLit(t, n);
       }
     }
@@ -452,7 +451,7 @@ class DisambiguateProperties<T> implements CompilerPass {
             JSType jsType = (JSType) type;
             String qName = n.getFirstChild().getQualifiedName();
             if (jsType.isAllType() || jsType.isUnknownType()) {
-              if (n.getFirstChild().getType() == Token.THIS) {
+              if (n.getFirstChild().isThis()) {
                 suggestion = "The \"this\" object is unknown in the function,"+
                     "consider using @this";
               } else {

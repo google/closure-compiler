@@ -2533,7 +2533,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
       boolean hasBrackets) {
 
     assertTrue(marker.getType() != null);
-    assertTrue(marker.getType().getItem().getType() == Token.STRING);
+    assertTrue(marker.getType().getItem().isString());
 
     // Match the name and brackets information.
     String foundName = marker.getType().getItem().getString();

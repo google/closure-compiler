@@ -92,7 +92,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
     if (parent == null) {
       return;
     }
-    if (n.getType() == Token.FUNCTION || n.getType() == Token.SCRIPT) {
+    if (n.isFunction() || n.isScript()) {
       return;
     }
 
@@ -164,7 +164,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
         List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
         if (outEdges.size() == 1 &&
             // If there is a next node, there is no chance this jump is useless.
-            (n.getNext() == null || n.getNext().getType() == Token.FUNCTION)) {
+            (n.getNext() == null || n.getNext().isFunction())) {
 
           Preconditions.checkState(outEdges.get(0).getValue() == Branch.UNCOND);
           Node fallThrough = computeFollowing(n);
@@ -180,7 +180,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
 
   private Node computeFollowing(Node n) {
     Node next = ControlFlowAnalysis.computeFollowNode(n);
-    while (next != null && next.getType() == Token.BLOCK) {
+    while (next != null && next.isBlock()) {
       if (next.hasChildren()) {
         next = next.getFirstChild();
       } else {
@@ -192,8 +192,8 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
 
   private void removeDeadExprStatementSafely(Node n) {
     Node parent = n.getParent();
-    if (n.getType() == Token.EMPTY ||
-        (n.getType() == Token.BLOCK && !n.hasChildren())) {
+    if (n.isEmpty() ||
+        (n.isBlock() && !n.hasChildren())) {
       // Not always trivial to remove, let FoldContants work its magic later.
       return;
     }
@@ -208,7 +208,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
       case Token.BLOCK:
         // BLOCKs are used in several ways including wrapping CATCH
         // blocks in TRYs
-        if (parent.getType() == Token.TRY) {
+        if (parent.isTry()) {
           if (NodeUtil.isTryCatchNodeContainer(n)) {
             return;
           }

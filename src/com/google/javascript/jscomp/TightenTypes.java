@@ -236,10 +236,10 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     /** Finds assignments and variables from the function body. */
     void initForScopeRoot(Node decl) {
       Preconditions.checkNotNull(decl);
-      if (decl.getType() == Token.FUNCTION) {
+      if (decl.isFunction()) {
         decl = decl.getLastChild();
       }
-      Preconditions.checkArgument(decl.getType() == Token.BLOCK);
+      Preconditions.checkArgument(decl.isBlock());
 
       NodeTraversal.traverse(compiler, decl, new CreateScope(this, false));
     }
@@ -247,7 +247,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
     /** Finds assignments and variables from the given externs. */
     void initForExternRoot(Node decl) {
       Preconditions.checkNotNull(decl);
-      Preconditions.checkArgument(decl.getType() == Token.BLOCK);
+      Preconditions.checkArgument(decl.isBlock());
 
       NodeTraversal.traverse(compiler, decl, new CreateScope(this, true));
     }
@@ -661,7 +661,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           if (inExterns) {
             // Again, we have to trust the externs.
             ConcreteScope scope;
-            if (lhs.getType() == Token.GETPROP) {
+            if (lhs.isGetProp()) {
               ConcreteType type = inferConcreteType(getTopScope(),
                   lhs.getFirstChild());
               scope = (ConcreteScope) type.getScope();
@@ -702,11 +702,11 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
         case Token.NEW:
         case Token.CALL:
           Node receiver = n.getFirstChild();
-          if (receiver.getType() == Token.GETPROP) {
+          if (receiver.isGetProp()) {
             Node first = receiver.getFirstChild();
             // Special case the call() function.
             if ("call".equals(first.getNext().getString())) {
-              if (first.getType() == Token.GETPROP) {
+              if (first.isGetProp()) {
                 // foo.bar.call()
                 addAction(new FunctionCallBuilder(first, receiver.getNext())
                     .setPropName(first.getFirstChild().getNext().getString())
@@ -727,13 +727,13 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           } else {
             // foo() or new Foo()
             addAction(new FunctionCallBuilder(receiver, receiver.getNext())
-                      .setIsNewCall(n.getType() == Token.NEW)
+                      .setIsNewCall(n.isNew())
                       .build());
           }
           break;
 
         case Token.NAME:
-          if (parent.getType() == Token.CATCH && parent.getFirstChild() == n) {
+          if (parent.isCatch() && parent.getFirstChild() == n) {
             // The variable in a catch statement gets defined in the scope of
             // the catch block. We approximate that, as does the normal type
             // sytem, by declaring a variable for it in the scope in which the
@@ -840,7 +840,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           // TODO(user): handle addEventListener for the case of an object
           //     implementing the EventListener interface.
           Node receiver = n.getFirstChild();
-          if (!inExterns && receiver.getType() == Token.GETPROP) {
+          if (!inExterns && receiver.isGetProp()) {
             return getImplicitActionsFromCall(n, receiver.getJSType());
           }
           break;
@@ -849,7 +849,7 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
           Node lhs = n.getFirstChild();
           // Functions assigned to externs properties are considered called.
           // E.g. element.onclick = function handle(evt) {};
-          if (!inExterns && lhs.getType() == Token.GETPROP) {
+          if (!inExterns && lhs.isGetProp()) {
             return getImplicitActionsFromProp(lhs.getFirstChild().getJSType(),
                 lhs.getLastChild().getString(), n.getLastChild());
           }
@@ -976,14 +976,14 @@ class TightenTypes implements CompilerPass, ConcreteType.Factory {
   /** Returns a concrete type from the JSType of the given variable. */
   private ConcreteType createType(Node name, ConcreteScope scope) {
     Preconditions.checkNotNull(name);
-    Preconditions.checkArgument(name.getType() == Token.NAME);
+    Preconditions.checkArgument(name.isName());
 
     if (name.getJSType() == null) {
       return ConcreteType.ALL;
     }
 
     if ((name.getFirstChild() != null)
-        && (name.getFirstChild().getType() == Token.FUNCTION)) {
+        && (name.getFirstChild().isFunction())) {
       return createConcreteFunction(name.getFirstChild(), scope);
     }
 

@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.VariableVisibilityAnalysis.VariableVisibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Tests of {@link VariableVisibilityAnalysis}.
@@ -168,7 +167,7 @@ public class VariableVisibilityAnalysisTest extends CompilerTestCase {
 
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.getParent().getType() == Token.LP
+        if (n.getParent().isLP()
             && parameterName.equals(n.getString())) {
 
           foundNode[0] = n;
@@ -235,7 +234,7 @@ public class VariableVisibilityAnalysisTest extends CompilerTestCase {
     }
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.LABEL &&
+      if (n.isLabel() &&
           target.equals(n.getFirstChild().getString())) {
 
         // LABEL

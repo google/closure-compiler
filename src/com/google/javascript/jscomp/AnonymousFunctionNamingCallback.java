@@ -77,7 +77,7 @@ class AnonymousFunctionNamingCallback
         Node functionNameNode = n.getFirstChild();
         String functionName = functionNameNode.getString();
         if (functionName.length() == 0) {
-          if (parent.getType() == Token.ASSIGN) {
+          if (parent.isAssign()) {
             // this is an assignment to a property, generally either a
             // static function or a prototype function
             // e.g. goog.string.htmlEscape = function() { } or
@@ -85,7 +85,7 @@ class AnonymousFunctionNamingCallback
             Node lhs = parent.getFirstChild();
             String name = namer.getName(lhs);
             namer.setFunctionName(name, n);
-          } else if (parent.getType() == Token.NAME) {
+          } else if (parent.isName()) {
             // this is an assignment to a variable
             // e.g. var handler = function() {}
             String name = namer.getName(parent);
@@ -101,7 +101,7 @@ class AnonymousFunctionNamingCallback
         //      }
         Node lhs = n.getFirstChild();
         Node rhs = lhs.getNext();
-        if (rhs.getType() == Token.OBJECTLIT) {
+        if (rhs.isObjectLit()) {
           nameObjectLiteralMethods(rhs, namer.getName(lhs));
         }
     }
@@ -115,7 +115,7 @@ class AnonymousFunctionNamingCallback
 
       // Object literal keys may be STRING, GET, SET. Get and Set
       // are skipped because they can not be named.
-      if (keyNode.getType() == Token.STRING) {
+      if (keyNode.isString()) {
         // concatenate the context and key name to get a new qualified name.
         String name = namer.getCombinedName(context, namer.getName(keyNode));
 

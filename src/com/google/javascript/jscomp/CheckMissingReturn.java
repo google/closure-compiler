@@ -48,7 +48,7 @@ class CheckMissingReturn implements ScopedCallback {
     public boolean apply(Node input) {
       // Check for null because the control flow graph's implicit return node is
       // represented by null, so this value might be input.
-      return input != null && input.getType() == Token.RETURN;
+      return input != null && input.isReturn();
     }
   };
 

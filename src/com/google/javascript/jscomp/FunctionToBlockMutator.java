@@ -118,7 +118,7 @@ class FunctionToBlockMutator {
    * @param n The node to inspect
    */
   private void rewriteFunctionDeclarations(Node n) {
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       if (NodeUtil.isFunctionDeclaration(n)) {
         // Rewrite: function f() {} ==> var f = function() {}
         Node fnNameNode = n.getFirstChild();
@@ -380,7 +380,7 @@ class FunctionToBlockMutator {
    *   a = (void) 0;
    */
   private static void addDummyAssignment(Node node, String resultName) {
-    Preconditions.checkArgument(node.getType() == Token.BLOCK);
+    Preconditions.checkArgument(node.isBlock());
 
     // A result is needed create a dummy value.
     Node srcLocation = node;
@@ -402,7 +402,7 @@ class FunctionToBlockMutator {
   private static void convertLastReturnToStatement(
       Node block, String resultName) {
     Node ret = block.getLastChild();
-    Preconditions.checkArgument(ret.getType() == Token.RETURN);
+    Preconditions.checkArgument(ret.isReturn());
     Node resultNode = getReplacementReturnStatement(ret, resultName);
 
     if (resultNode == null) {
@@ -468,7 +468,7 @@ class FunctionToBlockMutator {
   private static boolean hasReturnAtExit(Node block) {
     // Only inline functions that return something (empty returns
     // will be handled by ConstFolding+EmptyFunctionRemoval)
-    return (block.getLastChild().getType() == Token.RETURN);
+    return (block.getLastChild().isReturn());
   }
 
   /**
@@ -480,14 +480,14 @@ class FunctionToBlockMutator {
   private static Node replaceReturnWithBreak(Node current, Node parent,
       String resultName, String labelName) {
 
-    if (current.getType() == Token.FUNCTION
-        || current.getType() == Token.EXPR_RESULT) {
+    if (current.isFunction()
+        || current.isExprResult()) {
       // Don't recurse into functions definitions, and expressions can't
       // contain RETURN nodes.
       return current;
     }
 
-    if (current.getType() == Token.RETURN) {
+    if (current.isReturn()) {
       Preconditions.checkState(NodeUtil.isStatementBlock(parent));
 
       Node resultNode = getReplacementReturnStatement(current, resultName);

@@ -225,7 +225,7 @@ class RuntimeTypeCheck implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isFunction()) {
         visitFunction(t, n);
-      } else if (n.getType() == Token.RETURN) {
+      } else if (n.isReturn()) {
         visitReturn(t, n);
       }
     }

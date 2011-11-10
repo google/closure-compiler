@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 /**
@@ -193,7 +191,7 @@ public class MustBeReachingVariableDefTest extends TestCase {
   private class LabelFinder extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.LABEL) {
+      if (n.isLabel()) {
         if (n.getFirstChild().getString().equals("D")) {
           def = n.getLastChild();
         } else if (n.getFirstChild().getString().equals("U")) {

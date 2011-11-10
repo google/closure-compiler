@@ -50,8 +50,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
     // I've been unable to think of any cases where this indicates a bug,
     // and apparently some people like keeping these semicolons around,
     // so we'll allow it.
-    if (n.getType() == Token.EMPTY ||
-        n.getType() == Token.COMMA) {
+    if (n.isEmpty() ||
+        n.isComma()) {
       return;
     }
 
@@ -61,7 +61,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
     int pt = parent.getType();
     if (pt == Token.COMMA) {
       Node gramps = parent.getParent();
-      if (gramps.getType() == Token.CALL &&
+      if (gramps.isCall() &&
           parent == gramps.getFirstChild()) {
         // Semantically, a direct call to eval is different from an indirect
         // call to an eval. See Ecma-262 S15.1.2.1. So it's ok for the first
@@ -69,7 +69,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
         // an eval.
         if (n == parent.getFirstChild() &&
             parent.getChildCount() == 2 &&
-            n.getNext().getType() == Token.NAME &&
+            n.getNext().isName() &&
             "eval".equals(n.getNext().getString())) {
           return;
         }
@@ -111,7 +111,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
       }
 
       String msg = "This code lacks side-effects. Is there a bug?";
-      if (n.getType() == Token.STRING) {
+      if (n.isString()) {
         msg = "Is there a missing '+' on the previous line?";
       } else if (isSimpleOp) {
         msg = "The result of the '" + Node.tokenToName(n.getType()) +

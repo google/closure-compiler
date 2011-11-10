@@ -74,9 +74,9 @@ class GenerateExports implements CompilerPass {
       String grandparent = null;
 
       Node node = context.getNode().getFirstChild();
-      if (node.getType() == Token.GETPROP) {
+      if (node.isGetProp()) {
         parent = node.getFirstChild().getQualifiedName();
-        if (node.getFirstChild().getType() == Token.GETPROP &&
+        if (node.getFirstChild().isGetProp() &&
             getPropertyName(node.getFirstChild()).equals(PROTOTYPE_PROPERTY)) {
           grandparent = node.getFirstChild().getFirstChild().getQualifiedName();
         }
@@ -153,7 +153,7 @@ class GenerateExports implements CompilerPass {
    * @return property name.
    */
   private String getPropertyName(Node node) {
-    Preconditions.checkArgument(node.getType() == Token.GETPROP);
+    Preconditions.checkArgument(node.isGetProp());
     return node.getLastChild().getString();
   }
 }

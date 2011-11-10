@@ -94,17 +94,17 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   @Override public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() == Token.NAME) {
+    if (n.isName()) {
       if (!isDeclaration(n)) {
         checkNameUse(t, n);
       }
-    } else if (n.getType() == Token.ASSIGN) {
+    } else if (n.isAssign()) {
       checkAssignment(t, n);
     } else if (n.getType() == Token.DELPROP) {
       checkDelete(t, n);
-    } else if (n.getType() == Token.OBJECTLIT) {
+    } else if (n.isObjectLit()) {
       checkObjectLiteral(t, n);
-    } else if (n.getType() == Token.LABEL) {
+    } else if (n.isLabel()) {
       checkLabel(t, n);
     }
   }
@@ -121,7 +121,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
         return true;
 
       case Token.LP:
-        return n.getParent().getParent().getType() == Token.FUNCTION;
+        return n.getParent().getParent().isFunction();
 
       default:
         return false;
@@ -150,7 +150,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   /** Checks that an assignment is not to the "arguments" object. */
   private void checkAssignment(NodeTraversal t, Node n) {
-    if (n.getFirstChild().getType() == Token.NAME) {
+    if (n.getFirstChild().isName()) {
       if ("arguments".equals(n.getFirstChild().getString())) {
         t.report(n, ARGUMENTS_ASSIGNMENT);
       } else if ("eval".equals(n.getFirstChild().getString())) {
@@ -165,7 +165,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   /** Checks that variables, functions, and arguments are not deleted. */
   private void checkDelete(NodeTraversal t, Node n) {
-    if (n.getFirstChild().getType() == Token.NAME) {
+    if (n.getFirstChild().isName()) {
       Var v = t.getScope().getVar(n.getFirstChild().getString());
       if (v != null) {
         t.report(n, DELETE_VARIABLE);
@@ -214,9 +214,9 @@ class StrictModeCheck extends AbstractPostOrderCallback
   /** Checks that are performed on non-extern code only. */
   private class NonExternChecks extends AbstractPostOrderCallback {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
-      if ((n.getType() == Token.NAME) && isDeclaration(n)) {
+      if ((n.isName()) && isDeclaration(n)) {
         checkDeclaration(t, n);
-      } else if (n.getType() == Token.GETPROP) {
+      } else if (n.isGetProp()) {
         checkProperty(t, n);
       }
     }

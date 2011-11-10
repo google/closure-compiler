@@ -55,7 +55,7 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
       case Token.GETELEM:
         Node left = n.getFirstChild();
         Node right = left.getNext();
-        if (right.getType() == Token.STRING &&
+        if (right.isString() &&
             NodeUtil.isValidPropertyName(right.getString())) {
           n.removeChild(left);
           n.removeChild(right);

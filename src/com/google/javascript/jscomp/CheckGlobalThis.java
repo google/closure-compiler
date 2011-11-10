@@ -79,7 +79,7 @@ final class CheckGlobalThis implements Callback {
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
 
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       // Don't traverse functions that are constructors or have the @this
       // or @override annotation.
       JSDocInfo jsDoc = getFunctionJsDocInfo(n);
@@ -120,7 +120,7 @@ final class CheckGlobalThis implements Callback {
       }
     }
 
-    if (parent != null && parent.getType() == Token.ASSIGN) {
+    if (parent != null && parent.isAssign()) {
       Node lhs = parent.getFirstChild();
       Node rhs = lhs.getNext();
 
@@ -135,12 +135,12 @@ final class CheckGlobalThis implements Callback {
         // Only traverse the right side if it's not an assignment to a prototype
         // property or subproperty.
         if (NodeUtil.isGet(lhs)) {
-          if (lhs.getType() == Token.GETPROP &&
+          if (lhs.isGetProp() &&
               lhs.getLastChild().getString().equals("prototype")) {
             return false;
           }
           Node llhs = lhs.getFirstChild();
-          if (llhs.getType() == Token.GETPROP &&
+          if (llhs.isGetProp() &&
               llhs.getLastChild().getString().equals("prototype")) {
             return false;
           }
@@ -153,7 +153,7 @@ final class CheckGlobalThis implements Callback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+    if (n.isThis() && shouldReportThis(n, parent)) {
       compiler.report(t.makeError(n, GLOBAL_THIS));
     }
     if (n == assignLhsChild) {
@@ -190,7 +190,7 @@ final class CheckGlobalThis implements Callback {
         jsDoc = parent.getJSDocInfo();
         if (jsDoc == null && parentType == Token.NAME) {
           Node gramps = parent.getParent();
-          if (gramps.getType() == Token.VAR) {
+          if (gramps.isVar()) {
             jsDoc = gramps.getJSDocInfo();
           }
         }

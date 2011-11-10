@@ -349,7 +349,7 @@ final class NameAnalyzer implements CompilerPass {
     PrototypeSetNode(JsName name, Node parent) {
       super(name, parent.getFirstChild());
 
-      Preconditions.checkState(parent.getType() == Token.ASSIGN);
+      Preconditions.checkState(parent.isAssign());
     }
 
     @Override public void remove() {
@@ -421,12 +421,12 @@ final class NameAnalyzer implements CompilerPass {
     ClassDefiningFunctionNode(JsName name, Node node, Node parent,
         Node gramps) {
       super(name, node, parent, gramps);
-      Preconditions.checkState(node.getType() == Token.CALL);
+      Preconditions.checkState(node.isCall());
     }
 
     @Override
     public void remove() {
-      Preconditions.checkState(node.getType() == Token.CALL);
+      Preconditions.checkState(node.isCall());
       if (NodeUtil.isExpressionNode(parent)) {
         changeProxy.removeChild(gramps, parent);
       } else {
@@ -511,11 +511,11 @@ final class NameAnalyzer implements CompilerPass {
         return;
       }
 
-      if (n.getType() == Token.ASSIGN) {
+      if (n.isAssign()) {
         Node nameNode = n.getFirstChild();
         NameInformation ns = createNameInformation(t, nameNode, n);
         if (ns != null) {
-          if (parent.getType() == Token.FOR && !NodeUtil.isForIn(parent)) {
+          if (parent.isFor() && !NodeUtil.isForIn(parent)) {
             // Patch for assignments that appear in the init,
             // condition or iteration part of a FOR loop.  Without
             // this change, all 3 of those parts try to claim the for
@@ -617,7 +617,7 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       // Record assignments and call sites
-      if (n.getType() == Token.ASSIGN) {
+      if (n.isAssign()) {
         Node nameNode = n.getFirstChild();
 
         NameInformation ns = createNameInformation(t, nameNode, n);
@@ -628,7 +628,7 @@ final class NameAnalyzer implements CompilerPass {
             recordSet(ns.name, nameNode);
           }
         }
-      } else if (n.getType() == Token.CALL) {
+      } else if (n.isCall()) {
         Node nameNode = n.getFirstChild();
         NameInformation ns = createNameInformation(t, nameNode, n);
         if (ns != null && ns.onlyAffectsClassDef) {
@@ -655,7 +655,7 @@ final class NameAnalyzer implements CompilerPass {
 
       // Now, look at all parent names and record that their properties have
       // been written to.
-      if (node.getType() == Token.GETELEM) {
+      if (node.isGetElem()) {
         recordWriteOnProperties(name);
       } else if (name.indexOf('.') != -1) {
         recordWriteOnProperties(name.substring(0, name.lastIndexOf('.')));
@@ -704,7 +704,7 @@ final class NameAnalyzer implements CompilerPass {
       new Predicate<Node>() {
         @Override
         public boolean apply(Node input) {
-          if (input.getType() == Token.CALL) {
+          if (input.isCall()) {
             return false;
           }
           // TODO(johnlenz): handle NEW calls that record their 'this'
@@ -745,20 +745,20 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     private void addSimplifiedExpression(Node n, Node parent) {
-      if (parent.getType() == Token.VAR) {
+      if (parent.isVar()) {
         Node value = n.getFirstChild();
         if (value != null) {
           addSimplifiedChildren(value);
         }
-      } else if (n.getType() == Token.ASSIGN &&
-          (parent.getType() == Token.EXPR_RESULT ||
-           parent.getType() == Token.FOR ||
-           parent.getType() == Token.RETURN)) {
+      } else if (n.isAssign() &&
+          (parent.isExprResult() ||
+           parent.isFor() ||
+           parent.isReturn())) {
         for (Node child : n.children()) {
           addSimplifiedChildren(child);
         }
-      } else if (n.getType() == Token.CALL &&
-                 parent.getType() == Token.EXPR_RESULT) {
+      } else if (n.isCall() &&
+                 parent.isExprResult()) {
         addSimplifiedChildren(n);
       } else {
         addAllChildren(n);
@@ -775,7 +775,7 @@ final class NameAnalyzer implements CompilerPass {
       // arguments to function calls with side effects or are used in
       // control structure predicates.  These names are always
       // referenced when the enclosing function is called.
-      if (n.getType() == Token.FOR) {
+      if (n.isFor()) {
         if (!NodeUtil.isForIn(n)) {
           Node decl = n.getFirstChild();
           Node pred = decl.getNext();
@@ -791,23 +791,23 @@ final class NameAnalyzer implements CompilerPass {
         }
       }
 
-      if (parent.getType() == Token.VAR ||
-          parent.getType() == Token.EXPR_RESULT ||
-          parent.getType() == Token.RETURN ||
-          parent.getType() == Token.THROW) {
+      if (parent.isVar() ||
+          parent.isExprResult() ||
+          parent.isReturn() ||
+          parent.isThrow()) {
         addSimplifiedExpression(n, parent);
       }
 
-      if ((parent.getType() == Token.IF ||
+      if ((parent.isIf() ||
            parent.getType() == Token.WHILE ||
            parent.getType() == Token.WITH ||
-           parent.getType() == Token.SWITCH ||
-           parent.getType() == Token.CASE) &&
+           parent.isSwitch() ||
+           parent.isCase()) &&
           parent.getFirstChild() == n) {
         addAllChildren(n);
       }
 
-      if (parent.getType() == Token.DO && parent.getLastChild() == n) {
+      if (parent.isDo() && parent.getLastChild() == n) {
         addAllChildren(n);
       }
 
@@ -934,7 +934,7 @@ final class NameAnalyzer implements CompilerPass {
     private boolean maybeHiddenAlias(String name, Node n) {
       Node parent = n.getParent();
       if (NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
-        Node rhs = (parent.getType() == Token.VAR)
+        Node rhs = (parent.isVar())
             ? n.getFirstChild() : parent.getLastChild();
         return (rhs != null && !NodeUtil.evaluatesToLocalValue(
             rhs, NON_LOCAL_RESULT_PREDICATE));
@@ -948,8 +948,8 @@ final class NameAnalyzer implements CompilerPass {
     private boolean maybeRecordAlias(
         String name, Node parent,
         NameInformation referring, String referringName) {
-      if ((parent.getType() == Token.NAME ||
-          parent.getType() == Token.ASSIGN) &&
+      if ((parent.isName() ||
+          parent.isAssign()) &&
           referring != null &&
           scopes.get(parent) == referring) {
         recordAlias(referringName, name);
@@ -1327,7 +1327,7 @@ final class NameAnalyzer implements CompilerPass {
     while (true) {
       if (NodeUtil.isGet(rootNameNode)) {
         Node prop = rootNameNode.getLastChild();
-        if (rootNameNode.getType() == Token.GETPROP) {
+        if (rootNameNode.isGetProp()) {
           name = "." + prop.getString() + name;
         } else {
           // We consider the name to be "a.b" in a.b['c'] or a.b[x].d.
@@ -1342,13 +1342,13 @@ final class NameAnalyzer implements CompilerPass {
         // Check if this is an object literal assigned to something.
         Node objLit = rootNameNode.getParent();
         Node objLitParent = objLit.getParent();
-        if (objLitParent.getType() == Token.ASSIGN) {
+        if (objLitParent.isAssign()) {
           // This must be the right side of the assign.
           rootNameNode = objLitParent.getFirstChild();
-        } else if (objLitParent.getType() == Token.NAME) {
+        } else if (objLitParent.isName()) {
           // This must be a VAR initialization.
           rootNameNode = objLitParent;
-        } else if (objLitParent.getType() == Token.STRING) {
+        } else if (objLitParent.isString()) {
           // This must be a object literal key initialization.
           rootNameNode = objLitParent;
         } else {
@@ -1387,8 +1387,8 @@ final class NameAnalyzer implements CompilerPass {
         // Check whether this is an assignment to a prototype property
         // of an object defined in the global scope.
         if (!bNameWasShortened &&
-            n.getType() == Token.GETPROP &&
-            parent.getType() == Token.ASSIGN &&
+            n.isGetProp() &&
+            parent.isAssign() &&
             "prototype".equals(n.getLastChild().getString())) {
           if (createNameInformation(t, n.getFirstChild(), n) != null) {
             name = rootNameNode.getString() + name;
@@ -1518,15 +1518,15 @@ final class NameAnalyzer implements CompilerPass {
     if (parent != null) {
       // Account for functions defined in the form:
       //   var a = cond ? function a() {} : function b() {};
-      while (parent.getType() == Token.HOOK) {
+      while (parent.isHook()) {
         parent = parent.getParent();
       }
 
-      if (parent.getType() == Token.NAME) {
+      if (parent.isName()) {
         return scopes.get(parent);
       }
 
-      if (parent.getType() == Token.ASSIGN) {
+      if (parent.isAssign()) {
         return scopes.get(parent);
       }
     }
@@ -1631,7 +1631,7 @@ final class NameAnalyzer implements CompilerPass {
       newReplacements.add(valueExpr);
       changeProxy.replaceWith(
           parent, n, collapseReplacements(newReplacements));
-    } else if (n.getType() == Token.ASSIGN && parent.getType() != Token.FOR) {
+    } else if (n.isAssign() && parent.getType() != Token.FOR) {
       // assignment appears in a RHS expression.  we have already
       // considered names in the assignment's RHS as being referenced;
       // replace the assignment with its RHS.
@@ -1669,7 +1669,7 @@ final class NameAnalyzer implements CompilerPass {
       case Token.VAR:
         break;
       case Token.ASSIGN:
-        Preconditions.checkArgument(parent.getType() == Token.FOR,
+        Preconditions.checkArgument(parent.isFor(),
             "Unsupported assignment in replaceWithRhs. parent: %s", Token.name(parent.getType()));
         break;
       default:
@@ -1684,7 +1684,7 @@ final class NameAnalyzer implements CompilerPass {
       replacements.addAll(getSideEffectNodes(rhs));
     }
 
-    if (parent.getType() == Token.FOR) {
+    if (parent.isFor()) {
       // tweak replacements array s.t. it is a single expression node.
       if (replacements.isEmpty()) {
         replacements.add(new Node(Token.EMPTY));
@@ -1745,7 +1745,7 @@ final class NameAnalyzer implements CompilerPass {
   private Node collapseReplacements(List<Node> replacements) {
     Node expr = null;
     for (Node rep : replacements) {
-      if (rep.getType() == Token.EXPR_RESULT) {
+      if (rep.isExprResult()) {
         rep = rep.getFirstChild();
         rep.detachFromParent();
       }

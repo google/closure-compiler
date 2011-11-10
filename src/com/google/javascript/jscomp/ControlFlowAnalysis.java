@@ -167,7 +167,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       // priority of them too.
       for (DiGraphNode<Node, Branch> candidate : cfg.getDirectedGraphNodes()) {
         Node value = candidate.getValue();
-        if (value != null && value.getType() == Token.FUNCTION) {
+        if (value != null && value.isFunction()) {
           Preconditions.checkState(
               !nodePriorities.containsKey(candidate) || candidate == entry);
           prioritizeFromEntryNode(candidate);
@@ -453,7 +453,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     // Look for the next CASE, skipping over DEFAULT.
     Node next = getNextSiblingOfType(node.getNext(), Token.CASE);
     if (next != null) { // Found a CASE
-      Preconditions.checkState(next.getType() == Token.CASE);
+      Preconditions.checkState(next.isCase());
       createEdge(node, Branch.ON_FALSE, next);
     } else { // No more CASE found, go back and search for a DEFAULT.
       Node parent = node.getParent();
@@ -482,8 +482,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   private void handleStmtList(Node node) {
     Node parent = node.getParent();
     // Special case, don't add a block of empty CATCH block to the graph.
-    if (node.getType() == Token.BLOCK && parent != null &&
-        parent.getType() == Token.TRY &&
+    if (node.isBlock() && parent != null &&
+        parent.isTry() &&
         NodeUtil.getCatchBlock(parent) == node &&
         !NodeUtil.hasCatchHandler(node)) {
       return;
@@ -494,7 +494,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
     // Function declarations are skipped since control doesn't go into that
     // function (unless it is called)
-    while (child != null && child.getType() == Token.FUNCTION) {
+    while (child != null && child.isFunction()) {
       child = child.getNext();
     }
 
@@ -512,7 +512,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         case Token.TRY:
           break;
         default:
-          if (node.getType() == Token.BLOCK && node.isSyntheticBlock()) {
+          if (node.isBlock() && node.isSyntheticBlock()) {
             createEdge(node, Branch.SYN_BLOCK, computeFollowNode(node, this));
           }
           break;
@@ -568,7 +568,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     for (cur = node, lastJump = node;
         !isBreakTarget(cur, label);
         cur = parent, parent = parent.getParent()) {
-      if (cur.getType() == Token.TRY && NodeUtil.hasFinally(cur)
+      if (cur.isTry() && NodeUtil.hasFinally(cur)
           && cur.getLastChild() != previous) {
         if (lastJump == node) {
           createEdge(lastJump, Branch.UNCOND, computeFallThrough(
@@ -602,7 +602,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     for (cur = node, lastJump = node;
         !isContinueTarget(cur, parent, label);
         cur = parent, parent = parent.getParent()) {
-      if (cur.getType() == Token.TRY && NodeUtil.hasFinally(cur)
+      if (cur.isTry() && NodeUtil.hasFinally(cur)
           && cur.getLastChild() != previous) {
         if (lastJump == node) {
           createEdge(lastJump, Branch.UNCOND, cur.getLastChild());
@@ -700,7 +700,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
      * This will make life easier for DFAs.
      */
     Node parent = node.getParent();
-    if (parent == null || parent.getType() == Token.FUNCTION ||
+    if (parent == null || parent.isFunction() ||
         (cfa != null && node == cfa.root)) {
       return null;
     }
@@ -715,9 +715,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         // After the body of a CASE, the control goes to the body of the next
         // case, without having to go to the case condition.
         if (parent.getNext() != null) {
-          if (parent.getNext().getType() == Token.CASE) {
+          if (parent.getNext().isCase()) {
             return parent.getNext().getFirstChild().getNext();
-          } else if (parent.getNext().getType() == Token.DEFAULT) {
+          } else if (parent.getNext().isDefault()) {
             return parent.getNext().getFirstChild();
           } else {
             Preconditions.checkState(false, "Not reachable");
@@ -766,7 +766,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     Node nextSibling = node.getNext();
 
     // Skip function declarations because control doesn't get pass into it.
-    while (nextSibling != null && nextSibling.getType() == Token.FUNCTION) {
+    while (nextSibling != null && nextSibling.isFunction()) {
       nextSibling = nextSibling.getNext();
     }
 
@@ -824,7 +824,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         if (handler.isFunction()) {
           return;
         }
-        Preconditions.checkState(handler.getType() == Token.TRY);
+        Preconditions.checkState(handler.isTry());
         Node catchBlock = NodeUtil.getCatchBlock(handler);
 
         if (!NodeUtil.hasCatchHandler(catchBlock)) { // No catch but a FINALLY.
@@ -885,7 +885,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     if (label == null) {
       return true;
     }
-    while (target.getType() == Token.LABEL) {
+    while (target.isLabel()) {
       if (target.getFirstChild().getString().equals(label)) {
         return true;
       }
@@ -975,8 +975,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * @return The CATCH node or null there is no catch handler.
    */
   static Node getCatchHandlerForBlock(Node block) {
-    if (block.getType() == Token.BLOCK &&
-        block.getParent().getType() == Token.TRY &&
+    if (block.isBlock() &&
+        block.getParent().isTry() &&
         block.getParent().getFirstChild() == block) {
       for (Node s = block.getNext(); s != null; s = s.getNext()) {
         if (NodeUtil.hasCatchHandler(s)) {

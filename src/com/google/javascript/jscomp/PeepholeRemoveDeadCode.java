@@ -80,7 +80,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldTry(Node n) {
-    Preconditions.checkState(n.getType() == Token.TRY);
+    Preconditions.checkState(n.isTry());
     Node body = n.getFirstChild();
     Node catchBlock = body.getNext();
     Node finallyBlock = catchBlock.getNext();
@@ -115,12 +115,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldAssignment(Node subtree) {
-    Preconditions.checkState(subtree.getType() == Token.ASSIGN);
+    Preconditions.checkState(subtree.isAssign());
     Node left = subtree.getFirstChild();
     Node right = subtree.getLastChild();
     // Only names
-    if (left.getType() == Token.NAME
-        && right.getType() == Token.NAME
+    if (left.isName()
+        && right.isName()
         && left.getString().equals(right.getString())) {
       subtree.getParent().replaceChild(subtree, right.detachFromParent());
       reportCodeChange();
@@ -138,7 +138,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (result == null) {
       Node parent = subtree.getParent();
       // If the EXPR_RESULT no longer has any children, remove it as well.
-      if (parent.getType() == Token.LABEL) {
+      if (parent.isLabel()) {
         Node replacement = new Node(Token.BLOCK).copyInformationFrom(subtree);
         parent.replaceChild(subtree, replacement);
         subtree = replacement;
@@ -282,7 +282,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Remove useless switches and cases.
    */
   private Node tryOptimizeSwitch(Node n) {
-    Preconditions.checkState(n.getType() == Token.SWITCH);
+    Preconditions.checkState(n.isSwitch());
 
     Node defaultCase = tryOptimizeDefaultCase(n);
 
@@ -320,13 +320,13 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    *     if the default case is removed.
    */
   private Node tryOptimizeDefaultCase(Node n) {
-    Preconditions.checkState(n.getType() == Token.SWITCH);
+    Preconditions.checkState(n.isSwitch());
 
     Node lastNonRemovable = n.getFirstChild();  // The switch condition
 
     // The first child is the switch conditions skip it when looking for cases.
     for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
-      if (c.getType() == Token.DEFAULT) {
+      if (c.isDefault()) {
         // Remove cases that fall-through to the default case
         Node caseToRemove = lastNonRemovable.getNext();
         for (Node next; caseToRemove != c; caseToRemove = next) {
@@ -345,7 +345,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         }
         return c;
       } else {
-        Preconditions.checkState(c.getType() == Token.CASE);
+        Preconditions.checkState(c.isCase());
         if (c.getLastChild().hasChildren()
             || mayHaveSideEffects(c.getFirstChild())) {
           lastNonRemovable = c;
@@ -387,15 +387,15 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     Node executingCase = caseNode;
     while (executingCase != null) {
-      Preconditions.checkState(executingCase.getType() == Token.DEFAULT
-          || executingCase.getType() == Token.CASE);
+      Preconditions.checkState(executingCase.isDefault()
+          || executingCase.isCase());
       // We only expect a DEFAULT case if the case we are checking is the
       // DEFAULT case.  Otherwise we assume the DEFAULT case has already
       // been removed.
       Preconditions.checkState(caseNode == executingCase
           || executingCase.getType() != Token.DEFAULT);
       Node block = executingCase.getLastChild();
-      Preconditions.checkState(block.getType() == Token.BLOCK);
+      Preconditions.checkState(block.isBlock());
       if (block.hasChildren()) {
         for (Node blockChild : block.children()) {
           // If this is a block with a labelless break, it is useless.
@@ -544,7 +544,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (NodeUtil.isExprAssign(n)
         && n.getFirstChild().getFirstChild().isName()) {
       return true;
-    } else if (n.getType() == Token.VAR && n.hasOneChild() &&
+    } else if (n.isVar() && n.hasOneChild() &&
         n.getFirstChild().getFirstChild() != null) {
       return true;
     }
@@ -579,14 +579,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private boolean isConditionalStatement(Node n) {
     // We defined a conditional statement to be a IF or EXPR_RESULT rooted with
     // a HOOK, AND, or OR node.
-    return n != null && (n.getType() == Token.IF || isExprConditional(n));
+    return n != null && (n.isIf() || isExprConditional(n));
   }
 
   /**
    * @return Whether the node is a rooted with a HOOK, AND, or OR node.
    */
   private boolean isExprConditional(Node n) {
-    if (n.getType() == Token.EXPR_RESULT) {
+    if (n.isExprResult()) {
       switch (n.getFirstChild().getType()) {
         case Token.HOOK:
         case Token.AND:
@@ -601,7 +601,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return The condition of a conditional statement.
    */
   private Node getConditionalStatementCondition(Node n) {
-    if (n.getType() == Token.IF) {
+    if (n.isIf()) {
       return NodeUtil.getConditionExpression(n);
     } else {
       Preconditions.checkState(isExprConditional(n));
@@ -614,7 +614,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldIf(Node n) {
-    Preconditions.checkState(n.getType() == Token.IF);
+    Preconditions.checkState(n.isIf());
     Node parent = n.getParent();
     Preconditions.checkNotNull(parent);
     int type = n.getType();
@@ -720,7 +720,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * @return the replacement node, if changed, or the original if not
    */
   private Node tryFoldHook(Node n) {
-    Preconditions.checkState(n.getType() == Token.HOOK);
+    Preconditions.checkState(n.isHook());
     Node parent = n.getParent();
     Preconditions.checkNotNull(parent);
     Node cond = n.getFirstChild();
@@ -769,7 +769,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Removes FORs that always evaluate to false.
    */
   Node tryFoldFor(Node n) {
-    Preconditions.checkArgument(n.getType() == Token.FOR);
+    Preconditions.checkArgument(n.isFor());
     // If this is a FOR-IN loop skip it.
     if (NodeUtil.isForIn(n)) {
       return n;
@@ -814,7 +814,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * The block will be removed in a later pass, if possible.
    */
   Node tryFoldDo(Node n) {
-    Preconditions.checkArgument(n.getType() == Token.DO);
+    Preconditions.checkArgument(n.isDo());
 
     Node cond = NodeUtil.getConditionExpression(n);
     if (NodeUtil.getImpureBooleanValue(cond) != TernaryValue.FALSE) {

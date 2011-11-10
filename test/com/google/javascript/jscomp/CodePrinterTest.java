@@ -1111,7 +1111,7 @@ public class CodePrinterTest extends TestCase {
     Node n = parse("foo(a);");
     assertPrintNode("foo(a)", n);
     Node call =  n.getFirstChild().getFirstChild();
-    assertTrue(call.getType() == Token.CALL);
+    assertTrue(call.isCall());
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("foo(a)", n);
   }
@@ -1120,7 +1120,7 @@ public class CodePrinterTest extends TestCase {
     Node n = parse("x.foo(a);");
     assertPrintNode("x.foo(a)", n);
     Node call =  n.getFirstChild().getFirstChild();
-    assertTrue(call.getType() == Token.CALL);
+    assertTrue(call.isCall());
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("(0,x.foo)(a)", n);
   }

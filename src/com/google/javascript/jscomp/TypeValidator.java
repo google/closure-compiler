@@ -33,7 +33,6 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -255,7 +254,7 @@ class TypeValidator {
       // http://code.google.com/p/closure-compiler/issues/detail?id=109
       //
       // We do not do this inference globally.
-      if (n.getType() == Token.GETPROP &&
+      if (n.isGetProp() &&
           !t.inGlobalScope() && type.isNullType()) {
         return true;
       }
@@ -308,7 +307,7 @@ class TypeValidator {
    */
   void expectIndexMatch(NodeTraversal t, Node n, JSType objType,
       JSType indexType) {
-    Preconditions.checkState(n.getType() == Token.GETELEM);
+    Preconditions.checkState(n.isGetElem());
     Node indexNode = n.getLastChild();
     if (objType.isUnknownType()) {
       expectStringOrNumber(t, indexNode, indexType, "property access");
@@ -499,7 +498,7 @@ class TypeValidator {
   void expectUndeclaredVariable(String sourceName, CompilerInput input,
       Node n, Node parent, Var var, String variableName, JSType newType) {
     boolean allowDupe = false;
-    if (n.getType() == Token.GETPROP ||
+    if (n.isGetProp() ||
         NodeUtil.isObjectLitKey(n, parent)) {
       JSDocInfo info = n.getJSDocInfo();
       if (info == null) {
@@ -529,12 +528,12 @@ class TypeValidator {
         s.declare(variableName, n, varType, input, false);
 
         n.setJSType(varType);
-        if (parent.getType() == Token.VAR) {
+        if (parent.isVar()) {
           if (n.getFirstChild() != null) {
             n.getFirstChild().setJSType(varType);
           }
         } else {
-          Preconditions.checkState(parent.getType() == Token.FUNCTION);
+          Preconditions.checkState(parent.isFunction());
           parent.setJSType(varType);
         }
       } else {
@@ -544,7 +543,7 @@ class TypeValidator {
         // If the types match, suppress the warning iff there was a @suppress
         // tag, or if the original declaration was a stub.
         if (!(allowDupe ||
-              var.getParentNode().getType() == Token.EXPR_RESULT) ||
+              var.getParentNode().isExprResult()) ||
             !newType.equals(varType)) {
           report(JSError.make(sourceName, n, DUP_VAR_DECLARATION,
               variableName, newType.toString(), var.getInputName(),
@@ -681,7 +680,7 @@ class TypeValidator {
     // If we're analyzing a GETPROP, the property may be inherited by the
     // prototype chain. So climb the prototype chain and find out where
     // the property was originally defined.
-    if (n.getType() == Token.GETPROP) {
+    if (n.isGetProp()) {
       ObjectType objectType = getJSType(n.getFirstChild()).dereference();
       if (objectType != null) {
         String propName = n.getLastChild().getString();

@@ -664,7 +664,7 @@ public class CallGraphTest extends CompilerTestCase {
 
     assertTrue(mainFunction.isMain());
     assertNotNull(mainFunction.getBodyNode());
-    assertTrue(mainFunction.getBodyNode().getType() == Token.BLOCK);
+    assertTrue(mainFunction.getBodyNode().isBlock());
 
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
 
@@ -681,12 +681,12 @@ public class CallGraphTest extends CompilerTestCase {
     CallGraph.Function mainFunction = callgraph.getMainFunction();
 
     // Main function's AST node should be the global block
-    assertTrue(mainFunction.getAstNode().getType() == Token.BLOCK);
+    assertTrue(mainFunction.getAstNode().isBlock());
 
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
 
     // Regular function's AST node should be the function for A
-    assertTrue(functionA.getAstNode().getType() == Token.FUNCTION);
+    assertTrue(functionA.getAstNode().isFunction());
     assertEquals("A", NodeUtil.getFunctionName(functionA.getAstNode()));
   }
 
@@ -705,7 +705,7 @@ public class CallGraphTest extends CompilerTestCase {
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
 
     // Regular function's body node should be the block for A
-    assertTrue(functionA.getBodyNode().getType() == Token.BLOCK);
+    assertTrue(functionA.getBodyNode().isBlock());
     assertEquals(NodeUtil.getFunctionBody(functionA.getAstNode()),
         functionA.getBodyNode());
   }
@@ -956,7 +956,7 @@ public class CallGraphTest extends CompilerTestCase {
     Function functionA = callgraph.getUniqueFunctionWithName("A");
     Callsite callToB = functionA.getCallsitesInFunction().iterator().next();
 
-    assertTrue(callToB.getAstNode().getType() == Token.CALL);
+    assertTrue(callToB.getAstNode().isCall());
   }
 
   public void testCallsiteGetContainingFunction() {
@@ -1117,7 +1117,7 @@ public class CallGraphTest extends CompilerTestCase {
 
     for (Callsite callsite : callsites) {
       Node targetExpressionNode = callsite.getAstNode().getFirstChild();
-      if (targetExpressionNode.getType() == Token.NAME) {
+      if (targetExpressionNode.isName()) {
         result.add(targetExpressionNode.getString());
       } else {
         throw new IllegalStateException("Called getCallsiteTargetNames() on " +

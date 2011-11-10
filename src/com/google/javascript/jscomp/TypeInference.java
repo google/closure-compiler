@@ -160,10 +160,10 @@ class TypeInference
 
             FlowScope informed = traverse(obj, output.createChildFlowScope());
 
-            if (item.getType() == Token.VAR) {
+            if (item.isVar()) {
               item = item.getFirstChild();
             }
-            if (item.getType() == Token.NAME) {
+            if (item.isName()) {
               JSType iterKeyType = getNativeType(STRING_TYPE);
               ObjectType objType = getJSType(obj).dereference();
               JSType objIndexType = objType == null ?
@@ -186,7 +186,7 @@ class TypeInference
         case ON_FALSE:
           if (condition == null) {
             condition = NodeUtil.getConditionExpression(source);
-            if (condition == null && source.getType() == Token.CASE) {
+            if (condition == null && source.isCase()) {
               condition = source;
 
               // conditionFlowScope is cached from previous iterations
@@ -199,8 +199,8 @@ class TypeInference
           }
 
           if (condition != null) {
-            if (condition.getType() == Token.AND ||
-                condition.getType() == Token.OR) {
+            if (condition.isAnd() ||
+                condition.isOr()) {
               // When handling the short-circuiting binary operators,
               // the outcome scope on true can be different than the outcome
               // scope on false.
@@ -216,7 +216,7 @@ class TypeInference
               // conditionOutcomes is cached from previous iterations
               // of the loop.
               if (conditionOutcomes == null) {
-                conditionOutcomes = condition.getType() == Token.AND ?
+                conditionOutcomes = condition.isAnd() ?
                     traverseAnd(condition, output.createChildFlowScope()) :
                     traverseOr(condition, output.createChildFlowScope());
               }
@@ -369,7 +369,7 @@ class TypeInference
 
       case Token.EXPR_RESULT:
         scope = traverseChildren(n, scope);
-        if (n.getFirstChild().getType() == Token.GETPROP) {
+        if (n.getFirstChild().isGetProp()) {
           ensurePropertyDeclared(n.getFirstChild());
         }
         break;
@@ -397,7 +397,7 @@ class TypeInference
         // effect for all subsequent accesses of that name,
         // so treat it the same as an assign to that name.
         if (n.isQualifiedName() &&
-            n.getParent().getType() == Token.EXPR_RESULT) {
+            n.getParent().isExprResult()) {
           updateScopeForTypeChange(scope, n, n.getJSType(), castType);
         }
 
@@ -520,7 +520,7 @@ class TypeInference
                 propName, rightType, getprop);
           }
         } else {
-          if (getprop.getFirstChild().getType() == Token.THIS &&
+          if (getprop.getFirstChild().isThis() &&
               getJSType(syntacticScope.getRootNode()).isConstructor()) {
             objectType.defineInferredProperty(
                 propName, rightType, getprop);
@@ -781,8 +781,8 @@ class TypeInference
           scope = narrowScope(scope, assertedNode, narrowed);
           callNode.setJSType(narrowed);
         }
-      } else if (assertedNode.getType() == Token.AND ||
-                 assertedNode.getType() == Token.OR) {
+      } else if (assertedNode.isAnd() ||
+                 assertedNode.isOr()) {
         BooleanOutcomePair conditionOutcomes =
             traverseWithinShortCircuitingBinOp(assertedNode, scope);
         scope = reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
@@ -803,7 +803,7 @@ class TypeInference
 
   private FlowScope narrowScope(FlowScope scope, Node node, JSType narrowed) {
     scope = scope.createChildFlowScope();
-    if (node.getType() == Token.GETPROP) {
+    if (node.isGetProp()) {
       scope.inferQualifiedSlot(
           node, node.getQualifiedName(), getJSType(node), narrowed);
     } else {
@@ -833,7 +833,7 @@ class TypeInference
       if (iParameterType.isFunctionType()) {
         FunctionType iParameterFnType = iParameterType.toMaybeFunctionType();
 
-        if (iArgument.getType() == Token.FUNCTION &&
+        if (iArgument.isFunction() &&
             iArgumentType.isFunctionType() &&
             iArgument.getJSDocInfo() == null) {
           iArgument.setJSType(iParameterFnType);
@@ -896,7 +896,7 @@ class TypeInference
               }
               Node jArgument = n.getChildAtIndex(j + 1);
               JSType jArgumentType = getJSType(jArgument);
-              if (jArgument.getType() == Token.FUNCTION &&
+              if (jArgument.isFunction() &&
                   jArgumentType.isFunctionType()) {
                 if (iArgumentType != null &&
                     // null and undefined get filtered out above.
@@ -1275,7 +1275,7 @@ class TypeInference
 
   private void redeclareSimpleVar(
       FlowScope scope, Node nameNode, JSType varType) {
-    Preconditions.checkState(nameNode.getType() == Token.NAME);
+    Preconditions.checkState(nameNode.isName());
     String varName = nameNode.getString();
     if (varType == null) {
       varType = getNativeType(JSTypeNative.UNKNOWN_TYPE);

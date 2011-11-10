@@ -74,7 +74,7 @@ public class Scope
     @Override public boolean apply(Var var) {
       return var.getParentNode() != null &&
           var.getType() == null && // no declared type
-          var.getParentNode().getType() == Token.VAR &&
+          var.getParentNode().isVar() &&
           !var.isExtern();
     }
   };

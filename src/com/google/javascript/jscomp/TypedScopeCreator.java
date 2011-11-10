@@ -248,7 +248,7 @@ final class TypedScopeCreator implements ScopeCreator {
   void patchGlobalScope(Scope globalScope, Node scriptRoot) {
     // Preconditions: This is supposed to be called only on (named) SCRIPT nodes
     // and a global typed scope should have been generated already.
-    Preconditions.checkState(scriptRoot.getType() == Token.SCRIPT);
+    Preconditions.checkState(scriptRoot.isScript());
     Preconditions.checkNotNull(globalScope);
     Preconditions.checkState(globalScope.isGlobal());
 
@@ -360,7 +360,7 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
         case Token.EXPR_RESULT:
           Node firstChild = node.getFirstChild();
-          if (firstChild.getType() == Token.ASSIGN) {
+          if (firstChild.isAssign()) {
             identifyNameNode(
                 firstChild.getFirstChild(), firstChild.getLastChild(),
                 firstChild.getJSDocInfo());
@@ -454,8 +454,8 @@ final class TypedScopeCreator implements ScopeCreator {
     public final boolean shouldTraverse(NodeTraversal t, Node n,
         Node parent) {
       inputId = t.getInputId();
-      if (n.getType() == Token.FUNCTION ||
-          n.getType() == Token.SCRIPT) {
+      if (n.isFunction() ||
+          n.isScript()) {
         Preconditions.checkNotNull(inputId);
         sourceName = NodeUtil.getSourceName(n);
       }
@@ -507,7 +507,7 @@ final class TypedScopeCreator implements ScopeCreator {
         case Token.ASSIGN:
           // Handle initialization of properties.
           Node firstChild = n.getFirstChild();
-          if (firstChild.getType() == Token.GETPROP &&
+          if (firstChild.isGetProp() &&
               firstChild.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(),
                 firstChild, n, firstChild.getNext());
@@ -524,7 +524,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
         case Token.GETPROP:
           // Handle stubbed properties.
-          if (parent.getType() == Token.EXPR_RESULT &&
+          if (parent.isExprResult() &&
               n.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
           }
@@ -668,7 +668,7 @@ final class TypedScopeCreator implements ScopeCreator {
         Node node, JSDocInfo info) {
       JSType jsType = null;
       Node objNode =
-          node.getType() == Token.GETPROP ? node.getFirstChild() :
+          node.isGetProp() ? node.getFirstChild() :
           NodeUtil.isObjectLitKey(node, node.getParent()) ? node.getParent() :
           null;
       if (info != null) {
@@ -838,7 +838,7 @@ final class TypedScopeCreator implements ScopeCreator {
       if (functionType == null) {
         Node errorRoot = rValue == null ? lvalueNode : rValue;
         boolean isFnLiteral =
-            rValue != null && rValue.getType() == Token.FUNCTION;
+            rValue != null && rValue.isFunction();
         Node fnRoot = isFnLiteral ? rValue : null;
         Node parametersNode = isFnLiteral ?
             rValue.getFirstChild().getNext() : null;
@@ -894,7 +894,7 @@ final class TypedScopeCreator implements ScopeCreator {
             builder.inferThisType(
                 info, ownerType.getOwnerFunction().getInstanceType());
             searchedForThisType = true;
-          } else if (ownerNode != null && ownerNode.getType() == Token.THIS) {
+          } else if (ownerNode != null && ownerNode.isThis()) {
             builder.inferThisType(info, ownerNode.getJSType());
             searchedForThisType = true;
           }
@@ -974,7 +974,7 @@ final class TypedScopeCreator implements ScopeCreator {
             info.getEnumParameterType().evaluate(scope, typeRegistry);
         enumType = typeRegistry.createEnumType(name, rValue, elementsType);
 
-        if (rValue != null && rValue.getType() == Token.OBJECTLIT) {
+        if (rValue != null && rValue.isObjectLit()) {
           // collect enum elements
           Node key = rValue.getFirstChild();
           while (key != null) {
@@ -1030,17 +1030,17 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // Only allow declarations of NAMEs and qualfied names.
       // Object literal keys will have to compute their names themselves.
-      if (n.getType() == Token.NAME) {
+      if (n.isName()) {
         Preconditions.checkArgument(
-            parent.getType() == Token.FUNCTION ||
-            parent.getType() == Token.VAR ||
-            parent.getType() == Token.LP ||
-            parent.getType() == Token.CATCH);
+            parent.isFunction() ||
+            parent.isVar() ||
+            parent.isLP() ||
+            parent.isCatch());
       } else {
         Preconditions.checkArgument(
-            n.getType() == Token.GETPROP &&
-            (parent.getType() == Token.ASSIGN ||
-             parent.getType() == Token.EXPR_RESULT));
+            n.isGetProp() &&
+            (parent.isAssign() ||
+             parent.isExprResult()));
       }
       defineSlot(n, parent, n.getQualifiedName(), type, inferred);
     }
@@ -1060,17 +1060,17 @@ final class TypedScopeCreator implements ScopeCreator {
         JSType type, boolean inferred) {
       Preconditions.checkArgument(!variableName.isEmpty());
 
-      boolean isGlobalVar = n.getType() == Token.NAME && scope.isGlobal();
+      boolean isGlobalVar = n.isName() && scope.isGlobal();
       boolean shouldDeclareOnGlobalThis =
           isGlobalVar &&
-          (parent.getType() == Token.VAR ||
-           parent.getType() == Token.FUNCTION);
+          (parent.isVar() ||
+           parent.isFunction());
 
       // If n is a property, then we should really declare it in the
       // scope where the root object appears. This helps out people
       // who declare "global" names in an anonymous namespace.
       Scope scopeToDeclareIn = scope;
-      if (n.getType() == Token.GETPROP && !scope.isGlobal() &&
+      if (n.isGetProp() && !scope.isGlobal() &&
           isQnameRootedInGlobalScope(n)) {
         Scope globalScope = scope.getGlobalScope();
 
@@ -1100,7 +1100,7 @@ final class TypedScopeCreator implements ScopeCreator {
         if (type instanceof EnumType) {
           Node initialValue = newVar.getInitialValue();
           boolean isValidValue = initialValue != null &&
-              (initialValue.getType() == Token.OBJECTLIT ||
+              (initialValue.isObjectLit() ||
                initialValue.isQualifiedName());
           if (!isValidValue) {
             compiler.report(JSError.make(sourceName, n, ENUM_INITIALIZER));
@@ -1194,7 +1194,7 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     private boolean isQnameRootedInGlobalScope(Node n) {
       Node root = NodeUtil.getRootOfQualifiedName(n);
-      if (root.getType() == Token.NAME) {
+      if (root.isName()) {
         Var var = scope.getVar(root.getString());
         if (var != null) {
           return var.isGlobal();
@@ -1216,13 +1216,13 @@ final class TypedScopeCreator implements ScopeCreator {
         Node lValue, @Nullable Node rValue) {
       if (info != null && info.hasType()) {
         return getDeclaredTypeInAnnotation(sourceName, lValue, info);
-      } else if (rValue != null && rValue.getType() == Token.FUNCTION &&
+      } else if (rValue != null && rValue.isFunction() &&
           shouldUseFunctionLiteralType(
               JSType.toMaybeFunctionType(rValue.getJSType()), info, lValue)) {
         return rValue.getJSType();
       } else if (info != null) {
         if (info.hasEnumParameterType()) {
-          if (rValue != null && rValue.getType() == Token.OBJECTLIT) {
+          if (rValue != null && rValue.isObjectLit()) {
             return rValue.getJSType();
           } else {
             return createEnumTypeFromNodes(
@@ -1239,15 +1239,15 @@ final class TypedScopeCreator implements ScopeCreator {
               if (rValue.getJSType() != null
                   && !rValue.getJSType().isUnknownType()) {
                 return rValue.getJSType();
-              } else if (rValue.getType() == Token.OR) {
+              } else if (rValue.isOr()) {
                 // Check for a very specific JS idiom:
                 // var x = x || TYPE;
                 // This is used by Closure's base namespace for esoteric
                 // reasons.
                 Node firstClause = rValue.getFirstChild();
                 Node secondClause = firstClause.getNext();
-                boolean namesMatch = firstClause.getType() == Token.NAME
-                    && lValue.getType() == Token.NAME
+                boolean namesMatch = firstClause.isName()
+                    && lValue.isName()
                     && firstClause.getString().equals(lValue.getString());
                 if (namesMatch && secondClause.getJSType() != null
                     && !secondClause.getJSType().isUnknownType()) {
@@ -1445,7 +1445,7 @@ final class TypedScopeCreator implements ScopeCreator {
           ObjectType qVarType = ObjectType.cast(qVar.getType());
           if (qVarType != null &&
               rhsValue != null &&
-              rhsValue.getType() == Token.OBJECTLIT) {
+              rhsValue.isObjectLit()) {
             typeRegistry.resetImplicitPrototype(
                 rhsValue.getJSType(), qVarType.getImplicitPrototype());
           } else if (!qVar.isTypeInferred()) {
@@ -1463,7 +1463,7 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       if (valueType == null) {
-        if (parent.getType() == Token.EXPR_RESULT) {
+        if (parent.isExprResult()) {
           stubDeclarations.add(new StubDeclaration(
               n,
               t.getInput() != null && t.getInput().isExtern(),
@@ -1486,7 +1486,7 @@ final class TypedScopeCreator implements ScopeCreator {
       if (inferred) {
         // Determining declaration for #2
         inferred = !(rhsValue != null &&
-            rhsValue.getType() == Token.FUNCTION &&
+            rhsValue.isFunction() &&
             (info != null || !scope.isDeclared(qName, false)));
       }
 
@@ -1509,7 +1509,7 @@ final class TypedScopeCreator implements ScopeCreator {
         // caught when we try to declare it in the current scope.
         defineSlot(n, parent, valueType, inferred);
       } else if (rhsValue != null &&
-          rhsValue.getType() == Token.TRUE) {
+          rhsValue.isTrue()) {
         // We declare these for delegate proxy method properties.
         FunctionType ownerType =
             JSType.toMaybeFunctionType(getObjectSlot(ownerName));
@@ -1591,7 +1591,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.getType() == Token.EXPR_RESULT) {
+        if (n.isExprResult()) {
           Node child = n.getFirstChild();
           switch (child.getType()) {
             case Token.ASSIGN:
@@ -1622,7 +1622,7 @@ final class TypedScopeCreator implements ScopeCreator {
         JSType jsType = getDeclaredType(t.getSourceName(), info, member, value);
         Node name = member.getLastChild();
         if (jsType != null &&
-            (name.getType() == Token.NAME || name.getType() == Token.STRING)) {
+            (name.isName() || name.isString())) {
           thisType.defineDeclaredProperty(
               name.getString(),
               jsType,
@@ -1717,7 +1717,7 @@ final class TypedScopeCreator implements ScopeCreator {
       }
 
       typeRegistry.overwriteDeclaredType(typedef, realType);
-      if (candidate.getType() == Token.GETPROP) {
+      if (candidate.isGetProp()) {
         defineSlot(candidate, candidate.getParent(),
             getNativeType(NO_TYPE), false);
       }
@@ -1764,7 +1764,7 @@ final class TypedScopeCreator implements ScopeCreator {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if (n == scope.getRootNode()) return;
 
-      if (n.getType() == Token.LP && parent == scope.getRootNode()) {
+      if (n.isLP() && parent == scope.getRootNode()) {
         handleFunctionInputs(parent);
         return;
       }
@@ -1856,9 +1856,9 @@ final class TypedScopeCreator implements ScopeCreator {
         return;
       }
 
-      if (n.getType() == Token.RETURN && n.getFirstChild() != null) {
+      if (n.isReturn() && n.getFirstChild() != null) {
         data.get(t.getScopeRoot()).recordNonEmptyReturn();
-      } else if (n.getType() == Token.NAME && NodeUtil.isLValue(n)) {
+      } else if (n.isName() && NodeUtil.isLValue(n)) {
         String name = n.getString();
         Scope scope = t.getScope();
         Var var = scope.getVar(name);

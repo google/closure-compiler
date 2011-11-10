@@ -56,7 +56,7 @@ class DefinitionsRemover {
     } else if (NodeUtil.isObjectLitKey(n, parent)) {
       return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(),
           isExtern);
-    } else if (parent.getType() == Token.LP) {
+    } else if (parent.isLP()) {
       Node function = parent.getParent();
       return new FunctionArgumentDefinition(function, n, isExtern);
     }
@@ -85,7 +85,7 @@ class DefinitionsRemover {
       return true;
     } else if (NodeUtil.isObjectLitKey(n, parent)) {
       return true;
-    } else if (parent.getType() == Token.LP) {
+    } else if (parent.isLP()) {
       return true;
     }
     return false;

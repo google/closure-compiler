@@ -131,7 +131,7 @@ class AstParallelizer {
     Predicate<Node> shouldTraverse = new Predicate<Node>() {
       @Override
       public boolean apply(Node n) {
-        return n.getType() == Token.BLOCK;
+        return n.isBlock();
       }
     };
     return new AstParallelizer(

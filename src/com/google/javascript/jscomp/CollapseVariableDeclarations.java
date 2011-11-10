@@ -135,7 +135,7 @@ class CollapseVariableDeclarations implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.VAR) {
+      if (n.isVar()) {
         blacklistStubVars(t, n);
       }
 
@@ -147,11 +147,11 @@ class CollapseVariableDeclarations implements CompilerPass {
 
       // Adjacent VAR children of an IF node are the if and else parts and can't
       // be collapsed
-      if (parent.getType() == Token.IF) return;
+      if (parent.isIf()) return;
 
       Node varNode = n;
 
-      boolean hasVar = n.getType() == Token.VAR;
+      boolean hasVar = n.isVar();
 
       // Find variable declarations that follow this one (if any)
       n = n.getNext();
@@ -159,7 +159,7 @@ class CollapseVariableDeclarations implements CompilerPass {
       boolean hasNodesToCollapse = false;
 
       while (n != null &&
-          (n.getType() == Token.VAR || canBeRedeclared(n, t.getScope()))) {
+          (n.isVar() || canBeRedeclared(n, t.getScope()))) {
 
         if (n.isVar()) {
           blacklistStubVars(t, n);

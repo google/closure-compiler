@@ -139,7 +139,7 @@ class FunctionInjector {
     Predicate<Node> p = new Predicate<Node>(){
       @Override
       public boolean apply(Node n) {
-        if (n.getType() == Token.NAME) {
+        if (n.isName()) {
           return n.getString().equals("eval")
             || (!fnName.isEmpty()
                 && n.getString().equals(fnName))
@@ -269,7 +269,7 @@ class FunctionInjector {
       newExpression = NodeUtil.newUndefinedNode(srcLocation);
     } else {
       Node returnNode = block.getFirstChild();
-      Preconditions.checkArgument(returnNode.getType() == Token.RETURN);
+      Preconditions.checkArgument(returnNode.isReturn());
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
@@ -358,13 +358,13 @@ class FunctionInjector {
       return CallSiteType.SIMPLE_CALL;
     } else if (NodeUtil.isExprAssign(grandParent)
         && !NodeUtil.isVarOrSimpleAssignLhs(callNode, parent)
-        && parent.getFirstChild().getType() == Token.NAME
+        && parent.getFirstChild().isName()
         && !NodeUtil.isConstantName(parent.getFirstChild())) {
       // This is a simple assignment.  Example: "x = foo();"
       return CallSiteType.SIMPLE_ASSIGNMENT;
-    } else if (parent.getType() == Token.NAME
+    } else if (parent.isName()
         && !NodeUtil.isConstantName(parent)
-        && grandParent.getType() == Token.VAR
+        && grandParent.isVar()
         && grandParent.hasOneChild()) {
       // This is a var declaration.  Example: "var x = foo();"
       // TODO(johnlenz): Should we be checking for constants on the
@@ -521,7 +521,7 @@ class FunctionInjector {
       return true;
     } else if (block.hasOneChild()) {
       // Only inline functions that return something.
-      if (block.getFirstChild().getType() == Token.RETURN
+      if (block.getFirstChild().isReturn()
           && block.getFirstChild().getFirstChild() != null) {
         return true;
       }
@@ -605,10 +605,10 @@ class FunctionInjector {
       Predicate<Node> match = new Predicate<Node>(){
         @Override
         public boolean apply(Node n) {
-          if (n.getType() == Token.NAME) {
+          if (n.isName()) {
             return n.getString().equals("eval");
           }
-          if (!assumeMinimumCapture && n.getType() == Token.FUNCTION) {
+          if (!assumeMinimumCapture && n.isFunction()) {
             return n != fnNode;
           }
           return false;

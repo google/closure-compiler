@@ -580,7 +580,7 @@ public class NodeUtilTest extends TestCase {
 
   private Node findParentOfFuncDescendant(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (c.getType() == Token.FUNCTION) {
+      if (c.isFunction()) {
         return n;
       }
       Node result = findParentOfFuncDescendant(c);
@@ -593,7 +593,7 @@ public class NodeUtilTest extends TestCase {
 
   private Node getFuncChild(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (c.getType() == Token.FUNCTION) {
+      if (c.isFunction()) {
         return c;
       }
     }
@@ -1151,7 +1151,7 @@ public class NodeUtilTest extends TestCase {
     Node newExpr = getNode("new x()");
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
 
-    Preconditions.checkState(newExpr.getType() == Token.NEW);
+    Preconditions.checkState(newExpr.isNew());
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
 
     flags.clearAllFlags();
@@ -1195,7 +1195,7 @@ public class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.functionCallHasSideEffects(callExpr));
 
     Node newExpr = callExpr.getFirstChild().getFirstChild();
-    Preconditions.checkState(newExpr.getType() == Token.NEW);
+    Preconditions.checkState(newExpr.isNew());
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
 
     // No side effects, local result
@@ -1611,7 +1611,7 @@ public class NodeUtilTest extends TestCase {
   }
 
   static Node getFunctionNode(Node n) {
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       return n;
     }
     for (Node c : n.children()) {

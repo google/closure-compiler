@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -41,17 +40,17 @@ class TypedCodeGenerator extends CodeGenerator {
   void add(Node n, Context context) {
     Node parent = n.getParent();
     if (parent != null
-        && (parent.getType() == Token.BLOCK
-            || parent.getType() == Token.SCRIPT)) {
-      if (n.getType() == Token.FUNCTION) {
+        && (parent.isBlock()
+            || parent.isScript())) {
+      if (n.isFunction()) {
         add(getFunctionAnnotation(n));
-      } else if (n.getType() == Token.EXPR_RESULT
-          && n.getFirstChild().getType() == Token.ASSIGN) {
+      } else if (n.isExprResult()
+          && n.getFirstChild().isAssign()) {
         Node rhs = n.getFirstChild().getLastChild();
         add(getTypeAnnotation(rhs));
-      } else if (n.getType() == Token.VAR
+      } else if (n.isVar()
           && n.getFirstChild().getFirstChild() != null
-          && n.getFirstChild().getFirstChild().getType() == Token.FUNCTION) {
+          && n.getFirstChild().getFirstChild().isFunction()) {
         add(getFunctionAnnotation(n.getFirstChild().getFirstChild()));
       }
     }
@@ -78,7 +77,7 @@ class TypedCodeGenerator extends CodeGenerator {
    * @param fnNode A node for a function for which to generate a type annotation
    */
   private String getFunctionAnnotation(Node fnNode) {
-    Preconditions.checkState(fnNode.getType() == Token.FUNCTION);
+    Preconditions.checkState(fnNode.isFunction());
     StringBuilder sb = new StringBuilder("/**\n");
 
     JSType type = fnNode.getJSType();

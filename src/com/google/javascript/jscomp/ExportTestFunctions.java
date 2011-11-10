@@ -62,7 +62,7 @@ class ExportTestFunctions implements CompilerPass {
         return;
       }
 
-      if (parent.getType() == Token.SCRIPT) {
+      if (parent.isScript()) {
         if (NodeUtil.isFunctionDeclaration(n)) {
           // Check for a test function statement.
           String functionName = NodeUtil.getFunctionName(n);
@@ -81,7 +81,7 @@ class ExportTestFunctions implements CompilerPass {
             n.getLastChild().getType() != Token.ASSIGN) {
         // Check for a test method assignment.
         Node grandparent = parent.getParent();
-        if (grandparent != null && grandparent.getType() == Token.SCRIPT) {
+        if (grandparent != null && grandparent.isScript()) {
           String functionName = n.getFirstChild().getQualifiedName();
           if (isTestFunction(n, functionName)) {
             exportTestFunctionAsProperty(functionName, parent, n, grandparent);
@@ -106,7 +106,7 @@ class ExportTestFunctions implements CompilerPass {
         return false;
       }
       Node grandchild = node.getFirstChild().getFirstChild();
-      return grandchild != null && grandchild.getType() == Token.FUNCTION;
+      return grandchild != null && grandchild.isFunction();
     }
   }
 
@@ -123,7 +123,7 @@ class ExportTestFunctions implements CompilerPass {
         compiler.getCodingConvention(),
         exportSymbolFunction, node, testFunctionName);
     Node call = new Node(Token.CALL, exportCallTarget);
-    if (exportCallTarget.getType() == Token.NAME) {
+    if (exportCallTarget.isName()) {
       call.putBooleanProp(Node.FREE_CALL, true);
     }
     call.addChildToBack(Node.newString(testFunctionName));

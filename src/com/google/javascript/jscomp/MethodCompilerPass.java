@@ -101,7 +101,7 @@ abstract class MethodCompilerPass implements CompilerPass {
    * itself or the name of a function).
    */
   private void addPossibleSignature(String name, Node node, NodeTraversal t) {
-    if (node.getType() == Token.FUNCTION) {
+    if (node.isFunction()) {
       // The node we're looking at is a function, so we can add it directly
       addSignature(name, node, t.getSourceName());
     } else {
@@ -144,9 +144,9 @@ abstract class MethodCompilerPass implements CompilerPass {
           //          name methods
           //          string setTimeout
           //      function
-          if (parent.getType() == Token.ASSIGN &&
+          if (parent.isAssign() &&
               parent.getFirstChild() == n &&
-              n.getNext().getType() == Token.FUNCTION) {
+              n.getNext().isFunction()) {
             addSignature(name, n.getNext(), t.getSourceName());
           } else {
             getSignatureStore().removeSignature(name);
@@ -160,8 +160,8 @@ abstract class MethodCompilerPass implements CompilerPass {
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             Node value = key.getFirstChild();
             String name = key.getString();
-            if (key.getType() == Token.STRING
-                && value.getType() == Token.FUNCTION) {
+            if (key.isString()
+                && value.isFunction()) {
               addSignature(name, value, t.getSourceName());
             } else {
               getSignatureStore().removeSignature(name);
@@ -186,7 +186,7 @@ abstract class MethodCompilerPass implements CompilerPass {
         case Token.GETELEM:
           Node dest = n.getFirstChild().getNext();
 
-          if (dest.getType() == Token.STRING) {
+          if (dest.isString()) {
             if (dest.getString().equals("prototype")) {
               processPrototypeParent(t, parent);
             } else {
@@ -198,7 +198,7 @@ abstract class MethodCompilerPass implements CompilerPass {
               //          name Foo
               //          string bar
               //      function or name  <- n.getNext()
-              if (parent.getType() == Token.ASSIGN &&
+              if (parent.isAssign() &&
                   parent.getFirstChild() == n) {
                 addPossibleSignature(dest.getString(), n.getNext(), t);
               }
@@ -247,8 +247,8 @@ abstract class MethodCompilerPass implements CompilerPass {
           Node dest = n.getFirstChild().getNext();
           Node parent = n.getParent().getParent();
 
-          if (dest.getType() == Token.STRING &&
-              parent.getType() == Token.ASSIGN) {
+          if (dest.isString() &&
+              parent.isAssign()) {
             Node assignee = parent.getFirstChild().getNext();
 
             addPossibleSignature(dest.getString(), assignee, t);

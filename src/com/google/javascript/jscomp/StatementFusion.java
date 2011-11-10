@@ -126,9 +126,9 @@ public class StatementFusion extends AbstractPeepholeOptimization {
     // We can just join the new comma expression with another comma but
     // lets keep all the comma's in a straight line. That way we can use
     // tree comparison.
-    if (exp2.getType() == Token.COMMA) {
+    if (exp2.isComma()) {
       Node leftMostChild = exp2;
-      while(leftMostChild.getType() == Token.COMMA) {
+      while(leftMostChild.isComma()) {
         leftMostChild = leftMostChild.getFirstChild();
       }
       Node parent = leftMostChild.getParent();

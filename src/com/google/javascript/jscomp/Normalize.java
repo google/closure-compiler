@@ -171,7 +171,7 @@ class Normalize implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Note: Constant properties annotations are not propagated.
-      if (n.getType() == Token.NAME) {
+      if (n.isName()) {
         if (n.getString().isEmpty()) {
           return;
         }
@@ -230,7 +230,7 @@ class Normalize implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.NAME) {
+      if (n.isName()) {
         String name = n.getString();
         if (n.getString().isEmpty()) {
           return;
@@ -348,19 +348,19 @@ class Normalize implements CompilerPass {
      */
     private void annotateConstantsByConvention(Node n, Node parent) {
       Preconditions.checkState(
-          n.getType() == Token.NAME
-          || n.getType() == Token.STRING
-          || n.getType() == Token.GET
-          || n.getType() == Token.SET);
+          n.isName()
+          || n.isString()
+          || n.isGet()
+          || n.isSet());
 
       // There are only two cases where a string token
       // may be a variable reference: The right side of a GETPROP
       // or an OBJECTLIT key.
       boolean isObjLitKey = NodeUtil.isObjectLitKey(n, parent);
       boolean isProperty = isObjLitKey ||
-          (parent.getType() == Token.GETPROP &&
+          (parent.isGetProp() &&
            parent.getLastChild() == n);
-      if (n.getType() == Token.NAME || isProperty) {
+      if (n.isName() || isProperty) {
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (!isMarkedConstant &&
             NodeUtil.isConstantByConvention(
@@ -386,7 +386,7 @@ class Normalize implements CompilerPass {
      *    var f = function () {};
      */
     private void normalizeFunctionDeclaration(Node n) {
-      Preconditions.checkState(n.getType() == Token.FUNCTION);
+      Preconditions.checkState(n.isFunction());
       if (!NodeUtil.isFunctionExpression(n)
           && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n);
@@ -432,13 +432,13 @@ class Normalize implements CompilerPass {
      */
     private void doStatementNormalizations(
         NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.LABEL) {
+      if (n.isLabel()) {
         normalizeLabels(n);
       }
 
       // Only inspect the children of SCRIPTs, BLOCKs and LABELs, as all these
       // are the only legal place for VARs and FOR statements.
-      if (NodeUtil.isStatementBlock(n) || n.getType() == Token.LABEL) {
+      if (NodeUtil.isStatementBlock(n) || n.isLabel()) {
         extractForInitializer(n, null, null);
       }
 
@@ -448,7 +448,7 @@ class Normalize implements CompilerPass {
         splitVarDeclarations(n);
       }
 
-      if (n.getType() == Token.FUNCTION) {
+      if (n.isFunction()) {
         moveNamedFunctions(n.getLastChild());
       }
     }
@@ -461,7 +461,7 @@ class Normalize implements CompilerPass {
      * place as the named continues are not allowed for labeled blocks.
      */
     private void normalizeLabels(Node n) {
-      Preconditions.checkArgument(n.getType() == Token.LABEL);
+      Preconditions.checkArgument(n.isLabel());
 
       Node last = n.getLastChild();
       switch (last.getType()) {
@@ -506,7 +506,7 @@ class Normalize implements CompilerPass {
           case Token.FOR:
             if (NodeUtil.isForIn(c)) {
               Node first = c.getFirstChild();
-              if (first.getType() == Token.VAR) {
+              if (first.isVar()) {
                 // Transform:
                 //    for (var a = 1 in b) {}
                 // to:
@@ -527,7 +527,7 @@ class Normalize implements CompilerPass {
               Node newStatement;
               // Only VAR statements, and expressions are allowed,
               // but are handled differently.
-              if (init.getType() == Token.VAR) {
+              if (init.isVar()) {
                 newStatement = init;
               } else {
                 newStatement = NodeUtil.newExpr(init);
@@ -552,7 +552,7 @@ class Normalize implements CompilerPass {
     private void splitVarDeclarations(Node n) {
       for (Node next, c = n.getFirstChild(); c != null; c = next) {
         next = c.getNext();
-        if (c.getType() == Token.VAR) {
+        if (c.isVar()) {
           if (assertOnChange && !c.hasChildren()) {
             throw new IllegalStateException("Empty VAR node.");
           }
@@ -575,7 +575,7 @@ class Normalize implements CompilerPass {
      */
     private void moveNamedFunctions(Node functionBody) {
       Preconditions.checkState(
-          functionBody.getParent().getType() == Token.FUNCTION);
+          functionBody.getParent().isFunction());
       Node previous = null;
       Node current = functionBody.getFirstChild();
       // Skip any declarations at the beginning of the function body, they
@@ -648,7 +648,7 @@ class Normalize implements CompilerPass {
     @Override
     public void onRedeclaration(
         Scope s, String name, Node n, CompilerInput input) {
-      Preconditions.checkState(n.getType() == Token.NAME);
+      Preconditions.checkState(n.isName());
       Node parent = n.getParent();
       Var v = s.getVar(name);
 
@@ -665,7 +665,7 @@ class Normalize implements CompilerPass {
       }
 
       // If name is "arguments", Var maybe null.
-      if (v != null && v.getParentNode().getType() == Token.CATCH) {
+      if (v != null && v.getParentNode().isCatch()) {
         // Redeclaration of a catch expression variable is hard to model
         // without support for "with" expressions.
         // The EcmaScript spec (section 12.14), declares that a catch
@@ -687,14 +687,14 @@ class Normalize implements CompilerPass {
             JSError.make(
                 input.getName(), n,
                 CATCH_BLOCK_VAR_ERROR, name));
-      } else if (v != null && parent.getType() == Token.FUNCTION) {
-        if (v.getParentNode().getType() == Token.VAR) {
+      } else if (v != null && parent.isFunction()) {
+        if (v.getParentNode().isVar()) {
           s.undeclare(v);
           s.declare(name, n, n.getJSType(), v.input);
           replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
               v.getParentNode().getParent());
         }
-      } else if (parent.getType() == Token.VAR) {
+      } else if (parent.isVar()) {
         Preconditions.checkState(parent.hasOneChild());
 
         replaceVarWithAssignment(n, parent, parent.getParent());
@@ -731,14 +731,14 @@ class Normalize implements CompilerPass {
         // It is an empty reference remove it.
         if (NodeUtil.isStatementBlock(gramps)) {
           gramps.removeChild(parent);
-        } else if (gramps.getType() == Token.FOR) {
+        } else if (gramps.isFor()) {
           // This is the "for (var a in b)..." case.  We don't need to worry
           // about initializers in "for (var a;;)..." as those are moved out
           // as part of the other normalizations.
           parent.removeChild(n);
           gramps.replaceChild(parent, n);
         } else {
-          Preconditions.checkState(gramps.getType() == Token.LABEL);
+          Preconditions.checkState(gramps.isLabel());
           // We should never get here. LABELs with a single VAR statement should
           // already have been normalized to have a BLOCK.
           throw new IllegalStateException("Unexpected LABEL");

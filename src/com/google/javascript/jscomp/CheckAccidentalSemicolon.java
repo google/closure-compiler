@@ -61,7 +61,7 @@ final class CheckAccidentalSemicolon extends AbstractPostOrderCallback {
     // semicolons cause VOID children. Empty blocks are allowed because
     // that's usually intentional, especially with loops.
     for (; child != null; child = child.getNext()) {
-      if ((child.getType() == Token.BLOCK) && (!child.hasChildren())) {
+      if ((child.isBlock()) && (!child.hasChildren())) {
         // Only warn on empty blocks that replaced EMPTY nodes.  BLOCKs with no
         // children are considered OK.
         if (child.wasEmptyNode()) {

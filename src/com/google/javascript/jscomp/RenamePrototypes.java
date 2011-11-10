@@ -297,7 +297,7 @@ class RenamePrototypes implements CompilerPass {
         case Token.GETPROP:
         case Token.GETELEM:
           Node dest = n.getFirstChild().getNext();
-          if (dest.getType() == Token.STRING) {
+          if (dest.isString()) {
             reservedNames.add(dest.getString());
           }
       }
@@ -319,7 +319,7 @@ class RenamePrototypes implements CompilerPass {
         case Token.GETPROP:
         case Token.GETELEM:
           Node dest = n.getFirstChild().getNext();
-          if (dest.getType() == Token.STRING) {
+          if (dest.isString()) {
             String s = dest.getString();
             if (s.equals("prototype")) {
               processPrototypeParent(parent, t.getInput());
@@ -357,7 +357,7 @@ class RenamePrototypes implements CompilerPass {
         case Token.GETPROP:
         case Token.GETELEM:
           Node dest = n.getFirstChild().getNext();
-          if (dest.getType() == Token.STRING) {
+          if (dest.isString()) {
             markPrototypePropertyCandidate(dest, input);
           }
           break;
@@ -366,12 +366,12 @@ class RenamePrototypes implements CompilerPass {
         case Token.ASSIGN:
         case Token.CALL:
           Node map;
-          if (n.getType() == Token.ASSIGN) {
+          if (n.isAssign()) {
             map = n.getFirstChild().getNext();
           } else {
             map = n.getLastChild();
           }
-          if (map.getType() == Token.OBJECTLIT) {
+          if (map.isObjectLit()) {
             // Remember this node so that we can avoid processing it again when
             // the traversal reaches it.
             prototypeObjLits.add(map);

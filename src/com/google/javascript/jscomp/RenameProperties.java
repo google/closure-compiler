@@ -375,7 +375,7 @@ class RenameProperties implements CompilerPass {
       switch (n.getType()) {
         case Token.GETPROP:
           Node dest = n.getFirstChild().getNext();
-          if (dest.getType() == Token.STRING) {
+          if (dest.isString()) {
             externedNames.add(dest.getString());
           }
           break;
@@ -407,7 +407,7 @@ class RenameProperties implements CompilerPass {
       switch (n.getType()) {
         case Token.GETPROP:
           Node propNode = n.getFirstChild().getNext();
-          if (propNode.getType() == Token.STRING) {
+          if (propNode.isString()) {
             maybeMarkCandidate(propNode);
           }
           break;
@@ -427,7 +427,7 @@ class RenameProperties implements CompilerPass {
           // ensure that we never rename some other property in a way that
           // could conflict with this quoted name.
           Node child = n.getLastChild();
-          if (child != null && child.getType() == Token.STRING) {
+          if (child != null && child.isString()) {
             quotedNames.add(child.getString());
           }
           break;
@@ -435,7 +435,7 @@ class RenameProperties implements CompilerPass {
           // We replace a JSCompiler_renameProperty function call with a string
           // containing the renamed property.
           Node fnName = n.getFirstChild();
-          if (fnName.getType() == Token.NAME &&
+          if (fnName.isName() &&
               RENAME_PROPERTY_FUNCTION_NAME.equals(fnName.getString())) {
             callNodeToParentMap.put(n, parent);
             countCallCandidates(t, n);
@@ -454,10 +454,10 @@ class RenameProperties implements CompilerPass {
               }
               compiler.reportCodeChange();
             }
-          } else if (parent.getType() == Token.NAME &&
+          } else if (parent.isName() &&
                      RENAME_PROPERTY_FUNCTION_NAME.equals(parent.getString())) {
             Node varNode = parent.getParent();
-            if (varNode.getType() == Token.VAR) {
+            if (varNode.isVar()) {
               varNode.removeChild(parent);
               if (!varNode.hasChildren()) {
                 varNode.detachFromParent();

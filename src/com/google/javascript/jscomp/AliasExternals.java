@@ -210,7 +210,7 @@ class AliasExternals implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     defaultRoot = root.getFirstChild();
-    Preconditions.checkState(defaultRoot.getType() == Token.SCRIPT);
+    Preconditions.checkState(defaultRoot.isScript());
 
     aliasProperties(externs, root);
     aliasGlobals(externs, root);
@@ -477,7 +477,7 @@ class AliasExternals implements CompilerPass {
         case Token.GETPROP:
         case Token.GETELEM:
           Node dest = n.getFirstChild().getNext();
-          if (dest.getType() == Token.STRING &&
+          if (dest.isString() &&
               (whitelist.isEmpty() || whitelist.contains(dest.getString()))) {
             props.put(dest.getString(), newSymbolForProperty(dest.getString()));
           }
@@ -493,7 +493,7 @@ class AliasExternals implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.GETPROP) {
+      if (n.isGetProp()) {
         Node propNameNode = n.getLastChild();
 
         if (canReplaceWithGetProp(propNameNode, n, parent)) {
@@ -523,13 +523,13 @@ class AliasExternals implements CompilerPass {
      */
     private boolean canReplaceWithGetProp(Node propNameNode, Node getPropNode,
           Node parent) {
-      boolean isCallTarget = (parent.getType() == Token.CALL)
+      boolean isCallTarget = (parent.isCall())
           && (parent.getFirstChild() == getPropNode);
       boolean isAssignTarget = NodeUtil.isAssignmentOp(parent)
           && (parent.getFirstChild() == getPropNode);
-      boolean isIncOrDec = (parent.getType() == Token.INC) ||
-          (parent.getType() == Token.DEC);
-      return (propNameNode.getType() == Token.STRING) && !isAssignTarget
+      boolean isIncOrDec = (parent.isInc()) ||
+          (parent.isDec());
+      return (propNameNode.isString()) && !isAssignTarget
           && (!isCallTarget || !"eval".equals(propNameNode.getString()))
           && !isIncOrDec
           && props.containsKey(propNameNode.getString());
@@ -546,9 +546,9 @@ class AliasExternals implements CompilerPass {
      */
     private boolean canReplaceWithSetProp(Node propNameNode, Node getPropNode,
         Node parent) {
-      boolean isAssignTarget = (parent.getType() == Token.ASSIGN)
+      boolean isAssignTarget = (parent.isAssign())
           && (parent.getFirstChild() == getPropNode);
-      return (propNameNode.getType() == Token.STRING) && isAssignTarget
+      return (propNameNode.isString()) && isAssignTarget
           && props.containsKey(propNameNode.getString());
     }
   }
@@ -607,7 +607,7 @@ class AliasExternals implements CompilerPass {
    */
   private class GetGlobals extends NodeTraversal.AbstractShallowCallback {
     private void getGlobalName(NodeTraversal t, Node dest, Node parent) {
-      if (dest.getType() == Token.NAME) {
+      if (dest.isName()) {
 
         JSDocInfo docInfo = dest.getJSDocInfo() == null ?
             parent.getJSDocInfo() : dest.getJSDocInfo();
@@ -649,7 +649,7 @@ class AliasExternals implements CompilerPass {
   private final class GlobalGatherer extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.NAME) {
+      if (n.isName()) {
         String name = n.getString();
         Scope.Var var = t.getScope().getVar(name);
 
@@ -663,8 +663,8 @@ class AliasExternals implements CompilerPass {
         if (global != null) {
           // If a variable is declared in both externs and normal source,
           // don't alias it.
-          if (n.getParent().getType() == Token.VAR ||
-              n.getParent().getType() == Token.FUNCTION) {
+          if (n.getParent().isVar() ||
+              n.getParent().isFunction()) {
             globals.remove(name);
           }
 
@@ -675,9 +675,9 @@ class AliasExternals implements CompilerPass {
           // something that we want to avoid when aliasing, since we may be
           // dealing with external objects (e.g. ActiveXObject in MSIE)
           if ((NodeUtil.isAssignmentOp(parent) && isFirst) ||
-              (parent.getType() == Token.NEW && isFirst) ||
-              parent.getType() == Token.INC ||
-              parent.getType() == Token.DEC) {
+              (parent.isNew() && isFirst) ||
+              parent.isInc() ||
+              parent.isDec()) {
             global.recordMutator(t);
           } else {
             global.recordAccessor(t);

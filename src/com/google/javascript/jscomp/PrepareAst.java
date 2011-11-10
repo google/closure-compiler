@@ -128,7 +128,7 @@ class PrepareAst implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.OBJECTLIT) {
+      if (n.isObjectLit()) {
         normalizeObjectLiteralAnnotations(n);
       }
       return true;
@@ -149,7 +149,7 @@ class PrepareAst implements CompilerPass {
     }
 
     private void normalizeObjectLiteralAnnotations(Node objlit) {
-      Preconditions.checkState(objlit.getType() == Token.OBJECTLIT);
+      Preconditions.checkState(objlit.isObjectLit());
       for (Node key = objlit.getFirstChild();
            key != null; key = key.getNext()) {
         Node value = key.getFirstChild();
@@ -162,7 +162,7 @@ class PrepareAst implements CompilerPass {
      * "this" values (what we are call "free" calls) and direct call to eval.
      */
     private void annotateCalls(Node n) {
-      Preconditions.checkState(n.getType() == Token.CALL);
+      Preconditions.checkState(n.isCall());
 
       // Keep track of of the "this" context of a call.  A call without an
       // explicit "this" is a free call.
@@ -173,7 +173,7 @@ class PrepareAst implements CompilerPass {
 
       // Keep track of the context in which eval is called. It is important
       // to distinguish between "(0, eval)()" and "eval()".
-      if (first.getType() == Token.NAME &&
+      if (first.isName() &&
           "eval".equals(first.getString())) {
         first.putBooleanProp(Node.DIRECT_EVAL, true);
       }
@@ -183,10 +183,10 @@ class PrepareAst implements CompilerPass {
      * Translate dispatcher info into the property expected node.
      */
     private void annotateDispatchers(Node n, Node parent) {
-      Preconditions.checkState(n.getType() == Token.FUNCTION);
+      Preconditions.checkState(n.isFunction());
       if (parent.getJSDocInfo() != null
           && parent.getJSDocInfo().isJavaDispatch()) {
-        if (parent.getType() == Token.ASSIGN) {
+        if (parent.isAssign()) {
           Preconditions.checkState(parent.getLastChild() == n);
           n.putBooleanProp(Node.IS_DISPATCHER, true);
         }
@@ -210,9 +210,9 @@ class PrepareAst implements CompilerPass {
      */
     private void normalizeObjectLiteralKeyAnnotations(
         Node objlit, Node key, Node value) {
-      Preconditions.checkState(objlit.getType() == Token.OBJECTLIT);
+      Preconditions.checkState(objlit.isObjectLit());
       if (key.getJSDocInfo() != null &&
-          value.getType() == Token.FUNCTION) {
+          value.isFunction()) {
         value.setJSDocInfo(key.getJSDocInfo());
       }
     }

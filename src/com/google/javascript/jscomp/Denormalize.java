@@ -93,8 +93,8 @@ class Denormalize implements CompilerPass, Callback {
           compiler.reportCodeChange();
         }
       }
-    } else if (nextSibling.getType() == Token.FOR
-        && nextSibling.getFirstChild().getType() == Token.EMPTY) {
+    } else if (nextSibling.isFor()
+        && nextSibling.getFirstChild().isEmpty()) {
 
       // Does the current node contain an in operator?  If so, embedding
       // the expression in a for loop can cause some Javascript parsers (such
@@ -143,7 +143,7 @@ class Denormalize implements CompilerPass, Callback {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
-      if (node.getType() == Token.NAME || node.getType() == Token.STRING) {
+      if (node.isName() || node.isString()) {
         node.removeProp(Node.IS_CONSTANT_NAME);
       }
     }

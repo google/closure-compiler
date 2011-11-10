@@ -1511,7 +1511,7 @@ public class FunctionInjectorTest extends TestCase {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.CALL) {
+      if (n.isCall()) {
         Node callee;
         if (NodeUtil.isGet(n.getFirstChild())) {
           callee = n.getFirstChild().getFirstChild();
@@ -1519,7 +1519,7 @@ public class FunctionInjectorTest extends TestCase {
           callee = n.getFirstChild();
         }
 
-        if (callee.getType() == Token.NAME &&
+        if (callee.isName() &&
             callee.getString().equals(callname)) {
           complete = method.call(t, n, parent);
         }
@@ -1532,7 +1532,7 @@ public class FunctionInjectorTest extends TestCase {
   }
 
   private static Node findFunction(Node n, String name) {
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       if (n.getFirstChild().getString().equals(name)) {
         return n;
       }

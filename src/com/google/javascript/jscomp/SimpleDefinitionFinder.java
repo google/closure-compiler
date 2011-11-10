@@ -27,8 +27,6 @@ import com.google.javascript.jscomp.DefinitionsRemover.UnknownDefinition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +158,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       // Arguments of external functions should not count as name
       // definitions.  They are placeholder names for documentation
       // purposes only which are not reachable from anywhere.
-      if (inExterns && node.isName() && parent.getType() == Token.LP) {
+      if (inExterns && node.isName() && parent.isLP()) {
         return;
       }
 

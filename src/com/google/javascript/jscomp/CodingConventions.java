@@ -408,9 +408,9 @@ public class CodingConventions {
         }
       }
 
-      if (callTarget.getType() == Token.GETPROP
+      if (callTarget.isGetProp()
           && callTarget.getLastChild().getString().equals("bind")
-          && callTarget.getFirstChild().getType() == Token.FUNCTION) {
+          && callTarget.getFirstChild().isFunction()) {
         // (function(){}).bind(self, args...);
         Node fn = callTarget.getFirstChild();
         Node thisValue = callTarget.getNext();

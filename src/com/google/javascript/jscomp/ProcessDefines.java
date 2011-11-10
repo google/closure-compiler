@@ -197,7 +197,7 @@ class ProcessDefines implements CompilerPass {
           Node parent = ref.node.getParent();
           JSDocInfo info = n.getJSDocInfo();
           if (info == null &&
-              parent.getType() == Token.VAR && parent.hasOneChild()) {
+              parent.isVar() && parent.hasOneChild()) {
             info = parent.getJSDocInfo();
           }
 
@@ -295,7 +295,7 @@ class ProcessDefines implements CompilerPass {
           case SET_FROM_LOCAL:
             Node valParent = getValueParent(ref);
             Node val = valParent.getLastChild();
-            if (valParent.getType() == Token.ASSIGN && name.isSimpleName() &&
+            if (valParent.isAssign() && name.isSimpleName() &&
                 name.getDeclaration() == ref) {
               // For defines, it's an error if a simple name is assigned
               // before it's declared
@@ -336,18 +336,18 @@ class ProcessDefines implements CompilerPass {
 
       if (lvalueToRemoveLater == n) {
         lvalueToRemoveLater = null;
-        if (n.getType() == Token.ASSIGN) {
+        if (n.isAssign()) {
           Node last = n.getLastChild();
           n.removeChild(last);
           parent.replaceChild(n, last);
         } else {
-          Preconditions.checkState(n.getType() == Token.NAME);
+          Preconditions.checkState(n.isName());
           n.removeChild(n.getFirstChild());
         }
         compiler.reportCodeChange();
       }
 
-      if (n.getType() == Token.CALL) {
+      if (n.isCall()) {
         if (t.inGlobalScope()) {
           // If there's a function call in the global scope,
           // we just say it's unsafe and freeze all the defines.
@@ -453,7 +453,7 @@ class ProcessDefines implements CompilerPass {
     private static Node getValueParent(Ref ref) {
       // there are two types of declarations: VARs and ASSIGNs
       return ref.node.getParent() != null &&
-          ref.node.getParent().getType() == Token.VAR ?
+          ref.node.getParent().isVar() ?
           ref.node : ref.node.getParent();
     }
 

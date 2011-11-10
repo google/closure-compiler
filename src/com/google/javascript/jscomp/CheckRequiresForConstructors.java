@@ -119,7 +119,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
           break;
         case Token.FUNCTION:
           if (NodeUtil.isFunctionExpression(n)) {
-            if (parent.getType() == Token.NAME) {
+            if (parent.isName()) {
               String functionName = parent.getString();
               info = (JSDocInfo) parent.getProp(Node.JSDOC_INFO_PROP);
               if (info != null && info.isConstructor()) {
@@ -127,7 +127,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
               } else {
                 Node gramps = parent.getParent();
                 Preconditions.checkState(
-                    gramps != null && gramps.getType() == Token.VAR);
+                    gramps != null && gramps.isVar());
                 info = (JSDocInfo) gramps.getProp(Node.JSDOC_INFO_PROP);
                 if (info != null && info.isConstructor()) {
                   constructors.add(functionName);

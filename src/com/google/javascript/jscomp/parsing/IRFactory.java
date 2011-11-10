@@ -207,8 +207,8 @@ class IRFactory {
 
   private Node transformBlock(AstNode node) {
     Node irNode = transform(node);
-    if (irNode.getType() != Token.BLOCK) {
-      if (irNode.getType() == Token.EMPTY) {
+    if (!irNode.isBlock()) {
+      if (irNode.isEmpty()) {
         irNode.setType(Token.BLOCK);
         irNode.setWasEmptyNode(true);
       } else {
@@ -404,7 +404,7 @@ class IRFactory {
         ret = transform(n);
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       }
-      Preconditions.checkState(ret.getType() == Token.STRING);
+      Preconditions.checkState(ret.isString());
       return ret;
     }
 
@@ -476,7 +476,7 @@ class IRFactory {
 
       int nType = n.getType();
       return nType == Token.EXPR_RESULT &&
-          n.getFirstChild().getType() == Token.STRING &&
+          n.getFirstChild().isString() &&
           ALLOWED_DIRECTIVES.contains(n.getFirstChild().getString());
     }
 
@@ -772,13 +772,13 @@ class IRFactory {
         Node value = transform(el.getRight());
         if (el.isGetter()) {
           key.setType(Token.GET);
-          Preconditions.checkState(value.getType() == Token.FUNCTION);
+          Preconditions.checkState(value.isFunction());
           if (getFnParamNode(value).hasChildren()) {
             reportGetterParam(el.getLeft());
           }
         } else if (el.isSetter()) {
           key.setType(Token.SET);
-          Preconditions.checkState(value.getType() == Token.FUNCTION);
+          Preconditions.checkState(value.isFunction());
           if (!getFnParamNode(value).hasOneChild()) {
             reportSetterParam(el.getLeft());
           }
@@ -795,7 +795,7 @@ class IRFactory {
      */
    Node getFnParamNode(Node fnNode) {
      // Function NODE: [ FUNCTION -> NAME, LP -> ARG1, ARG2, ... ]
-     Preconditions.checkArgument(fnNode.getType() == Token.FUNCTION);
+     Preconditions.checkArgument(fnNode.isFunction());
      return fnNode.getFirstChild().getNext();
    }
 
@@ -935,14 +935,14 @@ class IRFactory {
     Node processUnaryExpression(UnaryExpression exprNode) {
       int type = transformTokenType(exprNode.getType());
       Node operand = transform(exprNode.getOperand());
-      if (type == Token.NEG && operand.getType() == Token.NUMBER) {
+      if (type == Token.NEG && operand.isNumber()) {
         operand.setDouble(-operand.getDouble());
         return operand;
       } else {
         if (type == Token.DELPROP &&
-            !(operand.getType() == Token.GETPROP ||
-              operand.getType() == Token.GETELEM ||
-              operand.getType() == Token.NAME)) {
+            !(operand.isGetProp() ||
+              operand.isGetElem() ||
+              operand.isName())) {
           String msg =
               "Invalid delete operand. Only properties can be deleted.";
           errorReporter.error(

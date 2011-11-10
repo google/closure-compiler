@@ -207,9 +207,9 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       return result;
-    } else if (name.getType() == Token.OR || name.getType() == Token.HOOK) {
+    } else if (name.isOr() || name.isHook()) {
       Node firstVal;
-      if (name.getType() == Token.HOOK) {
+      if (name.isHook()) {
         firstVal = name.getFirstChild().getNext();
       } else {
         firstVal = name.getFirstChild();
@@ -490,7 +490,7 @@ class PureFunctionIdentifier implements CompilerPass {
         Var v = i.next();
         boolean localVar = false;
         // Parameters and catch values come can from other scopes.
-        if (v.getParentNode().getType() == Token.VAR) {
+        if (v.getParentNode().isVar()) {
           // TODO(johnlenz): create a useful parameter list
           sideEffectInfo.knownLocals.add(v.getName());
           localVar = true;
@@ -779,8 +779,8 @@ class PureFunctionIdentifier implements CompilerPass {
     public boolean traverseEdge(FunctionInformation callee,
                                 Node callSite,
                                 FunctionInformation caller) {
-      Preconditions.checkArgument(callSite.getType() == Token.CALL ||
-                                  callSite.getType() == Token.NEW);
+      Preconditions.checkArgument(callSite.isCall() ||
+                                  callSite.isNew());
 
       boolean changed = false;
       if (!caller.mutatesGlobalState() && callee.mutatesGlobalState()) {

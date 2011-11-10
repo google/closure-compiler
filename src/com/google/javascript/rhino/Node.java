@@ -2210,6 +2210,14 @@ public class Node implements Cloneable, Serializable {
 
   /*** AST type check methods ***/
 
+  public boolean isAdd() {
+    return this.getType() == Token.ADD;
+  }
+
+  public boolean isAnd() {
+    return this.getType() == Token.AND;
+  }
+
   public boolean isArrayLit() {
     return this.getType() == Token.ARRAYLIT;
   }
@@ -2234,6 +2242,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.CATCH;
   }
 
+  public boolean isComma() {
+    return this.getType() == Token.COMMA;
+  }
+
   public boolean isDec() {
     return this.getType() == Token.DEC;
   }
@@ -2254,6 +2266,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.EXPR_RESULT;
   }
 
+  public boolean isFalse() {
+    return this.getType() == Token.FALSE;
+  }
+
   public boolean isFor() {
     return this.getType() == Token.FOR;
   }
@@ -2272,6 +2288,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isGetProp() {
     return this.getType() == Token.GETPROP;
+  }
+
+  public boolean isHook() {
+    return this.getType() == Token.HOOK;
   }
 
   public boolean isIf() {
@@ -2302,16 +2322,32 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.NEW;
   }
 
+  public boolean isNot() {
+    return this.getType() == Token.NOT;
+  }
+
   public boolean isNull() {
     return this.getType() == Token.NULL;
+  }
+
+  public boolean isNumber() {
+    return this.getType() == Token.NUMBER;
   }
 
   public boolean isObjectLit() {
     return this.getType() == Token.OBJECTLIT;
   }
 
+  public boolean isOr() {
+    return this.getType() == Token.OR;
+  }
+
   public boolean isRegExp() {
     return this.getType() == Token.REGEXP;
+  }
+
+  public boolean isReturn() {
+    return this.getType() == Token.RETURN;
   }
 
   public boolean isScript() {
@@ -2326,8 +2362,20 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.STRING;
   }
 
+  public boolean isSwitch() {
+    return this.getType() == Token.SWITCH;
+  }
+
   public boolean isThis() {
     return this.getType() == Token.THIS;
+  }
+
+  public boolean isThrow() {
+    return this.getType() == Token.THROW;
+  }
+
+  public boolean isTrue() {
+    return this.getType() == Token.TRUE;
   }
 
   public boolean isTry() {

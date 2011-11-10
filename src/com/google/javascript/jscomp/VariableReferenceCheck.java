@@ -23,8 +23,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -173,7 +171,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           if (!reference.getNode().isFromExterns()) {
             // Special case to deal with var goog = goog || {}
             Node grandparent = reference.getGrandparent();
-            if (grandparent.getType() == Token.NAME
+            if (grandparent.isName()
                 && grandparent.getString() == v.name) {
               continue;
             }

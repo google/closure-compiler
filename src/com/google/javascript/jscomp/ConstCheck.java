@@ -60,7 +60,7 @@ class ConstCheck extends AbstractPostOrderCallback
     switch (n.getType()) {
       case Token.NAME:
         if (parent != null &&
-            parent.getType() == Token.VAR &&
+            parent.isVar() &&
             n.hasChildren()) {
           String name = n.getString();
           Scope.Var var = t.getScope().getVar(name);
@@ -87,7 +87,7 @@ class ConstCheck extends AbstractPostOrderCallback
       case Token.ASSIGN_DIV:
       case Token.ASSIGN_MOD: {
         Node lhs = n.getFirstChild();
-        if (lhs.getType() == Token.NAME) {
+        if (lhs.isName()) {
           String name = lhs.getString();
           Scope.Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
@@ -104,7 +104,7 @@ class ConstCheck extends AbstractPostOrderCallback
       case Token.INC:
       case Token.DEC: {
         Node lhs = n.getFirstChild();
-        if (lhs.getType() == Token.NAME) {
+        if (lhs.isName()) {
           String name = lhs.getString();
           Scope.Var var = t.getScope().getVar(name);
           if (isConstant(var)) {

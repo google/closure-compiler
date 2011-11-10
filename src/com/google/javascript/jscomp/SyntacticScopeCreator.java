@@ -82,7 +82,7 @@ class SyntacticScopeCreator implements ScopeCreator {
   }
 
   private void scanRoot(Node n, Scope parent) {
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       if (inputId == null) {
         inputId = NodeUtil.getInputId(n);
         // TODO(johnlenz): inputId maybe null if the FUNCTION node is detached
@@ -102,10 +102,10 @@ class SyntacticScopeCreator implements ScopeCreator {
       }
 
       // Args: Declare function variables
-      Preconditions.checkState(args.getType() == Token.LP);
+      Preconditions.checkState(args.isLP());
       for (Node a = args.getFirstChild(); a != null;
            a = a.getNext()) {
-        Preconditions.checkState(a.getType() == Token.NAME);
+        Preconditions.checkState(a.isName());
         declareVar(a);
       }
 
@@ -148,7 +148,7 @@ class SyntacticScopeCreator implements ScopeCreator {
 
       case Token.CATCH:
         Preconditions.checkState(n.getChildCount() == 2);
-        Preconditions.checkState(n.getFirstChild().getType() == Token.NAME);
+        Preconditions.checkState(n.getFirstChild().isName());
         // the first child is the catch var and the third child
         // is the code block
 
@@ -198,8 +198,8 @@ class SyntacticScopeCreator implements ScopeCreator {
       if (scope.isGlobal()) {
         Scope.Var origVar = scope.getVar(name);
         Node origParent = origVar.getParentNode();
-        if (origParent.getType() == Token.CATCH &&
-            parent.getType() == Token.CATCH) {
+        if (origParent.isCatch() &&
+            parent.isCatch()) {
           // Okay, both are 'catch(x)' variables.
           return;
         }
@@ -231,7 +231,7 @@ class SyntacticScopeCreator implements ScopeCreator {
    * @param n The node corresponding to the variable name.
    */
   private void declareVar(Node n) {
-    Preconditions.checkState(n.getType() == Token.NAME);
+    Preconditions.checkState(n.isName());
 
     CompilerInput input = compiler.getInput(inputId);
     String name = n.getString();
@@ -252,7 +252,7 @@ class SyntacticScopeCreator implements ScopeCreator {
    *     for the given node.
    */
   static boolean hasDuplicateDeclarationSuppression(Node n, Scope.Var origVar) {
-    Preconditions.checkState(n.getType() == Token.NAME);
+    Preconditions.checkState(n.isName());
     Node parent = n.getParent();
     Node origParent = origVar.getParentNode();
 

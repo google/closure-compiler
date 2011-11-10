@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -306,7 +305,7 @@ abstract class ConcreteType implements LatticeElement {
       this.declaration = declaration;
       this.parentScope = parentScope;
 
-      Preconditions.checkArgument(declaration.getType() == Token.FUNCTION);
+      Preconditions.checkArgument(declaration.isFunction());
       Preconditions.checkArgument(declaration.getJSType() != null);
       Preconditions.checkArgument(declaration.getJSType().isFunctionType());
     }

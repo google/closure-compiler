@@ -176,9 +176,9 @@ public class VarCheckTest extends CompilerTestCase {
     testSetupPass = new CompilerPass() {
 
       void visit(Node n) {
-        if (n.getType() == Token.NAME
+        if (n.isName()
             && !n.getString().isEmpty()
-            && n.getParent().getType() == Token.FUNCTION) {
+            && n.getParent().isFunction()) {
           n.setString("");
           testcase.getLastCompiler().reportCodeChange();
         }

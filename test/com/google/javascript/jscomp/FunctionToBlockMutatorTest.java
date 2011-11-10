@@ -272,9 +272,9 @@ public class FunctionToBlockMutatorTest extends TestCase {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() == Token.CALL) {
+      if (n.isCall()) {
         Node first = n.getFirstChild();
-        if (first.getType() == Token.NAME &&
+        if (first.isName() &&
             first.getString().equals(callname)) {
           complete = method.call(t, n, parent);
         }
@@ -287,7 +287,7 @@ public class FunctionToBlockMutatorTest extends TestCase {
   }
 
   private static Node findFunction(Node n, String name) {
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       if (n.getFirstChild().getString().equals(name)) {
         return n;
       }

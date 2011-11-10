@@ -453,7 +453,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           return;
         }
 
-        if (parent.getType() == Token.ASSIGN || parent.getType() == Token.VAR) {
+        if (parent.isAssign() || parent.isVar()) {
           definitionMap.put(n.getQualifiedName(), parent);
         }
 

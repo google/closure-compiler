@@ -52,7 +52,7 @@ class NodeIterators {
       Preconditions.checkArgument(ancestors.length > 0);
 
       for (Node n : ancestors) {
-        if (n.getType() == Token.FUNCTION) {
+        if (n.isFunction()) {
           break;
         }
 
@@ -73,7 +73,7 @@ class NodeIterators {
         current = ancestors.peek();
 
         // If this is a function node, skip it.
-        if (current.getType() == Token.FUNCTION) {
+        if (current.isFunction()) {
           return next();
         }
       } else {
@@ -81,7 +81,7 @@ class NodeIterators {
         ancestors.push(current);
 
         // If this is a function node, skip it.
-        if (current.getType() == Token.FUNCTION) {
+        if (current.isFunction()) {
           return next();
         }
 
@@ -90,7 +90,7 @@ class NodeIterators {
           ancestors.push(current);
 
           // If this is a function node, skip it.
-          if (current.getType() == Token.FUNCTION) {
+          if (current.isFunction()) {
             return next();
           }
         }
@@ -162,7 +162,7 @@ class NodeIterators {
      */
     static LocalVarMotion forVar(
         Node name, Node var, Node block) {
-      Preconditions.checkArgument(var.getType() == Token.VAR);
+      Preconditions.checkArgument(var.isVar());
       Preconditions.checkArgument(NodeUtil.isStatement(var));
       // The FunctionlessLocalScope must start at "name" as this may be used
       // before the Normalize pass, and thus the VAR node may define multiple
@@ -178,8 +178,8 @@ class NodeIterators {
      */
     static LocalVarMotion forAssign(
         Node name, Node assign, Node expr, Node block) {
-      Preconditions.checkArgument(assign.getType() == Token.ASSIGN);
-      Preconditions.checkArgument(expr.getType() == Token.EXPR_RESULT);
+      Preconditions.checkArgument(assign.isAssign());
+      Preconditions.checkArgument(expr.isExprResult());
       // The FunctionlessLocalScope must start at "assign", to skip the value
       // assigned to "name" (which would be its sibling).
       return new LocalVarMotion(
@@ -191,7 +191,7 @@ class NodeIterators {
      *     beginning with the deepest ancestor.
      */
     private LocalVarMotion(Node nameNode, FunctionlessLocalScope iterator) {
-      Preconditions.checkArgument(nameNode.getType() == Token.NAME);
+      Preconditions.checkArgument(nameNode.isName());
       Node valueNode = NodeUtil.getAssignedValue(nameNode);
       this.varName = nameNode.getString();
       this.valueHasSideEffects = valueNode != null &&
@@ -226,7 +226,7 @@ class NodeIterators {
         // Don't advance past a refrence to the variable that we're trying
         // to inline.
         Node curNode = iterator.current();
-        if (curNode.getType() == Token.NAME &&
+        if (curNode.isName() &&
             varName.equals(curNode.getString())) {
           lookAhead = null;
           return;
@@ -251,9 +251,9 @@ class NodeIterators {
           if (nextParent == null) {
             blocked = true;
           } else {
-            boolean assignsName = (nextParent.getType() == Token.ASSIGN
+            boolean assignsName = (nextParent.isAssign()
                     && nextNode == nextParent.getFirstChild());
-            boolean isVarDeclaration = (nextParent.getType() == Token.VAR);
+            boolean isVarDeclaration = (nextParent.isVar());
 
             if (!assignsName && !isVarDeclaration) {
               blocked = true;
@@ -274,7 +274,7 @@ class NodeIterators {
       //   var b = 3;
       //   alert(a);
       if (NodeUtil.nodeTypeMayHaveSideEffects(nextNode) && type != Token.NAME
-          || type == Token.NAME && nextParent.getType() == Token.CATCH) {
+          || type == Token.NAME && nextParent.isCatch()) {
         lookAhead = null;
         return;
       }

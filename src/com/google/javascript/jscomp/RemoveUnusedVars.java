@@ -250,7 +250,7 @@ class RemoveUnusedVars
 
       case Token.NAME:
         var = scope.getVar(n.getString());
-        if (parent.getType() == Token.VAR) {
+        if (parent.isVar()) {
           Node value = n.getFirstChild();
           if (value != null && var != null && isRemovableVar(var) &&
               !NodeUtil.mayHaveSideEffects(value)) {
@@ -323,11 +323,11 @@ class RemoveUnusedVars
    */
   private void traverseFunction(Node n, Scope parentScope) {
     Preconditions.checkState(n.getChildCount() == 3);
-    Preconditions.checkState(n.getType() == Token.FUNCTION);
+    Preconditions.checkState(n.isFunction());
 
     final Node body = n.getLastChild();
     Preconditions.checkState(body.getNext() == null &&
-            body.getType() == Token.BLOCK);
+            body.isBlock());
 
     Scope fnScope =
         new SyntacticScopeCreator(compiler).createScope(n, parentScope);
@@ -361,7 +361,7 @@ class RemoveUnusedVars
 
     Node function = fnScope.getRootNode();
 
-    Preconditions.checkState(function.getType() == Token.FUNCTION);
+    Preconditions.checkState(function.isFunction());
     if (NodeUtil.isGetOrSetKey(function.getParent())) {
       // The parameters object literal setters can not be removed.
       return;
@@ -410,7 +410,7 @@ class RemoveUnusedVars
 
     public void optimize(Scope fnScope, Set<Var> referenced) {
       Node function = fnScope.getRootNode();
-      Preconditions.checkState(function.getType() == Token.FUNCTION);
+      Preconditions.checkState(function.isFunction());
       Node argList = getFunctionArgList(function);
 
       // In this path we try to modify all the call sites to remove unused
@@ -717,7 +717,7 @@ class RemoveUnusedVars
           boolean assignedToUnknownValue = false;
           boolean hasPropertyAssign = false;
 
-          if (var.getParentNode().getType() == Token.VAR &&
+          if (var.getParentNode().isVar() &&
               !NodeUtil.isForIn(var.getParentNode().getParent())) {
             Node value = var.getInitialValue();
             assignedToUnknownValue = value != null &&
@@ -800,14 +800,14 @@ class RemoveUnusedVars
       Node parent = toRemove.getParent();
 
       Preconditions.checkState(
-          toRemove.getType() == Token.VAR ||
-          toRemove.getType() == Token.FUNCTION ||
-          toRemove.getType() == Token.LP &&
-          parent.getType() == Token.FUNCTION,
+          toRemove.isVar() ||
+          toRemove.isFunction() ||
+          toRemove.isLP() &&
+          parent.isFunction(),
           "We should only declare vars and functions and function args");
 
-      if (toRemove.getType() == Token.LP &&
-          parent.getType() == Token.FUNCTION) {
+      if (toRemove.isLP() &&
+          parent.isFunction()) {
         // Don't remove function arguments here. That's a special case
         // that's taken care of in removeUnreferencedFunctionArgs.
       } else if (NodeUtil.isFunctionExpression(toRemove)) {
@@ -817,10 +817,10 @@ class RemoveUnusedVars
         }
         // Don't remove bleeding functions.
       } else if (parent != null &&
-          parent.getType() == Token.FOR &&
+          parent.isFor() &&
           parent.getChildCount() < 4) {
         // foreach iterations have 3 children. Leave them alone.
-      } else if (toRemove.getType() == Token.VAR &&
+      } else if (toRemove.isVar() &&
           nameNode.hasChildren() &&
           NodeUtil.mayHaveSideEffects(nameNode.getFirstChild())) {
         // If this is a single var declaration, we can at least remove the
@@ -831,7 +831,7 @@ class RemoveUnusedVars
               new Node(Token.EXPR_RESULT, nameNode.removeFirstChild()));
           compiler.reportCodeChange();
         }
-      } else if (toRemove.getType() == Token.VAR &&
+      } else if (toRemove.isVar() &&
           toRemove.getChildCount() > 1) {
         // For var declarations with multiple names (i.e. var a, b, c),
         // only remove the unreferenced name
@@ -921,7 +921,7 @@ class RemoveUnusedVars
         current = current.getFirstChild();
         isPropAssign = true;
 
-        if (current.getType() == Token.GETPROP &&
+        if (current.isGetProp() &&
             current.getLastChild().getString().equals("prototype")) {
           // Prototype properties sets should be considered like normal
           // property sets.
@@ -929,7 +929,7 @@ class RemoveUnusedVars
         }
       }
 
-      if (current.getType() == Token.NAME) {
+      if (current.isName()) {
         return new Assign(assignNode, current, isPropAssign);
       }
       return null;
@@ -947,7 +947,7 @@ class RemoveUnusedVars
         for (Node current = assignNode.getFirstChild();
              current.getType() != Token.NAME;
              current = current.getFirstChild()) {
-          if (current.getType() == Token.GETELEM) {
+          if (current.isGetElem()) {
             replacement = new Node(Token.COMMA,
                 current.getLastChild().detachFromParent(), replacement);
             replacement.copyInformationFrom(current);
@@ -957,7 +957,7 @@ class RemoveUnusedVars
         parent.replaceChild(assignNode, replacement);
       } else {
         Node gramps = parent.getParent();
-        if (parent.getType() == Token.EXPR_RESULT) {
+        if (parent.isExprResult()) {
           gramps.removeChild(parent);
         } else {
           parent.replaceChild(assignNode,

@@ -349,7 +349,7 @@ class MakeDeclaredNamesUnique
         List<Node> references = nameMap.get(name);
         Preconditions.checkState(references != null);
         for (Node n : references) {
-          Preconditions.checkState(n.getType() == Token.NAME);
+          Preconditions.checkState(n.isName());
           n.setString(newName);
         }
         compiler.reportCodeChange();

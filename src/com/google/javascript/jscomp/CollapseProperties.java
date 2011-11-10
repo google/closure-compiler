@@ -201,7 +201,7 @@ class CollapseProperties implements CompilerPass {
     // then the NAME must be the child of a VAR node, and we must
     // be in a VAR assignment.
     Node aliasParent = alias.node.getParent();
-    if (aliasParent.getType() == Token.NAME) {
+    if (aliasParent.isName()) {
       // Ensure that the local variable is well defined and never reassigned.
       Scope scope = alias.scope;
       Var aliasVar = scope.getVar(aliasParent.getString());
@@ -337,7 +337,7 @@ class CollapseProperties implements CompilerPass {
     Node varNode = new Node(Token.VAR, nameNode).copyInformationFrom(nameNode);
 
     Preconditions.checkState(
-        ref.node.getParent().getType() == Token.EXPR_RESULT);
+        ref.node.getParent().isExprResult());
     Node parent = ref.node.getParent();
     Node gramps = parent.getParent();
     gramps.replaceChild(parent, varNode);
@@ -398,7 +398,7 @@ class CollapseProperties implements CompilerPass {
     String originalName = n.getFullName();
     Ref decl = n.getDeclaration();
     if (decl != null && decl.node != null &&
-        decl.node.getType() == Token.GETPROP) {
+        decl.node.isGetProp()) {
       flattenNameRefAtDepth(alias, decl.node, depth, originalName);
     }
 
@@ -471,7 +471,7 @@ class CollapseProperties implements CompilerPass {
     Node ref = NodeUtil.newName(
         compiler.getCodingConvention(), alias, n, originalName);
     NodeUtil.copyNameAnnotations(n.getLastChild(), ref);
-    if (parent.getType() == Token.CALL && n == parent.getFirstChild()) {
+    if (parent.isCall() && n == parent.getFirstChild()) {
       // The node was a call target, we are deliberately flatten these as
       // we node the "this" isn't provided by the namespace. Mark it as such:
       parent.putBooleanProp(Node.FREE_CALL, true);
@@ -512,7 +512,7 @@ class CollapseProperties implements CompilerPass {
             p.canCollapse() &&
             p.getDeclaration().node != null &&
             p.getDeclaration().node.getParent() != null &&
-            p.getDeclaration().node.getParent().getType() == Token.ASSIGN) {
+            p.getDeclaration().node.getParent().isAssign()) {
           updateSimpleDeclaration(
               appendPropForAlias(alias, p.getBaseName()), p, p.getDeclaration());
         }
@@ -538,7 +538,7 @@ class CollapseProperties implements CompilerPass {
     Node greatGramps = gramps.getParent();
     Node greatGreatGramps = greatGramps.getParent();
 
-    if (rvalue != null && rvalue.getType() == Token.FUNCTION) {
+    if (rvalue != null && rvalue.isFunction()) {
       checkForHosedThisReferences(rvalue, refName.docInfo, refName);
     }
 
@@ -548,7 +548,7 @@ class CollapseProperties implements CompilerPass {
         refName.getFullName());
     NodeUtil.copyNameAnnotations(ref.node.getLastChild(), nameNode);
 
-    if (gramps.getType() == Token.EXPR_RESULT) {
+    if (gramps.isExprResult()) {
       // BEFORE: a.b.c = ...;
       //   exprstmt
       //     assign
@@ -666,7 +666,7 @@ class CollapseProperties implements CompilerPass {
     Node varNode = new Node(Token.VAR);
     Node varParent = ref.node.getAncestor(3);
     Node gramps = ref.node.getAncestor(2);
-    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+    boolean isObjLit = rvalue.isObjectLit();
     boolean insertedVarNode = false;
 
     if (isObjLit && n.canEliminate()) {
@@ -677,7 +677,7 @@ class CollapseProperties implements CompilerPass {
 
     } else if (!n.isSimpleName()) {
       // Create a VAR node to declare the name.
-      if (rvalue.getType() == Token.FUNCTION) {
+      if (rvalue.isFunction()) {
         checkForHosedThisReferences(rvalue, n.docInfo, n);
       }
 
@@ -734,7 +734,7 @@ class CollapseProperties implements CompilerPass {
           new NodeTraversal.AbstractShallowCallback() {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
-              if (n.getType() == Token.THIS) {
+              if (n.isThis()) {
                 compiler.report(
                     JSError.make(name.getDeclaration().getSourceName(), n,
                         UNSAFE_THIS, name.getFullName()));
@@ -763,7 +763,7 @@ class CollapseProperties implements CompilerPass {
     Node varNode = ref.node.getParent();
     Node gramps = varNode.getParent();
 
-    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+    boolean isObjLit = rvalue.isObjectLit();
     int numChanges = 0;
 
     if (isObjLit) {
@@ -836,7 +836,7 @@ class CollapseProperties implements CompilerPass {
       nextKey = key.getNext();
 
       // A get or a set can not be rewritten as a VAR.
-      if (key.getType() == Token.GET || key.getType() == Token.SET) {
+      if (key.isGet() || key.isSet()) {
         continue;
       }
 
@@ -901,7 +901,7 @@ class CollapseProperties implements CompilerPass {
 
         p.getDeclaration().node = nameNode;
 
-        if (value.getType() == Token.FUNCTION) {
+        if (value.isFunction()) {
           checkForHosedThisReferences(value, value.getJSDocInfo(), p);
         }
       }

@@ -82,7 +82,7 @@ public class PeepholeCollectPropertyAssignments
   }
 
   private Node getName(Node n) {
-    if (n.getType() == Token.VAR) {
+    if (n.isVar()) {
       return n.getFirstChild();
     } else if (NodeUtil.isExprAssign(n)) {
       return n.getFirstChild().getFirstChild();
@@ -91,7 +91,7 @@ public class PeepholeCollectPropertyAssignments
   }
 
   private Node getValue(Node n) {
-    if (n.getType() == Token.VAR) {
+    if (n.isVar()) {
       return n.getFirstChild().getFirstChild();
     } else if (NodeUtil.isExprAssign(n)) {
       return n.getFirstChild().getLastChild();
@@ -100,7 +100,7 @@ public class PeepholeCollectPropertyAssignments
   }
 
   boolean isInterestingValue(Node n) {
-    return n.getType() == Token.OBJECTLIT || n.getType() == Token.ARRAYLIT;
+    return n.isObjectLit() || n.getType() == Token.ARRAYLIT;
   }
 
   private boolean isPropertyAssignmentToName(Node propertyCandidate) {
@@ -233,14 +233,14 @@ public class PeepholeCollectPropertyAssignments
     Node property = obj.getNext();
 
     // The property must be statically known.
-    if (lhs.getType() == Token.GETELEM
+    if (lhs.isGetElem()
         && (property.getType() != Token.STRING
             && property.getType() != Token.NUMBER)) {
       return false;
     }
 
     String propertyName;
-    if (property.getType() == Token.NUMBER) {
+    if (property.isNumber()) {
       propertyName = NodeUtil.getStringValue(property);
     } else {
       propertyName = property.getString();
@@ -249,7 +249,7 @@ public class PeepholeCollectPropertyAssignments
     Node newProperty = Node.newString(propertyName)
         .copyInformationFrom(property);
     // Preserve the quotedness of a property reference
-    if (lhs.getType() == Token.GETELEM) {
+    if (lhs.isGetElem()) {
       newProperty.setQuotedString();
     }
     Node newValue = rhs.detachFromParent();
@@ -263,7 +263,7 @@ public class PeepholeCollectPropertyAssignments
 
   private static boolean mightContainForwardReference(
       Node node, String varName) {
-    if (node.getType() == Token.NAME) {
+    if (node.isName()) {
       return varName.equals(node.getString());
     }
     for (Node child = node.getFirstChild(); child != null;

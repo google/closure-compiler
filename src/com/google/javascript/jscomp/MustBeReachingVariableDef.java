@@ -299,7 +299,7 @@ final class MustBeReachingVariableDef extends
         }
 
         // DEC and INC actually defines the variable.
-        if (n.getType() == Token.DEC || n.getType() == Token.INC) {
+        if (n.isDec() || n.isInc()) {
           Node target = n.getFirstChild();
           if (target.isName()) {
             addToDefIfLocal(target.getString(),
@@ -379,7 +379,7 @@ final class MustBeReachingVariableDef extends
   }
 
   private boolean isParameter(Var v) {
-    return v.getParentNode().getType() == Token.LP;
+    return v.getParentNode().isLP();
   }
 
   /**

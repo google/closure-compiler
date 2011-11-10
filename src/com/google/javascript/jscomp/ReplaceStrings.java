@@ -189,7 +189,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
         // Look for calls to class methods.
         if (NodeUtil.isGet(calledFn)) {
           Node rhs = calledFn.getLastChild();
-          if (rhs.getType() == Token.NAME || rhs.getType() == Token.STRING) {
+          if (rhs.isName() || rhs.isString()) {
             String methodName = rhs.getString();
             Collection<String> classes = methods.get(methodName);
             if (classes != null) {
@@ -246,7 +246,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
    */
   private void doSubstitutions(NodeTraversal t, Config config, Node n) {
     Preconditions.checkState(
-        n.getType() == Token.NEW || n.getType() == Token.CALL);
+        n.isNew() || n.isCall());
 
     if (config.parameter != Config.REPLACE_ALL_VALUE) {
       // Note: the first child is the function, but the parameter id is 1 based.
@@ -295,7 +295,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
         Scope.Var var = t.getScope().getVar(expr.getString());
         if (var != null && var.isConst()) {
           Node value = var.getInitialValue();
-          if (value != null && value.getType() == Token.STRING) {
+          if (value != null && value.isString()) {
             key = value.getString();
             replacementString = getReplacement(key);
             replacement = Node.newString(replacementString);

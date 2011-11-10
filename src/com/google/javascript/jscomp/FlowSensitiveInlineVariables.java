@@ -193,9 +193,9 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
             // Make sure that the name node is purely a read.
             if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-                || parent.isVar() || parent.getType() == Token.INC ||
-                parent.getType() == Token.DEC || parent.getType() == Token.LP ||
-                parent.getType() == Token.CATCH) {
+                || parent.isVar() || parent.isInc() ||
+                parent.isDec() || parent.isLP() ||
+                parent.isCatch()) {
               return;
             }
 
@@ -378,7 +378,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         rhs.detachFromParent();
         // Oh yes! I have grandparent to remove this.
         Preconditions.checkState(NodeUtil.isExpressionNode(defParent));
-        while (defParent.getParent().getType() == Token.LABEL) {
+        while (defParent.getParent().isLabel()) {
           defParent = defParent.getParent();
         }
         defParent.detachFromParent();

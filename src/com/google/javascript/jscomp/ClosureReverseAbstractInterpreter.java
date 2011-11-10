@@ -16,10 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.rhino.Token.CALL;
-import static com.google.javascript.rhino.Token.GETPROP;
-import static com.google.javascript.rhino.Token.NAME;
-import static com.google.javascript.rhino.Token.STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
@@ -208,15 +204,15 @@ class ClosureReverseAbstractInterpreter
   @Override
   public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
       FlowScope blindScope, boolean outcome) {
-    if (condition.getType() == CALL && condition.getChildCount() == 2) {
+    if (condition.isCall() && condition.getChildCount() == 2) {
       Node callee = condition.getFirstChild();
       Node param = condition.getLastChild();
-      if (callee.getType() == GETPROP && param.isQualifiedName()) {
+      if (callee.isGetProp() && param.isQualifiedName()) {
         JSType paramType =  getTypeIfRefinable(param, blindScope);
         Node left = callee.getFirstChild();
         Node right = callee.getLastChild();
-        if (left.getType() == NAME && "goog".equals(left.getString()) &&
-            right.getType() == STRING) {
+        if (left.isName() && "goog".equals(left.getString()) &&
+            right.isString()) {
           Function<TypeRestriction, JSType> restricter =
               restricters.get(right.getString());
           if (restricter != null) {

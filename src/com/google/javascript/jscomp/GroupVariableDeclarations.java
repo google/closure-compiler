@@ -79,7 +79,7 @@ class GroupVariableDeclarations implements CompilerPass, ScopedCallback {
     Iterator<Var> scopeVarIter = t.getScope().getVars();
     while (scopeVarIter.hasNext()) {
       Node parentNode = scopeVarIter.next().getParentNode();
-      if (parentNode.getType() == Token.VAR) {
+      if (parentNode.isVar()) {
         varNodes.add(parentNode);
       }
     }
@@ -157,7 +157,7 @@ class GroupVariableDeclarations implements CompilerPass, ScopedCallback {
       initializedName.removeChild(initializedVal);
       Node assignmentNode = new Node(Token.ASSIGN, initializedName);
       assignmentNode.addChildAfter(initializedVal, initializedName);
-      if (groupVarParent.getType() == Token.FOR) {
+      if (groupVarParent.isFor()) {
         // Handle For and For-In Loops specially. For these, we do not need
         // to construct an EXPR_RESULT node.
         groupVarParent.replaceChild(groupVar, assignmentNode);
@@ -168,7 +168,7 @@ class GroupVariableDeclarations implements CompilerPass, ScopedCallback {
     } else {
       // There is no initialized var. But we need to handle FOR and
       // FOR-IN loops specially
-      if (groupVarParent.getType() == Token.FOR) {
+      if (groupVarParent.isFor()) {
         if (NodeUtil.isForIn(groupVarParent)) {
           // In For-In loop, we replace the VAR node with a NAME node
           Node nameNodeClone = groupVar.getFirstChild().cloneNode();

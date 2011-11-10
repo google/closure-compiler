@@ -184,8 +184,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
         case Token.VAR:
           Preconditions.checkState(n.hasOneChild());
           Node nameNode = n.getFirstChild();
-          if (nameNode.getType() == Token.NAME && nameNode.hasChildren()
-              && nameNode.getFirstChild().getType() == Token.FUNCTION) {
+          if (nameNode.isName() && nameNode.hasChildren()
+              && nameNode.getFirstChild().isFunction()) {
             maybeAddFunction(new FunctionVar(n), t.getModule());
           }
           break;
@@ -194,7 +194,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
         // function Foo(x) { return ... }
         case Token.FUNCTION:
           Preconditions.checkState(NodeUtil.isStatementBlock(parent)
-              || parent.getType() == Token.LABEL);
+              || parent.isLabel());
           if (!NodeUtil.isFunctionExpression(n)) {
             Function fn = new NamedFunction(n);
             maybeAddFunction(fn, t.getModule());
@@ -215,11 +215,11 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
         //   (function(){})();
         case Token.CALL:
           Node fnNode = null;
-          if (n.getFirstChild().getType() == Token.FUNCTION) {
+          if (n.getFirstChild().isFunction()) {
             fnNode = n.getFirstChild();
           } else if (NodeUtil.isFunctionObjectCall(n)) {
             Node fnIdentifingNode = n.getFirstChild().getFirstChild();
-            if (fnIdentifingNode.getType() == Token.FUNCTION) {
+            if (fnIdentifingNode.isFunction()) {
               fnNode = fnIdentifingNode;
             }
           }
@@ -394,16 +394,16 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
           String name = null;
           // NOTE: The normalization pass insures that local names do not
           // collide with global names.
-          if (child.getType() == Token.NAME) {
+          if (child.isName()) {
             name = child.getString();
-          } else if (child.getType() == Token.FUNCTION) {
+          } else if (child.isFunction()) {
             name = anonFunctionMap.get(child);
           } else if (NodeUtil.isFunctionObjectCall(n)) {
             Preconditions.checkState(NodeUtil.isGet(child));
             Node fnIdentifingNode = child.getFirstChild();
-            if (fnIdentifingNode.getType() == Token.NAME) {
+            if (fnIdentifingNode.isName()) {
               name = fnIdentifingNode.getString();
-            } else if (fnIdentifingNode.getType() == Token.FUNCTION) {
+            } else if (fnIdentifingNode.isFunction()) {
               name = anonFunctionMap.get(fnIdentifingNode);
             }
           }
@@ -426,14 +426,14 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
    */
   static boolean isCandidateUsage(Node name) {
     Node parent = name.getParent();
-    Preconditions.checkState(name.getType() == Token.NAME);
-    if (parent.getType() == Token.VAR || parent.getType() == Token.FUNCTION) {
+    Preconditions.checkState(name.isName());
+    if (parent.isVar() || parent.isFunction()) {
       // This is a declaration.  Duplicate declarations are handle during
       // function candidate gathering.
       return true;
     }
 
-    if (parent.getType() == Token.CALL && parent.getFirstChild() == name) {
+    if (parent.isCall() && parent.getFirstChild() == name) {
       // This is a normal reference to the function.
       return true;
     }
@@ -448,10 +448,10 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     //     ...
     if (NodeUtil.isGet(parent)
          && name == parent.getFirstChild()
-         && name.getNext().getType() == Token.STRING
+         && name.getNext().isString()
          && name.getNext().getString().equals("call")) {
       Node gramps = name.getAncestor(2);
-      if (gramps.getType() == Token.CALL
+      if (gramps.isCall()
           && gramps.getFirstChild() == parent) {
         // Yep, a ".call".
         return true;
@@ -476,7 +476,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       super.visit(t, n, parent);
-      if (n.getType() == Token.NAME) {
+      if (n.isName()) {
         checkNameUsage(t, n, parent);
       }
     }
@@ -547,7 +547,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
      * Find functions that can be inlined.
      */
     private void checkNameUsage(NodeTraversal t, Node n, Node parent) {
-      Preconditions.checkState(n.getType() == Token.NAME);
+      Preconditions.checkState(n.isName());
 
       if (isCandidateUsage(n)) {
         return;
@@ -564,9 +564,9 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       // JSCompiler_ObjectPropertyString are not aliases of a value, but
       // a reference to the name itself, as such the value of the name is
       // unknown and can not be inlined.
-      if (parent.getType() == Token.NEW) {
+      if (parent.isNew()) {
         Node target = parent.getFirstChild();
-        if (target.getType() == Token.NAME && target.getString().equals(
+        if (target.isName() && target.getString().equals(
             ObjectPropertyStringPreprocess.EXTERN_OBJECT_PROPERTY_STRING)) {
           // This method is going to be replaced so don't inline it anywhere.
           fs.setInline(false);
@@ -574,7 +574,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       }
 
       // If the name is being assigned to it can not be inlined.
-      if (parent.getType() == Token.ASSIGN && parent.getFirstChild() == n) {
+      if (parent.isAssign() && parent.getFirstChild() == n) {
         // e.g. bar = something; <== we can't inline "bar"
         // so mark the function as uninlinable.
         // TODO(johnlenz): Should we just remove it from fns here?
@@ -785,7 +785,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       Node node, Set<String> changed) {
     Preconditions.checkArgument(changed != null);
     // For each referenced function, add a new reference
-    if (node.getType() == Token.NAME) {
+    if (node.isName()) {
       if (isCandidateUsage(node)) {
         changed.add(node.getString());
       }

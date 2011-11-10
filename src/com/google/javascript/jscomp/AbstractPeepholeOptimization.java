@@ -145,7 +145,7 @@ abstract class AbstractPeepholeOptimization {
       if (n != null && n.getType() != Token.SCRIPT
           && (n.getType() != Token.BLOCK || !n.isSyntheticBlock())) {
         for (Node parent : n.getAncestors()) {
-          if (parent.getType() == Token.SCRIPT) {
+          if (parent.isScript()) {
             break done;
           }
         }

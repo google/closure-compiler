@@ -167,7 +167,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * we know that its un-owned.
    */
   private JSType getClassOfMethod(Node n, Node parent) {
-    if (parent.getType() == Token.ASSIGN) {
+    if (parent.isAssign()) {
       Node lValue = parent.getFirstChild();
       if (NodeUtil.isGet(lValue)) {
         // We have an assignment of the form "a.b = ...".
@@ -187,7 +187,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         return normalizeClassType(lValue.getJSType());
       }
     } else if (NodeUtil.isFunctionDeclaration(n) ||
-               parent.getType() == Token.NAME) {
+               parent.isName()) {
       return normalizeClassType(n.getJSType());
     }
 
@@ -265,8 +265,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private void checkNameDeprecation(NodeTraversal t, Node n, Node parent) {
     // Don't bother checking definitions or constructors.
-    if (parent.getType() == Token.FUNCTION || parent.getType() == Token.VAR ||
-        parent.getType() == Token.NEW) {
+    if (parent.isFunction() || parent.isVar() ||
+        parent.isNew()) {
       return;
     }
 
@@ -293,7 +293,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private void checkPropertyDeprecation(NodeTraversal t, Node n, Node parent) {
     // Don't bother checking constructors.
-    if (parent.getType() == Token.NEW) {
+    if (parent.isNew()) {
       return;
     }
 
@@ -431,7 +431,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       // Is this a normal property access, or are we trying to override
       // an existing property?
       boolean isOverride = parent.getJSDocInfo() != null &&
-          parent.getType() == Token.ASSIGN &&
+          parent.isAssign() &&
           parent.getFirstChild() == getprop;
 
       // Find the lowest property defined on a class with visibility
@@ -550,14 +550,14 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     // 2) Instantiations of deprecated classes.
     // For now, we just let everything else by.
     if (t.inGlobalScope()) {
-      if (!((parent.getType() == Token.CALL && parent.getFirstChild() == n) ||
-              n.getType() == Token.NEW)) {
+      if (!((parent.isCall() && parent.getFirstChild() == n) ||
+              n.isNew())) {
         return false;
       }
     }
 
     // We can always assign to a deprecated property, to keep it up to date.
-    if (n.getType() == Token.GETPROP && n == parent.getFirstChild() &&
+    if (n.isGetProp() && n == parent.getFirstChild() &&
         NodeUtil.isAssignmentOp(parent)) {
       return false;
     }
@@ -584,7 +584,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       // Case #2
       (getTypeDeprecationInfo(t.getScope().getTypeOfThis()) != null) ||
         // Case #3
-      (scopeRootParent != null && scopeRootParent.getType() == Token.ASSIGN &&
+      (scopeRootParent != null && scopeRootParent.isAssign() &&
        getTypeDeprecationInfo(
            getClassOfMethod(scopeRoot, scopeRootParent)) != null);
   }
@@ -593,7 +593,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * Returns whether this is a function node annotated as deprecated.
    */
   private static boolean isDeprecatedFunction(Node n, Node parent) {
-    if (n.getType() == Token.FUNCTION) {
+    if (n.isFunction()) {
       JSType type = n.getJSType();
       if (type != null) {
         return getTypeDeprecationInfo(type) != null;

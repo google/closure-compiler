@@ -60,7 +60,7 @@ class UnfoldCompoundAssignments implements Callback, CompilerPass {
     switch (node.getType()) {
       case Token.INC:
       case Token.DEC:
-        unfoldIncrDecr(node, node.getType() == Token.INC);
+        unfoldIncrDecr(node, node.isInc());
         break;
       case Token.ASSIGN_BITOR:  // |=
       case Token.ASSIGN_BITXOR: // ^=
@@ -140,7 +140,7 @@ class UnfoldCompoundAssignments implements Callback, CompilerPass {
    */
   private boolean isPrefix(Node node) {
     Preconditions.checkArgument(
-        node.getType() == Token.INC || node.getType() == Token.DEC,
+        node.isInc() || node.isDec(),
         "isPrefix can only be called on INC and DEC nodes");
     // According to CodeGenerator:
     // A non-zero post-prop value indicates a post inc/dec, default of zero is a
