@@ -27,11 +27,11 @@ public abstract class NullErrorReporter  {
   }
 
   public void error(String message, String sourceName, int line,
-      String lineSource, int lineOffset) {
+      int lineOffset) {
   }
 
   public void warning(String message, String sourceName, int line,
-      String lineSource, int lineOffset) {
+      int lineOffset) {
   }
 
   public static ErrorReporter forOldRhino() {
@@ -51,6 +51,18 @@ public abstract class NullErrorReporter  {
                    String lineSource, int lineOffset) {
       return new com.google.javascript.jscomp.mozilla.rhino.EvaluatorException(
           message);
+    }
+
+    @Override
+    public void error(String message, String sourceName, int line,
+        String sourceLine, int lineOffset) {
+      super.error(message, sourceName, line, lineOffset);
+    }
+
+    @Override
+    public void warning(String message, String sourceName, int line,
+        String sourceLine, int lineOffset) {
+      super.warning(message, sourceName, line, lineOffset);
     }
   }
 

@@ -53,22 +53,22 @@ public class SimpleErrorReporter implements ErrorReporter {
 
     @Override
     public void warning(String message, String sourceName, int line,
-                        String lineSource, int lineOffset) {
+                        int lineOffset) {
         if (warnings == null) {
             warnings = new ArrayList<String>();
         }
         warnings.add(formatDetailedMessage(
-            message, sourceName, line, lineSource, lineOffset));
+            message, sourceName, line, lineOffset));
     }
 
     @Override
     public void error(String message, String sourceName, int line,
-                      String lineSource, int lineOffset) {
+                      int lineOffset) {
         if (errors == null) {
             errors = new ArrayList<String>();
         }
         errors.add(formatDetailedMessage(
-            message, sourceName, line, lineSource, lineOffset));
+            message, sourceName, line, lineOffset));
     }
 
     /**
@@ -86,8 +86,7 @@ public class SimpleErrorReporter implements ErrorReporter {
     }
 
     private String formatDetailedMessage(
-        String message, String sourceName, int lineNumber, String lineSource,
-        int lineOffset) {
+        String message, String sourceName, int lineNumber, int lineOffset) {
       String details = message;
       if (sourceName == null || lineNumber <= 0) {
         return details;

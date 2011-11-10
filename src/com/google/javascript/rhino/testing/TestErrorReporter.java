@@ -82,7 +82,7 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
 
   @Override
   public void error(String message, String sourceName, int line,
-      String lineSource, int lineOffset) {
+      int lineOffset) {
     if (errors != null && errorsIndex < errors.length) {
       assertEquals(errors[errorsIndex++], message);
     } else {
@@ -92,7 +92,7 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
 
   @Override
   public void warning(String message, String sourceName, int line,
-      String lineSource, int lineOffset) {
+      int lineOffset) {
     if (warnings != null && warningsIndex < warnings.length) {
       assertEquals(warnings[warningsIndex++], message);
     } else {

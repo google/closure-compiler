@@ -1551,7 +1551,7 @@ public class JSTypeRegistry implements Serializable {
                     "msg.jsdoc.function.thisnotobject" :
                     "msg.jsdoc.function.newnotobject"),
                 sourceName,
-                contextNode.getLineno(), "", contextNode.getCharno());
+                contextNode.getLineno(), contextNode.getCharno());
           }
 
           isConstructor = current.getType() == Token.NEW;
@@ -1580,7 +1580,7 @@ public class JSTypeRegistry implements Serializable {
                 if (!addSuccess) {
                   reporter.warning(
                       ScriptRuntime.getMessage0("msg.jsdoc.function.varargs"),
-                      sourceName, arg.getLineno(), "", arg.getCharno());
+                      sourceName, arg.getLineno(), arg.getCharno());
                 }
               } else {
                 paramBuilder.addRequiredParams(type);
@@ -1657,7 +1657,7 @@ public class JSTypeRegistry implements Serializable {
         reporter.warning(
             "Duplicate record field " + fieldName,
             sourceName,
-            n.getLineno(), "", fieldNameNode.getCharno());
+            n.getLineno(), fieldNameNode.getCharno());
       }
     }
 

@@ -58,11 +58,9 @@ public interface ErrorReporter {
      * @param sourceName a String describing the JavaScript source
      * where the warning occured; typically a filename or URL
      * @param line the line number associated with the warning
-     * @param lineSource the text of the line (may be null)
      * @param lineOffset the offset into lineSource where problem was detected
      */
-    void warning(String message, String sourceName, int line,
-                 String lineSource, int lineOffset);
+    void warning(String message, String sourceName, int line, int lineOffset);
 
     /**
      * Report an error.
@@ -79,10 +77,8 @@ public interface ErrorReporter {
      * @param sourceName a String describing the JavaScript source
      * where the error occured; typically a filename or URL
      * @param line the line number associated with the error
-     * @param lineSource the text of the line (may be null)
      * @param lineOffset the offset into lineSource where problem was detected
      */
-    void error(String message, String sourceName, int line,
-               String lineSource, int lineOffset);
+    void error(String message, String sourceName, int line, int lineOffset);
 
 }

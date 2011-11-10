@@ -337,7 +337,7 @@ class NamedType extends ProxyObjectType {
     setReferencedType(
         registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
     t.warning("Cycle detected in inheritance chain of type " + reference,
-        sourceName, lineno, null, charno);
+        sourceName, lineno, charno);
     setResolvedTypeInternal(getReferencedType());
   }
 
@@ -359,7 +359,7 @@ class NamedType extends ProxyObjectType {
           registry.isForwardDeclaredType(reference);
       if (!isForwardDeclared && registry.isLastGeneration()) {
         t.warning("Bad type annotation. Unknown type " + reference,
-            sourceName, lineno, null, charno);
+            sourceName, lineno, charno);
       } else {
         setReferencedType(
             registry.getNativeObjectType(

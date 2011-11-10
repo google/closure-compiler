@@ -109,13 +109,13 @@ class RhinoErrorReporter {
   }
 
   public void warning(String message, String sourceName, int line,
-      String lineSource, int lineOffset) {
+      int lineOffset) {
     compiler.report(
         makeError(message, sourceName, line, lineOffset, CheckLevel.WARNING));
   }
 
   public void error(String message, String sourceName, int line,
-      String lineSource, int lineOffset) {
+      int lineOffset) {
     compiler.report(
         makeError(message, sourceName, line, lineOffset, CheckLevel.ERROR));
   }
@@ -157,6 +157,18 @@ class RhinoErrorReporter {
             String lineSource, int lineOffset) {
       return new com.google.javascript.jscomp.mozilla.rhino.EvaluatorException(
           message, sourceName, line, lineSource, lineOffset);
+    }
+
+    @Override
+    public void error(String message, String sourceName, int line,
+        String sourceLine, int lineOffset) {
+      super.error(message, sourceName, line, lineOffset);
+    }
+
+    @Override
+    public void warning(String message, String sourceName, int line,
+        String sourceLine, int lineOffset) {
+      super.warning(message, sourceName, line, lineOffset);
     }
   }
 }
