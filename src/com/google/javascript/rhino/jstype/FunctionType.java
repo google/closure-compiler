@@ -276,7 +276,7 @@ public class FunctionType extends PrototypeObjectType {
   }
 
   @Override
-  public StaticSlot<JSType> getSlot(String name) {
+  public Property getSlot(String name) {
     if ("prototype".equals(name)) {
       // Lazy initialization of the prototype field.
       getPrototype();

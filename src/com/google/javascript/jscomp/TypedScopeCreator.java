@@ -71,7 +71,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticSlot;
 
 import java.util.Iterator;
 import java.util.List;
@@ -1116,7 +1115,7 @@ final class TypedScopeCreator implements ScopeCreator {
               !fnType.equals(getNativeType(U2U_CONSTRUCTOR_TYPE))) {
             // Declare var.prototype in the scope chain.
             FunctionType superClassCtor = fnType.getSuperClassConstructor();
-            StaticSlot<JSType> prototypeSlot = fnType.getSlot("prototype");
+            ObjectType.Property prototypeSlot = fnType.getSlot("prototype");
 
             String prototypeName = variableName + ".prototype";
 
@@ -1124,16 +1123,18 @@ final class TypedScopeCreator implements ScopeCreator {
             // be declared. See TypedScopeCreatorTest#testBogusPrototypeInit.
             // Fortunately, other warnings will complain if this happens.
             if (scopeToDeclareIn.getOwnSlot(prototypeName) == null) {
-              // It's not really important what node we declare the prototype
-              // at. It's more important that the Var node is consistent with
-              // the node that the type system uses internally.
-              Node prototypeNode = n;
-              if (prototypeSlot.getDeclaration() != null) {
-                prototypeNode = prototypeSlot.getDeclaration().getNode();
-              }
+              // When we declare the function prototype implicitly, we
+              // want to make sure that the function and its prototype
+              // are declared at the same node. We also want to make sure
+              // that the if a symbol has both a Var and a JSType, they have
+              // the same node.
+              //
+              // This consistency is helpful to users of SymbolTable,
+              // because everything gets declared at the same place.
+              prototypeSlot.setNode(n);
 
               scopeToDeclareIn.declare(prototypeName,
-                  prototypeNode, prototypeSlot.getType(), input,
+                  n, prototypeSlot.getType(), input,
                   /* declared iff there's an explicit supertype */
                   superClassCtor == null ||
                   superClassCtor.getInstanceType().equals(

@@ -414,10 +414,15 @@ public class SymbolTableTest extends TestCase {
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     assertNotNull(fooPrototype);
 
-    List<Reference> refs = Lists.newArrayList(
-        table.getReferences(fooPrototype));
+    List<Reference> refs = table.getReferenceList(fooPrototype);
     assertEquals(1, refs.size());
-    assertEquals(Token.FUNCTION, refs.get(0).getNode().getType());
+    assertEquals(Token.NAME, refs.get(0).getNode().getType());
+
+    // Make sure that the ctor and its prototype are declared at the
+    // same node.
+    assertEquals(
+        refs.get(0).getNode(),
+        table.getReferenceList(getGlobalVar(table, "Foo")).get(0).getNode());
   }
 
   public void testPrototypeReferences4() throws Exception {
@@ -432,6 +437,24 @@ public class SymbolTableTest extends TestCase {
     assertEquals(1, refs.size());
     assertEquals(Token.GETPROP, refs.get(0).getNode().getType());
     assertEquals("Foo.prototype", refs.get(0).getNode().getQualifiedName());
+  }
+
+  public void testPrototypeReferences5() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var goog = {}; /** @constructor */ goog.Foo = function() {};");
+    Symbol fooPrototype = getGlobalVar(table, "goog.Foo.prototype");
+    assertNotNull(fooPrototype);
+
+    List<Reference> refs = table.getReferenceList(fooPrototype);
+    assertEquals(1, refs.size());
+    assertEquals(Token.GETPROP, refs.get(0).getNode().getType());
+
+    // Make sure that the ctor and its prototype are declared at the
+    // same node.
+    assertEquals(
+        refs.get(0).getNode(),
+        table.getReferenceList(
+            getGlobalVar(table, "goog.Foo")).get(0).getNode());
   }
 
   public void testReferencesInJSDocType() {

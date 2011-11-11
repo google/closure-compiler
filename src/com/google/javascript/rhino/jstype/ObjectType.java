@@ -98,10 +98,10 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
   }
 
   @Override
-  public abstract StaticSlot<JSType> getSlot(String name);
+  public abstract Property getSlot(String name);
 
   @Override
-  public StaticSlot<JSType> getOwnSlot(String name) {
+  public Property getOwnSlot(String name) {
     if (hasOwnProperty(name)) {
       return getSlot(name);
     }
@@ -568,7 +568,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
     return ImmutableSet.of();
   }
 
-  static final class Property
+  public static final class Property
       implements Serializable, StaticSlot<JSType>, StaticReference<JSType> {
     private static final long serialVersionUID = 1L;
 
@@ -591,7 +591,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
      * The node corresponding to this property, e.g., a GETPROP node that
      * declares this property.
      */
-    private final Node propertyNode;
+    private Node propertyNode;
 
     /**  The JSDocInfo for this property. */
     private JSDocInfo docInfo = null;
@@ -653,6 +653,10 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
 
     void setJSDocInfo(JSDocInfo info) {
       this.docInfo = info;
+    }
+
+    public void setNode(Node n) {
+      this.propertyNode = n;
     }
   }
 }

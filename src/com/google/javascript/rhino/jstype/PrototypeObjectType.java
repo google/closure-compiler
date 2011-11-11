@@ -125,19 +125,19 @@ class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public StaticSlot<JSType> getSlot(String name) {
+  public Property getSlot(String name) {
     if (properties.containsKey(name)) {
       return properties.get(name);
     }
     ObjectType implicitPrototype = getImplicitPrototype();
     if (implicitPrototype != null) {
-      StaticSlot<JSType> prop = implicitPrototype.getSlot(name);
+      Property prop = implicitPrototype.getSlot(name);
       if (prop != null) {
         return prop;
       }
     }
     for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
-      StaticSlot<JSType> prop = interfaceType.getSlot(name);
+      Property prop = interfaceType.getSlot(name);
       if (prop != null) {
         return prop;
       }
