@@ -89,6 +89,37 @@ public class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "try{_.a = 1}catch(e){throw e}");
   }
 
+  public void testShadow() {
+    test("var _ = 1; (function () { _ = 2 })()",
+        "_._ = 1; (function () { _._ = 2 })()");
+    test("function foo() { var _ = {}; _.foo = foo; _.bar = 1; }",
+        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1}");
+    test("function foo() { var _ = {}; _.foo = foo; _.bar = 1; " +
+        "(function() { var _ = 0;})() }",
+        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; " +
+        "(function() { var _$ = 0;})() }");
+    test("function foo() { var _ = {}; _.foo = foo; _.bar = 1; " +
+        "var _$ = 1; }",
+        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; " +
+        "var _$$ = 1; }");
+    test("function foo() { var _ = {}; _.foo = foo; _.bar = 1; " +
+        "var _$ = 1; (function() { _ = _$ })() }",
+        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; " +
+        "var _$$ = 1; (function() { _$ = _$$ })() }");
+    test("function foo() { var _ = {}; _.foo = foo; _.bar = 1; " +
+        "var _$ = 1, _$$ = 2 (function() { _ = _$ = _$$; " +
+        "var _$, _$$$ })() }",
+        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; " +
+        "var _$$ = 1, _$$$ = 2 (function() { _$ = _$$ = _$$$; " +
+        "var _$$, _$$$$ })() }");
+    test("function foo() { var _a = 1;}",
+        "_.foo = function () { var _a = 1;}");
+    // We accept this unnecessary renaming as acceptable to simplify pattern
+    // matching in the traversal.
+    test("function foo() { var _$a = 1;}",
+        "_.foo = function () { var _$a$ = 1;}");
+  }
+
   private class StringCompare extends CompilerTestCase {
 
     StringCompare() {

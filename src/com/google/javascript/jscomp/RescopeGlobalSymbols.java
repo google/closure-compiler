@@ -45,6 +45,9 @@ import java.util.List;
  */
 class RescopeGlobalSymbols implements CompilerPass {
 
+  // Appended to variables names that conflict with globalSymbolNamespace.
+  private static final String DISAMBIGUATION_SUFFIX = "$";
+
   private final AbstractCompiler compiler;
   private final String globalSymbolNamespace;
   private final boolean addExtern;
@@ -152,8 +155,24 @@ class RescopeGlobalSymbols implements CompilerPass {
         return;
       }
       Scope.Var var = t.getScope().getVar(name);
-      // We only care about global vars that are not extern.
-      if (var == null || !var.isGlobal() || var.isExtern()) {
+      if (var == null) {
+        return;
+      }
+      // Don't touch externs.
+      if (var.isExtern()) {
+        return;
+      }
+      // When the globalSymbolNamespace is used as a local variable name
+      // add suffix to avoid shadowing the namespace. Also add a suffix
+      // if a name starts with the name of the globalSymbolnamespace and
+      // the suffix.
+      if (!var.isExtern() && (name.equals(globalSymbolNamespace) ||
+          name.indexOf(globalSymbolNamespace + DISAMBIGUATION_SUFFIX) == 0)) {
+        n.setString(name + DISAMBIGUATION_SUFFIX);
+        compiler.reportCodeChange();
+      }
+      // We only care about global vars.
+      if (!var.isGlobal()) {
         return;
       }
       Node nameNode = var.getNameNode();
