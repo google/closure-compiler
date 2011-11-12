@@ -212,8 +212,8 @@ abstract class MethodCompilerPass implements CompilerPass {
               case Token.STRING:
                 addPossibleSignature(key.getString(), key.getFirstChild(), t);
                 break;
-              case Token.SET:
-              case Token.GET:
+              case Token.SETTER_DEF:
+              case Token.GETTER_DEF:
                 nonMethodProperties.add(key.getString());
                 break;
               default:

@@ -710,7 +710,7 @@ public class Reader {
    */
   private void transformGetterProp(JsonML element, Node parent)
       throws JsonMLException {
-    transformProp(Token.GET, element, parent);
+    transformProp(Token.GETTER_DEF, element, parent);
   }
 
   /*
@@ -719,7 +719,7 @@ public class Reader {
    */
   private void transformSetterProp(JsonML element, Node parent)
       throws JsonMLException {
-    transformProp(Token.SET, element, parent);
+    transformProp(Token.SETTER_DEF, element, parent);
   }
 
   private void transformProp(int tokenType, JsonML element, Node parent)
@@ -747,7 +747,7 @@ public class Reader {
 
   private void transformDefaultCase(JsonML element, Node parent)
       throws JsonMLException {
-    Node node = createNode(Token.DEFAULT, element);
+    Node node = createNode(Token.DEFAULT_CASE, element);
     parent.addChildToBack(node);
 
     // the first child represent body
@@ -1035,7 +1035,7 @@ public class Reader {
   private void transformParamDecl(JsonML element, Node parent)
       throws JsonMLException {
     // formal arguments should be wrapped by LP node
-    Node node = createNode(Token.LP, element);
+    Node node = createNode(Token.PARAM_LIST, element);
     parent.addChildToBack(node);
 
     transformAllChildren(element, node);

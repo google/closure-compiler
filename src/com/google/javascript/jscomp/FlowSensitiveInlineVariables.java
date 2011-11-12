@@ -194,7 +194,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
             // Make sure that the name node is purely a read.
             if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
                 || parent.isVar() || parent.isInc() ||
-                parent.isDec() || parent.isLP() ||
+                parent.isDec() || parent.isParamList() ||
                 parent.isCatch()) {
               return;
             }

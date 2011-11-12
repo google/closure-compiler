@@ -364,7 +364,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateParameters(Node n) {
-    validateNodeType(Token.LP, n);
+    validateNodeType(Token.PARAM_LIST, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateName(c);
     }
@@ -548,7 +548,7 @@ public class AstValidator implements CompilerPass {
     int defaults = 0;
     for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
       validateSwitchMember(n.getLastChild());
-      if (c.isDefault()) {
+      if (c.isDefaultCase()) {
         defaults++;
       }
     }
@@ -563,7 +563,7 @@ public class AstValidator implements CompilerPass {
       case Token.CASE:
         validateCase(n);
         return;
-      case Token.DEFAULT:
+      case Token.DEFAULT_CASE:
         validateDefault(n);
         return;
       default:
@@ -573,7 +573,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateDefault(Node n) {
-    validateNodeType(Token.DEFAULT, n);
+    validateNodeType(Token.DEFAULT_CASE, n);
     validateChildCount(n, 1);
     validateSyntheticBlock(n.getLastChild());
   }
@@ -673,10 +673,10 @@ public class AstValidator implements CompilerPass {
 
   private void validateObjectLitKey(Node n) {
     switch (n.getType()) {
-      case Token.GET:
+      case Token.GETTER_DEF:
         validateObjectLitGetKey(n);
         return;
-      case Token.SET:
+      case Token.SETTER_DEF:
         validateObjectLitSetKey(n);
         return;
       case Token.STRING:
@@ -689,7 +689,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateObjectLitGetKey(Node n) {
-    validateNodeType(Token.GET, n);
+    validateNodeType(Token.GETTER_DEF, n);
     validateChildCount(n, 1);
     validateObjectLiteralKeyName(n);
     Node function = n.getFirstChild();
@@ -705,7 +705,7 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateObjectLitSetKey(Node n) {
-    validateNodeType(Token.SET, n);
+    validateNodeType(Token.SETTER_DEF, n);
     validateChildCount(n, 1);
     validateObjectLiteralKeyName(n);
     Node function = n.getFirstChild();

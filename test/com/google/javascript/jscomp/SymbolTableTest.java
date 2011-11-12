@@ -125,7 +125,7 @@ public class SymbolTableTest extends TestCase {
 
     assertEquals(2, refs.size());
     assertEquals(x.getDeclaration(), refs.get(0));
-    assertEquals(Token.LP, refs.get(0).getNode().getParent().getType());
+    assertEquals(Token.PARAM_LIST, refs.get(0).getNode().getParent().getType());
     assertEquals(Token.RETURN, refs.get(1).getNode().getParent().getType());
   }
 

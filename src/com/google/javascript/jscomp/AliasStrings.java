@@ -214,7 +214,7 @@ class AliasStrings extends AbstractPostOrderCallback
         case Token.FOR:
         case Token.SWITCH:
         case Token.CASE:
-        case Token.DEFAULT:
+        case Token.DEFAULT_CASE:
         case Token.BLOCK:
         case Token.SCRIPT:
         case Token.FUNCTION:

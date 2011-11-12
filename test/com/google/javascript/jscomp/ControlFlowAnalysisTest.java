@@ -336,7 +336,7 @@ public class ControlFlowAnalysisTest extends TestCase {
     // Transfer between cases and default.
     assertDownEdge(cfg, Token.SWITCH, Token.CASE, Branch.UNCOND);
     assertCrossEdge(cfg, Token.CASE, Token.CASE, Branch.ON_FALSE);
-    assertCrossEdge(cfg, Token.CASE, Token.DEFAULT, Branch.ON_FALSE);
+    assertCrossEdge(cfg, Token.CASE, Token.DEFAULT_CASE, Branch.ON_FALSE);
     // Within each case.
     assertDownEdge(cfg, Token.CASE, Token.BLOCK, Branch.ON_TRUE);
     assertDownEdge(cfg, Token.BLOCK, Token.EXPR_RESULT, Branch.UNCOND);
@@ -355,7 +355,7 @@ public class ControlFlowAnalysisTest extends TestCase {
     String src = "var x; switch(x){ default: break; case 1: break; }";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertDownEdge(cfg, Token.SWITCH, Token.CASE, Branch.UNCOND);
-    assertCrossEdge(cfg, Token.CASE, Token.DEFAULT, Branch.ON_FALSE);
+    assertCrossEdge(cfg, Token.CASE, Token.DEFAULT_CASE, Branch.ON_FALSE);
   }
 
   public void testSwitchDefaultInMiddle() {
@@ -365,7 +365,7 @@ public class ControlFlowAnalysisTest extends TestCase {
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertDownEdge(cfg, Token.SWITCH, Token.CASE, Branch.UNCOND);
     assertCrossEdge(cfg, Token.CASE, Token.CASE, Branch.ON_FALSE);
-    assertCrossEdge(cfg, Token.CASE, Token.DEFAULT, Branch.ON_FALSE);
+    assertCrossEdge(cfg, Token.CASE, Token.DEFAULT_CASE, Branch.ON_FALSE);
   }
 
   public void testSwitchEmpty() {
@@ -727,7 +727,7 @@ public class ControlFlowAnalysisTest extends TestCase {
       "  node0 -> node1 [weight=1];\n" +
       "  node2 [label=\"NAME\"];\n" +
       "  node1 -> node2 [weight=1];\n" +
-      "  node3 [label=\"LP\"];\n" +
+      "  node3 [label=\"PARAM_LIST\"];\n" +
       "  node1 -> node3 [weight=1];\n" +
       "  node4 [label=\"BLOCK\"];\n" +
       "  node1 -> node4 [weight=1];\n" +
@@ -763,7 +763,7 @@ public class ControlFlowAnalysisTest extends TestCase {
       "  node0 -> node1 [weight=1];\n" +
       "  node2 [label=\"NAME\"];\n" +
       "  node1 -> node2 [weight=1];\n" +
-      "  node3 [label=\"LP\"];\n" +
+      "  node3 [label=\"PARAM_LIST\"];\n" +
       "  node1 -> node3 [weight=1];\n" +
       "  node4 [label=\"BLOCK\"];\n" +
       "  node1 -> node4 [weight=1];\n" +
@@ -894,7 +894,7 @@ public class ControlFlowAnalysisTest extends TestCase {
         + "  node2 -> node3 [weight=1];\n"
         + "  node4 [label=\"NAME\"];\n"
         + "  node3 -> node4 [weight=1];\n"
-        + "  node5 [label=\"LP\"];\n"
+        + "  node5 [label=\"PARAM_LIST\"];\n"
         + "  node3 -> node5 [weight=1];\n"
         + "  node6 [label=\"BLOCK\"];\n"
         + "  node3 -> node6 [weight=1];\n"
@@ -1174,7 +1174,7 @@ public class ControlFlowAnalysisTest extends TestCase {
       "  node0 -> node4 [weight=1];\n" +
       "  node5 [label=\"NAME\"];\n" +
       "  node4 -> node5 [weight=1];\n" +
-      "  node6 [label=\"LP\"];\n" +
+      "  node6 [label=\"PARAM_LIST\"];\n" +
       "  node4 -> node6 [weight=1];\n" +
       "  node7 [label=\"BLOCK\"];\n" +
       "  node4 -> node7 [weight=1];\n" +
@@ -1204,7 +1204,7 @@ public class ControlFlowAnalysisTest extends TestCase {
       "  node0 -> node4 [weight=1];\n" +
       "  node5 [label=\"NAME\"];\n" +
       "  node4 -> node5 [weight=1];\n" +
-      "  node6 [label=\"LP\"];\n" +
+      "  node6 [label=\"PARAM_LIST\"];\n" +
       "  node4 -> node6 [weight=1];\n" +
       "  node7 [label=\"BLOCK\"];\n" +
       "  node4 -> node7 [weight=1];\n" +
@@ -1325,7 +1325,7 @@ public class ControlFlowAnalysisTest extends TestCase {
         "  node2 -> node4 [weight=1];\n" +
         "  node5 [label=\"NAME\"];\n" +
         "  node4 -> node5 [weight=1];\n" +
-        "  node6 [label=\"LP\"];\n" +
+        "  node6 [label=\"PARAM_LIST\"];\n" +
         "  node4 -> node6 [weight=1];\n" +
         "  node7 [label=\"BLOCK\"];\n" +
         "  node4 -> node7 [weight=1];\n" +

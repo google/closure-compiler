@@ -120,7 +120,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
       case Token.CATCH:
         return true;
 
-      case Token.LP:
+      case Token.PARAM_LIST:
         return n.getParent().getParent().isFunction();
 
       default:
@@ -183,7 +183,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
       if (!noCajaChecks && key.getString().endsWith("__")) {
         t.report(key, ILLEGAL_NAME);
       }
-      if (key.getType() != Token.SET) {
+      if (key.getType() != Token.SETTER_DEF) {
         // normal property and getter cases
         if (getters.contains(key.getString())) {
           t.report(key, DUPLICATE_OBJECT_KEY);
@@ -191,7 +191,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
           getters.add(key.getString());
         }
       }
-      if (key.getType() != Token.GET) {
+      if (key.getType() != Token.GETTER_DEF) {
         // normal property and setter cases
         if (setters.contains(key.getString())) {
           t.report(key, DUPLICATE_OBJECT_KEY);

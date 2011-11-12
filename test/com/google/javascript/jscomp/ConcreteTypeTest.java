@@ -201,7 +201,7 @@ public class ConcreteTypeTest extends TestCase {
   /** Creates a fake function with the given description. */
   private ConcreteFunctionType createFunction(
       String name, String... paramNames) {
-    Node args = new Node(Token.LP);
+    Node args = new Node(Token.PARAM_LIST);
     for (int i = 0; i < paramNames.length; ++i) {
       args.addChildToBack(Node.newString(Token.NAME, paramNames[i]));
     }

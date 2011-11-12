@@ -334,8 +334,8 @@ class Normalize implements CompilerPass {
 
         case Token.NAME:
         case Token.STRING:
-        case Token.GET:
-        case Token.SET:
+        case Token.GETTER_DEF:
+        case Token.SETTER_DEF:
           if (!compiler.getLifeCycleStage().isNormalizedObfuscated()) {
             annotateConstantsByConvention(n, parent);
           }
@@ -350,8 +350,8 @@ class Normalize implements CompilerPass {
       Preconditions.checkState(
           n.isName()
           || n.isString()
-          || n.isGet()
-          || n.isSet());
+          || n.isGetterDef()
+          || n.isSetterDef());
 
       // There are only two cases where a string token
       // may be a variable reference: The right side of a GETPROP

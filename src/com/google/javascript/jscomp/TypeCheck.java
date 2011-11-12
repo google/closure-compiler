@@ -470,7 +470,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         typeable = visitName(t, n, parent);
         break;
 
-      case Token.LP:
+      case Token.PARAM_LIST:
         // If this is under a FUNCTION node, it is a parameter list and can be
         // ignored here.
         if (parent.getType() != Token.FUNCTION) {
@@ -511,8 +511,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         break;
 
-      case Token.GET:
-      case Token.SET:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
         // Object literal keys are handled with OBJECTLIT
         break;
 
@@ -749,7 +749,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.EXPR_RESULT:
       case Token.BLOCK:
       case Token.EMPTY:
-      case Token.DEFAULT:
+      case Token.DEFAULT_CASE:
       case Token.CONTINUE:
       case Token.DEBUGGER:
       case Token.THROW:
@@ -1220,7 +1220,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     int parentNodeType = parent.getType();
     if (parentNodeType == Token.FUNCTION ||
         parentNodeType == Token.CATCH ||
-        parentNodeType == Token.LP ||
+        parentNodeType == Token.PARAM_LIST ||
         parentNodeType == Token.VAR) {
       return false;
     }

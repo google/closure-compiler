@@ -312,7 +312,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case Token.CASE:
         handleCase(n);
         return;
-      case Token.DEFAULT:
+      case Token.DEFAULT_CASE:
         handleDefault(n);
         return;
       case Token.BLOCK:
@@ -458,7 +458,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     } else { // No more CASE found, go back and search for a DEFAULT.
       Node parent = node.getParent();
       Node deflt = getNextSiblingOfType(
-        parent.getFirstChild().getNext(), Token.DEFAULT);
+        parent.getFirstChild().getNext(), Token.DEFAULT_CASE);
       if (deflt != null) { // Has a DEFAULT
         createEdge(node, Branch.ON_FALSE, deflt);
       } else { // No DEFAULT found, go to the follow of the SWITCH.
@@ -507,7 +507,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     // Synthetic blocks
     if (parent != null) {
       switch (parent.getType()) {
-        case Token.DEFAULT:
+        case Token.DEFAULT_CASE:
         case Token.CASE:
         case Token.TRY:
           break;
@@ -711,13 +711,13 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case Token.IF:
         return computeFollowNode(fromNode, parent, cfa);
       case Token.CASE:
-      case Token.DEFAULT:
+      case Token.DEFAULT_CASE:
         // After the body of a CASE, the control goes to the body of the next
         // case, without having to go to the case condition.
         if (parent.getNext() != null) {
           if (parent.getNext().isCase()) {
             return parent.getNext().getFirstChild().getNext();
-          } else if (parent.getNext().isDefault()) {
+          } else if (parent.getNext().isDefaultCase()) {
             return parent.getNext().getFirstChild();
           } else {
             Preconditions.checkState(false, "Not reachable");

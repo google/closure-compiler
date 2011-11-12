@@ -1560,7 +1560,7 @@ public class JSTypeRegistry implements Serializable {
 
         FunctionParamBuilder paramBuilder = new FunctionParamBuilder(this);
 
-        if (current.getType() == Token.LP) {
+        if (current.getType() == Token.PARAM_LIST) {
           Node args = current.getFirstChild();
           for (Node arg = current.getFirstChild(); arg != null;
                arg = arg.getNext()) {

@@ -1502,7 +1502,7 @@ public class Node implements Cloneable, Serializable {
       case Token.IN:              return "in";
       case Token.INSTANCEOF:      return "instanceof";
       case Token.TRY:             return "try";
-      case Token.LP:              return "lp";
+      case Token.PARAM_LIST:      return "lp";
       case Token.COMMA:           return "comma";
       case Token.ASSIGN:          return "assign";
       case Token.ASSIGN_BITOR:    return "assign_bitor";
@@ -1525,7 +1525,7 @@ public class Node implements Cloneable, Serializable {
       case Token.IF:              return "if";
       case Token.SWITCH:          return "switch";
       case Token.CASE:            return "case";
-      case Token.DEFAULT:         return "default";
+      case Token.DEFAULT_CASE:    return "default";
       case Token.WHILE:           return "while";
       case Token.DO:              return "do";
       case Token.FOR:             return "for";
@@ -2250,8 +2250,8 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.DEC;
   }
 
-  public boolean isDefault() {
-    return this.getType() == Token.DEFAULT;
+  public boolean isDefaultCase() {
+    return this.getType() == Token.DEFAULT_CASE;
   }
 
   public boolean isDo() {
@@ -2278,8 +2278,8 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.FUNCTION;
   }
 
-  public boolean isGet() {
-    return this.getType() == Token.GET;
+  public boolean isGetterDef() {
+    return this.getType() == Token.GETTER_DEF;
   }
 
   public boolean isGetElem() {
@@ -2310,10 +2310,6 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.LABEL_NAME;
   }
 
-  public boolean isLP() {
-    return this.getType() == Token.LP;
-  }
-
   public boolean isName() {
     return this.getType() == Token.NAME;
   }
@@ -2342,6 +2338,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.OR;
   }
 
+  public boolean isParamList() {
+    return this.getType() == Token.PARAM_LIST;
+  }
+
   public boolean isRegExp() {
     return this.getType() == Token.REGEXP;
   }
@@ -2354,8 +2354,8 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.SCRIPT;
   }
 
-  public boolean isSet() {
-    return this.getType() == Token.SET;
+  public boolean isSetterDef() {
+    return this.getType() == Token.SETTER_DEF;
   }
 
   public boolean isString() {
@@ -2389,5 +2389,4 @@ public class Node implements Cloneable, Serializable {
   public boolean isVoid() {
     return this.getType() == Token.VOID;
   }
-
 }

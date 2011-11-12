@@ -466,8 +466,8 @@ public final class NodeUtil {
     // Check for the form { 'x' : function() { } }
     Node parent = n.getParent();
     switch (parent.getType()) {
-      case Token.SET:
-      case Token.GET:
+      case Token.SETTER_DEF:
+      case Token.GETTER_DEF:
       case Token.STRING:
         // Return the name of the literal's key.
         return parent.getString();
@@ -791,7 +791,7 @@ public final class NodeUtil {
       case Token.HOOK:
       case Token.IF:
       case Token.IN:
-      case Token.LP:
+      case Token.PARAM_LIST:
       case Token.NUMBER:
       case Token.OR:
       case Token.THIS:
@@ -1628,7 +1628,7 @@ public final class NodeUtil {
       case Token.CATCH:
       case Token.SWITCH:
       case Token.CASE:
-      case Token.DEFAULT:
+      case Token.DEFAULT_CASE:
         return true;
       default:
         return false;
@@ -1657,7 +1657,7 @@ public final class NodeUtil {
       case Token.SWITCH:
       case Token.CASE:
         return parent.getFirstChild() != n;
-      case Token.DEFAULT:
+      case Token.DEFAULT_CASE:
         return true;
       default:
         Preconditions.checkState(isControlStructure(parent));
@@ -1722,7 +1722,7 @@ public final class NodeUtil {
 
   /** Whether the node is part of a switch statement. */
   static boolean isSwitchCase(Node n) {
-    return n.isCase() || n.isDefault();
+    return n.isCase() || n.isDefaultCase();
   }
 
   /**
@@ -2031,7 +2031,7 @@ public final class NodeUtil {
         || (parent.isFunction() && parent.getFirstChild() == n)
         || parent.isDec()
         || parent.isInc()
-        || parent.isLP()
+        || parent.isParamList()
         || parent.isCatch();
   }
 
@@ -2046,8 +2046,8 @@ public final class NodeUtil {
     switch (node.getType()) {
       case Token.STRING:
         return parent.isObjectLit();
-      case Token.GET:
-      case Token.SET:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
         return true;
     }
     return false;
@@ -2061,8 +2061,8 @@ public final class NodeUtil {
   static String getObjectLitKeyName(Node key) {
     switch (key.getType()) {
       case Token.STRING:
-      case Token.GET:
-      case Token.SET:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
         return key.getString();
     }
     throw new IllegalStateException("Unexpected node type: " + key);
@@ -2075,7 +2075,7 @@ public final class NodeUtil {
   static JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
     if (valueType != null) {
       switch (key.getType()) {
-        case Token.GET:
+        case Token.GETTER_DEF:
           // GET must always return a function type.
           if (valueType.isFunctionType()) {
             FunctionType fntype = valueType.toMaybeFunctionType();
@@ -2084,7 +2084,7 @@ public final class NodeUtil {
             return null;
           }
           break;
-        case Token.SET:
+        case Token.SETTER_DEF:
           if (valueType.isFunctionType()) {
             // SET must always return a function type.
             FunctionType fntype = valueType.toMaybeFunctionType();
@@ -2108,8 +2108,8 @@ public final class NodeUtil {
    */
   static boolean isGetOrSetKey(Node node) {
     switch (node.getType()) {
-      case Token.GET:
-      case Token.SET:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
         return true;
     }
     return false;
@@ -2267,7 +2267,7 @@ public final class NodeUtil {
   /** Creates function name(params_0, ..., params_n) { body }. */
   public static Node newFunctionNode(String name, List<Node> params,
       Node body, int lineno, int charno) {
-    Node parameterParen = new Node(Token.LP, lineno, charno);
+    Node parameterParen = new Node(Token.PARAM_LIST, lineno, charno);
     for (Node param : params) {
       parameterParen.addChildToBack(param);
     }
@@ -3098,5 +3098,33 @@ public final class NodeUtil {
       return null;
     }
     return lValue.getQualifiedName();
+  }
+
+  /**
+   * @returns false iff the result of the expression is not consumed.
+   */
+  static boolean isExpressionResultUsed(Node expr) {
+    // TODO(johnlenz): consider sharing some code with trySimpleUnusedResult.
+    Node parent = expr.getParent();
+    switch (parent.getType()) {
+      case Token.EXPR_RESULT:
+        return false;
+      case Token.HOOK:
+      case Token.AND:
+      case Token.OR:
+        return (expr == parent.getFirstChild())
+            ? true : isExpressionResultUsed(parent);
+      case Token.COMMA:
+        return (expr == parent.getFirstChild())
+            ? false : isExpressionResultUsed(parent);
+      case Token.FOR:
+        if (!NodeUtil.isForIn(parent)) {
+          // Only an expression whose result is in the condition part of the
+          // expression is used.
+          return (parent.getChildAtIndex(1) == expr);
+        }
+        break;
+    }
+    return true;
   }
 }

@@ -162,7 +162,7 @@ public class FunctionType extends PrototypeObjectType {
         Token.FUNCTION == source.getType());
     Preconditions.checkArgument(name != null);
     this.source = source;
-    this.call = new ArrowType(registry, new Node(Token.LP), null);
+    this.call = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
     this.kind = Kind.INTERFACE;
     this.typeOfThis = new InstanceObjectType(registry, this);
   }

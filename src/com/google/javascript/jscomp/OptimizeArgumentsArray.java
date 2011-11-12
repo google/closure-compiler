@@ -178,7 +178,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
   private boolean tryReplaceArguments(Scope scope) {
 
     Node parametersList = scope.getRootNode().getFirstChild().getNext();
-    Preconditions.checkState(parametersList.isLP());
+    Preconditions.checkState(parametersList.isParamList());
 
     // Keep track of rather this function modified the AST and needs to be
     // reported back to the compiler later.

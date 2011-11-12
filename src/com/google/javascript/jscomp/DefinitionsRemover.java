@@ -56,7 +56,7 @@ class DefinitionsRemover {
     } else if (NodeUtil.isObjectLitKey(n, parent)) {
       return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(),
           isExtern);
-    } else if (parent.isLP()) {
+    } else if (parent.isParamList()) {
       Node function = parent.getParent();
       return new FunctionArgumentDefinition(function, n, isExtern);
     }
@@ -85,7 +85,7 @@ class DefinitionsRemover {
       return true;
     } else if (NodeUtil.isObjectLitKey(n, parent)) {
       return true;
-    } else if (parent.isLP()) {
+    } else if (parent.isParamList()) {
       return true;
     }
     return false;
@@ -346,8 +346,8 @@ class DefinitionsRemover {
       // flexibility.
 
       switch (name.getType()) {
-        case Token.SET:
-        case Token.GET:
+        case Token.SETTER_DEF:
+        case Token.GETTER_DEF:
         case Token.STRING:
           // TODO(johnlenz): return a GETELEM for quoted strings.
           return new Node(Token.GETPROP,

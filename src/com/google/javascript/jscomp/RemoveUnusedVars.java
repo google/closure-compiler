@@ -802,11 +802,11 @@ class RemoveUnusedVars
       Preconditions.checkState(
           toRemove.isVar() ||
           toRemove.isFunction() ||
-          toRemove.isLP() &&
+          toRemove.isParamList() &&
           parent.isFunction(),
           "We should only declare vars and functions and function args");
 
-      if (toRemove.isLP() &&
+      if (toRemove.isParamList() &&
           parent.isFunction()) {
         // Don't remove function arguments here. That's a special case
         // that's taken care of in removeUnreferencedFunctionArgs.

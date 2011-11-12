@@ -95,7 +95,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
     // TODO(johnlenz): Add support for quoted properties
     checkDefinitionsInJs(
       "({get a() {}}); o.a",
-      ImmutableSet.of("DEF GET null -> FUNCTION",
+      ImmutableSet.of("DEF GETTER_DEF null -> FUNCTION",
                       "USE GETPROP o.a -> [FUNCTION]"));
   }
 
@@ -104,7 +104,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
     checkDefinitionsInJs(
       "({set a(b) {}}); o.a",
       ImmutableSet.of("DEF NAME b -> <null>",
-                      "DEF SET null -> FUNCTION",
+                      "DEF SETTER_DEF null -> FUNCTION",
                       "USE GETPROP o.a -> [FUNCTION]"));
   }
 

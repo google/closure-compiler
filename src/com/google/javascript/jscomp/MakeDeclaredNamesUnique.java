@@ -123,7 +123,7 @@ class MakeDeclaredNamesUnique
         }
         break;
 
-      case Token.LP: {
+      case Token.PARAM_LIST: {
           Renamer renamer = nameStack.peek().forChildScope();
 
           // Add the function parameters
@@ -178,7 +178,7 @@ class MakeDeclaredNamesUnique
         nameStack.pop();
         break;
 
-      case Token.LP:
+      case Token.PARAM_LIST:
         // Note: The parameters and function body variables live in the
         // same scope, we introduce the scope when in the "shouldTraverse"
         // visit of LP, but remove it when when we exit the function above.

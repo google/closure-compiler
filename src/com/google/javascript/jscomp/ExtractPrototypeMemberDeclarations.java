@@ -188,7 +188,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       Node block = new Node(Token.BLOCK);
       Node func = new Node(Token.FUNCTION,
            Node.newString(Token.NAME, ""),
-           new Node(Token.LP, Node.newString(Token.NAME, prototypeAlias)),
+           new Node(Token.PARAM_LIST, Node.newString(Token.NAME, prototypeAlias)),
            block);
 
       Node call = new Node(Token.CALL,func,

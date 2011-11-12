@@ -29,10 +29,10 @@ public class GoogleCodingConventionTest extends TestCase {
   private GoogleCodingConvention conv = new GoogleCodingConvention();
 
   public void testVarAndOptionalParams() {
-    Node args = new Node(Token.LP,
+    Node args = new Node(Token.PARAM_LIST,
         Node.newString(Token.NAME, "a"),
         Node.newString(Token.NAME, "b"));
-    Node optArgs = new Node(Token.LP,
+    Node optArgs = new Node(Token.PARAM_LIST,
         Node.newString(Token.NAME, "opt_a"),
         Node.newString(Token.NAME, "opt_b"));
 

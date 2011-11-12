@@ -167,7 +167,7 @@ public class VariableVisibilityAnalysisTest extends CompilerTestCase {
 
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.getParent().isLP()
+        if (n.getParent().isParamList()
             && parameterName.equals(n.getString())) {
 
           foundNode[0] = n;

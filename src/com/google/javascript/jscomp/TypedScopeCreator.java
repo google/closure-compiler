@@ -1033,7 +1033,7 @@ final class TypedScopeCreator implements ScopeCreator {
         Preconditions.checkArgument(
             parent.isFunction() ||
             parent.isVar() ||
-            parent.isLP() ||
+            parent.isParamList() ||
             parent.isCatch());
       } else {
         Preconditions.checkArgument(
@@ -1765,7 +1765,7 @@ final class TypedScopeCreator implements ScopeCreator {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if (n == scope.getRootNode()) return;
 
-      if (n.isLP() && parent == scope.getRootNode()) {
+      if (n.isParamList() && parent == scope.getRootNode()) {
         handleFunctionInputs(parent);
         return;
       }

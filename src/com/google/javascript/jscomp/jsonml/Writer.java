@@ -253,7 +253,7 @@ public class Writer {
       case Token.CASE:
         processCase(node, currentParent, TagType.Case);
         break;
-      case Token.DEFAULT:
+      case Token.DEFAULT_CASE:
         processCase(node, currentParent, TagType.DefaultCase);
         break;
       case Token.WHILE:
@@ -647,11 +647,11 @@ public class Writer {
           item = new JsonML(TagType.DataProp);
           name = key.getDouble();
           break;
-        case Token.GET:
+        case Token.GETTER_DEF:
           item = new JsonML(TagType.GetterProp);
           name = key.getString();
           break;
-        case Token.SET:
+        case Token.SETTER_DEF:
           item = new JsonML(TagType.SetterProp);
           name = key.getString();
           break;

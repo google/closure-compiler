@@ -326,7 +326,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     // The first child is the switch conditions skip it when looking for cases.
     for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
-      if (c.isDefault()) {
+      if (c.isDefaultCase()) {
         // Remove cases that fall-through to the default case
         Node caseToRemove = lastNonRemovable.getNext();
         for (Node next; caseToRemove != c; caseToRemove = next) {
@@ -387,13 +387,13 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     Node executingCase = caseNode;
     while (executingCase != null) {
-      Preconditions.checkState(executingCase.isDefault()
+      Preconditions.checkState(executingCase.isDefaultCase()
           || executingCase.isCase());
       // We only expect a DEFAULT case if the case we are checking is the
       // DEFAULT case.  Otherwise we assume the DEFAULT case has already
       // been removed.
       Preconditions.checkState(caseNode == executingCase
-          || executingCase.getType() != Token.DEFAULT);
+          || !executingCase.isDefaultCase());
       Node block = executingCase.getLastChild();
       Preconditions.checkState(block.isBlock());
       if (block.hasChildren()) {

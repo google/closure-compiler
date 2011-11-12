@@ -246,7 +246,7 @@ class VarCheck extends AbstractPostOrderCallback implements
         switch (parent.getType()) {
           case Token.VAR:
           case Token.FUNCTION:
-          case Token.LP:
+          case Token.PARAM_LIST:
             // These are okay.
             break;
           case Token.GETPROP:

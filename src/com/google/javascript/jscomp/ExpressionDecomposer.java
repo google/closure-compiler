@@ -659,7 +659,7 @@ class ExpressionDecomposer {
         case Token.BLOCK:
         case Token.LABEL:
         case Token.CASE:
-        case Token.DEFAULT:
+        case Token.DEFAULT_CASE:
           return null;
       }
       child = parent;

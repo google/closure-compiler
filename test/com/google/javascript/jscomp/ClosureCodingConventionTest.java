@@ -32,10 +32,10 @@ public class ClosureCodingConventionTest extends TestCase {
   private ClosureCodingConvention conv = new ClosureCodingConvention();
 
   public void testVarAndOptionalParams() {
-    Node args = new Node(Token.LP,
+    Node args = new Node(Token.PARAM_LIST,
         Node.newString(Token.NAME, "a"),
         Node.newString(Token.NAME, "b"));
-    Node optArgs = new Node(Token.LP,
+    Node optArgs = new Node(Token.PARAM_LIST,
         Node.newString(Token.NAME, "opt_a"),
         Node.newString(Token.NAME, "opt_b"));
 
@@ -206,11 +206,11 @@ public class ClosureCodingConventionTest extends TestCase {
 
     Node nodeA = new Node(Token.FUNCTION);
     FunctionType ctorA = registry.createConstructorType("A", nodeA,
-        new Node(Token.LP), null);
+        new Node(Token.PARAM_LIST), null);
 
     Node nodeB = new Node(Token.FUNCTION);
     FunctionType ctorB = registry.createConstructorType("B", nodeB,
-        new Node(Token.LP), null);
+        new Node(Token.PARAM_LIST), null);
 
     conv.applySubclassRelationship(ctorA, ctorB, SubclassType.INHERITS);
 

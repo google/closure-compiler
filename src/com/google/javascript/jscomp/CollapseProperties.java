@@ -836,7 +836,7 @@ class CollapseProperties implements CompilerPass {
       nextKey = key.getNext();
 
       // A get or a set can not be rewritten as a VAR.
-      if (key.isGet() || key.isSet()) {
+      if (key.isGetterDef() || key.isSetterDef()) {
         continue;
       }
 

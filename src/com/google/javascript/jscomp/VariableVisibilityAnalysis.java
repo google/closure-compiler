@@ -78,7 +78,7 @@ class VariableVisibilityAnalysis implements CompilerPass {
    * <pre>
    *    Token.VAR (for a variable declaration)
    *    Token.FUNCTION (for a function declaration)
-   *    Token.LP (for a function formal parameter)
+   *    Token.PARAM_LIST (for a function formal parameter)
    * </pre>
    *
    * The returned visibility will be one of:
@@ -98,7 +98,7 @@ class VariableVisibilityAnalysis implements CompilerPass {
 
     Preconditions.checkArgument(parent.isVar()
         || parent.isFunction()
-        || parent.isLP());
+        || parent.isParamList());
 
     return visibilityByDeclaringNameNode.get(declaringNameNode);
   }
@@ -145,6 +145,6 @@ class VariableVisibilityAnalysis implements CompilerPass {
   private static boolean variableIsParameter(Var variable) {
     Node variableParent = variable.getParentNode();
 
-    return variableParent != null && variableParent.isLP();
+    return variableParent != null && variableParent.isParamList();
   }
 }

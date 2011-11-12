@@ -106,10 +106,10 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
         "SCRIPT 1 [source_file: FileName.js] [length: 14]\n" +
         "    EXPR_RESULT 1 [source_file: FileName.js] [length: 13]\n" +
         "        OBJECTLIT 1 [parenthesized: true] [source_file: FileName.js] [length: 12]\n" +
-        "            GET 1 1 [quoted: 1] [source_file: FileName.js] [length: 1]\n" +
+        "            GETTER_DEF 1 1 [quoted: 1] [source_file: FileName.js] [length: 1]\n" +
         "                FUNCTION  1 [source_file: FileName.js] [length: 6]\n" +
         "                    NAME  1 [source_file: FileName.js]\n" +
-        "                    LP 1 [source_file: FileName.js]\n" +
+        "                    PARAM_LIST 1 [source_file: FileName.js]\n" +
         "                    BLOCK 1 [source_file: FileName.js] [length: 2]\n");
   }
 
@@ -120,10 +120,10 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
         "SCRIPT 1 [source_file: FileName.js] [length: 15]\n" +
         "    EXPR_RESULT 1 [source_file: FileName.js] [length: 14]\n" +
         "        OBJECTLIT 1 [parenthesized: true] [source_file: FileName.js] [length: 13]\n" +
-        "            SET 1 1 [quoted: 1] [source_file: FileName.js] [length: 1]\n" +
+        "            SETTER_DEF 1 1 [quoted: 1] [source_file: FileName.js] [length: 1]\n" +
         "                FUNCTION  1 [source_file: FileName.js] [length: 7]\n" +
         "                    NAME  1 [source_file: FileName.js]\n" +
-        "                    LP 1 [source_file: FileName.js]\n" +
+        "                    PARAM_LIST 1 [source_file: FileName.js]\n" +
         "                        NAME a 1 [source_file: FileName.js] [length: 1]\n" +
         "                    BLOCK 1 [source_file: FileName.js] [length: 2]\n");
   }
@@ -200,10 +200,10 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
         "SCRIPT 1 [source_file: FileName.js] [length: 14]\n" +
         "    EXPR_RESULT 1 [source_file: FileName.js] [length: 13]\n" +
         "        OBJECTLIT 1 [parenthesized: true] [source_file: FileName.js] [length: 12]\n" +
-        "            GET a 1 [source_file: FileName.js] [length: 1]\n" +
+        "            GETTER_DEF a 1 [source_file: FileName.js] [length: 1]\n" +
         "                FUNCTION  1 [source_file: FileName.js] [length: 6]\n" +
         "                    NAME  1 [source_file: FileName.js]\n" +
-        "                    LP 1 [source_file: FileName.js]\n" +
+        "                    PARAM_LIST 1 [source_file: FileName.js]\n" +
         "                    BLOCK 1 [source_file: FileName.js] [length: 2]\n");
   }
 
@@ -213,10 +213,10 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
         "SCRIPT 1 [source_file: FileName.js] [length: 15]\n" +
         "    EXPR_RESULT 1 [source_file: FileName.js] [length: 14]\n" +
         "        OBJECTLIT 1 [parenthesized: true] [source_file: FileName.js] [length: 13]\n" +
-        "            SET a 1 [source_file: FileName.js] [length: 1]\n" +
+        "            SETTER_DEF a 1 [source_file: FileName.js] [length: 1]\n" +
         "                FUNCTION  1 [source_file: FileName.js] [length: 7]\n" +
         "                    NAME  1 [source_file: FileName.js]\n" +
-        "                    LP 1 [source_file: FileName.js]\n" +
+        "                    PARAM_LIST 1 [source_file: FileName.js]\n" +
         "                        NAME x 1 [source_file: FileName.js] [length: 1]\n" +
         "                    BLOCK 1 [source_file: FileName.js] [length: 2]\n");
   }

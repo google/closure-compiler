@@ -1483,9 +1483,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     for (Node c = left.getFirstChild(); c != null; c = c.getNext()) {
       if (c.getString().equals(right.getString())) {
         switch (c.getType()) {
-          case Token.SET:
+          case Token.SETTER_DEF:
             continue;
-          case Token.GET:
+          case Token.GETTER_DEF:
           case Token.STRING:
             if (value != null && mayHaveSideEffects(value)) {
               // The previously found value had side-effects
@@ -1516,7 +1516,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     Node replacement = value.detachFromParent();
-    if (key.isGet()){
+    if (key.isGetterDef()){
       replacement = new Node(Token.CALL, replacement);
       replacement.putBooleanProp(Node.FREE_CALL, true);
     }

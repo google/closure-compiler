@@ -102,7 +102,7 @@ class SyntacticScopeCreator implements ScopeCreator {
       }
 
       // Args: Declare function variables
-      Preconditions.checkState(args.isLP());
+      Preconditions.checkState(args.isParamList());
       for (Node a = args.getFirstChild(); a != null;
            a = a.getNext()) {
         Preconditions.checkState(a.isName());

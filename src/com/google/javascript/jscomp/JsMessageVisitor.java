@@ -501,7 +501,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         case Token.NAME:
           // This is okay. The function has a name, but it is empty.
           break;
-        case Token.LP:
+        case Token.PARAM_LIST:
           // Parse the placeholder names from the function argument list.
           for (Node argumentNode : fnChild.children()) {
             if (argumentNode.isName()) {

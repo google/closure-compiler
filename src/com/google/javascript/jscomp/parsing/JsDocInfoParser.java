@@ -1870,7 +1870,7 @@ public final class JsDocInfoParser {
   // has to happen during type resolution. Rather than duplicate the
   // order-checking in two places, we just do all of it in type resolution.
   private Node parseParametersType(JsDocToken token) {
-    Node paramsType = newNode(Token.LP);
+    Node paramsType = newNode(Token.PARAM_LIST);
     boolean isVarArgs = false;
     Node paramType = null;
     if (token != JsDocToken.RP) {

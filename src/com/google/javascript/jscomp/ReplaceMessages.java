@@ -148,7 +148,7 @@ class ReplaceMessages extends JsMessageVisitor {
     Node nameNode = functionNode.getFirstChild();
     checkNode(nameNode, Token.NAME);
     Node argListNode = nameNode.getNext();
-    checkNode(argListNode, Token.LP);
+    checkNode(argListNode, Token.PARAM_LIST);
     Node oldBlockNode = argListNode.getNext();
     checkNode(oldBlockNode, Token.BLOCK);
 

@@ -158,7 +158,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
       // Arguments of external functions should not count as name
       // definitions.  They are placeholder names for documentation
       // purposes only which are not reachable from anywhere.
-      if (inExterns && node.isName() && parent.isLP()) {
+      if (inExterns && node.isName() && parent.isParamList()) {
         return;
       }
 

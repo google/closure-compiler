@@ -103,7 +103,7 @@ public class Token {
         OBJECTLIT      = 64, // object literal
 
         TRY            = 77,
-        LP             = 83,  // left and right parentheses
+        PARAM_LIST     = 83,
         COMMA          = 85,  // comma operator
 
         ASSIGN         = 86,  // simple assignment  (=)
@@ -119,16 +119,16 @@ public class Token {
         ASSIGN_DIV     = 96,  // /=
         ASSIGN_MOD     = 97,  // %=
 
-        HOOK           = 98, // conditional (?:)
+        HOOK           = 98,  // conditional (?:)
         OR             = 100, // logical or (||)
         AND            = 101, // logical and (&&)
-        INC            = 102, // increment/decrement (++ --)
-        DEC            = 103,
+        INC            = 102, // increment (++)
+        DEC            = 103, // decrement (--)
         FUNCTION       = 105, // function keyword
         IF             = 108, // if keyword
         SWITCH         = 110, // switch keyword
         CASE           = 111, // case keyword
-        DEFAULT        = 112, // default keyword
+        DEFAULT_CASE   = 112, // default keyword
         WHILE          = 113, // while keyword
         DO             = 114, // do keyword
         FOR            = 115, // for keyword
@@ -146,8 +146,8 @@ public class Token {
         EXPR_RESULT    = 130, // expression statement in scripts
         SCRIPT         = 132, // top-level node for entire script
 
-        GET            = 147,  // JS 1.5 get pseudo keyword
-        SET            = 148,  // JS 1.5 set pseudo keyword
+        GETTER_DEF     = 147,
+        SETTER_DEF     = 148,
 
         CONST          = 149,  // JS 1.5 const keyword
         DEBUGGER       = 152,
@@ -167,6 +167,14 @@ public class Token {
         LB             = 308,  // left brackets
         LC             = 309,  // left curly braces
         COLON          = 310;
+
+    // Transitional definitions
+    // TODO(johnlenz): remove these
+    public final static int
+         DEFAULT        = DEFAULT_CASE,
+         GET            = GETTER_DEF,
+         LP             = PARAM_LIST,
+         SET            = SETTER_DEF;
 
   public static String name(int token) {
         switch (token) {
@@ -216,7 +224,7 @@ public class Token {
           case ARRAYLIT:        return "ARRAYLIT";
           case OBJECTLIT:       return "OBJECTLIT";
           case TRY:             return "TRY";
-          case LP:              return "LP";
+          case PARAM_LIST:      return "PARAM_LIST";
           case COMMA:           return "COMMA";
           case ASSIGN:          return "ASSIGN";
           case ASSIGN_BITOR:    return "ASSIGN_BITOR";
@@ -240,7 +248,7 @@ public class Token {
           case IF:              return "IF";
           case SWITCH:          return "SWITCH";
           case CASE:            return "CASE";
-          case DEFAULT:         return "DEFAULT";
+          case DEFAULT_CASE:    return "DEFAULT_CASE";
           case WHILE:           return "WHILE";
           case DO:              return "DO";
           case FOR:             return "FOR";
@@ -254,8 +262,8 @@ public class Token {
           case LABEL:           return "LABEL";
           case EXPR_RESULT:     return "EXPR_RESULT";
           case SCRIPT:          return "SCRIPT";
-          case GET:             return "GET";
-          case SET:             return "SET";
+          case GETTER_DEF:      return "GETTER_DEF";
+          case SETTER_DEF:      return "SETTER_DEF";
           case CONST:           return "CONST";
           case DEBUGGER:        return "DEBUGGER";
           case ANNOTATION:      return "ANNOTATION";

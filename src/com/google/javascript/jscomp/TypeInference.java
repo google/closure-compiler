@@ -332,7 +332,7 @@ class TypeInference
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
 
-      case Token.LP:
+      case Token.PARAM_LIST:
         scope = traverse(n.getFirstChild(), scope);
         n.setJSType(getJSType(n.getFirstChild()));
         break;

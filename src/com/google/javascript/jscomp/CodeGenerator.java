@@ -210,7 +210,7 @@ class CodeGenerator {
         add("]");
         break;
 
-      case Token.LP:
+      case Token.PARAM_LIST:
         add("(");
         addList(first);
         add(")");
@@ -304,15 +304,15 @@ class CodeGenerator {
         }
         break;
 
-      case Token.GET:
-      case Token.SET:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
         Preconditions.checkState(n.getParent().isObjectLit());
         Preconditions.checkState(childCount == 1);
         Preconditions.checkState(first.isFunction());
 
         // Get methods are unnamed
         Preconditions.checkState(first.getFirstChild().getString().isEmpty());
-        if (type == Token.GET) {
+        if (type == Token.GETTER_DEF) {
           // Get methods have no parameters.
           Preconditions.checkState(!first.getChildAtIndex(1).hasChildren());
           add("get ");
@@ -641,7 +641,7 @@ class CodeGenerator {
             cc.listSeparator();
           }
 
-          if (c.isGet() || c.isSet()) {
+          if (c.isGetterDef() || c.isSetterDef()) {
             add(c);
           } else {
             Preconditions.checkState(c.isString());
@@ -691,7 +691,7 @@ class CodeGenerator {
         addCaseBody(last);
         break;
 
-      case Token.DEFAULT:
+      case Token.DEFAULT_CASE:
         Preconditions.checkState(childCount == 1);
         add("default");
         addCaseBody(first);

@@ -110,7 +110,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         .withReturnType(NUMBER_TYPE)
         .build();
     dateMethod = new FunctionBuilder(registry)
-        .withParamsNode(new Node(Token.LP))
+        .withParamsNode(new Node(Token.PARAM_LIST))
         .withReturnType(NUMBER_TYPE)
         .withTypeOfThis(DATE_TYPE)
         .build();
@@ -4682,19 +4682,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testSupertypeOfProxiedFunctionTypes() {
     ObjectType fn1 =
         new FunctionBuilder(registry)
-        .withParamsNode(new Node(Token.LP))
+        .withParamsNode(new Node(Token.PARAM_LIST))
         .withReturnType(NUMBER_TYPE)
         .build();
     ObjectType fn2 =
         new FunctionBuilder(registry)
-        .withParamsNode(new Node(Token.LP))
+        .withParamsNode(new Node(Token.PARAM_LIST))
         .withReturnType(STRING_TYPE)
         .build();
     ObjectType p1 = new ProxyObjectType(registry, fn1);
     ObjectType p2 = new ProxyObjectType(registry, fn2);
     ObjectType supremum =
         new FunctionBuilder(registry)
-        .withParamsNode(new Node(Token.LP))
+        .withParamsNode(new Node(Token.PARAM_LIST))
         .withReturnType(registry.createUnionType(STRING_TYPE, NUMBER_TYPE))
         .build();
 

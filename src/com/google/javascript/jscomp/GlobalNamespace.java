@@ -316,8 +316,8 @@ class GlobalNamespace
       boolean isPropAssign = false;
 
       switch (n.getType()) {
-        case Token.GET:
-        case Token.SET:
+        case Token.GETTER_DEF:
+        case Token.SETTER_DEF:
         case Token.STRING:
           // This may be a key in an object literal declaration.
           name = null;
@@ -330,10 +330,10 @@ class GlobalNamespace
             case Token.STRING:
               type = getValueType(n.getFirstChild());
               break;
-            case Token.GET:
+            case Token.GETTER_DEF:
               type = Name.Type.GET;
               break;
-            case Token.SET:
+            case Token.SETTER_DEF:
               type = Name.Type.SET;
               break;
             default:

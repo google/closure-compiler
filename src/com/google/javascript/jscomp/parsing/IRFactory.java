@@ -628,7 +628,7 @@ class IRFactory {
       }
 
       node.addChildToBack(newName);
-      Node lp = newNode(Token.LP);
+      Node lp = newNode(Token.PARAM_LIST);
       // The left paren's complicated because it's not represented by an
       // AstNode, so there's nothing that has the actual line number that it
       // appeared on.  We know the paren has to appear on the same line as the
@@ -771,13 +771,13 @@ class IRFactory {
         Node key = transformAsString(el.getLeft());
         Node value = transform(el.getRight());
         if (el.isGetter()) {
-          key.setType(Token.GET);
+          key.setType(Token.GETTER_DEF);
           Preconditions.checkState(value.isFunction());
           if (getFnParamNode(value).hasChildren()) {
             reportGetterParam(el.getLeft());
           }
         } else if (el.isSetter()) {
-          key.setType(Token.SET);
+          key.setType(Token.SETTER_DEF);
           Preconditions.checkState(value.isFunction());
           if (!getFnParamNode(value).hasOneChild()) {
             reportSetterParam(el.getLeft());
@@ -861,7 +861,7 @@ class IRFactory {
     Node processSwitchCase(SwitchCase caseNode) {
       Node node;
       if (caseNode.isDefault()) {
-        node = newNode(Token.DEFAULT);
+        node = newNode(Token.DEFAULT_CASE);
       } else {
         AstNode expr = caseNode.getExpression();
         node = newNode(Token.CASE, transform(expr));
@@ -1159,7 +1159,7 @@ class IRFactory {
         return Token.TRY;
       // The LP represents a parameter list
       case com.google.javascript.jscomp.mozilla.rhino.Token.LP:
-        return Token.LP;
+        return Token.PARAM_LIST;
       case com.google.javascript.jscomp.mozilla.rhino.Token.COMMA:
         return Token.COMMA;
       case com.google.javascript.jscomp.mozilla.rhino.Token.ASSIGN:
@@ -1205,7 +1205,7 @@ class IRFactory {
       case com.google.javascript.jscomp.mozilla.rhino.Token.CASE:
         return Token.CASE;
       case com.google.javascript.jscomp.mozilla.rhino.Token.DEFAULT:
-        return Token.DEFAULT;
+        return Token.DEFAULT_CASE;
       case com.google.javascript.jscomp.mozilla.rhino.Token.WHILE:
         return Token.WHILE;
       case com.google.javascript.jscomp.mozilla.rhino.Token.DO:
@@ -1236,9 +1236,9 @@ class IRFactory {
       case com.google.javascript.jscomp.mozilla.rhino.Token.SCRIPT:
         return Token.SCRIPT;
       case com.google.javascript.jscomp.mozilla.rhino.Token.GET:
-        return Token.GET;
+        return Token.GETTER_DEF;
       case com.google.javascript.jscomp.mozilla.rhino.Token.SET:
-        return Token.SET;
+        return Token.SETTER_DEF;
       case com.google.javascript.jscomp.mozilla.rhino.Token.CONST:
         return Token.CONST;
       case com.google.javascript.jscomp.mozilla.rhino.Token.DEBUGGER:

@@ -142,8 +142,8 @@ class CrossModuleMethodMotion implements CompilerPass {
         if (moduleGraph.dependsOn(deepestCommonModuleRef, prop.getModule()) &&
             value.isFunction()) {
           Node valueParent = value.getParent();
-          if (valueParent.isGet()
-              || valueParent.isSet()) {
+          if (valueParent.isGetterDef()
+              || valueParent.isSetterDef()) {
             // TODO(johnlenz): a GET or SET can't be deferred like a normal
             // FUNCTION property definition as a mix-in would get the result
             // of a GET instead of the function itself.

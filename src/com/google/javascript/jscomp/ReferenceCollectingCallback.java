@@ -557,7 +557,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       Node parent = getParent();
       Node grandparent = parent.getParent();
       return DECLARATION_PARENTS.contains(parent.getType()) ||
-          parent.isLP() &&
+          parent.isParamList() &&
           grandparent.isFunction();
     }
 

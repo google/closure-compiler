@@ -49,7 +49,7 @@ import com.google.javascript.rhino.Token;
 public class FunctionParamBuilder {
 
   private final JSTypeRegistry registry;
-  private final Node root = new Node(Token.LP);
+  private final Node root = new Node(Token.PARAM_LIST);
 
   public FunctionParamBuilder(JSTypeRegistry registry) {
     this.registry = registry;

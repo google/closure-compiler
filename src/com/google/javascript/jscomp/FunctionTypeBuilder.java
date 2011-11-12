@@ -403,7 +403,7 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder inferParameterTypes(JSDocInfo info) {
     // Create a fake args parent.
-    Node lp = new Node(Token.LP);
+    Node lp = new Node(Token.PARAM_LIST);
     for (String name : info.getParameterNames()) {
       lp.addChildToBack(Node.newString(Token.NAME, name));
     }

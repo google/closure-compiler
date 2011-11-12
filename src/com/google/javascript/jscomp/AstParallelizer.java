@@ -102,7 +102,7 @@ class AstParallelizer {
       public Node get() {
         return new Node(Token.FUNCTION,
             Node.newString(Token.NAME, TEMP_NAME),
-            new Node(Token.LP), new Node(Token.BLOCK));
+            new Node(Token.PARAM_LIST), new Node(Token.BLOCK));
       }
     };
     return new AstParallelizer(
