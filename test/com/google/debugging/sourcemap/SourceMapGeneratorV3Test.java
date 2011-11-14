@@ -32,6 +32,9 @@ import java.util.List;
  */
 public class SourceMapGeneratorV3Test extends SourceMapTestCase {
 
+  public SourceMapGeneratorV3Test() {
+  }
+
   @Override
   protected SourceMapConsumer getSourceMapConsumer() {
     return new SourceMapConsumerV3();
@@ -54,7 +57,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACAA,QAASA,UAAS,EAAG;\",\n" +
+                   "\"mappings\":\"AAAAA,QAASA,UAAS,EAAG;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
                    "\"names\":[\"__BASIC__\"]\n" +
                    "}\n");
@@ -78,7 +81,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACAA,QAASA,UAAS,CAACC,UAAD,CAAaC,UAAb," +
+                   "\"mappings\":\"AAAAA,QAASA,UAAS,CAACC,UAAD,CAAaC,UAAb," +
                        "CAAyB,CAAE,IAAIC,QAAU,SAAhB;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
                    "\"names\":[\"__BASIC__\",\"__PARAM1__\",\"__PARAM2__\"," +
@@ -126,6 +129,20 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "}\n");
   }
 
+  public void testGoldenOutput0a() throws Exception {
+    // Empty source map test
+    checkSourceMap("a;",
+
+                   "{\n" +
+                   "\"version\":3,\n" +
+                   "\"file\":\"testcode\",\n" +
+                   "\"lineCount\":1,\n" +
+                   "\"mappings\":\"AAAAA;\",\n" +
+                   "\"sources\":[\"testcode\"],\n" +
+                   "\"names\":[\"a\"]\n" +
+                   "}\n");
+  }
+
   public void testGoldenOutput1() throws Exception {
     detailLevel = SourceMap.DetailLevel.ALL;
 
@@ -135,7 +152,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
+                   "\"mappings\":\"AAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
                        "CAAW,CAAED,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkB,CAAG," +
                        "OAAOD,IAA9B;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
@@ -150,7 +167,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE," +
+                   "\"mappings\":\"AAAAA,QAASA,EAATA,CAAWC,GAAXD,CAAgBE," +
                        "GAAhBF,EAAuBC,GAAvBD,CAA6BC,GAA7BD,CAAmCE,GAAnCF," +
                        "SAAmDC,IAAnDD;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
@@ -166,7 +183,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
+                   "\"mappings\":\"AAAAA,QAASA,EAAC,CAACC,GAAD,CAAMC,GAAN," +
                        "CAAW,CAIrBD,GAAA,CAAMA,GAAN,CAAYC,GAAZ,CAAkBD," +
                        "GAClB,OAAOA,IALc;\",\n" +
                    "\"sources\":[\"testcode\"],\n" +
@@ -182,7 +199,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACAA;\",\n" +
+                   "\"mappings\":\"AAAAA;\",\n" +
                    "\"sources\":[\"c:\\\\myfile.js\"],\n" +
                    "\"names\":[\"foo\"]\n" +
                    "}\n");
@@ -196,7 +213,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
                    "\"version\":3,\n" +
                    "\"file\":\"testcode\",\n" +
                    "\"lineCount\":1,\n" +
-                   "\"mappings\":\"AACAA,GAAOC,IAAOC;\",\n" +
+                   "\"mappings\":\"AAAAA,GAAOC,IAAOC;\",\n" +
                    "\"sources\":[\"c:\\\\myfile.js\"],\n" +
                    "\"names\":[\"foo\",\"boo\",\"goo\"]\n" +
                    "}\n");
@@ -242,7 +259,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":6,\n" +
-        "\"mappings\":\"A;;;;AAIA,IAAIA,IAAIC,CAAJD,CAAQ,mxCAARA;AAA8xCE," +
+        "\"mappings\":\"A;;;;AAGA,IAAIA,IAAIC,CAAJD,CAAQ,mxCAARA;AAA8xCE," +
             "CAA9xCF,CAAkyCG,CAAlyCH,CAAsyCI;\",\n" +
         "\"sources\":[\"c:\\\\myfile.js\"],\n" +
         "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +
@@ -286,7 +303,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":6,\n" +
-        "\"mappings\":\"A;;;;IAIIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG," +
+        "\"mappings\":\"A;;;;IAGIA,IAAIC,CAAJD;AAA8xCE,CAA9xCF,CAAkyCG," +
             "CAAlyCH,CAAsyCI;\",\n" +
         "\"sources\":[\"c:\\\\myfile.js\"],\n" +
         "\"names\":[\"foo\",\"a\",\"c\",\"d\",\"e\"]\n" +

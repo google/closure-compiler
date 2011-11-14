@@ -31,6 +31,9 @@ import java.util.List;
  */
 public class SourceMapTest extends SourceMapTestCase {
 
+  public SourceMapTest() {
+  }
+
   private List<SourceMap.LocationMapping> mappings;
 
   public void testPrefixReplacement1() throws IOException {

@@ -37,7 +37,15 @@ import java.util.Map.Entry;
  */
 public abstract class SourceMapTestCase extends TestCase {
 
-  public SourceMapTestCase() {}
+  private boolean validateColumns = true;
+
+  public SourceMapTestCase() {
+  }
+
+  void disableColumnValidation() {
+    validateColumns = false;
+  }
+
 
   static final JSSourceFile[] EXTERNS = {
       JSSourceFile.fromCode("externs", "")
@@ -233,6 +241,16 @@ public abstract class SourceMapTestCase extends TestCase {
       // to normalize versus the Rhino line number indexing scheme).
       assertEquals(mapping.getLineNumber(),
                    inputToken.position.getLine() + 1);
+
+      int start = inputToken.position.getColumn() + 1;
+      if (inputToken.tokenName.startsWith("STR")) {
+        // include the preceding quote.
+        start--;
+      }
+
+      if (validateColumns) {
+        assertEquals(start, mapping.getColumnPosition());
+      }
 
       // Ensure that if the token name does not being with an 'STR' (meaning a
       // string) it has an original name.

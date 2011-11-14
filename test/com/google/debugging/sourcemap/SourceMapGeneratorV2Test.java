@@ -28,6 +28,10 @@ import java.io.IOException;
  */
 public class SourceMapGeneratorV2Test extends SourceMapTestCase {
 
+  public SourceMapGeneratorV2Test() {
+    disableColumnValidation();
+  }
+
   @Override
   protected SourceMapConsumer getSourceMapConsumer() {
     return new SourceMapConsumerV2();

@@ -25,6 +25,10 @@ import com.google.javascript.jscomp.SourceMap.Format;
  */
 public class SourceMapGeneratorV1Test extends SourceMapTestCase {
 
+  public SourceMapGeneratorV1Test() {
+    disableColumnValidation();
+  }
+
   @Override
   protected SourceMapConsumer getSourceMapConsumer() {
     return new SourceMapConsumerV1();

@@ -22,6 +22,8 @@ import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapFormat;
 import com.google.debugging.sourcemap.SourceMapGenerator;
 import com.google.debugging.sourcemap.SourceMapGeneratorFactory;
+import com.google.debugging.sourcemap.SourceMapGeneratorV1;
+import com.google.debugging.sourcemap.SourceMapGeneratorV2;
 import com.google.javascript.rhino.Node;
 
 import java.io.IOException;
@@ -129,9 +131,19 @@ public class SourceMap {
 
     String originalName = (String) node.getProp(Node.ORIGINALNAME_PROP);
 
+    // Strangely, Rhino source lines are one based but columns are
+    // zero based.
+    // We don't change this for the v1 or v2 source maps but for
+    // v3 we make them both 0 based.
+    int lineBaseOffset = 1;
+    if (generator instanceof SourceMapGeneratorV1
+        || generator instanceof SourceMapGeneratorV2) {
+      lineBaseOffset = 0;
+    }
+
     generator.addMapping(
         sourceFile, originalName,
-        new FilePosition(node.getLineno(), node.getCharno()),
+        new FilePosition(node.getLineno() - lineBaseOffset, node.getCharno()),
         outputStartPosition, outputEndPosition);
   }
 
