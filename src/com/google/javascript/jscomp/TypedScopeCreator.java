@@ -89,6 +89,8 @@ import javax.annotation.Nullable;
  *
  * When building scope information, also declares relevant information
  * about types in the type registry.
+ *
+ * @author nicksantos@google.com (Nick Santos)
  */
 final class TypedScopeCreator implements ScopeCreator {
   /**
@@ -1194,14 +1196,22 @@ final class TypedScopeCreator implements ScopeCreator {
      * Check if the given node is a property of a name in the global scope.
      */
     private boolean isQnameRootedInGlobalScope(Node n) {
+      Scope scope = getQnameRootScope(n);
+      return scope != null && scope.isGlobal();
+    }
+
+    /**
+     * Return the scope for the name of the given node.
+     */
+    private Scope getQnameRootScope(Node n) {
       Node root = NodeUtil.getRootOfQualifiedName(n);
       if (root.isName()) {
         Var var = scope.getVar(root.getString());
         if (var != null) {
-          return var.isGlobal();
+          return var.getScope();
         }
       }
-      return false;
+      return null;
     }
 
     /**
@@ -1474,6 +1484,30 @@ final class TypedScopeCreator implements ScopeCreator {
         return;
       }
 
+      // NOTE(nicksantos): Determining whether a property is declared or not
+      // is really really obnoxious.
+      //
+      // The problem is that there are two (equally valid) coding styles:
+      //
+      // (function() {
+      //   /* The authoritative definition of goog.bar. */
+      //   goog.bar = function() {};
+      // })();
+      //
+      // function f() {
+      //   goog.bar();
+      //   /* Reset goog.bar to a no-op. */
+      //   goog.bar = function() {};
+      // }
+      //
+      // In a dynamic language with first-class functions, it's very difficult
+      // to know which one the user intended without looking at lots of
+      // contextual information (the second example demonstrates a small case
+      // of this, but there are some really pathological cases as well).
+      //
+      // The current algorithm checks if either the declaration has
+      // jsdoc type information, or @const with a known type,
+      // or a function literal with a name we haven't seen before.
       boolean inferred = true;
       if (info != null) {
         // Determining declaration for #1 + #3 + #4
@@ -1484,11 +1518,14 @@ final class TypedScopeCreator implements ScopeCreator {
             || FunctionTypeBuilder.isFunctionTypeDeclaration(info));
       }
 
-      if (inferred) {
+      if (inferred && rhsValue != null && rhsValue.isFunction()) {
         // Determining declaration for #2
-        inferred = !(rhsValue != null &&
-            rhsValue.isFunction() &&
-            (info != null || !scope.isDeclared(qName, false)));
+        if (info != null) {
+          inferred = false;
+        } else if (!scope.isDeclared(qName, false) &&
+                   n.isUnscopedQualifiedName()) {
+          inferred = false;
+        }
       }
 
       if (!inferred) {
@@ -1509,8 +1546,7 @@ final class TypedScopeCreator implements ScopeCreator {
         // If the property is already declared, the error will be
         // caught when we try to declare it in the current scope.
         defineSlot(n, parent, valueType, inferred);
-      } else if (rhsValue != null &&
-          rhsValue.isTrue()) {
+      } else if (rhsValue != null && rhsValue.isTrue()) {
         // We declare these for delegate proxy method properties.
         FunctionType ownerType =
             JSType.toMaybeFunctionType(getObjectSlot(ownerName));
