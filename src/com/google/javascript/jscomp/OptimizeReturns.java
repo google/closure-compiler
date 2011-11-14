@@ -103,7 +103,7 @@ class OptimizeReturns
       if (isCall(site)) {
         Node callNode = useNodeParent;
         Preconditions.checkState(callNode.isCall());
-        if (isValueUsed(callNode)) {
+        if (NodeUtil.isExpressionResultUsed(callNode)) {
           return true;
         }
       } else {
@@ -119,34 +119,6 @@ class OptimizeReturns
 
     // No possible use of the definition result
     return false;
-  }
-
-  /**
-   * Determines if the name node acts as the function name in a call expression.
-   */
-  private static boolean isValueUsed(Node node) {
-    // TODO(johnlenz): consider sharing some code with trySimpleUnusedResult.
-    Node parent = node.getParent();
-    switch (parent.getType()) {
-      case Token.EXPR_RESULT:
-        return false;
-      case Token.HOOK:
-      case Token.AND:
-      case Token.OR:
-        return (node == parent.getFirstChild()) ? true : isValueUsed(parent);
-      case Token.COMMA:
-        return (node == parent.getFirstChild()) ? false : isValueUsed(parent);
-      case Token.FOR:
-        if (NodeUtil.isForIn(parent)) {
-          return true;
-        } else {
-          // Only an expression whose result is in the condition part of the
-          // expression is used.
-          return (parent.getChildAtIndex(1) == node);
-        }
-      default:
-        return true;
-    }
   }
 
   /**

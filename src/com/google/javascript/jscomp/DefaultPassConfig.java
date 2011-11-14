@@ -729,6 +729,7 @@ public class DefaultPassConfig extends PassConfig {
 
     if (options.removeUnusedPrototypeProperties) {
       passes.add(removeUnusedPrototypeProperties);
+      passes.add(removeUnusedClassProperties);
     }
 
     assertAllLoopablePasses(passes);
@@ -1592,6 +1593,17 @@ public class DefaultPassConfig extends PassConfig {
       return new RemoveUnusedPrototypeProperties(
           compiler, options.removeUnusedPrototypePropertiesInExterns,
           !options.removeUnusedVars);
+    }
+  };
+
+  /**
+   * Remove prototype properties that do not appear to be used.
+   */
+  final PassFactory removeUnusedClassProperties =
+      new PassFactory("removeUnusedClassProperties", false) {
+    @Override
+    protected CompilerPass createInternal(AbstractCompiler compiler) {
+      return new RemoveUnusedClassProperties(compiler);
     }
   };
 

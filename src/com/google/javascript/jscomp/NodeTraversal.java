@@ -464,6 +464,12 @@ public class NodeTraversal {
     t.traverseRoots(roots);
   }
 
+  public static void traverseRoots(
+      AbstractCompiler compiler, Callback cb, Node ... roots) {
+    NodeTraversal t = new NodeTraversal(compiler, cb);
+    t.traverseRoots(roots);
+  }
+
   /**
    * Traverses a branch.
    */
