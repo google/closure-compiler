@@ -364,4 +364,18 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("([a])", "");
     test("([foo()])", "foo()");
   }
+
+  public void testFoldIfs1() {
+    fold("function f() {if (x) return 1; else if (y) return 1;}",
+         "function f() {if (x||y) return 1;}");
+    fold("function f() {if (x) return 1; else {if (y) return 1; else foo();}}",
+         "function f() {if (x||y) return 1; foo();}");
+  }
+
+  public void testFoldIfs2() {
+    fold("function f() {if (x) { a(); } else if (y) { a() }}",
+         "function f() {x?a():y&&a();}");
+  }
+
+
 }

@@ -200,6 +200,29 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     foldSame("function f(){for(var x in y) { return x.y; } return k}");
   }
 
+  public void testCombineIfs1() {
+    fold("function f() {if (x) return 1; if (y) return 1}",
+         "function f() {if (x||y) return 1;}");
+    fold("function f() {if (x) return 1; if (y) foo(); else return 1}",
+         "function f() {if ((!x)&&y) foo(); else return 1;}");
+  }
+
+  public void testCombineIfs2() {
+    // combinable but not yet done
+    foldSame("function f() {if (x) throw 1; if (y) throw 1}");
+    // Can't combine, side-effect
+    fold("function f(){ if (x) g(); if (y) g() }",
+         "function f(){ x&&g(); y&&g() }");
+    // Can't combine, side-effect
+    fold("function f(){ if (x) y = 0; if (y) y = 0; }",
+         "function f(){ x&&(y = 0); y&&(y = 0); }");
+  }
+
+  public void testCombineIfs3() {
+    foldSame("function f() {if (x) return 1; if (y) {g();f()}}");
+  }
+
+
   /** Try to minimize assignments */
   public void testFoldAssignments() {
     fold("function f(){if(x)y=3;else y=4;}", "function f(){y=x?3:4}");

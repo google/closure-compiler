@@ -299,13 +299,43 @@ class PeepholeSubstituteAlternateSyntax
     for (Node child = n.getFirstChild();
          child != null; child = child.getNext()){
       if (child.isIf()){
-
         Node cond = child.getFirstChild();
         Node thenBranch = cond.getNext();
         Node elseBranch = thenBranch.getNext();
         Node nextNode = child.getNext();
 
-        if (nextNode != null && elseBranch == null &&
+        if (nextNode != null && elseBranch == null
+            && isReturnBlock(thenBranch)
+            && nextNode.isIf()) {
+          Node nextCond = nextNode.getFirstChild();
+          Node nextThen = nextCond.getNext();
+          Node nextElse = nextThen.getNext();
+          if (thenBranch.isEquivalentToTyped(nextThen)) {
+            // Transform
+            //   if (x) return 1; if (y) return 1;
+            // to
+            //   if (x||y) return 1;
+            child.detachFromParent();
+            child.detachChildren();
+            Node newCond = new Node(Token.OR, cond);
+            nextNode.replaceChild(nextCond, newCond);
+            newCond.addChildToBack(nextCond);
+            reportCodeChange();
+          } else if (nextElse != null
+              && thenBranch.isEquivalentToTyped(nextElse)) {
+            // Transform
+            //   if (x) return 1; if (y) foo() else return 1;
+            // to
+            //   if (!x&&y) foo() else return 1;
+            child.detachFromParent();
+            child.detachChildren();
+            Node newCond = new Node(Token.AND,
+                new Node(Token.NOT, cond).copyInformationFrom(cond));
+            nextNode.replaceChild(nextCond, newCond);
+            newCond.addChildToBack(nextCond);
+            reportCodeChange();
+          }
+        } else if (nextNode != null && elseBranch == null &&
             isReturnBlock(thenBranch) && isReturnExpression(nextNode)) {
           Node thenExpr = null;
           // if(x)return; return 1 -> return x?void 0:1
