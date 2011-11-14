@@ -364,10 +364,11 @@ _ga_tracker.prototype._setVisitorCookieTimeout = function(cookieTimeoutMillis)
  * @param {string} action
  * @param {string=} opt_label
  * @param {number=} opt_value
+ * @param {boolean=} opt_noninteraction
  * @return {undefined}
  */
 _ga_tracker.prototype._trackEvent = function(category, action, opt_label,
-    opt_value) {};
+    opt_value, opt_noninteraction) {};
 
 /**
  * @param {string=} opt_pageUrl
