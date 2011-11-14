@@ -645,6 +645,8 @@ class TypeInference
       return scope;
     }
 
+    String qObjName = NodeUtil.getBestLValueName(
+        NodeUtil.getBestLValue(n));
     for (Node name = n.getFirstChild(); name != null;
          name = name.getNext()) {
       Node value = name.getFirstChild();
@@ -657,6 +659,21 @@ class TypeInference
           valueType = getNativeType(UNKNOWN_TYPE);
         }
         objectType.defineInferredProperty(memberName, valueType, name);
+
+        // Do normal flow inference if this is a direct property assignment.
+        if (qObjName != null && name.isString()) {
+          String qKeyName = qObjName + "." + memberName;
+          Var var = syntacticScope.getVar(qKeyName);
+          JSType oldType = var == null ? null : var.getType();
+          if (var != null && var.isTypeInferred()) {
+            var.setType(oldType == null ?
+                valueType : oldType.getLeastSupertype(oldType));
+          }
+
+          scope.inferQualifiedSlot(name, qKeyName,
+              oldType == null ? getNativeType(UNKNOWN_TYPE) : oldType,
+              valueType);
+        }
       } else {
         n.setJSType(getNativeType(UNKNOWN_TYPE));
       }

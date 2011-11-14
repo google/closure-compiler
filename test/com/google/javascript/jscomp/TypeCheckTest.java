@@ -6332,7 +6332,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "for (var i = 0; i < 10; i++) {" +
           "var x = /** @type {Object|number} */ ({foo: 3});" +
-          "/** @param {boolean} x */ function f(x) {}" +
+          "/** @param {number} x */ function f(x) {}" +
           "f(x.foo);" +
           "f([].foo);" +
         "}",

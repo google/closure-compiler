@@ -640,21 +640,20 @@ final class TypedScopeCreator implements ScopeCreator {
         JSType keyType =  objLitType.isEnumType() ?
             objLitType.toMaybeEnumType().getElementsType() :
             NodeUtil.getObjectLitKeyTypeFromValueType(keyNode, valueType);
-        if (keyType != null) {
-          // Try to declare this property in the current scope if it
-          // has an authoritative name.
-          String qualifiedName = NodeUtil.getBestLValueName(keyNode);
-          if (qualifiedName != null) {
-            defineSlot(keyNode, objLit, qualifiedName, keyType, false);
-          } else {
-            setDeferredType(keyNode, keyType);
-          }
 
-          if (objLitType != null && declareOnOwner) {
-            // Declare this property on its object literal.
-            boolean isExtern = t.getInput() != null && t.getInput().isExtern();
-            objLitType.defineDeclaredProperty(memberName, keyType, keyNode);
-          }
+        // Try to declare this property in the current scope if it
+        // has an authoritative name.
+        String qualifiedName = NodeUtil.getBestLValueName(keyNode);
+        if (qualifiedName != null) {
+          defineSlot(keyNode, objLit, qualifiedName, keyType, keyType == null);
+        } else if (keyType != null) {
+          setDeferredType(keyNode, keyType);
+        }
+
+        if (keyType != null && objLitType != null && declareOnOwner) {
+          // Declare this property on its object literal.
+          boolean isExtern = t.getInput() != null && t.getInput().isExtern();
+          objLitType.defineDeclaredProperty(memberName, keyType, keyNode);
         }
       }
     }
@@ -1440,6 +1439,7 @@ final class TypedScopeCreator implements ScopeCreator {
         // Determining type for #5
         valueType = rhsValue.getJSType();
       }
+
       // Function prototypes are special.
       // It's a common JS idiom to do:
       // F.prototype = { ... };

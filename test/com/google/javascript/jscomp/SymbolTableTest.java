@@ -723,6 +723,36 @@ public class SymbolTableTest extends TestCase {
     assertNotNull(toggle);
   }
 
+  public void testMethodInAnonObject1() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var a = {}; a.b = {}; a.b.c = function() {};");
+    Symbol a = getGlobalVar(table, "a");
+    Symbol ab = getGlobalVar(table, "a.b");
+    Symbol abc = getGlobalVar(table, "a.b.c");
+
+    assertNotNull(abc);
+    assertEquals(1, table.getReferenceList(abc).size());
+
+    assertEquals("{b: {c: function (): undefined}}", a.getType().toString());
+    assertEquals("{c: function (): undefined}", ab.getType().toString());
+    assertEquals("function (): undefined", abc.getType().toString());
+  }
+
+  public void testMethodInAnonObject2() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "var a = {b: {c: function() {}}};");
+    Symbol a = getGlobalVar(table, "a");
+    Symbol ab = getGlobalVar(table, "a.b");
+    Symbol abc = getGlobalVar(table, "a.b.c");
+
+    assertNotNull(abc);
+    assertEquals(1, table.getReferenceList(abc).size());
+
+    assertEquals("{b: {c: function (): undefined}}", a.getType().toString());
+    assertEquals("{c: function (): undefined}", ab.getType().toString());
+    assertEquals("function (): undefined", abc.getType().toString());
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);
