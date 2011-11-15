@@ -645,7 +645,8 @@ final class TypedScopeCreator implements ScopeCreator {
         // has an authoritative name.
         String qualifiedName = NodeUtil.getBestLValueName(keyNode);
         if (qualifiedName != null) {
-          defineSlot(keyNode, objLit, qualifiedName, keyType, keyType == null);
+          boolean inferred = keyType == null;
+          defineSlot(keyNode, objLit, qualifiedName, keyType, inferred);
         } else if (keyType != null) {
           setDeferredType(keyNode, keyType);
         }
@@ -1484,50 +1485,8 @@ final class TypedScopeCreator implements ScopeCreator {
         return;
       }
 
-      // NOTE(nicksantos): Determining whether a property is declared or not
-      // is really really obnoxious.
-      //
-      // The problem is that there are two (equally valid) coding styles:
-      //
-      // (function() {
-      //   /* The authoritative definition of goog.bar. */
-      //   goog.bar = function() {};
-      // })();
-      //
-      // function f() {
-      //   goog.bar();
-      //   /* Reset goog.bar to a no-op. */
-      //   goog.bar = function() {};
-      // }
-      //
-      // In a dynamic language with first-class functions, it's very difficult
-      // to know which one the user intended without looking at lots of
-      // contextual information (the second example demonstrates a small case
-      // of this, but there are some really pathological cases as well).
-      //
-      // The current algorithm checks if either the declaration has
-      // jsdoc type information, or @const with a known type,
-      // or a function literal with a name we haven't seen before.
-      boolean inferred = true;
-      if (info != null) {
-        // Determining declaration for #1 + #3 + #4
-        inferred = !(info.hasType()
-            || info.hasEnumParameterType()
-            || (info.isConstant() && valueType != null
-                && !valueType.isUnknownType())
-            || FunctionTypeBuilder.isFunctionTypeDeclaration(info));
-      }
-
-      if (inferred && rhsValue != null && rhsValue.isFunction()) {
-        // Determining declaration for #2
-        if (info != null) {
-          inferred = false;
-        } else if (!scope.isDeclared(qName, false) &&
-                   n.isUnscopedQualifiedName()) {
-          inferred = false;
-        }
-      }
-
+      boolean inferred = isQualifiedNameInferred(
+          qName, n, info, rhsValue, valueType);
       if (!inferred) {
         ObjectType ownerType = getObjectSlot(ownerName);
         if (ownerType != null) {
@@ -1561,6 +1520,60 @@ final class TypedScopeCreator implements ScopeCreator {
           }
         }
       }
+    }
+
+    /**
+     * Determines whether a qualified name is inferred.
+     * NOTE(nicksantos): Determining whether a property is declared or not
+     * is really really obnoxious.
+     *
+     * The problem is that there are two (equally valid) coding styles:
+     *
+     * (function() {
+     *   /* The authoritative definition of goog.bar. /
+     *   goog.bar = function() {};
+     * })();
+     *
+     * function f() {
+     *   goog.bar();
+     *   /* Reset goog.bar to a no-op. /
+     *   goog.bar = function() {};
+     * }
+     *
+     * In a dynamic language with first-class functions, it's very difficult
+     * to know which one the user intended without looking at lots of
+     * contextual information (the second example demonstrates a small case
+     * of this, but there are some really pathological cases as well).
+     *
+     * The current algorithm checks if either the declaration has
+     * jsdoc type information, or @const with a known type,
+     * or a function literal with a name we haven't seen before.
+     */
+    private boolean isQualifiedNameInferred(
+        String qName, Node n, JSDocInfo info,
+        Node rhsValue, JSType valueType) {
+      if (valueType == null) {
+        return true;
+      }
+
+      boolean inferred = true;
+      if (info != null) {
+        inferred = !(info.hasType()
+            || info.hasEnumParameterType()
+            || (info.isConstant() && valueType != null
+                && !valueType.isUnknownType())
+            || FunctionTypeBuilder.isFunctionTypeDeclaration(info));
+      }
+
+      if (inferred && rhsValue != null && rhsValue.isFunction()) {
+        if (info != null) {
+          inferred = false;
+        } else if (!scope.isDeclared(qName, false) &&
+                   n.isUnscopedQualifiedName()) {
+          inferred = false;
+        }
+      }
+      return inferred;
     }
 
     /**

@@ -1038,12 +1038,37 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("number", yType.toString());
   }
 
+  public void testDeclaredObjectLitProperty6() throws Exception {
+    testSame("var x = {/** This is jsdoc */ prop: function(){}};");
+    Var prop = globalScope.getVar("x.prop");
+    JSType propType = prop.getType();
+    assertEquals("function (): undefined", propType.toString());
+    assertFalse(prop.isTypeInferred());
+    assertFalse(
+        ObjectType.cast(globalScope.getVar("x").getType())
+        .isPropertyTypeInferred("prop"));
+  }
+
   public void testInferredObjectLitProperty1() throws Exception {
     testSame("var x = {prop: 3};");
     Var prop = globalScope.getVar("x.prop");
     JSType propType = prop.getType();
     assertEquals("number", propType.toString());
     assertTrue(prop.isTypeInferred());
+    assertTrue(
+        ObjectType.cast(globalScope.getVar("x").getType())
+        .isPropertyTypeInferred("prop"));
+  }
+
+  public void testInferredObjectLitProperty2() throws Exception {
+    testSame("var x = {prop: function(){}};");
+    Var prop = globalScope.getVar("x.prop");
+    JSType propType = prop.getType();
+    assertEquals("function (): undefined", propType.toString());
+    assertTrue(prop.isTypeInferred());
+    assertTrue(
+        ObjectType.cast(globalScope.getVar("x").getType())
+        .isPropertyTypeInferred("prop"));
   }
 
   public void testDeclaredConstType1() throws Exception {
