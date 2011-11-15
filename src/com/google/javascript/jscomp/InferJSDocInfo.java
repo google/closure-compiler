@@ -101,7 +101,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         }
 
         // Only allow JSDoc on VARs, function declarations, and assigns.
-        if (parent.getType() != Token.VAR &&
+        if (!parent.isVar() &&
             !NodeUtil.isFunctionDeclaration(parent) &&
             !(parent.isAssign() &&
               n == parent.getFirstChild())) {

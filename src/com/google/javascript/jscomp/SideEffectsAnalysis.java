@@ -867,7 +867,7 @@ import java.util.Set;
         // or an increment/decrement
 
         boolean nonSimpleAssign =
-          NodeUtil.isAssignmentOp(parent) && parent.getType() != Token.ASSIGN;
+          NodeUtil.isAssignmentOp(parent) && !parent.isAssign();
 
         return (nonSimpleAssign
             || parent.isDec()

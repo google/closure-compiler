@@ -132,7 +132,7 @@ abstract class MethodCompilerPass implements CompilerPass {
         case Token.GETELEM: {
           Node dest = n.getFirstChild().getNext();
 
-          if (dest.getType() != Token.STRING) {
+          if (!dest.isString()) {
             return;
           }
 

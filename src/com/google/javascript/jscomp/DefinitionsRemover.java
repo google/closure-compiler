@@ -384,7 +384,7 @@ class DefinitionsRemover {
           "AST should be normalized first");
       Node parent = var.getParent();
       Node rValue = name.removeFirstChild();
-      Preconditions.checkState(parent.getType() != Token.FOR);
+      Preconditions.checkState(!parent.isFor());
       parent.replaceChild(var, NodeUtil.newExpr(rValue));
     }
 

@@ -492,7 +492,7 @@ class RenameProperties implements CompilerPass {
      */
     private void countCallCandidates(NodeTraversal t, Node callNode) {
       Node firstArg = callNode.getFirstChild().getNext();
-      if (firstArg.getType() != Token.STRING) {
+      if (!firstArg.isString()) {
         t.report(callNode, BAD_CALL);
         return;
       }

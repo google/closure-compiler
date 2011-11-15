@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * An abstract class whose implementations run peephole optimizations:
@@ -142,8 +141,8 @@ abstract class AbstractPeepholeOptimization {
   @VisibleForTesting
   static Node validateResult(Node n) {
     done: {
-      if (n != null && n.getType() != Token.SCRIPT
-          && (n.getType() != Token.BLOCK || !n.isSyntheticBlock())) {
+      if (n != null && !n.isScript()
+          && (!n.isBlock() || !n.isSyntheticBlock())) {
         for (Node parent : n.getAncestors()) {
           if (parent.isScript()) {
             break done;

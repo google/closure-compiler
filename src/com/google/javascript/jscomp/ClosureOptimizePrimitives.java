@@ -85,7 +85,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
           callNode.removeChild(keyNode);
           callNode.removeChild(valueNode);
 
-          if (keyNode.getType() != Token.STRING) {
+          if (!keyNode.isString()) {
             keyNode = Node.newString(NodeUtil.getStringValue(keyNode))
                 .copyInformationFrom(keyNode);
           }
@@ -107,8 +107,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     Node curParam = firstParam;
     while (curParam != null) {
       // All keys must be strings or numbers.
-      if (curParam.getType() != Token.STRING &&
-          curParam.getType() != Token.NUMBER) {
+      if (!curParam.isString() && !curParam.isNumber()) {
         return false;
       }
       curParam = curParam.getNext();

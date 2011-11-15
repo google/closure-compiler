@@ -169,8 +169,7 @@ class CreateSyntheticBlocks implements CompilerPass {
   private class Callback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.CALL
-          || n.getFirstChild().getType() != Token.NAME) {
+      if (!n.isCall() || !n.getFirstChild().isName()) {
         return;
       }
 
@@ -178,7 +177,7 @@ class CreateSyntheticBlocks implements CompilerPass {
       String callName = callTarget.getString();
 
       if (startMarkerName.equals(callName)) {
-        if (parent.getType() != Token.EXPR_RESULT) {
+        if (!parent.isExprResult()) {
           compiler.report(
               t.makeError(n, INVALID_MARKER_USAGE, startMarkerName));
           return;
@@ -192,7 +191,7 @@ class CreateSyntheticBlocks implements CompilerPass {
       }
 
       Node endMarkerNode = parent;
-      if (endMarkerNode.getType() != Token.EXPR_RESULT) {
+      if (!endMarkerNode.isExprResult()) {
         compiler.report(
             t.makeError(n, INVALID_MARKER_USAGE, endMarkerName));
         return;

@@ -576,7 +576,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       // VAR is the only type of variable declaration that may not initialize
       // its variable. Catch blocks, named functions, and parameters all do.
       return isDeclaration() &&
-          getParent().getType() != Token.VAR ||
+          !getParent().isVar() ||
           nameNode.getFirstChild() != null;
     }
 

@@ -255,8 +255,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
       case Token.GETPROP:
         if (n.getFirstChild().isName() &&
-            parent.getType() != Token.CALL &&
-            parent.getType() != Token.ASSIGN &&
+            !parent.isCall() &&
+            !parent.isAssign() &&
             "goog.base".equals(n.getQualifiedName())) {
           reportBadBaseClassUse(t, n, "May only be called directly.");
         }
@@ -415,7 +415,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     Node callee = n.getFirstChild();
     Node thisArg = callee.getNext();
-    if (thisArg == null || thisArg.getType() != Token.THIS) {
+    if (thisArg == null || !thisArg.isThis()) {
       reportBadBaseClassUse(t, n, "First argument must be 'this'.");
       return;
     }
@@ -461,7 +461,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     } else {
       // Handle methods.
       Node methodNameNode = thisArg.getNext();
-      if (methodNameNode == null || methodNameNode.getType() != Token.STRING) {
+      if (methodNameNode == null || !methodNameNode.isString()) {
         reportBadBaseClassUse(t, n, "Second argument must name a method.");
         return;
       }
@@ -572,9 +572,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       for (Node key = arg.getFirstChild(); key != null;
           key = key.getNext()) {
         Node value = key.getFirstChild();
-        if (key.getType() != Token.STRING
+        if (!key.isString()
             || value == null
-            || value.getType() != Token.STRING) {
+            || !value.isString()) {
           compiler.report(
               t.makeError(n,
                   NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR));
@@ -747,11 +747,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     DiagnosticType diagnostic = null;
     if (firstArg == null) {
       diagnostic = NULL_ARGUMENT_ERROR;
-    } else if (firstArg.getType() != Token.OBJECTLIT) {
+    } else if (!firstArg.isObjectLit()) {
       diagnostic = EXPECTED_OBJECTLIT_ERROR;
     } else if (firstArg.getNext() != null) {
       Node secondArg = firstArg.getNext();
-      if (secondArg.getType() != Token.STRING) {
+      if (!secondArg.isString()) {
         diagnostic = EXPECTED_STRING_ERROR;
       } else if (secondArg.getNext() != null) {
         diagnostic = TOO_MANY_ARGUMENTS_ERROR;

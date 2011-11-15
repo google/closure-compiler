@@ -474,7 +474,7 @@ class StripCode implements CompilerPass {
       //   ... (arguments)
 
       Node function = n.getFirstChild();
-      if (function == null || function.getType() != Token.GETPROP) {
+      if (function == null || !function.isGetProp()) {
         // We are only interested in calls on object references that are
         // properties. We don't need to eliminate method calls on variables
         // that are getting removed, since that's already done by the code

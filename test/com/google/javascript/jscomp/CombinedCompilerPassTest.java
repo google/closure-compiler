@@ -223,7 +223,7 @@ public class CombinedCompilerPassTest extends TestCase  {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return n.getType() != Token.NAME || !ignoring.contains(n.getString());
+      return !n.isName() || !ignoring.contains(n.getString());
     }
 
     Set<Node> getVisitedScopes() {

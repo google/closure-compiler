@@ -311,7 +311,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
             return null;
       }
 
-      if (definition.getType() != Token.FUNCTION) {
+      if (!definition.isFunction()) {
         return null;
       }
 
@@ -459,7 +459,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
         // Only handle function calls. This avoids assignments
         // that do not export items directly.
-        if (parent.getType() != Token.CALL) {
+        if (!parent.isCall()) {
           return;
         }
 
@@ -486,7 +486,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
     // Confirm the arguments are the expected types. If they are not,
     // then we have an export that we cannot statically identify.
-    if (nameArg.getType() != Token.STRING) {
+    if (!nameArg.isString()) {
       return;
     }
 
@@ -512,7 +512,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       return;
     }
 
-    if (nameArg.getType() != Token.STRING) {
+    if (!nameArg.isString()) {
       return;
     }
 

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Collapses anonymous function expressions into named function declarations,
@@ -52,7 +51,7 @@ class CollapseAnonymousFunctions implements CompilerPass {
   private class Callback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.VAR) {
+      if (!n.isVar()) {
         return;
       }
 

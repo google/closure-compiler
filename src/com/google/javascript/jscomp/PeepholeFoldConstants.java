@@ -179,7 +179,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private Node tryReduceVoid(Node n) {
     Node child = n.getFirstChild();
-    if (child.getType() != Token.NUMBER || child.getDouble() != 0.0) {
+    if (!child.isNumber() || child.getDouble() != 0.0) {
       if (!mayHaveSideEffects(n)) {
         n.replaceChild(child, Node.newNumber(0));
         reportCodeChange();
@@ -803,7 +803,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         || n.isAdd());
 
     Preconditions.checkState(
-        n.getType() != Token.ADD || !NodeUtil.mayBeString(n));
+        !n.isAdd()|| !NodeUtil.mayBeString(n));
 
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.
@@ -1003,7 +1003,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         break;
 
       case Token.THIS:
-        if (right.getType() != Token.THIS) {
+        if (!right.isThis()) {
           return n;
         }
         switch (op) {
@@ -1312,7 +1312,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Preconditions.checkArgument(n.isNew());
 
     Node objectType = n.getFirstChild();
-    if (objectType.getType() != Token.NAME) {
+    if (!objectType.isName()) {
       return n;
     }
 
@@ -1423,7 +1423,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (right.getType() != Token.NUMBER) {
+    if (!right.isNumber()) {
       // Sometimes people like to use complex expressions to index into
       // arrays, or strings to index into array methods.
       return n;
@@ -1466,7 +1466,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldObjectPropAccess(Node n, Node left, Node right) {
     Preconditions.checkArgument(NodeUtil.isGet(n));
 
-    if (left.getType() != Token.OBJECTLIT || right.getType() != Token.STRING) {
+    if (!left.isObjectLit() || !right.isString()) {
       return n;
     }
 

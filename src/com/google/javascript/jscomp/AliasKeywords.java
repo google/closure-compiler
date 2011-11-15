@@ -410,7 +410,7 @@ class AliasKeywords implements CompilerPass {
    * Does the given node define one of our aliases?
    */
   private boolean isAliasDefinition(Node n) {
-    if (n.getType() != Token.NAME) {
+    if (!n.isName()) {
       return false;
     }
 

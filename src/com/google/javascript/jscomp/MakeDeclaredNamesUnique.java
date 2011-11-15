@@ -80,7 +80,7 @@ class MakeDeclaredNamesUnique
       // If the contextual renamer is being used the starting context can not
       // be a function.
       Preconditions.checkState(
-          declarationRoot.getType() != Token.FUNCTION ||
+          !declarationRoot.isFunction() ||
           !(rootRenamer instanceof ContextualRenamer));
       Preconditions.checkState(t.inGlobalScope());
       renamer = rootRenamer;
@@ -88,7 +88,7 @@ class MakeDeclaredNamesUnique
       renamer = nameStack.peek().forChildScope();
     }
 
-    if (declarationRoot.getType() != Token.FUNCTION) {
+    if (!declarationRoot.isFunction()) {
       // Add the block declarations
       findDeclaredNames(declarationRoot, null, renamer);
     }
@@ -213,7 +213,7 @@ class MakeDeclaredNamesUnique
     // Do a shallow traversal, so don't traverse into function declarations,
     // except for the name of the function itself.
     if (parent == null
-        || parent.getType() != Token.FUNCTION
+        || !parent.isFunction()
         || n == parent.getFirstChild()) {
       if (NodeUtil.isVarDeclaration(n)) {
         renamer.addDeclaredName(n.getString());

@@ -341,7 +341,7 @@ class ProcessTweaks implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.CALL) {
+      if (!n.isCall()) {
         return;
       }
 
@@ -359,7 +359,7 @@ class ProcessTweaks implements CompilerPass {
 
       // Ensure the first parameter (the tweak ID) is a string literal.
       Node tweakIdNode = n.getFirstChild().getNext();
-      if (tweakIdNode.getType() != Token.STRING) {
+      if (!tweakIdNode.isString()) {
         compiler.report(t.makeError(tweakIdNode, NON_LITERAL_TWEAK_ID_ERROR));
         return;
       }

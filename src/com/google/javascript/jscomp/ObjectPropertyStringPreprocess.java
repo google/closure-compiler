@@ -74,7 +74,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
 
   private void addExternDeclaration(Node externs, Node declarationStmt) {
     Node script = externs.getLastChild();
-    if (script == null || script.getType() != Token.SCRIPT) {
+    if (script == null || !script.isScript()) {
       script = new Node(Token.SCRIPT);
       script.setIsSyntheticBlock(true);
       externs.addChildToBack(script);
@@ -97,7 +97,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
       // Rewrite "new goog.testing.ObjectPropertyString(foo, 'bar')" to
       // "new goog.testing.ObjectPropertyString(window, foo.bar)" and
       // issues errors if bad arguments are encountered.
-      if (n.getType() != Token.NEW) {
+      if (!n.isNew()) {
         return;
       }
 
@@ -123,7 +123,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
       }
 
       Node secondArgument = firstArgument.getNext();
-      if (secondArgument.getType() != Token.STRING) {
+      if (!secondArgument.isString()) {
         compiler.report(t.makeError(secondArgument,
             STRING_LITERAL_EXPECTED_ERROR,
             Token.name(secondArgument.getType())));

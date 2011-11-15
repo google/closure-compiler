@@ -779,16 +779,16 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node cond = init.getNext();
     Node increment = cond.getNext();
 
-    if (init.getType() != Token.EMPTY && init.getType() != Token.VAR) {
+    if (!init.isEmpty() && !init.isVar()) {
       init = trySimplifyUnusedResult(init, false);
     }
 
-    if (increment.getType() != Token.EMPTY) {
+    if (!increment.isEmpty()) {
       increment = trySimplifyUnusedResult(increment, false);
     }
 
     // There is an initializer skip it
-    if (n.getFirstChild().getType() != Token.EMPTY) {
+    if (!n.getFirstChild().isEmpty()) {
       return n;
     }
 

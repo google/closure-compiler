@@ -214,11 +214,11 @@ class FunctionInjector {
    * @return Whether the call is of a type that is supported.
    */
   private boolean isSupportedCallType(Node callNode) {
-    if (callNode.getFirstChild().getType() != Token.NAME) {
+    if (!callNode.getFirstChild().isName()) {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
         if (!assumeStrictThis) {
           Node thisValue = callNode.getFirstChild().getNext();
-          if (thisValue == null || thisValue.getType() != Token.THIS) {
+          if (thisValue == null || !thisValue.isThis()) {
             return false;
           }
         }
@@ -669,10 +669,10 @@ class FunctionInjector {
     // Functions called via 'call' and 'apply' have a this-object as
     // the first parameter, but this is not part of the called function's
     // parameter list.
-    if (callNode.getFirstChild().getType() != Token.NAME) {
+    if (!callNode.getFirstChild().isName()) {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
         // TODO(johnlenz): Support replace this with a value.
-        if (cArg == null || cArg.getType() != Token.THIS) {
+        if (cArg == null || !cArg.isThis()) {
           return CanInlineResult.NO;
         }
         cArg = cArg.getNext();

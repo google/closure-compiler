@@ -266,8 +266,8 @@ class CodeGenerator {
       }
 
       case Token.REGEXP:
-        if (first.getType() != Token.STRING ||
-            last.getType() != Token.STRING) {
+        if (!first.isString() ||
+            !last.isString()) {
           throw new Error("Expected children to be strings");
         }
 
@@ -558,7 +558,7 @@ class CodeGenerator {
         Preconditions.checkState(childCount <= 1);
         add("continue");
         if (childCount == 1) {
-          if (first.getType() != Token.LABEL_NAME) {
+          if (!first.isLabelName()) {
             throw new Error("Unexpected token type. Should be LABEL_NAME.");
           }
           add(" ");
@@ -577,7 +577,7 @@ class CodeGenerator {
         Preconditions.checkState(childCount <= 1);
         add("break");
         if (childCount == 1) {
-          if (first.getType() != Token.LABEL_NAME) {
+          if (!first.isLabelName()) {
             throw new Error("Unexpected token type. Should be LABEL_NAME.");
           }
           add(" ");
@@ -699,7 +699,7 @@ class CodeGenerator {
 
       case Token.LABEL:
         Preconditions.checkState(childCount == 2);
-        if (first.getType() != Token.LABEL_NAME) {
+        if (!first.isLabelName()) {
           throw new Error("Unexpected token type. Should be LABEL_NAME.");
         }
         add(first);
@@ -759,7 +759,7 @@ class CodeGenerator {
       Node n, Context context, boolean allowNonBlockChild) {
     Node nodeToProcess = n;
 
-    if (!allowNonBlockChild && n.getType() != Token.BLOCK) {
+    if (!allowNonBlockChild && !n.isBlock()) {
       throw new Error("Missing BLOCK child.");
     }
 
@@ -820,7 +820,7 @@ class CodeGenerator {
   private boolean isOneExactlyFunctionOrDo(Node n) {
     if (n.isLabel()) {
       Node labeledStatement = n.getLastChild();
-      if (labeledStatement.getType() != Token.BLOCK) {
+      if (!labeledStatement.isBlock()) {
         return isOneExactlyFunctionOrDo(labeledStatement);
       } else {
         // For labels with block children, we need to ensure that a
@@ -1087,7 +1087,7 @@ class CodeGenerator {
     for (; c != null && i < maxCount; c = c.getNext()) {
       if (c.isBlock()) {
         i += getNonEmptyChildCount(c, maxCount-i);
-      } else if (c.getType() != Token.EMPTY) {
+      } else if (!c.isEmpty()) {
         i++;
       }
     }
@@ -1102,7 +1102,7 @@ class CodeGenerator {
         if (result != null) {
           return result;
         }
-      } else if (c.getType() != Token.EMPTY) {
+      } else if (!c.isEmpty()) {
         return c;
       }
     }

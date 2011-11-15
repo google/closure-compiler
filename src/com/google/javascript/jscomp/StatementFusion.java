@@ -45,7 +45,7 @@ public class StatementFusion extends AbstractPeepholeOptimization {
 
   private static boolean canFuseIntoOneStatement(Node block) {
     // Fold only statement block. NOT scripts block.
-    if (block.getType() != Token.BLOCK) {
+    if (!block.isBlock()) {
       return false;
     }
 

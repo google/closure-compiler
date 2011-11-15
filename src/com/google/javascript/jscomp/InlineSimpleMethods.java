@@ -119,12 +119,12 @@ class InlineSimpleMethods extends MethodCompilerPass {
    * and for which the right side is a string.
    */
   private static boolean isPropertyTree(Node expectedGetprop) {
-    if (expectedGetprop.getType() != Token.GETPROP) {
+    if (!expectedGetprop.isGetProp()) {
       return false;
     }
 
     Node leftChild = expectedGetprop.getFirstChild();
-    if (leftChild.getType() != Token.THIS &&
+    if (!leftChild.isThis() &&
         !isPropertyTree(leftChild)) {
       return false;
     }
@@ -160,7 +160,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     }
 
     Node expectedReturn = expectedBlock.getFirstChild();
-    if (expectedReturn.getType() != Token.RETURN) {
+    if (!expectedReturn.isReturn()) {
       return null;
     }
 

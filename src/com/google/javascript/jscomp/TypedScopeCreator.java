@@ -463,7 +463,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // We do want to traverse the name of a named function, but we don't
       // want to traverse the arguments or body.
-      boolean descend = parent == null || parent.getType() != Token.FUNCTION ||
+      boolean descend = parent == null || !parent.isFunction() ||
           n == parent.getFirstChild() || parent == scope.getRootNode();
 
       if (descend) {
@@ -1650,8 +1650,8 @@ final class TypedScopeCreator implements ScopeCreator {
         // if the node is not a member expression, or
         // if the member expression is not of the form: this.someProperty.
         if (info == null ||
-            member.getType() != Token.GETPROP ||
-            member.getFirstChild().getType() != Token.THIS) {
+            !member.isGetProp() ||
+            !member.getFirstChild().isThis()) {
           return;
         }
 

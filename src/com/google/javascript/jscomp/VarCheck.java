@@ -125,7 +125,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() != Token.NAME) {
+    if (!n.isName()) {
       return;
     }
 

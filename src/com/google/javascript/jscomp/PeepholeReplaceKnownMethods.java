@@ -85,8 +85,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     Node stringNode = callTarget.getFirstChild();
     Node functionName = stringNode.getNext();
 
-    if ((stringNode.getType() != Token.STRING) ||
-        (functionName.getType() != Token.STRING)) {
+    if ((!stringNode.isString()) ||
+        (!functionName.isString())) {
       return subtree;
     }
 
@@ -217,8 +217,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       }
 
       // Third-argument and non-numeric second arg are problematic. Discard.
-      if ((secondArg.getNext() != null) ||
-          (secondArg.getType() != Token.NUMBER)) {
+      if (secondArg.getNext() != null || !secondArg.isNumber()) {
         return n;
       } else {
         double tmpRadix = secondArg.getDouble();
@@ -344,8 +343,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     int fromIndex = isIndexOf ? 0 : lstring.length();
     if (secondArg != null) {
       // Third-argument and non-numeric second arg are problematic. Discard.
-      if ((secondArg.getNext() != null) ||
-          (secondArg.getType() != Token.NUMBER)) {
+      if (secondArg.getNext() != null || !secondArg.isNumber()) {
         return n;
       } else {
         fromIndex = (int) secondArg.getDouble();
@@ -381,7 +379,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     Node arrayNode = callTarget.getFirstChild();
     Node functionName = arrayNode.getNext();
 
-    if ((arrayNode.getType() != Token.ARRAYLIT) ||
+    if (!arrayNode.isArrayLit() ||
         !functionName.getString().equals("join")) {
       return n;
     }
@@ -447,7 +445,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
           return n;
         }
         arrayNode.detachChildren();
-        if (foldedStringNode.getType() != Token.STRING) {
+        if (!foldedStringNode.isString()) {
           // If the Node is not a string literal, ensure that
           // it is coerced to a string.
           Node replacement = new Node(Token.ADD,

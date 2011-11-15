@@ -19,8 +19,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Comparator;
 import java.util.TreeSet;
 
@@ -83,7 +81,7 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() != Token.FUNCTION) {
+    if (!n.isFunction()) {
       return;
     }
 

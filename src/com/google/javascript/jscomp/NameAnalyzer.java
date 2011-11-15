@@ -1631,7 +1631,7 @@ final class NameAnalyzer implements CompilerPass {
       newReplacements.add(valueExpr);
       changeProxy.replaceWith(
           parent, n, collapseReplacements(newReplacements));
-    } else if (n.isAssign() && parent.getType() != Token.FOR) {
+    } else if (n.isAssign() && !parent.isFor()) {
       // assignment appears in a RHS expression.  we have already
       // considered names in the assignment's RHS as being referenced;
       // replace the assignment with its RHS.

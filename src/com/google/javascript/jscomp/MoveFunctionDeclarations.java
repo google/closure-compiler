@@ -20,8 +20,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -70,13 +68,12 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     Node gramps = n.getAncestor(2);
-    return gramps == null || gramps.getType() != Token.SCRIPT;
+    return gramps == null || !gramps.isScript();
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (parent == null ||
-        parent.getType() != Token.SCRIPT) {
+    if (parent == null || !parent.isScript()) {
       return;
     }
 

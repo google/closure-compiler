@@ -162,7 +162,7 @@ public class NodeTraversal {
         Node parent) {
       // We do want to traverse the name of a named function, but we don't
       // want to traverse the arguments or body.
-      return parent == null || parent.getType() != Token.FUNCTION ||
+      return parent == null || !parent.isFunction() ||
           n == parent.getFirstChild();
     }
   }

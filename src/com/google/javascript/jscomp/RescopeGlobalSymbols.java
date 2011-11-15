@@ -146,7 +146,7 @@ class RescopeGlobalSymbols implements CompilerPass {
   private class RewriteScopeCallback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.NAME) {
+      if (!n.isName()) {
         return;
       }
       String name = n.getString();
@@ -223,7 +223,7 @@ class RescopeGlobalSymbols implements CompilerPass {
       AbstractShallowStatementCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.VAR) {
+      if (!n.isVar()) {
         return;
       }
       List<Node> commas = new ArrayList<Node>();

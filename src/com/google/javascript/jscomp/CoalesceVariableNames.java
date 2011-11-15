@@ -363,7 +363,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
             .copyInformationFrom(name);
 
         // We don't need to wrapped it with EXPR node if it is within a FOR.
-        if (parent.getType() != Token.FOR) {
+        if (!parent.isFor()) {
           assign = NodeUtil.newExpr(assign);
         }
         parent.replaceChild(var, assign);

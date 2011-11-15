@@ -268,7 +268,7 @@ public final class SymbolTable
       return globalScope.getSlot(GLOBAL_THIS);
     }
 
-    if (rootNode.getType() != Token.FUNCTION) {
+    if (!rootNode.isFunction()) {
       return null;
     }
 
@@ -1360,7 +1360,7 @@ public final class SymbolTable
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.THIS) {
+      if (!n.isThis()) {
         return;
       }
 

@@ -228,7 +228,7 @@ class ExpressionDecomposer {
       // Node extractedCall = extractExpression(decomposition, expressionRoot);
     } else {
       Node parent = nonconditionalExpr.getParent();
-      boolean needResult = parent.getType() != Token.EXPR_RESULT;
+      boolean needResult = !parent.isExprResult();
       Node extractedConditional = extractConditional(
           nonconditionalExpr, exprInjectionPoint, needResult);
     }
@@ -454,7 +454,7 @@ class ExpressionDecomposer {
     //    t1.foo = t1.foo + 2;
     if (isLhsOfAssignOp && NodeUtil.isGet(expr)) {
       for (Node n : expr.children()) {
-        if (n.getType() != Token.STRING && !isConstantName(n, knownConstants)) {
+        if (!n.isString() && !isConstantName(n, knownConstants)) {
           Node extractedNode = extractExpression(n, injectionPoint);
           if (firstExtractedNode == null) {
             firstExtractedNode = extractedNode;

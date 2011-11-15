@@ -93,15 +93,15 @@ class PrepareAst implements CompilerPass {
    */
   private void normalizeBlocks(Node n) {
     if (NodeUtil.isControlStructure(n)
-        && n.getType() != Token.LABEL
-        && n.getType() != Token.SWITCH) {
+        && !n.isLabel()
+        && !n.isSwitch()) {
       for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
         if (NodeUtil.isControlStructureCodeBlock(n,c) &&
-            c.getType() != Token.BLOCK) {
+            !c.isBlock()) {
           Node newBlock = new Node(Token.BLOCK, n.getLineno(), n.getCharno());
           newBlock.copyInformationFrom(n);
           n.replaceChild(c, newBlock);
-          if (c.getType() != Token.EMPTY) {
+          if (!c.isEmpty()) {
             newBlock.addChildrenToFront(c);
           } else {
             newBlock.setWasEmptyNode(true);

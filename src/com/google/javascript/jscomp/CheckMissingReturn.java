@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -122,7 +121,7 @@ class CheckMissingReturn implements ScopedCallback {
    */
   private static boolean fastAllPathsReturnCheck(ControlFlowGraph<Node> cfg) {
     for (DiGraphEdge<Node, Branch> s : cfg.getImplicitReturn().getInEdges()) {
-      if (s.getSource().getValue().getType() != Token.RETURN) {
+      if (!s.getSource().getValue().isReturn()) {
         return false;
       }
     }

@@ -64,9 +64,9 @@ class FunctionArgumentInjector {
       Node replacementTemplate = replacements.get(node.getString());
       if (replacementTemplate != null) {
         // This should not be replacing declared names.
-        Preconditions.checkState(parent.getType() != Token.FUNCTION
-            || parent.getType() != Token.VAR
-            || parent.getType() != Token.CATCH);
+        Preconditions.checkState(!parent.isFunction()
+            || !parent.isVar()
+            || !parent.isCatch());
         // The name may need to be replaced more than once,
         // so we need to clone the node.
         Node replacement = replacementTemplate.cloneTree();
@@ -76,7 +76,7 @@ class FunctionArgumentInjector {
     } else if (replaceThis && node.isThis()) {
       Node replacementTemplate = replacements.get(THIS_MARKER);
       Preconditions.checkNotNull(replacementTemplate);
-      if (replacementTemplate.getType() != Token.THIS) {
+      if (!replacementTemplate.isThis()) {
         // The name may need to be replaced more than once,
         // so we need to clone the node.
         Node replacement = replacementTemplate.cloneTree();

@@ -51,7 +51,7 @@ class ObjectPropertyStringPostprocess implements CompilerPass {
   private class Callback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.NEW) {
+      if (!n.isNew()) {
         return;
       }
 

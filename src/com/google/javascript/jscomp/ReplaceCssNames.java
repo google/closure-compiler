@@ -162,7 +162,7 @@ class ReplaceCssNames implements CompilerPass {
 
             Node second = first.getNext();
 
-            if (second.getType() != Token.STRING) {
+            if (!second.isString()) {
               compiler.report(t.makeError(n, STRING_LITERAL_EXPECTED_ERROR,
                   Token.name(second.getType())));
             } else if (first.isString()) {

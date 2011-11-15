@@ -102,7 +102,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return parent == null || parent.getType() != Token.SCRIPT ||
+      return parent == null || !parent.isScript() ||
           !t.getInput().isExtern();
     }
 
@@ -199,7 +199,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
       // We only consider programmer-defined constructors that are
       // global variables, or are defined on global variables.
-      if (nameNode.getType() != Token.NAME) {
+      if (!nameNode.isName()) {
         return;
       }
 

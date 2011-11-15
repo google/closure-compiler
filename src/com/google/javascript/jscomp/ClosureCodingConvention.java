@@ -311,7 +311,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     Node objectNode = typeNode.getNext();
-    if (objectNode.getType() != Token.OBJECTLIT) {
+    if (!objectNode.isObjectLit()) {
       // TODO(johnlenz): The coding convention should not be performing checks.
       t.getCompiler().report(JSError.make(t.getSourceName(), callNode,
                                           OBJECTLIT_EXPECTED));
@@ -368,7 +368,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     // It would be nice to be able to identify a fn.bind call
     // but that requires knowing the type of "fn".
 
-    if (n.getType() != Token.CALL) {
+    if (!n.isCall()) {
       return null;
     }
 

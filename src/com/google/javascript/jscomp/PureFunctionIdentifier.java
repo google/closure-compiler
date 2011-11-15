@@ -401,7 +401,7 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       if (!NodeUtil.nodeTypeMayHaveSideEffects(node)
-          && node.getType() != Token.RETURN) {
+          && !node.isReturn()) {
         return;
       }
 
@@ -796,7 +796,7 @@ class PureFunctionIdentifier implements CompilerPass {
       if (callee.mutatesThis()) {
         // Side effects only propagate via regular calls.
         // Calling a constructor that modifies "this" has no side effects.
-        if (callSite.getType() != Token.NEW) {
+        if (!callSite.isNew()) {
           Node objectNode = getCallThisObject(callSite);
           if (objectNode != null && objectNode.isName()
               && !isCallOrApply(callSite)) {

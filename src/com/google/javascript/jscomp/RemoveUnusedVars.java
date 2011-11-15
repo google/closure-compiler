@@ -535,7 +535,7 @@ class RemoveUnusedVars
             } else {
               // replace the node in the arg with 0
               if (!NodeUtil.mayHaveSideEffects(arg, compiler)
-                  && (arg.getType() != Token.NUMBER || arg.getDouble() != 0)) {
+                  && (!arg.isNumber() || arg.getDouble() != 0)) {
                 toReplaceWithZero.add(arg);
               }
             }
@@ -898,7 +898,7 @@ class RemoveUnusedVars
       this.isPropertyAssign = isPropertyAssign;
 
       this.mayHaveSecondarySideEffects =
-          assignNode.getParent().getType() != Token.EXPR_RESULT ||
+          !assignNode.getParent().isExprResult() ||
           NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
           NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
     }
@@ -945,7 +945,7 @@ class RemoveUnusedVars
 
         // Aggregate any expressions in GETELEMs.
         for (Node current = assignNode.getFirstChild();
-             current.getType() != Token.NAME;
+             !current.isName();
              current = current.getFirstChild()) {
           if (current.isGetElem()) {
             replacement = new Node(Token.COMMA,

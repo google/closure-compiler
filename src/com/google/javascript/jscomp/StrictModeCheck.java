@@ -183,7 +183,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
       if (!noCajaChecks && key.getString().endsWith("__")) {
         t.report(key, ILLEGAL_NAME);
       }
-      if (key.getType() != Token.SETTER_DEF) {
+      if (!key.isSetterDef()) {
         // normal property and getter cases
         if (getters.contains(key.getString())) {
           t.report(key, DUPLICATE_OBJECT_KEY);
@@ -191,7 +191,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
           getters.add(key.getString());
         }
       }
-      if (key.getType() != Token.GETTER_DEF) {
+      if (!key.isGetterDef()) {
         // normal property and setter cases
         if (setters.contains(key.getString())) {
           t.report(key, DUPLICATE_OBJECT_KEY);

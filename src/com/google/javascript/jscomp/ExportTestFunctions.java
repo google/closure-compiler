@@ -78,7 +78,7 @@ class ExportTestFunctions implements CompilerPass {
           }
         }
       } else if (NodeUtil.isExprAssign(parent) &&
-            n.getLastChild().getType() != Token.ASSIGN) {
+            !n.getLastChild().isAssign()) {
         // Check for a test method assignment.
         Node grandparent = parent.getParent();
         if (grandparent != null && grandparent.isScript()) {
@@ -102,7 +102,7 @@ class ExportTestFunctions implements CompilerPass {
      * @param node
      */
     private boolean isVarDeclaredFunction(Node node) {
-      if (node.getType() != Token.VAR) {
+      if (!node.isVar()) {
         return false;
       }
       Node grandchild = node.getFirstChild().getFirstChild();

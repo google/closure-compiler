@@ -28,8 +28,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollect
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -482,7 +480,7 @@ class InlineVariables implements CompilerPass {
       }
 
       // Determine if we should really inline a String or not.
-      return value.getType() != Token.STRING ||
+      return !value.isString() ||
           isStringWorthInlining(var, refInfo.references);
     }
 
@@ -532,7 +530,7 @@ class InlineVariables implements CompilerPass {
       // VAR declarations and EXPR_RESULT don't need the value, but other
       // ASSIGN expressions parents do.
       if (declaration != initialization &&
-          initialization.getGrandparent().getType() != Token.EXPR_RESULT) {
+          !initialization.getGrandparent().isExprResult()) {
         return false;
       }
 
@@ -631,7 +629,7 @@ class InlineVariables implements CompilerPass {
      */
     private boolean isValidDeclaration(Reference declaration) {
       return (declaration.getParent().isVar()
-          && declaration.getGrandparent().getType() != Token.FOR)
+          && !declaration.getGrandparent().isFor())
           || NodeUtil.isFunctionDeclaration(declaration.getParent());
     }
 
@@ -699,7 +697,7 @@ class InlineVariables implements CompilerPass {
 
         boolean isImmutableValueWorthInlining =
             NodeUtil.isImmutableValue(value) &&
-            (value.getType() != Token.STRING ||
+            (!value.isString() ||
                 isStringWorthInlining(v, refInfo.references));
         boolean isInlinableThisAlias =
             value.isThis() &&

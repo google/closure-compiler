@@ -183,7 +183,7 @@ class InlineObjectLiterals implements CompilerPass {
         }
 
         // We're looking for object literal assignments only.
-        if (val.getType() != Token.OBJECTLIT) {
+        if (!val.isObjectLit()) {
           return false;
         }
 

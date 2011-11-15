@@ -202,7 +202,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       // Bail on anything but argument[c] access where c is a constant.
       // TODO(user): We might not need to bail out all the time, there might
       // be more cases that we can cover.
-      if (getElem.getType() != Token.GETELEM) {
+      if (!getElem.isGetElem()) {
         return false;
       }
 
@@ -210,7 +210,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
       // We have something like arguments[x] where x is not a constant. That
       // means at least one of the access is not known.
-      if (index.getType() != Token.NUMBER) {
+      if (!index.isNumber()) {
         // TODO(user): Its possible not to give up just yet. The type
         // inference did a 'semi value propagation'. If we know that string
         // is never a subclass of the type of the index. We'd know that
@@ -259,7 +259,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       Node index = ref.getNext();
 
       // Skip if it is unknown.
-      if (index.getType() != Token.NUMBER) {
+      if (!index.isNumber()) {
         continue;
       }
       int value = (int) index.getDouble();

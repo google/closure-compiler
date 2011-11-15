@@ -960,7 +960,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    */
   static Node getExceptionHandler(Node n) {
     for (Node cur = n;
-        cur.getType() != Token.SCRIPT && cur.getType() != Token.FUNCTION;
+        !cur.isScript() && !cur.isFunction();
         cur = cur.getParent()) {
       Node catchNode = getCatchHandlerForBlock(cur);
       if (catchNode != null) {

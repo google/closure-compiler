@@ -582,8 +582,8 @@ class CollapseProperties implements CompilerPass {
 
       Node current = gramps;
       Node currentParent = gramps.getParent();
-      for (; currentParent.getType() != Token.SCRIPT &&
-             currentParent.getType() != Token.BLOCK;
+      for (; !currentParent.isScript() &&
+             !currentParent.isBlock();
            current = currentParent,
            currentParent = currentParent.getParent()) {}
 
@@ -845,7 +845,7 @@ class CollapseProperties implements CompilerPass {
       // this object literal's child names wouldn't be collapsible.) The only
       // reason that we don't eliminate them entirely is the off chance that
       // their values are expressions that have side effects.
-      boolean isJsIdentifier = key.getType() != Token.NUMBER &&
+      boolean isJsIdentifier = !key.isNumber() &&
                                TokenStream.isJSIdentifier(key.getString());
       String propName = isJsIdentifier ?
           key.getString() : String.valueOf(++arbitraryNameCounter);

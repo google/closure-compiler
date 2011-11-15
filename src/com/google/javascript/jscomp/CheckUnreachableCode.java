@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
@@ -60,7 +59,7 @@ class CheckUnreachableCode implements ScopedCallback {
       // be executed early) or some rhino bug.
       if (n.getLineno() != -1 &&
           // Allow spurious semi-colons and spurious breaks.
-          n.getType() != Token.EMPTY && n.getType() != Token.BREAK) {
+          !n.isEmpty() && !n.isBreak()) {
         compiler.report(t.makeError(n, level, UNREACHABLE_CODE));
         // From now on, we are going to assume the user fixed the error and not
         // give more warning related to code section reachable from this node.

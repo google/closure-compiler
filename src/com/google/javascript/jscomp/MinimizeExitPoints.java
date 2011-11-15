@@ -156,7 +156,7 @@ class MinimizeExitPoints
     // TODO(johnlenz): The last case of SWITCH statement?
 
     // The rest assumes a block with at least one child, bail on anything else.
-    if (n.getType() != Token.BLOCK || n.getLastChild() == null) {
+    if (!n.isBlock() || n.getLastChild() == null) {
       return;
     }
 

@@ -295,7 +295,7 @@ class LiveVariablesAnalysis extends
   }
 
   private boolean isArgumentsName(Node n) {
-    if (n.getType() != Token.NAME ||
+    if (!n.isName()||
         !n.getString().equals(ARGUMENT_ARRAY_ALIAS) ||
         jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false)) {
       return false;

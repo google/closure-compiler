@@ -236,12 +236,12 @@ class InstrumentFunctions implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return n.getType() != Token.FUNCTION;
+      return !n.isFunction();
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.RETURN) {
+      if (!n.isReturn()) {
         return;
       }
 
@@ -276,7 +276,7 @@ class InstrumentFunctions implements CompilerPass {
       for (DiGraphNode<Node, Branch> pred :
         cfg.getDirectedPredNodes(returnPathsParent)) {
         Node n = pred.getValue();
-        if (n.getType() != Token.RETURN) {
+        if (!n.isReturn()) {
           return false;
         }
       }
@@ -287,7 +287,7 @@ class InstrumentFunctions implements CompilerPass {
   private class InstrumentCallback extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.FUNCTION) {
+      if (!n.isFunction()) {
         return;
       }
 

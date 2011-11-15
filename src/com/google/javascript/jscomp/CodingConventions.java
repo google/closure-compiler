@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -389,7 +388,7 @@ public class CodingConventions {
       // It would be nice to be able to identify a fn.bind call
       // but that requires knowing the type of "fn".
 
-      if (n.getType() != Token.CALL) {
+      if (!n.isCall()) {
         return null;
       }
 

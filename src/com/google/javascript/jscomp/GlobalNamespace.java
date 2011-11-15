@@ -462,8 +462,7 @@ class GlobalNamespace
           //   NAME (gramps)
           //     OBJLIT (parent)
           //       STRING (n)
-          if (greatGramps == null ||
-              greatGramps.getType() != Token.VAR) {
+          if (greatGramps == null || !greatGramps.isVar()) {
             return null;
           }
           name = gramps.getString();

@@ -25,8 +25,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -101,7 +99,7 @@ class GlobalVarReferenceMap implements ReferenceMap {
    */
   void updateGlobalVarReferences(Map<Var, ReferenceCollection>
       refMapPatch, Node root) {
-    if (refMap == null || root.getType() != Token.SCRIPT) {
+    if (refMap == null || !root.isScript()) {
       resetGlobalVarReferences(refMapPatch);
       return;
     }

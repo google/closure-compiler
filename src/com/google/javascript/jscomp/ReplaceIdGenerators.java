@@ -21,8 +21,6 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -128,7 +126,7 @@ class ReplaceIdGenerators implements CompilerPass {
   private class ReplaceGenerators extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getType() != Token.CALL) {
+      if (!n.isCall()) {
         return;
       }
 

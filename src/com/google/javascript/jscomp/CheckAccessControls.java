@@ -365,7 +365,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     Node parent = getprop.getParent();
     boolean isDelete = parent.getType() == Token.DELPROP;
     if (!(NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == getprop)
-        && (parent.getType() != Token.INC) && (parent.getType() != Token.DEC)
+        && !parent.isInc() && !parent.isDec()
         && !isDelete) {
       return;
     }
@@ -533,7 +533,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * We may want to revisit this if we decide to make the restrictions tighter.
    */
   private static boolean isValidPrivateConstructorAccess(Node parent) {
-    return parent.getType() != Token.NEW;
+    return !parent.isNew();
   }
 
   /**

@@ -473,7 +473,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.PARAM_LIST:
         // If this is under a FUNCTION node, it is a parameter list and can be
         // ignored here.
-        if (parent.getType() != Token.FUNCTION) {
+        if (!parent.isFunction()) {
           ensureTyped(t, n, getJSType(n.getFirstChild()));
         } else {
           typeable = false;
@@ -1834,7 +1834,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void ensureTyped(NodeTraversal t, Node n, JSType type) {
     // Make sure FUNCTION nodes always get function type.
-    Preconditions.checkState(n.getType() != Token.FUNCTION ||
+    Preconditions.checkState(!n.isFunction() ||
             type.isFunctionType() ||
             type.isUnknownType());
     JSDocInfo info = n.getJSDocInfo();

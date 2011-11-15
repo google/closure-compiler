@@ -388,7 +388,7 @@ class TypeInference
         scope = traverseCatch(n, scope);
         break;
     }
-    if (n.getType() != Token.FUNCTION) {
+    if (!n.isFunction()) {
       JSDocInfo info = n.getJSDocInfo();
       if (info != null && info.hasType()) {
         JSType castType = info.getType().evaluate(syntacticScope, registry);

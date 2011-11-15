@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Traversal callback that finds method invocations of the form
@@ -38,20 +37,20 @@ abstract class InvocationsCallback extends AbstractPostOrderCallback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() != Token.CALL) {
+    if (!n.isCall()) {
       return;
     }
 
     Node function = n.getFirstChild();
 
-    if (function.getType() != Token.GETPROP) {
+    if (!function.isGetProp()) {
       return;
     }
 
     Node nameNode = function.getFirstChild().getNext();
 
     // Don't care about numerical or variable indexes
-    if (nameNode.getType() != Token.STRING) {
+    if (!nameNode.isString()) {
       return;
     }
 

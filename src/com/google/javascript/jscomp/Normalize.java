@@ -518,7 +518,7 @@ class Normalize implements CompilerPass {
                 insertBeforeParent.addChildBefore(newStatement, insertBefore);
                 reportCodeChange("FOR-IN var declaration");
               }
-            } else if (c.getFirstChild().getType() != Token.EMPTY) {
+            } else if (!c.getFirstChild().isEmpty()) {
               Node init = c.getFirstChild();
               Node empty = new Node(Token.EMPTY);
               empty.copyInformationFrom(c);

@@ -113,7 +113,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
             // VAR Nodes are normalized to have only one child.
             Node declParent = decl.node.getParent();
             Preconditions.checkState(
-                declParent.getType() != Token.VAR || declParent.hasOneChild(),
+                !declParent.isVar() || declParent.hasOneChild(),
                 "AST not normalized.");
 
             // Remove it
@@ -277,7 +277,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() != Token.NAME) {
+    if (!n.isName()) {
       return;
     }
 

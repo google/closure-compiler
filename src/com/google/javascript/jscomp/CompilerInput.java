@@ -24,8 +24,6 @@ import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -261,8 +259,8 @@ public class CompilerInput
         }
         return;
       } else if (parent != null &&
-          parent.getType() != Token.EXPR_RESULT &&
-          parent.getType() != Token.SCRIPT) {
+          !parent.isExprResult() &&
+          !parent.isScript()) {
         return;
       }
 

@@ -17,8 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,8 +56,8 @@ class CheckMissingGetCssName
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isString() &&
-        parent.getType() != Token.GETPROP &&
-        parent.getType() != Token.REGEXP &&
+        !parent.isGetProp() &&
+        !parent.isRegExp() &&
         !NodeUtil.isObjectLitKey(n, parent)) {
       String s = n.getString();
 

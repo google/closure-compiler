@@ -140,7 +140,7 @@ class CollapseVariableDeclarations implements CompilerPass {
       }
 
       // Only care about var nodes
-      if (n.getType() != Token.VAR && !canBeRedeclared(n, t.getScope())) return;
+      if (!n.isVar() && !canBeRedeclared(n, t.getScope())) return;
 
       // If we've already looked at this node, skip it
       if (nodesToCollapse.contains(n)) return;

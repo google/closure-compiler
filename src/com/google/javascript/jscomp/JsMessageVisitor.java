@@ -184,7 +184,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         isVar = false;
 
         Node getProp = node.getFirstChild();
-        if (getProp.getType() != Token.GETPROP) {
+        if (!getProp.isGetProp()) {
           return;
         }
 
@@ -518,7 +518,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         case Token.BLOCK:
           // Build the message's value by examining the return statement
           Node returnNode = fnChild.getFirstChild();
-          if (returnNode.getType() != Token.RETURN) {
+          if (!returnNode.isReturn()) {
             throw new MalformedException("RETURN node expected; found: "
                 + getReadableTokenName(returnNode), returnNode);
           }
@@ -601,7 +601,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   private void extractFromCallNode(Builder builder,
       Node node) throws MalformedException {
     // Check the function being called
-    if (node.getType() != Token.CALL) {
+    if (!node.isCall()) {
       throw new MalformedException(
           "Message must be initialized using " + MSG_FUNCTION_NAME +
           " function.", node);
@@ -627,12 +627,12 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
     Set<String> phNames = Sets.newHashSet();
     if (objLitNode != null) {
       // Register the placeholder names
-      if (objLitNode.getType() != Token.OBJECTLIT) {
+      if (!objLitNode.isObjectLit()) {
         throw new MalformedException("OBJLIT node expected", objLitNode);
       }
       for (Node aNode = objLitNode.getFirstChild(); aNode != null;
            aNode = aNode.getNext()) {
-        if (aNode.getType() != Token.STRING) {
+        if (!aNode.isString()) {
           throw new MalformedException("STRING node expected as OBJLIT key",
               aNode);
         }

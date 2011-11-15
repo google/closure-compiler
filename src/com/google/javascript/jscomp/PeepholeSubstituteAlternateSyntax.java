@@ -53,7 +53,7 @@ class PeepholeSubstituteAlternateSyntax
       = new Predicate<Node>() {
     @Override
     public boolean apply(Node input) {
-      return input.getType() != Token.FUNCTION;
+      return !input.isFunction();
     }
   };
 
@@ -132,7 +132,7 @@ class PeepholeSubstituteAlternateSyntax
 
       case Token.NEW:
         node = tryFoldStandardConstructors(node);
-        if (node.getType() != Token.CALL) {
+        if (!node.isCall()) {
           return node;
         }
         // Fall through on purpose because tryFoldStandardConstructors() may
@@ -272,7 +272,7 @@ class PeepholeSubstituteAlternateSyntax
     Node right = n.getLastChild();
 
     if (parent.isExprResult()
-        && parent.getParent().getType() != Token.LABEL) {
+        && !parent.getParent().isLabel()) {
       // split comma
       n.detachChildren();
       // Replace the original expression with the left operand.
@@ -1147,8 +1147,8 @@ class PeepholeSubstituteAlternateSyntax
               // Check special case when such transformation cannot reduce
               // due to the added ()
               // It only occurs when both of expressions are not NOT expressions
-              if (leftParent.getType() != Token.NOT
-                  && rightParent.getType() != Token.NOT) {
+              if (!leftParent.isNot()
+                  && !rightParent.isNot()) {
                 // If an expression has higher precendence than && or ||,
                 // but lower precedence than NOT, an additional () is needed
                 // Thus we do not preceed
@@ -1515,7 +1515,7 @@ class PeepholeSubstituteAlternateSyntax
   private Node tryMinimizeArrayLiteral(Node n) {
     boolean allStrings = true;
     for (Node cur = n.getFirstChild(); cur != null; cur = cur.getNext()) {
-      if (cur.getType() != Token.STRING) {
+      if (!cur.isString()) {
         allStrings = false;
       }
     }

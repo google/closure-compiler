@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.List;
@@ -71,9 +70,9 @@ class ChainCalls implements CompilerPass {
 
       for (DiGraphEdge<Node, Branch> s : cfg.getImplicitReturn().getInEdges()) {
         Node exitNode = s.getSource().getValue();
-        if (exitNode.getType() != Token.RETURN ||
+        if (!exitNode.isReturn() ||
             exitNode.getFirstChild() == null ||
-            exitNode.getFirstChild().getType() != Token.THIS) {
+            !exitNode.getFirstChild().isThis()) {
           badFunctionNodes.add(t.getScopeRoot());
           return;
         }
@@ -109,12 +108,12 @@ class ChainCalls implements CompilerPass {
       }
 
       Node callNode = n.getFirstChild();
-      if (callNode.getType() != Token.CALL) {
+      if (!callNode.isCall()) {
         return;
       }
 
       Node getPropNode = callNode.getFirstChild();
-      if (getPropNode.getType() != Token.GETPROP) {
+      if (!getPropNode.isGetProp()) {
         return;
       }
 
@@ -142,18 +141,17 @@ class ChainCalls implements CompilerPass {
       }
 
       Node nextNode = n.getNext();
-      if (nextNode == null ||
-          nextNode.getType() != Token.EXPR_RESULT) {
+      if (nextNode == null || !nextNode.isExprResult()) {
         return;
       }
 
       Node nextCallNode = nextNode.getFirstChild();
-      if (nextCallNode.getType() != Token.CALL) {
+      if (!nextCallNode.isCall()) {
         return;
       }
 
       Node nextGetPropNode = nextCallNode.getFirstChild();
-      if (nextGetPropNode.getType() != Token.GETPROP) {
+      if (!nextGetPropNode.isGetProp()) {
         return;
       }
 

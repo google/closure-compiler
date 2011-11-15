@@ -2230,6 +2230,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.BLOCK;
   }
 
+  public boolean isBreak() {
+    return this.getType() == Token.BREAK;
+  }
+
   public boolean isCall() {
     return this.getType() == Token.CALL;
   }
@@ -2244,6 +2248,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isComma() {
     return this.getType() == Token.COMMA;
+  }
+
+  public boolean isContinue() {
+    return this.getType() == Token.CONTINUE;
   }
 
   public boolean isDec() {
