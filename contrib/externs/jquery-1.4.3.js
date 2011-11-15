@@ -542,6 +542,7 @@ jQueryObject.prototype.click = function(arg1, handler) {};
 /**
  * @param {boolean=} withDataAndEvents
  * @return {jQueryObject}
+ * @suppress {checkTypes} http://code.google.com/p/closure-compiler/issues/detail?id=583
  */
 jQueryObject.prototype.clone = function(withDataAndEvents) {};
 

@@ -288,6 +288,7 @@ jQuery.prototype.click = function(arg1, handler) {};
  * @param {boolean=} withDataAndEvents
  * @param {boolean=} deepWithDataAndEvents
  * @return {jQuery}
+ * @suppress {checkTypes} http://code.google.com/p/closure-compiler/issues/detail?id=583
  */
 jQuery.prototype.clone = function(withDataAndEvents, deepWithDataAndEvents) {};
 
