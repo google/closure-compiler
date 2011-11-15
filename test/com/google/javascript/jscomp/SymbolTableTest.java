@@ -258,6 +258,16 @@ public class SymbolTableTest extends TestCase {
     assertEquals(8, Iterables.size(table.getReferences(goog)));
   }
 
+  public void testGoogRequireReferences2() throws Exception {
+    options.brokenClosureRequiresLevel = CheckLevel.OFF;
+    SymbolTable table = createSymbolTable(
+        "foo.bar = function(){};  // definition\n"
+        + "goog.require('foo.bar')\n");
+    Symbol fooBar = getGlobalVar(table, "foo.bar");
+    assertNotNull(fooBar);
+    assertEquals(2, Iterables.size(table.getReferences(fooBar)));
+  }
+
   public void testGlobalVarInExterns() throws Exception {
     SymbolTable table = createSymbolTable("customExternFn(1);");
     Symbol fn = getGlobalVar(table, "customExternFn");
