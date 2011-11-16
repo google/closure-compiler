@@ -245,7 +245,9 @@ public class ScriptRuntime {
      * the same as 'escape.'
      */
     public static String escapeString(String s, char escapeQuote) {
-        if (!(escapeQuote == '"' || escapeQuote == '\'')) Kit.codeBug();
+        if (!(escapeQuote == '"' || escapeQuote == '\'')) {
+          throw new IllegalStateException("unexpected quote char:" + escapeQuote);
+        }
         StringBuffer sb = null;
 
         for(int i = 0, L = s.length(); i != L; ++i) {

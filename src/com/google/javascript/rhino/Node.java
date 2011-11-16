@@ -140,9 +140,8 @@ public class Node implements Cloneable, Serializable {
         case INPUT_ID:  return "input_id";
         case LENGTH:    return "length";
         default:
-          Kit.codeBug();
+          throw new IllegalStateException("unexpect prop id " + propType);
       }
-      return null;
   }
 
   private static class NumberNode extends Node {
@@ -814,7 +813,7 @@ public class Node implements Cloneable, Serializable {
   public int getExistingIntProp(int propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
-      Kit.codeBug();
+      throw new IllegalStateException("missing prop: " + propType);
     }
     return item.getIntValue();
   }
@@ -2180,7 +2179,7 @@ public class Node implements Cloneable, Serializable {
    * This should only be called for STRING nodes children of OBJECTLIT.
    */
   public void setQuotedString() {
-    Kit.codeBug();
+    throw new IllegalStateException("not a StringNode");
   }
 
   static class NodeMismatch {
