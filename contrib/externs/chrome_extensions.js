@@ -371,6 +371,20 @@ chrome.bookmarks.get = function(idOrIdList, callback) {};
 chrome.bookmarks.getChildren = function(id, callback) {};
 
 /**
+ * @param {number} numberOfItems The number of items to return.
+ * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ *     callback function which accepts an array of BookmarkTreeNode.
+ */
+chrome.bookmarks.getRecent = function(numberOfItems, callback) {};
+
+/**
+ * @param {string} id The ID of the root of the subtree to retrieve.
+ * @param {function(Array.<BookmarkTreeNode>) : void} callback The
+ *     callback function which accepts an array of BookmarkTreeNode.
+ */
+chrome.bookmarks.getSubTree = function(id, callback) {};
+
+/**
  * @param {function(Array.<BookmarkTreeNode>) : void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
  * @return {Array.<BookmarkTreeNode>}
