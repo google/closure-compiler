@@ -1475,7 +1475,7 @@ public final class NodeUtil {
       case Token.ASSIGN_MOD:
         return Token.MOD;
     }
-    throw new IllegalArgumentException("Not an assiment op:" + n);
+    throw new IllegalArgumentException("Not an assignment op:" + n);
   }
 
   static boolean isExpressionNode(Node n) {
