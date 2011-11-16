@@ -99,7 +99,7 @@ public class PeepholeCollectPropertyAssignments
   }
 
   boolean isInterestingValue(Node n) {
-    return n.isObjectLit() || n.getType() == Token.ARRAYLIT;
+    return n.isObjectLit() || n.isArrayLit();
   }
 
   private boolean isPropertyAssignmentToName(Node propertyCandidate) {

@@ -454,7 +454,7 @@ final class NameAnalyzer implements CompilerPass {
     InstanceOfCheckNode(JsName name, Node node, Node parent, Node gramps) {
       super(name, node, parent, gramps);
       Preconditions.checkState(node.isQualifiedName());
-      Preconditions.checkState(parent.getType() == Token.INSTANCEOF);
+      Preconditions.checkState(parent.isInstanceOf());
     }
 
     @Override
@@ -799,8 +799,8 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if ((parent.isIf() ||
-           parent.getType() == Token.WHILE ||
-           parent.getType() == Token.WITH ||
+           parent.isWhile() ||
+           parent.isWith() ||
            parent.isSwitch() ||
            parent.isCase()) &&
           parent.getFirstChild() == n) {
@@ -846,7 +846,7 @@ final class NameAnalyzer implements CompilerPass {
         return;
       }
 
-      if (parent.getType() == Token.INSTANCEOF &&
+      if (parent.isInstanceOf() &&
           parent.getLastChild() == n &&
           // Don't cover GETELEMs with a global root node.
           n.isQualifiedName()) {

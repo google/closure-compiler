@@ -286,7 +286,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * typeof(6) --> "number"
    */
   private Node tryFoldTypeof(Node originalTypeofNode) {
-    Preconditions.checkArgument(originalTypeofNode.getType() == Token.TYPEOF);
+    Preconditions.checkArgument(originalTypeofNode.isTypeOf());
 
     Node argumentNode = originalTypeofNode.getFirstChild();
     if (argumentNode == null || !NodeUtil.isLiteralValue(argumentNode, true)) {
@@ -435,7 +435,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * or {@code false}.
    */
   private Node tryFoldInstanceof(Node n, Node left, Node right) {
-    Preconditions.checkArgument(n.getType() == Token.INSTANCEOF);
+    Preconditions.checkArgument(n.isInstanceOf());
 
     // TODO(johnlenz) Use type information if available to fold
     // instanceof.
@@ -1355,7 +1355,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return tryFoldObjectPropAccess(n, left, right);
     }
 
-    if (left.getType() == Token.ARRAYLIT) {
+    if (left.isArrayLit()) {
       return tryFoldArrayAccess(n, left, right);
     }
     return n;

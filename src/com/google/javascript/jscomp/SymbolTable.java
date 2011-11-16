@@ -29,7 +29,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -1262,8 +1261,7 @@ public final class SymbolTable
         }
 
         maybeDefineTypedReference(n, n.getLastChild().getString(), owner);
-      } else if (NodeUtil.isObjectLitKey(n, parent) &&
-          n.getType() == Token.STRING) {
+      } else if (NodeUtil.isObjectLitKey(n, parent) && n.isString()) {
         JSType owner = parent.getJSType();
         if (owner == null || owner.isUnknownType()) {
           tryDefineLexicalPropRef(NodeUtil.getBestLValueName(n), n);

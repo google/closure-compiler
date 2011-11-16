@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -235,7 +234,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     if ("goog.addDependency".equals(callName.getQualifiedName()) &&
         n.getChildCount() >= 3) {
       Node typeArray = callName.getNext().getNext();
-      if (typeArray.getType() == Token.ARRAYLIT) {
+      if (typeArray.isArrayLit()) {
         List<String> typeNames = Lists.newArrayList();
         for (Node name = typeArray.getFirstChild(); name != null;
              name = name.getNext()) {

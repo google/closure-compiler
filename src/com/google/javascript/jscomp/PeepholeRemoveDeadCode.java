@@ -753,7 +753,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Removes WHILEs that always evaluate to false.
    */
   Node tryFoldWhile(Node n) {
-    Preconditions.checkArgument(n.getType() == Token.WHILE);
+    Preconditions.checkArgument(n.isWhile());
     Node cond = NodeUtil.getConditionExpression(n);
     if (NodeUtil.getPureBooleanValue(cond) != TernaryValue.FALSE) {
       return n;

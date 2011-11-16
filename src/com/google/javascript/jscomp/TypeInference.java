@@ -708,7 +708,7 @@ class TypeInference
     }
     n.setJSType(type);
 
-    if (n.getType() == Token.ASSIGN_ADD) {
+    if (n.isAssignAdd()) {
       updateScopeForTypeChange(scope, left, leftType, type);
     }
 

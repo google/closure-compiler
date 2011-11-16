@@ -410,8 +410,7 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
               CrossModuleMethodMotion.STUB_METHOD_NAME) ||
            functionName.getString().equals(
               CrossModuleMethodMotion.UNSTUB_METHOD_NAME));
-    } else if (n.getType() == Token.ARRAYLIT ||
-        n.isObjectLit()) {
+    } else if (n.isArrayLit() || n.isObjectLit()) {
       boolean isObjectLit = n.isObjectLit();
       for (Node child = n.getFirstChild(); child != null;
            child = child.getNext()) {

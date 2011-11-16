@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * {@link CheckDebuggerStatement} checks for the presence of the "debugger"
@@ -49,7 +48,7 @@ class CheckDebuggerStatement extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() == Token.DEBUGGER) {
+    if (n.isDebugger()) {
       t.report(n, DEBUGGER_STATEMENT_PRESENT);
     }
   }

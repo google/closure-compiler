@@ -604,7 +604,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         TernaryValue result =
             leftTypeRestricted.testForEquality(rightTypeRestricted);
         if (result != TernaryValue.UNKNOWN) {
-          if (n.getType() == Token.NE) {
+          if (n.isNE()) {
             result = result.not();
           }
           report(t, n, DETERMINISTIC_TEST, leftType.toString(),

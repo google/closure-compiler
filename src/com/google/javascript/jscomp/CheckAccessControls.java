@@ -363,7 +363,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       Node getprop) {
     // Check whether the property is modified
     Node parent = getprop.getParent();
-    boolean isDelete = parent.getType() == Token.DELPROP;
+    boolean isDelete = parent.isDelProp();
     if (!(NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == getprop)
         && !parent.isInc() && !parent.isDec()
         && !isDelete) {

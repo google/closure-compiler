@@ -2226,6 +2226,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.ASSIGN;
   }
 
+  public boolean isAssignAdd() {
+    return this.getType() == Token.ASSIGN_ADD;
+  }
+
   public boolean isBlock() {
     return this.getType() == Token.BLOCK;
   }
@@ -2254,12 +2258,20 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.CONTINUE;
   }
 
+  public boolean isDebugger() {
+    return this.getType() == Token.DEBUGGER;
+  }
+
   public boolean isDec() {
     return this.getType() == Token.DEC;
   }
 
   public boolean isDefaultCase() {
     return this.getType() == Token.DEFAULT_CASE;
+  }
+
+  public boolean isDelProp() {
+    return this.getType() == Token.DELPROP;
   }
 
   public boolean isDo() {
@@ -2306,8 +2318,16 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.IF;
   }
 
+  public boolean isIn() {
+    return this.getType() == Token.IN;
+  }
+
   public boolean isInc() {
     return this.getType() == Token.INC;
+  }
+
+  public boolean isInstanceOf() {
+    return this.getType() == Token.INSTANCEOF;
   }
 
   public boolean isLabel() {
@@ -2320,6 +2340,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isName() {
     return this.getType() == Token.NAME;
+  }
+
+  public boolean isNE() {
+    return this.getType() == Token.NE;
   }
 
   public boolean isNew() {
@@ -2390,11 +2414,23 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.TRY;
   }
 
+  public boolean isTypeOf() {
+    return this.getType() == Token.TYPEOF;
+  }
+
   public boolean isVar() {
     return this.getType() == Token.VAR;
   }
 
   public boolean isVoid() {
     return this.getType() == Token.VOID;
+  }
+
+  public boolean isWhile() {
+    return this.getType() == Token.WHILE;
+  }
+
+  public boolean isWith() {
+    return this.getType() == Token.WITH;
   }
 }

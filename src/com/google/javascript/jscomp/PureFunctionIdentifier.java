@@ -539,7 +539,7 @@ class PureFunctionIdentifier implements CompilerPass {
           // value (x++ results in a number, for instance)
           Preconditions.checkState(
               NodeUtil.isAssignmentOp(op)
-              || isIncDec(op) || op.getType() == Token.DELPROP);
+              || isIncDec(op) || op.isDelProp());
           if (rhs != null
               && op.isAssign()
               && !NodeUtil.evaluatesToLocalValue(rhs)) {

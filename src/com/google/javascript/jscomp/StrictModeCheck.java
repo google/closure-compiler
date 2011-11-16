@@ -100,7 +100,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
       }
     } else if (n.isAssign()) {
       checkAssignment(t, n);
-    } else if (n.getType() == Token.DELPROP) {
+    } else if (n.isDelProp()) {
       checkDelete(t, n);
     } else if (n.isObjectLit()) {
       checkObjectLiteral(t, n);

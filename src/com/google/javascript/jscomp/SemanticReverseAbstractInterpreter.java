@@ -143,10 +143,10 @@ class SemanticReverseAbstractInterpreter
 
         Node typeOfNode = null;
         Node stringNode = null;
-        if (left.getType() == Token.TYPEOF && right.isString()) {
+        if (left.isTypeOf() && right.isString()) {
           typeOfNode = left;
           stringNode = right;
-        } else if (right.getType() == Token.TYPEOF &&
+        } else if (right.isTypeOf() &&
                    left.isString()) {
           typeOfNode = right;
           stringNode = left;

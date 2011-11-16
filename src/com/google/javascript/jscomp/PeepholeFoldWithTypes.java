@@ -71,7 +71,7 @@ class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
    * PeepholeFoldConstants.
    */
   private Node tryFoldTypeof(Node typeofNode) {
-    Preconditions.checkArgument(typeofNode.getType() == Token.TYPEOF);
+    Preconditions.checkArgument(typeofNode.isTypeOf());
     Preconditions.checkArgument(typeofNode.getFirstChild() != null);
 
     Node argumentNode = typeofNode.getFirstChild();

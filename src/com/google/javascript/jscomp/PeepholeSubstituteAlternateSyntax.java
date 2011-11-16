@@ -171,9 +171,9 @@ class PeepholeSubstituteAlternateSyntax
 
     Node block = n.getLastChild();
     Node maybeIf = block.getFirstChild();
-    if (maybeIf != null && maybeIf.getType() == Token.IF) {
+    if (maybeIf != null && maybeIf.isIf()) {
       Node maybeBreak = maybeIf.getChildAtIndex(1).getFirstChild();
-      if (maybeBreak != null && maybeBreak.getType() == Token.BREAK
+      if (maybeBreak != null && maybeBreak.isBreak()
           && !maybeBreak.hasChildren()) {
 
         // Preserve the IF ELSE expression is there is one.
@@ -190,7 +190,7 @@ class PeepholeSubstituteAlternateSyntax
 
         // Ok, join the IF expression with the FOR expression
         Node forCondition = NodeUtil.getConditionExpression(n);
-        if (forCondition.getType() == Token.EMPTY) {
+        if (forCondition.isEmpty()) {
           n.replaceChild(forCondition, fixedIfCondition);
         } else {
           Node replacement = new Node(Token.AND);

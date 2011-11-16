@@ -859,7 +859,7 @@ class CodeGenerator {
   private void addExpr(Node n, int minPrecedence, Context context) {
     if ((NodeUtil.precedence(n.getType()) < minPrecedence) ||
         ((context == Context.IN_FOR_INIT_CLAUSE) &&
-        (n.getType() == Token.IN))){
+        (n.isIn()))){
       add("(");
       add(n, clearContextForNoInOperator(context));
       add(")");

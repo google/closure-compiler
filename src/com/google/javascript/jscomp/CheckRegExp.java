@@ -69,7 +69,7 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
       }
 
     // Check the syntax of regular expression patterns.
-    } else if (n.getType() == Token.REGEXP) {
+    } else if (n.isRegExp()) {
       String pattern = n.getFirstChild().getString();
       String flags = n.getChildCount() == 2
           ? n.getLastChild().getString() : "";
