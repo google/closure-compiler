@@ -189,6 +189,68 @@ TouchEvent.prototype.initTouchEvent = function(type, canBubble, cancelable,
     metaKey, touches, targetTouches, changedTouches, scale, rotation) {};
 
 /**
+ * The GestureEvent class encapsulates information about a multi-touch gesture.
+ *
+ * GestureEvent objects are high-level events that encapsulate the low-level
+ * TouchEvent objects. Both GestureEvent and TouchEvent events are sent during
+ * a multi-touch sequence. Gesture events contain scaling and rotation
+ * information allowing gestures to be combined, if supported by the platform.
+ * If not supported, one gesture ends before another starts. Listen for
+ * GestureEvent events if you want to respond to gestures only, not process
+ * the low-level TouchEvent objects.
+ *
+ * @see http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/GestureEventClassReference/GestureEvent/GestureEvent.html
+ * @extends {UIEvent}
+ * @constructor
+ */
+function GestureEvent() {}
+
+/**
+ * The distance between two fingers since the start of an event as a multiplier
+ * of the initial distance. The initial value is 1.0. If less than 1.0, the
+ * gesture is pinch close (to zoom out). If greater than 1.0, the gesture is
+ * pinch open (to zoom in).
+ * @type {number}
+ */
+GestureEvent.prototype.scale;
+
+/**
+ * The delta rotation since the start of an event, in degrees, where clockwise
+ * is positive and counter-clockwise is negative. The initial value is 0.0.
+ * @type {number}
+ */
+GestureEvent.prototype.rotation;
+
+/**
+ * The target of this gesture.
+ * @type {EventTarget}
+ */
+GestureEvent.prototype.target;
+
+/**
+ * Initializes a newly created GestureEvent object.
+ * @param {string} type
+ * @param {boolean} canBubble
+ * @param {boolean} cancelable
+ * @param {Window} view
+ * @param {number} detail
+ * @param {number} screenX
+ * @param {number} screenY
+ * @param {number} clientX
+ * @param {number} clientY
+ * @param {boolean} ctrlKey
+ * @param {boolean} altKey
+ * @param {boolean} shiftKey
+ * @param {boolean} metaKey
+ * @param {EventTarget} target
+ * @param {number} scale
+ * @param {number} rotation
+ */
+GestureEvent.prototype.initGestureEvent = function(type, canBubble, cancelable,
+    view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
+    metaKey, target, scale, rotation) {};
+
+/**
  * Specifies the JavaScript method to invoke when the system cancels tracking
  * for the touch.
  * @param {Event} e
@@ -215,6 +277,27 @@ Element.prototype.ontouchmove = function(e) {};
  * @param {Event} e
  */
 Element.prototype.ontouchstart = function(e) {};
+
+/**
+ * Specifies the JavaScript method to invoke when a gesture is started by
+ * two or more fingers touching the surface.
+ * @param {Event} e
+ */
+Element.prototype.ongesturestart = function(e) {};
+
+/**
+ * Specifies the JavaScript method to invoke when fingers are moved during a
+ * gesture.
+ * @param {Event} e
+ */
+Element.prototype.ongesturechange = function(e) {};
+
+/**
+ * Specifies the JavaScript method to invoke when a gesture ends (when there are
+ * 0 or 1 fingers touching the surface).
+ * @param {Event} e
+ */
+Element.prototype.ongestureend = function(e) {};
 
 /**
  * Specifies the JavaScript method to invoke when the browser device's
