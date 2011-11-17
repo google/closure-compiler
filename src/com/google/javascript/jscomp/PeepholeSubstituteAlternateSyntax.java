@@ -643,9 +643,10 @@ class PeepholeSubstituteAlternateSyntax
     if (elseBranch == null) {
       if (isFoldableExpressBlock(thenBranch)) {
         Node expr = getBlockExpression(thenBranch);
-        if (isPropertyAssignmentInExpression(expr)) {
+        if (!late && isPropertyAssignmentInExpression(expr)) {
           // Keep opportunities for CollapseProperties such as
           // a.longIdentifier || a.longIdentifier = ... -> var a = ...;
+          // until CollapseProperties has been run.
           return n;
         }
 

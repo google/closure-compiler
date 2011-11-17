@@ -98,6 +98,7 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   /** Check that removing blocks with 1 child works */
   public void testFoldOneChildBlocks() {
+    late = false;
     fold("function f(){if(x)a();x=3}",
         "function f(){x&&a();x=3}");
     fold("function f(){if(x){a()}x=3}",
@@ -278,6 +279,8 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   public void testAndParenthesesCount() {
     fold("function f(){if(x||y)a.foo()}", "function f(){(x||y)&&a.foo()}");
+    fold("function f(){if(x.a)x.a=0}",
+         "function f(){x.a&&(x.a=0)}");
     foldSame("function f(){if(x()||y()){x()||y()}}");
   }
 
