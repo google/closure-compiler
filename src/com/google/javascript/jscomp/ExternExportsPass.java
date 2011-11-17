@@ -22,6 +22,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -199,14 +200,9 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * parameter or return types.
      */
     private Node createExternFunction(Node exportedFunction) {
-      List<Node> externParameters = Lists.newLinkedList();
-      for (Node param :
-          NodeUtil.getFunctionParameters(exportedFunction).children()) {
-        externParameters.add(param.cloneNode());
-      }
-
-      Node externFunction = NodeUtil.newFunctionNode("", externParameters,
-          new Node(Token.BLOCK), -1, -1);
+      Node paramList = NodeUtil.getFunctionParameters(exportedFunction)
+          .cloneTree();
+      Node externFunction = IR.function(IR.name(""), paramList, IR.block());
 
       checkForFunctionsWithUnknownTypes(exportedFunction);
       externFunction.setJSType(exportedFunction.getJSType());

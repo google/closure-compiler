@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -415,22 +416,15 @@ class AliasExternals implements CompilerPass {
     // Function arguments
     String localPropName = getMutatorFor(propName) + "$a";
     String localValueName = getMutatorFor(propName) + "$b";
-    Node hasPropNode = Node.newString(Token.NAME, localPropName);
-    Node propValueNode = Node.newString(Token.NAME, localValueName);
-    List<Node> args = Lists.newArrayList(hasPropNode, propValueNode);
-
-    // Function body
-    Node propNameNode = Node.newString(Token.NAME, localPropName);
-    Node propValue = Node.newString(Token.STRING, propName);
-    Node getProp = new Node(Token.GETPROP, propNameNode, propValue);
-    Node assignFrom = Node.newString(Token.NAME, localValueName);
-    Node assign = new Node(Token.ASSIGN, getProp, assignFrom);
-    Node returnNode = new Node(Token.RETURN, assign);
-    Node functionBody = new Node(Token.BLOCK, returnNode);
-
     // Create the function and append to front of output tree
-    Node fnNode = NodeUtil.newFunctionNode(
-        functionName, args, functionBody, -1, -1);
+    Node fnNode = IR.function(
+        IR.name(functionName),
+        IR.paramList(IR.name(localPropName), IR.name(localValueName)),
+        IR.block(
+            IR.returnNode(
+                IR.assign(
+                    IR.getprop(IR.name(localPropName), IR.string(propName)),
+                    IR.name(localValueName)))));
     root.addChildToFront(fnNode);
 
     compiler.reportCodeChange();

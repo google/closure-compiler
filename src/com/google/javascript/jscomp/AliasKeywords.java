@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -64,7 +65,7 @@ class AliasKeywords implements CompilerPass {
     private void visitNameNode(Node n) {
       if (isAliasDefinition(n)) {
         throw new IllegalStateException(
-            "Existing alias definition for " + Node.tokenToName(n.getType()));
+            "Existing alias definition for " + Token.name(n.getType()));
       }
     }
   }
@@ -213,11 +214,12 @@ class AliasKeywords implements CompilerPass {
    * throw. The function throws the object.
    */
   private static Node createAliasFunctionNode(String aliasName) {
-    Node parameterName = Node.newString(Token.NAME, "jscomp_throw_param");
-    List<Node> parameters = Lists.newArrayList(parameterName.cloneNode());
-    Node throwStatement = new Node(Token.THROW, parameterName);
-    Node body = new Node(Token.BLOCK, throwStatement);
-    return NodeUtil.newFunctionNode(aliasName, parameters, body, -1, -1);
+    final String PARAM_NAME = "jscomp_throw_param";
+    return IR.function(
+        IR.name(aliasName),
+        IR.paramList(IR.name(PARAM_NAME)),
+        IR.block(
+            IR.throwNode(IR.name(PARAM_NAME))));
   }
 
   /** Aliases literal keywords (e.g., null) with variable names. */
