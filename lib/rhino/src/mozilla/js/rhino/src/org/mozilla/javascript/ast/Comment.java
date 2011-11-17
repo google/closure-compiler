@@ -74,7 +74,6 @@ public class Comment extends AstNode {
 
     private String value;
     private Token.CommentType commentType;
-    private boolean parsed = false;
 
     {
         type = Token.COMMENT;
@@ -131,13 +130,5 @@ public class Comment extends AstNode {
     @Override
     public void visit(NodeVisitor v) {
         v.visit(this);
-    }
-
-    public boolean isParsed() {
-        return parsed;
-    }
-
-    public void setParsed(boolean parsed) {
-        this.parsed = parsed;
     }
 }

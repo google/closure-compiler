@@ -55,7 +55,7 @@ package org.mozilla.javascript;
 public class Token
 {
     public static enum CommentType {
-        LINE, BLOCK, JSDOC, HTML
+        LINE, BLOCK_COMMENT, JSDOC, HTML
     }
 
     // debug flags

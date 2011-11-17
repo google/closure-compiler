@@ -792,7 +792,7 @@ class TokenStream
                         lookForSlash = true;
                         commentType = Token.CommentType.JSDOC;
                     } else {
-                        commentType = Token.CommentType.BLOCK;
+                        commentType = Token.CommentType.BLOCK_COMMENT;
                     }
                     for (;;) {
                         c = getChar();

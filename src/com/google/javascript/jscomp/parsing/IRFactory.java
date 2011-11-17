@@ -104,6 +104,7 @@ class IRFactory {
           "public", "static", "yield");
 
   private final Set<String> reservedKeywords;
+  private final Set<Comment> parsedComments = Sets.newHashSet();
 
   // @license text gets appended onto the fileLevelJsDocBuilder as found,
   // and stored in JSDocInfo for placeholder node.
@@ -172,9 +173,9 @@ class IRFactory {
     if (node.getComments() != null) {
       for (Comment comment : node.getComments()) {
         if (comment.getCommentType() == CommentType.JSDOC &&
-            !comment.isParsed()) {
+            !irFactory.parsedComments.contains(comment)) {
           irFactory.handlePossibleFileOverviewJsDoc(comment, irNode);
-        } else if (comment.getCommentType() == CommentType.BLOCK) {
+        } else if (comment.getCommentType() == CommentType.BLOCK_COMMENT) {
           irFactory.handleBlockComment(comment);
         }
       }
@@ -250,7 +251,7 @@ class IRFactory {
 
   private void handlePossibleFileOverviewJsDoc(Comment comment, Node irNode) {
     JsDocInfoParser jsDocParser = createJsDocInfoParser(comment, irNode);
-    comment.setParsed(true);
+    parsedComments.add(comment);
     handlePossibleFileOverviewJsDoc(jsDocParser);
   }
 
@@ -258,7 +259,7 @@ class IRFactory {
     Comment comment = node.getJsDocNode();
     if (comment != null) {
       JsDocInfoParser jsDocParser = createJsDocInfoParser(comment, irNode);
-      comment.setParsed(true);
+      parsedComments.add(comment);
       if (!handlePossibleFileOverviewJsDoc(jsDocParser)) {
         return jsDocParser.retrieveAndResetParsedJSDocInfo();
       }
