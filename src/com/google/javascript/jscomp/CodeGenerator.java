@@ -547,11 +547,23 @@ class CodeGenerator {
         break;
 
       case Token.NULL:
+        Preconditions.checkState(childCount == 0);
+        add("null");
+        break;
+
       case Token.THIS:
+        Preconditions.checkState(childCount == 0);
+        add("this");
+        break;
+
       case Token.FALSE:
+        Preconditions.checkState(childCount == 0);
+        add("false");
+        break;
+
       case Token.TRUE:
         Preconditions.checkState(childCount == 0);
-        add(Node.tokenToName(type));
+        add("true");
         break;
 
       case Token.CONTINUE:

@@ -193,9 +193,13 @@ public final class NodeUtil {
         return getStringValue(n.getDouble());
 
       case Token.FALSE:
+        return "false";
+
       case Token.TRUE:
+        return "true";
+
       case Token.NULL:
-        return Node.tokenToName(n.getType());
+        return "null";
 
       case Token.VOID:
         return "undefined";
@@ -1225,7 +1229,7 @@ public final class NodeUtil {
         return 15;
 
       default: throw new Error("Unknown precedence for " +
-                               Node.tokenToName(type) +
+                               Token.name(type) +
                                " (type " + type + ")");
     }
   }

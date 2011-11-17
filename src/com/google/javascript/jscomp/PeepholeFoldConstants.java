@@ -912,7 +912,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           break;
         default:
           throw new AssertionError("Unknown shift operator: " +
-              Node.tokenToName(n.getType()));
+              Token.name(n.getType()));
       }
 
       Node newNumber = Node.newNumber(result);

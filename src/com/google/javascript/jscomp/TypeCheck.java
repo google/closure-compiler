@@ -1740,7 +1740,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       default:
-        report(t, n, UNEXPECTED_TOKEN, Node.tokenToName(op));
+        report(t, n, UNEXPECTED_TOKEN, Token.name(op));
     }
     ensureTyped(t, n);
   }

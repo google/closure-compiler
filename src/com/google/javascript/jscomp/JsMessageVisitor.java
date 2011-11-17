@@ -767,7 +767,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * Returns human-readable name of the given node's type.
    */
   private static String getReadableTokenName(Node node) {
-    return Node.tokenToName(node.getType()).toUpperCase();
+    return Token.name(node.getType());
   }
 
   /**

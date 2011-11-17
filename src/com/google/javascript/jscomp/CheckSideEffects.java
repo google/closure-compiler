@@ -114,7 +114,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
       if (n.isString()) {
         msg = "Is there a missing '+' on the previous line?";
       } else if (isSimpleOp) {
-        msg = "The result of the '" + Node.tokenToName(n.getType()) +
+        msg = "The result of the '" + Token.name(n.getType()).toLowerCase() +
             "' operator is not being used.";
       }
 

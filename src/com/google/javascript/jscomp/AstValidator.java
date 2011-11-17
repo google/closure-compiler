@@ -148,7 +148,7 @@ public class AstValidator implements CompilerPass {
         return;
       default:
         violation("Expected statement but was "
-            + Node.tokenToName(n.getType()) + ".", n);
+            + Token.name(n.getType()) + ".", n);
     }
   }
 
@@ -270,7 +270,7 @@ public class AstValidator implements CompilerPass {
 
       default:
         violation("Expected expression but was "
-            + Node.tokenToName(n.getType()), n);
+            + Token.name(n.getType()), n);
     }
   }
 
@@ -568,7 +568,7 @@ public class AstValidator implements CompilerPass {
         return;
       default:
         violation("Expected switch member but was "
-            + Node.tokenToName(n.getType()), n);
+            + Token.name(n.getType()), n);
     }
   }
 
@@ -612,7 +612,7 @@ public class AstValidator implements CompilerPass {
         return;
       default:
         violation("Expected assignment target expression but was "
-            + Node.tokenToName(n.getType()), n);
+            + Token.name(n.getType()), n);
     }
   }
 
@@ -684,7 +684,7 @@ public class AstValidator implements CompilerPass {
         return;
       default:
         violation("Expected object literal key expression but was "
-              + Node.tokenToName(n.getType()), n);
+              + Token.name(n.getType()), n);
     }
   }
 
@@ -733,7 +733,7 @@ public class AstValidator implements CompilerPass {
         // Validate that getString doesn't throw
         n.getString();
       } catch (UnsupportedOperationException e) {
-        violation("getString failed for" + Node.tokenToName(n.getType()), n);
+        violation("getString failed for" + Token.name(n.getType()), n);
       }
     } else {
       validateNonEmptyString(n);
@@ -766,8 +766,8 @@ public class AstValidator implements CompilerPass {
   private void validateNodeType(int type, Node n) {
     if (n.getType() != type) {
       violation(
-          "Expected " + Node.tokenToName(type) + " but was "
-              + Node.tokenToName(n.getType()), n);
+          "Expected " + Token.name(type) + " but was "
+              + Token.name(n.getType()), n);
     }
   }
 
