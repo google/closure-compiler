@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for the Google Maps v3 API.
+ * @fileoverview Externs for the Google Maps v3.7 API.
  * @see http://code.google.com/apis/maps/documentation/javascript/reference.html
  * @externs
  */
@@ -1742,7 +1742,7 @@ google.maps.Map.prototype.getHeading = function() {};
 
 /**
  * @nosideeffects
- * @return {google.maps.MapTypeId}
+ * @return {google.maps.MapTypeId|string}
  */
 google.maps.Map.prototype.getMapTypeId = function() {};
 
@@ -1812,7 +1812,7 @@ google.maps.Map.prototype.setCenter = function(latlng) {};
 google.maps.Map.prototype.setHeading = function(heading) {};
 
 /**
- * @param {google.maps.MapTypeId} mapTypeId
+ * @param {google.maps.MapTypeId|string} mapTypeId
  * @return {undefined}
  */
 google.maps.Map.prototype.setMapTypeId = function(mapTypeId) {};
