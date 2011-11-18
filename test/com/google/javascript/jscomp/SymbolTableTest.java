@@ -211,6 +211,25 @@ public class SymbolTableTest extends TestCase {
     assertEquals(2, Iterables.size(table.getReferences(googDomHelper)));
   }
 
+  public void testGlobalRichObjectReference() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */\n" +
+        "function A(){};\n" +
+        "/** @type {?A} */ A.prototype.b;\n" +
+        "/** @type {A} */ var a = new A();\n" +
+        "function g() {\n" +
+        "  return a.b ? 'x' : 'y';\n" +
+        "}\n" +
+        "(function() {\n" +
+        "  var x; if (x) { x = a.b.b; } else { x = a.b.c; }\n" +
+        "  return x;\n" +
+        "})();\n");
+
+    Symbol ab = getGlobalVar(table, "a.b");
+    assertNotNull(ab);
+    assertEquals(1, table.getReferenceList(ab).size());
+  }
+
   public void testRemovalOfNamespacedReferencesOfProperties()
       throws Exception {
     SymbolTable table = createSymbolTable(

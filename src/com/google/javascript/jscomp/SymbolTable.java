@@ -548,16 +548,9 @@ public final class SymbolTable
         Node declNode = decl.getNode();
 
         // If we have a declaration node, we can ensure the symbol is declared.
-        mySymbol = symbols.get(declNode, name);
+        mySymbol = isAnySymbolDeclared(name, declNode, myScope);
         if (mySymbol == null) {
-          // Sometimes, our symbol tables will disagree on where the
-          // declaration node should be. In the rare case where this happens,
-          // trust the existing symbol.
-          // See SymbolTableTest#testDeclarationDisagreement.
-          mySymbol = myScope.ownSymbols.get(otherSymbol.getName());
-          if (mySymbol == null) {
-            mySymbol = copySymbolTo(otherSymbol, declNode, myScope);
-          }
+          mySymbol = copySymbolTo(otherSymbol, declNode, myScope);
         }
       } else {
         // If we don't have a declaration node, we won't be able to declare
@@ -574,6 +567,23 @@ public final class SymbolTable
         }
       }
     }
+  }
+
+  /**
+   * Checks if any symbol is already declared at the given node and scope
+   * for the given name. If so, returns it.
+   */
+  private Symbol isAnySymbolDeclared(
+      String name, Node declNode, SymbolScope scope) {
+    Symbol sym = symbols.get(declNode, name);
+    if (sym == null) {
+      // Sometimes, our symbol tables will disagree on where the
+      // declaration node should be. In the rare case where this happens,
+      // trust the existing symbol.
+      // See SymbolTableTest#testDeclarationDisagreement.
+      return scope.ownSymbols.get(name);
+    }
+    return sym;
   }
 
   /** Helper for addSymbolsFrom, to determine the best declaration spot. */
@@ -623,10 +633,14 @@ public final class SymbolTable
       Node declNode) {
     Symbol symbol = new Symbol(name, type, inferred, scope);
     Symbol replacedSymbol = symbols.put(declNode, name, symbol);
-    Preconditions.checkState(replacedSymbol == null);
+    Preconditions.checkState(
+        replacedSymbol == null,
+        "Found duplicate symbol %s in global index. Type %s", name, type);
 
     replacedSymbol = scope.ownSymbols.put(name, symbol);
-    Preconditions.checkState(replacedSymbol == null);
+    Preconditions.checkState(
+        replacedSymbol == null,
+        "Found duplicate symbol %s in its scope. Type %s", name, type);
     return symbol;
   }
 
@@ -682,7 +696,11 @@ public final class SymbolTable
 
           String name = currentNode.getQualifiedName();
           if (name != null) {
-            Symbol namespace = root.scope.getSlot(name);
+            Symbol namespace =
+                isAnySymbolDeclared(name, currentNode, root.scope);
+            if (namespace == null) {
+              namespace = root.scope.getSlot(name);
+            }
 
             if (namespace == null && root.scope.isGlobalScope()) {
               namespace = declareSymbol(name,
