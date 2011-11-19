@@ -521,6 +521,10 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
                          "o.foo()"));
   }
 
+  public void testWrapper() {
+    testSame("(function() {})()");
+  }
+
   private static class ModuleTestInput {
     static final String DEFINITION = "a.prototype.foo = function() {}";
     static final String USE = "x.foo()";
@@ -673,7 +677,10 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
         return left + "[" + n.getLastChild().getString() + "]";
       } else if (type == Token.THIS) {
         return "this";
+      } else if (type == Token.FUNCTION){
+        return "{ANON FUNCTION}";
       } else {
+        // I wonder if we should just die on this.
         return null;
       }
     }
