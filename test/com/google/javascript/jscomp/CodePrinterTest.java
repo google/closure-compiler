@@ -1272,4 +1272,10 @@ public class CodePrinterTest extends TestCase {
   public void testIssue582() {
     assertPrint("var x = -0.0;", "var x=-0.0");
   }
+
+  public void testIssue601() {
+    assertPrint("'\\v' == 'v'", "\"\\v\"==\"v\"");
+    assertPrint("'\\u000B' == '\\v'", "\"\\x0B\"==\"\\v\"");
+    assertPrint("'\\x0B' == '\\v'", "\"\\x0B\"==\"\\v\"");
+  }
 }

@@ -341,7 +341,7 @@ class CodeGenerator {
           if (!Double.isNaN(d)) {
             cc.addNumber(d);
           } else {
-            addJsString(n.getString());
+            addJsString(n);
           }
         }
 
@@ -633,7 +633,7 @@ class CodeGenerator {
           throw new IllegalStateException(
               "Unexpected String children: " + n.getParent().toStringTree());
         }
-        addJsString(n.getString());
+        addJsString(n);
         break;
 
       case Token.DELPROP:
@@ -937,16 +937,22 @@ class CodeGenerator {
   }
 
   /** Outputs a js string, using the optimal (single/double) quote character */
-  void addJsString(String s) {
-    String cached = ESCAPED_JS_STRINGS.get(s);
-    if (cached == null) {
-      cached = jsString(s);
-      ESCAPED_JS_STRINGS.put(s, cached);
+  private void addJsString(Node n) {
+    String s = n.getString();
+    boolean useSlashV = n.getBooleanProp(Node.SLASH_V);
+    if (useSlashV) {
+      add(jsString(n.getString(), useSlashV));
+    } else {
+      String cached = ESCAPED_JS_STRINGS.get(s);
+      if (cached == null) {
+        cached = jsString(n.getString(), useSlashV);
+        ESCAPED_JS_STRINGS.put(s, cached);
+      }
+      add(cached);
     }
-    add(cached);
   }
 
-  String jsString(String s) {
+  private String jsString(String s, boolean useSlashV) {
     int singleq = 0, doubleq = 0;
 
     // could count the quotes and pick the optimal quote character
@@ -972,19 +978,19 @@ class CodeGenerator {
     }
 
     return strEscape(s, quote, doublequote, singlequote, "\\\\",
-        outputCharsetEncoder);
+        outputCharsetEncoder, useSlashV);
   }
 
   /** Escapes regular expression */
   static String regexpEscape(String s, CharsetEncoder outputCharsetEncoder) {
-    return strEscape(s, '/', "\"", "'", "\\", outputCharsetEncoder);
+    return strEscape(s, '/', "\"", "'", "\\", outputCharsetEncoder, false);
   }
 
   /**
    * Escapes the given string to a double quoted (") JavaScript/JSON string
    */
   static String escapeToDoubleQuotedJsString(String s) {
-    return strEscape(s, '"',  "\\\"", "\'", "\\\\", null);
+    return strEscape(s, '"',  "\\\"", "\'", "\\\\", null, false);
   }
 
   /* If the user doesn't want to specify an output charset encoder, assume
@@ -995,17 +1001,26 @@ class CodeGenerator {
   }
 
   /** Helper to escape javascript string as well as regular expression */
-  static String strEscape(String s, char quote,
-                          String doublequoteEscape,
-                          String singlequoteEscape,
-                          String backslashEscape,
-                          CharsetEncoder outputCharsetEncoder) {
+  private static String strEscape(
+      String s, char quote,
+      String doublequoteEscape,
+      String singlequoteEscape,
+      String backslashEscape,
+      CharsetEncoder outputCharsetEncoder,
+      boolean useSlashV) {
     StringBuilder sb = new StringBuilder(s.length() + 2);
     sb.append(quote);
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
       switch (c) {
         case '\0': sb.append("\\x00"); break;
+        case '\u000B':
+          if (useSlashV) {
+            sb.append("\\v");
+          } else {
+            sb.append("\\x0B");
+          }
+          break;
         case '\n': sb.append("\\n"); break;
         case '\r': sb.append("\\r"); break;
         case '\t': sb.append("\\t"); break;

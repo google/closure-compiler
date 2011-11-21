@@ -104,7 +104,10 @@ public class Node implements Cloneable, Serializable {
                                   // this node.
       INPUT_ID           = 53,    // The id of the input associated with this
                                   // node.
-      LAST_PROP          = 53;
+      SLASH_V            = 54,    // Whether a STRING node contains a \v
+                                  // vertical tab escape. This is a total hack.
+                                  // See comments in IRFactory about this.
+      LAST_PROP          = 54;
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -1497,6 +1500,12 @@ public class Node implements Cloneable, Serializable {
       int quoted1 = this.getIntProp(QUOTED_PROP);
       int quoted2 = node.getIntProp(QUOTED_PROP);
       if (quoted1 != quoted2) {
+        return false;
+      }
+
+      int slashV1 = this.getIntProp(SLASH_V);
+      int slashV2 = node.getIntProp(SLASH_V);
+      if (slashV1 != slashV2) {
         return false;
       }
     } else if (type == Token.CALL) {

@@ -854,7 +854,30 @@ class IRFactory {
 
     @Override
     Node processStringLiteral(StringLiteral literalNode) {
-      Node n = newStringNode(literalNode.getValue());
+      String value = literalNode.getValue();
+      Node n = newStringNode(value);
+      if (value.indexOf('\u000B') != -1) {
+        // NOTE(nicksantos): In JavaScript, there are 3 ways to
+        // represent a vertical tab: \v, \x0B, \u000B.
+        // The \v notation was added later, and is not understood
+        // on IE. So we need to preserve it as-is. This is really
+        // obnoxious, because we do not have a good way to represent
+        // how the original string was encoded without making the
+        // representation of strings much more complicated.
+        //
+        // To handle this, we look at the original source test, and
+        // mark the string as \v-encoded or not. If a string is
+        // \v encoded, then all the vertical tabs in that string
+        // will be encoded with a \v.
+        int start = literalNode.getAbsolutePosition();
+        int end = start + literalNode.getLength();
+        if (start < sourceString.length() &&
+            (sourceString.substring(
+                 start, Math.min(sourceString.length(), end))
+             .indexOf("\\v") != -1)) {
+          n.putBooleanProp(Node.SLASH_V, true);
+        }
+      }
       return n;
     }
 

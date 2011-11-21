@@ -1056,6 +1056,12 @@ public class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("(![foo()])");
   }
 
+  public void testIssue601() {
+    testSame("'\\v' == 'v'");
+    testSame("'v' == '\\v'");
+    testSame("'\\u000B' == '\\v'");
+  }
+
   public void testFoldObjectLiteralRef1() {
     // Leave extra side-effects in place
     testSame("var x = ({a:foo(),b:bar()}).a");

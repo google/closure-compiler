@@ -386,6 +386,24 @@ public class CommandLineRunnerTest extends TestCase {
          "alert('hi');", CheckSideEffects.USELESS_CODE_ERROR);
   }
 
+  public void testIssue601() {
+    args.add("--compilation_level=WHITESPACE_ONLY");
+    test("function f() { return '\\v' == 'v'; } window['f'] = f;",
+         "function f(){return'\\v'=='v'}window['f']=f");
+  }
+
+  public void testIssue601b() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("function f() { return '\\v' == 'v'; } window['f'] = f;",
+         "window.f=function(){return'\\v'=='v'}");
+  }
+
+  public void testIssue601c() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    test("function f() { return '\\u000B' == 'v'; } window['f'] = f;",
+         "window.f=function(){return'\\u000B'=='v'}");
+  }
+
   public void testDebugFlag1() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     args.add("--debug=false");

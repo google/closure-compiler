@@ -116,6 +116,13 @@ public class NodeTest extends TestCase {
     assertEquals(false, node1.isEquivalentTo(node2));
   }
 
+  public void testCheckTreeEqualsSlashVDifferent() {
+    Node node1 = Node.newString("\u000B");
+    node1.putBooleanProp(Node.SLASH_V, true);
+    Node node2 = Node.newString("\u000B");
+    assertEquals(false, node1.isEquivalentTo(node2));
+  }
+
   public void testCheckTreeEqualsImplDifferentIncProp() {
     Node node1 = new Node(Token.INC);
     node1.putIntProp(Node.INCRDECR_PROP, 1);

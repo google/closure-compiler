@@ -1038,20 +1038,25 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (Token.STRING != right.getType()) {
           return n;  // Only eval if they are the same type
         }
+
+        TernaryValue ternary = TernaryValue.UNKNOWN;
         switch (op) {
           case Token.SHEQ:
           case Token.EQ:
-            result = left.getString().equals(right.getString());
+            ternary = areStringsEqual(left.getString(), right.getString());
             break;
 
           case Token.SHNE:
           case Token.NE:
-            result = !left.getString().equals(right.getString());
+            ternary =
+                areStringsEqual(left.getString(), right.getString()).not();
             break;
-
-          default:
-            return n;  // we only handle == and != here
         }
+
+        if (ternary == TernaryValue.UNKNOWN) {
+          return n;
+        }
+        result = ternary.toBoolean(true);
         break;
 
       case Token.NUMBER:
@@ -1154,6 +1159,18 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     reportCodeChange();
 
     return newNode;
+  }
+
+  /** Returns whether two JS strings are equal. */
+  private TernaryValue areStringsEqual(String a, String b) {
+    // In JS, browsers parse \v differently. So do not consider strings
+    // equal if one containts \v.
+    if (a.indexOf('\u000B') != -1 ||
+        b.indexOf('\u000B') != -1) {
+      return TernaryValue.UNKNOWN;
+    } else {
+      return a.equals(b) ? TernaryValue.TRUE : TernaryValue.FALSE;
+    }
   }
 
   /**
