@@ -3087,18 +3087,28 @@ public class Parser
         }
     }
 
+    private static final int PROP_ENTRY = 1;
+    private static final int GET_ENTRY  = 2;
+    private static final int SET_ENTRY  = 4;
+
     private ObjectLiteral objectLiteral()
         throws IOException
     {
         int pos = ts.tokenBeg, lineno = ts.lineno;
         int afterComma = -1;
         List<ObjectProperty> elems = new ArrayList<ObjectProperty>();
-        Set<String> propertyNames = new HashSet<String>();
+        Set<String> getterNames = null;
+        Set<String> setterNames = null;
+        if (this.inUseStrictDirective) {
+          getterNames = new HashSet<String>();
+          setterNames = new HashSet<String>();
+        }
         Comment objJsdocNode = getAndResetJsDoc();
 
       commaLoop:
         for (;;) {
             String propertyName = null;
+            int entryKind = PROP_ENTRY;
             int tt = peekToken();
             Comment jsdocNode = getAndResetJsDoc();
             switch(tt) {
@@ -3114,6 +3124,7 @@ public class Parser
                           || "set".equals(propertyName))))
                   {
                       boolean isGet = "get".equals(propertyName);
+                      entryKind = isGet ? GET_ENTRY : SET_ENTRY;
                       AstNode pname = objliteralProperty();
                       if (pname == null) {
                         propertyName = null;
@@ -3150,11 +3161,29 @@ public class Parser
                   break;
             }
 
-            if (this.inUseStrictDirective) {
-                if (propertyNames.contains(propertyName)) {
+            if (this.inUseStrictDirective && propertyName != null) {
+              switch (entryKind) {
+                case PROP_ENTRY:
+                  if (getterNames.contains(propertyName)
+                      || setterNames.contains(propertyName)) {
                     addError("msg.dup.obj.lit.prop.strict", propertyName);
-                }
-                propertyNames.add(propertyName);
+                  }
+                  getterNames.add(propertyName);
+                  setterNames.add(propertyName);
+                  break;
+                case GET_ENTRY:
+                  if (getterNames.contains(propertyName)) {
+                    addError("msg.dup.obj.lit.prop.strict", propertyName);
+                  }
+                  getterNames.add(propertyName);
+                  break;
+                case SET_ENTRY:
+                  if (setterNames.contains(propertyName)) {
+                    addError("msg.dup.obj.lit.prop.strict", propertyName);
+                  }
+                  setterNames.add(propertyName);
+                  break;
+              }
             }
 
             // Eat any dangling jsdoc in the property.

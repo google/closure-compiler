@@ -206,5 +206,13 @@ public class StrictModeCheckTest extends CompilerTestCase {
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
     testSame("var x = { set a(p) {}, a: 1 };",
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
+
+    testSame(
+        "'use strict';\n" +
+        "function App() {}\n" +
+        "App.prototype = {\n" +
+        "  get appData() { return this.appData_; },\n" +
+        "  set appData(data) { this.appData_ = data; }\n" +
+        "};");
   }
 }
