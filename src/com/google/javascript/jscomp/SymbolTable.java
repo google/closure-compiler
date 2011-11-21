@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -853,7 +854,7 @@ public final class SymbolTable
         new JSDocInfoCollector(compiler.getTypeRegistry()));
 
     // Create references to parameters in the JSDoc.
-    for (Symbol sym : getAllSymbols()) {
+    for (Symbol sym : getAllSymbolsSorted()) {
       JSDocInfo info = sym.getJSDocInfo();
       if (info == null) {
         continue;
@@ -866,8 +867,34 @@ public final class SymbolTable
         }
 
         Node paramNode = pos.getItem();
-        Symbol param = getParameterInFunction(sym, paramNode.getString());
-        if (param != null) {
+        String name = paramNode.getString();
+        Symbol param = getParameterInFunction(sym, name);
+        if (param == null) {
+          // There is no reference to this parameter in the actual JavaScript
+          // code, so we'll try to create a special jsdoc-only symbol in
+          // a jsdoc-only scope.
+          SourcePosition<Node> typePos = marker.getType();
+          JSType type = null;
+          if (typePos != null) {
+            type = typePos.getItem().getJSType();
+          }
+
+          if (sym.docScope == null) {
+            sym.docScope = new SymbolScope(null /* root */,
+                null /* parent scope */, null /* type of this */, sym);
+          }
+
+          // Check to make sure there's no existing symbol. In theory, this
+          // should never happen, but we check anyway and fail silently
+          // if our assumptions are wrong. (We do not want to put the symbol
+          // table into an invalid state).
+          Symbol existingSymbol =
+              isAnySymbolDeclared(name, paramNode, sym.docScope);
+          if (existingSymbol == null) {
+            declareSymbol(name, type, type == null, sym.docScope, paramNode,
+                null /* info */);
+          }
+        } else {
           param.defineReferenceAt(paramNode);
         }
       }
@@ -1017,6 +1044,9 @@ public final class SymbolTable
 
     private JSDocInfo docInfo = null;
 
+    // A scope for symbols that are only documented in JSDoc.
+    private SymbolScope docScope = null;
+
     Symbol(String name, JSType type, boolean inferred, SymbolScope scope) {
       super(name, type, inferred);
       this.scope = scope;
@@ -1094,6 +1124,11 @@ public final class SymbolTable
       return scope.isLexicalScope();
     }
 
+    /** Whether this is a variable that's only in JSDoc. */
+    public boolean isDocOnlyParameter() {
+      return scope.isDocScope();
+    }
+
     @Override
     public String toString() {
       Node n = getDeclarationNode();
@@ -1112,13 +1147,13 @@ public final class SymbolTable
     private final Node rootNode;
     private final SymbolScope parent;
     private final JSType typeOfThis;
-    private final Map<String, Symbol> ownSymbols = Maps.newHashMap();
+    private final Map<String, Symbol> ownSymbols = Maps.newLinkedHashMap();
     private final int scopeDepth;
 
     // The number of inner anonymous functions that we've given names to.
     private int innerAnonFunctionsWithNames = 0;
 
-    // The symbol associated with a property scope.
+    // The symbol associated with a property scope or doc scope.
     private Symbol mySymbol;
 
     SymbolScope(
@@ -1139,6 +1174,12 @@ public final class SymbolTable
 
     void setSymbolForScope(Symbol sym) {
       this.mySymbol = sym;
+    }
+
+    /** Gets a unique index for the symbol in this scope. */
+    public int getIndexOfSymbol(Symbol sym) {
+      return Iterables.indexOf(
+          ownSymbols.values(), Predicates.equalTo(sym));
     }
 
     @Override
@@ -1187,8 +1228,17 @@ public final class SymbolTable
       return getParentScope() == null && getRootNode() != null;
     }
 
+    /**
+     * Returns whether this is a doc scope. A doc scope is a table for symbols
+     * that are documented solely within a JSDoc comment.
+     */
+    public boolean isDocScope() {
+      return getRootNode() == null && mySymbol != null &&
+          mySymbol.docScope == this;
+    }
+
     public boolean isPropertyScope() {
-      return getRootNode() == null;
+      return getRootNode() == null && !isDocScope();
     }
 
     public boolean isLexicalScope() {

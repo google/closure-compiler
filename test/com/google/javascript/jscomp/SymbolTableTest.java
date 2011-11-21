@@ -782,6 +782,24 @@ public class SymbolTableTest extends TestCase {
     assertEquals("function (): undefined", abc.getType().toString());
   }
 
+  public void testJSDocOnlySymbol() throws Exception {
+    SymbolTable table = createSymbolTable(
+        "/**\n"
+        + " * @param {number} x\n"
+        + " * @param y\n"
+        + " */\n"
+        + "var a;");
+    Symbol x = getDocVar(table, "x");
+    assertNotNull(x);
+    assertEquals("number", x.getType().toString());
+    assertEquals(1, table.getReferenceList(x).size());
+
+    Symbol y = getDocVar(table, "y");
+    assertNotNull(x);
+    assertEquals(null, y.getType());
+    assertEquals(1, table.getReferenceList(y).size());
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertTrue(ordering.compare(first, first) == 0);
@@ -792,6 +810,15 @@ public class SymbolTableTest extends TestCase {
 
   private Symbol getGlobalVar(SymbolTable table, String name) {
     return table.getGlobalScope().getSlot(name);
+  }
+
+  private Symbol getDocVar(SymbolTable table, String name) {
+    for (Symbol sym : table.getAllSymbols()) {
+      if (sym.isDocOnlyParameter() && sym.getName().equals(name)) {
+        return sym;
+      }
+    }
+    return null;
   }
 
   private Symbol getLocalVar(SymbolTable table, String name) {
