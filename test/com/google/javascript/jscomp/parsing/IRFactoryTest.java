@@ -370,8 +370,8 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     Node varExpr = varName.getFirstChild();
 
     assertNodePosition(1, 0, varDecl);
-    assertNodePosition(2, 4, varName);
-    assertNodePosition(3, 4, varExpr);
+    assertNodePosition(2, 4, 1, varName);
+    assertNodePosition(3, 4, 1, varExpr);
   }
 
   public void testReturnLocation() {
@@ -938,6 +938,13 @@ public class IRFactoryTest extends BaseJSTypeTestCase {
     assertEquals("Line number", lineno, n.getLineno());
     assertEquals("Column position", charno, n.getCharno());
   }
+
+  private void assertNodePosition(int lineno, int charno, int length, Node n) {
+    assertEquals("Line number", lineno, n.getLineno());
+    assertEquals("Column position", charno, n.getCharno());
+    assertEquals("Length", length, n.getLength());
+  }
+
 
   private void testNewParser(String code, String expected) {
     String actual = newParse(code).toStringTree();

@@ -1021,9 +1021,8 @@ class IRFactory {
     Node processVariableInitializer(VariableInitializer initializerNode) {
       Node node = transform(initializerNode.getTarget());
       if (initializerNode.getInitializer() != null) {
-        node.addChildToBack(transform(initializerNode.getInitializer()));
-        node.setLineno(node.getLineno());
-        maybeSetLengthFrom(node, initializerNode);
+        Node initalizer = transform(initializerNode.getInitializer());
+        node.addChildToBack(initalizer);
       }
       return node;
     }
