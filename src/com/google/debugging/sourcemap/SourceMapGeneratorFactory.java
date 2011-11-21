@@ -34,9 +34,9 @@ public class SourceMapGeneratorFactory {
     switch (format) {
       case V1:
         return new SourceMapGeneratorV1();
-      case DEFAULT:
       case V2:
         return new SourceMapGeneratorV2();
+      case DEFAULT:
       case V3:
         return new SourceMapGeneratorV3();
       default:

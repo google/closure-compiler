@@ -27,10 +27,7 @@
  * @externs
  */
 
-/**
- * @typedef {(Window|Document|Element|Array.<Element>|string|jQuery|
- *     NodeList)}
- */
+/** @typedef {(Window|Document|Element|Array.<Element>|string|jQuery)} */
 var jQuerySelector;
 
 /**
@@ -356,10 +353,10 @@ jQuery.prototype.clearQueue = function(queueName) {};
 jQuery.prototype.click = function(arg1, handler) {};
 
 /**
- * @suppress {checkTypes} see issue 583
  * @param {boolean=} withDataAndEvents
  * @param {boolean=} deepWithDataAndEvents
  * @return {jQuery}
+ * @suppress {checkTypes} http://code.google.com/p/closure-compiler/issues/detail?id=583
  */
 jQuery.prototype.clone = function(withDataAndEvents, deepWithDataAndEvents) {};
 
@@ -709,9 +706,6 @@ jQuery.event.prototype.currentTarget;
 
 /** @type {*} */
 jQuery.event.prototype.data;
-
-/** @type {Element} */
-jQuery.event.prototype.delegateTarget;
 
 /**
  * @return {boolean}
@@ -1227,7 +1221,6 @@ jQuery.jqXHR.prototype.fail = function(failCallbacks) {};
  * @override
  * @return {boolean}
  * @nosideeffects
- * @deprecated
  */
 jQuery.jqXHR.prototype.isRejected = function() {};
 
@@ -1235,7 +1228,6 @@ jQuery.jqXHR.prototype.isRejected = function() {};
  * @override
  * @return {boolean}
  * @nosideeffects
- * @deprecated
  */
 jQuery.jqXHR.prototype.isResolved = function() {};
 
@@ -1669,14 +1661,12 @@ jQuery.Promise.prototype.fail = function(failCallbacks) {};
 /**
  * @return {boolean}
  * @nosideeffects
- * @deprecated
  */
 jQuery.Promise.prototype.isRejected = function() {};
 
 /**
  * @return {boolean}
  * @nosideeffects
- * @deprecated
  */
 jQuery.Promise.prototype.isResolved = function() {};
 
