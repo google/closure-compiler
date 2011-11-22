@@ -72,4 +72,35 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     assertEquals("{a1: number, a2: number, a3: number, a4: number, ...}",
         record.toString());
   }
+
+  public void testSupAndInf() {
+    JSType recordA = new RecordTypeBuilder(registry)
+        .addProperty("a", NUMBER_TYPE, null)
+        .addProperty("b", NUMBER_TYPE, null)
+        .build();
+    JSType recordC = new RecordTypeBuilder(registry)
+        .addProperty("b", NUMBER_TYPE, null)
+        .addProperty("c", NUMBER_TYPE, null)
+        .build();
+    ProxyObjectType proxyRecordA = new ProxyObjectType(registry, recordA);
+    ProxyObjectType proxyRecordC = new ProxyObjectType(registry, recordC);
+
+    JSType aInfC = new RecordTypeBuilder(registry)
+        .addProperty("a", NUMBER_TYPE, null)
+        .addProperty("b", NUMBER_TYPE, null)
+        .addProperty("c", NUMBER_TYPE, null)
+        .build();
+
+    JSType aSupC = registry.createUnionType(recordA, recordC);
+
+    Asserts.assertTypeEquals(
+        aInfC, recordA.getGreatestSubtype(recordC));
+    Asserts.assertTypeEquals(
+        aSupC, recordA.getLeastSupertype(recordC));
+
+    Asserts.assertTypeEquals(
+        aInfC, proxyRecordA.getGreatestSubtype(proxyRecordC));
+    Asserts.assertTypeEquals(
+        aSupC, proxyRecordA.getLeastSupertype(proxyRecordC));
+  }
 }

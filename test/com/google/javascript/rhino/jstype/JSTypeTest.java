@@ -2716,14 +2716,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("e", NUMBER_TYPE, null);
     builder.addProperty("b", STRING_TYPE, null);
     builder.addProperty("c", STRING_TYPE, null);
-    JSType subRecordType = builder.build();
+    JSType otherRecordType = builder.build();
 
-    JSType leastSupertype = recordType.getLeastSupertype(subRecordType);
-
-    builder = new RecordTypeBuilder(registry);
-    builder.addProperty("b", STRING_TYPE, null);
-
-    assertTypeEquals(leastSupertype, builder.build());
+    assertTypeEquals(
+        registry.createUnionType(recordType, otherRecordType),
+        recordType.getLeastSupertype(otherRecordType));
   }
 
   public void testRecordTypeLeastSuperType3() {
@@ -2731,10 +2728,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("d", NUMBER_TYPE, null);
     builder.addProperty("e", STRING_TYPE, null);
     builder.addProperty("f", STRING_TYPE, null);
-    JSType subRecordType = builder.build();
+    JSType otherRecordType = builder.build();
 
-    JSType leastSupertype = recordType.getLeastSupertype(subRecordType);
-    assertTypeEquals(leastSupertype, OBJECT_TYPE);
+    assertTypeEquals(
+        registry.createUnionType(recordType, otherRecordType),
+        recordType.getLeastSupertype(otherRecordType));
   }
 
   public void testRecordTypeLeastSuperType4() {
@@ -4888,6 +4886,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     builder = new RecordTypeBuilder(registry);
     builder.addProperty("a", STRING_TYPE, null);
+    builder.addProperty("c", STRING_TYPE, null);
+    JSType acType = builder.build();
+    JSType abOrAcType = registry.createUnionType(abType, acType);
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("a", STRING_TYPE, null);
     builder.addProperty("b", STRING_TYPE, null);
     builder.addProperty("c", NUMBER_TYPE, null);
     JSType abcType = builder.build();
@@ -4897,6 +4901,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
         aType,
+        abOrAcType,
         abType,
         abcType,
         registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),

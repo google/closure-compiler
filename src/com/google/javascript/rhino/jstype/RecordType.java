@@ -137,33 +137,9 @@ class RecordType extends PrototypeObjectType {
         propertyNode);
   }
 
-  @Override
-  public JSType getLeastSupertype(JSType that) {
-    if (!that.isRecordType()) {
-      return super.getLeastSupertype(that);
-    }
-
-    RecordType thatRecord = that.toMaybeRecordType();
-    RecordTypeBuilder builder = new RecordTypeBuilder(registry);
-
-    // The least supertype consist of those properties of the record
-    // type that both record types hold in common both by name and
-    // type of the properties themselves.
-    for (String property : properties.keySet()) {
-      if (thatRecord.hasProperty(property) &&
-          thatRecord.getPropertyType(property).isEquivalentTo(
-              getPropertyType(property))) {
-        builder.addProperty(property, getPropertyType(property),
-            getPropertyNode(property));
-      }
-    }
-
-    return builder.build();
-  }
-
   JSType getGreatestSubtypeHelper(JSType that) {
     if (that.isRecordType()) {
-      RecordType thatRecord = (RecordType) that;
+      RecordType thatRecord = that.toMaybeRecordType();
       RecordTypeBuilder builder = new RecordTypeBuilder(registry);
 
       // The greatest subtype consists of those *unique* properties of both
