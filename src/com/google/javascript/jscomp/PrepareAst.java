@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -98,8 +99,7 @@ class PrepareAst implements CompilerPass {
       for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
         if (NodeUtil.isControlStructureCodeBlock(n,c) &&
             !c.isBlock()) {
-          Node newBlock = new Node(Token.BLOCK, n.getLineno(), n.getCharno());
-          newBlock.copyInformationFrom(n);
+          Node newBlock = IR.block().srcref(n);
           n.replaceChild(c, newBlock);
           if (!c.isEmpty()) {
             newBlock.addChildrenToFront(c);

@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 
 /**
@@ -47,7 +47,7 @@ public class SyntheticAst implements SourceAst {
 
   @Override
   public void clearAst() {
-    root = new Node(Token.SCRIPT);
+    root = IR.script();
     root.setInputId(inputId);
     root.setIsSyntheticBlock(true);
     root.setStaticSourceFile(sourceFile);

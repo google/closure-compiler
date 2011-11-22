@@ -20,6 +20,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -214,10 +215,9 @@ class FunctionRewriter implements CompilerPass {
      * @param charno character offset in original line.
      */
     protected final Node buildCallNode(String methodName, Node argumentNode,
-                                       int lineno, int charno) {
-      Node call = new Node(Token.CALL, lineno, charno);
+                                       Node srcref) {
+      Node call = IR.call(IR.name(methodName)).srcref(srcref);
       call.putBooleanProp(Node.FREE_CALL, true);
-      call.addChildToBack(Node.newString(Token.NAME, methodName));
       if (argumentNode != null) {
         call.addChildToBack(argumentNode.cloneTree());
       }
@@ -249,8 +249,7 @@ class FunctionRewriter implements CompilerPass {
     @Override
     public Node reduce(Node node) {
       if (NodeUtil.isEmptyFunctionExpression(node)) {
-        return buildCallNode(FACTORY_METHOD_NAME, null,
-                             node.getLineno(), node.getCharno());
+        return buildCallNode(FACTORY_METHOD_NAME, null, node);
       } else {
         return node;
       }
@@ -310,8 +309,7 @@ class FunctionRewriter implements CompilerPass {
       }
 
       if (isIdentityFunction(node)) {
-        return buildCallNode(FACTORY_METHOD_NAME, null,
-                             node.getLineno(), node.getCharno());
+        return buildCallNode(FACTORY_METHOD_NAME, null, node);
       } else {
         return node;
       }
@@ -371,8 +369,7 @@ class FunctionRewriter implements CompilerPass {
 
       Node valueNode = getValueNode(node);
       if (valueNode != null) {
-        return buildCallNode(FACTORY_METHOD_NAME, valueNode,
-                             node.getLineno(), node.getCharno());
+        return buildCallNode(FACTORY_METHOD_NAME, valueNode, node);
       } else {
         return node;
       }
@@ -430,8 +427,7 @@ class FunctionRewriter implements CompilerPass {
               "Expected STRING, got " + Token.name(propName.getType()));
         }
 
-        return buildCallNode(FACTORY_METHOD_NAME, propName,
-                             node.getLineno(), node.getCharno());
+        return buildCallNode(FACTORY_METHOD_NAME, propName, node);
       } else {
         return node;
       }
@@ -492,8 +488,7 @@ class FunctionRewriter implements CompilerPass {
               "Expected STRING, got " + Token.name(propName.getType()));
         }
 
-        return buildCallNode(FACTORY_METHOD_NAME, propName,
-                             node.getLineno(), node.getCharno());
+        return buildCallNode(FACTORY_METHOD_NAME, propName, node);
       } else {
         return node;
       }

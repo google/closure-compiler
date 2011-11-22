@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -276,8 +277,7 @@ class DefinitionsRemover {
     @Override
     public void performRemove() {
       // replace internal name with ""
-      function.replaceChild(function.getFirstChild(),
-                            Node.newString(Token.NAME, ""));
+      function.replaceChild(function.getFirstChild(), IR.name(""));
     }
   }
 
@@ -350,9 +350,9 @@ class DefinitionsRemover {
         case Token.GETTER_DEF:
         case Token.STRING:
           // TODO(johnlenz): return a GETELEM for quoted strings.
-          return new Node(Token.GETPROP,
-            new Node(Token.OBJECTLIT),
-            name.cloneNode());
+          return IR.getprop(
+              IR.objectlit(),
+              IR.string(name.getString()));
         default:
           throw new IllegalStateException("unexpected");
       }

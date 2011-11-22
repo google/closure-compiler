@@ -748,9 +748,7 @@ public final class NodeUtil {
    * @return Newly created EXPR node with the child as subexpression.
    */
   public static Node newExpr(Node child) {
-    Node expr = new Node(Token.EXPR_RESULT, child)
-        .copyInformationFrom(child);
-    return expr;
+    return IR.exprResult(child).srcref(child);
   }
 
   /**
@@ -1800,7 +1798,7 @@ public final class NodeUtil {
       // Only Token.FOR can have an Token.EMPTY other control structure
       // need something for the condition. Others need to be replaced
       // or the structure removed.
-      parent.replaceChild(node, new Node(Token.EMPTY));
+      parent.replaceChild(node, IR.empty());
     } else {
       throw new IllegalStateException("Invalid attempt to remove node: " +
           node.toString() + " of "+ parent.toString());
@@ -1813,8 +1811,7 @@ public final class NodeUtil {
   static void maybeAddFinally(Node tryNode) {
     Preconditions.checkState(tryNode.isTry());
     if (!NodeUtil.hasFinally(tryNode)) {
-      tryNode.addChildrenToBack(new Node(Token.BLOCK)
-          .copyInformationFrom(tryNode));
+      tryNode.addChildrenToBack(IR.block().srcref(tryNode));
     }
   }
 
@@ -2222,11 +2219,10 @@ public final class NodeUtil {
 
     Node parent = getAddingRoot(branch);
     for (Node nameNode : vars) {
-      Node var = new Node(
-          Token.VAR,
-          Node.newString(Token.NAME, nameNode.getString())
-              .copyInformationFrom(nameNode))
-          .copyInformationFrom(nameNode);
+      Node var = IR.var(
+          IR.name(nameNode.getString())
+              .srcref(nameNode))
+          .srcref(nameNode);
       copyNameAnnotations(nameNode, var.getFirstChild());
       parent.addChildToFront(var);
     }
@@ -2307,7 +2303,7 @@ public final class NodeUtil {
       String part = (endPos == -1
                      ? name.substring(startPos)
                      : name.substring(startPos, endPos));
-      Node propNode = Node.newString(Token.STRING, part, lineno, charno);
+      Node propNode = Node.newString(part, lineno, charno);
       if (convention.isConstantKey(part)) {
         propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
@@ -2386,7 +2382,7 @@ public final class NodeUtil {
    */
   static Node newName(
       CodingConvention convention, String name, Node basisNode) {
-    Node nameNode = Node.newString(Token.NAME, name);
+    Node nameNode = IR.name(name);
     if (convention.isConstantKey(name)) {
       nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
@@ -2561,7 +2557,7 @@ public final class NodeUtil {
    *   "void 0"
    */
   static Node newUndefinedNode(Node srcReferenceNode) {
-    Node node = new Node(Token.VOID, Node.newNumber(0));
+    Node node = IR.voidNode(IR.number(0));
     if (srcReferenceNode != null) {
         node.copyInformationFromForTree(srcReferenceNode);
     }
@@ -2572,14 +2568,13 @@ public final class NodeUtil {
    * Create a VAR node containing the given name and initial value expression.
    */
   static Node newVarNode(String name, Node value) {
-    Node nodeName = Node.newString(Token.NAME, name);
+    Node nodeName = IR.name(name);
     if (value != null) {
       Preconditions.checkState(value.getNext() == null);
       nodeName.addChildToBack(value);
-      nodeName.copyInformationFrom(value);
+      nodeName.srcref(value);
     }
-    Node var = new Node(Token.VAR, nodeName)
-        .copyInformationFrom(nodeName);
+    Node var = IR.var(nodeName).srcref(nodeName);
 
     return var;
   }
@@ -2903,7 +2898,7 @@ public final class NodeUtil {
    */
   static Node newCallNode(Node callTarget, Node... parameters) {
     boolean isFreeCall = !isGet(callTarget);
-    Node call = new Node(Token.CALL, callTarget);
+    Node call = IR.call(callTarget);
     call.putBooleanProp(Node.FREE_CALL, isFreeCall);
     for (Node parameter : parameters) {
       call.addChildToBack(parameter);

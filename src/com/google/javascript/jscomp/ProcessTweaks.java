@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -171,11 +172,11 @@ class ProcessTweaks implements CompilerPass {
     Node createDefaultValueNode() {
       switch (this) {
         case REGISTER_BOOLEAN:
-          return new Node(Token.FALSE);
+          return IR.falseNode();
         case REGISTER_NUMBER:
-          return Node.newNumber(0);
+          return IR.number(0);
         case REGISTER_STRING:
-          return Node.newString("");
+          return IR.string("");
       }
       throw new IllegalStateException();
     }
@@ -254,10 +255,8 @@ class ProcessTweaks implements CompilerPass {
           }
           parent.replaceChild(callNode, newValue);
         } else {
-          Node voidZeroNode = new Node(Token.VOID)
-              .copyInformationFrom(callNode);
-          voidZeroNode.addChildToBack(Node.newNumber(0)
-              .copyInformationFrom(callNode));
+          Node voidZeroNode = IR.voidNode(IR.number(0).srcref(callNode))
+              .srcref(callNode);
           parent.replaceChild(callNode, voidZeroNode);
         }
       }
@@ -270,10 +269,9 @@ class ProcessTweaks implements CompilerPass {
    */
   private Node createCompilerDefaultValueOverridesVarNode(
       Node sourceInformationNode) {
-    Node objNode = new Node(Token.OBJECTLIT)
-        .copyInformationFrom(sourceInformationNode);
+    Node objNode = IR.objectlit().srcref(sourceInformationNode);
     for (Entry<String, Node> entry : compilerDefaultValueOverrides.entrySet()) {
-      Node objKeyNode = Node.newString(entry.getKey())
+      Node objKeyNode = IR.string(entry.getKey())
           .copyInformationFrom(sourceInformationNode);
       Node objValueNode = entry.getValue().cloneNode()
           .copyInformationFrom(sourceInformationNode);

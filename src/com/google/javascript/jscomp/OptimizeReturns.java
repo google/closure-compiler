@@ -20,10 +20,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
-
 import java.util.Collection;
 import java.util.List;
 
@@ -145,8 +143,7 @@ class OptimizeReturns
             Node result = node.removeFirstChild();
             if (keepValue) {
               node.getParent().addChildBefore(
-                new Node(
-                  Token.EXPR_RESULT, result).copyInformationFrom(result), node);
+                IR.exprResult(result).srcref(result), node);
             }
             compiler.reportCodeChange();
           }

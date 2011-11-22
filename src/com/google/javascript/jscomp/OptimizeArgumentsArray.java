@@ -19,9 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Deque;
 import java.util.List;
 
@@ -250,7 +249,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     for (int i = 0; i < numExtraArgs; i++) {
       String name = getNewName();
       argNames[i] = name;
-      parametersList.addChildrenToBack(Node.newString(Token.NAME, name));
+      parametersList.addChildrenToBack(IR.name(name));
       changed = true;
     }
 
@@ -267,7 +266,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       // Unnamed parameter.
       if (value >= numNamedParameter) {
         ref.getParent().getParent().replaceChild(ref.getParent(),
-            Node.newString(Token.NAME, argNames[value - numNamedParameter]));
+            IR.name(argNames[value - numNamedParameter]));
       } else {
 
         // Here, for no apparent reason, the user is accessing a named parameter
@@ -281,7 +280,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
           name = name.getNext();
         }
         ref.getParent().getParent().replaceChild(ref.getParent(),
-            Node.newString(Token.NAME, name.getString()));
+            IR.name(name.getString()));
       }
       changed = true;
     }

@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
@@ -216,7 +217,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
               // We can't modify parent, so just create a node that will
               // get compiled out.
-              parent.replaceChild(n, Node.newNumber(0));
+              parent.replaceChild(n, IR.number(0));
               compiler.reportCodeChange();
             } else if ("setCssNameMapping".equals(methodName)) {
               processSetCssNameMapping(t, n, parent);
@@ -912,7 +913,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             assignNode.removeChild(nameNode);
             assignNode.removeChild(valueNode);
             nameNode.addChildToFront(valueNode);
-            Node varNode = new Node(Token.VAR, nameNode);
+            Node varNode = IR.var(nameNode);
             varNode.copyInformationFrom(candidateDefinition);
             candidateDefinition.getParent().replaceChild(
                 candidateDefinition, varNode);
@@ -968,10 +969,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * (e.g. <code>var foo = {};</code>).
      */
     private Node makeVarDeclNode() {
-      Node name = Node.newString(Token.NAME, namespace);
+      Node name = IR.name(namespace);
       name.addChildToFront(createNamespaceLiteral());
 
-      Node decl = new Node(Token.VAR, name);
+      Node decl = IR.var(name);
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
 
       // TODO(nicksantos): ew ew ew. Create a mutator package.
@@ -993,7 +994,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * So always give the namespace literal a type.
      */
     private Node createNamespaceLiteral() {
-      Node objlit = new Node(Token.OBJECTLIT);
+      Node objlit = IR.objectlit();
       objlit.setJSType(
           compiler.getTypeRegistry().createAnonymousObjectType());
       return objlit;
@@ -1004,8 +1005,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      * (e.g. <code>foo.bar = {};</code>).
      */
     private Node makeAssignmentExprNode() {
-      Node decl = new Node(Token.EXPR_RESULT,
-          new Node(Token.ASSIGN,
+      Node decl = IR.exprResult(
+          IR.assign(
               NodeUtil.newQualifiedNameNode(
                   compiler.getCodingConvention(), namespace,
                   firstNode /* real source info will be filled in below */,

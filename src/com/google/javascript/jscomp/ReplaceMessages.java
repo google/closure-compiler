@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 import javax.annotation.Nullable;
+
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -106,7 +108,7 @@ class ReplaceMessages extends JsMessageVisitor {
         return origValueNode;
       case Token.ADD:
         // The message is a simple string. Create a string node.
-        return Node.newString(message.toString());
+        return IR.string(message.toString());
       case Token.CALL:
         // The message is a function call. Replace it with a string expression.
         return replaceCallNode(message, origValueNode);
@@ -155,9 +157,8 @@ class ReplaceMessages extends JsMessageVisitor {
     Iterator<CharSequence> iterator = message.parts().iterator();
     Node valueNode = iterator.hasNext()
         ? constructAddOrStringNode(iterator, argListNode)
-        : Node.newString("");
-    Node newBlockNode = new Node(Token.BLOCK,
-        new Node(Token.RETURN, valueNode));
+        : IR.string("");
+    Node newBlockNode = IR.block(IR.returnNode(valueNode));
 
     functionNode.replaceChild(oldBlockNode, newBlockNode);
   }
@@ -193,7 +194,7 @@ class ReplaceMessages extends JsMessageVisitor {
           // uppercase placeholder names, but function arguments in javascript
           // code can have mixed case.
           if (arg.equalsIgnoreCase(phRef.getName())) {
-            partNode = Node.newString(Token.NAME, arg);
+            partNode = IR.name(arg);
           }
         }
       }
@@ -205,11 +206,11 @@ class ReplaceMessages extends JsMessageVisitor {
       }
     } else {
       // The part is just a string literal.
-      partNode = Node.newString(part.toString());
+      partNode = IR.string(part.toString());
     }
 
     if (partsIterator.hasNext()) {
-      return new Node(Token.ADD, partNode,
+      return IR.add(partNode,
                       constructAddOrStringNode(partsIterator, argListNode));
     } else {
       return partNode;
@@ -306,11 +307,11 @@ class ReplaceMessages extends JsMessageVisitor {
       }
     } else {
       // The part is just a string literal.
-      partNode = Node.newString(part.toString());
+      partNode = IR.string(part.toString());
     }
 
     if (parts.hasNext()) {
-      return new Node(Token.ADD, partNode,
+      return IR.add(partNode,
           constructStringExprNode(parts, objLitNode));
     } else {
       return partNode;

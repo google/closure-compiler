@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -228,7 +229,7 @@ class CollapseProperties implements CompilerPass {
         }
 
         // just set the original alias to null.
-        aliasParent.replaceChild(alias.node, new Node(Token.NULL));
+        aliasParent.replaceChild(alias.node, IR.nullNode());
         compiler.reportCodeChange();
 
         // Inlining the variable may have introduced new references
@@ -334,7 +335,7 @@ class CollapseProperties implements CompilerPass {
     Node nameNode = NodeUtil.newName(
         compiler.getCodingConvention(), alias, ref.node,
         name.getFullName());
-    Node varNode = new Node(Token.VAR, nameNode).copyInformationFrom(nameNode);
+    Node varNode = IR.var(nameNode).copyInformationFrom(nameNode);
 
     Preconditions.checkState(
         ref.node.getParent().isExprResult());
@@ -567,7 +568,7 @@ class CollapseProperties implements CompilerPass {
       parent.removeChild(rvalue);
       nameNode.addChildToFront(rvalue);
 
-      Node varNode = new Node(Token.VAR, nameNode);
+      Node varNode = IR.var(nameNode);
       greatGramps.replaceChild(gramps, varNode);
     } else {
       // This must be a complex assignment.
@@ -589,7 +590,7 @@ class CollapseProperties implements CompilerPass {
 
       // Create a stub variable declaration right
       // before the current statement.
-      Node stubVar = new Node(Token.VAR, nameNode.cloneTree())
+      Node stubVar = IR.var(nameNode.cloneTree())
           .copyInformationFrom(nameNode);
       currentParent.addChildBefore(stubVar, current);
 
@@ -864,7 +865,7 @@ class CollapseProperties implements CompilerPass {
         value.detachFromParent();
       } else {
         // Substitute a reference for the value.
-        refNode = Node.newString(Token.NAME, propAlias);
+        refNode = IR.name(propAlias);
         if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
           refNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
@@ -873,12 +874,12 @@ class CollapseProperties implements CompilerPass {
       }
 
       // Declare the collapsed name as a variable with the original value.
-      Node nameNode = Node.newString(Token.NAME, propAlias);
+      Node nameNode = IR.name(propAlias);
       nameNode.addChildToFront(value);
       if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      Node newVar = new Node(Token.VAR, nameNode)
+      Node newVar = IR.var(nameNode)
           .copyInformationFromForTree(key);
       if (nameToAddAfter != null) {
         varParent.addChildAfter(newVar, nameToAddAfter);
@@ -934,8 +935,8 @@ class CollapseProperties implements CompilerPass {
       for (Name p : n.props) {
         if (p.needsToBeStubbed()) {
           String propAlias = appendPropForAlias(alias, p.getBaseName());
-          Node nameNode = Node.newString(Token.NAME, propAlias);
-          Node newVar = new Node(Token.VAR, nameNode)
+          Node nameNode = IR.name(propAlias);
+          Node newVar = IR.var(nameNode)
               .copyInformationFromForTree(addAfter);
           parent.addChildAfter(newVar, addAfter);
           addAfter = newVar;

@@ -16,9 +16,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.regex.Pattern;
 
 /**
@@ -122,16 +121,16 @@ class ExportTestFunctions implements CompilerPass {
     Node exportCallTarget = NodeUtil.newQualifiedNameNode(
         compiler.getCodingConvention(),
         exportSymbolFunction, node, testFunctionName);
-    Node call = new Node(Token.CALL, exportCallTarget);
+    Node call = IR.call( exportCallTarget);
     if (exportCallTarget.isName()) {
       call.putBooleanProp(Node.FREE_CALL, true);
     }
-    call.addChildToBack(Node.newString(testFunctionName));
+    call.addChildToBack(IR.string(testFunctionName));
     call.addChildToBack(NodeUtil.newQualifiedNameNode(
         compiler.getCodingConvention(),
         testFunctionName, node, testFunctionName));
 
-    Node expression = new Node(Token.EXPR_RESULT, call);
+    Node expression = IR.exprResult(call);
 
     scriptNode.addChildAfter(expression, node);
     compiler.reportCodeChange();

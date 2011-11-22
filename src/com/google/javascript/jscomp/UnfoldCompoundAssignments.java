@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -99,11 +100,11 @@ class UnfoldCompoundAssignments implements Callback, CompilerPass {
     // TODO(elnatan): We might want to use type information to only add this '+'
     // when lhs isn't already a number.
     if (isIncrement) {
-      lhs = new Node(Token.POS, lhs);
+      lhs = IR.pos(lhs);
     }
     node.setType(Token.ASSIGN);
     Node rhs = new Node(isIncrement ? Token.ADD : Token.SUB,
-        lhs, Node.newNumber(1));
+        lhs, IR.number(1));
     rhs.copyInformationFromForTree(node);
     node.addChildToBack(rhs);
     compiler.reportCodeChange();

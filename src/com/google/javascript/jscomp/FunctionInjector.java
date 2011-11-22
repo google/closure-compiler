@@ -22,6 +22,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -496,7 +497,7 @@ class FunctionInjector {
         injectionPointParent.addChildBefore(newBlock, injectionPoint);
         // Replace the call site with a reference to the intermediate
         // result name.
-        parent.replaceChild(callNode, Node.newString(Token.NAME, resultName));
+        parent.replaceChild(callNode, IR.name(resultName));
         break;
 
       default:

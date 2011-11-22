@@ -310,7 +310,7 @@ class AliasStrings extends AbstractPostOrderCallback
                                           String name,
                                           StringInfo info) {
     occurrence.parent.replaceChild(occurrence.node,
-                                   Node.newString(Token.NAME, name));
+                                   IR.name(name));
     info.isAliased = true;
     compiler.reportCodeChange();
   }

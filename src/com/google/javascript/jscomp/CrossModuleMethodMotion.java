@@ -19,9 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.NameInfo;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Property;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Symbol;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
@@ -153,9 +152,9 @@ class CrossModuleMethodMotion implements CompilerPass {
           int stubId = idGenerator.newId();
 
           // example: JSCompiler_stubMethod(id);
-          Node stubCall = new Node(Token.CALL,
-              Node.newString(Token.NAME, STUB_METHOD_NAME),
-              Node.newNumber(stubId))
+          Node stubCall = IR.call(
+              IR.name(STUB_METHOD_NAME),
+              IR.number(stubId))
               .copyInformationFromForTree(value);
           stubCall.putBooleanProp(Node.FREE_CALL, true);
 
@@ -166,18 +165,18 @@ class CrossModuleMethodMotion implements CompilerPass {
           // unstub the function body in the deeper module
           Node unstubParent = compiler.getNodeForCodeInsertion(
               deepestCommonModuleRef);
-          Node unstubCall = new Node(Token.CALL,
-              Node.newString(Token.NAME, UNSTUB_METHOD_NAME),
-              Node.newNumber(stubId),
+          Node unstubCall = IR.call(
+              IR.name(UNSTUB_METHOD_NAME),
+              IR.number(stubId),
               value);
           unstubCall.putBooleanProp(Node.FREE_CALL, true);
           unstubParent.addChildToFront(
               // A.prototype.b = JSCompiler_unstubMethod(id, body);
-              new Node(Token.EXPR_RESULT,
-                  new Node(Token.ASSIGN,
-                      new Node(Token.GETPROP,
+              IR.exprResult(
+                  IR.assign(
+                      IR.getprop(
                           proto.cloneTree(),
-                          Node.newString(Token.STRING, nameInfo.name)),
+                          IR.string(nameInfo.name)),
                       unstubCall))
                   .copyInformationFromForTree(value));
 

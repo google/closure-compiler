@@ -20,10 +20,9 @@ import com.google.common.base.Preconditions;
 
 import com.google.javascript.jscomp.parsing.ParserRunner;
 
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.io.IOException;
 
 import java.util.logging.Logger;
@@ -95,7 +94,7 @@ public class JsAst implements SourceAst {
 
     if (root == null || compiler.hasHaltingErrors()) {
       // There was a parse error or IOException, so use a dummy block.
-      root = new Node(Token.SCRIPT);
+      root = IR.script();
     } else {
       compiler.prepareAst(root);
     }

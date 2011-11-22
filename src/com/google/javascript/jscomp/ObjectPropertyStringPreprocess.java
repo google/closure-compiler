@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -67,15 +68,15 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     addExternDeclaration(externs,
-        new Node(Token.VAR,
-            Node.newString(Token.NAME, EXTERN_OBJECT_PROPERTY_STRING)));
+        IR.var(
+            IR.name(EXTERN_OBJECT_PROPERTY_STRING)));
     NodeTraversal.traverse(compiler, root, new Callback());
   }
 
   private void addExternDeclaration(Node externs, Node declarationStmt) {
     Node script = externs.getLastChild();
     if (script == null || !script.isScript()) {
-      script = new Node(Token.SCRIPT);
+      script = IR.script();
       script.setIsSyntheticBlock(true);
       externs.addChildToBack(script);
     }
@@ -86,8 +87,7 @@ public class ObjectPropertyStringPreprocess implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (OBJECT_PROPERTY_STRING.equals(n.getQualifiedName())) {
-        Node newName =
-            Node.newString(Token.NAME, EXTERN_OBJECT_PROPERTY_STRING);
+        Node newName = IR.name(EXTERN_OBJECT_PROPERTY_STRING);
         newName.copyInformationFrom(n);
         parent.replaceChild(n, newName);
         compiler.reportCodeChange();

@@ -22,10 +22,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
-import com.google.javascript.rhino.Token;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -921,15 +920,14 @@ public class CompilerOptions implements Serializable, Cloneable {
       String name = entry.getKey();
       Object value = entry.getValue();
       if (value instanceof Boolean) {
-        map.put(name, ((Boolean) value).booleanValue() ?
-            new Node(Token.TRUE) : new Node(Token.FALSE));
+        map.put(name, NodeUtil.booleanNode(((Boolean) value).booleanValue()));
       } else if (value instanceof Integer) {
-        map.put(name, Node.newNumber(((Integer) value).intValue()));
+        map.put(name, IR.number(((Integer) value).intValue()));
       } else if (value instanceof Double) {
-        map.put(name, Node.newNumber(((Double) value).doubleValue()));
+        map.put(name, IR.number(((Double) value).doubleValue()));
       } else {
         Preconditions.checkState(value instanceof String);
-        map.put(name, Node.newString((String) value));
+        map.put(name, IR.string((String) value));
       }
     }
     return map;

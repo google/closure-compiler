@@ -33,9 +33,8 @@ import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 import com.google.javascript.jscomp.graph.UndiGraph;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.Iterator;
@@ -359,8 +358,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       if (name.hasChildren()) {
         Node value = name.removeFirstChild();
         var.removeChild(name);
-        Node assign = new Node(Token.ASSIGN, name, value)
-            .copyInformationFrom(name);
+        Node assign = IR.assign(name, value).srcref(name);
 
         // We don't need to wrapped it with EXPR node if it is within a FOR.
         if (!parent.isFor()) {

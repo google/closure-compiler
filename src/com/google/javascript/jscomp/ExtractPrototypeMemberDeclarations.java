@@ -18,9 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -176,8 +175,8 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       // Use the temp variable to hold the prototype.
       Node stmt = new Node(first.node.getType(),
-          new Node(Token.ASSIGN,
-              Node.newString(Token.NAME, prototypeAlias),
+         IR.assign(
+              IR.name(prototypeAlias),
               NodeUtil.newQualifiedNameNode(
                   compiler.getCodingConvention(), className + ".prototype",
                   instance.parent, className + ".prototype")))
@@ -185,13 +184,13 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
       instance.parent.addChildBefore(stmt, first.node);
     } else if (pattern == Pattern.USE_ANON_FUNCTION){
-      Node block = new Node(Token.BLOCK);
-      Node func = new Node(Token.FUNCTION,
-           Node.newString(Token.NAME, ""),
-           new Node(Token.PARAM_LIST, Node.newString(Token.NAME, prototypeAlias)),
+      Node block = IR.block();
+      Node func = IR.function(
+           IR.name(""),
+           IR.paramList(IR.name(prototypeAlias)),
            block);
 
-      Node call = new Node(Token.CALL,func,
+      Node call = IR.call(func,
            NodeUtil.newQualifiedNameNode(
                compiler.getCodingConvention(), className + ".prototype",
                instance.parent, className + ".prototype"));

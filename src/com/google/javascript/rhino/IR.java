@@ -372,7 +372,7 @@ public class IR {
   // TODO(johnlenz): quoted props
 
   public static Node propdef(Node string, Node value) {
-    Preconditions.checkState(!string.isString());
+    Preconditions.checkState(string.isString());
     Preconditions.checkState(!string.hasChildren());
     Preconditions.checkState(mayBeExpression(value));
     string.addChildToFront(value);

@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -129,7 +130,7 @@ public class Reader {
     }
 
     errorReporter = this.new ErrorReporter(compiler);
-    Node root = new Node(Token.BLOCK);
+    Node root = IR.block();
     nodeIndex = -1;
 
     Preconditions.checkState(rootElement.getType() == TagType.Program);
@@ -470,7 +471,7 @@ public class Reader {
       if (child.getType() == TagType.EmptyStmt ||
           child.getType() == TagType.Empty) {
         nodeIndex++;
-        node.addChildToBack(new Node(Token.EMPTY));
+        node.addChildToBack(IR.empty());
       } else {
         transformElement(child, node);
       }
@@ -491,7 +492,7 @@ public class Reader {
 
     String label = getOptionalAttribute(element, TagAttr.LABEL, String.class);
     if (label != null) {
-      node.addChildToBack(Node.newString(Token.LABEL_NAME, label));
+      node.addChildToBack(IR.labelName(label));
     }
   }
 
@@ -529,11 +530,11 @@ public class Reader {
         element.getType() == TagType.Empty) {
       nodeIndex++;
       // Empty elements are only replaced by BLOCK node
-      Node block = new Node(Token.BLOCK);
+      Node block = IR.block();
       parent.addChildToBack(block);
       block.putBooleanProp(Node.EMPTY_BLOCK, true);
     } else if (element.getType() != TagType.BlockStmt) {
-      Node block = new Node(Token.BLOCK);
+      Node block = IR.block();
       parent.addChildToBack(block);
       boolean state = insertExprResultState;
       insertExprResultState = true;
@@ -627,7 +628,7 @@ public class Reader {
     transformElement(child, node);
 
     // always insert an extra BLOCK node
-    Node block = new Node(Token.BLOCK);
+    Node block = IR.block();
     block.setIsSyntheticBlock(true);
     node.addChildToBack(block);
 
@@ -690,9 +691,9 @@ public class Reader {
 
     Node node = null;
     if (name instanceof Number) {
-      node = Node.newNumber(((Number) name).doubleValue());
+      node = IR.number(((Number) name).doubleValue());
     } else if (name instanceof String) {
-      node = Node.newString(Token.STRING, (String) name);
+      node = IR.string((String) name);
     } else {
       throw new IllegalStateException(
           "The name of the property has invalid type.");
@@ -751,7 +752,7 @@ public class Reader {
     parent.addChildToBack(node);
 
     // the first child represent body
-    Node block = new Node(Token.BLOCK);
+    Node block = IR.block();
     block.setIsSyntheticBlock(true);
     node.addChildToBack(block);
 
@@ -789,10 +790,10 @@ public class Reader {
   private void transformEmpty(JsonML element, Node parent) {
     switch (parent.getType()) {
       case Token.ARRAYLIT:
-        parent.addChildToBack(new Node(Token.EMPTY));
+        parent.addChildToBack(IR.empty());
         break;
       case Token.FUNCTION:
-        parent.addChildToBack(Node.newString(Token.NAME, ""));
+        parent.addChildToBack(IR.name(""));
         break;
       default:
         throw new IllegalArgumentException("Unexpected Empty element.");
@@ -802,7 +803,7 @@ public class Reader {
   private void transformEmptyStmt(JsonML element, Node parent) {
     Preconditions.checkState(
         parent.getType() == Token.BLOCK || parent.getType() == Token.SCRIPT);
-    parent.addChildToBack(new Node(Token.EMPTY));
+    parent.addChildToBack(IR.empty());
   }
 
   private void transformEvalExpr(JsonML element, Node parent)
@@ -812,7 +813,7 @@ public class Reader {
     node.putBooleanProp(Node.FREE_CALL, true);
     parent.addChildToBack(node);
 
-    Node child = Node.newString(Token.NAME, "eval");
+    Node child = IR.name("eval");
     child.putBooleanProp(Node.DIRECT_EVAL, true);
     node.addChildToBack(child);
 
@@ -861,7 +862,7 @@ public class Reader {
   private void transformIdExpr(JsonML element, Node parent)
       throws JsonMLException {
     String name = getStringAttribute(element, TagAttr.NAME);
-    Node node = Node.newString(Token.NAME, name);
+    Node node = IR.name(name);
     setPosition(node);
     parent.addChildToBack(node);
   }
@@ -874,7 +875,7 @@ public class Reader {
       throws JsonMLException {
     JsonML child = element.getChild(0);
     nodeIndex++;
-    Node node = Node.newString(Token.NAME,
+    Node node = IR.name(
         getAttribute(child, TagAttr.NAME, String.class));
     setPosition(node);
     parent.addChildToBack(node);
@@ -885,7 +886,7 @@ public class Reader {
 
   private void transformIdPatt(JsonML element, Node parent)
       throws JsonMLException {
-    Node node = Node.newString(Token.NAME,
+    Node node = IR.name(
         getStringAttribute(element, TagAttr.NAME));
     setPosition(node);
     parent.addChildToBack(node);
@@ -932,13 +933,13 @@ public class Reader {
       throws JsonMLException {
     String label = getStringAttribute(element, TagAttr.LABEL);
     Node node = createNode(Token.LABEL, element);
-    node.addChildToBack(Node.newString(Token.LABEL_NAME, label));
+    node.addChildToBack(IR.labelName(label));
     parent.addChildToBack(node);
 
     JsonML child = element.getChild(0);
     if (child.getType() == TagType.EmptyStmt) {
       nodeIndex++;
-      node.addChildToBack(new Node(Token.EMPTY));
+      node.addChildToBack(IR.empty());
     } else {
       transformElement(element.getChild(0), node);
     }
@@ -953,9 +954,9 @@ public class Reader {
       case BOOLEAN: {
         Boolean value = getAttribute(element, TagAttr.VALUE, Boolean.class);
         if (value) {
-          node = new Node(Token.TRUE);
+          node = IR.trueNode();
         } else {
-          node = new Node(Token.FALSE);
+          node = IR.falseNode();
         }
         break;
       }
@@ -963,19 +964,19 @@ public class Reader {
       case NULL: {
         // needed to throw an exception if value is not null
         getAttribute(element, TagAttr.VALUE, null);
-        node = new Node(Token.NULL);
+        node = IR.nullNode();
         break;
       }
 
       case NUMBER: {
         Double value = getAttribute(element, TagAttr.VALUE, Double.class);
-        node = Node.newNumber(value);
+        node = IR.number(value);
         break;
       }
 
       case STRING: {
         String value = getStringAttribute(element, TagAttr.VALUE);
-        node = Node.newString(value);
+        node = IR.string(value);
         break;
       }
 
@@ -1046,7 +1047,7 @@ public class Reader {
     Preconditions.checkNotNull(parent);
     insertExprResultState = true;
 
-    Node script = new Node(Token.SCRIPT);
+    Node script = IR.script();
     script.setIsSyntheticBlock(true);
     parent.addChildToBack(script);
 
@@ -1068,9 +1069,8 @@ public class Reader {
       parent.setDirectives(directives);
     } else {
       // for a directive which is not supported, we create a regular node
-      Node node = new Node(Token.EXPR_RESULT);
+      Node node = IR.exprResult(IR.string(directive));
       parent.addChildToBack(node);
-      node.addChildToBack(Node.newString(Token.STRING, directive));
     }
   }
 
@@ -1080,11 +1080,11 @@ public class Reader {
     parent.addChildToBack(node);
 
     String body = getStringAttribute(element, TagAttr.BODY);
-    node.addChildToBack(Node.newString(Token.STRING, body));
+    node.addChildToBack(IR.string(body));
 
     String flags = getStringAttribute(element, TagAttr.FLAGS);
     if (!(flags.equals(""))) {
-      node.addChildToBack(Node.newString(Token.STRING, flags));
+      node.addChildToBack(IR.string(flags));
     }
   }
 
@@ -1154,7 +1154,7 @@ public class Reader {
     transformElement(child, node);
 
     // the second child represents catch
-    Node block = new Node(Token.BLOCK);
+    Node block = IR.block();
     node.addChildToBack(block);
     child = element.getChild(1);
 

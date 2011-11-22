@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -243,7 +244,7 @@ class MinimizeExitPoints
     if (ifNode.getNext() != null) {
       // Move siblings of the if block into the opposite
       // logic block of the exit.
-      Node newDestBlock = new Node(Token.BLOCK).copyInformationFrom(ifNode);
+      Node newDestBlock = IR.block().srcref(ifNode);
       if (destBlock == null) {
         // Only possible if this is the false block.
         ifNode.addChildToBack(newDestBlock);

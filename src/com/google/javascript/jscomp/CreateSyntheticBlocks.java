@@ -18,9 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -108,11 +107,11 @@ class CreateSyntheticBlocks implements CompilerPass {
 
 
     Node originalParent = marker.endMarker.getParent();
-    Node outerBlock = new Node(Token.BLOCK);
+    Node outerBlock = IR.block();
     outerBlock.setIsSyntheticBlock(true);
     originalParent.addChildBefore(outerBlock, marker.startMarker);
 
-    Node innerBlock = new Node(Token.BLOCK);
+    Node innerBlock = IR.block();
     innerBlock.setIsSyntheticBlock(true);
     // Move everything after the start Node up to the end Node into the inner
     // block.

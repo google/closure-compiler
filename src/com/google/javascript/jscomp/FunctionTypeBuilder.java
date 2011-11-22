@@ -28,10 +28,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionBuilder;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -403,9 +403,9 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder inferParameterTypes(JSDocInfo info) {
     // Create a fake args parent.
-    Node lp = new Node(Token.PARAM_LIST);
+    Node lp = IR.paramList();
     for (String name : info.getParameterNames()) {
-      lp.addChildToBack(Node.newString(Token.NAME, name));
+      lp.addChildToBack(IR.name(name));
     }
 
     return inferParameterTypes(lp, info);

@@ -19,6 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -119,7 +120,7 @@ class ExpressionDecomposer {
     // Replace the expression with a reference to the new name.
     Node expressionParent = expression.getParent();
     expressionParent.replaceChild(
-        expression, Node.newString(Token.NAME, resultName));
+        expression, IR.name(resultName));
 
     // Re-add the expression at the appropriate place.
     Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
@@ -348,8 +349,8 @@ class ExpressionDecomposer {
 
     // Transform the conditional to an IF statement.
     Node cond = null;
-    Node trueExpr = new Node(Token.BLOCK).copyInformationFrom(expr);
-    Node falseExpr = new Node(Token.BLOCK).copyInformationFrom(expr);
+    Node trueExpr = IR.block().srcref(expr);
+    Node falseExpr = IR.block().srcref(expr);
     switch (expr.getType()) {
       case Token.HOOK:
         // a = x?y:z --> if (x) {a=y} else {a=z}
@@ -378,9 +379,9 @@ class ExpressionDecomposer {
 
     Node ifNode;
     if (falseExpr.hasChildren()) {
-      ifNode = new Node(Token.IF, cond, trueExpr, falseExpr);
+      ifNode = IR.ifNode(cond, trueExpr, falseExpr);
     } else {
-      ifNode = new Node(Token.IF, cond, trueExpr);
+      ifNode = IR.ifNode(cond, trueExpr);
     }
     ifNode.copyInformationFrom(expr);
 
@@ -392,7 +393,7 @@ class ExpressionDecomposer {
       injectionPointParent.addChildAfter(ifNode, tempVarNode);
 
       // Replace the expression with the temporary name.
-      Node replacementValueNode = Node.newString(Token.NAME, tempName);
+      Node replacementValueNode = IR.name(tempName);
       parent.replaceChild(expr, replacementValueNode);
     } else {
       // Only conditionals that are the direct child of an expression statement
@@ -417,9 +418,9 @@ class ExpressionDecomposer {
   private static Node buildResultExpression(
       Node expr, boolean needResult, String tempName) {
     if (needResult) {
-      return new Node(Token.ASSIGN,
-          Node.newString(Token.NAME, tempName),
-          expr).copyInformationFromForTree(expr);
+      return IR.assign(
+          IR.name(tempName),
+          expr).srcrefTree(expr);
     } else {
       return expr;
     }
@@ -465,8 +466,7 @@ class ExpressionDecomposer {
 
     // The temp is known to be constant.
     String tempName = getTempConstantValueName();
-    Node replacementValueNode = Node.newString(Token.NAME, tempName)
-        .copyInformationFrom(expr);
+    Node replacementValueNode = IR.name(tempName).srcref(expr);
 
     Node tempNameValue;
 
@@ -549,11 +549,11 @@ class ExpressionDecomposer {
     //   original-parameter1
     //   original-parameter2
     //   ...
-    Node newCall = new Node(Token.CALL,
-        new Node(Token.GETPROP,
+    Node newCall = IR.call(
+        IR.getprop(
             functionNameNode.cloneNode(),
-            Node.newString("call")),
-        thisNameNode.cloneNode(), call.getLineno(), call.getCharno());
+            IR.string("call")),
+        thisNameNode.cloneNode()).srcref(call);
 
     // Throw away the call name
     call.removeFirstChild();

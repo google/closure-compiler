@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.protobuf.TextFormat;
@@ -137,11 +138,11 @@ class InstrumentFunctions implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new InstrumentCallback());
 
     if (!appNameSetter.isEmpty()) {
-      Node call = new Node(Token.CALL,
-          Node.newString(Token.NAME, appNameSetter),
-          Node.newString(appNameStr));
+      Node call = IR.call(
+          IR.name(appNameSetter),
+          IR.string(appNameStr));
       call.putBooleanProp(Node.FREE_CALL, true);
-      Node expr = new Node(Token.EXPR_RESULT, call);
+      Node expr = IR.exprResult(call);
 
       Node addingRoot = compiler.getNodeForCodeInsertion(null);
       addingRoot.addChildrenToFront(expr);
@@ -228,7 +229,7 @@ class InstrumentFunctions implements CompilerPass {
 
       if (!allPathsReturn(body)) {
         Node call = newReportFunctionExitNode();
-        Node expr = new Node(Token.EXPR_RESULT, call);
+        Node expr = IR.exprResult(call);
         body.addChildToBack(expr);
         compiler.reportCodeChange();
       }
@@ -255,9 +256,9 @@ class InstrumentFunctions implements CompilerPass {
     }
 
     private Node newReportFunctionExitNode() {
-      Node call = new Node(Token.CALL,
-          Node.newString(Token.NAME, reportFunctionExitName),
-          Node.newNumber(functionId));
+      Node call = IR.call(
+          IR.name(reportFunctionExitName),
+          IR.number(functionId));
       call.putBooleanProp(Node.FREE_CALL, true);
       return call;
     }
@@ -299,11 +300,11 @@ class InstrumentFunctions implements CompilerPass {
 
       if (!reportFunctionName.isEmpty()) {
         Node body = n.getFirstChild().getNext().getNext();
-        Node call = new Node(Token.CALL,
-            Node.newString(Token.NAME, reportFunctionName),
-            Node.newNumber(id));
+        Node call = IR.call(
+            IR.name(reportFunctionName),
+            IR.number(id));
         call.putBooleanProp(Node.FREE_CALL, true);
-        Node expr = new Node(Token.EXPR_RESULT, call);
+        Node expr = IR.exprResult(call);
         body.addChildToFront(expr);
         compiler.reportCodeChange();
       }
@@ -314,9 +315,9 @@ class InstrumentFunctions implements CompilerPass {
       }
 
       if (!definedFunctionName.isEmpty()) {
-        Node call = new Node(Token.CALL,
-            Node.newString(Token.NAME, definedFunctionName),
-            Node.newNumber(id));
+        Node call = IR.call(
+            IR.name(definedFunctionName),
+            IR.number(id));
         call.putBooleanProp(Node.FREE_CALL, true);
         Node expr = NodeUtil.newExpr(call);
 

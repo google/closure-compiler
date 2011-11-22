@@ -245,7 +245,7 @@ public class PeepholeCollectPropertyAssignments
       propertyName = property.getString();
     }
 
-    Node newProperty = Node.newString(propertyName)
+    Node newProperty = IR.string(propertyName)
         .copyInformationFrom(property);
     // Preserve the quotedness of a property reference
     if (lhs.isGetElem()) {

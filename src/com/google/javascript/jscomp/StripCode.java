@@ -20,6 +20,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -590,7 +591,7 @@ class StripCode implements CompilerPass {
      * @param parent {@code n}'s parent
      */
     void replaceWithNull(Node n, Node parent) {
-      parent.replaceChild(n, new Node(Token.NULL));
+      parent.replaceChild(n, IR.nullNode());
     }
 
     /**

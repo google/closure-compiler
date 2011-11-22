@@ -19,9 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.List;
 
 /**
@@ -100,9 +99,7 @@ class AstParallelizer {
     Supplier<Node> placeHolders = new Supplier<Node>() {
       @Override
       public Node get() {
-        return new Node(Token.FUNCTION,
-            Node.newString(Token.NAME, TEMP_NAME),
-            new Node(Token.PARAM_LIST), new Node(Token.BLOCK));
+        return IR.function(IR.name(TEMP_NAME), IR.paramList(), IR.block());
       }
     };
     return new AstParallelizer(
@@ -123,7 +120,7 @@ class AstParallelizer {
     Supplier<Node> placeHolders = new Supplier<Node>() {
       @Override
       public Node get() {
-        return NodeUtil.newExpr(Node.newString(TEMP_NAME));
+        return NodeUtil.newExpr(IR.string(TEMP_NAME));
       }
     };
 

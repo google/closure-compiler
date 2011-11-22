@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -246,12 +247,12 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
       } else if (n.isInc() || n.isDec()) {
         if (NodeUtil.isExpressionNode(parent)) {
           parent.replaceChild(n,
-              new Node(Token.VOID, Node.newNumber(0).copyInformationFrom(n)));
+              IR.voidNode(IR.number(0).srcref(n)));
         } else if(n.isComma() && n != parent.getLastChild()) {
           parent.removeChild(n);
         } else if (parent.isFor() && !NodeUtil.isForIn(parent) &&
             NodeUtil.getConditionExpression(parent) != n) {
-          parent.replaceChild(n, new Node(Token.EMPTY));
+          parent.replaceChild(n, IR.empty());
         } else {
           // Cannot replace x = a++ with x = a because that's not valid
           // when a is not a number.

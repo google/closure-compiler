@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.mozilla.rhino.ast.Comment;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -1552,7 +1553,7 @@ public final class JsDocInfoParser {
       token = next();
       if (token == JsDocToken.RC) {
         // EMPTY represents the UNKNOWN type in the Type AST.
-        return wrapNode(Token.ELLIPSIS, new Node(Token.EMPTY));
+        return wrapNode(Token.ELLIPSIS, IR.empty());
       }
       restArg = true;
     }
@@ -1633,7 +1634,7 @@ public final class JsDocInfoParser {
     if (typeExpr == null) {
       return null;
     }
-    Node typeList = new Node(Token.BLOCK);
+    Node typeList = IR.block();
     typeList.addChildToBack(typeExpr);
     while (match(JsDocToken.COMMA)) {
       next();
@@ -2176,7 +2177,7 @@ public final class JsDocInfoParser {
   // e.g., source-name, between all nodes.
   private Node createTemplateNode() {
     // The Node type choice is arbitrary.
-    Node templateNode = new Node(Token.SCRIPT);
+    Node templateNode = IR.script();
     templateNode.setStaticSourceFile(
       this.associatedNode != null ?
       this.associatedNode.getStaticSourceFile() :

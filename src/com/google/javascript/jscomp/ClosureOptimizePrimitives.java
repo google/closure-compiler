@@ -18,9 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.List;
 
 /**
@@ -75,8 +74,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     for (Node callNode : callNodes) {
       Node curParam = callNode.getFirstChild().getNext();
       if (canOptimizeObjectCreate(curParam)) {
-        Node objNode = new Node(Token.OBJECTLIT)
-            .copyInformationFrom(callNode);
+        Node objNode = IR.objectlit().srcref(callNode);
         while (curParam != null) {
           Node keyNode = curParam;
           Node valueNode = curParam.getNext();
@@ -86,12 +84,11 @@ final class ClosureOptimizePrimitives implements CompilerPass {
           callNode.removeChild(valueNode);
 
           if (!keyNode.isString()) {
-            keyNode = Node.newString(NodeUtil.getStringValue(keyNode))
-                .copyInformationFrom(keyNode);
+            keyNode = IR.string(NodeUtil.getStringValue(keyNode))
+                .srcref(keyNode);
           }
           keyNode.setQuotedString();
-          keyNode.addChildToBack(valueNode);
-          objNode.addChildToBack(keyNode);
+          objNode.addChildToBack(IR.propdef(keyNode, valueNode));
         }
         callNode.getParent().replaceChild(callNode, objNode);
         compiler.reportCodeChange();

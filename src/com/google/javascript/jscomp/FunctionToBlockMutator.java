@@ -22,6 +22,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -123,14 +124,12 @@ class FunctionToBlockMutator {
         // Rewrite: function f() {} ==> var f = function() {}
         Node fnNameNode = n.getFirstChild();
 
-        Node var = new Node(Token.VAR).copyInformationFrom(n);
-        Node name = Node.newString(Token.NAME, fnNameNode.getString())
-            .copyInformationFrom(fnNameNode);
+        Node name = IR.name(fnNameNode.getString()).srcref(fnNameNode);
+        Node var = IR.var(name).srcref(n);
 
         fnNameNode.setString("");
         // Add the VAR, remove the FUNCTION
         n.getParent().replaceChild(n, var);
-        var.addChildToFront(name);
         // readd the function as a function expression
         name.addChildToFront(n);
       }
@@ -270,8 +269,8 @@ class FunctionToBlockMutator {
               newVars.add(0, newNode);
               // Remove the parameter from the list to replace.
               newArgMap.put(THIS_MARKER,
-                  Node.newString(Token.NAME, newName)
-                      .copyInformationFromForTree(newValue));
+                  IR.name(newName)
+                      .srcrefTree(newValue));
             }
           } else {
             Node newValue = entry.getValue().cloneTree();
@@ -347,13 +346,10 @@ class FunctionToBlockMutator {
         replaceReturnWithBreak(block, null, resultName, labelName);
 
         // Add label
-        Node label = new Node(Token.LABEL).copyInformationFrom(block);
-        Node name = Node.newString(Token.LABEL_NAME, labelName)
-            .copyInformationFrom(block);
-        label.addChildToFront(name);
-        label.addChildToBack(block);
+        Node name = IR.labelName(labelName).srcref(block);
+        Node label = IR.label(name, block).srcref(block);
 
-        Node newRoot = new Node(Token.BLOCK).copyInformationFrom(block);
+        Node newRoot = IR.block().srcref(block);
         newRoot.addChildrenToBack(label);
 
 
@@ -420,8 +416,8 @@ class FunctionToBlockMutator {
   private static Node createAssignStatementNode(String name, Node expression) {
     // Create 'name = result-expression;' statement.
     // EXPR (ASSIGN (NAME, EXPRESSION))
-    Node nameNode = Node.newString(Token.NAME, name);
-    Node assign = new Node(Token.ASSIGN, nameNode, expression);
+    Node nameNode = IR.name(name);
+    Node assign = IR.assign(nameNode, expression);
     return NodeUtil.newExpr(assign);
   }
 
@@ -491,8 +487,7 @@ class FunctionToBlockMutator {
       Preconditions.checkState(NodeUtil.isStatementBlock(parent));
 
       Node resultNode = getReplacementReturnStatement(current, resultName);
-      Node name = Node.newString(Token.LABEL_NAME, labelName);
-      Node breakNode = new Node(Token.BREAK, name);
+      Node breakNode = IR.breakNode(IR.labelName(labelName));
 
       // Replace the node in parent, and reset current to the first new child.
       breakNode.copyInformationFromForTree(current);

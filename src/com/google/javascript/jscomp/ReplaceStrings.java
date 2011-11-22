@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -280,11 +281,11 @@ class ReplaceStrings extends AbstractPostOrderCallback
       case Token.STRING:
         key = expr.getString();
         replacementString = getReplacement(key);
-        replacement = Node.newString(replacementString);
+        replacement = IR.string(replacementString);
         break;
       case Token.ADD:
         StringBuilder keyBuilder = new StringBuilder();
-        Node keyNode = Node.newString("");
+        Node keyNode = IR.string("");
         replacement = buildReplacement(expr, keyNode, keyBuilder);
         key = keyBuilder.toString();
         replacementString = getReplacement(key);
@@ -298,7 +299,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
           if (value != null && value.isString()) {
             key = value.getString();
             replacementString = getReplacement(key);
-            replacement = Node.newString(replacementString);
+            replacement = IR.string(replacementString);
             break;
           }
         }
@@ -369,9 +370,8 @@ class ReplaceStrings extends AbstractPostOrderCallback
         return prefix;
       default:
         keyBuilder.append(placeholderToken);
-        prefix = new Node(
-            Token.ADD, prefix, Node.newString(placeholderToken));
-        return new Node(Token.ADD, prefix, expr.cloneTree());
+        prefix = IR.add(prefix, IR.string(placeholderToken));
+        return IR.add(prefix, expr.cloneTree());
     }
   }
 

@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -217,7 +218,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    * subsequent compiler passes from crashing.
    */
   private void createSynthesizedExternVar(String varName) {
-    Node nameNode = Node.newString(Token.NAME, varName);
+    Node nameNode = IR.name(varName);
 
     // Mark the variable as constant if it matches the coding convention
     // for constant vars.
@@ -230,7 +231,7 @@ class VarCheck extends AbstractPostOrderCallback implements
     }
 
     getSynthesizedExternsRoot().addChildToBack(
-        new Node(Token.VAR, nameNode));
+        IR.var(nameNode));
     varsToDeclareInExterns.remove(varName);
     compiler.reportCodeChange();
   }

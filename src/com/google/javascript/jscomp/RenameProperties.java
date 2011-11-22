@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 import com.google.javascript.jscomp.graph.UndiGraph;
 import com.google.javascript.jscomp.graph.UndiGraph.UndiGraphEdge;
 import com.google.javascript.jscomp.graph.UndiGraph.UndiGraphNode;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -260,7 +261,7 @@ class RenameProperties implements CompilerPass {
         }
         sb.append(replacement);
       }
-      parent.replaceChild(nodeEntry.getKey(), Node.newString(sb.toString()));
+      parent.replaceChild(nodeEntry.getKey(), IR.string(sb.toString()));
       changed = true;
     }
 

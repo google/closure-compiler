@@ -1306,7 +1306,7 @@ class PeepholeSubstituteAlternateSyntax
    * Returns the replacement for n if it was replaced, otherwise returns n.
    */
   private Node maybeReplaceChildWithNumber(Node n, Node parent, int num) {
-    Node newNode = Node.newNumber(num);
+    Node newNode = IR.number(num);
     if (!newNode.isEquivalentTo(n)) {
       parent.replaceChild(n, newNode);
       reportCodeChange();
@@ -1665,7 +1665,7 @@ class PeepholeSubstituteAlternateSyntax
     if (null == sb) { return n.cloneTree(); }
 
     sb.append(s, pos, s.length());
-    return Node.newString(sb.toString()).copyInformationFrom(n);
+    return IR.string(sb.toString()).srcref(n);
   }
 
   /**

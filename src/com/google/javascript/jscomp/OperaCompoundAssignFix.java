@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -128,17 +129,15 @@ class OperaCompoundAssignFix extends AbstractPostOrderCallback
     parent.replaceChild(assign, comma);
 
     String newName = names.peek().getNextNewName();
-    Node newAssign = new Node(Token.ASSIGN,
-        Node.newString(Token.NAME, newName));
+    Node newAssign = IR.assign(
+        IR.name(newName), assign.getLastChild().detachFromParent());
     newAssign.copyInformationFromForTree(assign);
-    newAssign.addChildToBack(assign.getLastChild().detachFromParent());
     comma.addChildrenToBack(newAssign);
-    assign.addChildrenToBack(
-        Node.newString(Token.NAME, newName).copyInformationFrom(assign));
+    assign.addChildrenToBack(IR.name(newName).srcref(assign));
     comma.addChildrenToBack(assign);
 
     Node root = t.getScopeRoot();
-    Node var = new Node(Token.VAR, Node.newString(Token.NAME, newName));
+    Node var = IR.var(IR.name(newName));
     var.copyInformationFromForTree(assign);
 
     if (NodeUtil.isStatementBlock(root)) {

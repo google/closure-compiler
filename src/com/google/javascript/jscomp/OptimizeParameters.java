@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -462,7 +463,7 @@ class OptimizeParameters
     if (varName != null) {
       stmt = NodeUtil.newVarNode(varName.getString(), value);
     } else {
-      stmt = new Node(Token.EXPR_RESULT, value);
+      stmt = IR.exprResult(value);
     }
     block.addChildToFront(stmt);
     compiler.reportCodeChange();
@@ -489,7 +490,7 @@ class OptimizeParameters
       // Keep the args in the same order, do the last first.
       eliminateParamsAfter(fnNode, argNode.getNext());
       argNode.detachFromParent();
-      Node var = new Node(Token.VAR, argNode).copyInformationFrom(argNode);
+      Node var = IR.var(argNode).copyInformationFrom(argNode);
       fnNode.getLastChild().addChildrenToFront(var);
       compiler.reportCodeChange();
       return true;

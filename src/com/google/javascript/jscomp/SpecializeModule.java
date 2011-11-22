@@ -20,9 +20,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -199,7 +198,7 @@ class SpecializeModule implements CompilerPass {
 
     functionInfoBySpecializedFunctionNode = Maps.newLinkedHashMap();
 
-    Node syntheticModuleJsRoot = new Node(Token.BLOCK);
+    Node syntheticModuleJsRoot = IR.block();
     syntheticModuleJsRoot.setIsSyntheticBlock(true);
 
     for (CompilerInput input : module.getInputs()) {
@@ -218,7 +217,7 @@ class SpecializeModule implements CompilerPass {
 
     // The jsRoot needs a parent (in a normal compilation this would be the
     // node that contains jsRoot and the externs).
-    Node syntheticExternsAndJsRoot = new Node(Token.BLOCK);
+    Node syntheticExternsAndJsRoot = IR.block();
     syntheticExternsAndJsRoot.addChildToBack(syntheticModuleJsRoot);
 
     return syntheticModuleJsRoot;
@@ -521,7 +520,7 @@ class SpecializeModule implements CompilerPass {
             NodeUtil.newName(compiler.getCodingConvention(), "", nameNode));
       }
 
-      Node assignment = new Node(Token.ASSIGN, nameNode, functionCopy);
+      Node assignment = IR.assign(nameNode, functionCopy);
       assignment.copyInformationFrom(functionCopy);
 
       return NodeUtil.newExpr(assignment);

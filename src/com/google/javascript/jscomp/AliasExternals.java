@@ -288,9 +288,9 @@ class AliasExternals implements CompilerPass {
       getPropNode.removeChild(propSrc);
 
       Node newNameNode =
-        Node.newString(Token.NAME, getArrayNotationNameFor(propName));
+          IR.name(getArrayNotationNameFor(propName));
 
-      Node elemNode = new Node(Token.GETELEM, propSrc, newNameNode);
+      Node elemNode = IR.getelem(propSrc, newNameNode);
       replaceNode(getPropNode.getParent(), getPropNode, elemNode);
 
       compiler.reportCodeChange();
@@ -332,9 +332,9 @@ class AliasExternals implements CompilerPass {
 
       // Create the call GETPROP_prop() node, using the old propSrc as the
       // one paremeter to GETPROP_prop() call.
-      Node callName = Node.newString(Token.NAME,
-        getMutatorFor(propNameNode.getString()));
-      Node call = new Node(Token.CALL, callName, propSrc, propDest);
+      Node callName = IR.name(
+          getMutatorFor(propNameNode.getString()));
+      Node call = IR.call( callName, propSrc, propDest);
       call.putBooleanProp(Node.FREE_CALL, true);
 
       // And replace the assign statement with the new call
@@ -377,11 +377,11 @@ class AliasExternals implements CompilerPass {
         name PROP_length
             string length
      */
-    Node propValue = Node.newString(Token.STRING, propName);
+    Node propValue = IR.string(propName);
     Node propNameNode =
-      Node.newString(Token.NAME, getArrayNotationNameFor(propName));
+        IR.name(getArrayNotationNameFor(propName));
     propNameNode.addChildToFront(propValue);
-    Node var = new Node(Token.VAR, propNameNode);
+    Node var = IR.var(propNameNode);
     root.addChildToFront(var);
 
     compiler.reportCodeChange();
@@ -718,13 +718,12 @@ class AliasExternals implements CompilerPass {
      */
 
     String globalName = global.name;
-    Node globalValue = Node.newString(Token.NAME, global.name);
+    Node globalValue = IR.name(global.name);
     globalValue.putBooleanProp(Node.IS_CONSTANT_NAME, global.isConstant);
 
-    Node globalNameNode =
-      Node.newString(Token.NAME, "GLOBAL_" + globalName);
+    Node globalNameNode = IR.name("GLOBAL_" + globalName);
     globalNameNode.addChildToFront(globalValue);
-    Node var = new Node(Token.VAR, globalNameNode);
+    Node var = IR.var(globalNameNode);
     root.addChildToFront(var);
 
     compiler.reportCodeChange();

@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -320,7 +321,7 @@ class Normalize implements CompilerPass {
           if (CONVERT_WHILE_TO_FOR) {
             Node expr = n.getFirstChild();
             n.setType(Token.FOR);
-            Node empty = new Node(Token.EMPTY);
+            Node empty = IR.empty();
             empty.copyInformationFrom(n);
             n.addChildBefore(empty, expr);
             n.addChildAfter(empty.cloneNode(), expr);
@@ -413,8 +414,7 @@ class Normalize implements CompilerPass {
       // Prepare a spot for the function.
       Node oldNameNode = n.getFirstChild();
       Node fnNameNode = oldNameNode.cloneNode();
-      Node var = new Node(Token.VAR, fnNameNode, n.getLineno(), n.getCharno());
-      var.copyInformationFrom(n);
+      Node var = IR.var(fnNameNode).srcref(n);
 
       // Prepare the function
       oldNameNode.setString("");
@@ -472,7 +472,7 @@ class Normalize implements CompilerPass {
         case Token.DO:
           return;
         default:
-          Node block = new Node(Token.BLOCK);
+          Node block = IR.block();
           block.copyInformationFrom(last);
           n.replaceChild(last, block);
           block.addChildToFront(last);
@@ -520,7 +520,7 @@ class Normalize implements CompilerPass {
               }
             } else if (!c.getFirstChild().isEmpty()) {
               Node init = c.getFirstChild();
-              Node empty = new Node(Token.EMPTY);
+              Node empty = IR.empty();
               empty.copyInformationFrom(c);
               c.replaceChild(init, empty);
 
@@ -560,8 +560,7 @@ class Normalize implements CompilerPass {
           while (c.getFirstChild() != c.getLastChild()) {
             Node name = c.getFirstChild();
             c.removeChild(name);
-            Node newVar = new Node(
-                Token.VAR, name, n.getLineno(), n.getCharno());
+            Node newVar = IR.var(name).srcref(n);
             n.addChildBefore(newVar, c);
             reportCodeChange("VAR with multiple children");
           }
@@ -724,7 +723,7 @@ class Normalize implements CompilerPass {
         // Convert "var name = value" to "name = value"
         Node value = n.getFirstChild();
         n.removeChild(value);
-        Node replacement = new Node(Token.ASSIGN, n, value);
+        Node replacement = IR.assign(n, value);
         replacement.copyInformationFrom(parent);
         gramps.replaceChild(parent, NodeUtil.newExpr(replacement));
       } else {

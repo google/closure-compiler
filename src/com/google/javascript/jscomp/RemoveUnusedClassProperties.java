@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -65,7 +66,7 @@ class RemoveUnusedClassProperties
           assign.getParent().replaceChild(assign,
               assign.getLastChild().detachFromParent());
         } else if (parent.isInc() || parent.isDec()) {
-          parent.getParent().replaceChild(parent, Node.newNumber(0));
+          parent.getParent().replaceChild(parent, IR.number(0));
         } else {
           throw new IllegalStateException("unexpected: "+ parent);
         }

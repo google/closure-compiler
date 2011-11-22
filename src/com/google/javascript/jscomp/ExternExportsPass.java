@@ -143,7 +143,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           if (isCompletePathPrefix && functionToExport != null) {
             initializer = createExternFunction(functionToExport);
           } else {
-            initializer = new Node(Token.OBJECTLIT);
+            initializer = IR.objectlit();
           }
 
           appendPathDefinition(pathPrefix, initializer);
@@ -181,8 +181,8 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       } else {
         Node qualifiedPath = NodeUtil.newQualifiedNameNode(
             compiler.getCodingConvention(), path, -1, -1);
-        pathDefinition = NodeUtil.newExpr(new Node(Token.ASSIGN, qualifiedPath,
-            initializer));
+        pathDefinition = NodeUtil.newExpr(
+            IR.assign(qualifiedPath, initializer));
       }
 
       externsRoot.addChildToBack(pathDefinition);
@@ -382,7 +382,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     this.exports = Lists.newArrayList();
     this.compiler = compiler;
     this.definitionMap = Maps.newHashMap();
-    this.externsRoot = new Node(Token.BLOCK);
+    this.externsRoot = IR.block();
     this.externsRoot.setIsSyntheticBlock(true);
     this.alreadyExportedPaths = Sets.newHashSet();
     this.mappedPaths = Maps.newHashMap();

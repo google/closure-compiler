@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -104,7 +105,7 @@ class PeepholeFoldWithTypes extends AbstractPeepholeOptimization {
         }
 
         if (typeName != null) {
-          Node newNode = Node.newString(typeName);
+          Node newNode = IR.string(typeName);
           typeofNode.getParent().replaceChild(typeofNode, newNode);
           reportCodeChange();
 

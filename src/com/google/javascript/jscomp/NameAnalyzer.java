@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -430,8 +431,7 @@ final class NameAnalyzer implements CompilerPass {
       if (NodeUtil.isExpressionNode(parent)) {
         changeProxy.removeChild(gramps, parent);
       } else {
-        changeProxy.replaceWith(
-            parent, node, new Node(Token.VOID, Node.newNumber(0)));
+        changeProxy.replaceWith(parent, node, IR.voidNode(IR.number(0)));
       }
     }
   }
@@ -459,7 +459,7 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void remove() {
-      changeProxy.replaceWith(gramps, parent, new Node(Token.FALSE));
+      changeProxy.replaceWith(gramps, parent, IR.falseNode());
     }
   }
 
@@ -1687,7 +1687,7 @@ final class NameAnalyzer implements CompilerPass {
     if (parent.isFor()) {
       // tweak replacements array s.t. it is a single expression node.
       if (replacements.isEmpty()) {
-        replacements.add(new Node(Token.EMPTY));
+        replacements.add(IR.empty());
       } else {
         Node expr = collapseReplacements(replacements);
         replacements.clear();
@@ -1753,7 +1753,7 @@ final class NameAnalyzer implements CompilerPass {
       if (expr == null) {
         expr = rep;
       } else {
-        expr = new Node(Token.COMMA, expr, rep);
+        expr = IR.comma(expr, rep);
       }
     }
 

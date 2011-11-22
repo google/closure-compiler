@@ -27,9 +27,8 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -2187,12 +2186,12 @@ public class DefaultPassConfig extends PassConfig {
     Map<String, Node> additionalReplacements = Maps.newHashMap();
 
     if (options.markAsCompiled || options.closurePass) {
-      additionalReplacements.put(COMPILED_CONSTANT_NAME, new Node(Token.TRUE));
+      additionalReplacements.put(COMPILED_CONSTANT_NAME, IR.trueNode());
     }
 
     if (options.closurePass && options.locale != null) {
       additionalReplacements.put(CLOSURE_LOCALE_CONSTANT_NAME,
-          Node.newString(options.locale));
+          IR.string(options.locale));
     }
 
     return additionalReplacements;

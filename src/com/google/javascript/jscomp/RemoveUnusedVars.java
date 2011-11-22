@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -430,7 +431,7 @@ class RemoveUnusedVars
         compiler.reportCodeChange();
       }
       for (Node n : toReplaceWithZero) {
-        n.getParent().replaceChild(n, Node.newNumber(0).copyInformationFrom(n));
+        n.getParent().replaceChild(n, IR.number(0).srcref(n));
         compiler.reportCodeChange();
       }
     }
@@ -828,7 +829,7 @@ class RemoveUnusedVars
         // var a = foo(); => foo();
         if (toRemove.getChildCount() == 1) {
           parent.replaceChild(toRemove,
-              new Node(Token.EXPR_RESULT, nameNode.removeFirstChild()));
+              IR.exprResult(nameNode.removeFirstChild()));
           compiler.reportCodeChange();
         }
       } else if (toRemove.isVar() &&
@@ -948,7 +949,7 @@ class RemoveUnusedVars
              !current.isName();
              current = current.getFirstChild()) {
           if (current.isGetElem()) {
-            replacement = new Node(Token.COMMA,
+            replacement = IR.comma(
                 current.getLastChild().detachFromParent(), replacement);
             replacement.copyInformationFrom(current);
           }

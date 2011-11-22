@@ -17,9 +17,8 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,9 +64,7 @@ class RescopeGlobalSymbols implements CompilerPass {
   }
 
   private void addExternForGlobalSymbolNamespace() {
-    Node nameNode = Node.newString(Token.NAME, globalSymbolNamespace);
-    Node varNode = new Node(Token.VAR);
-    varNode.addChildToBack(nameNode);
+    Node varNode = IR.var(IR.name(globalSymbolNamespace));
     CompilerInput input = compiler.newExternInput(
         "{RescopeGlobalSymbolsNamespaceVar}");
     input.getAstRoot(compiler).addChildrenToBack(varNode);
@@ -186,14 +183,13 @@ class RescopeGlobalSymbols implements CompilerPass {
 
     private void replaceSymbol(Node node, String name) {
       Node parent = node.getParent();
-      Node replacement = new Node(Token.GETPROP,
-          Node.newString(Token.NAME, globalSymbolNamespace)
-              .copyInformationFrom(node),
-          Node.newString(name).copyInformationFrom(node));
-      replacement.copyInformationFrom(node);
+      Node replacement = IR.getprop(
+          IR.name(globalSymbolNamespace).srcref(node),
+          IR.string(name).srcref(node));
+      replacement.srcref(node);
       if (node.hasChildren()) {
         // var declaration list: var a = 1, b = 2;
-        Node assign = new Node(Token.ASSIGN, replacement,
+        Node assign = IR.assign(replacement,
             node.removeFirstChild());
         parent.replaceChild(node, assign);
       } else {
@@ -243,9 +239,7 @@ class RescopeGlobalSymbols implements CompilerPass {
           commas.add(c.cloneTree());
         } else {
           // Var statement outside of for-loop.
-          Node expr = new Node(Token.EXPR_RESULT);
-          expr.copyInformationFrom(c);
-          expr.addChildToBack(c.cloneTree());
+          Node expr = IR.exprResult(c.cloneTree()).srcref(c);
           parent.addChildBefore(expr, n);
         }
       }
@@ -261,7 +255,7 @@ class RescopeGlobalSymbols implements CompilerPass {
     private Node joinOnComma(List<Node> commas, Node source) {
       Node comma = commas.get(0);
       for (int i = 1; i < commas.size(); i++) {
-        Node nextComma = new Node(Token.COMMA, comma, commas.get(i));
+        Node nextComma = IR.comma(comma, commas.get(i));
         nextComma.copyInformationFrom(source);
         comma = nextComma;
       }

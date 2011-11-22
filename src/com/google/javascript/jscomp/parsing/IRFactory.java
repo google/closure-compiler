@@ -65,6 +65,7 @@ import com.google.javascript.jscomp.mozilla.rhino.ast.VariableInitializer;
 import com.google.javascript.jscomp.mozilla.rhino.ast.WhileLoop;
 import com.google.javascript.jscomp.mozilla.rhino.ast.WithStatement;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -1290,7 +1291,7 @@ class IRFactory {
   }
 
   private Node newStringNode(String value) {
-    return Node.newString(value).clonePropsFrom(templateNode);
+    return IR.string(value).clonePropsFrom(templateNode);
   }
 
   private Node newStringNode(int type, String value) {
@@ -1298,6 +1299,6 @@ class IRFactory {
   }
 
   private Node newNumberNode(Double value) {
-    return Node.newNumber(value).clonePropsFrom(templateNode);
+    return IR.number(value).clonePropsFrom(templateNode);
   }
 }

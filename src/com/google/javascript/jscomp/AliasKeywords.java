@@ -172,9 +172,9 @@ class AliasKeywords implements CompilerPass {
       Node name = NodeUtil.newName(
           compiler.getCodingConvention(),
           getAliasName(), throwNode, getAliasName());
-      Node aliasCall = new Node(Token.CALL, name, throwNode.removeFirstChild());
+      Node aliasCall = IR.call( name, throwNode.removeFirstChild());
       aliasCall.putBooleanProp(Node.FREE_CALL, true);
-      Node exprResult = new Node(Token.EXPR_RESULT, aliasCall);
+      Node exprResult = IR.exprResult(aliasCall);
       parent.replaceChild(throwNode, exprResult);
     }
 
@@ -288,7 +288,7 @@ class AliasKeywords implements CompilerPass {
      */
     protected void insertAliasDeclaration(Node codeRoot) {
       Node varNode = new Node(Token.VAR);
-      Node value = new Node(Token.VOID, Node.newNumber(0));
+      Node value = IR.voidNode(IR.number(0));
       Node name = NodeUtil.newName(
           compiler.getCodingConvention(), getAliasName(),
           varNode, getAliasName());

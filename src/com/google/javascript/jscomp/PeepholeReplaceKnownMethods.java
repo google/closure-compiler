@@ -154,7 +154,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
   private Node tryFoldStringToLowerCase(Node subtree, Node stringNode) {
     // From Rhino, NativeString.java. See ECMA 15.5.4.11
     String lowered = stringNode.getString().toLowerCase(ROOT_LOCALE);
-    Node replacement = Node.newString(lowered);
+    Node replacement = IR.string(lowered);
     subtree.getParent().replaceChild(subtree, replacement);
     reportCodeChange();
     return replacement;
@@ -166,7 +166,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
   private Node tryFoldStringToUpperCase(Node subtree, Node stringNode) {
     // From Rhino, NativeString.java. See ECMA 15.5.4.12
     String uppered = stringNode.getString().toUpperCase(ROOT_LOCALE);
-    Node replacement = Node.newString(uppered);
+    Node replacement = IR.string(uppered);
     subtree.getParent().replaceChild(subtree, replacement);
     reportCodeChange();
     return replacement;
@@ -244,9 +244,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         // is 10 or omitted, just replace it with the number
         Node numericNode;
         if (isParseInt) {
-          numericNode = Node.newNumber(checkVal.intValue());
+          numericNode = IR.number(checkVal.intValue());
         } else {
-          numericNode = Node.newNumber(checkVal);
+          numericNode = IR.number(checkVal);
         }
         n.getParent().replaceChild(n, numericNode);
         reportCodeChange();
@@ -295,12 +295,12 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         return n;
       }
 
-      newNode = Node.newNumber(newVal);
+      newNode = IR.number(newVal);
     } else {
       String normalizedNewVal = "0";
       try {
         double newVal = Double.parseDouble(stringVal);
-        newNode = Node.newNumber(newVal);
+        newNode = IR.number(newVal);
         normalizedNewVal = normalizeNumericString(String.valueOf(newVal));
       }
       catch(NumberFormatException e) {
@@ -350,7 +350,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     }
     int indexVal = isIndexOf ? lstring.indexOf(searchValue, fromIndex)
                              : lstring.lastIndexOf(searchValue, fromIndex);
-    Node newNode = Node.newNumber(indexVal);
+    Node newNode = IR.number(indexVal);
     n.getParent().replaceChild(n, newNode);
 
     reportCodeChange();
@@ -411,7 +411,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
           // + 2 for the quotes.
           foldedSize += sb.length() + 2;
           arrayFoldedChildren.add(
-              Node.newString(sb.toString()).copyInformationFrom(prev));
+              IR.string(sb.toString()).copyInformationFrom(prev));
           sb = null;
         }
         foldedSize += InlineCostEstimator.getCost(elem);
@@ -426,7 +426,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       // + 2 for the quotes.
       foldedSize += sb.length() + 2;
       arrayFoldedChildren.add(
-          Node.newString(sb.toString()).copyInformationFrom(prev));
+          IR.string(sb.toString()).copyInformationFrom(prev));
     }
     // one for each comma.
     foldedSize += arrayFoldedChildren.size() - 1;
@@ -434,7 +434,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     int originalSize = InlineCostEstimator.getCost(n);
     switch (arrayFoldedChildren.size()) {
       case 0:
-        Node emptyStringNode = Node.newString("");
+        Node emptyStringNode = IR.string("");
         n.getParent().replaceChild(n, emptyStringNode);
         reportCodeChange();
         return emptyStringNode;
@@ -523,7 +523,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     }
 
     String result = stringAsString.substring(start, start + length);
-    Node resultNode = Node.newString(result);
+    Node resultNode = IR.string(result);
 
     Node parent = n.getParent();
     parent.replaceChild(n, resultNode);
@@ -576,7 +576,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     }
 
     String result = stringAsString.substring(start, end);
-    Node resultNode = Node.newString(result);
+    Node resultNode = IR.string(result);
 
     Node parent = n.getParent();
     parent.replaceChild(n, resultNode);
@@ -607,7 +607,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       return n;
     }
 
-    Node resultNode = Node.newString(
+    Node resultNode = IR.string(
         stringAsString.substring(index, index + 1));
     Node parent = n.getParent();
     parent.replaceChild(n, resultNode);
@@ -638,7 +638,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       return n;
     }
 
-    Node resultNode = Node.newNumber(stringAsString.charAt(index));
+    Node resultNode = IR.number(stringAsString.charAt(index));
     Node parent = n.getParent();
     parent.replaceChild(n, resultNode);
     reportCodeChange();

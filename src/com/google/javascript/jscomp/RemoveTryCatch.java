@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -81,7 +82,7 @@ class RemoveTryCatch implements CompilerPass {
           // try node
           Node block;
           if (!NodeUtil.isStatementBlock(parent)) {
-            block = new Node(Token.BLOCK);
+            block = IR.block();
             parent.replaceChild(n, block);
             block.addChildToFront(tryBlock);
           } else {

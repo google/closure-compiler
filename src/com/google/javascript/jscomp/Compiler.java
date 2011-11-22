@@ -31,10 +31,10 @@ import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideExcept
 import com.google.javascript.jscomp.mozilla.rhino.ErrorReporter;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.io.IOException;
@@ -1163,13 +1163,13 @@ public class Compiler extends AbstractCompiler {
     }
 
     // Parse main js sources.
-    jsRoot = new Node(Token.BLOCK);
+    jsRoot = IR.block();
     jsRoot.setIsSyntheticBlock(true);
 
-    externsRoot = new Node(Token.BLOCK);
+    externsRoot = IR.block();
     externsRoot.setIsSyntheticBlock(true);
 
-    externAndJsRoot = new Node(Token.BLOCK, externsRoot, jsRoot);
+    externAndJsRoot = IR.block(externsRoot, jsRoot);
     externAndJsRoot.setIsSyntheticBlock(true);
 
     if (options.tracer.isOn()) {

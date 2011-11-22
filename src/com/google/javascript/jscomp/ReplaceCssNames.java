@@ -21,6 +21,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -172,8 +173,8 @@ class ReplaceCssNames implements CompilerPass {
             } else {
               processStringNode(t, second);
               n.removeChild(first);
-              Node replacement = new Node(Token.ADD, first,
-                  Node.newString("-" + second.getString())
+              Node replacement = IR.add(first,
+                  IR.string("-" + second.getString())
                       .copyInformationFrom(second))
                   .copyInformationFrom(n);
               replacement.setJSType(nativeStringType);

@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Caja is a system that rewrites web content (JavaScript, CSS, HTML)
@@ -59,9 +59,9 @@ class IgnoreCajaProperties implements CompilerPass {
         n.removeChild(body);
         Node key = n.getFirstChild();
         n.removeChild(key);
-        Node tmp = Node.newString(Token.NAME,
+        Node tmp = IR.name(
             "JSCompiler_IgnoreCajaProperties_" + counter++);
-        n.addChildToFront(new Node(Token.VAR, tmp));
+        n.addChildToFront(IR.var(tmp));
         Node assignment;
         Node ifBody;
 
@@ -76,15 +76,12 @@ class IgnoreCajaProperties implements CompilerPass {
           //     body;
           //   }
           // }
-          ifBody = new Node(
-              Token.BLOCK,
+          ifBody = IR.block(
               key,
-              new Node(
-                  Token.EXPR_RESULT,
-                  new Node(
-                    Token.ASSIGN,
-                    key.getFirstChild().cloneNode(),
-                    tmp.cloneTree())),
+              IR.exprResult(
+                  IR.assign(
+                      key.getFirstChild().cloneNode(),
+                      tmp.cloneTree())),
               body);
         } else {
           // for (key in x) { body; }
@@ -95,33 +92,24 @@ class IgnoreCajaProperties implements CompilerPass {
           //     body;
           //   }
           // }
-          ifBody = new Node(
-              Token.BLOCK,
-              new Node(
-                  Token.EXPR_RESULT,
-                  new Node(
-                    Token.ASSIGN,
-                    key,
-                    tmp.cloneTree())),
+          ifBody = IR.block(
+              IR.exprResult(
+                  IR.assign(
+                      key,
+                      tmp.cloneTree())),
               body);
         }
 
         // Construct the new body of the for loop.
-        Node newBody = new Node(
-            Token.BLOCK,
-            new Node(
-                Token.IF,
-                new Node(
-                    Token.NOT,
-                    new Node(
-                        Token.CALL,
-                        new Node(
-                            Token.GETPROP,
+        Node newBody = IR.block(
+            IR.ifNode(
+                IR.not(
+                    IR.call(
+                        IR.getprop(
                             tmp.cloneTree(),
-                            Node.newString("match")),
-                        new Node(
-                            Token.REGEXP,
-                            Node.newString("___$")))),
+                            IR.string("match")),
+                        IR.regexp(
+                            IR.string("___$")))),
                 ifBody));
         n.addChildToBack(newBody);
         compiler.reportCodeChange();

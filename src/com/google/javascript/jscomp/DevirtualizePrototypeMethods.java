@@ -19,8 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -298,9 +298,7 @@ class DevirtualizePrototypeMethods
       Node objectNode = node.getFirstChild();
       node.removeChild(objectNode);
       parent.replaceChild(node, objectNode);
-      parent.addChildToFront(
-          Node.newString(Token.NAME, newMethodName)
-              .copyInformationFrom(node));
+      parent.addChildToFront(IR.name(newMethodName).srcref(node));
       Preconditions.checkState(parent.isCall());
       parent.putBooleanProp(Node.FREE_CALL, true);
       compiler.reportCodeChange();
@@ -327,7 +325,7 @@ class DevirtualizePrototypeMethods
     Node expr = parent.getParent();
     Node block = expr.getParent();
 
-    Node newNameNode = Node.newString(Token.NAME, newMethodName)
+    Node newNameNode = IR.name(newMethodName)
         .copyInformationFrom(parent.getFirstChild());
 
     if (specializationState != null) {
@@ -336,12 +334,12 @@ class DevirtualizePrototypeMethods
 
     parent.removeChild(functionNode);
     newNameNode.addChildToFront(functionNode);
-    block.replaceChild(expr, new Node(Token.VAR, newNameNode));
+    block.replaceChild(expr, IR.var(newNameNode));
 
     // add extra argument
     String self = newMethodName + "$self";
     Node argList = functionNode.getFirstChild().getNext();
-    argList.addChildToFront(Node.newString(Token.NAME, self)
+    argList.addChildToFront(IR.name(self)
         .copyInformationFrom(functionNode));
 
     // rewrite body
@@ -393,7 +391,7 @@ class DevirtualizePrototypeMethods
 
     for (Node child : node.children()) {
       if (child.isThis()) {
-        Node newName = Node.newString(Token.NAME, name);
+        Node newName = IR.name(name);
         newName.setJSType(child.getJSType());
         node.replaceChild(child, newName);
       } else {

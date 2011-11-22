@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -314,26 +315,27 @@ class InlineObjectLiterals implements CompilerPass {
         Node value = key.removeFirstChild();
         // TODO(user): Copy type information.
         nodes.add(
-          new Node(Token.ASSIGN,
-                   Node.newString(Token.NAME, varmap.get(var)), value));
+            IR.assign(
+                IR.name(varmap.get(var)),
+                value));
         all.remove(var);
       }
 
       // TODO(user): Better source information.
       for (String var : all) {
         nodes.add(
-          new Node(Token.ASSIGN,
-                   Node.newString(Token.NAME, varmap.get(var)),
-                   NodeUtil.newUndefinedNode(null)));
+            IR.assign(
+                IR.name(varmap.get(var)),
+                NodeUtil.newUndefinedNode(null)));
       }
 
       Node replacement;
       if (nodes.isEmpty()) {
-        replacement = new Node(Token.TRUE);
+        replacement = IR.trueNode();
       } else {
         // All assignments evaluate to true, so make sure that the
         // expr statement evaluates to true in case it matters.
-        nodes.add(new Node(Token.TRUE));
+        nodes.add(IR.trueNode());
 
         // Join these using COMMA.  A COMMA node must have 2 children, so we
         // create a tree. In the tree the first child be the COMMA to match
@@ -431,7 +433,7 @@ class InlineObjectLiterals implements CompilerPass {
           Preconditions.checkState(varmap.containsKey(var));
 
           // Replace the GETPROP node with a NAME.
-          Node replacement = Node.newString(Token.NAME, varmap.get(var));
+          Node replacement = IR.name(varmap.get(var));
           replacement.copyInformationFrom(getprop);
           ref.getGrandparent().replaceChild(ref.getParent(), replacement);
         }
