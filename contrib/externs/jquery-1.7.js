@@ -27,7 +27,8 @@
  * @externs
  */
 
-/** @typedef {(Window|Document|Element|Array.<Element>|string|jQuery)} */
+/** @typedef {(Window|Document|Element|Array.<Element>|string|jQuery|
+ *     NodeList)} */
 var jQuerySelector;
 
 /**
