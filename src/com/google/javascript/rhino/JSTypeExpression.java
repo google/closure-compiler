@@ -113,7 +113,11 @@ public final class JSTypeExpression implements Serializable {
     return root.toStringTree().hashCode();
   }
 
-  Node getRoot() {
+  /**
+   * @return The source for this type expression.  Note that it will not
+   * contain an expression if there's an @override tag.
+   */
+  public Node getRoot() {
     return root;
   }
 }
