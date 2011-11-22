@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -256,11 +257,7 @@ class AliasStrings extends AbstractPostOrderCallback
         continue;
       }
       String alias = info.getVariableName(entry.getKey());
-      Node value = Node.newString(Token.STRING, entry.getKey());
-      Node name = Node.newString(Token.NAME, alias);
-      name.addChildToBack(value);
-      Node var = new Node(Token.VAR);
-      var.addChildToBack(name);
+      Node var = IR.var(IR.name(alias), IR.string(entry.getKey()));
       if (info.siblingToInsertVarDeclBefore == null) {
         info.parentForNewVarDecl.addChildToFront(var);
       } else {

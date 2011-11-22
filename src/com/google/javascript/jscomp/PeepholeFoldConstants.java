@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.mozilla.rhino.ScriptRuntime;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -264,17 +265,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     double value = result;
 
-    Node replacement;
-    if (Double.isNaN(value)) {
-      replacement = Node.newString(Token.NAME, "NaN");
-    } else if (value == Double.POSITIVE_INFINITY) {
-      replacement = Node.newString(Token.NAME, "Infinity");
-    } else if (value == Double.NEGATIVE_INFINITY) {
-      replacement = new Node(Token.NEG, Node.newString(Token.NAME, "Infinity"));
-      replacement.copyInformationFromForTree(n);
-    } else {
-      replacement = Node.newNumber(value);
-    }
+    Node replacement = NodeUtil.numberNode(value, n);
 
     n.getParent().replaceChild(n, replacement);
     reportCodeChange();
@@ -361,8 +352,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             return n;
           }
         }
-        int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;
-        Node replacementNode = new Node(result);
+        Node replacementNode = NodeUtil.booleanNode(!leftVal.toBoolean(true));
         parent.replaceChild(n, replacementNode);
         reportCodeChange();
         return replacementNode;
@@ -446,10 +436,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       if (NodeUtil.isImmutableValue(left)) {
         // Non-object types are never instances.
-        replacementNode = new Node(Token.FALSE);
+        replacementNode = IR.falseNode();
       } else if (right.isName()
           && "Object".equals(right.getString())) {
-        replacementNode = new Node(Token.TRUE);
+        replacementNode = IR.trueNode();
       }
 
       if (replacementNode != null) {
@@ -554,9 +544,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Tries to convert x += y -> x = x + y;
     int op = NodeUtil.getOpFromAssignmentOp(n);
-    Node replacement = new Node(Token.ASSIGN, left.detachFromParent(),
+    Node replacement = IR.assign(left.detachFromParent(),
         new Node(op, left.cloneTree(), right.detachFromParent())
-            .useSourceInfoFrom(n));
+            .srcref(n));
     n.getParent().replaceChild(n, replacement);
     reportCodeChange();
 
@@ -768,22 +758,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // TODO(johnlenz): consider removing the result length check.
     // length of the left and right value plus 1 byte for the operator.
-    if (String.valueOf(result).length() <=
-        String.valueOf(lval).length() + String.valueOf(rval).length() + 1 &&
+    if ((String.valueOf(result).length() <=
+        String.valueOf(lval).length() + String.valueOf(rval).length() + 1
 
         // Do not try to fold arithmetic for numbers > 2^53. After that
         // point, fixed-point math starts to break down and become inaccurate.
-        Math.abs(result) <= MAX_FOLD_NUMBER) {
-      Node newNumber = Node.newNumber(result);
-      return newNumber;
-    } else if (Double.isNaN(result)) {
-      return Node.newString(Token.NAME, "NaN");
-    } else if (result == Double.POSITIVE_INFINITY) {
-      return Node.newString(Token.NAME, "Infinity");
-    } else if (result == Double.NEGATIVE_INFINITY) {
-      return new Node(Token.NEG, Node.newString(Token.NAME, "Infinity"));
+        && Math.abs(result) <= MAX_FOLD_NUMBER)
+        || Double.isNaN(result)
+        || result == Double.POSITIVE_INFINITY
+        || result == Double.NEGATIVE_INFINITY) {
+      return NodeUtil.numberNode(result, null);
     }
-
     return null;
   }
 
@@ -1154,7 +1139,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return n;
     }
 
-    Node newNode = new Node(result ? Token.TRUE : Token.FALSE);
+    Node newNode = NodeUtil.booleanNode(result);
     n.getParent().replaceChild(n, newNode);
     reportCodeChange();
 
@@ -1534,7 +1519,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     Node replacement = value.detachFromParent();
     if (key.isGetterDef()){
-      replacement = new Node(Token.CALL, replacement);
+      replacement = IR.call(replacement);
       replacement.putBooleanProp(Node.FREE_CALL, true);
     }
 

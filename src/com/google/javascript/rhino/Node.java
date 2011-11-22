@@ -1741,6 +1741,10 @@ public class Node implements Cloneable, Serializable {
     return this;
   }
 
+  public Node srcref(Node other) {
+    return useSourceInfoFrom(other);
+  }
+
   /**
    * Overwrite all the source information in this node and its subtree with
    * that of {@code other}.
@@ -1753,6 +1757,10 @@ public class Node implements Cloneable, Serializable {
     }
 
     return this;
+  }
+
+  public Node srcrefTree(Node other) {
+    return useSourceInfoFromForTree(other);
   }
 
   /**

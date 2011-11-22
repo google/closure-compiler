@@ -18,9 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import java.util.List;
 import java.util.Locale;
 
@@ -448,8 +447,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
         if (!foldedStringNode.isString()) {
           // If the Node is not a string literal, ensure that
           // it is coerced to a string.
-          Node replacement = new Node(Token.ADD,
-              Node.newString("").copyInformationFrom(n),
+          Node replacement = IR.add(
+              IR.string("").srcref(n),
               foldedStringNode);
           foldedStringNode = replacement;
         }

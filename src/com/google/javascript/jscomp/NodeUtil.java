@@ -21,6 +21,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -3130,5 +3131,26 @@ public final class NodeUtil {
         break;
     }
     return true;
+  }
+
+  static Node booleanNode(boolean value) {
+    return value ? IR.trueNode() : IR.falseNode();
+  }
+
+  static Node numberNode(double value, Node srcref) {
+    Node result;
+    if (Double.isNaN(value)) {
+      result = IR.name("NaN");
+    } else if (value == Double.POSITIVE_INFINITY) {
+      result = IR.name("Infinity");
+    } else if (value == Double.NEGATIVE_INFINITY) {
+      result = IR.neg(IR.name("Infinity"));
+    } else {
+      result = IR.number(value);
+    }
+    if (srcref != null) {
+      result.srcrefTree(srcref);
+    }
+    return result;
   }
 }

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.Node;
 
@@ -204,8 +205,7 @@ public class PeepholeCollectPropertyAssignments
         // Pad the array if it is sparse.
         // So if array is [0] and integer 3 is assigned at index is 2, then
         // we want to produce [0,,2].
-        Node emptyNode = new Node(Token.EMPTY)
-                         .copyInformationFrom(arrayLiteral);
+        Node emptyNode = IR.empty().srcref(arrayLiteral);
         arrayLiteral.addChildToBack(emptyNode);
         ++maxIndexAssigned;
       }
